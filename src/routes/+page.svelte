@@ -35,7 +35,12 @@
 
     function saveAdventure() {
         saveEdit(editId, editName, editLocation, editCreated)
+        editId = NaN;
+        editName = '';
+        editLocation = '';
+        editCreated = '';
         adventures = getAdventures()
+
     }
 
     function editAdventure(event: { detail: number; }) {
@@ -60,7 +65,11 @@
     </div>
 {/each}
 
-{#if editId !== null}
+{#if adventures.length == 0}
+<span class="addsomething">Add some adventures!</span>
+{/if}
+
+{#if !Number.isNaN(editId)}
     <form on:submit|preventDefault={saveAdventure}>
         <input bind:value={editName} />
         <input bind:value={editLocation} />
@@ -70,5 +79,11 @@
 {/if}
 
 <style>
-
+.addsomething {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+    text-align: center;
+}
 </style>
