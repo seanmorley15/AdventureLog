@@ -18,6 +18,10 @@ export function getNextId() {
     return nextId;
 }
 
+export function setAdventures(importArray: Adventure[]) {
+    adventures = importArray
+}
+
 export function addAdventure(adventure: Adventure) {
     adventures = [...adventures, adventure];
     if (isBrowser) {

@@ -3,6 +3,11 @@
     import type { Adventure } from '$lib/utils/types';
     import { addAdventure, getAdventures, getNextId, removeAdventure ,saveEdit } from "../services/adventureService";
     import { onMount } from 'svelte';
+    import { exportData } from "../services/export";
+    import { importData } from "../services/import";
+
+    import mapDrawing from "$lib/assets/adventure_map.svg"
+
 
     let newName = '';
     let newLocation = '';
@@ -52,6 +57,8 @@
             editCreated = adventure.created;
         }
     }
+
+
     
 </script>
 
@@ -66,7 +73,11 @@
 {/each}
 
 {#if adventures.length == 0}
-<span class="addsomething">Add some adventures!</span>
+<div class="addsomething">
+    <h2>Add some adventures!</h2>
+    <img src={mapDrawing} width="25%" alt="Logo" />
+</div >
+
 {/if}
 
 {#if !Number.isNaN(editId)}
@@ -78,9 +89,12 @@
     </form>
 {/if}
 
+<button on:click={async () => { window.location.href = exportData(); }}>Save as File</button>
+
 <style>
 .addsomething {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     height: 90vh;
