@@ -89,7 +89,9 @@
     </form>
 {/if}
 
+{#if adventures.length != 0}
 <button on:click={async () => { window.location.href = exportData(); }}>Save as File</button>
+{/if}
 
 <style>
 .addsomething {

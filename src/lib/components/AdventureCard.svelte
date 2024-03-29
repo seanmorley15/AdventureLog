@@ -8,7 +8,7 @@
     export let id:Number;
 
     function remove() {
-        dispatch('remove', name);
+        dispatch('remove', id);
     }
     function edit() {
         dispatch('edit', id)
