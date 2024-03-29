@@ -33,4 +33,19 @@
         border-radius: .5rem;
         box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.182);
     }
+    button {
+        margin-left: 1rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        background-color: #076836;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
+    }
+
+    button:hover {
+        background-color: #074b28;
+    }
 </style>
