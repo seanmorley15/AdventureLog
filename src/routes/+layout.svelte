@@ -7,7 +7,7 @@
 <section>
     <slot></slot>
   </section>
-  <Footer />
+  <!-- <Footer /> -->
 
   <style>
     section {

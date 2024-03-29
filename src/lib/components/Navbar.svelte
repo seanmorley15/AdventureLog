@@ -5,6 +5,9 @@
         align-items: center;
         flex-direction: row;
     }
+    button {
+        margin-left: 1rem;
+    }
     
 </style>
 
