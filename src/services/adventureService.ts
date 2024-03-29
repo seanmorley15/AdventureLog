@@ -34,8 +34,8 @@ export function getAdventures(): Adventure[] {
     return adventures;
 }
 
-export function removeAdventure(event: { detail: string; }) {
-    adventures = adventures.filter(adventure => adventure.name !== event.detail);
+export function removeAdventure(event: { detail: number; }) {
+    adventures = adventures.filter(adventure => adventure.id !== event.detail);
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
     }
