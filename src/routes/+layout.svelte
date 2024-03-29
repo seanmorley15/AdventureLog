@@ -1,7 +1,9 @@
 <script>
     import Footer from "$lib/components/Footer.svelte";
+    import Navbar from "$lib/components/Navbar.svelte";
 </script>
 
+<Navbar />
 <section>
     <slot></slot>
   </section>
@@ -9,6 +11,7 @@
 
   <style>
     section {
+        margin-top: 2rem;
         margin-bottom: 5rem;
         /* gives the footer space! */
     }
