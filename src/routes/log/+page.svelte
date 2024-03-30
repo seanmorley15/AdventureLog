@@ -71,17 +71,19 @@
 
 
 
-{#each adventures as adventure, i}
-    <div>
+
+<div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
+    {#each adventures as adventure (adventure.id)}
         <AdventureCard id={adventure.id} name={adventure.name} location={adventure.location} created={adventure.created} on:remove={triggerRemoveAdventure} on:edit={editAdventure} />
-    </div>
-{/each}
+    {/each}
+</div>
+
 
 {#if adventures.length == 0}
 <div class="flex flex-col items-center justify-center mt-28">
     <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
-</div >
+</div>
 
 {/if}
 
