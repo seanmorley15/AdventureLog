@@ -5,6 +5,7 @@
     import { onMount } from 'svelte';
     import { exportData } from "../../services/export";
     import { importData } from "../../services/import";
+    import exportFile from "$lib/assets/exportFile.svg";
 
     import mapDrawing from "$lib/assets/adventure_map.svg"
 
@@ -62,21 +63,24 @@
     
 </script>
 
-<input bind:value={newName} placeholder="Adventure Name" />
-<input bind:value={newLocation} placeholder="Adventure Location" />
-<button on:click={createNewAdventure}>Add Adventure</button>
+<div class="flex flex-row items-center justify-center gap-4">
+    <input type="text" bind:value={newName} placeholder="Adventure Name" class="input input-bordered w-full max-w-xs" />
+    <input type="text" bind:value={newLocation} placeholder="Adventure Location" class="input input-bordered w-full max-w-xs" />
+    <button class="btn" on:click={createNewAdventure}>Add Adventure</button>
+</div>
 
-{#each adventures as adventure, i}
-    <div>
+<div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
+    {#each adventures as adventure (adventure.id)}
         <AdventureCard id={adventure.id} name={adventure.name} location={adventure.location} created={adventure.created} on:remove={triggerRemoveAdventure} on:edit={editAdventure} />
-    </div>
-{/each}
+    {/each}
+</div>
+
 
 {#if adventures.length == 0}
-<div class="addsomething">
-    <h2>Add some adventures!</h2>
+<div class="flex flex-col items-center justify-center mt-28">
+    <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
-</div >
+</div>
 
 {/if}
 
@@ -90,10 +94,16 @@
 {/if}
 
 {#if adventures.length != 0}
-<button on:click={async () => { window.location.href = exportData(); }}>Save as File</button>
+
+
+
+<button class="btn btn-neutral ml-auto mr-auto block" on:click={async () => { window.location.href = exportData(); }}>
+    <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
+</button>
+
 {/if}
 
-<style>
+<!-- <style>
 .addsomething {
     display: flex;
     flex-direction: column;
@@ -117,4 +127,4 @@ button {
     button:hover {
         background-color: #074b28;
     }
-</style>
+</style> -->

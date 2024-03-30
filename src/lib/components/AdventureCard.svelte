@@ -1,5 +1,7 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
+    import locationDot from "$lib/assets/locationDot.svg";
+    import calendar from "$lib/assets/calendar.svg";
     const dispatch = createEventDispatcher();
 
     export let name:String;
@@ -15,37 +17,15 @@
     }
 </script>
 
-<div>
-    <!-- <p>ID: {id}</p> -->
-    <p>Name: {name}</p>
-    <p>Location: {location}</p>
-    <p>Created: {created}</p>
-    <button on:click={remove}>Remove</button>
-    <button on:click={edit}>Edit</button>
+<div class="card min-w-max w-96 bg-neutral shadow-xl overflow-hidden">
+    <div class="card-body">
+      <h2 class="card-title overflow-ellipsis">{name}</h2>
+      <p><img src={locationDot} class="inline-block -mt-1 mr-1" alt="Logo" />{location}</p>
+      <p><img src={calendar} class="inline-block -mt-1 mr-1" alt="Logo" />{created}</p>
+      <div class="card-actions justify-end">
+        <button class="btn btn-primary" on:click={edit}>Edit</button>
+        <button class="btn btn-secondary" on:click={remove}>Remove</button>
+      </div>
+    </div>
 </div>
 
-<style>
-    div {
-        margin: 2rem;
-        padding: .5rem;
-        background-color: rgb(235, 230, 223);
-        border: 1px solid grey;
-        border-radius: .5rem;
-        box-shadow: 10px 5px 5px rgba(0, 0, 0, 0.182);
-    }
-    button {
-        margin-left: 1rem;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        background-color: #076836;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-    }
-
-    button:hover {
-        background-color: #074b28;
-    }
-</style>
