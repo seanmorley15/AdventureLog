@@ -1,5 +1,3 @@
-#Dockerfile
-
 # Use this image as the platform to build the app
 FROM node:18-alpine AS external-website
 
@@ -18,8 +16,11 @@ RUN npm ci
 # Build SvelteKit app
 RUN npm run build
 
+# Expose the port that the app is listening on
+EXPOSE 3000
+
 # The USER instruction sets the user name to use as the default user for the remainder of the current stage
 USER node:node
 
 # This is the command that will be run inside the image when you tell Docker to start the container
-CMD ["node","build/index.js"]
+CMD ["node", "build/index.js"]
