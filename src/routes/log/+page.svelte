@@ -69,9 +69,6 @@
     <button class="btn" on:click={createNewAdventure}>Add Adventure</button>
 </div>
 
-
-
-
 <div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
     {#each adventures as adventure (adventure.id)}
         <AdventureCard id={adventure.id} name={adventure.name} location={adventure.location} created={adventure.created} on:remove={triggerRemoveAdventure} on:edit={editAdventure} />
