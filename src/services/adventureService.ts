@@ -55,4 +55,8 @@ export function saveEdit(editId:number, editName:string, editLocation:string, ed
     }
 }
 
+export function getNumberOfAdventures() {
+    return adventures.length;
+}
+
 

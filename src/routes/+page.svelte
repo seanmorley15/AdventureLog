@@ -5,37 +5,8 @@
     }
 </script>
 
-<h1>Welcome to AdventureLog 🗺️</h1>
-<img src={campingDrawing} width="25%" alt="Logo" />
-<button on:click={navToLog}>Open Log</button>
-
-<style>
-    button {
-        margin-left: 1rem;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        background-color: #076836;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-        margin-left: auto;
-        margin-right: auto;
-        display: block;
-    }
-
-    button:hover {
-        background-color: #074b28;
-    }
-    h1 {
-        text-align: center;
-    }
-    img {
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
-</style>
+<div class="flex flex-col items-center justify-center">
+    <article class="prose"><h1 class="mb-4">Welcome. Let's get Exploring!</h1></article>
+    <img src={campingDrawing} class="w-1/4 mb-4" alt="Logo" />
+    <button on:click={navToLog} class="btn btn-primary">Open Log</button>
+</div>
