@@ -1,7 +1,8 @@
 <script lang="ts">
+    import { goto } from '$app/navigation';
     import campingDrawing from "$lib/assets/camping.svg";
-    function navToLog() {
-        window.location.href = '/log';
+    async function navToLog() {
+        goto('/log');
     }
 </script>
 
