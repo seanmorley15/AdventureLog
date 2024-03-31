@@ -3,7 +3,7 @@ import adapterNode from '@sveltejs/adapter-node';
 import adapterVercel from '@sveltejs/adapter-vercel';
 
 let adapter;
-if (process.env.VERCEL_DEPLOYMENT === 'true') {
+if (process.env.USING_VERCEL === 'true') {
 	adapter = adapterVercel;
 } else {
 	adapter = adapterNode;
