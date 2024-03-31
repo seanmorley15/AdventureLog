@@ -65,4 +65,11 @@ export function getNumberOfAdventures() {
     return adventures.length;
 }
 
+export function clearAdventures() {
+    adventures = [];
+    if (isBrowser) {
+        localStorage.setItem('adventures', JSON.stringify(adventures));
+    }
+}
+
 

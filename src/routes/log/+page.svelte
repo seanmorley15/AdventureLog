@@ -1,11 +1,12 @@
 <script lang="ts">
     import AdventureCard from "$lib/components/AdventureCard.svelte";
     import type { Adventure } from '$lib/utils/types';
-    import { addAdventure, getAdventures, getNextId, removeAdventure ,saveEdit } from "../../services/adventureService";
+    import { addAdventure, clearAdventures, getAdventures, getNextId, removeAdventure ,saveEdit } from "../../services/adventureService";
     import { onMount } from 'svelte';
     import { exportData } from "../../services/export";
     import { importData } from "../../services/import";
     import exportFile from "$lib/assets/exportFile.svg";
+    import deleteIcon from "$lib/assets/deleteIcon.svg";
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
@@ -86,8 +87,12 @@
         editCreated = '';
     }
 
+    function deleteData() {
+        clearAdventures();
+        adventures = getAdventures();
+        showToast('deleted');
+    }
 
-    
 </script>
 
 <div class="flex flex-row items-center justify-center gap-4">
@@ -100,11 +105,9 @@
     <SucessToast action={toastAction} />
 {/if}
 
-
 {#if !Number.isNaN(editId)}
 <EditModal bind:editId={editId} bind:editName={editName} bind:editLocation={editLocation} bind:editCreated={editCreated} on:submit={saveAdventure} on:close={handleClose} />
 {/if}
-
 
 <div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
     {#each adventures as adventure (adventure.id)}
@@ -112,57 +115,20 @@
     {/each}
 </div>
 
-
 {#if adventures.length == 0}
 <div class="flex flex-col items-center justify-center mt-28">
     <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
 </div>
-
-
 {/if}
-
-<!-- {#if !Number.isNaN(editId)}
-    <form on:submit|preventDefault={saveAdventure}>
-        <input bind:value={editName} />
-        <input bind:value={editLocation} />
-        <input type="date" bind:value={editCreated} />
-        <button type="submit">Save</button>
-    </form>
-{/if} -->
 
 {#if adventures.length != 0}
-
-
-
-<button class="btn btn-neutral ml-auto mr-auto block" on:click={async () => { window.location.href = exportData(); }}>
-    <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
-</button>
-
+<div class="flex flex-row items-center justify-center mt-28 gap-4">
+    <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
+        <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
+    </button>
+    <button class="btn btn-neutral" on:click={deleteData}>
+        <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
+    </button>
+</div>
 {/if}
-
-<!-- <style>
-.addsomething {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    height: 90vh;
-    text-align: center;
-}
-button {
-        margin-left: 1rem;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        background-color: #076836;
-        color: white;
-        cursor: pointer;
-        transition: background-color 0.3s ease;
-        box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-    }
-
-    button:hover {
-        background-color: #074b28;
-    }
-</style> -->
