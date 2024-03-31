@@ -10,6 +10,7 @@
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
+    import { Input } from "postcss";
 
 
     let newName = '';
@@ -96,9 +97,11 @@
 </script>
 
 <div class="flex flex-row items-center justify-center gap-4">
-    <input type="text" bind:value={newName} placeholder="Adventure Name" class="input input-bordered w-full max-w-xs" />
-    <input type="text" bind:value={newLocation} placeholder="Adventure Location" class="input input-bordered w-full max-w-xs" />
-    <button class="btn" on:click={createNewAdventure}>Add Adventure</button>
+    <form on:submit={createNewAdventure} class="flex gap-2">
+        <input type="text" bind:value={newName} placeholder="Adventure Name" class="input input-bordered w-full max-w-xs" />
+        <input type="text" bind:value={newLocation} placeholder="Adventure Location" class="input input-bordered w-full max-w-xs" />
+        <input class="btn btn-primary" type="submit" value="Add Adventure">
+    </form>
 </div>
 
 {#if isShowingToast}
