@@ -6,8 +6,9 @@
     import { exportData } from "../../services/export";
     import { importData } from "../../services/import";
     import exportFile from "$lib/assets/exportFile.svg";
-
+    import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
+    import EditModal from "$lib/components/EditModal.svelte";
 
 
     let newName = '';
@@ -20,6 +21,21 @@
 
     let adventures: Adventure[] = [];
 
+    let isShowingToast:boolean = false;
+    let toastAction:string = '';
+
+    function showToast(action:string) {
+        toastAction = action;
+        isShowingToast = true;
+        console.log('showing toast');
+
+        setTimeout(() => {
+            isShowingToast = false;
+            toastAction = '';
+            console.log('hiding toast');
+        }, 3000);
+    }
+
     const createNewAdventure = () => {
         let currentDate = new Date();
         let dateString = currentDate.toISOString().slice(0,10); // Get date in "yyyy-mm-dd" format
@@ -28,6 +44,7 @@
         newName = ''; // Reset newName and newLocation after adding adventure
         newLocation = '';
         adventures = getAdventures(); // add to local array
+        showToast('added');
     };
 
     onMount(async () => {
@@ -36,16 +53,19 @@
 
     function triggerRemoveAdventure(event: { detail: number; }) {
         removeAdventure(event)
+        showToast('removed');
         adventures = getAdventures()
     }
 
-    function saveAdventure() {
-        saveEdit(editId, editName, editLocation, editCreated)
+    function saveAdventure(event: { detail: Adventure; }) {
+        console.log("Event" + event.detail)
+        saveEdit(event.detail)
         editId = NaN;
         editName = '';
         editLocation = '';
         editCreated = '';
         adventures = getAdventures()
+        showToast('edited');
 
     }
 
@@ -59,6 +79,13 @@
         }
     }
 
+    function handleClose() {
+        editId = NaN;
+        editName = '';
+        editLocation = '';
+        editCreated = '';
+    }
+
 
     
 </script>
@@ -68,6 +95,16 @@
     <input type="text" bind:value={newLocation} placeholder="Adventure Location" class="input input-bordered w-full max-w-xs" />
     <button class="btn" on:click={createNewAdventure}>Add Adventure</button>
 </div>
+
+{#if isShowingToast}
+    <SucessToast action={toastAction} />
+{/if}
+
+
+{#if !Number.isNaN(editId)}
+<EditModal bind:editId={editId} bind:editName={editName} bind:editLocation={editLocation} bind:editCreated={editCreated} on:submit={saveAdventure} on:close={handleClose} />
+{/if}
+
 
 <div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
     {#each adventures as adventure (adventure.id)}
@@ -82,16 +119,17 @@
     <img src={mapDrawing} width="25%" alt="Logo" />
 </div>
 
+
 {/if}
 
-{#if !Number.isNaN(editId)}
+<!-- {#if !Number.isNaN(editId)}
     <form on:submit|preventDefault={saveAdventure}>
         <input bind:value={editName} />
         <input bind:value={editLocation} />
         <input type="date" bind:value={editCreated} />
         <button type="submit">Save</button>
     </form>
-{/if}
+{/if} -->
 
 {#if adventures.length != 0}
 

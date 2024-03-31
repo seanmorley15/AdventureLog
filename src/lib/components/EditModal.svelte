@@ -1,0 +1,50 @@
+<script lang="ts">
+    export let editId:number = NaN;
+        export let editName:string = '';
+        export let editLocation:string = '';
+        export let editCreated: string = '';
+        import { createEventDispatcher } from 'svelte';
+        import type { Adventure } from '$lib/utils/types';
+        const dispatch = createEventDispatcher();
+        import { onMount } from 'svelte';
+        let modal: HTMLDialogElement;
+
+        onMount(() => {
+                modal = document.getElementById("my_modal_1") as HTMLDialogElement;
+                if (modal) {
+                        modal.showModal();
+                }
+        });
+
+        
+
+        function submit() {
+            const adventureEdited: Adventure = { id: editId, name: editName, location: editLocation, created: editCreated };
+            dispatch('submit', adventureEdited);
+            console.log(adventureEdited)
+    }
+
+    function close() {
+        dispatch('close');
+    }
+</script>
+
+<dialog id="my_modal_1" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg">Edit Adventure {editName}</h3>
+        <p class="py-4">Press ESC key or click the button below to close</p>
+        <div class="modal-action">
+            <form method="dialog">
+                <label for="name">Name</label>
+                <input type="text" id="name" bind:value={editName} class="input input-bordered w-full max-w-xs" />
+                <label for="location">Location</label>
+                <input type="text" id="location" bind:value={editLocation} class="input input-bordered w-full max-w-xs" />
+                <label for="created">Created</label>
+                <input type="date" id="created" bind:value={editCreated} class="input input-bordered w-full max-w-xs" />
+                <button class="btn btn-primary" on:click={submit}>Save</button>
+                <!-- if there is a button in form, it will close the modal -->
+                <button class="btn" on:click={close}>Close</button>
+            </form>
+        </div>
+    </div>
+</dialog>
