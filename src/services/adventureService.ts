@@ -41,12 +41,18 @@ export function removeAdventure(event: { detail: number; }) {
     }
 }
 
-export function saveEdit(editId:number, editName:string, editLocation:string, editCreated:string) {
-    const adventure = adventures.find(adventure => adventure.id === editId);
-    if (adventure) {
-        adventure.name = editName;
-        adventure.location = editLocation;
-        adventure.created = editCreated;
+export function saveEdit(adventure:Adventure) {
+    let editId = adventure.id;
+    console.log("saving edit")
+    let editName = adventure.name;
+    let editLocation = adventure.location;
+    let editCreated = adventure.created;
+    let oldAdventure: Adventure | undefined = adventures.find(adventure => adventure.id === editId);
+    console.log("old" + oldAdventure)
+    if (oldAdventure) {
+        oldAdventure.name = editName;
+        oldAdventure.location = editLocation;
+        oldAdventure.created = editCreated;
     }
     editId = NaN;
     console.log("done")
