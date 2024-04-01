@@ -10,8 +10,6 @@
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
-    import { Input } from "postcss";
-
 
     let newName = '';
     let newLocation = '';
@@ -119,14 +117,14 @@
 </div>
 
 {#if adventures.length == 0}
-<div class="flex flex-col items-center justify-center mt-28">
+<div class="flex flex-col items-center justify-center  mt-16">
     <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
 </div>
 {/if}
 
 {#if adventures.length != 0}
-<div class="flex flex-row items-center justify-center mt-28 gap-4">
+<div class="flex flex-row items-center justify-center mt-16 gap-4">
     <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
         <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
