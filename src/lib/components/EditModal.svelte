@@ -9,6 +9,8 @@
         import { onMount } from 'svelte';
         let modal: HTMLDialogElement;
 
+        let originalName = editName;
+
         onMount(() => {
                 modal = document.getElementById("my_modal_1") as HTMLDialogElement;
                 if (modal) {
@@ -27,11 +29,19 @@
     function close() {
         dispatch('close');
     }
+
+    function handleKeydown(event: KeyboardEvent) {
+        if (event.key === 'Escape') {
+            close();
+        }
+    }
 </script>
 
-<dialog id="my_modal_1" class="modal">
-    <div class="modal-box">
-        <h3 class="font-bold text-lg">Edit Adventure {editName}</h3>
+<dialog id="my_modal_1" class="modal" >
+    <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+    <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+    <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+        <h3 class="font-bold text-lg">Edit Adventure {originalName}</h3>
         <p class="py-4">Press ESC key or click the button below to close</p>
         <div class="modal-action">
             <form method="dialog">
