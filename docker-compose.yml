@@ -1,0 +1,11 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+  #   depends_on:
+  #     - db
+  # db:
+  #   image: postgres
+  #   environment:
+  #     POSTGRES_PASSWORD: example
