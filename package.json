@@ -1,6 +1,7 @@
 {
 	"name": "adventurelog",
 	"version": "0.0.1",
+	"description": "Embark, Explore, Remember. 🌍",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev",
