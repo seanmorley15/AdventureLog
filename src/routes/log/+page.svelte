@@ -93,6 +93,8 @@
         .then(response => response.json())
         .then(data => {
             console.log('Success:', data);
+            let url = window.location.origin + '/shared/' + key
+            navigator.clipboard.writeText(url)
         })
         .catch((error) => {
             console.error('Error:', error);
