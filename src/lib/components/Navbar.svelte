@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getNumberOfAdventures } from "../../services/adventureService";
+  import { visitCount } from '$lib/utils/stores/visitCountStore';
   import { goto } from '$app/navigation';
 
     async function goHome() {
@@ -11,6 +11,23 @@
     async function goToFeatured() {
         goto('/featured');
     }
+
+
+    let count = 0;
+    visitCount.subscribe((value) => {
+        count = value;
+    });
+
+    // Set the visit count to the number of adventures stored in local storage
+    const isBrowser = typeof window !== 'undefined';
+    if (isBrowser) {
+        const storedAdventures = localStorage.getItem('adventures');
+        if (storedAdventures) {
+            let parsed = JSON.parse(storedAdventures);
+            visitCount.set (parsed.length);
+        }
+}
+
 </script>
 <div class="navbar bg-base-100 flex flex-col md:flex-row">
     <div class="navbar-start flex justify-around md:justify-start">
@@ -22,6 +39,6 @@
       <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
     </div>
     <div class="navbar-end flex justify-around md:justify-end mr-4">
-      <p>Adventures: {getNumberOfAdventures()} </p>
+      <p>Adventures: {count} </p>
     </div>
 </div>

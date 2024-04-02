@@ -2,8 +2,11 @@ import type { Adventure } from '$lib/utils/types';
 
 let adventures: Adventure[] = [];
 
+import { visitCount } from '$lib/utils/stores/visitCountStore';
+
 // Check if localStorage is available (browser environment)
 const isBrowser = typeof window !== 'undefined';
+
 
 // Load adventures from localStorage on startup (only in the browser)
 if (isBrowser) {
@@ -28,6 +31,7 @@ export function addAdventure(adventure: Adventure) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
     }
     console.log(adventures);
+    visitCount.update((n) => n + 1);
 }
 
 export function getAdventures(): Adventure[] {
@@ -39,6 +43,7 @@ export function removeAdventure(event: { detail: number; }) {
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
     }
+    visitCount.update((n) => n - 1);
 }
 
 export function saveEdit(adventure:Adventure) {
@@ -59,10 +64,6 @@ export function saveEdit(adventure:Adventure) {
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
     }
-}
-
-export function getNumberOfAdventures() {
-    return adventures.length;
 }
 
 export function clearAdventures() {
