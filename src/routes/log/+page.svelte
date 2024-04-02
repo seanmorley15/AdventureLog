@@ -10,6 +10,7 @@
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
+    import { generateRandomString } from "$lib";
 
     let newName = '';
     let newLocation = '';
@@ -79,6 +80,28 @@
         }
     }
 
+    function shareLink() {
+        let key = generateRandomString()
+        let data = JSON.stringify(adventures)
+        fetch('/api/share', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ key, data }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            let url = window.location.origin + '/shared/' + key
+            navigator.clipboard.writeText(url)
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+        
+    }
+
     function handleClose() {
         editId = NaN;
         editName = '';
@@ -94,6 +117,12 @@
 
 </script>
 
+<div class="flex justify-center items-center w-full mt-4 mb-4">
+    <article class="prose">
+        <h2 class="text-center">Add new Location</h2>
+    </article>
+</div>
+
 <div class="flex flex-row items-center justify-center gap-4">
     <form on:submit={createNewAdventure} class="flex gap-2">
         <input type="text" bind:value={newName} placeholder="Adventure Name" class="input input-bordered w-full max-w-xs" />
@@ -101,6 +130,13 @@
         <input class="btn btn-primary" type="submit" value="Add Adventure">
     </form>
 </div>
+{#if adventures.length != 0}
+<div class="flex justify-center items-center w-full mt-4 mb-4">
+    <article class="prose">
+        <h1 class="text-center">My Visited Adventure Locations</h1>
+    </article>
+</div>
+{/if}
 
 {#if isShowingToast}
     <SucessToast action={toastAction} />
@@ -124,12 +160,15 @@
 {/if}
 
 {#if adventures.length != 0}
-<div class="flex flex-row items-center justify-center mt-16 gap-4">
+<div class="flex flex-row items-center justify-center mt-16 gap-4 mb-4">
     <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
         <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
     <button class="btn btn-neutral" on:click={deleteData}>
         <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
+    </button>
+    <button class="btn btn-neutral" on:click={shareLink}>
+        <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Share as Link
     </button>
 </div>
 {/if}

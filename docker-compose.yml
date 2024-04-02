@@ -3,9 +3,15 @@ services:
     build: .
     ports:
       - "3000:3000"
-  #   depends_on:
-  #     - db
-  # db:
-  #   image: postgres
-  #   environment:
-  #     POSTGRES_PASSWORD: example
+    environment:
+      - DATABASE_URL=postgres://adventurelog:PO24VjITwGgk@db:5432/adventurelog
+    depends_on:
+      - db
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: adventurelog
+      POSTGRES_PASSWORD: PO24VjITwGgk
+      POSTGRES_DB: adventurelog
+    ports:
+      - "5432:5432"
