@@ -29,9 +29,10 @@ export function addAdventure(adventure: Adventure) {
     adventures = [...adventures, adventure];
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
+        visitCount.update((n) => n + 1);
     }
     console.log(adventures);
-    visitCount.update((n) => n + 1);
+    
 }
 
 export function getAdventures(): Adventure[] {
@@ -42,8 +43,9 @@ export function removeAdventure(event: { detail: number; }) {
     adventures = adventures.filter(adventure => adventure.id !== event.detail);
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
+        visitCount.update((n) => n - 1);
     }
-    visitCount.update((n) => n - 1);
+    
 }
 
 export function saveEdit(adventure:Adventure) {
@@ -70,7 +72,9 @@ export function clearAdventures() {
     adventures = [];
     if (isBrowser) {
         localStorage.setItem('adventures', JSON.stringify(adventures));
+        visitCount.set(0);
     }
+
 }
 
 

@@ -107,13 +107,13 @@
         <input class="btn btn-primary" type="submit" value="Add Adventure">
     </form>
 </div>
-
+{#if adventures.length != 0}
 <div class="flex justify-center items-center w-full mt-4 mb-4">
     <article class="prose">
         <h1 class="text-center">My Visited Adventure Locations</h1>
     </article>
 </div>
-
+{/if}
 
 {#if isShowingToast}
     <SucessToast action={toastAction} />
