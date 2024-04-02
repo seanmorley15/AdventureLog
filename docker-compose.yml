@@ -1,11 +1,9 @@
+version: '3.8'
+
 services:
   web:
     build: .
     ports:
       - "3000:3000"
-  #   depends_on:
-  #     - db
-  # db:
-  #   image: postgres
-  #   environment:
-  #     POSTGRES_PASSWORD: example
+    environment:
+      - DATABASE_URL=postgresql://seanmorley15:1XGfuKoO9wcH@ep-withered-violet-a5xm4eqj.us-east-2.aws.neon.tech/demo?sslmode=require
