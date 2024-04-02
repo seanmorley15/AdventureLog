@@ -8,6 +8,27 @@
       "when": 1712061709595,
       "tag": "0000_fancy_starjammers",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1712083579596,
+      "tag": "0001_nostalgic_skreet",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1712083756923,
+      "tag": "0002_dusty_captain_midlands",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1712083977580,
+      "tag": "0003_clammy_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

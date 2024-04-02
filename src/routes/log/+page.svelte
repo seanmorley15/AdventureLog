@@ -10,6 +10,7 @@
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
+    import { generateRandomString } from "$lib";
 
     let newName = '';
     let newLocation = '';
@@ -79,6 +80,26 @@
         }
     }
 
+    function shareLink() {
+        let key = generateRandomString()
+        let data = JSON.stringify(adventures)
+        fetch('/api/share', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ key, data }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+        });
+        
+    }
+
     function handleClose() {
         editId = NaN;
         editName = '';
@@ -143,6 +164,9 @@
     </button>
     <button class="btn btn-neutral" on:click={deleteData}>
         <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
+    </button>
+    <button class="btn btn-neutral" on:click={shareLink}>
+        <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Share as Link
     </button>
 </div>
 {/if}
