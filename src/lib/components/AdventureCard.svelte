@@ -17,7 +17,7 @@
     }
 </script>
 
-<div class="card min-w-max w-96 bg-neutral shadow-xl overflow-hidden">
+<div class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden">
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       <p><img src={locationDot} class="inline-block -mt-1 mr-1" alt="Logo" />{location}</p>

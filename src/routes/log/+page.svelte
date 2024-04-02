@@ -10,8 +10,6 @@
     import SucessToast from "$lib/components/SucessToast.svelte";
     import mapDrawing from "$lib/assets/adventure_map.svg"
     import EditModal from "$lib/components/EditModal.svelte";
-    import { Input } from "postcss";
-
 
     let newName = '';
     let newLocation = '';
@@ -112,21 +110,21 @@
 <EditModal bind:editId={editId} bind:editName={editName} bind:editLocation={editLocation} bind:editCreated={editCreated} on:submit={saveAdventure} on:close={handleClose} />
 {/if}
 
-<div class="grid grid-cols-3 gap-4 mt-4 content-center auto-cols-auto ml-6">
+<div class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6">
     {#each adventures as adventure (adventure.id)}
         <AdventureCard id={adventure.id} name={adventure.name} location={adventure.location} created={adventure.created} on:remove={triggerRemoveAdventure} on:edit={editAdventure} />
     {/each}
 </div>
 
 {#if adventures.length == 0}
-<div class="flex flex-col items-center justify-center mt-28">
+<div class="flex flex-col items-center justify-center  mt-16">
     <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
 </div>
 {/if}
 
 {#if adventures.length != 0}
-<div class="flex flex-row items-center justify-center mt-28 gap-4">
+<div class="flex flex-row items-center justify-center mt-16 gap-4">
     <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
         <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
