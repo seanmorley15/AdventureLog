@@ -4,7 +4,7 @@ import type { Adventure } from '$lib/utils/types';
 
 
 export const load = (async () => {
-    const result = await db.select().from(featuredAdventures)
+    const result = await db.select().from(featuredAdventures).orderBy(featuredAdventures.id);
     return {
         result : result as Adventure[]
     };

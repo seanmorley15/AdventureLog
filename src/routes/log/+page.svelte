@@ -94,6 +94,12 @@
 
 </script>
 
+<div class="flex justify-center items-center w-full mt-4 mb-4">
+    <article class="prose">
+        <h2 class="text-center">Add new Location</h2>
+    </article>
+</div>
+
 <div class="flex flex-row items-center justify-center gap-4">
     <form on:submit={createNewAdventure} class="flex gap-2">
         <input type="text" bind:value={newName} placeholder="Adventure Name" class="input input-bordered w-full max-w-xs" />
@@ -101,6 +107,13 @@
         <input class="btn btn-primary" type="submit" value="Add Adventure">
     </form>
 </div>
+
+<div class="flex justify-center items-center w-full mt-4 mb-4">
+    <article class="prose">
+        <h1 class="text-center">My Visited Adventure Locations</h1>
+    </article>
+</div>
+
 
 {#if isShowingToast}
     <SucessToast action={toastAction} />
@@ -124,7 +137,7 @@
 {/if}
 
 {#if adventures.length != 0}
-<div class="flex flex-row items-center justify-center mt-16 gap-4">
+<div class="flex flex-row items-center justify-center mt-16 gap-4 mb-4">
     <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
         <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>

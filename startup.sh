@@ -3,6 +3,6 @@
 # Start your application here
 # Example: node build/index.js
 # print message
-echo "Starting the application"
+echo "Starting AdventureLog"
 npm run migrate
 node build/index.js
