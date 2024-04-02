@@ -43,17 +43,23 @@
     <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
         <h3 class="font-bold text-lg">Edit Adventure {originalName}</h3>
         <p class="py-4">Press ESC key or click the button below to close</p>
-        <div class="modal-action">
-            <form method="dialog">
-                <label for="name">Name</label>
-                <input type="text" id="name" bind:value={editName} class="input input-bordered w-full max-w-xs" />
-                <label for="location">Location</label>
-                <input type="text" id="location" bind:value={editLocation} class="input input-bordered w-full max-w-xs" />
-                <label for="created">Created</label>
-                <input type="date" id="created" bind:value={editCreated} class="input input-bordered w-full max-w-xs" />
-                <button class="btn btn-primary" on:click={submit}>Save</button>
+        <div class="modal-action items-center" style="display: flex; flex-direction: column; align-items: center; width: 100%;">
+            <form method="dialog" style="width: 100%;">
+                <div>
+                    <label for="name">Name</label>
+                    <input type="text" id="name" bind:value={editName} class="input input-bordered w-full max-w-xs" />
+                </div>
+                <div>
+                    <label for="location">Location</label>
+                    <input type="text" id="location" bind:value={editLocation} class="input input-bordered w-full max-w-xs" />
+                </div>
+                <div>
+                    <label for="created">Created</label>
+                    <input type="date" id="created" bind:value={editCreated} class="input input-bordered w-full max-w-xs" />
+                </div>
+                <button class="btn btn-primary mr-4 mt-4" on:click={submit}>Save</button>
                 <!-- if there is a button in form, it will close the modal -->
-                <button class="btn" on:click={close}>Close</button>
+                <button class="btn mt-4" on:click={close}>Close</button>
             </form>
         </div>
     </div>

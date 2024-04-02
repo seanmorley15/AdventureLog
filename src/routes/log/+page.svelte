@@ -160,7 +160,12 @@
 {/if}
 
 {#if adventures.length != 0}
-<div class="flex flex-row items-center justify-center mt-16 gap-4 mb-4">
+<div class="flex justify-center items-center w-full mt-4">
+    <article class="prose">
+        <h2 class="text-center">Actions</h2>
+    </article>
+</div>
+<div class="flex flex-row items-center justify-center mt-2 gap-4 mb-4 flex-wrap">
     <button class="btn btn-neutral" on:click={async () => { window.location.href = exportData(); }}>
         <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
