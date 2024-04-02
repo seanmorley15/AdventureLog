@@ -1,20 +1,20 @@
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
-import adapterNode from '@sveltejs/adapter-node';
-import adapterVercel from '@sveltejs/adapter-vercel';
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import adapterNode from "@sveltejs/adapter-node";
+import adapterVercel from "@sveltejs/adapter-vercel";
 
 let adapter;
-if (process.env.USING_VERCEL === 'true') {
-	adapter = adapterVercel;
+if (process.env.USING_VERCEL === "true") {
+  adapter = adapterVercel;
 } else {
-	adapter = adapterNode;
+  adapter = adapterNode;
 }
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	preprocess: vitePreprocess(),
-	kit: {
-		adapter: adapter()
-	}
+  preprocess: vitePreprocess(),
+  kit: {
+    adapter: adapter(),
+  },
 };
 
 export default config;
