@@ -21,6 +21,8 @@ export const sharedAdventures = pgTable("sharedAdventures", {
 export const userTable = pgTable("user", {
   id: text("id").primaryKey(),
   username: text("username").notNull(),
+  first_name: text("first_name").notNull(),
+  last_name: text("last_name").notNull(),
   hashed_password: varchar("hashed_password").notNull(),
 });
 

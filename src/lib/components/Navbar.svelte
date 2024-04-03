@@ -1,7 +1,7 @@
 <script lang="ts">
   import { visitCount } from "$lib/utils/stores/visitCountStore";
   import { goto } from "$app/navigation";
-
+  import type { DatabaseUser } from "$lib/server/auth";
   async function goHome() {
     goto("/");
   }
