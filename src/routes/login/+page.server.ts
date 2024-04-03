@@ -21,6 +21,12 @@ export const actions: Actions = {
     const username = formData.get("username");
     const password = formData.get("password");
 
+    if (!username || !password) {
+      return fail(400, {
+        message: "Invalid request",
+      });
+    }
+
     if (
       typeof username !== "string" ||
       username.length < 3 ||

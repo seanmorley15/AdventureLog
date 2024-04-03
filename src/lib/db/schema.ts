@@ -38,3 +38,12 @@ export const sessionTable = pgTable("session", {
     mode: "date",
   }).notNull(),
 });
+
+export const userVisitedAdventures = pgTable("userVisitedAdventures", {
+  userId: text("user_id")
+    .notNull()
+    .references(() => userTable.id),
+  adventureName: text("adventure_name").notNull(),
+  location: text("location"),
+  adventureVistied: text("adventure_visited"),
+});

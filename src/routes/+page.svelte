@@ -16,8 +16,9 @@
   <article class="prose">
     {#if data.user && data.user.username != ""}
       <h1 class="mb-4">Welcome {data.user.first_name}. Let's get Exploring!</h1>
+    {:else}
+      <h1 class="mb-4">Welcome. Let's get Exploring!</h1>
     {/if}
-    <h1 class="mb-4">Welcome. Let's get Exploring!</h1>
   </article>
   <img src={campingDrawing} class="w-1/4 mb-4" alt="Logo" />
   <button on:click={navToLog} class="btn btn-primary">Open Log</button>
@@ -33,6 +34,6 @@
 
 {#if data.user}
   <form method="post" use:enhance>
-    <button>Sign out</button>
+    <button class="btn btn-primary">Sign out</button>
   </form>
 {/if}
