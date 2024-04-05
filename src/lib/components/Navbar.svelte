@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { enhance } from "$app/forms";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
   import { goto } from "$app/navigation";
   import type { DatabaseUser } from "$lib/server/auth";
@@ -11,6 +12,9 @@
   }
   async function goToFeatured() {
     goto("/featured");
+  }
+  async function toToLogin() {
+    goto("/login");
   }
 
   let count = 0;
@@ -48,8 +52,13 @@
   </div>
   <div class="navbar-end flex justify-around md:justify-end mr-4">
     <p>Adventures: {count}</p>
+    {#if !user}
+      <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
+    {/if}
     {#if user}
-      <p>Hello {user.first_name}</p>
+      <form method="post" use:enhance>
+        <button class="btn btn-primary ml-4">Sign out</button>
+      </form>
     {/if}
   </div>
 </div>

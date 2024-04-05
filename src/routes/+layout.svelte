@@ -6,6 +6,7 @@
   // only show footer if scrolled to the bottom
 </script>
 
+<!-- passes the user object to the navbar component -->
 <Navbar user={data.user} />
 <section>
   <slot />
