@@ -2,6 +2,7 @@
   import { visitCount } from "$lib/utils/stores/visitCountStore";
   import { goto } from "$app/navigation";
   import type { DatabaseUser } from "$lib/server/auth";
+  export let user: any;
   async function goHome() {
     goto("/");
   }
@@ -47,5 +48,8 @@
   </div>
   <div class="navbar-end flex justify-around md:justify-end mr-4">
     <p>Adventures: {count}</p>
+    {#if user}
+      <p>Hello {user.first_name}</p>
+    {/if}
   </div>
 </div>
