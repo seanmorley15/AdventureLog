@@ -31,9 +31,3 @@
     </div>
   </div>
 </div>
-
-{#if data.user}
-  <form method="post" use:enhance>
-    <button class="btn btn-primary">Sign out</button>
-  </form>
-{/if}

@@ -4,6 +4,7 @@
   import { goto } from "$app/navigation";
   import type { DatabaseUser } from "$lib/server/auth";
   export let user: any;
+  import UserAvatar from "./UserAvatar.svelte";
   async function goHome() {
     goto("/");
   }
@@ -15,6 +16,9 @@
   }
   async function toToLogin() {
     goto("/login");
+  }
+  async function toToSignup() {
+    goto("/signup");
   }
 
   let count = 0;
@@ -54,8 +58,10 @@
     <p>Adventures: {count}</p>
     {#if !user}
       <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
+      <button class="btn btn-primary ml-4" on:click={toToSignup}>Signup</button>
     {/if}
     {#if user}
+      <UserAvatar {user} />
       <form method="post" use:enhance>
         <button class="btn btn-primary ml-4">Sign out</button>
       </form>
