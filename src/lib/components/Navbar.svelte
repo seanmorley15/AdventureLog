@@ -43,10 +43,12 @@
       class="btn btn-primary my-2 md:my-0 md:mr-4 md:ml-2"
       on:click={goHome}>Home</button
     >
-    <button
-      class="btn btn-primary my-2 md:my-0 md:mr-4 md:ml-2"
-      on:click={goToLog}>My Log</button
-    >
+    {#if user}
+      <button
+        class="btn btn-primary my-2 md:my-0 md:mr-4 md:ml-2"
+        on:click={goToLog}>My Log</button
+      >
+    {/if}
     <button class="btn btn-primary my-2 md:my-0" on:click={goToFeatured}
       >Featured</button
     >

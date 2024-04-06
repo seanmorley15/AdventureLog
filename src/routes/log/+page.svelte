@@ -1,4 +1,6 @@
 <script lang="ts">
+  let adventures: Adventure[] = [];
+  export let data;
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
   import {
@@ -26,8 +28,6 @@
   let editName: string = "";
   let editLocation: string = "";
   let editCreated: string = "";
-
-  let adventures: Adventure[] = [];
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -62,6 +62,7 @@
 
   onMount(async () => {
     adventures = getAdventures();
+    console.log(data.result);
   });
 
   function triggerRemoveAdventure(event: { detail: number }) {
@@ -177,7 +178,7 @@
 <div
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
-  {#each adventures as adventure (adventure.id)}
+  {#each data.result.adventures as adventure (adventure.id)}
     <AdventureCard
       type="mylog"
       id={adventure.id}

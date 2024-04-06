@@ -40,10 +40,11 @@ export const sessionTable = pgTable("session", {
 });
 
 export const userVisitedAdventures = pgTable("userVisitedAdventures", {
+  adventureID: serial("adventure_id").primaryKey(),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
   adventureName: text("adventure_name").notNull(),
   location: text("location"),
-  adventureVistied: text("adventure_visited"),
+  visitedDate: text("visited_date"),
 });

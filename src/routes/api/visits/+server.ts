@@ -3,6 +3,7 @@ import type { RequestEvent } from "@sveltejs/kit";
 import { userVisitedAdventures } from "$lib/db/schema";
 import { db } from "$lib/db/db.server";
 import { eq } from "drizzle-orm";
+import type { Adventure } from "$lib/utils/types";
 
 // Gets all the adventures that the user has visited
 export async function GET(event: RequestEvent): Promise<Response> {
@@ -14,16 +15,19 @@ export async function GET(event: RequestEvent): Promise<Response> {
       },
     });
   }
-
   let result = await db
     .select()
     .from(userVisitedAdventures)
     .where(eq(userVisitedAdventures.userId, event.locals.user.id))
     .execute();
-
   return new Response(
     JSON.stringify({
-      result: result,
+      adventures: result.map((item) => ({
+        id: item.adventureID,
+        name: item.adventureName,
+        location: item.location,
+        created: item.visitedDate,
+      })),
     }),
     {
       status: 200,
