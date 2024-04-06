@@ -61,14 +61,19 @@
   };
 
   onMount(async () => {
-    adventures = getAdventures();
+    // adventures = getAdventures();
     console.log(data.result);
+    adventures = data.result.adventures;
   });
 
   function triggerRemoveAdventure(event: { detail: number }) {
     removeAdventure(event);
     showToast("removed");
     adventures = getAdventures();
+    // remove from data.result.adventures
+    data.result.adventures = data.result.adventures.filter(
+      (adventure: Adventure) => adventure.id !== event.detail
+    );
   }
 
   function saveAdventure(event: { detail: Adventure }) {
