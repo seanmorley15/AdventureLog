@@ -13,6 +13,7 @@ export const load: PageServerLoad = async (event) => {
   };
 };
 
+// handle the logout action
 export const actions: Actions = {
   default: async (event) => {
     if (!event.locals.session) {

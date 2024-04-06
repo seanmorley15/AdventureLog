@@ -62,8 +62,8 @@
     {/if}
     {#if user}
       <UserAvatar {user} />
-      <form method="post" use:enhance>
-        <button class="btn btn-primary ml-4">Sign out</button>
+      <form method="post" action="/" use:enhance>
+        <button class="btn btn-primary ml-4">Logout</button>
       </form>
     {/if}
   </div>
