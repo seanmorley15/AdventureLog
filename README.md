@@ -1,6 +1,6 @@
 # AdventureLog: Embark, Explore, Remember. 🌍
 
-_**⚠️ AdvenutreLog is in early development and is not at all deployable in the current form!**_
+_**⚠️ AdventureLog is in early development and is not recommended for production use until version 1.0!**_
 ### *"Never forget an adventure with AdventureLog - Your ultimate travel companion!"*
 -----
 ## Installation
