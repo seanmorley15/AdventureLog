@@ -9,7 +9,6 @@
     clearAdventures,
     getAdventures,
     getNextId,
-    saveEdit,
   } from "../../services/adventureService";
   import { onMount } from "svelte";
   import { exportData } from "../../services/export";
@@ -67,10 +66,8 @@
     })
       .then((response) => response.json())
       .then((data) => {
-        console.log("Success:", data);
         let newId = data.id;
-        console.log("New ID: " + newId);
-        console.log("New Name: " + newName);
+        // add to local array for instant view update
         adventures = [
           ...adventures,
           {
@@ -89,25 +86,37 @@
       });
   };
 
-  // function triggerRemoveAdventure(event: { detail: number }) {
-  //   removeAdventure(event);
-  //   showToast("removed");
-  //   adventures = getAdventures();
-  //   // remove from data.result.adventures
-  //   data.result.adventures = data.result.adventures.filter(
-  //     (adventure: Adventure) => adventure.id !== event.detail,
-  //   );
-  // }
-
   function saveAdventure(event: { detail: Adventure }) {
     console.log("Event" + event.detail);
-    saveEdit(event.detail);
-    editId = NaN;
-    editName = "";
-    editLocation = "";
-    editCreated = "";
-    adventures = getAdventures();
-    showToast("edited");
+    // put request to /api/visits with id and advneture data
+    fetch("/api/visits", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: event.detail.id,
+        name: event.detail.name,
+        location: event.detail.location,
+        created: event.detail.created,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // update local array with new data
+        adventures = adventures.map((adventure) =>
+          adventure.id === event.detail.id ? event.detail : adventure,
+        );
+        editId = NaN;
+        editName = "";
+        editLocation = "";
+        editCreated = "";
+        showToast("edited");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 
   function editAdventure(event: { detail: number }) {

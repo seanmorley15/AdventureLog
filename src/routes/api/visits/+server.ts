@@ -122,3 +122,47 @@ let res = await db
     }
   );
 }
+
+// put route to update existing adventure
+export async function PUT(event: RequestEvent): Promise<Response> {
+  if (!event.locals.user) {
+    return new Response(JSON.stringify({ error: "No user found" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  // get properties from the body
+  const { id, name, location, created } = await event.request.json();
+
+  // update the adventure in the user's visited list
+  await db
+    .update(userVisitedAdventures)
+    .set({
+      adventureName: name,
+      location: location,
+      visitedDate: created,
+    })
+    .where(
+      and(
+        eq(userVisitedAdventures.userId, event.locals.user.id),
+        eq(userVisitedAdventures.adventureID, Number(id))
+      )
+    )
+    .execute();
+
+  return new Response(
+    JSON.stringify({
+      adventure: { id, name, location, created },
+      message: { message: "Adventure updated" },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+}

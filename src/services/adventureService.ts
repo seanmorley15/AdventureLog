@@ -31,28 +31,6 @@ export function getAdventures(): Adventure[] {
   return adventures;
 }
 
-export function saveEdit(adventure: Adventure) {
-  let editId = adventure.id;
-  console.log("saving edit");
-  let editName = adventure.name;
-  let editLocation = adventure.location;
-  let editCreated = adventure.created;
-  let oldAdventure: Adventure | undefined = adventures.find(
-    (adventure) => adventure.id === editId
-  );
-  console.log("old" + oldAdventure);
-  if (oldAdventure) {
-    oldAdventure.name = editName;
-    oldAdventure.location = editLocation;
-    oldAdventure.created = editCreated;
-  }
-  editId = NaN;
-  console.log("done");
-  if (isBrowser) {
-    localStorage.setItem("adventures", JSON.stringify(adventures));
-  }
-}
-
 export function clearAdventures() {
   adventures = [];
   if (isBrowser) {
