@@ -7,6 +7,7 @@
   import UserAvatar from "./UserAvatar.svelte";
   import { onMount } from "svelte";
   import InfoModal from "./InfoModal.svelte";
+  import infoIcon from "$lib/assets/info.svg";
   async function goHome() {
     goto("/");
   }
@@ -80,17 +81,15 @@
     <InfoModal on:close={closeModal} />
   {/if}
   <div class="navbar-end flex justify-around md:justify-end mr-4">
-    <button class="btn btn-primary" on:click={showModal}>Info</button>
     {#if !user}
       <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
       <button class="btn btn-primary ml-4" on:click={toToSignup}>Signup</button>
     {/if}
+
     {#if user}
       <p>Adventures: {count}</p>
       <UserAvatar {user} />
-      <form method="post" action="/" use:enhance>
-        <button class="btn btn-primary ml-4">Logout</button>
-      </form>
     {/if}
+    <button class="btn btn-neutral ml-4" on:click={showModal}>About</button>
   </div>
 </div>
