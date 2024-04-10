@@ -5,6 +5,7 @@
   import type { DatabaseUser } from "$lib/server/auth";
   export let user: any;
   import UserAvatar from "./UserAvatar.svelte";
+  import { onMount } from "svelte";
   async function goHome() {
     goto("/");
   }
@@ -22,6 +23,15 @@
   }
 
   let count = 0;
+
+  // get value from fetch /api/visitcount
+
+  onMount(async () => {
+    const res = await fetch("/api/visitcount");
+    const data = await res.json();
+    visitCount.set(data.visitCount);
+  });
+
   visitCount.subscribe((value) => {
     count = value;
   });
@@ -30,10 +40,6 @@
   const isBrowser = typeof window !== "undefined";
   if (isBrowser) {
     const storedAdventures = localStorage.getItem("adventures");
-    if (storedAdventures) {
-      let parsed = JSON.parse(storedAdventures);
-      visitCount.set(parsed.length);
-    }
   }
 </script>
 
@@ -57,12 +63,12 @@
     <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
   </div>
   <div class="navbar-end flex justify-around md:justify-end mr-4">
-    <p>Adventures: {count}</p>
     {#if !user}
       <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
       <button class="btn btn-primary ml-4" on:click={toToSignup}>Signup</button>
     {/if}
     {#if user}
+      <p>Adventures: {count}</p>
       <UserAvatar {user} />
       <form method="post" action="/" use:enhance>
         <button class="btn btn-primary ml-4">Logout</button>

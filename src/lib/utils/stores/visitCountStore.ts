@@ -1,3 +1,5 @@
 import { writable } from "svelte/store";
 
-export const visitCount = writable(0);
+let value = 0;
+export const visitCount = writable(value);
+

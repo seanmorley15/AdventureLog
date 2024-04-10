@@ -19,6 +19,7 @@
   import mapDrawing from "$lib/assets/adventure_map.svg";
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
+  import { visitCount } from "$lib/utils/stores/visitCountStore";
 
   let newName = "";
   let newLocation = "";
@@ -35,6 +36,11 @@
   onMount(async () => {
     console.log(data);
     adventures = data.result.adventures;
+  });
+
+  let count = 0;
+  visitCount.subscribe((value) => {
+    count = value;
   });
 
   function showToast(action: string) {
@@ -80,6 +86,7 @@
         newName = ""; // Reset newName and newLocation after adding adventure
         newLocation = "";
         showToast("added");
+        visitCount.update((n) => n + 1);
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -183,6 +190,7 @@
           (adventure) => adventure.id !== event.detail,
         );
         showToast("removed");
+        visitCount.update((n) => n - 1);
       })
       .catch((error) => {
         console.error("Error:", error);
