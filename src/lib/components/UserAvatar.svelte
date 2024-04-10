@@ -1,8 +1,12 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-
+  import { goto } from "$app/navigation";
   export let user: any;
   let firstLetter = user.first_name.charAt(0);
+
+  async function navToSettings() {
+    goto("/settings");
+  }
 </script>
 
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
@@ -21,7 +25,7 @@
     <!-- svelte-ignore a11y-missing-attribute -->
     <li><a>Profile</a></li>
     <li><a>My Log</a></li>
-    <li><a>Settings</a></li>
+    <li><button on:click={navToSettings}>Settings</button></li>
     <form method="post" action="/" use:enhance>
       <li><button>Logout</button></li>
     </form>

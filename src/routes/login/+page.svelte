@@ -28,7 +28,7 @@
       id="password"
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
-    <button class="py-2 px-4 rounded btn btn-primary">Login</button>
+    <button class="py-2 px-4 btn btn-primary">Login</button>
   </form>
 </div>
 
