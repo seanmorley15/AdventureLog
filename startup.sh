@@ -23,5 +23,6 @@ npm run generate
 # Run database migration
 npm run migrate
 
+echo "The orgin to be set is: $ORIGIN"
 # Start the application
-node build/index.js
+ORIGIN=$ORIGIN node build

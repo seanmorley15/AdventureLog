@@ -14,6 +14,7 @@ const config = {
   preprocess: vitePreprocess(),
   kit: {
     adapter: adapter(),
+    csrf: { checkOrigin: true, }
   },
 };
 
