@@ -7,6 +7,9 @@
   async function navToSettings() {
     goto("/settings");
   }
+  async function navToLog() {
+    goto("/log");
+  }
 </script>
 
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
@@ -24,7 +27,7 @@
     <!-- svelte-ignore a11y-missing-attribute -->
     <!-- svelte-ignore a11y-missing-attribute -->
     <li><a>Profile</a></li>
-    <li><a>My Log</a></li>
+    <li><button on:click={navToLog}>My Log</button></li>
     <li><button on:click={navToSettings}>Settings</button></li>
     <form method="post" action="/" use:enhance>
       <li><button>Logout</button></li>
