@@ -1,6 +1,7 @@
 <script lang="ts">
   export let data;
   console.log(data.result);
+  import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import { visitCount } from "$lib/utils/stores/visitCountStore.js";
   import type { Adventure } from "$lib/utils/types.js";
@@ -10,8 +11,8 @@
     count = value;
   });
 
-  function add(event: CustomEvent<{ name: string; location: string }>) {
-    fetch("/api/visits", {
+  async function add(event: CustomEvent<{ name: string; location: string }>) {
+    const response = await fetch("/api/visits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -22,7 +23,12 @@
         created: "",
       }),
     });
-    visitCount.update((n) => n + 1);
+
+    if (response.status === 401) {
+      goto("/login");
+    } else {
+      visitCount.update((n) => n + 1);
+    }
   }
 </script>
 

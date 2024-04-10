@@ -6,6 +6,7 @@
   export let user: any;
   import UserAvatar from "./UserAvatar.svelte";
   import { onMount } from "svelte";
+  import InfoModal from "./InfoModal.svelte";
   async function goHome() {
     goto("/");
   }
@@ -24,13 +25,25 @@
 
   let count = 0;
 
+  let infoModalOpen = false;
+
+  function showModal() {
+    infoModalOpen = true;
+  }
+
+  function closeModal() {
+    infoModalOpen = false;
+  }
+
   // get value from fetch /api/visitcount
 
-  onMount(async () => {
-    const res = await fetch("/api/visitcount");
-    const data = await res.json();
-    visitCount.set(data.visitCount);
-  });
+  $: if (user) {
+    onMount(async () => {
+      const res = await fetch("/api/visitcount");
+      const data = await res.json();
+      visitCount.set(data.visitCount);
+    });
+  }
 
   visitCount.subscribe((value) => {
     count = value;
@@ -62,7 +75,12 @@
   <div class="navbar-center flex justify-center md:justify-center">
     <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
   </div>
+
+  {#if infoModalOpen}
+    <InfoModal on:close={closeModal} />
+  {/if}
   <div class="navbar-end flex justify-around md:justify-end mr-4">
+    <button class="btn btn-primary" on:click={showModal}>Info</button>
     {#if !user}
       <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
       <button class="btn btn-primary ml-4" on:click={toToSignup}>Signup</button>
