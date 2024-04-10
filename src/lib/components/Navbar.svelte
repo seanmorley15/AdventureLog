@@ -64,9 +64,8 @@
       on:click={goHome}>Home</button
     >
     {#if user}
-      <button
-        class="btn btn-primary my-2 md:my-0 md:mr-4 md:ml-2"
-        on:click={goToLog}>My Log</button
+      <button class="btn btn-primary my-2 md:my-0 md:mr-4" on:click={goToLog}
+        >My Log</button
       >
     {/if}
     <button class="btn btn-primary my-2 md:my-0" on:click={goToFeatured}
@@ -87,7 +86,7 @@
     {/if}
 
     {#if user}
-      <p>Adventures: {count}</p>
+      <p class="font-bold">Adventures: {count}</p>
       <UserAvatar {user} />
     {/if}
     <button class="btn btn-neutral ml-4" on:click={showModal}>About</button>

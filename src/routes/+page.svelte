@@ -13,13 +13,14 @@
 </script>
 
 <div class="flex flex-col items-center justify-center">
-  <article class="prose">
-    {#if data.user && data.user.username != ""}
-      <h1 class="mb-4">Welcome {data.user.first_name}. Let's get Exploring!</h1>
-    {:else}
-      <h1 class="mb-4">Welcome. Let's get Exploring!</h1>
-    {/if}
-  </article>
+  {#if data.user && data.user.username != ""}
+    <h1 class="mb-6 text-4xl font-extrabold">
+      Welcome {data.user.first_name}. Let's get Exploring!
+    </h1>
+  {:else}
+    <h1 class="mb-6 text-4xl font-extrabold">Welcome. Let's get Exploring!</h1>
+  {/if}
+
   <img src={campingDrawing} class="w-1/4 mb-4" alt="Logo" />
   <button on:click={navToLog} class="btn btn-primary">Open Log</button>
 
