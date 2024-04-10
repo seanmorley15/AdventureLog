@@ -7,13 +7,7 @@ import { visitCount } from "$lib/utils/stores/visitCountStore";
 // Check if localStorage is available (browser environment)
 const isBrowser = typeof window !== "undefined";
 
-// // Load adventures from localStorage on startup (only in the browser)
-// if (isBrowser) {
-//   const storedAdventures = localStorage.getItem("adventures");
-//   if (storedAdventures) {
-//     adventures = JSON.parse(storedAdventures);
-//   }
-// }
+// 
 
 export function getNextId() {
   let nextId = Math.max(0, ...adventures.map((adventure) => adventure.id)) + 1;
@@ -35,14 +29,6 @@ export function addAdventure(adventure: Adventure) {
 
 export function getAdventures(): Adventure[] {
   return adventures;
-}
-
-export function removeAdventure(event: { detail: number }) {
-  adventures = adventures.filter((adventure) => adventure.id !== event.detail);
-  if (isBrowser) {
-    localStorage.setItem("adventures", JSON.stringify(adventures));
-    visitCount.update((n) => n - 1);
-  }
 }
 
 export function saveEdit(adventure: Adventure) {

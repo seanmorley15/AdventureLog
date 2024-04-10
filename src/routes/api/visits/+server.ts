@@ -62,14 +62,63 @@ export async function DELETE(event: RequestEvent): Promise<Response> {
     )
     .execute();
 
-    console.log(res);
-    console.log(id);
-    console.log(event.locals.user.id);
-
   return new Response(JSON.stringify({ id: id, res: res }), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
     },
   });
+}
+
+// add the adventure to the user's visited list
+export async function POST(event: RequestEvent): Promise<Response> {
+  if (!event.locals.user) {
+    return new Response(JSON.stringify({ error: "No user found" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  // get properties from the body
+  const { name, location, created } = await event.request.json();
+
+  // insert the adventure to the user's visited list
+  await db
+    .insert(userVisitedAdventures)
+    .values({
+      userId: event.locals.user.id,
+      adventureName: name,
+      location: location,
+      visitedDate: created,
+    })
+    .execute();
+let res = await db
+    .select()
+    .from(userVisitedAdventures)
+    .where(
+      and(
+        eq(userVisitedAdventures.userId, event.locals.user.id),
+        eq(userVisitedAdventures.adventureName, name),
+        eq(userVisitedAdventures.location, location),
+        eq(userVisitedAdventures.visitedDate, created)
+      )
+    )
+    .execute();
+
+// return a response with the adventure object values
+  return new Response(
+    JSON.stringify({
+      adventure: { name, location, created },
+      message: { message: "Adventure added" },
+      id: res[0].adventureID
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
 }

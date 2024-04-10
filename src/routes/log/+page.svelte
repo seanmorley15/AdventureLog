@@ -53,17 +53,40 @@
   const createNewAdventure = () => {
     let currentDate = new Date();
     let dateString = currentDate.toISOString().slice(0, 10); // Get date in "yyyy-mm-dd" format
-    const newAdventure: Adventure = {
-      id: getNextId(),
-      name: newName,
-      location: newLocation,
-      created: dateString,
-    };
-    addAdventure(newAdventure);
-    newName = ""; // Reset newName and newLocation after adding adventure
-    newLocation = "";
-    adventures = getAdventures(); // add to local array
-    showToast("added");
+    // post to /api/visits
+    fetch("/api/visits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: newName,
+        location: newLocation,
+        created: dateString,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        let newId = data.id;
+        console.log("New ID: " + newId);
+        console.log("New Name: " + newName);
+        adventures = [
+          ...adventures,
+          {
+            id: newId,
+            name: newName,
+            location: newLocation,
+            created: dateString,
+          },
+        ];
+        newName = ""; // Reset newName and newLocation after adding adventure
+        newLocation = "";
+        showToast("added");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
 
   // function triggerRemoveAdventure(event: { detail: number }) {
