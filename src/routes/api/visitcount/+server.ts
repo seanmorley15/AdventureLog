@@ -20,8 +20,6 @@ export async function GET(event: RequestEvent): Promise<Response> {
       .where(eq(userVisitedAdventures.userId,event.locals.user.id))
       .execute();
 
-      console.log(result[0].count);
-
     return new Response(
       JSON.stringify({
         visitCount: result[0].count,

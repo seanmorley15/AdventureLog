@@ -21,7 +21,7 @@
             id="username"
             class="block mb-2 input input-bordered w-full max-w-xs"
         /><br />
-        <label for="password">First Name</label>
+        <label for="first_name">First Name</label>
         <input
             type="text"
             bind:value={first_name}
@@ -29,11 +29,19 @@
             id="first_name"
             class="block mb-2 input input-bordered w-full max-w-xs"
         /><br />
+        <label for="last_name">Last Name</label>
         <input
             type="text"
             bind:value={last_name}
             name="last_name"
             id="last_name"
+            class="block mb-2 input input-bordered w-full max-w-xs"
+        /><br />
+        <label for="password">Password</label>
+        <input
+            type="password"
+            name="password"
+            id="password"
             class="block mb-2 input input-bordered w-full max-w-xs"
         /><br />
         <!--  make hidden input where the user id is -->

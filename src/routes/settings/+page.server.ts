@@ -3,6 +3,7 @@ import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
 import { userTable } from "$lib/db/schema";
 import { eq } from "drizzle-orm";
+import { Argon2id } from "oslo/password";
 
 export const load: PageServerLoad = async (event) => {
   if (event.locals.user)
@@ -20,6 +21,8 @@ export const actions: Actions = {
     let firstName = formData.get("first_name");
     let lastName = formData.get("last_name");
 
+    let password = formData.get("password");
+
     if (!userId) {
         return {
             status: 400,
@@ -27,6 +30,16 @@ export const actions: Actions = {
                 message: "User ID is required"
             }
         };
+    }
+
+    if (password) {
+        let hashedPassword = await new Argon2id().hash(password);
+        console.log(hashedPassword)
+        await db.update(userTable)
+            .set({
+                hashed_password: hashedPassword
+            })
+            .where(eq(userTable.id, userId));
     }
 
     await db.update(userTable)
