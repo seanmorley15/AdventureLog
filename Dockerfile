@@ -16,8 +16,6 @@ RUN npm ci
 # Build SvelteKit app
 RUN npm run build
 
-RUN npm run generate
-
 # Expose the port that the app is listening on
 EXPOSE 3000
 
