@@ -17,8 +17,12 @@ echo "Starting AdventureLog"
 # Wait for the database to start up
 wait_for_db
 
+# generate the schema
+npm run generate
+
 # Run database migration
 npm run migrate
 
+echo "The orgin to be set is: $ORIGIN"
 # Start the application
-node build/index.js
+ORIGIN=$ORIGIN node build

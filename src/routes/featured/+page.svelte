@@ -1,19 +1,34 @@
 <script lang="ts">
   export let data;
   console.log(data.result);
+  import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
+  import { visitCount } from "$lib/utils/stores/visitCountStore.js";
   import type { Adventure } from "$lib/utils/types.js";
-  import { addAdventure, getNextId } from "../../services/adventureService.js";
 
-  function add(event: CustomEvent<{ name: string; location: string }>) {
-    console.log(event.detail);
-    let newAdventure: Adventure = {
-      id: getNextId(),
-      name: event.detail.name,
-      location: event.detail.location,
-      created: "",
-    };
-    addAdventure(newAdventure);
+  let count = 0;
+  visitCount.subscribe((value) => {
+    count = value;
+  });
+
+  async function add(event: CustomEvent<{ name: string; location: string }>) {
+    const response = await fetch("/api/visits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: event.detail.name,
+        location: event.detail.location,
+        created: "",
+      }),
+    });
+
+    if (response.status === 401) {
+      goto("/login");
+    } else {
+      visitCount.update((n) => n + 1);
+    }
   }
 </script>
 

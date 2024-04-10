@@ -29,6 +29,48 @@
       "when": 1712083977580,
       "tag": "0003_clammy_goblin_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1712103855532,
+      "tag": "0004_smart_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1712104331399,
+      "tag": "0005_glamorous_pixie",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1712105206127,
+      "tag": "0006_melted_leech",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1712167204757,
+      "tag": "0007_nervous_scalphunter",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1712186591227,
+      "tag": "0008_romantic_maria_hill",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1712407140727,
+      "tag": "0009_spotty_madame_web",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,7 @@
 <script lang="ts">
+  export let data;
+  let adventures: Adventure[] = [];
+
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
   import {
@@ -6,8 +9,6 @@
     clearAdventures,
     getAdventures,
     getNextId,
-    removeAdventure,
-    saveEdit,
   } from "../../services/adventureService";
   import { onMount } from "svelte";
   import { exportData } from "../../services/export";
@@ -18,6 +19,7 @@
   import mapDrawing from "$lib/assets/adventure_map.svg";
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
+  import { visitCount } from "$lib/utils/stores/visitCountStore";
 
   let newName = "";
   let newLocation = "";
@@ -27,10 +29,19 @@
   let editLocation: string = "";
   let editCreated: string = "";
 
-  let adventures: Adventure[] = [];
-
   let isShowingToast: boolean = false;
   let toastAction: string = "";
+
+  // Sets the adventures array to the data from the server
+  onMount(async () => {
+    console.log(data);
+    adventures = data.result.adventures;
+  });
+
+  let count = 0;
+  visitCount.subscribe((value) => {
+    count = value;
+  });
 
   function showToast(action: string) {
     toastAction = action;
@@ -47,43 +58,77 @@
   const createNewAdventure = () => {
     let currentDate = new Date();
     let dateString = currentDate.toISOString().slice(0, 10); // Get date in "yyyy-mm-dd" format
-    const newAdventure: Adventure = {
-      id: getNextId(),
-      name: newName,
-      location: newLocation,
-      created: dateString,
-    };
-    addAdventure(newAdventure);
-    newName = ""; // Reset newName and newLocation after adding adventure
-    newLocation = "";
-    adventures = getAdventures(); // add to local array
-    showToast("added");
+    // post to /api/visits
+    fetch("/api/visits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: newName,
+        location: newLocation,
+        created: dateString,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        let newId = data.id;
+        // add to local array for instant view update
+        adventures = [
+          ...adventures,
+          {
+            id: newId,
+            name: newName,
+            location: newLocation,
+            created: dateString,
+          },
+        ];
+        newName = ""; // Reset newName and newLocation after adding adventure
+        newLocation = "";
+        showToast("added");
+        visitCount.update((n) => n + 1);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   };
-
-  onMount(async () => {
-    adventures = getAdventures();
-  });
-
-  function triggerRemoveAdventure(event: { detail: number }) {
-    removeAdventure(event);
-    showToast("removed");
-    adventures = getAdventures();
-  }
 
   function saveAdventure(event: { detail: Adventure }) {
     console.log("Event" + event.detail);
-    saveEdit(event.detail);
-    editId = NaN;
-    editName = "";
-    editLocation = "";
-    editCreated = "";
-    adventures = getAdventures();
-    showToast("edited");
+    // put request to /api/visits with id and advneture data
+    fetch("/api/visits", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: event.detail.id,
+        name: event.detail.name,
+        location: event.detail.location,
+        created: event.detail.created,
+      }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // update local array with new data
+        adventures = adventures.map((adventure) =>
+          adventure.id === event.detail.id ? event.detail : adventure,
+        );
+        editId = NaN;
+        editName = "";
+        editLocation = "";
+        editCreated = "";
+        showToast("edited");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 
   function editAdventure(event: { detail: number }) {
     const adventure = adventures.find(
-      (adventure) => adventure.id === event.detail
+      (adventure) => adventure.id === event.detail,
     );
     if (adventure) {
       editId = adventure.id;
@@ -122,9 +167,48 @@
   }
 
   function deleteData() {
-    clearAdventures();
-    adventures = getAdventures();
-    showToast("deleted");
+    fetch("/api/clearvisits", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // remove adventure from array where id matches
+        adventures = [];
+        showToast("removed");
+        visitCount.set(0);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+  function removeAdventure(event: { detail: number }) {
+    console.log("Event ID " + event.detail);
+    // send delete request to server at /api/visits
+    fetch("/api/visits", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: event.detail }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // remove adventure from array where id matches
+        adventures = adventures.filter(
+          (adventure) => adventure.id !== event.detail,
+        );
+        showToast("removed");
+        visitCount.update((n) => n - 1);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 </script>
 
@@ -184,8 +268,8 @@
       name={adventure.name}
       location={adventure.location}
       created={adventure.created}
-      on:remove={triggerRemoveAdventure}
       on:edit={editAdventure}
+      on:remove={removeAdventure}
     />
   {/each}
 </div>
