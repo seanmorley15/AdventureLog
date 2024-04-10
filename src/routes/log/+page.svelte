@@ -1,6 +1,7 @@
 <script lang="ts">
-  let adventures: Adventure[] = [];
   export let data;
+  let adventures: Adventure[] = [];
+
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
   import {
@@ -8,7 +9,6 @@
     clearAdventures,
     getAdventures,
     getNextId,
-    removeAdventure,
     saveEdit,
   } from "../../services/adventureService";
   import { onMount } from "svelte";
@@ -31,6 +31,12 @@
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
+
+  // Sets the adventures array to the data from the server
+  onMount(async () => {
+    console.log(data);
+    adventures = data.result.adventures;
+  });
 
   function showToast(action: string) {
     toastAction = action;
@@ -60,21 +66,15 @@
     showToast("added");
   };
 
-  onMount(async () => {
-    // adventures = getAdventures();
-    console.log(data.result);
-    adventures = data.result.adventures;
-  });
-
-  function triggerRemoveAdventure(event: { detail: number }) {
-    removeAdventure(event);
-    showToast("removed");
-    adventures = getAdventures();
-    // remove from data.result.adventures
-    data.result.adventures = data.result.adventures.filter(
-      (adventure: Adventure) => adventure.id !== event.detail
-    );
-  }
+  // function triggerRemoveAdventure(event: { detail: number }) {
+  //   removeAdventure(event);
+  //   showToast("removed");
+  //   adventures = getAdventures();
+  //   // remove from data.result.adventures
+  //   data.result.adventures = data.result.adventures.filter(
+  //     (adventure: Adventure) => adventure.id !== event.detail,
+  //   );
+  // }
 
   function saveAdventure(event: { detail: Adventure }) {
     console.log("Event" + event.detail);
@@ -89,7 +89,7 @@
 
   function editAdventure(event: { detail: number }) {
     const adventure = adventures.find(
-      (adventure) => adventure.id === event.detail
+      (adventure) => adventure.id === event.detail,
     );
     if (adventure) {
       editId = adventure.id;
@@ -131,6 +131,30 @@
     clearAdventures();
     adventures = getAdventures();
     showToast("deleted");
+  }
+
+  function removeAdventure(event: { detail: number }) {
+    console.log("Event ID " + event.detail);
+    // send delete request to server at /api/visits
+    fetch("/api/visits", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: event.detail }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // remove adventure from array where id matches
+        adventures = adventures.filter(
+          (adventure) => adventure.id !== event.detail,
+        );
+        showToast("removed");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 </script>
 
@@ -183,15 +207,15 @@
 <div
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
-  {#each data.result.adventures as adventure (adventure.id)}
+  {#each adventures as adventure (adventure.id)}
     <AdventureCard
       type="mylog"
       id={adventure.id}
       name={adventure.name}
       location={adventure.location}
       created={adventure.created}
-      on:remove={triggerRemoveAdventure}
       on:edit={editAdventure}
+      on:remove={removeAdventure}
     />
   {/each}
 </div>

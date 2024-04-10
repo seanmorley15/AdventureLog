@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
+import type { Adventure } from "$lib/utils/types";
 
 export const load: PageServerLoad = async (event) => {
   if (!event.locals.user) {
@@ -7,6 +8,7 @@ export const load: PageServerLoad = async (event) => {
   }
   const response = await event.fetch("/api/visits");
   const result = await response.json();
+  // let array = result.adventures as Adventure[];
   return {
     result,
   };
