@@ -2,18 +2,27 @@
   export let data;
   console.log(data.result);
   import AdventureCard from "$lib/components/AdventureCard.svelte";
+  import { visitCount } from "$lib/utils/stores/visitCountStore.js";
   import type { Adventure } from "$lib/utils/types.js";
-  import { addAdventure, getNextId } from "../../services/adventureService.js";
+
+  let count = 0;
+  visitCount.subscribe((value) => {
+    count = value;
+  });
 
   function add(event: CustomEvent<{ name: string; location: string }>) {
-    console.log(event.detail);
-    let newAdventure: Adventure = {
-      id: getNextId(),
-      name: event.detail.name,
-      location: event.detail.location,
-      created: "",
-    };
-    addAdventure(newAdventure);
+    fetch("/api/visits", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: event.detail.name,
+        location: event.detail.location,
+        created: "",
+      }),
+    });
+    visitCount.update((n) => n + 1);
   }
 </script>
 
