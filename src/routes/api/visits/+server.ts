@@ -52,6 +52,15 @@ export async function DELETE(event: RequestEvent): Promise<Response> {
   // get id from the body
   const { id } = await event.request.json();
 
+  if (!id) {
+    return new Response(JSON.stringify({ error: "No id found" }), {
+      status: 400,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
   let res = await db
     .delete(userVisitedAdventures)
     .where(

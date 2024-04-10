@@ -167,9 +167,23 @@
   }
 
   function deleteData() {
-    clearAdventures();
-    adventures = getAdventures();
-    showToast("deleted");
+    fetch("/api/clearvisits", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        // remove adventure from array where id matches
+        adventures = [];
+        showToast("removed");
+        visitCount.set(0);
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
   }
 
   function removeAdventure(event: { detail: number }) {
