@@ -16,6 +16,8 @@ export const featuredAdventures = pgTable("featuredAdventures", {
 export const sharedAdventures = pgTable("sharedAdventures", {
   id: text("id").primaryKey(),
   data: json("data").notNull(),
+  name: text("name").notNull(),
+  date: text("date").notNull(),
 });
 
 export const userTable = pgTable("user", {

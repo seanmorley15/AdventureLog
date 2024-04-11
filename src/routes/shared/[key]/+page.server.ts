@@ -29,9 +29,14 @@ export async function load({ params }) {
     } as Adventure;
   });
 
+  let name = rawData.name;
+  let date = rawData.date;
+
 
   // Return the array of Adventure objects
   return {
     adventureArray,
+    name,
+    date,
   };
 }

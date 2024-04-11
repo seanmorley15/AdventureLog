@@ -15,6 +15,7 @@
   </div>
 {/each} -->
 <h1 class="text-center font-bold text-4xl">Shared Adventure List</h1>
+<h2 class="text-center text-2xl">By {data.name} on {data.date}</h2>
 <div
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
