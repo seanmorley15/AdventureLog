@@ -75,3 +75,31 @@
     </div>
   </div>
 {/if}
+
+{#if type === "shared"}
+  <div
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+  >
+    <div class="card-body">
+      <h2 class="card-title overflow-ellipsis">{name}</h2>
+      {#if location !== ""}
+        <p>
+          <img
+            src={locationDot}
+            class="inline-block -mt-1 mr-1"
+            alt="Logo"
+          />{location}
+        </p>
+      {/if}
+      {#if created !== ""}
+        <p>
+          <img
+            src={calendar}
+            class="inline-block -mt-1 mr-1"
+            alt="Logo"
+          />{created}
+        </p>
+      {/if}
+    </div>
+  </div>
+{/if}
