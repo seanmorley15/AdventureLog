@@ -1,0 +1,19 @@
+name: Update Latest Tag
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  update-latest-tag:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run latest-tag
+      uses: EndBug/latest-tag@latest
+      with:
+        # You can change the name of the tag or branch with this input. Default is 'latest'
+        ref: latest
+        # If a description is provided, the action will use it to create an annotated tag. If none is given, the action will create a lightweight tag.
+        description: Latest release
+        # Force-update a branch instead of using a tag. Default is false.
+        force-branch: true
