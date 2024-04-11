@@ -1,6 +1,6 @@
 services:
   web:
-    build: .
+    image: ghcr.io/seanmorley15/adventurelog:latest
     ports:
       - "3000:3000"
     environment:
