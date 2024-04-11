@@ -23,6 +23,7 @@ export const userTable = pgTable("user", {
   username: text("username").notNull(),
   first_name: text("first_name").notNull(),
   last_name: text("last_name").notNull(),
+  icon: text("icon"),
   hashed_password: varchar("hashed_password").notNull(),
 });
 

@@ -20,6 +20,7 @@ export const actions: Actions = {
     let username = formData.get("username");
     let firstName = formData.get("first_name");
     let lastName = formData.get("last_name");
+    let icon = formData.get("icon");
 
     let password = formData.get("password");
 
@@ -28,6 +29,15 @@ export const actions: Actions = {
             status: 400,
             body: {
                 message: "User ID is required"
+            }
+        };
+    }
+
+    if (icon.length > 1) {
+        return {
+            status: 400,
+            body: {
+                message: "Icon must be a single character"
             }
         };
     }
@@ -47,6 +57,7 @@ export const actions: Actions = {
             username: username,
             first_name: firstName,
             last_name: lastName,
+            icon: icon
         })
         .where(eq(userTable.id, userId));
 

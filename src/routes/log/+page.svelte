@@ -1,6 +1,7 @@
 <script lang="ts">
   export let data;
   let adventures: Adventure[] = [];
+  let isLoading = true;
 
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
@@ -36,6 +37,7 @@
   onMount(async () => {
     console.log(data);
     adventures = data.result.adventures;
+    isLoading = false;
   });
 
   let count = 0;
@@ -243,6 +245,12 @@
   </div>
 {/if}
 
+{#if isLoading}
+  <div class="flex justify-center items-center w-full mt-16">
+    <span class="loading loading-spinner w-24 h-24"></span>
+  </div>
+{/if}
+
 {#if isShowingToast}
   <SucessToast action={toastAction} />
 {/if}
@@ -274,14 +282,14 @@
   {/each}
 </div>
 
-{#if adventures.length == 0}
+{#if adventures.length == 0 && !isLoading}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some adventures!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
   </div>
 {/if}
 
-{#if adventures.length != 0}
+{#if adventures.length != 0 && !isLoading}
   <div class="flex justify-center items-center w-full mt-4">
     <article class="prose">
       <h2 class="text-center">Actions</h2>

@@ -19,6 +19,7 @@ export const lucia = new Lucia(adapter, {
       id: attributes.id,
       first_name: attributes.first_name,
       last_name: attributes.last_name,
+      icon: attributes.icon,
     };
   },
 });
@@ -35,5 +36,6 @@ export interface DatabaseUser {
   username: string;
   first_name: string;
   last_name: string;
+  icon: string;
   hashed_password: string;
 }

@@ -6,6 +6,7 @@
     let first_name = data.user?.first_name;
     let last_name = data.user?.last_name;
     let user_id = data.user?.id;
+    let icon = data.user?.icon;
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
@@ -35,6 +36,14 @@
             bind:value={last_name}
             name="last_name"
             id="last_name"
+            class="block mb-2 input input-bordered w-full max-w-xs"
+        /><br />
+        <label for="icon">Profile Icon (emoji)</label>
+        <input
+            type="emoji"
+            bind:value={icon}
+            name="icon"
+            id="icon"
             class="block mb-2 input input-bordered w-full max-w-xs"
         /><br />
         <label for="password">Password</label>
