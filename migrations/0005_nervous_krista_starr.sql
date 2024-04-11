@@ -1,0 +1,1 @@
+ALTER TABLE "worldTravelRegions" ALTER COLUMN "country_id" SET DATA TYPE integer;

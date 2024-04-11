@@ -79,3 +79,4 @@ INSERT INTO "featuredAdventures" (id, name, location) VALUES
   (97, 'Acadia National Park', 'Maine, USA'),
   (98, 'Sequoia National Park', 'California, USA'),
   (99, 'Joshua Tree National Park', 'California, USA');
+ON CONFLICT (id) DO NOTHING;
