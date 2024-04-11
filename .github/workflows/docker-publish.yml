@@ -1,0 +1,31 @@
+name: Upload Docker image to GHCR
+
+on:
+  release:
+    types: [published]
+
+env:
+  IMAGE_NAME: "adventurelog"
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ACESS_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:${{ github.event.release.tag_name }} .
+
+      - name: Tag Docker image
+        run: docker tag $IMAGE_NAME:${{ github.event.release.tag_name }} ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ github.event.release.tag_name }}
+
+      - name: Push Docker image to GHCR
+        run: docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ github.event.release.tag_name }}
