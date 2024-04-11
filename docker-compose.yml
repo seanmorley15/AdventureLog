@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/seanmorley15/adventurelog:latest
+    build: .
     ports:
       - "3000:3000"
     environment:
@@ -9,6 +9,8 @@ services:
       - ORIGIN=http://localhost:3000
     depends_on:
       - db
+    volumes:
+    - ./sql:/sql
   db:
     image: postgres
     environment:

@@ -4,6 +4,8 @@ FROM node:18-alpine AS external-website
 # A small line inside the image to show who made it
 LABEL Developers="Sean Morley"
 
+RUN apk update && apk add postgresql-client
+
 # The WORKDIR instruction sets the working directory for everything that will happen next
 WORKDIR /app
 
