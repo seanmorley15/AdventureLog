@@ -48,12 +48,10 @@
   function showToast(action: string) {
     toastAction = action;
     isShowingToast = true;
-    console.log("showing toast");
 
     setTimeout(() => {
       isShowingToast = false;
       toastAction = "";
-      console.log("hiding toast");
     }, 3000);
   }
 
@@ -87,7 +85,7 @@
         ];
         newName = ""; // Reset newName and newLocation after adding adventure
         newLocation = "";
-        showToast("added");
+        showToast("Adventure added successfully!");
         visitCount.update((n) => n + 1);
       })
       .catch((error) => {
@@ -121,7 +119,7 @@
         editName = "";
         editLocation = "";
         editCreated = "";
-        showToast("edited");
+        showToast("Adventure edited successfully!");
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -155,6 +153,7 @@
         console.log("Success:", data);
         let url = window.location.origin + "/shared/" + key;
         navigator.clipboard.writeText(url);
+        showToast("Link copied to clipboard!");
       })
       .catch((error) => {
         console.error("Error:", error);
@@ -180,7 +179,7 @@
         console.log("Success:", data);
         // remove adventure from array where id matches
         adventures = [];
-        showToast("removed");
+        showToast("Adventure removed successfully!");
         visitCount.set(0);
       })
       .catch((error) => {
@@ -205,7 +204,7 @@
         adventures = adventures.filter(
           (adventure) => adventure.id !== event.detail,
         );
-        showToast("removed");
+        showToast("Adventure removed successfully!");
         visitCount.update((n) => n - 1);
       })
       .catch((error) => {
