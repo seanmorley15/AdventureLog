@@ -62,7 +62,7 @@ export const worldTravelCountries = pgTable("worldTravelCountries", {
 
 export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
   id: varchar("id").primaryKey().unique(),
-  name: text("name").notNull().unique(),
+  name: text("name").notNull(),
   country_code: text("country_code")
     .notNull()
     .references(() => worldTravelCountries.country_code),

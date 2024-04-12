@@ -15,6 +15,6 @@ VALUES
   ('DE-SN', 'Saxony', 'de'),
   ('DE-ST', 'Saxony-Anhalt', 'de'),
   ('DE-SH', 'Schleswig-Holstein', 'de'),
-  ('DE-TH', 'Thuringia', 'de');
+  ('DE-TH', 'Thuringia', 'de')
 
 ON CONFLICT (id) DO NOTHING;

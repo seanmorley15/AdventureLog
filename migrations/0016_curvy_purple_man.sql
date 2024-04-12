@@ -1,0 +1,1 @@
+ALTER TABLE "worldTravelCountryRegions" DROP CONSTRAINT "worldTravelCountryRegions_name_unique";
