@@ -32,7 +32,7 @@ echo "Starting AdventureLog"
 wait_for_db
 
 # generate the schema
-npm run generate
+# npm run generate
 
 # Run database migration
 npm run migrate
