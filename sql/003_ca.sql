@@ -1,17 +1,16 @@
-INSERT INTO "worldTravelCountryRegions" (name, country_code)
+INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
 VALUES
-  ('Alberta', 'ca'),
-  ('British Columbia', 'ca'),
-  ('Manitoba', 'ca'),
-  ('New Brunswick', 'ca'),
-  ('Newfoundland and Labrador', 'ca'),
-  ('Nova Scotia', 'ca'),
-  ('Ontario', 'ca'),
-  ('Prince Edward Island', 'ca'),
-  ('Quebec', 'ca'),
-  ('Saskatchewan', 'ca'),
-  ('Northwest Territories', 'ca'),
-  ('Nunavut', 'ca'),
-  ('Yukon', 'ca')
-
-ON CONFLICT (name) DO NOTHING;
+  ('CA-AB', 'Alberta', 'ca'),
+  ('CA-BC', 'British Columbia', 'ca'),
+  ('CA-MB', 'Manitoba', 'ca'),
+  ('CA-NB', 'New Brunswick', 'ca'),
+  ('CA-NL', 'Newfoundland and Labrador', 'ca'),
+  ('CA-NS', 'Nova Scotia', 'ca'),
+  ('CA-ON', 'Ontario', 'ca'),
+  ('CA-PE', 'Prince Edward Island', 'ca'),
+  ('CA-QC', 'Quebec', 'ca'),
+  ('CA-SK', 'Saskatchewan', 'ca'),
+  ('CA-NT', 'Northwest Territories', 'ca'),
+  ('CA-NU', 'Nunavut', 'ca'),
+  ('CA-YT', 'Yukon', 'ca')
+ON CONFLICT (id) DO NOTHING;

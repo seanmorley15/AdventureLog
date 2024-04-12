@@ -1,0 +1,1 @@
+ALTER TABLE "worldTravelCountryRegions" ALTER COLUMN "id" SET DATA TYPE varchar;

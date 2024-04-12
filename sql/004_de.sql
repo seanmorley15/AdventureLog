@@ -1,20 +1,20 @@
-INSERT INTO "worldTravelCountryRegions" (name, country_code)
+INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
 VALUES
-  ('Baden-Württemberg', 'de'),
-  ('Bavaria', 'de'),
-  ('Berlin', 'de'),
-  ('Brandenburg', 'de'),
-  ('Bremen', 'de'),
-  ('Hamburg', 'de'),
-  ('Hesse', 'de'),
-  ('Lower Saxony', 'de'),
-  ('Mecklenburg-Vorpommern', 'de'),
-  ('North Rhine-Westphalia', 'de'),
-  ('Rhineland-Palatinate', 'de'),
-  ('Saarland', 'de'),
-  ('Saxony', 'de'),
-  ('Saxony-Anhalt', 'de'),
-  ('Schleswig-Holstein', 'de'),
-  ('Thuringia', 'de')
+  ('DE-BW', 'Baden-Württemberg', 'de'),
+  ('DE-BY', 'Bavaria', 'de'),
+  ('DE-BE', 'Berlin', 'de'),
+  ('DE-BB', 'Brandenburg', 'de'),
+  ('DE-HB', 'Bremen', 'de'),
+  ('DE-HH', 'Hamburg', 'de'),
+  ('DE-HE', 'Hesse', 'de'),
+  ('DE-NI', 'Lower Saxony', 'de'),
+  ('DE-MV', 'Mecklenburg-Vorpommern', 'de'),
+  ('DE-NW', 'North Rhine-Westphalia', 'de'),
+  ('DE-RP', 'Rhineland-Palatinate', 'de'),
+  ('DE-SL', 'Saarland', 'de'),
+  ('DE-SN', 'Saxony', 'de'),
+  ('DE-ST', 'Saxony-Anhalt', 'de'),
+  ('DE-SH', 'Schleswig-Holstein', 'de'),
+  ('DE-TH', 'Thuringia', 'de');
 
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (id) DO NOTHING;

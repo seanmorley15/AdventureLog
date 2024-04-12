@@ -5,7 +5,6 @@ import {
   json,
   serial,
   varchar,
-  foreignKey,
   integer,
 } from "drizzle-orm/pg-core";
 
@@ -62,7 +61,7 @@ export const worldTravelCountries = pgTable("worldTravelCountries", {
 });
 
 export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
-  id: serial("id").primaryKey(),
+  id: varchar("id").primaryKey().unique(),
   name: text("name").notNull().unique(),
   country_code: text("country_code")
     .notNull()
