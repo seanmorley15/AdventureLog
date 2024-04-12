@@ -20,8 +20,11 @@
   async function toToLogin() {
     goto("/login");
   }
-  async function toToSignup() {
+  async function goToSignup() {
     goto("/signup");
+  }
+  async function goToWorldTravel() {
+    goto("/worldtravel");
   }
 
   let count = 0;
@@ -67,6 +70,10 @@
       <button class="btn btn-primary my-2 md:my-0 md:mr-4" on:click={goToLog}
         >My Log</button
       >
+      <button
+        class="btn btn-primary my-2 md:my-0 md:mr-4"
+        on:click={goToWorldTravel}>World Tavel Log</button
+      >
     {/if}
     <button class="btn btn-primary my-2 md:my-0" on:click={goToFeatured}
       >Featured</button
@@ -82,7 +89,7 @@
   <div class="navbar-end flex justify-around md:justify-end mr-4">
     {#if !user}
       <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
-      <button class="btn btn-primary ml-4" on:click={toToSignup}>Signup</button>
+      <button class="btn btn-primary ml-4" on:click={goToSignup}>Signup</button>
     {/if}
 
     {#if user}
