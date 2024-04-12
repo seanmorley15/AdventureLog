@@ -11,7 +11,7 @@ import {
 
 export const featuredAdventures = pgTable("featuredAdventures", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   location: text("location"),
 });
 
@@ -63,7 +63,7 @@ export const worldTravelCountries = pgTable("worldTravelCountries", {
 
 export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
   id: serial("id").primaryKey(),
-  name: text("name").notNull(),
+  name: text("name").notNull().unique(),
   country_code: text("country_code")
     .notNull()
     .references(() => worldTravelCountries.country_code),

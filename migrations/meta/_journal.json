@@ -71,6 +71,20 @@
       "when": 1712880141763,
       "tag": "0009_zippy_domino",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1712884724835,
+      "tag": "0010_closed_nicolaos",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1712885083355,
+      "tag": "0011_legal_red_hulk",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,1 @@
+ALTER TABLE "worldTravelCountryRegions" ADD CONSTRAINT "worldTravelCountryRegions_name_unique" UNIQUE("name");

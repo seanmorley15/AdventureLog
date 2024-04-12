@@ -14,4 +14,5 @@ VALUES
   ('Australia', 'au', 'Oceania'),
   ('New Zealand', 'nz', 'Oceania'),
   ('South Africa', 'za', 'Africa'),
-  ('Egypt', 'eg', 'Africa');
+  ('Egypt', 'eg', 'Africa'),
+ON CONFLICT (country_code) DO NOTHING;
