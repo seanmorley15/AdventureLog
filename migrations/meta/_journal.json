@@ -85,6 +85,20 @@
       "when": 1712885083355,
       "tag": "0011_legal_red_hulk",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1712886238567,
+      "tag": "0012_slow_miracleman",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1712886259872,
+      "tag": "0013_high_unicorn",
+      "breakpoints": true
     }
   ]
 }

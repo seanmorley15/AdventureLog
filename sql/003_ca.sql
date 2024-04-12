@@ -12,6 +12,6 @@ VALUES
   ('Saskatchewan', 'ca'),
   ('Northwest Territories', 'ca'),
   ('Nunavut', 'ca'),
-  ('Yukon', 'ca');
+  ('Yukon', 'ca')
 
 ON CONFLICT (name) DO NOTHING;

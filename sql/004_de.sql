@@ -15,6 +15,6 @@ VALUES
   ('Saxony', 'de'),
   ('Saxony-Anhalt', 'de'),
   ('Schleswig-Holstein', 'de'),
-  ('Thuringia', 'de');
+  ('Thuringia', 'de')
 
 ON CONFLICT (name) DO NOTHING;

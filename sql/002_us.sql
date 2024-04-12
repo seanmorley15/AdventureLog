@@ -49,6 +49,6 @@ VALUES
   ('Washington', 'us'),
   ('West Virginia', 'us'),
   ('Wisconsin', 'us'),
-  ('Wyoming', 'us');
+  ('Wyoming', 'us')
 
 ON CONFLICT (name) DO NOTHING;
