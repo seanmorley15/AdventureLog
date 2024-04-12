@@ -57,6 +57,14 @@ export const userVisitedAdventures = pgTable("userVisitedAdventures", {
 export const worldTravelCountries = pgTable("worldTravelCountries", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
-  country_code: text("country_code").notNull(),
+  country_code: text("country_code").notNull().unique(),
   continent: text("continent").notNull(),
+});
+
+export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  country_code: text("country_code")
+    .notNull()
+    .references(() => worldTravelCountries.country_code),
 });
