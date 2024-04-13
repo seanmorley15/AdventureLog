@@ -10,6 +10,8 @@
   export let location: String | undefined = undefined;
   export let created: String | undefined = undefined;
   export let id: Number | undefined = undefined;
+  export let regionId: String | undefined = undefined;
+  export let visited: Boolean | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -19,6 +21,14 @@
   }
   function add() {
     dispatch("add", { name, location });
+  }
+  function markVisited() {
+    dispatch("markVisited", regionId);
+    visited = true;
+  }
+  function removeVisit() {
+    dispatch("removeVisit", regionId);
+    visited = false;
   }
 </script>
 
@@ -110,8 +120,16 @@
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
+      <p>{regionId}</p>
       <div class="card-actions justify-end">
-        <button class="btn btn-primary">Mark Visited</button>
+        {#if !visited}
+          <button class="btn btn-primary" on:click={markVisited}
+            >Mark Visited</button
+          >
+        {/if}
+        {#if visited}
+          <button class="btn btn-warning" on:click={removeVisit}>Remove</button>
+        {/if}
       </div>
     </div>
   </div>
