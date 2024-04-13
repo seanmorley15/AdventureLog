@@ -1,5 +1,5 @@
 {
-  "id": "9341b0b9-3e38-4043-bc4e-5655d8f0a953",
+  "id": "b6ab23b7-42f0-4475-aa5d-23b92c00e97f",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -30,7 +30,15 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "featuredAdventures_name_unique": {
+          "name": "featuredAdventures_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name"
+          ]
+        }
+      }
     },
     "session": {
       "name": "session",
@@ -208,6 +216,61 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
+    "userVisitedWorldTravel": {
+      "name": "userVisitedWorldTravel",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "region_id": {
+          "name": "region_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "userVisitedWorldTravel_user_id_user_id_fk": {
+          "name": "userVisitedWorldTravel_user_id_user_id_fk",
+          "tableFrom": "userVisitedWorldTravel",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "userVisitedWorldTravel_region_id_worldTravelCountryRegions_id_fk": {
+          "name": "userVisitedWorldTravel_region_id_worldTravelCountryRegions_id_fk",
+          "tableFrom": "userVisitedWorldTravel",
+          "tableTo": "worldTravelCountryRegions",
+          "columnsFrom": [
+            "region_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
     "worldTravelCountries": {
       "name": "worldTravelCountries",
       "schema": "",
@@ -240,15 +303,23 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
+      "uniqueConstraints": {
+        "worldTravelCountries_country_code_unique": {
+          "name": "worldTravelCountries_country_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "country_code"
+          ]
+        }
+      }
     },
-    "worldTravelRegions": {
-      "name": "worldTravelRegions",
+    "worldTravelCountryRegions": {
+      "name": "worldTravelCountryRegions",
       "schema": "",
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "varchar",
           "primaryKey": true,
           "notNull": true
         },
@@ -258,8 +329,8 @@
           "primaryKey": false,
           "notNull": true
         },
-        "country_id": {
-          "name": "country_id",
+        "country_code": {
+          "name": "country_code",
           "type": "text",
           "primaryKey": false,
           "notNull": true
@@ -267,15 +338,15 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "worldTravelRegions_country_id_worldTravelCountries_id_fk": {
-          "name": "worldTravelRegions_country_id_worldTravelCountries_id_fk",
-          "tableFrom": "worldTravelRegions",
+        "worldTravelCountryRegions_country_code_worldTravelCountries_country_code_fk": {
+          "name": "worldTravelCountryRegions_country_code_worldTravelCountries_country_code_fk",
+          "tableFrom": "worldTravelCountryRegions",
           "tableTo": "worldTravelCountries",
           "columnsFrom": [
-            "country_id"
+            "country_code"
           ],
           "columnsTo": [
-            "id"
+            "country_code"
           ],
           "onDelete": "no action",
           "onUpdate": "no action"

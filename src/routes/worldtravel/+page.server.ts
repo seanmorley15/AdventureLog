@@ -4,10 +4,10 @@ import type { Adventure } from "$lib/utils/types";
 import { db } from "$lib/db/db.server";
 import { worldTravelCountries } from "$lib/db/schema";
 
-export const load: PageServerLoad = async (event) => {
-  if (!event.locals.user) {
-    return redirect(302, "/login");
-  }
+export const load: PageServerLoad = async () => {
+  // if (!event.locals.user) {
+  //   return redirect(302, "/login");
+  // }
   let response = await db
   .select()
   .from(worldTravelCountries)

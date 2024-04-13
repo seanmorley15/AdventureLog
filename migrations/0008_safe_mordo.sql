@@ -1,1 +1,0 @@
-ALTER TABLE "worldTravelCountries" ADD CONSTRAINT "worldTravelCountries_country_code_unique" UNIQUE("country_code");

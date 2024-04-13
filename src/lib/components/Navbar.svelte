@@ -70,11 +70,11 @@
       <button class="btn btn-primary my-2 md:my-0 md:mr-4" on:click={goToLog}
         >My Log</button
       >
-      <button
-        class="btn btn-primary my-2 md:my-0 md:mr-4"
-        on:click={goToWorldTravel}>World Tavel Log</button
-      >
     {/if}
+    <button
+      class="btn btn-primary my-2 md:my-0 md:mr-4"
+      on:click={goToWorldTravel}>World Tavel Log</button
+    >
     <button class="btn btn-primary my-2 md:my-0" on:click={goToFeatured}
       >Featured</button
     >

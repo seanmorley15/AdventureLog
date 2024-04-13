@@ -5,15 +5,8 @@
 
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
-  import {
-    addAdventure,
-    clearAdventures,
-    getAdventures,
-    getNextId,
-  } from "../../services/adventureService";
   import { onMount } from "svelte";
   import { exportData } from "../../services/export";
-  import { importData } from "../../services/import";
   import exportFile from "$lib/assets/exportFile.svg";
   import deleteIcon from "$lib/assets/deleteIcon.svg";
   import SucessToast from "$lib/components/SucessToast.svelte";

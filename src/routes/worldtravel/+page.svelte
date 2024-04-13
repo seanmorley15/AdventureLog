@@ -3,7 +3,6 @@
     import AdventureCard from "$lib/components/AdventureCard.svelte";
 
     export let data: any;
-    console.log(data.response);
 
     async function nav(loc: string) {
         goto(`/worldtravel/${loc}`);

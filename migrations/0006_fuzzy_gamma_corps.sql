@@ -1,1 +1,0 @@
-ALTER TABLE "worldTravelRegions" ALTER COLUMN "id" SET DATA TYPE serial;

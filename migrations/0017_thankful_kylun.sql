@@ -1,1 +1,0 @@
-ALTER TABLE "worldTravelCountries" ADD COLUMN "flag" text;

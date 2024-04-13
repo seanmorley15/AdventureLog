@@ -1,2 +1,0 @@
-ALTER TABLE "worldTravelCountries" DROP CONSTRAINT "worldTravelCountries_name_unique";--> statement-breakpoint
-ALTER TABLE "worldTravelCountries" ADD CONSTRAINT "worldTravelCountries_country_code_unique" UNIQUE("country_code");

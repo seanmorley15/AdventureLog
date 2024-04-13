@@ -1,1 +1,0 @@
-ALTER TABLE "worldTravelCountries" DROP COLUMN IF EXISTS "flag";

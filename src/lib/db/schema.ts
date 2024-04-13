@@ -67,3 +67,13 @@ export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
     .notNull()
     .references(() => worldTravelCountries.country_code),
 });
+
+export const userVisitedWorldTravel = pgTable("userVisitedWorldTravel", {
+  id: serial("id").primaryKey(),
+  userId: text("user_id")
+    .notNull()
+    .references(() => userTable.id),
+  region_id: varchar("region_id")
+    .notNull()
+    .references(() => worldTravelCountryRegions.id),
+});
