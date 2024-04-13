@@ -18,7 +18,7 @@
         on:click={() => nav(item.country_code)}
         >{item.name}
         <img
-            src={getFlag(item.country_code)}
+            src={getFlag(24, item.country_code)}
             class="inline-block -mt-1 mr-1"
             alt="Flag"
         /></button

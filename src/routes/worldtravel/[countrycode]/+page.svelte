@@ -8,7 +8,7 @@
 <h1 class="text-center text-4xl font-bold">
     Regions in {countryCodeToName(data.countrycode)}
     <img
-        src={getFlag(data.countrycode)}
+        src={getFlag(40, data.countrycode)}
         class="inline-block -mt-1 mr-1"
         alt="Flag"
     />
