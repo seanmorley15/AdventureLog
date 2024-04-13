@@ -13,5 +13,6 @@ export const load: PageServerLoad  = async ({ params, locals })  => {
     .where(eq(worldTravelCountryRegions.country_code, countrycode))
   return {
       regions : data,
+      countrycode: countrycode,
   };
 }

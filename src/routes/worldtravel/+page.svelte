@@ -1,14 +1,12 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
+    import { getFlag } from "$lib";
     import AdventureCard from "$lib/components/AdventureCard.svelte";
 
     export let data: any;
 
     async function nav(loc: string) {
         goto(`/worldtravel/${loc}`);
-    }
-    function getFlag(country: string) {
-        return `https://flagcdn.com/h24/${country}.png`;
     }
 </script>
 

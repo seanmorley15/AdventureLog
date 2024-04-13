@@ -1,4 +1,43 @@
 // place files you want to import through the `$lib` alias in this folder.
+export function countryCodeToName(countryCode: string) {
+  switch (countryCode) {
+    case "us":
+      return "United States";
+    case "de":
+      return "Germany";
+    case "fr":
+      return "France";
+    case "gb":
+      return "United Kingdom";
+    case "ar":
+      return "Argentina";
+    case "mx":
+      return "Mexico";
+    case "jp":
+      return "Japan";
+    case "cn":
+      return "China";
+    case "in":
+      return "India";
+    case "au":
+      return "Australia";
+    case "nz":
+      return "New Zealand";
+    case "za":
+      return "South Africa";
+    case "eg":
+      return "Egypt";
+    case "ca":
+      return "Canada";
+    case "br":
+      return "Brazil";
+  }
+}
+
+export function getFlag(country: string) {
+  return `https://flagcdn.com/h24/${country}.png`;
+}
+    
 export function generateRandomString() {
   let randomString = "";
   const digits =

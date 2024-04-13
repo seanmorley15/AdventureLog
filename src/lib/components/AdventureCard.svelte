@@ -6,10 +6,10 @@
 
   export let type: String;
 
-  export let name: String;
-  export let location: String;
-  export let created: string;
-  export let id: Number;
+  export let name: String | undefined = undefined;
+  export let location: String | undefined = undefined;
+  export let created: String | undefined = undefined;
+  export let id: Number | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -100,6 +100,19 @@
           />{created}
         </p>
       {/if}
+    </div>
+  </div>
+{/if}
+
+{#if type === "worldtravelregion"}
+  <div
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+  >
+    <div class="card-body">
+      <h2 class="card-title overflow-ellipsis">{name}</h2>
+      <div class="card-actions justify-end">
+        <button class="btn btn-primary">Mark Visited</button>
+      </div>
     </div>
   </div>
 {/if}
