@@ -9,8 +9,22 @@ wait_for_db() {
     echo "Database is now available."
 }
 
+# Function to run SQL scripts
+run_sql_scripts() {
+    echo "Running SQL scripts..."
+
+    # Define the path to your SQL scripts
+    SQL_SCRIPTS_PATH="/sql"  # Replace with the path to your SQL scripts
+
+    # Run each SQL script in the directory using the DATABASE_URL
+    for sql_script in "$SQL_SCRIPTS_PATH"/*.sql; do
+        echo "Running script: $sql_script"
+        psql "$DATABASE_URL" -f "$sql_script"
+    done
+    echo "Finished running SQL scripts."
+}
+
 # Start your application here
-# Example: node build/index.js
 # Print message
 echo "Starting AdventureLog"
 
@@ -18,11 +32,14 @@ echo "Starting AdventureLog"
 wait_for_db
 
 # generate the schema
-npm run generate
+# npm run generate
 
 # Run database migration
 npm run migrate
 
-echo "The orgin to be set is: $ORIGIN"
+# Run SQL scripts
+run_sql_scripts
+
+echo "The origin to be set is: $ORIGIN"
 # Start the application
 ORIGIN=$ORIGIN node build

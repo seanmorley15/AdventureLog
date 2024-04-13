@@ -35,7 +35,7 @@
 <div class="flex justify-center mt-12 mr-25 ml-25">
   <blockquote class="w-80 text-center text-lg break-words">
     {#if quote != ""}
-      "{quote}"
+      {quote}
     {/if}
     <!-- <footer class="text-sm">- Steve Jobs</footer> -->
   </blockquote>

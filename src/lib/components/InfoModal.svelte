@@ -50,7 +50,7 @@
         class="text-primary-500 underline">Source Code</a
       >
     </p>
-    <p class="py-1">Made with ❤️ in Connecticut.</p>
+    <p class="py-1">Made with ❤️ in the United States.</p>
     <div
       class="modal-action items-center"
       style="display: flex; flex-direction: column; align-items: center; width: 100%;"
