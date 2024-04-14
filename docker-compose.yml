@@ -9,6 +9,8 @@ services:
       - ORIGIN=http://localhost:3000
     depends_on:
       - db
+    volumes:
+    - ./sql:/sql
   db:
     image: postgres
     environment:
