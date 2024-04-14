@@ -1,6 +1,9 @@
 <script lang="ts">
+    import { createEventDispatcher } from "svelte";
+    const dispatch = createEventDispatcher();
     function handleStateClick(stateCode: String) {
         console.log(`Clicked on ${stateCode}`);
+        dispatch("marked", stateCode);
     }
 </script>
 
@@ -12,6 +15,7 @@
     version="1.1"
     width="1200"
     height="600"
+    fill="#ffffff"
 >
     <defs id="defs282" />
     <g id="viewport">

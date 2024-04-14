@@ -5,6 +5,7 @@
     import { getFlag } from "$lib";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import Us from "$lib/components/maps/US.svelte";
 
     let viewType: String = "cards";
 
@@ -100,4 +101,8 @@
     </div>
 {/if}
 
-{#if viewType == "map"}{/if}
+{#if viewType == "map"}
+    {#if data.countrycode.toLowerCase() == "us"}
+        <Us on:marked={markVisited} />
+    {/if}
+{/if}
