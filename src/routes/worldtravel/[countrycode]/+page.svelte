@@ -15,6 +15,7 @@
             },
             body: JSON.stringify({
                 region_id: event.detail,
+                country_code: data.countrycode,
             }),
         }).then((response) => {
             if (response.status === 401) {

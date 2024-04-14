@@ -70,6 +70,9 @@ export const worldTravelCountryRegions = pgTable("worldTravelCountryRegions", {
 
 export const userVisitedWorldTravel = pgTable("userVisitedWorldTravel", {
   id: serial("id").primaryKey(),
+  country_code: text("country_code")
+    .notNull()
+    .references(() => worldTravelCountries.country_code),
   userId: text("user_id")
     .notNull()
     .references(() => userTable.id),
