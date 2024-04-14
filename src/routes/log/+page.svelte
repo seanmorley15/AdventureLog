@@ -6,7 +6,6 @@
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types";
   import { onMount } from "svelte";
-  import { exportData } from "../../services/export";
   import exportFile from "$lib/assets/exportFile.svg";
   import deleteIcon from "$lib/assets/deleteIcon.svg";
   import SucessToast from "$lib/components/SucessToast.svelte";
@@ -46,6 +45,18 @@
       isShowingToast = false;
       toastAction = "";
     }, 3000);
+  }
+
+  function exportData() {
+    let jsonString = JSON.stringify(adventures);
+    let blob = new Blob([jsonString], { type: "application/json" });
+    let url = URL.createObjectURL(blob);
+
+    let link = document.createElement("a");
+    link.download = "data.json";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   const createNewAdventure = () => {
@@ -290,12 +301,7 @@
   <div
     class="flex flex-row items-center justify-center mt-2 gap-4 mb-4 flex-wrap"
   >
-    <button
-      class="btn btn-neutral"
-      on:click={async () => {
-        window.location.href = exportData();
-      }}
-    >
+    <button class="btn btn-neutral" on:click={exportData}>
       <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
     <button class="btn btn-neutral" on:click={deleteData}>

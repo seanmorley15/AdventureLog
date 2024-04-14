@@ -128,7 +128,7 @@
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       <p>{regionId}</p>
       <div class="card-actions justify-end">
-        <button class="btn btn-info" on:click={moreInfo}>More Info</button>
+        <!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
         {#if !visited}
           <button class="btn btn-primary" on:click={markVisited}
             >Mark Visited</button
