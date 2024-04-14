@@ -6,6 +6,8 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
 
+    let viewType: String = "cards";
+
     function markVisited(event: { detail: string }) {
         console.log(`Marked ${event.detail} as visited`);
         fetch("/api/regionvisit", {
@@ -43,6 +45,10 @@
         });
     }
 
+    function setViewType(type: String) {
+        viewType = type;
+    }
+
     onMount(() => {
         console.log(data.visitedRegions);
     });
@@ -57,19 +63,41 @@
     />
 </h1>
 
-<div
-    class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
->
-    {#each data.regions as region (region.id)}
-        <AdventureCard
-            type="worldtravelregion"
-            regionId={region.id}
-            name={region.name}
-            on:markVisited={markVisited}
-            visited={data.visitedRegions.some(
-                (visitedRegion) => visitedRegion.region_id === region.id,
-            )}
-            on:removeVisit={removeVisit}
-        />
-    {/each}
+<div class="join items-center justify-center flex">
+    <input
+        class="join-item btn btn-neutral"
+        type="radio"
+        name="viewtype"
+        checked
+        aria-label="Cards"
+        on:click={() => setViewType("cards")}
+    />
+    <input
+        class="join-item btn btn-neutral"
+        type="radio"
+        name="viewtype"
+        aria-label="Map"
+        on:click={() => setViewType("map")}
+    />
 </div>
+
+{#if viewType == "cards"}
+    <div
+        class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
+    >
+        {#each data.regions as region (region.id)}
+            <AdventureCard
+                type="worldtravelregion"
+                regionId={region.id}
+                name={region.name}
+                on:markVisited={markVisited}
+                visited={data.visitedRegions.some(
+                    (visitedRegion) => visitedRegion.region_id === region.id,
+                )}
+                on:removeVisit={removeVisit}
+            />
+        {/each}
+    </div>
+{/if}
+
+{#if viewType == "map"}{/if}
