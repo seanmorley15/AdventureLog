@@ -2,6 +2,7 @@
   import { createEventDispatcher } from "svelte";
   import locationDot from "$lib/assets/locationDot.svg";
   import calendar from "$lib/assets/calendar.svg";
+  import { goto } from "$app/navigation";
   const dispatch = createEventDispatcher();
 
   export let type: String;
@@ -12,6 +13,7 @@
   export let id: Number | undefined = undefined;
   export let regionId: String | undefined = undefined;
   export let visited: Boolean | undefined = undefined;
+  export let countryCode: String | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -29,6 +31,10 @@
   function removeVisit() {
     dispatch("removeVisit", regionId);
     visited = false;
+  }
+
+  function moreInfo() {
+    goto(`/worldtravel/${countryCode}/${regionId}`);
   }
 </script>
 
@@ -122,6 +128,7 @@
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       <p>{regionId}</p>
       <div class="card-actions justify-end">
+        <button class="btn btn-info" on:click={moreInfo}>More Info</button>
         {#if !visited}
           <button class="btn btn-primary" on:click={markVisited}
             >Mark Visited</button

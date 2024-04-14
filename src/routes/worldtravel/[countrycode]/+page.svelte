@@ -89,6 +89,7 @@
         {#each data.regions as region (region.id)}
             <AdventureCard
                 type="worldtravelregion"
+                countryCode={data.countrycode}
                 regionId={region.id}
                 name={region.name}
                 on:markVisited={markVisited}
