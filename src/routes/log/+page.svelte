@@ -53,7 +53,7 @@
     let url = URL.createObjectURL(blob);
 
     let link = document.createElement("a");
-    link.download = "data.json";
+    link.download = "adventurelog-export.json";
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);

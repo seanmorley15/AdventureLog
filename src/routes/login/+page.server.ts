@@ -1,5 +1,5 @@
 import { lucia } from "$lib/server/auth";
-import { fail, redirect } from "@sveltejs/kit";
+import { error, fail, redirect } from "@sveltejs/kit";
 import { Argon2id } from "oslo/password";
 import { db } from "$lib/db/db.server";
 
@@ -22,8 +22,8 @@ export const actions: Actions = {
     const password = formData.get("password");
 
     if (!username || !password) {
-      return fail(400, {
-        message: "Invalid request",
+      return error(400, {
+        message: "Missing username or password",
       });
     }
 
@@ -33,7 +33,7 @@ export const actions: Actions = {
       username.length > 31 ||
       !/^[a-z0-9_-]+$/.test(username)
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid username",
       });
     }
@@ -42,7 +42,7 @@ export const actions: Actions = {
       password.length < 6 ||
       password.length > 255
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid password",
       });
     }
@@ -55,7 +55,7 @@ export const actions: Actions = {
       .then((results) => results[0] as unknown as DatabaseUser | undefined);
 
     if (!existingUser) {
-      return fail(400, {
+      return error(400, {
         message: "Incorrect username or password",
       });
     }
@@ -65,7 +65,7 @@ export const actions: Actions = {
       password
     );
     if (!validPassword) {
-      return fail(400, {
+      return error(400, {
         message: "Incorrect username or password",
       });
     }
@@ -78,5 +78,6 @@ export const actions: Actions = {
     });
 
     return redirect(302, "/");
+
   },
 };
