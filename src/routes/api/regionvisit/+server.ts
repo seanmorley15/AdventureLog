@@ -18,6 +18,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
     .values({
         userId: event.locals.user.id,
         region_id: body.region_id,
+        country_code: body.country_code,
     })
     .execute();
     return new Response(JSON.stringify({ res: res }), {

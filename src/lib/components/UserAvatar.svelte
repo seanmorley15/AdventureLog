@@ -37,8 +37,8 @@
     <li><a>Profile</a></li>
     <li><button on:click={navToLog}>My Log</button></li>
     <li><button on:click={navToSettings}>Settings</button></li>
-    <form method="post" action="/" use:enhance>
-      <li><button>Logout</button></li>
+    <form method="post">
+      <li><button formaction="/?/logout">Logout</button></li>
     </form>
   </ul>
 </div>

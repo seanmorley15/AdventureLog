@@ -1,7 +1,8 @@
 import { lucia } from "$lib/server/auth";
 import type { Handle } from "@sveltejs/kit";
+import { sequence } from '@sveltejs/kit/hooks';
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const authHook: Handle = async ({ event, resolve }) => {
   const sessionId = event.cookies.get(lucia.sessionCookieName);
   if (!sessionId) {
     event.locals.user = null;
@@ -20,7 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     });
   }
   if (!session) {
-    const sessionCookie = lucia.createBlankSessionCookie();
+    const sessionCookie:any = lucia.createBlankSessionCookie();
     event.cookies.set(sessionCookie.name, sessionCookie.value, {
       path: ".",
       ...sessionCookie.attributes,
@@ -30,3 +31,26 @@ export const handle: Handle = async ({ event, resolve }) => {
   event.locals.session = session;
   return resolve(event);
 };
+
+export const themeHook: Handle = async ({ event, resolve }) => {
+  let theme:String | null = null;
+
+  const newTheme = event.url.searchParams.get("theme");
+  const cookieTheme = event.cookies.get("colortheme");
+
+  if(newTheme) {
+    theme = newTheme;
+  } else if (cookieTheme) {
+    theme = cookieTheme;
+  }
+  if (theme) {
+    return await resolve(event, {
+      transformPageChunk: ({ html }) =>
+        html.replace('data-theme=""', `data-theme="${theme}"`)
+    })
+  }
+
+  return await resolve(event);
+}
+
+export const handle = sequence(authHook, themeHook);

@@ -8,6 +8,7 @@
   import { onMount } from "svelte";
   import InfoModal from "./InfoModal.svelte";
   import infoIcon from "$lib/assets/info.svg";
+  import type { SubmitFunction } from "@sveltejs/kit";
   async function goHome() {
     goto("/");
   }
@@ -26,6 +27,13 @@
   async function goToWorldTravel() {
     goto("/worldtravel");
   }
+
+  const submitUpdateTheme: SubmitFunction = ({ action }) => {
+    const theme = action.searchParams.get("theme");
+    if (theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+    }
+  };
 
   let count = 0;
 
@@ -97,5 +105,22 @@
       <UserAvatar {user} />
     {/if}
     <button class="btn btn-neutral ml-4" on:click={showModal}>About</button>
+    <div class="dropdown dropdown-bottom dropdown-end">
+      <div tabindex="0" role="button" class="btn m-1 ml-4">Themes</div>
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+      <ul
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
+      >
+        <form method="POST" use:enhance={submitUpdateTheme}>
+          <li><button formaction="/?/setTheme&theme=light">Light</button></li>
+          <li><button formaction="/?/setTheme&theme=dark">Dark</button></li>
+          <li><button formaction="/?/setTheme&theme=night">Night</button></li>
+          <!-- <li><button formaction="/?/setTheme&theme=nord">Nord</button></li> -->
+          <!-- <li><button formaction="/?/setTheme&theme=retro">Retro</button></li> -->
+          <li><button formaction="/?/setTheme&theme=forest">Forest</button></li>
+        </form>
+      </ul>
+    </div>
   </div>
 </div>
