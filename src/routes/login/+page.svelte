@@ -17,7 +17,7 @@
     });
 
     if (response.ok) {
-      // wait .5s before redirecting
+      errors = {};
       goto("/login");
       return;
     }

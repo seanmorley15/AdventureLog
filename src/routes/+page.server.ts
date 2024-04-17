@@ -3,7 +3,7 @@ import { fail, redirect } from "@sveltejs/kit";
 
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = async (event) => {
+export const load: PageServerLoad = async (event: { locals: { user: any; }; }) => {
   if (event.locals.user)
     return {
       user: event.locals.user,
@@ -15,7 +15,7 @@ export const load: PageServerLoad = async (event) => {
 
 // handle the logout action
 export const actions: Actions = {
-  default: async (event) => {
+  logout: async (event) => {
     if (!event.locals.session) {
       return fail(401);
     }
@@ -27,5 +27,14 @@ export const actions: Actions = {
       ...sessionCookie.attributes,
     });
     return redirect(302, "/login");
+  },
+  setTheme: async ( { url, cookies }) => {
+    const theme = url.searchParams.get("theme");
+    if (theme) {
+      cookies.set("colortheme", theme, {
+        path: "/",
+        maxAge: 60 * 60 * 24 * 365,
+      });
+    }
   },
 };
