@@ -107,6 +107,9 @@
         <form method="POST">
           <li><button formaction="/?/setTheme&theme=light">Light</button></li>
           <li><button formaction="/?/setTheme&theme=dark">Dark</button></li>
+          <li><button formaction="/?/setTheme&theme=night">Night</button></li>
+          <!-- <li><button formaction="/?/setTheme&theme=retro">Retro</button></li> -->
+          <li><button formaction="/?/setTheme&theme=forest">Forest</button></li>
         </form>
       </ul>
     </div>

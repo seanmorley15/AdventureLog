@@ -55,7 +55,7 @@
 </div>
 
 {#if errors.message}
-  <div class="text-center text-red-500 mt-4">
+  <div class="text-center text-error mt-4">
     {errors.message}
   </div>
 {/if}

@@ -40,7 +40,7 @@
 
 {#if type === "mylog"}
   <div
-    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
@@ -72,7 +72,7 @@
 
 {#if type === "featured"}
   <div
-    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
@@ -94,7 +94,7 @@
 
 {#if type === "shared"}
   <div
-    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
@@ -122,7 +122,7 @@
 
 {#if type === "worldtravelregion"}
   <div
-    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral shadow-xl overflow-hidden"
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>

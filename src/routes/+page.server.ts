@@ -30,7 +30,8 @@ export const actions: Actions = {
   },
   setTheme: async ( { url, cookies }) => {
     const theme = url.searchParams.get("theme");
-    if (theme) {
+    // change the theme only if it is one of the allowed themes
+    if (theme && ["light", "dark", "night", "retro", "forest"].includes(theme)) {
       cookies.set("colortheme", theme, {
         path: "/",
         maxAge: 60 * 60 * 24 * 365,
