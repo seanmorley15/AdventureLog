@@ -2,8 +2,8 @@
   export let data;
   import Footer from "$lib/components/Footer.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
+  import type { SubmitFunction } from "@sveltejs/kit";
   import "../app.css";
-  // only show footer if scrolled to the bottom
 </script>
 
 <!-- passes the user object to the navbar component -->
