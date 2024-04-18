@@ -40,6 +40,7 @@
   "dependencies": {
     "@lucia-auth/adapter-drizzle": "^1.0.7",
     "@vercel/analytics": "^1.2.2",
+    "@vercel/speed-insights": "^1.0.10",
     "drizzle-orm": "^0.30.6",
     "oslo": "^1.2.0",
     "postgres": "^3.4.4"
