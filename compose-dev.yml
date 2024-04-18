@@ -1,0 +1,13 @@
+services:
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=
+      # ORIGIN is only necessary when not using a reverse proxy or hosting that includes https
+      - ORIGIN=http://localhost:3000
+      - SKIP_DB_WAIT=true
+      # Only necessary for externaly hosted databases such as NeonDB
+    volumes:
+    - ./sql:/sql
