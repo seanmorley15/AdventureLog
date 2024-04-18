@@ -36,7 +36,12 @@
     <p class="text-lg ml-4 font-bold">Hi, {user.first_name} {user.last_name}</p>
     <li><a>Profile</a></li>
     <li><button on:click={navToLog}>My Log</button></li>
-    <li><button on:click={navToSettings}>Settings</button></li>
+    <li><button on:click={navToSettings}>User Settings</button></li>
+    {#if user.role == "admin"}
+      <li>
+        <button on:click={() => goto("/settings/admin")}>Admin Settings</button>
+      </li>
+    {/if}
     <form method="post">
       <li><button formaction="/?/logout">Logout</button></li>
     </form>

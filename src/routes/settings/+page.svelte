@@ -1,5 +1,6 @@
 <script>
     import { enhance } from "$app/forms";
+    import AdventureCard from "$lib/components/AdventureCard.svelte";
 
     export let data;
     let username = data.user?.username;
@@ -14,7 +15,6 @@
 <h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
 
 <h1 class="text-center font-extrabold text-xl">User Account Settings</h1>
-
 <div class="flex justify-center">
     <form method="post" use:enhance class="w-full max-w-xs">
         <label for="username">Username</label>
