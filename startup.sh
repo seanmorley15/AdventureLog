@@ -35,7 +35,7 @@ if [ -z "$SKIP_DB_WAIT" ] || [ "$SKIP_DB_WAIT" = "false" ]; then
 fi
 
 # Wait for the database to start up
-setup_admin_user
+
 
 # generate the schema
 # npm run generate
