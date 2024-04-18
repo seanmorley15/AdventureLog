@@ -7,6 +7,8 @@
     let last_name = data.user?.last_name;
     let user_id = data.user?.id;
     let icon = data.user?.icon;
+    let signup_date = data.user?.signup_date;
+    let role = data.user?.role;
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
@@ -65,4 +67,6 @@
     </form>
 </div>
 
-<small class="text-center">For Debug Use: UUID={user_id}</small>
+<small class="text-center"
+    ><b>For Debug Use:</b> UUID={user_id} Signup Date={signup_date} Role={role}</small
+>

@@ -28,6 +28,15 @@ export const userTable = pgTable("user", {
   last_name: text("last_name").notNull(),
   icon: text("icon"),
   hashed_password: varchar("hashed_password").notNull(),
+  signup_date: timestamp("signup_date", {
+    withTimezone: true,
+    mode: "date",
+  }).notNull(),
+  last_login: timestamp("last_login", {
+    withTimezone: true,
+    mode: "date",
+  }),
+  role: text("role").notNull(),
 });
 
 // export type SelectUser = typeof userTable.$inferSelect;

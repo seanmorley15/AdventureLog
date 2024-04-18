@@ -47,7 +47,7 @@ export const actions: Actions = {
       });
     }
 
-    const existingUser = await db
+    const existingUser:any = await db
       .select()
       .from(userTable)
       .where(eq(userTable.username, username))
@@ -69,6 +69,14 @@ export const actions: Actions = {
         message: "Incorrect username or password",
       });
     }
+
+    await db
+      .update(userTable)
+      .set({
+        last_login: new Date(),
+      })
+      .where(eq(userTable.id, existingUser.id))
+      .execute();
 
     const session = await lucia.createSession(existingUser.id, {});
     const sessionCookie = lucia.createSessionCookie(session.id);

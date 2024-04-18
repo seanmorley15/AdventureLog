@@ -90,6 +90,9 @@ export const actions: Actions = {
         first_name: firstName,
         last_name: lastName,
         hashed_password: hashedPassword,
+        signup_date: new Date(),
+        role: "user",
+        last_login: new Date(),
       } as DatabaseUser)
       .execute();
 

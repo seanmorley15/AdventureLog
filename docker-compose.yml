@@ -7,6 +7,8 @@ services:
       - DATABASE_URL=postgres://adventurelog:PO24VjITwGgk@db:5432/adventurelog
       # ORIGIN is only necessary when not using a reverse proxy or hosting that includes https
       - ORIGIN=http://localhost:3000
+      - SKIP_DB_WAIT=false
+      # Only necessary for externaly hosted databases such as NeonDB
     depends_on:
       - db
     volumes:
