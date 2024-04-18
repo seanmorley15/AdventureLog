@@ -11,3 +11,5 @@ services:
       # Only necessary for externaly hosted databases such as NeonDB
     volumes:
     - ./sql:/sql
+
+# docker compose -f ./compose-dev.yml up --build

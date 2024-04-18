@@ -1,6 +1,9 @@
 import { lucia } from "$lib/server/auth";
-import type { Handle } from "@sveltejs/kit";
+import { redirect, type Handle } from "@sveltejs/kit";
 import { sequence } from '@sveltejs/kit/hooks';
+import { db } from "$lib/db/db.server";
+import { userTable } from "$lib/db/schema";
+import { eq } from "drizzle-orm";
 
 export const authHook: Handle = async ({ event, resolve }) => {
   const sessionId = event.cookies.get(lucia.sessionCookieName);
@@ -53,4 +56,27 @@ export const themeHook: Handle = async ({ event, resolve }) => {
   return await resolve(event);
 }
 
-export const handle = sequence(authHook, themeHook);
+export const setupAdminUser: Handle = async ({ event, resolve }) => {
+  // Check if an admin user exists
+  /* let result = await db
+    .select()
+    .from(userVisitedAdventures)
+    .where(eq(userVisitedAdventures.userId, event.locals.user.id))
+    .execute();*/
+  let adminUser = await db
+  .select()
+  .from(userTable)
+  .where(eq(userTable.role, 'admin'))
+  .execute();
+  // If an admin user exists, return the resolved event
+  if (adminUser != null && adminUser.length > 0) {
+    event.locals.isServerSetup = true;
+    return await resolve(event);
+  }
+
+  console.log("No admin user found");
+  event.locals.isServerSetup = false;
+  return await resolve(event);
+};
+
+export const handle = sequence(setupAdminUser, authHook, themeHook);
