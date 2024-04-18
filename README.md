@@ -10,5 +10,7 @@ _**⚠️ AdventureLog is in early development and is not recommended for produc
 2. Edit the `docker-compose.yml` file and change the database password
 3. Run `docker compose up -d` to build the image and start the container
 4. Wait for the app to start up and migrate then visit the port and enjoy!
+5. After navigating to the app, fill out the form to create the admin user.
+
 **Note**: The `ORIGIN` variable is required for CSRF protection. It can be omitted if using a reverse proxy or other HTTPS service.
 

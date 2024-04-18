@@ -24,12 +24,18 @@ run_sql_scripts() {
     echo "Finished running SQL scripts."
 }
 
+
 # Start your application here
 # Print message
 echo "Starting AdventureLog"
 
 # Wait for the database to start up
-wait_for_db
+if [ -z "$SKIP_DB_WAIT" ] || [ "$SKIP_DB_WAIT" = "false" ]; then
+    wait_for_db
+fi
+
+# Wait for the database to start up
+
 
 # generate the schema
 # npm run generate

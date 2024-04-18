@@ -4,6 +4,7 @@ import { db } from "$lib/db/db.server";
 import { userTable } from "$lib/db/schema";
 import { eq } from "drizzle-orm";
 import { Argon2id } from "oslo/password";
+import type { DatabaseUser } from "$lib/server/auth";
 
 export const load: PageServerLoad = async (event) => {
   if (event.locals.user)
@@ -38,6 +39,22 @@ export const actions: Actions = {
             status: 400,
             body: {
                 message: "Icon must be a single character"
+            }
+        };
+    }
+
+    const usernameTaken = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.username, username))
+      .limit(1)
+      .then((results) => results[0] as unknown as DatabaseUser | undefined);
+
+    if (usernameTaken) {
+        return {
+            status: 400,
+            body: {
+                message: "Username taken!"
             }
         };
     }

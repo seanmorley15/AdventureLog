@@ -82,6 +82,19 @@ export const actions: Actions = {
         message: "Username already taken",
       });
     }
+
+    let adminUser = await db
+  .select()
+  .from(userTable)
+  .where(eq(userTable.role, 'admin'))
+  .execute();
+
+    if (adminUser != null && adminUser.length > 0) {
+      return fail(400, {
+        message: "Admin user already exists",
+      });
+    }
+    
     await db
       .insert(userTable)
       .values({
@@ -91,7 +104,7 @@ export const actions: Actions = {
         last_name: lastName,
         hashed_password: hashedPassword,
         signup_date: new Date(),
-        role: "user",
+        role: "admin",
         last_login: new Date(),
       } as DatabaseUser)
       .execute();

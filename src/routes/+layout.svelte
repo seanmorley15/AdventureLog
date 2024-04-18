@@ -4,6 +4,21 @@
   import Navbar from "$lib/components/Navbar.svelte";
   import type { SubmitFunction } from "@sveltejs/kit";
   import "../app.css";
+  import { goto } from "$app/navigation";
+  import { onMount } from "svelte";
+  import { page } from "$app/stores";
+
+  let isServerSetup = data.isServerSetup;
+
+  onMount(() => {
+    console.log("isServerSetup", isServerSetup);
+    if (!isServerSetup && $page.url.pathname !== "/setup") {
+      goto("/setup");
+    }
+    if (isServerSetup && $page.url.pathname == "/setup") {
+      goto("/");
+    }
+  });
 </script>
 
 <!-- passes the user object to the navbar component -->
