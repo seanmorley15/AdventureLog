@@ -7,6 +7,13 @@
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import { page } from "$app/stores";
+  import { inject } from "@vercel/analytics";
+  import { injectSpeedInsights } from "@vercel/speed-insights/sveltekit";
+
+  if (data.usingVercel === "true") {
+    inject();
+    injectSpeedInsights();
+  }
 
   let isServerSetup = data.isServerSetup;
 
