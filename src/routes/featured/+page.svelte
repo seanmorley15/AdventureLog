@@ -51,3 +51,11 @@
     />
   {/each}
 </div>
+
+<svelte:head>
+  <title>Featured Adventures | AdventureLog</title>
+  <meta
+    name="description"
+    content="Featured Adventure Locations from around the world. Add them to your visited list!"
+  />
+</svelte:head>

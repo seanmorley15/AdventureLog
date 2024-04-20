@@ -70,3 +70,11 @@
 <small class="text-center"
   ><b>For Debug Use:</b> UUID={user_id} Signup Date={signup_date} Role={role}</small
 >
+
+<svelte:head>
+  <title>User Settings | AdventureLog</title>
+  <meta
+    name="description"
+    content="Update your user account settings here. Change your username, first name, last name, and profile icon."
+  />
+</svelte:head>

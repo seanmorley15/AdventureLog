@@ -54,3 +54,11 @@
 </div>
 
 <!-- username first last pass -->
+
+<svelte:head>
+  <title>Signup | AdventureLog</title>
+  <meta
+    name="description"
+    content="Signup for AdventureLog to start logging your adventures!"
+  />
+</svelte:head>;
