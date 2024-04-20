@@ -84,17 +84,17 @@ export const actions: Actions = {
     }
 
     let adminUser = await db
-  .select()
-  .from(userTable)
-  .where(eq(userTable.role, 'admin'))
-  .execute();
+      .select()
+      .from(userTable)
+      .where(eq(userTable.role, "admin"))
+      .execute();
 
     if (adminUser != null && adminUser.length > 0) {
       return fail(400, {
         message: "Admin user already exists",
       });
     }
-    
+
     await db
       .insert(userTable)
       .values({

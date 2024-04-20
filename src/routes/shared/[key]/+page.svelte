@@ -29,3 +29,11 @@
     />
   {/each}
 </div>
+
+<svelte:head>
+  <title>Shared List by {data.name} | AdventureLog</title>
+  <meta
+    name="description"
+    content="Shared Adventure List from around the world. Add them to your visited list!"
+  />
+</svelte:head>

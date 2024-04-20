@@ -68,3 +68,11 @@
     <!-- <footer class="text-sm">- Steve Jobs</footer> -->
   </blockquote>
 </div>
+
+<svelte:head>
+  <title>Login | AdventureLog</title>
+  <meta
+    name="description"
+    content="Login to your AdventureLog account to start logging your adventures!"
+  />
+</svelte:head>

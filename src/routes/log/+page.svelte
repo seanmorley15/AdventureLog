@@ -117,7 +117,7 @@
         console.log("Success:", data);
         // update local array with new data
         adventures = adventures.map((adventure) =>
-          adventure.id === event.detail.id ? event.detail : adventure,
+          adventure.id === event.detail.id ? event.detail : adventure
         );
         editId = NaN;
         editName = "";
@@ -132,7 +132,7 @@
 
   function editAdventure(event: { detail: number }) {
     const adventure = adventures.find(
-      (adventure) => adventure.id === event.detail,
+      (adventure) => adventure.id === event.detail
     );
     if (adventure) {
       editId = adventure.id;
@@ -206,7 +206,7 @@
         console.log("Success:", data);
         // remove adventure from array where id matches
         adventures = adventures.filter(
-          (adventure) => adventure.id !== event.detail,
+          (adventure) => adventure.id !== event.detail
         );
         showToast("Adventure removed successfully!");
         visitCount.update((n) => n - 1);
@@ -312,3 +312,11 @@
     </button>
   </div>
 {/if}
+
+<svelte:head>
+  <title>My Log | AdventureLog</title>
+  <meta
+    name="description"
+    content="Displays the user's visited adventure locations."
+  />
+</svelte:head>
