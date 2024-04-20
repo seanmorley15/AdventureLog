@@ -45,22 +45,16 @@
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       {#if location !== ""}
-        <p>
-          <img
-            src={locationDot}
-            class="inline-block -mt-1 mr-1"
-            alt="Logo"
-          />{location}
-        </p>
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
+          <p class="ml-.5">{location}</p>
+        </div>
       {/if}
       {#if created !== ""}
-        <p>
-          <img
-            src={calendar}
-            class="inline-block -mt-1 mr-1"
-            alt="Logo"
-          />{created}
-        </p>
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
+          <p class="ml-1">{created}</p>
+        </div>
       {/if}
       <div class="card-actions justify-end">
         <button class="btn btn-primary" on:click={edit}>Edit</button>
@@ -77,13 +71,10 @@
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       {#if location != ""}
-        <p>
-          <img
-            src={locationDot}
-            class="inline-block -mt-1 mr-1"
-            alt="Logo"
-          />{location}
-        </p>
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
+          <p class="ml-.5">{location}</p>
+        </div>
       {/if}
       <div class="card-actions justify-end">
         <button class="btn btn-primary" on:click={add}>Add</button>
@@ -99,22 +90,16 @@
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
       {#if location !== ""}
-        <p>
-          <img
-            src={locationDot}
-            class="inline-block -mt-1 mr-1"
-            alt="Logo"
-          />{location}
-        </p>
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
+          <p class="ml-.5">{location}</p>
+        </div>
       {/if}
       {#if created !== ""}
-        <p>
-          <img
-            src={calendar}
-            class="inline-block -mt-1 mr-1"
-            alt="Logo"
-          />{created}
-        </p>
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
+          <p class="ml-1">{created}</p>
+        </div>
       {/if}
     </div>
   </div>

@@ -9,6 +9,7 @@
   import { page } from "$app/stores";
   import { inject } from "@vercel/analytics";
   import { injectSpeedInsights } from "@vercel/speed-insights/sveltekit";
+  import "iconify-icon";
 
   if (data.usingVercel === "true") {
     inject();
