@@ -1,6 +1,5 @@
 <script lang="ts">
   export let data;
-  console.log(data.result);
   import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import { visitCount } from "$lib/utils/stores/visitCountStore.js";

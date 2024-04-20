@@ -104,21 +104,55 @@
       <p class="font-bold">Adventures: {count}</p>
       <UserAvatar {user} />
     {/if}
-    <button class="btn btn-neutral ml-4" on:click={showModal}>About</button>
+    <button class="btn btn-neutral ml-4 btn-circle" on:click={showModal}
+      ><iconify-icon icon="mdi:information" class="text-xl"
+      ></iconify-icon></button
+    >
     <div class="dropdown dropdown-bottom dropdown-end">
-      <div tabindex="0" role="button" class="btn m-1 ml-4">Themes</div>
+      <div tabindex="0" role="button" class="btn m-1 ml-4">
+        <iconify-icon icon="mdi:theme-light-dark" class="text-xl"
+        ></iconify-icon>
+      </div>
       <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <ul
         tabindex="0"
         class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
       >
         <form method="POST" use:enhance={submitUpdateTheme}>
-          <li><button formaction="/?/setTheme&theme=light">Light</button></li>
-          <li><button formaction="/?/setTheme&theme=dark">Dark</button></li>
-          <li><button formaction="/?/setTheme&theme=night">Night</button></li>
+          <li>
+            <button formaction="/?/setTheme&theme=light"
+              >Light<iconify-icon icon="mdi:weather-sunny" class="text-xl"
+              ></iconify-icon></button
+            >
+          </li>
+          <li>
+            <button formaction="/?/setTheme&theme=dark"
+              >Dark<iconify-icon icon="mdi:weather-night" class="text-xl"
+              ></iconify-icon></button
+            >
+          </li>
+          <li>
+            <button formaction="/?/setTheme&theme=night"
+              >Night<iconify-icon icon="mdi:weather-night" class="text-xl"
+              ></iconify-icon></button
+            >
+          </li>
           <!-- <li><button formaction="/?/setTheme&theme=nord">Nord</button></li> -->
           <!-- <li><button formaction="/?/setTheme&theme=retro">Retro</button></li> -->
-          <li><button formaction="/?/setTheme&theme=forest">Forest</button></li>
+          <li>
+            <button formaction="/?/setTheme&theme=forest"
+              >Forest<iconify-icon icon="mdi:forest" class="text-xl"
+              ></iconify-icon></button
+            >
+            <button formaction="/?/setTheme&theme=garden"
+              >Garden<iconify-icon icon="mdi:flower" class="text-xl"
+              ></iconify-icon></button
+            >
+            <button formaction="/?/setTheme&theme=aqua"
+              >Aqua<iconify-icon icon="mdi:water" class="text-xl"
+              ></iconify-icon></button
+            >
+          </li>
         </form>
       </ul>
     </div>

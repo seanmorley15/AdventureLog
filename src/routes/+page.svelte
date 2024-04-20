@@ -22,7 +22,7 @@
   {/if}
 
   <img src={campingDrawing} class="w-1/4 mb-4" alt="Logo" />
-  <button on:click={navToLog} class="btn btn-primary">Open Log</button>
+  <button on:click={navToLog} class="btn btn-primary mb-4">Open Log</button>
 
   <div class="stats shadow">
     <div class="stat">
