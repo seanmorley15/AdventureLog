@@ -1,5 +1,8 @@
 import type { LayoutServerLoad, PageServerLoad } from "./$types";
-import { USING_VERCEL } from "$env/static/private";
+let USING_VERCEL: string;
+try {
+  USING_VERCEL = require("$env/static/private").USING_VERCEL;
+} catch (error) {}
 
 export const load: LayoutServerLoad = async (event) => {
   if (event.locals.user) {

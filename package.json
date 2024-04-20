@@ -25,7 +25,7 @@
     "autoprefixer": "^10.4.19",
     "daisyui": "^4.9.0",
     "dotenv": "^16.4.5",
-    "drizzle-kit": "^0.20.14",
+    "drizzle-kit": "^0.20.16",
     "lucia": "^3.1.1",
     "pg": "^8.11.5",
     "postcss": "^8.4.38",
