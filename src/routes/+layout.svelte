@@ -19,7 +19,6 @@
   let isServerSetup = data.isServerSetup;
 
   onMount(() => {
-    console.log("isServerSetup", isServerSetup);
     if (!isServerSetup && $page.url.pathname !== "/setup") {
       goto("/setup");
     }
