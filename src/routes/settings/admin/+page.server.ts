@@ -14,7 +14,6 @@ export const load: PageServerLoad = async (event) => {
   }
   if (event.locals.user.role === "admin") {
     users = (await db.select().from(userTable).execute()) as DatabaseUser[];
-    console.log(users);
   }
   return {
     users,
@@ -28,7 +27,7 @@ export const actions: Actions = {
         message: "You are not authorized to perform this action",
       });
     } else {
-      console.log("ALL SESSIONS CLEARED");
+      console.log("ALL SESSIONS CLEARED by " + event.locals.user?.username);
       await db.delete(sessionTable).execute();
       return {
         status: 200,

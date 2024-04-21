@@ -12,6 +12,27 @@
   let first_name: string = "";
   let last_name: string = "";
   let password: string = "";
+  import ConfirmModal from "$lib/components/ConfirmModal.svelte";
+
+  let isModalOpen = false;
+
+  async function clearAllSessions() {
+    await fetch("?/clearAllSessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(),
+    });
+    window.location.reload();
+  }
+
+  function openModal() {
+    isModalOpen = true;
+  }
+  function closeModal() {
+    isModalOpen = false;
+  }
 
   const addUser: SubmitFunction = async ({ formData, action, cancel }) => {
     const response = await fetch(action, {
@@ -95,22 +116,30 @@
   </div>
 {/if}
 
-<h2 class="text-center font-extrabold text-2xl">Session Managment</h2>
+<h2 class="text-center font-extrabold text-2xl mb-2">Session Managment</h2>
 <div class="flex justify-center items-center">
-  <form use:enhance method="POST" action="?/clearAllSessions">
-    <input
-      type="submit"
-      class="btn btn-warning"
-      value="Clear All Users Sessions"
-    />
-  </form>
+  <button on:click={openModal} class="btn btn-warning mb-4"
+    >Clear All Users Sessions</button
+  >
 </div>
 
 <h2 class="text-center font-extrabold text-2xl">User Managment</h2>
-<div class="text-center">
+<div
+  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
+>
   {#each $page.data.users as user}
     <div>
       <UserCard {user} />
     </div>
   {/each}
 </div>
+
+{#if isModalOpen}
+  <ConfirmModal
+    on:close={closeModal}
+    on:confirm={clearAllSessions}
+    title="Clear All Sessions"
+    isWarning={true}
+    message="Are you sure you want to clear all user sessions?"
+  />
+{/if}
