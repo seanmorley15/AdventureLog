@@ -23,7 +23,7 @@ export const actions: Actions = {
 
     // check all to make sure all fields are provided
     if (!username || !password || !firstName || !lastName) {
-      return fail(400, {
+      return error(400, {
         message: "All fields are required",
       });
     }
@@ -43,7 +43,7 @@ export const actions: Actions = {
       username.length > 31 ||
       !/^[a-z0-9_-]+$/.test(username)
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid username",
       });
     }
@@ -52,7 +52,7 @@ export const actions: Actions = {
       password.length < 6 ||
       password.length > 255
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid password",
       });
     }
@@ -62,7 +62,7 @@ export const actions: Actions = {
       firstName.length < 1 ||
       firstName.length > 255
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid first name",
       });
     }
@@ -72,13 +72,10 @@ export const actions: Actions = {
       lastName.length < 1 ||
       lastName.length > 255
     ) {
-      return fail(400, {
+      return error(400, {
         message: "Invalid last name",
       });
     }
-
-    const userId = generateId(15);
-    const hashedPassword = await new Argon2id().hash(password);
 
     const usernameTaken = await db
       .select()
@@ -88,10 +85,14 @@ export const actions: Actions = {
       .then((results) => results[0] as unknown as DatabaseUser | undefined);
 
     if (usernameTaken) {
-      return fail(400, {
+      return error(400, {
         message: "Username already taken",
       });
     }
+
+    const userId = generateId(15);
+    const hashedPassword = await new Argon2id().hash(password);
+
     await db
       .insert(userTable)
       .values({

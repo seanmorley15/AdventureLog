@@ -4,6 +4,10 @@
   import { type SubmitFunction } from "@sveltejs/kit";
   let errors: { message?: string } = {};
   let message: { message?: string } = {};
+  let username: string = "";
+  let first_name: string = "";
+  let last_name: string = "";
+  let password: string = "";
   const addUser: SubmitFunction = async ({ formData, action, cancel }) => {
     const response = await fetch(action, {
       method: "POST",
@@ -13,8 +17,11 @@
     if (response.ok) {
       console.log("User Added Successfully!");
       errors = {};
+      username = "";
+      first_name = "";
+      last_name = "";
+      password = "";
       cancel();
-      window.location.reload();
       return;
     }
 
@@ -41,18 +48,21 @@
     <input
       name="username"
       id="username"
+      bind:value={username}
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
     <label for="first_name">First Name</label>
     <input
       name="first_name"
       id="first_name"
+      bind:value={first_name}
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
     <label for="last_name">Last Name</label>
     <input
       name="last_name"
       id="last_name"
+      bind:value={last_name}
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
     <label for="password">Password</label>
@@ -60,6 +70,7 @@
       type="password"
       name="password"
       id="password"
+      bind:value={password}
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
     <label for="role">Admin User?</label>
@@ -78,3 +89,14 @@
     {errors.message}
   </div>
 {/if}
+
+<h2 class="text-center font-extrabold text-2xl">Session Managment</h2>
+<div class="flex justify-center items-center">
+  <form use:enhance method="POST" action="?/clearAllSessions">
+    <input
+      type="submit"
+      class="btn btn-warning"
+      value="Clear All Users Sessions"
+    />
+  </form>
+</div>
