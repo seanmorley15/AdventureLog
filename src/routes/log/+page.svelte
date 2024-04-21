@@ -20,7 +20,7 @@
   let editId: number = NaN;
   let editName: string = "";
   let editLocation: string = "";
-  let editCreated: string = "";
+  let editdate: string = "";
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -71,7 +71,7 @@
       body: JSON.stringify({
         name: newName,
         location: newLocation,
-        created: dateString,
+        date: dateString,
       }),
     })
       .then((response) => response.json())
@@ -84,7 +84,7 @@
             id: newId,
             name: newName,
             location: newLocation,
-            created: dateString,
+            date: dateString,
           },
         ];
         newName = ""; // Reset newName and newLocation after adding adventure
@@ -109,7 +109,7 @@
         id: event.detail.id,
         name: event.detail.name,
         location: event.detail.location,
-        created: event.detail.created,
+        date: event.detail.date,
       }),
     })
       .then((response) => response.json())
@@ -122,7 +122,7 @@
         editId = NaN;
         editName = "";
         editLocation = "";
-        editCreated = "";
+        editdate = "";
         showToast("Adventure edited successfully!");
       })
       .catch((error) => {
@@ -138,7 +138,7 @@
       editId = adventure.id || 0;
       editName = adventure.name || "";
       editLocation = adventure.location || "";
-      editCreated = adventure.created || "";
+      editdate = adventure.date || "";
     }
   }
 
@@ -168,7 +168,7 @@
     editId = NaN;
     editName = "";
     editLocation = "";
-    editCreated = "";
+    editdate = "";
   }
 
   function deleteData() {
@@ -263,7 +263,7 @@
     bind:editId
     bind:editName
     bind:editLocation
-    bind:editCreated
+    bind:editdate
     on:submit={saveAdventure}
     on:close={handleClose}
   />
@@ -278,7 +278,7 @@
       id={adventure.id}
       name={adventure.name}
       location={adventure.location}
-      created={adventure.created}
+      date={adventure.date}
       on:edit={editAdventure}
       on:remove={removeAdventure}
     />

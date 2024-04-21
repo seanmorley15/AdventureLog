@@ -19,7 +19,7 @@
       body: JSON.stringify({
         name: event.detail.name,
         location: event.detail.location,
-        created: "",
+        date: "",
       }),
     });
 
@@ -46,7 +46,7 @@
       on:add={add}
       name={adventure.name}
       location={adventure.location}
-      created=""
+      date=""
       id={NaN}
     />
   {/each}

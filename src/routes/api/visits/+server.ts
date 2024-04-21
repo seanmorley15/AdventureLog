@@ -26,7 +26,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
         id: item.adventureID,
         name: item.adventureName,
         location: item.location,
-        created: item.visitedDate,
+        date: item.visitedDate,
       })),
     }),
     {
@@ -91,7 +91,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
   }
 
   // get properties from the body
-  const { name, location, created } = await event.request.json();
+  const { name, location, date } = await event.request.json();
 
   // insert the adventure to the user's visited list
   await db
@@ -100,10 +100,10 @@ export async function POST(event: RequestEvent): Promise<Response> {
       userId: event.locals.user.id,
       adventureName: name,
       location: location,
-      visitedDate: created,
+      visitedDate: date,
     })
     .execute();
-let res = await db
+  let res = await db
     .select()
     .from(userVisitedAdventures)
     .where(
@@ -111,17 +111,17 @@ let res = await db
         eq(userVisitedAdventures.userId, event.locals.user.id),
         eq(userVisitedAdventures.adventureName, name),
         eq(userVisitedAdventures.location, location),
-        eq(userVisitedAdventures.visitedDate, created)
+        eq(userVisitedAdventures.visitedDate, date)
       )
     )
     .execute();
 
-// return a response with the adventure object values
+  // return a response with the adventure object values
   return new Response(
     JSON.stringify({
-      adventure: { name, location, created },
+      adventure: { name, location, date },
       message: { message: "Adventure added" },
-      id: res[0].adventureID
+      id: res[0].adventureID,
     }),
     {
       status: 200,
@@ -144,7 +144,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
   }
 
   // get properties from the body
-  const { id, name, location, created } = await event.request.json();
+  const { id, name, location, date } = await event.request.json();
 
   // update the adventure in the user's visited list
   await db
@@ -152,7 +152,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     .set({
       adventureName: name,
       location: location,
-      visitedDate: created,
+      visitedDate: date,
     })
     .where(
       and(
@@ -164,7 +164,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
 
   return new Response(
     JSON.stringify({
-      adventure: { id, name, location, created },
+      adventure: { id, name, location, date },
       message: { message: "Adventure updated" },
     }),
     {

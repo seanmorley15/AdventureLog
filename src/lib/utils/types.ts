@@ -2,7 +2,7 @@ export interface Adventure {
   id?: number;
   name?: string;
   location?: string | undefined;
-  created?: string | undefined;
+  date?: string | undefined;
   description?: string | undefined;
   activityTypes?: string[] | undefined;
 }

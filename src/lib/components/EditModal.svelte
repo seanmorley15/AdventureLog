@@ -2,7 +2,7 @@
   export let editId: number = NaN;
   export let editName: string = "";
   export let editLocation: string = "";
-  export let editCreated: string = "";
+  export let editdate: string = "";
   import { createEventDispatcher } from "svelte";
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
@@ -23,7 +23,7 @@
       id: editId,
       name: editName,
       location: editLocation,
-      created: editCreated,
+      date: editdate,
     };
     dispatch("submit", adventureEdited);
     console.log(adventureEdited);
@@ -70,11 +70,11 @@
           />
         </div>
         <div>
-          <label for="created">Created</label>
+          <label for="date">date</label>
           <input
             type="date"
-            id="created"
-            bind:value={editCreated}
+            id="date"
+            bind:value={editdate}
             class="input input-bordered w-full max-w-xs"
           />
         </div>

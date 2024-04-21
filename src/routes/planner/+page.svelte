@@ -24,6 +24,8 @@
       name={adventure.name}
       location={adventure.location}
       activityTypes={adventure.activityTypes}
+      description={adventure?.description}
+      date={adventure?.date}
     />
   {/each}
 </div>

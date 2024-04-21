@@ -50,6 +50,13 @@
       "when": 1713739045755,
       "tag": "0006_colorful_inertia",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1713739446962,
+      "tag": "0007_clear_sinister_six",
+      "breakpoints": true
     }
   ]
 }

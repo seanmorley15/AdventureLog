@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -99,4 +100,6 @@ export const userPlannedAdventures = pgTable("userPlannedAdventures", {
   name: text("adventureName").notNull(),
   location: text("location"),
   activityTypes: json("activityTypes"),
+  description: text("description"),
+  date: text("plannedDate"),
 });

@@ -10,7 +10,7 @@
   <div>
     <h1>{adventure.name}</h1>
     <p>{adventure.location}</p>
-    <p>{adventure.created}</p>
+    <p>{adventure.date}</p>
     <p>{adventure.id}</p>
   </div>
 {/each} -->
@@ -25,7 +25,7 @@
       id={adventure.id}
       name={adventure.name}
       location={adventure.location}
-      created={adventure.created}
+      date={adventure.date}
     />
   {/each}
 </div>

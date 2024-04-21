@@ -129,7 +129,7 @@ export const actions: Actions = {
           "content-type": "application/json",
         },
         body: JSON.stringify({
-          message: "User created",
+          message: "User date",
         }),
       };
     }

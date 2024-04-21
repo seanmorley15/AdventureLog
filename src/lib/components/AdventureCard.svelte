@@ -3,18 +3,20 @@
   import locationDot from "$lib/assets/locationDot.svg";
   import calendar from "$lib/assets/calendar.svg";
   import { goto } from "$app/navigation";
+  import { desc } from "drizzle-orm";
   const dispatch = createEventDispatcher();
 
   export let type: String;
 
   export let name: String | undefined = undefined;
   export let location: String | undefined = undefined;
-  export let created: String | undefined = undefined;
+  export let date: String | undefined = undefined;
   export let id: Number | undefined = undefined;
   export let regionId: String | undefined = undefined;
   export let visited: Boolean | undefined = undefined;
   export let countryCode: String | undefined = undefined;
   export let activityTypes: String[] | undefined = undefined;
+  export let description: String | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -51,10 +53,10 @@
           <p class="ml-.5">{location}</p>
         </div>
       {/if}
-      {#if created !== ""}
+      {#if date !== ""}
         <div class="inline-flex items-center">
           <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
-          <p class="ml-1">{created}</p>
+          <p class="ml-1">{date}</p>
         </div>
       {/if}
       <div class="card-actions justify-end">
@@ -96,10 +98,10 @@
           <p class="ml-.5">{location}</p>
         </div>
       {/if}
-      {#if created !== ""}
+      {#if date !== ""}
         <div class="inline-flex items-center">
           <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
-          <p class="ml-1">{created}</p>
+          <p class="ml-1">{date}</p>
         </div>
       {/if}
     </div>
@@ -141,7 +143,22 @@
         </div>
       {/if}
       {#if activityTypes && activityTypes.length > 0}
-        <p>{activityTypes}</p>
+        {#each activityTypes as activity}
+          <div
+            class="relative grid select-none items-center whitespace-nowrap rounded-lg bg-gray-900 py-1.5 px-3 font-sans text-xs font-bold uppercase text-white"
+          >
+            <span class="">{activity}</span>
+          </div>
+        {/each}
+      {/if}
+      {#if description && description.length > 0}
+        <p>{description}</p>
+      {/if}
+      {#if date && date != undefined}
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
+          <p class="ml-1">{date}</p>
+        </div>
       {/if}
       <div class="card-actions justify-end">
         <button class="btn btn-primary" on:click={add}>Add</button>

@@ -51,10 +51,10 @@
           />
         </div>
         <div>
-          <label for="created">Created</label>
+          <label for="date">date</label>
           <input
             type="date"
-            id="created"
+            id="date"
             class="input input-bordered w-full max-w-xs"
           />
         </div>
