@@ -1,16 +1,24 @@
 import { error, redirect, type Actions, type Handle } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
-import { sessionTable } from "$lib/db/schema";
+import { sessionTable, userTable } from "$lib/db/schema";
+import type { DatabaseUser } from "$lib/server/auth";
 
 export const load: PageServerLoad = async (event) => {
+  let users: DatabaseUser[] = [];
   if (!event.locals.user) {
     return redirect(302, "/login");
-  } else {
-    if (event.locals.user.role !== "admin") {
-      return redirect(302, "/settings");
-    }
   }
+  if (event.locals.user.role !== "admin") {
+    return redirect(302, "/settings");
+  }
+  if (event.locals.user.role === "admin") {
+    users = (await db.select().from(userTable).execute()) as DatabaseUser[];
+    console.log(users);
+  }
+  return {
+    users,
+  };
 };
 
 export const actions: Actions = {

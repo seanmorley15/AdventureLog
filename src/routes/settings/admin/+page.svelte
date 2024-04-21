@@ -1,13 +1,18 @@
 <script lang="ts">
+  import { page } from "$app/stores";
+
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { type SubmitFunction } from "@sveltejs/kit";
+  import type { DatabaseUser } from "lucia";
+  import UserCard from "$lib/components/UserCard.svelte";
   let errors: { message?: string } = {};
   let message: { message?: string } = {};
   let username: string = "";
   let first_name: string = "";
   let last_name: string = "";
   let password: string = "";
+
   const addUser: SubmitFunction = async ({ formData, action, cancel }) => {
     const response = await fetch(action, {
       method: "POST",
@@ -99,4 +104,13 @@
       value="Clear All Users Sessions"
     />
   </form>
+</div>
+
+<h2 class="text-center font-extrabold text-2xl">User Managment</h2>
+<div class="text-center">
+  {#each $page.data.users as user}
+    <div>
+      <UserCard {user} />
+    </div>
+  {/each}
 </div>
