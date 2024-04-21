@@ -32,4 +32,4 @@
     name="description"
     content="Explore the world and add countries to your visited list!"
   />
-</svelte:head>;
+</svelte:head>

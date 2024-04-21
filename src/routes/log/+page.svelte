@@ -135,10 +135,10 @@
       (adventure) => adventure.id === event.detail
     );
     if (adventure) {
-      editId = adventure.id;
-      editName = adventure.name;
-      editLocation = adventure.location;
-      editCreated = adventure.created;
+      editId = adventure.id || 0;
+      editName = adventure.name || "";
+      editLocation = adventure.location || "";
+      editCreated = adventure.created || "";
     }
   }
 

@@ -1,8 +1,10 @@
 export interface Adventure {
-  id: number;
-  name: string;
-  location: string;
-  created: string;
+  id?: number;
+  name?: string;
+  location?: string | undefined;
+  created?: string | undefined;
+  description?: string | undefined;
+  activityTypes?: string[] | undefined;
 }
 
 export interface RegionInfo {
@@ -36,4 +38,4 @@ export interface RegionInfo {
     attractions: string[];
   };
   major_sports_teams: string[];
-};
+}

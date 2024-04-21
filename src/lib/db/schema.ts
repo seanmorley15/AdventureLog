@@ -90,3 +90,13 @@ export const userVisitedWorldTravel = pgTable("userVisitedWorldTravel", {
     .notNull()
     .references(() => worldTravelCountryRegions.id),
 });
+
+export const userPlannedAdventures = pgTable("userPlannedAdventures", {
+  id: serial("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => userTable.id),
+  name: text("adventureName").notNull(),
+  location: text("location"),
+  activityTypes: json("activityTypes"),
+});

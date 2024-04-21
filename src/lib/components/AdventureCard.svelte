@@ -14,6 +14,7 @@
   export let regionId: String | undefined = undefined;
   export let visited: Boolean | undefined = undefined;
   export let countryCode: String | undefined = undefined;
+  export let activityTypes: String[] | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -122,6 +123,28 @@
         {#if visited}
           <button class="btn btn-warning" on:click={removeVisit}>Remove</button>
         {/if}
+      </div>
+    </div>
+  </div>
+{/if}
+
+{#if type === "planner"}
+  <div
+    class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
+  >
+    <div class="card-body">
+      <h2 class="card-title overflow-ellipsis">{name}</h2>
+      {#if location != ""}
+        <div class="inline-flex items-center">
+          <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
+          <p class="ml-.5">{location}</p>
+        </div>
+      {/if}
+      {#if activityTypes && activityTypes.length > 0}
+        <p>{activityTypes}</p>
+      {/if}
+      <div class="card-actions justify-end">
+        <button class="btn btn-primary" on:click={add}>Add</button>
       </div>
     </div>
   </div>

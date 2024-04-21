@@ -29,6 +29,27 @@
       "when": 1713402092365,
       "tag": "0003_easy_iron_monger",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1713737819317,
+      "tag": "0004_noisy_squadron_supreme",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1713738940329,
+      "tag": "0005_massive_black_tarantula",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1713739045755,
+      "tag": "0006_colorful_inertia",
+      "breakpoints": true
     }
   ]
 }

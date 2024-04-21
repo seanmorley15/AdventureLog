@@ -58,12 +58,16 @@
     console.log(errors);
     cancel();
   };
+
+  let visitCount = $page.data.visitCount[0].count;
+  let userCount = $page.data.userCount[0].count;
+  let regionCount = $page.data.regionCount[0].count;
 </script>
 
 <h1 class="text-center font-extrabold text-4xl">Admin Settings</h1>
 
 <h2 class="text-center font-extrabold text-2xl">Add User</h2>
-<div class="flex justify-center">
+<div class="flex justify-center mb-4">
   <form
     method="POST"
     action="/signup"
@@ -125,7 +129,7 @@
 
 <h2 class="text-center font-extrabold text-2xl">User Managment</h2>
 <div
-  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
+  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6 mb-4"
 >
   {#each $page.data.users as user}
     <div>
@@ -143,3 +147,31 @@
     message="Are you sure you want to clear all user sessions?"
   />
 {/if}
+
+<h2 class="text-center font-extrabold text-2xl">Admin Stats (All Users)</h2>
+<div class="flex items-center justify-center mb-4">
+  <div class="stats stats-vertical lg:stats-horizontal shadow">
+    <div class="stat">
+      <div class="stat-title">Total Visits</div>
+      <div class="stat-value">{visitCount}</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-title">Total Users</div>
+      <div class="stat-value">{userCount}</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-title">Visited Regions</div>
+      <div class="stat-value">{regionCount}</div>
+    </div>
+  </div>
+</div>
+
+<svelte:head>
+  <title>Admin Settings | AdventureLog</title>
+  <meta
+    name="description"
+    content="Admin Settings for AdventureLog. Add users, manage sessions, and more!"
+  />
+</svelte:head>

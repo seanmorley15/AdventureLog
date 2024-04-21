@@ -78,6 +78,10 @@
       <button class="btn btn-primary my-2 md:my-0 md:mr-4" on:click={goToLog}
         >My Log</button
       >
+      <button
+        class="btn btn-primary my-2 md:my-0 md:mr-4"
+        on:click={() => goto("/planner")}>Planner</button
+      >
     {/if}
     <button
       class="btn btn-primary my-2 md:my-0 md:mr-4"

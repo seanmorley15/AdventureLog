@@ -1,11 +1,20 @@
 import { error, redirect, type Actions, type Handle } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
-import { sessionTable, userTable } from "$lib/db/schema";
+import {
+  sessionTable,
+  userTable,
+  userVisitedAdventures,
+  userVisitedWorldTravel,
+} from "$lib/db/schema";
 import type { DatabaseUser } from "$lib/server/auth";
+import { count } from "drizzle-orm";
 
 export const load: PageServerLoad = async (event) => {
   let users: DatabaseUser[] = [];
+  let visitCount: number = NaN;
+  let userCount: number = NaN;
+  let regionCount: number = NaN;
   if (!event.locals.user) {
     return redirect(302, "/login");
   }
@@ -14,9 +23,24 @@ export const load: PageServerLoad = async (event) => {
   }
   if (event.locals.user.role === "admin") {
     users = (await db.select().from(userTable).execute()) as DatabaseUser[];
+    visitCount = (await db
+      .select({ count: count() })
+      .from(userVisitedAdventures)
+      .execute()) as unknown as number;
+    userCount = (await db
+      .select({ count: count() })
+      .from(userTable)
+      .execute()) as unknown as number;
+    regionCount = (await db
+      .select({ count: count() })
+      .from(userVisitedWorldTravel)
+      .execute()) as unknown as number;
   }
   return {
     users,
+    visitCount,
+    userCount,
+    regionCount,
   };
 };
 
