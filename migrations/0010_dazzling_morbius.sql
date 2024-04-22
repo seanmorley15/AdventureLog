@@ -1,0 +1,1 @@
+ALTER TABLE "userPlannedAdventures" ALTER COLUMN "userId" DROP NOT NULL;
