@@ -28,7 +28,7 @@
   // Sets the adventures array to the data from the server
   onMount(async () => {
     console.log(data);
-    adventures = data.result.adventures;
+    adventures = data.result;
     isLoading = false;
   });
 
@@ -63,15 +63,22 @@
     let currentDate = new Date();
     let dateString = currentDate.toISOString().slice(0, 10); // Get date in "yyyy-mm-dd" format
     // post to /api/visits
+
+    let newAdventure: Adventure = {
+      type: "mylog",
+      name: newName,
+      location: newLocation,
+      date: dateString,
+      id: -1,
+    };
+
     fetch("/api/visits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: newName,
-        location: newLocation,
-        date: dateString,
+        newAdventure,
       }),
     })
       .then((response) => response.json())
@@ -82,6 +89,7 @@
           ...adventures,
           {
             id: newId,
+            type: "mylog",
             name: newName,
             location: newLocation,
             date: dateString,
@@ -99,6 +107,15 @@
 
   function saveAdventure(event: { detail: Adventure }) {
     console.log("Event" + event.detail);
+
+    let newAdventure: Adventure = {
+      type: "mylog",
+      name: event.detail.name,
+      location: event.detail.location,
+      date: event.detail.date,
+      id: event.detail.id,
+    };
+
     // put request to /api/visits with id and advneture data
     fetch("/api/visits", {
       method: "PUT",
@@ -106,10 +123,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id: event.detail.id,
-        name: event.detail.name,
-        location: event.detail.location,
-        date: event.detail.date,
+        newAdventure,
       }),
     })
       .then((response) => response.json())

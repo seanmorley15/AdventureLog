@@ -53,7 +53,7 @@
           <p class="ml-.5">{location}</p>
         </div>
       {/if}
-      {#if date !== ""}
+      {#if date && date !== ""}
         <div class="inline-flex items-center">
           <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon>
           <p class="ml-1">{date}</p>
@@ -73,7 +73,7 @@
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
-      {#if location != ""}
+      {#if location && location != ""}
         <div class="inline-flex items-center">
           <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
           <p class="ml-.5">{location}</p>
@@ -92,7 +92,7 @@
   >
     <div class="card-body">
       <h2 class="card-title overflow-ellipsis">{name}</h2>
-      {#if location !== ""}
+      {#if location && location !== ""}
         <div class="inline-flex items-center">
           <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
           <p class="ml-.5">{location}</p>
