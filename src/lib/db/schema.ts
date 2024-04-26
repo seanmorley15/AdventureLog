@@ -107,9 +107,7 @@ export const userPlannedAdventures = pgTable("userPlannedAdventures", {
 export const adventureTable = pgTable("adventures", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(),
-  userId: text("userId")
-    .notNull()
-    .references(() => userTable.id),
+  userId: text("userId").references(() => userTable.id),
   name: text("name").notNull(),
   location: text("location"),
   activityTypes: json("activityTypes"),

@@ -44,7 +44,7 @@ fi
 npm run migrate
 
 # Run SQL scripts
-run_sql_scripts
+# run_sql_scripts
 
 echo "The origin to be set is: $ORIGIN"
 # Start the application
