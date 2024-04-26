@@ -11,15 +11,21 @@
   });
 
   async function add(event: CustomEvent<{ name: string; location: string }>) {
+    let newAdventure: Adventure = {
+      name: event.detail.name,
+      location: event.detail.location,
+      date: "",
+      type: "mylog",
+      id: -1,
+    };
+
     const response = await fetch("/api/visits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: event.detail.name,
-        location: event.detail.location,
-        created: "",
+        newAdventure,
       }),
     });
 
@@ -46,7 +52,7 @@
       on:add={add}
       name={adventure.name}
       location={adventure.location}
-      created=""
+      date=""
       id={NaN}
     />
   {/each}

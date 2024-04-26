@@ -8,7 +8,8 @@ import type { DatabaseUser } from "$lib/server/auth";
 
 import type { Actions } from "./$types";
 import { userTable } from "$lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { insertData } from "$lib/db/insertData";
 
 export const actions: Actions = {
   default: async (event) => {
@@ -109,8 +110,11 @@ export const actions: Actions = {
       } as DatabaseUser)
       .execute();
 
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
+    // inserts the data needed for all of the pre defined adventures and world travel regions
+    await insertData();
+
+    const session: any = await lucia.createSession(userId, {});
+    const sessionCookie: any = lucia.createSessionCookie(session.id);
     event.cookies.set(sessionCookie.name, sessionCookie.value, {
       path: ".",
       ...sessionCookie.attributes,

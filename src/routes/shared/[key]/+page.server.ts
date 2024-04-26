@@ -25,13 +25,12 @@ export async function load({ params }) {
       id: item.id,
       name: item.name,
       location: item.location,
-      created: item.created,
+      date: item.date,
     } as Adventure;
   });
 
   let name = rawData.name;
   let date = rawData.date;
-
 
   // Return the array of Adventure objects
   return {

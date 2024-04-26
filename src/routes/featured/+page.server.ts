@@ -1,12 +1,14 @@
 import { db } from "$lib/db/db.server";
-import { featuredAdventures } from "$lib/db/schema";
+import { adventureTable, featuredAdventures } from "$lib/db/schema";
 import type { Adventure } from "$lib/utils/types";
+import { eq } from "drizzle-orm";
 
 export const load = async () => {
   const result = await db
     .select()
-    .from(featuredAdventures)
-    .orderBy(featuredAdventures.id);
+    .from(adventureTable)
+    .where(eq(adventureTable.type, "featured"))
+    .orderBy(adventureTable.id);
   return {
     result: result as Adventure[],
   };

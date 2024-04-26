@@ -1,6 +1,6 @@
 import { lucia } from "$lib/server/auth";
 import { redirect, type Handle } from "@sveltejs/kit";
-import { sequence } from '@sveltejs/kit/hooks';
+import { sequence } from "@sveltejs/kit/hooks";
 import { db } from "$lib/db/db.server";
 import { userTable } from "$lib/db/schema";
 import { eq } from "drizzle-orm";
@@ -24,7 +24,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
     });
   }
   if (!session) {
-    const sessionCookie:any = lucia.createBlankSessionCookie();
+    const sessionCookie: any = lucia.createBlankSessionCookie();
     event.cookies.set(sessionCookie.name, sessionCookie.value, {
       path: ".",
       ...sessionCookie.attributes,
@@ -36,12 +36,12 @@ export const authHook: Handle = async ({ event, resolve }) => {
 };
 
 export const themeHook: Handle = async ({ event, resolve }) => {
-  let theme:String | null = null;
+  let theme: String | null = null;
 
   const newTheme = event.url.searchParams.get("theme");
   const cookieTheme = event.cookies.get("colortheme");
 
-  if(newTheme) {
+  if (newTheme) {
     theme = newTheme;
   } else if (cookieTheme) {
     theme = cookieTheme;
@@ -49,25 +49,20 @@ export const themeHook: Handle = async ({ event, resolve }) => {
   if (theme) {
     return await resolve(event, {
       transformPageChunk: ({ html }) =>
-        html.replace('data-theme=""', `data-theme="${theme}"`)
-    })
+        html.replace('data-theme=""', `data-theme="${theme}"`),
+    });
   }
 
   return await resolve(event);
-}
+};
 
 export const setupAdminUser: Handle = async ({ event, resolve }) => {
   // Check if an admin user exists
-  /* let result = await db
-    .select()
-    .from(userVisitedAdventures)
-    .where(eq(userVisitedAdventures.userId, event.locals.user.id))
-    .execute();*/
   let adminUser = await db
-  .select()
-  .from(userTable)
-  .where(eq(userTable.role, 'admin'))
-  .execute();
+    .select()
+    .from(userTable)
+    .where(eq(userTable.role, "admin"))
+    .execute();
   // If an admin user exists, return the resolved event
   if (adminUser != null && adminUser.length > 0) {
     event.locals.isServerSetup = true;

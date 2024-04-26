@@ -1,13 +1,39 @@
 <script lang="ts">
+  import { page } from "$app/stores";
+
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
   import { type SubmitFunction } from "@sveltejs/kit";
+  import type { DatabaseUser } from "lucia";
+  import UserCard from "$lib/components/UserCard.svelte";
   let errors: { message?: string } = {};
   let message: { message?: string } = {};
   let username: string = "";
   let first_name: string = "";
   let last_name: string = "";
   let password: string = "";
+  import ConfirmModal from "$lib/components/ConfirmModal.svelte";
+
+  let isModalOpen = false;
+
+  async function clearAllSessions() {
+    await fetch("?/clearAllSessions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(),
+    });
+    window.location.reload();
+  }
+
+  function openModal() {
+    isModalOpen = true;
+  }
+  function closeModal() {
+    isModalOpen = false;
+  }
+
   const addUser: SubmitFunction = async ({ formData, action, cancel }) => {
     const response = await fetch(action, {
       method: "POST",
@@ -32,12 +58,16 @@
     console.log(errors);
     cancel();
   };
+
+  let visitCount = $page.data.visitCount[0].count;
+  let userCount = $page.data.userCount[0].count;
+  let regionCount = $page.data.regionCount[0].count;
 </script>
 
 <h1 class="text-center font-extrabold text-4xl">Admin Settings</h1>
 
 <h2 class="text-center font-extrabold text-2xl">Add User</h2>
-<div class="flex justify-center">
+<div class="flex justify-center mb-4">
   <form
     method="POST"
     action="/signup"
@@ -90,13 +120,58 @@
   </div>
 {/if}
 
-<h2 class="text-center font-extrabold text-2xl">Session Managment</h2>
+<h2 class="text-center font-extrabold text-2xl mb-2">Session Managment</h2>
 <div class="flex justify-center items-center">
-  <form use:enhance method="POST" action="?/clearAllSessions">
-    <input
-      type="submit"
-      class="btn btn-warning"
-      value="Clear All Users Sessions"
-    />
-  </form>
+  <button on:click={openModal} class="btn btn-warning mb-4"
+    >Clear All Users Sessions</button
+  >
 </div>
+
+<h2 class="text-center font-extrabold text-2xl">User Managment</h2>
+<div
+  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6 mb-4"
+>
+  {#each $page.data.users as user}
+    <div>
+      <UserCard {user} />
+    </div>
+  {/each}
+</div>
+
+{#if isModalOpen}
+  <ConfirmModal
+    on:close={closeModal}
+    on:confirm={clearAllSessions}
+    title="Clear All Sessions"
+    isWarning={true}
+    message="Are you sure you want to clear all user sessions?"
+  />
+{/if}
+
+<h2 class="text-center font-extrabold text-2xl">Admin Stats (All Users)</h2>
+<div class="flex items-center justify-center mb-4">
+  <div class="stats stats-vertical lg:stats-horizontal shadow">
+    <div class="stat">
+      <div class="stat-title">Total Visits</div>
+      <div class="stat-value">{visitCount}</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-title">Total Users</div>
+      <div class="stat-value">{userCount}</div>
+    </div>
+
+    <div class="stat">
+      <div class="stat-title">Visited Regions</div>
+      <div class="stat-value">{regionCount}</div>
+    </div>
+  </div>
+</div>
+
+<svelte:head>
+  <title>Admin Settings | AdventureLog</title>
+  <meta
+    name="description"
+    content="Admin Settings for AdventureLog. Add users, manage sessions, and more!"
+  />
+</svelte:head>

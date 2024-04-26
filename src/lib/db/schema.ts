@@ -1,3 +1,4 @@
+import { desc } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -52,16 +53,6 @@ export const sessionTable = pgTable("session", {
   }).notNull(),
 });
 
-export const userVisitedAdventures = pgTable("userVisitedAdventures", {
-  adventureID: serial("adventure_id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => userTable.id),
-  adventureName: text("adventure_name").notNull(),
-  location: text("location"),
-  visitedDate: text("visited_date"),
-});
-
 export const worldTravelCountries = pgTable("worldTravelCountries", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -89,4 +80,30 @@ export const userVisitedWorldTravel = pgTable("userVisitedWorldTravel", {
   region_id: varchar("region_id")
     .notNull()
     .references(() => worldTravelCountryRegions.id),
+});
+
+export const userPlannedAdventures = pgTable("userPlannedAdventures", {
+  id: serial("id").primaryKey(),
+  userId: text("userId")
+    .notNull()
+    .references(() => userTable.id),
+  name: text("adventureName").notNull(),
+  location: text("location"),
+  activityTypes: json("activityTypes"),
+  description: text("description"),
+  date: text("plannedDate"),
+});
+
+export const adventureTable = pgTable("adventures", {
+  id: serial("id").primaryKey(),
+  type: text("type").notNull(),
+  userId: text("userId").references(() => userTable.id),
+  name: text("name").notNull(),
+  location: text("location"),
+  activityTypes: json("activityTypes"),
+  description: text("description"),
+  rating: integer("rating"),
+  link: text("link"),
+  imageUrl: text("imageUrl"),
+  date: text("date"),
 });

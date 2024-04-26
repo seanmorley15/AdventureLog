@@ -20,7 +20,7 @@
   let editId: number = NaN;
   let editName: string = "";
   let editLocation: string = "";
-  let editCreated: string = "";
+  let editdate: string = "";
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -28,7 +28,7 @@
   // Sets the adventures array to the data from the server
   onMount(async () => {
     console.log(data);
-    adventures = data.result.adventures;
+    adventures = data.result;
     isLoading = false;
   });
 
@@ -63,15 +63,22 @@
     let currentDate = new Date();
     let dateString = currentDate.toISOString().slice(0, 10); // Get date in "yyyy-mm-dd" format
     // post to /api/visits
+
+    let newAdventure: Adventure = {
+      type: "mylog",
+      name: newName,
+      location: newLocation,
+      date: dateString,
+      id: -1,
+    };
+
     fetch("/api/visits", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: newName,
-        location: newLocation,
-        created: dateString,
+        newAdventure,
       }),
     })
       .then((response) => response.json())
@@ -82,9 +89,10 @@
           ...adventures,
           {
             id: newId,
+            type: "mylog",
             name: newName,
             location: newLocation,
-            created: dateString,
+            date: dateString,
           },
         ];
         newName = ""; // Reset newName and newLocation after adding adventure
@@ -99,6 +107,15 @@
 
   function saveAdventure(event: { detail: Adventure }) {
     console.log("Event" + event.detail);
+
+    let newAdventure: Adventure = {
+      type: "mylog",
+      name: event.detail.name,
+      location: event.detail.location,
+      date: event.detail.date,
+      id: event.detail.id,
+    };
+
     // put request to /api/visits with id and advneture data
     fetch("/api/visits", {
       method: "PUT",
@@ -106,10 +123,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        id: event.detail.id,
-        name: event.detail.name,
-        location: event.detail.location,
-        created: event.detail.created,
+        newAdventure,
       }),
     })
       .then((response) => response.json())
@@ -122,7 +136,7 @@
         editId = NaN;
         editName = "";
         editLocation = "";
-        editCreated = "";
+        editdate = "";
         showToast("Adventure edited successfully!");
       })
       .catch((error) => {
@@ -135,10 +149,10 @@
       (adventure) => adventure.id === event.detail
     );
     if (adventure) {
-      editId = adventure.id;
-      editName = adventure.name;
-      editLocation = adventure.location;
-      editCreated = adventure.created;
+      editId = adventure.id || 0;
+      editName = adventure.name || "";
+      editLocation = adventure.location || "";
+      editdate = adventure.date || "";
     }
   }
 
@@ -168,7 +182,7 @@
     editId = NaN;
     editName = "";
     editLocation = "";
-    editCreated = "";
+    editdate = "";
   }
 
   function deleteData() {
@@ -263,7 +277,7 @@
     bind:editId
     bind:editName
     bind:editLocation
-    bind:editCreated
+    bind:editdate
     on:submit={saveAdventure}
     on:close={handleClose}
   />
@@ -278,7 +292,7 @@
       id={adventure.id}
       name={adventure.name}
       location={adventure.location}
-      created={adventure.created}
+      date={adventure.date}
       on:edit={editAdventure}
       on:remove={removeAdventure}
     />

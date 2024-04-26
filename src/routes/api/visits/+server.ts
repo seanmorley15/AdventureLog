@@ -1,6 +1,6 @@
 import { lucia } from "$lib/server/auth";
 import type { RequestEvent } from "@sveltejs/kit";
-import { userVisitedAdventures } from "$lib/db/schema";
+import { adventureTable } from "$lib/db/schema";
 import { db } from "$lib/db/db.server";
 import { and, eq } from "drizzle-orm";
 import type { Adventure } from "$lib/utils/types";
@@ -17,18 +17,12 @@ export async function GET(event: RequestEvent): Promise<Response> {
   }
   let result = await db
     .select()
-    .from(userVisitedAdventures)
-    .where(eq(userVisitedAdventures.userId, event.locals.user.id))
+    .from(adventureTable)
+    .where(eq(adventureTable.userId, event.locals.user.id))
     .execute();
   return new Response(
-    JSON.stringify({
-      adventures: result.map((item) => ({
-        id: item.adventureID,
-        name: item.adventureName,
-        location: item.location,
-        created: item.visitedDate,
-      })),
-    }),
+    // turn the result into an Adventure object array
+    JSON.stringify(result.map((r) => r as Adventure)),
     {
       status: 200,
       headers: {
@@ -62,11 +56,11 @@ export async function DELETE(event: RequestEvent): Promise<Response> {
   }
 
   let res = await db
-    .delete(userVisitedAdventures)
+    .delete(adventureTable)
     .where(
       and(
-        eq(userVisitedAdventures.userId, event.locals.user.id),
-        eq(userVisitedAdventures.adventureID, Number(id))
+        eq(adventureTable.userId, event.locals.user.id),
+        eq(adventureTable.id, Number(id))
       )
     )
     .execute();
@@ -90,38 +84,40 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  // get properties from the body
-  const { name, location, created } = await event.request.json();
+  const { newAdventure } = await event.request.json();
+  console.log(newAdventure);
+  const { name, location, date } = newAdventure;
 
   // insert the adventure to the user's visited list
   await db
-    .insert(userVisitedAdventures)
+    .insert(adventureTable)
     .values({
       userId: event.locals.user.id,
-      adventureName: name,
+      type: "mylog",
+      name: name,
       location: location,
-      visitedDate: created,
+      date: date,
     })
     .execute();
-let res = await db
+  let res = await db
     .select()
-    .from(userVisitedAdventures)
+    .from(adventureTable)
     .where(
       and(
-        eq(userVisitedAdventures.userId, event.locals.user.id),
-        eq(userVisitedAdventures.adventureName, name),
-        eq(userVisitedAdventures.location, location),
-        eq(userVisitedAdventures.visitedDate, created)
+        eq(adventureTable.userId, event.locals.user.id),
+        eq(adventureTable.name, name),
+        eq(adventureTable.location, location),
+        eq(adventureTable.date, date)
       )
     )
     .execute();
 
-// return a response with the adventure object values
+  // return a response with the adventure object values
   return new Response(
     JSON.stringify({
-      adventure: { name, location, created },
+      adventure: { name, location, date },
       message: { message: "Adventure added" },
-      id: res[0].adventureID
+      id: res[0].id,
     }),
     {
       status: 200,
@@ -144,27 +140,29 @@ export async function PUT(event: RequestEvent): Promise<Response> {
   }
 
   // get properties from the body
-  const { id, name, location, created } = await event.request.json();
+  const { newAdventure } = await event.request.json();
+  console.log(newAdventure);
+  const { name, location, date, id } = newAdventure;
 
   // update the adventure in the user's visited list
   await db
-    .update(userVisitedAdventures)
+    .update(adventureTable)
     .set({
-      adventureName: name,
+      name: name,
       location: location,
-      visitedDate: created,
+      date: date,
     })
     .where(
       and(
-        eq(userVisitedAdventures.userId, event.locals.user.id),
-        eq(userVisitedAdventures.adventureID, Number(id))
+        eq(adventureTable.userId, event.locals.user.id),
+        eq(adventureTable.id, Number(id))
       )
     )
     .execute();
 
   return new Response(
     JSON.stringify({
-      adventure: { id, name, location, created },
+      adventure: { id, name, location, date },
       message: { message: "Adventure updated" },
     }),
     {
