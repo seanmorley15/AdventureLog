@@ -1,1 +1,0 @@
-ALTER TABLE "userPlannedAdventures" ALTER COLUMN "userId" SET NOT NULL;

@@ -53,16 +53,6 @@ export const sessionTable = pgTable("session", {
   }).notNull(),
 });
 
-export const userVisitedAdventures = pgTable("userVisitedAdventures", {
-  adventureID: serial("adventure_id").primaryKey(),
-  userId: text("user_id")
-    .notNull()
-    .references(() => userTable.id),
-  adventureName: text("adventure_name").notNull(),
-  location: text("location"),
-  visitedDate: text("visited_date"),
-});
-
 export const worldTravelCountries = pgTable("worldTravelCountries", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -107,9 +97,7 @@ export const userPlannedAdventures = pgTable("userPlannedAdventures", {
 export const adventureTable = pgTable("adventures", {
   id: serial("id").primaryKey(),
   type: text("type").notNull(),
-  userId: text("userId")
-    .notNull()
-    .references(() => userTable.id),
+  userId: text("userId").references(() => userTable.id),
   name: text("name").notNull(),
   location: text("location"),
   activityTypes: json("activityTypes"),

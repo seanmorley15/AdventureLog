@@ -1,1 +1,0 @@
-ALTER TABLE "worldTravelCountryRegions" ADD COLUMN "info" json;

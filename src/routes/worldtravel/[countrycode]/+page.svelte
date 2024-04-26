@@ -6,6 +6,7 @@
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
   import Us from "$lib/components/maps/US.svelte";
+  import WorldTravelCard from "$lib/components/WorldTravelCard.svelte";
 
   let viewType: String = "cards";
 
@@ -87,8 +88,7 @@
     class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
   >
     {#each data.regions as region (region.id)}
-      <AdventureCard
-        type="worldtravelregion"
+      <WorldTravelCard
         countryCode={data.countrycode}
         regionId={region.id}
         name={region.name}

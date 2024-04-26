@@ -1,1 +1,0 @@
-ALTER TABLE "userPlannedAdventures" ALTER COLUMN "activity_types" SET DATA TYPE json;
