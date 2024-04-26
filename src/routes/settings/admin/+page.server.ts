@@ -2,9 +2,9 @@ import { error, redirect, type Actions, type Handle } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
 import {
+  adventureTable,
   sessionTable,
   userTable,
-  userVisitedAdventures,
   userVisitedWorldTravel,
 } from "$lib/db/schema";
 import type { DatabaseUser } from "$lib/server/auth";
@@ -25,7 +25,7 @@ export const load: PageServerLoad = async (event) => {
     users = (await db.select().from(userTable).execute()) as DatabaseUser[];
     visitCount = (await db
       .select({ count: count() })
-      .from(userVisitedAdventures)
+      .from(adventureTable)
       .execute()) as unknown as number;
     userCount = (await db
       .select({ count: count() })

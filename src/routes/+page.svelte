@@ -32,3 +32,11 @@
     </div>
   </div>
 </div>
+
+<svelte:head>
+  <title>Home | AdventureLog</title>
+  <meta
+    name="description"
+    content="AdventureLog is a platform to log your adventures."
+  />
+</svelte:head>

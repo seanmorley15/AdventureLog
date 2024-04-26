@@ -1,6 +1,6 @@
 import { lucia } from "$lib/server/auth";
 import type { RequestEvent } from "@sveltejs/kit";
-import { adventureTable, userVisitedAdventures } from "$lib/db/schema";
+import { adventureTable } from "$lib/db/schema";
 import { db } from "$lib/db/db.server";
 import { and, eq } from "drizzle-orm";
 import type { Adventure } from "$lib/utils/types";

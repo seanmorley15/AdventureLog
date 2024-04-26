@@ -1,1 +1,0 @@
-ALTER TABLE "adventures" RENAME COLUMN "adventureName" TO "name";
