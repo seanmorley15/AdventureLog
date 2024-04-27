@@ -58,12 +58,24 @@
     {/if}
     <div class="card-actions justify-end">
       {#if type == "mylog"}
-        <button class="btn btn-primary" on:click={edit}>Edit</button>
-        <button class="btn btn-secondary" on:click={remove}>Remove</button>
-        <button class="btn btn-primary" on:click={moreInfo}>Info</button>
+        <button class="btn btn-primary" on:click={moreInfo}
+          ><iconify-icon icon="mdi:launch" class="text-2xl"
+          ></iconify-icon></button
+        >
+        <button class="btn btn-primary" on:click={edit}
+          ><iconify-icon icon="mdi:file-document-edit" class="text-2xl"
+          ></iconify-icon></button
+        >
+        <button class="btn btn-secondary" on:click={remove}
+          ><iconify-icon icon="mdi:trash-can-outline" class="text-2xl"
+          ></iconify-icon></button
+        >
       {/if}
       {#if type == "featured"}
-        <button class="btn btn-primary" on:click={add}>Add</button>
+        <button class="btn btn-primary" on:click={add}
+          ><iconify-icon icon="mdi:plus" class="text-2xl"
+          ></iconify-icon></button
+        >
       {/if}
     </div>
   </div>
