@@ -11,8 +11,6 @@ services:
       # Only necessary for externaly hosted databases such as NeonDB
     depends_on:
       - db
-    volumes:
-    - ./sql:/sql
   db:
     image: postgres
     environment:

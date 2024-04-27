@@ -7,7 +7,10 @@
 <div class="card w-96 shadow-xl bg-primary-content">
   <div class="card-body">
     <h2 class="card-title">{user.first_name} {user.last_name}</h2>
-    <p>{user.username} - {user.icon}</p>
+    <p>
+      {user.username}{#if user.icon}
+        - {user.icon}{/if}
+    </p>
     <p>Last Login: {user.last_login}</p>
     <p>date: {user.signup_date}</p>
     <p>{user.role}</p>

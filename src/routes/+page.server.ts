@@ -35,9 +35,17 @@ export const actions: Actions = {
     // change the theme only if it is one of the allowed themes
     if (
       theme &&
-      ["light", "dark", "night", "retro", "forest", "aqua", "forest"].includes(
-        theme
-      )
+      [
+        "light",
+        "dark",
+        "night",
+        "retro",
+        "forest",
+        "aqua",
+        "forest",
+        "garden",
+        "emerald",
+      ].includes(theme)
     ) {
       cookies.set("colortheme", theme, {
         path: "/",
