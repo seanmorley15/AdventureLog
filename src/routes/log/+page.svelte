@@ -17,10 +17,11 @@
   let newName = "";
   let newLocation = "";
 
-  let editId: number = NaN;
-  let editName: string = "";
-  let editLocation: string = "";
-  let editdate: string = "";
+  // let editId: number = NaN;
+  // let editName: string = "";
+  // let editLocation: string = "";
+  // let editdate: string = "";
+  let adventureToEdit: Adventure | undefined;
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -133,10 +134,7 @@
         adventures = adventures.map((adventure) =>
           adventure.id === event.detail.id ? event.detail : adventure
         );
-        editId = NaN;
-        editName = "";
-        editLocation = "";
-        editdate = "";
+        adventureToEdit = undefined;
         showToast("Adventure edited successfully!");
       })
       .catch((error) => {
@@ -149,10 +147,7 @@
       (adventure) => adventure.id === event.detail
     );
     if (adventure) {
-      editId = adventure.id || 0;
-      editName = adventure.name || "";
-      editLocation = adventure.location || "";
-      editdate = adventure.date || "";
+      adventureToEdit = adventure;
     }
   }
 
@@ -179,10 +174,7 @@
   }
 
   function handleClose() {
-    editId = NaN;
-    editName = "";
-    editLocation = "";
-    editdate = "";
+    adventureToEdit = undefined;
   }
 
   function deleteData() {
@@ -272,12 +264,9 @@
   <SucessToast action={toastAction} />
 {/if}
 
-{#if !Number.isNaN(editId)}
+{#if adventureToEdit && adventureToEdit.id != undefined}
   <EditModal
-    bind:editId
-    bind:editName
-    bind:editLocation
-    bind:editdate
+    bind:adventureToEdit
     on:submit={saveAdventure}
     on:close={handleClose}
   />

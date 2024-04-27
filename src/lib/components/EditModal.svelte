@@ -1,15 +1,12 @@
 <script lang="ts">
-  export let editId: number = NaN;
-  export let editName: string = "";
-  export let editLocation: string = "";
-  export let editdate: string = "";
+  export let adventureToEdit: Adventure;
   import { createEventDispatcher } from "svelte";
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
 
-  let originalName = editName;
+  let originalName = adventureToEdit.name;
 
   onMount(() => {
     modal = document.getElementById("my_modal_1") as HTMLDialogElement;
@@ -19,14 +16,8 @@
   });
 
   function submit() {
-    const adventureEdited: Adventure = {
-      id: editId,
-      name: editName,
-      location: editLocation,
-      date: editdate,
-    };
-    dispatch("submit", adventureEdited);
-    console.log(adventureEdited);
+    dispatch("submit", adventureToEdit);
+    console.log(adventureToEdit);
   }
 
   function close() {
@@ -56,7 +47,7 @@
           <input
             type="text"
             id="name"
-            bind:value={editName}
+            bind:value={adventureToEdit.name}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
@@ -65,7 +56,7 @@
           <input
             type="text"
             id="location"
-            bind:value={editLocation}
+            bind:value={adventureToEdit.location}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
@@ -74,7 +65,7 @@
           <input
             type="date"
             id="date"
-            bind:value={editdate}
+            bind:value={adventureToEdit.date}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
