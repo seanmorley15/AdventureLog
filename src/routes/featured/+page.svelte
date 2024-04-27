@@ -50,10 +50,10 @@
     <AdventureCard
       type="featured"
       on:add={add}
+      id={adventure.id}
       name={adventure.name}
       location={adventure.location}
       date=""
-      id={NaN}
     />
   {/each}
 </div>

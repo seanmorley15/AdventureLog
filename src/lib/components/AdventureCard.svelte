@@ -14,7 +14,6 @@
   export let id: Number | undefined = undefined;
   export let regionId: String | undefined = undefined;
   export let visited: Boolean | undefined = undefined;
-  export let countryCode: String | undefined = undefined;
 
   function remove() {
     dispatch("remove", id);
@@ -35,7 +34,8 @@
   }
 
   function moreInfo() {
-    goto(`/worldtravel/${countryCode}/${regionId}`);
+    console.log(id);
+    goto(`/adventure/${id}`);
   }
 </script>
 
@@ -60,6 +60,7 @@
       {#if type == "mylog"}
         <button class="btn btn-primary" on:click={edit}>Edit</button>
         <button class="btn btn-secondary" on:click={remove}>Remove</button>
+        <button class="btn btn-primary" on:click={moreInfo}>Info</button>
       {/if}
       {#if type == "featured"}
         <button class="btn btn-primary" on:click={add}>Add</button>

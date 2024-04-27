@@ -27,7 +27,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     .where(
       and(
         eq(adventureTable.id, Number(id)), // Convert id to number
-        eq(adventureTable.userId, user.id)
+        eq(adventureTable.userId, user.id),
+        eq(adventureTable.type, "mylog")
       )
     )
     .limit(1)
