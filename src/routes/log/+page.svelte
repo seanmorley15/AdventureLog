@@ -17,10 +17,6 @@
   let newName = "";
   let newLocation = "";
 
-  // let editId: number = NaN;
-  // let editName: string = "";
-  // let editLocation: string = "";
-  // let editdate: string = "";
   let adventureToEdit: Adventure | undefined;
 
   let isShowingToast: boolean = false;
