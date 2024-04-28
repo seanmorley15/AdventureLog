@@ -13,14 +13,14 @@
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
+  import MoreFieldsInput from "$lib/components/MoreFieldsInput.svelte";
 
   let newName = "";
   let newLocation = "";
 
-  let editId: number = NaN;
-  let editName: string = "";
-  let editLocation: string = "";
-  let editdate: string = "";
+  let isShowingMoreFields = false;
+
+  let adventureToEdit: Adventure | undefined;
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -59,16 +59,13 @@
     URL.revokeObjectURL(url);
   }
 
-  const createNewAdventure = () => {
-    let currentDate = new Date();
-    let dateString = currentDate.toISOString().slice(0, 10); // Get date in "yyyy-mm-dd" format
-    // post to /api/visits
-
+  const createNewAdventure = (event: { detail: Adventure }) => {
     let newAdventure: Adventure = {
       type: "mylog",
-      name: newName,
-      location: newLocation,
-      date: dateString,
+      name: event.detail.name,
+      location: event.detail.location,
+      date: event.detail.date,
+      description: event.detail.description,
       id: -1,
     };
 
@@ -90,9 +87,10 @@
           {
             id: newId,
             type: "mylog",
-            name: newName,
-            location: newLocation,
-            date: dateString,
+            name: event.detail.name,
+            location: event.detail.location,
+            date: event.detail.date,
+            description: event.detail.description,
           },
         ];
         newName = ""; // Reset newName and newLocation after adding adventure
@@ -114,6 +112,7 @@
       location: event.detail.location,
       date: event.detail.date,
       id: event.detail.id,
+      description: event.detail.description,
     };
 
     // put request to /api/visits with id and advneture data
@@ -133,10 +132,7 @@
         adventures = adventures.map((adventure) =>
           adventure.id === event.detail.id ? event.detail : adventure
         );
-        editId = NaN;
-        editName = "";
-        editLocation = "";
-        editdate = "";
+        adventureToEdit = undefined;
         showToast("Adventure edited successfully!");
       })
       .catch((error) => {
@@ -149,10 +145,7 @@
       (adventure) => adventure.id === event.detail
     );
     if (adventure) {
-      editId = adventure.id || 0;
-      editName = adventure.name || "";
-      editLocation = adventure.location || "";
-      editdate = adventure.date || "";
+      adventureToEdit = adventure;
     }
   }
 
@@ -179,10 +172,8 @@
   }
 
   function handleClose() {
-    editId = NaN;
-    editName = "";
-    editLocation = "";
-    editdate = "";
+    adventureToEdit = undefined;
+    isShowingMoreFields = false;
   }
 
   function deleteData() {
@@ -238,21 +229,13 @@
 </div>
 
 <div class="flex flex-row items-center justify-center gap-4">
-  <form on:submit={createNewAdventure} class="flex gap-2">
-    <input
-      type="text"
-      bind:value={newName}
-      placeholder="Adventure Name"
-      class="input input-bordered w-full max-w-xs"
-    />
-    <input
-      type="text"
-      bind:value={newLocation}
-      placeholder="Adventure Location"
-      class="input input-bordered w-full max-w-xs"
-    />
-    <input class="btn btn-primary" type="submit" value="Add Adventure" />
-  </form>
+  <button
+    type="button"
+    class="btn btn-secondary"
+    on:click={() => (isShowingMoreFields = !isShowingMoreFields)}
+  >
+    Show More Fields
+  </button>
 </div>
 {#if adventures.length != 0}
   <div class="flex justify-center items-center w-full mt-4 mb-4">
@@ -272,12 +255,17 @@
   <SucessToast action={toastAction} />
 {/if}
 
-{#if !Number.isNaN(editId)}
+{#if isShowingMoreFields}
+  <MoreFieldsInput
+    on:create={createNewAdventure}
+    on:close={handleClose}
+    on:submit={saveAdventure}
+  />
+{/if}
+
+{#if adventureToEdit && adventureToEdit.id != undefined}
   <EditModal
-    bind:editId
-    bind:editName
-    bind:editLocation
-    bind:editdate
+    bind:adventureToEdit
     on:submit={saveAdventure}
     on:close={handleClose}
   />
@@ -288,11 +276,8 @@
 >
   {#each adventures as adventure (adventure.id)}
     <AdventureCard
+      {adventure}
       type="mylog"
-      id={adventure.id}
-      name={adventure.name}
-      location={adventure.location}
-      date={adventure.date}
       on:edit={editAdventure}
       on:remove={removeAdventure}
     />

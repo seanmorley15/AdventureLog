@@ -2,6 +2,10 @@
   import { enhance } from "$app/forms";
 
   let loading = false;
+
+  function toggleLoad() {
+    loading = !loading;
+  }
 </script>
 
 <h1 class="text-center font-bold text-4xl">AdventureLog Setup</h1>
@@ -16,7 +20,7 @@
   <h2 class="text-center font-bold text-2xl mt-6">Create Admin User</h2>
 
   <div class="flex justify-center">
-    <form method="post" use:enhance class="w-full max-w-xs">
+    <form method="post" use:enhance={toggleLoad} class="w-full max-w-xs">
       <label for="username">Username</label>
       <input
         name="username"
@@ -59,4 +63,4 @@
     name="description"
     content="Setup AdventureLog with your admin account"
   />
-</svelte:head>;
+</svelte:head>

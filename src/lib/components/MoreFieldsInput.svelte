@@ -1,12 +1,19 @@
 <script lang="ts">
-  export let adventureToEdit: Adventure;
+  let newAdventure: Adventure;
+
+  newAdventure = {
+    id: -1,
+    type: "mylog",
+    name: "",
+    location: "",
+    date: "",
+  };
+
   import { createEventDispatcher } from "svelte";
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
-
-  let originalName = adventureToEdit.name;
 
   onMount(() => {
     modal = document.getElementById("my_modal_1") as HTMLDialogElement;
@@ -15,9 +22,9 @@
     }
   });
 
-  function submit() {
-    dispatch("submit", adventureToEdit);
-    console.log(adventureToEdit);
+  function create() {
+    dispatch("create", newAdventure);
+    console.log(newAdventure);
   }
 
   function close() {
@@ -35,7 +42,7 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-    <h3 class="font-bold text-lg">Edit Adventure {originalName}</h3>
+    <h3 class="font-bold text-lg">New Adventure</h3>
     <p class="py-4">Press ESC key or click the button below to close</p>
     <div
       class="modal-action items-center"
@@ -47,7 +54,7 @@
           <input
             type="text"
             id="name"
-            bind:value={adventureToEdit.name}
+            bind:value={newAdventure.name}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
@@ -56,16 +63,16 @@
           <input
             type="text"
             id="location"
-            bind:value={adventureToEdit.location}
+            bind:value={newAdventure.location}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
         <div>
-          <label for="date">Date</label>
+          <label for="date">date</label>
           <input
             type="date"
             id="date"
-            bind:value={adventureToEdit.date}
+            bind:value={newAdventure.date}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
@@ -74,11 +81,11 @@
           <input
             type="text"
             id="description"
-            bind:value={adventureToEdit.description}
+            bind:value={newAdventure.description}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
-        <button class="btn btn-primary mr-4 mt-4" on:click={submit}>Save</button
+        <button class="btn btn-primary mr-4 mt-4" on:click={create}>Save</button
         >
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>

@@ -8,7 +8,7 @@ import {
   userVisitedWorldTravel,
 } from "$lib/db/schema";
 import type { DatabaseUser } from "$lib/server/auth";
-import { count } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 
 export const load: PageServerLoad = async (event) => {
   let users: DatabaseUser[] = [];
@@ -26,6 +26,7 @@ export const load: PageServerLoad = async (event) => {
     visitCount = (await db
       .select({ count: count() })
       .from(adventureTable)
+      .where(eq(adventureTable.type, "mylog"))
       .execute()) as unknown as number;
     userCount = (await db
       .select({ count: count() })

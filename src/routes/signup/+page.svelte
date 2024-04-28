@@ -61,4 +61,4 @@
     name="description"
     content="Signup for AdventureLog to start logging your adventures!"
   />
-</svelte:head>;
+</svelte:head>
