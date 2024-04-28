@@ -15,7 +15,7 @@
     inject();
     injectSpeedInsights();
   } else {
-    console.log("Not using Vercel");
+    // console.log("Not using Vercel");
   }
 
   let isServerSetup = data.isServerSetup;

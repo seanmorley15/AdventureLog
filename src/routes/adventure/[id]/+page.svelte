@@ -33,7 +33,7 @@
   {/if}
   {#if adventure.date}
     <p class="text-center text-lg mt-4 pl-16 pr-16">
-      Visited on: {new Date(adventure.date).toLocaleDateString()}
+      Visited on: {adventure.date}
     </p>
   {/if}
   {#if adventure.rating !== undefined && adventure.rating !== null}

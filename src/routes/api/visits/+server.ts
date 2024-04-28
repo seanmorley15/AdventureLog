@@ -86,7 +86,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
 
   const { newAdventure } = await event.request.json();
   console.log(newAdventure);
-  const { name, location, date } = newAdventure;
+  const { name, location, date, description } = newAdventure;
 
   // insert the adventure to the user's visited list
   await db
@@ -97,6 +97,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       name: name,
       location: location,
       date: date,
+      description: description,
     })
     .execute();
   let res = await db
@@ -107,7 +108,8 @@ export async function POST(event: RequestEvent): Promise<Response> {
         eq(adventureTable.userId, event.locals.user.id),
         eq(adventureTable.name, name),
         eq(adventureTable.location, location),
-        eq(adventureTable.date, date)
+        eq(adventureTable.date, date),
+        eq(adventureTable.description, description)
       )
     )
     .execute();
@@ -142,7 +144,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
   // get properties from the body
   const { newAdventure } = await event.request.json();
   console.log(newAdventure);
-  const { name, location, date, id } = newAdventure;
+  const { name, location, date, id, description } = newAdventure;
 
   // update the adventure in the user's visited list
   await db
@@ -151,6 +153,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
       name: name,
       location: location,
       date: date,
+      description: description,
     })
     .where(
       and(
@@ -162,7 +165,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
 
   return new Response(
     JSON.stringify({
-      adventure: { id, name, location, date },
+      adventure: { id, name, location, date, description },
       message: { message: "Adventure updated" },
     }),
     {

@@ -2,6 +2,7 @@
   import type { Adventure } from "$lib/utils/types";
   export let data;
   let array = data.adventureArray as Adventure[];
+  console.log(array);
   import AdventureCard from "$lib/components/AdventureCard.svelte";
 </script>
 
@@ -20,13 +21,7 @@
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
   {#each array as adventure (adventure.id)}
-    <AdventureCard
-      type="shared"
-      id={adventure.id}
-      name={adventure.name}
-      location={adventure.location}
-      date={adventure.date}
-    />
+    <AdventureCard type="shared" {adventure} />
   {/each}
 </div>
 

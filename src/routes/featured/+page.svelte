@@ -10,11 +10,10 @@
     count = value;
   });
 
-  async function add(event: CustomEvent<{ name: string; location: string }>) {
+  async function add(event: CustomEvent<Adventure>) {
     let newAdventure: Adventure = {
       name: event.detail.name,
       location: event.detail.location,
-      date: "",
       type: "mylog",
       id: -1,
     };
@@ -47,14 +46,7 @@
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
   {#each data.result as adventure (adventure.id)}
-    <AdventureCard
-      type="featured"
-      on:add={add}
-      id={adventure.id}
-      name={adventure.name}
-      location={adventure.location}
-      date=""
-    />
+    <AdventureCard type="featured" on:add={add} {adventure} />
   {/each}
 </div>
 
