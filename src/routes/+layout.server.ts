@@ -5,7 +5,7 @@ try {
   const env = await import("$env/static/private");
   USING_VERCEL = env.USING_VERCEL;
 } catch (error) {
-  console.log(error);
+  USING_VERCEL = "false";
 }
 
 export const load: LayoutServerLoad = async (event) => {
