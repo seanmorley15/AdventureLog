@@ -78,7 +78,16 @@
         newAdventure,
       }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(
+              data.error || `Failed to add adventure - ${data?.message}`
+            );
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
         let newId = data.id;
         // add to local array for instant view update
@@ -100,6 +109,7 @@
       })
       .catch((error) => {
         console.error("Error:", error);
+        showToast(error.message);
       });
   };
 
