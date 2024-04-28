@@ -13,7 +13,7 @@
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
-  import MoreFieldsInput from "$lib/components/MoreFieldsInput.svelte";
+  import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
 
   let newName = "";
   let newLocation = "";
@@ -234,7 +234,7 @@
     class="btn btn-secondary"
     on:click={() => (isShowingMoreFields = !isShowingMoreFields)}
   >
-    Show More Fields
+    <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
   </button>
 </div>
 {#if adventures.length != 0}
@@ -307,7 +307,8 @@
       <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
     </button>
     <button class="btn btn-neutral" on:click={shareLink}>
-      <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Share as Link
+      <iconify-icon icon="mdi:share-variant" class="text-xl"></iconify-icon> Share
+      as Link
     </button>
   </div>
 {/if}

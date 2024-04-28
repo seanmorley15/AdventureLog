@@ -85,7 +85,8 @@
             class="input input-bordered w-full max-w-xs"
           />
         </div>
-        <button class="btn btn-primary mr-4 mt-4" on:click={create}>Save</button
+        <button class="btn btn-primary mr-4 mt-4" on:click={create}
+          >Create</button
         >
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
