@@ -49,6 +49,17 @@
         <p class="ml-1">{adventure.date}</p>
       </div>
     {/if}
+    {#if adventure.activityTypes && adventure.activityTypes.length > 0}
+      <ul class="flex flex-wrap">
+        {#each adventure.activityTypes as activity}
+          <div
+            class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1"
+          >
+            {activity}
+          </div>
+        {/each}
+      </ul>
+    {/if}
     <div class="card-actions justify-end">
       {#if type == "mylog"}
         <button class="btn btn-primary" on:click={moreInfo}
