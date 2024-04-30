@@ -11,6 +11,7 @@
   onMount(() => {
     if (data.adventure.adventure) {
       adventure = data.adventure.adventure[0];
+      console.log(adventure.activityTypes);
     } else {
       goto("/404");
     }
@@ -61,6 +62,14 @@
         alt={adventure.name}
         class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
       />
+    </div>
+  {/if}
+  {#if adventure.activityTypes && adventure.activityTypes.length > 0}
+    <div class="flex justify-center items-center mt-4">
+      <p class="text-center text-lg">Activities:</p>
+      <ul class="flex flex-wrap">
+        {adventure.activityTypes.toString()}
+      </ul>
     </div>
   {/if}
 {/if}
