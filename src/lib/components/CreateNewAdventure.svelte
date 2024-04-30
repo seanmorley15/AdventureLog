@@ -7,6 +7,7 @@
     name: "",
     location: "",
     date: "",
+    activityTypes: [],
   };
 
   import { createEventDispatcher } from "svelte";
@@ -23,6 +24,7 @@
   });
 
   function create() {
+    addActivityType();
     dispatch("create", newAdventure);
     console.log(newAdventure);
   }
@@ -35,6 +37,22 @@
     if (event.key === "Escape") {
       close();
     }
+  }
+
+  let activityInput: string = "";
+
+  function addActivityType() {
+    if (activityInput.trim() !== "") {
+      const activities = activityInput
+        .split(",")
+        .map((activity) => activity.trim());
+      newAdventure.activityTypes = [
+        ...(newAdventure.activityTypes || []),
+        ...activities,
+      ];
+      activityInput = "";
+    }
+    console.log(newAdventure.activityTypes);
   }
 </script>
 
@@ -85,8 +103,19 @@
             class="input input-bordered w-full max-w-xs"
           />
         </div>
-        <button class="btn btn-primary mr-4 mt-4" on:click={create}
-          >Create</button
+        <div>
+          <label for="date">Activity Types</label>
+          <input
+            type="text"
+            id="activityTypes"
+            bind:value={activityInput}
+            class="input input-bordered w-full max-w-xs"
+          />
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary mr-4 mt-4"
+          on:click={create}>Create</button
         >
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>

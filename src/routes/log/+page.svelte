@@ -67,6 +67,7 @@
       date: event.detail.date,
       description: event.detail.description,
       id: -1,
+      activityTypes: event.detail.activityTypes,
     };
 
     fetch("/api/visits", {
@@ -123,6 +124,7 @@
       date: event.detail.date,
       id: event.detail.id,
       description: event.detail.description,
+      activityTypes: event.detail.activityTypes,
     };
 
     // put request to /api/visits with id and advneture data

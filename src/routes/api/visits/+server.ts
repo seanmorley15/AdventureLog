@@ -22,7 +22,20 @@ export async function GET(event: RequestEvent): Promise<Response> {
     .execute();
   return new Response(
     // turn the result into an Adventure object array
-    JSON.stringify(result.map((r) => r as Adventure)),
+    JSON.stringify(
+      result.map((r) => {
+        const adventure: Adventure = r as Adventure;
+        if (typeof adventure.activityTypes === "string") {
+          try {
+            adventure.activityTypes = JSON.parse(adventure.activityTypes);
+          } catch (error) {
+            console.error("Error parsing activityTypes:", error);
+            adventure.activityTypes = undefined;
+          }
+        }
+        return adventure;
+      })
+    ),
     {
       status: 200,
       headers: {
@@ -86,13 +99,15 @@ export async function POST(event: RequestEvent): Promise<Response> {
 
   const { newAdventure } = await event.request.json();
   console.log(newAdventure);
-  const { name, location, date, description } = newAdventure;
+  const { name, location, date, description, activityTypes } = newAdventure;
 
   if (!name) {
     return error(400, {
       message: "Name field is required!",
     });
   }
+
+  console.log(activityTypes);
 
   // insert the adventure to the user's visited list
   let res = await db
@@ -104,6 +119,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       location: location || null,
       date: date || null,
       description: description || null,
+      activityTypes: JSON.stringify(activityTypes) || null,
     })
     .returning({ insertedId: adventureTable.id })
     .execute();
