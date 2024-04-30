@@ -1,5 +1,5 @@
 import { lucia } from "$lib/server/auth";
-import type { RequestEvent } from "@sveltejs/kit";
+import { error, type RequestEvent } from "@sveltejs/kit";
 import { adventureTable } from "$lib/db/schema";
 import { db } from "$lib/db/db.server";
 import { and, eq } from "drizzle-orm";
@@ -88,38 +88,35 @@ export async function POST(event: RequestEvent): Promise<Response> {
   console.log(newAdventure);
   const { name, location, date, description } = newAdventure;
 
+  if (!name) {
+    return error(400, {
+      message: "Name field is required!",
+    });
+  }
+
   // insert the adventure to the user's visited list
-  await db
+  let res = await db
     .insert(adventureTable)
     .values({
       userId: event.locals.user.id,
       type: "mylog",
       name: name,
-      location: location,
-      date: date,
-      description: description,
+      location: location || null,
+      date: date || null,
+      description: description || null,
     })
+    .returning({ insertedId: adventureTable.id })
     .execute();
-  let res = await db
-    .select()
-    .from(adventureTable)
-    .where(
-      and(
-        eq(adventureTable.userId, event.locals.user.id),
-        eq(adventureTable.name, name),
-        eq(adventureTable.location, location),
-        eq(adventureTable.date, date),
-        eq(adventureTable.description, description)
-      )
-    )
-    .execute();
+
+  let insertedId = res[0].insertedId;
+  console.log(insertedId);
 
   // return a response with the adventure object values
   return new Response(
     JSON.stringify({
       adventure: { name, location, date },
       message: { message: "Adventure added" },
-      id: res[0].id,
+      id: insertedId,
     }),
     {
       status: 200,

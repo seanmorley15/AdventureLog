@@ -13,7 +13,7 @@
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
-  import MoreFieldsInput from "$lib/components/MoreFieldsInput.svelte";
+  import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
 
   let newName = "";
   let newLocation = "";
@@ -78,7 +78,16 @@
         newAdventure,
       }),
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((data) => {
+            throw new Error(
+              data.error || `Failed to add adventure - ${data?.message}`
+            );
+          });
+        }
+        return response.json();
+      })
       .then((data) => {
         let newId = data.id;
         // add to local array for instant view update
@@ -100,6 +109,7 @@
       })
       .catch((error) => {
         console.error("Error:", error);
+        showToast(error.message);
       });
   };
 
@@ -234,7 +244,7 @@
     class="btn btn-secondary"
     on:click={() => (isShowingMoreFields = !isShowingMoreFields)}
   >
-    Show More Fields
+    <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
   </button>
 </div>
 {#if adventures.length != 0}
@@ -307,7 +317,8 @@
       <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
     </button>
     <button class="btn btn-neutral" on:click={shareLink}>
-      <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Share as Link
+      <iconify-icon icon="mdi:share-variant" class="text-xl"></iconify-icon> Share
+      as Link
     </button>
   </div>
 {/if}
