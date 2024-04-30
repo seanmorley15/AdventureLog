@@ -59,7 +59,7 @@
       <img
         src={adventure.imageUrl}
         alt={adventure.name}
-        class="w-50 mt-4 align-middle rounded-lg shadow-lg"
+        class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
       />
     </div>
   {/if}
