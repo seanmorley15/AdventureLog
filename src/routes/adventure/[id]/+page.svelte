@@ -66,9 +66,15 @@
   {/if}
   {#if adventure.activityTypes && adventure.activityTypes.length > 0}
     <div class="flex justify-center items-center mt-4">
-      <p class="text-center text-lg">Activities:</p>
+      <p class="text-center text-lg">Activities:&nbsp</p>
       <ul class="flex flex-wrap">
-        {adventure.activityTypes.toString()}
+        {#each adventure.activityTypes as activity}
+          <div
+            class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1"
+          >
+            {activity}
+          </div>
+        {/each}
       </ul>
     </div>
   {/if}

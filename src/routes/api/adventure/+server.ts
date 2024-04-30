@@ -39,7 +39,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     return json({ error: "Adventure not found" }, { status: 404 });
   }
 
-  let adventureData = JSON.stringify(
+  JSON.stringify(
     adventure.map((r) => {
       const adventure: Adventure = r as Adventure;
       if (typeof adventure.activityTypes === "string") {

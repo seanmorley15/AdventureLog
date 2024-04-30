@@ -9,7 +9,7 @@ export const load = (async (event) => {
     return redirect(302, "/login");
   }
 
-  let adventureUserId = await db
+  let adventureUserId: any[] = await db
     .select({ userId: adventureTable.userId })
     .from(adventureTable)
     .where(eq(adventureTable.id, Number(event.params.id)))
