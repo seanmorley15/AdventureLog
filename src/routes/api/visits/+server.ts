@@ -157,7 +157,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
   // get properties from the body
   const { newAdventure } = await event.request.json();
   console.log(newAdventure);
-  const { name, location, date, id, description } = newAdventure;
+  const { name, location, date, id, description, activityTypes } = newAdventure;
 
   // update the adventure in the user's visited list
   await db
@@ -167,6 +167,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
       location: location,
       date: date,
       description: description,
+      activityTypes: JSON.stringify(activityTypes),
     })
     .where(
       and(
