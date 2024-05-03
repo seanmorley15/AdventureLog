@@ -20,6 +20,7 @@
     dispatch("remove", adventure.id);
   }
   function edit() {
+    console.log(adventure.activityTypes);
     dispatch("edit", adventure.id);
   }
   function add() {

@@ -44,8 +44,8 @@
   function addActivityType() {
     if (activityInput.trim() !== "") {
       const activities = activityInput
-        .split(",")
-        .map((activity) => activity.trim());
+        .split(" ")
+        .filter((activity) => activity.trim() !== "");
       newAdventure.activityTypes = [
         ...(newAdventure.activityTypes || []),
         ...activities,
