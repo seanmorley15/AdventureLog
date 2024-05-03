@@ -6,6 +6,8 @@
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
 
+  console.log(adventureToEdit.id);
+
   let originalName = adventureToEdit.name;
 
   onMount(() => {

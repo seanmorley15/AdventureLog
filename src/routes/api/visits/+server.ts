@@ -86,7 +86,6 @@ export async function DELETE(event: RequestEvent): Promise<Response> {
   });
 }
 
-// add the adventure to the user's visited list
 export async function POST(event: RequestEvent): Promise<Response> {
   if (!event.locals.user) {
     return new Response(JSON.stringify({ error: "No user found" }), {
@@ -97,9 +96,15 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { newAdventure } = await event.request.json();
-  console.log(newAdventure);
-  const { name, location, date, description, activityTypes } = newAdventure;
+  const body = await event.request.json();
+  if (!body.detailAdventure) {
+    return error(400, {
+      message: "No adventure data provided",
+    });
+  }
+
+  const { name, location, date, description, activityTypes } =
+    body.detailAdventure;
 
   if (!name) {
     return error(400, {
@@ -127,10 +132,12 @@ export async function POST(event: RequestEvent): Promise<Response> {
   let insertedId = res[0].insertedId;
   console.log(insertedId);
 
+  body.detailAdventure.id = insertedId;
+
   // return a response with the adventure object values
   return new Response(
     JSON.stringify({
-      adventure: { name, location, date },
+      adventure: body.detailAdventure,
       message: { message: "Adventure added" },
       id: insertedId,
     }),
@@ -154,10 +161,21 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     });
   }
 
-  // get properties from the body
-  const { newAdventure } = await event.request.json();
-  console.log(newAdventure);
-  const { name, location, date, id, description, activityTypes } = newAdventure;
+  const body = await event.request.json();
+  if (!body.detailAdventure) {
+    return error(400, {
+      message: "No adventure data provided",
+    });
+  }
+
+  const { name, location, date, description, activityTypes, id } =
+    body.detailAdventure;
+
+  if (!name) {
+    return error(400, {
+      message: "Name field is required!",
+    });
+  }
 
   // update the adventure in the user's visited list
   await db
@@ -179,7 +197,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
 
   return new Response(
     JSON.stringify({
-      adventure: { id, name, location, date, description },
+      adventure: body.detailAdventure,
       message: { message: "Adventure updated" },
     }),
     {
