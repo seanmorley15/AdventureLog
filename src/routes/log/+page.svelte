@@ -7,6 +7,7 @@
   import type { Adventure } from "$lib/utils/types";
   import { onMount } from "svelte";
   import exportFile from "$lib/assets/exportFile.svg";
+  import ConfirmModal from "$lib/components/ConfirmModal.svelte";
   import deleteIcon from "$lib/assets/deleteIcon.svg";
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
@@ -26,6 +27,7 @@
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
+  let confirmModalOpen: boolean = false;
 
   // Sets the adventures array to the data from the server
   onMount(async () => {
@@ -122,6 +124,7 @@
 
   function handleClose() {
     adventureToEdit = undefined;
+    confirmModalOpen = false;
     isShowingMoreFields = false;
   }
 
@@ -239,7 +242,7 @@
     <button class="btn btn-neutral" on:click={exportData}>
       <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
-    <button class="btn btn-neutral" on:click={deleteData}>
+    <button class="btn btn-neutral" on:click={() => (confirmModalOpen = true)}>
       <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
     </button>
     <button class="btn btn-neutral" on:click={shareLink}>
@@ -247,6 +250,16 @@
       as Link
     </button>
   </div>
+{/if}
+
+{#if confirmModalOpen}
+  <ConfirmModal
+    on:close={handleClose}
+    on:confirm={deleteData}
+    title="Delete all Adventures"
+    isWarning={false}
+    message="Are you sure you want to delete all adventures?"
+  />
 {/if}
 
 <svelte:head>
