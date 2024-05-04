@@ -21,7 +21,7 @@ export async function GET(event: RequestEvent): Promise<Response> {
     .where(
       and(
         eq(adventureTable.userId, event.locals.user.id),
-        eq(adventureTable.type, "mylog")
+        eq(adventureTable.type, "planner")
       )
     )
     .execute();
@@ -130,7 +130,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
     .insert(adventureTable)
     .values({
       userId: event.locals.user.id,
-      type: "mylog",
+      type: "planner",
       name: name,
       location: location || null,
       date: date || null,
