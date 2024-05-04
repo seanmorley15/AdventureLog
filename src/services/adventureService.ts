@@ -1,3 +1,4 @@
+import { visitCount } from "$lib/utils/stores/visitCountStore";
 import type { Adventure } from "$lib/utils/types";
 
 /**
@@ -111,6 +112,9 @@ export async function addAdventure(
     .then((response) => response.json())
     .then((data) => {
       adventureArray.push(data.adventure);
+      if (data.adventure.type === "mylog") {
+        incrementVisitCount(1);
+      }
     })
     .catch((error) => {
       console.error("Error:", error);
@@ -118,4 +122,12 @@ export async function addAdventure(
     });
 
   return adventureArray;
+}
+
+/**
+ * Increments the visit count by the specified amount.
+ * @param {number} amount - The amount to increment the visit count by.
+ */
+export function incrementVisitCount(amount: number) {
+  visitCount.update((n) => n + 1);
 }

@@ -26,6 +26,10 @@
 
   function create() {
     addActivityType();
+    if (newAdventure.name.trim() === "") {
+      alert("Name is required");
+      return;
+    }
     dispatch("create", newAdventure);
     console.log(newAdventure);
   }
@@ -70,6 +74,7 @@
           <input
             type="text"
             id="name"
+            required
             bind:value={newAdventure.name}
             class="input input-bordered w-full max-w-xs"
           />
