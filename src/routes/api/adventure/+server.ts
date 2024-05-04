@@ -1,5 +1,6 @@
 import { db } from "$lib/db/db.server";
 import { adventureTable } from "$lib/db/schema";
+import type { Adventure } from "$lib/utils/types";
 import { json, type RequestEvent, type RequestHandler } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
 
@@ -37,6 +38,20 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   if (adventure.length === 0) {
     return json({ error: "Adventure not found" }, { status: 404 });
   }
+
+  JSON.stringify(
+    adventure.map((r) => {
+      const adventure: Adventure = r as Adventure;
+      if (typeof adventure.activityTypes === "string") {
+        try {
+          adventure.activityTypes = JSON.parse(adventure.activityTypes);
+        } catch (error) {
+          console.error("Error parsing activityTypes:", error);
+          adventure.activityTypes = undefined;
+        }
+      }
+    })
+  );
 
   //   console.log("GET /api/adventure?id=", id);
   //   console.log("User:", user);

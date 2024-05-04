@@ -11,6 +11,7 @@
   onMount(() => {
     if (data.adventure.adventure) {
       adventure = data.adventure.adventure[0];
+      console.log(adventure.activityTypes);
     } else {
       goto("/404");
     }
@@ -59,8 +60,22 @@
       <img
         src={adventure.imageUrl}
         alt={adventure.name}
-        class="w-50 mt-4 align-middle rounded-lg shadow-lg"
+        class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
       />
+    </div>
+  {/if}
+  {#if adventure.activityTypes && adventure.activityTypes.length > 0}
+    <div class="flex justify-center items-center mt-4">
+      <p class="text-center text-lg">Activities:&nbsp</p>
+      <ul class="flex flex-wrap">
+        {#each adventure.activityTypes as activity}
+          <div
+            class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1"
+          >
+            {activity}
+          </div>
+        {/each}
+      </ul>
     </div>
   {/if}
 {/if}

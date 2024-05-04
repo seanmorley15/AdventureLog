@@ -8,7 +8,6 @@ export const load: PageServerLoad = async (event) => {
   }
   const response = await event.fetch("/api/visits");
   const result = await response.json();
-  // let array = result.adventures as Adventure[];
   return {
     result,
   };

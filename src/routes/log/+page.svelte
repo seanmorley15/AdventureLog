@@ -15,9 +15,6 @@
   import { visitCount } from "$lib/utils/stores/visitCountStore";
   import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
 
-  let newName = "";
-  let newLocation = "";
-
   let isShowingMoreFields = false;
 
   let adventureToEdit: Adventure | undefined;
@@ -60,14 +57,9 @@
   }
 
   const createNewAdventure = (event: { detail: Adventure }) => {
-    let newAdventure: Adventure = {
-      type: "mylog",
-      name: event.detail.name,
-      location: event.detail.location,
-      date: event.detail.date,
-      description: event.detail.description,
-      id: -1,
-    };
+    isShowingMoreFields = false;
+    let detailAdventure = event.detail;
+    console.log("Event" + event.detail.name);
 
     fetch("/api/visits", {
       method: "POST",
@@ -75,7 +67,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        newAdventure,
+        detailAdventure,
       }),
     })
       .then((response) => {
@@ -89,21 +81,8 @@
         return response.json();
       })
       .then((data) => {
-        let newId = data.id;
         // add to local array for instant view update
-        adventures = [
-          ...adventures,
-          {
-            id: newId,
-            type: "mylog",
-            name: event.detail.name,
-            location: event.detail.location,
-            date: event.detail.date,
-            description: event.detail.description,
-          },
-        ];
-        newName = ""; // Reset newName and newLocation after adding adventure
-        newLocation = "";
+        adventures = [...adventures, data.adventure];
         showToast("Adventure added successfully!");
         visitCount.update((n) => n + 1);
       })
@@ -114,34 +93,29 @@
   };
 
   function saveAdventure(event: { detail: Adventure }) {
-    console.log("Event" + event.detail);
+    console.log("Event", event.detail);
+    let detailAdventure = event.detail;
 
-    let newAdventure: Adventure = {
-      type: "mylog",
-      name: event.detail.name,
-      location: event.detail.location,
-      date: event.detail.date,
-      id: event.detail.id,
-      description: event.detail.description,
-    };
-
-    // put request to /api/visits with id and advneture data
+    // put request to /api/visits with id and adventure data
     fetch("/api/visits", {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        newAdventure,
+        detailAdventure,
       }),
     })
       .then((response) => response.json())
       .then((data) => {
         console.log("Success:", data);
         // update local array with new data
-        adventures = adventures.map((adventure) =>
-          adventure.id === event.detail.id ? event.detail : adventure
+        const index = adventures.findIndex(
+          (adventure) => adventure.id === detailAdventure.id
         );
+        if (index !== -1) {
+          adventures[index] = detailAdventure;
+        }
         adventureToEdit = undefined;
         showToast("Adventure edited successfully!");
       })
@@ -161,6 +135,12 @@
 
   function shareLink() {
     let key = generateRandomString();
+
+    // console log each adventure in the array
+    for (let i = 0; i < adventures.length; i++) {
+      console.log(adventures[i]);
+    }
+
     let data = JSON.stringify(adventures);
     fetch("/api/share", {
       method: "POST",
@@ -269,7 +249,7 @@
   <MoreFieldsInput
     on:create={createNewAdventure}
     on:close={handleClose}
-    on:submit={saveAdventure}
+    type="mylog"
   />
 {/if}
 

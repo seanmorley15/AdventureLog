@@ -11,12 +11,7 @@
   });
 
   async function add(event: CustomEvent<Adventure>) {
-    let newAdventure: Adventure = {
-      name: event.detail.name,
-      location: event.detail.location,
-      type: "mylog",
-      id: -1,
-    };
+    let detailAdventure = event.detail;
 
     const response = await fetch("/api/visits", {
       method: "POST",
@@ -24,7 +19,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        newAdventure,
+        detailAdventure,
       }),
     });
 

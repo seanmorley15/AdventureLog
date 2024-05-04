@@ -20,6 +20,7 @@
     dispatch("remove", adventure.id);
   }
   function edit() {
+    console.log(adventure.activityTypes);
     dispatch("edit", adventure.id);
   }
   function add() {
@@ -49,8 +50,33 @@
         <p class="ml-1">{adventure.date}</p>
       </div>
     {/if}
+    {#if adventure.activityTypes && adventure.activityTypes.length > 0}
+      <ul class="flex flex-wrap">
+        {#each adventure.activityTypes as activity}
+          <div
+            class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1"
+          >
+            {activity}
+          </div>
+        {/each}
+      </ul>
+    {/if}
     <div class="card-actions justify-end">
       {#if type == "mylog"}
+        <button class="btn btn-primary" on:click={moreInfo}
+          ><iconify-icon icon="mdi:launch" class="text-2xl"
+          ></iconify-icon></button
+        >
+        <button class="btn btn-primary" on:click={edit}
+          ><iconify-icon icon="mdi:file-document-edit" class="text-2xl"
+          ></iconify-icon></button
+        >
+        <button class="btn btn-secondary" on:click={remove}
+          ><iconify-icon icon="mdi:trash-can-outline" class="text-2xl"
+          ></iconify-icon></button
+        >
+      {/if}
+      {#if type == "planner"}
         <button class="btn btn-primary" on:click={moreInfo}
           ><iconify-icon icon="mdi:launch" class="text-2xl"
           ></iconify-icon></button
