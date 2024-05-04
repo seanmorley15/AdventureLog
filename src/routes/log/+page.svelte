@@ -246,7 +246,11 @@
 {/if}
 
 {#if isShowingMoreFields}
-  <MoreFieldsInput on:create={createNewAdventure} on:close={handleClose} />
+  <MoreFieldsInput
+    on:create={createNewAdventure}
+    on:close={handleClose}
+    type="mylog"
+  />
 {/if}
 
 {#if adventureToEdit && adventureToEdit.id != undefined}

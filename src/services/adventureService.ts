@@ -67,13 +67,15 @@ export async function removeAdventure(
   if (response.ok) {
     // remove adventure from array where id matches
     adventureArray = adventureArray.filter(
-      (adventure) => adventure.id !== adventure.id
+      (existingAdventure) => existingAdventure.id !== adventure.id
     );
     // showToast("Adventure removed successfully!");
   } else {
     console.error("Error:", response.statusText);
     adventureArray = [];
   }
+
+  console.log(adventureArray);
 
   return adventureArray;
 }

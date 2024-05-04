@@ -1,9 +1,10 @@
 <script lang="ts">
   let newAdventure: Adventure;
+  export let type: string;
 
   newAdventure = {
     id: -1,
-    type: "mylog",
+    type: type,
     name: "",
     location: "",
     date: "",
