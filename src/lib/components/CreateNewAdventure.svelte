@@ -46,10 +46,7 @@
       const activities = activityInput
         .split(" ")
         .filter((activity) => activity.trim() !== "");
-      newAdventure.activityTypes = [
-        ...(newAdventure.activityTypes || []),
-        ...activities,
-      ];
+      newAdventure.activityTypes = activities;
       activityInput = "";
     }
     console.log(newAdventure.activityTypes);
@@ -104,11 +101,22 @@
           />
         </div>
         <div>
-          <label for="date">Activity Types</label>
+          <label for="date">Activity Types (Comma Seperated)</label>
           <input
             type="text"
             id="activityTypes"
             bind:value={activityInput}
+            class="input input-bordered w-full max-w-xs"
+          />
+        </div>
+        <div>
+          <label for="rating">Rating</label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            id="rating"
+            bind:value={newAdventure.rating}
             class="input input-bordered w-full max-w-xs"
           />
         </div>

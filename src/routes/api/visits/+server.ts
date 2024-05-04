@@ -103,12 +103,18 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes } =
+  const { name, location, date, description, activityTypes, rating } =
     body.detailAdventure;
 
   if (!name) {
     return error(400, {
       message: "Name field is required!",
+    });
+  }
+
+  if (rating && (rating < 1 || rating > 5)) {
+    return error(400, {
+      message: "Rating must be between 1 and 5",
     });
   }
 
@@ -125,6 +131,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       date: date || null,
       description: description || null,
       activityTypes: JSON.stringify(activityTypes) || null,
+      rating: rating || null,
     })
     .returning({ insertedId: adventureTable.id })
     .execute();
@@ -168,7 +175,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes, id } =
+  const { name, location, date, description, activityTypes, id, rating } =
     body.detailAdventure;
 
   if (!name) {
@@ -185,6 +192,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
       location: location,
       date: date,
       description: description,
+      rating: rating,
       activityTypes: JSON.stringify(activityTypes),
     })
     .where(

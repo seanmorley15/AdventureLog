@@ -40,9 +40,8 @@
     if (activityInput.trim() !== "") {
       const activities = activityInput
         .split(",")
-        .map((activity) => activity.trim());
+        .filter((activity) => activity.trim() !== "");
       adventureToEdit.activityTypes = activities;
-      // override the original activity types
       activityInput = "";
     }
     console.log(adventureToEdit.activityTypes);
@@ -97,11 +96,22 @@
           />
         </div>
         <div>
-          <label for="date">Activity Types</label>
+          <label for="date">Activity Types (Comma Seperated)</label>
           <input
             type="text"
             id="activityTypes"
             bind:value={activityInput}
+            class="input input-bordered w-full max-w-xs"
+          />
+        </div>
+        <div>
+          <label for="rating">Rating</label>
+          <input
+            type="number"
+            min="0"
+            max="5"
+            id="rating"
+            bind:value={adventureToEdit.rating}
             class="input input-bordered w-full max-w-xs"
           />
         </div>
