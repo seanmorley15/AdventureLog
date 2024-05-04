@@ -4,6 +4,8 @@
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import EditModal from "$lib/components/EditModal.svelte";
   import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
+  import { saveAdventure } from "../../services/adventureService.js";
+  import SucessToast from "$lib/components/SucessToast.svelte";
   export let data;
   let plans: Adventure[] = [];
   let isLoading = true;
@@ -16,9 +18,22 @@
 
   let isShowingMoreFields: boolean = false;
 
+  let isShowingToast: boolean = false;
+  let toastAction: string = "";
+
   let adventureToEdit: Adventure | undefined;
 
   console.log(data);
+
+  function showToast(action: string) {
+    toastAction = action;
+    isShowingToast = true;
+
+    setTimeout(() => {
+      isShowingToast = false;
+      toastAction = "";
+    }, 3000);
+  }
 
   function editPlan(event: { detail: number }) {
     const adventure = plans.find((adventure) => adventure.id === event.detail);
@@ -32,36 +47,15 @@
     isShowingMoreFields = false;
   }
 
-  function savePlan(event: { detail: Adventure }) {
-    console.log("Event", event.detail);
-    let detailAdventure = event.detail;
-
-    // put request to /api/visits with id and adventure data
-    fetch("/api/planner", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        detailAdventure,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // update local array with new data
-        const index = plans.findIndex(
-          (adventure) => adventure.id === detailAdventure.id
-        );
-        if (index !== -1) {
-          plans[index] = detailAdventure;
-        }
-        adventureToEdit = undefined;
-        // showToast("Adventure edited successfully!");
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+  async function savePlan(event: { detail: Adventure }) {
+    let newArray = await saveAdventure(event.detail, plans);
+    if (newArray.length > 0) {
+      plans = newArray;
+      showToast("Adventure updated successfully!");
+    } else {
+      showToast("Failed to update adventure");
+    }
+    adventureToEdit = undefined;
   }
 
   function removeAdventure(event: { detail: number }) {
@@ -123,6 +117,10 @@
       });
   };
 </script>
+
+{#if isShowingToast}
+  <SucessToast action={toastAction} />
+{/if}
 
 <div class="flex flex-row items-center justify-center gap-4">
   <button
