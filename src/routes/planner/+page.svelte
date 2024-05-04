@@ -7,6 +7,7 @@
   import {
     saveAdventure,
     removeAdventure,
+    addAdventure,
   } from "../../services/adventureService.js";
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
@@ -76,40 +77,15 @@
     }
   }
 
-  const createNewAdventure = (event: { detail: Adventure }) => {
+  const createNewAdventure = async (event: { detail: Adventure }) => {
     isShowingMoreFields = false;
-    let detailAdventure = event.detail;
-    console.log("Event" + event.detail.name);
-
-    fetch("/api/planner", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        detailAdventure,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then((data) => {
-            throw new Error(
-              data.error || `Failed to add adventure - ${data?.message}`
-            );
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        // add to local array for instant view update
-        plans = [...plans, data.adventure];
-        // showToast("Adventure added successfully!");
-        // visitCount.update((n) => n + 1);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        // showToast(error.message);
-      });
+    let newArray = await addAdventure(event.detail, plans);
+    if (newArray.length > 0) {
+      plans = newArray;
+      showToast("Adventure added successfully!");
+    } else {
+      showToast("Failed to add adventure");
+    }
   };
 </script>
 

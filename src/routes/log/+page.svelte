@@ -7,6 +7,7 @@
   import type { Adventure } from "$lib/utils/types";
   import { onMount } from "svelte";
   import exportFile from "$lib/assets/exportFile.svg";
+  import ConfirmModal from "$lib/components/ConfirmModal.svelte";
   import deleteIcon from "$lib/assets/deleteIcon.svg";
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
@@ -14,6 +15,11 @@
   import { generateRandomString } from "$lib";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
   import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
+  import {
+    addAdventure,
+    removeAdventure,
+    saveAdventure,
+  } from "../../services/adventureService.js";
 
   let isShowingMoreFields = false;
 
@@ -21,6 +27,7 @@
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
+  let confirmModalOpen: boolean = false;
 
   // Sets the adventures array to the data from the server
   onMount(async () => {
@@ -56,72 +63,26 @@
     URL.revokeObjectURL(url);
   }
 
-  const createNewAdventure = (event: { detail: Adventure }) => {
+  const createNewAdventure = async (event: { detail: Adventure }) => {
     isShowingMoreFields = false;
-    let detailAdventure = event.detail;
-    console.log("Event" + event.detail.name);
-
-    fetch("/api/visits", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        detailAdventure,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          return response.json().then((data) => {
-            throw new Error(
-              data.error || `Failed to add adventure - ${data?.message}`
-            );
-          });
-        }
-        return response.json();
-      })
-      .then((data) => {
-        // add to local array for instant view update
-        adventures = [...adventures, data.adventure];
-        showToast("Adventure added successfully!");
-        visitCount.update((n) => n + 1);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-        showToast(error.message);
-      });
+    let newArray = await addAdventure(event.detail, adventures);
+    if (newArray.length > 0) {
+      adventures = newArray;
+      showToast("Adventure added successfully!");
+    } else {
+      showToast("Failed to add adventure");
+    }
   };
 
-  function saveAdventure(event: { detail: Adventure }) {
-    console.log("Event", event.detail);
-    let detailAdventure = event.detail;
-
-    // put request to /api/visits with id and adventure data
-    fetch("/api/visits", {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        detailAdventure,
-      }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // update local array with new data
-        const index = adventures.findIndex(
-          (adventure) => adventure.id === detailAdventure.id
-        );
-        if (index !== -1) {
-          adventures[index] = detailAdventure;
-        }
-        adventureToEdit = undefined;
-        showToast("Adventure edited successfully!");
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+  async function save(event: { detail: Adventure }) {
+    let newArray = await saveAdventure(event.detail, adventures);
+    if (newArray.length > 0) {
+      adventures = newArray;
+      showToast("Adventure updated successfully!");
+    } else {
+      showToast("Failed to update adventure");
+    }
+    adventureToEdit = undefined;
   }
 
   function editAdventure(event: { detail: number }) {
@@ -163,6 +124,7 @@
 
   function handleClose() {
     adventureToEdit = undefined;
+    confirmModalOpen = false;
     isShowingMoreFields = false;
   }
 
@@ -186,29 +148,20 @@
       });
   }
 
-  function removeAdventure(event: { detail: number }) {
-    console.log("Event ID " + event.detail);
-    // send delete request to server at /api/visits
-    fetch("/api/visits", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: event.detail }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // remove adventure from array where id matches
-        adventures = adventures.filter(
-          (adventure) => adventure.id !== event.detail
-        );
+  async function remove(event: { detail: number }) {
+    let initialLength: number = adventures.length;
+    let theAdventure = adventures.find(
+      (adventure) => adventure.id === event.detail
+    );
+    if (theAdventure) {
+      let newArray = await removeAdventure(theAdventure, adventures);
+      if (newArray.length === initialLength - 1) {
+        adventures = newArray;
         showToast("Adventure removed successfully!");
-        visitCount.update((n) => n - 1);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+      } else {
+        showToast("Failed to remove adventure");
+      }
+    }
   }
 </script>
 
@@ -254,11 +207,7 @@
 {/if}
 
 {#if adventureToEdit && adventureToEdit.id != undefined}
-  <EditModal
-    bind:adventureToEdit
-    on:submit={saveAdventure}
-    on:close={handleClose}
-  />
+  <EditModal bind:adventureToEdit on:submit={save} on:close={handleClose} />
 {/if}
 
 <div
@@ -269,7 +218,7 @@
       {adventure}
       type="mylog"
       on:edit={editAdventure}
-      on:remove={removeAdventure}
+      on:remove={remove}
     />
   {/each}
 </div>
@@ -293,7 +242,7 @@
     <button class="btn btn-neutral" on:click={exportData}>
       <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
     </button>
-    <button class="btn btn-neutral" on:click={deleteData}>
+    <button class="btn btn-neutral" on:click={() => (confirmModalOpen = true)}>
       <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
     </button>
     <button class="btn btn-neutral" on:click={shareLink}>
@@ -301,6 +250,16 @@
       as Link
     </button>
   </div>
+{/if}
+
+{#if confirmModalOpen}
+  <ConfirmModal
+    on:close={handleClose}
+    on:confirm={deleteData}
+    title="Delete all Adventures"
+    isWarning={false}
+    message="Are you sure you want to delete all adventures?"
+  />
 {/if}
 
 <svelte:head>

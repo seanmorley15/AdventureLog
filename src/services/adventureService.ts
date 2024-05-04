@@ -1,6 +1,9 @@
+import { visitCount } from "$lib/utils/stores/visitCountStore";
 import type { Adventure } from "$lib/utils/types";
 
-// json that maps the type to api routes
+/**
+ * Object containing the API routes for the different types of adventures.
+ */
 const apiRoutes: { [key: string]: string } = {
   planner: "/api/planner",
   mylog: "/api/visits",
@@ -50,6 +53,12 @@ export async function saveAdventure(
   return adventureArray;
 }
 
+/**
+ * Removes an adventure from the adventure array and sends a delete request to the server.
+ * @param adventure - The adventure to be removed.
+ * @param adventureArray - The array of adventures.
+ * @returns A promise that resolves to the updated adventure array.
+ */
 export async function removeAdventure(
   adventure: Adventure,
   adventureArray: Adventure[]
@@ -81,28 +90,44 @@ export async function removeAdventure(
 }
 
 /**
- * function removeAdventure(event: { detail: number }) {
-    console.log("Event ID " + event.detail);
-    // send delete request to server at /api/visits
-    fetch("/api/visits", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: event.detail }),
+ * Adds an adventure to the adventure array and sends a POST request to the specified URL.
+ * @param {Adventure} adventure - The adventure to be added.
+ * @param {Adventure[]} adventureArray - The array of adventures.
+ * @returns {Promise<Adventure[]>} - A promise that resolves to the updated adventure array.
+ */
+export async function addAdventure(
+  adventure: Adventure,
+  adventureArray: Adventure[]
+): Promise<Adventure[]> {
+  let url = apiRoutes[adventure.type];
+  let detailAdventure = adventure;
+  // post request to /api/visits with adventure data
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ detailAdventure }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      adventureArray.push(data.adventure);
+      if (data.adventure.type === "mylog") {
+        incrementVisitCount(1);
+      }
     })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // remove adventure from array where id matches
-        plans = plans.filter((adventure) => adventure.id !== event.detail);
-        // showToast("Adventure removed successfully!");
-        // visitCount.update((n) => n - 1);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
-  }
- * 
- * 
-    */
+    .catch((error) => {
+      console.error("Error:", error);
+      return [];
+    });
+
+  return adventureArray;
+}
+
+/**
+ * Increments the visit count by the specified amount.
+ * @param {number} amount - The amount to increment the visit count by.
+ */
+export function incrementVisitCount(amount: number) {
+  visitCount.update((n) => n + 1);
+}
