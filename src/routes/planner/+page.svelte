@@ -4,7 +4,10 @@
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import EditModal from "$lib/components/EditModal.svelte";
   import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
-  import { saveAdventure } from "../../services/adventureService.js";
+  import {
+    saveAdventure,
+    removeAdventure,
+  } from "../../services/adventureService.js";
   import SucessToast from "$lib/components/SucessToast.svelte";
   export let data;
   let plans: Adventure[] = [];
@@ -58,27 +61,18 @@
     adventureToEdit = undefined;
   }
 
-  function removeAdventure(event: { detail: number }) {
-    console.log("Event ID " + event.detail);
-    // send delete request to server at /api/visits
-    fetch("/api/visits", {
-      method: "DELETE",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: event.detail }),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        console.log("Success:", data);
-        // remove adventure from array where id matches
-        plans = plans.filter((adventure) => adventure.id !== event.detail);
-        // showToast("Adventure removed successfully!");
-        // visitCount.update((n) => n - 1);
-      })
-      .catch((error) => {
-        console.error("Error:", error);
-      });
+  async function remove(event: { detail: number }) {
+    let initialLenght: number = plans.length;
+    let theAdventure = plans.find((adventure) => adventure.id === event.detail);
+    if (theAdventure) {
+      let newArray = await removeAdventure(theAdventure, plans);
+      if (newArray.length == initialLenght - 1) {
+        plans = newArray;
+        showToast("Adventure removed successfully!");
+      } else {
+        showToast("Failed to remove adventure");
+      }
+    }
   }
 
   const createNewAdventure = (event: { detail: Adventure }) => {
@@ -146,7 +140,7 @@
       {adventure}
       type="planner"
       on:edit={editPlan}
-      on:remove={removeAdventure}
+      on:remove={remove}
     />
   {/each}
 </div>

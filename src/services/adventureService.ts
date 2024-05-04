@@ -50,36 +50,57 @@ export async function saveAdventure(
   return adventureArray;
 }
 
-/**
- * function savePlan(event: { detail: Adventure }) {
-    console.log("Event", event.detail);
-    let detailAdventure = event.detail;
+export async function removeAdventure(
+  adventure: Adventure,
+  adventureArray: Adventure[]
+): Promise<Adventure[]> {
+  let url = apiRoutes[adventure.type];
+  // delete request to /api/visits with id
+  const response = await fetch(url, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ id: adventure.id }),
+  });
 
-    // put request to /api/visits with id and adventure data
-    fetch("/api/planner", {
-      method: "PUT",
+  if (response.ok) {
+    // remove adventure from array where id matches
+    adventureArray = adventureArray.filter(
+      (adventure) => adventure.id !== adventure.id
+    );
+    // showToast("Adventure removed successfully!");
+  } else {
+    console.error("Error:", response.statusText);
+    adventureArray = [];
+  }
+
+  return adventureArray;
+}
+
+/**
+ * function removeAdventure(event: { detail: number }) {
+    console.log("Event ID " + event.detail);
+    // send delete request to server at /api/visits
+    fetch("/api/visits", {
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        detailAdventure,
-      }),
+      body: JSON.stringify({ id: event.detail }),
     })
       .then((response) => response.json())
       .then((data) => {
         console.log("Success:", data);
-        // update local array with new data
-        const index = plans.findIndex(
-          (adventure) => adventure.id === detailAdventure.id
-        );
-        if (index !== -1) {
-          plans[index] = detailAdventure;
-        }
-        adventureToEdit = undefined;
-        // showToast("Adventure edited successfully!");
+        // remove adventure from array where id matches
+        plans = plans.filter((adventure) => adventure.id !== event.detail);
+        // showToast("Adventure removed successfully!");
+        // visitCount.update((n) => n - 1);
       })
       .catch((error) => {
         console.error("Error:", error);
       });
   }
+ * 
+ * 
     */
