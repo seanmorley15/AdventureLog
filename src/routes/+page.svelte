@@ -27,7 +27,7 @@
       <div class="flex flex-col justify-center space-y-4">
         <div class="space-y-2">
           <h1
-            class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
+            class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
           >
             Discover the World's Most Thrilling Adventures
           </h1>
@@ -68,7 +68,7 @@
           Key Features
         </div>
         <h2
-          class="text-3xl font-bold tracking-tighter sm:text-5xl dark:text-gray-400"
+          class="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
         >
           Discover, Plan, and Explore with Ease
         </h2>
