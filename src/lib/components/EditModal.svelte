@@ -4,6 +4,7 @@
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
+  import { addActivityType } from "$lib";
   let modal: HTMLDialogElement;
 
   console.log(adventureToEdit.id);
@@ -19,7 +20,7 @@
   });
 
   function submit() {
-    addActivityType();
+    activitySetup();
     dispatch("submit", adventureToEdit);
     console.log(adventureToEdit);
   }
@@ -36,15 +37,9 @@
 
   let activityInput: string = "";
 
-  function addActivityType() {
-    if (activityInput.trim() !== "") {
-      const activities = activityInput
-        .split(",")
-        .filter((activity) => activity.trim() !== "");
-      adventureToEdit.activityTypes = activities;
-      activityInput = "";
-    }
-    console.log(adventureToEdit.activityTypes);
+  function activitySetup() {
+    adventureToEdit = addActivityType(activityInput, adventureToEdit);
+    activityInput = "";
   }
 </script>
 
