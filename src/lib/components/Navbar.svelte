@@ -91,12 +91,14 @@
         tabindex="0"
         class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 gap-2"
       >
-        <li>
-          <button on:click={() => goto("/log")}>My Log</button>
-        </li>
-        <li>
-          <button on:click={() => goto("/planner")}>Planner</button>
-        </li>
+        {#if user}
+          <li>
+            <button on:click={() => goto("/log")}>My Log</button>
+          </li>
+          <li>
+            <button on:click={() => goto("/planner")}>Planner</button>
+          </li>
+        {/if}
         <li>
           <button on:click={() => goto("/worldtravel")}>World Travel</button>
         </li>
@@ -118,16 +120,18 @@
   </div>
   <div class="navbar-center hidden lg:flex">
     <ul class="menu menu-horizontal px-1 gap-2">
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/log")}
-          >My Log</button
-        >
-      </li>
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/planner")}
-          >Planner</button
-        >
-      </li>
+      {#if user}
+        <li>
+          <button class="btn btn-neutral" on:click={() => goto("/log")}
+            >My Log</button
+          >
+        </li>
+        <li>
+          <button class="btn btn-neutral" on:click={() => goto("/planner")}
+            >Planner</button
+          >
+        </li>
+      {/if}
       <li>
         <button class="btn btn-neutral" on:click={() => goto("/worldtravel")}
           >World Travel</button

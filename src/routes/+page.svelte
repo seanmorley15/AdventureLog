@@ -6,6 +6,8 @@
   import { goto } from "$app/navigation";
   import campingDrawing from "$lib/assets/camping.svg";
   import { visitCount } from "$lib/utils/stores/visitCountStore";
+  import AdventureOverlook from "$lib/assets/AdventureOverlook.webp";
+  import MapWithPins from "$lib/assets/MapWithPins.webp";
 
   async function navToLog() {
     goto("/log");
@@ -45,7 +47,7 @@
         </div>
       </div>
       <img
-        src="https://images.unsplash.com/photo-1463693396721-8ca0cfa2b3b5?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        src={AdventureOverlook}
         width="550"
         height="550"
         alt="Hero"
@@ -82,7 +84,7 @@
     >
       <!-- svelte-ignore a11y-img-redundant-alt -->
       <img
-        src="https://images.unsplash.com/photo-1516738901171-8eb4fc13bd20?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+        src={MapWithPins}
         width="550"
         height="310"
         alt="Image"
