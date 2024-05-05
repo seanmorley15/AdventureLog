@@ -15,6 +15,7 @@
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
+  import { addActivityType } from "$lib";
   let modal: HTMLDialogElement;
 
   onMount(() => {
@@ -25,7 +26,7 @@
   });
 
   function create() {
-    addActivityType();
+    activitySetup();
     if (newAdventure.name.trim() === "") {
       alert("Name is required");
       return;
@@ -46,15 +47,9 @@
 
   let activityInput: string = "";
 
-  function addActivityType() {
-    if (activityInput.trim() !== "") {
-      const activities = activityInput
-        .split(" ")
-        .filter((activity) => activity.trim() !== "");
-      newAdventure.activityTypes = activities;
-      activityInput = "";
-    }
-    console.log(newAdventure.activityTypes);
+  function activitySetup() {
+    newAdventure = addActivityType(activityInput, newAdventure);
+    activityInput = "";
   }
 </script>
 

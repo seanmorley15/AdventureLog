@@ -1,6 +1,7 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
+  import InfoModal from "./InfoModal.svelte";
   export let user: any;
 
   let icon: string = "";
@@ -17,6 +18,8 @@
   async function navToLog() {
     goto("/log");
   }
+
+  let isInfoModalOpen: boolean = false;
 </script>
 
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
@@ -42,8 +45,17 @@
         <button on:click={() => goto("/settings/admin")}>Admin Settings</button>
       </li>
     {/if}
+    <li>
+      <button on:click={() => (isInfoModalOpen = true)}
+        >About AdventureLog</button
+      >
+    </li>
     <form method="post">
       <li><button formaction="/?/logout">Logout</button></li>
     </form>
   </ul>
 </div>
+
+{#if isInfoModalOpen}
+  <InfoModal on:close={() => (isInfoModalOpen = false)} />
+{/if}

@@ -180,7 +180,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes, id, rating } =
+  const { name, location, date, description, activityTypes, id, rating, type } =
     body.detailAdventure;
 
   if (!name) {
@@ -189,11 +189,18 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     });
   }
 
+  if (type == "featured") {
+    return error(400, {
+      message: "Featured adventures cannot be created at the moment",
+    });
+  }
+
   // update the adventure in the user's visited list
   await db
     .update(adventureTable)
     .set({
       name: name,
+      type: type,
       location: location,
       date: date,
       description: description,

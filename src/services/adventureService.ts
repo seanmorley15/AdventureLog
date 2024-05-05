@@ -124,6 +124,37 @@ export async function addAdventure(
   return adventureArray;
 }
 
+export async function changeType(
+  newAdventure: Adventure,
+  newType: string,
+  adventureArray: Adventure[]
+) {
+  newAdventure.type = newType;
+  let detailAdventure = newAdventure;
+
+  const response = await fetch("/api/visits", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ detailAdventure }),
+  });
+
+  if (response.ok) {
+    // remove adventure from array where id matches
+    adventureArray = adventureArray.filter(
+      (existingAdventure) => existingAdventure.id !== newAdventure.id
+    );
+    // showToast("Adventure removed successfully!");
+  } else {
+    console.error("Error:", response.statusText);
+    adventureArray = [];
+  }
+
+  console.log(adventureArray);
+
+  return adventureArray;
+}
 /**
  * Increments the visit count by the specified amount.
  * @param {number} amount - The amount to increment the visit count by.

@@ -1,5 +1,6 @@
 import inspirationalQuotes from "./json/quotes.json";
 import countryCodes from "./json/countries.json";
+import type { Adventure } from "./utils/types";
 
 /**
  * Converts a country code to its corresponding country name.
@@ -8,7 +9,8 @@ import countryCodes from "./json/countries.json";
  */
 export function countryCodeToName(countryCode: string): string | null {
   // Look up the country name using the provided country code
-  const countryName = countryCodes[countryCode.toLowerCase() as keyof typeof countryCodes];
+  const countryName =
+    countryCodes[countryCode.toLowerCase() as keyof typeof countryCodes];
   // Return the country name if found, otherwise return null
   return countryName || null;
 }
@@ -19,10 +21,10 @@ export function countryCodeToName(countryCode: string): string | null {
  * @param country - The 2 digit country code representing the desired flag.
  * @returns The URL of the flag image.
  */
-export function getFlag(size:number,country: string) {
+export function getFlag(size: number, country: string) {
   return `https://flagcdn.com/h${size}/${country}.png`;
 }
-    
+
 /**
  * Generates a random string consisting of alphanumeric characters.
  * @returns {string} The randomly generated string.
@@ -48,5 +50,30 @@ export function getRandomQuote() {
   const randomIndex = Math.floor(Math.random() * quotes.length);
   let quoteString = quotes[randomIndex].quote;
   let authorString = quotes[randomIndex].author;
-  return "\"" + quoteString +  "\" - "  + authorString;
+  return '"' + quoteString + '" - ' + authorString;
+}
+
+/**
+ * Adds activity types to the adventure.
+ *
+ * @param activityInput - The input string containing activity types separated by commas.
+ * @param adventureToEdit - The adventure object to which the activity types will be added.
+ * @returns The adventure object with the updated activity types.
+ */
+export function addActivityType(
+  activityInput: string,
+  adventureToEdit: Adventure
+) {
+  if (activityInput.trim() !== "") {
+    const activities = activityInput
+      .split(",")
+      .filter((activity) => activity.trim() !== "");
+    // trims the whitespace from the activities
+    for (let i = 0; i < activities.length; i++) {
+      activities[i] = activities[i].trim();
+    }
+    adventureToEdit.activityTypes = activities;
+    activityInput = "";
+  }
+  return adventureToEdit;
 }
