@@ -27,7 +27,7 @@
       <div class="flex flex-col justify-center space-y-4">
         <div class="space-y-2">
           <h1
-            class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none"
+            class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
           >
             Discover the World's Most Thrilling Adventures
           </h1>
@@ -63,11 +63,13 @@
     >
       <div class="space-y-2">
         <div
-          class="inline-block rounded-lg bg-gray-100 px-3 py-1 text-sm dark:bg-gray-800"
+          class="inline-block rounded-lg bg-gray-100 px-3 py-1 text-md dark:bg-gray-800 dark:text-gray-400"
         >
           Key Features
         </div>
-        <h2 class="text-3xl font-bold tracking-tighter sm:text-5xl">
+        <h2
+          class="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+        >
           Discover, Plan, and Explore with Ease
         </h2>
         <p
@@ -94,7 +96,9 @@
         <ul class="grid gap-6">
           <li>
             <div class="grid gap-1">
-              <h3 class="text-xl font-bold">Trip Planning</h3>
+              <h3 class="text-xl font-bold dark:text-gray-400">
+                Trip Planning
+              </h3>
               <p class="text-gray-500 dark:text-gray-400">
                 Easily create custom itineraries and get real-time updates on
                 your trip.
@@ -103,7 +107,9 @@
           </li>
           <li>
             <div class="grid gap-1">
-              <h3 class="text-xl font-bold">Packing Lists</h3>
+              <h3 class="text-xl font-bold dark:text-gray-400">
+                Packing Lists
+              </h3>
               <p class="text-gray-500 dark:text-gray-400">
                 Never forget a thing with our comprehensive packing lists.
               </p>
@@ -111,7 +117,9 @@
           </li>
           <li>
             <div class="grid gap-1">
-              <h3 class="text-xl font-bold">Destination Guides</h3>
+              <h3 class="text-xl font-bold dark:text-gray-400">
+                Destination Guides
+              </h3>
               <p class="text-gray-500 dark:text-gray-400">
                 Discover the best attractions, activities, and hidden gems in
                 your destination.
