@@ -31,6 +31,10 @@
     console.log(adventure.id);
     goto(`/adventure/${adventure.id}`);
   }
+  function markVisited() {
+    console.log(adventure.id);
+    dispatch("markVisited", adventure);
+  }
 </script>
 
 <div
@@ -77,6 +81,10 @@
         >
       {/if}
       {#if type == "planner"}
+        <button class="btn btn-success" on:click={markVisited}
+          ><iconify-icon icon="mdi:check-bold" class="text-2xl"
+          ></iconify-icon></button
+        >
         <button class="btn btn-primary" on:click={moreInfo}
           ><iconify-icon icon="mdi:launch" class="text-2xl"
           ></iconify-icon></button

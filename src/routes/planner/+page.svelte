@@ -8,6 +8,7 @@
     saveAdventure,
     removeAdventure,
     addAdventure,
+    changeType,
   } from "../../services/adventureService.js";
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
@@ -87,6 +88,18 @@
       showToast("Failed to add adventure");
     }
   };
+
+  async function markVisited(event: { detail: Adventure }) {
+    let initialLength: number = plans.length;
+    let newArray = await changeType(event.detail, "mylog", plans);
+    if (newArray.length + 1 == initialLength) {
+      plans = newArray;
+      showToast("Adventure moved to visit log!");
+    } else {
+      showToast("Failed to moves adventure");
+    }
+    adventureToEdit = undefined;
+  }
 </script>
 
 {#if isShowingToast}
@@ -131,6 +144,7 @@
       type="planner"
       on:edit={editPlan}
       on:remove={remove}
+      on:markVisited={markVisited}
     />
   {/each}
 </div>
@@ -153,3 +167,52 @@
     type="planner"
   />
 {/if}
+
+<!-- ----------------------- -->
+
+<!-- {#if plans.length == 0 && !isLoading}
+  <div class="flex flex-col items-center justify-center mt-16">
+    <article class="prose mb-4"><h2>Add some adventures!</h2></article>
+    <img src={mapDrawing} width="25%" alt="Logo" />
+  </div>
+{/if}
+
+{#if plans.length != 0 && !isLoading}
+  <div class="flex justify-center items-center w-full mt-4">
+    <article class="prose">
+      <h2 class="text-center">Actions</h2>
+    </article>
+  </div>
+  <div
+    class="flex flex-row items-center justify-center mt-2 gap-4 mb-4 flex-wrap"
+  >
+    <button class="btn btn-neutral" on:click={exportData}>
+      <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
+    </button>
+    <button class="btn btn-neutral" on:click={() => (confirmModalOpen = true)}>
+      <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
+    </button>
+    <button class="btn btn-neutral" on:click={shareLink}>
+      <iconify-icon icon="mdi:share-variant" class="text-xl"></iconify-icon> Share
+      as Link
+    </button>
+  </div>
+{/if}
+
+{#if confirmModalOpen}
+  <ConfirmModal
+    on:close={handleClose}
+    on:confirm={deleteData}
+    title="Delete all Adventures"
+    isWarning={false}
+    message="Are you sure you want to delete all adventures?"
+  />
+{/if} -->
+
+<svelte:head>
+  <title>My Plans | AdventureLog</title>
+  <meta
+    name="description"
+    content="Create and manage your adventure plans here!"
+  />
+</svelte:head>
