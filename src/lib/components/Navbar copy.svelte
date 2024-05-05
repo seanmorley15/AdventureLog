@@ -68,76 +68,55 @@
   }
 </script>
 
-<div class="navbar bg-base-100">
-  <div class="navbar-start">
-    <div class="dropdown">
-      <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          class="h-5 w-5"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          ><path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 6h16M4 12h8m-8 6h16"
-          /></svg
-        >
-      </div>
-      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-      <ul
-        tabindex="0"
-        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+<div class="navbar bg-base-100 flex flex-col md:flex-row">
+  <div class="navbar-start flex justify-around md:justify-start">
+    <button
+      class="btn btn-primary my-2 md:my-0 md:mr-4 md:ml-2"
+      on:click={goHome}>Home</button
+    >
+    {#if user}
+      <button class="btn btn-primary my-2 md:my-0 md:mr-4" on:click={goToLog}
+        >My Log</button
       >
-        <li>
-          <button on:click={() => goto("/log")}>My Log</button>
-        </li>
-        <li>
-          <button on:click={() => goto("/planner")}>Planner</button>
-        </li>
-        <li>
-          <button on:click={() => goto("/worldtravel")}>World Travel</button>
-        </li>
-        <li>
-          <button on:click={() => goto("/featured")}>Featured</button>
-        </li>
-      </ul>
-    </div>
+      <button
+        class="btn btn-primary my-2 md:my-0 md:mr-4"
+        on:click={() => goto("/planner")}>Planner</button
+      >
+
+      <!-- <button
+        class="btn btn-primary my-2 md:my-0 md:mr-4"
+        on:click={() => goto("/planner")}>Planner</button
+      > -->
+    {/if}
+    <button
+      class="btn btn-primary my-2 md:my-0 md:mr-4"
+      on:click={goToWorldTravel}>World Tavel Log</button
+    >
+    <button class="btn btn-primary my-2 md:my-0" on:click={goToFeatured}
+      >Featured</button
+    >
+  </div>
+  <div class="navbar-center flex justify-center md:justify-center">
     <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
   </div>
-  <div class="navbar-center hidden lg:flex">
-    <ul class="menu menu-horizontal px-1 gap-2">
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/log")}
-          >My Log</button
-        >
-      </li>
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/planner")}
-          >Planner</button
-        >
-      </li>
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/worldtravel")}
-          >World Travel</button
-        >
-      </li>
-      <li>
-        <button class="btn btn-neutral" on:click={() => goto("/featured")}
-          >Featured</button
-        >
-      </li>
-    </ul>
-  </div>
-  <div class="navbar-end">
-    {#if user}
-      <UserAvatar {user} />
-    {:else}
-      <button class="btn btn-primary mr-2" on:click={toToLogin}>Login</button>
-      <button class="btn btn-primary" on:click={goToSignup}>Signup</button>
+
+  {#if infoModalOpen}
+    <InfoModal on:close={closeModal} />
+  {/if}
+  <div class="navbar-end flex justify-around md:justify-end mr-4">
+    {#if !user}
+      <button class="btn btn-primary ml-4" on:click={toToLogin}>Login</button>
+      <button class="btn btn-primary ml-4" on:click={goToSignup}>Signup</button>
     {/if}
+
+    {#if user}
+      <p class="font-bold">Adventures: {count}</p>
+      <UserAvatar {user} />
+    {/if}
+    <button class="btn btn-neutral ml-4 btn-circle" on:click={showModal}
+      ><iconify-icon icon="mdi:information" class="text-xl"
+      ></iconify-icon></button
+    >
     <div class="dropdown dropdown-bottom dropdown-end">
       <div tabindex="0" role="button" class="btn m-1 ml-4">
         <iconify-icon icon="mdi:theme-light-dark" class="text-xl"
