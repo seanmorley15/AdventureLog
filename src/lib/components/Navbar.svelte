@@ -89,7 +89,7 @@
       <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <ul
         tabindex="0"
-        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52"
+        class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 gap-2"
       >
         <li>
           <button on:click={() => goto("/log")}>My Log</button>
@@ -103,6 +103,15 @@
         <li>
           <button on:click={() => goto("/featured")}>Featured</button>
         </li>
+        {#if !user}
+          <li>
+            <button class="btn btn-primary" on:click={toToLogin}>Login</button>
+          </li>
+          <li>
+            <button class="btn btn-primary" on:click={goToSignup}>Signup</button
+            >
+          </li>
+        {/if}
       </ul>
     </div>
     <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
@@ -129,14 +138,19 @@
           >Featured</button
         >
       </li>
+      {#if !user}
+        <li>
+          <button class="btn btn-primary" on:click={toToLogin}>Login</button>
+        </li>
+        <li>
+          <button class="btn btn-primary" on:click={goToSignup}>Signup</button>
+        </li>
+      {/if}
     </ul>
   </div>
   <div class="navbar-end">
     {#if user}
       <UserAvatar {user} />
-    {:else}
-      <button class="btn btn-primary mr-2" on:click={toToLogin}>Login</button>
-      <button class="btn btn-primary" on:click={goToSignup}>Signup</button>
     {/if}
     <div class="dropdown dropdown-bottom dropdown-end">
       <div tabindex="0" role="button" class="btn m-1 ml-4">
