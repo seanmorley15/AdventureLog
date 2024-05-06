@@ -1,6 +1,5 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
-  import { visitCount } from "$lib/utils/stores/visitCountStore";
   import { goto } from "$app/navigation";
   import type { DatabaseUser } from "$lib/server/auth";
   export let user: any;
@@ -46,20 +45,6 @@
   function closeModal() {
     infoModalOpen = false;
   }
-
-  // get value from fetch /api/visitcount
-
-  $: if (user) {
-    onMount(async () => {
-      const res = await fetch("/api/visitcount");
-      const data = await res.json();
-      visitCount.set(data.visitCount);
-    });
-  }
-
-  visitCount.subscribe((value) => {
-    count = value;
-  });
 
   // Set the visit count to the number of adventures stored in local storage
   const isBrowser = typeof window !== "undefined";

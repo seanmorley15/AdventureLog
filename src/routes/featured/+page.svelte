@@ -2,13 +2,7 @@
   export let data;
   import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
-  import { visitCount } from "$lib/utils/stores/visitCountStore.js";
   import type { Adventure } from "$lib/utils/types.js";
-
-  let count = 0;
-  visitCount.subscribe((value) => {
-    count = value;
-  });
 
   async function add(event: CustomEvent<Adventure>) {
     let detailAdventure = event.detail;
@@ -25,8 +19,6 @@
 
     if (response.status === 401) {
       goto("/login");
-    } else {
-      visitCount.update((n) => n + 1);
     }
   }
 </script>

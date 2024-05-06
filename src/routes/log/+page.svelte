@@ -13,7 +13,6 @@
   import mapDrawing from "$lib/assets/adventure_map.svg";
   import EditModal from "$lib/components/EditModal.svelte";
   import { generateRandomString } from "$lib";
-  import { visitCount } from "$lib/utils/stores/visitCountStore";
   import MoreFieldsInput from "$lib/components/CreateNewAdventure.svelte";
   import {
     addAdventure,
@@ -34,11 +33,6 @@
     console.log(data);
     adventures = data.result;
     isLoading = false;
-  });
-
-  let count = 0;
-  visitCount.subscribe((value) => {
-    count = value;
   });
 
   function showToast(action: string) {
@@ -141,7 +135,6 @@
         // remove adventure from array where id matches
         adventures = [];
         showToast("Adventure removed successfully!");
-        visitCount.set(0);
       })
       .catch((error) => {
         console.error("Error:", error);
