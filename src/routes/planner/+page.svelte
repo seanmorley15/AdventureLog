@@ -18,14 +18,15 @@
   let adventuresPlans: Adventure[] = [];
   let tripPlans: Trip[] = [];
 
-  let isLoading = true;
+  let isLoadingIdeas: boolean = true;
+  let isLoadingTrips: boolean = true;
 
   onMount(async () => {
     console.log(data);
-
+    getAllTrips();
     console.log(tripPlans);
     adventuresPlans = data.result;
-    isLoading = false;
+    isLoadingIdeas = false;
   });
 
   let isShowingMoreFields: boolean = false;
@@ -127,10 +128,30 @@
       .then((response) => response.json())
       .then((data) => {
         console.log("Success:", data);
+        newTrip = data.trip;
+        console.log(newTrip);
         tripPlans = [...tripPlans, newTrip];
       })
       .catch((error) => {
         console.error("Error:", error);
+      });
+  }
+
+  async function getAllTrips() {
+    const response = await fetch("/api/trips", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        tripPlans = data;
+        isLoadingTrips = false;
+      })
+      .catch((error) => {
+        showToast("Failed to get trips");
       });
   }
 </script>
@@ -172,7 +193,7 @@
   </div>
 {/if}
 
-{#if isLoading}
+{#if isLoadingIdeas && isLoadingTrips}
   <div class="flex justify-center items-center w-full mt-16">
     <span class="loading loading-spinner w-24 h-24"></span>
   </div>
@@ -192,7 +213,7 @@
   {/each}
 </div>
 
-{#if adventuresPlans.length == 0 && !isLoading}
+{#if adventuresPlans.length == 0 && !isLoadingIdeas}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some plans!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />

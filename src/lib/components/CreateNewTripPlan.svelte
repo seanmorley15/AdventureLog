@@ -85,7 +85,7 @@
         <div>
           <label for="date">End Date</label>
           <input
-            type="text"
+            type="date"
             id="endDate"
             bind:value={newTrip.endDate}
             class="input input-bordered w-full max-w-xs"

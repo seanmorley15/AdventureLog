@@ -49,7 +49,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
 
   return new Response(
     JSON.stringify({
-      tirp: body.newTrip,
+      trip: body.newTrip,
       message: { message: "Trip added" },
       id: insertedId,
     }),
