@@ -158,20 +158,30 @@
   }
 </script>
 
-<div class="flex justify-center items-center w-full mt-4 mb-4">
-  <article class="prose">
-    <h2 class="text-center">Add new Location</h2>
-  </article>
-</div>
-
-<div class="flex flex-row items-center justify-center gap-4">
-  <button
-    type="button"
-    class="btn btn-secondary"
-    on:click={() => (isShowingMoreFields = !isShowingMoreFields)}
-  >
-    <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
-  </button>
+<div class="fixed bottom-4 right-4">
+  <div class="flex flex-row items-center justify-center gap-4">
+    <div class="dropdown dropdown-top dropdown-end">
+      <div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
+        <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
+      </div>
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+      <ul
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
+      >
+        <p class="text-center font-bold text-lg">Create new...</p>
+        <button
+          class="btn btn-primary"
+          on:click={() => (isShowingMoreFields = true)}
+          >Visited Adventure</button
+        >
+        <!-- <button
+          class="btn btn-primary"
+          on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
+        > -->
+      </ul>
+    </div>
+  </div>
 </div>
 {#if adventures.length != 0}
   <div class="flex justify-center items-center w-full mt-4 mb-4">
