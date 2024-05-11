@@ -213,7 +213,7 @@
   {/each}
 </div>
 
-{#if adventuresPlans.length == 0 && !isLoadingIdeas}
+{#if adventuresPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && tripPlans.length == 0}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some plans!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
@@ -260,47 +260,6 @@
     </article>
   </div>
 {/each}
-
-<!-- ----------------------- -->
-
-<!-- {#if plans.length == 0 && !isLoading}
-  <div class="flex flex-col items-center justify-center mt-16">
-    <article class="prose mb-4"><h2>Add some adventures!</h2></article>
-    <img src={mapDrawing} width="25%" alt="Logo" />
-  </div>
-{/if}
-
-{#if plans.length != 0 && !isLoading}
-  <div class="flex justify-center items-center w-full mt-4">
-    <article class="prose">
-      <h2 class="text-center">Actions</h2>
-    </article>
-  </div>
-  <div
-    class="flex flex-row items-center justify-center mt-2 gap-4 mb-4 flex-wrap"
-  >
-    <button class="btn btn-neutral" on:click={exportData}>
-      <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
-    </button>
-    <button class="btn btn-neutral" on:click={() => (confirmModalOpen = true)}>
-      <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
-    </button>
-    <button class="btn btn-neutral" on:click={shareLink}>
-      <iconify-icon icon="mdi:share-variant" class="text-xl"></iconify-icon> Share
-      as Link
-    </button>
-  </div>
-{/if}
-
-{#if confirmModalOpen}
-  <ConfirmModal
-    on:close={handleClose}
-    on:confirm={deleteData}
-    title="Delete all Adventures"
-    isWarning={false}
-    message="Are you sure you want to delete all adventures?"
-  />
-{/if} -->
 
 <svelte:head>
   <title>My Plans | AdventureLog</title>
