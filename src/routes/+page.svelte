@@ -7,6 +7,7 @@
   import campingDrawing from "$lib/assets/camping.svg";
   import AdventureOverlook from "$lib/assets/AdventureOverlook.webp";
   import MapWithPins from "$lib/assets/MapWithPins.webp";
+  import { onMount } from "svelte";
 
   async function navToLog() {
     goto("/log");
@@ -27,11 +28,29 @@
     >
       <div class="flex flex-col justify-center space-y-4">
         <div class="space-y-2">
-          <h1
-            class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
-          >
-            Discover the World's Most Thrilling Adventures
-          </h1>
+          {#if data.user}
+            {#if data.user.first_name && data.user.first_name !== null}
+              <h1
+                class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
+              >
+                {data.user.first_name.charAt(0).toUpperCase() +
+                  data.user.first_name.slice(1)}, Discover the World's Most
+                Thrilling Adventures
+              </h1>
+            {:else}
+              <h1
+                class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
+              >
+                Discover the World's Most Thrilling Adventures
+              </h1>
+            {/if}
+          {:else}
+            <h1
+              class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
+            >
+              Discover the World's Most Thrilling Adventures
+            </h1>
+          {/if}
           <p class="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
             Discover and plan your next epic adventure with our cutting-edge
             travel app. Explore breathtaking destinations, create custom
