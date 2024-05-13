@@ -58,6 +58,10 @@
         ><iconify-icon icon="mdi:trash-can-outline" class="text-2xl"
         ></iconify-icon></button
       >
+      <button class="btn btn-primary" on:click={() => goto(`/trip/${trip.id}`)}
+        ><iconify-icon icon="mdi:launch" class="text-2xl"
+        ></iconify-icon></button
+      >
     </div>
   </div>
 </div>
