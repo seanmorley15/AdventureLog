@@ -82,16 +82,16 @@ export const userVisitedWorldTravel = pgTable("userVisitedWorldTravel", {
     .references(() => worldTravelCountryRegions.id),
 });
 
-export const userPlannedAdventures = pgTable("userPlannedAdventures", {
+export const userPlannedTrips = pgTable("userPlannedTrips", {
   id: serial("id").primaryKey(),
   userId: text("userId")
     .notNull()
     .references(() => userTable.id),
   name: text("adventureName").notNull(),
-  location: text("location"),
-  activityTypes: json("activityTypes"),
   description: text("description"),
-  date: text("plannedDate"),
+  startDate: text("startDate"),
+  endDate: text("endDate"),
+  adventures: json("adventures"),
 });
 
 export const adventureTable = pgTable("adventures", {

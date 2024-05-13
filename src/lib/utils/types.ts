@@ -10,3 +10,12 @@ export interface Adventure {
   imageUrl?: string | undefined;
   date?: string | undefined;
 }
+
+export interface Trip {
+  id: number;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  adventures?: Adventure[] | [];
+}

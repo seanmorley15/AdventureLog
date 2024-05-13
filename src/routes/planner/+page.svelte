@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Adventure } from "$lib/utils/types.js";
+  import type { Adventure, Trip } from "$lib/utils/types";
   import { onMount } from "svelte";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import EditModal from "$lib/components/EditModal.svelte";
@@ -9,20 +9,28 @@
     removeAdventure,
     addAdventure,
     changeType,
-  } from "../../services/adventureService.js";
+  } from "../../services/adventureService";
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
+  import CreateNewTripPlan from "$lib/components/CreateNewTripPlan.svelte";
   export let data;
-  let plans: Adventure[] = [];
-  let isLoading = true;
+
+  let adventuresPlans: Adventure[] = [];
+  let tripPlans: Trip[] = [];
+
+  let isLoadingIdeas: boolean = true;
+  let isLoadingTrips: boolean = true;
 
   onMount(async () => {
     console.log(data);
-    plans = data.result;
-    isLoading = false;
+    getAllTrips();
+    console.log(tripPlans);
+    adventuresPlans = data.result;
+    isLoadingIdeas = false;
   });
 
   let isShowingMoreFields: boolean = false;
+  let isShowingNewTrip: boolean = false;
 
   let isShowingToast: boolean = false;
   let toastAction: string = "";
@@ -42,7 +50,9 @@
   }
 
   function editPlan(event: { detail: number }) {
-    const adventure = plans.find((adventure) => adventure.id === event.detail);
+    const adventure = adventuresPlans.find(
+      (adventure) => adventure.id === event.detail
+    );
     if (adventure) {
       adventureToEdit = adventure;
     }
@@ -54,9 +64,9 @@
   }
 
   async function savePlan(event: { detail: Adventure }) {
-    let newArray = await saveAdventure(event.detail, plans);
+    let newArray = await saveAdventure(event.detail, adventuresPlans);
     if (newArray.length > 0) {
-      plans = newArray;
+      adventuresPlans = newArray;
       showToast("Adventure updated successfully!");
     } else {
       showToast("Failed to update adventure");
@@ -65,12 +75,14 @@
   }
 
   async function remove(event: { detail: number }) {
-    let initialLength: number = plans.length;
-    let theAdventure = plans.find((adventure) => adventure.id === event.detail);
+    let initialLength: number = adventuresPlans.length;
+    let theAdventure = adventuresPlans.find(
+      (adventure) => adventure.id === event.detail
+    );
     if (theAdventure) {
-      let newArray = await removeAdventure(theAdventure, plans);
+      let newArray = await removeAdventure(theAdventure, adventuresPlans);
       if (newArray.length === initialLength - 1) {
-        plans = newArray;
+        adventuresPlans = newArray;
         showToast("Adventure removed successfully!");
       } else {
         showToast("Failed to remove adventure");
@@ -80,9 +92,9 @@
 
   const createNewAdventure = async (event: { detail: Adventure }) => {
     isShowingMoreFields = false;
-    let newArray = await addAdventure(event.detail, plans);
+    let newArray = await addAdventure(event.detail, adventuresPlans);
     if (newArray.length > 0) {
-      plans = newArray;
+      adventuresPlans = newArray;
       showToast("Adventure added successfully!");
     } else {
       showToast("Failed to add adventure");
@@ -90,15 +102,57 @@
   };
 
   async function markVisited(event: { detail: Adventure }) {
-    let initialLength: number = plans.length;
-    let newArray = await changeType(event.detail, "mylog", plans);
+    let initialLength: number = adventuresPlans.length;
+    let newArray = await changeType(event.detail, "mylog", adventuresPlans);
     if (newArray.length + 1 == initialLength) {
-      plans = newArray;
+      adventuresPlans = newArray;
       showToast("Adventure moved to visit log!");
     } else {
       showToast("Failed to moves adventure");
     }
     adventureToEdit = undefined;
+  }
+
+  async function createNewTrip(event: { detail: Trip }) {
+    isShowingNewTrip = false;
+    let newTrip: Trip = event.detail;
+    // post the trip object to /api/trips
+    // if successful, add the trip to the tripPlans array
+    const response = await fetch("/api/trips", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ newTrip }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        newTrip = data.trip;
+        console.log(newTrip);
+        tripPlans = [...tripPlans, newTrip];
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+  async function getAllTrips() {
+    const response = await fetch("/api/trips", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        tripPlans = data;
+        isLoadingTrips = false;
+      })
+      .catch((error) => {
+        showToast("Failed to get trips");
+      });
   }
 </script>
 
@@ -106,30 +160,40 @@
   <SucessToast action={toastAction} />
 {/if}
 
-<div class="flex justify-center items-center w-full mt-4 mb-4">
-  <article class="prose">
-    <h2 class="text-center">Add new Plan</h2>
-  </article>
+<div class="fixed bottom-4 right-4">
+  <div class="flex flex-row items-center justify-center gap-4">
+    <div class="dropdown dropdown-top dropdown-end">
+      <div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
+        <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
+      </div>
+      <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+      <ul
+        tabindex="0"
+        class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
+      >
+        <p class="text-center font-bold text-lg">Create new...</p>
+        <button
+          class="btn btn-primary"
+          on:click={() => (isShowingMoreFields = true)}>Adventure Idea</button
+        >
+        <button
+          class="btn btn-primary"
+          on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
+        >
+      </ul>
+    </div>
+  </div>
 </div>
 
-<div class="flex flex-row items-center justify-center gap-4">
-  <button
-    type="button"
-    class="btn btn-secondary"
-    on:click={() => (isShowingMoreFields = !isShowingMoreFields)}
-  >
-    <iconify-icon icon="mdi:plus" class="text-2xl"></iconify-icon>
-  </button>
-</div>
-{#if plans.length != 0}
+{#if adventuresPlans.length != 0}
   <div class="flex justify-center items-center w-full mt-4 mb-4">
     <article class="prose">
-      <h1 class="text-center">My Adventure Plans</h1>
+      <h1 class="text-center">My Adventure Ideas</h1>
     </article>
   </div>
 {/if}
 
-{#if isLoading}
+{#if isLoadingIdeas && isLoadingTrips}
   <div class="flex justify-center items-center w-full mt-16">
     <span class="loading loading-spinner w-24 h-24"></span>
   </div>
@@ -138,7 +202,7 @@
 <div
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
-  {#each plans as adventure (adventure.id)}
+  {#each adventuresPlans as adventure (adventure.id)}
     <AdventureCard
       {adventure}
       type="planner"
@@ -149,7 +213,7 @@
   {/each}
 </div>
 
-{#if plans.length == 0 && !isLoading}
+{#if adventuresPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && tripPlans.length == 0}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some plans!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
@@ -168,46 +232,34 @@
   />
 {/if}
 
-<!-- ----------------------- -->
-
-<!-- {#if plans.length == 0 && !isLoading}
-  <div class="flex flex-col items-center justify-center mt-16">
-    <article class="prose mb-4"><h2>Add some adventures!</h2></article>
-    <img src={mapDrawing} width="25%" alt="Logo" />
-  </div>
+{#if isShowingNewTrip}
+  <CreateNewTripPlan
+    on:close={() => (isShowingNewTrip = false)}
+    on:create={createNewTrip}
+  />
 {/if}
 
-{#if plans.length != 0 && !isLoading}
-  <div class="flex justify-center items-center w-full mt-4">
+{#if tripPlans.length !== 0}
+  <div class="flex justify-center items-center w-full mt-4 mb-4">
     <article class="prose">
-      <h2 class="text-center">Actions</h2>
+      <h1 class="text-center">My Trip Plans</h1>
     </article>
   </div>
-  <div
-    class="flex flex-row items-center justify-center mt-2 gap-4 mb-4 flex-wrap"
-  >
-    <button class="btn btn-neutral" on:click={exportData}>
-      <img src={exportFile} class="inline-block -mt-1" alt="Logo" /> Save as File
-    </button>
-    <button class="btn btn-neutral" on:click={() => (confirmModalOpen = true)}>
-      <img src={deleteIcon} class="inline-block -mt-1" alt="Logo" /> Delete Data
-    </button>
-    <button class="btn btn-neutral" on:click={shareLink}>
-      <iconify-icon icon="mdi:share-variant" class="text-xl"></iconify-icon> Share
-      as Link
-    </button>
-  </div>
 {/if}
 
-{#if confirmModalOpen}
-  <ConfirmModal
-    on:close={handleClose}
-    on:confirm={deleteData}
-    title="Delete all Adventures"
-    isWarning={false}
-    message="Are you sure you want to delete all adventures?"
-  />
-{/if} -->
+{#each tripPlans as trip (trip.id)}
+  <div class="flex justify-center items-center w-full mt-4 mb-4">
+    <article class="prose">
+      <h2>{trip.name}</h2>
+      <p>{trip.description}</p>
+      <p>
+        <strong>Start Date:</strong>
+        {trip.startDate} <strong>End Date:</strong>
+        {trip.endDate}
+      </p>
+    </article>
+  </div>
+{/each}
 
 <svelte:head>
   <title>My Plans | AdventureLog</title>
