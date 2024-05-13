@@ -13,6 +13,7 @@
   import SucessToast from "$lib/components/SucessToast.svelte";
   import mapDrawing from "$lib/assets/adventure_map.svg";
   import CreateNewTripPlan from "$lib/components/CreateNewTripPlan.svelte";
+  import TripCard from "$lib/components/TripCard.svelte";
   export let data;
 
   let adventuresPlans: Adventure[] = [];
@@ -154,6 +155,34 @@
         showToast("Failed to get trips");
       });
   }
+
+  async function removeTrip(event: { detail: number }) {
+    let initialLength: number = tripPlans.length;
+    const response = await fetch("/api/trips", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: event.detail }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        console.log("Success:", data);
+        let theTrip = tripPlans.find((trip) => trip.id === event.detail);
+        if (theTrip) {
+          let newArray = tripPlans.filter((trip) => trip.id !== event.detail);
+          if (newArray.length === initialLength - 1) {
+            tripPlans = newArray;
+            showToast("Trip removed successfully!");
+          } else {
+            showToast("Failed to remove trip");
+          }
+        }
+      })
+      .catch((error) => {
+        showToast("Failed to get trips");
+      });
+  }
 </script>
 
 {#if isShowingToast}
@@ -247,19 +276,20 @@
   </div>
 {/if}
 
-{#each tripPlans as trip (trip.id)}
-  <div class="flex justify-center items-center w-full mt-4 mb-4">
-    <article class="prose">
-      <h2>{trip.name}</h2>
-      <p>{trip.description}</p>
-      <p>
-        <strong>Start Date:</strong>
-        {trip.startDate} <strong>End Date:</strong>
-        {trip.endDate}
-      </p>
-    </article>
+<div
+  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
+>
+  {#each tripPlans as trip (trip.id)}
+    <TripCard {trip} on:remove={removeTrip} />
+  {/each}
+</div>
+
+{#if tripPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip}
+  <div class="flex flex-col items-center justify-center mt-16">
+    <article class="prose mb-4"><h2>Add some trips!</h2></article>
+    <img src={mapDrawing} width="25%" alt="Logo" />
   </div>
-{/each}
+{/if}
 
 <svelte:head>
   <title>My Plans | AdventureLog</title>

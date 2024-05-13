@@ -1,7 +1,7 @@
 import { db } from "$lib/db/db.server";
 import { userPlannedTrips } from "$lib/db/schema";
 import { error, type RequestEvent } from "@sveltejs/kit";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 export async function POST(event: RequestEvent): Promise<Response> {
   if (!event.locals.user) {
@@ -86,6 +86,41 @@ export async function GET(event: RequestEvent): Promise<Response> {
   }
 
   return new Response(JSON.stringify(trips), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+export async function DELETE(event: RequestEvent): Promise<Response> {
+  if (!event.locals.user) {
+    return new Response(JSON.stringify({ error: "No user found" }), {
+      status: 401,
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  const body = await event.request.json();
+  if (!body.id) {
+    return error(400, {
+      message: "No trip id provided",
+    });
+  }
+
+  let res = await db
+    .delete(userPlannedTrips)
+    .where(
+      and(
+        eq(userPlannedTrips.userId, event.locals.user.id),
+        eq(userPlannedTrips.id, body.id)
+      )
+    )
+    .execute();
+
+  return new Response(JSON.stringify({ message: "Trip deleted" }), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
