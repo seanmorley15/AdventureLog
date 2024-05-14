@@ -18,7 +18,7 @@ _**⚠️ AdventureLog is in early development and is not recommended for produc
 
 **Note**: The `ORIGIN` variable is required for CSRF protection. It can be omitted if using a reverse proxy or other HTTPS service.
 
-## About AdventureLog ℹ️
+## About AdventureLog
 
 AdventureLog is a Svelte Kit application that utilizes a PostgreSQL database. Users can log the adventures they have experienced, as well as plan future ones. Key features include:
 
@@ -29,7 +29,7 @@ AdventureLog is a Svelte Kit application that utilizes a PostgreSQL database. Us
 
 AdventureLog aims to be your ultimate travel companion, helping you document your adventures and plan new ones effortlessly.
 
-AdventureLog is liscensed under the GNU General Public License v3.0.
+AdventureLog is licensed under the GNU General Public License v3.0.
 
 ## Roadmap 🛣️
 
