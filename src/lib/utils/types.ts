@@ -9,6 +9,7 @@ export interface Adventure {
   link?: string | undefined;
   imageUrl?: string | undefined;
   date?: string | undefined;
+  tripId?: number | undefined;
 }
 
 export interface Trip {
