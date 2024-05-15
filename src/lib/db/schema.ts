@@ -91,7 +91,6 @@ export const userPlannedTrips = pgTable("userPlannedTrips", {
   description: text("description"),
   startDate: text("startDate"),
   endDate: text("endDate"),
-  adventures: json("adventures"),
 });
 
 export const adventureTable = pgTable("adventures", {
@@ -106,4 +105,5 @@ export const adventureTable = pgTable("adventures", {
   link: text("link"),
   imageUrl: text("imageUrl"),
   date: text("date"),
+  tripId: integer("tripId").references(() => userPlannedTrips.id),
 });

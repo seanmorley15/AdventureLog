@@ -2,7 +2,7 @@ import { lucia } from "$lib/server/auth";
 import { error, type RequestEvent } from "@sveltejs/kit";
 import { adventureTable } from "$lib/db/schema";
 import { db } from "$lib/db/db.server";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Adventure } from "$lib/utils/types";
 
 // Gets all the adventures that the user has visited
@@ -21,7 +21,8 @@ export async function GET(event: RequestEvent): Promise<Response> {
     .where(
       and(
         eq(adventureTable.userId, event.locals.user.id),
-        eq(adventureTable.type, "planner")
+        eq(adventureTable.type, "planner"),
+        isNull(adventureTable.tripId)
       )
     )
     .execute();
