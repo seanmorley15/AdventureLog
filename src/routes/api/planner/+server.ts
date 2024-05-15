@@ -109,7 +109,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes, rating } =
+  const { name, location, date, description, activityTypes, rating, tripId } =
     body.detailAdventure;
 
   if (!name) {
@@ -134,6 +134,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       type: "planner",
       name: name,
       location: location || null,
+      tripId: tripId || null,
       date: date || null,
       description: description || null,
       activityTypes: JSON.stringify(activityTypes) || null,
