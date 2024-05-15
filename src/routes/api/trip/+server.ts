@@ -22,7 +22,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     return json({ error: "Missing adventure ID" }, { status: 400 });
   }
 
-  const trip = await db
+  let trip = await db
     .select()
     .from(userPlannedTrips)
     .where(
@@ -38,14 +38,37 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     return json({ error: "Trip not found" }, { status: 404 });
   }
 
+  let adventures = await db
+    .select()
+    .from(adventureTable)
+    .where(eq(adventureTable.tripId, trip[0].id))
+    .execute();
+
   JSON.stringify(
     trip.map((r) => {
       const adventure: Trip = r as Trip;
     })
   );
 
+  if (adventures.length !== 0) {
+    JSON.stringify(
+      adventures.map((r) => {
+        const adventure: Adventure = r as Adventure;
+        if (typeof adventure.activityTypes === "string") {
+          try {
+            adventure.activityTypes = JSON.parse(adventure.activityTypes);
+          } catch (error) {
+            console.error("Error parsing activityTypes:", error);
+            adventure.activityTypes = undefined;
+          }
+        }
+        return adventure;
+      })
+    );
+  }
+
   //   console.log("GET /api/adventure?id=", id);
   //   console.log("User:", user);
 
-  return json({ trip }, { status: 200 });
+  return json({ trip, adventures }, { status: 200 });
 };
