@@ -11,11 +11,11 @@ export const load: PageServerLoad = async (event) => {
     return {
       user: event.locals.user,
     };
-    return redirect(302, "/login");
+  return redirect(302, "/login");
 };
 
 export const actions: Actions = {
-    default: async (event: { request: { formData: () => any; }; }) => {
+  default: async (event: { request: { formData: () => any } }) => {
     const formData = await event.request.formData();
     let userId = formData.get("user_id");
     let username = formData.get("username");
@@ -26,22 +26,22 @@ export const actions: Actions = {
     let password = formData.get("password");
 
     if (!userId) {
-        return {
-            status: 400,
-            body: {
-                message: "User ID is required"
-            }
-        };
+      return {
+        status: 400,
+        body: {
+          message: "User ID is required",
+        },
+      };
     }
 
-    if (icon.length > 1) {
-        return {
-            status: 400,
-            body: {
-                message: "Icon must be a single character"
-            }
-        };
-    }
+    // if (icon.length > 1) {
+    //   return {
+    //     status: 400,
+    //     body: {
+    //       message: "Icon must be a single character",
+    //     },
+    //   };
+    // }
 
     const usernameTaken = await db
       .select()
@@ -50,40 +50,42 @@ export const actions: Actions = {
       .limit(1)
       .then((results) => results[0] as unknown as DatabaseUser | undefined);
 
-    if (usernameTaken) {
-        return {
-            status: 400,
-            body: {
-                message: "Username taken!"
-            }
-        };
+    if (usernameTaken && usernameTaken.id !== userId) {
+      return {
+        status: 400,
+        body: {
+          message: "Username taken!",
+        },
+      };
     }
 
     if (password) {
-        let hashedPassword = await new Argon2id().hash(password);
-        console.log(hashedPassword)
-        await db.update(userTable)
-            .set({
-                hashed_password: hashedPassword
-            })
-            .where(eq(userTable.id, userId));
-    }
-
-    await db.update(userTable)
+      let hashedPassword = await new Argon2id().hash(password);
+      console.log(hashedPassword);
+      await db
+        .update(userTable)
         .set({
-            username: username,
-            first_name: firstName,
-            last_name: lastName,
-            icon: icon
+          hashed_password: hashedPassword,
         })
         .where(eq(userTable.id, userId));
-
-        return {
-            status: 200,
-            body: {
-                message: "User updated"
-                
-            }
-        };
     }
+
+    await db
+      .update(userTable)
+      .set({
+        username: username,
+        first_name: firstName,
+        last_name: lastName,
+        icon: icon,
+      })
+      .where(eq(userTable.id, userId));
+
+    // return a page refresh
+    return {
+      status: 303,
+      headers: {
+        location: "/settings",
+      },
+    };
+  },
 };

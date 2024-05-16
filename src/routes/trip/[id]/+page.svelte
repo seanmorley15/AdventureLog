@@ -4,8 +4,14 @@
   import type { PageData } from "./$types";
   import { goto } from "$app/navigation";
   import CreateNewAdventure from "$lib/components/CreateNewAdventure.svelte";
-  import { addAdventure } from "../../../services/adventureService";
+  import {
+    addAdventure,
+    removeAdventure,
+    saveAdventure,
+  } from "../../../services/adventureService";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
+  import EditModal from "$lib/components/EditModal.svelte";
+  import SucessToast from "$lib/components/SucessToast.svelte";
 
   export let data: PageData;
 
@@ -14,6 +20,7 @@
   let isCreateModalOpen: boolean = false;
 
   let adventuresPlans: Adventure[] = [];
+  let adventureToEdit: Adventure | undefined;
 
   onMount(() => {
     if (data.trip.trip) {
@@ -25,6 +32,11 @@
     }
   });
 
+  function handleClose() {
+    adventureToEdit = undefined;
+    isCreateModalOpen = false;
+  }
+
   const newAdventure = async (event: { detail: Adventure }) => {
     isCreateModalOpen = false;
     let detailAdventure = event.detail;
@@ -32,12 +44,65 @@
     let newArray = await addAdventure(detailAdventure, adventuresPlans);
     if (newArray.length > 0) {
       adventuresPlans = newArray;
-      // showToast("Adventure added successfully!");
+      showToast("Adventure added successfully!");
     } else {
-      // showToast("Failed to add adventure");
+      showToast("Failed to add adventure");
     }
   };
+
+  let isShowingToast: boolean = false;
+  let toastAction: string = "";
+
+  function showToast(action: string) {
+    toastAction = action;
+    isShowingToast = true;
+
+    setTimeout(() => {
+      isShowingToast = false;
+      toastAction = "";
+    }, 3000);
+  }
+
+  async function remove(event: { detail: number }) {
+    let initialLength: number = adventuresPlans.length;
+    let theAdventure = adventuresPlans.find(
+      (adventure) => adventure.id === event.detail
+    );
+    if (theAdventure) {
+      let newArray = await removeAdventure(theAdventure, adventuresPlans);
+      if (newArray.length === initialLength - 1) {
+        adventuresPlans = newArray;
+        showToast("Adventure removed successfully!");
+      } else {
+        showToast("Failed to remove adventure");
+      }
+    }
+  }
+
+  async function savePlan(event: { detail: Adventure }) {
+    let newArray = await saveAdventure(event.detail, adventuresPlans);
+    if (newArray.length > 0) {
+      adventuresPlans = newArray;
+      showToast("Adventure updated successfully!");
+    } else {
+      showToast("Failed to update adventure");
+    }
+    adventureToEdit = undefined;
+  }
+
+  function edit(event: { detail: number }) {
+    const adventure = adventuresPlans.find(
+      (adventure) => adventure.id === event.detail
+    );
+    if (adventure) {
+      adventureToEdit = adventure;
+    }
+  }
 </script>
+
+{#if isShowingToast}
+  <SucessToast action={toastAction} />
+{/if}
 
 <main>
   {#if trip && trip.name}
@@ -60,7 +125,7 @@
   class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
 >
   {#each adventuresPlans as adventure (adventure.id)}
-    <AdventureCard {adventure} type="trip" />
+    <AdventureCard {adventure} type="trip" on:edit={edit} on:remove={remove} />
   {/each}
 </div>
 
@@ -97,4 +162,8 @@
     }}
     on:create={newAdventure}
   />
+{/if}
+
+{#if adventureToEdit && adventureToEdit.id != undefined}
+  <EditModal bind:adventureToEdit on:submit={savePlan} on:close={handleClose} />
 {/if}

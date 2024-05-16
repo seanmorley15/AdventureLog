@@ -104,6 +104,20 @@
           ></iconify-icon></button
         >
       {/if}
+      {#if type == "trip"}
+        <!-- <button class="btn btn-primary" on:click={moreInfo}
+          ><iconify-icon icon="mdi:launch" class="text-2xl"
+          ></iconify-icon></button
+        > -->
+        <button class="btn btn-primary" on:click={edit}
+          ><iconify-icon icon="mdi:file-document-edit" class="text-2xl"
+          ></iconify-icon></button
+        >
+        <button class="btn btn-secondary" on:click={remove}
+          ><iconify-icon icon="mdi:trash-can-outline" class="text-2xl"
+          ></iconify-icon></button
+        >
+      {/if}
     </div>
   </div>
 </div>
