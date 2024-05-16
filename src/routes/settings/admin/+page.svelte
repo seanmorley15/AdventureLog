@@ -62,6 +62,9 @@
   let visitCount = $page.data.visitCount[0].count;
   let userCount = $page.data.userCount[0].count;
   let regionCount = $page.data.regionCount[0].count;
+  let tripCount = $page.data.tripCount[0].count;
+  let planCount = $page.data.planCount[0].count;
+  let featuredCount = $page.data.featuredCount[0].count;
 </script>
 
 <h1 class="text-center font-extrabold text-4xl">Admin Settings</h1>
@@ -153,17 +156,29 @@
   <div class="stats stats-vertical lg:stats-horizontal shadow">
     <div class="stat">
       <div class="stat-title">Total Visits</div>
-      <div class="stat-value">{visitCount}</div>
+      <div class="stat-value text-center">{visitCount}</div>
     </div>
 
     <div class="stat">
       <div class="stat-title">Total Users</div>
-      <div class="stat-value">{userCount}</div>
+      <div class="stat-value text-center">{userCount}</div>
     </div>
 
     <div class="stat">
       <div class="stat-title">Visited Regions</div>
-      <div class="stat-value">{regionCount}</div>
+      <div class="stat-value text-center">{regionCount}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Total Trips</div>
+      <div class="stat-value text-center">{tripCount}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Total Plans</div>
+      <div class="stat-value text-center">{planCount}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Featured Adventures</div>
+      <div class="stat-value text-center">{featuredCount}</div>
     </div>
   </div>
 </div>

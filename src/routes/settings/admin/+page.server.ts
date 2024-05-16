@@ -4,6 +4,7 @@ import { db } from "$lib/db/db.server";
 import {
   adventureTable,
   sessionTable,
+  userPlannedTrips,
   userTable,
   userVisitedWorldTravel,
 } from "$lib/db/schema";
@@ -14,6 +15,9 @@ export const load: PageServerLoad = async (event) => {
   let users: DatabaseUser[] = [];
   let visitCount: number = NaN;
   let userCount: number = NaN;
+  let planCount: number = NaN;
+  let tripCount: number = NaN;
+  let featuredCount: number = NaN;
   let regionCount: number = NaN;
   if (!event.locals.user) {
     return redirect(302, "/login");
@@ -36,12 +40,29 @@ export const load: PageServerLoad = async (event) => {
       .select({ count: count() })
       .from(userVisitedWorldTravel)
       .execute()) as unknown as number;
+    planCount = (await db
+      .select({ count: count() })
+      .from(adventureTable)
+      .where(eq(adventureTable.type, "planner"))
+      .execute()) as unknown as number;
+    tripCount = (await db
+      .select({ count: count() })
+      .from(userPlannedTrips)
+      .execute()) as unknown as number;
+    featuredCount = (await db
+      .select({ count: count() })
+      .from(adventureTable)
+      .where(eq(adventureTable.type, "featured"))
+      .execute()) as unknown as number;
   }
   return {
     users,
     visitCount,
     userCount,
     regionCount,
+    planCount,
+    tripCount,
+    featuredCount,
   };
 };
 

@@ -10,6 +10,8 @@
   let icon = data.user?.icon;
   let signup_date = data.user?.signup_date;
   let role = data.user?.role;
+
+  // the submit function shoud just reload the page
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
