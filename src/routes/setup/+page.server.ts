@@ -14,7 +14,15 @@ import { insertData } from "$lib/db/insertData";
 export const actions: Actions = {
   default: async (event) => {
     const formData = await event.request.formData();
-    const username = formData.get("username");
+    const formUsername = formData.get("username");
+
+    let username = formUsername?.toString().toLocaleLowerCase();
+
+    if (typeof formUsername !== "string") {
+      return fail(400, {
+        message: "Invalid username",
+      });
+    }
     const password = formData.get("password");
     const firstName = formData.get("first_name");
     const lastName = formData.get("last_name");

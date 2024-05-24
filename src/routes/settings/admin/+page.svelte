@@ -6,14 +6,15 @@
   import { type SubmitFunction } from "@sveltejs/kit";
   import type { DatabaseUser } from "lucia";
   import UserCard from "$lib/components/UserCard.svelte";
-  let errors: { message?: string } = {};
-  let message: { message?: string } = {};
+
   let username: string = "";
   let first_name: string = "";
   let last_name: string = "";
   let password: string = "";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
 
+  let errors: { addUser?: string } = {};
+  let sucess: { addUser?: string } = {};
   let isModalOpen = false;
 
   async function clearAllSessions() {
@@ -34,30 +35,7 @@
     isModalOpen = false;
   }
 
-  const addUser: SubmitFunction = async ({ formData, action, cancel }) => {
-    const response = await fetch(action, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      console.log("User Added Successfully!");
-      errors = {};
-      username = "";
-      first_name = "";
-      last_name = "";
-      password = "";
-      cancel();
-      return;
-    }
-
-    const { type, error } = await response.json();
-    if (type === "error") {
-      errors = { message: error.message };
-    }
-    console.log(errors);
-    cancel();
-  };
+  let form = $page.form;
 
   let visitCount = $page.data.visitCount[0].count;
   let userCount = $page.data.userCount[0].count;
@@ -71,12 +49,7 @@
 
 <h2 class="text-center font-extrabold text-2xl">Add User</h2>
 <div class="flex justify-center mb-4">
-  <form
-    method="POST"
-    action="?/adduser"
-    use:enhance={addUser}
-    class="w-full max-w-xs"
-  >
+  <form method="POST" class="w-full max-w-xs" use:enhance action="?/adduser">
     <label for="username">Username</label>
     <input
       name="username"
@@ -114,14 +87,16 @@
       class="block mb-2 checkbox-primary checkbox"
     /><br />
     <button class="py-2 px-4 btn btn-primary">Signup</button>
+    {#if $page.form?.message}
+      <div class="text-center text-error mt-4">
+        {$page.form?.message}
+      </div>
+    {/if}
+    {#if $page.form?.success}
+      <div class="text-center text-success mt-4">User added successfully!</div>
+    {/if}
   </form>
 </div>
-
-{#if errors.message}
-  <div class="text-center text-error mt-4">
-    {errors.message}
-  </div>
-{/if}
 
 <h2 class="text-center font-extrabold text-2xl mb-2">Session Managment</h2>
 <div class="flex justify-center items-center">

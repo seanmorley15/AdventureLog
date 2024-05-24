@@ -18,7 +18,15 @@ export const load: PageServerLoad = async (event) => {
 export const actions: Actions = {
   default: async (event) => {
     const formData = await event.request.formData();
-    const username = formData.get("username");
+    const formUsername = formData.get("username");
+
+    let username = formUsername?.toString().toLocaleLowerCase();
+
+    if (typeof formUsername !== "string") {
+      return error(400, {
+        message: "Invalid username",
+      });
+    }
     const password = formData.get("password");
 
     if (!username || !password) {
