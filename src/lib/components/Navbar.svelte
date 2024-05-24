@@ -36,15 +36,7 @@
 
   let count = 0;
 
-  let infoModalOpen = false;
-
-  function showModal() {
-    infoModalOpen = true;
-  }
-
-  function closeModal() {
-    infoModalOpen = false;
-  }
+  let isInfoModalOpen = false;
 
   // Set the visit count to the number of adventures stored in local storage
   const isBrowser = typeof window !== "undefined";
@@ -52,6 +44,10 @@
     const storedAdventures = localStorage.getItem("adventures");
   }
 </script>
+
+{#if isInfoModalOpen}
+  <InfoModal on:close={() => (isInfoModalOpen = false)} />
+{/if}
 
 <div class="navbar bg-base-100">
   <div class="navbar-start">
@@ -143,14 +139,17 @@
     {/if}
     <div class="dropdown dropdown-bottom dropdown-end">
       <div tabindex="0" role="button" class="btn m-1 ml-4">
-        <iconify-icon icon="mdi:theme-light-dark" class="text-xl"
-        ></iconify-icon>
+        <iconify-icon icon="mdi:dots-horizontal" class="text-xl"></iconify-icon>
       </div>
       <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <ul
         tabindex="0"
         class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52"
       >
+        <button class="btn" on:click={() => (isInfoModalOpen = true)}
+          >About AdventureLog</button
+        >
+        <p class="font-bold m-4 text-lg">Theme Selection</p>
         <form method="POST" use:enhance={submitUpdateTheme}>
           <li>
             <button formaction="/?/setTheme&theme=light"
