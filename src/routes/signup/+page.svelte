@@ -1,15 +1,38 @@
 <!-- routes/signup/+page.svelte -->
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
   import { getRandomQuote } from "$lib";
+  import type { SubmitFunction } from "@sveltejs/kit";
   import { onMount } from "svelte";
 
+  let errors: { message?: string } = {};
   let backgroundImageUrl = "https://source.unsplash.com/random/?mountains";
 
   let quote: string = "";
   onMount(async () => {
     quote = getRandomQuote();
   });
+
+  const handleSubmit: SubmitFunction = async ({ formData, action, cancel }) => {
+    const response = await fetch(action, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      errors = {};
+      goto("/signup");
+      return;
+    }
+
+    const { type, error } = await response.json();
+    if (type === "error") {
+      errors = { message: error.message };
+    }
+    console.log(errors);
+    cancel();
+  };
 </script>
 
 <div
@@ -22,7 +45,7 @@
     </article>
 
     <div class="flex justify-center">
-      <form method="post" use:enhance class="w-full max-w-xs">
+      <form method="post" use:enhance={handleSubmit} class="w-full max-w-xs">
         <label for="username">Username</label>
         <input
           name="username"
@@ -52,6 +75,12 @@
       </form>
     </div>
 
+    {#if errors.message}
+      <div class="text-center text-error mt-4">
+        {errors.message}
+      </div>
+    {/if}
+
     <div class="flex justify-center mt-12 mr-25 ml-25">
       <blockquote class="w-80 text-center text-lg break-words">
         {#if quote != ""}
@@ -62,7 +91,6 @@
     </div>
   </div>
 </div>
-
 <!-- username first last pass -->
 
 <svelte:head>

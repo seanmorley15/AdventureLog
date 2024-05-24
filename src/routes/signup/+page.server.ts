@@ -6,21 +6,37 @@ import { Argon2id } from "oslo/password";
 import { db } from "$lib/db/db.server";
 import type { DatabaseUser } from "$lib/server/auth";
 
-import type { Actions } from "./$types";
+import type { Actions, PageServerLoad } from "./$types";
 import { userTable } from "$lib/db/schema";
 import { eq } from "drizzle-orm";
+
+export const load: PageServerLoad = async (event) => {
+  if (event.locals.user) {
+    return redirect(302, "/");
+  }
+  return {};
+};
 
 export const actions: Actions = {
   default: async (event) => {
     const formData = await event.request.formData();
-    const username = formData.get("username");
+    const formUsername = formData.get("username");
+    let username = formUsername?.toString().toLocaleLowerCase();
+
+    if (typeof formUsername !== "string") {
+      return error(400, {
+        message: "Invalid username",
+      });
+    }
     const password = formData.get("password");
     const firstName = formData.get("first_name");
     const lastName = formData.get("last_name");
-    let role: string = "";
     // username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
     // keep in mind some database (e.g. mysql) are case insensitive
 
+    if (event.locals.user) {
+      return redirect(302, "/");
+    }
     // check all to make sure all fields are provided
     if (!username || !password || !firstName || !lastName) {
       return error(400, {
@@ -28,20 +44,11 @@ export const actions: Actions = {
       });
     }
 
-    if (!event.locals.user) {
-      role = "user";
-    }
-
-    if (event.locals.user && event.locals.user.role === "admin") {
-      const isAdmin = formData.get("role") === "on";
-      role = isAdmin ? "admin" : "user";
-    }
-
     if (
       typeof username !== "string" ||
       username.length < 3 ||
       username.length > 31 ||
-      !/^[a-z0-9_-]+$/.test(username)
+      !/^[a-zA-Z0-9_-]+$/.test(username)
     ) {
       return error(400, {
         message: "Invalid username",
@@ -102,36 +109,18 @@ export const actions: Actions = {
         last_name: lastName,
         hashed_password: hashedPassword,
         signup_date: new Date(),
-        role: role,
+        role: "user",
         last_login: new Date(),
       } as DatabaseUser)
       .execute();
 
-    if (!event.locals.user) {
-      const session = await lucia.createSession(userId, {});
-      const sessionCookie = lucia.createSessionCookie(session.id);
-      event.cookies.set(sessionCookie.name, sessionCookie.value, {
-        path: ".",
-        ...sessionCookie.attributes,
-      });
+    const session = await lucia.createSession(userId, {});
+    const sessionCookie = lucia.createSessionCookie(session.id);
+    event.cookies.set(sessionCookie.name, sessionCookie.value, {
+      path: ".",
+      ...sessionCookie.attributes,
+    });
 
-      redirect(302, "/");
-    } else {
-      if (event.locals.user && event.locals.user.role !== "admin") {
-        return error(403, {
-          message: "You are not authorized to add users",
-        });
-      }
-
-      return {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          message: "User date",
-        }),
-      };
-    }
+    return redirect(302, "/");
   },
 };
