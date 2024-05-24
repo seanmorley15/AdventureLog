@@ -73,7 +73,7 @@
 <div class="flex justify-center mb-4">
   <form
     method="POST"
-    action="/signup"
+    action="?/adduser"
     use:enhance={addUser}
     class="w-full max-w-xs"
   >

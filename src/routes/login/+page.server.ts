@@ -31,7 +31,7 @@ export const actions: Actions = {
       typeof username !== "string" ||
       username.length < 3 ||
       username.length > 31 ||
-      !/^[a-z0-9_-]+$/.test(username)
+      !/^[a-zA-Z0-9_-]+$/.test(username)
     ) {
       return error(400, {
         message: "Invalid username",
@@ -47,7 +47,7 @@ export const actions: Actions = {
       });
     }
 
-    const existingUser:any = await db
+    const existingUser: any = await db
       .select()
       .from(userTable)
       .where(eq(userTable.username, username))
@@ -86,6 +86,5 @@ export const actions: Actions = {
     });
 
     return redirect(302, "/");
-
   },
 };
