@@ -1,20 +1,29 @@
-import { db } from '$lib/db/db.server.js';
-import { userVisitedWorldTravel, worldTravelCountryRegions } from '$lib/db/schema.js';
-import { and, eq } from 'drizzle-orm';
-import type { PageServerLoad } from './$types';
+import { db } from "$lib/db/db.server.js";
+import {
+  userVisitedWorldTravel,
+  worldTravelCountries,
+  worldTravelCountryRegions,
+} from "$lib/db/schema.js";
+import { and, eq } from "drizzle-orm";
+import type { PageServerLoad } from "./$types";
 
-export const load: PageServerLoad  = async ({ params, locals })  => {
-
+export const load: PageServerLoad = async ({ params, locals }) => {
   const { countrycode } = params;
-    let data = await db
+  let data = await db
     .select()
     .from(worldTravelCountryRegions)
-    .where(eq(worldTravelCountryRegions.country_code, countrycode))
+    .where(eq(worldTravelCountryRegions.country_code, countrycode));
 
-    let visitedRegions: { id: number; userId: string; region_id: string; }[] = [];
-    if (locals.user) {
-      let countryCode = params.countrycode
-      visitedRegions = await db
+  let countryName = await db
+    .select()
+    .from(worldTravelCountries)
+    .where(eq(worldTravelCountries.country_code, countrycode))
+    .execute();
+
+  let visitedRegions: { id: number; userId: string; region_id: string }[] = [];
+  if (locals.user) {
+    let countryCode = params.countrycode;
+    visitedRegions = await db
       .select()
       .from(userVisitedWorldTravel)
       .where(
@@ -24,11 +33,12 @@ export const load: PageServerLoad  = async ({ params, locals })  => {
         )
       )
       .execute();
-    }
+  }
 
   return {
-      regions : data,
-      countrycode: countrycode,
-      visitedRegions: visitedRegions,
+    regions: data,
+    countrycode: countrycode,
+    visitedRegions: visitedRegions,
+    countryName: countryName[0].name,
   };
-}
+};

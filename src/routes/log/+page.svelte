@@ -158,7 +158,7 @@
   }
 </script>
 
-<div class="fixed bottom-4 right-4">
+<div class="fixed bottom-4 right-4 z-[999]">
   <div class="flex flex-row items-center justify-center gap-4">
     <div class="dropdown dropdown-top dropdown-end">
       <div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
