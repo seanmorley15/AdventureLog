@@ -10,8 +10,11 @@ WORKDIR /app
 # Copy all local files into the image
 COPY . .
 
-# Clean install all node modules
-RUN npm ci
+# Install pnpm
+RUN npm install -g pnpm
+
+# Clean install all node modules using pnpm
+RUN pnpm install
 
 # Build SvelteKit app
 RUN npm run build
@@ -19,13 +22,10 @@ RUN npm run build
 # Expose the port that the app is listening on
 EXPOSE 3000
 
-
 RUN chmod +x ./startup.sh
 
 # The USER instruction sets the user name to use as the default user for the remainder of the current stage
 USER node:node
-
-# get permission to run startup script
 
 # Run startup.sh instead of the default command
 CMD ["./startup.sh"]
