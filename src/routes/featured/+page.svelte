@@ -3,9 +3,32 @@
   import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure } from "$lib/utils/types.js";
+  import AddFromFeatured from "$lib/components/AddFromFeatured.svelte";
+  import { addAdventure } from "../../services/adventureService.js";
+  import SucessToast from "$lib/components/SucessToast.svelte";
+
+  let isShowingToast: boolean = false;
+  let toastAction: string = "";
+
+  let adventureToAdd: Adventure | null = null;
+
+  function showToast(action: string) {
+    toastAction = action;
+    isShowingToast = true;
+
+    setTimeout(() => {
+      isShowingToast = false;
+      toastAction = "";
+    }, 3000);
+  }
 
   async function add(event: CustomEvent<Adventure>) {
-    let detailAdventure = event.detail;
+    adventureToAdd = event.detail;
+  }
+
+  async function addToVisted() {
+    let detailAdventure = adventureToAdd;
+    adventureToAdd = null;
 
     const response = await fetch("/api/visits", {
       method: "POST",
@@ -19,9 +42,45 @@
 
     if (response.status === 401) {
       goto("/login");
+    } else {
+      showToast("Adventure added to visited list!");
+    }
+  }
+
+  async function addIdea() {
+    let detailAdventure = adventureToAdd;
+    adventureToAdd = null;
+
+    const response = await fetch("/api/planner", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        detailAdventure,
+      }),
+    });
+
+    if (response.status === 401) {
+      goto("/login");
+    } else {
+      showToast("Adventure added to idea list!");
     }
   }
 </script>
+
+{#if isShowingToast}
+  <SucessToast action={toastAction} />
+{/if}
+
+{#if adventureToAdd}
+  <AddFromFeatured
+    adventure={adventureToAdd}
+    on:close={() => (adventureToAdd = null)}
+    on:visited={addToVisted}
+    on:idea={addIdea}
+  />
+{/if}
 
 <div class="flex justify-center items-center w-full mt-4 mb-4">
   <article class="prose">

@@ -1,5 +1,5 @@
 import { db } from "$lib/db/db.server";
-import { adventureTable, featuredAdventures } from "$lib/db/schema";
+import { adventureTable } from "$lib/db/schema";
 import type { Adventure } from "$lib/utils/types";
 import { eq } from "drizzle-orm";
 
