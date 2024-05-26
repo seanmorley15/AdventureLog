@@ -1,5 +1,5 @@
 import { db } from "$lib/db/db.server";
-import { userPlannedTrips } from "$lib/db/schema";
+import { adventureTable, userPlannedTrips } from "$lib/db/schema";
 import { error, type RequestEvent } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
 import type { Trip } from "$lib/utils/types";
@@ -102,6 +102,11 @@ export async function DELETE(event: RequestEvent): Promise<Response> {
       message: "No trip id provided",
     });
   }
+
+  let deleted = await db
+    .delete(adventureTable)
+    .where(eq(adventureTable.tripId, body.id))
+    .execute();
 
   let res = await db
     .delete(userPlannedTrips)
