@@ -36,7 +36,12 @@ export async function insertData() {
     ('Australia', 'au', 'Oceania'),
     ('New Zealand', 'nz', 'Oceania'),
     ('South Africa', 'za', 'Africa'),
-    ('Egypt', 'eg', 'Africa')
+    ('Egypt', 'eg', 'Africa'),
+    ('Sweden', 'se', 'Europe'),
+    ('Ireland', 'ie', 'Europe'),
+    ('Spain', 'es', 'Europe'),
+    ('Switzerland', 'ch', 'Europe'),
+    ('Italy', 'it', 'Europe')
   ON CONFLICT (country_code) DO NOTHING;`);
 
   console.log("Inserting regions...");
@@ -94,6 +99,8 @@ export async function insertData() {
 ON CONFLICT (id) DO NOTHING;
 `);
 
+  console.log("Inserting Canada regions...");
+
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
     ('CA-AB', 'Alberta', 'ca'),
@@ -112,6 +119,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inserting Germany regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -135,6 +144,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inserting France regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -161,6 +172,8 @@ ON CONFLICT (id) DO NOTHING;
   
 `);
 
+  console.log("Inserting United Kingdom regions...");
+
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
     ('GB-ENG', 'England', 'gb'),
@@ -171,6 +184,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inserting Argentina regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -202,6 +217,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inerting Mexico regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -240,6 +257,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inserting Japan regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -295,6 +314,8 @@ ON CONFLICT (id) DO NOTHING;
   
 `);
 
+  console.log("Inserting China regions...");
+
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
     ('CN-BJ', 'Beijing', 'cn'),
@@ -332,6 +353,8 @@ ON CONFLICT (id) DO NOTHING;
   ON CONFLICT (id) DO NOTHING;
   
 `);
+
+  console.log("Inserting India regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -376,6 +399,8 @@ ON CONFLICT (id) DO NOTHING;
   
 `);
 
+  console.log("Inserting Australia regions...");
+
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
 VALUES
   ('AU-NSW', 'New South Wales', 'au'),
@@ -391,6 +416,8 @@ ON CONFLICT (id) DO NOTHING;
 
   
 `);
+
+  console.log("Inserting New Zealand regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -416,6 +443,8 @@ ON CONFLICT (id) DO NOTHING;
   
 `);
 
+  console.log("Inserting South Africa regions...");
+
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
     ('ZA-EC', 'Eastern Cape', 'za'),
@@ -432,6 +461,8 @@ ON CONFLICT (id) DO NOTHING;
   
   
 `);
+
+  console.log("Inserting Egypt regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
   VALUES
@@ -464,9 +495,9 @@ ON CONFLICT (id) DO NOTHING;
     ('EG-ESI', 'Ismailia', 'eg')
   
   ON CONFLICT (id) DO NOTHING;
-  
-  
 `);
+
+  console.log("Inserting Brazil regions...");
 
   await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
 VALUES
@@ -497,9 +528,129 @@ VALUES
   ('BR-SP', 'São Paulo', 'br'),
   ('BR-SE', 'Sergipe', 'br'),
   ('BR-TO', 'Tocantins', 'br')
-
 ON CONFLICT (id) DO NOTHING;
+`);
 
-  
+  console.log("Inserting Sweden regions...");
+
+  await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
+  VALUES
+    ('SE-AB', 'Stockholm', 'se'),
+    ('SE-AC', 'Västerbotten', 'se'),
+    ('SE-BD', 'Norrbotten', 'se'),
+    ('SE-C', 'Uppsala', 'se'),
+    ('SE-D', 'Södermanland', 'se'),
+    ('SE-E', 'Östergötland', 'se'),
+    ('SE-F', 'Jönköping', 'se'),
+    ('SE-G', 'Kronoberg', 'se'),
+    ('SE-H', 'Kalmar', 'se'),
+    ('SE-I', 'Gotland', 'se'),
+    ('SE-K', 'Blekinge', 'se'),
+    ('SE-M', 'Skåne', 'se'),
+    ('SE-N', 'Halland', 'se'),
+    ('SE-O', 'Västra Götaland', 'se'),
+    ('SE-S', 'Värmland', 'se'),
+    ('SE-T', 'Örebro', 'se'),
+    ('SE-U', 'Västmanland', 'se'),
+    ('SE-W', 'Dalarna', 'se'),
+    ('SE-X', 'Gävleborg', 'se'),
+    ('SE-Y', 'Västernorrland', 'se'),
+    ('SE-Z', 'Jämtland', 'se')
+  ON CONFLICT (id) DO NOTHING;
+`);
+
+  console.log("Inserting Ireland regions...");
+
+  await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
+  VALUES
+    ('IE-C', 'Connacht', 'ie'),
+    ('IE-L', 'Leinster', 'ie'),
+    ('IE-M', 'Munster', 'ie'),
+    ('IE-U', 'Ulster', 'ie')
+  ON CONFLICT (id) DO NOTHING;
+`);
+
+  console.log("Inserting Spain regions...");
+
+  await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
+  VALUES
+    ('ES-AN', 'Andalucía', 'es'),
+    ('ES-AR', 'Aragón', 'es'),
+    ('ES-AS', 'Asturias', 'es'),
+    ('ES-CB', 'Cantabria', 'es'),
+    ('ES-CL', 'Castilla y León', 'es'),
+    ('ES-CM', 'Castilla-La Mancha', 'es'),
+    ('ES-CN', 'Canarias', 'es'),
+    ('ES-CT', 'Cataluña', 'es'),
+    ('ES-EX', 'Extremadura', 'es'),
+    ('ES-GA', 'Galicia', 'es'),
+    ('ES-IB', 'Islas Baleares', 'es'),
+    ('ES-MD', 'Madrid', 'es'),
+    ('ES-MC', 'Murcia', 'es'),
+    ('ES-NC', 'Navarra', 'es'),
+    ('ES-PV', 'País Vasco', 'es'),
+    ('ES-RI', 'La Rioja', 'es'),
+    ('ES-VC', 'Comunidad Valenciana', 'es')
+  ON CONFLICT (id) DO NOTHING;
+`);
+
+  console.log("Inserting Switzerland regions...");
+
+  await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
+  VALUES
+    ('CH-AG', 'Aargau', 'ch'),
+    ('CH-AR', 'Appenzell Ausserrhoden', 'ch'),
+    ('CH-AI', 'Appenzell Innerrhoden', 'ch'),
+    ('CH-BL', 'Basel-Landschaft', 'ch'),
+    ('CH-BS', 'Basel-Stadt', 'ch'),
+    ('CH-BE', 'Bern', 'ch'),
+    ('CH-FR', 'Fribourg', 'ch'),
+    ('CH-GE', 'Genève', 'ch'),
+    ('CH-GL', 'Glarus', 'ch'),
+    ('CH-GR', 'Graubünden', 'ch'),
+    ('CH-JU', 'Jura', 'ch'),
+    ('CH-LU', 'Luzern', 'ch'),
+    ('CH-NE', 'Neuchâtel', 'ch'),
+    ('CH-NW', 'Nidwalden', 'ch'),
+    ('CH-OW', 'Obwalden', 'ch'),
+    ('CH-SH', 'Schaffhausen', 'ch'),
+    ('CH-SZ', 'Schwyz', 'ch'),
+    ('CH-SO', 'Solothurn', 'ch'),
+    ('CH-SG', 'St. Gallen', 'ch'),
+    ('CH-TG', 'Thurgau', 'ch'),
+    ('CH-TI', 'Ticino', 'ch'),
+    ('CH-UR', 'Uri', 'ch'),
+    ('CH-VS', 'Valais', 'ch'),
+    ('CH-VD', 'Vaud', 'ch'),
+    ('CH-ZG', 'Zug', 'ch'),
+    ('CH-ZH', 'Zürich', 'ch')
+  ON CONFLICT (id) DO NOTHING;
+`);
+
+  console.log("Inserting Italy regions...");
+
+  await db.execute(sql`INSERT INTO "worldTravelCountryRegions" (id, name, country_code)
+  VALUES
+    ('IT-65', 'Abruzzo', 'it'),
+    ('IT-77', 'Basilicata', 'it'),
+    ('IT-78', 'Calabria', 'it'),
+    ('IT-72', 'Campania', 'it'),
+    ('IT-45', 'Emilia-Romagna', 'it'),
+    ('IT-36', 'Friuli Venezia Giulia', 'it'),
+    ('IT-62', 'Lazio', 'it'),
+    ('IT-42', 'Liguria', 'it'),
+    ('IT-25', 'Lombardia', 'it'),
+    ('IT-57', 'Marche', 'it'),
+    ('IT-67', 'Molise', 'it'),
+    ('IT-21', 'Piemonte', 'it'),
+    ('IT-75', 'Puglia', 'it'),
+    ('IT-88', 'Sardegna', 'it'),
+    ('IT-82', 'Sicilia', 'it'),
+    ('IT-52', 'Toscana', 'it'),
+    ('IT-32', 'Trentino-Alto Adige', 'it'),
+    ('IT-55', 'Umbria', 'it'),
+    ('IT-23', 'Valle d''Aosta', 'it'),
+    ('IT-34', 'Veneto', 'it')
+  ON CONFLICT (id) DO NOTHING;
 `);
 }

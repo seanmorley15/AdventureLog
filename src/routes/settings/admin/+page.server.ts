@@ -98,6 +98,13 @@ export const actions: Actions = {
     const formData = await event.request.formData();
     const formUsername = formData.get("username");
     let username = formUsername?.toString().toLocaleLowerCase();
+    let role = formData.get("role");
+    if (!role) {
+      role = "user";
+    } else {
+      role = "admin";
+    }
+    console.log("role", role);
 
     if (typeof formUsername !== "string") {
       return fail(400, { message: "Invalid username" });
@@ -187,17 +194,10 @@ export const actions: Actions = {
         last_name: lastName,
         hashed_password: hashedPassword,
         signup_date: new Date(),
-        role: "admin",
+        role: role,
         last_login: new Date(),
       } as DatabaseUser)
       .execute();
-
-    const session = await lucia.createSession(userId, {});
-    const sessionCookie = lucia.createSessionCookie(session.id);
-    event.cookies.set(sessionCookie.name, sessionCookie.value, {
-      path: ".",
-      ...sessionCookie.attributes,
-    });
 
     return { success: true };
   },

@@ -1,7 +1,6 @@
 <script lang="ts">
   export let data;
   import AdventureCard from "$lib/components/AdventureCard.svelte";
-  import { countryCodeToName } from "$lib";
   import { getFlag } from "$lib";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -57,7 +56,7 @@
 </script>
 
 <h1 class="text-center text-4xl font-bold">
-  Regions in {countryCodeToName(data.countrycode)}
+  Regions in {data.countryName}
   <img
     src={getFlag(40, data.countrycode)}
     class="inline-block -mt-1 mr-1"
@@ -109,11 +108,9 @@
 {/if}
 
 <svelte:head>
-  <title>{countryCodeToName(data.countrycode)} Regions | AdventureLog</title>
+  <title>{data.countryName} Regions | AdventureLog</title>
   <meta
     name="description"
-    content="Explore the regions in {countryCodeToName(
-      data.countrycode
-    )} and add them to your visited list!"
+    content="Explore the regions in {data.countryName} and add them to your visited list!"
   />
 </svelte:head>

@@ -9,6 +9,7 @@
     location: "",
     date: "",
     activityTypes: [],
+    imageUrl: "",
   };
 
   import { createEventDispatcher } from "svelte";
@@ -121,6 +122,16 @@
             class="input input-bordered w-full max-w-xs"
           />
         </div>
+        <div>
+          <label for="rating">Image URL</label>
+          <input
+            type="url"
+            id="iamgeUrl"
+            bind:value={newAdventure.imageUrl}
+            class="input input-bordered w-full max-w-xs"
+          />
+        </div>
+
         <button
           type="submit"
           class="btn btn-primary mr-4 mt-4"
