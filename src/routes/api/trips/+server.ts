@@ -2,6 +2,7 @@ import { db } from "$lib/db/db.server";
 import { userPlannedTrips } from "$lib/db/schema";
 import { error, type RequestEvent } from "@sveltejs/kit";
 import { and, eq } from "drizzle-orm";
+import type { Trip } from "$lib/utils/types";
 
 export async function POST(event: RequestEvent): Promise<Response> {
   if (!event.locals.user) {
@@ -37,7 +38,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
       description: description || null,
       startDate: startDate || null,
       endDate: endDate || null,
-      adventures: JSON.stringify([]),
     })
     .returning({ insertedId: userPlannedTrips.id })
     .execute();
@@ -77,13 +77,6 @@ export async function GET(event: RequestEvent): Promise<Response> {
     .from(userPlannedTrips)
     .where(eq(userPlannedTrips.userId, event.locals.user.id))
     .execute();
-
-  // json parse the adventures into an Adventure array
-  for (let trip of trips) {
-    if (trip.adventures) {
-      trip.adventures = JSON.parse(trip.adventures as unknown as string);
-    }
-  }
 
   return new Response(JSON.stringify(trips), {
     status: 200,

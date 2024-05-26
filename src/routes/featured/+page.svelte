@@ -2,7 +2,7 @@
   export let data;
   import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
-  import type { Adventure } from "$lib/utils/types.js";
+  import type { Adventure, Trip } from "$lib/utils/types.js";
   import AddFromFeatured from "$lib/components/AddFromFeatured.svelte";
   import { addAdventure } from "../../services/adventureService.js";
   import SucessToast from "$lib/components/SucessToast.svelte";
@@ -25,6 +25,33 @@
   async function add(event: CustomEvent<Adventure>) {
     adventureToAdd = event.detail;
   }
+
+  const addToTrip = async (event: { detail: Trip }) => {
+    if (!adventureToAdd) {
+      showToast("Failed to add adventure");
+      adventureToAdd = null;
+    } else {
+      let detailAdventure = adventureToAdd;
+      detailAdventure.tripId = event.detail.id;
+      detailAdventure.type = "planner";
+      console.log(detailAdventure);
+      let res = await fetch("/api/planner", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          detailAdventure,
+        }),
+      });
+      if (res.status === 401) {
+        goto("/login");
+      } else {
+        showToast("Adventure added to trip!");
+        adventureToAdd = null;
+      }
+    }
+  };
 
   async function addToVisted() {
     let detailAdventure = adventureToAdd;
@@ -79,6 +106,7 @@
     on:close={() => (adventureToAdd = null)}
     on:visited={addToVisted}
     on:idea={addIdea}
+    on:trip={addToTrip}
   />
 {/if}
 
