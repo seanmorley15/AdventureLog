@@ -109,8 +109,16 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes, rating, tripId } =
-    body.detailAdventure;
+  const {
+    name,
+    location,
+    date,
+    description,
+    activityTypes,
+    rating,
+    tripId,
+    imageUrl,
+  } = body.detailAdventure;
 
   if (!name) {
     return error(400, {
@@ -139,6 +147,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       description: description || null,
       activityTypes: JSON.stringify(activityTypes) || null,
       rating: rating || null,
+      imageUrl: imageUrl || null,
     })
     .returning({ insertedId: adventureTable.id })
     .execute();
@@ -182,8 +191,16 @@ export async function PUT(event: RequestEvent): Promise<Response> {
     });
   }
 
-  const { name, location, date, description, activityTypes, id, rating } =
-    body.detailAdventure;
+  const {
+    name,
+    location,
+    date,
+    description,
+    activityTypes,
+    id,
+    rating,
+    imageUrl,
+  } = body.detailAdventure;
 
   if (!name) {
     return error(400, {
@@ -201,6 +218,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
       description: description,
       rating: rating,
       activityTypes: JSON.stringify(activityTypes),
+      imageUrl: imageUrl,
     })
     .where(
       and(

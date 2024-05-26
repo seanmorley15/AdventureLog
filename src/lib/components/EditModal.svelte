@@ -110,6 +110,15 @@
             class="input input-bordered w-full max-w-xs"
           />
         </div>
+        <div>
+          <label for="rating">Image URL</label>
+          <input
+            type="url"
+            id="imageUrl"
+            bind:value={adventureToEdit.imageUrl}
+            class="input input-bordered w-full max-w-xs"
+          />
+        </div>
         <button class="btn btn-primary mr-4 mt-4" on:click={submit}>Save</button
         >
         <!-- if there is a button in form, it will close the modal -->
