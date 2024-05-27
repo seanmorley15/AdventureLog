@@ -3,7 +3,7 @@
   import { goto } from "$app/navigation";
   import AdventureCard from "$lib/components/AdventureCard.svelte";
   import type { Adventure, Trip } from "$lib/utils/types.js";
-  import AddFromFeatured from "$lib/components/AddFromFeatured.svelte";
+  import AddFromFeatured from "$lib/components/AddLocationChooser.svelte";
   import { addAdventure } from "../../services/adventureService.js";
   import SucessToast from "$lib/components/SucessToast.svelte";
 
