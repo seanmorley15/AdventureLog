@@ -271,7 +271,7 @@
 {#if tripPlans.length !== 0}
   <div class="flex justify-center items-center w-full mt-4 mb-4">
     <article class="prose">
-      <h1 class="text-center">My Trip Plans</h1>
+      <h1 class="text-center">My Trip Ideas</h1>
     </article>
   </div>
 {/if}

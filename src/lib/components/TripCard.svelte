@@ -19,11 +19,7 @@
     dispatch("add", trip);
   }
 
-  function moreInfo() {
-    console.log(trip.id);
-    goto(`/trip/${trip.id}`);
-  }
-
+  // TODO: Implement markVisited function
   function markVisited() {
     console.log(trip.id);
     dispatch("markVisited", trip);

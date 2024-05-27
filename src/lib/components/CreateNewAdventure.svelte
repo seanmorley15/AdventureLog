@@ -16,7 +16,7 @@
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
-  import { addActivityType } from "$lib";
+  import { addActivityType, generateDescription, getImage } from "$lib";
   let modal: HTMLDialogElement;
 
   onMount(() => {
@@ -43,6 +43,28 @@
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === "Escape") {
       close();
+    }
+  }
+
+  async function generate() {
+    try {
+      console.log(newAdventure.name);
+      const desc = await generateDescription(newAdventure.name);
+      newAdventure.description = desc;
+      // Do something with the updated newAdventure object
+    } catch (error) {
+      console.error(error);
+      // Handle the error
+    }
+  }
+
+  async function searchImage() {
+    try {
+      const imageUrl = await getImage(newAdventure.name);
+      newAdventure.imageUrl = imageUrl;
+    } catch (error) {
+      console.error(error);
+      // Handle the error
     }
   }
 
@@ -102,6 +124,7 @@
             class="input input-bordered w-full max-w-xs"
           />
         </div>
+
         <div>
           <label for="date">Activity Types (Comma Seperated)</label>
           <input
@@ -140,6 +163,12 @@
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
       </form>
+      <button class="btn btn-secondary" on:click={generate}
+        >Generate Description</button
+      >
+      <button class="btn btn-secondary" on:click={searchImage}
+        >Search for Image</button
+      >
     </div>
   </div>
 </dialog>
