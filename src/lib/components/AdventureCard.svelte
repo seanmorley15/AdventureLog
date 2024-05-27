@@ -109,6 +109,10 @@
           ><iconify-icon icon="mdi:launch" class="text-2xl"
           ></iconify-icon></button
         > -->
+        <button class="btn btn-primary" on:click={moreInfo}
+          ><iconify-icon icon="mdi:launch" class="text-2xl"
+          ></iconify-icon></button
+        >
         <button class="btn btn-primary" on:click={edit}
           ><iconify-icon icon="mdi:file-document-edit" class="text-2xl"
           ></iconify-icon></button

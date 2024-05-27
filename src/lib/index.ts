@@ -63,3 +63,64 @@ export function addActivityType(
   }
   return adventureToEdit;
 }
+
+/**
+ * Generates a description for an adventure using the adventure title.
+ * @param adventureTitle - The title of the adventure.
+ * @returns A Promise that resolves to the description of the adventure.
+ */
+export async function generateDescription(adventureTitle: string) {
+  const url = `https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=extracts&exintro&explaintext&format=json&titles=${encodeURIComponent(
+    adventureTitle
+  )}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // Check if the query was successful
+    if (data.query && data.query.pages) {
+      const pageId = Object.keys(data.query.pages)[0];
+      const page = data.query.pages[pageId];
+
+      // Check if the page exists
+      if (page.extract) {
+        return page.extract;
+      } else {
+        return `No Wikipedia article found for "${adventureTitle}".`;
+      }
+    } else {
+      return `Error: ${data.error.info}`;
+    }
+  } catch (error) {
+    console.error("Error fetching Wikipedia data:", error);
+    return `Error fetching Wikipedia data for "${adventureTitle}".`;
+  }
+}
+
+export async function getImage(adventureTitle: string) {
+  const url = `https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageimages&format=json&piprop=original&titles=${adventureTitle}`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    // Check if the query was successful
+    if (data.query && data.query.pages) {
+      const pageId = Object.keys(data.query.pages)[0];
+      const page = data.query.pages[pageId];
+
+      // Check if the page has an image
+      if (page.original && page.original.source) {
+        return page.original.source;
+      } else {
+        return `No image found for "${adventureTitle}".`;
+      }
+    } else {
+      return `Error: ${data.error.info}`;
+    }
+  } catch (error) {
+    console.error("Error fetching Wikipedia data:", error);
+    return `Error fetching Wikipedia data for "${adventureTitle}".`;
+  }
+}
