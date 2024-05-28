@@ -163,12 +163,14 @@
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
       </form>
-      <button class="btn btn-secondary" on:click={generate}
-        >Generate Description</button
-      >
-      <button class="btn btn-secondary" on:click={searchImage}
-        >Search for Image</button
-      >
+      <div class="flex items-center justify-center flex-wrap gap-4 mt-4">
+        <button class="btn btn-secondary" on:click={generate}
+          >Generate Description</button
+        >
+        <button class="btn btn-secondary" on:click={searchImage}
+          >Search for Image</button
+        >
+      </div>
     </div>
   </div>
 </dialog>

@@ -4,7 +4,7 @@
   import type { Adventure } from "$lib/utils/types";
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
-  import { addActivityType } from "$lib";
+  import { addActivityType, generateDescription, getImage } from "$lib";
   let modal: HTMLDialogElement;
 
   console.log(adventureToEdit.id);
@@ -40,6 +40,28 @@
   function activitySetup() {
     adventureToEdit = addActivityType(activityInput, adventureToEdit);
     activityInput = "";
+  }
+
+  async function generate() {
+    try {
+      console.log(adventureToEdit.name);
+      const desc = await generateDescription(adventureToEdit.name);
+      adventureToEdit.description = desc;
+      // Do something with the updated newAdventure object
+    } catch (error) {
+      console.error(error);
+      // Handle the error
+    }
+  }
+
+  async function searchImage() {
+    try {
+      const imageUrl = await getImage(adventureToEdit.name);
+      adventureToEdit.imageUrl = imageUrl;
+    } catch (error) {
+      console.error(error);
+      // Handle the error
+    }
   }
 </script>
 
@@ -124,6 +146,14 @@
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
       </form>
+      <div class="flex items-center justify-center flex-wrap gap-4 mt-4">
+        <button class="btn btn-secondary" on:click={generate}
+          >Generate Description</button
+        >
+        <button class="btn btn-secondary" on:click={searchImage}
+          >Search for Image</button
+        >
+      </div>
     </div>
   </div>
 </dialog>
