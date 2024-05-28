@@ -12,19 +12,21 @@
 
 <h1 class="text-center font-bold text-4xl mb-4">Country List</h1>
 
-{#each data.response as item}
-  <button
-    class="btn btn-primary mr-4 mb-2"
-    on:click={() => nav(item.country_code)}
-    >{item.name}
-    <img
-      src={getFlag(24, item.country_code)}
-      class="inline-block -mt-1 mr-1"
-      alt="Flag"
-    /></button
-  >
-  <!-- <p>Name: {item.name}, Continent: {item.continent}</p> -->
-{/each}
+<div class="flex items-center justify-center flex-wrap">
+  {#each data.response as item}
+    <button
+      class="btn btn-primary mr-2 ml-2 mb-2"
+      on:click={() => nav(item.country_code)}
+      >{item.name}
+      <img
+        src={getFlag(24, item.country_code)}
+        class="inline-block -mt-1 mr-1"
+        alt="Flag"
+      /></button
+    >
+    <!-- <p>Name: {item.name}, Continent: {item.continent}</p> -->
+  {/each}
+</div>
 
 <svelte:head>
   <title>WorldTravel | AdventureLog</title>

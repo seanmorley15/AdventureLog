@@ -97,7 +97,9 @@
         {/if}
       </ul>
     </div>
-    <a class="btn btn-ghost text-xl" href="/">AdventureLog 🗺️</a>
+    <a class="btn btn-ghost text-xl" href="/"
+      >AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-8" /></a
+    >
   </div>
   <div class="navbar-center hidden lg:flex">
     <ul class="menu menu-horizontal px-1 gap-2">

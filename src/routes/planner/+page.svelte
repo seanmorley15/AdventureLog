@@ -242,7 +242,7 @@
   {/each}
 </div>
 
-{#if adventuresPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && tripPlans.length == 0}
+{#if adventuresPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && tripPlans.length > 0}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some plans!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
@@ -284,9 +284,16 @@
   {/each}
 </div>
 
-{#if tripPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip}
+{#if tripPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && adventuresPlans.length > 0}
   <div class="flex flex-col items-center justify-center mt-16">
     <article class="prose mb-4"><h2>Add some trips!</h2></article>
+    <img src={mapDrawing} width="25%" alt="Logo" />
+  </div>
+{/if}
+
+{#if tripPlans.length == 0 && !isLoadingIdeas && !isLoadingTrips && !isShowingMoreFields && !isShowingNewTrip && adventuresPlans.length == 0}
+  <div class="flex flex-col items-center justify-center mt-16">
+    <article class="prose mb-4"><h2>Add some trips and plans!</h2></article>
     <img src={mapDrawing} width="25%" alt="Logo" />
   </div>
 {/if}
