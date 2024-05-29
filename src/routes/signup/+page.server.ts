@@ -31,6 +31,7 @@ export const actions: Actions = {
     const password = formData.get("password");
     const firstName = formData.get("first_name");
     const lastName = formData.get("last_name");
+    const confirmPassword = formData.get("passwordConfirm");
     // username must be between 4 ~ 31 characters, and only consists of lowercase letters, 0-9, -, and _
     // keep in mind some database (e.g. mysql) are case insensitive
 
@@ -38,7 +39,7 @@ export const actions: Actions = {
       return redirect(302, "/");
     }
     // check all to make sure all fields are provided
-    if (!username || !password || !firstName || !lastName) {
+    if (!username || !password || !firstName || !lastName || !confirmPassword) {
       return error(400, {
         message: "All fields are required",
       });
@@ -81,6 +82,12 @@ export const actions: Actions = {
     ) {
       return error(400, {
         message: "Invalid last name",
+      });
+    }
+
+    if (password !== confirmPassword) {
+      return error(400, {
+        message: "Passwords do not match",
       });
     }
 

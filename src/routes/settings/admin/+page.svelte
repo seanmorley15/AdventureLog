@@ -2,9 +2,6 @@
   import { page } from "$app/stores";
 
   import { enhance } from "$app/forms";
-  import { goto } from "$app/navigation";
-  import { type SubmitFunction } from "@sveltejs/kit";
-  import type { DatabaseUser } from "lucia";
   import UserCard from "$lib/components/UserCard.svelte";
 
   let username: string = "";
@@ -13,8 +10,6 @@
   let password: string = "";
   import ConfirmModal from "$lib/components/ConfirmModal.svelte";
 
-  let errors: { addUser?: string } = {};
-  let sucess: { addUser?: string } = {};
   let isModalOpen = false;
 
   async function clearAllSessions() {
@@ -34,8 +29,6 @@
   function closeModal() {
     isModalOpen = false;
   }
-
-  let form = $page.form;
 
   let visitCount = $page.data.visitCount[0].count;
   let userCount = $page.data.userCount[0].count;
