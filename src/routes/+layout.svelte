@@ -30,17 +30,11 @@
   });
 </script>
 
-<!-- passes the user object to the navbar component -->
-<Navbar user={data.user} />
-<section>
-  <slot />
-</section>
-<!-- <Footer /> -->
-
-<!-- <style>
-    section {
-        margin-top: 2rem;
-        margin-bottom: 5rem;
-        /* gives the footer space! */
-    }
-  </style> -->
+<div class="flex flex-col min-h-screen">
+  <!-- passes the user object to the navbar component -->
+  <Navbar user={data.user} />
+  <main class="flex-grow">
+    <slot />
+  </main>
+  <Footer />
+</div>
