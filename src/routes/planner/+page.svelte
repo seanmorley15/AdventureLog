@@ -220,6 +220,13 @@
       <h1 class="text-center">My Adventure Ideas</h1>
     </article>
   </div>
+  <div class="flex justify-center items-center w-full mt-4 mb-4">
+    Filter by: Activity Type &nbsp;
+    <select class="select select-bordered w-full max-w-xs">
+      <option>Han Solo</option>
+      <option>Greedo</option>
+    </select>
+  </div>
 {/if}
 
 {#if isLoadingIdeas && isLoadingTrips}
