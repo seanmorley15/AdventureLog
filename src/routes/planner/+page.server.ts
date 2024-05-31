@@ -8,7 +8,10 @@ export const load: PageServerLoad = async (event) => {
   }
   const response = await event.fetch("/api/planner");
   const result = await response.json();
+  const activityTypes = await event.fetch("/api/activitytypes?type=planner");
+  const activityTypesResult = await activityTypes.json();
   return {
     result,
+    activityTypesResult,
   };
 };

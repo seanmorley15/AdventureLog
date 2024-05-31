@@ -48,5 +48,8 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     }
   });
 
+  // remove duplicates
+  array = [...new Set(array)];
+
   return json({ types: array }, { status: 200 });
 };
