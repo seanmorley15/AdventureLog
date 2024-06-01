@@ -151,11 +151,17 @@
           <label for="date">Activity Types (Comma Seperated)</label>
           <input
             type="text"
+            hidden
             id="activityTypes"
             bind:value={activityInput}
             class="input input-bordered w-full max-w-xs"
           />
-          <AutoComplete items={activityTypes} bind:selectedItem={selected} />
+
+          <AutoComplete
+            items={activityTypes}
+            bind:selectedItem={selected}
+            bind:displayValue={activityInput}
+          />
         </div>
         <div>
           <label for="rating">Rating</label>
