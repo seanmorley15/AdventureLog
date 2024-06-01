@@ -1,5 +1,5 @@
 {
-  "id": "7cce94bb-5a17-42ff-850f-e0a41834b739",
+  "id": "7d9fd5eb-2eed-4595-a3db-6f01cde31041",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -40,9 +40,10 @@
         },
         "activityTypes": {
           "name": "activityTypes",
-          "type": "json",
+          "type": "text[]",
           "primaryKey": false,
-          "notNull": false
+          "notNull": false,
+          "default": "ARRAY[]::text[]"
         },
         "description": {
           "name": "description",
@@ -73,6 +74,12 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "tripId": {
+          "name": "tripId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -89,46 +96,23 @@
           ],
           "onDelete": "no action",
           "onUpdate": "no action"
+        },
+        "adventures_tripId_userPlannedTrips_id_fk": {
+          "name": "adventures_tripId_userPlannedTrips_id_fk",
+          "tableFrom": "adventures",
+          "tableTo": "userPlannedTrips",
+          "columnsFrom": [
+            "tripId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
-    },
-    "featuredAdventures": {
-      "name": "featuredAdventures",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "location": {
-          "name": "location",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "featuredAdventures_name_unique": {
-          "name": "featuredAdventures_name_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
-        }
-      }
     },
     "session": {
       "name": "session",
@@ -243,12 +227,6 @@
         "endDate": {
           "name": "endDate",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "adventures": {
-          "name": "adventures",
-          "type": "json",
           "primaryKey": false,
           "notNull": false
         }

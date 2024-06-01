@@ -4,19 +4,13 @@ CREATE TABLE IF NOT EXISTS "adventures" (
 	"userId" text,
 	"name" text NOT NULL,
 	"location" text,
-	"activityTypes" json,
+	"activityTypes" text[] DEFAULT ARRAY[]::text[],
 	"description" text,
 	"rating" integer,
 	"link" text,
 	"imageUrl" text,
-	"date" text
-);
---> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "featuredAdventures" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"name" text NOT NULL,
-	"location" text,
-	CONSTRAINT "featuredAdventures_name_unique" UNIQUE("name")
+	"date" text,
+	"tripId" integer
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "session" (
@@ -38,8 +32,7 @@ CREATE TABLE IF NOT EXISTS "userPlannedTrips" (
 	"adventureName" text NOT NULL,
 	"description" text,
 	"startDate" text,
-	"endDate" text,
-	"adventures" json
+	"endDate" text
 );
 --> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "user" (
@@ -78,6 +71,12 @@ CREATE TABLE IF NOT EXISTS "worldTravelCountryRegions" (
 --> statement-breakpoint
 DO $$ BEGIN
  ALTER TABLE "adventures" ADD CONSTRAINT "adventures_userId_user_id_fk" FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "adventures" ADD CONSTRAINT "adventures_tripId_userPlannedTrips_id_fk" FOREIGN KEY ("tripId") REFERENCES "userPlannedTrips"("id") ON DELETE no action ON UPDATE no action;
 EXCEPTION
  WHEN duplicate_object THEN null;
 END $$;
