@@ -1,0 +1,1 @@
+ALTER TABLE "adventures" ALTER COLUMN "activityTypes" SET DEFAULT ARRAY[]::text[];

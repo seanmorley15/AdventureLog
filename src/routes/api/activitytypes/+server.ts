@@ -33,18 +33,18 @@ export const GET: RequestHandler = async ({ url, locals }) => {
   types.forEach((type) => {
     console.log(type.activityTypes);
   });
-  if (types.length === 0) {
-    return json({ error: "Types not found" }, { status: 404 });
-  }
+  // if (types.length === 0) {
+  //   return json({ error: "Types not found" }, { status: 404 });
+  // }
 
   // console.log(types);
 
   let array: any[] = [];
 
   types.forEach((type) => {
-    const parsedActivityTypes = JSON.parse(type.activityTypes as string);
+    const parsedActivityTypes = type.activityTypes;
     if (parsedActivityTypes && parsedActivityTypes.length > 0) {
-      array.push(...parsedActivityTypes); // Spread the parsed array into the main array
+      array.push(...parsedActivityTypes);
     }
   });
 

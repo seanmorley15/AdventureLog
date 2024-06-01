@@ -15,6 +15,20 @@
       "when": 1715806684204,
       "tag": "0001_salty_ser_duncan",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1717253251149,
+      "tag": "0002_fine_sabra",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1717253339415,
+      "tag": "0003_closed_famine",
+      "breakpoints": true
     }
   ]
 }
