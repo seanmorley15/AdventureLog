@@ -84,7 +84,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       .from(adventureTable)
       .where(
         and(
-          ilike(adventureTable.location, value),
+          ilike(adventureTable.location, `%${value}%`),
           eq(adventureTable.userId, locals.user.id)
         )
       )
@@ -101,7 +101,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       .from(adventureTable)
       .where(
         and(
-          ilike(adventureTable.name, value),
+          ilike(adventureTable.name, `%${value}%`),
           eq(adventureTable.userId, locals.user.id)
         )
       )
