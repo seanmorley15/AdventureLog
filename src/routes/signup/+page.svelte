@@ -39,7 +39,7 @@
   class="min-h-screen bg-no-repeat bg-cover flex items-center justify-center"
   style="background-image: url('{backgroundImageUrl}')"
 >
-  <div class="card card-compact w-96 bg-base-100 shadow-xl p-6">
+  <div class="card card-compact w-96 bg-base-100 shadow-xl p-6 mt-4 mb-4">
     <article class="text-center text-4xl font-extrabold">
       <h1>Signup</h1>
     </article>
@@ -69,6 +69,12 @@
           type="password"
           name="password"
           id="password"
+          class="block mb-2 input input-bordered w-full max-w-xs"
+        /><br /><label for="password">Confirm Password</label>
+        <input
+          type="password"
+          name="passwordConfirm"
+          id="passwordConfirm"
           class="block mb-2 input input-bordered w-full max-w-xs"
         /><br />
         <button class="py-2 px-4 btn btn-primary">Signup</button>

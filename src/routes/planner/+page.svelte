@@ -19,15 +19,16 @@
   let adventuresPlans: Adventure[] = [];
   let tripPlans: Trip[] = [];
 
+  let activityTypes: String[] = [];
+
   let isLoadingIdeas: boolean = true;
   let isLoadingTrips: boolean = true;
 
   onMount(async () => {
-    console.log(data);
     getAllTrips();
-    console.log(tripPlans);
     adventuresPlans = data.result;
     isLoadingIdeas = false;
+    activityTypes = data.activityTypesResult.types;
   });
 
   let isShowingMoreFields: boolean = false;
@@ -37,8 +38,6 @@
   let toastAction: string = "";
 
   let adventureToEdit: Adventure | undefined;
-
-  console.log(data);
 
   function showToast(action: string) {
     toastAction = action;
@@ -65,10 +64,16 @@
   }
 
   async function savePlan(event: { detail: Adventure }) {
+    let types: String[] = [];
+    if (event.detail.activityTypes && event.detail.activityTypes.length > 0) {
+      types = event.detail.activityTypes;
+    }
     let newArray = await saveAdventure(event.detail, adventuresPlans);
     if (newArray.length > 0) {
       adventuresPlans = newArray;
       showToast("Adventure updated successfully!");
+      activityTypes = activityTypes.concat(types);
+      activityTypes = [...new Set(activityTypes)];
     } else {
       showToast("Failed to update adventure");
     }
@@ -93,10 +98,16 @@
 
   const createNewAdventure = async (event: { detail: Adventure }) => {
     isShowingMoreFields = false;
+    let types: String[] = [];
+    if (event.detail.activityTypes && event.detail.activityTypes.length > 0) {
+      types = event.detail.activityTypes;
+    }
     let newArray = await addAdventure(event.detail, adventuresPlans);
     if (newArray.length > 0) {
       adventuresPlans = newArray;
       showToast("Adventure added successfully!");
+      activityTypes = activityTypes.concat(types);
+      activityTypes = [...new Set(activityTypes)];
     } else {
       showToast("Failed to add adventure");
     }
@@ -219,6 +230,15 @@
     <article class="prose">
       <h1 class="text-center">My Adventure Ideas</h1>
     </article>
+  </div>
+  <div class="flex justify-center items-center w-full mt-4 mb-4">
+    Activity Type &nbsp;
+    <select class="select select-bordered w-full max-w-xs">
+      <option value="">All</option>
+      {#each activityTypes as type}
+        <option value={type}>{type}</option>
+      {/each}
+    </select>
   </div>
 {/if}
 

@@ -1,30 +1,36 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
   import { goto } from "$app/navigation";
-  import type { DatabaseUser } from "$lib/server/auth";
   export let user: any;
   import UserAvatar from "./UserAvatar.svelte";
-  import { onMount } from "svelte";
   import InfoModal from "./InfoModal.svelte";
-  import infoIcon from "$lib/assets/info.svg";
   import type { SubmitFunction } from "@sveltejs/kit";
-  async function goHome() {
-    goto("/");
-  }
-  async function goToLog() {
-    goto("/log");
-  }
-  async function goToFeatured() {
-    goto("/featured");
-  }
+  import { onMount } from "svelte";
+
+  let searchVal: string = "";
+
   async function toToLogin() {
     goto("/login");
   }
   async function goToSignup() {
     goto("/signup");
   }
-  async function goToWorldTravel() {
-    goto("/worldtravel");
+
+  onMount(() => {
+    if (window.location.pathname === "/search") {
+      searchVal = new URLSearchParams(window.location.search).get("all") || "";
+    }
+  });
+
+  async function goToSearch() {
+    let reload: boolean = false;
+    if (window.location.pathname === "/search") {
+      reload = true;
+    }
+    await goto("/search?all=" + searchVal);
+    if (reload) {
+      location.reload();
+    }
   }
 
   const submitUpdateTheme: SubmitFunction = ({ action }) => {
@@ -86,6 +92,24 @@
         <li>
           <button on:click={() => goto("/featured")}>Featured</button>
         </li>
+        {#if user}
+          <li>
+            <label class="input input-bordered flex items-center gap-2">
+              <input type="text" class="grow" placeholder="Search" />
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                class="w-4 h-4 opacity-70"
+                ><path
+                  fill-rule="evenodd"
+                  d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                  clip-rule="evenodd"
+                /></svg
+              >
+            </label>
+          </li>
+        {/if}
         {#if !user}
           <li>
             <button class="btn btn-primary" on:click={toToLogin}>Login</button>
@@ -125,6 +149,38 @@
           >Featured</button
         >
       </li>
+      {#if user}
+        <li>
+          <label class="input input-bordered flex items-center gap-2">
+            <form on:submit={() => goto("/search?all=" + searchVal)}>
+              <input
+                type="text"
+                class="grow"
+                placeholder="Search"
+                bind:value={searchVal}
+                on:keydown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+
+                    goToSearch();
+                  }
+                }}
+              />
+            </form>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 16 16"
+              fill="currentColor"
+              class="w-4 h-4 opacity-70"
+              ><path
+                fill-rule="evenodd"
+                d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+                clip-rule="evenodd"
+              /></svg
+            >
+          </label>
+        </li>
+      {/if}
       {#if !user}
         <li>
           <button class="btn btn-primary" on:click={toToLogin}>Login</button>

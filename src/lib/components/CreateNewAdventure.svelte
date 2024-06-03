@@ -17,13 +17,35 @@
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
   import { addActivityType, generateDescription, getImage } from "$lib";
+  import AutoComplete from "./AutoComplete.svelte";
   let modal: HTMLDialogElement;
 
-  onMount(() => {
+  let activityTypes: string[] = [];
+
+  $: selected = "";
+
+  // on selection add to activityTypes
+  $: {
+    if (selected) {
+      newAdventure = addActivityType(selected, newAdventure);
+
+      if (activityInput.length === 0) {
+        activityInput = selected;
+      } else {
+        activityInput = activityInput + ", " + selected;
+      }
+      selected = "";
+    }
+  }
+
+  onMount(async () => {
     modal = document.getElementById("my_modal_1") as HTMLDialogElement;
     if (modal) {
       modal.showModal();
     }
+    let activityFetch = await fetch("/api/activitytypes?type=" + type);
+    let res = await activityFetch.json();
+    activityTypes = res.types;
   });
 
   function create() {
@@ -129,9 +151,16 @@
           <label for="date">Activity Types (Comma Seperated)</label>
           <input
             type="text"
+            hidden
             id="activityTypes"
             bind:value={activityInput}
             class="input input-bordered w-full max-w-xs"
+          />
+
+          <AutoComplete
+            items={activityTypes}
+            bind:selectedItem={selected}
+            bind:displayValue={activityInput}
           />
         </div>
         <div>

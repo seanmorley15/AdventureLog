@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -93,7 +93,9 @@ export const adventureTable = pgTable("adventures", {
   userId: text("userId").references(() => userTable.id),
   name: text("name").notNull(),
   location: text("location"),
-  activityTypes: json("activityTypes"),
+  activityTypes: text("activityTypes")
+    .array()
+    .default(sql`ARRAY[]::text[]`),
   description: text("description"),
   rating: integer("rating"),
   link: text("link"),

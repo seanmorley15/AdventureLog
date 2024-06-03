@@ -5,18 +5,42 @@
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
   import { addActivityType, generateDescription, getImage } from "$lib";
+  import AutoComplete from "./AutoComplete.svelte";
   let modal: HTMLDialogElement;
 
   console.log(adventureToEdit.id);
 
   let originalName = adventureToEdit.name;
 
-  onMount(() => {
+  let activityTypes: string[] = [];
+
+  $: selected = "";
+
+  // on selection add to activityTypes
+  $: {
+    if (selected) {
+      adventureToEdit = addActivityType(selected, adventureToEdit);
+
+      if (activityInput.length === 0) {
+        activityInput = selected;
+      } else {
+        activityInput = activityInput + ", " + selected;
+      }
+      selected = "";
+    }
+  }
+
+  onMount(async () => {
     modal = document.getElementById("my_modal_1") as HTMLDialogElement;
     if (modal) {
       modal.showModal();
     }
     activityInput = (adventureToEdit?.activityTypes || []).join(", ");
+    let activityFetch = await fetch(
+      "/api/activitytypes?type=" + adventureToEdit.type
+    );
+    let res = await activityFetch.json();
+    activityTypes = res.types;
   });
 
   function submit() {
@@ -113,12 +137,18 @@
           />
         </div>
         <div>
-          <label for="date">Activity Types (Comma Seperated)</label>
           <input
             type="text"
+            hidden
             id="activityTypes"
             bind:value={activityInput}
             class="input input-bordered w-full max-w-xs"
+          />
+          <label for="date">Activity Types (Comma Seperated)</label>
+          <AutoComplete
+            items={activityTypes}
+            bind:selectedItem={selected}
+            bind:displayValue={activityInput}
           />
         </div>
         <div>

@@ -132,8 +132,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  console.log(activityTypes);
-
   // insert the adventure to the user's visited list
   let res = await db
     .insert(adventureTable)
@@ -145,7 +143,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       tripId: tripId || null,
       date: date || null,
       description: description || null,
-      activityTypes: JSON.stringify(activityTypes) || null,
+      activityTypes: activityTypes || null,
       rating: rating || null,
       imageUrl: imageUrl || null,
     })
@@ -153,7 +151,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
     .execute();
 
   let insertedId = res[0].insertedId;
-  console.log(insertedId);
 
   body.detailAdventure.id = insertedId;
 
@@ -217,7 +214,7 @@ export async function PUT(event: RequestEvent): Promise<Response> {
       date: date,
       description: description,
       rating: rating,
-      activityTypes: JSON.stringify(activityTypes),
+      activityTypes: activityTypes,
       imageUrl: imageUrl,
     })
     .where(

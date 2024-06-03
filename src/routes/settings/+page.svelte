@@ -1,6 +1,5 @@
 <script>
   import { enhance } from "$app/forms";
-  import AdventureCard from "$lib/components/AdventureCard.svelte";
 
   export let data;
   let username = data.user?.username;

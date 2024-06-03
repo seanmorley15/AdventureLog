@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1715035790035,
-      "tag": "0000_grey_iron_monger",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1715806684204,
-      "tag": "0001_salty_ser_duncan",
+      "when": 1717264326698,
+      "tag": "0000_whole_blob",
       "breakpoints": true
     }
   ]
