@@ -132,8 +132,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
     });
   }
 
-  console.log(activityTypes);
-
   // insert the adventure to the user's visited list
   let res = await db
     .insert(adventureTable)
@@ -153,7 +151,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
     .execute();
 
   let insertedId = res[0].insertedId;
-  console.log(insertedId);
 
   body.detailAdventure.id = insertedId;
 

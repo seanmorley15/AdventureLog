@@ -1,8 +1,7 @@
 <script lang="ts">
   export let data;
-  import Footer from "$lib/components/Footer.svelte";
+  // import Footer from "$lib/components/Footer.svelte";
   import Navbar from "$lib/components/Navbar.svelte";
-  import type { SubmitFunction } from "@sveltejs/kit";
   import "../app.css";
   import { goto } from "$app/navigation";
   import { onMount } from "svelte";
@@ -36,5 +35,5 @@
   <main class="flex-grow">
     <slot />
   </main>
-  <Footer />
+  <!-- <Footer /> -->
 </div>

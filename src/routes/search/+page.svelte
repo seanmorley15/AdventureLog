@@ -19,6 +19,6 @@
       {/each}
     </div>
   {:else}
-    <p>No results found</p>
+    <h1 class="text-center text-4xl font-bold mt-16">No Results Found</h1>
   {/if}
 </main>
