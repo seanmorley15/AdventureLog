@@ -18,16 +18,20 @@
 
   onMount(() => {
     if (window.location.pathname === "/search") {
-      searchVal = new URLSearchParams(window.location.search).get("all") || "";
+      searchVal =
+        new URLSearchParams(window.location.search).get("value") || "";
     }
   });
 
   async function goToSearch() {
+    if (searchVal === "") {
+      return;
+    }
     let reload: boolean = false;
     if (window.location.pathname === "/search") {
       reload = true;
     }
-    await goto("/search?all=" + searchVal);
+    await goto("/search?value=" + searchVal);
     if (reload) {
       location.reload();
     }

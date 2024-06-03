@@ -5,7 +5,6 @@
 
   export let data: PageData;
   let adventureArray: Adventure[] = data.props?.adventures as Adventure[];
-  console.log(adventureArray);
 </script>
 
 <main>
