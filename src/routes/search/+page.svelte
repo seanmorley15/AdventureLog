@@ -5,29 +5,31 @@
   import type { SubmitFunction } from "@sveltejs/kit";
   import type { PageData } from "./$types";
 
-  let visitedValue = "all";
-  let typeValue = "";
+  // let visitedValue = "all";
+  // let typeValue = "";
 
   export let data: PageData;
   let adventureArray: Adventure[] = data.props?.adventures as Adventure[];
 
   const filter: SubmitFunction = async ({ formData }) => {
-    visitedValue = formData.get("visited") as string;
-    typeValue = formData.get("type") as string;
+    const radioValue = formData.get("visited") as string;
+    let typeValue = formData.get("type") as string;
+    if (!typeValue) {
+      typeValue = "";
+    }
     const value = new URLSearchParams(location.search).get("value");
-
+    console.log(value);
     console.log(
-      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
+      `/api/search?value=${value}&type=${typeValue}&visited=${radioValue}`
     );
-
-    let response = await fetch(
-      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
+    let data = await fetch(
+      `/api/search?value=${value}&type=${typeValue}&visited=${radioValue}`
     );
-    console.log(response);
-
-    let res = await response.json();
+    console.log(data);
+    adventureArray = [];
+    let res = await data.json();
     adventureArray = res.adventures as Adventure[];
-    console.log("TEST" + visitedValue + " " + typeValue);
+    console.log(radioValue);
   };
 </script>
 
@@ -37,46 +39,32 @@
       type="radio"
       name="visited"
       value="all"
+      checked
       class="radio radio-primary"
-      bind:group={visitedValue}
-      checked={visitedValue === "all"}
     />
     All
     <input
       type="radio"
-      bind:group={visitedValue}
       name="visited"
       value="false"
       class="radio radio-primary"
-      checked={visitedValue === "false"}
     />
     Not Visited
     <input
       type="radio"
-      bind:group={visitedValue}
       name="visited"
       value="true"
       class="radio radio-primary"
-      checked={visitedValue === "true"}
     />
     Visited
     <br />
-    <input
-      type="radio"
-      name="type"
-      value=""
-      class="radio radio-primary"
-      bind:group={typeValue}
-      checked={typeValue === ""}
-    />
+    <input type="radio" name="type" value="" class="radio radio-primary" />
     All
     <input
       type="radio"
       name="type"
       value="activity"
       class="radio radio-primary"
-      bind:group={typeValue}
-      checked={typeValue === "activity"}
     />
     Activity
     <input
@@ -84,18 +72,9 @@
       name="type"
       value="location"
       class="radio radio-primary"
-      bind:group={typeValue}
-      checked={typeValue === "location"}
     />
     Location
-    <input
-      type="radio"
-      name="type"
-      value="name"
-      class="radio radio-primary"
-      bind:group={typeValue}
-      checked={typeValue === "name"}
-    />
+    <input type="radio" name="type" value="name" class="radio radio-primary" />
     Name
     <!-- submit button -->
     <button type="submit" class="btn btn-primary">Search</button>
