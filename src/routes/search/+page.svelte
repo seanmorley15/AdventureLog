@@ -12,21 +12,22 @@
   let adventureArray: Adventure[] = data.props?.adventures as Adventure[];
 
   const filter: SubmitFunction = async ({ formData }) => {
-    const radioValue = formData.get("visited");
-    const typeValue = formData.get("type");
+    visitedValue = formData.get("visited") as string;
+    typeValue = formData.get("type") as string;
     const value = new URLSearchParams(location.search).get("value");
-    console.log(value);
+
     console.log(
-      `/api/search?value=${value}&type=${typeValue}&visited=${radioValue}`
+      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
     );
-    let data = await fetch(
-      `/api/search?value=${value}&type=${typeValue}&visited=${radioValue}`
+
+    let response = await fetch(
+      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
     );
-    console.log(data);
-    adventureArray = [];
-    let res = await data.json();
+    console.log(response);
+
+    let res = await response.json();
     adventureArray = res.adventures as Adventure[];
-    console.log(radioValue);
+    console.log("TEST" + visitedValue + " " + typeValue);
   };
 </script>
 
@@ -38,7 +39,7 @@
       value="all"
       class="radio radio-primary"
       bind:group={visitedValue}
-      checked
+      checked={visitedValue === "all"}
     />
     All
     <input
@@ -47,6 +48,7 @@
       name="visited"
       value="false"
       class="radio radio-primary"
+      checked={visitedValue === "false"}
     />
     Not Visited
     <input
@@ -55,6 +57,7 @@
       name="visited"
       value="true"
       class="radio radio-primary"
+      checked={visitedValue === "true"}
     />
     Visited
     <br />
@@ -64,6 +67,7 @@
       value=""
       class="radio radio-primary"
       bind:group={typeValue}
+      checked={typeValue === ""}
     />
     All
     <input
@@ -72,22 +76,25 @@
       value="activity"
       class="radio radio-primary"
       bind:group={typeValue}
+      checked={typeValue === "activity"}
     />
     Activity
     <input
       type="radio"
       name="type"
-      bind:group={typeValue}
       value="location"
       class="radio radio-primary"
+      bind:group={typeValue}
+      checked={typeValue === "location"}
     />
     Location
     <input
       type="radio"
-      bind:group={typeValue}
       name="type"
       value="name"
       class="radio radio-primary"
+      bind:group={typeValue}
+      checked={typeValue === "name"}
     />
     Name
     <!-- submit button -->
