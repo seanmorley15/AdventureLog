@@ -26,12 +26,20 @@ export const GET: RequestHandler = async ({
     const locationResults = await locationSearch(value, locals);
     const namesResults = await nameSearch(value, locals);
 
+    // remove duplicates by id
+    let adventures: any = {};
+    activityResults.adventures.forEach((a: any) => {
+      adventures[a.id] = a;
+    });
+    locationResults.adventures.forEach((a: any) => {
+      adventures[a.id] = a;
+    });
+    namesResults.adventures.forEach((a: any) => {
+      adventures[a.id] = a;
+    });
+
     return json({
-      adventures: [
-        ...activityResults.adventures,
-        ...locationResults.adventures,
-        ...namesResults.adventures,
-      ],
+      adventures: Object.values(adventures),
     });
   } else if (type === "activity") {
     return json(await activitySearch(value, locals, isVisited));
