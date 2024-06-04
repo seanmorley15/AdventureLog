@@ -19,3 +19,10 @@ export const load: PageServerLoad = async ({ url, locals, fetch }) => {
   let json = await data.json();
   return { props: { adventures: json.adventures } };
 };
+
+export const actions = {
+  default: async () => {
+    console.log("default");
+    return { props: {} };
+  },
+};

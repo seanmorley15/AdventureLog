@@ -17,14 +17,15 @@ export const GET: RequestHandler = async ({
   } else if (visited === "false") {
     isVisited = false;
   }
+  console.log("visited", visited, isVisited);
 
   if (!user) {
     return json({ error: "Unauthorized" }, { status: 401 });
   }
   if (!type) {
     const activityResults = await activitySearch(value, locals, isVisited);
-    const locationResults = await locationSearch(value, locals);
-    const namesResults = await nameSearch(value, locals);
+    const locationResults = await locationSearch(value, locals, isVisited);
+    const namesResults = await nameSearch(value, locals, isVisited);
 
     // remove duplicates by id
     let adventures: any = {};
@@ -44,9 +45,9 @@ export const GET: RequestHandler = async ({
   } else if (type === "activity") {
     return json(await activitySearch(value, locals, isVisited));
   } else if (type === "location") {
-    return json(await locationSearch(value, locals));
+    return json(await locationSearch(value, locals, isVisited));
   } else if (type === "name") {
-    return json(await nameSearch(value, locals));
+    return json(await nameSearch(value, locals, isVisited));
   }
   return json({ error: "No results found." }, { status: 400 });
 };
@@ -78,14 +79,22 @@ async function activitySearch(
   };
 }
 
-async function locationSearch(value: string, locals: any) {
+async function locationSearch(
+  value: string,
+  locals: any,
+  visited: boolean | undefined
+) {
   let res = await db
     .select()
     .from(adventureTable)
     .where(
       and(
         ilike(adventureTable.location, `%${value}%`),
-        eq(adventureTable.userId, locals.user.id)
+        eq(adventureTable.userId, locals.user.id),
+        or(
+          visited === true ? eq(adventureTable.type, "mylog") : undefined,
+          visited === false ? eq(adventureTable.type, "planner") : undefined
+        )
       )
     )
     .execute();
@@ -95,14 +104,22 @@ async function locationSearch(value: string, locals: any) {
   };
 }
 
-async function nameSearch(value: string, locals: any) {
+async function nameSearch(
+  value: string,
+  locals: any,
+  visited: boolean | undefined
+) {
   let res = await db
     .select()
     .from(adventureTable)
     .where(
       and(
         ilike(adventureTable.name, `%${value}%`),
-        eq(adventureTable.userId, locals.user.id)
+        eq(adventureTable.userId, locals.user.id),
+        or(
+          visited === true ? eq(adventureTable.type, "mylog") : undefined,
+          visited === false ? eq(adventureTable.type, "planner") : undefined
+        )
       )
     )
     .execute();
