@@ -5,8 +5,29 @@
   import type { SubmitFunction } from "@sveltejs/kit";
   import type { PageData } from "./$types";
 
-  // let visitedValue = "all";
-  // let typeValue = "";
+  let typeValue: string = "";
+  let visitedValue: string = "all";
+
+  async function filterResults() {
+    console.log(typeValue);
+    console.log(visitedValue);
+
+    if (!typeValue) {
+      typeValue = "";
+    }
+    const value = new URLSearchParams(location.search).get("value");
+    console.log(value);
+    console.log(
+      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
+    );
+    let data = await fetch(
+      `/api/search?value=${value}&type=${typeValue}&visited=${visitedValue}`
+    );
+    console.log(data);
+    adventureArray = [];
+    let res = await data.json();
+    adventureArray = res.adventures as Adventure[];
+  }
 
   export let data: PageData;
   let adventureArray: Adventure[] = data.props?.adventures as Adventure[];
@@ -34,51 +55,73 @@
 </script>
 
 <main>
-  <form method="post" use:enhance={filter}>
-    <input
-      type="radio"
-      name="visited"
-      value="all"
-      checked
-      class="radio radio-primary"
-    />
-    All
-    <input
-      type="radio"
-      name="visited"
-      value="false"
-      class="radio radio-primary"
-    />
-    Not Visited
-    <input
-      type="radio"
-      name="visited"
-      value="true"
-      class="radio radio-primary"
-    />
-    Visited
+  <h1 class="text-center font-semibold text-2xl mb-2">Filtering Options</h1>
+  <div class="flex items-center justify-center gap-6 mb-4">
+    <div class="join">
+      <input
+        type="radio"
+        name="visited"
+        value="all"
+        checked
+        class="join-item btn"
+        aria-label="All"
+        bind:group={visitedValue}
+      />
+      <input
+        type="radio"
+        name="visited"
+        value="false"
+        class="join-item btn"
+        bind:group={visitedValue}
+        aria-label="Not Visited"
+      />
+      <input
+        type="radio"
+        name="visited"
+        value="true"
+        class="join-item btn"
+        bind:group={visitedValue}
+        aria-label="Visited"
+      />
+    </div>
     <br />
-    <input type="radio" name="type" value="" class="radio radio-primary" />
-    All
-    <input
-      type="radio"
-      name="type"
-      value="activity"
-      class="radio radio-primary"
-    />
-    Activity
-    <input
-      type="radio"
-      name="type"
-      value="location"
-      class="radio radio-primary"
-    />
-    Location
-    <input type="radio" name="type" value="name" class="radio radio-primary" />
-    Name
-    <!-- submit button -->
-    <button type="submit" class="btn btn-primary">Search</button>
-  </form>
+    <div class="join">
+      <input
+        type="radio"
+        name="type"
+        value=""
+        class="join-item btn"
+        bind:group={typeValue}
+        aria-label="All"
+      />
+      <input
+        type="radio"
+        name="type"
+        value="activity"
+        class="join-item btn"
+        bind:group={typeValue}
+        aria-label="Activity"
+      />
+      <input
+        type="radio"
+        name="type"
+        value="location"
+        class="join-item btn"
+        bind:group={typeValue}
+        aria-label="Location"
+      />
+      <input
+        type="radio"
+        name="type"
+        value="name"
+        class="join-item btn"
+        aria-label="Name"
+        bind:group={typeValue}
+      />
+    </div>
+    <button class="btn btn-primary" on:click={filterResults}>Filter</button>
+  </div>
+
   <h1 class="text-center font-bold text-4xl">Search Results</h1>
   {#if adventureArray.length > 0}
     <div
