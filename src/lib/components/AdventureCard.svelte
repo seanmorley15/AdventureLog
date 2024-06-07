@@ -42,9 +42,10 @@
 >
   {#if adventure.imageUrl && adventure.imageUrl.length > 0}
     <figure>
+      <!-- svelte-ignore a11y-img-redundant-alt -->
       <img
         src={adventure.imageUrl}
-        alt="Shoes"
+        alt="No image available"
         class="w-full h-48 object-cover"
       />
     </figure>
@@ -74,7 +75,7 @@
         {/each}
       </ul>
     {/if}
-    <div class="card-actions justify-end">
+    <div class="card-actions justify-end mt-2">
       {#if type == "mylog"}
         <button class="btn btn-primary" on:click={moreInfo}
           ><iconify-icon icon="mdi:launch" class="text-2xl"
