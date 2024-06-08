@@ -213,9 +213,7 @@
   <EditModal bind:adventureToEdit on:submit={save} on:close={handleClose} />
 {/if}
 
-<div
-  class="grid xl:grid-cols-3 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-4 mt-4 content-center auto-cols-auto ml-6 mr-6"
->
+<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
   {#each adventures as adventure (adventure.id)}
     <AdventureCard
       {adventure}

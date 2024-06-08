@@ -40,18 +40,20 @@
 <div
   class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
 >
-  {#if adventure.imageUrl && adventure.imageUrl.length > 0}
-    <figure>
-      <!-- svelte-ignore a11y-img-redundant-alt -->
-      <img
-        src={adventure.imageUrl}
-        alt="No image available"
-        class="w-full h-48 object-cover"
-      />
-    </figure>
-  {/if}
+  <figure>
+    <!-- svelte-ignore a11y-img-redundant-alt -->
+    <img
+      src={adventure.imageUrl ||
+        "https://placehold.co/300?text=No%20Image%20Found&font=roboto"}
+      alt="No image available"
+      class="w-full h-48 object-cover"
+    />
+  </figure>
+
   <div class="card-body">
-    <h2 class="card-title overflow-ellipsis">{adventure.name}</h2>
+    <h2 class="card-title break-words max-w-11 text-wrap">
+      {adventure.name}
+    </h2>
     {#if adventure.location && adventure.location !== ""}
       <div class="inline-flex items-center">
         <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon>
