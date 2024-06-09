@@ -8,9 +8,17 @@ services:
       # ORIGIN is only necessary when not using a reverse proxy or hosting that includes https
       - ORIGIN=http://localhost:3000
       - SKIP_DB_WAIT=false
-      # Only necessary for externaly hosted databases such as NeonDB
+      - MINIO_SERVER_URL=minio
+      - MINIO_CLIENT_URL=http://localhost:9000
+      - MINIO_ENDPOINT=minio
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadmin
+      - MINIO_USE_SSL=false
+      - BODY_SIZE_LIMIT=Infinity
+      # Only necessary for externally hosted databases such as NeonDB
     depends_on:
       - db
+      - minio
   db:
     image: postgres
     environment:

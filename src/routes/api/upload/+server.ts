@@ -3,7 +3,7 @@
 import minioClient from "$lib/server/minio.js";
 import type { RequestEvent } from "@sveltejs/kit";
 import { generateId } from "lucia";
-import { MINIO_URL } from "$env/static/private";
+const MINIO_CLIENT_URL = process.env.MINIO_CLIENT_URL;
 
 export async function POST(event: RequestEvent): Promise<Response> {
   try {
@@ -74,7 +74,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       fileName
     );
 
-    const publicUrl = `${MINIO_URL}/profile-pics/${fileName}`;
+    const publicUrl = `${MINIO_CLIENT_URL}/profile-pics/${fileName}`;
 
     return new Response(JSON.stringify({ publicUrl }), {
       status: 200,
