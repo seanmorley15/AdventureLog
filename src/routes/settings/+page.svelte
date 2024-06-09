@@ -47,14 +47,6 @@
       id="last_name"
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
-    <label for="icon">Profile Icon (emoji)</label>
-    <input
-      type="emoji"
-      bind:value={icon}
-      name="icon"
-      id="icon"
-      class="block mb-2 input input-bordered w-full max-w-xs"
-    /><br />
     <label for="profilePicture">Profile Picture</label>
     <input
       type="file"

@@ -28,7 +28,6 @@ export const actions: Actions = {
     let lastName = formData.get("last_name") as string;
     let icon = formData.get("icon") as string;
     let profilePicture = formData.get("profilePicture") as File;
-    console.log(profilePicture);
 
     let password = formData.get("password") as string;
 
@@ -68,7 +67,6 @@ export const actions: Actions = {
 
     if (password) {
       let hashedPassword = await new Argon2id().hash(password);
-      console.log(hashedPassword);
       await db
         .update(userTable)
         .set({
@@ -84,14 +82,14 @@ export const actions: Actions = {
       });
 
       const data = await response.json();
+      console.log("DATA" + data.publicUrl);
+      icon = data.publicUrl;
 
       if (data.error) {
         throw error(400, {
           message: "Error uploading profile picture",
         });
       }
-
-      console.log(data);
     }
 
     await db

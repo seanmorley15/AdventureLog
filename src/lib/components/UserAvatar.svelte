@@ -22,7 +22,7 @@
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
   <div class="avatar placeholder">
     <div class="bg-neutral text-neutral-content rounded-full w-10 ml-4">
-      <span class="text-2xl -mt-0.5">{icon}</span>
+      <img src={user.icon} alt="" />
     </div>
   </div>
   <!-- svelte-ignore a11y-missing-attribute -->
