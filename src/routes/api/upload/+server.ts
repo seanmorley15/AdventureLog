@@ -11,6 +11,25 @@ export async function POST(event: RequestEvent): Promise<Response> {
     const fileExtension = contentType.split("/").pop();
     const fileName = `${generateId(25)}.${fileExtension}`;
 
+    if (!fileExtension || !fileName) {
+      return new Response(JSON.stringify({ error: "Invalid file type" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // check if the file is an image
+    if (!contentType.startsWith("image")) {
+      return new Response(JSON.stringify({ error: "Invalid file type" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
     const fileBuffer = await event.request.arrayBuffer();
     const metaData = {
       "Content-Type": contentType,
