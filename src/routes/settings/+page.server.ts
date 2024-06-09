@@ -1,4 +1,9 @@
-import { redirect, type Actions } from "@sveltejs/kit";
+import {
+  error,
+  redirect,
+  type Actions,
+  type RequestEvent,
+} from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
 import { userTable } from "$lib/db/schema";
@@ -15,15 +20,17 @@ export const load: PageServerLoad = async (event) => {
 };
 
 export const actions: Actions = {
-  default: async (event: { request: { formData: () => any } }) => {
-    const formData = await event.request.formData();
-    let userId = formData.get("user_id");
-    let username = formData.get("username");
-    let firstName = formData.get("first_name");
-    let lastName = formData.get("last_name");
-    let icon = formData.get("icon");
+  default: async (event: RequestEvent) => {
+    const formData = (await event.request.formData()) as FormData;
+    let userId = formData.get("user_id") as string;
+    let username = formData.get("username") as string;
+    let firstName = formData.get("first_name") as string;
+    let lastName = formData.get("last_name") as string;
+    let icon = formData.get("icon") as string;
+    let profilePicture = formData.get("profilePicture") as File;
+    console.log(profilePicture);
 
-    let password = formData.get("password");
+    let password = formData.get("password") as string;
 
     if (!userId) {
       return {
@@ -68,6 +75,23 @@ export const actions: Actions = {
           hashed_password: hashedPassword,
         })
         .where(eq(userTable.id, userId));
+    }
+
+    if (profilePicture) {
+      const response = await event.fetch("/api/upload", {
+        method: "POST",
+        body: profilePicture,
+      });
+
+      const data = await response.json();
+
+      if (data.error) {
+        throw error(400, {
+          message: "Error uploading profile picture",
+        });
+      }
+
+      console.log(data);
     }
 
     await db

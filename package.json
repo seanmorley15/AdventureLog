@@ -43,6 +43,7 @@
     "@vercel/speed-insights": "^1.0.10",
     "drizzle-orm": "^0.30.6",
     "iconify-icon": "^2.1.0",
+    "minio": "^8.0.0",
     "oslo": "^1.2.0",
     "postgres": "^3.4.4"
   }

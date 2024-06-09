@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { enhance } from "$app/forms";
 
   export let data;
@@ -9,6 +9,7 @@
   let icon = data.user?.icon;
   let signup_date = data.user?.signup_date;
   let role = data.user?.role;
+  let file: File;
 
   // the submit function shoud just reload the page
 </script>
@@ -17,7 +18,12 @@
 
 <h1 class="text-center font-extrabold text-xl">User Account Settings</h1>
 <div class="flex justify-center">
-  <form method="post" use:enhance class="w-full max-w-xs">
+  <form
+    method="post"
+    use:enhance
+    class="w-full max-w-xs"
+    enctype="multipart/form-data"
+  >
     <label for="username">Username</label>
     <input
       bind:value={username}
@@ -47,6 +53,14 @@
       bind:value={icon}
       name="icon"
       id="icon"
+      class="block mb-2 input input-bordered w-full max-w-xs"
+    /><br />
+    <label for="profilePicture">Profile Picture</label>
+    <input
+      type="file"
+      bind:value={file}
+      name="profilePicture"
+      id="profilePicture"
       class="block mb-2 input input-bordered w-full max-w-xs"
     /><br />
     <label for="password">Password</label>
