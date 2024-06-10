@@ -7,13 +7,15 @@ services:
       - DATABASE_URL=postgres://adventurelog:PO24VjITwGgk@db:5432/adventurelog
       # ORIGIN is only necessary when not using a reverse proxy or hosting that includes https
       - ORIGIN=http://localhost:3000
+      # SKIP_DB_WAIT: Only necessary for externally hosted databases such as NeonDB which have their own health checks!
       - SKIP_DB_WAIT=false
       - AWS_ACCESS_KEY_ID=minioadmin
       - AWS_SECRET_ACCESS_KEY=minioadmin
       - AWS_S3_ENDPOINT=http://minio:9000
+      # MINIO_CLIENT_OVERRIDE: Only necessary if using minio here with this docker compose file. This is becaues the client needs a different endpoint than the server because its not in the docker network.
       - MINIO_CLIENT_OVERRIDE=http://localhost:9000
-      - BODY_SIZE_LIMIT=Infinity
-      # Only necessary for externally hosted databases such as NeonDB
+      - BODY_SIZE_LIMIT=Infinity # change this to a smaller value if you want to limit the size of uploaded files!
+
     depends_on:
       - db
       - minio
