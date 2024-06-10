@@ -82,8 +82,8 @@ export const actions: Actions = {
       });
 
       const data = await response.json();
-      console.log("DATA" + data.publicUrl);
-      icon = data.publicUrl;
+      console.log("DATA" + data.objectUrl);
+      icon = data.objectUrl;
 
       if (data.error) {
         throw error(400, {

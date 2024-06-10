@@ -1,9 +1,9 @@
 // src/routes/api/upload.js
 
-import minioClient from "$lib/server/minio.js";
+import { ensureBucketExists, s3Client, uploadObject } from "$lib/server/s3";
+import { HeadBucketCommand } from "@aws-sdk/client-s3";
 import type { RequestEvent } from "@sveltejs/kit";
 import { generateId } from "lucia";
-const MINIO_CLIENT_URL = process.env.MINIO_CLIENT_URL;
 
 export async function POST(event: RequestEvent): Promise<Response> {
   try {
@@ -35,48 +35,17 @@ export async function POST(event: RequestEvent): Promise<Response> {
       "Content-Type": contentType,
     };
 
-    const found: Boolean = await minioClient.bucketExists("profile-pics");
+    await ensureBucketExists("profile-pics");
 
-    if (!found) {
-      await minioClient.makeBucket("profile-pics");
-      // Set a bucket policy to allow public read access
-      const bucketPolicy = {
-        Version: "2012-10-17",
-        Statement: [
-          {
-            Effect: "Allow",
-            Principal: "*",
-            Action: ["s3:GetBucketLocation", "s3:ListBucket"],
-            Resource: `arn:aws:s3:::profile-pics`,
-          },
-          {
-            Effect: "Allow",
-            Principal: "*",
-            Action: "s3:GetObject",
-            Resource: `arn:aws:s3:::profile-pics/*`,
-          },
-        ],
-      };
-      await minioClient.setBucketPolicy(
-        "profile-pics",
-        JSON.stringify(bucketPolicy)
-      );
-    }
-
-    await minioClient.putObject(
+    const objectUrl = await uploadObject(
       "profile-pics",
       fileName,
       Buffer.from(fileBuffer)
     );
 
-    const fileUrl = await minioClient.presignedGetObject(
-      "profile-pics",
-      fileName
-    );
+    console.log(`File uploaded to ${objectUrl}`);
 
-    const publicUrl = `${MINIO_CLIENT_URL}/profile-pics/${fileName}`;
-
-    return new Response(JSON.stringify({ publicUrl }), {
+    return new Response(JSON.stringify({ objectUrl }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
