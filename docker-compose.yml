@@ -8,12 +8,10 @@ services:
       # ORIGIN is only necessary when not using a reverse proxy or hosting that includes https
       - ORIGIN=http://localhost:3000
       - SKIP_DB_WAIT=false
-      - MINIO_SERVER_URL=minio
-      - MINIO_CLIENT_URL=http://localhost:9000
-      - MINIO_ENDPOINT=minio
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MINIO_USE_SSL=false
+      - AWS_ACCESS_KEY_ID=minioadmin
+      - AWS_SECRET_ACCESS_KEY=minioadmin
+      - AWS_S3_ENDPOINT=http://minio:9000
+      - MINIO_CLIENT_OVERRIDE=http://localhost:9000
       - BODY_SIZE_LIMIT=Infinity
       # Only necessary for externally hosted databases such as NeonDB
     depends_on:

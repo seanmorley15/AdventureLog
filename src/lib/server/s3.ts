@@ -10,7 +10,7 @@ import { env } from "$env/dynamic/private";
 console.log(env.AWS_ACCESS_KEY_ID as string);
 
 const s3Config: S3ClientConfig = {
-  region: env.AWS_REGION as string,
+  region: (env.AWS_REGION as string) || "us-east-1",
   credentials: {
     accessKeyId: env.AWS_ACCESS_KEY_ID as string,
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY as string,
@@ -28,6 +28,7 @@ export const ensureBucketExists = async (bucketName: string): Promise<void> => {
     await s3Client.send(headBucketCommand);
     console.log(`Bucket ${bucketName} already exists.`);
   } catch (error: any) {
+    console.log(error);
     if (error.$metadata.httpStatusCode === 404) {
       console.log(`Bucket ${bucketName} does not exist. Creating...`);
       const createBucketCommand = new CreateBucketCommand({
@@ -85,6 +86,9 @@ export const uploadObject = async (
 
     // Determine the provider from the endpoint
     let endpoint = env.AWS_S3_ENDPOINT as string;
+    if (env.MINIO_CLIENT_OVERRIDE) {
+      endpoint = env.MINIO_CLIENT_OVERRIDE;
+    }
     let objectUrl: string;
 
     if (endpoint.includes("amazonaws.com")) {
