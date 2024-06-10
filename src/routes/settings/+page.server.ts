@@ -26,8 +26,10 @@ export const actions: Actions = {
     let username = formData.get("username") as string;
     let firstName = formData.get("first_name") as string;
     let lastName = formData.get("last_name") as string;
-    let icon = formData.get("icon") as string;
-    let profilePicture = formData.get("profilePicture") as File;
+    let icon = event.locals.user?.icon;
+    let profilePicture = formData.get("profilePicture") as File | null;
+
+    console.log("PROFILE PICTURE" + profilePicture);
 
     let password = formData.get("password") as string;
 
@@ -75,7 +77,7 @@ export const actions: Actions = {
         .where(eq(userTable.id, userId));
     }
 
-    if (profilePicture) {
+    if (profilePicture?.size && profilePicture.size > 0) {
       const response = await event.fetch("/api/upload", {
         method: "POST",
         body: profilePicture,

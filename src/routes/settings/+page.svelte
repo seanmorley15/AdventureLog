@@ -2,6 +2,7 @@
   import { enhance } from "$app/forms";
 
   export let data;
+
   let username = data.user?.username;
   let first_name = data.user?.first_name;
   let last_name = data.user?.last_name;
@@ -9,7 +10,8 @@
   let icon = data.user?.icon;
   let signup_date = data.user?.signup_date;
   let role = data.user?.role;
-  let file: File;
+  console.log(username);
+  let file: File | null = null;
 
   // the submit function shoud just reload the page
 </script>
