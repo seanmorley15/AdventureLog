@@ -85,32 +85,8 @@ export const uploadObject = async (
   try {
     await s3Client.send(putObjectCommand);
 
-    // Determine the provider from the endpoint
-    let endpoint = env.AWS_S3_ENDPOINT as string;
-    if (env.MINIO_CLIENT_OVERRIDE) {
-      endpoint = env.MINIO_CLIENT_OVERRIDE;
-    }
     let objectUrl: string;
-
-    if (endpoint.includes("amazonaws.com")) {
-      // Amazon S3
-      objectUrl = `https://${bucketName}.s3.${env.AWS_REGION}.amazonaws.com/${fileName}`;
-    } else if (endpoint.includes("storage.googleapis.com")) {
-      // Google Cloud Storage
-      objectUrl = `https://storage.googleapis.com/${bucketName}/${fileName}`;
-    } else if (endpoint.includes("digitaloceanspaces.com")) {
-      // DigitalOcean Spaces
-      objectUrl = `https://${bucketName}.${endpoint}/${fileName}`;
-    } else if (endpoint.includes("supabase.co")) {
-      // Supabase Storage
-      endpoint = endpoint.replace("s3", "object/public"); // Remove the version
-      console.log(endpoint);
-      objectUrl = `${endpoint}/${bucketName}/${fileName}`;
-    } else {
-      // Default fallback
-      objectUrl = `${endpoint}/${bucketName}/${fileName}`;
-    }
-
+    objectUrl = getObjectUrl(bucketName, fileName);
     return objectUrl;
   } catch (error) {
     console.error(
@@ -136,4 +112,30 @@ export const deleteObject = async (bucketName: string, fileName: string) => {
     );
     throw error;
   }
+};
+
+export const getObjectUrl = (bucketName: string, fileName: string): string => {
+  let objectUrl: string;
+  let endpoint = env.AWS_S3_ENDPOINT as string;
+
+  if (endpoint.includes("amazonaws.com")) {
+    // Amazon S3
+    objectUrl = `https://${bucketName}.s3.${env.AWS_REGION}.amazonaws.com/${fileName}`;
+  } else if (endpoint.includes("storage.googleapis.com")) {
+    // Google Cloud Storage
+    objectUrl = `https://storage.googleapis.com/${bucketName}/${fileName}`;
+  } else if (endpoint.includes("digitaloceanspaces.com")) {
+    // DigitalOcean Spaces
+    objectUrl = `https://${bucketName}.${endpoint}/${fileName}`;
+  } else if (endpoint.includes("supabase.co")) {
+    // Supabase Storage
+    endpoint = endpoint.replace("s3", "object/public"); // Remove the version
+    console.log(endpoint);
+    objectUrl = `${endpoint}/${bucketName}/${fileName}`;
+  } else {
+    // Default fallback
+    objectUrl = `${endpoint}/${bucketName}/${fileName}`;
+  }
+
+  return objectUrl;
 };

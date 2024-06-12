@@ -13,7 +13,7 @@ export const load: PageServerLoad = async (event) => {
   if (event.locals.user) {
     return redirect(302, "/");
   }
-  return { images: await getBackgroundImages(1) };
+  return { image: await getBackgroundImages() };
 };
 
 export const actions: Actions = {

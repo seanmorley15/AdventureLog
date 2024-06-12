@@ -209,7 +209,7 @@ export const actions: Actions = {
       method: "POST",
       body: background,
       headers: {
-        bucket: "images",
+        bucket: "backgrounds",
         type: "background",
       },
     });
