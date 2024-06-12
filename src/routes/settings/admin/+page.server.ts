@@ -1,10 +1,4 @@
-import {
-  error,
-  fail,
-  redirect,
-  type Actions,
-  type Handle,
-} from "@sveltejs/kit";
+import { error, fail, redirect, type Actions } from "@sveltejs/kit";
 import type { PageServerLoad } from "./$types";
 import { db } from "$lib/db/db.server";
 import {
@@ -199,6 +193,31 @@ export const actions: Actions = {
       } as DatabaseUser)
       .execute();
 
+    return { success: true };
+  },
+  background: async (event) => {
+    console.log("background");
+    const formData = await event.request.formData();
+    const background = formData.get("background") as File | null;
+    if (!background) {
+      return fail(400, { message: "No background provided" });
+    }
+    if (!event.locals.user) {
+      return redirect(302, "/");
+    }
+    let res = await event.fetch("/api/upload", {
+      method: "POST",
+      body: background,
+      headers: {
+        bucket: "images",
+        type: "background",
+      },
+    });
+    await res.json();
+    console.log("Background uploaded");
+    if (!res.ok) {
+      return fail(500, { message: "Failed to upload background" });
+    }
     return { success: true };
   },
 };

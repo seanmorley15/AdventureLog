@@ -42,15 +42,6 @@ export const actions: Actions = {
       };
     }
 
-    // if (icon.length > 1) {
-    //   return {
-    //     status: 400,
-    //     body: {
-    //       message: "Icon must be a single character",
-    //     },
-    //   };
-    // }
-
     const usernameTaken = await db
       .select()
       .from(userTable)

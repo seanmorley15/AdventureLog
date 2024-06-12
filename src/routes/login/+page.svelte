@@ -4,6 +4,11 @@
   import { getRandomQuote } from "$lib";
   import { redirect, type SubmitFunction } from "@sveltejs/kit";
   import { onMount } from "svelte";
+
+  export let data;
+
+  console.log(data);
+
   let quote: string = "";
   let errors: { message?: string } = {};
   let backgroundImageUrl = "https://source.unsplash.com/random/?mountains";
@@ -35,7 +40,7 @@
 
 <div
   class="min-h-screen bg-no-repeat bg-cover flex items-center justify-center"
-  style="background-image: url('{backgroundImageUrl}')"
+  style="background-image: url('{data.images[0].url}')"
 >
   <div class="card card-compact w-96 bg-base-100 shadow-xl p-6">
     <article class="text-center text-4xl font-extrabold">

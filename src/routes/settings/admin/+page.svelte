@@ -119,6 +119,24 @@
   />
 {/if}
 
+<h2 class="text-center font-extrabold text-2xl mb-2">Background Images</h2>
+<form
+  method="POST"
+  class="w-full max-w-xs"
+  use:enhance
+  action="?/background"
+  enctype="multipart/form-data"
+>
+  <label for="background">Background Image</label>
+  <input
+    type="file"
+    name="background"
+    id="background"
+    class="block mb-2 input input-bordered w-full max-w-xs"
+  />
+  <button type="submit" class="py-2 px-4 btn btn-primary">Upload</button>
+</form>
+
 <h2 class="text-center font-extrabold text-2xl">Admin Stats (All Users)</h2>
 <div class="flex items-center justify-center mb-4">
   <div class="stats stats-vertical lg:stats-horizontal shadow">

@@ -7,12 +7,13 @@ import type { Actions, PageServerLoad } from "./$types";
 import type { DatabaseUser } from "$lib/server/auth";
 import { userTable } from "$lib/db/schema";
 import { eq } from "drizzle-orm";
+import { getBackgroundImages } from "$lib/db/getBackgroundImages";
 
 export const load: PageServerLoad = async (event) => {
   if (event.locals.user) {
     return redirect(302, "/");
   }
-  return {};
+  return { images: await getBackgroundImages(1) };
 };
 
 export const actions: Actions = {

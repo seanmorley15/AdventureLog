@@ -103,3 +103,10 @@ export const adventureTable = pgTable("adventures", {
   date: text("date"),
   tripId: integer("tripId").references(() => userPlannedTrips.id),
 });
+
+export const imagesTable = pgTable("images", {
+  id: serial("id").primaryKey(),
+  url: text("url").notNull(),
+  type: text("type").notNull(),
+  adventureId: integer("adventureId").references(() => adventureTable.id),
+});
