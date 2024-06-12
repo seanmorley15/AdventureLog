@@ -1,5 +1,6 @@
 import {
   CreateBucketCommand,
+  DeleteObjectCommand,
   HeadBucketCommand,
   PutBucketPolicyCommand,
   PutObjectCommand,
@@ -111,6 +112,23 @@ export const uploadObject = async (
     }
 
     return objectUrl;
+  } catch (error) {
+    console.error(
+      `Error uploading file ${fileName} to bucket ${bucketName}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+export const deleteObject = async (bucketName: string, fileName: string) => {
+  const deleteObjectCommand = new DeleteObjectCommand({
+    Bucket: bucketName,
+    Key: fileName,
+  });
+
+  try {
+    await s3Client.send(deleteObjectCommand);
   } catch (error) {
     console.error(
       `Error uploading file ${fileName} to bucket ${bucketName}:`,

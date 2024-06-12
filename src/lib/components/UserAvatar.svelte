@@ -3,14 +3,6 @@
   import { goto } from "$app/navigation";
   export let user: any;
 
-  let icon: string = "";
-
-  if (user.icon != null && user.icon != "") {
-    icon = user.icon;
-  } else {
-    icon = user.username.charAt(0);
-  }
-
   async function navToSettings() {
     goto("/settings");
   }
@@ -22,7 +14,11 @@
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
   <div class="avatar placeholder">
     <div class="bg-neutral text-neutral-content rounded-full w-10 ml-4">
-      <img src={user.icon} alt="" />
+      {#if user.icon}
+        <img src={user.icon} alt="" />
+      {:else}
+        <span class="text-2xl -mt-1">{user.first_name[0]}</span>
+      {/if}
     </div>
   </div>
   <!-- svelte-ignore a11y-missing-attribute -->
