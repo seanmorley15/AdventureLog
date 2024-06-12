@@ -1,6 +1,3 @@
-import { eq } from "drizzle-orm";
-import { db } from "./db.server";
-import { imagesTable } from "./schema";
 import { ensureBucketExists, getObjectUrl, s3Client } from "$lib/server/s3";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 

@@ -116,7 +116,7 @@ export const deleteObject = async (bucketName: string, fileName: string) => {
 
 export const getObjectUrl = (bucketName: string, fileName: string): string => {
   let objectUrl: string;
-  let endpoint = env.AWS_S3_ENDPOINT as string;
+  let endpoint = env.MINIO_CLIENT_OVERRIDE as string;
 
   if (endpoint.includes("amazonaws.com")) {
     // Amazon S3
