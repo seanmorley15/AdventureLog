@@ -1,6 +1,13 @@
 import { ensureBucketExists, getObjectUrl, s3Client } from "$lib/server/s3";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 
+/**
+ * Retrieves a random background image URL from the "backgrounds" bucket.
+ * If the randomly selected image is ".emptyFolderPlaceholder", it recursively calls itself to get another image.
+ * If no images are found in the bucket, a default image URL is returned.
+ *
+ * @returns A Promise that resolves to a string representing the URL of the background image.
+ */
 export const getBackgroundImages = async (): Promise<string> => {
   await ensureBucketExists("backgrounds");
 

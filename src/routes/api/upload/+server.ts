@@ -6,6 +6,12 @@ import { deleteObject, ensureBucketExists, uploadObject } from "$lib/server/s3";
 import type { RequestEvent } from "@sveltejs/kit";
 import { generateId } from "lucia";
 
+/**
+ * Handles the POST request for uploading a file to S3 storage.
+ *
+ * @param event - The request event object.
+ * @returns A promise that resolves to a response object.
+ */
 export async function POST(event: RequestEvent): Promise<Response> {
   try {
     const contentType = event.request.headers.get("content-type") ?? "";
