@@ -1,6 +1,6 @@
 // src/routes/api/upload.js
 
-import { ensureBucketExists, uploadObject } from "$lib/server/s3";
+import { deleteObject, ensureBucketExists, uploadObject } from "$lib/server/s3";
 import type { RequestEvent } from "@sveltejs/kit";
 import { generateId } from "lucia";
 
@@ -8,7 +8,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
   try {
     const contentType = event.request.headers.get("content-type") ?? "";
     const fileExtension = contentType.split("/").pop();
-    const fileName = `${generateId(25)}.${fileExtension}`;
+    const fileName = `${generateId(50)}.${fileExtension}`;
     const bucket = event.request.headers.get("bucket") as string;
 
     if (!fileExtension || !fileName) {
@@ -48,6 +48,11 @@ export async function POST(event: RequestEvent): Promise<Response> {
     };
 
     await ensureBucketExists(bucket);
+
+    if (event.locals.user?.icon) {
+      const key: string = event.locals.user.icon.split("/").pop() as string;
+      await deleteObject(bucket, key);
+    }
 
     const objectUrl = await uploadObject(
       bucket,
