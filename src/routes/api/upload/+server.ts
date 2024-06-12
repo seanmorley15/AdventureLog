@@ -8,7 +8,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
   try {
     const contentType = event.request.headers.get("content-type") ?? "";
     const fileExtension = contentType.split("/").pop();
-    const fileName = `${generateId(50)}.${fileExtension}`;
+    const fileName = `${generateId(75)}.${fileExtension}`;
     const bucket = event.request.headers.get("bucket") as string;
 
     if (!fileExtension || !fileName) {
