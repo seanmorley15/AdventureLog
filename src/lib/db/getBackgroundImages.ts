@@ -1,20 +1,16 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db.server";
 import { imagesTable } from "./schema";
-import { getObjectUrl, s3Client } from "$lib/server/s3";
+import { ensureBucketExists, getObjectUrl, s3Client } from "$lib/server/s3";
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 
 export const getBackgroundImages = async () => {
-  //   const images = await db
-  //     .select({ url: imagesTable.url })
-  //     .from(imagesTable)
-  //     .where(eq(imagesTable.type, "background"))
-  //     .execute();
+  await ensureBucketExists("backgrounds");
 
-  // list all objects in the bucket using listObjectsV2
   const data = await s3Client.send(
-    new ListObjectsV2Command({ Bucket: "images" })
+    new ListObjectsV2Command({ Bucket: "backgrounds" })
   );
+
   const randomImages = data.Contents?.map((item) => item.Key) ?? [];
   const randomIndex = Math.floor(Math.random() * randomImages.length);
 
@@ -22,8 +18,13 @@ export const getBackgroundImages = async () => {
 
   console.log(randomImage);
 
-  const url = getObjectUrl("images", randomImage as string);
+  let url = getObjectUrl("backgrounds", randomImage as string);
   console.log(url);
+
+  if (!data.Contents) {
+    url =
+      "https://512pixels.net/downloads/macos-wallpapers-thumbs/10-14-Night-Thumb.jpg";
+  }
 
   return url as string;
 };
