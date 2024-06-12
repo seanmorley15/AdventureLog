@@ -81,6 +81,9 @@ export const actions: Actions = {
       const response = await event.fetch("/api/upload", {
         method: "POST",
         body: profilePicture,
+        headers: {
+          bucket: "profile-pics",
+        },
       });
 
       const data = await response.json();

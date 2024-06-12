@@ -1,7 +1,6 @@
 // src/routes/api/upload.js
 
-import { ensureBucketExists, s3Client, uploadObject } from "$lib/server/s3";
-import { HeadBucketCommand } from "@aws-sdk/client-s3";
+import { ensureBucketExists, uploadObject } from "$lib/server/s3";
 import type { RequestEvent } from "@sveltejs/kit";
 import { generateId } from "lucia";
 
@@ -10,6 +9,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
     const contentType = event.request.headers.get("content-type") ?? "";
     const fileExtension = contentType.split("/").pop();
     const fileName = `${generateId(25)}.${fileExtension}`;
+    const bucket = event.request.headers.get("bucket") as string;
 
     if (!fileExtension || !fileName) {
       return new Response(JSON.stringify({ error: "Invalid file type" }), {
@@ -18,6 +18,18 @@ export async function POST(event: RequestEvent): Promise<Response> {
           "Content-Type": "application/json",
         },
       });
+    }
+
+    if (!bucket) {
+      return new Response(
+        JSON.stringify({ error: "Bucket name is required" }),
+        {
+          status: 400,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
     }
 
     // check if the file is an image
@@ -35,10 +47,10 @@ export async function POST(event: RequestEvent): Promise<Response> {
       "Content-Type": contentType,
     };
 
-    await ensureBucketExists("profile-pics");
+    await ensureBucketExists(bucket);
 
     const objectUrl = await uploadObject(
-      "profile-pics",
+      bucket,
       fileName,
       Buffer.from(fileBuffer)
     );
