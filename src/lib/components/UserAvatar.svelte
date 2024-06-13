@@ -30,7 +30,7 @@
     <!-- svelte-ignore a11y-missing-attribute -->
     <!-- svelte-ignore a11y-missing-attribute -->
     <p class="text-lg ml-4 font-bold">Hi, {user.first_name} {user.last_name}</p>
-    <li><a>Profile</a></li>
+    <li><button on:click={() => goto("/profile")}>Profile</button></li>
     <li><button on:click={navToLog}>My Log</button></li>
     <li><button on:click={navToSettings}>User Settings</button></li>
     {#if user.role == "admin"}
