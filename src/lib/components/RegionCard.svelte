@@ -22,7 +22,7 @@
 </script>
 
 <div
-  class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
+  class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl overflow-hidden text-base-content"
 >
   <div class="card-body">
     <h2 class="card-title overflow-ellipsis">{name}</h2>
