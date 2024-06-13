@@ -14,6 +14,15 @@ import { generateId } from "lucia";
  */
 export async function POST(event: RequestEvent): Promise<Response> {
   try {
+    if (!event.locals.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
     const contentType = event.request.headers.get("content-type") ?? "";
     const fileExtension = contentType.split("/").pop();
     const fileName = `${generateId(75)}.${fileExtension}`;
