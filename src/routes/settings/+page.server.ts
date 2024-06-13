@@ -74,6 +74,7 @@ export const actions: Actions = {
         body: profilePicture,
         headers: {
           bucket: "profile-pics",
+          type: "profile-pic",
         },
       });
 

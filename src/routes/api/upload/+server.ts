@@ -64,9 +64,38 @@ export async function POST(event: RequestEvent): Promise<Response> {
       "Content-Type": contentType,
     };
 
+    const allowedBuckets = ["backgrounds", "profile-pics"];
+
+    if (!allowedBuckets.includes(bucket)) {
+      return new Response(JSON.stringify({ error: "Invalid bucket name" }), {
+        status: 400,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
+    // Admin only for backgrounds
+    if (
+      bucket === "backgrounds" &&
+      type == "background" &&
+      event.locals.user.role !== "admin"
+    ) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    }
+
     await ensureBucketExists(bucket);
 
-    if (event.locals.user?.icon && bucket === "profile-pics") {
+    if (
+      event.locals.user?.icon &&
+      bucket === "profile-pics" &&
+      type === "profile-pic"
+    ) {
       const key: string = event.locals.user.icon.split("/").pop() as string;
       await deleteObject(bucket, key);
     }
@@ -76,13 +105,6 @@ export async function POST(event: RequestEvent): Promise<Response> {
       fileName,
       Buffer.from(fileBuffer)
     );
-
-    if (bucket === "images" && type && type === "background") {
-      let res = await db.insert(imagesTable).values({
-        url: objectUrl,
-        type: "background",
-      });
-    }
 
     console.log(`File uploaded to ${objectUrl}`);
 
