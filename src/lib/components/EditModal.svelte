@@ -6,6 +6,7 @@
   import { onMount } from "svelte";
   import { addActivityType, generateDescription, getImage } from "$lib";
   import AutoComplete from "./AutoComplete.svelte";
+  import ImageModal from "./ImageModal.svelte";
   let modal: HTMLDialogElement;
 
   console.log(adventureToEdit.id);
@@ -87,7 +88,23 @@
       // Handle the error
     }
   }
+
+  let isImageModalOpen: boolean = false;
+
+  function upload(e: CustomEvent<any>) {
+    let key = e.detail;
+    console.log("EE" + key);
+    adventureToEdit.imageUrl = key;
+  }
 </script>
+
+{#if isImageModalOpen}
+  <ImageModal
+    name={adventureToEdit.name}
+    on:submit={upload}
+    on:close={() => (isImageModalOpen = false)}
+  />
+{/if}
 
 <dialog id="my_modal_1" class="modal">
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -163,13 +180,15 @@
           />
         </div>
         <div>
-          <label for="rating">Image URL</label>
-          <input
-            type="url"
-            id="imageUrl"
-            bind:value={adventureToEdit.imageUrl}
-            class="input input-bordered w-full max-w-xs"
-          />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            on:click={() => {
+              isImageModalOpen = true;
+            }}
+          >
+            Upload Image
+          </button>
         </div>
         <button class="btn btn-primary mr-4 mt-4" on:click={submit}>Save</button
         >

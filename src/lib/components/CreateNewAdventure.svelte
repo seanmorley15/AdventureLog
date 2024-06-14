@@ -83,16 +83,6 @@
     }
   }
 
-  async function searchImage() {
-    try {
-      const imageUrl = await getImage(newAdventure.name);
-      newAdventure.imageUrl = imageUrl;
-    } catch (error) {
-      console.error(error);
-      // Handle the error
-    }
-  }
-
   let activityInput: string = "";
 
   function activitySetup() {
@@ -108,7 +98,11 @@
 </script>
 
 {#if isImageModalOpen}
-  <ImageModal on:submit={upload} on:close={() => (isImageModalOpen = false)} />
+  <ImageModal
+    name={newAdventure.name}
+    on:submit={upload}
+    on:close={() => (isImageModalOpen = false)}
+  />
 {/if}
 
 <dialog id="my_modal_1" class="modal">
@@ -188,7 +182,6 @@
           />
         </div>
         <div>
-          <label for="rating">Image URL</label>
           <button
             type="button"
             class="btn btn-secondary"
@@ -196,6 +189,7 @@
               isImageModalOpen = true;
             }}
           >
+            Upload Image
           </button>
         </div>
 
@@ -210,9 +204,6 @@
       <div class="flex items-center justify-center flex-wrap gap-4 mt-4">
         <button class="btn btn-secondary" on:click={generate}
           >Generate Description</button
-        >
-        <button class="btn btn-secondary" on:click={searchImage}
-          >Search for Image</button
         >
       </div>
     </div>

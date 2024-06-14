@@ -1,7 +1,9 @@
 <script lang="ts">
+  import { getImage } from "$lib";
   import { createEventDispatcher } from "svelte";
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
+  export let name: string;
 
   let viewType: string = "upload";
 
@@ -89,6 +91,15 @@
       imageFile = target.files[0];
     }
   }
+
+  async function searchImage() {
+    try {
+      imageUrl = await getImage(name);
+    } catch (error) {
+      console.error(error);
+      // Handle the error
+    }
+  }
 </script>
 
 <dialog id="my_modal_1" class="modal">
@@ -96,7 +107,7 @@
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
     <h3 class="font-bold text-lg">Image Upload</h3>
-    <div class="join items-center justify-center flex">
+    <div class="join items-center justify-center flex mb-8">
       <input
         class="join-item btn btn-neutral"
         type="radio"
@@ -114,7 +125,10 @@
       />
     </div>
     {#if viewType == "url"}
-      <form method="dialog" style="width: 100%;">
+      <button class="btn btn-secondary" on:click={searchImage}
+        >Search for Image</button
+      >
+      <form method="dialog" style="width: 100%;" class="mb-4">
         <div>
           <label for="rating">Image URL</label>
           <input
@@ -127,7 +141,7 @@
       </form>
     {/if}
     {#if viewType == "upload"}
-      <form method="dialog" style="width: 100%;">
+      <form method="dialog" style="width: 100%;" class="mb-4">
         <div>
           <label for="rating">Image Upload</label>
           <input
