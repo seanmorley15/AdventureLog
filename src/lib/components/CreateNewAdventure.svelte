@@ -18,7 +18,10 @@
   import { onMount } from "svelte";
   import { addActivityType, generateDescription, getImage } from "$lib";
   import AutoComplete from "./AutoComplete.svelte";
+  import ImageModal from "./ImageModal.svelte";
   let modal: HTMLDialogElement;
+
+  let isImageModalOpen: boolean = false;
 
   let activityTypes: string[] = [];
 
@@ -96,7 +99,17 @@
     newAdventure = addActivityType(activityInput, newAdventure);
     activityInput = "";
   }
+
+  function upload(e: CustomEvent<any>) {
+    let key = e.detail;
+    console.log("EE" + key);
+    newAdventure.imageUrl = key;
+  }
 </script>
+
+{#if isImageModalOpen}
+  <ImageModal on:submit={upload} on:close={() => (isImageModalOpen = false)} />
+{/if}
 
 <dialog id="my_modal_1" class="modal">
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -176,12 +189,14 @@
         </div>
         <div>
           <label for="rating">Image URL</label>
-          <input
-            type="url"
-            id="iamgeUrl"
-            bind:value={newAdventure.imageUrl}
-            class="input input-bordered w-full max-w-xs"
-          />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            on:click={() => {
+              isImageModalOpen = true;
+            }}
+          >
+          </button>
         </div>
 
         <button

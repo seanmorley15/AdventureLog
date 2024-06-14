@@ -5,13 +5,14 @@
   "private": true,
   "scripts": {
     "dev": "vite dev",
+    "generate": "drizzle-kit generate:pg --config drizzle.config.ts",
+    "migrate": "drizzle-kit push:pg --config drizzle.config.ts",
+    "minio": "cd minio && docker-compose up",
     "build": "vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "studio": "drizzle-kit studio --config drizzle.config.ts",
-    "generate": "drizzle-kit generate:pg --config drizzle.config.ts",
-    "migrate": "drizzle-kit push:pg --config drizzle.config.ts",
     "seed": "node seed.js"
   },
   "devDependencies": {

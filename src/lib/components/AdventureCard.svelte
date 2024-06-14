@@ -42,12 +42,20 @@
 >
   <figure>
     <!-- svelte-ignore a11y-img-redundant-alt -->
-    <img
-      src={adventure.imageUrl ||
-        "https://placehold.co/300?text=No%20Image%20Found&font=roboto"}
-      alt="No image available"
-      class="w-full h-48 object-cover"
-    />
+    {#if adventure.imageUrl && adventure.imageUrl !== ""}
+      <img
+        src="/cdn/adventures/{adventure.imageUrl}"
+        alt="No image available"
+        class="w-full h-48 object-cover"
+        crossorigin="anonymous"
+      />
+    {:else}
+      <img
+        src={"https://placehold.co/300?text=No%20Image%20Found&font=roboto"}
+        alt="No image available"
+        class="w-full h-48 object-cover"
+      />
+    {/if}
   </figure>
 
   <div class="card-body">
