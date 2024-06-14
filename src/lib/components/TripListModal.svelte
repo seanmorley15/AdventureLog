@@ -45,6 +45,9 @@
         </button>
       </li>
     {/each}
+    {#if trips.length === 0}
+      <p>No trips found</p>
+    {/if}
   </div>
   <!-- close button -->
   <button class="btn btn-neutral" on:click={close}>Close</button>

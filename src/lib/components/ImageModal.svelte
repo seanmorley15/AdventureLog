@@ -125,7 +125,7 @@
       />
     </div>
     {#if viewType == "url"}
-      <button class="btn btn-secondary" on:click={searchImage}
+      <button class="btn btn-secondary mb-2" on:click={searchImage}
         >Search for Image</button
       >
       <form method="dialog" style="width: 100%;" class="mb-4">
@@ -135,6 +135,7 @@
             type="text"
             id="imageUrl"
             bind:value={imageUrl}
+            class="input input-bordered w-full max-w-xs"
             placeholder="Enter the URL of the image"
           />
         </div>
@@ -149,12 +150,13 @@
             id="imageFile"
             on:change={handleFileChange}
             placeholder="Upload an image file"
+            class="input input-bordered w-full max-w-xs"
           />
         </div>
       </form>
     {/if}
 
-    <button class="btn btn-neutral" on:click={close}>Close</button>
     <button class="btn btn-primary" on:click={submit}>Submit</button>
+    <button class="btn btn-neutral" on:click={close}>Close</button>
   </div>
 </dialog>
