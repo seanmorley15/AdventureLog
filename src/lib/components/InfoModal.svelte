@@ -4,7 +4,7 @@
   const dispatch = createEventDispatcher();
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
-  import { appVersion, copyrightYear } from "$lib/config";
+  import { appVersion, copyrightYear, versionChangelog } from "$lib/config";
 
   onMount(() => {
     modal = document.getElementById("my_modal_1") as HTMLDialogElement;
@@ -30,7 +30,12 @@
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
     <h3 class="font-bold text-lg">About AdventureLog</h3>
     <p class="py-1">
-      AdventureLog {appVersion}
+      AdventureLog <a
+        target="_blank"
+        rel="noopener noreferrer"
+        class="text-primary-500 underline"
+        href={versionChangelog}>{appVersion}</a
+      >
     </p>
     <p class="py-1">
       © {copyrightYear}
