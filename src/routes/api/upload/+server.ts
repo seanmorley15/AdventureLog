@@ -64,7 +64,7 @@ export async function POST(event: RequestEvent): Promise<Response> {
       "Content-Type": contentType,
     };
 
-    const allowedBuckets = ["backgrounds", "profile-pics"];
+    const allowedBuckets = ["backgrounds", "profile-pics", "adventures"];
 
     if (!allowedBuckets.includes(bucket)) {
       return new Response(JSON.stringify({ error: "Invalid bucket name" }), {

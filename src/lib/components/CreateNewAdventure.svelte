@@ -18,7 +18,10 @@
   import { onMount } from "svelte";
   import { addActivityType, generateDescription, getImage } from "$lib";
   import AutoComplete from "./AutoComplete.svelte";
+  import ImageModal from "./ImageModal.svelte";
   let modal: HTMLDialogElement;
+
+  let isImageModalOpen: boolean = false;
 
   let activityTypes: string[] = [];
 
@@ -80,23 +83,27 @@
     }
   }
 
-  async function searchImage() {
-    try {
-      const imageUrl = await getImage(newAdventure.name);
-      newAdventure.imageUrl = imageUrl;
-    } catch (error) {
-      console.error(error);
-      // Handle the error
-    }
-  }
-
   let activityInput: string = "";
 
   function activitySetup() {
     newAdventure = addActivityType(activityInput, newAdventure);
     activityInput = "";
   }
+
+  function upload(e: CustomEvent<any>) {
+    let key = e.detail;
+    console.log("EE" + key);
+    newAdventure.imageUrl = key;
+  }
 </script>
+
+{#if isImageModalOpen}
+  <ImageModal
+    name={newAdventure.name}
+    on:submit={upload}
+    on:close={() => (isImageModalOpen = false)}
+  />
+{/if}
 
 <dialog id="my_modal_1" class="modal">
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -175,13 +182,15 @@
           />
         </div>
         <div>
-          <label for="rating">Image URL</label>
-          <input
-            type="url"
-            id="iamgeUrl"
-            bind:value={newAdventure.imageUrl}
-            class="input input-bordered w-full max-w-xs"
-          />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            on:click={() => {
+              isImageModalOpen = true;
+            }}
+          >
+            Upload Image
+          </button>
         </div>
 
         <button
@@ -195,9 +204,6 @@
       <div class="flex items-center justify-center flex-wrap gap-4 mt-4">
         <button class="btn btn-secondary" on:click={generate}
           >Generate Description</button
-        >
-        <button class="btn btn-secondary" on:click={searchImage}
-          >Search for Image</button
         >
       </div>
     </div>
