@@ -19,7 +19,7 @@ const s3Config: S3ClientConfig = {
     accessKeyId: env.AWS_ACCESS_KEY_ID as string,
     secretAccessKey: env.AWS_SECRET_ACCESS_KEY as string,
   },
-  endpoint: env.VITE_AWS_S3_ENDPOINT, // Add the endpoint
+  endpoint: env.AWS_S3_ENDPOINT, // Add the endpoint
   forcePathStyle: true,
 };
 
@@ -146,10 +146,10 @@ export const deleteObject = async (bucketName: string, fileName: string) => {
 export const getObjectUrl = (bucketName: string, fileName: string): string => {
   let objectUrl: string;
   let endpoint: string = "";
-  if (env.VITE_MINIO_CLIENT_OVERRIDE) {
-    endpoint = env.VITE_MINIO_CLIENT_OVERRIDE as string;
+  if (env.MINIO_CLIENT_OVERRIDE) {
+    endpoint = env.MINIO_CLIENT_OVERRIDE as string;
   } else {
-    endpoint = env.VITE_AWS_S3_ENDPOINT as string;
+    endpoint = env.AWS_S3_ENDPOINT as string;
   }
 
   // This code is not as clean as it could be, but it works for whats needed. Help is welcome to clean it up!
