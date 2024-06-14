@@ -119,7 +119,7 @@ export const actions: Actions = {
       .execute();
 
     // inserts the data needed for all of the pre defined adventures and world travel regions
-    await insertData(event);
+    await insertData();
 
     const session: any = await lucia.createSession(userId, {});
     const sessionCookie: any = lucia.createSessionCookie(session.id);
