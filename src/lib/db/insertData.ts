@@ -1,162 +1,23 @@
 import { sql } from "drizzle-orm";
 import { db } from "./db.server";
-import { imagesTable } from "./schema";
 
-export async function insertData(event: { fetch: any }) {
+export async function insertData() {
   // insets default featured adventures
   console.log("Inserting default featured adventures...");
-
-  // upload image for featured adventures
-
-  const featuredImages = {
-    "Yellowstone National Park": {
-      location: "Wyoming, Montana, Idaho, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/7/73/Grand_Canyon_of_yellowstone.jpg",
-      key: "",
-    },
-    "Yosemite National Park": {
-      location: "California, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/1/13/Tunnel_View%2C_Yosemite_Valley%2C_Yosemite_NP_-_Diliff.jpg",
-      key: "",
-    },
-    "Banff National Park": {
-      location: "Alberta, Canada",
-      url: "https://upload.wikimedia.org/wikipedia/commons/c/c5/Moraine_Lake_17092005.jpg",
-      key: "",
-    },
-    "Kruger National Park": {
-      location: "Limpopo, South Africa",
-      url: "https://upload.wikimedia.org/wikipedia/commons/f/f0/Kruger_Zebra.JPG",
-      key: "",
-    },
-    "Grand Canyon National Park": {
-      location: "Arizona, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/a/aa/Dawn_on_the_S_rim_of_the_Grand_Canyon_%288645178272%29.jpg",
-      key: "",
-    },
-    "Great Smoky Mountains National Park": {
-      location: "North Carolina, Tennessee, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/b/bc/View_atop_Cliff_Tops_on_Mount_LeConte%2C_GSMNP%2C_TN.jpg",
-      key: "",
-    },
-    "Zion National Park": {
-      location: "Utah, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/1/10/Zion_angels_landing_view.jpg",
-      key: "",
-    },
-    "Glacier National Park": {
-      location: "Montana, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/5/51/Mountain_Goat_at_Hidden_Lake.jpg",
-      key: "",
-    },
-    "Rocky Mountain National Park": {
-      location: "Colorado, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/Rocky_Mountain_National_Park_in_September_2011_-_view_from_Many_Parks_Curve.JPG/2560px-Rocky_Mountain_National_Park_in_September_2011_-_view_from_Many_Parks_Curve.JPG",
-      key: "",
-    },
-    "Everglades National Park": {
-      location: "Florida, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/2/2a/Sunset_over_the_River_of_Grass%2C_NPSphoto%2C_G.Gardner_%289255157507%29.jpg",
-      key: "",
-    },
-    "Arches National Park": {
-      location: "Utah, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/f/f0/Delicate_arch_sunset.jpg",
-      key: "",
-    },
-    "Acadia National Park": {
-      location: "Maine, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bass_Harbor_Lighthouse_b.jpg",
-      key: "",
-    },
-    "Sequoia National Park": {
-      location: "California, USA",
-      url: "https://upload.wikimedia.org/wikipedia/commons/7/76/Bass_Harbor_Lighthouse_b.jpg",
-      key: "",
-    },
-  };
-
-  for (const [name, { url }] of Object.entries(featuredImages)) {
-    const response = await event.fetch(url);
-    const blob = await response.blob();
-    const uploadResponse = await event.fetch("/api/upload", {
-      method: "POST",
-      body: blob,
-      headers: {
-        bucket: "adventures",
-        type: "adventure",
-      },
-    });
-    //console.log("uploadResponse", uploadResponse);
-    const waiting = await uploadResponse.json();
-
-    (featuredImages as { [key: string]: { url: string; key: string } })[
-      name
-    ].key = waiting.key;
-    console.log(waiting.key as string);
-  }
-
-  console.log(featuredImages);
-
-  // const insertValues = [];
-
-  // // Iterate over the featuredImages object to build the insertValues array
-  // for (const [name, { location, key }] of Object.entries(featuredImages)) {
-  //   console.log(name, location, key);
-  //   insertValues.push(`('${name}', '${location}', 'featured', '${key}')`);
-  // }
-
-  // // Construct the SQL query
-  // const sqlQuery = `
-  //   INSERT INTO "adventures" (name, location, type, imageUrl) VALUES
-  //   ${insertValues.join(", ")}
-  // `;
-
-  // // Now execute the SQL query using your database library (assuming `db` has a method like `execute`)
-  // await db.execute(sql`${sqlQuery}`);
-
-  await db.execute(sql`
-    INSERT INTO "adventures" (name, location, type, "imageUrl") VALUES
-    ('Yellowstone National Park', 'Wyoming, Montana, Idaho, USA', 'featured', ${
-      featuredImages["Yellowstone National Park"].key
-    }),
-    ('Yosemite National Park', 'California, USA', 'featured', ${
-      featuredImages["Yosemite National Park"].key
-    }),
-    ('Banff National Park', 'Alberta, Canada', 'featured', ${
-      featuredImages["Banff National Park"].key
-    }),
-    ('Kruger National Park', 'Limpopo, South Africa', 'featured', ${
-      featuredImages["Kruger National Park"].key
-    }),
-    ('Grand Canyon National Park', 'Arizona, USA', 'featured', ${
-      featuredImages["Grand Canyon National Park"].key
-    }),
-    ('Great Smoky Mountains National Park', 'North Carolina, Tennessee, USA', 'featured', ${
-      featuredImages["Great Smoky Mountains National Park"].key
-    }),
-    ('Zion National Park', 'Utah, USA', 'featured', ${
-      featuredImages["Zion National Park"].key
-    }),
-    ('Glacier National Park', 'Montana, USA', 'featured', ${
-      featuredImages["Glacier National Park"].key
-    }),
-    ('Rocky Mountain National Park', 'Colorado, USA', 'featured', ${
-      featuredImages["Rocky Mountain National Park"].key || "default_key_value"
-    }), -- Handle undefined key
-    ('Everglades National Park', 'Florida, USA', 'featured', ${
-      featuredImages["Everglades National Park"].key
-    }),
-    ('Arches National Park', 'Utah, USA', 'featured', ${
-      featuredImages["Arches National Park"].key
-    }),
-    ('Acadia National Park', 'Maine, USA', 'featured', ${
-      featuredImages["Acadia National Park"].key
-    }),
-    ('Sequoia National Park', 'California, USA', 'featured', ${
-      featuredImages["Sequoia National Park"].key
-    });
-`);
+  await db.execute(sql`INSERT INTO "adventures" (name, location, type) VALUES
+     ('Yellowstone National Park', 'Wyoming, Montana, Idaho, USA', 'featured'),
+     ('Yosemite National Park', 'California, USA', 'featured'),
+     ('Banff National Park', 'Alberta, Canada', 'featured'),
+     ('Kruger National Park', 'Limpopo, South Africa', 'featured'),
+     ('Grand Canyon National Park', 'Arizona, USA', 'featured'),
+     ('Great Smoky Mountains National Park', 'North Carolina, Tennessee, USA', 'featured'),
+     ('Zion National Park', 'Utah, USA', 'featured'),
+     ('Glacier National Park', 'Montana, USA', 'featured'),
+     ('Rocky Mountain National Park', 'Colorado, USA', 'featured'),
+     ('Everglades National Park', 'Florida, USA', 'featured'),
+     ('Arches National Park', 'Utah, USA', 'featured'),
+     ('Acadia National Park', 'Maine, USA', 'featured'),
+     ('Sequoia National Park', 'California, USA', 'featured');`);
 
   console.log("Inserting countries...");
   await db.execute(sql`INSERT INTO "worldTravelCountries" (name, country_code, continent)
