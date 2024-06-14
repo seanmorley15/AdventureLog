@@ -11,9 +11,9 @@ services:
       - SKIP_DB_WAIT=false
       - AWS_ACCESS_KEY_ID=minioadmin
       - AWS_SECRET_ACCESS_KEY=minioadmin
-      - AWS_S3_ENDPOINT=http://minio:9000
-      # MINIO_CLIENT_OVERRIDE: Only necessary if using minio here with this docker compose file. This is becaues the client needs a different endpoint than the server because its not in the docker network.
-      - MINIO_CLIENT_OVERRIDE=http://localhost:9000
+      - VITE_AWS_S3_ENDPOINT=http://minio:9000
+      # VITE_MINIO_CLIENT_OVERRIDE: Only necessary if using minio here with this docker compose file. This is becaues the client needs a different endpoint than the server because its not in the docker network.
+      - VITE_MINIO_CLIENT_OVERRIDE=http://localhost:9000
       - BODY_SIZE_LIMIT=Infinity # change this to a smaller value if you want to limit the size of uploaded files!
 
     depends_on:

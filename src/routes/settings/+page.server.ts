@@ -79,8 +79,8 @@ export const actions: Actions = {
       });
 
       const data = await response.json();
-      console.log("DATA" + data.objectUrl);
-      icon = data.objectUrl;
+      console.log("DATA" + data.key);
+      icon = data.key;
 
       if (data.error) {
         throw error(400, {

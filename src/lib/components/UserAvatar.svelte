@@ -15,7 +15,7 @@
   <div class="avatar placeholder">
     <div class="bg-neutral text-neutral-content rounded-full w-10 ml-4">
       {#if user.icon}
-        <img src={user.icon} alt="" />
+        <img src={`/cdn/profile-pics/${user.icon}`} alt="" />
       {:else}
         <span class="text-2xl -mt-1">{user.first_name[0]}</span>
       {/if}

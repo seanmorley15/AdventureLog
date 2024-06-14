@@ -106,9 +106,11 @@ export async function POST(event: RequestEvent): Promise<Response> {
       Buffer.from(fileBuffer)
     );
 
+    const newKey = objectUrl.split("/").pop() as string;
+
     console.log(`File uploaded to ${objectUrl}`);
 
-    return new Response(JSON.stringify({ objectUrl }), {
+    return new Response(JSON.stringify({ objectUrl, key: newKey }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
