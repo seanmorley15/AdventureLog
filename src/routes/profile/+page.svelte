@@ -17,6 +17,7 @@
 {#if data.user.icon}
   <div class="avatar flex items-center justify-center">
     <div class="w-24 rounded">
+      <!-- svelte-ignore a11y-missing-attribute -->
       <img src={data.user.icon} class="w-24 rounded-full" />
     </div>
   </div>
