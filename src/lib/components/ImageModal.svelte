@@ -27,6 +27,10 @@
   }
 
   async function submit() {
+    if (!imageUrl && !imageFile) {
+      close();
+    }
+
     try {
       let key: string;
       if (viewType === "url") {
@@ -125,12 +129,8 @@
       />
     </div>
     {#if viewType == "url"}
-      <button class="btn btn-secondary mb-2" on:click={searchImage}
-        >Search for Image</button
-      >
-      <form method="dialog" style="width: 100%;" class="mb-4">
-        <div>
-          <label for="rating">Image URL</label>
+      <form method="dialog" style="width: 100%;" class="mb-8">
+        <div class="flex justify-center items-center gap-2">
           <input
             type="text"
             id="imageUrl"
@@ -138,19 +138,25 @@
             class="input input-bordered w-full max-w-xs"
             placeholder="Enter the URL of the image"
           />
+          <button
+            type="button"
+            class="btn btn-neutral mb-2"
+            on:click={searchImage}
+            >Search for Image <iconify-icon icon="mdi:magnify" class="text-xl"
+            ></iconify-icon></button
+          >
         </div>
       </form>
     {/if}
     {#if viewType == "upload"}
-      <form method="dialog" style="width: 100%;" class="mb-4">
-        <div>
-          <label for="rating">Image Upload</label>
+      <form method="dialog" style="width: 100%;" class="mb-8">
+        <div class="flex justify-center items-center">
           <input
             type="file"
             id="imageFile"
             on:change={handleFileChange}
             placeholder="Upload an image file"
-            class="input input-bordered w-full max-w-xs"
+            class="file-input file-input-bordered w-full max-w-xs"
           />
         </div>
       </form>

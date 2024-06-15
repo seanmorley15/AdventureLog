@@ -54,7 +54,7 @@
   function create() {
     activitySetup();
     if (newAdventure.name.trim() === "") {
-      alert("Name is required");
+      close();
       return;
     }
     dispatch("create", newAdventure);
@@ -110,58 +110,82 @@
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
     <h3 class="font-bold text-lg">New Adventure</h3>
-    <p class="py-4">Press ESC key or click the button below to close</p>
     <div
       class="modal-action items-center"
       style="display: flex; flex-direction: column; align-items: center; width: 100%;"
     >
       <form method="dialog" style="width: 100%;">
-        <div>
-          <label for="name">Name</label>
+        <div class="mb-2">
+          <label for="name">Name</label><br />
           <input
             type="text"
             id="name"
-            required
             bind:value={newAdventure.name}
-            class="input input-bordered w-full max-w-xs"
+            class="input input-bordered w-full max-w-xs mt-1"
           />
         </div>
-        <div>
-          <label for="location">Location</label>
+        <div class="mb-2">
+          <label for="location"
+            >Location<iconify-icon
+              icon="mdi:map-marker"
+              class="text-lg ml-0.5 -mb-0.5"
+            ></iconify-icon></label
+          ><br />
           <input
             type="text"
             id="location"
             bind:value={newAdventure.location}
-            class="input input-bordered w-full max-w-xs"
+            class="input input-bordered w-full max-w-xs mt-1"
           />
         </div>
-        <div>
-          <label for="date">date</label>
+        <div class="mb-2">
+          <label for="date"
+            >Date<iconify-icon icon="mdi:calendar" class="text-lg ml-1 -mb-0.5"
+            ></iconify-icon></label
+          ><br />
           <input
             type="date"
             id="date"
             bind:value={newAdventure.date}
-            class="input input-bordered w-full max-w-xs"
+            class="input input-bordered w-full max-w-xs mt-1"
           />
         </div>
-        <div>
-          <label for="date">Description</label>
-          <input
-            type="text"
-            id="description"
-            bind:value={newAdventure.description}
-            class="input input-bordered w-full max-w-xs"
-          />
+        <div class="mb-2">
+          <label for="date"
+            >Description<iconify-icon
+              icon="mdi:notebook"
+              class="text-lg ml-1 -mb-0.5"
+            ></iconify-icon></label
+          ><br />
+          <div class="flex">
+            <input
+              type="text"
+              id="description"
+              bind:value={newAdventure.description}
+              class="input input-bordered w-full max-w-xs mt-1 mb-2"
+            />
+            <button
+              class="btn btn-neutral ml-2"
+              type="button"
+              on:click={generate}
+              ><iconify-icon icon="mdi:wikipedia" class="text-xl -mb-1"
+              ></iconify-icon>Generate Description</button
+            >
+          </div>
         </div>
-
-        <div>
-          <label for="date">Activity Types (Comma Seperated)</label>
+        <div class="mb-2">
+          <label for="activityTypes"
+            >Activity Types <iconify-icon
+              icon="mdi:clipboard-list"
+              class="text-xl -mb-1"
+            ></iconify-icon></label
+          ><br />
           <input
             type="text"
             hidden
             id="activityTypes"
             bind:value={activityInput}
-            class="input input-bordered w-full max-w-xs"
+            class="input input-bordered w-full max-w-xs mt-1"
           />
 
           <AutoComplete
@@ -170,26 +194,30 @@
             bind:displayValue={activityInput}
           />
         </div>
-        <div>
-          <label for="rating">Rating</label>
+        <div class="mb-2">
+          <label for="rating"
+            >Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"
+            ></iconify-icon></label
+          ><br />
           <input
             type="number"
             min="0"
             max="5"
             id="rating"
             bind:value={newAdventure.rating}
-            class="input input-bordered w-full max-w-xs"
+            class="input input-bordered w-full max-w-xs mt-1"
           />
         </div>
         <div>
           <button
             type="button"
-            class="btn btn-secondary"
+            class="btn btn-neutral"
             on:click={() => {
               isImageModalOpen = true;
             }}
           >
-            Upload Image
+            <iconify-icon icon="mdi:upload" class="text-xl"
+            ></iconify-icon>Upload Image
           </button>
         </div>
 
@@ -201,11 +229,7 @@
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
       </form>
-      <div class="flex items-center justify-center flex-wrap gap-4 mt-4">
-        <button class="btn btn-secondary" on:click={generate}
-          >Generate Description</button
-        >
-      </div>
+      <div class="flex items-center justify-center flex-wrap gap-4 mt-4"></div>
     </div>
   </div>
 </dialog>
