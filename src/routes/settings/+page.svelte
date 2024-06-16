@@ -55,7 +55,7 @@
       bind:value={file}
       name="profilePicture"
       id="profilePicture"
-      class="block mb-2 input input-bordered w-full max-w-xs"
+      class="file-input file-input-bordered w-full max-w-xs mb-2 block"
     /><br />
     <label for="password">Password</label>
     <input

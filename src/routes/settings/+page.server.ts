@@ -100,11 +100,6 @@ export const actions: Actions = {
       .where(eq(userTable.id, userId));
 
     // return a page refresh
-    return {
-      status: 303,
-      headers: {
-        location: "/settings",
-      },
-    };
+    return redirect(302, "/settings");
   },
 };

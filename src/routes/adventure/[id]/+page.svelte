@@ -58,7 +58,7 @@
   {#if adventure.imageUrl}
     <div class="flex content-center justify-center">
       <img
-        src={adventure.imageUrl}
+        src="/cdn/adventures/{adventure.imageUrl}"
         alt={adventure.name}
         class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
       />

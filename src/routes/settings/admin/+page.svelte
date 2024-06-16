@@ -79,7 +79,7 @@
       id="admin"
       class="block mb-2 checkbox-primary checkbox"
     /><br />
-    <button class="py-2 px-4 btn btn-primary">Signup</button>
+    <button class="py-2 px-4 btn btn-primary">Add user</button>
     {#if $page.form?.message}
       <div class="text-center text-error mt-4">
         {$page.form?.message}
@@ -119,23 +119,25 @@
   />
 {/if}
 
-<h2 class="text-center font-extrabold text-2xl mb-2">Background Images</h2>
-<form
-  method="POST"
-  class="w-full max-w-xs"
-  use:enhance
-  action="?/background"
-  enctype="multipart/form-data"
->
-  <label for="background">Background Image</label>
-  <input
-    type="file"
-    name="background"
-    id="background"
-    class="block mb-2 input input-bordered w-full max-w-xs"
-  />
-  <button type="submit" class="py-2 px-4 btn btn-primary">Upload</button>
-</form>
+<div class="flex flex-col items-center justify-center text-center space-y-2">
+  <h2 class="font-extrabold text-2xl mb-2">Background Images</h2>
+  <form
+    method="POST"
+    class="w-full max-w-xs"
+    use:enhance
+    action="?/background"
+    enctype="multipart/form-data"
+  >
+    <label for="background" class="block">Background Image</label>
+    <input
+      type="file"
+      name="background"
+      id="background"
+      class="file-input file-input-bordered w-full max-w-xs"
+    />
+    <button type="submit" class="py-2 px-4 btn btn-primary">Upload</button>
+  </form>
+</div>
 
 <h2 class="text-center font-extrabold text-2xl">Admin Stats (All Users)</h2>
 <div class="flex items-center justify-center mb-4">
