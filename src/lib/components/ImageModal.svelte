@@ -4,6 +4,8 @@
   import { onMount } from "svelte";
   let modal: HTMLDialogElement;
   export let name: string;
+  export let existingImageKey: string | undefined;
+  export let bucket: string;
 
   let viewType: string = "upload";
 
@@ -110,6 +112,11 @@
   <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
   <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+    {#if existingImageKey}
+      <h2 class="text-center font-bold text-xl mb-2">Existing Image</h2>
+      <img src="/cdn/{bucket}/{existingImageKey}" alt="Existing" class="mb-2" />
+    {/if}
+
     <h3 class="font-bold text-lg">Image Upload</h3>
     <div class="join items-center justify-center flex mb-8">
       <input
