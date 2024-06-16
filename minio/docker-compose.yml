@@ -2,7 +2,7 @@ version: "3.4"
 
 services:
   minio:
-    image: quay.io/minio/minio
+    image: minio/minio
     command: server /data --console-address ":9001"
     environment:
       - MINIO_ROOT_USER=minioadmin

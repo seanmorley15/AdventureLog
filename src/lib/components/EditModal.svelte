@@ -232,7 +232,7 @@
         <button
           type="submit"
           class="btn btn-primary mr-4 mt-4"
-          on:click={submit}>Create</button
+          on:click={submit}>Edit</button
         >
         <!-- if there is a button in form, it will close the modal -->
         <button class="btn mt-4" on:click={close}>Close</button>
