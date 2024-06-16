@@ -106,6 +106,12 @@
       // Handle the error
     }
   }
+
+  function removeImage() {
+    existingImageKey = undefined;
+    imageUrl = "";
+    dispatch("submit", "");
+  }
 </script>
 
 <dialog id="my_modal_1" class="modal">
@@ -114,7 +120,14 @@
   <div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
     {#if existingImageKey}
       <h2 class="text-center font-bold text-xl mb-2">Existing Image</h2>
+
       <img src="/cdn/{bucket}/{existingImageKey}" alt="Existing" class="mb-2" />
+      <div class="flex items-center justify-center">
+        <button class="btn btn-warning" on:click={removeImage}
+          >Remove Image<iconify-icon icon="mdi:delete" class="text-xl -ml-1"
+          ></iconify-icon></button
+        >
+      </div>
     {/if}
 
     <h3 class="font-bold text-lg">Image Upload</h3>
@@ -169,7 +182,10 @@
       </form>
     {/if}
 
-    <button class="btn btn-primary" on:click={submit}>Submit</button>
+    <button class="btn btn-primary" on:click={submit}
+      >Submit <iconify-icon icon="mdi:upload" class="text-xl"
+      ></iconify-icon></button
+    >
     <button class="btn btn-neutral" on:click={close}>Close</button>
   </div>
 </dialog>
