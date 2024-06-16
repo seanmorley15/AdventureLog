@@ -102,6 +102,8 @@
     name={newAdventure.name}
     on:submit={upload}
     on:close={() => (isImageModalOpen = false)}
+    bucket="adventures"
+    existingImageKey={newAdventure.imageUrl}
   />
 {/if}
 
