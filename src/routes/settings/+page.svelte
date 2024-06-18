@@ -1,5 +1,6 @@
 <script lang="ts">
   import { enhance } from "$app/forms";
+  import { goto } from "$app/navigation";
 
   export let data;
 
@@ -12,6 +13,37 @@
   let role = data.user?.role;
   console.log(username);
   let file: File | null = null;
+
+  // function exportData() {
+  //   let jsonString = JSON.stringify(adventures);
+  //   let blob = new Blob([jsonString], { type: "application/json" });
+  //   let url = URL.createObjectURL(blob);
+
+  //   let link = document.createElement("a");
+  //   link.download = "adventurelog-export.json";
+  //   link.href = url;
+  //   link.click();
+  //   URL.revokeObjectURL(url);
+  // }
+
+  async function exportToFile() {
+    let res = await fetch("/api/export", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    let data = await res.json();
+    let jsonString = JSON.stringify(data);
+    let blob = new Blob([jsonString], { type: "application/json" });
+    let url = URL.createObjectURL(blob);
+
+    let link = document.createElement("a");
+    link.download = "adventurelog-export.json";
+    link.href = url;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
 
   // the submit function shoud just reload the page
 </script>
@@ -74,6 +106,13 @@
     />
     <button class="py-2 px-4 btn btn-primary">Update</button>
   </form>
+</div>
+
+<div class="flex items-center justify-center mt-4 mb-4">
+  <button class="btn btn-neutral" on:click={exportToFile}
+    >Export Data to File <iconify-icon icon="mdi:download" class="text-xl"
+    ></iconify-icon></button
+  >
 </div>
 
 <small class="text-center"
