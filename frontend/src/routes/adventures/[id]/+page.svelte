@@ -90,10 +90,12 @@
 	{/if}
 	{#if adventure.image}
 		<div class="flex content-center justify-center">
+			<!-- svelte-ignore a11y-img-redundant-alt -->
 			<img
 				src={adventure.image}
-				alt={adventure.name}
-				class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
+				alt="Adventure Image"
+				class="w-full h-48 object-cover"
+				crossorigin="anonymous"
 			/>
 		</div>
 	{/if}
