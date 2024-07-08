@@ -188,13 +188,8 @@ SWAGGER_SETTINGS = {
 
 
 # For demo purposes only. Use a white list in the real world.
-CORS_ORIGIN_ALLOW_ALL = False
+CORS_ORIGIN_ALLOW_ALL = True
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://adventurelog.app',
-    'https://api.adventurelog.app',
-]
 
 CSRF_TRUSTED_ORIGINS = [
     'https://api.adventurelog.app',
