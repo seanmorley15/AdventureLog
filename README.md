@@ -11,7 +11,7 @@ _**⚠️ AdventureLog is in early development and is not recommended for produc
 ### Docker 🐋 (Recomended)
 
 1. Clone the repository
-2. Edit the `docker-compose.yml` file and change the database password
+2. Edit the `docker-compose.yml` file and change the database password as well as the django secret key
 3. Run `docker compose up -d` to build the image and start the container
 4. Wait for the app to start up and migrate then visit the port and enjoy!
 5. After navigating to the app, fill out the form to create the admin user.
@@ -20,7 +20,7 @@ _**⚠️ AdventureLog is in early development and is not recommended for produc
 
 ## About AdventureLog
 
-AdventureLog is a Svelte Kit application that utilizes a PostgreSQL database. Users can log the adventures they have experienced, as well as plan future ones. Key features include:
+AdventureLog is a Svelte Kit and Django application that utilizes a PostgreSQL database. Users can log the adventures they have experienced, as well as plan future ones. Key features include:
 
 - Logging past adventures with fields like name, date, location, description, and rating.
 - Planning future adventures with similar fields.
@@ -31,7 +31,7 @@ AdventureLog aims to be your ultimate travel companion, helping you document you
 
 AdventureLog is licensed under the GNU General Public License v3.0.
 
-## Screenshots 🖼️
+<!-- ## Screenshots 🖼️
 
 ![Visited Log](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/visited.png?raw=true)
 ![Planner Log](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/ideas.png?raw=true)
@@ -43,4 +43,4 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 - Improved mobile device support
 - Password reset functionality
 - Improved error handling
-- Handling of adventure cards with variable width
+- Handling of adventure cards with variable width -->
