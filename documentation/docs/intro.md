@@ -2,9 +2,9 @@
 sidebar_position: 1
 ---
 
-# Tutorial Intro
+# Intro 1️⃣
 
-Let's discover **Docusaurus in less than 5 minutes**.
+This tutorial will guide you how to get AdventureLog up and running on your local machine quickly and easily.
 
 ## Getting Started
 
