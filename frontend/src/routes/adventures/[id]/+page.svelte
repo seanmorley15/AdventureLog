@@ -94,7 +94,7 @@
 			<img
 				src={adventure.image}
 				alt="Adventure Image"
-				class="w-full h-48 object-cover"
+				class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
 				crossorigin="anonymous"
 			/>
 		</div>
