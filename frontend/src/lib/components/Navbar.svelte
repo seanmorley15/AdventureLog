@@ -64,6 +64,9 @@
 					<li>
 						<button on:click={() => goto('/featured')}>Featured</button>
 					</li>
+					<li>
+						<button on:click={() => goto('/map')}>Map</button>
+					</li>
 				{/if}
 
 				{#if !data.user}
@@ -95,6 +98,9 @@
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/featured')}>Featured</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/map')}>Map</button>
 				</li>
 			{/if}
 
