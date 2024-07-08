@@ -49,6 +49,9 @@
 					type="button"
 					on:click={() => goto('/settings/forgot-password')}>Forgot Password</button
 				>
+				<button class="py-2 px-4 btn btn-neutral" type="button" on:click={() => goto('/signup')}
+					>Sign Up</button
+				>
 			</form>
 		</div>
 
