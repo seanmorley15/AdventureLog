@@ -1,0 +1,38 @@
+<!-- Signup form -->
+<form class="form-horizontal ajax-post" id="signup" role="form" action="{% url 'rest_register' %}">{% csrf_token %}
+  <div class="form-group">
+    <label for="email" class="col-sm-2 control-label">Email</label>
+    <div class="col-sm-10">
+      <input name="email" type="text" class="form-control" id="email" placeholder="Email">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="username" class="col-sm-2 control-label">Username</label>
+    <div class="col-sm-10">
+      <input name="username" type="text" class="form-control" id="username" placeholder="Username">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="password1" class="col-sm-2 control-label">Password</label>
+    <div class="col-sm-10">
+      <input name="password1" type="password" class="form-control" id="password1" placeholder="Password">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label for="password2" class="col-sm-2 control-label">Repeat password</label>
+    <div class="col-sm-10">
+      <input name="password2" type="password" class="form-control" id="password2" placeholder="Repeat password">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-2 col-sm-10">
+      <button type="submit" class="btn btn-default">Sign up</button>
+    </div>
+  </div>
+
+  <div class="form-group api-response"></div>
+</form>

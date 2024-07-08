@@ -1,0 +1,52 @@
+{% extends "rest_framework/base.html" %}
+
+{% block style %}
+    {{ block.super }}
+        <style>
+            #btn-link {
+                border: none;
+                outline: none;
+                background: none;
+                display: block;
+                padding: 3px 20px;
+                clear: both;
+                font-weight: 400;
+                line-height: 1.42857143;
+                color: #A30000;
+                white-space: nowrap;
+                width: 100%;
+                text-align: left;
+            }
+            #btn-link:hover {
+                background: #EEEEEE;
+                color: #C20000;
+            }
+        </style>
+{% endblock %}
+
+{% block userlinks %}
+    {% if user.is_authenticated or response.data.access_token %}
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                {% firstof user.username 'Registered' %}
+                <b class="caret"></b>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-right">
+                {% url 'rest_user_details' as user_url %}
+                <li><a href="{{ user_url }}">User</a></li>
+                <li>
+                    {% url 'rest_logout' as logout_url %}
+                    <form action="{{ logout_url }}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" id="btn-link">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </li>
+    {% else %}
+        {% url 'rest_login' as login_url %}
+        <li><a href="{{ login_url }}">Login</a></li>
+        {% url 'rest_register' as register_url %}
+        <li><a href="{{ register_url }}">Register</a></li>
+    {% endif %}
+{% endblock %}
