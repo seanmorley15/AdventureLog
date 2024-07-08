@@ -42,12 +42,7 @@
 	<figure>
 		<!-- svelte-ignore a11y-img-redundant-alt -->
 		{#if adventure.image && adventure.image !== ''}
-			<img
-				src={adventure.image}
-				alt="Adventure Image"
-				class="w-full h-48 object-cover"
-				crossorigin="anonymous"
-			/>
+			<img src={adventure.image} alt="Adventure Image" class="w-full h-48 object-cover" />
 		{:else}
 			<img
 				src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
