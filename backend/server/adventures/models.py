@@ -38,14 +38,13 @@ class Adventure(models.Model):
 
     def clean(self):
         if self.trip:
-            if self.is_public and not self.trip.is_public:
-                raise ValidationError('Public adventures must be associated with a public trip')
             if self.trip.is_public and not self.is_public:
                 raise ValidationError('Adventures associated with a public trip must be public')
             if self.user_id != self.trip.user_id:
                 raise ValidationError('Adventures must be associated with trips owned by the same user')
-        elif self.is_public:
-            raise ValidationError('Public adventures must be associated with a trip')
+
+    def __str__(self):
+        return self.name
 
 class Trip(models.Model):
     id = models.AutoField(primary_key=True)
@@ -57,10 +56,15 @@ class Trip(models.Model):
     date = models.DateField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
 
+    # if connected adventures are private and trip is public, raise an error
     def clean(self):
-            if self.is_public:
-                if self.adventures.filter(is_public=False).exists():
-                    raise ValidationError('Public trips cannot have private adventures')
+        if self.is_public:
+            for adventure in self.adventure_set.all():
+                if not adventure.is_public:
+                    raise ValidationError('Public trips cannot be associated with private adventures')
+                
+
 
     def __str__(self):
         return self.name
+
