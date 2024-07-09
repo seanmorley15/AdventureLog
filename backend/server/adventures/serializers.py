@@ -1,5 +1,5 @@
 import os
-from .models import Adventure
+from .models import Adventure, Trip
 from rest_framework import serializers
 
 class AdventureSerializer(serializers.ModelSerializer):
@@ -17,3 +17,11 @@ class AdventureSerializer(serializers.ModelSerializer):
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
+    
+class TripSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Trip
+        fields = '__all__'  # Serialize all fields of the Adventure model
+
+   
