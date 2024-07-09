@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Adventure, Trip
 from .serializers import AdventureSerializer, TripSerializer
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly
 
 class AdventureViewSet(viewsets.ModelViewSet):
@@ -47,6 +47,10 @@ class TripViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Trip.objects.filter(
             Q(is_public=True) | Q(user_id=self.request.user.id)
+        ).prefetch_related(
+            Prefetch('adventure_set', queryset=Adventure.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id)
+            ))
         )
 
     def perform_create(self, serializer):
@@ -54,21 +58,18 @@ class TripViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def visited(self, request):
-        trips = Trip.objects.filter(
-            type='visited', user_id=request.user.id)
+        trips = self.get_queryset().filter(type='visited', user_id=request.user.id)
         serializer = self.get_serializer(trips, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def planned(self, request):
-        trips = Trip.objects.filter(
-            type='planned', user_id=request.user.id)
+        trips = self.get_queryset().filter(type='planned', user_id=request.user.id)
         serializer = self.get_serializer(trips, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def featured(self, request):
-        trips = Trip.objects.filter(
-            type='featured', is_public=True)
+        trips = self.get_queryset().filter(type='featured', is_public=True)
         serializer = self.get_serializer(trips, many=True)
         return Response(serializer.data)
