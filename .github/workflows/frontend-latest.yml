@@ -1,0 +1,34 @@
+name: Upload Docker image to GHCR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+
+env:
+  IMAGE_NAME: "adventurelog-frontend"
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.ACCESS_TOKEN }}
+
+      - name: Build Docker image
+        run: docker build -t $IMAGE_NAME:latest ./frontend
+
+      - name: Tag Docker image
+        run: docker tag $IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
+
+      - name: Push Docker image to GHCR
+        run: docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
