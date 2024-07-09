@@ -1,3 +1,4 @@
+import os
 from django.contrib import admin
 from django.utils.html import mark_safe
 from .models import Adventure
@@ -10,7 +11,9 @@ class AdventureAdmin(admin.ModelAdmin):
 
     def image_display(self, obj):
         if obj.image:
-            return mark_safe(f'<img src="{obj.image.url}" width="100px" height="100px"')
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            public_url = public_url.replace("'", "")
+            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
         else:
             return
 
@@ -48,7 +51,9 @@ class CustomUserAdmin(UserAdmin):
     )
     def image_display(self, obj):
         if obj.profile_pic:
-            return mark_safe(f'<img src="{obj.profile_pic.url}" width="100px" height="100px"')
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            public_url = public_url.replace("'", "")
+            return mark_safe(f'<img src="{public_url}/media/{obj.profile_pic.name}" width="100px" height="100px"')
         else:
             return
 

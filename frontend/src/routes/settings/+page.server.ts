@@ -58,16 +58,16 @@ export const actions: Actions = {
 
 			let currentUser = (await resCurrent.json()) as User;
 
-			if (username === currentUser.username) {
+			if (username === currentUser.username || !username) {
 				username = undefined;
 			}
-			if (first_name === currentUser.first_name) {
+			if (first_name === currentUser.first_name || !first_name) {
 				first_name = undefined;
 			}
-			if (last_name === currentUser.last_name) {
+			if (last_name === currentUser.last_name || !last_name) {
 				last_name = undefined;
 			}
-			if (currentUser.profile_pic && !profile_pic) {
+			if (currentUser.profile_pic && profile_pic?.size === 0) {
 				profile_pic = undefined;
 			}
 
@@ -100,8 +100,6 @@ export const actions: Actions = {
 				response = { message: Object.values(response)[0] };
 				return fail(res.status, response);
 			}
-
-			let user = response as User;
 
 			return { success: true };
 		} catch (error) {
