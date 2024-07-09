@@ -44,6 +44,8 @@ class Adventure(models.Model):
                 raise ValidationError('Adventures must be associated with trips owned by the same user. Trip owner: ' + self.trip.user_id.username + ' Adventure owner: ' + self.user_id.username)
             if self.type != self.trip.type:
                 raise ValidationError('Adventure type must match trip type. Trip type: ' + self.trip.type + ' Adventure type: ' + self.type)
+            if self.type == 'featured' and not self.is_public:
+                raise ValidationError('Featured adventures must be public. Adventure: ' + self.name)
 
     def __str__(self):
         return self.name
@@ -60,13 +62,12 @@ class Trip(models.Model):
 
     # if connected adventures are private and trip is public, raise an error
     def clean(self):
-        if self.is_public:
+        if self.is_public and self.pk:  # Only check if the instance has a primary key
             for adventure in self.adventure_set.all():
                 if not adventure.is_public:
                     raise ValidationError('Public trips cannot be associated with private adventures. Trip: ' + self.name + ' Adventure: ' + adventure.name)
-                
-
+        if self.type == 'featured' and not self.is_public:
+            raise ValidationError('Featured trips must be public. Trip: ' + self.name)
 
     def __str__(self):
         return self.name
-

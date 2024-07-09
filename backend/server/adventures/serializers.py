@@ -6,7 +6,7 @@ class AdventureSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Adventure
-        fields = '__all__'  # Serialize all fields of the Adventure model
+        fields = '__all__' 
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -19,9 +19,12 @@ class AdventureSerializer(serializers.ModelSerializer):
         return representation
     
 class TripSerializer(serializers.ModelSerializer):
+    adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
 
     class Meta:
         model = Trip
-        fields = '__all__'  # Serialize all fields of the Adventure model
+        # fields are all plus the adventures field
+        fields = ['id', 'user_id', 'name', 'type', 'location', 'date', 'is_public', 'adventures']
+
 
    
