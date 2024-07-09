@@ -118,6 +118,30 @@
 	</form>
 </div>
 
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Email Change</h1>
+<div class="flex justify-center">
+	<form action="?/changeEmail" method="post" class="w-full max-w-xs">
+		<label for="current_email">Current Email</label>
+		<input
+			type="email"
+			name="current_email"
+			placeholder={user.email || 'No Email Set'}
+			id="current_email"
+			readonly
+			class="block mb-2 input input-bordered w-full max-w-xs"
+		/>
+		<br />
+		<input
+			type="email"
+			name="new_email"
+			placeholder="New Email"
+			id="new_email"
+			class="block mb-2 input input-bordered w-full max-w-xs"
+		/>
+		<button class="py-2 px-4 btn btn-primary mt-2">Change Email</button>
+	</form>
+</div>
+
 <small class="text-center"
 	><b>For Debug Use:</b> Server PK={user.pk} | Date Joined: {user.date_joined
 		? new Date(user.date_joined).toDateString()

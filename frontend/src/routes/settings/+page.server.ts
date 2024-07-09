@@ -139,5 +139,33 @@ export const actions: Actions = {
 			return fail(res.status, await res.json());
 		}
 		return { success: true };
+	},
+	changeEmail: async (event) => {
+		if (!event.locals.user) {
+			return redirect(302, '/');
+		}
+		if (!event.cookies.get('auth')) {
+			return redirect(302, '/');
+		}
+		const formData = await event.request.formData();
+		const new_email = formData.get('new_email') as string | null | undefined;
+		if (!new_email) {
+			return fail(400, { message: 'Email is required' });
+		} else {
+			let res = await fetch(`${endpoint}/auth/change-email/`, {
+				method: 'POST',
+				headers: {
+					Cookie: event.cookies.get('auth') || '',
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					new_email
+				})
+			});
+			if (!res.ok) {
+				return fail(res.status, await res.json());
+			}
+			return { success: true };
+		}
 	}
 };
