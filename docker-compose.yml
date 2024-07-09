@@ -34,6 +34,7 @@ services:
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
       - PUBLIC_URL='http://127.0.0.1:8000'
+      - DEBUG=False
     ports:
       - "8000:8000"
     depends_on:

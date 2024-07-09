@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'backend/**'
+      - "backend/**"
 
 env:
   IMAGE_NAME: "adventurelog-backend"
