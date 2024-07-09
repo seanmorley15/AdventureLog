@@ -115,5 +115,4 @@ demo/react-spa/yarn.lock
 
 */media/*
 
-/static/*
-/staticfiles/*
+*/staticfiles/*
