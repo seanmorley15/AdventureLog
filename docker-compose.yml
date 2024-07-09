@@ -34,7 +34,7 @@ services:
       - DJANGO_ADMIN_USERNAME=admin
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
-      - PUBLIC_URL='http://127.0.0.1:8000'
+      - PUBLIC_URL='http://127.0.0.1:81'
       - DEBUG=True
     ports:
       - "8000:8000"
@@ -43,6 +43,27 @@ services:
     volumes:
       - adventurelog_media:/code/media/
 
+  nginx:
+    image: nginx:latest
+    ports:
+      - "81:80" # Using port 81 to avoid conflict with your existing setup
+    volumes:
+      - adventurelog_media:/app/media
+      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - server
+
 volumes:
   postgres_data:
   adventurelog_media:
+#
+# nginx:
+#     build:
+#       context: ./proxy/
+#       dockerfile: Dockerfile.nginx
+#     ports:
+#       - "81:80" # Using port 81 to avoid conflict with your existing setup
+#     volumes:
+#       - adventurelog_media:/app/media
+#     depends_on:
+#       - server
