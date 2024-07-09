@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   web:
-    # build: ./frontend/
+    #build: ./frontend/
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     environment:
       - PUBLIC_SERVER_URL=http://server:8000
@@ -23,8 +23,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    build: ./backend/
-    #image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    #build: ./backend/
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
     environment:
       - PGHOST=db
       - PGDATABASE=database
@@ -35,7 +35,7 @@ services:
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
       - PUBLIC_URL='http://127.0.0.1:81'
-      - DEBUG=True
+      - DEBUG=False
     ports:
       - "8000:8000"
     depends_on:
