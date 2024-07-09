@@ -39,9 +39,11 @@ class Adventure(models.Model):
     def clean(self):
         if self.trip:
             if self.trip.is_public and not self.is_public:
-                raise ValidationError('Adventures associated with a public trip must be public')
+                raise ValidationError('Adventures associated with a public trip must be public. Trip: ' + self.trip.name + ' Adventure: ' + self.name)
             if self.user_id != self.trip.user_id:
-                raise ValidationError('Adventures must be associated with trips owned by the same user')
+                raise ValidationError('Adventures must be associated with trips owned by the same user. Trip owner: ' + self.trip.user_id.username + ' Adventure owner: ' + self.user_id.username)
+            if self.type != self.trip.type:
+                raise ValidationError('Adventure type must match trip type. Trip type: ' + self.trip.type + ' Adventure type: ' + self.type)
 
     def __str__(self):
         return self.name
@@ -61,7 +63,7 @@ class Trip(models.Model):
         if self.is_public:
             for adventure in self.adventure_set.all():
                 if not adventure.is_public:
-                    raise ValidationError('Public trips cannot be associated with private adventures')
+                    raise ValidationError('Public trips cannot be associated with private adventures. Trip: ' + self.name + ' Adventure: ' + adventure.name)
                 
 
 
