@@ -18,25 +18,51 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
+	import Lost from '$lib/assets/undraw_lost.svg';
 
 	export let data: PageData;
 
 	let adventure: Adventure;
 
+	let notFound: boolean = false;
+
 	onMount(() => {
 		if (data.props.adventure) {
 			adventure = data.props.adventure;
 		} else {
-			goto('/404');
+			notFound = true;
 		}
 	});
 </script>
 
-{#if !adventure}
+{#if notFound}
+	<div
+		class="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 -mt-20"
+	>
+		<div class="mx-auto max-w-md text-center">
+			<div class="flex items-center justify-center">
+				<img src={Lost} alt="Lost" class="w-1/2" />
+			</div>
+			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+				Adventure not Found
+			</h1>
+			<p class="mt-4 text-muted-foreground">
+				The adventure you were looking for could not be found. Please try a different adventure or
+				check back later.
+			</p>
+			<div class="mt-6">
+				<button class="btn btn-primary" on:click={() => goto('/')}>Homepage</button>
+			</div>
+		</div>
+	</div>
+{/if}
+
+{#if !adventure && !notFound}
 	<div class="flex justify-center items-center w-full mt-16">
 		<span class="loading loading-spinner w-24 h-24"></span>
 	</div>
-{:else}
+{/if}
+{#if adventure}
 	{#if adventure.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{adventure.name}</h1>
 	{/if}

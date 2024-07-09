@@ -5,11 +5,11 @@ from .models import Adventure, Trip
 from .serializers import AdventureSerializer, TripSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
-from .permissions import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
 
 class AdventureViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
 
     def get_queryset(self):
         return Adventure.objects.filter(
@@ -42,7 +42,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
 class TripViewSet(viewsets.ModelViewSet):
     serializer_class = TripSerializer
-    permission_classes = [IsAuthenticated, IsOwnerOrReadOnly]
+    permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
 
     def get_queryset(self):
         return Trip.objects.filter(

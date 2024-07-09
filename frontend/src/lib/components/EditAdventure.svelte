@@ -21,6 +21,7 @@
 	import Star from '~icons/mdi/star';
 	import Attachment from '~icons/mdi/attachment';
 	import PointSelectionModal from './PointSelectionModal.svelte';
+	import Earth from '~icons/mdi/earth';
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -245,6 +246,39 @@
 						Location</button
 					>
 				</div>
+				<div class="mb-2">
+					<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
+					/>
+					<input
+						type="checkbox"
+						class="toggle toggle-primary"
+						id="is_public"
+						name="is_public"
+						bind:checked={adventureToEdit.is_public}
+					/>
+				</div>
+
+				{#if adventureToEdit.is_public}
+					<div class="bg-neutral p-4 rounded-md shadow-sm">
+						<p class=" font-semibold">Share this Adventure!</p>
+						<div class="flex items-center justify-between">
+							<p class="text-card-foreground font-mono">
+								{window.location.origin}/adventures/{adventureToEdit.id}
+							</p>
+							<button
+								type="button"
+								on:click={() => {
+									navigator.clipboard.writeText(
+										`${window.location.origin}/adventures/${adventureToEdit.id}`
+									);
+								}}
+								class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+							>
+								Copy Link
+							</button>
+						</div>
+					</div>
+				{/if}
 
 				<button type="submit" class="btn btn-primary mr-4 mt-4" on:click={submit}>Edit</button>
 				<!-- if there is a button in form, it will close the modal -->

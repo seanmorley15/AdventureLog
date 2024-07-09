@@ -175,6 +175,13 @@ export const actions: Actions = {
 		let link = formData.get('link') as string | null;
 		let latitude = formData.get('latitude') as string | null;
 		let longitude = formData.get('longitude') as string | null;
+		let is_public = formData.get('is_public') as string | null | boolean;
+
+		if (is_public) {
+			is_public = true;
+		} else {
+			is_public = false;
+		}
 
 		// check if latitude and longitude are valid
 		if (latitude && longitude) {
@@ -221,6 +228,7 @@ export const actions: Actions = {
 		formDataToSend.append('description', description || '');
 		formDataToSend.append('latitude', latitude || '');
 		formDataToSend.append('longitude', longitude || '');
+		formDataToSend.append('is_public', is_public.toString());
 		if (activity_types) {
 			// Filter out empty and duplicate activity types, then trim each activity type
 			const cleanedActivityTypes = Array.from(
