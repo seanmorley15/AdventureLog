@@ -5,33 +5,27 @@ import type { Adventure } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
-	if (!event.locals.user) {
-		return redirect(302, '/login');
-	} else {
-		const id = event.params as { id: string };
-		let request = await fetch(`${endpoint}/api/adventures/${id.id}/`, {
-			headers: {
-				Cookie: `${event.cookies.get('auth')}`
-			}
-		});
-		if (!request.ok) {
-			console.error('Failed to fetch adventure ' + id.id);
-			return {
-				props: {
-					adventure: null
-				}
-			};
-		} else {
-			let adventure = (await request.json()) as Adventure;
-			if (!adventure.is_public && adventure.user_id !== event.locals.user.pk) {
-				return redirect(302, '/');
-			}
-			return {
-				props: {
-					adventure
-				}
-			};
+	const id = event.params as { id: string };
+	let request = await fetch(`${endpoint}/api/adventures/${id.id}/`, {
+		headers: {
+			Cookie: `${event.cookies.get('auth')}`
 		}
+	});
+	if (!request.ok) {
+		console.error('Failed to fetch adventure ' + id.id);
+		return {
+			props: {
+				adventure: null
+			}
+		};
+	} else {
+		let adventure = (await request.json()) as Adventure;
+
+		return {
+			props: {
+				adventure
+			}
+		};
 	}
 }) satisfies PageServerLoad;
 
