@@ -24,6 +24,8 @@ RUN pip install -r requirements.txt
 # Copy the Django project code into the Docker image
 COPY ./server /code/
 
+RUN python3 manage.py collectstatic --verbosity 2
+
 # Set the entrypoint script
 COPY ./entrypoint.sh /code/entrypoint.sh
 RUN chmod +x /code/entrypoint.sh

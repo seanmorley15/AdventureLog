@@ -9,3 +9,4 @@ coreapi==2.3.3
 python-dotenv
 psycopg2-binary
 Pillow
+whitenoise

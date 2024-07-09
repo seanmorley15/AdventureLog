@@ -114,3 +114,6 @@ demo/react-spa/yarn.lock
 .vscode/
 
 */media/*
+
+/static/*
+/staticfiles/*
