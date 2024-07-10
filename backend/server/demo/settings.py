@@ -209,6 +209,5 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 from os import getenv
 
-CSRF_TRUSTED_ORIGINS = getenv('CSRF_TRUSTED_ORIGINS', 'localhost').split(',')
-
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
