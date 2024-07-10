@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # Docker 🐋
 
-Docker is the perffered way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
+Docker is the preferred way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
 **Note**: This guide mainly focuses on installation with a linux based host machine, but the steps are similar for other operating systems.
 
 ## Prerequisites

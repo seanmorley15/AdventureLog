@@ -53,3 +53,14 @@ export type Point = {
 	};
 	name: string;
 };
+
+export type Trip = {
+	id: number;
+	user_id: number;
+	name: string;
+	type: string;
+	location: string;
+	date: string;
+	is_public: boolean;
+	adventures: Adventure[];
+};

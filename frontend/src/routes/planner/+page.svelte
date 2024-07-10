@@ -80,7 +80,7 @@
 	</div>
 </div>
 
-<h1 class="text-center font-bold text-4xl mb-4">Visited Adventures</h1>
+<h1 class="text-center font-bold text-4xl mb-4">Planned Adventures</h1>
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each adventures as adventure}
 		<AdventureCard type="planned" {adventure} on:delete={deleteAdventure} on:edit={editAdventure} />
