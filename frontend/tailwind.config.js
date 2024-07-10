@@ -51,7 +51,10 @@ export default {
 
 					'--btn-text-case': 'uppercase',
 					'--navbar-padding': '.5rem',
-					'--border-btn': '1px'
+					'--border-btn': '1px',
+
+					fontFamily:
+						'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
 				}
 			}
 		]

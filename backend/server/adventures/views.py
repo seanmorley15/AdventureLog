@@ -47,7 +47,7 @@ class TripViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return Trip.objects.filter(
             Q(is_public=True) | Q(user_id=self.request.user.id)
-        ).prefetch_related(
+        ).select_related(
             Prefetch('adventure_set', queryset=Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id)
             ))
