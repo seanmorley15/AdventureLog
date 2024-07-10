@@ -23,7 +23,8 @@
 
 {#if data.user && data.user.first_name && data.user.last_name}
 	<h1 class="text-center text-4xl font-bold">
-		{data.user.first_name}, {data.user.last_name}
+		{data.user.first_name}
+		{data.user.last_name}
 	</h1>
 {/if}
 <p class="text-center text-lg mt-2">{data.user.username}</p>
