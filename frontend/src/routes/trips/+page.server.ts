@@ -9,11 +9,12 @@ export const load = (async (event) => {
 	} else {
 		let res = await event.fetch(`${endpoint}/api/trips/`, {
 			headers: {
-				Cookies: event.cookies.get('auth') || ''
+				Cookie: `${event.cookies.get('auth')}`
 			}
 		});
 		if (res.ok) {
 			let data = await res.json();
+			console.log(data);
 			return {
 				props: {
 					trips: data
@@ -22,7 +23,7 @@ export const load = (async (event) => {
 		} else {
 			return {
 				status: res.status,
-				error: new Error('Failed to fetch data')
+				error: 'Failed to load trips'
 			};
 		}
 	}

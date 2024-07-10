@@ -10,10 +10,13 @@
 
 	let trips: Trip[];
 	let notFound: boolean = false;
+	let noTrips: boolean = false;
 
 	onMount(() => {
-		if (data.props && data.props.trips) {
+		if (data.props && data.props.trips?.length > 0) {
 			trips = data.props.trips;
+		} else if (data.props && data.props.trips?.length === 0) {
+			noTrips = true;
 		} else {
 			notFound = true;
 		}
@@ -40,6 +43,24 @@
 			<div class="mt-6">
 				<button class="btn btn-primary" on:click={() => goto('/')}>Homepage</button>
 			</div>
+		</div>
+	</div>
+{/if}
+
+{#if noTrips}
+	<div
+		class="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 -mt-20"
+	>
+		<div class="mx-auto max-w-md text-center">
+			<div class="flex items-center justify-center">
+				<img src={Lost} alt="Lost" class="w-1/2" />
+			</div>
+			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+				No Trips Found
+			</h1>
+			<p class="mt-4 text-muted-foreground">
+				There are no trips to display. Please try again later.
+			</p>
 		</div>
 	</div>
 {/if}

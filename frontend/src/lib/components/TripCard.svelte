@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 
+	import Calendar from '~icons/mdi/calendar';
+	import MapMarker from '~icons/mdi/map-marker';
+	import Launch from '~icons/mdi/launch';
+	import TrashCanOutline from '~icons/mdi/trash-can-outline';
+
 	import { goto } from '$app/navigation';
 	import type { Trip } from '$lib/types';
 	const dispatch = createEventDispatcher();
@@ -31,23 +36,21 @@
 		<h2 class="card-title overflow-ellipsis">{trip.name}</h2>
 		{#if trip.date && trip.date !== ''}
 			<div class="inline-flex items-center">
-				<!-- <iconify-icon icon="mdi:calendar" class="text-xl"></iconify-icon> -->
+				<Calendar class="w-5 h-5 mr-1" />
 				<p class="ml-1">{trip.date}</p>
 			</div>
 		{/if}
 		{#if trip.location && trip.location !== ''}
 			<div class="inline-flex items-center">
-				<!-- <iconify-icon icon="mdi:map-marker" class="text-xl"></iconify-icon> -->
+				<MapMarker class="w-5 h-5 mr-1" />
 				<p class="ml-1">{trip.location}</p>
 			</div>
 		{/if}
 
 		<div class="card-actions justify-end">
-			<button class="btn btn-secondary"
-				><iconify-icon icon="mdi:trash-can-outline" class="text-2xl"></iconify-icon></button
-			>
+			<button class="btn btn-secondary"><TrashCanOutline class="w-5 h-5 mr-1" /></button>
 			<button class="btn btn-primary" on:click={() => goto(`/trip/${trip.id}`)}
-				><iconify-icon icon="mdi:launch" class="text-2xl"></iconify-icon></button
+				><Launch class="w-5 h-5 mr-1" /></button
 			>
 		</div>
 	</div>
