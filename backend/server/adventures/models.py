@@ -44,8 +44,8 @@ class Adventure(models.Model):
                 raise ValidationError('Adventures must be associated with trips owned by the same user. Trip owner: ' + self.trip.user_id.username + ' Adventure owner: ' + self.user_id.username)
             if self.type != self.trip.type:
                 raise ValidationError('Adventure type must match trip type. Trip type: ' + self.trip.type + ' Adventure type: ' + self.type)
-            if self.type == 'featured' and not self.is_public:
-                raise ValidationError('Featured adventures must be public. Adventure: ' + self.name)
+        if self.type == 'featured' and not self.is_public:
+            raise ValidationError('Featured adventures must be public. Adventure: ' + self.name)
 
     def __str__(self):
         return self.name

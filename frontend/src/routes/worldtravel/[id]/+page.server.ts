@@ -1,5 +1,5 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Region, VisitedRegion } from '$lib/types';
+import type { Country, Region, VisitedRegion } from '$lib/types';
 import type { PageServerLoad } from './$types';
 
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
@@ -9,6 +9,7 @@ export const load = (async (event) => {
 
 	let regions: Region[] = [];
 	let visitedRegions: VisitedRegion[] = [];
+	let country: Country;
 
 	let res = await fetch(`${endpoint}/api/${id}/regions/`, {
 		method: 'GET',
@@ -21,6 +22,11 @@ export const load = (async (event) => {
 		return { status: 500 };
 	} else {
 		regions = (await res.json()) as Region[];
+	}
+
+	if (regions.length === 0) {
+		console.error('No regions found');
+		return { status: 404 };
 	}
 
 	res = await fetch(`${endpoint}/api/${id}/visits/`, {
@@ -36,10 +42,24 @@ export const load = (async (event) => {
 		visitedRegions = (await res.json()) as VisitedRegion[];
 	}
 
+	res = await fetch(`${endpoint}/api/countries/${regions[0].country}/`, {
+		method: 'GET',
+		headers: {
+			Cookie: `${event.cookies.get('auth')}`
+		}
+	});
+	if (!res.ok) {
+		console.error('Failed to fetch country');
+		return { status: 500 };
+	} else {
+		country = (await res.json()) as Country;
+	}
+
 	return {
 		props: {
 			regions,
-			visitedRegions
+			visitedRegions,
+			country
 		}
 	};
 }) satisfies PageServerLoad;

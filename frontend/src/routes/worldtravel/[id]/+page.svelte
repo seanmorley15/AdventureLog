@@ -5,11 +5,27 @@
 	export let data: PageData;
 	let regions: Region[] = data.props?.regions || [];
 	let visitedRegions: VisitedRegion[] = data.props?.visitedRegions || [];
-
+	const country = data.props?.country || null;
 	console.log(data);
+
+	let numRegions: number = regions.length;
+	let numVisitedRegions: number = visitedRegions.length;
 </script>
 
-<h1 class="text-center font-bold text-4xl mb-4">Regions</h1>
+<h1 class="text-center font-bold text-4xl mb-4">Regions in {country?.name}</h1>
+<div class="flex items-center justify-center mb-4">
+	<div class="stats shadow bg-base-300">
+		<div class="stat">
+			<div class="stat-title">Region Stats</div>
+			<div class="stat-value">{numVisitedRegions}/{numRegions} Visited</div>
+			{#if numRegions === numVisitedRegions}
+				<div class="stat-desc">You've visited all regions in {country?.name} 🎉!</div>
+			{:else}
+				<div class="stat-desc">Keep exploring!</div>
+			{/if}
+		</div>
+	</div>
+</div>
 
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each regions as region}
@@ -18,8 +34,10 @@
 			visited={visitedRegions.some((visitedRegion) => visitedRegion.region === region.id)}
 			on:visit={(e) => {
 				visitedRegions = [...visitedRegions, e.detail];
+				numVisitedRegions++;
 			}}
 			visit_id={visitedRegions.find((visitedRegion) => visitedRegion.region === region.id)?.id}
+			on:remove={() => numVisitedRegions--}
 		/>
 	{/each}
 </div>

@@ -10,8 +10,6 @@
 
 	export let visit_id: number | undefined | null;
 
-	console.log(visit_id);
-
 	async function markVisited() {
 		let res = await fetch(`/worldtravel?/markVisited`, {
 			method: 'POST',
@@ -47,6 +45,7 @@
 		if (res.ok) {
 			visited = false;
 			addToast('info', `Visit to ${region.name} removed`);
+			dispatch('remove', null);
 		} else {
 			console.error('Failed to remove visit');
 		}

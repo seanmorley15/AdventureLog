@@ -37,7 +37,7 @@ export type Country = {
 export type Region = {
 	id: number;
 	name: string;
-	country_id: number;
+	country: number;
 };
 
 export type VisitedRegion = {

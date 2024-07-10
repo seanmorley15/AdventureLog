@@ -67,8 +67,6 @@ export const actions: Actions = {
 	removeVisited: async (event) => {
 		const body = await event.request.json();
 
-		console.log(body);
-
 		if (!body || !body.visitId) {
 			return {
 				status: 400
