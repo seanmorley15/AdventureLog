@@ -208,8 +208,8 @@ CORS_ORIGIN_ALLOW_ALL = True
 
 
 CSRF_TRUSTED_ORIGINS = [
-    # 'https://api.adventurelog.app',
-    # 'https://adventurelog.app',
+    'https://api.adventurelog.app',
+    'https://adventurelog.app',
     
 ]
 
