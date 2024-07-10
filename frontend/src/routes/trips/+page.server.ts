@@ -1,6 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { PUBLIC_SERVER_URL } from '$env/static/public';
+const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const load = (async (event) => {
 	const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
