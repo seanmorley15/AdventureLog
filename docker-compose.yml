@@ -35,6 +35,7 @@ services:
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
       - PUBLIC_URL='http://127.0.0.1:81'
+      - CSRF_TRUSTED_ORIGINS=https://api.adventurelog.app,https://adventurelog.app
       - DEBUG=False
     ports:
       - "8000:8000"

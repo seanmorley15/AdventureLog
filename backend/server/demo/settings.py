@@ -207,10 +207,8 @@ SWAGGER_SETTINGS = {
 CORS_ORIGIN_ALLOW_ALL = True
 
 
-CSRF_TRUSTED_ORIGINS = [
-    'https://api.adventurelog.app',
-    'https://adventurelog.app',
-    
-]
+from os import getenv
+
+CSRF_TRUSTED_ORIGINS = getenv('CSRF_TRUSTED_ORIGINS', 'localhost').split(',')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
