@@ -37,7 +37,7 @@ export type Country = {
 export type Region = {
 	id: number;
 	name: string;
-	country_id: number;
+	country: number;
 };
 
 export type VisitedRegion = {
@@ -52,4 +52,15 @@ export type Point = {
 		lng: number;
 	};
 	name: string;
+};
+
+export type Trip = {
+	id: number;
+	user_id: number;
+	name: string;
+	type: string;
+	location: string;
+	date: string;
+	is_public: boolean;
+	adventures: Adventure[];
 };
