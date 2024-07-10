@@ -1,8 +1,9 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad, RequestEvent } from '../$types';
 import { PUBLIC_SERVER_URL } from '$env/static/public';
-const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
 export const load: PageServerLoad = async (event: RequestEvent) => {
+	const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 	if (!event.locals.user || !event.cookies.get('auth')) {
 		return redirect(302, '/login');
 	}
