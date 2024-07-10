@@ -2,7 +2,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from rest_framework.response import Response
 from .models import Adventure, Trip
-from worldtravel.models import VisitedRegion
+from worldtravel.models import VisitedRegion, Region, Country
 from .serializers import AdventureSerializer, TripSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
@@ -88,15 +88,19 @@ class StatsViewSet(viewsets.ViewSet):
             type='featured', is_public=True).count()
         trips_count = Trip.objects.filter(
             user_id=request.user.id).count()
-        region_count = VisitedRegion.objects.filter(
+        visited_region_count = VisitedRegion.objects.filter(
             user_id=request.user.id).count()
+        total_regions = Region.objects.count()
         country_count = VisitedRegion.objects.filter(
             user_id=request.user.id).values('region__country').distinct().count()
+        total_countries = Country.objects.count()
         return Response({
             'visited_count': visited_count,
             'planned_count': planned_count,
             'featured_count': featured_count,
             'trips_count': trips_count,
-            'region_count': region_count,
+            'visited_region_count': visited_region_count,
+            'total_regions': total_regions,
             'country_count': country_count,
+            'total_countries': total_countries
         })
