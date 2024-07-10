@@ -6,6 +6,8 @@
 	import type { PageData } from './$types';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 
+	import Lost from '$lib/assets/undraw_lost.svg';
+
 	export let data: PageData;
 	console.log(data);
 
@@ -80,7 +82,10 @@
 	</div>
 </div>
 
-<h1 class="text-center font-bold text-4xl mb-4">Planned Adventures</h1>
+{#if adventures.length > 0}
+	<h1 class="text-center font-bold text-4xl mb-4">Planned Adventures</h1>
+{/if}
+
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each adventures as adventure}
 		<AdventureCard type="planned" {adventure} on:delete={deleteAdventure} on:edit={editAdventure} />
@@ -88,7 +93,19 @@
 </div>
 
 {#if adventures.length === 0}
-	<div class="flex justify-center items-center h-96">
-		<p class="text-2xl text-primary-content">No planned adventures yet!</p>
+	<div
+		class="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 -mt-20"
+	>
+		<div class="mx-auto max-w-md text-center">
+			<div class="flex items-center justify-center">
+				<img src={Lost} alt="Lost" class="w-1/2" />
+			</div>
+			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+				No planned adventures found
+			</h1>
+			<p class="mt-4 text-muted-foreground">
+				There are no adventures to display. Add some using the plus button at the bottom right!
+			</p>
+		</div>
 	</div>
 {/if}
