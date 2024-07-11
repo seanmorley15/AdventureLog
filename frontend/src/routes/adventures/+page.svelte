@@ -117,6 +117,15 @@
 				>
 					Visited Adventure</button
 				>
+				<button
+					class="btn btn-primary"
+					on:click={() => {
+						isShowingCreateModal = true;
+						newType = 'planned';
+					}}
+				>
+					Planned Adventure</button
+				>
 				<!-- <button
 			class="btn btn-primary"
 			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
