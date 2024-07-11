@@ -53,10 +53,7 @@
 			>
 				{#if data.user}
 					<li>
-						<button on:click={() => goto('/visited')}>Visited</button>
-					</li>
-					<li>
-						<button on:click={() => goto('/planner')}>Planner</button>
+						<button on:click={() => goto('/adventures')}>Adventures</button>
 					</li>
 					<li>
 						<button on:click={() => goto('/worldtravel')}>World Travel</button>
@@ -87,10 +84,7 @@
 		<ul class="menu menu-horizontal px-1 gap-2">
 			{#if data.user}
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/visited')}>Visited</button>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/planner')}>Planner</button>
+					<button class="btn btn-neutral" on:click={() => goto('/adventures')}>Adventures</button>
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/worldtravel')}>World Travel</button

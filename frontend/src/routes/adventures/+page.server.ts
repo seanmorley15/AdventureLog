@@ -13,7 +13,8 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/`, {
+		let adventures: Adventure[] = [];
+		let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/visited/`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
 			}
@@ -23,12 +24,21 @@ export const load = (async (event) => {
 			return redirect(302, '/login');
 		} else {
 			let visited = (await visitedFetch.json()) as Adventure[];
-			return {
-				props: {
-					visited
-				}
-			};
+			adventures = [...adventures, ...visited];
 		}
+		let plannedFetch = await fetch(`${serverEndpoint}/api/adventures/planned/`, {
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
+			}
+		});
+		if (!plannedFetch.ok) {
+			console.error('Failed to fetch visited adventures');
+			return redirect(302, '/login');
+		} else {
+			let planned = (await plannedFetch.json()) as Adventure[];
+			adventures = [...adventures, ...planned];
+		}
+		return { adventures } as { adventures: Adventure[] };
 	}
 }) satisfies PageServerLoad;
 
@@ -224,7 +234,7 @@ export const actions: Actions = {
 
 		const image = formData.get('image') as File;
 
-		console.log(activity_types);
+		// console.log(activity_types);
 
 		if (!type || !name) {
 			return {
@@ -339,23 +349,66 @@ export const actions: Actions = {
 		return { image_url, link_url };
 	},
 	get: async (event) => {
-		const adventureId = event.params.adventureId;
+		if (!event.locals.user) {
+		}
 
-		const res = await fetch(`${serverEndpoint}/api/adventures/${adventureId}/`, {
-			headers: {
-				Cookie: `${event.cookies.get('auth')}`
-			}
-		});
+		const formData = await event.request.formData();
+		const visited = formData.get('visited');
+		const planned = formData.get('planned');
+		const featured = formData.get('featured');
 
-		if (!res.ok) {
+		let adventures: Adventure[] = [];
+
+		if (!event.locals.user) {
 			return {
-				status: res.status,
-				body: { error: 'Failed to fetch adventure' }
+				status: 401,
+				body: { message: 'Unauthorized' }
 			};
 		}
 
-		let adventure = await res.json();
-
-		return { adventure };
+		if (visited) {
+			let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/visited/`, {
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+			if (!visitedFetch.ok) {
+				console.error('Failed to fetch visited adventures');
+				return redirect(302, '/login');
+			} else {
+				let visited = (await visitedFetch.json()) as Adventure[];
+				adventures = [...adventures, ...visited];
+			}
+		}
+		if (planned) {
+			let plannedFetch = await fetch(`${serverEndpoint}/api/adventures/planned/`, {
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+			if (!plannedFetch.ok) {
+				console.error('Failed to fetch visited adventures');
+				return redirect(302, '/login');
+			} else {
+				let planned = (await plannedFetch.json()) as Adventure[];
+				adventures = [...adventures, ...planned];
+			}
+		}
+		if (featured) {
+			let featuredFetch = await fetch(`${serverEndpoint}/api/adventures/featured/`, {
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+			if (!featuredFetch.ok) {
+				console.error('Failed to fetch visited adventures');
+				return redirect(302, '/login');
+			} else {
+				let featured = (await featuredFetch.json()) as Adventure[];
+				adventures = [...adventures, ...featured];
+			}
+		}
+		// console.log(adventures);
+		return adventures as Adventure[];
 	}
 };
