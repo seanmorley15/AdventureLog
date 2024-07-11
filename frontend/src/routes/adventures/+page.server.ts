@@ -3,13 +3,34 @@ import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure } from '$lib/types';
 
-const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-
 import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
+export const load = (async (event) => {
+	if (!event.locals.user) {
+		return redirect(302, '/login');
+	} else {
+		let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/`, {
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
+			}
+		});
+		if (!visitedFetch.ok) {
+			console.error('Failed to fetch visited adventures');
+			return redirect(302, '/login');
+		} else {
+			let visited = (await visitedFetch.json()) as Adventure[];
+			return {
+				props: {
+					visited
+				}
+			};
+		}
+	}
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
 	create: async (event) => {
@@ -316,5 +337,25 @@ export const actions: Actions = {
 		let image_url = adventure.image;
 		let link_url = adventure.link;
 		return { image_url, link_url };
+	},
+	get: async (event) => {
+		const adventureId = event.params.adventureId;
+
+		const res = await fetch(`${serverEndpoint}/api/adventures/${adventureId}/`, {
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
+			}
+		});
+
+		if (!res.ok) {
+			return {
+				status: res.status,
+				body: { error: 'Failed to fetch adventure' }
+			};
+		}
+
+		let adventure = await res.json();
+
+		return { adventure };
 	}
 };
