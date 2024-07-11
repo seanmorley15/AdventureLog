@@ -193,6 +193,7 @@
 					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 					<div class="divider"></div>
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
+					<label for="name-asc">Name ASC</label>
 					<input
 						type="radio"
 						name="name"
@@ -201,6 +202,7 @@
 						checked
 						on:click={() => sort({ attribute: 'name', order: 'asc' })}
 					/>
+					<label for="name-desc">Name DESC</label>
 					<input
 						type="radio"
 						name="name"
