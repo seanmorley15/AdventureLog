@@ -11,12 +11,33 @@
 	export let data: any;
 	console.log(data);
 
-	let adventures: Adventure[] = data.adventures || [];
+	let adventures: Adventure[] = data.props.adventures || [];
 
 	let currentSort = { attribute: 'name', order: 'asc' };
 
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
+
+	let next: string | null = null;
+	let previous: string | null = null;
+	let count = 0;
+
+	async function changePage(direction: string) {
+		let url: string = '';
+		if (direction === 'next' && next) {
+			url = next;
+		} else if (direction === 'previous' && previous) {
+			url = previous;
+		} else {
+			return;
+		}
+		let res = await fetch(url);
+		let result = await res.json();
+		adventures = result.results as Adventure[];
+		next = result.next;
+		previous = result.previous;
+		count = result.count;
+	}
 
 	function handleSubmit() {
 		return async ({ result, update }: any) => {
@@ -27,8 +48,11 @@
 			if (result.type === 'success') {
 				if (result.data) {
 					// console.log(result.data);
-					adventures = result.data as Adventure[];
-					sort(currentSort);
+					adventures = result.data.adventures as Adventure[];
+					next = result.data.next;
+					previous = result.data.previous;
+					count = result.data.count;
+					// sort(currentSort);
 				}
 			}
 		};
@@ -39,9 +63,9 @@
 		currentSort.order = order;
 		if (attribute === 'name') {
 			if (order === 'asc') {
-				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
-			} else {
 				adventures = adventures.sort((a, b) => b.name.localeCompare(a.name));
+			} else {
+				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
 			}
 		}
 	}
@@ -140,6 +164,7 @@
 	<div class="drawer-content">
 		<!-- Page content -->
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
+		<p class="text-center">This search returned {count} results.</p>
 		{#if adventures.length === 0}
 			<NotFound />
 		{/if}
@@ -159,6 +184,17 @@
 						on:edit={editAdventure}
 					/>
 				{/each}
+			</div>
+			<div class="join grid grid-cols-2">
+				{#if previous}
+					<button class="join-item btn btn-outline" on:click={() => changePage('previous')}
+						>Previous page</button
+					>
+				{/if}
+				{#if next}
+					<button class="join-item btn btn-outline" on:click={() => changePage('next')}>Next</button
+					>
+				{/if}
 			</div>
 		</div>
 	</div>

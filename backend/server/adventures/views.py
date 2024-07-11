@@ -7,10 +7,23 @@ from .serializers import AdventureSerializer, TripSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
+from rest_framework.pagination import PageNumberPagination
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 6
+    page_size_query_param = 'page_size'
+    max_page_size = 1000
+
+from rest_framework.pagination import PageNumberPagination
+
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.db.models import Q
 
 class AdventureViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureSerializer
     permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
+    pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
         return Adventure.objects.filter(
@@ -21,24 +34,33 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer.save(user_id=self.request.user)
 
     @action(detail=False, methods=['get'])
-    def visited(self, request):
-        visited_adventures = Adventure.objects.filter(
-            type='visited', user_id=request.user.id, trip=None)
-        serializer = self.get_serializer(visited_adventures, many=True)
-        return Response(serializer.data)
+    def filtered(self, request):
+        types = request.query_params.get('types', '').split(',')
+        valid_types = ['visited', 'planned', 'featured']
+        types = [t for t in types if t in valid_types]
 
-    @action(detail=False, methods=['get'])
-    def planned(self, request):
-        planned_adventures = Adventure.objects.filter(
-            type='planned', user_id=request.user.id, trip=None)
-        serializer = self.get_serializer(planned_adventures, many=True)
-        return Response(serializer.data)
+        if not types:
+            return Response({"error": "No valid types provided"}, status=400)
 
-    @action(detail=False, methods=['get'])
-    def featured(self, request):
-        featured_adventures = Adventure.objects.filter(
-            type='featured', is_public=True, trip=None)
-        serializer = self.get_serializer(featured_adventures, many=True)
+        queryset = Adventure.objects.none()
+
+        for adventure_type in types:
+            if adventure_type in ['visited', 'planned']:
+                queryset |= Adventure.objects.filter(
+                    type=adventure_type, user_id=request.user.id, trip=None)
+            elif adventure_type == 'featured':
+                queryset |= Adventure.objects.filter(
+                    type='featured', is_public=True, trip=None)
+
+        return self.paginate_and_respond(queryset, request)
+
+    def paginate_and_respond(self, queryset, request):
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+        serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 class TripViewSet(viewsets.ModelViewSet):
@@ -58,10 +80,11 @@ class TripViewSet(viewsets.ModelViewSet):
         serializer.save(user_id=self.request.user)
 
     @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'])
     def visited(self, request):
-        trips = self.get_queryset().filter(type='visited', user_id=request.user.id)
-        serializer = self.get_serializer(trips, many=True)
-        return Response(serializer.data)
+        visited_adventures = Adventure.objects.filter(
+            type='visited', user_id=request.user.id, trip=None)
+        return self.get_paginated_response(visited_adventures)
 
     @action(detail=False, methods=['get'])
     def planned(self, request):
