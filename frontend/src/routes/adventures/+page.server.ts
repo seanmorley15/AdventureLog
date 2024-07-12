@@ -432,7 +432,7 @@ export const actions: Actions = {
 		const previous = formData.get('previous') as string;
 		const page = formData.get('page') as string;
 
-		if (!event.locals.user || !event.cookies.get('auth')) {
+		if (!event.locals.user) {
 			return {
 				status: 401,
 				body: { message: 'Unauthorized' }
@@ -446,8 +446,16 @@ export const actions: Actions = {
 			};
 		}
 
-		// Start with the current URL if next and previous are not provided
-		let url: string = next || previous || event.url.toString();
+		// Start with the provided URL or default to the filtered adventures endpoint
+		let url: string = next || previous || `${serverEndpoint}/api/adventures/filtered`;
+
+		// Extract the path and query parameters after '/api'
+		const apiIndex = url.indexOf('/api');
+		if (apiIndex !== -1) {
+			url = `${serverEndpoint}${url.slice(apiIndex)}`;
+		} else {
+			url = `${serverEndpoint}/api/adventures/filtered`;
+		}
 
 		// Replace or add the page number in the URL
 		if (url.includes('page=')) {
@@ -457,8 +465,6 @@ export const actions: Actions = {
 			url += url.includes('?') ? '&' : '?';
 			url += `page=${page}`;
 		}
-
-		console.log('CHANGE PAGE' + url);
 
 		try {
 			const response = await fetch(url, {
