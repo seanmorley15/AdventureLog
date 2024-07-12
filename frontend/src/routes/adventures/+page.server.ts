@@ -449,8 +449,8 @@ export const actions: Actions = {
 		// Start with the provided URL or default to the filtered adventures endpoint
 		let url: string = next || previous || '/api/adventures/filtered';
 
-		// Extract the path starting from '/api'
-		const apiIndex = url.indexOf('/api');
+		// Extract the path starting from '/api/adventures'
+		const apiIndex = url.indexOf('/api/adventures');
 		if (apiIndex !== -1) {
 			url = url.slice(apiIndex);
 		} else {
