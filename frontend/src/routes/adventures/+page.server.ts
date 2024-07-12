@@ -442,12 +442,6 @@ export const actions: Actions = {
 		// Start with the current URL if next and previous are not provided
 		let url: string = next || previous || event.url.toString();
 
-		let index = url.indexOf('/api');
-		let newUrl = url.substring(index);
-		console.log('NEW URL' + newUrl);
-		url = serverEndpoint + newUrl;
-		console.log('URL' + url);
-
 		// Replace or add the page number in the URL
 		if (url.includes('page=')) {
 			url = url.replace(/page=\d+/, `page=${page}`);
