@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure } from '$lib/types';
 
-import type { Actions } from '@sveltejs/kit';
+import type { Actions, RequestEvent } from '@sveltejs/kit';
 import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 
@@ -13,32 +13,38 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
+		let next = null;
+		let previous = null;
+		let count = 0;
 		let adventures: Adventure[] = [];
-		let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/visited/`, {
-			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+		let initialFetch = await fetch(
+			`${serverEndpoint}/api/adventures/filtered?types=visited,planned`,
+			{
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				}
 			}
-		});
-		if (!visitedFetch.ok) {
+		);
+		if (!initialFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
 		} else {
-			let visited = (await visitedFetch.json()) as Adventure[];
+			let res = await initialFetch.json();
+			let visited = res.results as Adventure[];
+			next = res.next;
+			previous = res.previous;
+			count = res.count;
 			adventures = [...adventures, ...visited];
 		}
-		let plannedFetch = await fetch(`${serverEndpoint}/api/adventures/planned/`, {
-			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+
+		return {
+			props: {
+				adventures,
+				next,
+				previous,
+				count
 			}
-		});
-		if (!plannedFetch.ok) {
-			console.error('Failed to fetch visited adventures');
-			return redirect(302, '/login');
-		} else {
-			let planned = (await plannedFetch.json()) as Adventure[];
-			adventures = [...adventures, ...planned];
-		}
-		return { adventures } as { adventures: Adventure[] };
+		};
 	}
 }) satisfies PageServerLoad;
 
@@ -366,49 +372,123 @@ export const actions: Actions = {
 			};
 		}
 
+		let filterString = '';
 		if (visited) {
-			let visitedFetch = await fetch(`${serverEndpoint}/api/adventures/visited/`, {
-				headers: {
-					Cookie: `${event.cookies.get('auth')}`
-				}
-			});
-			if (!visitedFetch.ok) {
-				console.error('Failed to fetch visited adventures');
-				return redirect(302, '/login');
-			} else {
-				let visited = (await visitedFetch.json()) as Adventure[];
-				adventures = [...adventures, ...visited];
-			}
+			filterString += 'visited';
 		}
 		if (planned) {
-			let plannedFetch = await fetch(`${serverEndpoint}/api/adventures/planned/`, {
-				headers: {
-					Cookie: `${event.cookies.get('auth')}`
-				}
-			});
-			if (!plannedFetch.ok) {
-				console.error('Failed to fetch visited adventures');
-				return redirect(302, '/login');
-			} else {
-				let planned = (await plannedFetch.json()) as Adventure[];
-				adventures = [...adventures, ...planned];
+			if (filterString) {
+				filterString += ',';
 			}
+			filterString += 'planned';
 		}
 		if (featured) {
-			let featuredFetch = await fetch(`${serverEndpoint}/api/adventures/featured/`, {
+			if (filterString) {
+				filterString += ',';
+			}
+			filterString += 'featured';
+		}
+		if (!filterString) {
+			filterString = '';
+		}
+
+		let next = null;
+		let previous = null;
+		let count = 0;
+
+		console.log(filterString);
+
+		let visitedFetch = await fetch(
+			`${serverEndpoint}/api/adventures/filtered?types=${filterString}`,
+			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`
 				}
-			});
-			if (!featuredFetch.ok) {
-				console.error('Failed to fetch visited adventures');
-				return redirect(302, '/login');
-			} else {
-				let featured = (await featuredFetch.json()) as Adventure[];
-				adventures = [...adventures, ...featured];
 			}
+		);
+		if (!visitedFetch.ok) {
+			console.error('Failed to fetch visited adventures');
+			return redirect(302, '/login');
+		} else {
+			let res = await visitedFetch.json();
+			let visited = res.results as Adventure[];
+			next = res.next;
+			previous = res.previous;
+			count = res.count;
+			adventures = [...adventures, ...visited];
+			console.log(next, previous, count);
 		}
-		// console.log(adventures);
-		return adventures as Adventure[];
+
+		return {
+			adventures,
+			next,
+			previous,
+			count
+		};
+	},
+	changePage: async (event) => {
+		const formData = await event.request.formData();
+		const next = formData.get('next') as string;
+		const previous = formData.get('previous') as string;
+		const page = formData.get('page') as string;
+
+		if (!page) {
+			return {
+				status: 400,
+				body: { error: 'Missing required fields' }
+			};
+		}
+
+		// Start with the current URL if next and previous are not provided
+		let url: string = next || previous || event.url.toString();
+
+		let index = url.indexOf('/api');
+		let newUrl = url.substring(index);
+		console.log('NEW URL' + newUrl);
+		url = serverEndpoint + newUrl;
+		console.log('URL' + url);
+
+		// Replace or add the page number in the URL
+		if (url.includes('page=')) {
+			url = url.replace(/page=\d+/, `page=${page}`);
+		} else {
+			// If 'page=' is not in the URL, add it
+			url += url.includes('?') ? '&' : '?';
+			url += `page=${page}`;
+		}
+
+		try {
+			const response = await fetch(url, {
+				headers: {
+					'Content-Type': 'application/json',
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			let adventures = data.results as Adventure[];
+			let next = data.next;
+			let previous = data.previous;
+			let count = data.count;
+
+			return {
+				status: 200,
+				body: {
+					adventures,
+					next,
+					previous,
+					count
+				}
+			};
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to fetch data' }
+			};
+		}
 	}
 };

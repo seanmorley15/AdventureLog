@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, deserialize } from '$app/forms';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
@@ -11,12 +11,32 @@
 	export let data: any;
 	console.log(data);
 
-	let adventures: Adventure[] = data.adventures || [];
+	let adventures: Adventure[] = data.props.adventures || [];
 
 	let currentSort = { attribute: 'name', order: 'asc' };
 
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
+
+	let resultsPerPage: number = 10;
+
+	let next: string | null = data.props.next || null;
+	let previous: string | null = data.props.previous || null;
+	let count = data.props.count || 0;
+	let totalPages = Math.ceil(count / resultsPerPage);
+
+	function handleChangePage() {
+		return async ({ result }: any) => {
+			if (result.type === 'success') {
+				console.log(result.data);
+				adventures = result.data.body.adventures as Adventure[];
+				next = result.data.body.next;
+				previous = result.data.body.previous;
+				count = result.data.body.count;
+				totalPages = Math.ceil(count / resultsPerPage);
+			}
+		};
+	}
 
 	function handleSubmit() {
 		return async ({ result, update }: any) => {
@@ -27,8 +47,12 @@
 			if (result.type === 'success') {
 				if (result.data) {
 					// console.log(result.data);
-					adventures = result.data as Adventure[];
-					sort(currentSort);
+					adventures = result.data.adventures as Adventure[];
+					next = result.data.next;
+					previous = result.data.previous;
+					count = result.data.count;
+					totalPages = Math.ceil(count / resultsPerPage);
+					console.log(next);
 				}
 			}
 		};
@@ -39,9 +63,9 @@
 		currentSort.order = order;
 		if (attribute === 'name') {
 			if (order === 'asc') {
-				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
-			} else {
 				adventures = adventures.sort((a, b) => b.name.localeCompare(a.name));
+			} else {
+				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
 			}
 		}
 	}
@@ -140,6 +164,7 @@
 	<div class="drawer-content">
 		<!-- Page content -->
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
+		<p class="text-center">This search returned {count} results.</p>
 		{#if adventures.length === 0}
 			<NotFound />
 		{/if}
@@ -159,6 +184,22 @@
 						on:edit={editAdventure}
 					/>
 				{/each}
+			</div>
+			<div class="join grid grid-cols-2">
+				<div class="join grid grid-cols-2">
+					{#if next || previous}
+						<div class="join">
+							{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+								<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+									<input type="hidden" name="page" value={page} />
+									<input type="hidden" name="next" value={next} />
+									<input type="hidden" name="previous" value={previous} />
+									<button class="join-item btn">{page}</button>
+								</form>
+							{/each}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>

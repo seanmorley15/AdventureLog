@@ -34,8 +34,8 @@ export const actions: Actions = {
 			}
 		});
 		if (res.ok) {
-			cookies.delete('auth', { path: '/' });
-			cookies.delete('refresh', { path: '/' });
+			cookies.delete('auth', { path: '/', secure: false });
+			cookies.delete('refresh', { path: '/', secure: false });
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');

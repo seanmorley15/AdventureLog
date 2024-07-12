@@ -60,13 +60,15 @@ export const actions: Actions = {
 				httpOnly: true,
 				sameSite: 'lax',
 				expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-				path: '/'
+				path: '/',
+				secure: false
 			});
 			event.cookies.set('refresh', refreshToken, {
 				httpOnly: true,
 				sameSite: 'lax',
 				expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-				path: '/'
+				path: '/',
+				secure: false
 			});
 
 			return redirect(302, '/');
