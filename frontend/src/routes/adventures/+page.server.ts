@@ -466,6 +466,9 @@ export const actions: Actions = {
 			url += `page=${page}`;
 		}
 
+		console.log(url);
+		console.log(serverEndpoint);
+
 		try {
 			const response = await fetch(url, {
 				headers: {
