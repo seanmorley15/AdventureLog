@@ -1,5 +1,6 @@
 from rest_framework.decorators import action
 from rest_framework import viewsets
+from django.db.models.functions import Lower
 from rest_framework.response import Response
 from .models import Adventure, Trip
 from worldtravel.models import VisitedRegion, Region, Country
@@ -26,10 +27,13 @@ class AdventureViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
     def get_queryset(self):
-        return Adventure.objects.filter(
+        lower_name = Lower('name')
+        queryset = Adventure.objects.annotate(
+        ).filter(
             Q(is_public=True) | Q(user_id=self.request.user.id)
-        )
-
+        ).order_by(lower_name)  # Sort by the annotated lowercase name
+        return queryset
+    
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
 
@@ -52,7 +56,10 @@ class AdventureViewSet(viewsets.ModelViewSet):
                 queryset |= Adventure.objects.filter(
                     type='featured', is_public=True, trip=None)
 
-        return self.paginate_and_respond(queryset, request)
+        lower_name = Lower('name')
+        queryset = queryset.order_by(lower_name)
+        adventures = self.paginate_and_respond(queryset, request)
+        return adventures
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
