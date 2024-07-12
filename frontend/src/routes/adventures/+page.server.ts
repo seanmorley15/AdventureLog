@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure } from '$lib/types';
 
-import type { Actions } from '@sveltejs/kit';
+import type { Actions, RequestEvent } from '@sveltejs/kit';
 import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 
@@ -41,7 +41,8 @@ export const load = (async (event) => {
 			props: {
 				adventures,
 				next,
-				previous
+				previous,
+				count
 			}
 		};
 	}
@@ -395,6 +396,8 @@ export const actions: Actions = {
 		let previous = null;
 		let count = 0;
 
+		console.log(filterString);
+
 		let visitedFetch = await fetch(
 			`${serverEndpoint}/api/adventures/filtered?types=${filterString}`,
 			{
@@ -413,6 +416,7 @@ export const actions: Actions = {
 			previous = res.previous;
 			count = res.count;
 			adventures = [...adventures, ...visited];
+			console.log(next, previous, count);
 		}
 
 		return {
@@ -421,5 +425,52 @@ export const actions: Actions = {
 			previous,
 			count
 		};
+	},
+	changePage: async (event) => {
+		const formData = await event.request.formData();
+		const url = formData.get('url');
+
+		console.log('Received URL:', url);
+
+		if (!url) {
+			return {
+				status: 400,
+				body: { error: 'URL is required' }
+			};
+		}
+
+		try {
+			const response = await fetch(url.toString(), {
+				headers: {
+					'Content-Type': 'application/json',
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`);
+			}
+			const data = await response.json();
+			let adventures = data.results as Adventure[];
+			let next = data.next;
+			let previous = data.previous;
+			let count = data.count;
+
+			return {
+				status: 200,
+				body: {
+					adventures,
+					next,
+					previous,
+					count
+				}
+			};
+		} catch (error) {
+			console.error('Error fetching data:', error);
+			return {
+				status: 500,
+				body: { error: 'Failed to fetch data' }
+			};
+		}
 	}
 };

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
+	import { enhance, deserialize } from '$app/forms';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
@@ -18,25 +18,20 @@
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
-	let next: string | null = null;
-	let previous: string | null = null;
-	let count = 0;
+	let next: string | null = data.props.next || null;
+	let previous: string | null = data.props.previous || null;
+	let count = data.props.count || 0;
 
-	async function changePage(direction: string) {
-		let url: string = '';
-		if (direction === 'next' && next) {
-			url = next;
-		} else if (direction === 'previous' && previous) {
-			url = previous;
-		} else {
-			return;
-		}
-		let res = await fetch(url);
-		let result = await res.json();
-		adventures = result.results as Adventure[];
-		next = result.next;
-		previous = result.previous;
-		count = result.count;
+	function handleChangePage() {
+		return async ({ result }: any) => {
+			if (result.type === 'success') {
+				console.log(result.data);
+				adventures = result.data.body.adventures as Adventure[];
+				next = result.data.body.next;
+				previous = result.data.body.previous;
+				count = result.data.body.count;
+			}
+		};
 	}
 
 	function handleSubmit() {
@@ -52,7 +47,7 @@
 					next = result.data.next;
 					previous = result.data.previous;
 					count = result.data.count;
-					// sort(currentSort);
+					console.log(next);
 				}
 			}
 		};
@@ -186,15 +181,20 @@
 				{/each}
 			</div>
 			<div class="join grid grid-cols-2">
-				{#if previous}
-					<button class="join-item btn btn-outline" on:click={() => changePage('previous')}
-						>Previous page</button
-					>
-				{/if}
-				{#if next}
-					<button class="join-item btn btn-outline" on:click={() => changePage('next')}>Next</button
-					>
-				{/if}
+				<div class="join grid grid-cols-2">
+					{#if previous}
+						<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+							<input type="hidden" name="url" value={previous} />
+							<button class="join-item btn btn-outline" type="submit">Previous page</button>
+						</form>
+					{/if}
+					{#if next}
+						<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+							<input type="hidden" name="url" value={next} />
+							<button class="join-item btn btn-outline" type="submit">Next page</button>
+						</form>
+					{/if}
+				</div>
 			</div>
 		</div>
 	</div>
