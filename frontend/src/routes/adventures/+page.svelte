@@ -18,9 +18,12 @@
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
+	let resultsPerPage: number = 10;
+
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
+	let totalPages = Math.ceil(count / resultsPerPage);
 
 	function handleChangePage() {
 		return async ({ result }: any) => {
@@ -30,6 +33,7 @@
 				next = result.data.body.next;
 				previous = result.data.body.previous;
 				count = result.data.body.count;
+				totalPages = Math.ceil(count / resultsPerPage);
 			}
 		};
 	}
@@ -47,6 +51,7 @@
 					next = result.data.next;
 					previous = result.data.previous;
 					count = result.data.count;
+					totalPages = Math.ceil(count / resultsPerPage);
 					console.log(next);
 				}
 			}
@@ -182,17 +187,17 @@
 			</div>
 			<div class="join grid grid-cols-2">
 				<div class="join grid grid-cols-2">
-					{#if previous}
-						<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-							<input type="hidden" name="url" value={previous} />
-							<button class="join-item btn btn-outline" type="submit">Previous page</button>
-						</form>
-					{/if}
-					{#if next}
-						<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-							<input type="hidden" name="url" value={next} />
-							<button class="join-item btn btn-outline" type="submit">Next page</button>
-						</form>
+					{#if next || previous}
+						<div class="join">
+							{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+								<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+									<input type="hidden" name="page" value={page} />
+									<input type="hidden" name="next" value={next} />
+									<input type="hidden" name="previous" value={previous} />
+									<button class="join-item btn">{page}</button>
+								</form>
+							{/each}
+						</div>
 					{/if}
 				</div>
 			</div>

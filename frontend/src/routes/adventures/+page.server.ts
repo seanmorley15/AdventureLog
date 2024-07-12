@@ -428,19 +428,37 @@ export const actions: Actions = {
 	},
 	changePage: async (event) => {
 		const formData = await event.request.formData();
-		const url = formData.get('url');
+		const next = formData.get('next') as string;
+		const previous = formData.get('previous') as string;
+		const page = formData.get('page') as string;
 
-		console.log('Received URL:', url);
-
-		if (!url) {
+		if (!page) {
 			return {
 				status: 400,
-				body: { error: 'URL is required' }
+				body: { error: 'Missing required fields' }
 			};
 		}
 
+		// Start with the current URL if next and previous are not provided
+		let url: string = next || previous || event.url.toString();
+
+		let index = url.indexOf('/api');
+		let newUrl = url.substring(index);
+		console.log('NEW URL' + newUrl);
+		url = serverEndpoint + newUrl;
+		console.log('URL' + url);
+
+		// Replace or add the page number in the URL
+		if (url.includes('page=')) {
+			url = url.replace(/page=\d+/, `page=${page}`);
+		} else {
+			// If 'page=' is not in the URL, add it
+			url += url.includes('?') ? '&' : '?';
+			url += `page=${page}`;
+		}
+
 		try {
-			const response = await fetch(url.toString(), {
+			const response = await fetch(url, {
 				headers: {
 					'Content-Type': 'application/json',
 					Cookie: `${event.cookies.get('auth')}`
