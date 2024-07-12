@@ -432,6 +432,13 @@ export const actions: Actions = {
 		const previous = formData.get('previous') as string;
 		const page = formData.get('page') as string;
 
+		if (!event.locals.user) {
+			return {
+				status: 401,
+				body: { message: 'Unauthorized' }
+			};
+		}
+
 		if (!page) {
 			return {
 				status: 400,
@@ -439,8 +446,14 @@ export const actions: Actions = {
 			};
 		}
 
-		// Start with the current URL if next and previous are not provided
-		let url: string = next || previous || event.url.toString();
+		// Start with the provided URL or default to the filtered adventures endpoint
+		let url: string = next || previous || `${serverEndpoint}/api/adventures/filtered`;
+
+		// Extract the path and query parameters
+		const urlParts = url.split('/api');
+		if (urlParts.length > 1) {
+			url = `${serverEndpoint}/api${urlParts[1]}`;
+		}
 
 		// Replace or add the page number in the URL
 		if (url.includes('page=')) {
