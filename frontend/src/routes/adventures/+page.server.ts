@@ -447,14 +447,14 @@ export const actions: Actions = {
 		}
 
 		// Start with the provided URL or default to the filtered adventures endpoint
-		let url: string = next || previous || `${serverEndpoint}/api/adventures/filtered`;
+		let url: string = next || previous || '/api/adventures/filtered';
 
-		// Extract the path and query parameters after '/api'
+		// Extract the path starting from '/api'
 		const apiIndex = url.indexOf('/api');
 		if (apiIndex !== -1) {
-			url = `${serverEndpoint}${url.slice(apiIndex)}`;
+			url = url.slice(apiIndex);
 		} else {
-			url = `${serverEndpoint}/api/adventures/filtered`;
+			url = '/api/adventures/filtered';
 		}
 
 		// Replace or add the page number in the URL
@@ -466,11 +466,12 @@ export const actions: Actions = {
 			url += `page=${page}`;
 		}
 
-		console.log(url);
+		const fullUrl = `${serverEndpoint}${url}`;
+		console.log(fullUrl);
 		console.log(serverEndpoint);
 
 		try {
-			const response = await fetch(url, {
+			const response = await fetch(fullUrl, {
 				headers: {
 					'Content-Type': 'application/json',
 					Cookie: `${event.cookies.get('auth')}`
