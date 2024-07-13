@@ -493,7 +493,8 @@ export const actions: Actions = {
 					adventures,
 					next,
 					previous,
-					count
+					count,
+					page
 				}
 			};
 		} catch (error) {

@@ -30,7 +30,7 @@
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<p class="text-lg ml-4 font-bold">Hi, {user.first_name} {user.last_name}</p>
 		<li><button on:click={() => goto('/profile')}>Profile</button></li>
-		<li><button on:click={() => goto('/visited')}>My Log</button></li>
+		<li><button on:click={() => goto('/adventures')}>My Adventures</button></li>
 		<li><button on:click={() => goto('/settings')}>User Settings</button></li>
 		<form method="post">
 			<li><button formaction="/?/logout">Logout</button></li>

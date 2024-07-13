@@ -20,10 +20,13 @@
 
 	let resultsPerPage: number = 10;
 
+	let currentView: string = 'cards';
+
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
+	let currentPage: number = 1;
 
 	function handleChangePage() {
 		return async ({ result }: any) => {
@@ -33,6 +36,7 @@
 				next = result.data.body.next;
 				previous = result.data.body.previous;
 				count = result.data.body.count;
+				currentPage = result.data.body.page;
 				totalPages = Math.ceil(count / resultsPerPage);
 			}
 		};
@@ -52,6 +56,7 @@
 					previous = result.data.previous;
 					count = result.data.count;
 					totalPages = Math.ceil(count / resultsPerPage);
+
 					console.log(next);
 				}
 			}
@@ -175,31 +180,35 @@
 			>
 				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
 			</button>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each adventures as adventure}
-					<AdventureCard
-						type={adventure.type}
-						{adventure}
-						on:delete={deleteAdventure}
-						on:edit={editAdventure}
-					/>
-				{/each}
-			</div>
-			<div class="join grid grid-cols-2">
-				<div class="join grid grid-cols-2">
-					{#if next || previous}
-						<div class="join">
-							{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-								<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-									<input type="hidden" name="page" value={page} />
-									<input type="hidden" name="next" value={next} />
-									<input type="hidden" name="previous" value={previous} />
-									<button class="join-item btn">{page}</button>
-								</form>
-							{/each}
-						</div>
-					{/if}
+			{#if currentView == 'cards'}
+				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+					{#each adventures as adventure}
+						<AdventureCard
+							type={adventure.type}
+							{adventure}
+							on:delete={deleteAdventure}
+							on:edit={editAdventure}
+						/>
+					{/each}
 				</div>
+			{/if}
+			<div class="join flex items-center justify-center mt-4">
+				{#if next || previous}
+					<div class="join">
+						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+							<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+								<input type="hidden" name="page" value={page} />
+								<input type="hidden" name="next" value={next} />
+								<input type="hidden" name="previous" value={previous} />
+								{#if currentPage != page}
+									<button class="join-item btn btn-lg">{page}</button>
+								{:else}
+									<button class="join-item btn btn-lg btn-active">{page}</button>
+								{/if}
+							</form>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -261,6 +270,25 @@
 						on:click={() => sort({ attribute: 'name', order: 'desc' })}
 					/>
 				</form>
+				<div class="divider"></div>
+				<h3 class="text-center font-semibold text-lg mb-4">View</h3>
+				<div class="join">
+					<input
+						class="join-item btn-neutral btn"
+						type="radio"
+						name="options"
+						aria-label="Cards"
+						on:click={() => (currentView = 'cards')}
+						checked
+					/>
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="options"
+						aria-label="Table"
+						on:click={() => (currentView = 'table')}
+					/>
+				</div>
 			</div>
 		</ul>
 	</div>
