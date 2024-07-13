@@ -363,6 +363,11 @@ export const actions: Actions = {
 		const planned = formData.get('planned');
 		const featured = formData.get('featured');
 
+		const order_direction = formData.get('order_direction') as string;
+		const order_by = formData.get('order_by') as string;
+
+		console.log(order_direction, order_by);
+
 		let adventures: Adventure[] = [];
 
 		if (!event.locals.user) {
@@ -399,7 +404,7 @@ export const actions: Actions = {
 		console.log(filterString);
 
 		let visitedFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=${filterString}`,
+			`${serverEndpoint}/api/adventures/filtered?types=${filterString}&order_by=${order_by}&order_direction=${order_direction}`,
 			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`

@@ -252,22 +252,44 @@
 					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 					<div class="divider"></div>
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<label for="name-asc">Name ASC</label>
+					<p>Order Direction</p>
+					<label for="asc">Ascending</label>
 					<input
 						type="radio"
-						name="name"
-						id="name-asc"
+						name="order_direction"
+						id="asc"
 						class="radio radio-primary"
 						checked
-						on:click={() => sort({ attribute: 'name', order: 'asc' })}
+						value="asc"
 					/>
-					<label for="name-desc">Name DESC</label>
+					<label for="desc">Descending</label>
 					<input
 						type="radio"
-						name="name"
-						id="name-desc"
+						name="order_direction"
+						id="desc"
+						value="desc"
 						class="radio radio-primary"
-						on:click={() => sort({ attribute: 'name', order: 'desc' })}
+					/>
+					<br />
+					<p>Order By</p>
+					<label for="name">Name</label>
+					<input
+						type="radio"
+						name="order_by"
+						id="name"
+						class="radio radio-primary"
+						checked
+						value="name"
+					/>
+					<label for="date">Date</label>
+					<input type="radio" value="date" name="order_by" id="date" class="radio radio-primary" />
+					<label for="rating">Rating</label>
+					<input
+						type="radio"
+						value="rating"
+						name="order_by"
+						id="rating"
+						class="radio radio-primary"
 					/>
 				</form>
 				<div class="divider"></div>
