@@ -27,13 +27,37 @@ class AdventureViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
     pagination_class = StandardResultsSetPagination
 
+    def apply_sorting(self, queryset):
+        order_by = self.request.query_params.get('order_by', 'name')
+        order_direction = self.request.query_params.get('order_direction', 'asc')
+
+        valid_order_by = ['name', 'type', 'date', 'rating']
+        if order_by not in valid_order_by:
+            order_by = 'name'
+
+        if order_direction not in ['asc', 'desc']:
+            order_direction = 'asc'
+
+        # Apply case-insensitive sorting for the 'name' field
+        if order_by == 'name':
+            queryset = queryset.annotate(lower_name=Lower('name'))
+            ordering = 'lower_name'
+        else:
+            ordering = order_by
+
+        if order_direction == 'desc':
+            ordering = f'-{ordering}'
+
+        print(f"Ordering by: {ordering}")  # For debugging
+
+        return queryset.order_by(ordering)
+
     def get_queryset(self):
-        lower_name = Lower('name')
         queryset = Adventure.objects.annotate(
         ).filter(
             Q(is_public=True) | Q(user_id=self.request.user.id)
-        ).order_by(lower_name)  # Sort by the annotated lowercase name
-        return queryset
+        )
+        return self.apply_sorting(queryset)
     
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
@@ -57,10 +81,17 @@ class AdventureViewSet(viewsets.ModelViewSet):
                 queryset |= Adventure.objects.filter(
                     type='featured', is_public=True, trip=None)
 
-        lower_name = Lower('name')
-        queryset = queryset.order_by(lower_name)
+        queryset = self.apply_sorting(queryset)
         adventures = self.paginate_and_respond(queryset, request)
         return adventures
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = Adventure.objects.filter(user_id=request.user.id).exclude(type='featured')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
@@ -70,7 +101,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
             return paginator.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-
 class TripViewSet(viewsets.ModelViewSet):
     serializer_class = TripSerializer
     permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]

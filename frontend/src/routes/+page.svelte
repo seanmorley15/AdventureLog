@@ -40,7 +40,7 @@
 					</p>
 				</div>
 				<div class="flex flex-col gap-2 min-[400px]:flex-row">
-					<button on:click={() => goto('/visited')} class="btn btn-primary">
+					<button on:click={() => goto('/adventures')} class="btn btn-primary">
 						Go To AdventureLog
 					</button>
 				</div>

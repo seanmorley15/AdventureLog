@@ -20,10 +20,13 @@
 
 	let resultsPerPage: number = 10;
 
+	let currentView: string = 'cards';
+
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
+	let currentPage: number = 1;
 
 	function handleChangePage() {
 		return async ({ result }: any) => {
@@ -33,6 +36,7 @@
 				next = result.data.body.next;
 				previous = result.data.body.previous;
 				count = result.data.body.count;
+				currentPage = result.data.body.page;
 				totalPages = Math.ceil(count / resultsPerPage);
 			}
 		};
@@ -52,6 +56,8 @@
 					previous = result.data.previous;
 					count = result.data.count;
 					totalPages = Math.ceil(count / resultsPerPage);
+					currentPage = 1;
+
 					console.log(next);
 				}
 			}
@@ -175,31 +181,35 @@
 			>
 				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
 			</button>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each adventures as adventure}
-					<AdventureCard
-						type={adventure.type}
-						{adventure}
-						on:delete={deleteAdventure}
-						on:edit={editAdventure}
-					/>
-				{/each}
-			</div>
-			<div class="join grid grid-cols-2">
-				<div class="join grid grid-cols-2">
-					{#if next || previous}
-						<div class="join">
-							{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-								<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-									<input type="hidden" name="page" value={page} />
-									<input type="hidden" name="next" value={next} />
-									<input type="hidden" name="previous" value={previous} />
-									<button class="join-item btn">{page}</button>
-								</form>
-							{/each}
-						</div>
-					{/if}
+			{#if currentView == 'cards'}
+				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+					{#each adventures as adventure}
+						<AdventureCard
+							type={adventure.type}
+							{adventure}
+							on:delete={deleteAdventure}
+							on:edit={editAdventure}
+						/>
+					{/each}
 				</div>
+			{/if}
+			<div class="join flex items-center justify-center mt-4">
+				{#if next || previous}
+					<div class="join">
+						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+							<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
+								<input type="hidden" name="page" value={page} />
+								<input type="hidden" name="next" value={next} />
+								<input type="hidden" name="previous" value={previous} />
+								{#if currentPage != page}
+									<button class="join-item btn btn-lg">{page}</button>
+								{:else}
+									<button class="join-item btn btn-lg btn-active">{page}</button>
+								{/if}
+							</form>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		</div>
 	</div>
@@ -239,28 +249,68 @@
 							class="checkbox checkbox-primary"
 						/>
 					</label>
-
-					<button type="submit" class="btn btn-primary mt-4">Filter</button>
-					<div class="divider"></div>
+					<!-- <div class="divider"></div> -->
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<label for="name-asc">Name ASC</label>
+					<p class="text-md font-semibold mb-2">Order Direction</p>
+					<label for="asc">Ascending</label>
 					<input
 						type="radio"
-						name="name"
-						id="name-asc"
+						name="order_direction"
+						id="asc"
 						class="radio radio-primary"
 						checked
-						on:click={() => sort({ attribute: 'name', order: 'asc' })}
+						value="asc"
 					/>
-					<label for="name-desc">Name DESC</label>
+					<label for="desc">Descending</label>
 					<input
 						type="radio"
-						name="name"
-						id="name-desc"
+						name="order_direction"
+						id="desc"
+						value="desc"
 						class="radio radio-primary"
-						on:click={() => sort({ attribute: 'name', order: 'desc' })}
 					/>
+					<br />
+					<p class="text-md font-semibold mt-2 mb-2">Order By</p>
+					<label for="name">Name</label>
+					<input
+						type="radio"
+						name="order_by"
+						id="name"
+						class="radio radio-primary"
+						checked
+						value="name"
+					/>
+					<label for="date">Date</label>
+					<input type="radio" value="date" name="order_by" id="date" class="radio radio-primary" />
+					<label for="rating">Rating</label>
+					<input
+						type="radio"
+						value="rating"
+						name="order_by"
+						id="rating"
+						class="radio radio-primary"
+					/>
+					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 				</form>
+				<div class="divider"></div>
+				<h3 class="text-center font-semibold text-lg mb-4">View</h3>
+				<div class="join">
+					<input
+						class="join-item btn-neutral btn"
+						type="radio"
+						name="options"
+						aria-label="Cards"
+						on:click={() => (currentView = 'cards')}
+						checked
+					/>
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="options"
+						aria-label="Table"
+						on:click={() => (currentView = 'table')}
+					/>
+				</div>
 			</div>
 		</ul>
 	</div>
