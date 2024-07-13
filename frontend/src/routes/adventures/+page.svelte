@@ -56,6 +56,7 @@
 					previous = result.data.previous;
 					count = result.data.count;
 					totalPages = Math.ceil(count / resultsPerPage);
+					currentPage = 1;
 
 					console.log(next);
 				}
@@ -248,11 +249,9 @@
 							class="checkbox checkbox-primary"
 						/>
 					</label>
-
-					<button type="submit" class="btn btn-primary mt-4">Filter</button>
-					<div class="divider"></div>
+					<!-- <div class="divider"></div> -->
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<p>Order Direction</p>
+					<p class="text-md font-semibold mb-2">Order Direction</p>
 					<label for="asc">Ascending</label>
 					<input
 						type="radio"
@@ -271,7 +270,7 @@
 						class="radio radio-primary"
 					/>
 					<br />
-					<p>Order By</p>
+					<p class="text-md font-semibold mt-2 mb-2">Order By</p>
 					<label for="name">Name</label>
 					<input
 						type="radio"
@@ -291,6 +290,7 @@
 						id="rating"
 						class="radio radio-primary"
 					/>
+					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 				</form>
 				<div class="divider"></div>
 				<h3 class="text-center font-semibold text-lg mb-4">View</h3>

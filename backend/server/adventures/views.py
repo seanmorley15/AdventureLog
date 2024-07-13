@@ -90,8 +90,8 @@ class AdventureViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
         queryset = Adventure.objects.filter(user_id=request.user.id).exclude(type='featured')
-        queryset = self.apply_sorting(queryset)
-        return self.paginate_and_respond(queryset, request)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
