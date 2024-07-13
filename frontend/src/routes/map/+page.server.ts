@@ -8,7 +8,7 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		let visitedFetch = await fetch(`${endpoint}/api/adventures/`, {
+		let visitedFetch = await fetch(`${endpoint}/api/adventures/all/`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
 			}

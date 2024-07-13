@@ -61,6 +61,16 @@ class AdventureViewSet(viewsets.ModelViewSet):
         queryset = queryset.order_by(lower_name)
         adventures = self.paginate_and_respond(queryset, request)
         return adventures
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        # return error if user is not authenticated
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = Adventure.objects.filter(user_id=request.user.id).exclude(type='featured')
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+        
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
