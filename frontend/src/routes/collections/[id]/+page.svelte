@@ -8,6 +8,7 @@
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
+	import EditAdventure from '$lib/components/EditAdventure.svelte';
 
 	export let data: PageData;
 
@@ -53,6 +54,24 @@
 			}
 		}
 	}
+
+	let adventureToEdit: Adventure;
+	let isEditModalOpen: boolean = false;
+
+	function editAdventure(event: CustomEvent<Adventure>) {
+		adventureToEdit = event.detail;
+		isEditModalOpen = true;
+	}
+
+	function saveEdit(event: CustomEvent<Adventure>) {
+		adventures = adventures.map((adventure) => {
+			if (adventure.id === event.detail.id) {
+				return event.detail;
+			}
+			return adventure;
+		});
+		isEditModalOpen = false;
+	}
 </script>
 
 {#if isShowingCreateModal}
@@ -61,6 +80,14 @@
 			isShowingCreateModal = false;
 		}}
 		on:add={addAdventure}
+	/>
+{/if}
+
+{#if isEditModalOpen}
+	<EditAdventure
+		{adventureToEdit}
+		on:close={() => (isEditModalOpen = false)}
+		on:saveEdit={saveEdit}
 	/>
 {/if}
 
@@ -127,7 +154,12 @@
 	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
-			<AdventureCard on:delete={deleteAdventure} type={adventure.type} {adventure} />
+			<AdventureCard
+				on:edit={editAdventure}
+				on:delete={deleteAdventure}
+				type={adventure.type}
+				{adventure}
+			/>
 		{/each}
 	</div>
 

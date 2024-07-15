@@ -1,4 +1,5 @@
 import requests
+from django.db import transaction
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
@@ -149,6 +150,34 @@ class CollectionViewSet(viewsets.ModelViewSet):
         print(f"Ordering by: {ordering}")  # For debugging
 
         return queryset.order_by(ordering)
+    
+    # this make the is_public field of the collection cascade to the adventures
+    @transaction.atomic
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+
+        # Check if the 'is_public' field is present in the update data
+        if 'is_public' in serializer.validated_data:
+            new_public_status = serializer.validated_data['is_public']
+            
+            # Update associated adventures to match the collection's is_public status
+            Adventure.objects.filter(collection=instance).update(is_public=new_public_status)
+
+            # Log the action (optional)
+            action = "public" if new_public_status else "private"
+            print(f"Collection {instance.id} and its adventures were set to {action}")
+
+        self.perform_update(serializer)
+
+        if getattr(instance, '_prefetched_objects_cache', None):
+            # If 'prefetch_related' has been applied to a queryset, we need to
+            # forcibly invalidate the prefetch cache on the instance.
+            instance._prefetched_objects_cache = {}
+
+        return Response(serializer.data)
 
     def get_queryset(self):
         collections =  Collection.objects.filter(

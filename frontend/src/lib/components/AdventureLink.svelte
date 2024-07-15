@@ -35,6 +35,7 @@
 	}
 
 	function add(event: CustomEvent<Adventure>) {
+		adventures = adventures.filter((a) => a.id !== event.detail.id);
 		dispatch('add', event.detail);
 	}
 
@@ -48,12 +49,17 @@
 <dialog id="my_modal_1" class="modal">
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
 				<AdventureCard type="link" {adventure} on:link={add} />
 			{/each}
+			{#if adventures.length === 0}
+				<p class="text-center text-lg">
+					No adventures found that can be linked to this collection.
+				</p>
+			{/if}
 		</div>
 		<button class="btn btn-primary" on:click={close}>Close</button>
 	</div>
