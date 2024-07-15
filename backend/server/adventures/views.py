@@ -30,6 +30,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
+        include_collections = self.request.query_params.get('include_collections', 'false')
 
         valid_order_by = ['name', 'type', 'date', 'rating']
         if order_by not in valid_order_by:
@@ -49,6 +50,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
             ordering = f'-{ordering}'
 
         print(f"Ordering by: {ordering}")  # For debugging
+
+        if include_collections == 'false':
+            queryset = queryset.filter(collection = None)
 
         return queryset.order_by(ordering)
 
@@ -76,7 +80,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         for adventure_type in types:
             if adventure_type in ['visited', 'planned']:
                 queryset |= Adventure.objects.filter(
-                    type=adventure_type, user_id=request.user.id, collection=None)
+                    type=adventure_type, user_id=request.user.id)
 
         queryset = self.apply_sorting(queryset)
         adventures = self.paginate_and_respond(queryset, request)
@@ -86,8 +90,25 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def all(self, request):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        queryset = Adventure.objects.filter(user_id=request.user.id)
+        # include_collections = request.query_params.get('include_collections', 'false')
+        # if include_collections not in ['true', 'false']:
+        #     include_collections = 'false'
+
+        # if include_collections == 'true':
+        #     queryset = Adventure.objects.filter(
+        #         Q(is_public=True) | Q(user_id=request.user.id)
+        #     )
+        # else:
+        #     queryset = Adventure.objects.filter(
+        #         Q(is_public=True) | Q(user_id=request.user.id), collection=None
+        #     )
+        queryset = Adventure.objects.filter(
+            Q(is_public=True) | Q(user_id=request.user.id)
+        )
+        
+        queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
+       
         return Response(serializer.data)
 
     def paginate_and_respond(self, queryset, request):

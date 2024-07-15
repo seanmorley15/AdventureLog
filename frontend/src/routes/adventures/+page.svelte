@@ -281,6 +281,16 @@
 						id="rating"
 						class="radio radio-primary"
 					/>
+					<br />
+					<label class="label cursor-pointer">
+						<span class="label-text">Include Collection Adventures</span>
+						<input
+							type="checkbox"
+							name="include_collections"
+							id="include_collections"
+							class="checkbox checkbox-primary"
+						/>
+					</label>
 					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 				</form>
 				<div class="divider"></div>

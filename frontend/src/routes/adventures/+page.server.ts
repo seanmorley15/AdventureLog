@@ -362,6 +362,13 @@ export const actions: Actions = {
 		const visited = formData.get('visited');
 		const planned = formData.get('planned');
 
+		let include_collections = formData.get('include_collections') as string;
+
+		if (include_collections) {
+			include_collections = 'true';
+		} else {
+			include_collections = 'false';
+		}
 		const order_direction = formData.get('order_direction') as string;
 		const order_by = formData.get('order_by') as string;
 
@@ -397,7 +404,7 @@ export const actions: Actions = {
 		console.log(filterString);
 
 		let visitedFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=${filterString}&order_by=${order_by}&order_direction=${order_direction}`,
+			`${serverEndpoint}/api/adventures/filtered?types=${filterString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}`,
 			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`
@@ -502,5 +509,46 @@ export const actions: Actions = {
 				body: { error: 'Failed to fetch data' }
 			};
 		}
+	},
+	all: async (event) => {
+		if (!event.locals.user) {
+			return {
+				status: 401,
+				body: { message: 'Unauthorized' }
+			};
+		}
+
+		const formData = await event.request.formData();
+
+		let include_collections = formData.get('include_collections') as string;
+
+		if (include_collections !== 'true' && include_collections !== 'false') {
+			include_collections = 'false';
+		}
+
+		let adventures: Adventure[] = [];
+
+		let visitedFetch = await fetch(
+			`${serverEndpoint}/api/adventures/all/?include_collections=${include_collections}`,
+			{
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`,
+					'Content-Type': 'application/json'
+				}
+			}
+		);
+		if (!visitedFetch.ok) {
+			console.error('Failed to fetch all adventures');
+			return redirect(302, '/login');
+		} else {
+			console.log('Fetched all adventures');
+			let res = await visitedFetch.json();
+			console.log(res);
+			adventures = res as Adventure[];
+		}
+
+		return {
+			adventures
+		};
 	}
 };

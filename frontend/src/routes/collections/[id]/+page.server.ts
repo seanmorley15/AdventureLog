@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Adventure } from '$lib/types';
+import type { Adventure, Collection } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -19,7 +19,7 @@ export const load = (async (event) => {
 			}
 		};
 	} else {
-		let collection = (await request.json()) as Adventure;
+		let collection = (await request.json()) as Collection;
 
 		return {
 			props: {
@@ -71,18 +71,19 @@ export const actions: Actions = {
 			};
 		}
 
-		let res = await fetch(`${serverEndpoint}/api/adventures/${event.params.id}`, {
+		let res = await fetch(`${serverEndpoint}/api/collections/${event.params.id}`, {
 			method: 'DELETE',
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`,
 				'Content-Type': 'application/json'
 			}
 		});
+
 		console.log(res);
 		if (!res.ok) {
 			return {
 				status: res.status,
-				error: new Error('Failed to delete adventure')
+				error: new Error('Failed to delete collection')
 			};
 		} else {
 			return {

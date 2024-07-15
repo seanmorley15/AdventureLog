@@ -1,39 +1,64 @@
-<!-- <script lang="ts">
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import type { Adventure } from '$lib/types';
-
-	export let data;
-	console.log(data);
-	let adventure: Adventure | null = data.props.adventure;
-</script>
-
-{#if !adventure}
-	<p>Adventure not found</p>
-{:else}
-	<AdventureCard {adventure} type={adventure.type} />
-{/if} -->
-
 <script lang="ts">
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, Collection } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
 
+	import Plus from '~icons/mdi/plus';
+	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import AdventureLink from '$lib/components/AdventureLink.svelte';
+
 	export let data: PageData;
 
-	let adventure: Adventure;
+	let collection: Collection;
+
+	let adventures: Adventure[] = [];
 
 	let notFound: boolean = false;
+	let isShowingCreateModal: boolean = false;
 
 	onMount(() => {
 		if (data.props.adventure) {
-			adventure = data.props.adventure;
+			collection = data.props.adventure;
+			adventures = collection.adventures as Adventure[];
 		} else {
 			notFound = true;
 		}
 	});
+
+	async function addAdventure(event: CustomEvent<Adventure>) {
+		console.log(event.detail);
+		if (adventures.find((a) => a.id === event.detail.id)) {
+			return;
+		} else {
+			let adventure = event.detail;
+			let formData = new FormData();
+			formData.append('collection_id', collection.id.toString());
+
+			let res = await fetch(`/adventures/${adventure.id}?/addToCollection`, {
+				method: 'POST',
+				body: formData // Remove the Content-Type header
+			});
+
+			if (res.ok) {
+				console.log('Adventure added to collection');
+				adventures = [...adventures, adventure];
+			} else {
+				console.log('Error adding adventure to collection');
+			}
+		}
+	}
 </script>
+
+{#if isShowingCreateModal}
+	<AdventureLink
+		on:close={() => {
+			isShowingCreateModal = false;
+		}}
+		on:add={addAdventure}
+	/>
+{/if}
 
 {#if notFound}
 	<div
@@ -57,71 +82,52 @@
 	</div>
 {/if}
 
-{#if !adventure && !notFound}
+{#if !collection && !notFound}
 	<div class="flex justify-center items-center w-full mt-16">
 		<span class="loading loading-spinner w-24 h-24"></span>
 	</div>
 {/if}
-{#if adventure}
-	{#if adventure.name}
-		<h1 class="text-center font-extrabold text-4xl mb-2">{adventure.name}</h1>
-	{/if}
-	{#if adventure.location}
-		<p class="text-center text-2xl">
-			<iconify-icon icon="mdi:map-marker" class="text-xl -mb-0.5"
-			></iconify-icon>{adventure.location}
-		</p>
-	{/if}
-	{#if adventure.date}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">
-			Visited on: {adventure.date}
-		</p>
-	{/if}
-	{#if adventure.rating !== undefined && adventure.rating !== null}
-		<div class="flex justify-center items-center">
-			<div class="rating" aria-readonly="true">
-				{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-					<input
-						type="radio"
-						name="rating-1"
-						class="mask mask-star"
-						checked={star <= adventure.rating}
-						disabled
-					/>
-				{/each}
+{#if collection}
+	<div class="fixed bottom-4 right-4 z-[999]">
+		<div class="flex flex-row items-center justify-center gap-4">
+			<div class="dropdown dropdown-top dropdown-end">
+				<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
+					<Plus class="w-8 h-8" />
+				</div>
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+				<ul
+					tabindex="0"
+					class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
+				>
+					<p class="text-center font-bold text-lg">Link new...</p>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							isShowingCreateModal = true;
+						}}
+					>
+						Adventure</button
+					>
+
+					<!-- <button
+			class="btn btn-primary"
+			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
+		  > -->
+				</ul>
 			</div>
 		</div>
+	</div>
+	{#if collection.name}
+		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
 	{/if}
-	{#if adventure.description}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">{adventure.description}</p>
-	{/if}
-	{#if adventure.link}
-		<div class="flex justify-center items-center mt-4">
-			<a href={adventure.link} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-				Visit Website
-			</a>
-		</div>
-	{/if}
-	{#if adventure.activity_types && adventure.activity_types.length > 0}
-		<div class="flex justify-center items-center mt-4">
-			<p class="text-center text-lg">Activities:&nbsp</p>
-			<ul class="flex flex-wrap">
-				{#each adventure.activity_types as activity}
-					<div class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1">
-						{activity}
-					</div>
-				{/each}
-			</ul>
-		</div>
-	{/if}
-	{#if adventure.image}
-		<div class="flex content-center justify-center">
-			<!-- svelte-ignore a11y-img-redundant-alt -->
-			<img
-				src={adventure.image}
-				alt="Adventure Image"
-				class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
-			/>
-		</div>
+	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
+	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+		{#each adventures as adventure}
+			<AdventureCard type={adventure.type} {adventure} />
+		{/each}
+	</div>
+
+	{#if collection.description}
+		<p class="text-center text-lg mt-4 pl-16 pr-16">{collection.description}</p>
 	{/if}
 {/if}

@@ -66,6 +66,10 @@
 		};
 	}
 
+	function deleteCollection(event: CustomEvent<number>) {
+		collections = collections.filter((collection) => collection.id !== event.detail);
+	}
+
 	function sort({ attribute, order }: { attribute: string; order: string }) {
 		currentSort.attribute = attribute;
 		currentSort.order = order;
@@ -174,7 +178,7 @@
 			{#if currentView == 'cards'}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 					{#each collections as collection}
-						<CollectionCard {collection} />
+						<CollectionCard {collection} on:delete={deleteCollection} />
 					{/each}
 				</div>
 			{/if}
