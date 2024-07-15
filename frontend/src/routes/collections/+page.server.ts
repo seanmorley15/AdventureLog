@@ -129,164 +129,96 @@ export const actions: Actions = {
 
 		return { id, user_id };
 	},
-	// edit: async (event) => {
-	// 	const formData = await event.request.formData();
+	edit: async (event) => {
+		const formData = await event.request.formData();
 
-	// 	const adventureId = formData.get('adventureId') as string;
-	// 	const type = formData.get('type') as string;
-	// 	const name = formData.get('name') as string;
-	// 	const location = formData.get('location') as string | null;
-	// 	let date = (formData.get('date') as string | null) ?? null;
-	// 	const description = formData.get('description') as string | null;
-	// 	let activity_types = formData.get('activity_types')
-	// 		? (formData.get('activity_types') as string).split(',')
-	// 		: null;
-	// 	const rating = formData.get('rating') ? Number(formData.get('rating')) : null;
-	// 	let link = formData.get('link') as string | null;
-	// 	let latitude = formData.get('latitude') as string | null;
-	// 	let longitude = formData.get('longitude') as string | null;
-	// 	let is_public = formData.get('is_public') as string | null | boolean;
+		const collectionId = formData.get('adventureId') as string;
+		const name = formData.get('name') as string;
+		const description = formData.get('description') as string | null;
+		let is_public = formData.get('is_public') as string | null | boolean;
 
-	// 	if (is_public) {
-	// 		is_public = true;
-	// 	} else {
-	// 		is_public = false;
-	// 	}
+		if (is_public) {
+			is_public = true;
+		} else {
+			is_public = false;
+		}
 
-	// 	// check if latitude and longitude are valid
-	// 	if (latitude && longitude) {
-	// 		if (isNaN(Number(latitude)) || isNaN(Number(longitude))) {
-	// 			return {
-	// 				status: 400,
-	// 				body: { error: 'Invalid latitude or longitude' }
-	// 			};
-	// 		}
-	// 	}
+		if (!name) {
+			return {
+				status: 400,
+				body: { error: 'Missing name.' }
+			};
+		}
 
-	// 	// round latitude and longitude to 6 decimal places
-	// 	if (latitude) {
-	// 		latitude = Number(latitude).toFixed(6);
-	// 	}
-	// 	if (longitude) {
-	// 		longitude = Number(longitude).toFixed(6);
-	// 	}
+		const formDataToSend = new FormData();
+		formDataToSend.append('name', name);
+		formDataToSend.append('description', description || '');
+		formDataToSend.append('is_public', is_public.toString());
 
-	// 	const image = formData.get('image') as File;
+		let auth = event.cookies.get('auth');
 
-	// 	// console.log(activity_types);
+		if (!auth) {
+			const refresh = event.cookies.get('refresh');
+			if (!refresh) {
+				return {
+					status: 401,
+					body: { message: 'Unauthorized' }
+				};
+			}
+			let res = await tryRefreshToken(refresh);
+			if (res) {
+				auth = res;
+				event.cookies.set('auth', auth, {
+					httpOnly: true,
+					sameSite: 'lax',
+					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
+					path: '/'
+				});
+			} else {
+				return {
+					status: 401,
+					body: { message: 'Unauthorized' }
+				};
+			}
+		}
 
-	// 	if (!type || !name) {
-	// 		return {
-	// 			status: 400,
-	// 			body: { error: 'Missing required fields' }
-	// 		};
-	// 	}
+		if (!auth) {
+			return {
+				status: 401,
+				body: { message: 'Unauthorized' }
+			};
+		}
 
-	// 	if (date == null || date == '') {
-	// 		date = null;
-	// 	}
+		const csrfToken = await fetchCSRFToken();
 
-	// 	if (link) {
-	// 		link = checkLink(link);
-	// 	}
+		if (!csrfToken) {
+			return {
+				status: 500,
+				body: { message: 'Failed to fetch CSRF token' }
+			};
+		}
 
-	// 	const formDataToSend = new FormData();
-	// 	formDataToSend.append('type', type);
-	// 	formDataToSend.append('name', name);
-	// 	formDataToSend.append('location', location || '');
-	// 	formDataToSend.append('date', date || '');
-	// 	formDataToSend.append('description', description || '');
-	// 	formDataToSend.append('latitude', latitude || '');
-	// 	formDataToSend.append('longitude', longitude || '');
-	// 	formDataToSend.append('is_public', is_public.toString());
-	// 	if (activity_types) {
-	// 		// Filter out empty and duplicate activity types, then trim each activity type
-	// 		const cleanedActivityTypes = Array.from(
-	// 			new Set(
-	// 				activity_types
-	// 					.map((activity_type) => activity_type.trim())
-	// 					.filter((activity_type) => activity_type !== '' && activity_type !== ',')
-	// 			)
-	// 		);
+		const res = await fetch(`${serverEndpoint}/api/collections/${collectionId}/`, {
+			method: 'PATCH',
+			headers: {
+				'X-CSRFToken': csrfToken,
+				Cookie: auth
+			},
+			body: formDataToSend
+		});
 
-	// 		// Append each cleaned activity type to formDataToSend
-	// 		cleanedActivityTypes.forEach((activity_type) => {
-	// 			formDataToSend.append('activity_types', activity_type);
-	// 		});
-	// 	}
-	// 	formDataToSend.append('rating', rating ? rating.toString() : '');
-	// 	formDataToSend.append('link', link || '');
+		if (!res.ok) {
+			const errorBody = await res.json();
+			return {
+				status: res.status,
+				body: { error: errorBody }
+			};
+		}
 
-	// 	if (image && image.size > 0) {
-	// 		formDataToSend.append('image', image);
-	// 	}
-
-	// 	let auth = event.cookies.get('auth');
-
-	// 	if (!auth) {
-	// 		const refresh = event.cookies.get('refresh');
-	// 		if (!refresh) {
-	// 			return {
-	// 				status: 401,
-	// 				body: { message: 'Unauthorized' }
-	// 			};
-	// 		}
-	// 		let res = await tryRefreshToken(refresh);
-	// 		if (res) {
-	// 			auth = res;
-	// 			event.cookies.set('auth', auth, {
-	// 				httpOnly: true,
-	// 				sameSite: 'lax',
-	// 				expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-	// 				path: '/'
-	// 			});
-	// 		} else {
-	// 			return {
-	// 				status: 401,
-	// 				body: { message: 'Unauthorized' }
-	// 			};
-	// 		}
-	// 	}
-
-	// 	if (!auth) {
-	// 		return {
-	// 			status: 401,
-	// 			body: { message: 'Unauthorized' }
-	// 		};
-	// 	}
-
-	// 	const csrfToken = await fetchCSRFToken();
-
-	// 	if (!csrfToken) {
-	// 		return {
-	// 			status: 500,
-	// 			body: { message: 'Failed to fetch CSRF token' }
-	// 		};
-	// 	}
-
-	// 	const res = await fetch(`${serverEndpoint}/api/adventures/${adventureId}/`, {
-	// 		method: 'PATCH',
-	// 		headers: {
-	// 			'X-CSRFToken': csrfToken,
-	// 			Cookie: auth
-	// 		},
-	// 		body: formDataToSend
-	// 	});
-
-	// 	if (!res.ok) {
-	// 		const errorBody = await res.json();
-	// 		return {
-	// 			status: res.status,
-	// 			body: { error: errorBody }
-	// 		};
-	// 	}
-
-	// 	let adventure = await res.json();
-
-	// 	let image_url = adventure.image;
-	// 	let link_url = adventure.link;
-	// 	return { image_url, link_url };
-	// },
+		return {
+			status: 200
+		};
+	},
 	get: async (event) => {
 		if (!event.locals.user) {
 		}

@@ -49,6 +49,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
 				<AdventureCard type="link" {adventure} on:link={add} />

@@ -27,6 +27,10 @@
 		}
 	});
 
+	function deleteAdventure(event: CustomEvent<number>) {
+		adventures = adventures.filter((a) => a.id !== event.detail);
+	}
+
 	async function addAdventure(event: CustomEvent<Adventure>) {
 		console.log(event.detail);
 		if (adventures.find((a) => a.id === event.detail.id)) {
@@ -123,7 +127,7 @@
 	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
-			<AdventureCard type={adventure.type} {adventure} />
+			<AdventureCard on:delete={deleteAdventure} type={adventure.type} {adventure} />
 		{/each}
 	</div>
 

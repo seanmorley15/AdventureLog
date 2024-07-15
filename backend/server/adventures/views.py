@@ -30,7 +30,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
-        include_collections = self.request.query_params.get('include_collections', 'false')
+        include_collections = self.request.query_params.get('include_collections', 'true')
 
         valid_order_by = ['name', 'type', 'date', 'rating']
         if order_by not in valid_order_by:

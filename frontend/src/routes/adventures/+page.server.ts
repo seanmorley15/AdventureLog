@@ -18,7 +18,7 @@ export const load = (async (event) => {
 		let count = 0;
 		let adventures: Adventure[] = [];
 		let initialFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=visited,planned`,
+			`${serverEndpoint}/api/adventures/filtered?types=visited,planned&include_collections=false`,
 			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`
@@ -369,6 +369,7 @@ export const actions: Actions = {
 		} else {
 			include_collections = 'false';
 		}
+
 		const order_direction = formData.get('order_direction') as string;
 		const order_by = formData.get('order_by') as string;
 

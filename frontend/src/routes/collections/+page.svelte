@@ -3,6 +3,7 @@
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import EditCollection from '$lib/components/EditCollection.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
 	import NewCollection from '$lib/components/NewCollection.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
@@ -94,7 +95,7 @@
 		isShowingCreateModal = false;
 	}
 
-	function editAdventure(event: CustomEvent<Collection>) {
+	function editCollection(event: CustomEvent<Collection>) {
 		collectionToEdit = event.detail;
 		isEditModalOpen = true;
 	}
@@ -120,13 +121,13 @@
 	<NewCollection on:create={createAdventure} on:close={() => (isShowingCreateModal = false)} />
 {/if}
 
-<!-- {#if isEditModalOpen}
-	<EditAdventure
-		adventureToEdit={collectionToEdit}
+{#if isEditModalOpen}
+	<EditCollection
+		{collectionToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
 	/>
-{/if} -->
+{/if}
 
 <div class="fixed bottom-4 right-4 z-[999]">
 	<div class="flex flex-row items-center justify-center gap-4">
@@ -178,7 +179,7 @@
 			{#if currentView == 'cards'}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 					{#each collections as collection}
-						<CollectionCard {collection} on:delete={deleteCollection} />
+						<CollectionCard {collection} on:delete={deleteCollection} on:edit={editCollection} />
 					{/each}
 				</div>
 			{/if}
