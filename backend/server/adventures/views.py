@@ -11,6 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
 from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -58,11 +60,25 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
-        queryset = Adventure.objects.annotate(
-        ).filter(
-            Q(is_public=True) | Q(user_id=self.request.user.id)
-        )
-        return self.apply_sorting(queryset)
+        if self.action == 'retrieve':
+            # For individual adventure retrieval, include public adventures
+            return Adventure.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id)
+            )
+        else:
+            # For other actions, only include user's own adventures
+            return Adventure.objects.filter(user_id=self.request.user.id)
+
+    def list(self, request, *args, **kwargs):
+        # Prevent listing all adventures
+        return Response({"detail": "Listing all adventures is not allowed."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    def retrieve(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        adventure = get_object_or_404(queryset, pk=kwargs['pk'])
+        serializer = self.get_serializer(adventure)
+        return Response(serializer.data)
     
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
