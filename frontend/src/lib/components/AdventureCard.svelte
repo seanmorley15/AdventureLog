@@ -100,12 +100,6 @@
 					><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
-			{#if type == 'featured'}
-				<!-- TODO: option to add to visited or featured -->
-				<button class="btn btn-primary" on:click={() => goto(`/adventures/${adventure.id}`)}
-					><Launch class="w-6 h-6" /></button
-				>
-			{/if}
 		</div>
 	</div>
 </div>

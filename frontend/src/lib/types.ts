@@ -54,13 +54,11 @@ export type Point = {
 	name: string;
 };
 
-export type Trip = {
+export type Collection = {
 	id: number;
 	user_id: number;
 	name: string;
-	type: string;
-	location: string;
-	date: string;
+	description: string;
 	is_public: boolean;
 	adventures: Adventure[];
 };

@@ -7,12 +7,12 @@
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 
 	import { goto } from '$app/navigation';
-	import type { Trip } from '$lib/types';
+	import type { Collection } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	//   export let type: String;
 
-	export let trip: Trip;
+	export let collection: Collection;
 
 	// function remove() {
 	//   dispatch("remove", trip.id);
@@ -33,23 +33,11 @@
 	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
 >
 	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{trip.name}</h2>
-		{#if trip.date && trip.date !== ''}
-			<div class="inline-flex items-center">
-				<Calendar class="w-5 h-5 mr-1" />
-				<p class="ml-1">{trip.date}</p>
-			</div>
-		{/if}
-		{#if trip.location && trip.location !== ''}
-			<div class="inline-flex items-center">
-				<MapMarker class="w-5 h-5 mr-1" />
-				<p class="ml-1">{trip.location}</p>
-			</div>
-		{/if}
-
+		<h2 class="card-title overflow-ellipsis">{collection.name}</h2>
+		<p>{collection.adventures.length} Adventures</p>
 		<div class="card-actions justify-end">
 			<button class="btn btn-secondary"><TrashCanOutline class="w-5 h-5 mr-1" /></button>
-			<button class="btn btn-primary" on:click={() => goto(`/trip/${trip.id}`)}
+			<button class="btn btn-primary" on:click={() => goto(`/trip/${collection.id}`)}
 				><Launch class="w-5 h-5 mr-1" /></button
 			>
 		</div>

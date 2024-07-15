@@ -3,7 +3,6 @@
 
 	let stats: {
 		country_count: number;
-		featured_count: number;
 		planned_count: number;
 		total_regions: number;
 		trips_count: number;

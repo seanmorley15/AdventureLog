@@ -361,7 +361,6 @@ export const actions: Actions = {
 		const formData = await event.request.formData();
 		const visited = formData.get('visited');
 		const planned = formData.get('planned');
-		const featured = formData.get('featured');
 
 		const order_direction = formData.get('order_direction') as string;
 		const order_by = formData.get('order_by') as string;
@@ -386,12 +385,6 @@ export const actions: Actions = {
 				filterString += ',';
 			}
 			filterString += 'planned';
-		}
-		if (featured) {
-			if (filterString) {
-				filterString += ',';
-			}
-			filterString += 'featured';
 		}
 		if (!filterString) {
 			filterString = '';
