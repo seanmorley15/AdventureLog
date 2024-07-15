@@ -246,17 +246,19 @@
 						Location</button
 					>
 				</div>
-				<div class="mb-2">
-					<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
-					/>
-					<input
-						type="checkbox"
-						class="toggle toggle-primary"
-						id="is_public"
-						name="is_public"
-						bind:checked={adventureToEdit.is_public}
-					/>
-				</div>
+				{#if adventureToEdit.collection === null}
+					<div class="mb-2">
+						<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+						><br />
+						<input
+							type="checkbox"
+							class="toggle toggle-primary"
+							id="is_public"
+							name="is_public"
+							bind:checked={adventureToEdit.is_public}
+						/>
+					</div>
+				{/if}
 
 				{#if adventureToEdit.is_public}
 					<div class="bg-neutral p-4 rounded-md shadow-sm">

@@ -56,6 +56,9 @@
 						<button on:click={() => goto('/adventures')}>Adventures</button>
 					</li>
 					<li>
+						<button on:click={() => goto('/collections')}>Collections</button>
+					</li>
+					<li>
 						<button on:click={() => goto('/worldtravel')}>World Travel</button>
 					</li>
 					<li>
@@ -82,6 +85,9 @@
 			{#if data.user}
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/adventures')}>Adventures</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/collections')}>Collections</button>
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/worldtravel')}>World Travel</button

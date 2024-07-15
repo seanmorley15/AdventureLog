@@ -1,5 +1,5 @@
 import os
-from .models import Adventure, Trip
+from .models import Adventure, Collection
 from rest_framework import serializers
 
 class AdventureSerializer(serializers.ModelSerializer):
@@ -18,13 +18,13 @@ class AdventureSerializer(serializers.ModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
-class TripSerializer(serializers.ModelSerializer):
+class CollectionSerializer(serializers.ModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
 
     class Meta:
-        model = Trip
+        model = Collection
         # fields are all plus the adventures field
-        fields = ['id', 'user_id', 'name', 'type', 'location', 'date', 'is_public', 'adventures']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures']
 
 
    

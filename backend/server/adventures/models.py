@@ -7,7 +7,6 @@ from django.forms import ValidationError
 ADVENTURE_TYPES = [
     ('visited', 'Visited'),
     ('planned', 'Planned'),
-    ('featured', 'Featured')
 ]
 
 
@@ -34,40 +33,31 @@ class Adventure(models.Model):
     is_public = models.BooleanField(default=False)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    trip = models.ForeignKey('Trip', on_delete=models.CASCADE, blank=True, null=True)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
 
     def clean(self):
-        if self.trip:
-            if self.trip.is_public and not self.is_public:
-                raise ValidationError('Adventures associated with a public trip must be public. Trip: ' + self.trip.name + ' Adventure: ' + self.name)
-            if self.user_id != self.trip.user_id:
-                raise ValidationError('Adventures must be associated with trips owned by the same user. Trip owner: ' + self.trip.user_id.username + ' Adventure owner: ' + self.user_id.username)
-            if self.type != self.trip.type:
-                raise ValidationError('Adventure type must match trip type. Trip type: ' + self.trip.type + ' Adventure type: ' + self.type)
-        if self.type == 'featured' and not self.is_public:
-            raise ValidationError('Featured adventures must be public. Adventure: ' + self.name)
-
+        if self.collection:
+            if self.collection.is_public and not self.is_public:
+                raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
+            if self.user_id != self.collection.user_id:
+                raise ValidationError('Adventures must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Adventure owner: ' + self.user_id.username)
     def __str__(self):
         return self.name
 
-class Trip(models.Model):
+class Collection(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
-    type = models.CharField(max_length=100, choices=ADVENTURE_TYPES)
-    location = models.CharField(max_length=200, blank=True, null=True)
-    date = models.DateField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
 
-    # if connected adventures are private and trip is public, raise an error
+    # if connected adventures are private and collection is public, raise an error
     def clean(self):
         if self.is_public and self.pk:  # Only check if the instance has a primary key
             for adventure in self.adventure_set.all():
                 if not adventure.is_public:
-                    raise ValidationError('Public trips cannot be associated with private adventures. Trip: ' + self.name + ' Adventure: ' + adventure.name)
-        if self.type == 'featured' and not self.is_public:
-            raise ValidationError('Featured trips must be public. Trip: ' + self.name)
+                    raise ValidationError('Public collections cannot be associated with private adventures. Collection: ' + self.name + ' Adventure: ' + adventure.name)
 
     def __str__(self):
         return self.name

@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { enhance, deserialize } from '$app/forms';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import EditCollection from '$lib/components/EditCollection.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
+	import NewCollection from '$lib/components/NewCollection.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, Collection } from '$lib/types';
 
 	import Plus from '~icons/mdi/plus';
 
 	export let data: any;
 	console.log(data);
 
-	let adventures: Adventure[] = data.props.adventures || [];
+	let collections: Collection[] = data.props.adventures || [];
 
 	let currentSort = { attribute: 'name', order: 'asc' };
 
@@ -32,7 +35,7 @@
 		return async ({ result }: any) => {
 			if (result.type === 'success') {
 				console.log(result.data);
-				adventures = result.data.body.adventures as Adventure[];
+				collections = result.data.body.adventures as Collection[];
 				next = result.data.body.next;
 				previous = result.data.body.previous;
 				count = result.data.body.count;
@@ -51,7 +54,7 @@
 			if (result.type === 'success') {
 				if (result.data) {
 					// console.log(result.data);
-					adventures = result.data.adventures as Adventure[];
+					collections = result.data.adventures as Collection[];
 					next = result.data.next;
 					previous = result.data.previous;
 					count = result.data.count;
@@ -64,37 +67,41 @@
 		};
 	}
 
+	function deleteCollection(event: CustomEvent<number>) {
+		collections = collections.filter((collection) => collection.id !== event.detail);
+	}
+
 	function sort({ attribute, order }: { attribute: string; order: string }) {
 		currentSort.attribute = attribute;
 		currentSort.order = order;
 		if (attribute === 'name') {
 			if (order === 'asc') {
-				adventures = adventures.sort((a, b) => b.name.localeCompare(a.name));
+				collections = collections.sort((a, b) => b.name.localeCompare(a.name));
 			} else {
-				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
+				collections = collections.sort((a, b) => a.name.localeCompare(b.name));
 			}
 		}
 	}
 
-	let adventureToEdit: Adventure;
+	let collectionToEdit: Collection;
 	let isEditModalOpen: boolean = false;
 
 	function deleteAdventure(event: CustomEvent<number>) {
-		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
+		collections = collections.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function createAdventure(event: CustomEvent<Adventure>) {
-		adventures = [event.detail, ...adventures];
+	function createAdventure(event: CustomEvent<Collection>) {
+		collections = [event.detail, ...collections];
 		isShowingCreateModal = false;
 	}
 
-	function editAdventure(event: CustomEvent<Adventure>) {
-		adventureToEdit = event.detail;
+	function editCollection(event: CustomEvent<Collection>) {
+		collectionToEdit = event.detail;
 		isEditModalOpen = true;
 	}
 
-	function saveEdit(event: CustomEvent<Adventure>) {
-		adventures = adventures.map((adventure) => {
+	function saveEdit(event: CustomEvent<Collection>) {
+		collections = collections.map((adventure) => {
 			if (adventure.id === event.detail.id) {
 				return event.detail;
 			}
@@ -111,16 +118,12 @@
 </script>
 
 {#if isShowingCreateModal}
-	<NewAdventure
-		type={newType}
-		on:create={createAdventure}
-		on:close={() => (isShowingCreateModal = false)}
-	/>
+	<NewCollection on:create={createAdventure} on:close={() => (isShowingCreateModal = false)} />
 {/if}
 
 {#if isEditModalOpen}
-	<EditAdventure
-		{adventureToEdit}
+	<EditCollection
+		{collectionToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
 	/>
@@ -145,17 +148,9 @@
 						newType = 'visited';
 					}}
 				>
-					Visited Adventure</button
+					Collection</button
 				>
-				<button
-					class="btn btn-primary"
-					on:click={() => {
-						isShowingCreateModal = true;
-						newType = 'planned';
-					}}
-				>
-					Planned Adventure</button
-				>
+
 				<!-- <button
 			class="btn btn-primary"
 			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
@@ -169,9 +164,9 @@
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 	<div class="drawer-content">
 		<!-- Page content -->
-		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
+		<h1 class="text-center font-bold text-4xl mb-6">My Collections</h1>
 		<p class="text-center">This search returned {count} results.</p>
-		{#if adventures.length === 0}
+		{#if collections.length === 0}
 			<NotFound />
 		{/if}
 		<div class="p-4">
@@ -183,13 +178,8 @@
 			</button>
 			{#if currentView == 'cards'}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-					{#each adventures as adventure}
-						<AdventureCard
-							type={adventure.type}
-							{adventure}
-							on:delete={deleteAdventure}
-							on:edit={editAdventure}
-						/>
+					{#each collections as collection}
+						<CollectionCard {collection} on:delete={deleteCollection} on:edit={editCollection} />
 					{/each}
 				</div>
 			{/if}
@@ -217,30 +207,8 @@
 		<label for="my-drawer" class="drawer-overlay"></label>
 		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content rounded-lg">
 			<!-- Sidebar content here -->
-			<h3 class="text-center font-semibold text-lg mb-4">Adventure Types</h3>
 			<div class="form-control">
 				<form action="?/get" method="post" use:enhance={handleSubmit}>
-					<label class="label cursor-pointer">
-						<span class="label-text">Completed</span>
-						<input
-							type="checkbox"
-							name="visited"
-							id="visited"
-							class="checkbox checkbox-primary"
-							checked
-						/>
-					</label>
-					<label class="label cursor-pointer">
-						<span class="label-text">Planned</span>
-						<input
-							type="checkbox"
-							id="planned"
-							name="planned"
-							class="checkbox checkbox-primary"
-							checked
-						/>
-					</label>
-					<!-- <div class="divider"></div> -->
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
 					<p class="text-md font-semibold mb-2">Order Direction</p>
 					<label for="asc">Ascending</label>
@@ -271,26 +239,6 @@
 						checked
 						value="name"
 					/>
-					<label for="date">Date</label>
-					<input type="radio" value="date" name="order_by" id="date" class="radio radio-primary" />
-					<label for="rating">Rating</label>
-					<input
-						type="radio"
-						value="rating"
-						name="order_by"
-						id="rating"
-						class="radio radio-primary"
-					/>
-					<br />
-					<label class="label cursor-pointer">
-						<span class="label-text">Include Collection Adventures</span>
-						<input
-							type="checkbox"
-							name="include_collections"
-							id="include_collections"
-							class="checkbox checkbox-primary"
-						/>
-					</label>
 					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 				</form>
 				<div class="divider"></div>

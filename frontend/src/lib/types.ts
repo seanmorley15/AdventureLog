@@ -21,7 +21,7 @@ export type Adventure = {
 	link?: string | null;
 	image?: string | null;
 	date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
-	trip_id?: number | null;
+	collection?: number | null;
 	latitude: number | null;
 	longitude: number | null;
 	is_public: boolean;
@@ -54,13 +54,11 @@ export type Point = {
 	name: string;
 };
 
-export type Trip = {
+export type Collection = {
 	id: number;
 	user_id: number;
 	name: string;
-	type: string;
-	location: string;
-	date: string;
+	description: string;
 	is_public: boolean;
 	adventures: Adventure[];
 };

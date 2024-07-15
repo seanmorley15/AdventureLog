@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Trip
+from .models import Adventure, Collection
 from worldtravel.models import Country, Region, VisitedRegion
 
 
@@ -65,7 +65,7 @@ admin.site.register(Adventure, AdventureAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Region, RegionAdmin)
 admin.site.register(VisitedRegion)
-admin.site.register(Trip)
+admin.site.register(Collection)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

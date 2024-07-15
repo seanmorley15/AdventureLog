@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Adventure } from '$lib/types';
+import type { Adventure, Collection } from '$lib/types';
 
 import type { Actions, RequestEvent } from '@sveltejs/kit';
 import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
@@ -17,14 +17,11 @@ export const load = (async (event) => {
 		let previous = null;
 		let count = 0;
 		let adventures: Adventure[] = [];
-		let initialFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=visited,planned&include_collections=false`,
-			{
-				headers: {
-					Cookie: `${event.cookies.get('auth')}`
-				}
+		let initialFetch = await fetch(`${serverEndpoint}/api/collections/`, {
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
 			}
-		);
+		});
 		if (!initialFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
@@ -52,81 +49,19 @@ export const actions: Actions = {
 	create: async (event) => {
 		const formData = await event.request.formData();
 
-		const type = formData.get('type') as string;
 		const name = formData.get('name') as string;
-		const location = formData.get('location') as string | null;
-		let date = (formData.get('date') as string | null) ?? null;
 		const description = formData.get('description') as string | null;
-		const activity_types = formData.get('activity_types')
-			? (formData.get('activity_types') as string).split(',')
-			: null;
-		const rating = formData.get('rating') ? Number(formData.get('rating')) : null;
-		let link = formData.get('link') as string | null;
-		let latitude = formData.get('latitude') as string | null;
-		let longitude = formData.get('longitude') as string | null;
 
-		// check if latitude and longitude are valid
-		if (latitude && longitude) {
-			if (isNaN(Number(latitude)) || isNaN(Number(longitude))) {
-				return {
-					status: 400,
-					body: { error: 'Invalid latitude or longitude' }
-				};
-			}
-		}
-
-		// round latitude and longitude to 6 decimal places
-		if (latitude) {
-			latitude = Number(latitude).toFixed(6);
-		}
-		if (longitude) {
-			longitude = Number(longitude).toFixed(6);
-		}
-
-		const image = formData.get('image') as File;
-
-		if (!type || !name) {
+		if (!name) {
 			return {
 				status: 400,
 				body: { error: 'Missing required fields' }
 			};
 		}
 
-		if (date == null || date == '') {
-			date = null;
-		}
-
-		if (link) {
-			link = checkLink(link);
-		}
-
 		const formDataToSend = new FormData();
-		formDataToSend.append('type', type);
 		formDataToSend.append('name', name);
-		formDataToSend.append('location', location || '');
-		formDataToSend.append('date', date || '');
 		formDataToSend.append('description', description || '');
-		formDataToSend.append('latitude', latitude || '');
-		formDataToSend.append('longitude', longitude || '');
-		if (activity_types) {
-			// Filter out empty and duplicate activity types, then trim each activity type
-			const cleanedActivityTypes = Array.from(
-				new Set(
-					activity_types
-						.map((activity_type) => activity_type.trim())
-						.filter((activity_type) => activity_type !== '' && activity_type !== ',')
-				)
-			);
-
-			// Append each cleaned activity type to formDataToSend
-			cleanedActivityTypes.forEach((activity_type) => {
-				formDataToSend.append('activity_types', activity_type);
-			});
-		}
-		formDataToSend.append('rating', rating ? rating.toString() : '');
-		formDataToSend.append('link', link || '');
-		formDataToSend.append('image', image);
-
 		let auth = event.cookies.get('auth');
 
 		if (!auth) {
@@ -170,7 +105,7 @@ export const actions: Actions = {
 			};
 		}
 
-		const res = await fetch(`${serverEndpoint}/api/adventures/`, {
+		const res = await fetch(`${serverEndpoint}/api/collections/`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
@@ -191,27 +126,15 @@ export const actions: Actions = {
 
 		let id = new_id.id;
 		let user_id = new_id.user_id;
-		let image_url = new_id.image;
-		let link_url = new_id.link;
 
-		return { id, user_id, image_url, link };
+		return { id, user_id };
 	},
 	edit: async (event) => {
 		const formData = await event.request.formData();
 
-		const adventureId = formData.get('adventureId') as string;
-		const type = formData.get('type') as string;
+		const collectionId = formData.get('adventureId') as string;
 		const name = formData.get('name') as string;
-		const location = formData.get('location') as string | null;
-		let date = (formData.get('date') as string | null) ?? null;
 		const description = formData.get('description') as string | null;
-		let activity_types = formData.get('activity_types')
-			? (formData.get('activity_types') as string).split(',')
-			: null;
-		const rating = formData.get('rating') ? Number(formData.get('rating')) : null;
-		let link = formData.get('link') as string | null;
-		let latitude = formData.get('latitude') as string | null;
-		let longitude = formData.get('longitude') as string | null;
 		let is_public = formData.get('is_public') as string | null | boolean;
 
 		if (is_public) {
@@ -220,73 +143,17 @@ export const actions: Actions = {
 			is_public = false;
 		}
 
-		// check if latitude and longitude are valid
-		if (latitude && longitude) {
-			if (isNaN(Number(latitude)) || isNaN(Number(longitude))) {
-				return {
-					status: 400,
-					body: { error: 'Invalid latitude or longitude' }
-				};
-			}
-		}
-
-		// round latitude and longitude to 6 decimal places
-		if (latitude) {
-			latitude = Number(latitude).toFixed(6);
-		}
-		if (longitude) {
-			longitude = Number(longitude).toFixed(6);
-		}
-
-		const image = formData.get('image') as File;
-
-		// console.log(activity_types);
-
-		if (!type || !name) {
+		if (!name) {
 			return {
 				status: 400,
-				body: { error: 'Missing required fields' }
+				body: { error: 'Missing name.' }
 			};
 		}
 
-		if (date == null || date == '') {
-			date = null;
-		}
-
-		if (link) {
-			link = checkLink(link);
-		}
-
 		const formDataToSend = new FormData();
-		formDataToSend.append('type', type);
 		formDataToSend.append('name', name);
-		formDataToSend.append('location', location || '');
-		formDataToSend.append('date', date || '');
 		formDataToSend.append('description', description || '');
-		formDataToSend.append('latitude', latitude || '');
-		formDataToSend.append('longitude', longitude || '');
 		formDataToSend.append('is_public', is_public.toString());
-		if (activity_types) {
-			// Filter out empty and duplicate activity types, then trim each activity type
-			const cleanedActivityTypes = Array.from(
-				new Set(
-					activity_types
-						.map((activity_type) => activity_type.trim())
-						.filter((activity_type) => activity_type !== '' && activity_type !== ',')
-				)
-			);
-
-			// Append each cleaned activity type to formDataToSend
-			cleanedActivityTypes.forEach((activity_type) => {
-				formDataToSend.append('activity_types', activity_type);
-			});
-		}
-		formDataToSend.append('rating', rating ? rating.toString() : '');
-		formDataToSend.append('link', link || '');
-
-		if (image && image.size > 0) {
-			formDataToSend.append('image', image);
-		}
 
 		let auth = event.cookies.get('auth');
 
@@ -331,7 +198,7 @@ export const actions: Actions = {
 			};
 		}
 
-		const res = await fetch(`${serverEndpoint}/api/adventures/${adventureId}/`, {
+		const res = await fetch(`${serverEndpoint}/api/collections/${collectionId}/`, {
 			method: 'PATCH',
 			headers: {
 				'X-CSRFToken': csrfToken,
@@ -348,27 +215,15 @@ export const actions: Actions = {
 			};
 		}
 
-		let adventure = await res.json();
-
-		let image_url = adventure.image;
-		let link_url = adventure.link;
-		return { image_url, link_url };
+		return {
+			status: 200
+		};
 	},
 	get: async (event) => {
 		if (!event.locals.user) {
 		}
 
 		const formData = await event.request.formData();
-		const visited = formData.get('visited');
-		const planned = formData.get('planned');
-
-		let include_collections = formData.get('include_collections') as string;
-
-		if (include_collections) {
-			include_collections = 'true';
-		} else {
-			include_collections = 'false';
-		}
 
 		const order_direction = formData.get('order_direction') as string;
 		const order_by = formData.get('order_by') as string;
@@ -384,28 +239,12 @@ export const actions: Actions = {
 			};
 		}
 
-		let filterString = '';
-		if (visited) {
-			filterString += 'visited';
-		}
-		if (planned) {
-			if (filterString) {
-				filterString += ',';
-			}
-			filterString += 'planned';
-		}
-		if (!filterString) {
-			filterString = '';
-		}
-
 		let next = null;
 		let previous = null;
 		let count = 0;
 
-		console.log(filterString);
-
 		let visitedFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=${filterString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}`,
+			`${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}`,
 			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`
@@ -453,14 +292,14 @@ export const actions: Actions = {
 		}
 
 		// Start with the provided URL or default to the filtered adventures endpoint
-		let url: string = next || previous || '/api/adventures/filtered';
+		let url: string = next || previous || '/api/collections/';
 
 		// Extract the path starting from '/api/adventures'
-		const apiIndex = url.indexOf('/api/adventures');
+		const apiIndex = url.indexOf('/api/collections');
 		if (apiIndex !== -1) {
 			url = url.slice(apiIndex);
 		} else {
-			url = '/api/adventures/filtered';
+			url = '/api/collections/';
 		}
 
 		// Replace or add the page number in the URL
@@ -510,46 +349,5 @@ export const actions: Actions = {
 				body: { error: 'Failed to fetch data' }
 			};
 		}
-	},
-	all: async (event) => {
-		if (!event.locals.user) {
-			return {
-				status: 401,
-				body: { message: 'Unauthorized' }
-			};
-		}
-
-		const formData = await event.request.formData();
-
-		let include_collections = formData.get('include_collections') as string;
-
-		if (include_collections !== 'true' && include_collections !== 'false') {
-			include_collections = 'false';
-		}
-
-		let adventures: Adventure[] = [];
-
-		let visitedFetch = await fetch(
-			`${serverEndpoint}/api/adventures/all/?include_collections=${include_collections}`,
-			{
-				headers: {
-					Cookie: `${event.cookies.get('auth')}`,
-					'Content-Type': 'application/json'
-				}
-			}
-		);
-		if (!visitedFetch.ok) {
-			console.error('Failed to fetch all adventures');
-			return redirect(302, '/login');
-		} else {
-			console.log('Fetched all adventures');
-			let res = await visitedFetch.json();
-			console.log(res);
-			adventures = res as Adventure[];
-		}
-
-		return {
-			adventures
-		};
 	}
 };

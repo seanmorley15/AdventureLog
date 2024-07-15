@@ -10,6 +10,7 @@
 	import Calendar from '~icons/mdi/calendar';
 	import MapMarker from '~icons/mdi/map-marker';
 	import { addToast } from '$lib/toasts';
+	import Link from '~icons/mdi/link-variant';
 
 	export let type: string;
 
@@ -33,6 +34,10 @@
 
 	function editAdventure() {
 		dispatch('edit', adventure);
+	}
+
+	function link() {
+		dispatch('link', adventure);
 	}
 </script>
 
@@ -100,11 +105,8 @@
 					><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
-			{#if type == 'featured'}
-				<!-- TODO: option to add to visited or featured -->
-				<button class="btn btn-primary" on:click={() => goto(`/adventures/${adventure.id}`)}
-					><Launch class="w-6 h-6" /></button
-				>
+			{#if type == 'link'}
+				<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
 			{/if}
 		</div>
 	</div>

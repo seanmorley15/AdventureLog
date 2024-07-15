@@ -3,7 +3,6 @@
 
 	let stats: {
 		country_count: number;
-		featured_count: number;
 		planned_count: number;
 		total_regions: number;
 		trips_count: number;
@@ -76,7 +75,7 @@
 			</div>
 
 			<div class="stat">
-				<div class="stat-title">Trips</div>
+				<div class="stat-title">Collections</div>
 				<div class="stat-value text-center">{stats.trips_count}</div>
 				<!-- <div class="stat-desc">↘︎ 90 (14%)</div> -->
 			</div>
