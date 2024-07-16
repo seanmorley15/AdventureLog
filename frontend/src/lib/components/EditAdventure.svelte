@@ -22,6 +22,7 @@
 	import Attachment from '~icons/mdi/attachment';
 	import PointSelectionModal from './PointSelectionModal.svelte';
 	import Earth from '~icons/mdi/earth';
+	import Wikipedia from '~icons/mdi/wikipedia';
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -39,6 +40,14 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
 			close();
+		}
+	}
+
+	async function generateDesc() {
+		let res = await fetch(`/api/generate/desc/?name=${adventureToEdit.name}`);
+		let data = await res.json();
+		if (data.extract) {
+			adventureToEdit.description = data.extract;
 		}
 	}
 
@@ -166,13 +175,9 @@
 							bind:value={adventureToEdit.description}
 							class="input input-bordered w-full max-w-xs mt-1 mb-2"
 						/>
-						<!-- <button
-                class="btn btn-neutral ml-2"
-                type="button"
-                on:click={generate}
-                ><iconify-icon icon="mdi:wikipedia" class="text-xl -mb-1"
-                ></iconify-icon>Generate Description</button
-              > -->
+						<button class="btn btn-neutral ml-2" type="button" on:click={generateDesc}
+							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Generate Description</button
+						>
 					</div>
 				</div>
 				<div class="mb-2">
