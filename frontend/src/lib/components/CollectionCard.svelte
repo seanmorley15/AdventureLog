@@ -14,7 +14,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let type: String;
+	export let type: String | undefined | null;
 
 	//   export let type: String;
 

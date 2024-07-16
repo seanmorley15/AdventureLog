@@ -179,7 +179,12 @@
 			{#if currentView == 'cards'}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 					{#each collections as collection}
-						<CollectionCard {collection} on:delete={deleteCollection} on:edit={editCollection} />
+						<CollectionCard
+							type=""
+							{collection}
+							on:delete={deleteCollection}
+							on:edit={editCollection}
+						/>
 					{/each}
 				</div>
 			{/if}
@@ -229,8 +234,7 @@
 						class="radio radio-primary"
 					/>
 					<br />
-					<p class="text-md font-semibold mt-2 mb-2">Order By</p>
-					<label for="name">Name</label>
+
 					<input
 						type="radio"
 						name="order_by"
@@ -238,6 +242,7 @@
 						class="radio radio-primary"
 						checked
 						value="name"
+						hidden
 					/>
 					<button type="submit" class="btn btn-primary mt-4">Filter</button>
 				</form>

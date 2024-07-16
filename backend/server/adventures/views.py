@@ -81,6 +81,18 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
     
     def perform_create(self, serializer):
+        adventure = serializer.save(user_id=self.request.user)
+        if adventure.collection:
+            adventure.is_public = adventure.collection.is_public
+            adventure.save()
+
+    def perform_update(self, serializer):
+        adventure = serializer.save()
+        if adventure.collection:
+            adventure.is_public = adventure.collection.is_public
+            adventure.save()
+    
+    def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
 
     @action(detail=False, methods=['get'])
