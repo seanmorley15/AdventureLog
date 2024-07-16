@@ -12,11 +12,23 @@ export async function POST({ url, params, request, fetch, cookies }) {
 	return handleRequest(url, params, request, fetch, cookies);
 }
 
+export async function PATCH({ url, params, request, fetch, cookies }) {
+	return handleRequest(url, params, request, fetch, cookies);
+}
+
+export async function PUT({ url, params, request, fetch, cookies }) {
+	return handleRequest(url, params, request, fetch, cookies);
+}
+
+export async function DELETE({ url, params, request, fetch, cookies }) {
+	return handleRequest(url, params, request, fetch, cookies);
+}
+
 // Implement other HTTP methods as needed (PUT, DELETE, etc.)
 
 async function handleRequest(url: any, params: any, request: any, fetch: any, cookies: any) {
 	const path = params.path;
-	const targetUrl = `${endpoint}/api/${path}${url.search}&format=json`;
+	const targetUrl = `${endpoint}/api/${path}${url.search}/`;
 
 	const headers = new Headers(request.headers);
 

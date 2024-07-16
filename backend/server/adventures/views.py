@@ -120,7 +120,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         #         Q(is_public=True) | Q(user_id=request.user.id), collection=None
         #     )
         queryset = Adventure.objects.filter(
-            Q(is_public=True) | Q(user_id=request.user.id)
+            Q(user_id=request.user.id)
         )
         
         queryset = self.apply_sorting(queryset)
@@ -166,6 +166,29 @@ class CollectionViewSet(viewsets.ModelViewSet):
         print(f"Ordering by: {ordering}")  # For debugging
 
         return queryset.order_by(ordering)
+    
+    def list(self, request, *args, **kwargs):
+        # make sure the user is authenticated
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = self.get_queryset()
+        queryset = self.apply_sorting(queryset)
+        collections = self.paginate_and_respond(queryset, request)
+        return collections
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+       
+        queryset = Collection.objects.filter(
+            Q(user_id=request.user.id)
+        )
+        
+        queryset = self.apply_sorting(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+       
+        return Response(serializer.data)
     
     # this make the is_public field of the collection cascade to the adventures
     @transaction.atomic
