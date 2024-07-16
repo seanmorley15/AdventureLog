@@ -16,6 +16,7 @@
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
 	import CollectionLink from './CollectionLink.svelte';
+	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 
 	export let type: string;
 
@@ -108,7 +109,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl overflow-hidden text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
 >
 	<figure>
 		<!-- svelte-ignore a11y-img-redundant-alt -->
@@ -157,52 +158,50 @@
 			</ul>
 		{/if}
 		<div class="card-actions justify-end mt-2">
-			{#if type == 'visited'}
-				<button class="btn btn-primary" on:click={() => goto(`/adventures/${adventure.id}`)}
-					><Launch class="w-6 h-6" /></button
+			<!-- action options dropdown -->
+			<div class="dropdown dropdown-end">
+				<div tabindex="0" role="button" class="btn btn-neutral">
+					<DotsHorizontal class="w-6 h-6" />
+				</div>
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+				<ul
+					tabindex="0"
+					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 				>
-				<button class="btn btn-primary" on:click={editAdventure}>
-					<FileDocumentEdit class="w-6 h-6" />
-				</button>
-				<button class="btn btn-warning" on:click={deleteAdventure}
-					><TrashCan class="w-6 h-6" /></button
-				>
-			{/if}
-			{#if type == 'planned'}
-				<button class="btn btn-primary" on:click={() => goto(`/adventures/${adventure.id}`)}
-					><Launch class="w-6 h-6" /></button
-				>
-				<button class="btn btn-primary" on:click={editAdventure}>
-					<FileDocumentEdit class="w-6 h-6" />
-				</button>
-				<button class="btn btn-warning" on:click={deleteAdventure}
-					><TrashCan class="w-6 h-6" /></button
-				>
-			{/if}
-			{#if type == 'link'}
-				<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
-			{/if}
-			{#if adventure.type == 'visited'}
-				<button class="btn btn-secondary" on:click={changeType('planned')}
-					><FormatListBulletedSquare class="w-6 h-6" /></button
-				>
-			{/if}
-
-			{#if adventure.type == 'planned'}
-				<button class="btn btn-secondary" on:click={changeType('visited')}
-					><CheckBold class="w-6 h-6" /></button
-				>
-			{/if}
-			{#if adventure.collection}
-				<button class="btn btn-secondary" on:click={removeFromCollection}
-					><LinkVariantRemove class="w-6 h-6" /></button
-				>
-			{/if}
-			{#if !adventure.collection}
-				<button class="btn btn-secondary" on:click={() => (isCollectionModalOpen = true)}
-					><Plus class="w-6 h-6" /></button
-				>
-			{/if}
+					<button class="btn btn-neutral mb-2" on:click={() => goto(`/adventures/${adventure.id}`)}
+						><Launch class="w-6 h-6" />Open Details</button
+					>
+					<button class="btn btn-neutral mb-2" on:click={editAdventure}>
+						<FileDocumentEdit class="w-6 h-6" />Edit Adventure
+					</button>
+					{#if adventure.type == 'visited'}
+						<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
+							><FormatListBulletedSquare class="w-6 h-6" />Change to Plan</button
+						>
+					{/if}
+					{#if adventure.type == 'planned'}
+						<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
+							><CheckBold class="w-6 h-6" />Mark Visited</button
+						>
+					{/if}
+					{#if adventure.collection}
+						<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
+							><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
+						>
+					{/if}
+					{#if !adventure.collection}
+						<button class="btn btn-neutral mb-2" on:click={() => (isCollectionModalOpen = true)}
+							><Plus class="w-6 h-6" />Add to Collection</button
+						>
+					{/if}
+					{#if type == 'link'}
+						<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
+					{/if}
+					<button class="btn btn-warning" on:click={deleteAdventure}
+						><TrashCan class="w-6 h-6" />Delete</button
+					>
+				</ul>
+			</div>
 		</div>
 	</div>
 </div>

@@ -15,6 +15,7 @@
 	let collection: Collection;
 
 	let adventures: Adventure[] = [];
+	let numVisited: number = adventures.filter((a) => a.type == 'visited').length;
 
 	let notFound: boolean = false;
 	let isShowingCreateModal: boolean = false;
@@ -150,6 +151,21 @@
 	</div>
 	{#if collection.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
+	{/if}
+	{#if adventures.length > 0}
+		<div class="flex items-center justify-center mb-4">
+			<div class="stats shadow bg-base-300">
+				<div class="stat">
+					<div class="stat-title">Region Stats</div>
+					<div class="stat-value">{numVisited}/{adventures.length} Visited</div>
+					{#if numVisited === adventures.length}
+						<div class="stat-desc">You've completed this collection! 🎉!</div>
+					{:else}
+						<div class="stat-desc">Keep exploring!</div>
+					{/if}
+				</div>
+			</div>
+		</div>
 	{/if}
 	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
