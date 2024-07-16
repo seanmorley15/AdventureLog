@@ -5,6 +5,7 @@
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 	import PointSelectionModal from './PointSelectionModal.svelte';
+	import ImageFetcher from './ImageFetcher.svelte';
 
 	export let type: string = 'visited';
 
@@ -28,8 +29,10 @@
 	};
 
 	let image: File;
+	let fileInput: HTMLInputElement;
 
 	let isPointModalOpen: boolean = false;
+	let isImageFetcherOpen: boolean = false;
 
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
@@ -102,6 +105,22 @@
 		}
 	}
 
+	function handleImageFetch(event: CustomEvent) {
+		const file = event.detail.file;
+		if (file && fileInput) {
+			// Create a DataTransfer object and add the file
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(file);
+
+			// Set the files property of the file input
+			fileInput.files = dataTransfer.files;
+
+			// Update the adventureToEdit object
+			newAdventure.image = file;
+		}
+		isImageFetcherOpen = false;
+	}
+
 	function setLongLat(event: CustomEvent<[number, number]>) {
 		console.log(event.detail);
 		newAdventure.latitude = event.detail[1];
@@ -112,6 +131,10 @@
 
 {#if isPointModalOpen}
 	<PointSelectionModal on:close={() => (isPointModalOpen = false)} on:submit={setLongLat} />
+{/if}
+
+{#if isImageFetcherOpen}
+	<ImageFetcher on:image={handleImageFetch} on:close={() => (isImageFetcherOpen = false)} />
 {/if}
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
@@ -234,16 +257,23 @@
 					/>
 				</div>
 				<div class="mb-2">
-					<label for="image"
-						>Image <iconify-icon icon="mdi:image" class="text-xl -mb-1"></iconify-icon></label
-					><br />
-					<input
-						type="file"
-						id="image"
-						name="image"
-						bind:value={image}
-						class="file-input file-input-bordered w-full max-w-xs mt-1"
-					/>
+					<label for="image">Image </label><br />
+					<div class="flex">
+						<input
+							type="file"
+							id="image"
+							name="image"
+							bind:value={image}
+							bind:this={fileInput}
+							class="file-input file-input-bordered w-full max-w-xs mt-1"
+						/>
+						<button
+							class="btn btn-neutral ml-2"
+							type="button"
+							on:click={() => (isImageFetcherOpen = true)}
+							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Image Search</button
+						>
+					</div>
 				</div>
 				<div class="mb-2">
 					<input

@@ -12,17 +12,21 @@
 	let originalName = adventureToEdit.name;
 
 	let isPointModalOpen: boolean = false;
+	let isImageFetcherOpen: boolean = false;
+
+	let fileInput: HTMLInputElement;
+	let image: File;
 
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import Notebook from '~icons/mdi/notebook';
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import Image from '~icons/mdi/image';
 	import Star from '~icons/mdi/star';
 	import Attachment from '~icons/mdi/attachment';
 	import PointSelectionModal from './PointSelectionModal.svelte';
 	import Earth from '~icons/mdi/earth';
 	import Wikipedia from '~icons/mdi/wikipedia';
+	import ImageFetcher from './ImageFetcher.svelte';
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -88,6 +92,23 @@
 			}
 		}
 	}
+
+	function handleImageFetch(event: CustomEvent) {
+		const file = event.detail.file;
+		if (file && fileInput) {
+			// Create a DataTransfer object and add the file
+			const dataTransfer = new DataTransfer();
+			dataTransfer.items.add(file);
+
+			// Set the files property of the file input
+			fileInput.files = dataTransfer.files;
+
+			// Update the adventureToEdit object
+			adventureToEdit.image = file;
+		}
+		isImageFetcherOpen = false;
+	}
+
 	function setLongLat(event: CustomEvent<[number, number]>) {
 		console.log(event.detail);
 		adventureToEdit.latitude = event.detail[1];
@@ -103,6 +124,10 @@
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
 	/>
+{/if}
+
+{#if isImageFetcherOpen}
+	<ImageFetcher on:image={handleImageFetch} on:close={() => (isImageFetcherOpen = false)} />
 {/if}
 
 <dialog id="my_modal_1" class="modal">
@@ -193,14 +218,23 @@
 					/>
 				</div>
 				<div class="mb-2">
-					<label for="image">Image <Image class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br />
-					<input
-						type="file"
-						id="image"
-						name="image"
-						bind:value={adventureToEdit.image}
-						class="file-input file-input-bordered w-full max-w-xs mt-1"
-					/>
+					<label for="image">Image </label><br />
+					<div class="flex">
+						<input
+							type="file"
+							id="image"
+							name="image"
+							bind:value={image}
+							bind:this={fileInput}
+							class="file-input file-input-bordered w-full max-w-xs mt-1"
+						/>
+						<button
+							class="btn btn-neutral ml-2"
+							type="button"
+							on:click={() => (isImageFetcherOpen = true)}
+							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Image Search</button
+						>
+					</div>
 				</div>
 				<div class="mb-2">
 					<label for="link">Link <Attachment class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
