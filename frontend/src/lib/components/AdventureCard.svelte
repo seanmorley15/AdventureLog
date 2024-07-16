@@ -125,16 +125,18 @@
 	</figure>
 
 	<div class="card-body">
-		<h2 class="card-title break-words text-wrap">
-			{adventure.name}
-		</h2>
-		<div>
-			{#if adventure.type == 'visited'}
-				<div class="badge badge-primary">Visited</div>
-			{:else}
-				<div class="badge badge-secondary">Planned</div>
-			{/if}
-			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
+		<div class="flex justify-between">
+			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
+				{adventure.name}
+			</h2>
+			<div>
+				{#if adventure.type == 'visited'}
+					<div class="badge badge-primary">Visited</div>
+				{:else}
+					<div class="badge badge-secondary">Planned</div>
+				{/if}
+				<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
+			</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">

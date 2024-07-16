@@ -10,7 +10,7 @@ _**⚠️ AdventureLog is in early development and is not recommended for produc
 
 # Docker 🐋
 
-Docker is the perffered way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
+Docker is the preferred way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
 **Note**: This guide mainly focuses on installation with a linux based host machine, but the steps are similar for other operating systems.
 
 ## Prerequisites
@@ -52,6 +52,35 @@ Here is a summary of the configuration options available in the `docker-compose.
 | `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                        | admin@example.com    |
 | `PUBLIC_URL`            | Yes      | This is the publically accessible url to the **nginx** container. You should be able to acess nginx from this url where you access your app. | http://127.0.0.1:81  |
 | `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                           | Needs to be changed. |
+
+### Proxy Container (nginx) Configuration
+
+In order to use media files in a production environment, you need to configure the `nginx` container to serve the media files. The container is already in the docker compose file but you need to do a few things to make it work.
+
+1. Create a directory called `proxy` in the same directory as the `docker-compose.yml` file.
+2. Create a file called `nginx.conf` in the `proxy` directory.
+3. Add the following configuration to the `nginx.conf` file:
+
+```nginx
+server {
+    listen 80;
+    server_name localhost;
+
+    location /media/ {
+        alias /app/media/;
+    }
+}
+```
+
+## Running the Containers
+
+To start the containers, run the following command:
+
+```bash
+docker compose up -d
+```
+
+Enjoy AdventureLog! 🎉
 
 # About AdventureLog
 
