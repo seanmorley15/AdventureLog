@@ -164,7 +164,7 @@
 				<button class="btn btn-primary" on:click={editAdventure}>
 					<FileDocumentEdit class="w-6 h-6" />
 				</button>
-				<button class="btn btn-secondary" on:click={deleteAdventure}
+				<button class="btn btn-warning" on:click={deleteAdventure}
 					><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
@@ -175,7 +175,7 @@
 				<button class="btn btn-primary" on:click={editAdventure}>
 					<FileDocumentEdit class="w-6 h-6" />
 				</button>
-				<button class="btn btn-secondary" on:click={deleteAdventure}
+				<button class="btn btn-warning" on:click={deleteAdventure}
 					><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
