@@ -11,6 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
 from rest_framework.pagination import PageNumberPagination
+from django.shortcuts import get_object_or_404
+from rest_framework import status
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 10
@@ -58,11 +60,37 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
-        queryset = Adventure.objects.annotate(
-        ).filter(
-            Q(is_public=True) | Q(user_id=self.request.user.id)
-        )
-        return self.apply_sorting(queryset)
+        if self.action == 'retrieve':
+            # For individual adventure retrieval, include public adventures
+            return Adventure.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id)
+            )
+        else:
+            # For other actions, only include user's own adventures
+            return Adventure.objects.filter(user_id=self.request.user.id)
+
+    def list(self, request, *args, **kwargs):
+        # Prevent listing all adventures
+        return Response({"detail": "Listing all adventures is not allowed."},
+                        status=status.HTTP_403_FORBIDDEN)
+
+    def retrieve(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        adventure = get_object_or_404(queryset, pk=kwargs['pk'])
+        serializer = self.get_serializer(adventure)
+        return Response(serializer.data)
+    
+    def perform_create(self, serializer):
+        adventure = serializer.save(user_id=self.request.user)
+        if adventure.collection:
+            adventure.is_public = adventure.collection.is_public
+            adventure.save()
+
+    def perform_update(self, serializer):
+        adventure = serializer.save()
+        if adventure.collection:
+            adventure.is_public = adventure.collection.is_public
+            adventure.save()
     
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
@@ -104,7 +132,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         #         Q(is_public=True) | Q(user_id=request.user.id), collection=None
         #     )
         queryset = Adventure.objects.filter(
-            Q(is_public=True) | Q(user_id=request.user.id)
+            Q(user_id=request.user.id)
         )
         
         queryset = self.apply_sorting(queryset)
@@ -150,6 +178,29 @@ class CollectionViewSet(viewsets.ModelViewSet):
         print(f"Ordering by: {ordering}")  # For debugging
 
         return queryset.order_by(ordering)
+    
+    def list(self, request, *args, **kwargs):
+        # make sure the user is authenticated
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = self.get_queryset()
+        queryset = self.apply_sorting(queryset)
+        collections = self.paginate_and_respond(queryset, request)
+        return collections
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+       
+        queryset = Collection.objects.filter(
+            Q(user_id=request.user.id)
+        )
+        
+        queryset = self.apply_sorting(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+       
+        return Response(serializer.data)
     
     # this make the is_public field of the collection cascade to the adventures
     @transaction.atomic
