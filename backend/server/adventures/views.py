@@ -139,6 +139,17 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
        
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        query = self.request.query_params.get('query', '')
+        queryset = Adventure.objects.filter(
+    (Q(name__icontains=query) | Q(description__icontains=query) | Q(location__icontains=query) | Q(activity_types__icontains=query)) &
+    (Q(user_id=request.user.id) | Q(is_public=True))
+)
+        queryset = self.apply_sorting(queryset)
+        adventures = self.paginate_and_respond(queryset, request)
+        return adventures
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()

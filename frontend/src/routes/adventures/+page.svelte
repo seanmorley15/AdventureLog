@@ -193,6 +193,44 @@
 					{/each}
 				</div>
 			{/if}
+			{#if currentView == 'table'}
+				<table class="table table-compact w-full">
+					<thead>
+						<tr>
+							<th>Name</th>
+							<th>Date</th>
+							<th>Rating</th>
+							<th>Type</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{#each adventures as adventure}
+							<tr>
+								<td>{adventure.name}</td>
+								<td>{adventure.date}</td>
+								<td>{adventure.rating}</td>
+								<td>{adventure.type}</td>
+								<td>
+									<button
+										class="btn btn-sm btn-primary"
+										on:click={() => editAdventure(new CustomEvent('edit', { detail: adventure }))}
+									>
+										Edit
+									</button>
+									<button
+										class="btn btn-sm btn-error"
+										on:click={() =>
+											deleteAdventure(new CustomEvent('delete', { detail: adventure.id }))}
+									>
+										Delete
+									</button>
+								</td>
+							</tr>
+						{/each}
+					</tbody>
+				</table>
+			{/if}
 			<div class="join flex items-center justify-center mt-4">
 				{#if next || previous}
 					<div class="join">
