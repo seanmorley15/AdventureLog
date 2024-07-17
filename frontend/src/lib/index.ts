@@ -1,4 +1,5 @@
 import inspirationalQuotes from './json/quotes.json';
+import type { Adventure, Collection } from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;
@@ -18,4 +19,49 @@ export function checkLink(link: string) {
 	} else {
 		return 'http://' + link + '.com';
 	}
+}
+
+export async function exportData() {
+	let res = await fetch('/api/adventures/all');
+	let adventures = (await res.json()) as Adventure[];
+
+	res = await fetch('/api/collections/all');
+	let collections = (await res.json()) as Collection[];
+
+	res = await fetch('/api/visitedregion');
+	let visitedRegions = await res.json();
+
+	const data = {
+		adventures,
+		collections,
+		visitedRegions
+	};
+
+	async function convertImages() {
+		const promises = data.adventures.map(async (adventure, i) => {
+			if (adventure.image) {
+				const res = await fetch(adventure.image);
+				const blob = await res.blob();
+				const base64 = await blobToBase64(blob);
+				adventure.image = base64;
+				data.adventures[i].image = adventure.image;
+			}
+		});
+
+		await Promise.all(promises);
+	}
+
+	function blobToBase64(blob: Blob): Promise<string> {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.readAsDataURL(blob);
+			reader.onloadend = () => resolve(reader.result as string);
+			reader.onerror = (error) => reject(error);
+		});
+	}
+
+	await convertImages();
+
+	const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+	return URL.createObjectURL(blob);
 }

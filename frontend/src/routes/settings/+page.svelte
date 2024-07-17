@@ -6,6 +6,7 @@
 	import type { Adventure, Collection, User } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { exportData } from '$lib';
 
 	export let data;
 	let user: User;
@@ -35,24 +36,7 @@
 	}
 
 	async function exportAdventures() {
-		let res = await fetch('/api/adventures/all');
-		let adventures = (await res.json()) as Adventure[];
-
-		res = await fetch('/api/collections/all');
-		let collections = (await res.json()) as Collection[];
-
-		res = await fetch('/api/visitedregion');
-		let visitedRegions = await res.json();
-
-		const data = {
-			adventures,
-			collections,
-			visitedRegions
-		};
-
-		const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-
-		const url = URL.createObjectURL(blob);
+		const url = await exportData();
 
 		const a = document.createElement('a');
 		a.href = url;
