@@ -16,7 +16,9 @@
 {#if adventures.length === 0}
 	<NotFound />
 {:else}
-	{#each adventures as adventure}
-		<AdventureCard type={adventure.type} {adventure} />
-	{/each}
+	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+		{#each adventures as adventure}
+			<AdventureCard type={adventure.type} {adventure} />
+		{/each}
+	</div>
 {/if}
