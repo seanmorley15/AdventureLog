@@ -1,6 +1,6 @@
 <script lang="ts">
 	// @ts-nocheck
-	import type { Point } from '$lib/types';
+	import type { OpenStreetMapPlace, Point } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -9,6 +9,8 @@
 	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
 
 	let markers: Point[] = [];
+
+	let query: string = '';
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
@@ -39,6 +41,20 @@
 		}
 	}
 
+	let places: OpenStreetMapPlace[] = [];
+
+	async function geocode(e: Event) {
+		e.preventDefault();
+		if (!query) {
+			alert('Please enter a location');
+			return;
+		}
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		console.log(res);
+		let data = (await res.json()) as OpenStreetMapPlace[];
+		places = data;
+	}
+
 	function submit() {
 		if (markers.length === 0) {
 			alert('Please select a point on the map');
@@ -53,7 +69,18 @@
 <dialog id="my_modal_1" class="modal">
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+	<div class="modal-box w-11/12 max-w-4xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
+		<form on:submit={geocode}>
+			<input
+				type="text"
+				placeholder="Seach for a location"
+				class="input input-bordered w-full max-w-xs"
+				id="search"
+				name="search"
+				bind:value={query}
+			/>
+			<button type="submit">Search</button>
+		</form>
 		<h3 class="font-bold text-lg mb-4">Choose a Point</h3>
 		<MapLibre
 			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
@@ -69,6 +96,33 @@
 				<DefaultMarker lngLat={marker.lngLat} />
 			{/each}
 		</MapLibre>
+
+		{#if places.length > 0}
+			<div class="mt-4">
+				<h3 class="font-bold text-lg mb-4">Search Results</h3>
+				<ul>
+					{#each places as place}
+						<li>
+							<button
+								class="btn btn-neutral mb-2"
+								on:click={() => {
+									markers = [
+										{
+											lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+											name: place.display_name
+										}
+									];
+								}}
+							>
+								{place.display_name}
+							</button>
+						</li>
+					{/each}
+				</ul>
+			</div>
+		{:else}
+			<p class="text-error text-lg">No results found</p>
+		{/if}
 
 		<div class="mb-4 mt-4"></div>
 		<button class="btn btn-primary" on:click={submit}>Submit</button>

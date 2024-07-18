@@ -143,6 +143,8 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def search(self, request):
         query = self.request.query_params.get('query', '')
+        if len(query) < 2:
+            return Response({"error": "Query must be at least 2 characters long"}, status=400)
         queryset = Adventure.objects.filter(
     (Q(name__icontains=query) | Q(description__icontains=query) | Q(location__icontains=query) | Q(activity_types__icontains=query)) &
     (Q(user_id=request.user.id) | Q(is_public=True))

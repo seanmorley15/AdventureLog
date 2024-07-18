@@ -172,7 +172,7 @@
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
 		<p class="text-center">This search returned {count} results.</p>
 		{#if adventures.length === 0}
-			<NotFound />
+			<NotFound error={undefined} />
 		{/if}
 		<div class="p-4">
 			<button
