@@ -6,6 +6,10 @@
 
 	export let data: PageData;
 
+	function deleteAdventure(event: CustomEvent<number>) {
+		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
+	}
+
 	console.log(data);
 	let adventures: Adventure[] = [];
 	if (data.props) {
@@ -18,7 +22,7 @@
 {:else}
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
-			<AdventureCard type={adventure.type} {adventure} />
+			<AdventureCard type={adventure.type} {adventure} on:delete={deleteAdventure} />
 		{/each}
 	</div>
 {/if}

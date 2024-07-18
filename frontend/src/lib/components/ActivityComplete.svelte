@@ -20,8 +20,9 @@
 
 	function addActivity() {
 		if (inputVal && activities) {
-			if (!activities.includes(inputVal) && allActivities.includes(inputVal)) {
-				activities = [...activities, inputVal];
+			const trimmedInput = inputVal.trim();
+			if (trimmedInput && !activities.includes(trimmedInput)) {
+				activities = [...activities, trimmedInput];
 				inputVal = '';
 			}
 		}
@@ -56,6 +57,7 @@
 	/>
 	{#if inputVal && filteredItems.length > 0}
 		<ul class="absolute z-10 w-full bg-base-100 shadow-lg max-h-60 overflow-auto">
+			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			{#each filteredItems as item}
 				<!-- svelte-ignore a11y-click-events-have-key-events -->
 				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
