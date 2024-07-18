@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Lost from '$lib/assets/undraw_lost.svg';
+	export let error: string | undefined;
 </script>
 
 <div
@@ -12,9 +13,13 @@
 		<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
 			No adventures found
 		</h1>
-		<p class="mt-4 text-muted-foreground">
-			There are no adventures to display. Add some using the plus button at the bottom right or try
-			changing filters!
-		</p>
+		{#if !error}
+			<p class="mt-4 text-muted-foreground">
+				There are no adventures to display. Add some using the plus button at the bottom right or
+				try changing filters!
+			</p>
+		{:else}
+			<p class="text-error mt-2">{error}</p>
+		{/if}
 	</div>
 </div>

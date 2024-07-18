@@ -34,6 +34,7 @@ export const load = (async (event) => {
 		};
 	} else {
 		console.error('Failed to fetch search data');
-		return { data: [] };
+		let error = await res.json();
+		return { error: error.error };
 	}
 }) satisfies PageServerLoad;

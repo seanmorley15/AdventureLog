@@ -18,7 +18,7 @@
 </script>
 
 {#if adventures.length === 0}
-	<NotFound />
+	<NotFound error={data.error} />
 {:else}
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
