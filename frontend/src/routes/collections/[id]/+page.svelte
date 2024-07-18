@@ -77,6 +77,7 @@
 
 {#if isShowingCreateModal}
 	<AdventureLink
+		user={data?.user ?? null}
 		on:close={() => {
 			isShowingCreateModal = false;
 		}}
@@ -171,6 +172,7 @@
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
 			<AdventureCard
+				user={data.user}
 				on:edit={editAdventure}
 				on:delete={deleteAdventure}
 				type={adventure.type}

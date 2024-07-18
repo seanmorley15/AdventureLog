@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { deserialize } from '$app/forms';
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import type { ActionResult } from '@sveltejs/kit';
@@ -9,6 +9,8 @@
 	let modal: HTMLDialogElement;
 
 	let adventures: Adventure[] = [];
+
+	export let user: User | null;
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -53,7 +55,7 @@
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
-				<AdventureCard type="link" {adventure} on:link={add} />
+				<AdventureCard user={user ?? null} type="link" {adventure} on:link={add} />
 			{/each}
 			{#if adventures.length === 0}
 				<p class="text-center text-lg">

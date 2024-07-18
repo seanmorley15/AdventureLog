@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, User } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -19,6 +19,8 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 
 	export let type: string;
+
+	export let user: User | null;
 
 	let isCollectionModalOpen: boolean = false;
 
@@ -130,9 +132,9 @@
 				{adventure.name}
 			</h2>
 			<div>
-				{#if adventure.type == 'visited'}
+				{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
 					<div class="badge badge-primary">Visited</div>
-				{:else}
+				{:else if user?.pk == adventure.user_id}
 					<div class="badge badge-secondary">Planned</div>
 				{/if}
 				<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
@@ -162,48 +164,54 @@
 		<div class="card-actions justify-end mt-2">
 			<!-- action options dropdown -->
 			{#if type != 'link'}
-				<div class="dropdown dropdown-end">
-					<div tabindex="0" role="button" class="btn btn-neutral">
-						<DotsHorizontal class="w-6 h-6" />
+				{#if user?.pk == adventure.user_id}
+					<div class="dropdown dropdown-end">
+						<div tabindex="0" role="button" class="btn btn-neutral">
+							<DotsHorizontal class="w-6 h-6" />
+						</div>
+						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+						<ul
+							tabindex="0"
+							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+						>
+							<button
+								class="btn btn-neutral mb-2"
+								on:click={() => goto(`/adventures/${adventure.id}`)}
+								><Launch class="w-6 h-6" />Open Details</button
+							>
+							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
+								<FileDocumentEdit class="w-6 h-6" />Edit Adventure
+							</button>
+							{#if adventure.type == 'visited'}
+								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
+									><FormatListBulletedSquare class="w-6 h-6" />Change to Plan</button
+								>
+							{/if}
+							{#if adventure.type == 'planned'}
+								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
+									><CheckBold class="w-6 h-6" />Mark Visited</button
+								>
+							{/if}
+							{#if adventure.collection}
+								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
+									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
+								>
+							{/if}
+							{#if !adventure.collection}
+								<button class="btn btn-neutral mb-2" on:click={() => (isCollectionModalOpen = true)}
+									><Plus class="w-6 h-6" />Add to Collection</button
+								>
+							{/if}
+							<button class="btn btn-warning" on:click={deleteAdventure}
+								><TrashCan class="w-6 h-6" />Delete</button
+							>
+						</ul>
 					</div>
-					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<ul
-						tabindex="0"
-						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+				{:else}
+					<button class="btn btn-neutral mb-2" on:click={() => goto(`/adventures/${adventure.id}`)}
+						><Launch class="w-6 h-6" /></button
 					>
-						<button
-							class="btn btn-neutral mb-2"
-							on:click={() => goto(`/adventures/${adventure.id}`)}
-							><Launch class="w-6 h-6" />Open Details</button
-						>
-						<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-							<FileDocumentEdit class="w-6 h-6" />Edit Adventure
-						</button>
-						{#if adventure.type == 'visited'}
-							<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
-								><FormatListBulletedSquare class="w-6 h-6" />Change to Plan</button
-							>
-						{/if}
-						{#if adventure.type == 'planned'}
-							<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
-								><CheckBold class="w-6 h-6" />Mark Visited</button
-							>
-						{/if}
-						{#if adventure.collection}
-							<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
-								><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
-							>
-						{/if}
-						{#if !adventure.collection}
-							<button class="btn btn-neutral mb-2" on:click={() => (isCollectionModalOpen = true)}
-								><Plus class="w-6 h-6" />Add to Collection</button
-							>
-						{/if}
-						<button class="btn btn-warning" on:click={deleteAdventure}
-							><TrashCan class="w-6 h-6" />Delete</button
-						>
-					</ul>
-				</div>
+				{/if}
 			{/if}
 			{#if type == 'link'}
 				<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>

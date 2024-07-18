@@ -48,7 +48,12 @@
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
-			<AdventureCard type={adventure.type} {adventure} on:delete={deleteAdventure} />
+			<AdventureCard
+				user={data.user}
+				type={adventure.type}
+				{adventure}
+				on:delete={deleteAdventure}
+			/>
 		{/each}
 	</div>
 	<div class="divider"></div>
