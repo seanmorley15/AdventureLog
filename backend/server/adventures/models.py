@@ -35,6 +35,7 @@ class Adventure(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def clean(self):
         if self.collection:
@@ -53,6 +54,7 @@ class Collection(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     # if connected adventures are private and collection is public, raise an error
     def clean(self):

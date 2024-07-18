@@ -31,11 +31,11 @@ class AdventureViewSet(viewsets.ModelViewSet):
     pagination_class = StandardResultsSetPagination
 
     def apply_sorting(self, queryset):
-        order_by = self.request.query_params.get('order_by', 'name')
+        order_by = self.request.query_params.get('order_by', 'created_at')
         order_direction = self.request.query_params.get('order_direction', 'asc')
         include_collections = self.request.query_params.get('include_collections', 'true')
 
-        valid_order_by = ['name', 'type', 'date', 'rating']
+        valid_order_by = ['name', 'type', 'date', 'rating', 'created_at']
         if order_by not in valid_order_by:
             order_by = 'name'
 
@@ -51,6 +51,13 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         if order_direction == 'desc':
             ordering = f'-{ordering}'
+
+        # reverse ordering for created_at field
+        if order_by == 'created_at':
+            if order_direction == 'asc':
+                ordering = '-created_at'
+            else:
+                ordering = 'created_at'
 
         print(f"Ordering by: {ordering}")  # For debugging
 
