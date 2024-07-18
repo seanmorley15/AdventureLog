@@ -42,6 +42,7 @@ class Adventure(models.Model):
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
             if self.user_id != self.collection.user_id:
                 raise ValidationError('Adventures must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Adventure owner: ' + self.user_id.username)
+
     def __str__(self):
         return self.name
 

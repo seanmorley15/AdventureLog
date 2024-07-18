@@ -18,6 +18,11 @@ class AdventureSerializer(serializers.ModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
+    def validate_activity_types(self, value):
+        if value:
+            return [activity.lower() for activity in value]
+        return value
+    
 class CollectionSerializer(serializers.ModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
 
