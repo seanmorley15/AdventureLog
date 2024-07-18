@@ -20,7 +20,7 @@
 
 	function addActivity() {
 		if (inputVal && activities) {
-			const trimmedInput = inputVal.trim();
+			const trimmedInput = inputVal.trim().toLocaleLowerCase();
 			if (trimmedInput && !activities.includes(trimmedInput)) {
 				activities = [...activities, trimmedInput];
 				inputVal = '';

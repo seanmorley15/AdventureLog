@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
+from django_resized import ResizedImageField
 
 ADVENTURE_TYPES = [
     ('visited', 'Visited'),
@@ -28,7 +29,7 @@ class Adventure(models.Model):
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True)
-    image = models.ImageField(null=True, blank=True, upload_to='images/')
+    image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
     date = models.DateField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
@@ -41,6 +42,7 @@ class Adventure(models.Model):
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
             if self.user_id != self.collection.user_id:
                 raise ValidationError('Adventures must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Adventure owner: ' + self.user_id.username)
+
     def __str__(self):
         return self.name
 
