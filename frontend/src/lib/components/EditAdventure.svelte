@@ -27,6 +27,7 @@
 	import Earth from '~icons/mdi/earth';
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ImageFetcher from './ImageFetcher.svelte';
+	import ActivityComplete from './ActivityComplete.svelte';
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -213,9 +214,11 @@
 						type="text"
 						id="activity_types"
 						name="activity_types"
+						hidden
 						bind:value={adventureToEdit.activity_types}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<ActivityComplete bind:activities={adventureToEdit.activity_types} />
 				</div>
 				<div class="mb-2">
 					<label for="image">Image </label><br />
