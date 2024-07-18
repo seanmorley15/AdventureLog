@@ -3,9 +3,10 @@
 	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import type { User } from '$lib/types.js';
+	import type { Adventure, Collection, User } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { exportData } from '$lib';
 
 	export let data;
 	let user: User;
@@ -32,6 +33,16 @@
 		if (browser && $page.form?.error) {
 			addToast('error', 'Error updating settings');
 		}
+	}
+
+	async function exportAdventures() {
+		const url = await exportData();
+
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = 'adventure-log-export.json';
+		a.click();
+		URL.revokeObjectURL(url);
 	}
 </script>
 
@@ -140,6 +151,11 @@
 		/>
 		<button class="py-2 px-4 btn btn-primary mt-2">Change Email</button>
 	</form>
+</div>
+<div class="flex flex-col items-center">
+	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
+	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
+	<p>This may take a few seconds...</p>
 </div>
 
 <small class="text-center"

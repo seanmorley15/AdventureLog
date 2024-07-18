@@ -10,6 +10,8 @@
 	export let type: string = 'visited';
 
 	import Wikipedia from '~icons/mdi/wikipedia';
+	import ClipboardList from '~icons/mdi/clipboard-list';
+	import ActivityComplete from './ActivityComplete.svelte';
 
 	let newAdventure: Adventure = {
 		id: NaN,
@@ -218,17 +220,18 @@
 					</div>
 				</div>
 				<div class="mb-2">
-					<label for="activity_types"
-						>Activity Types <iconify-icon icon="mdi:clipboard-list" class="text-xl -mb-1"
-						></iconify-icon></label
+					<label for="activityTypes"
+						>Activity Types <ClipboardList class="inline-block -mt-1 mb-1 w-6 h-6" /></label
 					><br />
 					<input
 						type="text"
-						name="activity_types"
 						id="activity_types"
+						name="activity_types"
+						hidden
 						bind:value={newAdventure.activity_types}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<ActivityComplete bind:activities={newAdventure.activity_types} />
 				</div>
 				<div class="mb-2">
 					<label for="rating"
