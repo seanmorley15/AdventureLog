@@ -1,14 +1,39 @@
 <script lang="ts">
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, OpenStreetMapPlace } from '$lib/types';
+	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
+	import { page } from '$app/stores';
 
 	export let data: PageData;
 
 	function deleteAdventure(event: CustomEvent<number>) {
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
+
+	let osmResults: OpenStreetMapPlace[] = [];
+
+	let query: string | null = '';
+
+	onMount(() => {
+		const urlParams = new URLSearchParams(window.location.search);
+		query = urlParams.get('query');
+
+		fetchData();
+	});
+
+	async function fetchData() {
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		const data = await res.json();
+		osmResults = data;
+	}
+
+	onMount(async () => {
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		const data = await res.json();
+		osmResults = data;
+	});
 
 	console.log(data);
 	let adventures: Adventure[] = [];
@@ -17,12 +42,24 @@
 	}
 </script>
 
-{#if adventures.length === 0}
+{#if adventures.length === 0 && osmResults.length === 0}
 	<NotFound error={data.error} />
 {:else}
+	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
 			<AdventureCard type={adventure.type} {adventure} on:delete={deleteAdventure} />
+		{/each}
+	</div>
+	<div class="divider"></div>
+	<h2 class="text-center font-bold text-2xl mb-4">Online Results</h2>
+	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+		{#each osmResults as result}
+			<div class="bg-base-300 rounded-lg shadow-md p-4 w-96">
+				<h2 class="text-xl font-bold">{result.display_name}</h2>
+				<p>{result.type}</p>
+				<p>{result.lat}, {result.lon}</p>
+			</div>
 		{/each}
 	</div>
 {/if}

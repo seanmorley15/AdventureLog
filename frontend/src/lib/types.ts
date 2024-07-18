@@ -25,6 +25,7 @@ export type Adventure = {
 	latitude: number | null;
 	longitude: number | null;
 	is_public: boolean;
+	created_at?: string;
 };
 
 export type Country = {
@@ -61,6 +62,7 @@ export type Collection = {
 	description: string;
 	is_public: boolean;
 	adventures: Adventure[];
+	created_at?: string;
 };
 
 export type OpenStreetMapPlace = {
