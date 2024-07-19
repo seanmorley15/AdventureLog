@@ -124,11 +124,16 @@
 		latitude={adventureToEdit.latitude}
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
+		query={adventureToEdit.name}
 	/>
 {/if}
 
 {#if isImageFetcherOpen}
-	<ImageFetcher on:image={handleImageFetch} on:close={() => (isImageFetcherOpen = false)} />
+	<ImageFetcher
+		on:image={handleImageFetch}
+		name={adventureToEdit.name}
+		on:close={() => (isImageFetcherOpen = false)}
+	/>
 {/if}
 
 <dialog id="my_modal_1" class="modal">

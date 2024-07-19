@@ -271,9 +271,9 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="order_by"
-							id="created_at"
-							value="created_at"
-							aria-label="Created"
+							id="updated_at"
+							value="updated_at"
+							aria-label="Updated"
 							checked
 						/>
 						<input

@@ -215,24 +215,26 @@
 			<div class="form-control">
 				<form action="?/get" method="post" use:enhance={handleSubmit}>
 					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<p class="text-md font-semibold mb-2">Order Direction</p>
-					<label for="asc">Ascending</label>
-					<input
-						type="radio"
-						name="order_direction"
-						id="asc"
-						class="radio radio-primary"
-						checked
-						value="asc"
-					/>
-					<label for="desc">Descending</label>
-					<input
-						type="radio"
-						name="order_direction"
-						id="desc"
-						value="desc"
-						class="radio radio-primary"
-					/>
+					<p class="text-lg font-semibold mb-2">Order Direction</p>
+					<div class="join">
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_direction"
+							id="asc"
+							value="asc"
+							aria-label="Ascending"
+							checked
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_direction"
+							id="desc"
+							value="desc"
+							aria-label="Descending"
+						/>
+					</div>
 					<br />
 
 					<input

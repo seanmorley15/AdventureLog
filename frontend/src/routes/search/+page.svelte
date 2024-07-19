@@ -60,7 +60,7 @@
 	<h2 class="text-center font-bold text-2xl mb-4">Online Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each osmResults as result}
-			<div class="bg-base-300 rounded-lg shadow-md p-4 w-96">
+			<div class="bg-base-300 rounded-lg shadow-md p-4 w-96 mb-2">
 				<h2 class="text-xl font-bold">{result.display_name}</h2>
 				<p>{result.type}</p>
 				<p>{result.lat}, {result.lon}</p>
