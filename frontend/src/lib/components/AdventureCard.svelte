@@ -26,6 +26,19 @@
 
 	export let adventure: Adventure;
 
+	let activityTypes: string[] = [];
+	// makes it reactivty to changes so it updates automatically
+	$: {
+		if (adventure.activity_types) {
+			activityTypes = adventure.activity_types;
+			if (activityTypes.length > 3) {
+				activityTypes = activityTypes.slice(0, 3);
+				let remaining = adventure.activity_types.length - 3;
+				activityTypes.push('+' + remaining);
+			}
+		}
+	}
+
 	async function deleteAdventure() {
 		let res = await fetch(`/adventures/${adventure.id}?/delete`, {
 			method: 'POST',
@@ -131,14 +144,14 @@
 			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
 				{adventure.name}
 			</h2>
-			<div>
-				{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
-					<div class="badge badge-primary">Visited</div>
-				{:else if user?.pk == adventure.user_id}
-					<div class="badge badge-secondary">Planned</div>
-				{/if}
-				<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
-			</div>
+		</div>
+		<div>
+			{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
+				<div class="badge badge-primary">Visited</div>
+			{:else if user?.pk == adventure.user_id}
+				<div class="badge badge-secondary">Planned</div>
+			{/if}
+			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">
@@ -154,7 +167,7 @@
 		{/if}
 		{#if adventure.activity_types && adventure.activity_types.length > 0}
 			<ul class="flex flex-wrap">
-				{#each adventure.activity_types as activity}
+				{#each activityTypes as activity}
 					<div class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1">
 						{activity}
 					</div>
