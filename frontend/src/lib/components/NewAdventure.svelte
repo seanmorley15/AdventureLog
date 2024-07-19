@@ -132,11 +132,19 @@
 </script>
 
 {#if isPointModalOpen}
-	<PointSelectionModal on:close={() => (isPointModalOpen = false)} on:submit={setLongLat} />
+	<PointSelectionModal
+		query={newAdventure.name}
+		on:close={() => (isPointModalOpen = false)}
+		on:submit={setLongLat}
+	/>
 {/if}
 
 {#if isImageFetcherOpen}
-	<ImageFetcher on:image={handleImageFetch} on:close={() => (isImageFetcherOpen = false)} />
+	<ImageFetcher
+		on:image={handleImageFetch}
+		name={newAdventure.name}
+		on:close={() => (isImageFetcherOpen = false)}
+	/>
 {/if}
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->

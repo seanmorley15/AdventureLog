@@ -81,7 +81,11 @@
 			{#each activities as activity}
 				<li class="flex items-center justify-between bg-base-200 p-2 rounded">
 					{activity}
-					<button class="btn btn-sm btn-error" on:click={() => removeActivity(activity)}>
+					<button
+						type="button"
+						class="btn btn-sm btn-error"
+						on:click={() => removeActivity(activity)}
+					>
 						Remove
 					</button>
 				</li>

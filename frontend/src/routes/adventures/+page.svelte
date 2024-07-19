@@ -181,56 +181,19 @@
 			>
 				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
 			</button>
-			{#if currentView == 'cards'}
-				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-					{#each adventures as adventure}
-						<AdventureCard
-							type={adventure.type}
-							{adventure}
-							on:delete={deleteAdventure}
-							on:edit={editAdventure}
-						/>
-					{/each}
-				</div>
-			{/if}
-			{#if currentView == 'table'}
-				<table class="table table-compact w-full">
-					<thead>
-						<tr>
-							<th>Name</th>
-							<th>Date</th>
-							<th>Rating</th>
-							<th>Type</th>
-							<th>Actions</th>
-						</tr>
-					</thead>
-					<tbody>
-						{#each adventures as adventure}
-							<tr>
-								<td>{adventure.name}</td>
-								<td>{adventure.date}</td>
-								<td>{adventure.rating}</td>
-								<td>{adventure.type}</td>
-								<td>
-									<button
-										class="btn btn-sm btn-primary"
-										on:click={() => editAdventure(new CustomEvent('edit', { detail: adventure }))}
-									>
-										Edit
-									</button>
-									<button
-										class="btn btn-sm btn-error"
-										on:click={() =>
-											deleteAdventure(new CustomEvent('delete', { detail: adventure.id }))}
-									>
-										Delete
-									</button>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			{/if}
+
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each adventures as adventure}
+					<AdventureCard
+						user={data.user}
+						type={adventure.type}
+						{adventure}
+						on:delete={deleteAdventure}
+						on:edit={editAdventure}
+					/>
+				{/each}
+			</div>
+
 			<div class="join flex items-center justify-center mt-4">
 				{#if next || previous}
 					<div class="join">
@@ -253,10 +216,11 @@
 	</div>
 	<div class="drawer-side">
 		<label for="my-drawer" class="drawer-overlay"></label>
+
 		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content rounded-lg">
 			<!-- Sidebar content here -->
-			<h3 class="text-center font-semibold text-lg mb-4">Adventure Types</h3>
 			<div class="form-control">
+				<h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3>
 				<form action="?/get" method="post" use:enhance={handleSubmit}>
 					<label class="label cursor-pointer">
 						<span class="label-text">Completed</span>
@@ -279,56 +243,67 @@
 						/>
 					</label>
 					<!-- <div class="divider"></div> -->
-					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<p class="text-md font-semibold mb-2">Order Direction</p>
-					<label for="asc">Ascending</label>
-					<input
-						type="radio"
-						name="order_direction"
-						id="asc"
-						class="radio radio-primary"
-						checked
-						value="asc"
-					/>
-					<label for="desc">Descending</label>
-					<input
-						type="radio"
-						name="order_direction"
-						id="desc"
-						value="desc"
-						class="radio radio-primary"
-					/>
+					<h3 class="text-center font-bold text-lg mb-4">Sort</h3>
+					<p class="text-lg font-semibold mb-2">Order Direction</p>
+					<div class="join">
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_direction"
+							id="asc"
+							value="asc"
+							aria-label="Ascending"
+							checked
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_direction"
+							id="desc"
+							value="desc"
+							aria-label="Descending"
+						/>
+					</div>
 					<br />
-					<p class="text-md font-semibold mt-2 mb-2">Order By</p>
-					<label for="name">Created At</label>
-					<input
-						type="radio"
-						name="order_by"
-						id="created_at"
-						class="radio radio-primary"
-						checked
-						value="created_at"
-					/>
-					<label for="name">Name</label>
-					<input
-						type="radio"
-						name="order_by"
-						id="name"
-						class="radio radio-primary"
-						checked
-						value="name"
-					/>
-					<label for="date">Date</label>
-					<input type="radio" value="date" name="order_by" id="date" class="radio radio-primary" />
-					<label for="rating">Rating</label>
-					<input
-						type="radio"
-						value="rating"
-						name="order_by"
-						id="rating"
-						class="radio radio-primary"
-					/>
+					<p class="text-lg font-semibold mt-2 mb-2">Order By</p>
+					<div class="flex join overflow-auto">
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="updated_at"
+							value="updated_at"
+							aria-label="Updated"
+							checked
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="name"
+							aria-label="Name"
+							value="name"
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							value="date"
+							name="order_by"
+							id="date"
+							aria-label="Date"
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="rating"
+							aria-label="Rating"
+							value="rating"
+						/>
+					</div>
+
 					<br />
+					<p class="text-lg font-semibold mt-2 mb-2">Sources</p>
 					<label class="label cursor-pointer">
 						<span class="label-text">Include Collection Adventures</span>
 						<input
@@ -338,27 +313,8 @@
 							class="checkbox checkbox-primary"
 						/>
 					</label>
-					<button type="submit" class="btn btn-primary mt-4">Filter</button>
+					<button type="submit" class="btn btn-success mt-4">Filter</button>
 				</form>
-				<div class="divider"></div>
-				<h3 class="text-center font-semibold text-lg mb-4">View</h3>
-				<div class="join">
-					<input
-						class="join-item btn-neutral btn"
-						type="radio"
-						name="options"
-						aria-label="Cards"
-						on:click={() => (currentView = 'cards')}
-						checked
-					/>
-					<input
-						class="join-item btn btn-neutral"
-						type="radio"
-						name="options"
-						aria-label="Table"
-						on:click={() => (currentView = 'table')}
-					/>
-				</div>
 			</div>
 		</ul>
 	</div>

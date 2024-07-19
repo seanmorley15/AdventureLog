@@ -10,7 +10,11 @@
 
 	let markers: Point[] = [];
 
-	let query: string = '';
+	export let query: string | null = null;
+
+	if (query) {
+		geocode();
+	}
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
@@ -43,8 +47,10 @@
 
 	let places: OpenStreetMapPlace[] = [];
 
-	async function geocode(e: Event) {
-		e.preventDefault();
+	async function geocode(e: Event | null) {
+		if (e) {
+			e.preventDefault();
+		}
 		if (!query) {
 			alert('Please enter a location');
 			return;

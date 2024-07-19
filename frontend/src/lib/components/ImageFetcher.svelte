@@ -6,7 +6,8 @@
 	let modal: HTMLDialogElement;
 
 	let url: string = '';
-	let query: string = '';
+
+	export let name: string | null = null;
 
 	let error = '';
 
@@ -30,13 +31,13 @@
 	}
 
 	async function fetchWikiImage() {
-		let res = await fetch(`/api/generate/img/?name=${query}`);
+		let res = await fetch(`/api/generate/img/?name=${name}`);
 		let data = await res.json();
 		if (data.source) {
 			let imageUrl = data.source;
 			let res = await fetch(imageUrl);
 			let blob = await res.blob();
-			let file = new File([blob], `${query}.jpg`, { type: 'image/jpeg' });
+			let file = new File([blob], `${name}.jpg`, { type: 'image/jpeg' });
 			close();
 			dispatch('image', { file });
 		} else {
@@ -75,7 +76,7 @@
 			<input
 				type="text"
 				class="input input-bordered w-full max-w-xs"
-				bind:value={query}
+				bind:value={name}
 				placeholder="Enter a Wikipedia Article Name"
 			/>
 			<button class="btn btn-primary" on:click={fetchWikiImage}>Submit</button>
