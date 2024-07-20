@@ -13,6 +13,7 @@
 	}
 
 	let osmResults: OpenStreetMapPlace[] = [];
+	let adventures: Adventure[] = [];
 
 	let query: string | null = '';
 
@@ -36,7 +37,7 @@
 	});
 
 	console.log(data);
-	let adventures: Adventure[] = [];
+
 	if (data.props) {
 		adventures = data.props.adventures;
 	}
@@ -44,7 +45,9 @@
 
 {#if adventures.length === 0 && osmResults.length === 0}
 	<NotFound error={data.error} />
-{:else}
+{/if}
+
+{#if adventures.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
@@ -56,7 +59,11 @@
 			/>
 		{/each}
 	</div>
+{/if}
+{#if adventures.length > 0 && osmResults.length > 0}
 	<div class="divider"></div>
+{/if}
+{#if osmResults.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">Online Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each osmResults as result}

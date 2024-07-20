@@ -20,8 +20,6 @@
 
 	let resultsPerPage: number = 10;
 
-	let currentView: string = 'cards';
-
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
