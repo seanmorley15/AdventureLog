@@ -5,6 +5,7 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
+	import { appVersion } from '$lib/config';
 
 	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
 
@@ -55,7 +56,11 @@
 			alert('Please enter a location');
 			return;
 		}
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: {
+				'User-Agent': `AdventureLog / ${appVersion} `
+			}
+		});
 		console.log(res);
 		let data = (await res.json()) as OpenStreetMapPlace[];
 		places = data;

@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import { appVersion } from '$lib/config';
 
 	export let data: PageData;
 
@@ -25,13 +26,21 @@
 	});
 
 	async function fetchData() {
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: {
+				'User-Agent': `AdventureLog / ${appVersion} `
+			}
+		});
 		const data = await res.json();
 		osmResults = data;
 	}
 
 	onMount(async () => {
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`);
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: {
+				'User-Agent': `AdventureLog / ${appVersion} `
+			}
+		});
 		const data = await res.json();
 		osmResults = data;
 	});
