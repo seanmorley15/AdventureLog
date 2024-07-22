@@ -83,6 +83,7 @@
 			});
 			if (res.ok) {
 				console.log('Adventure type changed');
+				dispatch('typeChange', adventure.id);
 				addToast('info', 'Adventure type changed successfully!');
 				adventure.type = newType;
 			} else {

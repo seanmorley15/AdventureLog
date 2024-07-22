@@ -25,7 +25,8 @@ export const load = (async (event) => {
 				.map((adventure) => {
 					return {
 						lngLat: [adventure.longitude, adventure.latitude] as [number, number],
-						name: adventure.name
+						name: adventure.name,
+						type: adventure.type
 					};
 				});
 			return {

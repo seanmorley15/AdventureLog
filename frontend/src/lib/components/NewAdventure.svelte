@@ -27,7 +27,8 @@
 		user_id: NaN,
 		latitude: null,
 		longitude: null,
-		is_public: false
+		is_public: false,
+		collection: null
 	};
 
 	let image: File;

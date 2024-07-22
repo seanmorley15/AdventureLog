@@ -4,7 +4,7 @@
 	import type { Adventure, OpenStreetMapPlace } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { page } from '$app/stores';
+	import EditAdventure from '$lib/components/EditAdventure.svelte';
 
 	export let data: PageData;
 
@@ -13,6 +13,7 @@
 	}
 
 	let osmResults: OpenStreetMapPlace[] = [];
+	let adventures: Adventure[] = [];
 
 	let query: string | null = '';
 
@@ -36,15 +37,44 @@
 	});
 
 	console.log(data);
-	let adventures: Adventure[] = [];
+
 	if (data.props) {
 		adventures = data.props.adventures;
 	}
+
+	let adventureToEdit: Adventure;
+	let isEditModalOpen: boolean = false;
+	let isShowingCreateModal: boolean = false;
+
+	function editAdventure(event: CustomEvent<Adventure>) {
+		adventureToEdit = event.detail;
+		isEditModalOpen = true;
+	}
+
+	function saveEdit(event: CustomEvent<Adventure>) {
+		adventures = adventures.map((adventure) => {
+			if (adventure.id === event.detail.id) {
+				return event.detail;
+			}
+			return adventure;
+		});
+		isEditModalOpen = false;
+	}
 </script>
+
+{#if isEditModalOpen}
+	<EditAdventure
+		{adventureToEdit}
+		on:close={() => (isEditModalOpen = false)}
+		on:saveEdit={saveEdit}
+	/>
+{/if}
 
 {#if adventures.length === 0 && osmResults.length === 0}
 	<NotFound error={data.error} />
-{:else}
+{/if}
+
+{#if adventures.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
@@ -53,10 +83,15 @@
 				type={adventure.type}
 				{adventure}
 				on:delete={deleteAdventure}
+				on:edit={editAdventure}
 			/>
 		{/each}
 	</div>
+{/if}
+{#if adventures.length > 0 && osmResults.length > 0}
 	<div class="divider"></div>
+{/if}
+{#if osmResults.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">Online Results</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each osmResults as result}

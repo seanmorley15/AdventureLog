@@ -25,10 +25,7 @@ export const load = (async (event) => {
 
 		return {
 			props: {
-				adventures: data.results as Adventure[],
-				nextPage: data.next,
-				prevPage: data.previous,
-				total: data.count,
+				adventures: data,
 				query
 			}
 		};

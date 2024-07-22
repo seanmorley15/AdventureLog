@@ -56,16 +56,24 @@ class CustomUserAdmin(UserAdmin):
             return mark_safe(f'<img src="{public_url}/media/{obj.profile_pic.name}" width="100px" height="100px"')
         else:
             return
+        
+class CollectionAdmin(admin.ModelAdmin):
+    def adventure_count(self, obj):
+        return obj.adventure_set.count()
+
+    adventure_count.short_description = 'Adventure Count'
+
+    list_display = ('name', 'user_id', 'adventure_count', 'is_public')
 
 admin.site.register(CustomUser, CustomUserAdmin)
 
 
 
 admin.site.register(Adventure, AdventureAdmin)
+admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Country, CountryAdmin)
 admin.site.register(Region, RegionAdmin)
 admin.site.register(VisitedRegion)
-admin.site.register(Collection)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

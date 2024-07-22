@@ -77,7 +77,7 @@ MIDDLEWARE = (
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
 
-ROOT_URLCONF = 'demo.urls'
+ROOT_URLCONF = 'main.urls'
 
 # WSGI_APPLICATION = 'demo.wsgi.application'
 

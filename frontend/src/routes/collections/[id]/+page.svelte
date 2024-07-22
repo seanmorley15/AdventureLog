@@ -9,13 +9,18 @@
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import NotFound from '$lib/components/NotFound.svelte';
 
 	export let data: PageData;
 
 	let collection: Collection;
 
 	let adventures: Adventure[] = [];
-	let numVisited: number = adventures.filter((a) => a.type == 'visited').length;
+	let numVisited: number = 0;
+
+	$: {
+		numVisited = adventures.filter((a) => a.type === 'visited').length;
+	}
 
 	let notFound: boolean = false;
 	let isShowingCreateModal: boolean = false;
@@ -54,6 +59,19 @@
 				console.log('Error adding adventure to collection');
 			}
 		}
+	}
+
+	function changeType(event: CustomEvent<number>) {
+		adventures = adventures.map((adventure) => {
+			if (adventure.id == event.detail) {
+				if (adventure.type == 'visited') {
+					adventure.type = 'planned';
+				} else {
+					adventure.type = 'visited';
+				}
+			}
+			return adventure;
+		});
 	}
 
 	let adventureToEdit: Adventure;
@@ -157,7 +175,7 @@
 		<div class="flex items-center justify-center mb-4">
 			<div class="stats shadow bg-base-300">
 				<div class="stat">
-					<div class="stat-title">Region Stats</div>
+					<div class="stat-title">Collection Stats</div>
 					<div class="stat-value">{numVisited}/{adventures.length} Visited</div>
 					{#if numVisited === adventures.length}
 						<div class="stat-desc">You've completed this collection! 🎉!</div>
@@ -169,6 +187,9 @@
 		</div>
 	{/if}
 	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
+	{#if adventures.length == 0}
+		<NotFound error={undefined} />
+	{/if}
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each adventures as adventure}
 			<AdventureCard
@@ -177,6 +198,7 @@
 				on:delete={deleteAdventure}
 				type={adventure.type}
 				{adventure}
+				on:typeChange={changeType}
 			/>
 		{/each}
 	</div>
