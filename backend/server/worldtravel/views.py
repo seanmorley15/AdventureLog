@@ -37,7 +37,10 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RegionSerializer
     permission_classes = [IsAuthenticated]
 
+
 class VisitedRegionViewSet(viewsets.ModelViewSet):
-    queryset = VisitedRegion.objects.all()
     serializer_class = VisitedRegionSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return VisitedRegion.objects.filter(user_id=self.request.user.id)
