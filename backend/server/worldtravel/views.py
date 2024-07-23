@@ -21,7 +21,7 @@ def regions_by_country(request, country_code):
 @permission_classes([IsAuthenticated])
 def visits_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    visits = VisitedRegion.objects.filter(region__country=country)
+    visits = VisitedRegion.objects.filter(region__country=country, user_id=request.user.id)
 
     serializer = VisitedRegionSerializer(visits, many=True)
     return Response(serializer.data)
