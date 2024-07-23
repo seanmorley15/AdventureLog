@@ -55,10 +55,17 @@
 			>
 		</p>
 		<p class="py-1">Made with ❤️ in the United States.</p>
-		<div
-			class="modal-action items-center"
-			style="display: flex; flex-direction: column; align-items: center; width: 100%;"
-		></div>
+		<div class="divider"></div>
+		<h3 class="font-bold text-md">Open Source Attributions</h3>
+		<p class="py-1 mb-4">
+			Location Search and Geocoding is provided by <a
+				target="_blank"
+				rel="noopener noreferrer"
+				class="text-primary-500 underline"
+				href="https://operations.osmfoundation.org/policies/nominatim/">OpenStreepMap</a
+			>. Their data is liscensed under the ODbL liscense.
+		</p>
+
 		<button class="btn btn-primary" on:click={close}>Close</button>
 	</div>
 </dialog>

@@ -21,7 +21,7 @@ def regions_by_country(request, country_code):
 @permission_classes([IsAuthenticated])
 def visits_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    visits = VisitedRegion.objects.filter(region__country=country)
+    visits = VisitedRegion.objects.filter(region__country=country, user_id=request.user.id)
 
     serializer = VisitedRegionSerializer(visits, many=True)
     return Response(serializer.data)
@@ -37,7 +37,10 @@ class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = RegionSerializer
     permission_classes = [IsAuthenticated]
 
+
 class VisitedRegionViewSet(viewsets.ModelViewSet):
-    queryset = VisitedRegion.objects.all()
     serializer_class = VisitedRegionSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return VisitedRegion.objects.filter(user_id=self.request.user.id)
