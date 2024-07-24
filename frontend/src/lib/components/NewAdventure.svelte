@@ -9,6 +9,9 @@
 
 	export let type: string = 'visited';
 
+	export let longitude: number | undefined = undefined;
+	export let latitude: number | undefined = undefined;
+
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ActivityComplete from './ActivityComplete.svelte';
@@ -30,6 +33,11 @@
 		is_public: false,
 		collection: null
 	};
+
+	if (longitude && latitude) {
+		newAdventure.latitude = latitude;
+		newAdventure.longitude = longitude;
+	}
 
 	let image: File;
 	let fileInput: HTMLInputElement;
@@ -164,6 +172,28 @@
 				on:submit={handleSubmit}
 				action="/adventures?/create"
 			>
+				<div class="join">
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="type"
+						id="visited"
+						value="visited"
+						aria-label="Visited"
+						checked
+						on:click={() => (type = 'visited')}
+					/>
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="type"
+						id="planned"
+						value="planned"
+						aria-label="Planned"
+						on:click={() => (type = 'planned')}
+					/>
+				</div>
+
 				<input
 					type="text"
 					name="type"

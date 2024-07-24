@@ -1,6 +1,7 @@
 <script>
 	// @ts-nocheck
 
+	import NewAdventure from '$lib/components/NewAdventure.svelte';
 	import {
 		DefaultMarker,
 		MapEvents,
@@ -15,6 +16,19 @@
 	export let data;
 
 	let clickedName = '';
+
+	let newMarker = [];
+
+	let newLongitude = null;
+	let newLatitude = null;
+
+	function addMarker(e) {
+		newMarker = [];
+		newMarker = [...newMarker, { lngLat: e.detail.lngLat, name: 'Marker 1' }];
+		console.log(newMarker);
+		newLongitude = e.detail.lngLat.lng;
+		newLatitude = e.detail.lngLat.lat;
+	}
 
 	let markers = data.props.markers;
 
@@ -31,7 +45,23 @@
 
 	// mapped to the checkbox
 	let showGEO = true;
+
+	let createModalOpen = false;
 </script>
+
+{#if newMarker.length > 0}
+	<button type="button" class="btn btn-primary" on:click={() => (createModalOpen = true)}
+		>Add New Adventure at Marker</button
+	>
+{/if}
+
+{#if createModalOpen}
+	<NewAdventure
+		on:close={() => (createModalOpen = false)}
+		longitude={newLongitude}
+		latitude={newLatitude}
+	/>
+{/if}
 
 <label for="show-geo">Show Borders?</label>
 <input type="checkbox" id="shpw-gep" name="show-geo" class="checkbox" bind:checked={showGEO} />
@@ -109,6 +139,10 @@
 			/> -->
 		</GeoJSON>
 	{/if}
+	<MapEvents on:click={addMarker} />
+	{#each newMarker as marker}
+		<DefaultMarker lngLat={marker.lngLat} />
+	{/each}
 </MapLibre>
 
 <style>
