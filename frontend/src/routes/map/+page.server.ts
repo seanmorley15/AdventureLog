@@ -27,6 +27,12 @@ export const load = (async (event) => {
 			console.error('Failed to fetch US GeoJSON');
 		}
 
+		let CAfetch = await fetch(`${endpoint}/static/data/ca.json`);
+		let CAjson = await CAfetch.json();
+		if (!CAjson) {
+			console.error('Failed to fetch CA GeoJSON');
+		}
+
 		if (!visitedFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
@@ -48,6 +54,7 @@ export const load = (async (event) => {
 				props: {
 					markers,
 					USjson,
+					CAjson,
 					visitedRegions
 				}
 			};
