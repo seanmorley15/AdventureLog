@@ -9,8 +9,8 @@
 
 	export let type: string = 'visited';
 
-	export let longitude: number | undefined = undefined;
-	export let latitude: number | undefined = undefined;
+	export let longitude: number | null = null;
+	export let latitude: number | null = null;
 
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ClipboardList from '~icons/mdi/clipboard-list';
@@ -145,6 +145,8 @@
 		query={newAdventure.name}
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
+		latitude={newAdventure.latitude || null}
+		longitude={newAdventure.longitude || null}
 	/>
 {/if}
 
@@ -340,7 +342,8 @@
 						<button
 							type="button"
 							class="btn btn-secondary"
-							on:click={() => (isPointModalOpen = true)}>Define Location</button
+							on:click={() => (isPointModalOpen = true)}
+							>{newAdventure.latitude && newAdventure.longitude ? 'Change' : 'Select'} Location</button
 						>
 					</div>
 					<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>

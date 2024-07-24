@@ -43,6 +43,12 @@
 		visitArray.push(el.region);
 	});
 
+	function clearMarkers() {
+		newMarker = [];
+		newLatitude = null;
+		newLongitude = null;
+	}
+
 	// mapped to the checkbox
 	let showGEO = true;
 
@@ -50,8 +56,13 @@
 </script>
 
 {#if newMarker.length > 0}
-	<button type="button" class="btn btn-primary" on:click={() => (createModalOpen = true)}
+	<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
 		>Add New Adventure at Marker</button
+	>
+	<button type="button" class="btn btn-neutral mb-2" on:click={clearMarkers}>Clear Marker</button>
+{:else}
+	<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
+		>Add New Adventure</button
 	>
 {/if}
 
