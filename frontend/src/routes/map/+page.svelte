@@ -17,18 +17,10 @@
 	let clickedName = '';
 
 	let markers = data.props.markers;
-	let us = data.props.USjson;
-	let ca = data.props.CAjson;
-
-	// combine the two geojsons
-	let geoJSON = {
-		type: 'FeatureCollection',
-		features: [...us.features, ...ca.features]
-	};
-
-	console.log(markers);
 
 	let visitedRegions = data.props.visitedRegions;
+
+	let geoJSON = data.props.geoJSON;
 
 	let visitArray = [];
 
@@ -37,6 +29,7 @@
 		visitArray.push(el.region);
 	});
 
+	// mapped to the checkbox
 	let showGEO = true;
 </script>
 
@@ -94,7 +87,7 @@
 		{/if}
 	{/each}
 	{#if showGEO}
-		<GeoJSON id="states" data={geoJSON} promoteId="ISOCODE">
+		<GeoJSON id="states" data={data.props.geoJSON} promoteId="ISOCODE">
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{ 'line-color': 'grey', 'line-width': 3 }}
