@@ -5,6 +5,12 @@ import type { Adventure, VisitedRegion } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
+	let countryCodesToFetch = ['US', 'CA'];
+	let geoJSON = {
+		type: 'FeatureCollection',
+		features: []
+	};
+
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
@@ -21,17 +27,15 @@ export const load = (async (event) => {
 		});
 		let visitedRegions = (await visitedRegionsFetch.json()) as VisitedRegion[];
 
-		let USfetch = await fetch(`${endpoint}/static/data/us.json`);
-		let USjson = await USfetch.json();
-		if (!USjson) {
-			console.error('Failed to fetch US GeoJSON');
-		}
-
-		let CAfetch = await fetch(`${endpoint}/static/data/ca.json`);
-		let CAjson = await CAfetch.json();
-		if (!CAjson) {
-			console.error('Failed to fetch CA GeoJSON');
-		}
+		countryCodesToFetch.forEach(async (code) => {
+			let res = await fetch(`${endpoint}/static/data/${code.toLowerCase()}.json`);
+			let json = await res.json();
+			if (!json) {
+				console.error(`Failed to fetch ${code} GeoJSON`);
+			} else {
+				geoJSON.features = geoJSON.features.concat(json.features);
+			}
+		});
 
 		if (!visitedFetch.ok) {
 			console.error('Failed to fetch visited adventures');
@@ -53,8 +57,7 @@ export const load = (async (event) => {
 			return {
 				props: {
 					markers,
-					USjson,
-					CAjson,
+					geoJSON,
 					visitedRegions
 				}
 			};
