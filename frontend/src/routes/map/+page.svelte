@@ -1,14 +1,38 @@
 <script>
 	// @ts-nocheck
 
-	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
+	import {
+		DefaultMarker,
+		MapEvents,
+		MapLibre,
+		Popup,
+		Marker,
+		GeoJSON,
+		LineLayer,
+		FillLayer,
+		SymbolLayer
+	} from 'svelte-maplibre';
 	export let data;
 
 	let clickedName = '';
 
 	let markers = data.props.markers;
+	let us = data.props.USjson;
 	console.log(markers);
+
+	let visitedRegions = data.props.visitedRegions;
+
+	let visitArray = [];
+
+	// turns in into an array of the visits
+	visitedRegions.forEach((el) => {
+		visitArray.push(el.region);
+	});
+
+	let showGEO = true;
 </script>
+
+<input type="checkbox" class="checkbox" bind:checked={showGEO} />
 
 <MapLibre
 	style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
@@ -60,6 +84,29 @@
 			</Marker>
 		{/if}
 	{/each}
+	{#if showGEO}
+		<GeoJSON id="states" data={us} promoteId="STUSPS">
+			<LineLayer
+				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+				paint={{ 'line-color': 'grey', 'line-width': 3 }}
+				beforeLayerType="symbol"
+			/>
+			<FillLayer
+				paint={{ 'fill-color': 'rgba(37, 244, 26, 0.15)' }}
+				filter={['in', 'STUSPS', ...visitArray]}
+			/>
+			<SymbolLayer
+				layout={{
+					'text-field': ['slice', ['get', 'STUSPS'], 3],
+					'text-size': 12,
+					'text-anchor': 'center'
+				}}
+				paint={{
+					'text-color': 'black'
+				}}
+			/>
+		</GeoJSON>
+	{/if}
 </MapLibre>
 
 <style>
