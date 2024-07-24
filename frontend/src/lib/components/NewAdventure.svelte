@@ -9,6 +9,9 @@
 
 	export let type: string = 'visited';
 
+	export let longitude: number | null = null;
+	export let latitude: number | null = null;
+
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ActivityComplete from './ActivityComplete.svelte';
@@ -30,6 +33,11 @@
 		is_public: false,
 		collection: null
 	};
+
+	if (longitude && latitude) {
+		newAdventure.latitude = latitude;
+		newAdventure.longitude = longitude;
+	}
 
 	let image: File;
 	let fileInput: HTMLInputElement;
@@ -137,6 +145,8 @@
 		query={newAdventure.name}
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
+		latitude={newAdventure.latitude || null}
+		longitude={newAdventure.longitude || null}
 	/>
 {/if}
 
@@ -164,6 +174,28 @@
 				on:submit={handleSubmit}
 				action="/adventures?/create"
 			>
+				<div class="join">
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="type"
+						id="visited"
+						value="visited"
+						aria-label="Visited"
+						checked
+						on:click={() => (type = 'visited')}
+					/>
+					<input
+						class="join-item btn btn-neutral"
+						type="radio"
+						name="type"
+						id="planned"
+						value="planned"
+						aria-label="Planned"
+						on:click={() => (type = 'planned')}
+					/>
+				</div>
+
 				<input
 					type="text"
 					name="type"
@@ -310,7 +342,8 @@
 						<button
 							type="button"
 							class="btn btn-secondary"
-							on:click={() => (isPointModalOpen = true)}>Define Location</button
+							on:click={() => (isPointModalOpen = true)}
+							>{newAdventure.latitude && newAdventure.longitude ? 'Change' : 'Select'} Location</button
 						>
 					</div>
 					<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>

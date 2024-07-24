@@ -3,19 +3,22 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 from worldtravel.models import Country, Region
+from django.db import transaction
 
 
 class Command(BaseCommand):
     help = 'Imports the world travel data'
 
-    def handle(self, *args, **kwargs):
-        
-        # if the country or regions tables are not empty, do not insert data
-        if Country.objects.exists() or Region.objects.exists():
-            self.stdout.write(self.style.NOTICE(
-                'Countries or regions already exist in the database!'))
-            return
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '-f', '--force',
+            action='store_true',
+            help='Force import even if data already exists'
+        )
 
+    def handle(self, *args, **options):
+        force = options['force']
+        
         countries = [
             ('United States', 'us', 'NA'),
             ('Canada', 'ca', 'NA'),
@@ -38,21 +41,6 @@ class Command(BaseCommand):
             ('Switzerland', 'ch', 'EU'),
             ('Italy', 'it', 'EU'),
         ]
-
-        for name, country_code, continent in countries:
-            country, created = Country.objects.get_or_create(
-                name=name,
-                country_code=country_code,
-                defaults={'continent': continent}
-            )
-            if created:
-                print(f'Inserted {name} into worldtravel countries')
-            else:
-                print(f'{name} already exists in worldtravel countries')
-
-        self.stdout.write(self.style.SUCCESS(
-            'Successfully inserted worldtravel countries!'
-        ))
         
         regions = [
             ('US-AL', 'Alabama', 'us'),
@@ -136,7 +124,7 @@ class Command(BaseCommand):
             ('DE-TH', 'Thüringen', 'de'),
             ('FR-ARA', 'Auvergne-Rhône-Alpes', 'fr'),
             ('FR-BFC', 'Bourgogne-Franche-Comté', 'fr'),
-            ('FR-BRE', 'Brittany', 'fr'),
+            ('FR-BRE', 'Bretagne', 'fr'),
             ('FR-CVL', 'Centre-Val de Loire', 'fr'),
             ('FR-GES', 'Grand Est', 'fr'),
             ('FR-HDF', 'Hauts-de-France', 'fr'),
@@ -501,17 +489,73 @@ class Command(BaseCommand):
             ('IT-34', 'Veneto', 'it'),
         ]
         
-        for code, name, country_code in regions:
+        if not force and (Country.objects.exists() or Region.objects.exists()):
+            self.stdout.write(self.style.WARNING(
+                'Countries or regions already exist in the database. Use --force to override.'
+            ))
+            return
+
+        try:
+            with transaction.atomic():
+                if force:
+                    self.sync_countries(countries)
+                    self.sync_regions(regions)
+                else:
+                    self.insert_countries(countries)
+                    self.insert_regions(regions)
+                
+                self.stdout.write(self.style.SUCCESS('Successfully imported world travel data'))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f'Error importing data: {str(e)}'))
+
+    def sync_countries(self, countries):
+        country_codes = [code for _, code, _ in countries]
+        Country.objects.exclude(country_code__in=country_codes).delete()
+        
+        for name, country_code, continent in countries:
+            country, created = Country.objects.update_or_create(
+                country_code=country_code,
+                defaults={'name': name, 'continent': continent}
+            )
+            if created:
+                self.stdout.write(f'Inserted {name} into worldtravel countries')
+            else:
+                self.stdout.write(f'Updated {name} in worldtravel countries')
+
+    def sync_regions(self, regions):
+        region_ids = [id for id, _, _ in regions]
+        Region.objects.exclude(id__in=region_ids).delete()
+
+        for id, name, country_code in regions:
             country = Country.objects.get(country_code=country_code)
-            region, created = Region.objects.get_or_create(
-                id=code,
+            region, created = Region.objects.update_or_create(
+                id=id,
                 defaults={'name': name, 'country': country}
             )
             if created:
-                print(f'Inserted region: {name} ({code})')
+                self.stdout.write(f'Inserted {name} into worldtravel regions')
             else:
-                print(f'Region already exists: {name} ({code})')
+                self.stdout.write(f'Updated {name} in worldtravel regions')
 
-        self.stdout.write(self.style.SUCCESS(
-            'Successfully inserted worldtravel regions!'
-        ))
+    def insert_countries(self, countries):
+        for name, country_code, continent in countries:
+            country, created = Country.objects.get_or_create(
+                country_code=country_code,
+                defaults={'name': name, 'continent': continent}
+            )
+            if created:
+                self.stdout.write(f'Inserted {name} into worldtravel countries')
+            else:
+                self.stdout.write(f'{name} already exists in worldtravel countries')
+
+    def insert_regions(self, regions):
+        for id, name, country_code in regions:
+            country = Country.objects.get(country_code=country_code)
+            region, created = Region.objects.get_or_create(
+                id=id,
+                defaults={'name': name, 'country': country}
+            )
+            if created:
+                self.stdout.write(f'Inserted {name} into worldtravel regions')
+            else:
+                self.stdout.write(f'{name} already exists in worldtravel regions')
