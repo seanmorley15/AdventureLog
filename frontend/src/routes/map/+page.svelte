@@ -97,7 +97,7 @@
 				paint={{ 'fill-color': 'rgba(37, 244, 26, 0.15)' }}
 				filter={['in', 'ISOCODE', ...visitArray]}
 			/>
-			<!-- <SymbolLayer
+			<SymbolLayer
 				layout={{
 					'text-field': ['slice', ['get', 'ISOCODE'], 3],
 					'text-size': 12,
@@ -106,7 +106,7 @@
 				paint={{
 					'text-color': 'black'
 				}}
-			/> -->
+			/>
 		</GeoJSON>
 	{/if}
 </MapLibre>

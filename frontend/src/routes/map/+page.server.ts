@@ -5,7 +5,7 @@ import type { Adventure, VisitedRegion } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
-	let countryCodesToFetch = ['US', 'CA'];
+	let countryCodesToFetch = ['FR', 'US', 'CA'];
 	let geoJSON = {
 		type: 'FeatureCollection',
 		features: []
@@ -27,22 +27,24 @@ export const load = (async (event) => {
 		});
 		let visitedRegions = (await visitedRegionsFetch.json()) as VisitedRegion[];
 
-		countryCodesToFetch.forEach(async (code) => {
-			let res = await fetch(`${endpoint}/static/data/${code.toLowerCase()}.json`);
-			let json = await res.json();
-			if (!json) {
-				console.error(`Failed to fetch ${code} GeoJSON`);
-			} else {
-				geoJSON.features = geoJSON.features.concat(json.features);
-			}
-		});
+		await Promise.all(
+			countryCodesToFetch.map(async (code) => {
+				let res = await fetch(`${endpoint}/static/data/${code.toLowerCase()}.json`);
+				console.log('fetching ' + code);
+				let json = await res.json();
+				if (!json) {
+					console.error(`Failed to fetch ${code} GeoJSON`);
+				} else {
+					geoJSON.features = geoJSON.features.concat(json.features);
+				}
+			})
+		);
 
 		if (!visitedFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
 		} else {
 			let visited = (await visitedFetch.json()) as Adventure[];
-			console.log('VISITEDL ' + visited);
 			// make a long lat array like this { lngLat: [-20, 0], name: 'Adventure 1' },
 			let markers = visited
 				.filter((adventure) => adventure.latitude !== null && adventure.longitude !== null)
@@ -53,6 +55,8 @@ export const load = (async (event) => {
 						type: adventure.type
 					};
 				});
+
+			console.log('sent');
 
 			return {
 				props: {
