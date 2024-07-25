@@ -30,7 +30,34 @@
 		newLatitude = e.detail.lngLat.lat;
 	}
 
-	let markers = data.props.markers;
+	let markers = [];
+
+	$: {
+		markers = data.props.markers;
+	}
+
+	function createNewAdventure(event) {
+		// markers = visited
+		// 		.filter((adventure) => adventure.latitude !== null && adventure.longitude !== null)
+		// 		.map((adventure) => {
+		// 			return {
+		// 				lngLat: [adventure.longitude, adventure.latitude] as [number, number],
+		// 				name: adventure.name,
+		// 				type: adventure.type
+		// 			};
+		// 		});
+		console.log(event.detail);
+
+		let newMarker = {
+			lngLat: [event.detail.longitude, event.detail.latitude],
+			name: event.detail.name,
+			type: 'planned'
+		};
+		markers = [...markers, newMarker];
+		clearMarkers();
+		console.log(markers);
+		createModalOpen = false;
+	}
 
 	let visitedRegions = data.props.visitedRegions;
 
@@ -71,6 +98,7 @@
 		on:close={() => (createModalOpen = false)}
 		longitude={newLongitude}
 		latitude={newLatitude}
+		on:create={createNewAdventure}
 	/>
 {/if}
 
@@ -82,7 +110,7 @@
 	class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
 	standardControls
 >
-	{#each data.props.markers as { lngLat, name, type }}
+	{#each markers as { lngLat, name, type }}
 		{#if type == 'visited'}
 			<Marker
 				{lngLat}

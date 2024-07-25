@@ -108,3 +108,7 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 - Password reset functionality
 - Improved error handling
 - Handling of adventure cards with variable width -->
+
+# Attribution
+
+- [Mexico GEOJSON](https://cartographyvectors.com/map/784-mexico-with-states)

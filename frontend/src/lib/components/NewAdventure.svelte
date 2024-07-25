@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { Adventure, Point } from '$lib/types';
+	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
@@ -15,6 +15,7 @@
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ActivityComplete from './ActivityComplete.svelte';
+	import { appVersion } from '$lib/config';
 
 	let newAdventure: Adventure = {
 		id: NaN,
@@ -37,6 +38,25 @@
 	if (longitude && latitude) {
 		newAdventure.latitude = latitude;
 		newAdventure.longitude = longitude;
+		reverseGeocode();
+	}
+
+	async function reverseGeocode() {
+		let res = await fetch(
+			`https://nominatim.openstreetmap.org/search?q=${newAdventure.latitude},${newAdventure.longitude}&format=jsonv2`,
+			{
+				headers: {
+					'User-Agent': `AdventureLog / ${appVersion} `
+				}
+			}
+		);
+		let data = (await res.json()) as OpenStreetMapPlace[];
+		if (data.length > 0) {
+			newAdventure.name = data[0]?.name || '';
+			newAdventure.activity_types?.push(data[0]?.type || '');
+			newAdventure.location = data[0]?.display_name || '';
+		}
+		console.log(data);
 	}
 
 	let image: File;

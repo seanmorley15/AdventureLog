@@ -5,7 +5,7 @@ import type { Adventure, VisitedRegion } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
-	let countryCodesToFetch = ['FR', 'US', 'CA', 'DE', 'AU'];
+	let countryCodesToFetch = ['FR', 'US', 'CA', 'DE', 'AU', 'MX'];
 	let geoJSON = {
 		type: 'FeatureCollection',
 		features: []
