@@ -202,7 +202,7 @@
 						id="visited"
 						value="visited"
 						aria-label="Visited"
-						checked
+						checked={newAdventure.type === 'visited'}
 						on:click={() => (type = 'visited')}
 					/>
 					<input
@@ -212,6 +212,7 @@
 						id="planned"
 						value="planned"
 						aria-label="Planned"
+						checked={newAdventure.type === 'planned'}
 						on:click={() => (type = 'planned')}
 					/>
 				</div>

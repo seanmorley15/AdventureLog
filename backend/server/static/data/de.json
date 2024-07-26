@@ -5,7 +5,7 @@
       "type": "Feature",
       "id": 0,
       "properties": {
-        "ISO": "DE-BW",
+        "ISOCODE": "DE-BW",
         "NAME_0": "Germany",
         "ID_1": 1,
         "NAME_1": "Baden-Württemberg",
@@ -13,7 +13,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -218,7 +218,7 @@
       "type": "Feature",
       "id": 1,
       "properties": {
-        "ISO": "DE-BY",
+        "ISOCODE": "DE-BY",
         "NAME_0": "Germany",
         "ID_1": 2,
         "NAME_1": "Bayern",
@@ -226,7 +226,7 @@
         "VARNAME_1": "Bavaria",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -510,7 +510,7 @@
       "type": "Feature",
       "id": 2,
       "properties": {
-        "ISO": "DE-BE",
+        "ISOCODE": "DE-BE",
         "NAME_0": "Germany",
         "ID_1": 3,
         "NAME_1": "Berlin",
@@ -518,7 +518,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -558,7 +558,7 @@
       "type": "Feature",
       "id": 3,
       "properties": {
-        "ISO": "DE-BB",
+        "ISOCODE": "DE-BB",
         "NAME_0": "Germany",
         "ID_1": 4,
         "NAME_1": "Brandenburg",
@@ -566,7 +566,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -747,7 +747,7 @@
       "type": "Feature",
       "id": 4,
       "properties": {
-        "ISO": "DE-HB",
+        "ISOCODE": "DE-HB",
         "NAME_0": "Germany",
         "ID_1": 5,
         "NAME_1": "Bremen",
@@ -755,7 +755,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -787,7 +787,7 @@
       "type": "Feature",
       "id": 5,
       "properties": {
-        "ISO": "DE-HH",
+        "ISOCODE": "DE-HH",
         "NAME_0": "Germany",
         "ID_1": 6,
         "NAME_1": "Hamburg",
@@ -795,7 +795,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -830,7 +830,7 @@
       "type": "Feature",
       "id": 6,
       "properties": {
-        "ISO": "DE-HE",
+        "ISOCODE": "DE-HE",
         "NAME_0": "Germany",
         "ID_1": 7,
         "NAME_1": "Hessen",
@@ -838,7 +838,7 @@
         "VARNAME_1": "Hesse",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -1007,7 +1007,7 @@
       "type": "Feature",
       "id": 7,
       "properties": {
-        "ISO": "DE-MV",
+        "ISOCODE": "DE-MV",
         "NAME_0": "Germany",
         "ID_1": 8,
         "NAME_1": "Mecklenburg-Vorpommern",
@@ -1015,7 +1015,7 @@
         "VARNAME_1": "Mecklenburg-West Pomerania",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1284,7 +1284,7 @@
       "type": "Feature",
       "id": 8,
       "properties": {
-        "ISO": "DE-NI",
+        "ISOCODE": "DE-NI",
         "NAME_0": "Germany",
         "ID_1": 9,
         "NAME_1": "Niedersachsen",
@@ -1292,7 +1292,7 @@
         "VARNAME_1": "Lower Saxony",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1610,7 +1610,7 @@
       "type": "Feature",
       "id": 9,
       "properties": {
-        "ISO": "DE-NW",
+        "ISOCODE": "DE-NW",
         "NAME_0": "Germany",
         "ID_1": 10,
         "NAME_1": "Nordrhein-Westfalen",
@@ -1618,7 +1618,7 @@
         "VARNAME_1": "North Rhine-Westphalia",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -1809,7 +1809,7 @@
       "type": "Feature",
       "id": 10,
       "properties": {
-        "ISO": "DE-RP",
+        "ISOCODE": "DE-RP",
         "NAME_0": "Germany",
         "ID_1": 11,
         "NAME_1": "Rheinland-Pfalz",
@@ -1817,7 +1817,7 @@
         "VARNAME_1": "Rhineland-Palatinate",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -1948,7 +1948,7 @@
       "type": "Feature",
       "id": 11,
       "properties": {
-        "ISO": "DE-SL",
+        "ISOCODE": "DE-SL",
         "NAME_0": "Germany",
         "ID_1": 12,
         "NAME_1": "Saarland",
@@ -1956,7 +1956,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -2002,7 +2002,7 @@
       "type": "Feature",
       "id": 12,
       "properties": {
-        "ISO": "DE-ST",
+        "ISOCODE": "DE-ST",
         "NAME_0": "Germany",
         "ID_1": 13,
         "NAME_1": "Sachsen-Anhalt",
@@ -2010,7 +2010,7 @@
         "VARNAME_1": "Saxony-Anhalt",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -2149,7 +2149,7 @@
       "type": "Feature",
       "id": 13,
       "properties": {
-        "ISO": "DE-SN",
+        "ISOCODE": "DE-SN",
         "NAME_0": "Germany",
         "ID_1": 14,
         "NAME_1": "Sachsen",
@@ -2157,7 +2157,7 @@
         "VARNAME_1": "Saxony",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
@@ -2287,7 +2287,7 @@
       "type": "Feature",
       "id": 14,
       "properties": {
-        "ISO": "DE-SH",
+        "ISOCODE": "DE-SH",
         "NAME_0": "Germany",
         "ID_1": 15,
         "NAME_1": "Schleswig-Holstein",
@@ -2295,7 +2295,7 @@
         "VARNAME_1": null,
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -2529,7 +2529,7 @@
       "type": "Feature",
       "id": 15,
       "properties": {
-        "ISO": "DE-TH",
+        "ISOCODE": "DE-TH",
         "NAME_0": "Germany",
         "ID_1": 16,
         "NAME_1": "Thüringen",
@@ -2537,7 +2537,7 @@
         "VARNAME_1": "Thuringia",
         "TYPE_1": "Land",
         "ENGTYPE_1": "State",
-        "ISOCODE": 86
+        "ID_2": 86
       },
       "geometry": {
         "type": "Polygon",
