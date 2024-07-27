@@ -220,7 +220,7 @@
 			</div>
 		</div>
 	{/if}
-	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
+	<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
 	{#if adventures.length == 0}
 		<NotFound error={undefined} />
 	{/if}
@@ -237,15 +237,17 @@
 		{/each}
 	</div>
 
-	{#if numberOfDays}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">Duration: {numberOfDays} days</p>
-	{/if}
 	{#if collection.start_date && collection.end_date}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Itinerary</h1>
+		{#if numberOfDays}
+			<p class="text-center text-lg mt-4 pl-16 pr-16">Duration: {numberOfDays} days</p>
+		{/if}
 		<p class="text-center text-lg mt-4 pl-16 pr-16">
 			Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
 				collection.end_date
 			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
 		</p>
+		<div class="divider"></div>
 
 		{#each Array(numberOfDays) as _, i}
 			{@const currentDate = new Date(collection.start_date)}
