@@ -18,6 +18,7 @@
 	let image: File;
 
 	import MapMarker from '~icons/mdi/map-marker';
+	import Map from '~icons/mdi/map';
 	import Calendar from '~icons/mdi/calendar';
 	import Notebook from '~icons/mdi/notebook';
 	import ClipboardList from '~icons/mdi/clipboard-list';
@@ -110,10 +111,8 @@
 		isImageFetcherOpen = false;
 	}
 
-	function setLongLat(event: CustomEvent<[number, number]>) {
+	function setLongLat(event: CustomEvent<Adventure>) {
 		console.log(event.detail);
-		adventureToEdit.latitude = event.detail[1];
-		adventureToEdit.longitude = event.detail[0];
 		isPointModalOpen = false;
 	}
 </script>
@@ -121,8 +120,6 @@
 {#if isPointModalOpen}
 	<PointSelectionModal
 		bind:adventure={adventureToEdit}
-		longitude={adventureToEdit.longitude}
-		latitude={adventureToEdit.latitude}
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
 		query={adventureToEdit.name}
@@ -191,7 +188,10 @@
 							class="btn btn-secondary"
 							on:click={() => (isPointModalOpen = true)}
 						>
-							{adventureToEdit.latitude && adventureToEdit.longitude ? 'Change' : 'Select'}
+							<Map class="inline-block w-6 h-6" />{adventureToEdit.latitude &&
+							adventureToEdit.longitude
+								? 'Change'
+								: 'Select'}
 							Location</button
 						>
 					</div>

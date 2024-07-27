@@ -18,9 +18,6 @@
 		geocode();
 	}
 
-	export let longitude: number | null = null;
-	export let latitude: number | null = null;
-
 	function addMarker(e: CustomEvent<MouseEvent>) {
 		markers = [];
 		markers = [...markers, { lngLat: e.detail.lngLat, name: '' }];
@@ -32,10 +29,10 @@
 		if (modal) {
 			modal.showModal();
 		}
-		if (longitude && latitude) {
+		if (adventure.longitude && adventure.latitude) {
 			markers = [
 				{
-					lngLat: { lng: longitude, lat: latitude },
+					lngLat: { lng: adventure.longitude, lat: adventure.latitude },
 					name: adventure.name,
 					location: adventure.location
 				}
@@ -78,11 +75,10 @@
 			alert('Please select a point on the map');
 			return;
 		}
-		let coordArray: [number, number] = [markers[0].lngLat.lng, markers[0].lngLat.lat];
 
 		console.log(markers[0]);
-		adventure.longitude = coordArray[0];
-		adventure.latitude = coordArray[1];
+		adventure.longitude = markers[0].lngLat.lng;
+		adventure.latitude = markers[0].lngLat.lat;
 		if (!adventure.location) {
 			adventure.location = markers[0].location;
 		}

@@ -127,8 +127,8 @@
 					<circle cx="12" cy="12" r="10" stroke="red" stroke-width="2" fill="red" />
 				</svg>
 				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg font-bold">{name}</div>
-					<p class="font-semibold text-md">Visited</p>
+					<div class="text-lg text-black font-bold">{name}</div>
+					<p class="font-semibold text-black text-md">Visited</p>
 				</Popup>
 			</Marker>
 		{/if}
@@ -149,8 +149,8 @@
 					<circle cx="12" cy="12" r="10" stroke="blue" stroke-width="2" fill="blue" />
 				</svg>
 				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg font-bold">{name}</div>
-					<p class="font-semibold text-md">Planned</p>
+					<div class="text-lg text-black font-bold">{name}</div>
+					<p class="font-semibold text-black text-md">Planned</p>
 				</Popup>
 			</Marker>
 		{/if}

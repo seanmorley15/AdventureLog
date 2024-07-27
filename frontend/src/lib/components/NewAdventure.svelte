@@ -161,6 +161,7 @@
 
 	function setLongLat(event: CustomEvent<Adventure>) {
 		console.log(event.detail);
+		isPointModalOpen = false;
 	}
 </script>
 
@@ -170,8 +171,6 @@
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
 		bind:adventure={newAdventure}
-		latitude={newAdventure.latitude || null}
-		longitude={newAdventure.longitude || null}
 	/>
 {/if}
 
