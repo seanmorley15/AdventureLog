@@ -12,8 +12,15 @@
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
 
-	import Wikipedia from '~icons/mdi/wikipedia';
+	import MapMarker from '~icons/mdi/map-marker';
+	import Calendar from '~icons/mdi/calendar';
+	import Notebook from '~icons/mdi/notebook';
 	import ClipboardList from '~icons/mdi/clipboard-list';
+	import Star from '~icons/mdi/star';
+	import Attachment from '~icons/mdi/attachment';
+	import Map from '~icons/mdi/map';
+	import Earth from '~icons/mdi/earth';
+	import Wikipedia from '~icons/mdi/wikipedia';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 
@@ -152,10 +159,8 @@
 		isImageFetcherOpen = false;
 	}
 
-	function setLongLat(event: CustomEvent<[number, number]>) {
+	function setLongLat(event: CustomEvent<Adventure>) {
 		console.log(event.detail);
-		newAdventure.latitude = event.detail[1];
-		newAdventure.longitude = event.detail[0];
 		isPointModalOpen = false;
 	}
 </script>
@@ -165,8 +170,7 @@
 		query={newAdventure.name}
 		on:close={() => (isPointModalOpen = false)}
 		on:submit={setLongLat}
-		latitude={newAdventure.latitude || null}
-		longitude={newAdventure.longitude || null}
+		bind:adventure={newAdventure}
 	/>
 {/if}
 
@@ -238,9 +242,7 @@
 					/>
 				</div>
 				<div class="mb-2">
-					<label for="location"
-						>Location<iconify-icon icon="mdi:map-marker" class="text-lg ml-0.5 -mb-0.5"
-						></iconify-icon></label
+					<label for="location">Location<MapMarker class="inline-block -mt-1 mb-1 w-6 h-6" /></label
 					><br />
 					<input
 						type="text"
@@ -249,6 +251,16 @@
 						bind:value={newAdventure.location}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<div class="mb-2 mt-2">
+						<button
+							type="button"
+							class="btn btn-secondary"
+							on:click={() => (isPointModalOpen = true)}
+							><Map class="inline-block w-6 h-6" />{newAdventure.latitude && newAdventure.longitude
+								? 'Change'
+								: 'Select'} Location</button
+						>
+					</div>
 				</div>
 				<div class="mb-2">
 					<label for="date"
@@ -359,14 +371,7 @@
 						bind:value={newAdventure.longitude}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
-					<div class="mb-2">
-						<button
-							type="button"
-							class="btn btn-secondary"
-							on:click={() => (isPointModalOpen = true)}
-							>{newAdventure.latitude && newAdventure.longitude ? 'Change' : 'Select'} Location</button
-						>
-					</div>
+
 					<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>
 					<button type="button" class="btn mt-4" on:click={close}>Close</button>
 				</div>

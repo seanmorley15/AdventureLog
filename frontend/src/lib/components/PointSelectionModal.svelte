@@ -1,6 +1,6 @@
 <script lang="ts">
 	// @ts-nocheck
-	import type { OpenStreetMapPlace, Point } from '$lib/types';
+	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -12,17 +12,15 @@
 	let markers: Point[] = [];
 
 	export let query: string | null = null;
+	export let adventure: Adventure;
 
 	if (query) {
 		geocode();
 	}
 
-	export let longitude: number | null = null;
-	export let latitude: number | null = null;
-
 	function addMarker(e: CustomEvent<MouseEvent>) {
 		markers = [];
-		markers = [...markers, { lngLat: e.detail.lngLat, name: 'Marker 1' }];
+		markers = [...markers, { lngLat: e.detail.lngLat, name: '' }];
 		console.log(markers);
 	}
 
@@ -31,8 +29,14 @@
 		if (modal) {
 			modal.showModal();
 		}
-		if (longitude && latitude) {
-			markers = [{ lngLat: { lng: longitude, lat: latitude }, name: 'Marker 1' }];
+		if (adventure.longitude && adventure.latitude) {
+			markers = [
+				{
+					lngLat: { lng: adventure.longitude, lat: adventure.latitude },
+					name: adventure.name,
+					location: adventure.location
+				}
+			];
 		}
 	});
 
@@ -71,9 +75,19 @@
 			alert('Please select a point on the map');
 			return;
 		}
-		let coordArray: [number, number] = [markers[0].lngLat.lng, markers[0].lngLat.lat];
-		console.log(coordArray);
-		dispatch('submit', coordArray);
+
+		console.log(markers[0]);
+		adventure.longitude = markers[0].lngLat.lng;
+		adventure.latitude = markers[0].lngLat.lat;
+		if (!adventure.location) {
+			adventure.location = markers[0].location;
+		}
+		if (!adventure.name) {
+			adventure.name = markers[0].name;
+		}
+		adventure.activity_types = [...adventure.activity_types, markers[0].activity_type];
+		dispatch('submit', adventure);
+		close();
 	}
 </script>
 
@@ -120,7 +134,9 @@
 									markers = [
 										{
 											lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-											name: place.display_name
+											location: place.display_name,
+											name: place.name,
+											activity_type: place.type
 										}
 									];
 								}}
