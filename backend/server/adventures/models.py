@@ -56,6 +56,8 @@ class Collection(models.Model):
     description = models.TextField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
 
     # if connected adventures are private and collection is public, raise an error
     def clean(self):

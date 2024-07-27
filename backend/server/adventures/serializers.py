@@ -29,7 +29,7 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         # fields are all plus the adventures field
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date']
 
 
    

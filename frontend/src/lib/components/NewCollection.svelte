@@ -5,6 +5,8 @@
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 
+	import Calendar from '~icons/mdi/calendar';
+
 	let newCollection: Collection = {
 		user_id: NaN,
 		id: NaN,
@@ -104,10 +106,32 @@
 							class="input input-bordered w-full max-w-xs mt-1 mb-2"
 						/>
 					</div>
-				</div>
-				<div class="mb-2">
-					<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>
-					<button type="button" class="btn mt-4" on:click={close}>Close</button>
+					<div class="mb-2">
+						<label for="start_date">Start Date <Calendar class="inline-block mb-1 w-6 h-6" /></label
+						><br />
+						<input
+							type="date"
+							id="start_date"
+							name="start_date"
+							bind:value={newCollection.start_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+					<div class="mb-2">
+						<label for="end_date">End Date <Calendar class="inline-block mb-1 w-6 h-6" /></label><br
+						/>
+						<input
+							type="date"
+							id="end_date"
+							name="end_date"
+							bind:value={newCollection.end_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+					<div class="mb-2">
+						<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>
+						<button type="button" class="btn mt-4" on:click={close}>Close</button>
+					</div>
 				</div>
 			</form>
 		</div>

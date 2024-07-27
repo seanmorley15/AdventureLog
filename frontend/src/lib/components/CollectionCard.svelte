@@ -47,6 +47,20 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{collection.name}</h2>
 		<p>{collection.adventures.length} Adventures</p>
+		{#if collection.start_date && collection.end_date}
+			<p>
+				Dates: {new Date(collection.start_date).toLocaleDateString()} - {new Date(
+					collection.end_date
+				).toLocaleDateString()}
+			</p>
+			<!-- display the duration in days -->
+			<p>
+				Duration: {Math.floor(
+					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
+						(1000 * 60 * 60 * 24)
+				)}{' '}
+				days
+			</p>{/if}
 		<div class="card-actions justify-end">
 			{#if type != 'link'}
 				<button on:click={deleteCollection} class="btn btn-secondary"

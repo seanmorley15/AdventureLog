@@ -64,6 +64,8 @@ export type Collection = {
 	is_public: boolean;
 	adventures: Adventure[];
 	created_at?: string;
+	start_date?: string;
+	end_date?: string;
 };
 
 export type OpenStreetMapPlace = {
