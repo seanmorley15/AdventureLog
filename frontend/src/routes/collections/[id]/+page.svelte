@@ -192,72 +192,74 @@
 	</div>
 {/if}
 {#if collection}
-	<div class="fixed bottom-4 right-4 z-[999]">
-		<div class="flex flex-row items-center justify-center gap-4">
-			<div class="dropdown dropdown-top dropdown-end">
-				<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
-					<Plus class="w-8 h-8" />
-				</div>
-				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<ul
-					tabindex="0"
-					class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
-				>
-					<p class="text-center font-bold text-lg">Link new...</p>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingLinkModal = true;
-						}}
+	{#if data.user}
+		<div class="fixed bottom-4 right-4 z-[999]">
+			<div class="flex flex-row items-center justify-center gap-4">
+				<div class="dropdown dropdown-top dropdown-end">
+					<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
+						<Plus class="w-8 h-8" />
+					</div>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<ul
+						tabindex="0"
+						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						Adventure</button
-					>
-					<p class="text-center font-bold text-lg">Add new...</p>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingCreateModal = true;
-							newType = 'visited';
-						}}
-					>
-						Visited Adventure</button
-					>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingCreateModal = true;
-							newType = 'planned';
-						}}
-					>
-						Planned Adventure</button
-					>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingCreateModal = true;
-							newType = 'lodging';
-						}}
-					>
-						Lodging</button
-					>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingCreateModal = true;
-							newType = 'dining';
-						}}
-					>
-						Dining</button
-					>
+						<p class="text-center font-bold text-lg">Link new...</p>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingLinkModal = true;
+							}}
+						>
+							Adventure</button
+						>
+						<p class="text-center font-bold text-lg">Add new...</p>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'visited';
+							}}
+						>
+							Visited Adventure</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'planned';
+							}}
+						>
+							Planned Adventure</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'lodging';
+							}}
+						>
+							Lodging</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'dining';
+							}}
+						>
+							Dining</button
+						>
 
-					<!-- <button
+						<!-- <button
 			class="btn btn-primary"
 			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
 		  > -->
-				</ul>
+					</ul>
+				</div>
 			</div>
 		</div>
-	</div>
+	{/if}
 	{#if collection.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
 	{/if}
@@ -292,6 +294,16 @@
 			/>
 		{/each}
 	</div>
+
+	{#if collection.transportations && collection.transportations.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Transportation</h1>
+		{#each collection.transportations as transportation}
+			<p>{transportation.id}</p>
+			<p>{transportation.name}</p>
+			<p>{transportation.type}</p>
+			<p>{transportation.date}</p>
+		{/each}
+	{/if}
 
 	{#if collection.start_date && collection.end_date}
 		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>

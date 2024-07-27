@@ -23,14 +23,6 @@ class AdventureSerializer(serializers.ModelSerializer):
             return [activity.lower() for activity in value]
         return value
     
-class CollectionSerializer(serializers.ModelSerializer):
-    adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
-
-    class Meta:
-        model = Collection
-        # fields are all plus the adventures field
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date']
-
 class TransportationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -64,5 +56,16 @@ class TransportationSerializer(serializers.ModelSerializer):
         # Set the user_id to the current user
         validated_data['user_id'] = self.context['request'].user
         return super().create(validated_data)
+
+    
+class CollectionSerializer(serializers.ModelSerializer):
+    adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
+    transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
+
+    class Meta:
+        model = Collection
+        # fields are all plus the adventures field
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations']
+
 
    

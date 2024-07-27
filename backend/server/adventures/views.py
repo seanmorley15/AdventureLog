@@ -261,6 +261,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
             Prefetch('adventure_set', queryset=Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id)
             ))
+        ).prefetch_related(
+            Prefetch('transportation_set', queryset=Transportation.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id)
+            ))
         )
         return self.apply_sorting(collections)
 
@@ -294,6 +298,14 @@ class CollectionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+    # make a view to return all of the associated transportations with a collection
+    @action(detail=True, methods=['get'])
+    def transportations(self, request, pk=None):
+        collection = self.get_object()
+        transportations = Transportation.objects.filter(collection=collection)
+        serializer = TransportationSerializer(transportations, many=True)
         return Response(serializer.data)
     
 class StatsViewSet(viewsets.ViewSet):
@@ -394,6 +406,16 @@ class TransportationViewSet(viewsets.ModelViewSet):
         # Prevent listing all adventures
         return Response({"detail": "Listing all adventures is not allowed."},
                         status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = Transportation.objects.filter(
+            Q(user_id=request.user.id)
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
     
 
     def get_queryset(self):
