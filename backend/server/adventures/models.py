@@ -9,6 +9,7 @@ ADVENTURE_TYPES = [
     ('visited', 'Visited'),
     ('planned', 'Planned'),
     ('lodging', 'Lodging'),
+    ('dining', 'Dining')
 ]
 
 

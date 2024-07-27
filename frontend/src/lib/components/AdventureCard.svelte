@@ -24,7 +24,19 @@
 
 	let isCollectionModalOpen: boolean = false;
 
+	let keyword: string = '';
+
 	export let adventure: Adventure;
+
+	if (adventure.type == 'visited') {
+		keyword = 'Adventure';
+	} else if (adventure.type == 'planned') {
+		keyword = 'Adventure';
+	} else if (adventure.type == 'lodging') {
+		keyword = 'Lodging';
+	} else if (adventure.type == 'dining') {
+		keyword = 'Dining';
+	}
 
 	let activityTypes: string[] = [];
 	// makes it reactivty to changes so it updates automatically
@@ -153,6 +165,8 @@
 				<div class="badge badge-secondary">Planned</div>
 			{:else if user?.pk == adventure.user_id && adventure.type == 'lodging'}
 				<div class="badge badge-success">Lodging</div>
+			{:else if user?.pk == adventure.user_id && adventure.type == 'dining'}
+				<div class="badge badge-accent">Dining</div>
 			{/if}
 
 			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
@@ -197,7 +211,7 @@
 								><Launch class="w-6 h-6" />Open Details</button
 							>
 							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />Edit Adventure
+								<FileDocumentEdit class="w-6 h-6" />Edit {keyword}
 							</button>
 							{#if adventure.type == 'visited'}
 								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
@@ -216,7 +230,7 @@
 								>
 							{/if}
 							<!-- change a non adventure to an adventure -->
-							{#if adventure.collection && adventure.type == 'lodging'}
+							{#if (adventure.collection && adventure.type == 'lodging') || adventure.type == 'dining'}
 								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
 									><CheckBold class="w-6 h-6" />Change to Visit</button
 								>
