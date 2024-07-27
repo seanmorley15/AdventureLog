@@ -238,11 +238,11 @@
 	</div>
 
 	{#if collection.start_date && collection.end_date}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Itinerary</h1>
+		<h1 class="text-center font-bold text-4xl mt-4">Itinerary</h1>
 		{#if numberOfDays}
-			<p class="text-center text-lg mt-4 pl-16 pr-16">Duration: {numberOfDays} days</p>
+			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
 		{/if}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">
+		<p class="text-center text-lg pl-16 pr-16">
 			Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
 				collection.end_date
 			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
@@ -257,7 +257,7 @@
 				dateString
 			]}
 
-			<h2 class="text-center text-xl mt-4">
+			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
 			</h2>
 
