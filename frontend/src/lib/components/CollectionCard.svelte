@@ -58,7 +58,7 @@
 				Duration: {Math.floor(
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
-				)}{' '}
+				) + 1}{' '}
 				days
 			</p>{/if}
 		<div class="card-actions justify-end">

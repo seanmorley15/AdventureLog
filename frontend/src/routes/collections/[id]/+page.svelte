@@ -18,6 +18,8 @@
 	let adventures: Adventure[] = [];
 	let numVisited: number = 0;
 
+	let numberOfDays: number = NaN;
+
 	$: {
 		numVisited = adventures.filter((a) => a.type === 'visited').length;
 	}
@@ -32,10 +34,42 @@
 		} else {
 			notFound = true;
 		}
+		if (collection.start_date && collection.end_date) {
+			numberOfDays =
+				Math.floor(
+					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
+						(1000 * 60 * 60 * 24)
+				) + 1;
+		}
 	});
 
 	function deleteAdventure(event: CustomEvent<number>) {
 		adventures = adventures.filter((a) => a.id !== event.detail);
+	}
+
+	function groupAdventuresByDate(
+		adventures: Adventure[],
+		startDate: Date
+	): Record<string, Adventure[]> {
+		const groupedAdventures: Record<string, Adventure[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedAdventures[dateString] = [];
+		}
+
+		adventures.forEach((adventure) => {
+			if (adventure.date) {
+				const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
+				if (groupedAdventures[adventureDate]) {
+					groupedAdventures[adventureDate].push(adventure);
+				}
+			}
+		});
+
+		return groupedAdventures;
 	}
 
 	async function addAdventure(event: CustomEvent<Adventure>) {
@@ -203,7 +237,44 @@
 		{/each}
 	</div>
 
-	{#if collection.description}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">{collection.description}</p>
+	{#if numberOfDays}
+		<p class="text-center text-lg mt-4 pl-16 pr-16">Duration: {numberOfDays} days</p>
+	{/if}
+	{#if collection.start_date && collection.end_date}
+		<p class="text-center text-lg mt-4 pl-16 pr-16">
+			Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
+				collection.end_date
+			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+		</p>
+
+		{#each Array(numberOfDays) as _, i}
+			{@const currentDate = new Date(collection.start_date)}
+			{@const temp = currentDate.setDate(currentDate.getDate() + i)}
+			{@const dateString = currentDate.toISOString().split('T')[0]}
+			{@const dayAdventures = groupAdventuresByDate(adventures, new Date(collection.start_date))[
+				dateString
+			]}
+
+			<h2 class="text-center text-xl mt-4">
+				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
+			</h2>
+
+			{#if dayAdventures.length > 0}
+				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+					{#each dayAdventures as adventure}
+						<AdventureCard
+							user={data.user}
+							on:edit={editAdventure}
+							on:delete={deleteAdventure}
+							type={adventure.type}
+							{adventure}
+							on:typeChange={changeType}
+						/>
+					{/each}
+				</div>
+			{:else}
+				<p class="text-center text-lg mt-2">No adventures planned for this day.</p>
+			{/if}
+		{/each}
 	{/if}
 {/if}

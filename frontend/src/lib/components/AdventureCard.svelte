@@ -163,7 +163,7 @@
 		{#if adventure.date && adventure.date !== ''}
 			<div class="inline-flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
-				<p>{new Date(adventure.date).toLocaleDateString()}</p>
+				<p>{new Date(adventure.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
 			</div>
 		{/if}
 		{#if adventure.activity_types && adventure.activity_types.length > 0}
