@@ -99,7 +99,7 @@
 	$: {
 		if (showGEO && geoJSON.length === 0) {
 			(async () => {
-				geoJSON = await fetch(data.props.geoJsonUrl).then((res) => res.json());
+				geoJSON = await fetch('/api/geojson/').then((res) => res.json());
 			})();
 		} else if (!showGEO) {
 			geoJSON = [];

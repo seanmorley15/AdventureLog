@@ -14,8 +14,6 @@ export const load = (async (event) => {
 			}
 		});
 
-		let geoJsonUrl = `${endpoint}/api/geojson/` as string;
-
 		let visitedRegionsFetch = await fetch(`${endpoint}/api/visitedregion/`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
@@ -44,7 +42,6 @@ export const load = (async (event) => {
 			return {
 				props: {
 					markers,
-					geoJsonUrl,
 					visitedRegions
 				}
 			};
