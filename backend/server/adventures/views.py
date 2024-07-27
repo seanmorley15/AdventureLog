@@ -138,8 +138,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
         #     queryset = Adventure.objects.filter(
         #         Q(is_public=True) | Q(user_id=request.user.id), collection=None
         #     )
+        allowed_types = ['visited', 'planned']
         queryset = Adventure.objects.filter(
-            Q(user_id=request.user.id)
+            Q(user_id=request.user.id) & Q(type__in=allowed_types)
         )
         
         queryset = self.apply_sorting(queryset)

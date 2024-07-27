@@ -10,6 +10,7 @@
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
+	import NewAdventure from '$lib/components/NewAdventure.svelte';
 
 	export let data: PageData;
 
@@ -25,6 +26,7 @@
 	}
 
 	let notFound: boolean = false;
+	let isShowingLinkModal: boolean = false;
 	let isShowingCreateModal: boolean = false;
 
 	onMount(() => {
@@ -72,6 +74,11 @@
 		return groupedAdventures;
 	}
 
+	function createAdventure(event: CustomEvent<Adventure>) {
+		adventures = [event.detail, ...adventures];
+		isShowingCreateModal = false;
+	}
+
 	async function addAdventure(event: CustomEvent<Adventure>) {
 		console.log(event.detail);
 		if (adventures.find((a) => a.id === event.detail.id)) {
@@ -111,6 +118,8 @@
 	let adventureToEdit: Adventure;
 	let isEditModalOpen: boolean = false;
 
+	let newType: string;
+
 	function editAdventure(event: CustomEvent<Adventure>) {
 		adventureToEdit = event.detail;
 		isEditModalOpen = true;
@@ -127,11 +136,11 @@
 	}
 </script>
 
-{#if isShowingCreateModal}
+{#if isShowingLinkModal}
 	<AdventureLink
 		user={data?.user ?? null}
 		on:close={() => {
-			isShowingCreateModal = false;
+			isShowingLinkModal = false;
 		}}
 		on:add={addAdventure}
 	/>
@@ -142,6 +151,15 @@
 		{adventureToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
+	/>
+{/if}
+
+{#if isShowingCreateModal}
+	<NewAdventure
+		type={newType}
+		collection_id={collection.id}
+		on:create={createAdventure}
+		on:close={() => (isShowingCreateModal = false)}
 	/>
 {/if}
 
@@ -188,10 +206,38 @@
 					<button
 						class="btn btn-primary"
 						on:click={() => {
-							isShowingCreateModal = true;
+							isShowingLinkModal = true;
 						}}
 					>
 						Adventure</button
+					>
+					<p class="text-center font-bold text-lg">Add new...</p>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							isShowingCreateModal = true;
+							newType = 'visited';
+						}}
+					>
+						Visited Adventure</button
+					>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							isShowingCreateModal = true;
+							newType = 'planned';
+						}}
+					>
+						Planned Adventure</button
+					>
+					<button
+						class="btn btn-primary"
+						on:click={() => {
+							isShowingCreateModal = true;
+							newType = 'lodging';
+						}}
+					>
+						Lodging</button
 					>
 
 					<!-- <button
@@ -238,7 +284,7 @@
 	</div>
 
 	{#if collection.start_date && collection.end_date}
-		<h1 class="text-center font-bold text-4xl mt-4">Itinerary</h1>
+		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>
 		{#if numberOfDays}
 			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
 		{/if}

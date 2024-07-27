@@ -149,9 +149,12 @@
 		<div>
 			{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
 				<div class="badge badge-primary">Visited</div>
-			{:else if user?.pk == adventure.user_id}
+			{:else if user?.pk == adventure.user_id && adventure.type == 'planned'}
 				<div class="badge badge-secondary">Planned</div>
+			{:else if user?.pk == adventure.user_id && adventure.type == 'lodging'}
+				<div class="badge badge-success">Lodging</div>
 			{/if}
+
 			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}

@@ -11,6 +11,7 @@
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
+	export let collection_id: number | null = null;
 
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
@@ -39,7 +40,7 @@
 		latitude: null,
 		longitude: null,
 		is_public: false,
-		collection: null
+		collection: collection_id || NaN
 	};
 
 	if (longitude && latitude) {
@@ -369,6 +370,14 @@
 						name="longitude"
 						hidden
 						bind:value={newAdventure.longitude}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
+					<input
+						type="text"
+						id="collection"
+						name="collection"
+						hidden
+						bind:value={newAdventure.collection}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 

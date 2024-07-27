@@ -64,6 +64,7 @@ export const actions: Actions = {
 		let link = formData.get('link') as string | null;
 		let latitude = formData.get('latitude') as string | null;
 		let longitude = formData.get('longitude') as string | null;
+		let collection = formData.get('collection') as string | null;
 
 		// check if latitude and longitude are valid
 		if (latitude && longitude) {
@@ -108,6 +109,7 @@ export const actions: Actions = {
 		formDataToSend.append('description', description || '');
 		formDataToSend.append('latitude', latitude || '');
 		formDataToSend.append('longitude', longitude || '');
+		formDataToSend.append('collection', collection || '');
 		if (activity_types) {
 			// Filter out empty and duplicate activity types, then trim each activity type
 			const cleanedActivityTypes = Array.from(
