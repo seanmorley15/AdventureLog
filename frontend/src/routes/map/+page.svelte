@@ -17,6 +17,24 @@
 
 	let clickedName = '';
 
+	let showVisited = true;
+	let showPlanned = true;
+
+	$: {
+		if (!showVisited) {
+			markers = markers.filter((marker) => marker.type !== 'visited');
+		} else {
+			const visitedMarkers = data.props.markers.filter((marker) => marker.type === 'visited');
+			markers = [...markers, ...visitedMarkers];
+		}
+		if (!showPlanned) {
+			markers = markers.filter((marker) => marker.type !== 'planned');
+		} else {
+			const plannedMarkers = data.props.markers.filter((marker) => marker.type === 'planned');
+			markers = [...markers, ...plannedMarkers];
+		}
+	}
+
 	let newMarker = [];
 
 	let newLongitude = null;
@@ -61,7 +79,7 @@
 
 	let visitedRegions = data.props.visitedRegions;
 
-	let geoJSON = data.props.geoJSON;
+	let geoJSON = [];
 
 	let visitArray = [];
 
@@ -77,10 +95,28 @@
 	}
 
 	// mapped to the checkbox
-	let showGEO = true;
+	let showGEO = false;
+	$: {
+		if (showGEO && geoJSON.length === 0) {
+			(async () => {
+				geoJSON = await fetch(data.props.geoJsonUrl).then((res) => res.json());
+			})();
+		} else if (!showGEO) {
+			geoJSON = [];
+		}
+	}
 
 	let createModalOpen = false;
 </script>
+
+<label class="label cursor-pointer">
+	<span class="label-text">Visited</span>
+	<input type="checkbox" bind:checked={showVisited} class="checkbox checkbox-primary" />
+</label>
+<label class="label cursor-pointer">
+	<span class="label-text">Planned</span>
+	<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
+</label>
 
 {#if newMarker.length > 0}
 	<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
@@ -156,7 +192,7 @@
 		{/if}
 	{/each}
 	{#if showGEO}
-		<GeoJSON id="states" data={data.props.geoJSON} promoteId="ISOCODE">
+		<GeoJSON id="states" data={geoJSON} promoteId="ISOCODE">
 			<LineLayer
 				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
 				paint={{ 'line-color': 'grey', 'line-width': 3 }}
