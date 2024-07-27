@@ -209,9 +209,16 @@
 									><CheckBold class="w-6 h-6" />Mark Visited</button
 								>
 							{/if}
-							{#if adventure.collection}
+							<!-- remove from adventure -->
+							{#if (adventure.collection && adventure.type == 'visited') || adventure.type == 'planned'}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
 									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
+								>
+							{/if}
+							<!-- change a non adventure to an adventure -->
+							{#if adventure.collection && adventure.type == 'lodging'}
+								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
+									><CheckBold class="w-6 h-6" />Change to Visit</button
 								>
 							{/if}
 							{#if !adventure.collection}
