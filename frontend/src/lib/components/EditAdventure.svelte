@@ -120,6 +120,7 @@
 
 {#if isPointModalOpen}
 	<PointSelectionModal
+		bind:adventure={adventureToEdit}
 		longitude={adventureToEdit.longitude}
 		latitude={adventureToEdit.latitude}
 		on:close={() => (isPointModalOpen = false)}
@@ -184,6 +185,16 @@
 						bind:value={adventureToEdit.location}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<div class="mb-2 mt-2">
+						<button
+							type="button"
+							class="btn btn-secondary"
+							on:click={() => (isPointModalOpen = true)}
+						>
+							{adventureToEdit.latitude && adventureToEdit.longitude ? 'Change' : 'Select'}
+							Location</button
+						>
+					</div>
 				</div>
 				<div class="mb-2">
 					<label for="date">Date <Calendar class="inline-block mb-1 w-6 h-6" /></label><br />
@@ -283,16 +294,6 @@
 					bind:value={adventureToEdit.longitude}
 					class="input input-bordered w-full max-w-xs mt-1"
 				/>
-				<div class="mb-2">
-					<button
-						type="button"
-						class="btn btn-secondary"
-						on:click={() => (isPointModalOpen = true)}
-					>
-						{adventureToEdit.latitude && adventureToEdit.longitude ? 'Change' : 'Select'}
-						Location</button
-					>
-				</div>
 				{#if adventureToEdit.collection === null}
 					<div class="mb-2">
 						<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
