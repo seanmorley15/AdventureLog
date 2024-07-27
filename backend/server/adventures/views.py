@@ -4,9 +4,9 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Collection
+from .models import Adventure, Collection, Transportation
 from worldtravel.models import VisitedRegion, Region, Country
-from .serializers import AdventureSerializer, CollectionSerializer
+from .serializers import AdventureSerializer, CollectionSerializer, TransportationSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
@@ -238,6 +238,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
             # Update associated adventures to match the collection's is_public status
             Adventure.objects.filter(collection=instance).update(is_public=new_public_status)
 
+            # do the same for transportations
+            Transportation.objects.filter(collection=instance).update(is_public=new_public_status)
+
             # Log the action (optional)
             action = "public" if new_public_status else "private"
             print(f"Collection {instance.id} and its adventures were set to {action}")
@@ -379,3 +382,30 @@ class ActivityTypesView(viewsets.ViewSet):
                     allTypes.append(x)
 
         return Response(allTypes)
+
+class TransportationViewSet(viewsets.ModelViewSet):
+    queryset = Transportation.objects.all()
+    serializer_class = TransportationSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['type', 'is_public', 'collection']
+
+    # return error message if user is not authenticated on the root endpoint
+    def list(self, request, *args, **kwargs):
+        # Prevent listing all adventures
+        return Response({"detail": "Listing all adventures is not allowed."},
+                        status=status.HTTP_403_FORBIDDEN)
+    
+
+    def get_queryset(self):
+        
+        """
+        This view should return a list of all transportations
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Transportation.objects.filter(user_id=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
+
+   

@@ -163,9 +163,11 @@
 				<div class="badge badge-primary">Visited</div>
 			{:else if user?.pk == adventure.user_id && adventure.type == 'planned'}
 				<div class="badge badge-secondary">Planned</div>
+			{:else if (user?.pk !== adventure.user_id && adventure.type == 'planned') || adventure.type == 'visited'}
+				<div class="badge badge-secondary">Adventure</div>
 			{:else if user?.pk == adventure.user_id && adventure.type == 'lodging'}
 				<div class="badge badge-success">Lodging</div>
-			{:else if user?.pk == adventure.user_id && adventure.type == 'dining'}
+			{:else if adventure.type == 'dining'}
 				<div class="badge badge-accent">Dining</div>
 			{/if}
 
