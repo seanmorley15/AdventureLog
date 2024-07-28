@@ -105,7 +105,7 @@ class Transportation(models.Model):
     def clean(self):
         if self.collection:
             if self.collection.is_public and not self.is_public:
-                raise ValidationError('Transportations associated with a public collection must be public. Collection: ' + self.trip.name + ' Transportation: ' + self.name)
+                raise ValidationError('Transportations associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
             if self.user_id != self.collection.user_id:
                 raise ValidationError('Transportations must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Transportation owner: ' + self.user_id.username)
 

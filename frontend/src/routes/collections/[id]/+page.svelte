@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection } from '$lib/types';
+	import type { Adventure, Collection, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -12,6 +12,8 @@
 	import NotFound from '$lib/components/NotFound.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
 	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
+	import TransportationCard from '$lib/components/TransportationCard.svelte';
+	import EditTransportation from '$lib/components/EditTransportation.svelte';
 
 	export let data: PageData;
 
@@ -19,6 +21,7 @@
 
 	let adventures: Adventure[] = [];
 	let numVisited: number = 0;
+	let transportations: Transportation[] = [];
 
 	let numberOfDays: number = NaN;
 
@@ -43,6 +46,9 @@
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1;
+		}
+		if (collection.transportations) {
+			transportations = collection.transportations;
 		}
 	});
 
@@ -117,7 +123,9 @@
 	}
 
 	let adventureToEdit: Adventure;
+	let transportationToEdit: Transportation;
 	let isEditModalOpen: boolean = false;
+	let isTransportationEditModalOpen: boolean = false;
 
 	let newType: string;
 
@@ -144,6 +152,13 @@
 			isShowingLinkModal = false;
 		}}
 		on:add={addAdventure}
+	/>
+{/if}
+
+{#if isTransportationEditModalOpen}
+	<EditTransportation
+		{transportationToEdit}
+		on:close={() => (isTransportationEditModalOpen = false)}
 	/>
 {/if}
 
@@ -297,11 +312,17 @@
 
 	{#if collection.transportations && collection.transportations.length > 0}
 		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Transportation</h1>
-		{#each collection.transportations as transportation}
-			<p>{transportation.id}</p>
-			<p>{transportation.name}</p>
-			<p>{transportation.type}</p>
-			<p>{transportation.date}</p>
+		{#each transportations as transportation}
+			<TransportationCard
+				{transportation}
+				on:delete={(event) => {
+					transportations = transportations.filter((t) => t.id != event.detail);
+				}}
+				on:edit={(event) => {
+					transportationToEdit = event.detail;
+					isTransportationEditModalOpen = true;
+				}}
+			/>
 		{/each}
 	{/if}
 

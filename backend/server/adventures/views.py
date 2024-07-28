@@ -270,26 +270,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
-
-    # @action(detail=False, methods=['get'])
-    # def filtered(self, request):
-    #     types = request.query_params.get('types', '').split(',')
-    #     valid_types = ['visited', 'planned']
-    #     types = [t for t in types if t in valid_types]
-
-    #     if not types:
-    #         return Response({"error": "No valid types provided"}, status=400)
-
-    #     queryset = Collection.objects.none()
-
-    #     for adventure_type in types:
-    #         if adventure_type in ['visited', 'planned']:
-    #             queryset |= Collection.objects.filter(
-    #                 type=adventure_type, user_id=request.user.id)
-
-    #     queryset = self.apply_sorting(queryset)
-    #     collections = self.paginate_and_respond(queryset, request)
-    #     return collections
     
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
@@ -298,14 +278,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(page, many=True)
             return paginator.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-    
-    # make a view to return all of the associated transportations with a collection
-    @action(detail=True, methods=['get'])
-    def transportations(self, request, pk=None):
-        collection = self.get_object()
-        transportations = Transportation.objects.filter(collection=collection)
-        serializer = TransportationSerializer(transportations, many=True)
         return Response(serializer.data)
     
 class StatsViewSet(viewsets.ViewSet):
