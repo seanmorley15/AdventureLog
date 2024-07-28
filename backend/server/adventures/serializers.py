@@ -30,7 +30,7 @@ class TransportationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'collection_id', 'created_at', 'updated_at'
+            'is_public', 'collection', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 

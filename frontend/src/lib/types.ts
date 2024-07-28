@@ -88,7 +88,7 @@ export type OpenStreetMapPlace = {
 
 export type Transportation = {
 	id: number;
-	user_id: User;
+	user_id: number;
 	type: string;
 	name: string;
 	description: string | null;

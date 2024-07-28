@@ -14,6 +14,7 @@
 	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import EditTransportation from '$lib/components/EditTransportation.svelte';
+	import NewTransportation from '$lib/components/NewTransportation.svelte';
 
 	export let data: PageData;
 
@@ -32,6 +33,7 @@
 	let notFound: boolean = false;
 	let isShowingLinkModal: boolean = false;
 	let isShowingCreateModal: boolean = false;
+	let isShowingTransportationModal: boolean = false;
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -190,6 +192,17 @@
 	/>
 {/if}
 
+{#if isShowingTransportationModal}
+	<NewTransportation
+		on:close={() => (isShowingTransportationModal = false)}
+		on:add={(event) => {
+			transportations = [event.detail, ...transportations];
+			isShowingTransportationModal = false;
+		}}
+		{collection}
+	/>
+{/if}
+
 {#if notFound}
 	<div
 		class="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 -mt-20"
@@ -275,6 +288,15 @@
 							}}
 						>
 							Dining</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingTransportationModal = true;
+								newType = '';
+							}}
+						>
+							Transportation</button
 						>
 
 						<!-- <button
