@@ -134,6 +134,16 @@
 		isEditModalOpen = true;
 	}
 
+	function saveNewTransportation(event: CustomEvent<Transportation>) {
+		transportations = transportations.map((transportation) => {
+			if (transportation.id === event.detail.id) {
+				return event.detail;
+			}
+			return transportation;
+		});
+		isTransportationEditModalOpen = false;
+	}
+
 	function saveEdit(event: CustomEvent<Adventure>) {
 		adventures = adventures.map((adventure) => {
 			if (adventure.id === event.detail.id) {
@@ -159,6 +169,7 @@
 	<EditTransportation
 		{transportationToEdit}
 		on:close={() => (isTransportationEditModalOpen = false)}
+		on:saveEdit={saveNewTransportation}
 	/>
 {/if}
 

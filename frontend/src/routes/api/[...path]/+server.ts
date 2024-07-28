@@ -15,7 +15,7 @@ export async function GET({ url, params, request, fetch, cookies }) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies);
+	return handleRequest(url, params, request, fetch, cookies, true);
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
@@ -23,7 +23,7 @@ export async function PATCH({ url, params, request, fetch, cookies }) {
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies);
+	return handleRequest(url, params, request, fetch, cookies, true);
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
