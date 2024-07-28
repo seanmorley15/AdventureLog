@@ -55,11 +55,11 @@
 
 			transportationToEdit = result;
 
-			addToast('success', 'Adventure edited successfully!');
+			addToast('success', 'Transportation edited successfully!');
 			dispatch('saveEdit', transportationToEdit);
 			close();
 		} else {
-			addToast('error', 'Error editing adventure');
+			addToast('error', 'Error editing transportaion');
 		}
 	}
 </script>

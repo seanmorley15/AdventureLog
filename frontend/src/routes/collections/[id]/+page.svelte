@@ -83,6 +83,31 @@
 		return groupedAdventures;
 	}
 
+	function groupTransportationsByDate(
+		transportations: Transportation[],
+		startDate: Date
+	): Record<string, Transportation[]> {
+		const groupedTransportations: Record<string, Transportation[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedTransportations[dateString] = [];
+		}
+
+		transportations.forEach((transportation) => {
+			if (transportation.date) {
+				const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
+				if (groupedTransportations[transportationDate]) {
+					groupedTransportations[transportationDate].push(transportation);
+				}
+			}
+		});
+
+		return groupedTransportations;
+	}
+
 	function createAdventure(event: CustomEvent<Adventure>) {
 		adventures = [event.detail, ...adventures];
 		isShowingCreateModal = false;
@@ -344,19 +369,21 @@
 	</div>
 
 	{#if collection.transportations && collection.transportations.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Transportation</h1>
-		{#each transportations as transportation}
-			<TransportationCard
-				{transportation}
-				on:delete={(event) => {
-					transportations = transportations.filter((t) => t.id != event.detail);
-				}}
-				on:edit={(event) => {
-					transportationToEdit = event.detail;
-					isTransportationEditModalOpen = true;
-				}}
-			/>
-		{/each}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Transportation</h1>
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each transportations as transportation}
+				<TransportationCard
+					{transportation}
+					on:delete={(event) => {
+						transportations = transportations.filter((t) => t.id != event.detail);
+					}}
+					on:edit={(event) => {
+						transportationToEdit = event.detail;
+						isTransportationEditModalOpen = true;
+					}}
+				/>
+			{/each}
+		</div>
 	{/if}
 
 	{#if collection.start_date && collection.end_date}
@@ -378,13 +405,16 @@
 			{@const dayAdventures = groupAdventuresByDate(adventures, new Date(collection.start_date))[
 				dateString
 			]}
+			{@const dayTransportations = groupTransportationsByDate(
+				transportations,
+				new Date(collection.start_date)
+			)[dateString]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
 			</h2>
-
-			{#if dayAdventures.length > 0}
-				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#if dayAdventures.length > 0}
 					{#each dayAdventures as adventure}
 						<AdventureCard
 							user={data.user}
@@ -395,10 +425,25 @@
 							on:typeChange={changeType}
 						/>
 					{/each}
-				</div>
-			{:else}
-				<p class="text-center text-lg mt-2">No adventures planned for this day.</p>
-			{/if}
+				{:else if dayTransportations.length > 0}
+					{#each dayTransportations as transportation}
+						<TransportationCard
+							{transportation}
+							on:delete={(event) => {
+								transportations = transportations.filter((t) => t.id != event.detail);
+							}}
+							on:edit={(event) => {
+								transportationToEdit = event.detail;
+								isTransportationEditModalOpen = true;
+							}}
+						/>
+					{/each}
+				{:else}
+					<p class="text-center text-lg mt-2">
+						No adventures or transportaions planned for this day.
+					</p>
+				{/if}
+			</div>
 		{/each}
 		<div class="flex items-center justify-center w-10/12">
 			<MapLibre
