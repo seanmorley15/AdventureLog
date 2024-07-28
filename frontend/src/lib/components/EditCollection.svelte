@@ -109,6 +109,7 @@
 							bind:value={collectionToEdit.description}
 							class="input input-bordered w-full max-w-xs mt-1 mb-2"
 						/>
+
 						<!-- <button
                 class="btn btn-neutral ml-2"
                 type="button"
@@ -116,6 +117,28 @@
                 ><iconify-icon icon="mdi:wikipedia" class="text-xl -mb-1"
                 ></iconify-icon>Generate Description</button
               > -->
+					</div>
+					<div class="mb-2">
+						<label for="start_date">Start Date <Calendar class="inline-block mb-1 w-6 h-6" /></label
+						><br />
+						<input
+							type="date"
+							id="start_date"
+							name="start_date"
+							bind:value={collectionToEdit.start_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+					<div class="mb-2">
+						<label for="end_date">End Date <Calendar class="inline-block mb-1 w-6 h-6" /></label><br
+						/>
+						<input
+							type="date"
+							id="end_date"
+							name="end_date"
+							bind:value={collectionToEdit.end_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
 					</div>
 				</div>
 				<div class="mb-2">

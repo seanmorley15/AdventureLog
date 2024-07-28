@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection } from '$lib/types';
+	import type { Adventure, Collection, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -10,6 +10,11 @@
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
+	import NewAdventure from '$lib/components/NewAdventure.svelte';
+	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import TransportationCard from '$lib/components/TransportationCard.svelte';
+	import EditTransportation from '$lib/components/EditTransportation.svelte';
+	import NewTransportation from '$lib/components/NewTransportation.svelte';
 
 	export let data: PageData;
 
@@ -17,13 +22,18 @@
 
 	let adventures: Adventure[] = [];
 	let numVisited: number = 0;
+	let transportations: Transportation[] = [];
+
+	let numberOfDays: number = NaN;
 
 	$: {
 		numVisited = adventures.filter((a) => a.type === 'visited').length;
 	}
 
 	let notFound: boolean = false;
+	let isShowingLinkModal: boolean = false;
 	let isShowingCreateModal: boolean = false;
+	let isShowingTransportationModal: boolean = false;
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -32,10 +42,75 @@
 		} else {
 			notFound = true;
 		}
+		if (collection.start_date && collection.end_date) {
+			numberOfDays =
+				Math.floor(
+					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
+						(1000 * 60 * 60 * 24)
+				) + 1;
+		}
+		if (collection.transportations) {
+			transportations = collection.transportations;
+		}
 	});
 
 	function deleteAdventure(event: CustomEvent<number>) {
 		adventures = adventures.filter((a) => a.id !== event.detail);
+	}
+
+	function groupAdventuresByDate(
+		adventures: Adventure[],
+		startDate: Date
+	): Record<string, Adventure[]> {
+		const groupedAdventures: Record<string, Adventure[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedAdventures[dateString] = [];
+		}
+
+		adventures.forEach((adventure) => {
+			if (adventure.date) {
+				const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
+				if (groupedAdventures[adventureDate]) {
+					groupedAdventures[adventureDate].push(adventure);
+				}
+			}
+		});
+
+		return groupedAdventures;
+	}
+
+	function groupTransportationsByDate(
+		transportations: Transportation[],
+		startDate: Date
+	): Record<string, Transportation[]> {
+		const groupedTransportations: Record<string, Transportation[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedTransportations[dateString] = [];
+		}
+
+		transportations.forEach((transportation) => {
+			if (transportation.date) {
+				const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
+				if (groupedTransportations[transportationDate]) {
+					groupedTransportations[transportationDate].push(transportation);
+				}
+			}
+		});
+
+		return groupedTransportations;
+	}
+
+	function createAdventure(event: CustomEvent<Adventure>) {
+		adventures = [event.detail, ...adventures];
+		isShowingCreateModal = false;
 	}
 
 	async function addAdventure(event: CustomEvent<Adventure>) {
@@ -75,11 +150,25 @@
 	}
 
 	let adventureToEdit: Adventure;
+	let transportationToEdit: Transportation;
 	let isEditModalOpen: boolean = false;
+	let isTransportationEditModalOpen: boolean = false;
+
+	let newType: string;
 
 	function editAdventure(event: CustomEvent<Adventure>) {
 		adventureToEdit = event.detail;
 		isEditModalOpen = true;
+	}
+
+	function saveNewTransportation(event: CustomEvent<Transportation>) {
+		transportations = transportations.map((transportation) => {
+			if (transportation.id === event.detail.id) {
+				return event.detail;
+			}
+			return transportation;
+		});
+		isTransportationEditModalOpen = false;
 	}
 
 	function saveEdit(event: CustomEvent<Adventure>) {
@@ -93,13 +182,21 @@
 	}
 </script>
 
-{#if isShowingCreateModal}
+{#if isShowingLinkModal}
 	<AdventureLink
 		user={data?.user ?? null}
 		on:close={() => {
-			isShowingCreateModal = false;
+			isShowingLinkModal = false;
 		}}
 		on:add={addAdventure}
+	/>
+{/if}
+
+{#if isTransportationEditModalOpen}
+	<EditTransportation
+		{transportationToEdit}
+		on:close={() => (isTransportationEditModalOpen = false)}
+		on:saveEdit={saveNewTransportation}
 	/>
 {/if}
 
@@ -108,6 +205,26 @@
 		{adventureToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
+	/>
+{/if}
+
+{#if isShowingCreateModal}
+	<NewAdventure
+		type={newType}
+		collection_id={collection.id}
+		on:create={createAdventure}
+		on:close={() => (isShowingCreateModal = false)}
+	/>
+{/if}
+
+{#if isShowingTransportationModal}
+	<NewTransportation
+		on:close={() => (isShowingTransportationModal = false)}
+		on:add={(event) => {
+			transportations = [event.detail, ...transportations];
+			isShowingTransportationModal = false;
+		}}
+		{collection}
 	/>
 {/if}
 
@@ -139,35 +256,83 @@
 	</div>
 {/if}
 {#if collection}
-	<div class="fixed bottom-4 right-4 z-[999]">
-		<div class="flex flex-row items-center justify-center gap-4">
-			<div class="dropdown dropdown-top dropdown-end">
-				<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
-					<Plus class="w-8 h-8" />
-				</div>
-				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<ul
-					tabindex="0"
-					class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
-				>
-					<p class="text-center font-bold text-lg">Link new...</p>
-					<button
-						class="btn btn-primary"
-						on:click={() => {
-							isShowingCreateModal = true;
-						}}
+	{#if data.user}
+		<div class="fixed bottom-4 right-4 z-[999]">
+			<div class="flex flex-row items-center justify-center gap-4">
+				<div class="dropdown dropdown-top dropdown-end">
+					<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
+						<Plus class="w-8 h-8" />
+					</div>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<ul
+						tabindex="0"
+						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						Adventure</button
-					>
+						<p class="text-center font-bold text-lg">Link new...</p>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingLinkModal = true;
+							}}
+						>
+							Adventure</button
+						>
+						<p class="text-center font-bold text-lg">Add new...</p>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'visited';
+							}}
+						>
+							Visited Adventure</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'planned';
+							}}
+						>
+							Planned Adventure</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'lodging';
+							}}
+						>
+							Lodging</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingCreateModal = true;
+								newType = 'dining';
+							}}
+						>
+							Dining</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingTransportationModal = true;
+								newType = '';
+							}}
+						>
+							Transportation</button
+						>
 
-					<!-- <button
+						<!-- <button
 			class="btn btn-primary"
 			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
 		  > -->
-				</ul>
+					</ul>
+				</div>
 			</div>
 		</div>
-	</div>
+	{/if}
 	{#if collection.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
 	{/if}
@@ -186,7 +351,7 @@
 			</div>
 		</div>
 	{/if}
-	<h1 class="text-center font-semibold text-2xl mt-4 mb-2">Linked Adventures</h1>
+	<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
 	{#if adventures.length == 0}
 		<NotFound error={undefined} />
 	{/if}
@@ -203,7 +368,113 @@
 		{/each}
 	</div>
 
-	{#if collection.description}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">{collection.description}</p>
+	{#if collection.transportations && collection.transportations.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Transportation</h1>
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each transportations as transportation}
+				<TransportationCard
+					{transportation}
+					on:delete={(event) => {
+						transportations = transportations.filter((t) => t.id != event.detail);
+					}}
+					on:edit={(event) => {
+						transportationToEdit = event.detail;
+						isTransportationEditModalOpen = true;
+					}}
+				/>
+			{/each}
+		</div>
+	{/if}
+
+	{#if collection.start_date && collection.end_date}
+		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>
+		{#if numberOfDays}
+			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
+		{/if}
+		<p class="text-center text-lg pl-16 pr-16">
+			Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
+				collection.end_date
+			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+		</p>
+		<div class="divider"></div>
+
+		{#each Array(numberOfDays) as _, i}
+			{@const currentDate = new Date(collection.start_date)}
+			{@const temp = currentDate.setDate(currentDate.getDate() + i)}
+			{@const dateString = currentDate.toISOString().split('T')[0]}
+			{@const dayAdventures = groupAdventuresByDate(adventures, new Date(collection.start_date))[
+				dateString
+			]}
+			{@const dayTransportations = groupTransportationsByDate(
+				transportations,
+				new Date(collection.start_date)
+			)[dateString]}
+
+			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
+				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
+			</h2>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#if dayAdventures.length > 0}
+					{#each dayAdventures as adventure}
+						<AdventureCard
+							user={data.user}
+							on:edit={editAdventure}
+							on:delete={deleteAdventure}
+							type={adventure.type}
+							{adventure}
+							on:typeChange={changeType}
+						/>
+					{/each}
+				{/if}
+				{#if dayTransportations.length > 0}
+					{#each dayTransportations as transportation}
+						<TransportationCard
+							{transportation}
+							on:delete={(event) => {
+								transportations = transportations.filter((t) => t.id != event.detail);
+							}}
+							on:edit={(event) => {
+								transportationToEdit = event.detail;
+								isTransportationEditModalOpen = true;
+							}}
+						/>
+					{/each}
+				{/if}
+				{#if dayAdventures.length == 0 && dayTransportations.length == 0}
+					<p class="text-center text-lg mt-2">
+						No adventures or transportaions planned for this day.
+					</p>
+				{/if}
+			</div>
+		{/each}
+
+		<MapLibre
+			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+			standardControls
+		>
+			<!-- MapEvents gives you access to map events even from other components inside the map,
+  where you might not have access to the top-level `MapLibre` component. In this case
+  it would also work to just use on:click on the MapLibre component itself. -->
+			<!-- <MapEvents on:click={addMarker} /> -->
+
+			{#each adventures as adventure}
+				{#if adventure.longitude && adventure.latitude}
+					<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+						<Popup openOn="click" offset={[0, -10]}>
+							<div class="text-lg text-black font-bold">{adventure.name}</div>
+							<p class="font-semibold text-black text-md">
+								{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+							</p>
+							<p>
+								{adventure.date
+									? new Date(adventure.date).toLocaleDateString('en-US', { timeZone: 'UTC' })
+									: ''}
+							</p>
+						</Popup>
+					</DefaultMarker>
+				{/if}
+			{/each}
+		</MapLibre>
 	{/if}
 {/if}

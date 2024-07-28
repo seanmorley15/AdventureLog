@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AdventureViewSet, CollectionViewSet, StatsViewSet, GenerateDescription, ActivityTypesView
+from .views import AdventureViewSet, CollectionViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet
 
 router = DefaultRouter()
 router.register(r'adventures', AdventureViewSet, basename='adventures')
@@ -8,6 +8,7 @@ router.register(r'collections', CollectionViewSet, basename='collections')
 router.register(r'stats', StatsViewSet, basename='stats')
 router.register(r'generate', GenerateDescription, basename='generate')
 router.register(r'activity-types', ActivityTypesView, basename='activity-types')
+router.register(r'transportations', TransportationViewSet, basename='transportations')
 
 
 urlpatterns = [

@@ -64,6 +64,9 @@ export type Collection = {
 	is_public: boolean;
 	adventures: Adventure[];
 	created_at?: string;
+	start_date?: string;
+	end_date?: string;
+	transportations?: Transportation[];
 };
 
 export type OpenStreetMapPlace = {
@@ -81,4 +84,22 @@ export type OpenStreetMapPlace = {
 	name: string;
 	display_name: string;
 	boundingbox: string[];
+};
+
+export type Transportation = {
+	id: number;
+	user_id: number;
+	type: string;
+	name: string;
+	description: string | null;
+	rating: number | null;
+	link: string | null;
+	date: string | null; // ISO 8601 date string
+	flight_number: string | null;
+	from_location: string | null;
+	to_location: string | null;
+	is_public: boolean;
+	collection: Collection | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
 };

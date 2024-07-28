@@ -11,6 +11,7 @@
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
+	export let collection_id: number | null = null;
 
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
@@ -23,6 +24,7 @@
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
+	import AdventureCard from './AdventureCard.svelte';
 
 	let newAdventure: Adventure = {
 		id: NaN,
@@ -39,7 +41,7 @@
 		latitude: null,
 		longitude: null,
 		is_public: false,
-		collection: null
+		collection: collection_id || NaN
 	};
 
 	if (longitude && latitude) {
@@ -293,20 +295,22 @@
 						>
 					</div>
 				</div>
-				<div class="mb-2">
-					<label for="activityTypes"
-						>Activity Types <ClipboardList class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-					><br />
-					<input
-						type="text"
-						id="activity_types"
-						name="activity_types"
-						hidden
-						bind:value={newAdventure.activity_types}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<ActivityComplete bind:activities={newAdventure.activity_types} />
-				</div>
+				{#if newAdventure.type == 'visited' || newAdventure.type == 'planned'}
+					<div class="mb-2">
+						<label for="activityTypes"
+							>Activity Types <ClipboardList class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+						><br />
+						<input
+							type="text"
+							id="activity_types"
+							name="activity_types"
+							hidden
+							bind:value={newAdventure.activity_types}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+						<ActivityComplete bind:activities={newAdventure.activity_types} />
+					</div>
+				{/if}
 				<div class="mb-2">
 					<label for="rating"
 						>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
@@ -369,6 +373,14 @@
 						name="longitude"
 						hidden
 						bind:value={newAdventure.longitude}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
+					<input
+						type="text"
+						id="collection"
+						name="collection"
+						hidden
+						bind:value={newAdventure.collection}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 

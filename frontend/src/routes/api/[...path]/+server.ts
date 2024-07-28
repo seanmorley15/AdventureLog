@@ -15,7 +15,7 @@ export async function GET({ url, params, request, fetch, cookies }) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies);
+	return handleRequest(url, params, request, fetch, cookies, true);
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
@@ -23,11 +23,11 @@ export async function PATCH({ url, params, request, fetch, cookies }) {
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies);
+	return handleRequest(url, params, request, fetch, cookies, true);
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies);
+	return handleRequest(url, params, request, fetch, cookies, true);
 }
 
 // Implement other HTTP methods as needed (PUT, DELETE, etc.)
@@ -61,6 +61,14 @@ async function handleRequest(
 			headers: headers,
 			body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined
 		});
+
+		if (response.status === 204) {
+			// For 204 No Content, return a response with no body
+			return new Response(null, {
+				status: 204,
+				headers: response.headers
+			});
+		}
 
 		const responseData = await response.text();
 
