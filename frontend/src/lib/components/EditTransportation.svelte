@@ -89,6 +89,15 @@
 						bind:value={transportationToEdit.id}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<input
+						type="text"
+						id="is_public"
+						name="is_public"
+						hidden
+						readonly
+						bind:value={transportationToEdit.is_public}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
 					<div class="mb-2">
 						<label for="type">Type <Calendar class="inline-block mb-1 w-6 h-6" /></label><br />
 						<select

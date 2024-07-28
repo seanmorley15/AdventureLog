@@ -11,7 +11,7 @@
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
-	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import EditTransportation from '$lib/components/EditTransportation.svelte';
 
