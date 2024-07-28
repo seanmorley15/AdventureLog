@@ -425,7 +425,8 @@
 							on:typeChange={changeType}
 						/>
 					{/each}
-				{:else if dayTransportations.length > 0}
+				{/if}
+				{#if dayTransportations.length > 0}
 					{#each dayTransportations as transportation}
 						<TransportationCard
 							{transportation}
@@ -438,42 +439,42 @@
 							}}
 						/>
 					{/each}
-				{:else}
+				{/if}
+				{#if dayAdventures.length == 0 && dayTransportations.length == 0}
 					<p class="text-center text-lg mt-2">
 						No adventures or transportaions planned for this day.
 					</p>
 				{/if}
 			</div>
 		{/each}
-		<div class="flex items-center justify-center w-10/12">
-			<MapLibre
-				style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-				class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
-				standardControls
-			>
-				<!-- MapEvents gives you access to map events even from other components inside the map,
+
+		<MapLibre
+			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+			standardControls
+		>
+			<!-- MapEvents gives you access to map events even from other components inside the map,
   where you might not have access to the top-level `MapLibre` component. In this case
   it would also work to just use on:click on the MapLibre component itself. -->
-				<!-- <MapEvents on:click={addMarker} /> -->
+			<!-- <MapEvents on:click={addMarker} /> -->
 
-				{#each adventures as adventure}
-					{#if adventure.longitude && adventure.latitude}
-						<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-							<Popup openOn="click" offset={[0, -10]}>
-								<div class="text-lg text-black font-bold">{adventure.name}</div>
-								<p class="font-semibold text-black text-md">
-									{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
-								</p>
-								<p>
-									{adventure.date
-										? new Date(adventure.date).toLocaleDateString('en-US', { timeZone: 'UTC' })
-										: ''}
-								</p>
-							</Popup>
-						</DefaultMarker>
-					{/if}
-				{/each}
-			</MapLibre>
-		</div>
+			{#each adventures as adventure}
+				{#if adventure.longitude && adventure.latitude}
+					<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+						<Popup openOn="click" offset={[0, -10]}>
+							<div class="text-lg text-black font-bold">{adventure.name}</div>
+							<p class="font-semibold text-black text-md">
+								{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+							</p>
+							<p>
+								{adventure.date
+									? new Date(adventure.date).toLocaleDateString('en-US', { timeZone: 'UTC' })
+									: ''}
+							</p>
+						</Popup>
+					</DefaultMarker>
+				{/if}
+			{/each}
+		</MapLibre>
 	{/if}
 {/if}
