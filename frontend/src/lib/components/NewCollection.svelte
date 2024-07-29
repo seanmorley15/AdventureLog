@@ -56,10 +56,16 @@
 				let id = data[1];
 				let user_id = data[2];
 
-				console.log(newCollection);
-				dispatch('create', newCollection);
-				addToast('success', 'Collection created successfully!');
-				close();
+				if (id !== undefined && user_id !== undefined) {
+					newCollection.id = id;
+					newCollection.user_id = user_id;
+					console.log(newCollection);
+					dispatch('create', newCollection);
+					addToast('success', 'Collection created successfully!');
+					close();
+				} else {
+					addToast('error', 'Error creating collection');
+				}
 			}
 		}
 	}
