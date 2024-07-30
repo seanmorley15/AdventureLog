@@ -175,6 +175,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
     pagination_class = StandardResultsSetPagination
 
+    def get_queryset(self):
+        print(self.request.user.id)
+        return Collection.objects.filter(user_id=self.request.user.id)
+
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
@@ -255,9 +259,19 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
-        collections =  Collection.objects.filter(
-            Q(is_public=True) | Q(user_id=self.request.user.id)
-        ).prefetch_related(
+
+        adventures = None
+        
+        if self.action == 'retrieve':
+            # For individual collection retrieval, include public collections
+            adventures =  Collection.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id)
+            )
+        else:
+            # For other actions, only include user's own collections
+            adventures = Collection.objects.filter(user_id=self.request.user.id)
+        
+        adventures = adventures.prefetch_related(
             Prefetch('adventure_set', queryset=Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id)
             ))
@@ -266,7 +280,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 Q(is_public=True) | Q(user_id=self.request.user.id)
             ))
         )
-        return self.apply_sorting(collections)
+        return self.apply_sorting(adventures)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
