@@ -19,7 +19,6 @@
 
 	let showVisited = true;
 	let showPlanned = true;
-	let showCollectionAdventures = false;
 
 	$: {
 		if (!showVisited) {
@@ -33,12 +32,6 @@
 		} else {
 			const plannedMarkers = data.props.markers.filter((marker) => marker.type === 'planned');
 			markers = [...markers, ...plannedMarkers];
-		}
-		if (!showCollectionAdventures) {
-			markers = markers.filter((marker) => marker.collection === null);
-		} else {
-			const collectionMarkers = data.props.markers.filter((marker) => marker.collection !== null);
-			markers = [...markers, ...collectionMarkers];
 		}
 	}
 
@@ -123,14 +116,6 @@
 <label class="label cursor-pointer">
 	<span class="label-text">Planned</span>
 	<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
-</label>
-<label class="label cursor-pointer">
-	<span class="label-text">Collection Adventures</span>
-	<input
-		type="checkbox"
-		bind:checked={showCollectionAdventures}
-		class="checkbox checkbox-primary"
-	/>
 </label>
 
 {#if newMarker.length > 0}
