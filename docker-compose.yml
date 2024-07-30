@@ -8,6 +8,9 @@ services:
       - PUBLIC_SERVER_URL=http://server:8000
       - ORIGIN=http://localhost:8080
       - BODY_SIZE_LIMIT=Infinity
+      # Analytics can be configured here using Umami (https://umami.is)
+      - ENABLE_ANALYTICS=false
+      #- UNAMI_KEY=''
     ports:
       - "8080:3000"
     depends_on:
