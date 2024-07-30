@@ -115,3 +115,4 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 - [Japan GEOJSON](https://cartographyvectors.com/map/361-japan)
 - [Ireland GEOJSON](https://cartographyvectors.com/map/1399-ireland-provinces)
 - [Sweden GEOJSON](https://cartographyvectors.com/map/1521-sweden-with-regions)
+- [Switzerland GEOJSON](https://cartographyvectors.com/map/1522-switzerland-with-regions)
