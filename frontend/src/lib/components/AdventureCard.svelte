@@ -242,8 +242,11 @@
 									><Plus class="w-6 h-6" />Add to Collection</button
 								>
 							{/if}
-							<button class="btn btn-warning" on:click={deleteAdventure}
-								><TrashCan class="w-6 h-6" />Delete</button
+							<button
+								id="delete_adventure"
+								data-umami-event="Delete Adventure"
+								class="btn btn-warning"
+								on:click={deleteAdventure}><TrashCan class="w-6 h-6" />Delete</button
 							>
 						</ul>
 					</div>
