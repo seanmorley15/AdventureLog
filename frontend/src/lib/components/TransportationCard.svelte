@@ -7,7 +7,7 @@
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 
 	import { goto } from '$app/navigation';
-	import type { Collection, Transportation } from '$lib/types';
+	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 
 	import Plus from '~icons/mdi/plus';
@@ -15,6 +15,7 @@
 	const dispatch = createEventDispatcher();
 
 	export let transportation: Transportation;
+	export let user: User | null = null;
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -51,13 +52,15 @@
 		{#if transportation.date}
 			{new Date(transportation.date).toLocaleString()}
 		{/if}
-		<div class="card-actions justify-end">
-			<button on:click={deleteTransportation} class="btn btn-secondary"
-				><TrashCanOutline class="w-5 h-5 mr-1" /></button
-			>
-			<button class="btn btn-primary" on:click={editTransportation}>
-				<FileDocumentEdit class="w-6 h-6" />
-			</button>
-		</div>
+		{#if user}
+			<div class="card-actions justify-end">
+				<button on:click={deleteTransportation} class="btn btn-secondary"
+					><TrashCanOutline class="w-5 h-5 mr-1" /></button
+				>
+				<button class="btn btn-primary" on:click={editTransportation}>
+					<FileDocumentEdit class="w-6 h-6" />
+				</button>
+			</div>
+		{/if}
 	</div>
 </div>

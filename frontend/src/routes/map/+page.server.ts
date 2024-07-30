@@ -33,7 +33,8 @@ export const load = (async (event) => {
 					return {
 						lngLat: [adventure.longitude, adventure.latitude] as [number, number],
 						name: adventure.name,
-						type: adventure.type
+						type: adventure.type,
+						collection: adventure.collection
 					};
 				});
 

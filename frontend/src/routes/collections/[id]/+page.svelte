@@ -374,6 +374,7 @@
 			{#each transportations as transportation}
 				<TransportationCard
 					{transportation}
+					user={data?.user}
 					on:delete={(event) => {
 						transportations = transportations.filter((t) => t.id != event.detail);
 					}}
@@ -430,6 +431,7 @@
 					{#each dayTransportations as transportation}
 						<TransportationCard
 							{transportation}
+							user={data?.user}
 							on:delete={(event) => {
 								transportations = transportations.filter((t) => t.id != event.detail);
 							}}
