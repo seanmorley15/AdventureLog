@@ -5,7 +5,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "09",
-        "state_name": "Ciudad de México",
+        "name": "Ciudad de México",
         "id": 1,
         "ISOCODE": "MX-CMX"
       },
@@ -89,7 +89,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "12",
-        "state_name": "Guerrero",
+        "name": "Guerrero",
         "id": 2,
         "ISOCODE": "MX-GRO"
       },
@@ -619,7 +619,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "15",
-        "state_name": "México",
+        "name": "México",
         "id": 3,
         "ISOCODE": "MX-MEX"
       },
@@ -1083,7 +1083,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "17",
-        "state_name": "Morelos",
+        "name": "Morelos",
         "id": 4,
         "ISOCODE": "MX-MOR"
       },
@@ -1211,7 +1211,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "25",
-        "state_name": "Sinaloa",
+        "name": "Sinaloa",
         "id": 5,
         "ISOCODE": "MX-SIN"
       },
@@ -1720,7 +1720,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "02",
-        "state_name": "Baja California",
+        "name": "Baja California",
         "id": 6,
         "ISOCODE": "MX-BCN"
       },
@@ -2676,7 +2676,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "26",
-        "state_name": "Sonora",
+        "name": "Sonora",
         "id": 7,
         "ISOCODE": "MX-SON"
       },
@@ -3518,7 +3518,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "03",
-        "state_name": "Baja California Sur",
+        "name": "Baja California Sur",
         "id": 8,
         "ISOCODE": "MX-BCS"
       },
@@ -4480,7 +4480,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "32",
-        "state_name": "Zacatecas",
+        "name": "Zacatecas",
         "id": 9,
         "ISOCODE": "MX-ZAC"
       },
@@ -5400,7 +5400,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "10",
-        "state_name": "Durango",
+        "name": "Durango",
         "id": 10,
         "ISOCODE": "MX-DUR"
       },
@@ -6026,7 +6026,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "08",
-        "state_name": "Chihuahua",
+        "name": "Chihuahua",
         "id": 11,
         "ISOCODE": "MX-CHH"
       },
@@ -6782,7 +6782,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "06",
-        "state_name": "Colima",
+        "name": "Colima",
         "id": 12,
         "ISOCODE": "MX-COL"
       },
@@ -7015,7 +7015,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "18",
-        "state_name": "Nayarit",
+        "name": "Nayarit",
         "id": 13,
         "ISOCODE": "MX-NAY"
       },
@@ -7512,7 +7512,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "16",
-        "state_name": "Michoacán de Ocampo",
+        "name": "Michoacán de Ocampo",
         "id": 14,
         "ISOCODE": "MX-MIC"
       },
@@ -8188,7 +8188,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "14",
-        "state_name": "Jalisco",
+        "name": "Jalisco",
         "id": 15,
         "ISOCODE": "MX-JAL"
       },
@@ -9594,7 +9594,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "07",
-        "state_name": "Chiapas",
+        "name": "Chiapas",
         "id": 16,
         "ISOCODE": "MX-CHP"
       },
@@ -10048,7 +10048,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "27",
-        "state_name": "Tabasco",
+        "name": "Tabasco",
         "id": 17,
         "ISOCODE": "MX-TAB"
       },
@@ -10471,7 +10471,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "20",
-        "state_name": "Oaxaca",
+        "name": "Oaxaca",
         "id": 18,
         "ISOCODE": "MX-OAX"
       },
@@ -11073,7 +11073,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "11",
-        "state_name": "Guanajuato",
+        "name": "Guanajuato",
         "id": 19,
         "ISOCODE": "MX-GUA"
       },
@@ -11550,7 +11550,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "01",
-        "state_name": "Aguascalientes",
+        "name": "Aguascalientes",
         "id": 20,
         "ISOCODE": "MX-AGU"
       },
@@ -11682,7 +11682,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "22",
-        "state_name": "Querétaro",
+        "name": "Querétaro",
         "id": 21,
         "ISOCODE": "MX-QUE"
       },
@@ -11973,7 +11973,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "24",
-        "state_name": "San Luis Potosí",
+        "name": "San Luis Potosí",
         "id": 22,
         "ISOCODE": "MX-SLP"
       },
@@ -12619,7 +12619,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "29",
-        "state_name": "Tlaxcala",
+        "name": "Tlaxcala",
         "id": 23,
         "ISOCODE": "MX-TLA"
       },
@@ -12773,7 +12773,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "21",
-        "state_name": "Puebla",
+        "name": "Puebla",
         "id": 24,
         "ISOCODE": "MX-PUE"
       },
@@ -13501,7 +13501,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "13",
-        "state_name": "Hidalgo",
+        "name": "Hidalgo",
         "id": 25,
         "ISOCODE": "MX-HID"
       },
@@ -14025,7 +14025,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "30",
-        "state_name": "Veracruz de Ignacio de la Llave",
+        "name": "Veracruz de Ignacio de la Llave",
         "id": 26,
         "ISOCODE": "MX-VER"
       },
@@ -15049,7 +15049,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "19",
-        "state_name": "Nuevo León",
+        "name": "Nuevo León",
         "id": 27,
         "ISOCODE": "MX-NLE"
       },
@@ -15423,7 +15423,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "05",
-        "state_name": "Coahuila de Zaragoza",
+        "name": "Coahuila de Zaragoza",
         "id": 28,
         "ISOCODE": "MX-COA"
       },
@@ -16014,7 +16014,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "28",
-        "state_name": "Tamaulipas",
+        "name": "Tamaulipas",
         "id": 29,
         "ISOCODE": "MX-TAM"
       },
@@ -16647,7 +16647,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "31",
-        "state_name": "Yucatán",
+        "name": "Yucatán",
         "id": 30,
         "ISOCODE": "MX-YUC"
       },
@@ -17248,7 +17248,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "04",
-        "state_name": "Campeche",
+        "name": "Campeche",
         "id": 31,
         "ISOCODE": "MX-CAM"
       },
@@ -17567,7 +17567,7 @@
       "type": "Feature",
       "properties": {
         "state_code": "23",
-        "state_name": "Quintana Roo",
+        "name": "Quintana Roo",
         "id": 32,
         "ISOCODE": "MX-ROO"
       },

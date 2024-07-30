@@ -202,16 +202,16 @@
 				paint={{ 'fill-color': 'rgba(37, 244, 26, 0.15)' }}
 				filter={['in', 'ISOCODE', ...visitArray]}
 			/>
-			<!-- <SymbolLayer
+			<SymbolLayer
 				layout={{
-					'text-field': ['slice', ['get', 'ISOCODE'], 3],
+					'text-field': ['get', 'name'],
 					'text-size': 12,
 					'text-anchor': 'center'
 				}}
 				paint={{
 					'text-color': 'black'
 				}}
-			/> -->
+			/>
 		</GeoJSON>
 	{/if}
 	<MapEvents on:click={addMarker} />

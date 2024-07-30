@@ -1226,9 +1226,9 @@
       },
       "properties": {
         "OSM_ID": -278664,
-        "NAME": "Ulster",
-        "NAME_EN": "Ulster",
-        "NAME_GA": "CÃºige Uladh",
+        "name": "Ulster",
+        "name_EN": "Ulster",
+        "name_GA": "CÃºige Uladh",
         "ISOCODE": "IE-U"
       }
     },
@@ -1957,9 +1957,9 @@
       },
       "properties": {
         "OSM_ID": -278746,
-        "NAME": "Leinster",
-        "NAME_EN": "Leinster",
-        "NAME_GA": "CÃºige Laighean",
+        "name": "Leinster",
+        "name_EN": "Leinster",
+        "name_GA": "CÃºige Laighean",
         "ISOCODE": "IE-L"
       }
     },
@@ -3667,9 +3667,9 @@
       },
       "properties": {
         "OSM_ID": -278750,
-        "NAME": "Munster",
-        "NAME_EN": "Munster",
-        "NAME_GA": "CÃºige Mumhan",
+        "name": "Munster",
+        "name_EN": "Munster",
+        "name_GA": "CÃºige Mumhan",
         "ISOCODE": "IE-M"
       }
     },
@@ -5114,9 +5114,9 @@
       },
       "properties": {
         "OSM_ID": -278721,
-        "NAME": "Connacht",
-        "NAME_EN": "Connacht",
-        "NAME_GA": "CÃºige Chonnacht",
+        "name": "Connacht",
+        "name_EN": "Connacht",
+        "name_GA": "CÃºige Chonnacht",
         "ISOCODE": "IE-C"
       }
     }

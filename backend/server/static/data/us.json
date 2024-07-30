@@ -10,7 +10,7 @@
         "AFFGEOID": "0400000US22",
         "GEOID": "22",
         "ISOCODE": "US-LA",
-        "NAME": "Louisiana",
+        "name": "Louisiana",
         "LSAD": "00",
         "ALAND": 111915258185,
         "AWATER": 23736382213
@@ -331,7 +331,7 @@
         "AFFGEOID": "0400000US02",
         "GEOID": "02",
         "ISOCODE": "US-AK",
-        "NAME": "Alaska",
+        "name": "Alaska",
         "LSAD": "00",
         "ALAND": 1478942847588,
         "AWATER": 245378425142
@@ -2807,7 +2807,7 @@
         "AFFGEOID": "0400000US24",
         "GEOID": "24",
         "ISOCODE": "US-MD",
-        "NAME": "Maryland",
+        "name": "Maryland",
         "LSAD": "00",
         "ALAND": 25151992308,
         "AWATER": 6979074857
@@ -3101,7 +3101,7 @@
         "AFFGEOID": "0400000US55",
         "GEOID": "55",
         "ISOCODE": "US-WI",
-        "NAME": "Wisconsin",
+        "name": "Wisconsin",
         "LSAD": "00",
         "ALAND": 140292321657,
         "AWATER": 29343646672
@@ -3464,7 +3464,7 @@
         "AFFGEOID": "0400000US12",
         "GEOID": "12",
         "ISOCODE": "US-FL",
-        "NAME": "Florida",
+        "name": "Florida",
         "LSAD": "00",
         "ALAND": 138961722096,
         "AWATER": 45972570361
@@ -3884,7 +3884,7 @@
         "AFFGEOID": "0400000US13",
         "GEOID": "13",
         "ISOCODE": "US-GA",
-        "NAME": "Georgia",
+        "name": "Georgia",
         "LSAD": "00",
         "ALAND": 149486624386,
         "AWATER": 4418360134
@@ -4171,7 +4171,7 @@
         "AFFGEOID": "0400000US47",
         "GEOID": "47",
         "ISOCODE": "US-TN",
-        "NAME": "Tennessee",
+        "name": "Tennessee",
         "LSAD": "00",
         "ALAND": 106791957894,
         "AWATER": 2322601737
@@ -4441,7 +4441,7 @@
         "AFFGEOID": "0400000US27",
         "GEOID": "27",
         "ISOCODE": "US-MN",
-        "NAME": "Minnesota",
+        "name": "Minnesota",
         "LSAD": "00",
         "ALAND": 206232627084,
         "AWATER": 18949394733
@@ -4772,7 +4772,7 @@
         "AFFGEOID": "0400000US19",
         "GEOID": "19",
         "ISOCODE": "US-IA",
-        "NAME": "Iowa",
+        "name": "Iowa",
         "LSAD": "00",
         "ALAND": 144659721012,
         "AWATER": 1085964740
@@ -5046,7 +5046,7 @@
         "AFFGEOID": "0400000US29",
         "GEOID": "29",
         "ISOCODE": "US-MO",
-        "NAME": "Missouri",
+        "name": "Missouri",
         "LSAD": "00",
         "ALAND": 178052333716,
         "AWATER": 2487445715
@@ -5384,7 +5384,7 @@
         "AFFGEOID": "0400000US26",
         "GEOID": "26",
         "ISOCODE": "US-MI",
-        "NAME": "Michigan",
+        "name": "Michigan",
         "LSAD": "00",
         "ALAND": 146614937132,
         "AWATER": 103871870536
@@ -5904,7 +5904,7 @@
         "AFFGEOID": "0400000US16",
         "GEOID": "16",
         "ISOCODE": "US-ID",
-        "NAME": "Idaho",
+        "name": "Idaho",
         "LSAD": "00",
         "ALAND": 214049931578,
         "AWATER": 2391569647
@@ -6192,7 +6192,7 @@
         "AFFGEOID": "0400000US06",
         "GEOID": "06",
         "ISOCODE": "US-CA",
-        "NAME": "California",
+        "name": "California",
         "LSAD": "00",
         "ALAND": 403671756816,
         "AWATER": 20293573058
@@ -6703,7 +6703,7 @@
         "AFFGEOID": "0400000US09",
         "GEOID": "09",
         "ISOCODE": "US-CT",
-        "NAME": "Connecticut",
+        "name": "Connecticut",
         "LSAD": "00",
         "ALAND": 12541690473,
         "AWATER": 1816424193
@@ -6822,7 +6822,7 @@
         "AFFGEOID": "0400000US48",
         "GEOID": "48",
         "ISOCODE": "US-TX",
-        "NAME": "Texas",
+        "name": "Texas",
         "LSAD": "00",
         "ALAND": 676681550479,
         "AWATER": 18978390713
@@ -7394,7 +7394,7 @@
         "AFFGEOID": "0400000US51",
         "GEOID": "51",
         "ISOCODE": "US-VA",
-        "NAME": "Virginia",
+        "name": "Virginia",
         "LSAD": "00",
         "ALAND": 102258210137,
         "AWATER": 8528040726
@@ -7748,7 +7748,7 @@
         "AFFGEOID": "0400000US36",
         "GEOID": "36",
         "ISOCODE": "US-NY",
-        "NAME": "New York",
+        "name": "New York",
         "LSAD": "00",
         "ALAND": 122049142543,
         "AWATER": 19257128505
@@ -8108,7 +8108,7 @@
         "AFFGEOID": "0400000US17",
         "GEOID": "17",
         "ISOCODE": "US-IL",
-        "NAME": "Illinois",
+        "name": "Illinois",
         "LSAD": "00",
         "ALAND": 143778561906,
         "AWATER": 6216493488
@@ -8452,7 +8452,7 @@
         "AFFGEOID": "0400000US30",
         "GEOID": "30",
         "ISOCODE": "US-MT",
-        "NAME": "Montana",
+        "name": "Montana",
         "LSAD": "00",
         "ALAND": 376973729130,
         "AWATER": 3866634365
@@ -8718,7 +8718,7 @@
         "AFFGEOID": "0400000US21",
         "GEOID": "21",
         "ISOCODE": "US-KY",
-        "NAME": "Kentucky",
+        "name": "Kentucky",
         "LSAD": "00",
         "ALAND": 102283004821,
         "AWATER": 2367816964
@@ -9073,7 +9073,7 @@
         "AFFGEOID": "0400000US41",
         "GEOID": "41",
         "ISOCODE": "US-OR",
-        "NAME": "Oregon",
+        "name": "Oregon",
         "LSAD": "00",
         "ALAND": 248628414476,
         "AWATER": 6170965739
@@ -9348,7 +9348,7 @@
         "AFFGEOID": "0400000US11",
         "GEOID": "11",
         "ISOCODE": "US-DC",
-        "NAME": "District of Columbia",
+        "name": "District of Columbia",
         "LSAD": "00",
         "ALAND": 158316124,
         "AWATER": 18709762
@@ -9379,7 +9379,7 @@
         "AFFGEOID": "0400000US39",
         "GEOID": "39",
         "ISOCODE": "US-OH",
-        "NAME": "Ohio",
+        "name": "Ohio",
         "LSAD": "00",
         "ALAND": 105823653399,
         "AWATER": 10274702852
@@ -9641,7 +9641,7 @@
         "AFFGEOID": "0400000US05",
         "GEOID": "05",
         "ISOCODE": "US-AR",
-        "NAME": "Arkansas",
+        "name": "Arkansas",
         "LSAD": "00",
         "ALAND": 134660767709,
         "AWATER": 3121950081
@@ -9882,7 +9882,7 @@
         "AFFGEOID": "0400000US53",
         "GEOID": "53",
         "ISOCODE": "US-WA",
-        "NAME": "Washington",
+        "name": "Washington",
         "LSAD": "00",
         "ALAND": 172118963546,
         "AWATER": 12548738684
@@ -10146,7 +10146,7 @@
         "AFFGEOID": "0400000US72",
         "GEOID": "72",
         "ISOCODE": "US-PR",
-        "NAME": "Puerto Rico",
+        "name": "Puerto Rico",
         "LSAD": "00",
         "ALAND": 8869135605,
         "AWATER": 4922143005
@@ -10317,7 +10317,7 @@
         "AFFGEOID": "0400000US56",
         "GEOID": "56",
         "ISOCODE": "US-WY",
-        "NAME": "Wyoming",
+        "name": "Wyoming",
         "LSAD": "00",
         "ALAND": 251458712294,
         "AWATER": 1867503716
@@ -10434,7 +10434,7 @@
         "AFFGEOID": "0400000US23",
         "GEOID": "23",
         "ISOCODE": "US-ME",
-        "NAME": "Maine",
+        "name": "Maine",
         "LSAD": "00",
         "ALAND": 79888263364,
         "AWATER": 11745102727
@@ -10724,7 +10724,7 @@
         "AFFGEOID": "0400000US35",
         "GEOID": "35",
         "ISOCODE": "US-NM",
-        "NAME": "New Mexico",
+        "name": "New Mexico",
         "LSAD": "00",
         "ALAND": 314198560947,
         "AWATER": 726482113
@@ -10851,7 +10851,7 @@
         "AFFGEOID": "0400000US49",
         "GEOID": "49",
         "ISOCODE": "US-UT",
-        "NAME": "Utah",
+        "name": "Utah",
         "LSAD": "00",
         "ALAND": 213355072799,
         "AWATER": 6529973239
@@ -10964,7 +10964,7 @@
         "AFFGEOID": "0400000US54",
         "GEOID": "54",
         "ISOCODE": "US-WV",
-        "NAME": "West Virginia",
+        "name": "West Virginia",
         "LSAD": "00",
         "ALAND": 62266298634,
         "AWATER": 489204185
@@ -11226,7 +11226,7 @@
         "AFFGEOID": "0400000US20",
         "GEOID": "20",
         "ISOCODE": "US-KS",
-        "NAME": "Kansas",
+        "name": "Kansas",
         "LSAD": "00",
         "ALAND": 211753717642,
         "AWATER": 1345767737
@@ -11417,7 +11417,7 @@
         "AFFGEOID": "0400000US32",
         "GEOID": "32",
         "ISOCODE": "US-NV",
-        "NAME": "Nevada",
+        "name": "Nevada",
         "LSAD": "00",
         "ALAND": 284537290201,
         "AWATER": 1839636284
@@ -11580,7 +11580,7 @@
         "AFFGEOID": "0400000US28",
         "GEOID": "28",
         "ISOCODE": "US-MS",
-        "NAME": "Mississippi",
+        "name": "Mississippi",
         "LSAD": "00",
         "ALAND": 121533935354,
         "AWATER": 3914344129
@@ -11830,7 +11830,7 @@
         "AFFGEOID": "0400000US33",
         "GEOID": "33",
         "ISOCODE": "US-NH",
-        "NAME": "New Hampshire",
+        "name": "New Hampshire",
         "LSAD": "00",
         "ALAND": 23190115212,
         "AWATER": 1025971768
@@ -11990,7 +11990,7 @@
         "AFFGEOID": "0400000US01",
         "GEOID": "01",
         "ISOCODE": "US-AL",
-        "NAME": "Alabama",
+        "name": "Alabama",
         "LSAD": "00",
         "ALAND": 131175477769,
         "AWATER": 4591897964
@@ -12191,7 +12191,7 @@
         "AFFGEOID": "0400000US46",
         "GEOID": "46",
         "ISOCODE": "US-SD",
-        "NAME": "South Dakota",
+        "name": "South Dakota",
         "LSAD": "00",
         "ALAND": 196342918877,
         "AWATER": 3386737669
@@ -12398,7 +12398,7 @@
         "AFFGEOID": "0400000US42",
         "GEOID": "42",
         "ISOCODE": "US-PA",
-        "NAME": "Pennsylvania",
+        "name": "Pennsylvania",
         "LSAD": "00",
         "ALAND": 115881784866,
         "AWATER": 3397909903
@@ -12596,7 +12596,7 @@
         "AFFGEOID": "0400000US40",
         "GEOID": "40",
         "ISOCODE": "US-OK",
-        "NAME": "Oklahoma",
+        "name": "Oklahoma",
         "LSAD": "00",
         "ALAND": 177664154114,
         "AWATER": 3373725677
@@ -12853,7 +12853,7 @@
         "AFFGEOID": "0400000US37",
         "GEOID": "37",
         "ISOCODE": "US-NC",
-        "NAME": "North Carolina",
+        "name": "North Carolina",
         "LSAD": "00",
         "ALAND": 125933327733,
         "AWATER": 13456093195
@@ -13103,7 +13103,7 @@
         "AFFGEOID": "0400000US25",
         "GEOID": "25",
         "ISOCODE": "US-MA",
-        "NAME": "Massachusetts",
+        "name": "Massachusetts",
         "LSAD": "00",
         "ALAND": 20204390225,
         "AWATER": 7130660432
@@ -13362,7 +13362,7 @@
         "AFFGEOID": "0400000US38",
         "GEOID": "38",
         "ISOCODE": "US-ND",
-        "NAME": "North Dakota",
+        "name": "North Dakota",
         "LSAD": "00",
         "ALAND": 178694310772,
         "AWATER": 4414779956
@@ -13511,7 +13511,7 @@
         "AFFGEOID": "0400000US10",
         "GEOID": "10",
         "ISOCODE": "US-DE",
-        "NAME": "Delaware",
+        "name": "Delaware",
         "LSAD": "00",
         "ALAND": 5046731559,
         "AWATER": 1399179670
@@ -13587,7 +13587,7 @@
         "AFFGEOID": "0400000US08",
         "GEOID": "08",
         "ISOCODE": "US-CO",
-        "NAME": "Colorado",
+        "name": "Colorado",
         "LSAD": "00",
         "ALAND": 268418796417,
         "AWATER": 1185716938
@@ -13704,7 +13704,7 @@
         "AFFGEOID": "0400000US45",
         "GEOID": "45",
         "ISOCODE": "US-SC",
-        "NAME": "South Carolina",
+        "name": "South Carolina",
         "LSAD": "00",
         "ALAND": 77866200776,
         "AWATER": 5074243221
@@ -13922,7 +13922,7 @@
         "AFFGEOID": "0400000US15",
         "GEOID": "15",
         "ISOCODE": "US-HI",
-        "NAME": "Hawaii",
+        "name": "Hawaii",
         "LSAD": "00",
         "ALAND": 16634147169,
         "AWATER": 11777652105
@@ -14208,7 +14208,7 @@
         "AFFGEOID": "0400000US50",
         "GEOID": "50",
         "ISOCODE": "US-VT",
-        "NAME": "Vermont",
+        "name": "Vermont",
         "LSAD": "00",
         "ALAND": 23872569964,
         "AWATER": 1030754609
@@ -14361,7 +14361,7 @@
         "AFFGEOID": "0400000US44",
         "GEOID": "44",
         "ISOCODE": "US-RI",
-        "NAME": "Rhode Island",
+        "name": "Rhode Island",
         "LSAD": "00",
         "ALAND": 2677763359,
         "AWATER": 1323686988
@@ -14447,7 +14447,7 @@
         "AFFGEOID": "0400000US18",
         "GEOID": "18",
         "ISOCODE": "US-IN",
-        "NAME": "Indiana",
+        "name": "Indiana",
         "LSAD": "00",
         "ALAND": 92789363558,
         "AWATER": 1541248299
@@ -14687,7 +14687,7 @@
         "AFFGEOID": "0400000US34",
         "GEOID": "34",
         "ISOCODE": "US-NJ",
-        "NAME": "New Jersey",
+        "name": "New Jersey",
         "LSAD": "00",
         "ALAND": 19048916230,
         "AWATER": 3533083369
@@ -14872,7 +14872,7 @@
         "AFFGEOID": "0400000US04",
         "GEOID": "04",
         "ISOCODE": "US-AZ",
-        "NAME": "Arizona",
+        "name": "Arizona",
         "LSAD": "00",
         "ALAND": 294363973043,
         "AWATER": 855871553
@@ -15048,7 +15048,7 @@
         "AFFGEOID": "0400000US31",
         "GEOID": "31",
         "ISOCODE": "US-NE",
-        "NAME": "Nebraska",
+        "name": "Nebraska",
         "LSAD": "00",
         "ALAND": 198957385713,
         "AWATER": 1371105730

@@ -5,7 +5,7 @@
       "type": "Feature",
       "id": 0,
       "properties": {
-        "STATE_NAME": "New South Wales",
+        "name": "New South Wales",
         "ISOCODE": "AU-NSW"
       },
       "geometry": {
@@ -2673,7 +2673,7 @@
       "type": "Feature",
       "id": 1,
       "properties": {
-        "STATE_NAME": "Victoria",
+        "name": "Victoria",
         "ISOCODE": "AU-VIC"
       },
       "geometry": {
@@ -4369,7 +4369,7 @@
       "type": "Feature",
       "id": 2,
       "properties": {
-        "STATE_NAME": "Queensland",
+        "name": "Queensland",
         "ISOCODE": "AU-QLD"
       },
       "geometry": {
@@ -9598,7 +9598,7 @@
       "type": "Feature",
       "id": 3,
       "properties": {
-        "STATE_NAME": "South Australia",
+        "name": "South Australia",
         "ISOCODE": "AU-SA"
       },
       "geometry": {
@@ -11122,7 +11122,7 @@
       "type": "Feature",
       "id": 4,
       "properties": {
-        "STATE_NAME": "Western Australia",
+        "name": "Western Australia",
         "ISOCODE": "AU-WA"
       },
       "geometry": {
@@ -19549,7 +19549,7 @@
       "type": "Feature",
       "id": 5,
       "properties": {
-        "STATE_NAME": "Tasmania",
+        "name": "Tasmania",
         "ISOCODE": "AU-TAS"
       },
       "geometry": {
@@ -22477,7 +22477,7 @@
       "type": "Feature",
       "id": 6,
       "properties": {
-        "STATE_NAME": "Northern Territory",
+        "name": "Northern Territory",
         "ISOCODE": "AU-NT"
       },
       "geometry": {
@@ -26461,7 +26461,7 @@
       "type": "Feature",
       "id": 7,
       "properties": {
-        "STATE_NAME": "Australian Capital Territory",
+        "name": "Australian Capital Territory",
         "ISOCODE": "AU-ACT"
       },
       "geometry": {
