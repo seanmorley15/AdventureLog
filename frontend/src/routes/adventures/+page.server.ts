@@ -109,7 +109,13 @@ export const actions: Actions = {
 		formDataToSend.append('description', description || '');
 		formDataToSend.append('latitude', latitude || '');
 		formDataToSend.append('longitude', longitude || '');
-		formDataToSend.append('collection', collection || '');
+
+		if (!isNaN(Number(collection))) {
+			if (collection !== null) {
+				formDataToSend.append('collection', collection);
+			}
+		}
+
 		if (activity_types) {
 			// Filter out empty and duplicate activity types, then trim each activity type
 			const cleanedActivityTypes = Array.from(
@@ -128,6 +134,11 @@ export const actions: Actions = {
 		formDataToSend.append('rating', rating ? rating.toString() : '');
 		formDataToSend.append('link', link || '');
 		formDataToSend.append('image', image);
+
+		// log each key-value pair in the FormData
+		for (let pair of formDataToSend.entries()) {
+			console.log(pair[0] + ', ' + pair[1]);
+		}
 
 		let auth = event.cookies.get('auth');
 
