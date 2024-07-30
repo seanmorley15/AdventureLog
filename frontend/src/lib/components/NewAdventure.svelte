@@ -384,7 +384,12 @@
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 
-					<button type="submit" class="btn btn-primary mr-4 mt-4">Create</button>
+					<button
+						id="new_adventure"
+						data-umami-event="Create new Adventure"
+						type="submit"
+						class="btn btn-primary mr-4 mt-4">Create</button
+					>
 					<button type="button" class="btn mt-4" on:click={close}>Close</button>
 				</div>
 			</form>
