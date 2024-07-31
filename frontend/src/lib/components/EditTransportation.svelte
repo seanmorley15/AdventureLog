@@ -11,6 +11,17 @@
 
 	let originalName = transportationToEdit.name;
 
+	export let startDate: string | null = null;
+	export let endDate: string | null = null;
+
+	let fullStartDate: string = '';
+	let fullEndDate: string = '';
+
+	if (startDate && endDate) {
+		fullStartDate = `${startDate}T00:00`;
+		fullEndDate = `${endDate}T23:59`;
+	}
+
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import Notebook from '~icons/mdi/notebook';
@@ -142,6 +153,8 @@
 							type="datetime-local"
 							id="date"
 							name="date"
+							min={fullStartDate || ''}
+							max={fullEndDate || ''}
 							bind:value={transportationToEdit.date}
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>

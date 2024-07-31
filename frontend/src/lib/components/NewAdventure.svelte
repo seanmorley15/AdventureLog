@@ -24,7 +24,9 @@
 	import Wikipedia from '~icons/mdi/wikipedia';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
-	import AdventureCard from './AdventureCard.svelte';
+
+	export let startDate: string | null = null;
+	export let endDate: string | null = null;
 
 	let newAdventure: Adventure = {
 		id: NaN,
@@ -273,6 +275,8 @@
 						type="date"
 						id="date"
 						name="date"
+						min={startDate || ''}
+						max={endDate || ''}
 						bind:value={newAdventure.date}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>

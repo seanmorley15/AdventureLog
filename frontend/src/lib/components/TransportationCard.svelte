@@ -52,7 +52,7 @@
 		{#if transportation.date}
 			{new Date(transportation.date).toLocaleString()}
 		{/if}
-		{#if user}
+		{#if user?.pk === transportation.user_id}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button
