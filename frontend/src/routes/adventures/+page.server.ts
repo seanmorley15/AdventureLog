@@ -279,6 +279,9 @@ export const actions: Actions = {
 		formDataToSend.append('latitude', latitude || '');
 		formDataToSend.append('longitude', longitude || '');
 		formDataToSend.append('is_public', is_public.toString());
+
+		let csrfToken = await fetchCSRFToken();
+
 		if (activity_types) {
 			// Filter out empty and duplicate activity types, then trim each activity type
 			const cleanedActivityTypes = Array.from(
@@ -293,6 +296,23 @@ export const actions: Actions = {
 			cleanedActivityTypes.forEach((activity_type) => {
 				formDataToSend.append('activity_types', activity_type);
 			});
+		} else {
+			let res = await fetch(`${serverEndpoint}/api/adventures/${adventureId}/`, {
+				method: 'PATCH',
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`,
+					'X-CSRFToken': csrfToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ activity_types: [] })
+			});
+			if (!res.ok) {
+				const errorBody = await res.json();
+				return {
+					status: res.status,
+					body: { error: errorBody }
+				};
+			}
 		}
 		formDataToSend.append('rating', rating ? rating.toString() : '');
 		formDataToSend.append('link', link || '');
@@ -334,8 +354,6 @@ export const actions: Actions = {
 				body: { message: 'Unauthorized' }
 			};
 		}
-
-		const csrfToken = await fetchCSRFToken();
 
 		if (!csrfToken) {
 			return {
