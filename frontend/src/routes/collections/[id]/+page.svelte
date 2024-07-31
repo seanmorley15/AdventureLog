@@ -197,6 +197,8 @@
 		{transportationToEdit}
 		on:close={() => (isTransportationEditModalOpen = false)}
 		on:saveEdit={saveNewTransportation}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
 	/>
 {/if}
 
@@ -205,6 +207,8 @@
 		{adventureToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
 	/>
 {/if}
 
@@ -214,6 +218,8 @@
 		collection_id={collection.id}
 		on:create={createAdventure}
 		on:close={() => (isShowingCreateModal = false)}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
 	/>
 {/if}
 
@@ -225,6 +231,8 @@
 			isShowingTransportationModal = false;
 		}}
 		{collection}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
 	/>
 {/if}
 

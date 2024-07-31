@@ -4,8 +4,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "北海道",
-        "name_english": "Hokkaido",
+        "name_jp": "北海道",
+        "name": "Hokkaido",
         "ISOCODE": "JP-01",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:15:49+0100",
@@ -1944,8 +1944,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "青森県",
-        "name_english": "Aomori",
+        "name_jp": "青森県",
+        "name": "Aomori",
         "ISOCODE": "JP-02",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:15:55+0100",
@@ -2655,8 +2655,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "秋田県",
-        "name_english": "Akita",
+        "name_jp": "秋田県",
+        "name": "Akita",
         "ISOCODE": "JP-05",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:00+0100",
@@ -3206,8 +3206,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "岩手県",
-        "name_english": "Iwate",
+        "name_jp": "岩手県",
+        "name": "Iwate",
         "ISOCODE": "JP-03",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:06+0100",
@@ -4080,8 +4080,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "山形県",
-        "name_english": "Yamagata",
+        "name_jp": "山形県",
+        "name": "Yamagata",
         "ISOCODE": "JP-06",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:12+0100",
@@ -4535,8 +4535,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "宮城県",
-        "name_english": "Miyagi",
+        "name_jp": "宮城県",
+        "name": "Miyagi",
         "ISOCODE": "JP-04",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:18+0100",
@@ -5391,8 +5391,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "新潟県",
-        "name_english": "Niigata",
+        "name_jp": "新潟県",
+        "name": "Niigata",
         "ISOCODE": "JP-15",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:26+0100",
@@ -6070,8 +6070,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "福島県",
-        "name_english": "Fukushima",
+        "name_jp": "福島県",
+        "name": "Fukushima",
         "ISOCODE": "JP-07",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:34+0100",
@@ -6677,8 +6677,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "石川県",
-        "name_english": "Ishikawa",
+        "name_jp": "石川県",
+        "name": "Ishikawa",
         "ISOCODE": "JP-17",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:40+0100",
@@ -7252,8 +7252,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "栃木県",
-        "name_english": "Tochigi",
+        "name_jp": "栃木県",
+        "name": "Tochigi",
         "ISOCODE": "JP-09",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:16:48+0100",
@@ -7572,8 +7572,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "群馬県",
-        "name_english": "Gunma",
+        "name_jp": "群馬県",
+        "name": "Gunma",
         "ISOCODE": "JP-10",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:00+0100",
@@ -7979,8 +7979,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "長野県",
-        "name_english": "Nagano",
+        "name_jp": "長野県",
+        "name": "Nagano",
         "ISOCODE": "JP-20",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:06+0100",
@@ -8639,8 +8639,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "富山県",
-        "name_english": "Toyama",
+        "name_jp": "富山県",
+        "name": "Toyama",
         "ISOCODE": "JP-16",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:12+0100",
@@ -8989,8 +8989,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "茨城県",
-        "name_english": "Ibaraki",
+        "name_jp": "茨城県",
+        "name": "Ibaraki",
         "ISOCODE": "JP-08",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:19+0100",
@@ -9392,8 +9392,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "岐阜県",
-        "name_english": "Gifu",
+        "name_jp": "岐阜県",
+        "name": "Gifu",
         "ISOCODE": "JP-21",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:25+0100",
@@ -9949,8 +9949,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "福井県",
-        "name_english": "Fukui",
+        "name_jp": "福井県",
+        "name": "Fukui",
         "ISOCODE": "JP-18",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:30+0100",
@@ -10604,8 +10604,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "埼玉県",
-        "name_english": "Saitama",
+        "name_jp": "埼玉県",
+        "name": "Saitama",
         "ISOCODE": "JP-11",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:17:39+0100",
@@ -10862,8 +10862,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "千葉県",
-        "name_english": "Chiba",
+        "name_jp": "千葉県",
+        "name": "Chiba",
         "ISOCODE": "JP-12",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:22:22+0100",
@@ -11374,8 +11374,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "山梨県",
-        "name_english": "Yamanashi",
+        "name_jp": "山梨県",
+        "name": "Yamanashi",
         "ISOCODE": "JP-19",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:26+0100",
@@ -11683,8 +11683,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "東京都",
-        "name_english": "Tokyo",
+        "name_jp": "東京都",
+        "name": "Tokyo",
         "ISOCODE": "JP-13",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:31+0100",
@@ -12014,8 +12014,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "滋賀県",
-        "name_english": "Shiga",
+        "name_jp": "滋賀県",
+        "name": "Shiga",
         "ISOCODE": "JP-25",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:38+0100",
@@ -12313,8 +12313,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "神奈川県",
-        "name_english": "Kanagawa",
+        "name_jp": "神奈川県",
+        "name": "Kanagawa",
         "ISOCODE": "JP-14",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:44+0100",
@@ -12736,8 +12736,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "静岡県",
-        "name_english": "Shizuoka",
+        "name_jp": "静岡県",
+        "name": "Shizuoka",
         "ISOCODE": "JP-22",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:50+0100",
@@ -13423,8 +13423,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "愛知県",
-        "name_english": "Aichi",
+        "name_jp": "愛知県",
+        "name": "Aichi",
         "ISOCODE": "JP-23",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:19+0100",
@@ -13971,8 +13971,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "三重県",
-        "name_english": "Mie",
+        "name_jp": "三重県",
+        "name": "Mie",
         "ISOCODE": "JP-24",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:18:57+0100",
@@ -14995,8 +14995,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "大阪府",
-        "name_english": "Osaka",
+        "name_jp": "大阪府",
+        "name": "Osaka",
         "ISOCODE": "JP-27",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:06+0100",
@@ -15387,8 +15387,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "奈良県",
-        "name_english": "Nara",
+        "name_jp": "奈良県",
+        "name": "Nara",
         "ISOCODE": "JP-29",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:12+0100",
@@ -15693,8 +15693,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "和歌山県",
-        "name_english": "Wakayama",
+        "name_jp": "和歌山県",
+        "name": "Wakayama",
         "ISOCODE": "JP-30",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:48+0100",
@@ -16265,8 +16265,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "京都府",
-        "name_english": "Kyoto",
+        "name_jp": "京都府",
+        "name": "Kyoto",
         "ISOCODE": "JP-26",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:30+0100",
@@ -16850,8 +16850,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "兵庫県",
-        "name_english": "Hyogo",
+        "name_jp": "兵庫県",
+        "name": "Hyogo",
         "ISOCODE": "JP-28",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:35+0100",
@@ -17498,8 +17498,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "鳥取県",
-        "name_english": "Tottori",
+        "name_jp": "鳥取県",
+        "name": "Tottori",
         "ISOCODE": "JP-31",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:42+0100",
@@ -17854,8 +17854,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "島根県",
-        "name_english": "Shimane",
+        "name_jp": "島根県",
+        "name": "Shimane",
         "ISOCODE": "JP-32",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:19:48+0100",
@@ -18502,8 +18502,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "岡山県",
-        "name_english": "Okayama",
+        "name_jp": "岡山県",
+        "name": "Okayama",
         "ISOCODE": "JP-33",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:01+0100",
@@ -19119,8 +19119,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "広島県",
-        "name_english": "Hiroshima",
+        "name_jp": "広島県",
+        "name": "Hiroshima",
         "ISOCODE": "JP-34",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:09+0100",
@@ -19712,8 +19712,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "山口県",
-        "name_english": "Yamaguchi",
+        "name_jp": "山口県",
+        "name": "Yamaguchi",
         "ISOCODE": "JP-35",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:15+0100",
@@ -20628,8 +20628,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "香川県",
-        "name_english": "Kagawa",
+        "name_jp": "香川県",
+        "name": "Kagawa",
         "ISOCODE": "JP-37",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:25+0100",
@@ -20969,8 +20969,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "徳島県",
-        "name_english": "Tokushima",
+        "name_jp": "徳島県",
+        "name": "Tokushima",
         "ISOCODE": "JP-36",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:32+0100",
@@ -21408,8 +21408,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "愛媛県",
-        "name_english": "Ehime",
+        "name_jp": "愛媛県",
+        "name": "Ehime",
         "ISOCODE": "JP-38",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:41+0100",
@@ -22445,8 +22445,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "福岡県",
-        "name_english": "Fukuoka",
+        "name_jp": "福岡県",
+        "name": "Fukuoka",
         "ISOCODE": "JP-40",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:47+0100",
@@ -23079,8 +23079,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "高知県",
-        "name_english": "Kochi",
+        "name_jp": "高知県",
+        "name": "Kochi",
         "ISOCODE": "JP-39",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:20:53+0100",
@@ -23926,8 +23926,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "大分県",
-        "name_english": "Oita",
+        "name_jp": "大分県",
+        "name": "Oita",
         "ISOCODE": "JP-44",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:01+0100",
@@ -24767,8 +24767,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "佐賀県",
-        "name_english": "Saga",
+        "name_jp": "佐賀県",
+        "name": "Saga",
         "ISOCODE": "JP-41",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:06+0100",
@@ -25203,8 +25203,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "長崎県",
-        "name_english": "Nagasaki",
+        "name_jp": "長崎県",
+        "name": "Nagasaki",
         "ISOCODE": "JP-42",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:12+0100",
@@ -26128,8 +26128,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "熊本県",
-        "name_english": "Kumamoto",
+        "name_jp": "熊本県",
+        "name": "Kumamoto",
         "ISOCODE": "JP-43",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:17+0100",
@@ -26685,8 +26685,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "鹿児島県",
-        "name_english": "Kagoshima",
+        "name_jp": "鹿児島県",
+        "name": "Kagoshima",
         "ISOCODE": "JP-46",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:23+0100",
@@ -27440,8 +27440,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "沖縄県",
-        "name_english": "Okinawa",
+        "name_jp": "沖縄県",
+        "name": "Okinawa",
         "ISOCODE": "JP-47",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:29+0100",
@@ -27865,8 +27865,8 @@
     {
       "type": "Feature",
       "properties": {
-        "name": "宮崎県",
-        "name_english": "Miyazaki",
+        "name_jp": "宮崎県",
+        "name": "Miyazaki",
         "ISOCODE": "JP-45",
         "created_at": "2013-12-02T09:00:35+0100",
         "updated_at": "2013-12-02T09:21:37+0100",

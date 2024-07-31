@@ -40,6 +40,7 @@ class Command(BaseCommand):
             ('Spain', 'es', 'EU'),
             ('Switzerland', 'ch', 'EU'),
             ('Italy', 'it', 'EU'),
+            ('Iceland', 'is', 'EU'),
         ]
         
         regions = [
@@ -488,6 +489,14 @@ class Command(BaseCommand):
             ('IT-55', 'Umbria', 'it'),
             ('IT-23', 'Valle d''Aosta', 'it'),
             ('IT-34', 'Veneto', 'it'),
+            ('IS-1', 'Höfuðborgarsvæði', 'is'),
+            ('IS-2', 'Suðurnes', 'is'),
+            ('IS-3', 'Vesturland', 'is'),
+            ('IS-4', 'Vestfirðir', 'is'),
+            ('IS-5', 'Norðurland vestra', 'is'),
+            ('IS-6', 'Norðurland eystra', 'is'),
+            ('IS-7', 'Austurland', 'is'),
+            ('IS-8', 'Suðurland', 'is'),
         ]
         
         if not force and (Country.objects.exists() or Region.objects.exists()):

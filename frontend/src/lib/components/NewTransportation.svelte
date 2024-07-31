@@ -33,6 +33,17 @@
 	import LinkVariant from '~icons/mdi/link-variant';
 	import Airplane from '~icons/mdi/airplane';
 
+	export let startDate: string | null = null;
+	export let endDate: string | null = null;
+
+	let fullStartDate: string = '';
+	let fullEndDate: string = '';
+
+	if (startDate && endDate) {
+		fullStartDate = `${startDate}T00:00`;
+		fullEndDate = `${endDate}T23:59`;
+	}
+
 	let type: string = '';
 
 	onMount(async () => {
@@ -163,6 +174,8 @@
 							type="datetime-local"
 							id="date"
 							name="date"
+							min={fullStartDate || ''}
+							max={fullEndDate || ''}
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>
 					</div>

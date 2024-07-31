@@ -7,6 +7,9 @@
 	import { addToast } from '$lib/toasts';
 	let modal: HTMLDialogElement;
 
+	export let startDate: string | null = null;
+	export let endDate: string | null = null;
+
 	console.log(adventureToEdit.id);
 
 	let originalName = adventureToEdit.name;
@@ -202,6 +205,8 @@
 						type="date"
 						id="date"
 						name="date"
+						min={startDate || ''}
+						max={endDate || ''}
 						bind:value={adventureToEdit.date}
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
