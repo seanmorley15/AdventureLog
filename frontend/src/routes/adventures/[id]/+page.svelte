@@ -19,8 +19,10 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
+	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
 
 	export let data: PageData;
+	console.log(data);
 
 	let adventure: Adventure;
 
@@ -62,66 +64,239 @@
 		<span class="loading loading-spinner w-24 h-24"></span>
 	</div>
 {/if}
+
 {#if adventure}
-	{#if adventure.name}
-		<h1 class="text-center font-extrabold text-4xl mb-2">{adventure.name}</h1>
-	{/if}
-	{#if adventure.location}
-		<p class="text-center text-2xl">
-			<iconify-icon icon="mdi:map-marker" class="text-xl -mb-0.5"
-			></iconify-icon>{adventure.location}
-		</p>
-	{/if}
-	{#if adventure.date}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">
-			Visited on: {adventure.date}
-		</p>
-	{/if}
-	{#if adventure.rating !== undefined && adventure.rating !== null}
-		<div class="flex justify-center items-center">
-			<div class="rating" aria-readonly="true">
-				{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-					<input
-						type="radio"
-						name="rating-1"
-						class="mask mask-star"
-						checked={star <= adventure.rating}
-						disabled
-					/>
-				{/each}
-			</div>
-		</div>
-	{/if}
-	{#if adventure.description}
-		<p class="text-center text-lg mt-4 pl-16 pr-16">{adventure.description}</p>
-	{/if}
-	{#if adventure.link}
-		<div class="flex justify-center items-center mt-4">
-			<a href={adventure.link} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-				Visit Website
-			</a>
-		</div>
-	{/if}
-	{#if adventure.activity_types && adventure.activity_types.length > 0}
-		<div class="flex justify-center items-center mt-4">
-			<p class="text-center text-lg">Activities:&nbsp</p>
-			<ul class="flex flex-wrap">
-				{#each adventure.activity_types as activity}
-					<div class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1">
-						{activity}
+	<div class="flex flex-col min-h-dvh">
+		<main class="flex-1">
+			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
+				<div class="grid gap-8">
+					{#if adventure.image}
+						<div>
+							<img
+								src={adventure.image}
+								alt={adventure.name}
+								width="1200"
+								height="600"
+								class="w-full h-auto object-cover rounded-lg"
+								style="aspect-ratio: 1200 / 600; object-fit: cover;"
+							/>
+						</div>
+					{/if}
+					<div class="grid gap-4">
+						<div class="flex items-center justify-between">
+							<div>
+								<h1 class="text-4xl mt-2 font-bold">{adventure.name}</h1>
+							</div>
+
+							<div class="flex items-center gap-1">
+								{#if adventure.rating !== undefined && adventure.rating !== null}
+									<div class="flex justify-center items-center">
+										<div class="rating" aria-readonly="true">
+											{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
+												<input
+													type="radio"
+													name="rating-1"
+													class="mask mask-star"
+													checked={star <= adventure.rating}
+													disabled
+												/>
+											{/each}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+						<div class="grid gap-2">
+							<div class="flex items-center gap-2">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									width="24"
+									height="24"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									class="w-5 h-5 text-muted-foreground"
+								>
+									<rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+									<path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+								</svg>
+								<span class="text-sm text-muted-foreground"
+									>{adventure.is_public ? 'Public' : 'Private'}</span
+								>
+							</div>
+							{#if adventure.date}
+								<div class="flex items-center gap-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										class="w-5 h-5 text-muted-foreground"
+									>
+										<path d="M8 2v4"></path>
+										<path d="M16 2v4"></path>
+										<rect width="18" height="18" x="3" y="4" rx="2"></rect>
+										<path d="M3 10h18"></path>
+									</svg>
+									<span class="text-sm text-muted-foreground"
+										>{new Date(adventure.date).toLocaleDateString()}</span
+									>
+								</div>
+							{/if}
+							{#if adventure.location}
+								<div class="flex items-center gap-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										class="w-5 h-5 text-muted-foreground"
+									>
+										<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+										<circle cx="12" cy="10" r="3"></circle>
+									</svg>
+									<span class="text-sm text-muted-foreground">{adventure.location}</span>
+								</div>
+							{/if}
+							{#if adventure.activity_types}
+								<div class="flex items-center gap-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										class="w-5 h-5 text-muted-foreground"
+									>
+										<path
+											d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"
+										></path>
+									</svg>
+									<span class="text-sm text-muted-foreground"
+										>{adventure.activity_types.join(', ')}</span
+									>
+								</div>
+							{/if}
+							{#if adventure.link}
+								<div class="flex items-center gap-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										width="24"
+										height="24"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										class="w-5 h-5 text-muted-foreground"
+									>
+										<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+										<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+									</svg>
+									<a
+										href={adventure.link}
+										class="text-sm text-muted-foreground hover:underline"
+										target="_blank"
+									>
+										{adventure.link}
+									</a>
+								</div>
+							{/if}
+						</div>
+						{#if adventure.description}
+							<div class="grid gap-2">
+								<p class="text-sm text-muted-foreground">
+									{adventure.description}
+								</p>
+							</div>
+						{/if}
 					</div>
-				{/each}
-			</ul>
-		</div>
-	{/if}
-	{#if adventure.image}
-		<div class="flex content-center justify-center">
-			<!-- svelte-ignore a11y-img-redundant-alt -->
-			<img
-				src={adventure.image}
-				alt="Adventure Image"
-				class="w-1/2 mt-4 align-middle rounded-lg shadow-lg"
-			/>
-		</div>
-	{/if}
+				</div>
+				<div
+					data-orientation="horizontal"
+					role="none"
+					class="shrink-0 bg-border h-[1px] w-full my-8"
+				></div>
+				<div class="grid gap-8">
+					<div>
+						<h2 class="text-2xl font-bold mt-4">Trip Details</h2>
+						<div class="grid gap-4 mt-4">
+							<div class="grid md:grid-cols-2 gap-4">
+								<div>
+									<p class="text-sm text-muted-foreground">Trip Type</p>
+									<p class="text-base font-medium">
+										{adventure.type[0].toLocaleUpperCase() + adventure.type.slice(1)}
+									</p>
+								</div>
+								{#if data.props.collection}
+									<div>
+										<p class="text-sm text-muted-foreground">Collection</p>
+										<p class="text-base font-medium">{data.props.collection.name}</p>
+									</div>
+								{/if}
+							</div>
+							{#if adventure.longitude && adventure.latitude}
+								<div class="grid md:grid-cols-2 gap-4">
+									<div>
+										<p class="text-sm text-muted-foreground">Latitude</p>
+										<p class="text-base font-medium">{adventure.latitude}° N</p>
+									</div>
+									<div>
+										<p class="text-sm text-muted-foreground">Longitude</p>
+										<p class="text-base font-medium">{adventure.longitude}° W</p>
+									</div>
+								</div>
+								<MapLibre
+									style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+									standardControls
+									center={{ lng: adventure.longitude, lat: adventure.latitude }}
+									zoom={12}
+								>
+									<!-- MapEvents gives you access to map events even from other components inside the map,
+  where you might not have access to the top-level `MapLibre` component. In this case
+  it would also work to just use on:click on the MapLibre component itself. -->
+									<!-- <MapEvents on:click={addMarker} /> -->
+
+									<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+										<Popup openOn="click" offset={[0, -10]}>
+											<div class="text-lg text-black font-bold">{adventure.name}</div>
+											<p class="font-semibold text-black text-md">
+												{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+											</p>
+											<p>
+												{adventure.date
+													? new Date(adventure.date).toLocaleDateString('en-US', {
+															timeZone: 'UTC'
+														})
+													: ''}
+											</p>
+										</Popup>
+									</DefaultMarker>
+								</MapLibre>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
 {/if}

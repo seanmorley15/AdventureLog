@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Adventure } from '$lib/types';
+import type { Adventure, Collection } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -19,10 +19,21 @@ export const load = (async (event) => {
 		};
 	} else {
 		let adventure = (await request.json()) as Adventure;
+		let collection: Collection | null = null;
+
+		if (adventure.collection) {
+			let res2 = await fetch(`${endpoint}/api/collections/${adventure.collection}/`, {
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				}
+			});
+			collection = await res2.json();
+		}
 
 		return {
 			props: {
-				adventure
+				adventure,
+				collection
 			}
 		};
 	}
