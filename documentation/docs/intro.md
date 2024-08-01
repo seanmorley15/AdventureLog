@@ -6,4 +6,4 @@ sidebar_position: 1
 
 This tutorial will guide you how to get AdventureLog up and running on your local machine quickly and easily.
 
-Choose a next below to get started:
+Click next below to get started:
