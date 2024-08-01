@@ -64,6 +64,7 @@
 				class="text-primary-500 underline"
 				href="https://operations.osmfoundation.org/policies/nominatim/">OpenStreepMap</a
 			>. Their data is liscensed under the ODbL liscense.
+			<br /> Additional attributions can be found in the README file.
 		</p>
 
 		<button class="btn btn-primary" on:click={close}>Close</button>
