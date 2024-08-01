@@ -7,17 +7,21 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	// get url param query
 	const query = event.url.searchParams.get('query');
+	const property = event.url.searchParams.get('property') || 'all';
 
 	if (!query) {
 		return { data: [] };
 	}
 
-	let res = await fetch(`${serverEndpoint}/api/adventures/search/?query=${query}`, {
-		headers: {
-			'Content-Type': 'application/json',
-			Cookie: `${event.cookies.get('auth')}`
+	let res = await fetch(
+		`${serverEndpoint}/api/adventures/search/?query=${query}&property=${property}`,
+		{
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: `${event.cookies.get('auth')}`
+			}
 		}
-	});
+	);
 
 	if (res.ok) {
 		let data = await res.json();

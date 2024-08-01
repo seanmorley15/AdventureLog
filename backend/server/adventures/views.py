@@ -151,12 +151,46 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def search(self, request):
         query = self.request.query_params.get('query', '')
+        property = self.request.query_params.get('property', 'all')
         if len(query) < 2:
             return Response({"error": "Query must be at least 2 characters long"}, status=400)
-        queryset = Adventure.objects.filter(
-    (Q(name__icontains=query) | Q(description__icontains=query) | Q(location__icontains=query) | Q(activity_types__icontains=query)) &
-    (Q(user_id=request.user.id) | Q(is_public=True))
-)
+        
+        if property not in ['name', 'type', 'location', 'description', 'activity_types']:
+            property = 'all'
+
+        queryset = Adventure.objects.none()
+
+        if property == 'name':
+            queryset = Adventure.objects.filter(
+                (Q(name__icontains=query)) &
+                (Q(user_id=request.user.id) | Q(is_public=True))
+            )
+        elif property == 'type':
+            queryset = Adventure.objects.filter(
+                (Q(type__icontains=query)) &
+                (Q(user_id=request.user.id) | Q(is_public=True))
+            )
+        elif property == 'location':
+            queryset = Adventure.objects.filter(
+                (Q(location__icontains=query)) &
+                (Q(user_id=request.user.id) | Q(is_public=True))
+            )
+        elif property == 'description':
+            queryset = Adventure.objects.filter(
+                (Q(description__icontains=query)) &
+                (Q(user_id=request.user.id) | Q(is_public=True))
+            )
+        elif property == 'activity_types':
+            queryset = Adventure.objects.filter(
+                (Q(activity_types__icontains=query)) &
+                (Q(user_id=request.user.id) | Q(is_public=True))
+            )
+        else:
+            queryset = Adventure.objects.filter(
+            (Q(name__icontains=query) | Q(description__icontains=query) | Q(location__icontains=query) | Q(activity_types__icontains=query)) &
+            (Q(user_id=request.user.id) | Q(is_public=True))
+        )
+        
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
