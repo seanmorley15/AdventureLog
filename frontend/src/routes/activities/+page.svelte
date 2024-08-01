@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -19,12 +20,11 @@
 			<tr>
 				<td>{activity}</td>
 				<td>
-					<!-- <button
-						class="btn btn-sm btn-error"
-						on:click={() => {
-							activities = activities.filter((a) => a !== activity);
-						}}>Remove</button
-					> -->
+					<button
+						class="btn btn-sm btn-primary"
+						on:click={() => goto(`/search?query=${activity}&property=activity_types`)}
+						>See Adventures</button
+					>
 				</td>
 			</tr>
 		{/each}
