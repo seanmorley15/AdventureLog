@@ -6,6 +6,7 @@
 	import type { PageData } from './$types';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import { appVersion } from '$lib/config';
+	import { goto, invalidate } from '$app/navigation';
 
 	export let data: PageData;
 
@@ -18,6 +19,15 @@
 	let publicAdventures: Adventure[] = [];
 
 	let query: string | null = '';
+	let property: string = 'all';
+
+	// on chage of property, console log the property
+
+	function filterByProperty() {
+		let url = new URL(window.location.href);
+		url.searchParams.set('property', property);
+		goto(url.toString(), { invalidateAll: true });
+	}
 
 	onMount(() => {
 		const urlParams = new URLSearchParams(window.location.search);
@@ -47,18 +57,23 @@
 	});
 
 	console.log(data);
+	$: {
+		if (data.props) {
+			myAdventures = data.props.adventures;
+			publicAdventures = data.props.adventures;
 
-	if (data.props) {
-		myAdventures = data.props.adventures;
-		publicAdventures = data.props.adventures;
+			if (data.user?.pk != null) {
+				myAdventures = myAdventures.filter(
+					(adventure) => adventure.user_id === data.user?.pk ?? -1
+				);
+			} else {
+				myAdventures = [];
+			}
 
-		if (data.user?.pk != null) {
-			myAdventures = myAdventures.filter((adventure) => adventure.user_id === data.user?.pk ?? -1);
-		} else {
-			myAdventures = [];
+			publicAdventures = publicAdventures.filter(
+				(adventure) => adventure.user_id !== data.user?.pk
+			);
 		}
-
-		publicAdventures = publicAdventures.filter((adventure) => adventure.user_id !== data.user?.pk);
 	}
 
 	let adventureToEdit: Adventure;
@@ -96,6 +111,59 @@
 {#if myAdventures.length !== 0 && publicAdventures.length !== 0}
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 {/if}
+
+<div class="join">
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="All"
+		id="all"
+		checked
+		on:change={() => (property = 'all')}
+	/>
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="Name"
+		id="name"
+		on:change={() => (property = 'name')}
+	/>
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="Type"
+		id="type"
+		on:change={() => (property = 'type')}
+	/>
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="Location"
+		id="location"
+		on:change={() => (property = 'location')}
+	/>
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="Description"
+		id="description"
+		on:change={() => (property = 'description')}
+	/>
+	<input
+		class="join-item btn"
+		type="radio"
+		name="filter"
+		aria-label="Activity Types"
+		id="activity_types"
+		on:change={() => (property = 'activity_types')}
+	/>
+</div>
+<button class="btn btn-primary ml-2" type="button" on:click={filterByProperty}>Filter</button>
 
 {#if myAdventures.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">My Adventures</h2>
