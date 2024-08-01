@@ -111,59 +111,60 @@
 {#if myAdventures.length !== 0 && publicAdventures.length !== 0}
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 {/if}
-
-<div class="join">
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="All"
-		id="all"
-		checked
-		on:change={() => (property = 'all')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Name"
-		id="name"
-		on:change={() => (property = 'name')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Type"
-		id="type"
-		on:change={() => (property = 'type')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Location"
-		id="location"
-		on:change={() => (property = 'location')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Description"
-		id="description"
-		on:change={() => (property = 'description')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Activity Types"
-		id="activity_types"
-		on:change={() => (property = 'activity_types')}
-	/>
+<div class="flex items-center justify-center mt-2 mb-2">
+	<div class="join">
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="All"
+			id="all"
+			checked
+			on:change={() => (property = 'all')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Name"
+			id="name"
+			on:change={() => (property = 'name')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Type"
+			id="type"
+			on:change={() => (property = 'type')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Location"
+			id="location"
+			on:change={() => (property = 'location')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Description"
+			id="description"
+			on:change={() => (property = 'description')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Activity Types"
+			id="activity_types"
+			on:change={() => (property = 'activity_types')}
+		/>
+	</div>
+	<button class="btn btn-primary ml-2" type="button" on:click={filterByProperty}>Filter</button>
 </div>
-<button class="btn btn-primary ml-2" type="button" on:click={filterByProperty}>Filter</button>
 
 {#if myAdventures.length > 0}
 	<h2 class="text-center font-bold text-2xl mb-4">My Adventures</h2>
