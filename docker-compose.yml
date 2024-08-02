@@ -8,9 +8,7 @@ services:
       - PUBLIC_SERVER_URL=http://server:8000
       - ORIGIN=http://localhost:8080
       - BODY_SIZE_LIMIT=Infinity
-      # Analytics can be configured here using Umami (https://umami.is)
       - ENABLE_ANALYTICS=false
-      #- UNAMI_KEY=''
     ports:
       - "8080:3000"
     depends_on:
@@ -60,14 +58,3 @@ services:
 volumes:
   postgres_data:
   adventurelog_media:
-#
-# nginx:
-#     build:
-#       context: ./proxy/
-#       dockerfile: Dockerfile.nginx
-#     ports:
-#       - "81:80" # Using port 81 to avoid conflict with your existing setup
-#     volumes:
-#       - adventurelog_media:/app/media
-#     depends_on:
-#       - server

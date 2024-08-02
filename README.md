@@ -1,10 +1,23 @@
 # AdventureLog: Embark, Explore, Remember. 🌍
 
-_**⚠️ AdventureLog is in early development and is not recommended for production use until version 1.0!**_
-
 ### _"Never forget an adventure with AdventureLog - Your ultimate travel companion!"_
 
----
+**Documentation can be found [here](https://docs.adventurelog.app).**
+
+# Table of Contents
+
+- [Installation](#installation)
+  - [Docker 🐋](#docker-)
+    - [Prerequisites](#prerequisites)
+    - [Getting Started](#getting-started)
+    - [Configuration](#configuration)
+      - [Frontend Container (web)](#frontend-container-web)
+      - [Backend Container (server)](#backend-container-server)
+      - [Proxy Container (nginx) Configuration](#proxy-container-nginx-configuration)
+    - [Running the Containers](#running-the-containers)
+- [Screenshots 🖼️](#screenshots)
+- [About AdventureLog](#about-adventurelog)
+- [Attribution](#attribution)
 
 # Installation
 
@@ -81,6 +94,27 @@ docker compose up -d
 ```
 
 Enjoy AdventureLog! 🎉
+
+# Screenshots
+
+![Adventure Page](screenshots/adventures.png)
+Displaying the adventures you have visited and the ones you plan to embark on. You can also filter and sort the adventures.
+
+![Detail Page](screenshots/details.png)
+Shows specific details about an adventure, including the name, date, location, description, and rating.
+
+![Edit](screenshots/edit.png)
+
+![Map Page](screenshots/map.png)
+View all of your adventures on a map, with the ability to filter by visit status and add new ones by click on the map.
+
+![Itinerary Page](screenshots/itinerary.png)
+
+![Country Page](screenshots/countries.png)
+
+![Region Page](screenshots/regions.png)
+
+️
 
 # About AdventureLog
 
