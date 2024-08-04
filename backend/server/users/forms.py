@@ -28,9 +28,14 @@ class CustomAllAuthPasswordResetForm(AllAuthPasswordResetForm):
 
             path = f"custom_password_reset_url/{user_pk_to_url_str(user)}/{temp_key}/"
             url = build_absolute_uri(request, path)
+
+            frontend_url = settings.FRONTEND_URL
+            # remove ' from frontend_url
+            frontend_url = frontend_url.replace("'", "")
+
      #Values which are passed to password_reset_key_message.txt
             context = {
-                "frontend_url": settings.FRONTEND_URL,
+                "frontend_url": frontend_url,
                 "user": user,
                 "password_reset_url": url,
                 "request": request,
