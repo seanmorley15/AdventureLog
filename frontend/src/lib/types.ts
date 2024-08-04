@@ -67,6 +67,7 @@ export type Collection = {
 	start_date?: string;
 	end_date?: string;
 	transportations?: Transportation[];
+	notes?: Note[];
 };
 
 export type OpenStreetMapPlace = {
@@ -98,6 +99,18 @@ export type Transportation = {
 	flight_number: string | null;
 	from_location: string | null;
 	to_location: string | null;
+	is_public: boolean;
+	collection: Collection | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+};
+
+export type Note = {
+	id: number;
+	user_id: number;
+	name: string;
+	content: string | null;
+	date: string | null; // ISO 8601 date string
 	is_public: boolean;
 	collection: Collection | null;
 	created_at: string; // ISO 8601 date string

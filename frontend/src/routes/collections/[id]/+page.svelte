@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection, Transportation } from '$lib/types';
+	import type { Adventure, Collection, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -17,12 +17,14 @@
 	import NewTransportation from '$lib/components/NewTransportation.svelte';
 
 	export let data: PageData;
+	console.log(data);
 
 	let collection: Collection;
 
 	let adventures: Adventure[] = [];
 	let numVisited: number = 0;
 	let transportations: Transportation[] = [];
+	let notes: Note[] = [];
 
 	let numberOfDays: number = NaN;
 
@@ -51,6 +53,9 @@
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
+		}
+		if (collection.notes) {
+			notes = collection.notes;
 		}
 	});
 
@@ -106,6 +111,28 @@
 		});
 
 		return groupedTransportations;
+	}
+
+	function groupNotesByDate(notes: Note[], startDate: Date): Record<string, Note[]> {
+		const groupedNotes: Record<string, Note[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedNotes[dateString] = [];
+		}
+
+		notes.forEach((note) => {
+			if (note.date) {
+				const noteDate = new Date(note.date).toISOString().split('T')[0];
+				if (groupedNotes[noteDate]) {
+					groupedNotes[noteDate].push(note);
+				}
+			}
+		});
+
+		return groupedNotes;
 	}
 
 	function createAdventure(event: CustomEvent<Adventure>) {
@@ -452,6 +479,17 @@
 								isTransportationEditModalOpen = true;
 							}}
 						/>
+					{/each}
+				{/if}
+				{#if notes.length > 0}
+					{#each notes as note}
+						{#if note.date && new Date(note.date).toISOString().split('T')[0] === dateString}
+							<div class="bg-base-300 p-4 rounded-lg w-full">
+								<p class="text-lg font-semibold">{note.name}</p>
+								<p class="text-md">{note.date}</p>
+								<p>{note.content}</p>
+							</div>
+						{/if}
 					{/each}
 				{/if}
 				{#if dayAdventures.length == 0 && dayTransportations.length == 0}

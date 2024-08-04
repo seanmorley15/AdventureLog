@@ -82,8 +82,6 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
     
-# make a class for transportaiotn and make it linked to a collection. Make it so it can be used for different types of transportations like car, plane, train, etc.
-
 class Transportation(models.Model):
     id = models.AutoField(primary_key=True)
     user_id = models.ForeignKey(
@@ -108,6 +106,28 @@ class Transportation(models.Model):
                 raise ValidationError('Transportations associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
             if self.user_id != self.collection.user_id:
                 raise ValidationError('Transportations must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Transportation owner: ' + self.user_id.username)
+
+    def __str__(self):
+        return self.name
+
+class Note(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    content = models.TextField(blank=True, null=True)
+    date = models.DateField(blank=True, null=True)
+    is_public = models.BooleanField(default=False)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.collection:
+            if self.collection.is_public and not self.is_public:
+                raise ValidationError('Notes associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
+            if self.user_id != self.collection.user_id:
+                raise ValidationError('Notes must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Transportation owner: ' + self.user_id.username)
 
     def __str__(self):
         return self.name
