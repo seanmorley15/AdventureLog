@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from adventures.models import Adventure
+from users.forms import CustomAllAuthPasswordResetForm
+from dj_rest_auth.serializers import PasswordResetSerializer
 
 User = get_user_model()
 
@@ -177,3 +179,13 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             public_url = public_url.replace("'", "")
             representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
         return representation
+
+class MyPasswordResetSerializer(PasswordResetSerializer):
+
+    def validate_email(self, value):
+        # use the custom reset form
+        self.reset_form = CustomAllAuthPasswordResetForm(data=self.initial_data)
+        if not self.reset_form.is_valid():
+            raise serializers.ValidationError(self.reset_form.errors)
+
+        return value

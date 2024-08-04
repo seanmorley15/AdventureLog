@@ -155,7 +155,7 @@ REST_AUTH = {
     'JWT_AUTH_HTTPONLY': False,
     'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
     'USER_DETAILS_SERIALIZER': 'users.serializers.CustomUserDetailsSerializer',
-    
+    'PASSWORD_RESET_SERIALIZER': 'users.serializers.MyPasswordResetSerializer'
 }
 
 STORAGES = {
@@ -168,6 +168,8 @@ STORAGES = {
 }
 
 AUTH_USER_MODEL = 'users.CustomUser'
+
+FRONTEND_URL = 'http://localhost:5173'
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1

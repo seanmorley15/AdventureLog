@@ -22,8 +22,13 @@ export const actions: Actions = {
 				email
 			})
 		});
+
 		if (!res.ok) {
-			return fail(res.status, { message: await res.json() });
+			let message = await res.json();
+
+			const key = Object.keys(message)[0];
+
+			return fail(res.status, { message: message[key] });
 		}
 		return { success: true };
 	}
