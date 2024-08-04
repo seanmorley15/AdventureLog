@@ -15,6 +15,8 @@
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import EditTransportation from '$lib/components/EditTransportation.svelte';
 	import NewTransportation from '$lib/components/NewTransportation.svelte';
+	import NoteCard from '$lib/components/NoteCard.svelte';
+	import NoteModal from '$lib/components/NoteModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -180,6 +182,8 @@
 	let transportationToEdit: Transportation;
 	let isEditModalOpen: boolean = false;
 	let isTransportationEditModalOpen: boolean = false;
+	let isNoteModalOpen: boolean = false;
+	let noteToEdit: Note;
 
 	let newType: string;
 
@@ -234,6 +238,15 @@
 		{adventureToEdit}
 		on:close={() => (isEditModalOpen = false)}
 		on:saveEdit={saveEdit}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
+	/>
+{/if}
+
+{#if isNoteModalOpen}
+	<NoteModal
+		note={noteToEdit}
+		on:close={() => (isNoteModalOpen = false)}
 		startDate={collection.start_date}
 		endDate={collection.end_date}
 	/>
@@ -484,11 +497,13 @@
 				{#if notes.length > 0}
 					{#each notes as note}
 						{#if note.date && new Date(note.date).toISOString().split('T')[0] === dateString}
-							<div class="bg-base-300 p-4 rounded-lg w-full">
-								<p class="text-lg font-semibold">{note.name}</p>
-								<p class="text-md">{note.date}</p>
-								<p>{note.content}</p>
-							</div>
+							<NoteCard
+								{note}
+								on:edit={(event) => {
+									noteToEdit = event.detail;
+									isNoteModalOpen = true;
+								}}
+							/>
 						{/if}
 					{/each}
 				{/if}
@@ -502,7 +517,7 @@
 
 		<MapLibre
 			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 mt-4"
 			standardControls
 		>
 			<!-- MapEvents gives you access to map events even from other components inside the map,

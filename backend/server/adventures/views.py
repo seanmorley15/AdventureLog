@@ -6,7 +6,7 @@ from django.db.models.functions import Lower
 from rest_framework.response import Response
 from .models import Adventure, Collection, Transportation, Note
 from worldtravel.models import VisitedRegion, Region, Country
-from .serializers import AdventureSerializer, CollectionSerializer, TransportationSerializer
+from .serializers import AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
@@ -431,7 +431,7 @@ class TransportationViewSet(viewsets.ModelViewSet):
     # return error message if user is not authenticated on the root endpoint
     def list(self, request, *args, **kwargs):
         # Prevent listing all adventures
-        return Response({"detail": "Listing all adventures is not allowed."},
+        return Response({"detail": "Listing all transportations is not allowed."},
                         status=status.HTTP_403_FORBIDDEN)
     
     @action(detail=False, methods=['get'])
@@ -457,4 +457,37 @@ class TransportationViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
 
-   
+class NoteViewSet(viewsets.ModelViewSet):
+    queryset = Note.objects.all()
+    serializer_class = NoteSerializer
+    permission_classes = [IsAuthenticated]
+    filterset_fields = ['is_public', 'collection']
+
+    # return error message if user is not authenticated on the root endpoint
+    def list(self, request, *args, **kwargs):
+        # Prevent listing all adventures
+        return Response({"detail": "Listing all notes is not allowed."},
+                        status=status.HTTP_403_FORBIDDEN)
+    
+    @action(detail=False, methods=['get'])
+    def all(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = Note.objects.filter(
+            Q(user_id=request.user.id)
+        )
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
+
+    def get_queryset(self):
+        
+        """
+        This view should return a list of all notes
+        for the currently authenticated user.
+        """
+        user = self.request.user
+        return Note.objects.filter(user_id=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
