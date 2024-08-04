@@ -110,9 +110,10 @@ export type Note = {
 	user_id: number;
 	name: string;
 	content: string | null;
+	links: string[] | null;
 	date: string | null; // ISO 8601 date string
 	is_public: boolean;
-	collection: Collection | null;
+	collection: number | null;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 };

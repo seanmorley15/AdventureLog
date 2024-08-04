@@ -21,11 +21,11 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{note.name}</h2>
 		<div class="card-actions justify-end">
-			<button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
+			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
-			>
+			> -->
 			<button class="btn btn-neutral mb-2" on:click={editNote}>
-				<FileDocumentEdit class="w-6 h-6" />Edit note
+				<Launch class="w-6 h-6" />Open
 			</button>
 		</div>
 	</div>

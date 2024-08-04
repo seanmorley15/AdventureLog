@@ -116,6 +116,7 @@ class Note(models.Model):
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
     content = models.TextField(blank=True, null=True)
+    links = ArrayField(models.URLField(), blank=True, null=True)
     date = models.DateField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)

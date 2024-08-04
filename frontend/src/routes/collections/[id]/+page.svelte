@@ -249,6 +249,17 @@
 		on:close={() => (isNoteModalOpen = false)}
 		startDate={collection.start_date}
 		endDate={collection.end_date}
+		{collection}
+		on:save={(event) => {
+			notes = notes.map((note) => {
+				if (note.id === event.detail.id) {
+					return event.detail;
+				}
+				return note;
+			});
+			isNoteModalOpen = false;
+		}}
+		on:close={() => (isNoteModalOpen = false)}
 	/>
 {/if}
 
@@ -371,6 +382,15 @@
 						>
 							Transportation</button
 						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isNoteModalOpen = true;
+								newType = '';
+							}}
+						>
+							Note</button
+						>
 
 						<!-- <button
 			class="btn btn-primary"
@@ -462,6 +482,7 @@
 				transportations,
 				new Date(collection.start_date)
 			)[dateString]}
+			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date))[dateString]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
@@ -494,23 +515,20 @@
 						/>
 					{/each}
 				{/if}
-				{#if notes.length > 0}
-					{#each notes as note}
-						{#if note.date && new Date(note.date).toISOString().split('T')[0] === dateString}
-							<NoteCard
-								{note}
-								on:edit={(event) => {
-									noteToEdit = event.detail;
-									isNoteModalOpen = true;
-								}}
-							/>
-						{/if}
+				{#if dayNotes.length > 0}
+					{#each dayNotes as note}
+						<NoteCard
+							{note}
+							on:edit={(event) => {
+								noteToEdit = event.detail;
+								isNoteModalOpen = true;
+							}}
+						/>
 					{/each}
 				{/if}
-				{#if dayAdventures.length == 0 && dayTransportations.length == 0}
-					<p class="text-center text-lg mt-2">
-						No adventures or transportaions planned for this day.
-					</p>
+
+				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0}
+					<p class="text-center text-lg mt-2">Nothing planned for this day. Enjoy the journey!</p>
 				{/if}
 			</div>
 		{/each}
