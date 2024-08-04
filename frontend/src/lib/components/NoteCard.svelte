@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
-	import type { Note } from '$lib/types';
+	import type { Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -9,6 +9,7 @@
 	import TrashCan from '~icons/mdi/trash-can';
 
 	export let note: Note;
+	export let user: User | null = null;
 
 	function editNote() {
 		dispatch('edit', note);
@@ -39,12 +40,14 @@
 			<button class="btn btn-neutral mb-2" on:click={editNote}>
 				<Launch class="w-6 h-6" />Open
 			</button>
-			<button
-				id="delete_adventure"
-				data-umami-event="Delete Adventure"
-				class="btn btn-warning"
-				on:click={deleteNote}><TrashCan class="w-6 h-6" />Delete</button
-			>
+			{#if note.user_id == user?.pk}
+				<button
+					id="delete_adventure"
+					data-umami-event="Delete Adventure"
+					class="btn btn-warning"
+					on:click={deleteNote}><TrashCan class="w-6 h-6" />Delete</button
+				>
+			{/if}
 		</div>
 	</div>
 </div>

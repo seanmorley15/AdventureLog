@@ -246,6 +246,7 @@
 {#if isNoteModalOpen}
 	<NoteModal
 		note={noteToEdit}
+		user={data.user}
 		on:close={() => (isNoteModalOpen = false)}
 		{collection}
 		on:save={(event) => {
@@ -468,6 +469,7 @@
 			{#each notes as note}
 				<NoteCard
 					{note}
+					user={data.user || null}
 					on:edit={(event) => {
 						noteToEdit = event.detail;
 						isNoteModalOpen = true;
@@ -540,6 +542,7 @@
 					{#each dayNotes as note}
 						<NoteCard
 							{note}
+							user={data.user || null}
 							on:edit={(event) => {
 								noteToEdit = event.detail;
 								isNoteModalOpen = true;

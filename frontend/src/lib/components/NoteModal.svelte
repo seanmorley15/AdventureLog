@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isValidUrl } from '$lib';
-	import type { Collection, Note } from '$lib/types';
+	import type { Collection, Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -8,6 +8,7 @@
 
 	export let note: Note | null = null;
 	export let collection: Collection;
+	export let user: User | null = null;
 
 	let warning: string | null = '';
 
@@ -112,112 +113,164 @@
 			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
 		{/if}
 
-		<form on:submit|preventDefault>
-			<div class="form-control mb-2">
-				<label for="name">Name</label>
-				<input
-					type="text"
-					id="name"
-					class="input input-bordered w-full max-w-xs"
-					bind:value={newNote.name}
-				/>
-			</div>
-			<div class="form-control mb-2">
-				<label for="content">Date</label>
-				<input
-					type="date"
-					id="date"
-					name="date"
-					min={collection.start_date || ''}
-					max={collection.end_date || ''}
-					bind:value={newNote.date}
-					class="input input-bordered w-full max-w-xs mt-1"
-				/>
-			</div>
-			<div class="form-control mb-2">
-				<label for="content">Content</label>
-				<textarea
-					id="content"
-					class="textarea textarea-bordered"
-					bind:value={newNote.content}
-					rows="5"
-				></textarea>
-			</div>
-			<div class="form-control mb-2">
-				<label for="content">Links</label>
-				<input
-					type="url"
-					class="input input-bordered w-full mb-1"
-					placeholder="Add a link (e.g. https://example.com)"
-					bind:value={newLink}
-					on:keydown={(e) => {
-						if (e.key === 'Enter') {
-							e.preventDefault();
-							addLink();
-						}
-					}}
-				/>
-				<button type="button" class="btn btn-sm btn-primary" on:click={addLink}>Add</button>
-			</div>
-			{#if newNote.links.length > 0}
-				<ul class="list-none">
-					{#each newNote.links as link, i}
-						<li class="mb-1">
-							<a href={link} target="_blank">{link}</a>
-							<button
-								type="button"
-								class="btn btn-sm btn-error"
-								on:click={() => {
-									newNote.links = newNote.links.filter((_, index) => index !== i);
-								}}
-							>
-								Remove
-							</button>
-						</li>
-					{/each}
-				</ul>
-			{/if}
-
-			{#if warning}
-				<div role="alert" class="alert alert-error">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						class="h-6 w-6 shrink-0 stroke-current"
-						fill="none"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-					<span>{warning}</span>
+		{#if user?.pk == note?.user_id}
+			<form on:submit|preventDefault>
+				<div class="form-control mb-2">
+					<label for="name">Name</label>
+					<input
+						type="text"
+						id="name"
+						class="input input-bordered w-full max-w-xs"
+						bind:value={newNote.name}
+					/>
 				</div>
-			{/if}
-
-			<button class="btn btn-primary" on:click={save}>Save</button>
-			<button class="btn btn-neutral" on:click={close}>Close</button>
-
-			{#if collection.is_public}
-				<div role="alert" class="alert alert-info mt-4">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 24 24"
-						class="h-6 w-6 shrink-0 stroke-current"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						></path>
-					</svg>
-					<span>New software update available.</span>
+				<div class="form-control mb-2">
+					<label for="content">Date</label>
+					<input
+						type="date"
+						id="date"
+						name="date"
+						min={collection.start_date || ''}
+						max={collection.end_date || ''}
+						bind:value={newNote.date}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
 				</div>
-			{/if}
-		</form>
+				<div class="form-control mb-2">
+					<label for="content">Content</label>
+					<textarea
+						id="content"
+						class="textarea textarea-bordered"
+						bind:value={newNote.content}
+						rows="5"
+					></textarea>
+				</div>
+				<div class="form-control mb-2">
+					<label for="content">Links</label>
+					<input
+						type="url"
+						class="input input-bordered w-full mb-1"
+						placeholder="Add a link (e.g. https://example.com)"
+						bind:value={newLink}
+						on:keydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								addLink();
+							}
+						}}
+					/>
+					<button type="button" class="btn btn-sm btn-primary" on:click={addLink}>Add</button>
+				</div>
+				{#if newNote.links.length > 0}
+					<ul class="list-none">
+						{#each newNote.links as link, i}
+							<li class="mb-1">
+								<a href={link} target="_blank">{link}</a>
+								<button
+									type="button"
+									class="btn btn-sm btn-error"
+									on:click={() => {
+										newNote.links = newNote.links.filter((_, index) => index !== i);
+									}}
+								>
+									Remove
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
+				{#if warning}
+					<div role="alert" class="alert alert-error">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							class="h-6 w-6 shrink-0 stroke-current"
+							fill="none"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<span>{warning}</span>
+					</div>
+				{/if}
+
+				<button class="btn btn-primary" on:click={save}>Save</button>
+				<button class="btn btn-neutral" on:click={close}>Close</button>
+
+				{#if collection.is_public}
+					<div role="alert" class="alert alert-info mt-4">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							class="h-6 w-6 shrink-0 stroke-current"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							></path>
+						</svg>
+						<span>This note is public because it is in a public collection.</span>
+					</div>
+				{/if}
+			</form>
+		{:else}
+			<form>
+				<div class="form-control mb-2">
+					<label for="name">Name</label>
+					<input
+						type="text"
+						id="name"
+						class="input input-bordered w-full max-w-xs"
+						bind:value={newNote.name}
+						readonly
+					/>
+				</div>
+				<div class="form-control mb-2">
+					<label for="content">Date</label>
+					<input
+						type="date"
+						id="date"
+						name="date"
+						min={collection.start_date || ''}
+						max={collection.end_date || ''}
+						bind:value={newNote.date}
+						class="input input-bordered w-full max-w-xs mt-1"
+						readonly
+					/>
+				</div>
+				<div class="form-control mb-2">
+					<label for="content">Content</label>
+					<textarea
+						id="content"
+						class="textarea textarea-bordered"
+						bind:value={newNote.content}
+						rows="5"
+						readonly
+					></textarea>
+				</div>
+				<div class="form-control mb-2">
+					<label for="content">Links</label>
+				</div>
+				{#if newNote.links.length > 0}
+					<ul class="list-none">
+						{#each newNote.links as link, i}
+							<li class="mb-1">
+								<a href={link} target="_blank">{link}</a>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+
+				<button class="btn btn-neutral" on:click={close}>Close</button>
+			</form>
+		{/if}
 	</div>
 </dialog>
