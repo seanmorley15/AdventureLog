@@ -183,7 +183,7 @@
 	let isEditModalOpen: boolean = false;
 	let isTransportationEditModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
-	let noteToEdit: Note;
+	let noteToEdit: Note | null;
 
 	let newType: string;
 
@@ -247,8 +247,6 @@
 	<NoteModal
 		note={noteToEdit}
 		on:close={() => (isNoteModalOpen = false)}
-		startDate={collection.start_date}
-		endDate={collection.end_date}
 		{collection}
 		on:save={(event) => {
 			notes = notes.map((note) => {
@@ -260,6 +258,10 @@
 			isNoteModalOpen = false;
 		}}
 		on:close={() => (isNoteModalOpen = false)}
+		on:create={(event) => {
+			notes = [event.detail, ...notes];
+			isNoteModalOpen = false;
+		}}
 	/>
 {/if}
 
@@ -387,6 +389,7 @@
 							on:click={() => {
 								isNoteModalOpen = true;
 								newType = '';
+								noteToEdit = null;
 							}}
 						>
 							Note</button
@@ -522,6 +525,9 @@
 							on:edit={(event) => {
 								noteToEdit = event.detail;
 								isNoteModalOpen = true;
+							}}
+							on:delete={(event) => {
+								notes = notes.filter((n) => n.id != event.detail);
 							}}
 						/>
 					{/each}

@@ -8,10 +8,6 @@
 	export let note: Note | null = null;
 	export let collection: Collection;
 
-	let editing: boolean = true;
-
-	console.log(collection);
-
 	let newNote = {
 		name: note?.name || '',
 		content: note?.content || '',
@@ -20,10 +16,6 @@
 		collection: collection.id,
 		is_public: collection.is_public
 	};
-	console.log(note);
-
-	export let startDate: string | null = null;
-	export let endDate: string | null = null;
 
 	let initialName: string = note?.name || '';
 
@@ -70,7 +62,10 @@
 				body: JSON.stringify(newNote)
 			});
 			if (res.ok) {
-				dispatch('close');
+				let data = await res.json();
+				if (data) {
+					dispatch('create', data);
+				}
 			} else {
 				let data = await res.json();
 				console.error('Failed to save note', data);
@@ -89,7 +84,7 @@
 			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
 		{/if}
 
-		<form>
+		<form on:submit|preventDefault>
 			<div class="form-control mb-2">
 				<label for="name">Name</label>
 				<input
@@ -105,8 +100,8 @@
 					type="date"
 					id="date"
 					name="date"
-					min={startDate || ''}
-					max={endDate || ''}
+					min={collection.start_date || ''}
+					max={collection.end_date || ''}
 					bind:value={newNote.date}
 					class="input input-bordered w-full max-w-xs mt-1"
 				/>

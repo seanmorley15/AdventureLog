@@ -6,12 +6,24 @@
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
-	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import TrashCan from '~icons/mdi/trash-can';
 
 	export let note: Note;
 
 	function editNote() {
 		dispatch('edit', note);
+	}
+
+	async function deleteNote() {
+		const res = await fetch(`/api/notes/${note.id}`, {
+			method: 'DELETE'
+		});
+		if (res.ok) {
+			addToast('success', 'Note deleted successfully');
+			dispatch('delete', note.id);
+		} else {
+			addToast('Failed to delete note', 'error');
+		}
 	}
 </script>
 
@@ -27,6 +39,12 @@
 			<button class="btn btn-neutral mb-2" on:click={editNote}>
 				<Launch class="w-6 h-6" />Open
 			</button>
+			<button
+				id="delete_adventure"
+				data-umami-event="Delete Adventure"
+				class="btn btn-warning"
+				on:click={deleteNote}><TrashCan class="w-6 h-6" />Delete</button
+			>
 		</div>
 	</div>
 </div>
