@@ -24,13 +24,17 @@
 	let collection: Collection;
 
 	let adventures: Adventure[] = [];
+
 	let numVisited: number = 0;
+	let numAdventures: number = 0;
+
 	let transportations: Transportation[] = [];
 	let notes: Note[] = [];
 
 	let numberOfDays: number = NaN;
 
 	$: {
+		numAdventures = adventures.filter((a) => a.type === 'visited' || a.type === 'planned').length;
 		numVisited = adventures.filter((a) => a.type === 'visited').length;
 	}
 
@@ -413,8 +417,8 @@
 			<div class="stats shadow bg-base-300">
 				<div class="stat">
 					<div class="stat-title">Collection Stats</div>
-					<div class="stat-value">{numVisited}/{adventures.length} Visited</div>
-					{#if numVisited === adventures.length}
+					<div class="stat-value">{numVisited}/{numAdventures} Visited</div>
+					{#if numAdventures === numVisited}
 						<div class="stat-desc">You've completed this collection! 🎉!</div>
 					{:else}
 						<div class="stat-desc">Keep exploring!</div>
