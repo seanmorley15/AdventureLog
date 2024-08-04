@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isValidUrl } from '$lib';
 	import type { Collection, Note } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -8,9 +9,19 @@
 	export let note: Note | null = null;
 	export let collection: Collection;
 
+	let warning: string | null = '';
+
 	let newLink: string = '';
 
 	function addLink() {
+		// check to make it a valid URL
+		if (!isValidUrl(newLink)) {
+			warning = 'Invalid URL';
+			return;
+		} else {
+			warning = null;
+		}
+
 		if (newLink.trim().length > 0) {
 			newNote.links = [...newNote.links, newLink];
 			newLink = '';
@@ -21,7 +32,7 @@
 	let newNote = {
 		name: note?.name || '',
 		content: note?.content || '',
-		date: note?.date || '',
+		date: note?.date || undefined || null,
 		links: note?.links || [],
 		collection: collection.id,
 		is_public: collection.is_public
@@ -47,6 +58,11 @@
 	}
 
 	async function save() {
+		// handles empty date
+		if (newNote.date == '') {
+			newNote.date = null;
+		}
+
 		if (note && note.id) {
 			console.log('newNote', newNote);
 			const res = await fetch(`/api/notes/${note.id}`, {
@@ -130,9 +146,9 @@
 			<div class="form-control mb-2">
 				<label for="content">Links</label>
 				<input
-					type="text"
-					class="input input-bordered w-full"
-					placeholder="Add an activity"
+					type="url"
+					class="input input-bordered w-full mb-1"
+					placeholder="Add a link (e.g. https://example.com)"
 					bind:value={newLink}
 					on:keydown={(e) => {
 						if (e.key === 'Enter') {
@@ -141,6 +157,7 @@
 						}
 					}}
 				/>
+				<button type="button" class="btn btn-sm btn-primary" on:click={addLink}>Add</button>
 			</div>
 			{#if newNote.links.length > 0}
 				<ul class="list-none">
@@ -160,13 +177,47 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if collection.is_public}
-				<p class="text-warning mb-1">
-					This note will be public because it is in a public collection.
-				</p>
+
+			{#if warning}
+				<div role="alert" class="alert alert-error">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-6 w-6 shrink-0 stroke-current"
+						fill="none"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+						/>
+					</svg>
+					<span>{warning}</span>
+				</div>
 			{/if}
+
 			<button class="btn btn-primary" on:click={save}>Save</button>
 			<button class="btn btn-neutral" on:click={close}>Close</button>
+
+			{#if collection.is_public}
+				<div role="alert" class="alert alert-info mt-4">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						fill="none"
+						viewBox="0 0 24 24"
+						class="h-6 w-6 shrink-0 stroke-current"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+						></path>
+					</svg>
+					<span>New software update available.</span>
+				</div>
+			{/if}
 		</form>
 	</div>
 </dialog>

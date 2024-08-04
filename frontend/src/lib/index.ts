@@ -65,3 +65,12 @@ export async function exportData() {
 	const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
 	return URL.createObjectURL(blob);
 }
+
+export function isValidUrl(url: string) {
+	try {
+		new URL(url);
+		return true;
+	} catch (err) {
+		return false;
+	}
+}
