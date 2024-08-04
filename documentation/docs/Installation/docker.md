@@ -35,17 +35,18 @@ Here is a summary of the configuration options available in the `docker-compose.
 
 ### Backend Container (server)
 
-| Name                    | Required | Description                                                                                                                                  | Default Value        |
-| ----------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
-| `PGHOST`                | Yes      | Databse host.                                                                                                                                | db                   |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                    | database             |
-| `PGUSER`                | Yes      | Database user.                                                                                                                               | adventure            |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                           | changeme123          |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                            | admin                |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                 | admin                |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                        | admin@example.com    |
-| `PUBLIC_URL`            | Yes      | This is the publically accessible url to the **nginx** container. You should be able to acess nginx from this url where you access your app. | http://127.0.0.1:81  |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                           | Needs to be changed. |
+| Name                    | Required | Description                                                                                                                                   | Default Value         |
+| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `PGHOST`                | Yes      | Databse host.                                                                                                                                 | db                    |
+| `PGDATABASE`            | Yes      | Database.                                                                                                                                     | database              |
+| `PGUSER`                | Yes      | Database user.                                                                                                                                | adventure             |
+| `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | changeme123           |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | admin                 |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                  | admin                 |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | admin@example.com     |
+| `PUBLIC_URL`            | Yes      | This is the publically accessible url to the **nginx** container. You should be able to acess nginx from this url where you access your app.  | http://127.0.0.1:81   |
+| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                            | Needs to be changed.  |
+| `FRONTEND_URL`          | Yes      | This is the publically accessible url to the **frontend** container. This link should be accessable for all users. Used for email generation. | http://localhost:3000 |
 
 ### Proxy Container (nginx) Configuration
 

@@ -169,13 +169,25 @@ STORAGES = {
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
-FRONTEND_URL = 'http://localhost:5173'
+FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_AUTHENTICATION_METHOD = 'username'
 ACCOUNT_EMAIL_VERIFICATION = 'optional'
+
+if getenv('EMAIL_BACKEND', 'console') == 'console':
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = getenv('EMAIL_HOST')
+    EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_PORT = getenv('EMAIL_PORT', 587)
+    EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'False') == 'True'
+    EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
 
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # EMAIL_HOST = 'smtp.resend.com'
