@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection, Transportation } from '$lib/types';
+	import type { Adventure, Collection, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -15,18 +15,26 @@
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import EditTransportation from '$lib/components/EditTransportation.svelte';
 	import NewTransportation from '$lib/components/NewTransportation.svelte';
+	import NoteCard from '$lib/components/NoteCard.svelte';
+	import NoteModal from '$lib/components/NoteModal.svelte';
 
 	export let data: PageData;
+	console.log(data);
 
 	let collection: Collection;
 
 	let adventures: Adventure[] = [];
+
 	let numVisited: number = 0;
+	let numAdventures: number = 0;
+
 	let transportations: Transportation[] = [];
+	let notes: Note[] = [];
 
 	let numberOfDays: number = NaN;
 
 	$: {
+		numAdventures = adventures.filter((a) => a.type === 'visited' || a.type === 'planned').length;
 		numVisited = adventures.filter((a) => a.type === 'visited').length;
 	}
 
@@ -51,6 +59,9 @@
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
+		}
+		if (collection.notes) {
+			notes = collection.notes;
 		}
 	});
 
@@ -108,6 +119,28 @@
 		return groupedTransportations;
 	}
 
+	function groupNotesByDate(notes: Note[], startDate: Date): Record<string, Note[]> {
+		const groupedNotes: Record<string, Note[]> = {};
+
+		for (let i = 0; i < numberOfDays; i++) {
+			const currentDate = new Date(startDate);
+			currentDate.setDate(startDate.getDate() + i);
+			const dateString = currentDate.toISOString().split('T')[0];
+			groupedNotes[dateString] = [];
+		}
+
+		notes.forEach((note) => {
+			if (note.date) {
+				const noteDate = new Date(note.date).toISOString().split('T')[0];
+				if (groupedNotes[noteDate]) {
+					groupedNotes[noteDate].push(note);
+				}
+			}
+		});
+
+		return groupedNotes;
+	}
+
 	function createAdventure(event: CustomEvent<Adventure>) {
 		adventures = [event.detail, ...adventures];
 		isShowingCreateModal = false;
@@ -153,6 +186,8 @@
 	let transportationToEdit: Transportation;
 	let isEditModalOpen: boolean = false;
 	let isTransportationEditModalOpen: boolean = false;
+	let isNoteModalOpen: boolean = false;
+	let noteToEdit: Note | null;
 
 	let newType: string;
 
@@ -209,6 +244,29 @@
 		on:saveEdit={saveEdit}
 		startDate={collection.start_date}
 		endDate={collection.end_date}
+	/>
+{/if}
+
+{#if isNoteModalOpen}
+	<NoteModal
+		note={noteToEdit}
+		user={data.user}
+		on:close={() => (isNoteModalOpen = false)}
+		{collection}
+		on:save={(event) => {
+			notes = notes.map((note) => {
+				if (note.id === event.detail.id) {
+					return event.detail;
+				}
+				return note;
+			});
+			isNoteModalOpen = false;
+		}}
+		on:close={() => (isNoteModalOpen = false)}
+		on:create={(event) => {
+			notes = [event.detail, ...notes];
+			isNoteModalOpen = false;
+		}}
 	/>
 {/if}
 
@@ -331,6 +389,16 @@
 						>
 							Transportation</button
 						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isNoteModalOpen = true;
+								newType = '';
+								noteToEdit = null;
+							}}
+						>
+							Note</button
+						>
 
 						<!-- <button
 			class="btn btn-primary"
@@ -349,8 +417,8 @@
 			<div class="stats shadow bg-base-300">
 				<div class="stat">
 					<div class="stat-title">Collection Stats</div>
-					<div class="stat-value">{numVisited}/{adventures.length} Visited</div>
-					{#if numVisited === adventures.length}
+					<div class="stat-value">{numVisited}/{numAdventures} Visited</div>
+					{#if numAdventures === numVisited}
 						<div class="stat-desc">You've completed this collection! 🎉!</div>
 					{:else}
 						<div class="stat-desc">Keep exploring!</div>
@@ -359,24 +427,28 @@
 			</div>
 		</div>
 	{/if}
-	<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
-	{#if adventures.length == 0}
+
+	{#if adventures.length == 0 && transportations.length == 0}
 		<NotFound error={undefined} />
 	{/if}
-	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-		{#each adventures as adventure}
-			<AdventureCard
-				user={data.user}
-				on:edit={editAdventure}
-				on:delete={deleteAdventure}
-				type={adventure.type}
-				{adventure}
-				on:typeChange={changeType}
-			/>
-		{/each}
-	</div>
+	{#if adventures.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
 
-	{#if collection.transportations && collection.transportations.length > 0}
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each adventures as adventure}
+				<AdventureCard
+					user={data.user}
+					on:edit={editAdventure}
+					on:delete={deleteAdventure}
+					type={adventure.type}
+					{adventure}
+					on:typeChange={changeType}
+				/>
+			{/each}
+		</div>
+	{/if}
+
+	{#if transportations.length > 0}
 		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Transportation</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each transportations as transportation}
@@ -389,6 +461,25 @@
 					on:edit={(event) => {
 						transportationToEdit = event.detail;
 						isTransportationEditModalOpen = true;
+					}}
+				/>
+			{/each}
+		</div>
+	{/if}
+
+	{#if notes.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Notes</h1>
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each notes as note}
+				<NoteCard
+					{note}
+					user={data.user || null}
+					on:edit={(event) => {
+						noteToEdit = event.detail;
+						isNoteModalOpen = true;
+					}}
+					on:delete={(event) => {
+						notes = notes.filter((n) => n.id != event.detail);
 					}}
 				/>
 			{/each}
@@ -418,6 +509,7 @@
 				transportations,
 				new Date(collection.start_date)
 			)[dateString]}
+			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date))[dateString]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
@@ -450,17 +542,31 @@
 						/>
 					{/each}
 				{/if}
-				{#if dayAdventures.length == 0 && dayTransportations.length == 0}
-					<p class="text-center text-lg mt-2">
-						No adventures or transportaions planned for this day.
-					</p>
+				{#if dayNotes.length > 0}
+					{#each dayNotes as note}
+						<NoteCard
+							{note}
+							user={data.user || null}
+							on:edit={(event) => {
+								noteToEdit = event.detail;
+								isNoteModalOpen = true;
+							}}
+							on:delete={(event) => {
+								notes = notes.filter((n) => n.id != event.detail);
+							}}
+						/>
+					{/each}
+				{/if}
+
+				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0}
+					<p class="text-center text-lg mt-2">Nothing planned for this day. Enjoy the journey!</p>
 				{/if}
 			</div>
 		{/each}
 
 		<MapLibre
 			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 mt-4"
 			standardControls
 		>
 			<!-- MapEvents gives you access to map events even from other components inside the map,

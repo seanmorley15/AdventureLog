@@ -6,8 +6,14 @@ import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 export const authHook: Handle = async ({ event, resolve }) => {
 	try {
 		let authCookie = event.cookies.get('auth');
+		let refreshCookie = event.cookies.get('refresh');
 
-		if (!authCookie) {
+		if (!authCookie && !refreshCookie) {
+			event.locals.user = null;
+			return await resolve(event);
+		}
+
+		if (!authCookie && refreshCookie) {
 			event.locals.user = null;
 			const token = await tryRefreshToken(event.cookies.get('refresh') || '');
 			if (token) {
