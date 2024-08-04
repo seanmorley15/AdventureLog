@@ -8,6 +8,16 @@
 	export let note: Note | null = null;
 	export let collection: Collection;
 
+	let newLink: string = '';
+
+	function addLink() {
+		if (newLink.trim().length > 0) {
+			newNote.links = [...newNote.links, newLink];
+			newLink = '';
+		}
+		console.log(newNote.links);
+	}
+
 	let newNote = {
 		name: note?.name || '',
 		content: note?.content || '',
@@ -38,6 +48,7 @@
 
 	async function save() {
 		if (note && note.id) {
+			console.log('newNote', newNote);
 			const res = await fetch(`/api/notes/${note.id}`, {
 				method: 'PATCH',
 				headers: {
@@ -54,6 +65,7 @@
 				console.error('Failed to save note');
 			}
 		} else {
+			console.log('newNote', newNote);
 			const res = await fetch(`/api/notes/`, {
 				method: 'POST',
 				headers: {
@@ -115,6 +127,39 @@
 					rows="5"
 				></textarea>
 			</div>
+			<div class="form-control mb-2">
+				<label for="content">Links</label>
+				<input
+					type="text"
+					class="input input-bordered w-full"
+					placeholder="Add an activity"
+					bind:value={newLink}
+					on:keydown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							addLink();
+						}
+					}}
+				/>
+			</div>
+			{#if newNote.links.length > 0}
+				<ul class="list-none">
+					{#each newNote.links as link, i}
+						<li class="mb-1">
+							<a href={link} target="_blank">{link}</a>
+							<button
+								type="button"
+								class="btn btn-sm btn-error"
+								on:click={() => {
+									newNote.links = newNote.links.filter((_, index) => index !== i);
+								}}
+							>
+								Remove
+							</button>
+						</li>
+					{/each}
+				</ul>
+			{/if}
 			{#if collection.is_public}
 				<p class="text-warning mb-1">
 					This note will be public because it is in a public collection.

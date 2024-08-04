@@ -462,6 +462,24 @@
 		</div>
 	{/if}
 
+	{#if notes.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Notes</h1>
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each notes as note}
+				<NoteCard
+					{note}
+					on:edit={(event) => {
+						noteToEdit = event.detail;
+						isNoteModalOpen = true;
+					}}
+					on:delete={(event) => {
+						notes = notes.filter((n) => n.id != event.detail);
+					}}
+				/>
+			{/each}
+		</div>
+	{/if}
+
 	{#if collection.start_date && collection.end_date}
 		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>
 		{#if numberOfDays}
