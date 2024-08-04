@@ -38,6 +38,7 @@ services:
       - PUBLIC_URL='http://localhost:81'
       - CSRF_TRUSTED_ORIGINS=https://api.adventurelog.app,https://adventurelog.app
       - DEBUG=False
+      - FRONTEND_URL='http://localhost:8080'
     ports:
       - "8000:8000"
     depends_on:

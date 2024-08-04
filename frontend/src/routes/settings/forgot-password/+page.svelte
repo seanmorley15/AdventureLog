@@ -6,7 +6,7 @@
 <h1 class="text-center font-extrabold text-4xl mb-6">Reset Password</h1>
 
 <div class="flex justify-center">
-	<form method="post" action="?/forgotPassword" class="w-full max-w-xs">
+	<form method="post" action="?/forgotPassword" class="w-full max-w-xs" use:enhance>
 		<label for="email">Email</label>
 		<input
 			name="email"

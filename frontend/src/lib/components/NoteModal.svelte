@@ -113,7 +113,7 @@
 			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
 		{/if}
 
-		{#if user?.pk == note?.user_id}
+		{#if (note && user?.pk == note?.user_id) || !note}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
 					<label for="name">Name</label>
