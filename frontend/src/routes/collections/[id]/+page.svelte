@@ -359,24 +359,28 @@
 			</div>
 		</div>
 	{/if}
-	<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
-	{#if adventures.length == 0}
+
+	{#if adventures.length == 0 && transportations.length == 0}
 		<NotFound error={undefined} />
 	{/if}
-	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-		{#each adventures as adventure}
-			<AdventureCard
-				user={data.user}
-				on:edit={editAdventure}
-				on:delete={deleteAdventure}
-				type={adventure.type}
-				{adventure}
-				on:typeChange={changeType}
-			/>
-		{/each}
-	</div>
+	{#if adventures.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
 
-	{#if collection.transportations && collection.transportations.length > 0}
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each adventures as adventure}
+				<AdventureCard
+					user={data.user}
+					on:edit={editAdventure}
+					on:delete={deleteAdventure}
+					type={adventure.type}
+					{adventure}
+					on:typeChange={changeType}
+				/>
+			{/each}
+		</div>
+	{/if}
+
+	{#if transportations.length > 0}
 		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Transportation</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each transportations as transportation}
