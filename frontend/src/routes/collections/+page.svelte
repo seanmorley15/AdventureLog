@@ -23,8 +23,6 @@
 
 	let resultsPerPage: number = 25;
 
-	let currentView: string = 'cards';
-
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
@@ -176,18 +174,18 @@
 			>
 				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
 			</button>
-			{#if currentView == 'cards'}
-				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-					{#each collections as collection}
-						<CollectionCard
-							type=""
-							{collection}
-							on:delete={deleteCollection}
-							on:edit={editCollection}
-						/>
-					{/each}
-				</div>
-			{/if}
+
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each collections as collection}
+					<CollectionCard
+						type=""
+						{collection}
+						on:delete={deleteCollection}
+						on:edit={editCollection}
+					/>
+				{/each}
+			</div>
+
 			<div class="join flex items-center justify-center mt-4">
 				{#if next || previous}
 					<div class="join">
@@ -246,27 +244,9 @@
 						value="name"
 						hidden
 					/>
-					<button type="submit" class="btn btn-primary mt-4">Filter</button>
+					<button type="submit" class="btn btn-success btn-primary mt-4">Filter</button>
 				</form>
 				<div class="divider"></div>
-				<h3 class="text-center font-semibold text-lg mb-4">View</h3>
-				<div class="join">
-					<input
-						class="join-item btn-neutral btn"
-						type="radio"
-						name="options"
-						aria-label="Cards"
-						on:click={() => (currentView = 'cards')}
-						checked
-					/>
-					<input
-						class="join-item btn btn-neutral"
-						type="radio"
-						name="options"
-						aria-label="Table"
-						on:click={() => (currentView = 'table')}
-					/>
-				</div>
 			</div>
 		</ul>
 	</div>

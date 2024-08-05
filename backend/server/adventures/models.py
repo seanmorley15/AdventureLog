@@ -71,6 +71,8 @@ class Collection(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
 
     # if connected adventures are private and collection is public, raise an error
     def clean(self):

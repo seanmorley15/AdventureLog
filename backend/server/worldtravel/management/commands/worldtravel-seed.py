@@ -1,10 +1,36 @@
 # myapp/management/commands/seed.py
 
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
+import requests
 from worldtravel.models import Country, Region
 from django.db import transaction
 
+from django.conf import settings
+        
+media_root = settings.MEDIA_ROOT
+
+def saveCountryFlag(country_code):
+    flags_dir = os.path.join(media_root, 'flags')
+
+    # Check if the flags directory exists, if not, create it
+    if not os.path.exists(flags_dir):
+        os.makedirs(flags_dir)
+
+    # Check if the flag already exists in the media folder
+    flag_path = os.path.join(flags_dir, f'{country_code}.png')
+    if os.path.exists(flag_path):
+        print(f'Flag for {country_code} already exists')
+        return
+
+    res = requests.get(f'https://flagcdn.com/h240/{country_code}.png')
+    if res.status_code == 200:
+        with open(flag_path, 'wb') as f:
+            f.write(res.content)
+        print(f'Flag for {country_code} downloaded')
+    else:
+        print(f'Error downloading flag for {country_code}')
 
 class Command(BaseCommand):
     help = 'Imports the world travel data'
@@ -528,8 +554,10 @@ class Command(BaseCommand):
                 defaults={'name': name, 'continent': continent}
             )
             if created:
+                saveCountryFlag(country_code)
                 self.stdout.write(f'Inserted {name} into worldtravel countries')
             else:
+                saveCountryFlag(country_code)
                 self.stdout.write(f'Updated {name} in worldtravel countries')
 
     def sync_regions(self, regions):

@@ -217,9 +217,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
 
-        valid_order_by = ['name']
+        valid_order_by = ['name', 'upated_at']
         if order_by not in valid_order_by:
-            order_by = 'name'
+            order_by = 'updated_at'
 
         if order_direction not in ['asc', 'desc']:
             order_direction = 'asc'
@@ -228,13 +228,15 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if order_by == 'name':
             queryset = queryset.annotate(lower_name=Lower('name'))
             ordering = 'lower_name'
+            if order_direction == 'desc':
+                ordering = f'-{ordering}'
         else:
-            ordering = order_by
+            order_by == 'updated_at'
+            ordering = 'updated_at'
+            if order_direction == 'asc':
+                ordering = '-updated_at'
 
-        if order_direction == 'desc':
-            ordering = f'-{ordering}'
-
-        print(f"Ordering by: {ordering}")  # For debugging
+        #print(f"Ordering by: {ordering}")  # For debugging
 
         return queryset.order_by(ordering)
     

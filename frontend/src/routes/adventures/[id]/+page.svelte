@@ -249,7 +249,10 @@
 								{#if data.props.collection}
 									<div>
 										<p class="text-sm text-muted-foreground">Collection</p>
-										<p class="text-base font-medium">{data.props.collection.name}</p>
+										<a
+											class="text-base font-medium link"
+											href="/collections/{data.props.collection.id}">{data.props.collection.name}</a
+										>
 									</div>
 								{/if}
 							</div>
