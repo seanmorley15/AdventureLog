@@ -5,7 +5,7 @@ from rest_framework import serializers
 
 class CountrySerializer(serializers.ModelSerializer):
     def get_public_url(self, obj):
-        return os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+        return os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
 
     flag_url = serializers.SerializerMethodField()
 
