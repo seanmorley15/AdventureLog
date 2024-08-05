@@ -16,7 +16,7 @@ from django.contrib.staticfiles import finders
 def regions_by_country(request, country_code):
     # require authentication
     country = get_object_or_404(Country, country_code=country_code)
-    regions = Region.objects.filter(country=country)
+    regions = Region.objects.filter(country=country).order_by('name')
     serializer = RegionSerializer(regions, many=True)
     return Response(serializer.data)
 

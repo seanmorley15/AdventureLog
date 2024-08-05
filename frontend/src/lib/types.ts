@@ -34,6 +34,7 @@ export type Country = {
 	name: string;
 	country_code: string;
 	continent: string;
+	flag_url: string;
 };
 
 export type Region = {

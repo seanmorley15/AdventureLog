@@ -8,7 +8,6 @@ services:
       - PUBLIC_SERVER_URL=http://server:8000
       - ORIGIN=http://localhost:8080
       - BODY_SIZE_LIMIT=Infinity
-      - ENABLE_ANALYTICS=false
     ports:
       - "8080:3000"
     depends_on:

@@ -17,7 +17,7 @@ export const load = (async (event) => {
 		let previous = null;
 		let count = 0;
 		let adventures: Adventure[] = [];
-		let initialFetch = await fetch(`${serverEndpoint}/api/collections/`, {
+		let initialFetch = await fetch(`${serverEndpoint}/api/collections/?order_by=updated_at`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
 			}

@@ -13,7 +13,7 @@
 
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each countries as country}
-		<CountryCard countryCode={country.country_code} countryName={country.name} />
+		<CountryCard {country} />
 		<!-- <p>Name: {item.name}, Continent: {item.continent}</p> -->
 	{/each}
 </div>
