@@ -168,7 +168,7 @@
 								<a href={link} class="link link-primary" target="_blank">{link}</a>
 								<button
 									type="button"
-									class="btn btn-sm btn-error absolute right-0"
+									class="btn btn-sm btn-error absolute right-0 mr-4"
 									on:click={() => {
 										newNote.links = newNote.links.filter((_, index) => index !== i);
 									}}
