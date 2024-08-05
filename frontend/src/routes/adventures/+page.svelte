@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance, deserialize } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
@@ -20,46 +22,46 @@
 
 	let resultsPerPage: number = 25;
 
-	let next: string | null = data.props.next || null;
-	let previous: string | null = data.props.previous || null;
+	// let next: string | null = data.props.next || null;
+	// let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
 
-	function handleChangePage() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				console.log(result.data);
-				adventures = result.data.body.adventures as Adventure[];
-				next = result.data.body.next;
-				previous = result.data.body.previous;
-				count = result.data.body.count;
-				currentPage = result.data.body.page;
-				totalPages = Math.ceil(count / resultsPerPage);
-			}
-		};
+	function handleChangePage(pageNumber: number) {
+		// let query = new URLSearchParams($page.url.searchParams.toString());
+
+		// query.set('page', pageNumber.toString());
+
+		// console.log(query.toString());
+		currentPage = pageNumber;
+
+		let url = new URL(window.location.href);
+		url.searchParams.set('page', pageNumber.toString());
+		adventures = [];
+		adventures = data.props.adventures;
+		console.log(adventures);
+		goto(url.toString(), { invalidateAll: true, replaceState: true });
+
+		// goto(`?${query.toString()}`, { invalidateAll: true });
 	}
 
-	function handleSubmit() {
-		return async ({ result, update }: any) => {
-			// First, call the update function with reset: false
-			update({ reset: false });
+	$: {
+		let url = new URL($page.url);
+		let page = url.searchParams.get('page');
+		if (page) {
+			currentPage = parseInt(page);
+		}
+	}
 
-			// Then, handle the result
-			if (result.type === 'success') {
-				if (result.data) {
-					// console.log(result.data);
-					adventures = result.data.adventures as Adventure[];
-					next = result.data.next;
-					previous = result.data.previous;
-					count = result.data.count;
-					totalPages = Math.ceil(count / resultsPerPage);
-					currentPage = 1;
-
-					console.log(next);
-				}
-			}
-		};
+	$: {
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+		}
+		if (data.props.count) {
+			count = data.props.count;
+			totalPages = Math.ceil(count / resultsPerPage);
+		}
 	}
 
 	function sort({ attribute, order }: { attribute: string; order: string }) {
@@ -193,19 +195,16 @@
 			</div>
 
 			<div class="join flex items-center justify-center mt-4">
-				{#if next || previous}
+				{#if totalPages > 1}
 					<div class="join">
 						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-							<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-								<input type="hidden" name="page" value={page} />
-								<input type="hidden" name="next" value={next} />
-								<input type="hidden" name="previous" value={previous} />
-								{#if currentPage != page}
-									<button class="join-item btn btn-lg">{page}</button>
-								{:else}
-									<button class="join-item btn btn-lg btn-active">{page}</button>
-								{/if}
-							</form>
+							{#if currentPage != page}
+								<button class="join-item btn btn-lg" on:click={() => handleChangePage(page)}
+									>{page}</button
+								>
+							{:else}
+								<button class="join-item btn btn-lg btn-active">{page}</button>
+							{/if}
 						{/each}
 					</div>
 				{/if}
@@ -219,7 +218,7 @@
 			<!-- Sidebar content here -->
 			<div class="form-control">
 				<h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3>
-				<form action="?/get" method="post" use:enhance={handleSubmit}>
+				<form method="get">
 					<label class="label cursor-pointer">
 						<span class="label-text">Completed</span>
 						<input
