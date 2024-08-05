@@ -61,6 +61,7 @@
 				) + 1}{' '}
 				days
 			</p>{/if}
+		<div class="badge badge-neutral">{collection.is_public ? 'Public' : 'Private'}</div>
 		<div class="card-actions justify-end">
 			{#if type != 'link'}
 				<button on:click={deleteCollection} class="btn btn-secondary"

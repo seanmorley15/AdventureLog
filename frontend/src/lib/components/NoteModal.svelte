@@ -164,11 +164,11 @@
 				{#if newNote.links.length > 0}
 					<ul class="list-none">
 						{#each newNote.links as link, i}
-							<li class="mb-1">
-								<a href={link} target="_blank">{link}</a>
+							<li class="mb-4">
+								<a href={link} class="link link-primary" target="_blank">{link}</a>
 								<button
 									type="button"
-									class="btn btn-sm btn-error"
+									class="btn btn-sm btn-error absolute right-0"
 									on:click={() => {
 										newNote.links = newNote.links.filter((_, index) => index !== i);
 									}}
@@ -199,11 +199,11 @@
 					</div>
 				{/if}
 
-				<button class="btn btn-primary" on:click={save}>Save</button>
+				<button class="btn btn-primary mr-1" on:click={save}>Save</button>
 				<button class="btn btn-neutral" on:click={close}>Close</button>
 
 				{#if collection.is_public}
-					<div role="alert" class="alert alert-info mt-4">
+					<div role="alert" class="alert mt-4">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"

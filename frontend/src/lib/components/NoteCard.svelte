@@ -45,7 +45,7 @@
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"
 					class="btn btn-warning"
-					on:click={deleteNote}><TrashCan class="w-6 h-6" />Delete</button
+					on:click={deleteNote}><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
 		</div>
