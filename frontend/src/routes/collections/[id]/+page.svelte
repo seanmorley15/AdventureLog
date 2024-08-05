@@ -412,6 +412,9 @@
 	{#if collection.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
 	{/if}
+	{#if collection.description}
+		<p class="text-center text-lg mb-2">{collection.description}</p>
+	{/if}
 	{#if adventures.length > 0}
 		<div class="flex items-center justify-center mb-4">
 			<div class="stats shadow bg-base-300">

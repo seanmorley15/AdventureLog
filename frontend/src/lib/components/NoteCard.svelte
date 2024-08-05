@@ -33,6 +33,9 @@
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{note.name}</h2>
+		{#if note.links && note.links.length > 0}
+			<p>{note.links.length} links</p>
+		{/if}
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
@@ -45,7 +48,7 @@
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"
 					class="btn btn-warning"
-					on:click={deleteNote}><TrashCan class="w-6 h-6" />Delete</button
+					on:click={deleteNote}><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
 		</div>

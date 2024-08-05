@@ -28,17 +28,15 @@
 
 	const searchGo = async (e: Event) => {
 		e.preventDefault();
-		let reload: boolean = false;
 
 		if ($page.url.pathname === '/search') {
-			reload = true;
+			let url = new URL(window.location.href);
+			url.searchParams.set('query', query);
+			goto(url.toString(), { invalidateAll: true });
 		}
 
 		if (query) {
-			await goto(`/search?query=${query}`);
-			if (reload) {
-				window.location.reload();
-			}
+			goto(`/search?query=${query}`);
 		}
 	};
 </script>

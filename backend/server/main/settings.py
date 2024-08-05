@@ -74,6 +74,9 @@ MIDDLEWARE = (
 
 )
 
+# disable verifications for new users
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
 
