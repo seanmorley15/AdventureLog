@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection, Note, Transportation } from '$lib/types';
+	import type { Adventure, Checklist, Collection, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -18,6 +18,9 @@
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 
+	import { groupAdventuresByDate, groupNotesByDate, groupTransportationsByDate } from '$lib';
+	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
+
 	export let data: PageData;
 	console.log(data);
 
@@ -30,6 +33,7 @@
 
 	let transportations: Transportation[] = [];
 	let notes: Note[] = [];
+	let checklists: Checklist[] = [];
 
 	let numberOfDays: number = NaN;
 
@@ -63,82 +67,13 @@
 		if (collection.notes) {
 			notes = collection.notes;
 		}
+		if (collection.checklists) {
+			checklists = collection.checklists;
+		}
 	});
 
 	function deleteAdventure(event: CustomEvent<number>) {
 		adventures = adventures.filter((a) => a.id !== event.detail);
-	}
-
-	function groupAdventuresByDate(
-		adventures: Adventure[],
-		startDate: Date
-	): Record<string, Adventure[]> {
-		const groupedAdventures: Record<string, Adventure[]> = {};
-
-		for (let i = 0; i < numberOfDays; i++) {
-			const currentDate = new Date(startDate);
-			currentDate.setDate(startDate.getDate() + i);
-			const dateString = currentDate.toISOString().split('T')[0];
-			groupedAdventures[dateString] = [];
-		}
-
-		adventures.forEach((adventure) => {
-			if (adventure.date) {
-				const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
-				if (groupedAdventures[adventureDate]) {
-					groupedAdventures[adventureDate].push(adventure);
-				}
-			}
-		});
-
-		return groupedAdventures;
-	}
-
-	function groupTransportationsByDate(
-		transportations: Transportation[],
-		startDate: Date
-	): Record<string, Transportation[]> {
-		const groupedTransportations: Record<string, Transportation[]> = {};
-
-		for (let i = 0; i < numberOfDays; i++) {
-			const currentDate = new Date(startDate);
-			currentDate.setDate(startDate.getDate() + i);
-			const dateString = currentDate.toISOString().split('T')[0];
-			groupedTransportations[dateString] = [];
-		}
-
-		transportations.forEach((transportation) => {
-			if (transportation.date) {
-				const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
-				if (groupedTransportations[transportationDate]) {
-					groupedTransportations[transportationDate].push(transportation);
-				}
-			}
-		});
-
-		return groupedTransportations;
-	}
-
-	function groupNotesByDate(notes: Note[], startDate: Date): Record<string, Note[]> {
-		const groupedNotes: Record<string, Note[]> = {};
-
-		for (let i = 0; i < numberOfDays; i++) {
-			const currentDate = new Date(startDate);
-			currentDate.setDate(startDate.getDate() + i);
-			const dateString = currentDate.toISOString().split('T')[0];
-			groupedNotes[dateString] = [];
-		}
-
-		notes.forEach((note) => {
-			if (note.date) {
-				const noteDate = new Date(note.date).toISOString().split('T')[0];
-				if (groupedNotes[noteDate]) {
-					groupedNotes[noteDate].push(note);
-				}
-			}
-		});
-
-		return groupedNotes;
 	}
 
 	function createAdventure(event: CustomEvent<Adventure>) {
@@ -489,7 +424,23 @@
 		</div>
 	{/if}
 
+	{#if checklists.length > 0}
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Checklists</h1>
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+			{#each checklists as checklist}
+				<ChecklistCard
+					{checklist}
+					user={data.user || null}
+					on:delete={(event) => {
+						checklists = checklists.filter((n) => n.id != event.detail);
+					}}
+				/>
+			{/each}
+		</div>
+	{/if}
+
 	{#if collection.start_date && collection.end_date}
+		<div class="divider"></div>
 		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>
 		{#if numberOfDays}
 			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
@@ -499,20 +450,24 @@
 				collection.end_date
 			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
 		</p>
-		<div class="divider"></div>
 
 		{#each Array(numberOfDays) as _, i}
 			{@const currentDate = new Date(collection.start_date)}
 			{@const temp = currentDate.setDate(currentDate.getDate() + i)}
 			{@const dateString = currentDate.toISOString().split('T')[0]}
-			{@const dayAdventures = groupAdventuresByDate(adventures, new Date(collection.start_date))[
-				dateString
-			]}
+			{@const dayAdventures = groupAdventuresByDate(
+				adventures,
+				new Date(collection.start_date),
+				numberOfDays
+			)[dateString]}
 			{@const dayTransportations = groupTransportationsByDate(
 				transportations,
-				new Date(collection.start_date)
+				new Date(collection.start_date),
+				numberOfDays
 			)[dateString]}
-			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date))[dateString]}
+			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[
+				dateString
+			]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}

@@ -69,6 +69,7 @@ export type Collection = {
 	end_date?: string;
 	transportations?: Transportation[];
 	notes?: Note[];
+	checklists?: Checklist[];
 };
 
 export type OpenStreetMapPlace = {
@@ -115,6 +116,28 @@ export type Note = {
 	date: string | null; // ISO 8601 date string
 	is_public: boolean;
 	collection: number | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+};
+
+export type Checklist = {
+	id: number;
+	user_id: number;
+	name: string;
+	items: ChecklistItem[];
+	date: string | null; // ISO 8601 date string
+	is_public: boolean;
+	collection: number | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+};
+
+export type ChecklistItem = {
+	id: number;
+	user_id: number;
+	name: string;
+	is_checked: boolean;
+	checklist: number;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 };

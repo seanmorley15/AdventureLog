@@ -122,7 +122,7 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
             return super().create(validated_data)
     
     
-class Checklist(serializers.ModelSerializer):
+class ChecklistSerializer(serializers.ModelSerializer):
     items = ChecklistItemSerializer(many=True, read_only=True, source='checklistitem_set')
     class Meta:
         model = Checklist
@@ -159,7 +159,7 @@ class CollectionSerializer(serializers.ModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
-    checklists = Checklist(many=True, read_only=True, source='checklist_set')
+    checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
 
     class Meta:
         model = Collection
