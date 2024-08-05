@@ -18,7 +18,7 @@
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
-	let resultsPerPage: number = 10;
+	let resultsPerPage: number = 25;
 
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;

@@ -15,7 +15,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework import status
 
 class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 10
+    page_size = 25
     page_size_query_param = 'page_size'
     max_page_size = 1000
 
