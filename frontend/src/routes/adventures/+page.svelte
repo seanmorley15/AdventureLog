@@ -15,15 +15,19 @@
 
 	let adventures: Adventure[] = data.props.adventures || [];
 
-	let currentSort = { attribute: 'name', order: 'asc' };
+	let currentSort = {
+		order_by: '',
+		order: '',
+		visited: true,
+		planned: true,
+		includeCollections: true
+	};
 
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
 	let resultsPerPage: number = 25;
 
-	// let next: string | null = data.props.next || null;
-	// let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
@@ -40,7 +44,7 @@
 		url.searchParams.set('page', pageNumber.toString());
 		adventures = [];
 		adventures = data.props.adventures;
-		console.log(adventures);
+
 		goto(url.toString(), { invalidateAll: true, replaceState: true });
 
 		// goto(`?${query.toString()}`, { invalidateAll: true });
@@ -64,15 +68,30 @@
 		}
 	}
 
-	function sort({ attribute, order }: { attribute: string; order: string }) {
-		currentSort.attribute = attribute;
-		currentSort.order = order;
-		if (attribute === 'name') {
-			if (order === 'asc') {
-				adventures = adventures.sort((a, b) => b.name.localeCompare(a.name));
-			} else {
-				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
-			}
+	$: {
+		let url = new URL($page.url);
+		currentSort.order_by = url.searchParams.get('order_by') || 'updated_at';
+		currentSort.order = url.searchParams.get('order_direction') || 'asc';
+
+		if (url.searchParams.get('planned') === 'on') {
+			currentSort.planned = true;
+		} else {
+			currentSort.planned = false;
+		}
+		if (url.searchParams.get('visited') === 'on') {
+			currentSort.visited = true;
+		} else {
+			currentSort.visited = false;
+		}
+		if (url.searchParams.get('include_collections') === 'on') {
+			currentSort.includeCollections = true;
+		} else {
+			currentSort.includeCollections = false;
+		}
+
+		if (!currentSort.visited && !currentSort.planned) {
+			currentSort.visited = true;
+			currentSort.planned = true;
 		}
 	}
 
@@ -226,7 +245,7 @@
 							name="visited"
 							id="visited"
 							class="checkbox checkbox-primary"
-							checked
+							checked={currentSort.visited}
 						/>
 					</label>
 					<label class="label cursor-pointer">
@@ -236,7 +255,7 @@
 							id="planned"
 							name="planned"
 							class="checkbox checkbox-primary"
-							checked
+							checked={currentSort.planned}
 						/>
 					</label>
 					<!-- <div class="divider"></div> -->
@@ -250,7 +269,7 @@
 							id="asc"
 							value="asc"
 							aria-label="Ascending"
-							checked
+							checked={currentSort.order === 'asc'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -259,6 +278,7 @@
 							id="desc"
 							value="desc"
 							aria-label="Descending"
+							checked={currentSort.order === 'desc'}
 						/>
 					</div>
 					<br />
@@ -271,7 +291,7 @@
 							id="updated_at"
 							value="updated_at"
 							aria-label="Updated"
-							checked
+							checked={currentSort.order_by === 'updated_at'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -280,6 +300,7 @@
 							id="name"
 							aria-label="Name"
 							value="name"
+							checked={currentSort.order_by === 'name'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -288,6 +309,7 @@
 							name="order_by"
 							id="date"
 							aria-label="Date"
+							checked={currentSort.order_by === 'date'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -296,6 +318,7 @@
 							id="rating"
 							aria-label="Rating"
 							value="rating"
+							checked={currentSort.order_by === 'rating'}
 						/>
 					</div>
 
@@ -308,6 +331,7 @@
 							name="include_collections"
 							id="include_collections"
 							class="checkbox checkbox-primary"
+							checked={currentSort.includeCollections}
 						/>
 					</label>
 					<button type="submit" class="btn btn-success mt-4">Filter</button>
