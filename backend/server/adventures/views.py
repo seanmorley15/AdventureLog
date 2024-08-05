@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Collection, Transportation, Note
+from .models import Adventure, Checklist, Collection, Transportation, Note
 from worldtravel.models import VisitedRegion, Region, Country
 from .serializers import AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer
 from rest_framework.permissions import IsAuthenticated
@@ -310,19 +310,23 @@ class CollectionViewSet(viewsets.ModelViewSet):
             # For other actions, only include user's own collections
             adventures = Collection.objects.filter(user_id=self.request.user.id)
         
-        adventures = adventures.prefetch_related(
-            Prefetch('adventure_set', queryset=Adventure.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id)
-            ))
-        ).prefetch_related(
-            Prefetch('transportation_set', queryset=Transportation.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id)
-            ))
-        ).prefetch_related(
-            Prefetch('note_set', queryset=Note.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id)
-            ))
-        )
+        # adventures = adventures.prefetch_related(
+        #     Prefetch('adventure_set', queryset=Adventure.objects.filter(
+        #         Q(is_public=True) | Q(user_id=self.request.user.id)
+        #     ))
+        # ).prefetch_related(
+        #     Prefetch('transportation_set', queryset=Transportation.objects.filter(
+        #         Q(is_public=True) | Q(user_id=self.request.user.id)
+        #     ))
+        # ).prefetch_related(
+        #     Prefetch('note_set', queryset=Note.objects.filter(
+        #         Q(is_public=True) | Q(user_id=self.request.user.id)
+        #     ))
+        # ).prefetch_related(
+        #     Prefetch('checklist_set', queryset=Checklist.objects.filter(
+        #         Q(is_public=True) | Q(user_id=self.request.user.id)
+        #     ))
+        # )
         return self.apply_sorting(adventures)
 
     def perform_create(self, serializer):

@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Collection, Transportation, Note
+from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note
 from worldtravel.models import Country, Region, VisitedRegion
 
 
@@ -76,6 +76,8 @@ admin.site.register(Region, RegionAdmin)
 admin.site.register(VisitedRegion)
 admin.site.register(Transportation)
 admin.site.register(Note)
+admin.site.register(Checklist)
+admin.site.register(ChecklistItem)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

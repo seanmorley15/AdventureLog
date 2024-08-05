@@ -134,3 +134,43 @@ class Note(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Checklist(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    date = models.DateField(blank=True, null=True)
+    is_public = models.BooleanField(default=False)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.collection:
+            if self.collection.is_public and not self.is_public:
+                raise ValidationError('Checklists associated with a public collection must be public. Collection: ' + self.collection.name + ' Checklist: ' + self.name)
+            if self.user_id != self.collection.user_id:
+                raise ValidationError('Checklists must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Checklist owner: ' + self.user_id.username)
+
+    def __str__(self):
+        return self.name
+
+class ChecklistItem(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    is_checked = models.BooleanField(default=False)
+    checklist = models.ForeignKey('Checklist', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.checklist.is_public and not self.checklist.is_public:
+            raise ValidationError('Checklist items associated with a public checklist must be public. Checklist: ' + self.checklist.name + ' Checklist item: ' + self.name)
+        if self.user_id != self.checklist.user_id:
+            raise ValidationError('Checklist items must be associated with checklists owned by the same user. Checklist owner: ' + self.checklist.user_id.username + ' Checklist item owner: ' + self.user_id.username)
+
+    def __str__(self):
+        return self.name
