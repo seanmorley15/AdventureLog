@@ -21,7 +21,7 @@
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
-	let resultsPerPage: number = 10;
+	let resultsPerPage: number = 25;
 
 	let currentView: string = 'cards';
 

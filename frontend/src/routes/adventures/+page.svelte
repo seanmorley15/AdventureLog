@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { enhance, deserialize } from '$app/forms';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import NewAdventure from '$lib/components/NewAdventure.svelte';
@@ -13,64 +15,83 @@
 
 	let adventures: Adventure[] = data.props.adventures || [];
 
-	let currentSort = { attribute: 'name', order: 'asc' };
+	let currentSort = {
+		order_by: '',
+		order: '',
+		visited: true,
+		planned: true,
+		includeCollections: true
+	};
 
 	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
-	let resultsPerPage: number = 10;
+	let resultsPerPage: number = 25;
 
-	let next: string | null = data.props.next || null;
-	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
 
-	function handleChangePage() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				console.log(result.data);
-				adventures = result.data.body.adventures as Adventure[];
-				next = result.data.body.next;
-				previous = result.data.body.previous;
-				count = result.data.body.count;
-				currentPage = result.data.body.page;
-				totalPages = Math.ceil(count / resultsPerPage);
-			}
-		};
+	function handleChangePage(pageNumber: number) {
+		// let query = new URLSearchParams($page.url.searchParams.toString());
+
+		// query.set('page', pageNumber.toString());
+
+		// console.log(query.toString());
+		currentPage = pageNumber;
+
+		let url = new URL(window.location.href);
+		url.searchParams.set('page', pageNumber.toString());
+		adventures = [];
+		adventures = data.props.adventures;
+
+		goto(url.toString(), { invalidateAll: true, replaceState: true });
+
+		// goto(`?${query.toString()}`, { invalidateAll: true });
 	}
 
-	function handleSubmit() {
-		return async ({ result, update }: any) => {
-			// First, call the update function with reset: false
-			update({ reset: false });
-
-			// Then, handle the result
-			if (result.type === 'success') {
-				if (result.data) {
-					// console.log(result.data);
-					adventures = result.data.adventures as Adventure[];
-					next = result.data.next;
-					previous = result.data.previous;
-					count = result.data.count;
-					totalPages = Math.ceil(count / resultsPerPage);
-					currentPage = 1;
-
-					console.log(next);
-				}
-			}
-		};
+	$: {
+		let url = new URL($page.url);
+		let page = url.searchParams.get('page');
+		if (page) {
+			currentPage = parseInt(page);
+		}
 	}
 
-	function sort({ attribute, order }: { attribute: string; order: string }) {
-		currentSort.attribute = attribute;
-		currentSort.order = order;
-		if (attribute === 'name') {
-			if (order === 'asc') {
-				adventures = adventures.sort((a, b) => b.name.localeCompare(a.name));
-			} else {
-				adventures = adventures.sort((a, b) => a.name.localeCompare(b.name));
-			}
+	$: {
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+		}
+		if (data.props.count) {
+			count = data.props.count;
+			totalPages = Math.ceil(count / resultsPerPage);
+		}
+	}
+
+	$: {
+		let url = new URL($page.url);
+		currentSort.order_by = url.searchParams.get('order_by') || 'updated_at';
+		currentSort.order = url.searchParams.get('order_direction') || 'asc';
+
+		if (url.searchParams.get('planned') === 'on') {
+			currentSort.planned = true;
+		} else {
+			currentSort.planned = false;
+		}
+		if (url.searchParams.get('visited') === 'on') {
+			currentSort.visited = true;
+		} else {
+			currentSort.visited = false;
+		}
+		if (url.searchParams.get('include_collections') === 'on') {
+			currentSort.includeCollections = true;
+		} else {
+			currentSort.includeCollections = false;
+		}
+
+		if (!currentSort.visited && !currentSort.planned) {
+			currentSort.visited = true;
+			currentSort.planned = true;
 		}
 	}
 
@@ -193,19 +214,16 @@
 			</div>
 
 			<div class="join flex items-center justify-center mt-4">
-				{#if next || previous}
+				{#if totalPages > 1}
 					<div class="join">
 						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-							<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-								<input type="hidden" name="page" value={page} />
-								<input type="hidden" name="next" value={next} />
-								<input type="hidden" name="previous" value={previous} />
-								{#if currentPage != page}
-									<button class="join-item btn btn-lg">{page}</button>
-								{:else}
-									<button class="join-item btn btn-lg btn-active">{page}</button>
-								{/if}
-							</form>
+							{#if currentPage != page}
+								<button class="join-item btn btn-lg" on:click={() => handleChangePage(page)}
+									>{page}</button
+								>
+							{:else}
+								<button class="join-item btn btn-lg btn-active">{page}</button>
+							{/if}
 						{/each}
 					</div>
 				{/if}
@@ -219,7 +237,7 @@
 			<!-- Sidebar content here -->
 			<div class="form-control">
 				<h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3>
-				<form action="?/get" method="post" use:enhance={handleSubmit}>
+				<form method="get">
 					<label class="label cursor-pointer">
 						<span class="label-text">Completed</span>
 						<input
@@ -227,7 +245,7 @@
 							name="visited"
 							id="visited"
 							class="checkbox checkbox-primary"
-							checked
+							checked={currentSort.visited}
 						/>
 					</label>
 					<label class="label cursor-pointer">
@@ -237,7 +255,7 @@
 							id="planned"
 							name="planned"
 							class="checkbox checkbox-primary"
-							checked
+							checked={currentSort.planned}
 						/>
 					</label>
 					<!-- <div class="divider"></div> -->
@@ -251,7 +269,7 @@
 							id="asc"
 							value="asc"
 							aria-label="Ascending"
-							checked
+							checked={currentSort.order === 'asc'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -260,6 +278,7 @@
 							id="desc"
 							value="desc"
 							aria-label="Descending"
+							checked={currentSort.order === 'desc'}
 						/>
 					</div>
 					<br />
@@ -272,7 +291,7 @@
 							id="updated_at"
 							value="updated_at"
 							aria-label="Updated"
-							checked
+							checked={currentSort.order_by === 'updated_at'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -281,6 +300,7 @@
 							id="name"
 							aria-label="Name"
 							value="name"
+							checked={currentSort.order_by === 'name'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -289,6 +309,7 @@
 							name="order_by"
 							id="date"
 							aria-label="Date"
+							checked={currentSort.order_by === 'date'}
 						/>
 						<input
 							class="join-item btn btn-neutral"
@@ -297,6 +318,7 @@
 							id="rating"
 							aria-label="Rating"
 							value="rating"
+							checked={currentSort.order_by === 'rating'}
 						/>
 					</div>
 
@@ -309,6 +331,7 @@
 							name="include_collections"
 							id="include_collections"
 							class="checkbox checkbox-primary"
+							checked={currentSort.includeCollections}
 						/>
 					</label>
 					<button type="submit" class="btn btn-success mt-4">Filter</button>
