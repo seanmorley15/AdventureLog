@@ -1,4 +1,4 @@
-name: Upload Docker image to GHCR
+name: Upload latest backend image to GHCR
 
 on:
   push:
