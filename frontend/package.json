@@ -1,7 +1,6 @@
 {
 	"name": "adventurelog-frontend",
-	"version": "0.0.1",
-	"private": true,
+	"version": "0.5.0",
 	"scripts": {
 		"dev": "vite dev",
 		"django": "cd .. && cd backend/server && python3 manage.py runserver",

@@ -1,11 +1,11 @@
-name: Upload Docker image to GHCR
+name: Upload latest frontend image to GHCR
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'frontend/**'
+      - "frontend/**"
 
 env:
   IMAGE_NAME: "adventurelog-frontend"
