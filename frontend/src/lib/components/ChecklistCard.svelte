@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
-	import type { Note, User } from '$lib/types';
+	import type { Checklist, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -9,22 +8,22 @@
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
 
-	export let note: Note;
+	export let checklist: Checklist;
 	export let user: User | null = null;
 
-	function editNote() {
-		dispatch('edit', note);
+	function editChecklist() {
+		dispatch('edit', checklist);
 	}
 
-	async function deleteNote() {
-		const res = await fetch(`/api/notes/${note.id}`, {
+	async function deleteChecklist() {
+		const res = await fetch(`/api/checklists/${checklist.id}`, {
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('success', 'Note deleted successfully');
-			dispatch('delete', note.id);
+			addToast('success', 'Checklist deleted successfully');
+			dispatch('delete', checklist.id);
 		} else {
-			addToast('Failed to delete note', 'error');
+			addToast('Failed to delete checklist', 'error');
 		}
 	}
 </script>
@@ -35,32 +34,32 @@
 	<div class="card-body">
 		<div class="flex justify-between">
 			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
-				{note.name}
+				{checklist.name}
 			</h2>
 		</div>
-		<div class="badge badge-neutral">Note</div>
-		{#if note.links && note.links.length > 0}
-			<p>{note.links.length} {note.links.length > 1 ? 'Links' : 'Link'}</p>
+		<div class="badge badge-neutral">Checklist</div>
+		{#if checklist.items.length > 0}
+			<p>{checklist.items.length} {checklist.items.length > 1 ? 'Items' : 'Item'}</p>
 		{/if}
-		{#if note.date && note.date !== ''}
+		{#if checklist.date && checklist.date !== ''}
 			<div class="inline-flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
-				<p>{new Date(note.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
+				<p>{new Date(checklist.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
 			</div>
 		{/if}
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
 			> -->
-			<button class="btn btn-neutral mb-2" on:click={editNote}>
+			<button class="btn btn-neutral mb-2" on:click={editChecklist}>
 				<Launch class="w-6 h-6" />Open
 			</button>
-			{#if note.user_id == user?.pk}
+			{#if checklist.user_id == user?.pk}
 				<button
 					id="delete_adventure"
-					data-umami-event="Delete Adventure"
+					data-umami-event="Delete Checklist"
 					class="btn btn-warning"
-					on:click={deleteNote}><TrashCan class="w-6 h-6" /></button
+					on:click={deleteChecklist}><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
 		</div>

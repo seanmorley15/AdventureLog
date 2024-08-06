@@ -1,5 +1,5 @@
 import inspirationalQuotes from './json/quotes.json';
-import type { Adventure, Collection } from './types';
+import type { Adventure, Checklist, Collection, Note, Transportation } from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;
@@ -73,4 +73,108 @@ export function isValidUrl(url: string) {
 	} catch (err) {
 		return false;
 	}
+}
+
+export function groupAdventuresByDate(
+	adventures: Adventure[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Adventure[]> {
+	const groupedAdventures: Record<string, Adventure[]> = {};
+
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedAdventures[dateString] = [];
+	}
+
+	adventures.forEach((adventure) => {
+		if (adventure.date) {
+			const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
+			if (groupedAdventures[adventureDate]) {
+				groupedAdventures[adventureDate].push(adventure);
+			}
+		}
+	});
+
+	return groupedAdventures;
+}
+
+export function groupTransportationsByDate(
+	transportations: Transportation[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Transportation[]> {
+	const groupedTransportations: Record<string, Transportation[]> = {};
+
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedTransportations[dateString] = [];
+	}
+
+	transportations.forEach((transportation) => {
+		if (transportation.date) {
+			const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
+			if (groupedTransportations[transportationDate]) {
+				groupedTransportations[transportationDate].push(transportation);
+			}
+		}
+	});
+
+	return groupedTransportations;
+}
+
+export function groupNotesByDate(
+	notes: Note[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Note[]> {
+	const groupedNotes: Record<string, Note[]> = {};
+
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedNotes[dateString] = [];
+	}
+
+	notes.forEach((note) => {
+		if (note.date) {
+			const noteDate = new Date(note.date).toISOString().split('T')[0];
+			if (groupedNotes[noteDate]) {
+				groupedNotes[noteDate].push(note);
+			}
+		}
+	});
+
+	return groupedNotes;
+}
+
+export function groupChecklistsByDate(
+	checklists: Checklist[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Checklist[]> {
+	const groupedChecklists: Record<string, Checklist[]> = {};
+
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedChecklists[dateString] = [];
+	}
+
+	checklists.forEach((checklist) => {
+		if (checklist.date) {
+			const noteDate = new Date(checklist.date).toISOString().split('T')[0];
+			if (groupedChecklists[noteDate]) {
+				groupedChecklists[noteDate].push(checklist);
+			}
+		}
+	});
+
+	return groupedChecklists;
 }
