@@ -40,9 +40,9 @@
 				updated_at: ''
 			}
 		];
-		if (checklist) {
-			newChecklist.items = items;
-		}
+
+		newChecklist.items = items;
+
 		newItem = '';
 		newStatus = false;
 		warning = '';
@@ -158,20 +158,6 @@
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 				</div>
-				<!-- <div class="form-control mb-2">
-					<label for="content">New Item</label>
-					<div class="form-control">
-						<input type="checkbox" bind:checked={newStatus} class="checkbox" />
-					</div>
-					<input
-						type="text"
-						id="new_item"
-						name="new_item"
-						bind:value={newItem}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<button class="btn btn-primary mt-1" on:click={addItem}>Add Item</button>
-				</div> -->
 				<div class="form-control mb-2 flex flex-row">
 					<input type="checkbox" bind:checked={newStatus} class="checkbox mt-4 mr-2" />
 					<input
@@ -181,6 +167,12 @@
 						name="new_item"
 						bind:value={newItem}
 						class="input input-bordered w-full max-w-xs mt-1"
+						on:keydown={(e) => {
+							if (e.key === 'Enter') {
+								e.preventDefault();
+								addItem();
+							}
+						}}
 					/>
 					<button
 						type="button"
@@ -257,7 +249,58 @@
 				{/if}
 			</form>
 		{:else}
-			<!-- view only form -->
+			<form>
+				<div class="form-control mb-2">
+					<label for="name">Name</label>
+					<input
+						type="text"
+						id="name"
+						class="input input-bordered w-full max-w-xs"
+						bind:value={newChecklist.name}
+						readonly
+					/>
+				</div>
+				<div class="form-control mb-2">
+					<label for="content">Date</label>
+					<input
+						type="date"
+						id="date"
+						name="date"
+						min={collection.start_date || ''}
+						max={collection.end_date || ''}
+						bind:value={newChecklist.date}
+						readonly
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
+				</div>
+
+				{#if items.length > 0}
+					<div class="divider"></div>
+					<h2 class=" text-xl font-semibold mb-4 -mt-3">Items</h2>
+				{/if}
+
+				{#each items as item, i}
+					<div class="form-control mb-2 flex flex-row">
+						<input
+							type="checkbox"
+							checked={item.is_checked}
+							class="checkbox mt-4 mr-2"
+							readonly={true}
+							disabled
+						/>
+						<input
+							type="text"
+							id="item_{i}"
+							name="item_{i}"
+							bind:value={item.name}
+							readonly
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+				{/each}
+
+				<button class="btn btn-neutral" on:click={close}>Close</button>
+			</form>
 		{/if}
 	</div>
 </dialog>
