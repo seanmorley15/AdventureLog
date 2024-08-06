@@ -19,7 +19,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.ACESS_TOKEN }}
+          password: ${{ secrets.ACCESS_TOKEN }}
 
       - name: Build Docker image
         run: docker build -t $IMAGE_NAME:${{ github.event.release.tag_name }} ./frontend
