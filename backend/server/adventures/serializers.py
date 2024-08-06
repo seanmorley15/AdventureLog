@@ -7,6 +7,7 @@ class AdventureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Adventure
         fields = '__all__' 
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -205,4 +206,4 @@ class CollectionSerializer(serializers.ModelSerializer):
         model = Collection
         # fields are all plus the adventures field
         fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']

@@ -105,19 +105,19 @@ from rest_framework import serializers
 from django.conf import settings
 import os
 
-class AdventureSerializer(serializers.ModelSerializer):
-    image = serializers.SerializerMethodField()
+# class AdventureSerializer(serializers.ModelSerializer):
+#     image = serializers.SerializerMethodField()
 
-    class Meta:
-        model = Adventure
-        fields = ['id', 'user_id', 'type', 'name', 'location', 'activity_types', 'description', 
-                  'rating', 'link', 'image', 'date', 'trip_id', 'is_public', 'longitude', 'latitude']
+#     class Meta:
+#         model = Adventure
+#         fields = ['id', 'user_id', 'type', 'name', 'location', 'activity_types', 'description', 
+#                   'rating', 'link', 'image', 'date', 'trip_id', 'is_public', 'longitude', 'latitude']
 
-    def get_image(self, obj):
-        if obj.image:
-            public_url = os.environ.get('PUBLIC_URL', '')
-            return f'{public_url}/media/{obj.image.name}'
-        return None
+#     def get_image(self, obj):
+#         if obj.image:
+#             public_url = os.environ.get('PUBLIC_URL', '')
+#             return f'{public_url}/media/{obj.image.name}'
+#         return None
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
@@ -161,7 +161,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             
         model = UserModel
         fields = ('pk', *extra_fields)
-        read_only_fields = ('email', 'date_joined', 'is_staff')
+        read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
 

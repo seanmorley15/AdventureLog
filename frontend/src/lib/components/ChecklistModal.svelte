@@ -130,9 +130,9 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Checklist Editor</h3>
+		<h3 class="font-bold text-lg mb-2">Checklist Editor</h3>
 		{#if initialName}
-			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
+			<p class="font-semibold text-md mb-2">Editing checklist {initialName}</p>
 		{/if}
 
 		{#if (checklist && user?.pk == checklist?.user_id) || !checklist}
