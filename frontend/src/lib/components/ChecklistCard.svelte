@@ -11,7 +11,7 @@
 	export let checklist: Checklist;
 	export let user: User | null = null;
 
-	function editNote() {
+	function editChecklist() {
 		dispatch('edit', checklist);
 	}
 
@@ -51,7 +51,7 @@
 			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
 			> -->
-			<button class="btn btn-neutral mb-2" on:click={editNote}>
+			<button class="btn btn-neutral mb-2" on:click={editChecklist}>
 				<Launch class="w-6 h-6" />Open
 			</button>
 			{#if checklist.user_id == user?.pk}

@@ -96,7 +96,7 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
             fields = [
                 'id', 'user_id', 'name', 'is_checked', 'checklist', 'created_at', 'updated_at'
             ]
-            read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+            read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'checklist']
     
         def validate(self, data):
             # Check if the checklist is public and the checklist item is not
@@ -123,13 +123,56 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
     
     
 class ChecklistSerializer(serializers.ModelSerializer):
-    items = ChecklistItemSerializer(many=True, read_only=True, source='checklistitem_set')
+    items = ChecklistItemSerializer(many=True, source='checklistitem_set')
     class Meta:
         model = Checklist
         fields = [
             'id', 'user_id', 'name', 'date', 'is_public', 'collection', 'created_at', 'updated_at', 'items'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+    
+    def create(self, validated_data):
+        items_data = validated_data.pop('checklistitem_set')
+        checklist = Checklist.objects.create(**validated_data)
+        for item_data in items_data:
+            ChecklistItem.objects.create(checklist=checklist, **item_data)
+        return checklist
+    
+    def update(self, instance, validated_data):
+        items_data = validated_data.pop('checklistitem_set', [])
+        
+        # Update Checklist fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Get current items
+        current_items = instance.checklistitem_set.all()
+        current_item_ids = set(current_items.values_list('id', flat=True))
+        
+        # Update or create items
+        updated_item_ids = set()
+        for item_data in items_data:
+            item_id = item_data.get('id')
+            if item_id:
+                if item_id in current_item_ids:
+                    item = current_items.get(id=item_id)
+                    for attr, value in item_data.items():
+                        setattr(item, attr, value)
+                    item.save()
+                    updated_item_ids.add(item_id)
+                else:
+                    # If ID is provided but doesn't exist, create new item
+                    ChecklistItem.objects.create(checklist=instance, **item_data)
+            else:
+                # If no ID is provided, create new item
+                ChecklistItem.objects.create(checklist=instance, **item_data)
+        
+        # Delete items that are not in the updated data
+        items_to_delete = current_item_ids - updated_item_ids
+        instance.checklistitem_set.filter(id__in=items_to_delete).delete()
+        
+        return instance
 
     def validate(self, data):
         # Check if the collection is public and the checklist is not
@@ -149,10 +192,7 @@ class ChecklistSerializer(serializers.ModelSerializer):
 
         return data
 
-    def create(self, validated_data):
-        # Set the user_id to the current user
-        validated_data['user_id'] = self.context['request'].user
-        return super().create(validated_data)
+   
 
 
 class CollectionSerializer(serializers.ModelSerializer):

@@ -1,5 +1,5 @@
 import inspirationalQuotes from './json/quotes.json';
-import type { Adventure, Collection, Note, Transportation } from './types';
+import type { Adventure, Checklist, Collection, Note, Transportation } from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;
@@ -151,4 +151,30 @@ export function groupNotesByDate(
 	});
 
 	return groupedNotes;
+}
+
+export function groupChecklistsByDate(
+	checklists: Checklist[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Checklist[]> {
+	const groupedChecklists: Record<string, Checklist[]> = {};
+
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedChecklists[dateString] = [];
+	}
+
+	checklists.forEach((checklist) => {
+		if (checklist.date) {
+			const noteDate = new Date(checklist.date).toISOString().split('T')[0];
+			if (groupedChecklists[noteDate]) {
+				groupedChecklists[noteDate].push(checklist);
+			}
+		}
+	});
+
+	return groupedChecklists;
 }

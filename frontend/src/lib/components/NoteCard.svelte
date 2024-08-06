@@ -40,7 +40,7 @@
 		</div>
 		<div class="badge badge-neutral">Note</div>
 		{#if note.links && note.links.length > 0}
-			<p>{note.links.length} links</p>
+			<p>{note.links.length} {note.links.length > 1 ? 'Links' : 'Link'}</p>
 		{/if}
 		{#if note.date && note.date !== ''}
 			<div class="inline-flex items-center">

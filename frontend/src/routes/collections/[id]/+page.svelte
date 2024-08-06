@@ -18,8 +18,14 @@
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 
-	import { groupAdventuresByDate, groupNotesByDate, groupTransportationsByDate } from '$lib';
+	import {
+		groupAdventuresByDate,
+		groupNotesByDate,
+		groupTransportationsByDate,
+		groupChecklistsByDate
+	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
+	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -46,6 +52,7 @@
 	let isShowingLinkModal: boolean = false;
 	let isShowingCreateModal: boolean = false;
 	let isShowingTransportationModal: boolean = false;
+	let isShowingChecklistModal: boolean = false;
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -123,6 +130,7 @@
 	let isTransportationEditModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
+	let checklistToEdit: Checklist | null;
 
 	let newType: string;
 
@@ -201,6 +209,28 @@
 		on:create={(event) => {
 			notes = [event.detail, ...notes];
 			isNoteModalOpen = false;
+		}}
+	/>
+{/if}
+
+{#if isShowingChecklistModal}
+	<ChecklistModal
+		{collection}
+		user={data.user}
+		checklist={checklistToEdit}
+		on:close={() => (isShowingChecklistModal = false)}
+		on:create={(event) => {
+			checklists = [event.detail, ...checklists];
+			isShowingChecklistModal = false;
+		}}
+		on:save={(event) => {
+			checklists = checklists.map((checklist) => {
+				if (checklist.id === event.detail.id) {
+					return event.detail;
+				}
+				return checklist;
+			});
+			isShowingChecklistModal = false;
 		}}
 	/>
 {/if}
@@ -334,6 +364,16 @@
 						>
 							Note</button
 						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingChecklistModal = true;
+								newType = '';
+								checklistToEdit = null;
+							}}
+						>
+							Checklist</button
+						>
 
 						<!-- <button
 			class="btn btn-primary"
@@ -434,6 +474,10 @@
 					on:delete={(event) => {
 						checklists = checklists.filter((n) => n.id != event.detail);
 					}}
+					on:edit={(event) => {
+						checklistToEdit = event.detail;
+						isShowingChecklistModal = true;
+					}}
 				/>
 			{/each}
 		</div>
@@ -468,6 +512,11 @@
 			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[
 				dateString
 			]}
+			{@const dayChecklists = groupChecklistsByDate(
+				checklists,
+				new Date(collection.start_date),
+				numberOfDays
+			)[dateString]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
 				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
@@ -515,8 +564,23 @@
 						/>
 					{/each}
 				{/if}
+				{#if dayChecklists.length > 0}
+					{#each dayChecklists as checklist}
+						<ChecklistCard
+							{checklist}
+							user={data.user || null}
+							on:delete={(event) => {
+								notes = notes.filter((n) => n.id != event.detail);
+							}}
+							on:edit={(event) => {
+								checklistToEdit = event.detail;
+								isShowingChecklistModal = true;
+							}}
+						/>
+					{/each}
+				{/if}
 
-				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0}
+				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
 					<p class="text-center text-lg mt-2">Nothing planned for this day. Enjoy the journey!</p>
 				{/if}
 			</div>
