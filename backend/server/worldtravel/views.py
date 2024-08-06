@@ -45,15 +45,18 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return VisitedRegion.objects.filter(user_id=self.request.user.id)
+    
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        # Set the user_id to the request user's ID
-        request.data['user_id'] = request.user.id
+        request.data['user_id'] = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
 
 class GeoJSONView(viewsets.ViewSet):
     """
