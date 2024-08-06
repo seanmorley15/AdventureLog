@@ -616,3 +616,17 @@
 		</MapLibre>
 	{/if}
 {/if}
+
+<svelte:head>
+	<title
+		>{data.props.adventure && data.props.adventure.name
+			? `${data.props.adventure.name}`
+			: 'Collection'}</title
+	>
+	<meta
+		name="description"
+		content="Learn more about {data.props.adventure && data.props.adventure.name
+			? `${data.props.adventure.name}.`
+			: 'your adventures.'}"
+	/>
+</svelte:head>

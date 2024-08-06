@@ -41,3 +41,13 @@
 		/>
 	{/each}
 </div>
+
+<svelte:head>
+	<title
+		>{data.props && data.props.country ? `Regions in ${data.props.country.name}` : 'Regions'}</title
+	>
+	<meta
+		name="description"
+		content="View the regions in countries and mark them visited to track your world travel."
+	/>
+</svelte:head>

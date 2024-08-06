@@ -303,3 +303,12 @@
 		</main>
 	</div>
 {/if}
+
+<svelte:head>
+	<title
+		>{data.props.adventure && data.props.adventure.name
+			? `${data.props.adventure.name}`
+			: 'Adventure'}</title
+	>
+	<meta name="description" content="Explore the world and add countries to your visited list!" />
+</svelte:head>

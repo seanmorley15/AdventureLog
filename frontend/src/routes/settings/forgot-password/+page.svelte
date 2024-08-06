@@ -28,3 +28,8 @@
 		{/if}
 	</form>
 </div>
+
+<svelte:head>
+	<title>Forgot Password</title>
+	<meta name="description" content="Reset your password for AdventureLog." />
+</svelte:head>

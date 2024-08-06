@@ -210,3 +210,8 @@
 		{/each}
 	</div>
 {/if}
+
+<svelte:head>
+	<title>Search{query ? `: ${query}` : ''}</title>
+	<meta name="description" content="Search your adventures." />
+</svelte:head>

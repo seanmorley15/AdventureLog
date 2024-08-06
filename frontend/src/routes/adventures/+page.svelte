@@ -340,3 +340,8 @@
 		</ul>
 	</div>
 </div>
+
+<svelte:head>
+	<title>Adventures</title>
+	<meta name="description" content="View your completed and planned adventures." />
+</svelte:head>

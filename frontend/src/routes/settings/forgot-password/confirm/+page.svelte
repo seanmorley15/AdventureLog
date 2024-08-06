@@ -56,3 +56,8 @@
 		</div>
 	</div>
 {/if}
+
+<svelte:head>
+	<title>Password Reset Confirm</title>
+	<meta name="description" content="Confirm your password reset and make a new password." />
+</svelte:head>
