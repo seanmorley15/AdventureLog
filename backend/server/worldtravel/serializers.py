@@ -16,17 +16,16 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = '__all__'  # Serialize all fields of the Adventure model
-        read_only_fields = '__all__'
+        read_only_fields = ['id', 'name', 'country_code', 'continent', 'flag_url']
 
 class RegionSerializer(serializers.ModelSerializer):
-    flag_url = ''
     class Meta:
         model = Region
         fields = '__all__'  # Serialize all fields of the Adventure model
-        read_only_fields = '__all__'
+        read_only_fields = ['id', 'name', 'country']
 
 class VisitedRegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = VisitedRegion
         fields = '__all__'  # Serialize all fields of the Adventure model
-        read_only_fields = ['user_id']
+        read_only_fields = ['user_id', 'id']

@@ -66,7 +66,7 @@
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<ul
 				tabindex="0"
-				class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52 gap-2"
+				class="menu dropdown-content mt-3 z-[1] p-2 shadow bg-neutral text-neutral-content rounded-box gap-2 w-96"
 			>
 				{#if data.user}
 					<li>
@@ -109,7 +109,7 @@
 							/>
 						</svg>
 					</label>
-					<button on:click={searchGo} type="submit" class="btn btn-neutral">Search</button>
+					<button on:click={searchGo} type="submit" class="btn btn-primary">Search</button>
 				</form>
 			</ul>
 		</div>
@@ -174,7 +174,10 @@
 				<DotsHorizontal class="w-6 h-6" />
 			</div>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-			<ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-100 rounded-box w-52">
+			<ul
+				tabindex="0"
+				class="dropdown-content bg-neutral text-neutral-content z-[1] menu p-2 shadow rounded-box w-52"
+			>
 				<button class="btn" on:click={() => (isAboutModalOpen = true)}>About AdventureLog</button>
 				<p class="font-bold m-4 text-lg">Theme Selection</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
