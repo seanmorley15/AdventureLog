@@ -96,9 +96,6 @@
 </div>
 
 <svelte:head>
-	<title>Login | AdventureLog</title>
-	<meta
-		name="description"
-		content="Login to your AdventureLog account to start logging your adventures!"
-	/>
+	<title>Signup</title>
+	<meta name="description" content="Signup for AdventureLog to explore the world!" />
 </svelte:head>

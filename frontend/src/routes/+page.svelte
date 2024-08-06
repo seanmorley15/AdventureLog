@@ -122,5 +122,8 @@
 
 <svelte:head>
 	<title>Home | AdventureLog</title>
-	<meta name="description" content="AdventureLog is a platform to log your adventures." />
+	<meta
+		name="description"
+		content="AdventureLog is a platform to log your adventures and plan your travel."
+	/>
 </svelte:head>

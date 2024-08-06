@@ -220,6 +220,11 @@
 	{/each}
 </MapLibre>
 
+<svelte:head>
+	<title>Travel Map</title>
+	<meta name="description" content="View your travels on a map." />
+</svelte:head>
+
 <style>
 	:global(.map) {
 		height: 500px;

@@ -30,4 +30,8 @@
 		{/each}
 	</tbody>
 </table>
-<!-- 		</ul> -->
+
+<svelte:head>
+	<title>My Activities</title>
+	<meta name="description" content="View my activity types." />
+</svelte:head>

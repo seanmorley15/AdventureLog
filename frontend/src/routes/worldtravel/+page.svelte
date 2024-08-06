@@ -19,6 +19,6 @@
 </div>
 
 <svelte:head>
-	<title>WorldTravel | AdventureLog</title>
+	<title>Countries | World Travel</title>
 	<meta name="description" content="Explore the world and add countries to your visited list!" />
 </svelte:head>

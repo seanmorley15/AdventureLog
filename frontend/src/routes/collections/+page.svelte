@@ -251,3 +251,8 @@
 		</ul>
 	</div>
 </div>
+
+<svelte:head>
+	<title>Collections</title>
+	<meta name="description" content="View your adventure collections." />
+</svelte:head>
