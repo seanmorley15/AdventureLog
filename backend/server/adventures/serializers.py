@@ -205,5 +205,5 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         # fields are all plus the adventures field
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']

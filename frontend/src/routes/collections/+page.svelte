@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance, deserialize } from '$app/forms';
+	import { goto } from '$app/navigation';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import EditAdventure from '$lib/components/EditAdventure.svelte';
@@ -247,6 +248,11 @@
 					<button type="submit" class="btn btn-success btn-primary mt-4">Filter</button>
 				</form>
 				<div class="divider"></div>
+				<button
+					type="submit"
+					class="btn btn-neutral btn-primary mt-4"
+					on:click={() => goto('/collections/archived')}>Archived Collections</button
+				>
 			</div>
 		</ul>
 	</div>

@@ -209,9 +209,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
     pagination_class = StandardResultsSetPagination
 
-    def get_queryset(self):
-        print(self.request.user.id)
-        return Collection.objects.filter(user_id=self.request.user.id)
+    # def get_queryset(self):
+    #     return Collection.objects.filter(Q(user_id=self.request.user.id) & Q(is_archived=False))
 
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
@@ -263,6 +262,20 @@ class CollectionViewSet(viewsets.ModelViewSet):
        
         return Response(serializer.data)
     
+    @action(detail=False, methods=['get'])
+    def archived(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+       
+        queryset = Collection.objects.filter(
+            Q(user_id=request.user.id) & Q(is_archived=True)
+        )
+        
+        queryset = self.apply_sorting(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+       
+        return Response(serializer.data)
+    
     # this make the is_public field of the collection cascade to the adventures
     @transaction.atomic
     def update(self, request, *args, **kwargs):
@@ -298,36 +311,21 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
-
-        adventures = None
+        if self.action == 'destroy':
+            return Collection.objects.filter(user_id=self.request.user.id)
+        
+        if self.action in ['update', 'partial_update']:
+            return Collection.objects.filter(user_id=self.request.user.id)
         
         if self.action == 'retrieve':
-            # For individual collection retrieval, include public collections
-            adventures =  Collection.objects.filter(
+            return Collection.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id)
             )
-        else:
-            # For other actions, only include user's own collections
-            adventures = Collection.objects.filter(user_id=self.request.user.id)
         
-        # adventures = adventures.prefetch_related(
-        #     Prefetch('adventure_set', queryset=Adventure.objects.filter(
-        #         Q(is_public=True) | Q(user_id=self.request.user.id)
-        #     ))
-        # ).prefetch_related(
-        #     Prefetch('transportation_set', queryset=Transportation.objects.filter(
-        #         Q(is_public=True) | Q(user_id=self.request.user.id)
-        #     ))
-        # ).prefetch_related(
-        #     Prefetch('note_set', queryset=Note.objects.filter(
-        #         Q(is_public=True) | Q(user_id=self.request.user.id)
-        #     ))
-        # ).prefetch_related(
-        #     Prefetch('checklist_set', queryset=Checklist.objects.filter(
-        #         Q(is_public=True) | Q(user_id=self.request.user.id)
-        #     ))
-        # )
-        return self.apply_sorting(adventures)
+        # For other actions (like list), only include user's non-archived collections
+        return Collection.objects.filter(
+            Q(user_id=self.request.user.id) & Q(is_archived=False)
+        )
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
