@@ -72,6 +72,7 @@ class Collection(models.Model):
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
+    is_archived = models.BooleanField(default=False)
 
 
     # if connected adventures are private and collection is public, raise an error

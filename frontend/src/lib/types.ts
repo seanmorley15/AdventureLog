@@ -70,6 +70,7 @@ export type Collection = {
 	transportations?: Transportation[];
 	notes?: Note[];
 	checklists?: Checklist[];
+	is_archived?: boolean;
 };
 
 export type OpenStreetMapPlace = {
