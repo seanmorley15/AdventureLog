@@ -179,6 +179,11 @@
 				class="dropdown-content bg-neutral text-neutral-content z-[1] menu p-2 shadow rounded-box w-52"
 			>
 				<button class="btn" on:click={() => (isAboutModalOpen = true)}>About AdventureLog</button>
+				<button
+					class="btn btn-sm mt-2"
+					on:click={() => (window.location.href = 'https://docs.adventurelog.app/')}
+					>Documentation</button
+				>
 				<p class="font-bold m-4 text-lg">Theme Selection</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
 					<li>

@@ -35,14 +35,19 @@
 						</h1>
 					{/if}
 					<p class="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-						Discover and plan your next epic adventure with our cutting-edge travel app. Explore
-						breathtaking destinations, create custom itineraries, and stay connected on the go.
+						Discover and plan your next adventure with AdventureLog. Explore breathtaking
+						destinations, create custom itineraries, and stay connected on the go.
 					</p>
 				</div>
 				<div class="flex flex-col gap-2 min-[400px]:flex-row">
-					<button on:click={() => goto('/adventures')} class="btn btn-primary">
-						Go To AdventureLog
-					</button>
+					{#if data.user}
+						<button on:click={() => goto('/adventures')} class="btn btn-primary">
+							Go To AdventureLog
+						</button>
+					{:else}
+						<button on:click={() => goto('/login')} class="btn btn-primary"> Log In </button>
+						<button on:click={() => goto('/signup')} class="btn btn-neutral"> Sign Up </button>
+					{/if}
 				</div>
 			</div>
 			<img
@@ -74,8 +79,8 @@
 				<p
 					class="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400"
 				>
-					Our adventure travel app is designed to simplify your journey, providing you with the
-					tools and resources to plan, pack, and navigate your next epic adventure.
+					AdventureLog is designed to simplify your journey, providing you with the tools and
+					resources to plan, pack, and navigate your next unforgettable adventure.
 				</p>
 			</div>
 		</div>
@@ -92,25 +97,27 @@
 				<ul class="grid gap-6">
 					<li>
 						<div class="grid gap-1">
+							<h3 class="text-xl font-bold dark:text-gray-400">Travel Log</h3>
+							<p class="text-gray-500 dark:text-gray-400">
+								Keep track of your adventures with a personalized travel log and share your
+								experiences with friends and family.
+							</p>
+						</div>
+					</li>
+					<li>
+						<div class="grid gap-1">
 							<h3 class="text-xl font-bold dark:text-gray-400">Trip Planning</h3>
 							<p class="text-gray-500 dark:text-gray-400">
-								Easily create custom itineraries and get real-time updates on your trip.
+								Easily create custom itineraries and get a day-by-day breakdown of your trip.
 							</p>
 						</div>
 					</li>
 					<li>
 						<div class="grid gap-1">
-							<h3 class="text-xl font-bold dark:text-gray-400">Packing Lists</h3>
+							<h3 class="text-xl font-bold dark:text-gray-400">Travel Map</h3>
 							<p class="text-gray-500 dark:text-gray-400">
-								Never forget a thing with our comprehensive packing lists.
-							</p>
-						</div>
-					</li>
-					<li>
-						<div class="grid gap-1">
-							<h3 class="text-xl font-bold dark:text-gray-400">Destination Guides</h3>
-							<p class="text-gray-500 dark:text-gray-400">
-								Discover the best attractions, activities, and hidden gems in your destination.
+								View your travels throughout the world with an interactive map and explore new
+								destinations.
 							</p>
 						</div>
 					</li>
