@@ -14,6 +14,7 @@
 
 	import Plus from '~icons/mdi/plus';
 	import { json } from '@sveltejs/kit';
+	import DeleteWarning from './DeleteWarning.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -60,7 +61,20 @@
 			console.log('Error deleting adventure');
 		}
 	}
+
+	let isWarningModalOpen: boolean = false;
 </script>
+
+{#if isWarningModalOpen}
+	<DeleteWarning
+		title="Delete Collection"
+		button_text="Delete"
+		description="Are you sure you want to delete this collection? This action cannot be undone."
+		is_warning={true}
+		on:close={() => (isWarningModalOpen = false)}
+		on:confirm={deleteCollection}
+	/>
+{/if}
 
 <div
 	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
@@ -90,7 +104,7 @@
 		</div>
 		<div class="card-actions justify-end">
 			{#if type != 'link'}
-				<button on:click={deleteCollection} class="btn btn-secondary"
+				<button on:click={() => (isWarningModalOpen = true)} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button
 				>
 				{#if !collection.is_archived}
