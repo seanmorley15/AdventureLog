@@ -55,10 +55,10 @@
 		});
 		if (res.ok) {
 			console.log('Collection deleted');
-			addToast('info', 'Adventure deleted successfully!');
+			addToast('info', 'Collection deleted successfully!');
 			dispatch('delete', collection.id);
 		} else {
-			console.log('Error deleting adventure');
+			console.log('Error deleting collection');
 		}
 	}
 

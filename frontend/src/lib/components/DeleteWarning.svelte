@@ -38,7 +38,9 @@
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-lg">{title}</h3>
 		<p class="py-1 mb-4">{description}</p>
-		<button class="btn btn-warning mr-2" on:click={confirm}>{button_text}</button>
+		<button class="btn btn-{is_warning ? 'warning' : 'primary'} mr-2" on:click={confirm}
+			>{button_text}</button
+		>
 		<button class="btn btn-neutral" on:click={close}>Cancel</button>
 	</div>
 </dialog>
