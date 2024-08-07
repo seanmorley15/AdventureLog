@@ -37,10 +37,10 @@
 		});
 		if (res.ok) {
 			console.log(`Collection ${is_archived ? 'archived' : 'unarchived'}`);
-			addToast('info', `Adventure ${is_archived ? 'archived' : 'unarchived'} successfully!`);
+			addToast('info', `Collection ${is_archived ? 'archived' : 'unarchived'} successfully!`);
 			dispatch('delete', collection.id);
 		} else {
-			console.log('Error archiving adventure');
+			console.log('Error archiving collection');
 		}
 	}
 
