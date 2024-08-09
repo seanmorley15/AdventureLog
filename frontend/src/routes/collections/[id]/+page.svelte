@@ -426,7 +426,7 @@
 		</div>
 	{/if}
 
-	{#if adventures.length == 0 && transportations.length == 0}
+	{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
 		<NotFound error={undefined} />
 	{/if}
 	{#if adventures.length > 0}

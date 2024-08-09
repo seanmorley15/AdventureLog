@@ -22,17 +22,18 @@
 
 	$: {
 		if (!showVisited) {
-			markers = markers.filter((marker) => marker.type !== 'visited');
+			markers = data.props.markers.filter((marker) => marker.type !== 'visited');
 		} else {
 			const visitedMarkers = data.props.markers.filter((marker) => marker.type === 'visited');
 			markers = [...markers, ...visitedMarkers];
 		}
 		if (!showPlanned) {
-			markers = markers.filter((marker) => marker.type !== 'planned');
+			markers = data.props.markers.filter((marker) => marker.type !== 'planned');
 		} else {
 			const plannedMarkers = data.props.markers.filter((marker) => marker.type === 'planned');
 			markers = [...markers, ...plannedMarkers];
 		}
+		console.log(markers);
 	}
 
 	let newMarker = [];
@@ -55,15 +56,6 @@
 	}
 
 	function createNewAdventure(event) {
-		// markers = visited
-		// 		.filter((adventure) => adventure.latitude !== null && adventure.longitude !== null)
-		// 		.map((adventure) => {
-		// 			return {
-		// 				lngLat: [adventure.longitude, adventure.latitude] as [number, number],
-		// 				name: adventure.name,
-		// 				type: adventure.type
-		// 			};
-		// 		});
 		console.log(event.detail);
 
 		let newMarker = {
