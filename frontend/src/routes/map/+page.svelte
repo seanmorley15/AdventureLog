@@ -109,25 +109,45 @@
 	let createModalOpen = false;
 </script>
 
-<label class="label cursor-pointer">
-	<span class="label-text">Visited</span>
-	<input type="checkbox" bind:checked={showVisited} class="checkbox checkbox-primary" />
-</label>
-<label class="label cursor-pointer">
-	<span class="label-text">Planned</span>
-	<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
-</label>
+<h1 class="text-center font-bold text-4xl">Adventure Map</h1>
 
-{#if newMarker.length > 0}
-	<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-		>Add New Adventure at Marker</button
-	>
-	<button type="button" class="btn btn-neutral mb-2" on:click={clearMarkers}>Clear Marker</button>
-{:else}
-	<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-		>Add New Adventure</button
-	>
-{/if}
+<div class="m-2 flex flex-col items-center justify-center">
+	<div class="gap-4 border-solid border-2 rounded-lg p-2 mb-4 border-neutral max-w-4xl">
+		<p class="font-semibold text-center text-xl mb-2">Map Options</p>
+		<div class="flex flex-wrap items-center justify-center gap-4">
+			<label class="label cursor-pointer">
+				<span class="label-text mr-1">Visited</span>
+				<input type="checkbox" bind:checked={showVisited} class="checkbox checkbox-primary" />
+			</label>
+			<label class="label cursor-pointer">
+				<span class="label-text mr-1">Planned</span>
+				<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
+			</label>
+			<!-- <div class="divider divider-horizontal"></div> -->
+			<label for="show-geo">Show Borders</label>
+			<input
+				type="checkbox"
+				id="show-geo"
+				name="show-geo"
+				class="checkbox"
+				bind:checked={showGEO}
+			/>
+			<!-- <div class="divider divider-horizontal"></div> -->
+			{#if newMarker.length > 0}
+				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
+					>Add New Adventure at Marker</button
+				>
+				<button type="button" class="btn btn-neutral mb-2" on:click={clearMarkers}
+					>Clear Marker</button
+				>
+			{:else}
+				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
+					>Add New Adventure</button
+				>
+			{/if}
+		</div>
+	</div>
+</div>
 
 {#if createModalOpen}
 	<NewAdventure
@@ -137,9 +157,6 @@
 		on:create={createNewAdventure}
 	/>
 {/if}
-
-<label for="show-geo">Show Borders?</label>
-<input type="checkbox" id="shpw-gep" name="show-geo" class="checkbox" bind:checked={showGEO} />
 
 <MapLibre
 	style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"

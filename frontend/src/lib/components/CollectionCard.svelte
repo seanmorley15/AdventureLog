@@ -80,7 +80,20 @@
 	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
 >
 	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{collection.name}</h2>
+		<div class="flex justify-between">
+			<button
+				on:click={() => goto(`/collections/${collection.id}`)}
+				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline"
+			>
+				{collection.name}
+			</button>
+		</div>
+		<div class="inline-flex gap-2 mb-2">
+			<div class="badge badge-neutral">{collection.is_public ? 'Public' : 'Private'}</div>
+			{#if collection.is_archived}
+				<div class="badge badge-warning">Archived</div>
+			{/if}
+		</div>
 		<p>{collection.adventures.length} Adventures</p>
 		{#if collection.start_date && collection.end_date}
 			<p>
@@ -96,12 +109,7 @@
 				) + 1}{' '}
 				days
 			</p>{/if}
-		<div class="inline-flex gap-2 mb-2">
-			<div class="badge badge-neutral">{collection.is_public ? 'Public' : 'Private'}</div>
-			{#if collection.is_archived}
-				<div class="badge badge-warning">Archived</div>
-			{/if}
-		</div>
+
 		<div class="card-actions justify-end">
 			{#if type != 'link'}
 				<button on:click={() => (isWarningModalOpen = true)} class="btn btn-secondary"
