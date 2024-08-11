@@ -171,7 +171,7 @@
 									<span class="text-sm text-muted-foreground">{adventure.location}</span>
 								</div>
 							{/if}
-							{#if adventure.activity_types}
+							{#if adventure.activity_types && adventure.activity_types?.length > 0}
 								<div class="flex items-center gap-2">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"

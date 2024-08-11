@@ -146,15 +146,13 @@ export const actions: Actions = {
 			};
 		}
 
-		let trip_id_number: number = parseInt(trip_id as string);
-
 		let res = await fetch(`${serverEndpoint}/api/adventures/${event.params.id}/`, {
 			method: 'PATCH',
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`,
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ collection: trip_id_number })
+			body: JSON.stringify({ collection: trip_id })
 		});
 		let res2 = await res.json();
 		console.log(res2);

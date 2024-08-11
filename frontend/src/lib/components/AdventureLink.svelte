@@ -10,6 +10,8 @@
 
 	let adventures: Adventure[] = [];
 
+	let isLoading: boolean = true;
+
 	export let user: User | null;
 
 	onMount(async () => {
@@ -17,19 +19,16 @@
 		if (modal) {
 			modal.showModal();
 		}
-		let formData = new FormData();
-		formData.append('include_collections', 'false');
-		let res = await fetch(`/adventures?/all`, {
-			method: 'POST',
-			body: formData
+		let res = await fetch(`/api/adventures/all/?include_collections=false`, {
+			method: 'GET'
 		});
 
-		const result: ActionResult = deserialize(await res.text());
-		console.log(result);
+		const newAdventures = await res.json();
 
-		if (result.type === 'success' && result.data) {
-			adventures = result.data.adventures as Adventure[];
+		if (res.ok && adventures) {
+			adventures = newAdventures;
 		}
+		isLoading = false;
 	});
 
 	function close() {
@@ -53,11 +52,16 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
+		{#if isLoading}
+			<div class="flex justify-center items-center w-full mt-16">
+				<span class="loading loading-spinner w-24 h-24"></span>
+			</div>
+		{/if}
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
 				<AdventureCard user={user ?? null} type="link" {adventure} on:link={add} />
 			{/each}
-			{#if adventures.length === 0}
+			{#if adventures.length === 0 && !isLoading}
 				<p class="text-center text-lg">
 					No adventures found that can be linked to this collection.
 				</p>
