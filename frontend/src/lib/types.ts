@@ -10,7 +10,7 @@ export type User = {
 };
 
 export type Adventure = {
-	id: number;
+	id: string;
 	user_id: number;
 	type: string;
 	name: string;
@@ -58,7 +58,7 @@ export type Point = {
 };
 
 export type Collection = {
-	id: number;
+	id: string;
 	user_id: number;
 	name: string;
 	description: string;
@@ -91,7 +91,7 @@ export type OpenStreetMapPlace = {
 };
 
 export type Transportation = {
-	id: number;
+	id: string;
 	user_id: number;
 	type: string;
 	name: string;
@@ -109,7 +109,7 @@ export type Transportation = {
 };
 
 export type Note = {
-	id: number;
+	id: string;
 	user_id: number;
 	name: string;
 	content: string | null;
@@ -122,7 +122,7 @@ export type Note = {
 };
 
 export type Checklist = {
-	id: number;
+	id: string;
 	user_id: number;
 	name: string;
 	items: ChecklistItem[];
@@ -134,7 +134,7 @@ export type Checklist = {
 };
 
 export type ChecklistItem = {
-	id: number;
+	id: string;
 	user_id: number;
 	name: string;
 	is_checked: boolean;
