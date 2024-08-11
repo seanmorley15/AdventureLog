@@ -32,7 +32,8 @@ User = get_user_model()
 
 
 class Adventure(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     type = models.CharField(max_length=100, choices=ADVENTURE_TYPES)
@@ -63,7 +64,8 @@ class Adventure(models.Model):
         return self.name
 
 class Collection(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
@@ -87,7 +89,8 @@ class Collection(models.Model):
         return self.name
     
 class Transportation(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     type = models.CharField(max_length=100, choices=TRANSPORTATION_TYPES)
@@ -115,7 +118,8 @@ class Transportation(models.Model):
         return self.name
 
 class Note(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
@@ -138,7 +142,8 @@ class Note(models.Model):
         return self.name
     
 class Checklist(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
@@ -159,7 +164,8 @@ class Checklist(models.Model):
         return self.name
 
 class ChecklistItem(models.Model):
-    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    id = models.AutoField(primary_key=True)
+    temp_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, null=True, blank=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
