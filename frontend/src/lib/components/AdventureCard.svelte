@@ -154,9 +154,12 @@
 
 	<div class="card-body">
 		<div class="flex justify-between">
-			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
+			<button
+				on:click={() => goto(`/adventures/${adventure.id}`)}
+				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline"
+			>
 				{adventure.name}
-			</h2>
+			</button>
 		</div>
 		<div>
 			{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
