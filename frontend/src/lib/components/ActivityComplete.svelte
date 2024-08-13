@@ -11,16 +11,16 @@
 	}
 
 	onMount(async () => {
-		let res = await fetch('/api/activity-types/types/', {
-			method: 'GET',
+		let res = await fetch('/activities', {
+			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			}
 		});
 		let data = await res.json();
-		console.log('ACTIVITIES' + data);
-		if (data) {
-			allActivities = data;
+		console.log('ACTIVITIES' + data.activities);
+		if (data && data.activities) {
+			allActivities = data.activities;
 		}
 	});
 
