@@ -11,7 +11,7 @@
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
-	export let collection_id: number | null = null;
+	export let collection_id: string | null = null;
 
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
@@ -29,7 +29,7 @@
 	export let endDate: string | null = null;
 
 	let newAdventure: Adventure = {
-		id: NaN,
+		id: '',
 		type: type,
 		name: '',
 		location: '',
@@ -43,7 +43,7 @@
 		latitude: null,
 		longitude: null,
 		is_public: false,
-		collection: collection_id || NaN
+		collection: collection_id || ''
 	};
 
 	if (longitude && latitude) {

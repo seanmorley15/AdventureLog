@@ -66,7 +66,7 @@
 		};
 	}
 
-	function deleteCollection(event: CustomEvent<number>) {
+	function deleteCollection(event: CustomEvent<string>) {
 		collections = collections.filter((collection) => collection.id !== event.detail);
 	}
 
@@ -85,7 +85,7 @@
 	let collectionToEdit: Collection;
 	let isEditModalOpen: boolean = false;
 
-	function deleteAdventure(event: CustomEvent<number>) {
+	function deleteAdventure(event: CustomEvent<string>) {
 		collections = collections.filter((adventure) => adventure.id !== event.detail);
 	}
 
@@ -245,7 +245,7 @@
 						value="name"
 						hidden
 					/>
-					<button type="submit" class="btn btn-success btn-primary mt-4">Filter</button>
+					<button type="submit" class="btn btn-success btn-primary mt-4">Sort</button>
 				</form>
 				<div class="divider"></div>
 				<button

@@ -98,7 +98,7 @@
 	let adventureToEdit: Adventure;
 	let isEditModalOpen: boolean = false;
 
-	function deleteAdventure(event: CustomEvent<number>) {
+	function deleteAdventure(event: CustomEvent<string>) {
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 

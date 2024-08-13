@@ -10,7 +10,7 @@
 
 	export let data: PageData;
 
-	function deleteAdventure(event: CustomEvent<number>) {
+	function deleteAdventure(event: CustomEvent<string>) {
 		myAdventures = myAdventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
