@@ -79,7 +79,7 @@
 		}
 	});
 
-	function deleteAdventure(event: CustomEvent<number>) {
+	function deleteAdventure(event: CustomEvent<string>) {
 		adventures = adventures.filter((a) => a.id !== event.detail);
 	}
 
@@ -111,7 +111,7 @@
 		}
 	}
 
-	function changeType(event: CustomEvent<number>) {
+	function changeType(event: CustomEvent<string>) {
 		adventures = adventures.map((adventure) => {
 			if (adventure.id == event.detail) {
 				if (adventure.type == 'visited') {

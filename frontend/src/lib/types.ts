@@ -21,7 +21,7 @@ export type Adventure = {
 	link?: string | null;
 	image?: string | null;
 	date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
-	collection?: number | null;
+	collection?: string | null;
 	latitude: number | null;
 	longitude: number | null;
 	is_public: boolean;
