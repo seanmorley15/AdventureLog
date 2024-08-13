@@ -156,7 +156,7 @@
 		<div class="flex justify-between">
 			<button
 				on:click={() => goto(`/adventures/${adventure.id}`)}
-				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline"
+				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline text-left"
 			>
 				{adventure.name}
 			</button>

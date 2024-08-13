@@ -174,7 +174,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         representation = super().to_representation(instance)
         if instance.profile_pic:
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            print(public_url)
+            #print(public_url)
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
