@@ -32,28 +32,6 @@
 	onMount(() => {
 		const urlParams = new URLSearchParams(window.location.search);
 		query = urlParams.get('query');
-
-		fetchData();
-	});
-
-	async function fetchData() {
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
-		const data = await res.json();
-		osmResults = data;
-	}
-
-	onMount(async () => {
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
-		const data = await res.json();
-		osmResults = data;
 	});
 
 	console.log(data);
@@ -73,12 +51,15 @@
 			publicAdventures = publicAdventures.filter(
 				(adventure) => adventure.user_id !== data.user?.pk
 			);
+
+			if (data.props.osmData) {
+				osmResults = data.props.osmData;
+			}
 		}
 	}
 
 	let adventureToEdit: Adventure;
 	let isEditModalOpen: boolean = false;
-	let isShowingCreateModal: boolean = false;
 
 	function editAdventure(event: CustomEvent<Adventure>) {
 		adventureToEdit = event.detail;
@@ -108,7 +89,7 @@
 	<NotFound error={data.error} />
 {/if}
 
-{#if myAdventures.length !== 0 && publicAdventures.length !== 0}
+{#if myAdventures.length !== 0}
 	<h2 class="text-center font-bold text-2xl mb-4">AdventureLog Results</h2>
 	<div class="flex items-center justify-center mt-2 mb-2">
 		<div class="join">

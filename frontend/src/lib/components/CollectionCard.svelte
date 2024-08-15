@@ -13,7 +13,8 @@
 	import { addToast } from '$lib/toasts';
 
 	import Plus from '~icons/mdi/plus';
-	import { json } from '@sveltejs/kit';
+	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
 
 	const dispatch = createEventDispatcher();
@@ -69,7 +70,7 @@
 	<DeleteWarning
 		title="Delete Collection"
 		button_text="Delete"
-		description="Are you sure you want to delete this collection? This action cannot be undone."
+		description="Are you sure you want to delete this collection? This will also delete all of the linked adventures. This action cannot be undone."
 		is_warning={true}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteCollection}
@@ -77,7 +78,7 @@
 {/if}
 
 <div
-	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
+	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl text-base-content"
 >
 	<div class="card-body">
 		<div class="flex justify-between">
@@ -111,33 +112,50 @@
 			</p>{/if}
 
 		<div class="card-actions justify-end">
-			{#if type != 'link'}
-				<button on:click={() => (isWarningModalOpen = true)} class="btn btn-secondary"
-					><TrashCanOutline class="w-5 h-5 mr-1" /></button
+			<div class="dropdown dropdown-end">
+				<div tabindex="0" role="button" class="btn btn-neutral">
+					<DotsHorizontal class="w-6 h-6" />
+				</div>
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+				<ul
+					tabindex="0"
+					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 				>
-				{#if !collection.is_archived}
-					<button class="btn btn-primary" on:click={editAdventure}>
-						<FileDocumentEdit class="w-6 h-6" />
-					</button>
-				{/if}
-				<button class="btn btn-primary" on:click={() => goto(`/collections/${collection.id}`)}
-					><Launch class="w-5 h-5 mr-1" /></button
-				>
-			{/if}
-			{#if type == 'link'}
-				<button class="btn btn-primary" on:click={() => dispatch('link', collection.id)}>
-					<Plus class="w-5 h-5 mr-1" />
-				</button>
-			{/if}
-			{#if collection.is_archived}
-				<button class="btn btn-primary" on:click={() => archiveCollection(false)}>
-					<ArchiveArrowUp class="w-5 h-5 mr-1" />
-				</button>
-			{:else}
-				<button class="btn btn-primary" on:click={() => archiveCollection(true)}>
-					<ArchiveArrowDown class="w-5 h-5 mr" />
-				</button>
-			{/if}
+					{#if type != 'link'}
+						<button
+							class="btn btn-neutral mb-2"
+							on:click={() => goto(`/collections/${collection.id}`)}
+							><Launch class="w-5 h-5 mr-1" />Open Details</button
+						>
+						{#if !collection.is_archived}
+							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
+								<FileDocumentEdit class="w-6 h-6" />Edit Collection
+							</button>
+						{/if}
+						{#if collection.is_archived}
+							<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(false)}>
+								<ArchiveArrowUp class="w-6 h-6 mr-1" />Unarchive
+							</button>
+						{:else}
+							<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(true)}>
+								<ArchiveArrowDown class="w-6 h-6 mr" />Archive
+							</button>
+						{/if}
+						<button
+							id="delete_adventure"
+							data-umami-event="Delete Adventure"
+							class="btn btn-warning"
+							on:click={() => (isWarningModalOpen = true)}
+							><TrashCan class="w-6 h-6" />Delete</button
+						>
+					{/if}
+					{#if type == 'link'}
+						<button class="btn btn-primary" on:click={() => dispatch('link', collection.id)}>
+							<Plus class="w-5 h-5 mr-1" />
+						</button>
+					{/if}
+				</ul>
+			</div>
 		</div>
 	</div>
 </div>

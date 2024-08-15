@@ -27,6 +27,10 @@
 	let adventure: Adventure;
 
 	let notFound: boolean = false;
+	let isEditModalOpen: boolean = false;
+
+	import ClipboardList from '~icons/mdi/clipboard-list';
+	import EditAdventure from '$lib/components/EditAdventure.svelte';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -35,6 +39,11 @@
 			notFound = true;
 		}
 	});
+
+	function saveEdit(event: CustomEvent<Adventure>) {
+		adventure = event.detail;
+		isEditModalOpen = false;
+	}
 </script>
 
 {#if notFound}
@@ -59,6 +68,14 @@
 	</div>
 {/if}
 
+{#if isEditModalOpen}
+	<EditAdventure
+		adventureToEdit={adventure}
+		on:close={() => (isEditModalOpen = false)}
+		on:saveEdit={saveEdit}
+	/>
+{/if}
+
 {#if !adventure && !notFound}
 	<div class="flex justify-center items-center w-full mt-16">
 		<span class="loading loading-spinner w-24 h-24"></span>
@@ -66,6 +83,11 @@
 {/if}
 
 {#if adventure}
+	<div class="fixed bottom-4 right-4 z-[999]">
+		<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
+			><ClipboardList class="w-8 h-8" /></button
+		>
+	</div>
 	<div class="flex flex-col min-h-dvh">
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
