@@ -45,7 +45,7 @@
 				class="text-primary-500 underline">Sean Morley</a
 			>
 		</p>
-		<p class="py-1">Liscensed under the GPL-3.0 License.</p>
+		<p class="py-1">Licensed under the GPL-3.0 License.</p>
 		<p class="py-1">
 			<a
 				href="https://github.com/seanmorley15/AdventureLog"
