@@ -63,7 +63,7 @@
 				rel="noopener noreferrer"
 				class="text-primary-500 underline"
 				href="https://operations.osmfoundation.org/policies/nominatim/">OpenStreepMap</a
-			>. Their data is liscensed under the ODbL liscense.
+			>. Their data is liscensed under the ODbL license.
 			<br /> Additional attributions can be found in the README file.
 		</p>
 
