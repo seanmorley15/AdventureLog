@@ -17,12 +17,14 @@
 	import Plus from '~icons/mdi/plus';
 	import CollectionLink from './CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import DeleteWarning from './DeleteWarning.svelte';
 
 	export let type: string;
 
 	export let user: User | null;
 
 	let isCollectionModalOpen: boolean = false;
+	let isWarningModalOpen: boolean = false;
 
 	let keyword: string = '';
 
@@ -134,6 +136,17 @@
 
 {#if isCollectionModalOpen}
 	<CollectionLink on:link={linkCollection} on:close={() => (isCollectionModalOpen = false)} />
+{/if}
+
+{#if isWarningModalOpen}
+	<DeleteWarning
+		title="Delete Adventure"
+		button_text="Delete"
+		description="Are you sure you want to delete this adventure? This action cannot be undone."
+		is_warning={false}
+		on:close={() => (isWarningModalOpen = false)}
+		on:confirm={deleteAdventure}
+	/>
 {/if}
 
 <div
@@ -249,7 +262,8 @@
 								id="delete_adventure"
 								data-umami-event="Delete Adventure"
 								class="btn btn-warning"
-								on:click={deleteAdventure}><TrashCan class="w-6 h-6" />Delete</button
+								on:click={() => (isWarningModalOpen = true)}
+								><TrashCan class="w-6 h-6" />Delete</button
 							>
 						</ul>
 					</div>
