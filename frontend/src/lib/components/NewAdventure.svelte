@@ -125,6 +125,9 @@
 				let user_id = data[2];
 				let image_url = data[3];
 				let link = data[4];
+				if (newAdventure.is_public) {
+					navigator.clipboard.writeText(`${window.location.origin}/adventures/${id}`);
+				}
 				newAdventure.image = image_url;
 				newAdventure.id = id;
 				newAdventure.user_id = user_id;
@@ -370,6 +373,20 @@
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 				</div>
+				<div class="mb-2">
+					<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
+					/>
+					<input
+						type="checkbox"
+						class="toggle toggle-primary"
+						id="is_public"
+						name="is_public"
+						bind:checked={newAdventure.is_public}
+					/>
+				</div>
+				{#if newAdventure.is_public}
+					<p>The link to this adventure will be copied to your clipboard once it is created!</p>
+				{/if}
 				<div class="mb-2">
 					<input
 						type="text"
