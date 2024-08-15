@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note
+from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage
 from worldtravel.models import Country, Region, VisitedRegion
 
 
@@ -57,6 +57,20 @@ class CustomUserAdmin(UserAdmin):
         else:
             return
         
+class AdventureImageAdmin(admin.ModelAdmin):
+    list_display = ('user_id', 'image_display')
+
+    def image_display(self, obj):
+        if obj.image:  # Ensure this field matches your model's image field
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            public_url = public_url.replace("'", "")
+            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
+        else:
+            return
+
+    image_display.short_description = 'Image Preview'
+                                        
+        
 class CollectionAdmin(admin.ModelAdmin):
     def adventure_count(self, obj):
         return obj.adventure_set.count()
@@ -78,6 +92,7 @@ admin.site.register(Transportation)
 admin.site.register(Note)
 admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
+admin.site.register(AdventureImage, AdventureImageAdmin)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'
