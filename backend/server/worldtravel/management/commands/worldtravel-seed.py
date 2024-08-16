@@ -524,6 +524,7 @@ class Command(BaseCommand):
             ('IS-7', 'Austurland', 'is'),
             ('IS-8', 'Suðurland', 'is'),
         ]
+
         
         if not force and (Country.objects.exists() or Region.objects.exists()):
             self.stdout.write(self.style.WARNING(
@@ -582,8 +583,10 @@ class Command(BaseCommand):
                 defaults={'name': name, 'continent': continent}
             )
             if created:
+                saveCountryFlag(country_code)
                 self.stdout.write(f'Inserted {name} into worldtravel countries')
             else:
+                saveCountryFlag(country_code)
                 self.stdout.write(f'{name} already exists in worldtravel countries')
 
     def insert_regions(self, regions):
