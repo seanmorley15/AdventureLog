@@ -4,7 +4,7 @@ from django.views.generic import RedirectView, TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from adventures import urls as adventures
-from users.views import ChangeEmailView
+from users.views import ChangeEmailView, IsRegistrationDisabled
 from .views import get_csrf_token
 from drf_yasg.views import get_schema_view
 
@@ -21,6 +21,7 @@ urlpatterns = [
     path('api/', include('worldtravel.urls')),
 
     path('auth/change-email/', ChangeEmailView.as_view(), name='change_email'),
+    path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     re_path(r'^$', TemplateView.as_view(

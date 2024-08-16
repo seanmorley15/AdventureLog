@@ -2,13 +2,25 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/');
 	}
+	let is_disabled = await event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`);
+	let is_disabled_json = await is_disabled.json();
+	console.log(is_disabled_json);
+	if (is_disabled_json.is_disabled) {
+		return {
+			is_disabled: true
+		};
+	} else {
+		return {
+			is_disabled: false
+		};
+	}
 };
-
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();

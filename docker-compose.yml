@@ -48,7 +48,7 @@ services:
   nginx:
     image: nginx:latest
     ports:
-      - "81:80" # Using port 81 to avoid conflict with your existing setup
+      - "81:80"
     volumes:
       - adventurelog_media:/app/media
       - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
