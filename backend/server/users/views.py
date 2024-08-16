@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .serializers import ChangeEmailSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from django.conf import settings
 
 class ChangeEmailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -29,3 +30,15 @@ class ChangeEmailView(APIView):
             user.save()
             return Response({"detail": "Email successfully changed."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class IsRegistrationDisabled(APIView):
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Registration is disabled'),
+            400: 'Bad Request'
+        },
+        operation_description="Check if registration is disabled."
+    )
+    def get(self, request):
+        return Response({"is_disabled": settings.DISABLE_REGISTRATION}, status=status.HTTP_200_OK)
+    

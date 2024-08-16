@@ -24,75 +24,98 @@
 	class="min-h-screen bg-no-repeat bg-cover flex items-center justify-center"
 	style="background-image: url('{backgroundImageUrl}')"
 >
-	<div class="card card-compact w-96 bg-base-100 shadow-xl p-6 mt-4 mb-4">
-		<article class="text-center text-4xl font-extrabold">
-			<h1>Signup</h1>
-		</article>
+	{#if !data.is_disabled}
+		<div class="card card-compact w-96 bg-base-100 shadow-xl p-6 mt-4 mb-4">
+			<article class="text-center text-4xl font-extrabold">
+				<h1>Signup</h1>
+			</article>
 
-		<div class="flex justify-center">
-			<form method="post" use:enhance class="w-full max-w-xs">
-				<label for="username">Username</label>
-				<input
-					name="username"
-					id="username"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br />
-				<label for="first_name">Email</label>
-				<input
-					name="email"
-					id="email"
-					type="email"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br />
-				<label for="first_name">First Name</label>
-				<input
-					name="first_name"
-					id="first_name"
-					type="text"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br />
-				<label for="first_name">Last Name</label>
-				<input
-					name="last_name"
-					id="last_name"
-					type="text"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br />
-				<label for="password">Password</label>
-				<input
-					type="password"
-					name="password1"
-					id="password1"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br /><label for="password">Confirm Password</label>
-				<input
-					type="password"
-					name="password2"
-					id="password2"
-					class="block mb-2 input input-bordered w-full max-w-xs"
-				/><br />
-				<button class="py-2 px-4 btn btn-primary">Signup</button>
-				{#if $page.form?.message}
-					<div class="text-center text-error mt-4">{$page.form?.message}</div>
-				{/if}
-			</form>
-		</div>
-
-		{#if errors.message}
-			<div class="text-center text-error mt-4">
-				{errors.message}
+			<div class="flex justify-center">
+				<form method="post" use:enhance class="w-full max-w-xs">
+					<label for="username">Username</label>
+					<input
+						name="username"
+						id="username"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br />
+					<label for="first_name">Email</label>
+					<input
+						name="email"
+						id="email"
+						type="email"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br />
+					<label for="first_name">First Name</label>
+					<input
+						name="first_name"
+						id="first_name"
+						type="text"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br />
+					<label for="first_name">Last Name</label>
+					<input
+						name="last_name"
+						id="last_name"
+						type="text"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br />
+					<label for="password">Password</label>
+					<input
+						type="password"
+						name="password1"
+						id="password1"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br /><label for="password">Confirm Password</label>
+					<input
+						type="password"
+						name="password2"
+						id="password2"
+						class="block mb-2 input input-bordered w-full max-w-xs"
+					/><br />
+					<button class="py-2 px-4 btn btn-primary">Signup</button>
+					{#if $page.form?.message}
+						<div class="text-center text-error mt-4">{$page.form?.message}</div>
+					{/if}
+				</form>
 			</div>
-		{/if}
 
-		<div class="flex justify-center mt-12 mr-25 ml-25">
-			<blockquote class="w-80 text-center text-lg break-words">
-				{#if quote != ''}
-					{quote}
-				{/if}
-				<!-- <footer class="text-sm">- Steve Jobs</footer> -->
-			</blockquote>
+			{#if errors.message}
+				<div class="text-center text-error mt-4">
+					{errors.message}
+				</div>
+			{/if}
+
+			<div class="flex justify-center mt-12 mr-25 ml-25">
+				<blockquote class="w-80 text-center text-lg break-words">
+					{#if quote != ''}
+						{quote}
+					{/if}
+					<!-- <footer class="text-sm">- Steve Jobs</footer> -->
+				</blockquote>
+			</div>
 		</div>
-	</div>
+	{:else}
+		<div class="card card-compact w-96 bg-base-100 shadow-xl p-6 mt-4 mb-4">
+			<article class="text-center text-4xl font-extrabold">
+				<h1>Signup is disabled for this server.</h1>
+			</article>
+
+			{#if errors.message}
+				<div class="text-center text-error mt-4">
+					{errors.message}
+				</div>
+			{/if}
+
+			<div class="flex justify-center mt-12 mr-25 ml-25">
+				<blockquote class="w-80 text-center text-lg break-words">
+					{#if quote != ''}
+						{quote}
+					{/if}
+					<!-- <footer class="text-sm">- Steve Jobs</footer> -->
+				</blockquote>
+			</div>
+		</div>
+	{/if}
 </div>
 
 <svelte:head>
