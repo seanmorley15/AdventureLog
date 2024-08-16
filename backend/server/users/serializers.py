@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from adventures.models import Adventure
 from users.forms import CustomAllAuthPasswordResetForm
 from dj_rest_auth.serializers import PasswordResetSerializer
+from rest_framework.exceptions import PermissionDenied
 
 User = get_user_model()
 
@@ -78,6 +79,11 @@ class RegisterSerializer(serializers.Serializer):
         }
 
     def save(self, request):
+        # Check if registration is disabled
+        if getattr(settings, 'DISABLE_REGISTRATION', False):
+            raise PermissionDenied("Registration is currently disabled.")
+
+        # If registration is not disabled, proceed with the original logic
         adapter = get_adapter()
         user = adapter.new_user(request)
         self.cleaned_data = self.get_cleaned_data()
