@@ -92,10 +92,10 @@
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
 				<div class="grid gap-8">
-					{#if adventure.image}
+					{#if adventure.images && adventure.images.length > 0}
 						<div>
 							<img
-								src={adventure.image}
+								src={adventure.images[0].image}
 								alt={adventure.name}
 								width="1200"
 								height="600"

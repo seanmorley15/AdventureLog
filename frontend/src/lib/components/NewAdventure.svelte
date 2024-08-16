@@ -326,11 +326,59 @@
 						type="number"
 						min="0"
 						max="5"
+						hidden
 						bind:value={newAdventure.rating}
 						id="rating"
 						name="rating"
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
+					<div class="rating -ml-3 mt-1">
+						<input
+							type="radio"
+							name="rating-2"
+							class="rating-hidden"
+							checked={Number.isNaN(newAdventure.rating)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (newAdventure.rating = 1)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (newAdventure.rating = 2)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (newAdventure.rating = 3)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (newAdventure.rating = 4)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (newAdventure.rating = 5)}
+						/>
+						{#if newAdventure.rating}
+							<button
+								type="button"
+								class="btn btn-sm btn-error ml-2"
+								on:click={() => (newAdventure.rating = NaN)}
+							>
+								Remove
+							</button>
+						{/if}
+					</div>
 				</div>
 				<div class="mb-2">
 					<label for="link"

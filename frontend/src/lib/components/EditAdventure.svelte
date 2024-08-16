@@ -279,73 +279,126 @@
 						type="number"
 						min="0"
 						max="5"
-						name="rating"
-						id="rating"
+						hidden
 						bind:value={adventureToEdit.rating}
+						id="rating"
+						name="rating"
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
-				</div>
-				<input
-					type="text"
-					id="latitude"
-					hidden
-					name="latitude"
-					bind:value={adventureToEdit.latitude}
-					class="input input-bordered w-full max-w-xs mt-1"
-				/>
-				<input
-					type="text"
-					id="longitude"
-					hidden
-					name="longitude"
-					bind:value={adventureToEdit.longitude}
-					class="input input-bordered w-full max-w-xs mt-1"
-				/>
-				{#if adventureToEdit.collection === null}
-					<div class="mb-2">
-						<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-						><br />
+					<div class="rating -ml-3 mt-1 mb-4">
 						<input
-							type="checkbox"
-							class="toggle toggle-primary"
-							id="is_public"
-							name="is_public"
-							bind:checked={adventureToEdit.is_public}
+							type="radio"
+							name="rating-2"
+							class="rating-hidden"
+							checked={Number.isNaN(adventureToEdit.rating) || adventureToEdit.rating === null}
 						/>
-					</div>
-				{/if}
-
-				{#if adventureToEdit.is_public}
-					<div class="bg-neutral p-4 rounded-md shadow-sm">
-						<p class=" font-semibold">Share this Adventure!</p>
-						<div class="flex items-center justify-between">
-							<p class="text-card-foreground font-mono">
-								{window.location.origin}/adventures/{adventureToEdit.id}
-							</p>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							checked={adventureToEdit.rating === 1}
+							on:click={() => (adventureToEdit.rating = 1)}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (adventureToEdit.rating = 2)}
+							checked={adventureToEdit.rating === 2}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (adventureToEdit.rating = 3)}
+							checked={adventureToEdit.rating === 3}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (adventureToEdit.rating = 4)}
+							checked={adventureToEdit.rating === 4}
+						/>
+						<input
+							type="radio"
+							name="rating-2"
+							class="mask mask-star-2 bg-orange-400"
+							on:click={() => (adventureToEdit.rating = 5)}
+							checked={adventureToEdit.rating === 5}
+						/>
+						{#if adventureToEdit.rating}
 							<button
 								type="button"
-								on:click={() => {
-									navigator.clipboard.writeText(
-										`${window.location.origin}/adventures/${adventureToEdit.id}`
-									);
-								}}
-								class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+								class="btn btn-sm btn-error ml-2"
+								on:click={() => (adventureToEdit.rating = NaN)}
 							>
-								Copy Link
+								Remove
 							</button>
-						</div>
+						{/if}
 					</div>
-				{/if}
+					<input
+						type="text"
+						id="latitude"
+						hidden
+						name="latitude"
+						bind:value={adventureToEdit.latitude}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
+					<input
+						type="text"
+						id="longitude"
+						hidden
+						name="longitude"
+						bind:value={adventureToEdit.longitude}
+						class="input input-bordered w-full max-w-xs mt-1"
+					/>
+					{#if adventureToEdit.collection === null}
+						<div class="mb-2">
+							<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+							><br />
+							<input
+								type="checkbox"
+								class="toggle toggle-primary"
+								id="is_public"
+								name="is_public"
+								bind:checked={adventureToEdit.is_public}
+							/>
+						</div>
+					{/if}
 
-				<button
-					type="submit"
-					id="edit_adventure"
-					data-umami-event="Edit Adventure"
-					class="btn btn-primary mr-4 mt-4"
-					on:click={submit}>Edit</button
-				>
-				<!-- if there is a button in form, it will close the modal -->
-				<button class="btn mt-4" on:click={close}>Close</button>
+					{#if adventureToEdit.is_public}
+						<div class="bg-neutral p-4 rounded-md shadow-sm">
+							<p class=" font-semibold">Share this Adventure!</p>
+							<div class="flex items-center justify-between">
+								<p class="text-card-foreground font-mono">
+									{window.location.origin}/adventures/{adventureToEdit.id}
+								</p>
+								<button
+									type="button"
+									on:click={() => {
+										navigator.clipboard.writeText(
+											`${window.location.origin}/adventures/${adventureToEdit.id}`
+										);
+									}}
+									class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+								>
+									Copy Link
+								</button>
+							</div>
+						</div>
+					{/if}
+
+					<button
+						type="submit"
+						id="edit_adventure"
+						data-umami-event="Edit Adventure"
+						class="btn btn-primary mr-4 mt-4"
+						on:click={submit}>Edit</button
+					>
+					<!-- if there is a button in form, it will close the modal -->
+					<button class="btn mt-4" on:click={close}>Close</button>
+				</div>
 			</form>
 			<div class="flex items-center justify-center flex-wrap gap-4 mt-4"></div>
 		</div>
