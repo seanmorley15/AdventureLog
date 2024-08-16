@@ -23,6 +23,9 @@ class ChangeEmailView(APIView):
             user = request.user
             new_email = serializer.validated_data['new_email']
             user.email = new_email
+            # remove all other email addresses for the user
+            user.emailaddress_set.exclude(email=new_email).delete()
+            user.emailaddress_set.create(email=new_email, primary=True, verified=False)
             user.save()
             return Response({"detail": "Email successfully changed."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
