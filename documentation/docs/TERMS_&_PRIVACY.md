@@ -1,7 +1,3 @@
----
-sidebar_position: null
----
-
 # Terms and Privacy Policy
 
 **This document only applies to the demo version of AdventureLog hosted on adventurelog.app. If you are using a self-hosted version of AdventureLog, you are responsible for creating and maintaining your own terms and privacy policy and the terms of the GPL-3.0 license apply.**

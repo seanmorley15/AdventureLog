@@ -319,8 +319,8 @@
 					<div class="bg-neutral p-4 rounded-md shadow-sm">
 						<p class=" font-semibold">Share this Adventure!</p>
 						<div class="flex items-center justify-between">
-							<p class="text-card-foreground font-mono">
-								{window.location.origin}/adventures/{adventureToEdit.id}
+							<p class="text-card-foreground font-mono break-words break-all">
+								{window.location.origin + '/adventures/' + adventureToEdit.id}
 							</p>
 							<button
 								type="button"
