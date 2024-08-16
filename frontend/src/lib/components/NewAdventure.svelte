@@ -92,7 +92,13 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			close();
+			if (isImageFetcherOpen) {
+				isImageFetcherOpen = false;
+			} else if (isPointModalOpen) {
+				isPointModalOpen = false;
+			} else {
+				close(); // Closes the main adventure modal
+			}
 		}
 	}
 

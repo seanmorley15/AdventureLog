@@ -161,6 +161,8 @@ REST_AUTH = {
     'PASSWORD_RESET_SERIALIZER': 'users.serializers.MyPasswordResetSerializer'
 }
 
+DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
