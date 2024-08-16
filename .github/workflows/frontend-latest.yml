@@ -45,10 +45,7 @@ jobs:
           context: ./frontend
 
       - name: Tag Docker image for GHCR
-        run: docker tag $IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
-
-      - name: Tag Docker image for Docker Hub
-        run: docker tag $IMAGE_NAME:latest ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:latest
+        run: docker tag ${{ secrets.DOCKERHUB_USERNAME }}/$IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
 
       - name: Push Docker image to GHCR
         run: docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest
