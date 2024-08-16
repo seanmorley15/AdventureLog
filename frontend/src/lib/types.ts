@@ -19,7 +19,10 @@ export type Adventure = {
 	description?: string | null;
 	rating?: number | null;
 	link?: string | null;
-	image?: string | null;
+	images: {
+		id: string;
+		image: string;
+	}[];
 	date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
 	collection?: string | null;
 	latitude: number | null;

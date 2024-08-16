@@ -154,8 +154,25 @@
 >
 	<figure>
 		<!-- svelte-ignore a11y-img-redundant-alt -->
-		{#if adventure.image && adventure.image !== ''}
-			<img src={adventure.image} alt="Adventure Image" class="w-full h-48 object-cover" />
+		{#if adventure.images && adventure.images.length > 0}
+			<div class="carousel w-full">
+				{#each adventure.images as image, i}
+					<div id="slide{i}" class="carousel-item relative w-full">
+						<!-- svelte-ignore a11y-missing-attribute -->
+						<img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} />
+						<div
+							class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between"
+						>
+							{#if i > 0}
+								<a href="#slide{i - 1}" class="btn btn-circle">❮</a>
+							{/if}
+							{#if i < adventure.images.length - 1}
+								<a href="#slide{i + 1}" class="btn btn-circle">❯</a>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
 		{:else}
 			<img
 				src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
