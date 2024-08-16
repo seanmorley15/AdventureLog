@@ -215,17 +215,16 @@
 					<label for="date">Description <Notebook class="inline-block -mt-1 mb-1 w-6 h-6" /></label
 					><br />
 					<div class="flex">
-						<input
-							type="text"
+						<textarea
 							id="description"
 							name="description"
 							bind:value={adventureToEdit.description}
-							class="input input-bordered w-full max-w-xs mt-1 mb-2"
+							class="textarea textarea-bordered h-32 w-full max-w-xl mt-1 mb-2"
 						/>
-						<button class="btn btn-neutral ml-2" type="button" on:click={generateDesc}
-							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Generate Description</button
-						>
 					</div>
+					<button class="btn btn-neutral" type="button" on:click={generateDesc}
+						><Wikipedia class="inline-block -mt-1  mb-1 w-6 h-6" />Generate Description</button
+					>
 				</div>
 				{#if adventureToEdit.type == 'visited' || adventureToEdit.type == 'planned'}
 					<div class="mb-2">
@@ -337,6 +336,8 @@
 							</button>
 						{/if}
 					</div>
+				</div>
+				<div class="mb-2">
 					<input
 						type="text"
 						id="latitude"
