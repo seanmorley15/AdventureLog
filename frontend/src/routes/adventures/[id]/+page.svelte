@@ -98,18 +98,6 @@
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
 				<div class="grid gap-8">
-					<!-- {#if adventure.images && adventure.images.length > 0}
-						<div>
-							<img
-								src={adventure.images[0].image}
-								alt={adventure.name}
-								width="1200"
-								height="600"
-								class="w-full h-auto object-cover rounded-lg"
-								style="aspect-ratio: 1200 / 600; object-fit: cover;"
-							/>
-						</div>
-					{/if} -->
 					{#if adventure.images && adventure.images.length > 0}
 						<div class="carousel w-full">
 							{#each adventure.images as image, i}
@@ -136,21 +124,12 @@
 								</div>
 							{/each}
 						</div>
-					{:else}
-						<!-- svelte-ignore a11y-img-redundant-alt -->
-						<img
-							src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
-							alt="No image available"
-							class="w-full h-48 object-cover"
-						/>
 					{/if}
-
 					<div class="grid gap-4">
 						<div class="flex items-center justify-between">
 							<div>
 								<h1 class="text-4xl mt-2 font-bold">{adventure.name}</h1>
 							</div>
-
 							<div class="flex items-center gap-1">
 								{#if adventure.rating !== undefined && adventure.rating !== null}
 									<div class="flex justify-center items-center">

@@ -112,50 +112,51 @@
 			</p>{/if}
 
 		<div class="card-actions justify-end">
-			<div class="dropdown dropdown-end">
-				<div tabindex="0" role="button" class="btn btn-neutral">
-					<DotsHorizontal class="w-6 h-6" />
+			{#if type == 'link'}
+				<button class="btn btn-primary" on:click={() => dispatch('link', collection.id)}>
+					<Plus class="w-5 h-5 mr-1" />
+				</button>
+			{:else}
+				<div class="dropdown dropdown-end">
+					<div tabindex="0" role="button" class="btn btn-neutral">
+						<DotsHorizontal class="w-6 h-6" />
+					</div>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<ul
+						tabindex="0"
+						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+					>
+						{#if type != 'link'}
+							<button
+								class="btn btn-neutral mb-2"
+								on:click={() => goto(`/collections/${collection.id}`)}
+								><Launch class="w-5 h-5 mr-1" />Open Details</button
+							>
+							{#if !collection.is_archived}
+								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
+									<FileDocumentEdit class="w-6 h-6" />Edit Collection
+								</button>
+							{/if}
+							{#if collection.is_archived}
+								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(false)}>
+									<ArchiveArrowUp class="w-6 h-6 mr-1" />Unarchive
+								</button>
+							{:else}
+								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(true)}>
+									<ArchiveArrowDown class="w-6 h-6 mr" />Archive
+								</button>
+							{/if}
+							<button
+								id="delete_adventure"
+								data-umami-event="Delete Adventure"
+								class="btn btn-warning"
+								on:click={() => (isWarningModalOpen = true)}
+								><TrashCan class="w-6 h-6" />Delete</button
+							>
+						{/if}
+					</ul>
 				</div>
-				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<ul
-					tabindex="0"
-					class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-				>
-					{#if type != 'link'}
-						<button
-							class="btn btn-neutral mb-2"
-							on:click={() => goto(`/collections/${collection.id}`)}
-							><Launch class="w-5 h-5 mr-1" />Open Details</button
-						>
-						{#if !collection.is_archived}
-							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />Edit Collection
-							</button>
-						{/if}
-						{#if collection.is_archived}
-							<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(false)}>
-								<ArchiveArrowUp class="w-6 h-6 mr-1" />Unarchive
-							</button>
-						{:else}
-							<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(true)}>
-								<ArchiveArrowDown class="w-6 h-6 mr" />Archive
-							</button>
-						{/if}
-						<button
-							id="delete_adventure"
-							data-umami-event="Delete Adventure"
-							class="btn btn-warning"
-							on:click={() => (isWarningModalOpen = true)}
-							><TrashCan class="w-6 h-6" />Delete</button
-						>
-					{/if}
-					{#if type == 'link'}
-						<button class="btn btn-primary" on:click={() => dispatch('link', collection.id)}>
-							<Plus class="w-5 h-5 mr-1" />
-						</button>
-					{/if}
-				</ul>
-			</div>
+			{/if}
 		</div>
 	</div>
 </div>

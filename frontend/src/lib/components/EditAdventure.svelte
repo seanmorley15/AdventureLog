@@ -32,6 +32,17 @@
 
 	images = adventureToEdit.images || [];
 
+	if (adventureToEdit.longitude && adventureToEdit.latitude) {
+		markers = [
+			{
+				lngLat: { lng: adventureToEdit.longitude, lat: adventureToEdit.latitude },
+				location: adventureToEdit.location || '',
+				name: adventureToEdit.name,
+				activity_type: ''
+			}
+		];
+	}
+
 	if (longitude && latitude) {
 		adventureToEdit.latitude = latitude;
 		adventureToEdit.longitude = longitude;
