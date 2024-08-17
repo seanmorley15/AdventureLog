@@ -39,12 +39,13 @@
 	}
 
 	async function removeImage(id: string) {
-		let res = await fetch(`/api/images/${id}/`, {
-			method: 'DELETE'
+		let res = await fetch(`/api/images/${id}/image_delete`, {
+			method: 'POST'
 		});
-		let data = await res.json();
-		if (data.id) {
+		if (res.status === 204) {
 			images = images.filter((image) => image.id !== id);
+			adventureToEdit.images = images;
+			console.log(images);
 			addToast('success', 'Image removed');
 		} else {
 			addToast('error', 'Failed to remove image');

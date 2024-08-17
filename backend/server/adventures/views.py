@@ -535,8 +535,16 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureImageSerializer
     permission_classes = [IsAuthenticated]
-    
-    # make sure that when creating and updating an image, the user is authenticated and the adventure user is the same as the authenticated user
+
+    def dispatch(self, request, *args, **kwargs):
+        print(f"Method: {request.method}")
+        return super().dispatch(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'])
+    def image_delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -566,16 +574,21 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         return super().update(request, *args, **kwargs)
     
-    # def destroy(self, request, *args, **kwargs):
-    #     if not request.user.is_authenticated:
-    #         return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+    def perform_destroy(self, instance):
+        print("perform_destroy")
+        return super().perform_destroy(instance)
+
+    def destroy(self, request, *args, **kwargs):
+        print("destroy")
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
-    #     instance = self.get_object()
-    #     adventure = instance.adventure
-    #     if adventure.user_id != request.user:
-    #         return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        instance = self.get_object()
+        adventure = instance.adventure
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
-    #     return super().destroy(request, *args, **kwargs)
+        return super().destroy(request, *args, **kwargs)
     
     def partial_update(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -606,7 +619,6 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
-        # This method is used for list and retrieve actions
         return AdventureImage.objects.filter(user_id=self.request.user)
 
     def perform_create(self, serializer):
