@@ -510,9 +510,9 @@
 			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
 		{/if}
 		<p class="text-center text-lg pl-16 pr-16">
-			Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
+			Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} - {new Date(
 				collection.end_date
-			).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+			).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 		</p>
 
 		{#each Array(numberOfDays) as _, i}
@@ -539,7 +539,7 @@
 			)[dateString]}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
-				Day {i + 1} - {currentDate.toLocaleDateString('en-US', { timeZone: 'UTC' })}
+				Day {i + 1} - {currentDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
 			</h2>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 				{#if dayAdventures.length > 0}
@@ -626,7 +626,7 @@
 							</p>
 							<p>
 								{adventure.date
-									? new Date(adventure.date).toLocaleDateString('en-US', { timeZone: 'UTC' })
+									? new Date(adventure.date).toLocaleDateString(undefined, { timeZone: 'UTC' })
 									: ''}
 							</p>
 						</Popup>

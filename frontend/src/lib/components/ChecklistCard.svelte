@@ -44,7 +44,7 @@
 		{#if checklist.date && checklist.date !== ''}
 			<div class="inline-flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
-				<p>{new Date(checklist.date).toLocaleDateString('en-US', { timeZone: 'UTC' })}</p>
+				<p>{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
 			</div>
 		{/if}
 		<div class="card-actions justify-end">

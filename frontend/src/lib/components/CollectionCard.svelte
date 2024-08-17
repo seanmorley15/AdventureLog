@@ -98,9 +98,8 @@
 		<p>{collection.adventures.length} Adventures</p>
 		{#if collection.start_date && collection.end_date}
 			<p>
-				Dates: {new Date(collection.start_date).toLocaleDateString('en-US', { timeZone: 'UTC' })} - {new Date(
-					collection.end_date
-				).toLocaleDateString('en-US', { timeZone: 'UTC' })}
+				Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} -
+				{new Date(collection.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 			</p>
 			<!-- display the duration in days -->
 			<p>

@@ -50,7 +50,9 @@
 	<p class="ml-1 text-lg text-center mt-4">Member Since</p>
 	<div class="flex items-center justify-center text-center">
 		<iconify-icon icon="mdi:calendar" class="text-2xl"></iconify-icon>
-		<p class="ml-1 text-xl">{new Date(data.user.date_joined).toLocaleDateString()}</p>
+		<p class="ml-1 text-xl">
+			{new Date(data.user.date_joined).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+		</p>
 	</div>
 {/if}
 

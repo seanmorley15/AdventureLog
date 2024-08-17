@@ -50,7 +50,7 @@
 			</p>
 		{/if}
 		{#if transportation.date}
-			{new Date(transportation.date).toLocaleString()}
+			{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}
 		{/if}
 		{#if user?.pk === transportation.user_id}
 			<div class="card-actions justify-end">
