@@ -1,0 +1,82 @@
+version: '3.9'
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--api.insecure=true"  # Enable Traefik dashboard (remove in production)
+      - "--providers.docker=true"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
+      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"  # Replace with your email
+      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "traefik-letsencrypt:/letsencrypt"
+    labels:
+      - "traefik.enable=true"
+
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: adventure
+      POSTGRES_PASSWORD: your_postgres_password  # Replace with the actual password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data/
+
+  web:
+    image: ghcr.io/seanmorley15/adventurelog-web:latest
+    restart: unless-stopped
+    environment:
+      PUBLIC_SERVER_URL: "http://server:8000"
+      BODY_SIZE_LIMIT: "100000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adventurelog.entrypoints=websecure"
+      - "traefik.http.routers.adventurelog.rule=Host(`yourdomain.com`) && !PathPrefix(`/media`)"  # Replace with your domain
+      - "traefik.http.routers.adventurelog.tls=true"
+      - "traefik.http.routers.adventurelog.tls.certresolver=letsencrypt"
+
+  nginx:
+    image: nginx:latest
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx.entrypoints=websecure"
+      - "traefik.http.routers.nginx.rule=Host(`yourdomain.com`) && PathPrefix(`/media`)"  # Replace with your domain
+      - "traefik.http.routers.nginx.tls=true"
+      - "traefik.http.routers.nginx.tls.certresolver=letsencrypt"
+      - "traefik.http.middlewares.nginx-stripprefix.stripprefix.prefixes=/media"
+      - "traefik.http.routers.nginx.middlewares=nginx-stripprefix"
+    volumes:
+      - adventurelog-media:/usr/share/nginx/html
+
+  server:
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    restart: unless-stopped
+    environment:
+      PGHOST: "db"
+      PGDATABASE: "database"
+      PGUSER: "adventure"
+      PGPASSWORD: your_postgres_password  # Replace with the actual password
+      SECRET_KEY: your_secret_key  # Replace with the actual secret key
+      DJANGO_ADMIN_USERNAME: "admin"
+      DJANGO_ADMIN_PASSWORD: your_admin_password  # Replace with the actual admin password
+      DJANGO_ADMIN_EMAIL: "adventurelog-admin@yourdomain.com"  # Replace with your email
+      PUBLIC_URL: "https://yourdomain.com"  # Replace with your domain
+      CSRF_TRUSTED_ORIGINS: "https://yourdomain.com"  # Replace with your domain
+      DEBUG: "false"
+      FRONTEND_URL: "https://yourdomain.com"  # Replace with your domain
+    volumes:
+      - adventurelog-media:/code/media
+
+volumes:
+  postgres-data:
+  adventurelog-media:
+  traefik-letsencrypt:
