@@ -352,7 +352,7 @@
 					</div>
 					<div>
 						<div>
-							<div>
+							<div class="mt-2">
 								<label for="is_public"
 									>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
 								><br />
@@ -390,7 +390,7 @@
 							<input
 								type="text"
 								placeholder="Seach for a location"
-								class="input input-bordered w-full max-w-xs"
+								class="input input-bordered w-full max-w-xs mb-2"
 								id="search"
 								name="search"
 								bind:value={query}

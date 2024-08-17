@@ -349,10 +349,25 @@
 								</button>
 							{/if}
 						</div>
-						<!-- </div> -->
+						<div>
+							<div class="mt-2">
+								<div>
+									<label for="is_public"
+										>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+									><br />
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="is_public"
+										name="is_public"
+										bind:checked={adventureToEdit.is_public}
+									/>
+								</div>
+							</div>
+						</div>
 					</div>
 					<div class="divider"></div>
-					<h2 class="text-2xl font-semibold mb-2 mt-4">Location Information</h2>
+					<h2 class="text-2xl font-semibold mb-2 mt-2">Location Information</h2>
 					<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
 					<div>
 						<label for="latitude">Location</label><br />
@@ -369,7 +384,7 @@
 							<input
 								type="text"
 								placeholder="Seach for a location"
-								class="input input-bordered w-full max-w-xs"
+								class="input input-bordered w-full max-w-xs mb-2"
 								id="search"
 								name="search"
 								bind:value={query}
@@ -423,23 +438,6 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						</MapLibre>
 					</div>
 
-					<div>
-						<div>
-							<div>
-								<label for="is_public"
-									>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-								><br />
-								<input
-									type="checkbox"
-									class="toggle toggle-primary"
-									id="is_public"
-									name="is_public"
-									bind:checked={adventureToEdit.is_public}
-								/>
-							</div>
-						</div>
-					</div>
-
 					<div class="mt-4">
 						<button type="submit" class="btn btn-primary">Save & Next</button>
 						<button type="button" class="btn" on:click={close}>Close</button>
@@ -469,7 +467,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 			</div>
 		{:else}
 			<p>Upload images here</p>
-			<p>{adventureToEdit.id}</p>
+			<!-- <p>{adventureToEdit.id}</p> -->
 			<div class="mb-2">
 				<label for="image">Image </label><br />
 				<div class="flex">
@@ -499,8 +497,9 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							class="btn btn-error"
 							on:click={() => {
 								removeImage(image.id);
-							}}
-						/>
+							}}>X</button
+						>
+
 						<img src={image.image} alt={image.id} class="w-32 h-32" />
 					{/each}
 				</div>
