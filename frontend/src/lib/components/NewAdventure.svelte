@@ -24,6 +24,9 @@
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
 
+	let noPlaces: boolean = false;
+	let wikiError: string = '';
+
 	let newAdventure: Adventure = {
 		id: '',
 		type: type,
@@ -79,6 +82,12 @@
 		console.log(res);
 		let data = (await res.json()) as OpenStreetMapPlace[];
 		places = data;
+
+		if (data.length === 0) {
+			noPlaces = true;
+		} else {
+			noPlaces = false;
+		}
 	}
 
 	async function reverseGeocode() {
@@ -121,13 +130,16 @@
 		}
 	}
 
-	// async function generateDesc() {
-	// 	let res = await fetch(`/api/generate/desc/?name=${newAdventure.name}`);
-	// 	let data = await res.json();
-	// 	if (data.extract) {
-	// 		newAdventure.description = data.extract;
-	// 	}
-	// }
+	async function generateDesc() {
+		let res = await fetch(`/api/generate/desc/?name=${newAdventure.name}`);
+		let data = await res.json();
+		if (data.extract && data.extract.length > 0) {
+			newAdventure.description = data.extract;
+			wikiError = '';
+		} else {
+			wikiError = 'No description found';
+		}
+	}
 
 	function addMarker(e: CustomEvent<any>) {
 		markers = [];
@@ -176,7 +188,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-2xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">New {type} Adventure</h3>
+		<h3 class="font-bold text-lg">New {newAdventure.type} Adventure</h3>
 		{#if newAdventure.id === ''}
 			<div class="modal-action items-center">
 				<form
@@ -199,27 +211,31 @@
 							required
 						/>
 					</div>
-					<div class="join">
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="type"
-							id="visited"
-							value="visited"
-							aria-label="Visited"
-							checked={newAdventure.type === 'visited'}
-							on:click={() => (type = 'visited')}
-						/>
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="type"
-							id="planned"
-							value="planned"
-							aria-label="Planned"
-							checked={newAdventure.type === 'planned'}
-							on:click={() => (type = 'planned')}
-						/>
+					<div>
+						<div class="form-control">
+							<label class="label cursor-pointer">
+								<span class="label-text">Visited</span>
+								<input
+									type="radio"
+									name="radio-10"
+									class="radio checked:bg-red-500"
+									on:click={() => (newAdventure.type = 'visited')}
+									checked={newAdventure.type == 'visited'}
+								/>
+							</label>
+						</div>
+						<div class="form-control">
+							<label class="label cursor-pointer">
+								<span class="label-text">Planned</span>
+								<input
+									type="radio"
+									name="radio-10"
+									class="radio checked:bg-blue-500"
+									on:click={() => (newAdventure.type = 'planned')}
+									checked={newAdventure.type == 'planned'}
+								/>
+							</label>
+						</div>
 					</div>
 
 					<div>
@@ -242,6 +258,10 @@
 							bind:value={newAdventure.description}
 							class="textarea textarea-bordered w-full h-32"
 						></textarea>
+						<button class="btn btn-neutral" type="button" on:click={generateDesc}
+							>Search Wikipedia</button
+						>
+						<p class="text-red-500">{wikiError}</p>
 					</div>
 					<div>
 						<label for="activity_types">Activity Types</label><br />
@@ -403,7 +423,7 @@
 								{/each}
 							</div>
 						</div>
-					{:else}
+					{:else if noPlaces}
 						<p class="text-error text-lg">No results found</p>
 					{/if}
 					<div>
@@ -431,7 +451,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 			</div>
 		{:else}
 			<p>Upload images here</p>
-			<p>{newAdventure.id}</p>
+			<!-- <p>{newAdventure.id}</p> -->
 			<div class="mb-2">
 				<label for="image">Image </label><br />
 				<div class="flex">

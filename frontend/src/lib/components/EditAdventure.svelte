@@ -22,6 +22,8 @@
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
 
+	let noPlaces: boolean = false;
+
 	export let adventureToEdit: Adventure;
 
 	images = adventureToEdit.images || [];
@@ -86,6 +88,11 @@
 		console.log(res);
 		let data = (await res.json()) as OpenStreetMapPlace[];
 		places = data;
+		if (data.length === 0) {
+			noPlaces = true;
+		} else {
+			noPlaces = false;
+		}
 	}
 
 	async function reverseGeocode() {
@@ -395,7 +402,7 @@
 								{/each}
 							</div>
 						</div>
-					{:else}
+					{:else if noPlaces}
 						<p class="text-error text-lg">No results found</p>
 					{/if}
 					<!-- </div> -->
