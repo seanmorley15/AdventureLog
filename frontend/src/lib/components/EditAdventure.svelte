@@ -16,6 +16,7 @@
 
 	let isPointModalOpen: boolean = false;
 	let isImageFetcherOpen: boolean = false;
+	let wikiError: string = '';
 
 	let fileInput: HTMLInputElement;
 	let image: File;
@@ -55,8 +56,14 @@
 	async function generateDesc() {
 		let res = await fetch(`/api/generate/desc/?name=${adventureToEdit.name}`);
 		let data = await res.json();
+		if (!res.ok) {
+			wikiError = 'No article found';
+		}
 		if (data.extract) {
+			wikiError = '';
 			adventureToEdit.description = data.extract;
+		} else {
+			wikiError = 'No description found';
 		}
 	}
 
@@ -226,6 +233,9 @@
 							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Generate Description</button
 						>
 					</div>
+					{#if wikiError}
+						<p class="text-red-500">{wikiError}</p>
+					{/if}
 				</div>
 				{#if adventureToEdit.type == 'visited' || adventureToEdit.type == 'planned'}
 					<div class="mb-2">
