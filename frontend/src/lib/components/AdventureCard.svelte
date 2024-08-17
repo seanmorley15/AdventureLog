@@ -129,6 +129,20 @@
 		dispatch('edit', adventure);
 	}
 
+	let currentSlide = 0;
+
+	function nextSlide() {
+		currentSlide = (currentSlide + 1) % adventure.images.length;
+	}
+
+	function prevSlide() {
+		currentSlide = (currentSlide - 1 + adventure.images.length) % adventure.images.length;
+	}
+
+	function goToSlide(index: number) {
+		currentSlide = index;
+	}
+
 	function link() {
 		dispatch('link', adventure);
 	}
@@ -153,27 +167,27 @@
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
 >
 	<figure>
-		<!-- svelte-ignore a11y-img-redundant-alt -->
 		{#if adventure.images && adventure.images.length > 0}
 			<div class="carousel w-full">
 				{#each adventure.images as image, i}
-					<div id="slide{i}" class="carousel-item relative w-full">
-						<!-- svelte-ignore a11y-missing-attribute -->
+					<div
+						class="carousel-item w-full"
+						style="display: {i === currentSlide ? 'block' : 'none'}"
+					>
 						<img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} />
-						<div
-							class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between"
-						>
-							{#if i > 0}
-								<a href="#slide{i - 1}" class="btn btn-circle">❮</a>
-							{/if}
-							{#if i < adventure.images.length - 1}
-								<a href="#slide{i + 1}" class="btn btn-circle">❯</a>
-							{/if}
+						<div class="flex justify-center w-full py-2 gap-2">
+							{#each adventure.images as _, i}
+								<button
+									on:click={() => goToSlide(i)}
+									class="btn btn-xs {i === currentSlide ? 'btn-active' : ''}">{i + 1}</button
+								>
+							{/each}
 						</div>
 					</div>
 				{/each}
 			</div>
 		{:else}
+			<!-- svelte-ignore a11y-img-redundant-alt -->
 			<img
 				src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
 				alt="No image available"
