@@ -26,6 +26,12 @@
 
 	let adventure: Adventure;
 
+	let currentSlide = 0;
+
+	function goToSlide(index: number) {
+		currentSlide = index;
+	}
+
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
 
@@ -92,7 +98,7 @@
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
 				<div class="grid gap-8">
-					{#if adventure.images && adventure.images.length > 0}
+					<!-- {#if adventure.images && adventure.images.length > 0}
 						<div>
 							<img
 								src={adventure.images[0].image}
@@ -103,7 +109,42 @@
 								style="aspect-ratio: 1200 / 600; object-fit: cover;"
 							/>
 						</div>
+					{/if} -->
+					{#if adventure.images && adventure.images.length > 0}
+						<div class="carousel w-full">
+							{#each adventure.images as image, i}
+								<div
+									class="carousel-item w-full"
+									style="display: {i === currentSlide ? 'block' : 'none'}"
+								>
+									<img
+										src={image.image}
+										width="1200"
+										height="600"
+										class="w-full h-auto object-cover rounded-lg"
+										style="aspect-ratio: 1200 / 600; object-fit: cover;"
+										alt={adventure.name}
+									/>
+									<div class="flex justify-center w-full py-2 gap-2">
+										{#each adventure.images as _, i}
+											<button
+												on:click={() => goToSlide(i)}
+												class="btn btn-xs {i === currentSlide ? 'btn-active' : ''}">{i + 1}</button
+											>
+										{/each}
+									</div>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<!-- svelte-ignore a11y-img-redundant-alt -->
+						<img
+							src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
+							alt="No image available"
+							class="w-full h-48 object-cover"
+						/>
 					{/if}
+
 					<div class="grid gap-4">
 						<div class="flex items-center justify-between">
 							<div>

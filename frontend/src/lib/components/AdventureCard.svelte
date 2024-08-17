@@ -131,14 +131,6 @@
 
 	let currentSlide = 0;
 
-	function nextSlide() {
-		currentSlide = (currentSlide + 1) % adventure.images.length;
-	}
-
-	function prevSlide() {
-		currentSlide = (currentSlide - 1 + adventure.images.length) % adventure.images.length;
-	}
-
 	function goToSlide(index: number) {
 		currentSlide = index;
 	}
