@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
+	import { deserialize } from '$app/forms';
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
@@ -17,7 +18,6 @@
 	import Earth from '~icons/mdi/earth';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
-	import NewAdventure from './NewAdventure.svelte';
 
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
@@ -25,6 +25,9 @@
 	let noPlaces: boolean = false;
 
 	export let adventureToEdit: Adventure;
+
+	let url: string = '';
+	let imageError: string = '';
 
 	images = adventureToEdit.images || [];
 
@@ -39,6 +42,8 @@
 			adventureToEdit.rating = NaN;
 		}
 	}
+
+	let imageSearch: string = adventureToEdit.name || '';
 
 	async function removeImage(id: string) {
 		let res = await fetch(`/api/images/${id}/image_delete`, {
@@ -72,6 +77,60 @@
 		}
 	}
 
+	async function fetchImage() {
+		let res = await fetch(url);
+		let data = await res.blob();
+		if (!data) {
+			imageError = 'No image found at that URL.';
+			return;
+		}
+		let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
+		let formData = new FormData();
+		formData.append('image', file);
+		formData.append('adventure', adventureToEdit.id);
+		let res2 = await fetch(`/adventures?/image`, {
+			method: 'POST',
+			body: formData
+		});
+		let data2 = await res2.json();
+		console.log(data2);
+		if (data2.type === 'success') {
+			images = [...images, data2];
+			adventureToEdit.images = images;
+			addToast('success', 'Image uploaded');
+		} else {
+			addToast('error', 'Failed to upload image');
+		}
+	}
+
+	async function fetchWikiImage() {
+		let res = await fetch(`/api/generate/img/?name=${imageSearch}`);
+		let data = await res.json();
+		if (data.source) {
+			let imageUrl = data.source;
+			let res = await fetch(imageUrl);
+			let blob = await res.blob();
+			let file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
+			let formData = new FormData();
+			formData.append('image', file);
+			formData.append('adventure', adventureToEdit.id);
+			let res2 = await fetch(`/adventures?/image`, {
+				method: 'POST',
+				body: formData
+			});
+			if (res2.ok) {
+				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
+				console.log(newData);
+				let newImage = { id: newData.data.id, image: newData.data.image };
+				console.log(newImage);
+				images = [...images, newImage];
+				adventureToEdit.images = images;
+				addToast('success', 'Image uploaded');
+			} else {
+				addToast('error', 'Failed to upload image');
+			}
+		}
+	}
 	async function geocode(e: Event | null) {
 		if (e) {
 			e.preventDefault();
@@ -488,6 +547,32 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						<input type="hidden" name="adventure" value={adventureToEdit.id} id="adventure" />
 						<button class="btn btn-neutral mt-2 mb-2" type="submit">Upload Image</button>
 					</form>
+				</div>
+				<div class="mt-2">
+					<label for="url">URL</label><br />
+					<input
+						type="text"
+						id="url"
+						name="url"
+						bind:value={url}
+						class="input input-bordered w-full"
+					/>
+					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
+						>Fetch Image</button
+					>
+				</div>
+				<div class="mt-2">
+					<label for="name">Wikipedia</label><br />
+					<input
+						type="text"
+						id="name"
+						name="name"
+						bind:value={imageSearch}
+						class="input input-bordered w-full"
+					/>
+					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
+						>Fetch Image</button
+					>
 				</div>
 				<div class=" inline-flex gap-2">
 					{#each images as image}
