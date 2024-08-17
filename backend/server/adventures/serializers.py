@@ -1,11 +1,11 @@
 import os
-from .models import Adventure, ChecklistItem, Collection, Note, Transportation, Checklist
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist
 from rest_framework import serializers
 
 class AdventureImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Adventure
-        fields = ['id', 'image']
+        model = AdventureImage
+        fields = ['id', 'image', 'adventure']
         read_only_fields = ['id']
 
     def to_representation(self, instance):
