@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 
 
 User = get_user_model()
@@ -57,3 +58,8 @@ class VisitedRegion(models.Model):
 
     def __str__(self):
         return f'{self.region.name} ({self.region.country.country_code}) visited by: {self.user_id.username}'
+    
+    def save(self, *args, **kwargs):
+        if VisitedRegion.objects.filter(user_id=self.user_id, region=self.region).exists():
+            raise ValidationError("Region already visited by user.")
+        super().save(*args, **kwargs)
