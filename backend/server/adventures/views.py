@@ -534,7 +534,7 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureImageSerializer
-    permission_classes = [IsAuthenticated]\
+    permission_classes = [IsAuthenticated]
     
     # make sure that when creating and updating an image, the user is authenticated and the adventure user is the same as the authenticated user
     def create(self, request, *args, **kwargs):
@@ -566,16 +566,16 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         return super().update(request, *args, **kwargs)
     
-    def destroy(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+    # def destroy(self, request, *args, **kwargs):
+    #     if not request.user.is_authenticated:
+    #         return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        instance = self.get_object()
-        adventure = instance.adventure
-        if adventure.user_id != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+    #     instance = self.get_object()
+    #     adventure = instance.adventure
+    #     if adventure.user_id != request.user:
+    #         return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
-        return super().destroy(request, *args, **kwargs)
+    #     return super().destroy(request, *args, **kwargs)
     
     def partial_update(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

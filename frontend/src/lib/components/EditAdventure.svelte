@@ -5,8 +5,6 @@
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 
-	export let type: string = 'visited';
-
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
 
@@ -19,6 +17,7 @@
 	import Earth from '~icons/mdi/earth';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
+	import NewAdventure from './NewAdventure.svelte';
 
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
@@ -36,6 +35,19 @@
 	$: {
 		if (!adventureToEdit.rating) {
 			adventureToEdit.rating = NaN;
+		}
+	}
+
+	async function removeImage(id: string) {
+		let res = await fetch(`/api/images/${id}/`, {
+			method: 'DELETE'
+		});
+		let data = await res.json();
+		if (data.id) {
+			images = images.filter((image) => image.id !== id);
+			addToast('success', 'Image removed');
+		} else {
+			addToast('error', 'Failed to remove image');
 		}
 	}
 
@@ -172,7 +184,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-6xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Edit {type} Adventure</h3>
+		<h3 class="font-bold text-lg">Edit {adventureToEdit.type} Adventure</h3>
 		{#if adventureToEdit.id === '' || isDetails}
 			<div class="modal-action items-center">
 				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
@@ -190,38 +202,33 @@
 								required
 							/>
 						</div>
-						<div class="join">
-							<input
-								class="join-item btn btn-neutral"
-								type="radio"
-								name="type"
-								id="visited"
-								value="visited"
-								aria-label="Visited"
-								checked={adventureToEdit.type === 'visited'}
-								on:click={() => (type = 'visited')}
-							/>
-							<input
-								class="join-item btn btn-neutral"
-								type="radio"
-								name="type"
-								id="planned"
-								value="planned"
-								aria-label="Planned"
-								checked={adventureToEdit.type === 'planned'}
-								on:click={() => (type = 'planned')}
-							/>
-						</div>
 						<div>
-							<label for="location">Location</label><br />
-							<input
-								type="text"
-								id="location"
-								name="location"
-								bind:value={adventureToEdit.location}
-								class="input input-bordered w-full"
-							/>
+							<div class="form-control">
+								<label class="label cursor-pointer">
+									<span class="label-text">Visited</span>
+									<input
+										type="radio"
+										name="radio-10"
+										class="radio checked:bg-red-500"
+										on:click={() => (adventureToEdit.type = 'visited')}
+										checked={adventureToEdit.type == 'visited'}
+									/>
+								</label>
+							</div>
+							<div class="form-control">
+								<label class="label cursor-pointer">
+									<span class="label-text">Planned</span>
+									<input
+										type="radio"
+										name="radio-10"
+										class="radio checked:bg-blue-500"
+										on:click={() => (adventureToEdit.type = 'planned')}
+										checked={adventureToEdit.type == 'planned'}
+									/>
+								</label>
+							</div>
 						</div>
+
 						<div>
 							<label for="date">Date</label><br />
 							<input
@@ -233,6 +240,19 @@
 								bind:value={adventureToEdit.date}
 								class="input input-bordered w-full"
 							/>
+						</div>
+						<div>
+							<!-- link -->
+							<div>
+								<label for="link">Link</label><br />
+								<input
+									type="text"
+									id="link"
+									name="link"
+									bind:value={adventureToEdit.link}
+									class="input input-bordered w-full"
+								/>
+							</div>
 						</div>
 						<div>
 							<label for="description">Description</label><br />
@@ -322,35 +342,6 @@
 								{/if}
 							</div>
 						</div>
-						<div>
-							<!-- link -->
-							<div>
-								<label for="link">Link</label><br />
-								<input
-									type="text"
-									id="link"
-									name="link"
-									bind:value={adventureToEdit.link}
-									class="input input-bordered w-full"
-								/>
-							</div>
-						</div>
-						<div>
-							<div>
-								<div>
-									<label for="is_public"
-										>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-									><br />
-									<input
-										type="checkbox"
-										class="toggle toggle-primary"
-										id="is_public"
-										name="is_public"
-										bind:checked={adventureToEdit.is_public}
-									/>
-								</div>
-							</div>
-						</div>
 					</div>
 					<div class="divider"></div>
 					<h2 class="text-2xl font-semibold mb-2 mt-4">Location Information</h2>
@@ -425,6 +416,23 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						</MapLibre>
 					</div>
 
+					<div>
+						<div>
+							<div>
+								<label for="is_public"
+									>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+								><br />
+								<input
+									type="checkbox"
+									class="toggle toggle-primary"
+									id="is_public"
+									name="is_public"
+									bind:checked={adventureToEdit.is_public}
+								/>
+							</div>
+						</div>
+					</div>
+
 					<div class="mt-4">
 						<button type="submit" class="btn btn-primary">Save & Next</button>
 						<button type="button" class="btn" on:click={close}>Close</button>
@@ -478,6 +486,14 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</div>
 				<div class=" inline-flex gap-2">
 					{#each images as image}
+						<!-- remove button -->
+						<button
+							type="button"
+							class="btn btn-error"
+							on:click={() => {
+								removeImage(image.id);
+							}}
+						/>
 						<img src={image.image} alt={image.id} class="w-32 h-32" />
 					{/each}
 				</div>
