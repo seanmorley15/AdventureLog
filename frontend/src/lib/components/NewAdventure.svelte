@@ -4,8 +4,6 @@
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
-	import PointSelectionModal from './PointSelectionModal.svelte';
-	import ImageFetcher from './ImageFetcher.svelte';
 
 	export let type: string = 'visited';
 
@@ -13,20 +11,13 @@
 	export let latitude: number | null = null;
 	export let collection_id: string | null = null;
 
-	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 	let markers: Point[] = [];
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
+	let images: { id: string; image: string }[] = [];
 
-	import MapMarker from '~icons/mdi/map-marker';
-	import Calendar from '~icons/mdi/calendar';
-	import Notebook from '~icons/mdi/notebook';
-	import ClipboardList from '~icons/mdi/clipboard-list';
-	import Star from '~icons/mdi/star';
-	import Attachment from '~icons/mdi/attachment';
-	import Map from '~icons/mdi/map';
 	import Earth from '~icons/mdi/earth';
-	import Wikipedia from '~icons/mdi/wikipedia';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 
@@ -55,6 +46,11 @@
 		newAdventure.latitude = latitude;
 		newAdventure.longitude = longitude;
 		reverseGeocode();
+	}
+
+	function saveAndClose() {
+		dispatch('create', newAdventure);
+		close();
 	}
 
 	$: if (markers.length > 0) {
@@ -104,11 +100,7 @@
 		console.log(data);
 	}
 
-	let image: File;
 	let fileInput: HTMLInputElement;
-
-	let isPointModalOpen: boolean = false;
-	let isImageFetcherOpen: boolean = false;
 
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
@@ -147,8 +139,13 @@
 	function imageSubmit() {
 		return async ({ result }: any) => {
 			if (result.type === 'success') {
-				if (result.data.success) {
-					newAdventure.images.push(result.data.id);
+				if (result.data.id && result.data.image) {
+					newAdventure.images = [...newAdventure.images, result.data];
+					images = [...images, result.data];
+					addToast('success', 'Image uploaded');
+
+					fileInput.value = '';
+					console.log(newAdventure);
 				} else {
 					addToast('error', result.data.error || 'Failed to upload image');
 				}
@@ -191,7 +188,7 @@
 				>
 					<!-- Grid layout for form fields -->
 					<h2 class="text-2xl font-semibold mb-2">Basic Information</h2>
-					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
 						<div>
 							<label for="name">Name</label><br />
 							<input
@@ -329,6 +326,8 @@
 									</button>
 								{/if}
 							</div>
+						</div>
+						<div>
 							<!-- link -->
 							<div>
 								<label for="link">Link</label><br />
@@ -340,6 +339,8 @@
 									class="input input-bordered w-full"
 								/>
 							</div>
+						</div>
+						<div>
 							<div>
 								<div>
 									<label for="is_public"
@@ -361,7 +362,8 @@
 							</div>
 						</div>
 					</div>
-					<h2 class="text-2xl font-semibold mb-2">Location Information</h2>
+					<div class="divider"></div>
+					<h2 class="text-2xl font-semibold mb-2 mt-4">Location Information</h2>
 					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
 						<div>
 							<label for="latitude">Location</label><br />
@@ -451,11 +453,26 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						use:enhance={imageSubmit}
 						enctype="multipart/form-data"
 					>
-						<input type="file" name="image" bind:this={fileInput} accept="image/*" id="image" />
+						<input
+							type="file"
+							name="image"
+							class="file-input file-input-bordered w-full max-w-xs"
+							bind:this={fileInput}
+							accept="image/*"
+							id="image"
+						/>
 						<input type="hidden" name="adventure" value={newAdventure.id} id="adventure" />
-						<button type="submit">Upload Image</button>
+						<button class="btn btn-neutral mt-2 mb-2" type="submit">Upload Image</button>
 					</form>
 				</div>
+				<div class=" inline-flex gap-2">
+					{#each images as image}
+						<img src={image.image} alt={image.id} class="w-32 h-32" />
+					{/each}
+				</div>
+			</div>
+			<div class="mt-4">
+				<button type="button" class="btn btn-primary" on:click={saveAndClose}>Close</button>
 			</div>
 		{/if}
 	</div>

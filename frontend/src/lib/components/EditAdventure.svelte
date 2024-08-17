@@ -1,37 +1,102 @@
 <script lang="ts">
-	export let adventureToEdit: Adventure;
 	import { createEventDispatcher } from 'svelte';
-	import type { Adventure } from '$lib/types';
-	const dispatch = createEventDispatcher();
+	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
 	import { onMount } from 'svelte';
+	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
-	let modal: HTMLDialogElement;
+
+	export let type: string = 'visited';
+
+	export let longitude: number | null = null;
+	export let latitude: number | null = null;
+
+	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
+	let markers: Point[] = [];
+	let query: string = '';
+	let places: OpenStreetMapPlace[] = [];
+	let images: { id: string; image: string }[] = [];
+
+	import Earth from '~icons/mdi/earth';
+	import ActivityComplete from './ActivityComplete.svelte';
+	import { appVersion } from '$lib/config';
 
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
 
-	console.log(adventureToEdit.id);
+	export let adventureToEdit: Adventure;
 
-	let originalName = adventureToEdit.name;
+	images = adventureToEdit.images || [];
 
-	let isPointModalOpen: boolean = false;
-	let isImageFetcherOpen: boolean = false;
+	if (longitude && latitude) {
+		adventureToEdit.latitude = latitude;
+		adventureToEdit.longitude = longitude;
+		reverseGeocode();
+	}
+
+	$: {
+		if (!adventureToEdit.rating) {
+			adventureToEdit.rating = NaN;
+		}
+	}
+
+	let isDetails: boolean = true;
+
+	function saveAndClose() {
+		dispatch('saveEdit', adventureToEdit);
+		close();
+	}
+
+	$: if (markers.length > 0) {
+		adventureToEdit.latitude = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
+		adventureToEdit.longitude = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
+		if (!adventureToEdit.location) {
+			adventureToEdit.location = markers[0].location;
+		}
+		if (!adventureToEdit.name) {
+			adventureToEdit.name = markers[0].name;
+		}
+	}
+
+	async function geocode(e: Event | null) {
+		if (e) {
+			e.preventDefault();
+		}
+		if (!query) {
+			alert('Please enter a location');
+			return;
+		}
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: {
+				'User-Agent': `AdventureLog / ${appVersion} `
+			}
+		});
+		console.log(res);
+		let data = (await res.json()) as OpenStreetMapPlace[];
+		places = data;
+	}
+
+	async function reverseGeocode() {
+		let res = await fetch(
+			`https://nominatim.openstreetmap.org/search?q=${adventureToEdit.latitude},${adventureToEdit.longitude}&format=jsonv2`,
+			{
+				headers: {
+					'User-Agent': `AdventureLog / ${appVersion} `
+				}
+			}
+		);
+		let data = (await res.json()) as OpenStreetMapPlace[];
+		if (data.length > 0) {
+			adventureToEdit.name = data[0]?.name || '';
+			adventureToEdit.activity_types?.push(data[0]?.type || '');
+			adventureToEdit.location = data[0]?.display_name || '';
+		}
+		console.log(data);
+	}
 
 	let fileInput: HTMLInputElement;
-	let image: File;
 
-	import MapMarker from '~icons/mdi/map-marker';
-	import Map from '~icons/mdi/map';
-	import Calendar from '~icons/mdi/calendar';
-	import Notebook from '~icons/mdi/notebook';
-	import ClipboardList from '~icons/mdi/clipboard-list';
-	import Star from '~icons/mdi/star';
-	import Attachment from '~icons/mdi/attachment';
-	import PointSelectionModal from './PointSelectionModal.svelte';
-	import Earth from '~icons/mdi/earth';
-	import Wikipedia from '~icons/mdi/wikipedia';
-	import ImageFetcher from './ImageFetcher.svelte';
-	import ActivityComplete from './ActivityComplete.svelte';
+	const dispatch = createEventDispatcher();
+	let modal: HTMLDialogElement;
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -39,8 +104,6 @@
 			modal.showModal();
 		}
 	});
-
-	function submit() {}
 
 	function close() {
 		dispatch('close');
@@ -52,324 +115,322 @@
 		}
 	}
 
-	async function generateDesc() {
-		let res = await fetch(`/api/generate/desc/?name=${adventureToEdit.name}`);
-		let data = await res.json();
-		if (data.extract) {
-			adventureToEdit.description = data.extract;
-		}
+	// async function generateDesc() {
+	// 	let res = await fetch(`/api/generate/desc/?name=${adventureToEdit.name}`);
+	// 	let data = await res.json();
+	// 	if (data.extract) {
+	// 		adventureToEdit.description = data.extract;
+	// 	}
+	// }
+
+	function addMarker(e: CustomEvent<any>) {
+		markers = [];
+		markers = [...markers, { lngLat: e.detail.lngLat, name: '', location: '', activity_type: '' }];
+		console.log(markers);
+	}
+
+	function imageSubmit() {
+		return async ({ result }: any) => {
+			if (result.type === 'success') {
+				if (result.data.id && result.data.image) {
+					adventureToEdit.images = [...adventureToEdit.images, result.data];
+					images = [...images, result.data];
+					addToast('success', 'Image uploaded');
+
+					fileInput.value = '';
+					console.log(adventureToEdit);
+				} else {
+					addToast('error', result.data.error || 'Failed to upload image');
+				}
+			}
+		};
 	}
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		const form = event.target as HTMLFormElement;
-		const formData = new FormData(form);
-
-		const response = await fetch(form.action, {
-			method: form.method,
-			body: formData
+		console.log(adventureToEdit);
+		let res = await fetch(`/api/adventures/${adventureToEdit.id}`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(adventureToEdit)
 		});
-
-		if (response.ok) {
-			const result = await response.json();
-			const data = JSON.parse(result.data);
-			console.log(data);
-
-			if (data) {
-				if (typeof adventureToEdit.activity_types === 'string') {
-					adventureToEdit.activity_types = (adventureToEdit.activity_types as string)
-						.split(',')
-						.map((activity_type) => activity_type.trim())
-						.filter((activity_type) => activity_type !== '' && activity_type !== ',');
-
-					// Remove duplicates
-					adventureToEdit.activity_types = Array.from(new Set(adventureToEdit.activity_types));
-				}
-
-				adventureToEdit.image = data[1];
-				adventureToEdit.link = data[2];
-				addToast('success', 'Adventure edited successfully!');
-				dispatch('saveEdit', adventureToEdit);
-				close();
-			} else {
-				addToast('warning', 'Error editing adventure');
-				console.log('Error editing adventure');
-			}
+		let data = await res.json();
+		if (data.id) {
+			adventureToEdit = data as Adventure;
+			isDetails = false;
+			addToast('success', 'Adventure updated');
+		} else {
+			addToast('error', 'Failed to update adventure');
 		}
-	}
-
-	function handleImageFetch(event: CustomEvent) {
-		const file = event.detail.file;
-		if (file && fileInput) {
-			// Create a DataTransfer object and add the file
-			const dataTransfer = new DataTransfer();
-			dataTransfer.items.add(file);
-
-			// Set the files property of the file input
-			fileInput.files = dataTransfer.files;
-
-			// Update the adventureToEdit object
-			adventureToEdit.image = file;
-		}
-		isImageFetcherOpen = false;
-	}
-
-	function setLongLat(event: CustomEvent<Adventure>) {
-		console.log(event.detail);
-		isPointModalOpen = false;
 	}
 </script>
 
-{#if isPointModalOpen}
-	<PointSelectionModal
-		bind:adventure={adventureToEdit}
-		on:close={() => (isPointModalOpen = false)}
-		on:submit={setLongLat}
-		query={adventureToEdit.name}
-	/>
-{/if}
-
-{#if isImageFetcherOpen}
-	<ImageFetcher
-		on:image={handleImageFetch}
-		name={adventureToEdit.name}
-		on:close={() => (isImageFetcherOpen = false)}
-	/>
-{/if}
-
+<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <dialog id="my_modal_1" class="modal">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Edit Adventure: {originalName}</h3>
-		<div
-			class="modal-action items-center"
-			style="display: flex; flex-direction: column; align-items: center; width: 100%;"
-		>
-			<form method="post" style="width: 100%;" on:submit={handleSubmit} action="/adventures?/edit">
-				<div class="mb-2">
-					<input
-						type="text"
-						id="adventureId"
-						name="adventureId"
-						hidden
-						readonly
-						bind:value={adventureToEdit.id}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<input
-						type="text"
-						id="type"
-						name="type"
-						hidden
-						readonly
-						bind:value={adventureToEdit.type}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<label for="name">Name</label><br />
-					<input
-						type="text"
-						name="name"
-						id="name"
-						bind:value={adventureToEdit.name}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="location">Location<MapMarker class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-					><br />
-					<input
-						type="text"
-						id="location"
-						name="location"
-						bind:value={adventureToEdit.location}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<div class="mb-2 mt-2">
-						<button
-							type="button"
-							class="btn btn-secondary"
-							on:click={() => (isPointModalOpen = true)}
-						>
-							<Map class="inline-block w-6 h-6" />{adventureToEdit.latitude &&
-							adventureToEdit.longitude
-								? 'Change'
-								: 'Select'}
-							Location</button
-						>
-					</div>
-				</div>
-				<div class="mb-2">
-					<label for="date">Date <Calendar class="inline-block mb-1 w-6 h-6" /></label><br />
-					<input
-						type="date"
-						id="date"
-						name="date"
-						min={startDate || ''}
-						max={endDate || ''}
-						bind:value={adventureToEdit.date}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="date">Description <Notebook class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-					><br />
-					<div class="flex">
-						<textarea
-							id="description"
-							name="description"
-							bind:value={adventureToEdit.description}
-							class="textarea textarea-bordered h-32 w-full max-w-xl mt-1 mb-2"
-						/>
-					</div>
-					<button class="btn btn-neutral" type="button" on:click={generateDesc}
-						><Wikipedia class="inline-block -mt-1  mb-1 w-6 h-6" />Generate Description</button
-					>
-				</div>
-				{#if adventureToEdit.type == 'visited' || adventureToEdit.type == 'planned'}
-					<div class="mb-2">
-						<label for="activityTypes"
-							>Activity Types <ClipboardList class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-						><br />
-						<input
-							type="text"
-							id="activity_types"
-							name="activity_types"
-							hidden
-							bind:value={adventureToEdit.activity_types}
-							class="input input-bordered w-full max-w-xs mt-1"
-						/>
-						<ActivityComplete bind:activities={adventureToEdit.activity_types} />
-					</div>
-				{/if}
-				<div class="mb-2">
-					<label for="image">Image </label><br />
-					<div class="flex">
-						<input
-							type="file"
-							id="image"
-							name="image"
-							bind:value={image}
-							bind:this={fileInput}
-							class="file-input file-input-bordered w-full max-w-xs mt-1"
-						/>
-						<button
-							class="btn btn-neutral ml-2"
-							type="button"
-							on:click={() => (isImageFetcherOpen = true)}
-							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Image Search</button
-						>
-					</div>
-				</div>
-				<div class="mb-2">
-					<label for="link">Link <Attachment class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
-					/>
-					<input
-						type="url"
-						id="link"
-						name="link"
-						bind:value={adventureToEdit.link}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="rating">Rating <Star class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br />
-					<input
-						type="number"
-						min="0"
-						max="5"
-						hidden
-						bind:value={adventureToEdit.rating}
-						id="rating"
-						name="rating"
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<div class="rating -ml-3 mt-1 mb-4">
-						<input
-							type="radio"
-							name="rating-2"
-							class="rating-hidden"
-							checked={Number.isNaN(adventureToEdit.rating) || adventureToEdit.rating === null}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							checked={adventureToEdit.rating === 1}
-							on:click={() => (adventureToEdit.rating = 1)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (adventureToEdit.rating = 2)}
-							checked={adventureToEdit.rating === 2}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (adventureToEdit.rating = 3)}
-							checked={adventureToEdit.rating === 3}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (adventureToEdit.rating = 4)}
-							checked={adventureToEdit.rating === 4}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (adventureToEdit.rating = 5)}
-							checked={adventureToEdit.rating === 5}
-						/>
-						{#if adventureToEdit.rating}
-							<button
-								type="button"
-								class="btn btn-sm btn-error ml-2"
-								on:click={() => (adventureToEdit.rating = NaN)}
-							>
-								Remove
-							</button>
-						{/if}
-					</div>
-				</div>
-				<div class="mb-2">
-					<input
-						type="text"
-						id="latitude"
-						hidden
-						name="latitude"
-						bind:value={adventureToEdit.latitude}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<input
-						type="text"
-						id="longitude"
-						hidden
-						name="longitude"
-						bind:value={adventureToEdit.longitude}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					{#if adventureToEdit.collection === null}
-						<div class="mb-2">
-							<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-							><br />
+	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<div class="modal-box w-11/12 max-w-6xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
+		<h3 class="font-bold text-lg">Edit {type} Adventure</h3>
+		{#if adventureToEdit.id === '' || isDetails}
+			<div class="modal-action items-center">
+				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
+					<!-- Grid layout for form fields -->
+					<h2 class="text-2xl font-semibold mb-2">Basic Information</h2>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+						<div>
+							<label for="name">Name</label><br />
 							<input
-								type="checkbox"
-								class="toggle toggle-primary"
-								id="is_public"
-								name="is_public"
-								bind:checked={adventureToEdit.is_public}
+								type="text"
+								id="name"
+								name="name"
+								bind:value={adventureToEdit.name}
+								class="input input-bordered w-full"
+								required
 							/>
 						</div>
-					{/if}
+						<div class="join">
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="type"
+								id="visited"
+								value="visited"
+								aria-label="Visited"
+								checked={adventureToEdit.type === 'visited'}
+								on:click={() => (type = 'visited')}
+							/>
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="type"
+								id="planned"
+								value="planned"
+								aria-label="Planned"
+								checked={adventureToEdit.type === 'planned'}
+								on:click={() => (type = 'planned')}
+							/>
+						</div>
+						<div>
+							<label for="location">Location</label><br />
+							<input
+								type="text"
+								id="location"
+								name="location"
+								bind:value={adventureToEdit.location}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<label for="date">Date</label><br />
+							<input
+								type="date"
+								id="date"
+								name="date"
+								min={startDate || ''}
+								max={endDate || ''}
+								bind:value={adventureToEdit.date}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<label for="description">Description</label><br />
+							<textarea
+								id="description"
+								name="description"
+								bind:value={adventureToEdit.description}
+								class="textarea textarea-bordered w-full h-32"
+							></textarea>
+						</div>
+						<div>
+							<label for="activity_types">Activity Types</label><br />
+							<input
+								type="text"
+								id="activity_types"
+								name="activity_types"
+								hidden
+								bind:value={adventureToEdit.activity_types}
+								class="input input-bordered w-full"
+							/>
+							<ActivityComplete bind:activities={adventureToEdit.activity_types} />
+						</div>
+						<div>
+							<label for="rating"
+								>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
+							><br />
+							<input
+								type="number"
+								min="0"
+								max="5"
+								hidden
+								bind:value={adventureToEdit.rating}
+								id="rating"
+								name="rating"
+								class="input input-bordered w-full max-w-xs mt-1"
+							/>
+							<div class="rating -ml-3 mt-1">
+								<input
+									type="radio"
+									name="rating-2"
+									class="rating-hidden"
+									checked={Number.isNaN(adventureToEdit.rating)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventureToEdit.rating = 1)}
+									checked={adventureToEdit.rating === 1}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventureToEdit.rating = 2)}
+									checked={adventureToEdit.rating === 2}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventureToEdit.rating = 3)}
+									checked={adventureToEdit.rating === 3}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventureToEdit.rating = 4)}
+									checked={adventureToEdit.rating === 4}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventureToEdit.rating = 5)}
+									checked={adventureToEdit.rating === 5}
+								/>
+								{#if adventureToEdit.rating}
+									<button
+										type="button"
+										class="btn btn-sm btn-error ml-2"
+										on:click={() => (adventureToEdit.rating = NaN)}
+									>
+										Remove
+									</button>
+								{/if}
+							</div>
+						</div>
+						<div>
+							<!-- link -->
+							<div>
+								<label for="link">Link</label><br />
+								<input
+									type="text"
+									id="link"
+									name="link"
+									bind:value={adventureToEdit.link}
+									class="input input-bordered w-full"
+								/>
+							</div>
+						</div>
+						<div>
+							<div>
+								<div>
+									<label for="is_public"
+										>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+									><br />
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="is_public"
+										name="is_public"
+										bind:checked={adventureToEdit.is_public}
+									/>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="divider"></div>
+					<h2 class="text-2xl font-semibold mb-2 mt-4">Location Information</h2>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+						<div>
+							<label for="latitude">Location</label><br />
+							<input
+								type="text"
+								id="location"
+								name="location"
+								bind:value={adventureToEdit.location}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<form on:submit={geocode}>
+								<input
+									type="text"
+									placeholder="Seach for a location"
+									class="input input-bordered w-full max-w-xs"
+									id="search"
+									name="search"
+									bind:value={query}
+								/>
+								<button type="submit">Search</button>
+							</form>
+							{#if places.length > 0}
+								<div class="mt-4">
+									<h3 class="font-bold text-lg mb-4">Search Results</h3>
+									<ul>
+										{#each places as place}
+											<li>
+												<button
+													type="button"
+													class="btn btn-neutral mb-2"
+													on:click={() => {
+														markers = [
+															{
+																lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+																location: place.display_name,
+																name: place.name,
+																activity_type: place.type
+															}
+														];
+													}}
+												>
+													{place.display_name}
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{:else}
+								<p class="text-error text-lg">No results found</p>
+							{/if}
+						</div>
+					</div>
+					<div>
+						<MapLibre
+							style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+							class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+							standardControls
+						>
+							<!-- MapEvents gives you access to map events even from other components inside the map,
+where you might not have access to the top-level `MapLibre` component. In this case
+it would also work to just use on:click on the MapLibre component itself. -->
+							<MapEvents on:click={addMarker} />
 
+							{#each markers as marker}
+								<DefaultMarker lngLat={marker.lngLat} />
+							{/each}
+						</MapLibre>
+					</div>
+
+					<div class="mt-4">
+						<button type="submit" class="btn btn-primary">Save & Next</button>
+						<button type="button" class="btn" on:click={close}>Close</button>
+					</div>
 					{#if adventureToEdit.is_public}
-						<div class="bg-neutral p-4 rounded-md shadow-sm">
+						<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
 							<p class=" font-semibold">Share this Adventure!</p>
 							<div class="flex items-center justify-between">
 								<p class="text-card-foreground font-mono">
@@ -389,19 +450,41 @@
 							</div>
 						</div>
 					{/if}
-
-					<button
-						type="submit"
-						id="edit_adventure"
-						data-umami-event="Edit Adventure"
-						class="btn btn-primary mr-4 mt-4"
-						on:click={submit}>Edit</button
+				</form>
+			</div>
+		{:else}
+			<p>Upload images here</p>
+			<p>{adventureToEdit.id}</p>
+			<div class="mb-2">
+				<label for="image">Image </label><br />
+				<div class="flex">
+					<form
+						method="POST"
+						action="adventures?/image"
+						use:enhance={imageSubmit}
+						enctype="multipart/form-data"
 					>
-					<!-- if there is a button in form, it will close the modal -->
-					<button class="btn mt-4" on:click={close}>Close</button>
+						<input
+							type="file"
+							name="image"
+							class="file-input file-input-bordered w-full max-w-xs"
+							bind:this={fileInput}
+							accept="image/*"
+							id="image"
+						/>
+						<input type="hidden" name="adventure" value={adventureToEdit.id} id="adventure" />
+						<button class="btn btn-neutral mt-2 mb-2" type="submit">Upload Image</button>
+					</form>
 				</div>
-			</form>
-			<div class="flex items-center justify-center flex-wrap gap-4 mt-4"></div>
-		</div>
+				<div class=" inline-flex gap-2">
+					{#each images as image}
+						<img src={image.image} alt={image.id} class="w-32 h-32" />
+					{/each}
+				</div>
+			</div>
+			<div class="mt-4">
+				<button type="button" class="btn btn-primary" on:click={saveAndClose}>Close</button>
+			</div>
+		{/if}
 	</div>
 </dialog>
