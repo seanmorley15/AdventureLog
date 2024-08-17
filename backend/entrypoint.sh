@@ -19,13 +19,13 @@ python manage.py migrate
 # Check for default data
 python manage.py worldtravel-seed
 
-# Create superuser if environment variables are set
+# Create superuser if environment variables are set and there are no users present at all.
 if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -n "$DJANGO_ADMIN_PASSWORD" ]; then
   echo "Creating superuser..."
   python manage.py shell << EOF
 from django.contrib.auth import get_user_model
 User = get_user_model()
-if not User.objects.filter(username='$DJANGO_ADMIN_USERNAME').exists():
+if User.objects.count() == 0:
     User.objects.create_superuser('$DJANGO_ADMIN_USERNAME', '$DJANGO_ADMIN_EMAIL', '$DJANGO_ADMIN_PASSWORD')
     print("Superuser created successfully.")
 else:
