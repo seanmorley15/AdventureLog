@@ -28,6 +28,8 @@
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
 
+	let wikiError: string = '';
+
 	let newAdventure: Adventure = {
 		id: '',
 		type: type,
@@ -105,8 +107,14 @@
 	async function generateDesc() {
 		let res = await fetch(`/api/generate/desc/?name=${newAdventure.name}`);
 		let data = await res.json();
+		if (!res.ok) {
+			wikiError = 'No article found';
+		}
 		if (data.extract) {
+			wikiError = '';
 			newAdventure.description = data.extract;
+		} else {
+			wikiError = 'No description found';
 		}
 	}
 
@@ -307,6 +315,9 @@
 							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Generate Description</button
 						>
 					</div>
+					{#if wikiError}
+						<p class="text-red-500">{wikiError}</p>
+					{/if}
 				</div>
 				{#if newAdventure.type == 'visited' || newAdventure.type == 'planned'}
 					<div class="mb-2">
