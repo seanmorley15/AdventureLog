@@ -2,7 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
 	import { onMount } from 'svelte';
-	import { enhance } from '$app/forms';
+	import { deserialize, enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 
 	export let type: string = 'visited';
@@ -26,6 +26,7 @@
 
 	let noPlaces: boolean = false;
 	let wikiError: string = '';
+	let wikiImageError: string = '';
 
 	let newAdventure: Adventure = {
 		id: '',
@@ -66,6 +67,10 @@
 		newAdventure.name = markers[0].name;
 	}
 
+	let url: string = '';
+	let imageSearch: string = '';
+	let imageError: string = '';
+
 	async function geocode(e: Event | null) {
 		if (e) {
 			e.preventDefault();
@@ -87,6 +92,81 @@
 			noPlaces = true;
 		} else {
 			noPlaces = false;
+		}
+	}
+
+	async function fetchImage() {
+		let res = await fetch(url);
+		let data = await res.blob();
+		if (!data) {
+			imageError = 'No image found at that URL.';
+			return;
+		}
+		let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
+		let formData = new FormData();
+		formData.append('image', file);
+		formData.append('adventure', newAdventure.id);
+		let res2 = await fetch(`/adventures?/image`, {
+			method: 'POST',
+			body: formData
+		});
+		let data2 = await res2.json();
+		console.log(data2);
+		if (data2.type === 'success') {
+			images = [...images, data2];
+			newAdventure.images = images;
+			addToast('success', 'Image uploaded');
+		} else {
+			addToast('error', 'Failed to upload image');
+		}
+	}
+
+	async function fetchWikiImage() {
+		let res = await fetch(`/api/generate/img/?name=${imageSearch}`);
+		let data = await res.json();
+		if (!res.ok) {
+			wikiImageError = 'Failed to fetch image';
+			return;
+		}
+		if (data.source) {
+			let imageUrl = data.source;
+			let res = await fetch(imageUrl);
+
+			let blob = await res.blob();
+			let file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
+			let formData = new FormData();
+			formData.append('image', file);
+			formData.append('adventure', newAdventure.id);
+			let res2 = await fetch(`/adventures?/image`, {
+				method: 'POST',
+				body: formData
+			});
+			if (res2.ok) {
+				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
+				console.log(newData);
+				let newImage = { id: newData.data.id, image: newData.data.image };
+				console.log(newImage);
+				images = [...images, newImage];
+				newAdventure.images = images;
+				addToast('success', 'Image uploaded');
+			} else {
+				addToast('error', 'Failed to upload image');
+				wikiImageError = 'Failed to upload image';
+			}
+		}
+	}
+
+	async function removeImage(id: string) {
+		let res = await fetch(`/api/images/${id}/image_delete`, {
+			method: 'POST'
+		});
+		if (res.status === 204) {
+			images = images.filter((image) => image.id !== id);
+			newAdventure.images = images;
+			console.log(images);
+			addToast('success', 'Image removed');
+		} else {
+			addToast('error', 'Failed to remove image');
 		}
 	}
 
@@ -177,6 +257,7 @@
 		let data = await res.json();
 		if (data.id) {
 			newAdventure = data as Adventure;
+			imageSearch = newAdventure.name;
 		} else {
 			addToast('error', 'Failed to create adventure');
 		}
@@ -473,9 +554,51 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						<button class="btn btn-neutral mt-2 mb-2" type="submit">Upload Image</button>
 					</form>
 				</div>
-				<div class=" inline-flex gap-2">
+				<div class="mt-2">
+					<label for="url">URL</label><br />
+					<input
+						type="text"
+						id="url"
+						name="url"
+						bind:value={url}
+						class="input input-bordered w-full"
+					/>
+					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
+						>Fetch Image</button
+					>
+				</div>
+				<div class="mt-2">
+					<label for="name">Wikipedia</label><br />
+					<input
+						type="text"
+						id="name"
+						name="name"
+						bind:value={imageSearch}
+						class="input input-bordered w-full"
+					/>
+					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
+						>Fetch Image</button
+					>
+					<p class="text-red-500">{wikiImageError}</p>
+				</div>
+				<div class="divider"></div>
+				{#if images.length > 0}
+					<h1 class="font-semibold text-xl">My Images</h1>
+				{:else}
+					<h1 class="font-semibold text-xl">No Images</h1>
+				{/if}
+				<div class="flex flex-wrap gap-2 mt-2">
 					{#each images as image}
-						<img src={image.image} alt={image.id} class="w-32 h-32" />
+						<div class="relative h-32 w-32">
+							<button
+								type="button"
+								class="absolute top-0 left-0 btn btn-error btn-sm z-10"
+								on:click={() => removeImage(image.id)}
+							>
+								X
+							</button>
+							<img src={image.image} alt={image.id} class="w-full h-full object-cover" />
+						</div>
 					{/each}
 				</div>
 			</div>

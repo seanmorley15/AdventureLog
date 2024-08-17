@@ -28,6 +28,7 @@
 
 	let url: string = '';
 	let imageError: string = '';
+	let wikiImageError: string = '';
 
 	images = adventureToEdit.images || [];
 
@@ -106,6 +107,10 @@
 	async function fetchWikiImage() {
 		let res = await fetch(`/api/generate/img/?name=${imageSearch}`);
 		let data = await res.json();
+		if (!res.ok) {
+			wikiImageError = 'Failed to fetch image';
+			return;
+		}
 		if (data.source) {
 			let imageUrl = data.source;
 			let res = await fetch(imageUrl);
@@ -128,6 +133,7 @@
 				addToast('success', 'Image uploaded');
 			} else {
 				addToast('error', 'Failed to upload image');
+				wikiImageError = 'Failed to upload image';
 			}
 		}
 	}
@@ -574,18 +580,24 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						>Fetch Image</button
 					>
 				</div>
-				<div class=" inline-flex gap-2">
+				<div class="divider"></div>
+				{#if images.length > 0}
+					<h1 class="font-semibold text-xl">My Images</h1>
+				{:else}
+					<h1 class="font-semibold text-xl">No Images</h1>
+				{/if}
+				<div class="flex flex-wrap gap-2 mt-2">
 					{#each images as image}
-						<!-- remove button -->
-						<button
-							type="button"
-							class="btn btn-error"
-							on:click={() => {
-								removeImage(image.id);
-							}}>X</button
-						>
-
-						<img src={image.image} alt={image.id} class="w-32 h-32" />
+						<div class="relative h-32 w-32">
+							<button
+								type="button"
+								class="absolute top-0 left-0 btn btn-error btn-sm z-10"
+								on:click={() => removeImage(image.id)}
+							>
+								X
+							</button>
+							<img src={image.image} alt={image.id} class="w-full h-full object-cover" />
+						</div>
 					{/each}
 				</div>
 			</div>
