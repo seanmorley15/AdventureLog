@@ -9,6 +9,11 @@
 	console.log(data);
 
 	let numRegions: number = regions.length;
+
+	visitedRegions = visitedRegions.filter(
+		(visitedRegion, index, self) =>
+			index === self.findIndex((t) => t.region === visitedRegion.region)
+	);
 	let numVisitedRegions: number = visitedRegions.length;
 </script>
 

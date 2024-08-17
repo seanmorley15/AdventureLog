@@ -51,6 +51,8 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         request.data['user_id'] = request.user
+        if VisitedRegion.objects.filter(user_id=request.user.id, region=request.data['region']).exists():
+            return Response({"error": "Region already visited by user."}, status=400)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
