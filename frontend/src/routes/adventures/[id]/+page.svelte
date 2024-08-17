@@ -169,7 +169,9 @@
 										<path d="M3 10h18"></path>
 									</svg>
 									<span class="text-sm text-muted-foreground"
-										>{new Date(adventure.date).toLocaleDateString()}</span
+										>{new Date(adventure.date).toLocaleDateString(undefined, {
+											timeZone: 'UTC'
+										})}</span
 									>
 								</div>
 							{/if}
@@ -309,7 +311,7 @@
 											</p>
 											<p>
 												{adventure.date
-													? new Date(adventure.date).toLocaleDateString('en-US', {
+													? new Date(adventure.date).toLocaleDateString(undefined, {
 															timeZone: 'UTC'
 														})
 													: ''}
