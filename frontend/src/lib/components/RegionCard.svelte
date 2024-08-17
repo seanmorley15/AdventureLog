@@ -35,6 +35,7 @@
 			}
 		} else {
 			console.error('Failed to mark region as visited');
+			addToast('error', `Failed to mark visit to ${region.name}`);
 		}
 	}
 	async function removeVisit() {
