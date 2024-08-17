@@ -13,6 +13,11 @@
 	export let latitude: number | null = null;
 	export let collection_id: string | null = null;
 
+	import { DefaultMarker, MapEvents, MapLibre, Popup } from 'svelte-maplibre';
+	let markers: Point[] = [];
+	let query: string = '';
+	let places: OpenStreetMapPlace[] = [];
+
 	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import Notebook from '~icons/mdi/notebook';
@@ -32,13 +37,13 @@
 		id: '',
 		type: type,
 		name: '',
-		location: '',
-		date: '',
+		location: null,
+		date: null,
 		description: '',
 		activity_types: [],
 		rating: NaN,
 		link: '',
-		image: '',
+		images: [],
 		user_id: NaN,
 		latitude: null,
 		longitude: null,
@@ -50,6 +55,35 @@
 		newAdventure.latitude = latitude;
 		newAdventure.longitude = longitude;
 		reverseGeocode();
+	}
+
+	$: if (markers.length > 0) {
+		newAdventure.latitude = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
+		newAdventure.longitude = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
+		if (!newAdventure.location) {
+			newAdventure.location = markers[0].location;
+		}
+		if (!newAdventure.name) {
+			newAdventure.name = markers[0].name;
+		}
+	}
+
+	async function geocode(e: Event | null) {
+		if (e) {
+			e.preventDefault();
+		}
+		if (!query) {
+			alert('Please enter a location');
+			return;
+		}
+		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: {
+				'User-Agent': `AdventureLog / ${appVersion} `
+			}
+		});
+		console.log(res);
+		let data = (await res.json()) as OpenStreetMapPlace[];
+		places = data;
 	}
 
 	async function reverseGeocode() {
@@ -96,369 +130,333 @@
 		}
 	}
 
-	async function generateDesc() {
-		let res = await fetch(`/api/generate/desc/?name=${newAdventure.name}`);
-		let data = await res.json();
-		if (data.extract) {
-			newAdventure.description = data.extract;
-		}
+	// async function generateDesc() {
+	// 	let res = await fetch(`/api/generate/desc/?name=${newAdventure.name}`);
+	// 	let data = await res.json();
+	// 	if (data.extract) {
+	// 		newAdventure.description = data.extract;
+	// 	}
+	// }
+
+	function addMarker(e: CustomEvent<any>) {
+		markers = [];
+		markers = [...markers, { lngLat: e.detail.lngLat, name: '', location: '', activity_type: '' }];
+		console.log(markers);
+	}
+
+	function imageSubmit() {
+		return async ({ result }: any) => {
+			if (result.type === 'success') {
+				if (result.data.success) {
+					newAdventure.images.push(result.data.id);
+				} else {
+					addToast('error', result.data.error || 'Failed to upload image');
+				}
+			}
+		};
 	}
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		const form = event.target as HTMLFormElement;
-		const formData = new FormData(form);
-
-		const response = await fetch(form.action, {
-			method: form.method,
-			body: formData
+		console.log(newAdventure);
+		let res = await fetch('/api/adventures/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(newAdventure)
 		});
-
-		if (response.ok) {
-			const result = await response.json();
-			const data = JSON.parse(result.data); // Parsing the JSON string in the data field
-
-			if (data[1] !== undefined) {
-				// these two lines here are wierd, because the data[1] is the id of the new adventure and data[2] is the user_id of the new adventure
-				console.log(data);
-				let id = data[1];
-				let user_id = data[2];
-				let image_url = data[3];
-				let link = data[4];
-				if (newAdventure.is_public) {
-					navigator.clipboard.writeText(`${window.location.origin}/adventures/${id}`);
-				}
-				newAdventure.image = image_url;
-				newAdventure.id = id;
-				newAdventure.user_id = user_id;
-				newAdventure.link = link;
-				// turn the activity_types string into an array by splitting it at the commas
-				if (typeof newAdventure.activity_types === 'string') {
-					newAdventure.activity_types = (newAdventure.activity_types as string)
-						.split(',')
-						.map((activity_type) => activity_type.trim())
-						.filter((activity_type) => activity_type !== '' && activity_type !== ',');
-
-					// Remove duplicates
-					newAdventure.activity_types = Array.from(new Set(newAdventure.activity_types));
-				}
-				console.log(newAdventure);
-				dispatch('create', newAdventure);
-				addToast('success', 'Adventure created successfully!');
-				close();
-			}
+		let data = await res.json();
+		if (data.id) {
+			newAdventure = data as Adventure;
+		} else {
+			addToast('error', 'Failed to create adventure');
 		}
-	}
-
-	function handleImageFetch(event: CustomEvent) {
-		const file = event.detail.file;
-		if (file && fileInput) {
-			// Create a DataTransfer object and add the file
-			const dataTransfer = new DataTransfer();
-			dataTransfer.items.add(file);
-
-			// Set the files property of the file input
-			fileInput.files = dataTransfer.files;
-
-			// Update the adventureToEdit object
-			newAdventure.image = file;
-		}
-		isImageFetcherOpen = false;
-	}
-
-	function setLongLat(event: CustomEvent<Adventure>) {
-		console.log(event.detail);
-		isPointModalOpen = false;
 	}
 </script>
-
-{#if isPointModalOpen}
-	<PointSelectionModal
-		query={newAdventure.name}
-		on:close={() => (isPointModalOpen = false)}
-		on:submit={setLongLat}
-		bind:adventure={newAdventure}
-	/>
-{/if}
-
-{#if isImageFetcherOpen}
-	<ImageFetcher
-		on:image={handleImageFetch}
-		name={newAdventure.name}
-		on:close={() => (isImageFetcherOpen = false)}
-	/>
-{/if}
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 <dialog id="my_modal_1" class="modal">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
+	<div class="modal-box w-11/12 max-w-6xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-lg">New {type} Adventure</h3>
-		<div
-			class="modal-action items-center"
-			style="display: flex; flex-direction: column; align-items: center; width: 100%;"
-		>
-			<form
-				method="post"
-				style="width: 100%;"
-				on:submit={handleSubmit}
-				action="/adventures?/create"
-			>
-				<div class="join">
-					<input
-						class="join-item btn btn-neutral"
-						type="radio"
-						name="type"
-						id="visited"
-						value="visited"
-						aria-label="Visited"
-						checked={newAdventure.type === 'visited'}
-						on:click={() => (type = 'visited')}
-					/>
-					<input
-						class="join-item btn btn-neutral"
-						type="radio"
-						name="type"
-						id="planned"
-						value="planned"
-						aria-label="Planned"
-						checked={newAdventure.type === 'planned'}
-						on:click={() => (type = 'planned')}
-					/>
-				</div>
-
-				<input
-					type="text"
-					name="type"
-					id="type"
-					value={type}
-					hidden
-					readonly
-					class="input input-bordered w-full max-w-xs mt-1"
-				/>
-				<div class="mb-2">
-					<label for="name">Name</label><br />
-					<input
-						type="text"
-						id="name"
-						name="name"
-						bind:value={newAdventure.name}
-						class="input input-bordered w-full max-w-xs mt-1"
-						required
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="location">Location<MapMarker class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-					><br />
-					<input
-						type="text"
-						id="location"
-						name="location"
-						bind:value={newAdventure.location}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<div class="mb-2 mt-2">
-						<button
-							type="button"
-							class="btn btn-secondary"
-							on:click={() => (isPointModalOpen = true)}
-							><Map class="inline-block w-6 h-6" />{newAdventure.latitude && newAdventure.longitude
-								? 'Change'
-								: 'Select'} Location</button
+		{#if newAdventure.id === ''}
+			<div class="modal-action items-center">
+				<form
+					method="post"
+					style="width: 100%;"
+					on:submit={handleSubmit}
+					action="/adventures/create"
+				>
+					<!-- Grid layout for form fields -->
+					<h2 class="text-2xl font-semibold mb-2">Basic Information</h2>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+						<div>
+							<label for="name">Name</label><br />
+							<input
+								type="text"
+								id="name"
+								name="name"
+								bind:value={newAdventure.name}
+								class="input input-bordered w-full"
+								required
+							/>
+						</div>
+						<div class="join">
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="type"
+								id="visited"
+								value="visited"
+								aria-label="Visited"
+								checked={newAdventure.type === 'visited'}
+								on:click={() => (type = 'visited')}
+							/>
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="type"
+								id="planned"
+								value="planned"
+								aria-label="Planned"
+								checked={newAdventure.type === 'planned'}
+								on:click={() => (type = 'planned')}
+							/>
+						</div>
+						<div>
+							<label for="location">Location</label><br />
+							<input
+								type="text"
+								id="location"
+								name="location"
+								bind:value={newAdventure.location}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<label for="date">Date</label><br />
+							<input
+								type="date"
+								id="date"
+								name="date"
+								min={startDate || ''}
+								max={endDate || ''}
+								bind:value={newAdventure.date}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<label for="description">Description</label><br />
+							<textarea
+								id="description"
+								name="description"
+								bind:value={newAdventure.description}
+								class="textarea textarea-bordered w-full h-32"
+							></textarea>
+						</div>
+						<div>
+							<label for="activity_types">Activity Types</label><br />
+							<input
+								type="text"
+								id="activity_types"
+								name="activity_types"
+								hidden
+								bind:value={newAdventure.activity_types}
+								class="input input-bordered w-full"
+							/>
+							<ActivityComplete bind:activities={newAdventure.activity_types} />
+						</div>
+						<div>
+							<label for="rating"
+								>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
+							><br />
+							<input
+								type="number"
+								min="0"
+								max="5"
+								hidden
+								bind:value={newAdventure.rating}
+								id="rating"
+								name="rating"
+								class="input input-bordered w-full max-w-xs mt-1"
+							/>
+							<div class="rating -ml-3 mt-1">
+								<input
+									type="radio"
+									name="rating-2"
+									class="rating-hidden"
+									checked={Number.isNaN(newAdventure.rating)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (newAdventure.rating = 1)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (newAdventure.rating = 2)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (newAdventure.rating = 3)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (newAdventure.rating = 4)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (newAdventure.rating = 5)}
+								/>
+								{#if newAdventure.rating}
+									<button
+										type="button"
+										class="btn btn-sm btn-error ml-2"
+										on:click={() => (newAdventure.rating = NaN)}
+									>
+										Remove
+									</button>
+								{/if}
+							</div>
+							<!-- link -->
+							<div>
+								<label for="link">Link</label><br />
+								<input
+									type="text"
+									id="link"
+									name="link"
+									bind:value={newAdventure.link}
+									class="input input-bordered w-full"
+								/>
+							</div>
+							<div>
+								<div>
+									<label for="is_public"
+										>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+									><br />
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="is_public"
+										name="is_public"
+										bind:checked={newAdventure.is_public}
+									/>
+								</div>
+								{#if newAdventure.is_public}
+									<p>
+										The link to this adventure will be copied to your clipboard once it is created!
+									</p>
+								{/if}
+							</div>
+						</div>
+					</div>
+					<h2 class="text-2xl font-semibold mb-2">Location Information</h2>
+					<div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+						<div>
+							<label for="latitude">Location</label><br />
+							<input
+								type="text"
+								id="location"
+								name="location"
+								bind:value={newAdventure.location}
+								class="input input-bordered w-full"
+							/>
+						</div>
+						<div>
+							<form on:submit={geocode}>
+								<input
+									type="text"
+									placeholder="Seach for a location"
+									class="input input-bordered w-full max-w-xs"
+									id="search"
+									name="search"
+									bind:value={query}
+								/>
+								<button type="submit">Search</button>
+							</form>
+							{#if places.length > 0}
+								<div class="mt-4">
+									<h3 class="font-bold text-lg mb-4">Search Results</h3>
+									<ul>
+										{#each places as place}
+											<li>
+												<button
+													type="button"
+													class="btn btn-neutral mb-2"
+													on:click={() => {
+														markers = [
+															{
+																lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+																location: place.display_name,
+																name: place.name,
+																activity_type: place.type
+															}
+														];
+													}}
+												>
+													{place.display_name}
+												</button>
+											</li>
+										{/each}
+									</ul>
+								</div>
+							{:else}
+								<p class="text-error text-lg">No results found</p>
+							{/if}
+						</div>
+					</div>
+					<div>
+						<MapLibre
+							style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+							class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+							standardControls
 						>
-					</div>
-				</div>
-				<div class="mb-2">
-					<label for="date"
-						>Date<iconify-icon icon="mdi:calendar" class="text-lg ml-1 -mb-0.5"
-						></iconify-icon></label
-					><br />
-					<input
-						type="date"
-						id="date"
-						name="date"
-						min={startDate || ''}
-						max={endDate || ''}
-						bind:value={newAdventure.date}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="date">Description <Notebook class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-					><br />
-					<div class="flex">
-						<textarea
-							id="description"
-							name="description"
-							bind:value={newAdventure.description}
-							class="textarea textarea-bordered h-32 w-full max-w-xl mt-1 mb-2"
-						/>
-					</div>
-					<button class="btn btn-neutral" type="button" on:click={generateDesc}
-						><Wikipedia class="inline-block -mt-1  mb-1 w-6 h-6" />Generate Description</button
-					>
-				</div>
-				{#if newAdventure.type == 'visited' || newAdventure.type == 'planned'}
-					<div class="mb-2">
-						<label for="activityTypes"
-							>Activity Types <ClipboardList class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-						><br />
-						<input
-							type="text"
-							id="activity_types"
-							name="activity_types"
-							hidden
-							bind:value={newAdventure.activity_types}
-							class="input input-bordered w-full max-w-xs mt-1"
-						/>
-						<ActivityComplete bind:activities={newAdventure.activity_types} />
-					</div>
-				{/if}
-				<div class="mb-2">
-					<label for="rating"
-						>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
-					><br />
-					<input
-						type="number"
-						min="0"
-						max="5"
-						hidden
-						bind:value={newAdventure.rating}
-						id="rating"
-						name="rating"
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<div class="rating -ml-3 mt-1">
-						<input
-							type="radio"
-							name="rating-2"
-							class="rating-hidden"
-							checked={Number.isNaN(newAdventure.rating)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (newAdventure.rating = 1)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (newAdventure.rating = 2)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (newAdventure.rating = 3)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (newAdventure.rating = 4)}
-						/>
-						<input
-							type="radio"
-							name="rating-2"
-							class="mask mask-star-2 bg-orange-400"
-							on:click={() => (newAdventure.rating = 5)}
-						/>
-						{#if newAdventure.rating}
-							<button
-								type="button"
-								class="btn btn-sm btn-error ml-2"
-								on:click={() => (newAdventure.rating = NaN)}
-							>
-								Remove
-							</button>
-						{/if}
-					</div>
-				</div>
-				<div class="mb-2">
-					<label for="link"
-						>Link <iconify-icon icon="mdi:link" class="text-xl -mb-1"></iconify-icon></label
-					><br />
-					<input
-						type="text"
-						id="link"
-						name="link"
-						bind:value={newAdventure.link}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="image">Image </label><br />
-					<div class="flex">
-						<input
-							type="file"
-							id="image"
-							name="image"
-							bind:value={image}
-							bind:this={fileInput}
-							class="file-input file-input-bordered w-full max-w-xs mt-1"
-						/>
-						<button
-							class="btn btn-neutral ml-2"
-							type="button"
-							on:click={() => (isImageFetcherOpen = true)}
-							><Wikipedia class="inline-block -mt-1 mb-1 w-6 h-6" />Image Search</button
-						>
-					</div>
-				</div>
-				<div class="mb-2">
-					<input
-						type="text"
-						id="latitude"
-						hidden
-						name="latitude"
-						bind:value={newAdventure.latitude}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="mb-2">
-					<label for="is_public">Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label><br
-					/>
-					<input
-						type="checkbox"
-						class="toggle toggle-primary"
-						id="is_public"
-						name="is_public"
-						bind:checked={newAdventure.is_public}
-					/>
-				</div>
-				{#if newAdventure.is_public}
-					<p>The link to this adventure will be copied to your clipboard once it is created!</p>
-				{/if}
-				<div class="mb-2">
-					<input
-						type="text"
-						id="longitude"
-						name="longitude"
-						hidden
-						bind:value={newAdventure.longitude}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-					<input
-						type="text"
-						id="collection"
-						name="collection"
-						hidden
-						bind:value={newAdventure.collection}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
+							<!-- MapEvents gives you access to map events even from other components inside the map,
+where you might not have access to the top-level `MapLibre` component. In this case
+it would also work to just use on:click on the MapLibre component itself. -->
+							<MapEvents on:click={addMarker} />
 
-					<button
-						id="new_adventure"
-						data-umami-event="Create new Adventure"
-						type="submit"
-						class="btn btn-primary mr-4 mt-4">Create</button
+							{#each markers as marker}
+								<DefaultMarker lngLat={marker.lngLat} />
+							{/each}
+						</MapLibre>
+					</div>
+
+					<div class="mt-4">
+						<button type="submit" class="btn btn-primary">Create</button>
+						<button type="button" class="btn" on:click={close}>Close</button>
+					</div>
+				</form>
+			</div>
+		{:else}
+			<p>Upload images here</p>
+			<p>{newAdventure.id}</p>
+			<div class="mb-2">
+				<label for="image">Image </label><br />
+				<div class="flex">
+					<form
+						method="POST"
+						action="adventures?/image"
+						use:enhance={imageSubmit}
+						enctype="multipart/form-data"
 					>
-					<button type="button" class="btn mt-4" on:click={close}>Close</button>
+						<input type="file" name="image" bind:this={fileInput} accept="image/*" id="image" />
+						<input type="hidden" name="adventure" value={newAdventure.id} id="adventure" />
+						<button type="submit">Upload Image</button>
+					</form>
 				</div>
-			</form>
-		</div>
+			</div>
+		{/if}
 	</div>
 </dialog>

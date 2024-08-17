@@ -425,5 +425,17 @@ export const actions: Actions = {
 		let image_url = adventure.image;
 		let link_url = adventure.link;
 		return { image_url, link_url };
+	},
+	image: async (event) => {
+		let formData = await event.request.formData();
+		let res = await fetch(`${serverEndpoint}/api/images/`, {
+			method: 'POST',
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
+			},
+			body: formData
+		});
+		let data = await res.json();
+		return data;
 	}
 };

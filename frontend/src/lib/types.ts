@@ -58,6 +58,8 @@ export type Point = {
 		lng: number;
 	};
 	name: string;
+	location: string;
+	activity_type: string;
 };
 
 export type Collection = {
