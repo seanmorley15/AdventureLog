@@ -22,9 +22,6 @@
 		includeCollections: true
 	};
 
-	let isShowingCreateModal: boolean = false;
-	let newType: string = '';
-
 	let resultsPerPage: number = 25;
 
 	let count = data.props.count || 0;
@@ -152,7 +149,6 @@
 					class="btn btn-primary"
 					on:click={() => {
 						isAdventureModalOpen = true;
-						newType = 'visited';
 						adventureToEdit = null;
 					}}
 				>

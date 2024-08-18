@@ -23,6 +23,8 @@
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
 
+	let wikiError: string = '';
+
 	let noPlaces: boolean = false;
 
 	export let adventureToEdit: Adventure | null = null;
@@ -57,7 +59,8 @@
 				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
 				location: adventure.location || '',
 				name: adventure.name,
-				activity_type: ''
+				activity_type: '',
+				lng: 0
 			}
 		];
 	}
@@ -210,7 +213,8 @@
 						lngLat: { lng: longitude, lat: latitude },
 						location: data[0]?.display_name || '',
 						name: data[0]?.name || '',
-						activity_type: data[0]?.type || ''
+						activity_type: data[0]?.type || '',
+						lng: 0
 					}
 				];
 			}
@@ -240,17 +244,28 @@
 		}
 	}
 
-	// async function generateDesc() {
-	// 	let res = await fetch(`/api/generate/desc/?name=${adventureToEdit.name}`);
-	// 	let data = await res.json();
-	// 	if (data.extract) {
-	// 		adventureToEdit.description = data.extract;
-	// 	}
-	// }
+	async function generateDesc() {
+		let res = await fetch(`/api/generate/desc/?name=${adventure.name}`);
+		let data = await res.json();
+		if (data.extract?.length > 0) {
+			adventure.description = data.extract;
+		} else {
+			wikiError = 'No description found';
+		}
+	}
 
 	function addMarker(e: CustomEvent<any>) {
 		markers = [];
-		markers = [...markers, { lngLat: e.detail.lngLat, name: '', location: '', activity_type: '' }];
+		markers = [
+			...markers,
+			{
+				lngLat: e.detail.lngLat,
+				name: '',
+				location: '',
+				activity_type: '',
+				lng: 0
+			}
+		];
 		console.log(markers);
 	}
 
@@ -393,199 +408,206 @@
 							bind:value={adventure.description}
 							class="textarea textarea-bordered w-full h-32"
 						></textarea>
-					</div>
-					<div>
-						<label for="activity_types">Activity Types</label><br />
-						<input
-							type="text"
-							id="activity_types"
-							name="activity_types"
-							hidden
-							bind:value={adventure.activity_types}
-							class="input input-bordered w-full"
-						/>
-						<ActivityComplete bind:activities={adventure.activity_types} />
-					</div>
-					<div>
-						<label for="rating"
-							>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
-						><br />
-						<input
-							type="number"
-							min="0"
-							max="5"
-							hidden
-							bind:value={adventure.rating}
-							id="rating"
-							name="rating"
-							class="input input-bordered w-full max-w-xs mt-1"
-						/>
-						<div class="rating -ml-3 mt-1">
-							<input
-								type="radio"
-								name="rating-2"
-								class="rating-hidden"
-								checked={Number.isNaN(adventure.rating)}
-							/>
-							<input
-								type="radio"
-								name="rating-2"
-								class="mask mask-star-2 bg-orange-400"
-								on:click={() => (adventure.rating = 1)}
-								checked={adventure.rating === 1}
-							/>
-							<input
-								type="radio"
-								name="rating-2"
-								class="mask mask-star-2 bg-orange-400"
-								on:click={() => (adventure.rating = 2)}
-								checked={adventure.rating === 2}
-							/>
-							<input
-								type="radio"
-								name="rating-2"
-								class="mask mask-star-2 bg-orange-400"
-								on:click={() => (adventure.rating = 3)}
-								checked={adventure.rating === 3}
-							/>
-							<input
-								type="radio"
-								name="rating-2"
-								class="mask mask-star-2 bg-orange-400"
-								on:click={() => (adventure.rating = 4)}
-								checked={adventure.rating === 4}
-							/>
-							<input
-								type="radio"
-								name="rating-2"
-								class="mask mask-star-2 bg-orange-400"
-								on:click={() => (adventure.rating = 5)}
-								checked={adventure.rating === 5}
-							/>
-							{#if adventure.rating}
-								<button
-									type="button"
-									class="btn btn-sm btn-error ml-2"
-									on:click={() => (adventure.rating = NaN)}
-								>
-									Remove
-								</button>
-							{/if}
+						<div class="mt-2">
+							<button type="button" class="btn btn-neutral" on:click={generateDesc}
+								>Generate Description</button
+							>
+							<p class="text-red-500">{wikiError}</p>
 						</div>
 						<div>
-							<div class="mt-2">
-								<div>
-									<label for="is_public"
-										>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-									><br />
-									<input
-										type="checkbox"
-										class="toggle toggle-primary"
-										id="is_public"
-										name="is_public"
-										bind:checked={adventure.is_public}
-									/>
+							<label for="activity_types">Activity Types</label><br />
+							<input
+								type="text"
+								id="activity_types"
+								name="activity_types"
+								hidden
+								bind:value={adventure.activity_types}
+								class="input input-bordered w-full"
+							/>
+							<ActivityComplete bind:activities={adventure.activity_types} />
+						</div>
+						<div>
+							<label for="rating"
+								>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
+							><br />
+							<input
+								type="number"
+								min="0"
+								max="5"
+								hidden
+								bind:value={adventure.rating}
+								id="rating"
+								name="rating"
+								class="input input-bordered w-full max-w-xs mt-1"
+							/>
+							<div class="rating -ml-3 mt-1">
+								<input
+									type="radio"
+									name="rating-2"
+									class="rating-hidden"
+									checked={Number.isNaN(adventure.rating)}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventure.rating = 1)}
+									checked={adventure.rating === 1}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventure.rating = 2)}
+									checked={adventure.rating === 2}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventure.rating = 3)}
+									checked={adventure.rating === 3}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventure.rating = 4)}
+									checked={adventure.rating === 4}
+								/>
+								<input
+									type="radio"
+									name="rating-2"
+									class="mask mask-star-2 bg-orange-400"
+									on:click={() => (adventure.rating = 5)}
+									checked={adventure.rating === 5}
+								/>
+								{#if adventure.rating}
+									<button
+										type="button"
+										class="btn btn-sm btn-error ml-2"
+										on:click={() => (adventure.rating = NaN)}
+									>
+										Remove
+									</button>
+								{/if}
+							</div>
+							<div>
+								<div class="mt-2">
+									<div>
+										<label for="is_public"
+											>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+										><br />
+										<input
+											type="checkbox"
+											class="toggle toggle-primary"
+											id="is_public"
+											name="is_public"
+											bind:checked={adventure.is_public}
+										/>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
-					<div class="divider"></div>
-					<h2 class="text-2xl font-semibold mb-2 mt-2">Location Information</h2>
-					<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
-					<div>
-						<label for="latitude">Location</label><br />
-						<input
-							type="text"
-							id="location"
-							name="location"
-							bind:value={adventure.location}
-							class="input input-bordered w-full"
-						/>
-					</div>
-					<div>
-						<form on:submit={geocode} class="mt-2">
+						<div class="divider"></div>
+						<h2 class="text-2xl font-semibold mb-2 mt-2">Location Information</h2>
+						<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
+						<div>
+							<label for="latitude">Location</label><br />
 							<input
 								type="text"
-								placeholder="Seach for a location"
-								class="input input-bordered w-full max-w-xs mb-2"
-								id="search"
-								name="search"
-								bind:value={query}
+								id="location"
+								name="location"
+								bind:value={adventure.location}
+								class="input input-bordered w-full"
 							/>
-							<button class="btn btn-neutral -mt-1" type="submit">Search</button>
-						</form>
-					</div>
-					{#if places.length > 0}
-						<div class="mt-4 max-w-full">
-							<h3 class="font-bold text-lg mb-4">Search Results</h3>
-
-							<div class="flex flex-wrap">
-								{#each places as place}
-									<button
-										type="button"
-										class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
-										on:click={() => {
-											markers = [
-												{
-													lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-													location: place.display_name,
-													name: place.name,
-													activity_type: place.type
-												}
-											];
-										}}
-									>
-										{place.display_name}
-									</button>
-								{/each}
-							</div>
 						</div>
-					{:else if noPlaces}
-						<p class="text-error text-lg">No results found</p>
-					{/if}
-					<!-- </div> -->
-					<div>
-						<MapLibre
-							style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-							class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
-							standardControls
-						>
-							<!-- MapEvents gives you access to map events even from other components inside the map,
+						<div>
+							<form on:submit={geocode} class="mt-2">
+								<input
+									type="text"
+									placeholder="Seach for a location"
+									class="input input-bordered w-full max-w-xs mb-2"
+									id="search"
+									name="search"
+									bind:value={query}
+								/>
+								<button class="btn btn-neutral -mt-1" type="submit">Search</button>
+							</form>
+						</div>
+						{#if places.length > 0}
+							<div class="mt-4 max-w-full">
+								<h3 class="font-bold text-lg mb-4">Search Results</h3>
+
+								<div class="flex flex-wrap">
+									{#each places as place}
+										<button
+											type="button"
+											class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
+											on:click={() => {
+												markers = [
+													{
+														lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+														location: place.display_name,
+														name: place.name,
+														activity_type: place.type,
+														lng: 0
+													}
+												];
+											}}
+										>
+											{place.display_name}
+										</button>
+									{/each}
+								</div>
+							</div>
+						{:else if noPlaces}
+							<p class="text-error text-lg">No results found</p>
+						{/if}
+						<!-- </div> -->
+						<div>
+							<MapLibre
+								style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+								standardControls
+							>
+								<!-- MapEvents gives you access to map events even from other components inside the map,
 where you might not have access to the top-level `MapLibre` component. In this case
 it would also work to just use on:click on the MapLibre component itself. -->
-							<MapEvents on:click={addMarker} />
+								<MapEvents on:click={addMarker} />
 
-							{#each markers as marker}
-								<DefaultMarker lngLat={marker.lngLat} />
-							{/each}
-						</MapLibre>
-					</div>
-
-					<div class="mt-4">
-						<button type="submit" class="btn btn-primary">Save & Next</button>
-						<button type="button" class="btn" on:click={close}>Close</button>
-					</div>
-					{#if adventure.is_public}
-						<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
-							<p class=" font-semibold">Share this Adventure!</p>
-							<div class="flex items-center justify-between">
-								<p class="text-card-foreground font-mono">
-									{window.location.origin}/adventures/{adventure.id}
-								</p>
-								<button
-									type="button"
-									on:click={() => {
-										navigator.clipboard.writeText(
-											`${window.location.origin}/adventures/${adventure.id}`
-										);
-									}}
-									class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
-								>
-									Copy Link
-								</button>
-							</div>
+								{#each markers as marker}
+									<DefaultMarker lngLat={marker.lngLat} />
+								{/each}
+							</MapLibre>
 						</div>
-					{/if}
+
+						<div class="mt-4">
+							<button type="submit" class="btn btn-primary">Save & Next</button>
+							<button type="button" class="btn" on:click={close}>Close</button>
+						</div>
+						{#if adventure.is_public}
+							<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
+								<p class=" font-semibold">Share this Adventure!</p>
+								<div class="flex items-center justify-between">
+									<p class="text-card-foreground font-mono">
+										{window.location.origin}/adventures/{adventure.id}
+									</p>
+									<button
+										type="button"
+										on:click={() => {
+											navigator.clipboard.writeText(
+												`${window.location.origin}/adventures/${adventure.id}`
+											);
+										}}
+										class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+									>
+										Copy Link
+									</button>
+								</div>
+							</div>
+						{/if}
+					</div>
 				</form>
 			</div>
 		{:else}
