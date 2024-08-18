@@ -129,6 +129,12 @@
 		dispatch('edit', adventure);
 	}
 
+	let currentSlide = 0;
+
+	function goToSlide(index: number) {
+		currentSlide = index;
+	}
+
 	function link() {
 		dispatch('link', adventure);
 	}
@@ -153,10 +159,27 @@
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
 >
 	<figure>
-		<!-- svelte-ignore a11y-img-redundant-alt -->
-		{#if adventure.image && adventure.image !== ''}
-			<img src={adventure.image} alt="Adventure Image" class="w-full h-48 object-cover" />
+		{#if adventure.images && adventure.images.length > 0}
+			<div class="carousel w-full">
+				{#each adventure.images as image, i}
+					<div
+						class="carousel-item w-full"
+						style="display: {i === currentSlide ? 'block' : 'none'}"
+					>
+						<img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} />
+						<div class="flex justify-center w-full py-2 gap-2">
+							{#each adventure.images as _, i}
+								<button
+									on:click={() => goToSlide(i)}
+									class="btn btn-xs {i === currentSlide ? 'btn-active' : ''}">{i + 1}</button
+								>
+							{/each}
+						</div>
+					</div>
+				{/each}
+			</div>
 		{:else}
+			<!-- svelte-ignore a11y-img-redundant-alt -->
 			<img
 				src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
 				alt="No image available"

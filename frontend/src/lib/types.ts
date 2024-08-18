@@ -11,7 +11,7 @@ export type User = {
 
 export type Adventure = {
 	id: string;
-	user_id: number;
+	user_id: number | null;
 	type: string;
 	name: string;
 	location?: string | null;
@@ -19,7 +19,10 @@ export type Adventure = {
 	description?: string | null;
 	rating?: number | null;
 	link?: string | null;
-	image?: string | null;
+	images: {
+		id: string;
+		image: string;
+	}[];
 	date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
 	collection?: string | null;
 	latitude: number | null;
@@ -55,6 +58,8 @@ export type Point = {
 		lng: number;
 	};
 	name: string;
+	location: string;
+	activity_type: string;
 };
 
 export type Collection = {

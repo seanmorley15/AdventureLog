@@ -159,7 +159,7 @@ export const actions: Actions = {
 		}
 		formDataToSend.append('rating', rating ? rating.toString() : '');
 		formDataToSend.append('link', link || '');
-		formDataToSend.append('image', image);
+		// formDataToSend.append('image', image);
 
 		// log each key-value pair in the FormData
 		for (let pair of formDataToSend.entries()) {
@@ -232,6 +232,21 @@ export const actions: Actions = {
 		let user_id = new_id.user_id;
 		let image_url = new_id.image;
 		let link_url = new_id.link;
+
+		if (image && image.size > 0) {
+			let imageForm = new FormData();
+			imageForm.append('image', image);
+			imageForm.append('adventure', id);
+			let imageRes = await fetch(`${serverEndpoint}/api/images/`, {
+				method: 'POST',
+				headers: {
+					Cookie: `${event.cookies.get('auth')}`
+				},
+				body: imageForm
+			});
+			let data = await imageRes.json();
+			console.log(data);
+		}
 
 		return { id, user_id, image_url, link };
 	},
@@ -410,5 +425,17 @@ export const actions: Actions = {
 		let image_url = adventure.image;
 		let link_url = adventure.link;
 		return { image_url, link_url };
+	},
+	image: async (event) => {
+		let formData = await event.request.formData();
+		let res = await fetch(`${serverEndpoint}/api/images/`, {
+			method: 'POST',
+			headers: {
+				Cookie: `${event.cookies.get('auth')}`
+			},
+			body: formData
+		});
+		let data = await res.json();
+		return data;
 	}
 };

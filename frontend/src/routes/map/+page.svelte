@@ -1,7 +1,6 @@
 <script>
 	// @ts-nocheck
-
-	import NewAdventure from '$lib/components/NewAdventure.svelte';
+	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import {
 		DefaultMarker,
 		MapEvents,
@@ -142,11 +141,11 @@
 </div>
 
 {#if createModalOpen}
-	<NewAdventure
+	<AdventureModal
 		on:close={() => (createModalOpen = false)}
-		longitude={newLongitude}
+		on:save={createNewAdventure}
 		latitude={newLatitude}
-		on:create={createNewAdventure}
+		longitude={newLongitude}
 	/>
 {/if}
 

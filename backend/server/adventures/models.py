@@ -182,3 +182,13 @@ class ChecklistItem(models.Model):
 
     def __str__(self):
         return self.name
+
+class AdventureImage(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    image = ResizedImageField(force_format="WEBP", quality=75, upload_to='images/')
+    adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.image.url
