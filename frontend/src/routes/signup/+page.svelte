@@ -96,8 +96,11 @@
 		</div>
 	{:else}
 		<div class="card card-compact w-96 bg-base-100 shadow-xl p-6 mt-4 mb-4">
-			<article class="text-center text-4xl font-extrabold">
-				<h1>Signup is disabled for this server.</h1>
+			<article class="text-center">
+				<h1 class="text-4xl font-extrabold mb-6">Signup is disabled for this server.</h1>
+				<p>Please contact the server administrator if you think this is an error.</p>
+				<br />
+				<p>If you are the administrator, users can be registered via the admin site.</p>
 			</article>
 
 			{#if errors.message}
@@ -105,15 +108,6 @@
 					{errors.message}
 				</div>
 			{/if}
-
-			<div class="flex justify-center mt-12 mr-25 ml-25">
-				<blockquote class="w-80 text-center text-lg break-words">
-					{#if quote != ''}
-						{quote}
-					{/if}
-					<!-- <footer class="text-sm">- Steve Jobs</footer> -->
-				</blockquote>
-			</div>
 		</div>
 	{/if}
 </div>
