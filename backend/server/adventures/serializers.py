@@ -8,17 +8,27 @@ class AdventureImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'adventure']
         read_only_fields = ['id']
 
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+        
+    #     # Build the full URL for the image
+    #     request = self.context.get('request')
+    #     if request and instance.image:
+    #         public_url = request.build_absolute_uri(instance.image.url)
+    #     else:
+    #         public_url = f"{os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')}/media/{instance.image.name}"
+        
+    #     representation['image'] = public_url
+    #     return representation
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        
-        # Build the full URL for the image
-        request = self.context.get('request')
-        if request and instance.image:
-            public_url = request.build_absolute_uri(instance.image.url)
-        else:
-            public_url = f"{os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')}/media/{instance.image.name}"
-        
-        representation['image'] = public_url
+        if instance.image:
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            #print(public_url)
+            # remove any  ' from the url
+            public_url = public_url.replace("'", "")
+            representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
 
 
