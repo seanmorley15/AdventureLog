@@ -3,8 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import EditAdventure from '$lib/components/EditAdventure.svelte';
-	import NewAdventure from '$lib/components/NewAdventure.svelte';
+	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Adventure } from '$lib/types';
 
@@ -22,9 +21,6 @@
 		planned: true,
 		includeCollections: true
 	};
-
-	let isShowingCreateModal: boolean = false;
-	let newType: string = '';
 
 	let resultsPerPage: number = 25;
 
@@ -95,31 +91,31 @@
 		}
 	}
 
-	let adventureToEdit: Adventure;
-	let isEditModalOpen: boolean = false;
+	let adventureToEdit: Adventure | null = null;
+	let isAdventureModalOpen: boolean = false;
 
 	function deleteAdventure(event: CustomEvent<string>) {
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function createAdventure(event: CustomEvent<Adventure>) {
-		adventures = [event.detail, ...adventures];
-		isShowingCreateModal = false;
+	// function that save changes to an existing adventure or creates a new one if it doesn't exist
+	function saveOrCreate(event: CustomEvent<Adventure>) {
+		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
+			adventures = adventures.map((adventure) => {
+				if (adventure.id === event.detail.id) {
+					return event.detail;
+				}
+				return adventure;
+			});
+		} else {
+			adventures = [event.detail, ...adventures];
+		}
+		isAdventureModalOpen = false;
 	}
 
 	function editAdventure(event: CustomEvent<Adventure>) {
 		adventureToEdit = event.detail;
-		isEditModalOpen = true;
-	}
-
-	function saveEdit(event: CustomEvent<Adventure>) {
-		adventures = adventures.map((adventure) => {
-			if (adventure.id === event.detail.id) {
-				return event.detail;
-			}
-			return adventure;
-		});
-		isEditModalOpen = false;
+		isAdventureModalOpen = true;
 	}
 
 	let sidebarOpen = false;
@@ -129,19 +125,11 @@
 	}
 </script>
 
-{#if isShowingCreateModal}
-	<NewAdventure
-		type={newType}
-		on:create={createAdventure}
-		on:close={() => (isShowingCreateModal = false)}
-	/>
-{/if}
-
-{#if isEditModalOpen}
-	<EditAdventure
+{#if isAdventureModalOpen}
+	<AdventureModal
 		{adventureToEdit}
-		on:close={() => (isEditModalOpen = false)}
-		on:saveEdit={saveEdit}
+		on:close={() => (isAdventureModalOpen = false)}
+		on:save={saveOrCreate}
 	/>
 {/if}
 
@@ -160,21 +148,13 @@
 				<button
 					class="btn btn-primary"
 					on:click={() => {
-						isShowingCreateModal = true;
-						newType = 'visited';
+						isAdventureModalOpen = true;
+						adventureToEdit = null;
 					}}
 				>
-					Visited Adventure</button
+					Adventure</button
 				>
-				<button
-					class="btn btn-primary"
-					on:click={() => {
-						isShowingCreateModal = true;
-						newType = 'planned';
-					}}
-				>
-					Planned Adventure</button
-				>
+
 				<!-- <button
 			class="btn btn-primary"
 			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button

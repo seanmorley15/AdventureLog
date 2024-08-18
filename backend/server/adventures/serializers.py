@@ -1,13 +1,25 @@
 import os
-from .models import Adventure, ChecklistItem, Collection, Note, Transportation, Checklist
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist
 from rest_framework import serializers
 
-class AdventureSerializer(serializers.ModelSerializer):
-
+class AdventureImageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Adventure
-        fields = '__all__' 
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+        model = AdventureImage
+        fields = ['id', 'image', 'adventure']
+        read_only_fields = ['id']
+
+    # def to_representation(self, instance):
+    #     representation = super().to_representation(instance)
+        
+    #     # Build the full URL for the image
+    #     request = self.context.get('request')
+    #     if request and instance.image:
+    #         public_url = request.build_absolute_uri(instance.image.url)
+    #     else:
+    #         public_url = f"{os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')}/media/{instance.image.name}"
+        
+    #     representation['image'] = public_url
+    #     return representation
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -18,11 +30,19 @@ class AdventureSerializer(serializers.ModelSerializer):
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
-    
-    def validate_activity_types(self, value):
-        if value:
-            return [activity.lower() for activity in value]
-        return value
+
+
+                                        
+class AdventureSerializer(serializers.ModelSerializer):
+    images = AdventureImageSerializer(many=True, read_only=True)
+    class Meta:
+        model = Adventure
+        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'date', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return representation
     
 class TransportationSerializer(serializers.ModelSerializer):
 

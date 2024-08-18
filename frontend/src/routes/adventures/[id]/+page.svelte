@@ -26,11 +26,18 @@
 
 	let adventure: Adventure;
 
+	let currentSlide = 0;
+
+	function goToSlide(index: number) {
+		currentSlide = index;
+	}
+
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import EditAdventure from '$lib/components/AdventureModal.svelte';
+	import AdventureModal from '$lib/components/AdventureModal.svelte';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -69,10 +76,10 @@
 {/if}
 
 {#if isEditModalOpen}
-	<EditAdventure
+	<AdventureModal
 		adventureToEdit={adventure}
 		on:close={() => (isEditModalOpen = false)}
-		on:saveEdit={saveEdit}
+		on:save={saveEdit}
 	/>
 {/if}
 
@@ -92,16 +99,31 @@
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">
 				<div class="grid gap-8">
-					{#if adventure.image}
-						<div>
-							<img
-								src={adventure.image}
-								alt={adventure.name}
-								width="1200"
-								height="600"
-								class="w-full h-auto object-cover rounded-lg"
-								style="aspect-ratio: 1200 / 600; object-fit: cover;"
-							/>
+					{#if adventure.images && adventure.images.length > 0}
+						<div class="carousel w-full">
+							{#each adventure.images as image, i}
+								<div
+									class="carousel-item w-full"
+									style="display: {i === currentSlide ? 'block' : 'none'}"
+								>
+									<img
+										src={image.image}
+										width="1200"
+										height="600"
+										class="w-full h-auto object-cover rounded-lg"
+										style="aspect-ratio: 1200 / 600; object-fit: cover;"
+										alt={adventure.name}
+									/>
+									<div class="flex justify-center w-full py-2 gap-2">
+										{#each adventure.images as _, i}
+											<button
+												on:click={() => goToSlide(i)}
+												class="btn btn-xs {i === currentSlide ? 'btn-active' : ''}">{i + 1}</button
+											>
+										{/each}
+									</div>
+								</div>
+							{/each}
 						</div>
 					{/if}
 					<div class="grid gap-4">
@@ -109,7 +131,6 @@
 							<div>
 								<h1 class="text-4xl mt-2 font-bold">{adventure.name}</h1>
 							</div>
-
 							<div class="flex items-center gap-1">
 								{#if adventure.rating !== undefined && adventure.rating !== null}
 									<div class="flex justify-center items-center">

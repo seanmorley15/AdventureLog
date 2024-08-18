@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { enhance, deserialize } from '$app/forms';
+	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
-	import EditAdventure from '$lib/components/EditAdventure.svelte';
 	import EditCollection from '$lib/components/EditCollection.svelte';
-	import NewAdventure from '$lib/components/NewAdventure.svelte';
 	import NewCollection from '$lib/components/NewCollection.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure, Collection } from '$lib/types';
+	import type { Collection } from '$lib/types';
 
 	import Plus from '~icons/mdi/plus';
 

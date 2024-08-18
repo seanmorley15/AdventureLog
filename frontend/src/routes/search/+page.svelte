@@ -4,9 +4,10 @@
 	import type { Adventure, OpenStreetMapPlace } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import EditAdventure from '$lib/components/AdventureModal.svelte';
 	import { appVersion } from '$lib/config';
 	import { goto } from '$app/navigation';
+	import AdventureModal from '$lib/components/AdventureModal.svelte';
 
 	export let data: PageData;
 
@@ -59,29 +60,31 @@
 	}
 
 	let adventureToEdit: Adventure;
-	let isEditModalOpen: boolean = false;
+	let isAdventureModalOpen: boolean = false;
 
 	function editAdventure(event: CustomEvent<Adventure>) {
 		adventureToEdit = event.detail;
-		isEditModalOpen = true;
+		isAdventureModalOpen = true;
 	}
 
 	function saveEdit(event: CustomEvent<Adventure>) {
+		console.log(event.detail);
 		myAdventures = myAdventures.map((adventure) => {
 			if (adventure.id === event.detail.id) {
 				return event.detail;
 			}
 			return adventure;
 		});
-		isEditModalOpen = false;
+		isAdventureModalOpen = false;
+		console.log(myAdventures);
 	}
 </script>
 
-{#if isEditModalOpen}
-	<EditAdventure
+{#if isAdventureModalOpen}
+	<AdventureModal
 		{adventureToEdit}
-		on:close={() => (isEditModalOpen = false)}
-		on:saveEdit={saveEdit}
+		on:close={() => (isAdventureModalOpen = false)}
+		on:save={filterByProperty}
 	/>
 {/if}
 

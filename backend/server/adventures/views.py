@@ -1,12 +1,13 @@
+import uuid
 import requests
 from django.db import transaction
 from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Checklist, Collection, Transportation, Note
+from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage
 from worldtravel.models import VisitedRegion, Region, Country
-from .serializers import AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
+from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
 from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
@@ -527,6 +528,98 @@ class ChecklistViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         return Checklist.objects.filter(user_id=user)
+
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
+
+class AdventureImageViewSet(viewsets.ModelViewSet):
+    serializer_class = AdventureImageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def dispatch(self, request, *args, **kwargs):
+        print(f"Method: {request.method}")
+        return super().dispatch(request, *args, **kwargs)
+
+    @action(detail=True, methods=['post'])
+    def image_delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+    def create(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        adventure_id = request.data.get('adventure')
+        try:
+            adventure = Adventure.objects.get(id=adventure_id)
+        except Adventure.DoesNotExist:
+            return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().create(request, *args, **kwargs)
+    
+    def update(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        adventure_id = request.data.get('adventure')
+        try:
+            adventure = Adventure.objects.get(id=adventure_id)
+        except Adventure.DoesNotExist:
+            return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().update(request, *args, **kwargs)
+    
+    def perform_destroy(self, instance):
+        print("perform_destroy")
+        return super().perform_destroy(instance)
+
+    def destroy(self, request, *args, **kwargs):
+        print("destroy")
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        instance = self.get_object()
+        adventure = instance.adventure
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().destroy(request, *args, **kwargs)
+    
+    def partial_update(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        instance = self.get_object()
+        adventure = instance.adventure
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        return super().partial_update(request, *args, **kwargs)
+    
+    @action(detail=False, methods=['GET'], url_path='(?P<adventure_id>[0-9a-f-]+)')
+    def adventure_images(self, request, adventure_id=None, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            adventure_uuid = uuid.UUID(adventure_id)
+        except ValueError:
+            return Response({"error": "Invalid adventure ID"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        queryset = AdventureImage.objects.filter(
+            Q(adventure__id=adventure_uuid) & Q(user_id=request.user)
+        )
+        
+        serializer = self.get_serializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def get_queryset(self):
+        return AdventureImage.objects.filter(user_id=self.request.user)
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
