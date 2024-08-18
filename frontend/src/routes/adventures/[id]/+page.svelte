@@ -192,7 +192,12 @@
 									<span class="text-sm text-muted-foreground"
 										>{new Date(adventure.date).toLocaleDateString(undefined, {
 											timeZone: 'UTC'
-										})}</span
+										})}{adventure.end_date && adventure.end_date !== ''
+											? ' - ' +
+												new Date(adventure.end_date).toLocaleDateString(undefined, {
+													timeZone: 'UTC'
+												})
+											: ''}</span
 									>
 								</div>
 							{/if}

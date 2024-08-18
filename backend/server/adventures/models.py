@@ -46,6 +46,7 @@ class Adventure(models.Model):
     link = models.URLField(blank=True, null=True)
     image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
     date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
     is_public = models.BooleanField(default=False)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)

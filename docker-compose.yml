@@ -5,9 +5,9 @@ services:
     #build: ./frontend/
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     environment:
-      - PUBLIC_SERVER_URL=http://server:8000
+      - PUBLIC_SERVER_URL=http://server:8000 # MOST DOCKER USERS WILL NEVER NEED TO CHANGE THIS, EVEN IF YOU CHANGE THE PORTS
       - ORIGIN=http://localhost:8080
-      - BODY_SIZE_LIMIT=Infinity
+      - BODY_SIZE_LIMIT=Infinity # This is measured in bytes
     ports:
       - "8080:3000"
     depends_on:
