@@ -59,8 +59,7 @@
 				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
 				location: adventure.location || '',
 				name: adventure.name,
-				activity_type: '',
-				lng: 0
+				activity_type: ''
 			}
 		];
 	}
@@ -213,8 +212,7 @@
 						lngLat: { lng: longitude, lat: latitude },
 						location: data[0]?.display_name || '',
 						name: data[0]?.name || '',
-						activity_type: data[0]?.type || '',
-						lng: 0
+						activity_type: data[0]?.type || ''
 					}
 				];
 			}
@@ -249,6 +247,7 @@
 		let data = await res.json();
 		if (data.extract?.length > 0) {
 			adventure.description = data.extract;
+			wikiError = '';
 		} else {
 			wikiError = 'No description found';
 		}
@@ -262,8 +261,7 @@
 				lngLat: e.detail.lngLat,
 				name: '',
 				location: '',
-				activity_type: '',
-				lng: 0
+				activity_type: ''
 			}
 		];
 		console.log(markers);
@@ -550,8 +548,7 @@
 														lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
 														location: place.display_name,
 														name: place.name,
-														activity_type: place.type,
-														lng: 0
+														activity_type: place.type
 													}
 												];
 											}}
@@ -586,27 +583,6 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							<button type="submit" class="btn btn-primary">Save & Next</button>
 							<button type="button" class="btn" on:click={close}>Close</button>
 						</div>
-						{#if adventure.is_public}
-							<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
-								<p class=" font-semibold">Share this Adventure!</p>
-								<div class="flex items-center justify-between">
-									<p class="text-card-foreground font-mono">
-										{window.location.origin}/adventures/{adventure.id}
-									</p>
-									<button
-										type="button"
-										on:click={() => {
-											navigator.clipboard.writeText(
-												`${window.location.origin}/adventures/${adventure.id}`
-											);
-										}}
-										class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
-									>
-										Copy Link
-									</button>
-								</div>
-							</div>
-						{/if}
 					</div>
 				</form>
 			</div>
@@ -683,6 +659,25 @@ it would also work to just use on:click on the MapLibre component itself. -->
 			</div>
 			<div class="mt-4">
 				<button type="button" class="btn btn-primary" on:click={saveAndClose}>Close</button>
+			</div>
+		{/if}
+		{#if adventure.is_public && adventure.id}
+			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
+				<p class=" font-semibold">Share this Adventure!</p>
+				<div class="flex items-center justify-between">
+					<p class="text-card-foreground font-mono">
+						{window.location.origin}/adventures/{adventure.id}
+					</p>
+					<button
+						type="button"
+						on:click={() => {
+							navigator.clipboard.writeText(`${window.location.origin}/adventures/${adventure.id}`);
+						}}
+						class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+					>
+						Copy Link
+					</button>
+				</div>
 			</div>
 		{/if}
 	</div>
