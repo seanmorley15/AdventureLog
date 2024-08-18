@@ -36,7 +36,8 @@
 	let isEditModalOpen: boolean = false;
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import EditAdventure from '$lib/components/EditAdventure.svelte';
+	import EditAdventure from '$lib/components/AdventureModal.svelte';
+	import AdventureModal from '$lib/components/AdventureModal.svelte';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -75,10 +76,10 @@
 {/if}
 
 {#if isEditModalOpen}
-	<EditAdventure
+	<AdventureModal
 		adventureToEdit={adventure}
 		on:close={() => (isEditModalOpen = false)}
-		on:saveEdit={saveEdit}
+		on:save={saveEdit}
 	/>
 {/if}
 
