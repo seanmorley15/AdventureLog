@@ -24,6 +24,7 @@ export type Adventure = {
 		image: string;
 	}[];
 	date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
+	end_date?: string | null; // Assuming date is a string in 'YYYY-MM-DD' format
 	collection?: string | null;
 	latitude: number | null;
 	longitude: number | null;

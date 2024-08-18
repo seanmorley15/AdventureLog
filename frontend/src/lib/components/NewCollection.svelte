@@ -9,7 +9,7 @@
 
 	let newCollection: Collection = {
 		user_id: NaN,
-		id: NaN,
+		id: '',
 		name: '',
 		description: '',
 		adventures: [] as Adventure[],
@@ -40,6 +40,12 @@
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
+
+		// make sure that start_date is before end_date
+		if (new Date(newCollection.start_date ?? '') > new Date(newCollection.end_date ?? '')) {
+			addToast('error', 'Start date must be before end date');
+			return;
+		}
 
 		const response = await fetch(form.action, {
 			method: form.method,

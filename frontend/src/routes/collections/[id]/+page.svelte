@@ -184,6 +184,8 @@
 		on:close={() => (isAdventureModalOpen = false)}
 		on:save={saveOrCreate}
 		collection_id={collection.id}
+		startDate={collection.start_date}
+		endDate={collection.end_date}
 	/>
 {/if}
 

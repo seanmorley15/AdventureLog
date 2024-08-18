@@ -34,6 +34,7 @@
 		name: adventureToEdit?.name || '',
 		type: adventureToEdit?.type || 'visited',
 		date: adventureToEdit?.date || null,
+		end_date: adventureToEdit?.end_date || null,
 		link: adventureToEdit?.link || null,
 		description: adventureToEdit?.description || null,
 		activity_types: adventureToEdit?.activity_types || [],
@@ -286,6 +287,14 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		if (adventure.date && adventure.end_date) {
+			if (new Date(adventure.date) > new Date(adventure.end_date)) {
+				addToast('error', 'Start date must be before end date');
+				return;
+			}
+		}
+
 		console.log(adventure);
 		if (adventure.id === '') {
 			let res = await fetch('/api/adventures', {
@@ -374,7 +383,7 @@
 					</div>
 
 					<div>
-						<label for="date">Date</label><br />
+						<label for="date">Date (or start date)</label><br />
 						<input
 							type="date"
 							id="date"
@@ -382,6 +391,18 @@
 							min={startDate || ''}
 							max={endDate || ''}
 							bind:value={adventure.date}
+							class="input input-bordered w-full"
+						/>
+					</div>
+					<div>
+						<label for="end_date">End Date</label><br />
+						<input
+							type="date"
+							id="end_date"
+							name="end_date"
+							min={startDate || ''}
+							max={endDate || ''}
+							bind:value={adventure.end_date}
 							class="input input-bordered w-full"
 						/>
 					</div>
