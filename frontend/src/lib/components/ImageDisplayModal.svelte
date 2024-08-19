@@ -18,25 +18,34 @@
 
 	function close() {
 		dispatch('close');
+		if (modal) {
+			modal.close();
+		}
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			dispatch('close');
+			close();
+		}
+	}
+
+	function handleClickOutside(event: MouseEvent) {
+		if (event.target === modal) {
+			close();
 		}
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal">
+<dialog id="my_modal_1" class="modal" on:click={handleClickOutside}>
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold mb-4 text-2xl">{adventure.name}</h3>
-
-		<div class="flex flex-col items-center">
-			<img src={image} alt={adventure.name} class="w-full h-full object-cover" />
+		<div class="modal-header flex justify-between items-center mb-4">
+			<h3 class="font-bold text-2xl">{adventure.name}</h3>
+			<button class="close-btn" on:click={close} aria-label="Close" style="font-size: 3rem">&times;</button>
 		</div>
-
-		<button class="btn mt-4 btn-primary" on:click={close}>Close</button>
+		<div class="flex justify-center items-center" style="display: flex; justify-content: center; align-items: center;">
+			<img src={image} alt={adventure.name} style="max-width: 100%; max-height: 75vh; object-fit: contain;" />
+		</div>
 	</div>
 </dialog>
