@@ -172,7 +172,10 @@
 						style="display: {i === currentSlide ? 'block' : 'none'}"
 					>
 						<!-- svelte-ignore a11y-invalid-attribute -->
-						<a href="#" on:click={() => (image_url = image.image)}
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<!-- svelte-ignore a11y-missing-attribute -->
+						<a on:click={() => (image_url = image.image)}
 							><img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} /></a
 						>
 						<div class="flex justify-center w-full py-2 gap-2">
