@@ -117,8 +117,7 @@ class Transportation(models.Model):
         print(self.date)
         if self.date and self.end_date and self.date > self.end_date:
             raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
-        if self.end_date and self.date is 'null':
-            raise ValidationError('Transportations must have an end date. Transportation: ' + self.name)
+        
         if self.collection:
             if self.collection.is_public and not self.is_public:
                 raise ValidationError('Transportations associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
