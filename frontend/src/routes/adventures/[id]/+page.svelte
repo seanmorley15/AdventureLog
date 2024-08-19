@@ -34,10 +34,12 @@
 
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
+	let image_url: string | null = null;
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import EditAdventure from '$lib/components/AdventureModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -83,6 +85,10 @@
 	/>
 {/if}
 
+{#if image_url}
+	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} {adventure} />
+{/if}
+
 {#if !adventure && !notFound}
 	<div class="flex justify-center items-center w-full mt-16">
 		<span class="loading loading-spinner w-24 h-24"></span>
@@ -102,18 +108,25 @@
 					{#if adventure.images && adventure.images.length > 0}
 						<div class="carousel w-full">
 							{#each adventure.images as image, i}
+								<!-- svelte-ignore a11y-no-static-element-interactions -->
+								<!-- svelte-ignore a11y-missing-attribute -->
+								<!-- svelte-ignore a11y-missing-content -->
 								<div
 									class="carousel-item w-full"
 									style="display: {i === currentSlide ? 'block' : 'none'}"
 								>
-									<img
-										src={image.image}
-										width="1200"
-										height="600"
-										class="w-full h-auto object-cover rounded-lg"
-										style="aspect-ratio: 1200 / 600; object-fit: cover;"
-										alt={adventure.name}
-									/>
+									<!-- svelte-ignore a11y-click-events-have-key-events -->
+									<!-- svelte-ignore a11y-missing-attribute -->
+									<a on:click={() => (image_url = image.image)}>
+										<img
+											src={image.image}
+											width="1200"
+											height="600"
+											class="w-full h-auto object-cover rounded-lg"
+											style="aspect-ratio: 1200 / 600; object-fit: cover;"
+											alt={adventure.name}
+										/>
+									</a>
 									<div class="flex justify-center w-full py-2 gap-2">
 										{#each adventure.images as _, i}
 											<button
