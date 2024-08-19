@@ -164,7 +164,7 @@
 					</div>
 					<div class="mb-2">
 						<label for="start_date"
-							>{transportationToEdit.date ? 'Start' : ''}Date & Time <Calendar
+							>{transportationToEdit.date ? 'Start ' : ''}Date & Time <Calendar
 								class="inline-block mb-1 w-6 h-6"
 							/></label
 						><br />
