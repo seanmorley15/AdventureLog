@@ -18,6 +18,7 @@
 	import CollectionLink from './CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
+	import ImageDisplayModal from './ImageDisplayModal.svelte';
 
 	export let type: string;
 
@@ -27,7 +28,7 @@
 	let isWarningModalOpen: boolean = false;
 
 	let keyword: string = '';
-
+	let image_url: string | null = null;
 	export let adventure: Adventure;
 
 	if (adventure.type == 'visited') {
@@ -155,6 +156,10 @@
 	/>
 {/if}
 
+{#if image_url}
+	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} {adventure} />
+{/if}
+
 <div
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
 >
@@ -166,7 +171,9 @@
 						class="carousel-item w-full"
 						style="display: {i === currentSlide ? 'block' : 'none'}"
 					>
-						<img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} />
+						<a href="" on:click={() => (image_url = image.image)}
+							><img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} /></a
+						>
 						<div class="flex justify-center w-full py-2 gap-2">
 							{#each adventure.images as _, i}
 								<button
