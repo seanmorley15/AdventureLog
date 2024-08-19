@@ -53,6 +53,11 @@
 			return;
 		}
 
+		if (newCollection.start_date && !newCollection.end_date) {
+			addToast('error', 'Please provide an end date');
+			return;
+		}
+
 		const response = await fetch(form.action, {
 			method: form.method,
 			body: formData
