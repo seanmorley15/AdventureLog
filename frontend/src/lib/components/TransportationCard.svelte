@@ -11,6 +11,7 @@
 	import { addToast } from '$lib/toasts';
 
 	import Plus from '~icons/mdi/plus';
+	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
 
@@ -39,19 +40,30 @@
 </script>
 
 <div
-	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl overflow-hidden text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{transportation.name}</h2>
 		<div class="badge badge-secondary">{transportation.type}</div>
-		{#if transportation.from_location && transportation.to_location}
-			<p class="text-sm">
-				{transportation.from_location} to {transportation.to_location}
-			</p>
-		{/if}
-		{#if transportation.date}
-			{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}
-		{/if}
+		<div>
+			{#if transportation.from_location}
+				<p class="break-words text-wrap">{transportation.from_location}</p>
+			{/if}
+			{#if transportation.to_location}
+				<ArrowDownThick class="w-6 h-6" />
+				<p class="break-words text-wrap">{transportation.to_location}</p>
+			{/if}
+		</div>
+		<div>
+			{#if transportation.date}
+				<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+			{/if}
+			{#if transportation.end_date}
+				<ArrowDownThick class="w-6 h-6" />
+				<p>{new Date(transportation.end_date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+			{/if}
+		</div>
+
 		{#if user?.pk === transportation.user_id}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"

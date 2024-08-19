@@ -40,6 +40,9 @@
 	if (transportationToEdit.date) {
 		transportationToEdit.date = transportationToEdit.date.slice(0, 19);
 	}
+	if (transportationToEdit.end_date) {
+		transportationToEdit.end_date = transportationToEdit.end_date.slice(0, 19);
+	}
 
 	function close() {
 		dispatch('close');
@@ -55,6 +58,20 @@
 		event.preventDefault();
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
+		// make sure end_date is not before start_date
+		if (
+			transportationToEdit.end_date &&
+			transportationToEdit.date &&
+			transportationToEdit.date > transportationToEdit.end_date
+		) {
+			addToast('error', 'End date cannot be before start date');
+			return;
+		}
+		// make sure end_date has a start_date
+		if (transportationToEdit.end_date && !transportationToEdit.date) {
+			transportationToEdit.end_date = null;
+			formData.set('end_date', '');
+		}
 
 		const response = await fetch(`/api/transportations/${transportationToEdit.id}/`, {
 			method: 'PUT',
@@ -147,7 +164,9 @@
 					</div>
 					<div class="mb-2">
 						<label for="start_date"
-							>Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+							>{transportationToEdit.date ? 'Start' : ''}Date & Time <Calendar
+								class="inline-block mb-1 w-6 h-6"
+							/></label
 						><br />
 						<input
 							type="datetime-local"
@@ -159,6 +178,22 @@
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>
 					</div>
+					{#if transportationToEdit.date}
+						<div class="mb-2">
+							<label for="end_date"
+								>End Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+							><br />
+							<input
+								type="datetime-local"
+								id="end_date"
+								name="end_date"
+								min={fullStartDate || ''}
+								max={fullEndDate || ''}
+								bind:value={transportationToEdit.end_date}
+								class="input input-bordered w-full max-w-xs mt-1"
+							/>
+						</div>
+					{/if}
 					<div class="mb-2">
 						<label for="rating">Rating <Star class="inline-block mb-1 w-6 h-6" /></label><br />
 						<input
