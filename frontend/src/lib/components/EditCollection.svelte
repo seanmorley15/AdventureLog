@@ -47,6 +47,22 @@
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
 
+		if (collectionToEdit.end_date && collectionToEdit.start_date) {
+			if (new Date(collectionToEdit.start_date) > new Date(collectionToEdit.end_date)) {
+				addToast('error', 'Start date must be before end date');
+				return;
+			}
+		}
+		if (collectionToEdit.end_date && !collectionToEdit.start_date) {
+			addToast('error', 'Please provide a start date');
+			return;
+		}
+
+		if (collectionToEdit.start_date && !collectionToEdit.end_date) {
+			addToast('error', 'Please provide an end date');
+			return;
+		}
+
 		const response = await fetch(form.action, {
 			method: form.method,
 			body: formData
