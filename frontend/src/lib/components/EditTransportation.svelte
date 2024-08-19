@@ -56,6 +56,8 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+		const form = event.target as HTMLFormElement;
+		const formData = new FormData(form);
 		// make sure end_date is not before start_date
 		if (
 			transportationToEdit.end_date &&
@@ -67,11 +69,9 @@
 		}
 		// make sure end_date has a start_date
 		if (transportationToEdit.end_date && !transportationToEdit.date) {
-			addToast('error', 'Please provide a start date');
-			return;
+			transportationToEdit.end_date = null;
+			formData.set('end_date', '');
 		}
-		const form = event.target as HTMLFormElement;
-		const formData = new FormData(form);
 
 		const response = await fetch(`/api/transportations/${transportationToEdit.id}/`, {
 			method: 'PUT',

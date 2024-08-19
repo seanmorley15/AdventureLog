@@ -295,6 +295,11 @@
 			}
 		}
 
+		if (adventure.end_date && !adventure.date) {
+			adventure.end_date = null;
+			adventure.date = null;
+		}
+
 		console.log(adventure);
 		if (adventure.id === '') {
 			let res = await fetch('/api/adventures', {
