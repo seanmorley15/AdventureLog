@@ -171,7 +171,8 @@
 						class="carousel-item w-full"
 						style="display: {i === currentSlide ? 'block' : 'none'}"
 					>
-						<a href="" on:click={() => (image_url = image.image)}
+						<!-- svelte-ignore a11y-invalid-attribute -->
+						<a href="#" on:click={() => (image_url = image.image)}
 							><img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} /></a
 						>
 						<div class="flex justify-center w-full py-2 gap-2">
