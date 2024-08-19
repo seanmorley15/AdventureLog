@@ -37,31 +37,6 @@ export async function exportData() {
 		visitedRegions
 	};
 
-	async function convertImages() {
-		const promises = data.adventures.map(async (adventure, i) => {
-			if (adventure.image) {
-				const res = await fetch(adventure.image);
-				const blob = await res.blob();
-				const base64 = await blobToBase64(blob);
-				adventure.image = base64;
-				data.adventures[i].image = adventure.image;
-			}
-		});
-
-		await Promise.all(promises);
-	}
-
-	function blobToBase64(blob: Blob): Promise<string> {
-		return new Promise((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(blob);
-			reader.onloadend = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
-	}
-
-	await convertImages();
-
 	const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
 	return URL.createObjectURL(blob);
 }
@@ -92,7 +67,19 @@ export function groupAdventuresByDate(
 	adventures.forEach((adventure) => {
 		if (adventure.date) {
 			const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
-			if (groupedAdventures[adventureDate]) {
+			if (adventure.end_date) {
+				const endDate = new Date(adventure.end_date).toISOString().split('T')[0];
+				const currentDate = new Date(startDate);
+				for (let i = 0; i < numberOfDays; i++) {
+					currentDate.setDate(startDate.getDate() + i);
+					const dateString = currentDate.toISOString().split('T')[0];
+					if (dateString >= adventureDate && dateString <= endDate) {
+						if (groupedAdventures[dateString]) {
+							groupedAdventures[dateString].push(adventure);
+						}
+					}
+				}
+			} else if (groupedAdventures[adventureDate]) {
 				groupedAdventures[adventureDate].push(adventure);
 			}
 		}
@@ -118,7 +105,19 @@ export function groupTransportationsByDate(
 	transportations.forEach((transportation) => {
 		if (transportation.date) {
 			const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
-			if (groupedTransportations[transportationDate]) {
+			if (transportation.end_date) {
+				const endDate = new Date(transportation.end_date).toISOString().split('T')[0];
+				const currentDate = new Date(startDate);
+				for (let i = 0; i < numberOfDays; i++) {
+					currentDate.setDate(startDate.getDate() + i);
+					const dateString = currentDate.toISOString().split('T')[0];
+					if (dateString >= transportationDate && dateString <= endDate) {
+						if (groupedTransportations[dateString]) {
+							groupedTransportations[dateString].push(transportation);
+						}
+					}
+				}
+			} else if (groupedTransportations[transportationDate]) {
 				groupedTransportations[transportationDate].push(transportation);
 			}
 		}

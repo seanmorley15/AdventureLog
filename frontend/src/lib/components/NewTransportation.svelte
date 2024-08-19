@@ -72,6 +72,12 @@
 		const form = event.target as HTMLFormElement;
 		const formData = new FormData(form);
 
+		// make sure there is a start date if there is an end date
+		if (formData.get('end_date') && !formData.get('date')) {
+			addToast('error', 'Please provide a start date');
+			return;
+		}
+
 		const response = await fetch(`/api/transportations/`, {
 			method: 'POST',
 			body: formData
@@ -168,7 +174,7 @@
 					</div>
 					<div class="mb-2">
 						<label for="start_date"
-							>Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+							>Start Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
 						><br />
 						<input
 							type="datetime-local"
@@ -179,6 +185,21 @@
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>
 					</div>
+
+					<div class="mb-2">
+						<label for="end_date"
+							>End Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+						><br />
+						<input
+							type="datetime-local"
+							id="end_date"
+							name="end_date"
+							min={fullStartDate || ''}
+							max={fullEndDate || ''}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+
 					<div class="mb-2">
 						<label for="rating">Rating <Star class="inline-block mb-1 w-6 h-6" /></label><br />
 						<input

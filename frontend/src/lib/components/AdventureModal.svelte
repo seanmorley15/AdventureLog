@@ -383,7 +383,7 @@
 					</div>
 
 					<div>
-						<label for="date">Date (or start date)</label><br />
+						<label for="date">{adventure.date ? 'Start Date' : 'Date'}</label><br />
 						<input
 							type="date"
 							id="date"
@@ -394,18 +394,20 @@
 							class="input input-bordered w-full"
 						/>
 					</div>
-					<div>
-						<label for="end_date">End Date</label><br />
-						<input
-							type="date"
-							id="end_date"
-							name="end_date"
-							min={startDate || ''}
-							max={endDate || ''}
-							bind:value={adventure.end_date}
-							class="input input-bordered w-full"
-						/>
-					</div>
+					{#if adventure.date}
+						<div>
+							<label for="end_date">End Date</label><br />
+							<input
+								type="date"
+								id="end_date"
+								name="end_date"
+								min={startDate || ''}
+								max={endDate || ''}
+								bind:value={adventure.end_date}
+								class="input input-bordered w-full"
+							/>
+						</div>
+					{/if}
 					<div>
 						<!-- link -->
 						<div>

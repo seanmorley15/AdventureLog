@@ -105,6 +105,7 @@ export type Transportation = {
 	rating: number | null;
 	link: string | null;
 	date: string | null; // ISO 8601 date string
+	end_date: string | null; // ISO 8601 date string
 	flight_number: string | null;
 	from_location: string | null;
 	to_location: string | null;

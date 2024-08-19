@@ -55,6 +55,10 @@ class Adventure(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        if self.date and self.end_date and self.date > self.end_date:
+            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+        if self.end_date and not self.date:
+            raise ValidationError('Adventures must have an end date. Adventure: ' + self.name)
         if self.collection:
             if self.collection.is_public and not self.is_public:
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
@@ -100,6 +104,7 @@ class Transportation(models.Model):
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True)
     date = models.DateTimeField(blank=True, null=True)
+    end_date = models.DateTimeField(blank=True, null=True)
     flight_number = models.CharField(max_length=100, blank=True, null=True)
     from_location = models.CharField(max_length=200, blank=True, null=True)
     to_location = models.CharField(max_length=200, blank=True, null=True)
@@ -109,6 +114,11 @@ class Transportation(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
+        print(self.date)
+        if self.date and self.end_date and self.date > self.end_date:
+            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+        if self.end_date and self.date is 'null':
+            raise ValidationError('Transportations must have an end date. Transportation: ' + self.name)
         if self.collection:
             if self.collection.is_public and not self.is_public:
                 raise ValidationError('Transportations associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
