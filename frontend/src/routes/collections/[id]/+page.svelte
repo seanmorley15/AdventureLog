@@ -186,6 +186,7 @@
 		collection_id={collection.id}
 		startDate={collection.start_date}
 		endDate={collection.end_date}
+		is_collection={true}
 	/>
 {/if}
 
@@ -307,24 +308,6 @@
 							Adventure</button
 						>
 
-						<button
-							class="btn btn-primary"
-							on:click={() => {
-								isShowingCreateModal = true;
-								newType = 'lodging';
-							}}
-						>
-							Lodging</button
-						>
-						<button
-							class="btn btn-primary"
-							on:click={() => {
-								isShowingCreateModal = true;
-								newType = 'dining';
-							}}
-						>
-							Dining</button
-						>
 						<button
 							class="btn btn-primary"
 							on:click={() => {
