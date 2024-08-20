@@ -152,3 +152,4 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 - [Sweden GEOJSON](https://cartographyvectors.com/map/1521-sweden-with-regions)
 - [Switzerland GEOJSON](https://cartographyvectors.com/map/1522-switzerland-with-regions)
 - [Iceland GEOJSON](https://cartographyvectors.com/map/1453-iceland-with-regions)
+- [Austria GEOJSON](https://github.com/codeforgermany/click_that_hood/blob/main/public/data/austria-states.geojson)
