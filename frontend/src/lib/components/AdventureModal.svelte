@@ -10,6 +10,8 @@
 	export let latitude: number | null = null;
 	export let collection_id: string | null = null;
 
+	export let is_collection: boolean = false;
+
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 	let markers: Point[] = [];
 	let query: string = '';
@@ -27,9 +29,28 @@
 
 	let noPlaces: boolean = false;
 
+	let adventure: Adventure = {
+		id: '',
+		name: '',
+		type: 'visited',
+		date: null,
+		end_date: null,
+		link: null,
+		description: null,
+		activity_types: [],
+		rating: NaN,
+		is_public: false,
+		latitude: NaN,
+		longitude: NaN,
+		location: null,
+		images: [],
+		user_id: null,
+		collection: collection_id || null
+	};
+
 	export let adventureToEdit: Adventure | null = null;
 
-	let adventure: Adventure = {
+	adventure = {
 		id: adventureToEdit?.id || '',
 		name: adventureToEdit?.name || '',
 		type: adventureToEdit?.type || 'visited',
@@ -228,9 +249,8 @@
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		if (modal) {
-			modal.showModal();
-		}
+		modal.showModal();
+		console.log('open');
 	});
 
 	function close() {
@@ -342,7 +362,9 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-2xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Edit {adventure.type} Adventure</h3>
+		<h3 class="font-bold text-lg">
+			{adventureToEdit ? 'Edit Adventure' : 'New Adventure'}
+		</h3>
 		{#if adventure.id === '' || isDetails}
 			<div class="modal-action items-center">
 				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
@@ -360,6 +382,7 @@
 							required
 						/>
 					</div>
+
 					<div>
 						<div class="form-control">
 							<label class="label cursor-pointer">
@@ -385,6 +408,32 @@
 								/>
 							</label>
 						</div>
+						{#if is_collection}
+							<div class="form-control">
+								<label class="label cursor-pointer">
+									<span class="label-text">Lodging</span>
+									<input
+										type="radio"
+										name="radio-10"
+										class="radio checked:bg-blue-500"
+										on:click={() => (adventure.type = 'lodging')}
+										checked={adventure.type == 'lodging'}
+									/>
+								</label>
+							</div>
+							<div class="form-control">
+								<label class="label cursor-pointer">
+									<span class="label-text">Dining</span>
+									<input
+										type="radio"
+										name="radio-10"
+										class="radio checked:bg-blue-500"
+										on:click={() => (adventure.type = 'dining')}
+										checked={adventure.type == 'dining'}
+									/>
+								</label>
+							</div>
+						{/if}
 					</div>
 
 					<div>
