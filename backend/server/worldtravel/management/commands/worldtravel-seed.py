@@ -524,7 +524,6 @@ class Command(BaseCommand):
             ('IS-6', 'Norðurland eystra', 'is'),
             ('IS-7', 'Austurland', 'is'),
             ('IS-8', 'Suðurland', 'is'),
-            ('CZ-10', 'Prague', 'cz'),
             ('CZ-20', 'Středočeský kraj', 'cz'),
             ('CZ-31', 'Jihočeský kraj', 'cz'),
             ('CZ-32', 'Plzeňský kraj', 'cz'),
