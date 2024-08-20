@@ -45,6 +45,7 @@ class Country(models.Model):
 class Region(models.Model):
     id = models.CharField(primary_key=True)
     name = models.CharField(max_length=100)
+    name_en = models.CharField(max_length=100)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
 
     def __str__(self):
