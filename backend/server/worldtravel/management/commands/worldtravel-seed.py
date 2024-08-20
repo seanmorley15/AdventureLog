@@ -67,6 +67,7 @@ class Command(BaseCommand):
             ('Switzerland', 'ch', 'EU'),
             ('Italy', 'it', 'EU'),
             ('Iceland', 'is', 'EU'),
+            ('Czech Republic', 'cz', 'EU'),
         ]
         
         regions = [
@@ -523,6 +524,20 @@ class Command(BaseCommand):
             ('IS-6', 'Norðurland eystra', 'is'),
             ('IS-7', 'Austurland', 'is'),
             ('IS-8', 'Suðurland', 'is'),
+            ('CZ-10', 'Prague', 'cz'),
+            ('CZ-20', 'Středočeský kraj', 'cz'),
+            ('CZ-31', 'Jihočeský kraj', 'cz'),
+            ('CZ-32', 'Plzeňský kraj', 'cz'),
+            ('CZ-41', 'Karlovarský kraj', 'cz'),
+            ('CZ-42', 'Ústecký kraj', 'cz'),
+            ('CZ-51', 'Liberecký kraj', 'cz'),
+            ('CZ-52', 'Královéhradecký kraj', 'cz'),
+            ('CZ-53', 'Pardubický kraj', 'cz'),
+            ('CZ-63', 'Kraj Vysočina', 'cz'),
+            ('CZ-64', 'Jihomoravský kraj', 'cz'),
+            ('CZ-71', 'Olomoucký kraj', 'cz'),
+            ('CZ-72', 'Zlínský kraj', 'cz'),
+            ('CZ-80', 'Moravskoslezský kraj', 'cz'),
         ]
 
         
