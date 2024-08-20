@@ -44,6 +44,7 @@ export type Country = {
 export type Region = {
 	id: number;
 	name: string;
+	name_en: string;
 	country: number;
 };
 
