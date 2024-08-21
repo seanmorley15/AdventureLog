@@ -58,7 +58,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
-    'django_apscheduler',
+    # 'django_apscheduler',
 
 )
 
