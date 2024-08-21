@@ -16,9 +16,6 @@ done
 # Apply Django migrations
 python manage.py migrate
 
-# Check for default data
-python manage.py worldtravel-seed
-
 # Create superuser if environment variables are set and there are no users present at all.
 if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -n "$DJANGO_ADMIN_PASSWORD" ]; then
   echo "Creating superuser..."
@@ -32,6 +29,9 @@ else:
     print("Superuser already exists.")
 EOF
 fi
+
+# Sync the countries and world travel regions
+python manage.py worldtravel-seed --force
 
 # Start Django server
 python manage.py runserver 0.0.0.0:8000
