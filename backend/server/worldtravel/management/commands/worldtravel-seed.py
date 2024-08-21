@@ -68,6 +68,7 @@ class Command(BaseCommand):
             ('Czech Republic', 'cz', 'EU'),
             ('Austria', 'at', 'EU'),
             ('Slovakia','sk','EU'),
+            ('Liechtenstein','li','EU'),
         ]
         
         regions = [
@@ -549,11 +550,22 @@ class Command(BaseCommand):
             ('SK-BL', 'Bratislavský kraj', 'Bratislava Region', 'sk'),
             ('SK-TA', 'Trnavský kraj', 'Trnava Region', 'sk'),
             ('SK-TC', 'Trenčiansky kraj', 'Trenčín Region', 'sk'),
-            ('SK-NIc', 'Nitriansky kraj', 'Nitra Region', 'sk'),
+            ('SK-NI', 'Nitriansky kraj', 'Nitra Region', 'sk'),
             ('SK-ZI', 'Žilinský kraj', 'Žilina Region', 'sk'),
             ('SK-BC', 'Banskobystrický kraj', 'Banská Bystrica Region', 'sk'),
             ('SK-PV', 'Prešovský Kraj', 'Prešov Region', 'sk'),
             ('SK-KI', 'Košický kraj', 'Košice Region', 'sk'),
+            ('LI-01', 'Balzers', 'Balzers', 'li'),
+            ('LI-02', 'Eschen', 'Eschen', 'li'),
+            ('LI-03', 'Gamprin', 'Gamprin', 'li'),
+            ('LI-04', 'Mauren', 'Mauren', 'li'),
+            ('LI-05', 'Planken', 'Planken', 'li'),
+            ('LI-06', 'Ruggell', 'Ruggell', 'li'),
+            ('LI-07', 'Schaan', 'Schaan', 'li'),
+            ('LI-08', 'Schellenberg', 'Schellenberg', 'li'),
+            ('LI-09', 'Triesen', 'Triesen', 'li'),
+            ('LI-10', 'Triesenberg', 'Triesenberg', 'li'),
+            ('LI-11', 'Vaduz', 'Vaduz', 'li'),
         ]
 
         
