@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'django_apscheduler',
 
 )
 
@@ -71,11 +72,17 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
-
 )
 
 # disable verifications for new users
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
 
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
@@ -230,3 +237,30 @@ from os import getenv
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': 'scheduler.log',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console', 'file'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+}
+
+SCHEDULER_AUTOSTART = True
