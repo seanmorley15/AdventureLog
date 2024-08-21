@@ -7,6 +7,5 @@ class AdventuresConfig(AppConfig):
 
     def ready(self):
         if settings.SCHEDULER_AUTOSTART:
-            from django.core.management import call_command
-            import threading
-            threading.Thread(target=call_command, args=('start_scheduler',)).start()
+            from .scheduler import start_scheduler
+            start_scheduler()
