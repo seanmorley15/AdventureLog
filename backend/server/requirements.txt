@@ -11,4 +11,3 @@ psycopg2-binary
 Pillow
 whitenoise
 django-resized
-django-apscheduler

@@ -58,7 +58,6 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
-    # 'django_apscheduler',
 
 )
 
@@ -228,10 +227,8 @@ SWAGGER_SETTINGS = {
     'LOGOUT_URL': 'logout',
 }
 
-
 # For demo purposes only. Use a white list in the real world.
 CORS_ORIGIN_ALLOW_ALL = True
-
 
 from os import getenv
 
@@ -262,5 +259,3 @@ LOGGING = {
         },
     },
 }
-
-SCHEDULER_AUTOSTART = True
