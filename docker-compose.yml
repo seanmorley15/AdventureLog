@@ -23,8 +23,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    build: ./backend/
-    #image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    #build: ./backend/
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
     environment:
       - PGHOST=db
       - PGDATABASE=database

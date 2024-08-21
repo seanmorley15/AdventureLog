@@ -51,7 +51,7 @@ def start_scheduler():
         max_instances=1,
         replace_existing=True,
     )
-
+    # scheduler
     logger.info("Starting scheduler...")
     scheduler.start()
     return scheduler
