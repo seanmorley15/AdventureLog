@@ -46,7 +46,7 @@ def start_scheduler():
     scheduler.add_job(
         run_worldtravel_seed,
         trigger="interval",
-        minutes=3,
+        hours=24,
         id="worldtravel_seed",
         max_instances=1,
         replace_existing=True,
@@ -54,3 +54,4 @@ def start_scheduler():
 
     logger.info("Starting scheduler...")
     scheduler.start()
+    return scheduler
