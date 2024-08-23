@@ -46,7 +46,7 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         region = Region.objects.filter(geometry__contains=point).first()
         
         if region:
-            return Response({'in_region': True, 'region_name': region.name})
+            return Response({'in_region': True, 'region_name': region.name, 'region_id': region.id})
         else:
             return Response({'in_region': False})
 

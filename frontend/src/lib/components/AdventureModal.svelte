@@ -29,6 +29,9 @@
 
 	let noPlaces: boolean = false;
 
+	let region_name: string | null = null;
+	let region_id: string | null = null;
+
 	let adventure: Adventure = {
 		id: '',
 		name: '',
@@ -274,7 +277,7 @@
 		}
 	}
 
-	function addMarker(e: CustomEvent<any>) {
+	async function addMarker(e: CustomEvent<any>) {
 		markers = [];
 		markers = [
 			...markers,
@@ -285,6 +288,19 @@
 				activity_type: ''
 			}
 		];
+		let res = await fetch(
+			`/api/countries/check_point_in_region/?lat=${e.detail.lngLat.lat}&lon=${e.detail.lngLat.lng}`
+		);
+		let data = await res.json();
+		if (data.error) {
+			addToast('error', data.error);
+		} else {
+			if (data.in_region) {
+				region_name = data.region_name;
+				region_id = data.region_id;
+			}
+		}
+
 		console.log(markers);
 	}
 
@@ -307,6 +323,19 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		if (region_id && region_name) {
+			let res = await fetch(`/api/visitedregion/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ region: region_id })
+			});
+			if (res.ok) {
+				addToast('success', `Region ${region_name} marked as visited`);
+			}
+		}
 
 		if (adventure.date && adventure.end_date) {
 			if (new Date(adventure.date) > new Date(adventure.end_date)) {
@@ -655,6 +684,9 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								{/each}
 							</MapLibre>
 						</div>
+						{#if region_name}
+							<p class="text-lg font-semibold mt-2">Region: {region_name} ({region_id})</p>
+						{/if}
 
 						<div class="mt-4">
 							<button type="submit" class="btn btn-primary">Save & Next</button>
