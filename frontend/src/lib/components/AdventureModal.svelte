@@ -101,6 +101,13 @@
 		}
 	}
 
+	function clearMap() {
+		console.log('CLEAR');
+		markers = [];
+		region_id = null;
+		region_name = null;
+	}
+
 	let imageSearch: string = adventure.name || '';
 
 	async function removeImage(id: string) {
@@ -298,6 +305,9 @@
 			if (data.in_region) {
 				region_name = data.region_name;
 				region_id = data.region_id;
+			} else {
+				region_id = null;
+				region_name = null;
 			}
 		}
 
@@ -637,6 +647,9 @@
 									bind:value={query}
 								/>
 								<button class="btn btn-neutral -mt-1" type="submit">Search</button>
+								<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
+									>Clear Map</button
+								>
 							</form>
 						</div>
 						{#if places.length > 0}
