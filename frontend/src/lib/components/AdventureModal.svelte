@@ -295,20 +295,25 @@
 				activity_type: ''
 			}
 		];
-		let res = await fetch(
-			`/api/countries/check_point_in_region/?lat=${e.detail.lngLat.lat}&lon=${e.detail.lngLat.lng}`
-		);
-		let data = await res.json();
-		if (data.error) {
-			addToast('error', data.error);
-		} else {
-			if (data.in_region) {
-				region_name = data.region_name;
-				region_id = data.region_id;
+		if (adventure.type == 'visited') {
+			let res = await fetch(
+				`/api/countries/check_point_in_region/?lat=${e.detail.lngLat.lat}&lon=${e.detail.lngLat.lng}`
+			);
+			let data = await res.json();
+			if (data.error) {
+				addToast('error', data.error);
 			} else {
-				region_id = null;
-				region_name = null;
+				if (data.in_region) {
+					region_name = data.region_name;
+					region_id = data.region_id;
+				} else {
+					region_id = null;
+					region_name = null;
+				}
 			}
+		} else {
+			region_id = null;
+			region_name = null;
 		}
 
 		console.log(markers);
