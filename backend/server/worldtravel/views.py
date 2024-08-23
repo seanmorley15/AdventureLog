@@ -54,7 +54,7 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     # make a post action that will get all of the users adventures and check if the point is in any of the regions if so make a visited region object for that user if it does not already exist
     @action(detail=False, methods=['post'])
     def region_check_all_adventures(self, request):
-        adventures = Adventure.objects.filter(user_id=request.user.id)
+        adventures = Adventure.objects.filter(user_id=request.user.id, type='visited')
         count = 0
         for adventure in adventures:
             if adventure.latitude is not None and adventure.longitude is not None:

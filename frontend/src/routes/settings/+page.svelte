@@ -44,6 +44,21 @@
 		a.click();
 		URL.revokeObjectURL(url);
 	}
+
+	async function checkVisitedRegions() {
+		let res = await fetch('/api/countries/region_check_all_adventures/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		let data = await res.json();
+		if (res.ok) {
+			addToast('success', `${data.regions_visited} regions updated`);
+		} else {
+			addToast('error', 'Error updating visited regions');
+		}
+	}
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
@@ -156,6 +171,16 @@
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
 	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
 	<p>This may take a few seconds...</p>
+</div>
+<div class="flex flex-col items-center">
+	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
+	<p>
+		By selecting this, the server will check all of your visited adventures and mark the regions
+		they are located in as "visited" in world travel.
+	</p>
+	<button class="btn btn-neutral mb-4" on:click={checkVisitedRegions}>Update Visited Regions</button
+	>
+	<p>This may take longer depending on the number of adventures you have.</p>
 </div>
 
 <small class="text-center"
