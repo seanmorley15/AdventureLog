@@ -13,7 +13,7 @@
 	export let is_collection: boolean = false;
 
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
-	let markers: Point[] = [];
+
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string }[] = [];
@@ -72,6 +72,8 @@
 		collection: adventureToEdit?.collection || collection_id || null
 	};
 
+	let markers: Point[] = [];
+
 	let url: string = '';
 	let imageError: string = '';
 	let wikiImageError: string = '';
@@ -79,6 +81,7 @@
 	images = adventure.images || [];
 
 	if (adventure.longitude && adventure.latitude) {
+		markers = [];
 		markers = [
 			{
 				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
@@ -87,6 +90,7 @@
 				activity_type: ''
 			}
 		];
+		checkPointInRegion();
 	}
 
 	if (longitude && latitude) {
@@ -139,6 +143,13 @@
 		}
 		if (!adventure.name) {
 			adventure.name = markers[0].name;
+		}
+	}
+
+	$: {
+		if (adventure.type != 'visited') {
+			region_id = null;
+			region_name = null;
 		}
 	}
 
@@ -247,6 +258,7 @@
 						activity_type: data[0]?.type || ''
 					}
 				];
+				checkPointInRegion();
 			}
 		}
 		console.log(data);
@@ -284,21 +296,11 @@
 		}
 	}
 
-	async function addMarker(e: CustomEvent<any>) {
-		markers = [];
-		markers = [
-			...markers,
-			{
-				lngLat: e.detail.lngLat,
-				name: '',
-				location: '',
-				activity_type: ''
-			}
-		];
+	async function checkPointInRegion() {
 		if (adventure.type == 'visited') {
-			let res = await fetch(
-				`/api/countries/check_point_in_region/?lat=${e.detail.lngLat.lat}&lon=${e.detail.lngLat.lng}`
-			);
+			let lat = markers[0].lngLat.lat;
+			let lon = markers[0].lngLat.lng;
+			let res = await fetch(`/api/countries/check_point_in_region/?lat=${lat}&lon=${lon}`);
 			let data = await res.json();
 			if (data.error) {
 				addToast('error', data.error);
@@ -315,6 +317,20 @@
 			region_id = null;
 			region_name = null;
 		}
+	}
+
+	async function addMarker(e: CustomEvent<any>) {
+		markers = [];
+		markers = [
+			...markers,
+			{
+				lngLat: e.detail.lngLat,
+				name: '',
+				location: '',
+				activity_type: ''
+			}
+		];
+		checkPointInRegion();
 
 		console.log(markers);
 	}
@@ -675,6 +691,7 @@
 														activity_type: place.type
 													}
 												];
+												checkPointInRegion();
 											}}
 										>
 											{place.display_name}
