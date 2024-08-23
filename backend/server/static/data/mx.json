@@ -10,7 +10,7 @@
         "ISOCODE": "MX-CMX"
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "MultiPolygon",
         "coordinates": [
           [
             [-99.111241, 19.561498],

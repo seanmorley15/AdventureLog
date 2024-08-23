@@ -16,7 +16,7 @@
         "AWATER": 23736382213
       },
       "geometry": {
-        "type": "Polygon",
+        "type": "MultiPolygon",
         "coordinates": [
           [
             [-94.0430515276176, 32.6930299766656],

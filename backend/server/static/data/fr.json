@@ -4,7 +4,7 @@
     {
       "type": "Feature",
       "geometry": {
-        "type": "Polygon",
+        "type": "MultiPolygon",
         "coordinates": [
           [
             [1.9221462784913, 48.457599361977],

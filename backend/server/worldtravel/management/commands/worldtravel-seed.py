@@ -4,10 +4,65 @@ from django.contrib.auth import get_user_model
 import requests
 from worldtravel.models import Country, Region
 from django.db import transaction
+from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
+from django.contrib.gis.geos.error import GEOSException
+import json
 
 from django.conf import settings
         
 media_root = settings.MEDIA_ROOT
+
+
+def setGeometry(region_code):
+    # Assuming the file name is the country code (e.g., 'AU.json' for Australia)
+    country_code = region_code.split('-')[0]
+    json_file = os.path.join('static/data', f'{country_code.lower()}.json')
+    
+    if not os.path.exists(json_file):
+        print(f'File {country_code}.json does not exist')
+        return None
+
+    try:
+        with open(json_file, 'r') as f:
+            geojson_data = json.load(f)
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON in file for {country_code}: {e}")
+        return None
+
+    if 'type' not in geojson_data or geojson_data['type'] != 'FeatureCollection':
+        print(f"Invalid GeoJSON structure for {country_code}: missing or incorrect 'type'")
+        return None
+
+    if 'features' not in geojson_data or not geojson_data['features']:
+        print(f"Invalid GeoJSON structure for {country_code}: missing or empty 'features'")
+        return None
+
+    for feature in geojson_data['features']:
+        try:
+            properties = feature.get('properties', {})
+            isocode = properties.get('ISOCODE')
+            
+            if isocode == region_code:
+                geometry = feature['geometry']
+                geos_geom = GEOSGeometry(json.dumps(geometry))
+                
+                if isinstance(geos_geom, Polygon):
+                    Region.objects.filter(id=region_code).update(geometry=MultiPolygon([geos_geom]))
+                    print(f"Updated geometry for region {region_code}")
+                    return MultiPolygon([geos_geom])
+                elif isinstance(geos_geom, MultiPolygon):
+                    Region.objects.filter(id=region_code).update(geometry=geos_geom)
+                    print(f"Updated geometry for region {region_code}")
+                    return geos_geom
+                else:
+                    print(f"Unexpected geometry type for region {region_code}: {type(geos_geom)}")
+                    return None
+
+        except (KeyError, ValueError, GEOSException) as e:
+            print(f"Error processing region {region_code}: {e}")
+
+    print(f"No matching region found for {region_code}")
+    return None
 
 def saveCountryFlag(country_code):
     flags_dir = os.path.join(media_root, 'flags')
@@ -616,7 +671,9 @@ class Command(BaseCommand):
             )
             if created:
                 self.stdout.write(f'Inserted {name} into worldtravel regions')
+                setGeometry(id)
             else:
+                setGeometry(id)
                 self.stdout.write(f'Updated {name} in worldtravel regions')
 
     def insert_countries(self, countries):
@@ -627,6 +684,7 @@ class Command(BaseCommand):
             )
             if created:
                 saveCountryFlag(country_code)
+                
                 self.stdout.write(f'Inserted {name} into worldtravel countries')
             else:
                 saveCountryFlag(country_code)
@@ -641,5 +699,7 @@ class Command(BaseCommand):
             )
             if created:
                 self.stdout.write(f'Inserted {name} into worldtravel regions')
+                setGeometry(id)
             else:
+                setGeometry(id)
                 self.stdout.write(f'{name} already exists in worldtravel regions')

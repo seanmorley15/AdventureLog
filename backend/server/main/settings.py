@@ -58,6 +58,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'django.contrib.gis',
 
 )
 
@@ -100,7 +101,7 @@ SIMPLE_JWT = {
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': getenv('PGDATABASE'),
         'USER': getenv('PGUSER'),
         'PASSWORD': getenv('PGPASSWORD'),

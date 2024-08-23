@@ -8,7 +8,10 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 import os
 import json
+from django.http import JsonResponse
+from django.contrib.gis.geos import Point
 from django.conf import settings
+from rest_framework.decorators import action
 from django.contrib.staticfiles import finders
 
 @api_view(['GET'])
@@ -33,6 +36,19 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def check_point_in_region(self, request):
+        lat = float(request.query_params.get('lat'))
+        lon = float(request.query_params.get('lon'))
+        point = Point(lon, lat, srid=4326)
+        
+        region = Region.objects.filter(geometry__contains=point).first()
+        
+        if region:
+            return Response({'in_region': True, 'region_name': region.name})
+        else:
+            return Response({'in_region': False})
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()
