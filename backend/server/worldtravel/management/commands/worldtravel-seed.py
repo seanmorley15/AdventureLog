@@ -19,7 +19,7 @@ def setGeometry(region_code):
     json_file = os.path.join('static/data', f'{country_code.lower()}.json')
     
     if not os.path.exists(json_file):
-        print(f'File {country_code}.json does not exist')
+        print(f'File {country_code}.json does not exist (it probably hasn''t been added, contributors are welcome!)')
         return None
 
     try:

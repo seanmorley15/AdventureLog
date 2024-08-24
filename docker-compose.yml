@@ -2,8 +2,8 @@ version: "3.9"
 
 services:
   web:
-    #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    build: ./frontend/
+    #image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     environment:
       - PUBLIC_SERVER_URL=http://server:8000 # MOST DOCKER USERS WILL NEVER NEED TO CHANGE THIS, EVEN IF YOU CHANGE THE PORTS
       - ORIGIN=http://localhost:8080
@@ -14,7 +14,7 @@ services:
       - server
 
   db:
-    image: postgres:latest
+    image: postgis/postgis:15-3.3
     environment:
       POSTGRES_DB: database
       POSTGRES_USER: adventure
@@ -23,8 +23,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    build: ./backend/
+    #image: ghcr.io/seanmorley15/adventurelog-backend:latest
     environment:
       - PGHOST=db
       - PGDATABASE=database

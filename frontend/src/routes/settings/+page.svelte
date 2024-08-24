@@ -167,20 +167,23 @@
 		<button class="py-2 px-4 btn btn-primary mt-2">Change Email</button>
 	</form>
 </div>
-<div class="flex flex-col items-center">
-	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
-	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
-	<p>This may take a few seconds...</p>
-</div>
-<div class="flex flex-col items-center">
+
+<div class="flex flex-col items-center mt-4">
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
 	<p>
 		By selecting this, the server will check all of your visited adventures and mark the regions
 		they are located in as "visited" in world travel.
 	</p>
-	<button class="btn btn-neutral mb-4" on:click={checkVisitedRegions}>Update Visited Regions</button
+	<button class="btn btn-neutral mt-2 mb-2" on:click={checkVisitedRegions}
+		>Update Visited Regions</button
 	>
 	<p>This may take longer depending on the number of adventures you have.</p>
+</div>
+
+<div class="flex flex-col items-center mt-4">
+	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
+	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
+	<p>This may take a few seconds...</p>
 </div>
 
 <small class="text-center"

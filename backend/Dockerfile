@@ -13,7 +13,7 @@ WORKDIR /code
 
 # Install system dependencies
 RUN apt-get update \
-    && apt-get install -y git postgresql-client \
+    && apt-get install -y git postgresql-client gdal-bin libgdal-dev \
     && apt-get clean
 
 # Install Python dependencies
