@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
+from django.contrib.gis.db import models as gis_models
 
 
 User = get_user_model()
@@ -34,6 +35,7 @@ class Country(models.Model):
         choices=CONTINENT_CHOICES,
         default=AFRICA
     )
+    
 
     class Meta:
         verbose_name = "Country"
@@ -47,6 +49,7 @@ class Region(models.Model):
     name = models.CharField(max_length=100)
     name_en = models.CharField(max_length=100, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
+    geometry = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
 
     def __str__(self):
         return self.name

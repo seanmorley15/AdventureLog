@@ -22,7 +22,7 @@ class RegionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Region
         fields = '__all__'  # Serialize all fields of the Adventure model
-        read_only_fields = ['id', 'name', 'country', 'name_en']
+        read_only_fields = ['id', 'name', 'country', 'name_en', 'geometry']
 
 class VisitedRegionSerializer(serializers.ModelSerializer):
     class Meta:

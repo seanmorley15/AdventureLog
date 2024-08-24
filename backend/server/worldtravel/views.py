@@ -8,8 +8,12 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 import os
 import json
+from django.http import JsonResponse
+from django.contrib.gis.geos import Point
 from django.conf import settings
+from rest_framework.decorators import action
 from django.contrib.staticfiles import finders
+from adventures.models import Adventure
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -33,6 +37,39 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all()
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def check_point_in_region(self, request):
+        lat = float(request.query_params.get('lat'))
+        lon = float(request.query_params.get('lon'))
+        point = Point(lon, lat, srid=4326)
+        
+        region = Region.objects.filter(geometry__contains=point).first()
+        
+        if region:
+            return Response({'in_region': True, 'region_name': region.name, 'region_id': region.id})
+        else:
+            return Response({'in_region': False})
+        
+    # make a post action that will get all of the users adventures and check if the point is in any of the regions if so make a visited region object for that user if it does not already exist
+    @action(detail=False, methods=['post'])
+    def region_check_all_adventures(self, request):
+        adventures = Adventure.objects.filter(user_id=request.user.id, type='visited')
+        count = 0
+        for adventure in adventures:
+            if adventure.latitude is not None and adventure.longitude is not None:
+                try:
+                    print(f"Adventure {adventure.id}: lat={adventure.latitude}, lon={adventure.longitude}")
+                    point = Point(float(adventure.longitude), float(adventure.latitude), srid=4326)
+                    region = Region.objects.filter(geometry__contains=point).first()
+                    if region:
+                        if not VisitedRegion.objects.filter(user_id=request.user.id, region=region).exists():
+                            VisitedRegion.objects.create(user_id=request.user, region=region)
+                            count += 1
+                except Exception as e:
+                    print(f"Error processing adventure {adventure.id}: {e}")
+                    continue
+        return Response({'regions_visited': count})
 
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()

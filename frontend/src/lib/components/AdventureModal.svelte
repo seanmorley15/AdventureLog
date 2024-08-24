@@ -13,7 +13,7 @@
 	export let is_collection: boolean = false;
 
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
-	let markers: Point[] = [];
+
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string }[] = [];
@@ -28,6 +28,9 @@
 	let wikiError: string = '';
 
 	let noPlaces: boolean = false;
+
+	let region_name: string | null = null;
+	let region_id: string | null = null;
 
 	let adventure: Adventure = {
 		id: '',
@@ -69,6 +72,8 @@
 		collection: adventureToEdit?.collection || collection_id || null
 	};
 
+	let markers: Point[] = [];
+
 	let url: string = '';
 	let imageError: string = '';
 	let wikiImageError: string = '';
@@ -76,6 +81,7 @@
 	images = adventure.images || [];
 
 	if (adventure.longitude && adventure.latitude) {
+		markers = [];
 		markers = [
 			{
 				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
@@ -84,6 +90,7 @@
 				activity_type: ''
 			}
 		];
+		checkPointInRegion();
 	}
 
 	if (longitude && latitude) {
@@ -96,6 +103,13 @@
 		if (!adventure.rating) {
 			adventure.rating = NaN;
 		}
+	}
+
+	function clearMap() {
+		console.log('CLEAR');
+		markers = [];
+		region_id = null;
+		region_name = null;
 	}
 
 	let imageSearch: string = adventure.name || '';
@@ -129,6 +143,13 @@
 		}
 		if (!adventure.name) {
 			adventure.name = markers[0].name;
+		}
+	}
+
+	$: {
+		if (adventure.type != 'visited') {
+			region_id = null;
+			region_name = null;
 		}
 	}
 
@@ -237,6 +258,7 @@
 						activity_type: data[0]?.type || ''
 					}
 				];
+				checkPointInRegion();
 			}
 		}
 		console.log(data);
@@ -274,7 +296,30 @@
 		}
 	}
 
-	function addMarker(e: CustomEvent<any>) {
+	async function checkPointInRegion() {
+		if (adventure.type == 'visited') {
+			let lat = markers[0].lngLat.lat;
+			let lon = markers[0].lngLat.lng;
+			let res = await fetch(`/api/countries/check_point_in_region/?lat=${lat}&lon=${lon}`);
+			let data = await res.json();
+			if (data.error) {
+				addToast('error', data.error);
+			} else {
+				if (data.in_region) {
+					region_name = data.region_name;
+					region_id = data.region_id;
+				} else {
+					region_id = null;
+					region_name = null;
+				}
+			}
+		} else {
+			region_id = null;
+			region_name = null;
+		}
+	}
+
+	async function addMarker(e: CustomEvent<any>) {
 		markers = [];
 		markers = [
 			...markers,
@@ -285,6 +330,8 @@
 				activity_type: ''
 			}
 		];
+		checkPointInRegion();
+
 		console.log(markers);
 	}
 
@@ -307,6 +354,19 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		if (region_id && region_name) {
+			let res = await fetch(`/api/visitedregion/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ region: region_id })
+			});
+			if (res.ok) {
+				addToast('success', `Region ${region_name} marked as visited`);
+			}
+		}
 
 		if (adventure.date && adventure.end_date) {
 			if (new Date(adventure.date) > new Date(adventure.end_date)) {
@@ -608,6 +668,9 @@
 									bind:value={query}
 								/>
 								<button class="btn btn-neutral -mt-1" type="submit">Search</button>
+								<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
+									>Clear Map</button
+								>
 							</form>
 						</div>
 						{#if places.length > 0}
@@ -628,6 +691,7 @@
 														activity_type: place.type
 													}
 												];
+												checkPointInRegion();
 											}}
 										>
 											{place.display_name}
@@ -655,6 +719,9 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								{/each}
 							</MapLibre>
 						</div>
+						{#if region_name}
+							<p class="text-lg font-semibold mt-2">Region: {region_name} ({region_id})</p>
+						{/if}
 
 						<div class="mt-4">
 							<button type="submit" class="btn btn-primary">Save & Next</button>

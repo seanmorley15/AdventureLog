@@ -13,6 +13,9 @@ done
 
 >&2 echo "PostgreSQL is up - continuing..."
 
+# run sql commands
+# psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -f /app/backend/init-postgis.sql
+
 # Apply Django migrations
 python manage.py migrate
 
