@@ -19,21 +19,10 @@
 	let showVisited = true;
 	let showPlanned = true;
 
-	$: {
-		if (!showVisited) {
-			markers = data.props.markers.filter((marker) => marker.type !== 'visited');
-		} else {
-			const visitedMarkers = data.props.markers.filter((marker) => marker.type === 'visited');
-			markers = [...markers, ...visitedMarkers];
-		}
-		if (!showPlanned) {
-			markers = data.props.markers.filter((marker) => marker.type !== 'planned');
-		} else {
-			const plannedMarkers = data.props.markers.filter((marker) => marker.type === 'planned');
-			markers = [...markers, ...plannedMarkers];
-		}
-		console.log(markers);
-	}
+	$: filteredMarkers = markers.filter(
+		(marker) =>
+			(showVisited && marker.type === 'visited') || (showPlanned && marker.type === 'planned')
+	);
 
 	let newMarker = [];
 
@@ -43,7 +32,6 @@
 	function addMarker(e) {
 		newMarker = [];
 		newMarker = [...newMarker, { lngLat: e.detail.lngLat, name: 'Marker 1' }];
-		console.log(newMarker);
 		newLongitude = e.detail.lngLat.lng;
 		newLatitude = e.detail.lngLat.lat;
 	}
@@ -55,19 +43,15 @@
 	}
 
 	function createNewAdventure(event) {
-		console.log(event.detail);
-
 		let newMarker = {
 			lngLat: [event.detail.longitude, event.detail.latitude],
 			name: event.detail.name,
-			type: 'planned'
+			type: event.detail.type
 		};
 		markers = [...markers, newMarker];
 		clearMarkers();
-		console.log(markers);
 		createModalOpen = false;
 	}
-
 	let visitedRegions = data.props.visitedRegions;
 
 	let geoJSON = [];
@@ -154,7 +138,7 @@
 	class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
 	standardControls
 >
-	{#each markers as { lngLat, name, type }}
+	{#each filteredMarkers as { lngLat, name, type }}
 		{#if type == 'visited'}
 			<Marker
 				{lngLat}
