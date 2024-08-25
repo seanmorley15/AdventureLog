@@ -169,6 +169,7 @@ REST_AUTH = {
 }
 
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
+DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
 STORAGES = {
     "staticfiles": {

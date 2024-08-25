@@ -13,7 +13,8 @@ export const load: PageServerLoad = async (event) => {
 	console.log(is_disabled_json);
 	if (is_disabled_json.is_disabled) {
 		return {
-			is_disabled: true
+			is_disabled: true,
+			message: is_disabled_json.message
 		};
 	} else {
 		return {
