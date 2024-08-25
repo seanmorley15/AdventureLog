@@ -40,5 +40,5 @@ class IsRegistrationDisabled(APIView):
         operation_description="Check if registration is disabled."
     )
     def get(self, request):
-        return Response({"is_disabled": settings.DISABLE_REGISTRATION}, status=status.HTTP_200_OK)
+        return Response({"is_disabled": settings.DISABLE_REGISTRATION, "message": settings.DISABLE_REGISTRATION_MESSAGE}, status=status.HTTP_200_OK)
     
