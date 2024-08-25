@@ -21,7 +21,7 @@ services:
       - "traefik.enable=true"
 
   db:
-    image: postgres:latest
+    image: postgis/postgis:15-3.3
     restart: unless-stopped
     environment:
       POSTGRES_DB: database
