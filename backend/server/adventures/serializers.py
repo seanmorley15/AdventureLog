@@ -225,5 +225,14 @@ class CollectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Collection
         # fields are all plus the adventures field
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Make it display the user uuid for the shared users instead of the PK
+        shared_uuids = []
+        for user in instance.shared_with.all():
+            shared_uuids.append(str(user.uuid))
+        representation['shared_with'] = shared_uuids
+        return representation

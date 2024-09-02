@@ -6,11 +6,12 @@ from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
 from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage
+from django.core.exceptions import PermissionDenied
 from worldtravel.models import VisitedRegion, Region, Country
 from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q, Prefetch
-from .permissions import IsOwnerOrReadOnly, IsPublicReadOnly
+from .permissions import CollectionShared, IsOwnerOrReadOnly, IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess, IsPublicReadOnly
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -28,7 +29,7 @@ from django.db.models import Q
 
 class AdventureViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureSerializer
-    permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
+    permission_classes = [IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess]
     pagination_class = StandardResultsSetPagination
 
     def apply_sorting(self, queryset):
@@ -71,16 +72,13 @@ class AdventureViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Adventure.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id)
+                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
             )
         else:
-            # For other actions, only include user's own adventures
-            return Adventure.objects.filter(user_id=self.request.user.id)
-
-    def list(self, request, *args, **kwargs):
-        # Prevent listing all adventures
-        return Response({"detail": "Listing all adventures is not allowed."},
-                        status=status.HTTP_403_FORBIDDEN)
+            # For other actions, include user's own adventures and shared adventures
+            return Adventure.objects.filter(
+                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
 
     def retrieve(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -99,9 +97,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         if adventure.collection:
             adventure.is_public = adventure.collection.is_public
             adventure.save()
-    
-    def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        
 
     @action(detail=False, methods=['get'])
     def filtered(self, request):
@@ -195,6 +191,46 @@ class AdventureViewSet(viewsets.ModelViewSet):
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        print(serializer.validated_data)
+        if 'collection' in serializer.validated_data:
+            new_collection = serializer.validated_data['collection']
+            # if the new collection is different from the old one and the user making the request is not the owner of the new collection return an error
+            if new_collection != instance.collection and new_collection.user_id != request.user:
+                return Response({"error": "User does not own the new collection"}, status=400)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        if 'collection' in serializer.validated_data:
+            new_collection = serializer.validated_data['collection']
+            # if the new collection is different from the old one and the user making the request is not the owner of the new collection return an error
+            if new_collection != instance.collection and new_collection.user_id != request.user:
+                return Response({"error": "User does not own the new collection"}, status=400)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+    
+    # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
+    def perform_create(self, serializer):
+        # Retrieve the collection from the validated data
+        collection = serializer.validated_data.get('collection')
+
+        # Check if a collection is provided
+        if collection:
+            # Check if the user is the owner or is in the shared_with list
+            if collection.user_id != self.request.user.id and not collection.shared_with.filter(id=self.request.user.id).exists():
+                # Return an error response if the user does not have permission
+                raise PermissionDenied("You do not have permission to use this collection.")
+
+        # Save the adventure with the current user as the owner
+        serializer.save(user_id=self.request.user.id)
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
@@ -207,7 +243,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     
 class CollectionViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionSerializer
-    permission_classes = [IsOwnerOrReadOnly, IsPublicReadOnly]
+    permission_classes = [CollectionShared]
     pagination_class = StandardResultsSetPagination
 
     # def get_queryset(self):
@@ -302,6 +338,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
             action = "public" if new_public_status else "private"
             print(f"Collection {instance.id} and its adventures were set to {action}")
 
+        
+
         self.perform_update(serializer)
 
         if getattr(instance, '_prefetched_objects_cache', None):
@@ -316,19 +354,23 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Collection.objects.filter(user_id=self.request.user.id)
         
         if self.action in ['update', 'partial_update']:
-            return Collection.objects.filter(user_id=self.request.user.id)
+            return Collection.objects.filter(
+                Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)
+            ).distinct()
         
         if self.action == 'retrieve':
             return Collection.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id)
-            )
+                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)
+            ).distinct()
         
-        # For other actions (like list), only include user's non-archived collections
+        # For list action, include collections owned by the user or shared with the user, that are not archived
         return Collection.objects.filter(
-            Q(user_id=self.request.user.id) & Q(is_archived=False)
-        )
+            (Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
+        ).distinct()
+
 
     def perform_create(self, serializer):
+        # This is ok because you cannot share a collection when creating it
         serializer.save(user_id=self.request.user)
     
     def paginate_and_respond(self, queryset, request):

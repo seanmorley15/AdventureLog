@@ -81,6 +81,7 @@ class Collection(models.Model):
     end_date = models.DateField(blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_archived = models.BooleanField(default=False)
+    shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
 
 
     # if connected adventures are private and collection is public, raise an error
