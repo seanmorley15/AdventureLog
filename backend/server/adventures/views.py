@@ -224,13 +224,17 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         # Check if a collection is provided
         if collection:
+            user = self.request.user
             # Check if the user is the owner or is in the shared_with list
-            if collection.user_id != self.request.user.id and not collection.shared_with.filter(id=self.request.user.id).exists():
+            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
+            # if collection the owner of the adventure is the owner of the collection
+            serializer.save(user_id=collection.user_id)
+            return
 
         # Save the adventure with the current user as the owner
-        serializer.save(user_id=self.request.user.id)
+        serializer.save(user_id=self.request.user)
 
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()
@@ -321,6 +325,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(instance, data=request.data, partial=partial)
         serializer.is_valid(raise_exception=True)
 
+        if 'collection' in serializer.validated_data:
+            new_collection = serializer.validated_data['collection']
+            # if the new collection is different from the old one and the user making the request is not the owner of the new collection return an error
+            if new_collection != instance.collection and new_collection.user_id != request.user:
+                return Response({"error": "User does not own the new collection"}, status=400)
+
         # Check if the 'is_public' field is present in the update data
         if 'is_public' in serializer.validated_data:
             new_public_status = serializer.validated_data['is_public']
@@ -337,8 +347,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
             # Log the action (optional)
             action = "public" if new_public_status else "private"
             print(f"Collection {instance.id} and its adventures were set to {action}")
-
-        
 
         self.perform_update(serializer)
 
