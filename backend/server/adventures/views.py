@@ -69,8 +69,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
-
-        # if suer is not authenticated return only public adventures for  retrieve action
+        # if the user is not authenticated return only public adventures for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
                 return Adventure.objects.filter(is_public=True)
@@ -106,7 +105,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
             adventure.is_public = adventure.collection.is_public
             adventure.save()
         
-
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         types = request.query_params.get('types', '').split(',')
@@ -228,10 +226,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         # Return the updated instance
         return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save()
-    
     
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
@@ -262,8 +256,8 @@ class AdventureViewSet(viewsets.ModelViewSet):
         # Return the updated instance
         return Response(serializer.data)
 
-def perform_update(self, serializer):
-    serializer.save()
+    def perform_update(self, serializer):
+        serializer.save()
     
     # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
@@ -528,7 +522,7 @@ class ActivityTypesView(viewsets.ViewSet):
 class TransportationViewSet(viewsets.ModelViewSet):
     queryset = Transportation.objects.all()
     serializer_class = TransportationSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess]
     filterset_fields = ['type', 'is_public', 'collection']
 
     # return error message if user is not authenticated on the root endpoint
@@ -549,21 +543,108 @@ class TransportationViewSet(viewsets.ModelViewSet):
     
 
     def get_queryset(self):
-        
-        """
-        This view should return a list of all transportations
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return Transportation.objects.filter(user_id=user)
+        # if the user is not authenticated return only public transportations for  retrieve action
+        if not self.request.user.is_authenticated:
+            if self.action == 'retrieve':
+                return Transportation.objects.filter(is_public=True)
+            return Transportation.objects.none()
 
+        
+        if self.action == 'retrieve':
+            # For individual adventure retrieval, include public adventures
+            return Transportation.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+        else:
+            # For other actions, include user's own adventures and shared adventures
+            return Transportation.objects.filter(
+                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+    
+    # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
+        # Retrieve the collection from the validated data
+        collection = serializer.validated_data.get('collection')
+
+        # Check if a collection is provided
+        if collection:
+            user = self.request.user
+            # Check if the user is the owner or is in the shared_with list
+            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
+                # Return an error response if the user does not have permission
+                raise PermissionDenied("You do not have permission to use this collection.")
+            # if collection the owner of the adventure is the owner of the collection
+            serializer.save(user_id=collection.user_id)
+            return
+
+        # Save the adventure with the current user as the owner
         serializer.save(user_id=self.request.user)
 
 class NoteViewSet(viewsets.ModelViewSet):
     queryset = Note.objects.all()
     serializer_class = NoteSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess]
     filterset_fields = ['is_public', 'collection']
 
     # return error message if user is not authenticated on the root endpoint
@@ -584,21 +665,108 @@ class NoteViewSet(viewsets.ModelViewSet):
     
 
     def get_queryset(self):
-        
-        """
-        This view should return a list of all notes
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return Note.objects.filter(user_id=user)
+        # if the user is not authenticated return only public transportations for  retrieve action
+        if not self.request.user.is_authenticated:
+            if self.action == 'retrieve':
+                return Note.objects.filter(is_public=True)
+            return Note.objects.none()
 
+        
+        if self.action == 'retrieve':
+            # For individual adventure retrieval, include public adventures
+            return Note.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+        else:
+            # For other actions, include user's own adventures and shared adventures
+            return Note.objects.filter(
+                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+    
+    # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
+        # Retrieve the collection from the validated data
+        collection = serializer.validated_data.get('collection')
+
+        # Check if a collection is provided
+        if collection:
+            user = self.request.user
+            # Check if the user is the owner or is in the shared_with list
+            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
+                # Return an error response if the user does not have permission
+                raise PermissionDenied("You do not have permission to use this collection.")
+            # if collection the owner of the adventure is the owner of the collection
+            serializer.save(user_id=collection.user_id)
+            return
+
+        # Save the adventure with the current user as the owner
         serializer.save(user_id=self.request.user)
 
 class ChecklistViewSet(viewsets.ModelViewSet):
     queryset = Checklist.objects.all()
     serializer_class = ChecklistSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess]
     filterset_fields = ['is_public', 'collection']
 
     # return error message if user is not authenticated on the root endpoint
@@ -619,15 +787,102 @@ class ChecklistViewSet(viewsets.ModelViewSet):
     
 
     def get_queryset(self):
-        
-        """
-        This view should return a list of all checklists
-        for the currently authenticated user.
-        """
-        user = self.request.user
-        return Checklist.objects.filter(user_id=user)
+        # if the user is not authenticated return only public transportations for  retrieve action
+        if not self.request.user.is_authenticated:
+            if self.action == 'retrieve':
+                return Checklist.objects.filter(is_public=True)
+            return Checklist.objects.none()
 
+        
+        if self.action == 'retrieve':
+            # For individual adventure retrieval, include public adventures
+            return Checklist.objects.filter(
+                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+        else:
+            # For other actions, include user's own adventures and shared adventures
+            return Checklist.objects.filter(
+                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+            )
+
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+    
+    def partial_update(self, request, *args, **kwargs):
+        # Retrieve the current object
+        instance = self.get_object()
+        
+        # Partially update the instance with the request data
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        # Retrieve the collection from the validated data
+        new_collection = serializer.validated_data.get('collection')
+
+        user = request.user
+        print(new_collection)
+
+        if new_collection is not None and new_collection!=instance.collection:
+            # Check if the user is the owner of the new collection
+            if new_collection.user_id != user or instance.user_id != user:
+                raise PermissionDenied("You do not have permission to use this collection.")
+        elif new_collection is None:
+            # Handle the case where the user is trying to set the collection to None
+            if instance.collection is not None and instance.collection.user_id != user:
+                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
+        
+        # Perform the update
+        self.perform_update(serializer)
+
+        # Return the updated instance
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
+    
+    # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
+        # Retrieve the collection from the validated data
+        collection = serializer.validated_data.get('collection')
+
+        # Check if a collection is provided
+        if collection:
+            user = self.request.user
+            # Check if the user is the owner or is in the shared_with list
+            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
+                # Return an error response if the user does not have permission
+                raise PermissionDenied("You do not have permission to use this collection.")
+            # if collection the owner of the adventure is the owner of the collection
+            serializer.save(user_id=collection.user_id)
+            return
+
+        # Save the adventure with the current user as the owner
         serializer.save(user_id=self.request.user)
 
 class AdventureImageViewSet(viewsets.ModelViewSet):

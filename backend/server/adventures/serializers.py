@@ -8,19 +8,6 @@ class AdventureImageSerializer(serializers.ModelSerializer):
         fields = ['id', 'image', 'adventure']
         read_only_fields = ['id']
 
-    # def to_representation(self, instance):
-    #     representation = super().to_representation(instance)
-        
-    #     # Build the full URL for the image
-    #     request = self.context.get('request')
-    #     if request and instance.image:
-    #         public_url = request.build_absolute_uri(instance.image.url)
-    #     else:
-    #         public_url = f"{os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')}/media/{instance.image.name}"
-        
-    #     representation['image'] = public_url
-    #     return representation
-
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.image:
@@ -55,29 +42,6 @@ class TransportationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
-    def validate(self, data):
-        # Check if the collection is public and the transportation is not
-        collection = data.get('collection')
-        is_public = data.get('is_public', False)
-        if collection and collection.is_public and not is_public:
-            raise serializers.ValidationError(
-                'Transportations associated with a public collection must be public.'
-            )
-
-        # Check if the user owns the collection
-        request = self.context.get('request')
-        if request and collection and collection.user_id != request.user:
-            raise serializers.ValidationError(
-                'Transportations must be associated with collections owned by the same user.'
-            )
-
-        return data
-
-    def create(self, validated_data):
-        # Set the user_id to the current user
-        validated_data['user_id'] = self.context['request'].user
-        return super().create(validated_data)
-
 class NoteSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -87,29 +51,6 @@ class NoteSerializer(serializers.ModelSerializer):
             'is_public', 'collection', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
-
-    def validate(self, data):
-        # Check if the collection is public and the transportation is not
-        collection = data.get('collection')
-        is_public = data.get('is_public', False)
-        if collection and collection.is_public and not is_public:
-            raise serializers.ValidationError(
-                'Notes associated with a public collection must be public.'
-            )
-
-        # Check if the user owns the collection
-        request = self.context.get('request')
-        if request and collection and collection.user_id != request.user:
-            raise serializers.ValidationError(
-                'Notes must be associated with collections owned by the same user.'
-            )
-
-        return data
-
-    def create(self, validated_data):
-        # Set the user_id to the current user
-        validated_data['user_id'] = self.context['request'].user
-        return super().create(validated_data)
     
 class ChecklistItemSerializer(serializers.ModelSerializer):
         class Meta:
@@ -119,29 +60,15 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
             ]
             read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'checklist']
     
-        def validate(self, data):
-            # Check if the checklist is public and the checklist item is not
-            checklist = data.get('checklist')
-            is_checked = data.get('is_checked', False)
-            if checklist and checklist.is_public and not is_checked:
-                raise serializers.ValidationError(
-                    'Checklist items associated with a public checklist must be checked.'
-                )
-    
-            # Check if the user owns the checklist
-            request = self.context.get('request')
-            if request and checklist and checklist.user_id != request.user:
-                raise serializers.ValidationError(
-                    'Checklist items must be associated with checklists owned by the same user.'
-                )
-    
-            return data
-    
-        def create(self, validated_data):
-            # Set the user_id to the current user
-            validated_data['user_id'] = self.context['request'].user
-            return super().create(validated_data)
-    
+        # def validate(self, data):
+        #     # Check if the checklist is public and the checklist item is not
+        #     checklist = data.get('checklist')
+        #     is_checked = data.get('is_checked', False)
+        #     if checklist and checklist.is_public and not is_checked:
+        #         raise serializers.ValidationError(
+        #             'Checklist items associated with a public checklist must be checked.'
+        #         )
+
     
 class ChecklistSerializer(serializers.ModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
@@ -202,13 +129,6 @@ class ChecklistSerializer(serializers.ModelSerializer):
         if collection and collection.is_public and not is_public:
             raise serializers.ValidationError(
                 'Checklists associated with a public collection must be public.'
-            )
-
-        # Check if the user owns the checklist
-        request = self.context.get('request')
-        if request and collection and collection.user_id != request.user:
-            raise serializers.ValidationError(
-                'Checklists must be associated with collections owned by the same user.'
             )
 
         return data
