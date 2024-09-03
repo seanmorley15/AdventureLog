@@ -55,7 +55,7 @@ class CollectionShared(permissions.BasePermission):
 class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
     Custom permission to allow:
-    - Full access (except delete) for shared users
+    - Full access for shared users
     - Full access for owners
     - Read-only access for others on safe methods
     """
@@ -63,9 +63,9 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         # Check if the object has a collection
         if hasattr(obj, 'collection') and obj.collection:
-            # Allow all actions (except DELETE) for shared users
+            # Allow all actions for shared users
             if request.user in obj.collection.shared_with.all():
-                return request.method != 'DELETE'
+                return True
 
         # Always allow GET, HEAD, or OPTIONS requests (safe methods)
         if request.method in permissions.SAFE_METHODS:
@@ -78,7 +78,7 @@ class IsPublicOrOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
     Custom permission to allow:
     - Read-only access for public objects
-    - Full access (except delete) for shared users
+    - Full access for shared users
     - Full access for owners
     """
 
@@ -89,9 +89,9 @@ class IsPublicOrOwnerOrSharedWithFullAccess(permissions.BasePermission):
 
         # Check if the object has a collection
         if hasattr(obj, 'collection') and obj.collection:
-            # Allow all actions (except DELETE) for shared users
+            # Allow all actions for shared users
             if request.user in obj.collection.shared_with.all():
-                return request.method != 'DELETE'
+                return True
 
         # Allow all actions for the owner
         return obj.user_id == request.user
