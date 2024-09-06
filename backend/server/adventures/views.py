@@ -10,11 +10,14 @@ from django.core.exceptions import PermissionDenied
 from worldtravel.models import VisitedRegion, Region, Country
 from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
-from django.db.models import Q, Prefetch
-from .permissions import CollectionShared, IsOwnerOrReadOnly, IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess, IsPublicReadOnly
+from django.db.models import Q
+from .permissions import CollectionShared, IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess
 from rest_framework.pagination import PageNumberPagination
 from django.shortcuts import get_object_or_404
 from rest_framework import status
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 25
@@ -398,6 +401,49 @@ class CollectionViewSet(viewsets.ModelViewSet):
             instance._prefetched_objects_cache = {}
 
         return Response(serializer.data)
+    
+    # Adds a new user to the shared_with field of an adventure
+    @action(detail=True, methods=['post'], url_path='share/(?P<uuid>[^/.]+)')
+    def share(self, request, pk=None, uuid=None):
+        collection = self.get_object()
+        if not uuid:
+            return Response({"error": "User UUID is required"}, status=400)
+        try:
+            user = User.objects.get(uuid=uuid, public_profile=True)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        
+        if user == request.user:
+            return Response({"error": "Cannot share with yourself"}, status=400)
+        
+        if collection.shared_with.filter(id=user.id).exists():
+            return Response({"error": "Adventure is already shared with this user"}, status=400)
+        
+        collection.shared_with.add(user)
+        collection.save()
+        return Response({"success": f"Shared with {user.username}"})
+    
+    @action(detail=True, methods=['post'], url_path='unshare/(?P<uuid>[^/.]+)')
+    def unshare(self, request, pk=None, uuid=None):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        collection = self.get_object()
+        if not uuid:
+            return Response({"error": "User UUID is required"}, status=400)
+        try:
+            user = User.objects.get(uuid=uuid, public_profile=True)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        
+        if user == request.user:
+            return Response({"error": "Cannot unshare with yourself"}, status=400)
+        
+        if not collection.shared_with.filter(id=user.id).exists():
+            return Response({"error": "Collection is not shared with this user"}, status=400)
+        
+        collection.shared_with.remove(user)
+        collection.save()
+        return Response({"success": f"Unshared with {user.username}"})
 
     def get_queryset(self):
         if self.action == 'destroy':
