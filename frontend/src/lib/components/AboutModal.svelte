@@ -27,7 +27,11 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">About AdventureLog</h3>
+		<h3 class="font-bold text-lg">
+			About AdventureLog<span class=" inline-block"
+				><img src="/favicon.png" alt="Map Logo" class="w-10 -mb-3 ml-2" /></span
+			>
+		</h3>
 		<p class="py-1">
 			AdventureLog <a
 				target="_blank"
