@@ -114,7 +114,7 @@
 			</ul>
 		</div>
 		<a class="btn btn-ghost text-xl" href="/"
-			>AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-8" /></a
+			>AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-10" /></a
 		>
 	</div>
 	<div class="navbar-center hidden lg:flex">
