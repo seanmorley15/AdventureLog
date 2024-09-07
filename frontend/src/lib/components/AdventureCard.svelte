@@ -256,7 +256,7 @@
 			{#if type != 'link'}
 				{#if user?.pk == adventure.user_id}
 					<div class="dropdown dropdown-end">
-						<div tabindex="0" role="button" class="btn btn-neutral">
+						<div tabindex="0" role="button" class="btn btn-neutral-200">
 							<DotsHorizontal class="w-6 h-6" />
 						</div>
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
