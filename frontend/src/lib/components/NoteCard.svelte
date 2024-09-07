@@ -30,7 +30,7 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl overflow-hidden text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md overflow-hidden bg-neutral text-neutral-content shadow-xl"
 >
 	<div class="card-body">
 		<div class="flex justify-between">

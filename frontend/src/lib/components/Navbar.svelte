@@ -202,7 +202,12 @@
 					</li>
 					<li>
 						<button formaction="/?/setTheme&theme=forest">Forest<Forest class="w-6 h-6" /></button>
-						<button formaction="/?/setTheme&theme=garden">Garden<Flower class="w-6 h-6" /></button>
+						<button formaction="/?/setTheme&theme=aestheticLight"
+							>Aesthetic Light<Flower class="w-6 h-6" /></button
+						>
+						<button formaction="/?/setTheme&theme=aestheticDark"
+							>Aesthetic Dark<Flower class="w-6 h-6" /></button
+						>
 						<button formaction="/?/setTheme&theme=aqua">Aqua<Water class="w-6 h-6" /></button>
 					</li>
 				</form>

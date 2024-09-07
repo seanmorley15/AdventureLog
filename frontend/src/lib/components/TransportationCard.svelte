@@ -1,16 +1,10 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-
-	import Launch from '~icons/mdi/launch';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
-
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-
-	import { goto } from '$app/navigation';
-	import type { Collection, Transportation, User } from '$lib/types';
+	import type { Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 
-	import Plus from '~icons/mdi/plus';
 	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
@@ -40,7 +34,7 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{transportation.name}</h2>

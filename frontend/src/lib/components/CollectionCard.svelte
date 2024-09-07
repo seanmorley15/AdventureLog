@@ -78,7 +78,7 @@
 {/if}
 
 <div
-	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-primary-content shadow-xl text-base-content"
+	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral text-neutral-content shadow-xl"
 >
 	<div class="card-body">
 		<div class="flex justify-between">
