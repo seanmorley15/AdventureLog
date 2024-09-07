@@ -29,7 +29,7 @@ export default {
 					'accent-content': '#f2eaea',
 
 					neutral: '#2b2a2a',
-					'neutral-focus': '#1c1b1b',
+					'neutral-focus': '#272525',
 					'neutral-content': '#e9e7e7',
 
 					'base-100': '#121212', // Dark background

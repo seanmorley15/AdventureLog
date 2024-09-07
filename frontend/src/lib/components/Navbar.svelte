@@ -11,6 +11,7 @@
 	import Flower from '~icons/mdi/flower';
 	import Water from '~icons/mdi/water';
 	import AboutModal from './AboutModal.svelte';
+	import AccountMultiple from '~icons/mdi/account-multiple';
 	import Avatar from './Avatar.svelte';
 	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
@@ -82,6 +83,9 @@
 					<li>
 						<button on:click={() => goto('/map')}>Map</button>
 					</li>
+					<li>
+						<button on:click={() => goto('/users')}>Users</button>
+					</li>
 				{/if}
 
 				{#if !data.user}
@@ -133,6 +137,11 @@
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/map')}>Map</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/users')}
+						><AccountMultiple /></button
+					>
 				</li>
 			{/if}
 
