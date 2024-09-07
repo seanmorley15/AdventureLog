@@ -177,3 +177,24 @@ export function groupChecklistsByDate(
 
 	return groupedChecklists;
 }
+
+export function continentCodeToString(code: string) {
+	switch (code) {
+		case 'AF':
+			return 'Africa';
+		case 'AN':
+			return 'Antarctica';
+		case 'AS':
+			return 'Asia';
+		case 'EU':
+			return 'Europe';
+		case 'NA':
+			return 'North America';
+		case 'OC':
+			return 'Oceania';
+		case 'SA':
+			return 'South America';
+		default:
+			return 'Unknown';
+	}
+}
