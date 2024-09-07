@@ -6,6 +6,11 @@ from .serializers import ChangeEmailSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.conf import settings
+from django.shortcuts import get_object_or_404
+from django.contrib.auth import get_user_model
+from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
+
+User = get_user_model()
 
 class ChangeEmailView(APIView):
     permission_classes = [IsAuthenticated]
@@ -41,4 +46,35 @@ class IsRegistrationDisabled(APIView):
     )
     def get(self, request):
         return Response({"is_disabled": settings.DISABLE_REGISTRATION, "message": settings.DISABLE_REGISTRATION_MESSAGE}, status=status.HTTP_200_OK)
-    
+
+class PublicUserListView(APIView):
+    # Allow the listing of all public users
+    permission_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('List of public users'),
+            400: 'Bad Request'
+        },
+        operation_description="List public users."
+    )
+    def get(self, request):
+        users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
+        serializer = PublicUserSerializer(users, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class PublicUserDetailView(APIView):
+    # Allow the retrieval of a single public user
+    permission_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Public user information'),
+            400: 'Bad Request'
+        },
+        operation_description="Get public user information."
+    )
+    def get(self, request, user_id):
+        user = get_object_or_404(User, uuid=user_id, public_profile=True)
+        serializer = PublicUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

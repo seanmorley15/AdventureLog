@@ -174,7 +174,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ('profile_pic',)
+        fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
