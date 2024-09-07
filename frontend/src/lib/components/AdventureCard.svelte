@@ -221,7 +221,7 @@
 				<div class="badge badge-accent">Dining</div>
 			{/if}
 
-			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
+			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">

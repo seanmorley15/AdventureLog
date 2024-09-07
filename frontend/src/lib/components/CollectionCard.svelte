@@ -90,7 +90,7 @@
 			</button>
 		</div>
 		<div class="inline-flex gap-2 mb-2">
-			<div class="badge badge-neutral">{collection.is_public ? 'Public' : 'Private'}</div>
+			<div class="badge badge-secondary">{collection.is_public ? 'Public' : 'Private'}</div>
 			{#if collection.is_archived}
 				<div class="badge badge-warning">Archived</div>
 			{/if}

@@ -12,6 +12,7 @@
 	import Water from '~icons/mdi/water';
 	import AboutModal from './AboutModal.svelte';
 	import Avatar from './Avatar.svelte';
+	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
 
 	let query: string = '';
@@ -203,10 +204,10 @@
 					<li>
 						<button formaction="/?/setTheme&theme=forest">Forest<Forest class="w-6 h-6" /></button>
 						<button formaction="/?/setTheme&theme=aestheticLight"
-							>Aesthetic Light<Flower class="w-6 h-6" /></button
+							>Aesthetic Light<PaletteOutline class="w-6 h-6" /></button
 						>
 						<button formaction="/?/setTheme&theme=aestheticDark"
-							>Aesthetic Dark<Flower class="w-6 h-6" /></button
+							>Aesthetic Dark<PaletteOutline class="w-6 h-6" /></button
 						>
 						<button formaction="/?/setTheme&theme=aqua">Aqua<Water class="w-6 h-6" /></button>
 					</li>
