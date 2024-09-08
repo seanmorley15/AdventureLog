@@ -16,5 +16,5 @@
 </div>
 
 {#if users.length === 0}
-	<p class="text-center">No users found.</p>
+	<p class="text-center">No users found with public profiles.</p>
 {/if}
