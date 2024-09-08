@@ -22,8 +22,8 @@ urlpatterns = [
 
     path('auth/change-email/', ChangeEmailView.as_view(), name='change_email'),
     path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
-    path('auth/users', PublicUserListView.as_view(), name='public-user-list'),
-    path('auth/user/<uuid:user_id>', PublicUserDetailView.as_view(), name='public-user-detail'),
+    path('auth/users/', PublicUserListView.as_view(), name='public-user-list'),
+    path('auth/user/<uuid:user_id>/', PublicUserDetailView.as_view(), name='public-user-detail'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     re_path(r'^$', TemplateView.as_view(
