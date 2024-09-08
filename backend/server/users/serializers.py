@@ -142,7 +142,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         return username
 
     class Meta:
-        extra_fields = ['profile_pic']
+        extra_fields = ['profile_pic', 'uuid', 'public_profile']
         profile_pic = serializers.ImageField(required=False)
         # see https://github.com/iMerica/dj-rest-auth/issues/181
         # UserModel.XYZ causing attribute error while importing other
@@ -160,10 +160,12 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('date_joined')
         if hasattr(UserModel, 'is_staff'):
             extra_fields.append('is_staff')
+        if hasattr(UserModel, 'public_profile'):
+            extra_fields.append('public_profile')
 
         class Meta(UserDetailsSerializer.Meta):
             model = CustomUser
-            fields = UserDetailsSerializer.Meta.fields + ('profile_pic',)
+            fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
             
         model = UserModel
         fields = ('pk', *extra_fields)
