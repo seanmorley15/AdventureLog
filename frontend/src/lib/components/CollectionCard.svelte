@@ -16,10 +16,12 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
+	import ShareModal from './ShareModal.svelte';
 
 	const dispatch = createEventDispatcher();
 
 	export let type: String | undefined | null;
+	let isShareModalOpen: boolean = false;
 
 	//   export let type: String;
 
@@ -75,6 +77,10 @@
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteCollection}
 	/>
+{/if}
+
+{#if isShareModalOpen}
+	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
 {/if}
 
 <div
@@ -134,6 +140,9 @@
 							{#if !collection.is_archived}
 								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
 									<FileDocumentEdit class="w-6 h-6" />Edit Collection
+								</button>
+								<button class="btn btn-neutral mb-2" on:click={() => (isShareModalOpen = true)}>
+									<FileDocumentEdit class="w-6 h-6" />Share
 								</button>
 							{/if}
 							{#if collection.is_archived}

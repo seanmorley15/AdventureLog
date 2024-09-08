@@ -7,6 +7,9 @@
 
 	import Calendar from '~icons/mdi/calendar';
 
+	export let sharing: boolean = false;
+	export let shared_with: string[] | undefined = undefined;
+
 	export let user: User;
 
 	async function nav() {
@@ -40,7 +43,13 @@
 			</p>
 		</div>
 		<div class="card-actions justify-end">
-			<button class="btn btn-primary" on:click={nav}>View</button>
+			{#if !sharing}
+				<button class="btn btn-primary" on:click={nav}>View</button>
+			{:else if shared_with && !shared_with.includes(user.uuid)}
+				<button class="btn btn-primary" on:click={() => dispatch('share', user)}>Share</button>
+			{:else}
+				<button class="btn btn-primary" on:click={() => dispatch('unshare', user)}>Unshare</button>
+			{/if}
 		</div>
 	</div>
 </div>

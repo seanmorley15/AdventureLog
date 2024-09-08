@@ -80,6 +80,7 @@ export type Collection = {
 	notes?: Note[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
+	shared_with: string[];
 };
 
 export type OpenStreetMapPlace = {

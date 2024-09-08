@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from adventures.models import Adventure
+from adventures.models import Adventure, Collection
 from users.forms import CustomAllAuthPasswordResetForm
 from dj_rest_auth.serializers import PasswordResetSerializer
 from rest_framework.exceptions import PermissionDenied
@@ -133,8 +133,6 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     @staticmethod
     def validate_username(username):
         if 'allauth.account' not in settings.INSTALLED_APPS:
-            # We don't need to call the all-auth
-            # username validator unless it's installed
             return username
 
         from allauth.account.adapter import get_adapter
@@ -144,10 +142,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         extra_fields = ['profile_pic', 'uuid', 'public_profile']
         profile_pic = serializers.ImageField(required=False)
-        # see https://github.com/iMerica/dj-rest-auth/issues/181
-        # UserModel.XYZ causing attribute error while importing other
-        # classes from `serializers.py`. So, we need to check whether the auth model has
-        # the attribute or not
+
         if hasattr(UserModel, 'USERNAME_FIELD'):
             extra_fields.append(UserModel.USERNAME_FIELD)
         if hasattr(UserModel, 'EMAIL_FIELD'):
@@ -166,10 +161,25 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         class Meta(UserDetailsSerializer.Meta):
             model = CustomUser
             fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
-            
+
         model = UserModel
         fields = ('pk', *extra_fields)
         read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
+
+    def handle_public_profile_change(self, instance, validated_data):
+        """Remove user from `shared_with` if public profile is set to False."""
+        if 'public_profile' in validated_data and not validated_data['public_profile']:
+            for collection in Collection.objects.filter(shared_with=instance):
+                collection.shared_with.remove(instance)
+
+    def update(self, instance, validated_data):
+        self.handle_public_profile_change(instance, validated_data)
+        return super().update(instance, validated_data)
+
+    def partial_update(self, instance, validated_data):
+        self.handle_public_profile_change(instance, validated_data)
+        return super().partial_update(instance, validated_data)
+
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
 
