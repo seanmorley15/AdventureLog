@@ -402,6 +402,18 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
     
+    # make an action to retreive all adventures that are shared with the user
+    @action(detail=False, methods=['get'])
+    def shared(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        queryset = Collection.objects.filter(
+            shared_with=request.user
+        )
+        queryset = self.apply_sorting(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+    
     # Adds a new user to the shared_with field of an adventure
     @action(detail=True, methods=['post'], url_path='share/(?P<uuid>[^/.]+)')
     def share(self, request, pk=None, uuid=None):

@@ -32,6 +32,7 @@
 		<li><button on:click={() => goto('/profile')}>Profile</button></li>
 		<li><button on:click={() => goto('/adventures')}>My Adventures</button></li>
 		<li><button on:click={() => goto('/activities')}>My Activities</button></li>
+		<li><button on:click={() => goto('/shared')}>Shared With Me</button></li>
 		<li><button on:click={() => goto('/settings')}>User Settings</button></li>
 		<form method="post">
 			<li><button formaction="/?/logout">Logout</button></li>

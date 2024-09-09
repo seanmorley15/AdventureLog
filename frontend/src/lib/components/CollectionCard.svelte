@@ -131,7 +131,7 @@
 						tabindex="0"
 						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 					>
-						{#if type != 'link'}
+						{#if type != 'link' && type != 'viewonly'}
 							<button
 								class="btn btn-neutral mb-2"
 								on:click={() => goto(`/collections/${collection.id}`)}
@@ -160,6 +160,13 @@
 								class="btn btn-warning"
 								on:click={() => (isWarningModalOpen = true)}
 								><TrashCan class="w-6 h-6" />Delete</button
+							>
+						{/if}
+						{#if type == 'viewonly'}
+							<button
+								class="btn btn-neutral mb-2"
+								on:click={() => goto(`/collections/${collection.id}`)}
+								><Launch class="w-5 h-5 mr-1" />Open Details</button
 							>
 						{/if}
 					</ul>
