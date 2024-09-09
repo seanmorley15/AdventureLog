@@ -307,8 +307,9 @@
 						</ul>
 					</div>
 				{:else}
-					<button class="btn btn-neutral mb-2" on:click={() => goto(`/adventures/${adventure.id}`)}
-						><Launch class="w-6 h-6" /></button
+					<button
+						class="btn btn-neutral-200 mb-2"
+						on:click={() => goto(`/adventures/${adventure.id}`)}><Launch class="w-6 h-6" /></button
 					>
 				{/if}
 			{/if}

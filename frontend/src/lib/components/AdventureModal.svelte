@@ -627,22 +627,24 @@
 									</button>
 								{/if}
 							</div>
-							<div>
-								<div class="mt-2">
-									<div>
-										<label for="is_public"
-											>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-										><br />
-										<input
-											type="checkbox"
-											class="toggle toggle-primary"
-											id="is_public"
-											name="is_public"
-											bind:checked={adventure.is_public}
-										/>
+							{#if !collection_id}
+								<div>
+									<div class="mt-2">
+										<div>
+											<label for="is_public"
+												>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+											><br />
+											<input
+												type="checkbox"
+												class="toggle toggle-primary"
+												id="is_public"
+												name="is_public"
+												bind:checked={adventure.is_public}
+											/>
+										</div>
 									</div>
 								</div>
-							</div>
+							{/if}
 						</div>
 						<div class="divider"></div>
 						<h2 class="text-2xl font-semibold mb-2 mt-2">Location Information</h2>

@@ -95,12 +95,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
         adventure = get_object_or_404(queryset, pk=kwargs['pk'])
         serializer = self.get_serializer(adventure)
         return Response(serializer.data)
-    
-    def perform_create(self, serializer):
-        adventure = serializer.save(user_id=self.request.user)
-        if adventure.collection:
-            adventure.is_public = adventure.collection.is_public
-            adventure.save()
 
     def perform_update(self, serializer):
         adventure = serializer.save()
@@ -201,13 +195,17 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
-    def partial_update(self, request, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         # Retrieve the current object
         instance = self.get_object()
         
         # Partially update the instance with the request data
         serializer = self.get_serializer(instance, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
+
+        # if the adventure is trying to have is_public changed and its part of a collection return an error
+        if 'is_public' in serializer.validated_data and instance.collection:
+            return Response({"error": "Cannot change is_public for adventures in a collection"}, status=400)
 
         # Retrieve the collection from the validated data
         new_collection = serializer.validated_data.get('collection')
@@ -243,6 +241,10 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         user = request.user
         print(new_collection)
+
+        # if the adventure is trying to have is_public changed and its part of a collection return an error
+        if 'is_public' in serializer.validated_data and instance.collection:
+            return Response({"error": "Cannot change is_public for adventures in a collection"}, status=400)
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
@@ -266,7 +268,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         # Retrieve the collection from the validated data
         collection = serializer.validated_data.get('collection')
-
+        
         # Check if a collection is provided
         if collection:
             user = self.request.user
@@ -275,7 +277,8 @@ class AdventureViewSet(viewsets.ModelViewSet):
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
             # if collection the owner of the adventure is the owner of the collection
-            serializer.save(user_id=collection.user_id)
+            # set the is_public field of the adventure to the is_public field of the collection
+            serializer.save(user_id=collection.user_id, is_public=collection.is_public)
             return
 
         # Save the adventure with the current user as the owner
@@ -380,6 +383,11 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if 'is_public' in serializer.validated_data:
             new_public_status = serializer.validated_data['is_public']
             
+            # if is_publuc has changed and the user is not the owner of the collection return an error
+            if new_public_status != instance.is_public and instance.user_id != request.user:
+                print(f"User {request.user.id} does not own the collection {instance.id} that is owned by {instance.user_id}")
+                return Response({"error": "User does not own the collection"}, status=400)
+
             # Update associated adventures to match the collection's is_public status
             Adventure.objects.filter(collection=instance).update(is_public=new_public_status)
 
@@ -467,6 +475,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
             ).distinct()
         
         if self.action == 'retrieve':
+            if not self.request.user.is_authenticated:
+                return Collection.objects.filter(is_public=True)
             return Collection.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)
             ).distinct()
@@ -966,7 +976,13 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
         
         if adventure.user_id != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+            # Check if the adventure has a collection
+            if adventure.collection:
+                # Check if the user is in the collection's shared_with list
+                if not adventure.collection.shared_with.filter(id=request.user.id).exists():
+                    return Response({"error": "User does not have permission to access this adventure"}, status=status.HTTP_403_FORBIDDEN)
+            else:
+                return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().create(request, *args, **kwargs)
     
