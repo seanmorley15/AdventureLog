@@ -96,11 +96,13 @@
 {/if}
 
 {#if adventure}
-	<div class="fixed bottom-4 right-4 z-[999]">
-		<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
-			><ClipboardList class="w-8 h-8" /></button
-		>
-	</div>
+	{#if data.user && data.user.pk == adventure.user_id}
+		<div class="fixed bottom-4 right-4 z-[999]">
+			<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
+				><ClipboardList class="w-8 h-8" /></button
+			>
+		</div>
+	{/if}
 	<div class="flex flex-col min-h-dvh">
 		<main class="flex-1">
 			<div class="max-w-5xl mx-auto p-4 md:p-6 lg:p-8">

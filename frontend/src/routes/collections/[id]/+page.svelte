@@ -404,6 +404,7 @@
 					type={adventure.type}
 					{adventure}
 					on:typeChange={changeType}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -423,6 +424,7 @@
 						transportationToEdit = event.detail;
 						isTransportationEditModalOpen = true;
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -442,6 +444,7 @@
 					on:delete={(event) => {
 						notes = notes.filter((n) => n.id != event.detail);
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -461,6 +464,7 @@
 						checklistToEdit = event.detail;
 						isShowingChecklistModal = true;
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>

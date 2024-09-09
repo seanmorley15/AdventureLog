@@ -4,6 +4,8 @@
 
 **Documentation can be found [here](https://docs.adventurelog.app).**
 
+**Join the AdventureLog Community Discord Server [here](https://discord.gg/wRbQ9Egr8C).**
+
 # Table of Contents
 
 - [Installation](#installation)

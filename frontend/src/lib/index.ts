@@ -1,5 +1,5 @@
 import inspirationalQuotes from './json/quotes.json';
-import type { Adventure, Checklist, Collection, Note, Transportation } from './types';
+import type { Adventure, Checklist, Collection, Note, Transportation, User } from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;

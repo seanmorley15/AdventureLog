@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
-	import type { Note, User } from '$lib/types';
+	import type { Collection, Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -11,6 +11,7 @@
 
 	export let note: Note;
 	export let user: User | null = null;
+	export let collection: Collection | null = null;
 
 	function editNote() {
 		dispatch('edit', note);
@@ -52,10 +53,10 @@
 			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
 			> -->
-			<button class="btn btn-neutral mb-2" on:click={editNote}>
+			<button class="btn btn-neutral-200 mb-2" on:click={editNote}>
 				<Launch class="w-6 h-6" />Open
 			</button>
-			{#if note.user_id == user?.pk}
+			{#if note.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"

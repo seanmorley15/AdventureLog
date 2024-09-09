@@ -2,7 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-	import type { Transportation, User } from '$lib/types';
+	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 
 	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
@@ -11,6 +11,7 @@
 
 	export let transportation: Transportation;
 	export let user: User | null = null;
+	export let collection: Collection | null = null;
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -58,7 +59,7 @@
 			{/if}
 		</div>
 
-		{#if user?.pk === transportation.user_id}
+		{#if transportation.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button
