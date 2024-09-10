@@ -11,10 +11,6 @@
 	export let shared_with: string[] | undefined = undefined;
 
 	export let user: User;
-
-	async function nav() {
-		goto(`/user/${user.uuid}`);
-	}
 </script>
 
 <div
@@ -44,7 +40,7 @@
 		</div>
 		<div class="card-actions justify-end">
 			{#if !sharing}
-				<button class="btn btn-primary" on:click={nav}>View</button>
+				<button class="btn btn-primary" on:click={() => goto(`/user/${user.uuid}`)}>View</button>
 			{:else if shared_with && !shared_with.includes(user.uuid)}
 				<button class="btn btn-primary" on:click={() => dispatch('share', user)}>Share</button>
 			{:else}

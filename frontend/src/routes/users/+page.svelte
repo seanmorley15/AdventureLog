@@ -18,3 +18,8 @@
 {#if users.length === 0}
 	<p class="text-center">No users found with public profiles.</p>
 {/if}
+
+<svelte:head>
+	<title>Users</title>
+	<meta name="description" content="View your adventure collections." />
+</svelte:head>
