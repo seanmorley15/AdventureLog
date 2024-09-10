@@ -13,6 +13,8 @@ declare global {
 				date_joined: string | null;
 				is_staff: boolean;
 				profile_pic: string | null;
+				uuid: string;
+				public_profile: boolean;
 			} | null;
 		}
 		// interface PageData {}

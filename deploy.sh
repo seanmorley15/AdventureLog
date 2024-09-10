@@ -5,3 +5,4 @@ docker compose pull
 echo "Stating containers"
 docker compose up -d
 echo "All set!"
+docker logs adventurelog-backend --follow

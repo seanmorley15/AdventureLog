@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Adventure, User } from '$lib/types';
+	import type { Adventure, Collection, User } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -21,8 +21,8 @@
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 
 	export let type: string;
-
 	export let user: User | null;
+	export let collection: Collection | null = null;
 
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
@@ -161,7 +161,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
 	<figure>
 		{#if adventure.images && adventure.images.length > 0}
@@ -209,19 +209,17 @@
 			</button>
 		</div>
 		<div>
-			{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
+			{#if adventure.type == 'visited'}
 				<div class="badge badge-primary">Visited</div>
-			{:else if user?.pk == adventure.user_id && adventure.type == 'planned'}
+			{:else if adventure.type == 'planned'}
 				<div class="badge badge-secondary">Planned</div>
-			{:else if (user?.pk !== adventure.user_id && adventure.type == 'planned') || adventure.type == 'visited'}
-				<div class="badge badge-secondary">Adventure</div>
-			{:else if user?.pk == adventure.user_id && adventure.type == 'lodging'}
+			{:else if adventure.type == 'lodging'}
 				<div class="badge badge-success">Lodging</div>
 			{:else if adventure.type == 'dining'}
 				<div class="badge badge-accent">Dining</div>
 			{/if}
 
-			<div class="badge badge-neutral">{adventure.is_public ? 'Public' : 'Private'}</div>
+			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">
@@ -254,9 +252,9 @@
 		<div class="card-actions justify-end mt-2">
 			<!-- action options dropdown -->
 			{#if type != 'link'}
-				{#if user?.pk == adventure.user_id}
+				{#if adventure.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 					<div class="dropdown dropdown-end">
-						<div tabindex="0" role="button" class="btn btn-neutral">
+						<div tabindex="0" role="button" class="btn btn-neutral-200">
 							<DotsHorizontal class="w-6 h-6" />
 						</div>
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
@@ -272,18 +270,18 @@
 							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
 								<FileDocumentEdit class="w-6 h-6" />Edit {keyword}
 							</button>
-							{#if adventure.type == 'visited'}
+							{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
 									><FormatListBulletedSquare class="w-6 h-6" />Change to Plan</button
 								>
 							{/if}
-							{#if adventure.type == 'planned'}
+							{#if adventure.type == 'planned' && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
 									><CheckBold class="w-6 h-6" />Mark Visited</button
 								>
 							{/if}
 							<!-- remove from adventure -->
-							{#if adventure.collection && (adventure.type == 'visited' || adventure.type == 'planned')}
+							{#if adventure.collection && (adventure.type == 'visited' || adventure.type == 'planned') && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
 									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
 								>
@@ -309,8 +307,9 @@
 						</ul>
 					</div>
 				{:else}
-					<button class="btn btn-neutral mb-2" on:click={() => goto(`/adventures/${adventure.id}`)}
-						><Launch class="w-6 h-6" /></button
+					<button
+						class="btn btn-neutral-200 mb-2"
+						on:click={() => goto(`/adventures/${adventure.id}`)}><Launch class="w-6 h-6" /></button
 					>
 				{/if}
 			{/if}

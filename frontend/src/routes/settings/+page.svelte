@@ -111,6 +111,24 @@
 			id="profile_pic"
 			class="file-input file-input-bordered w-full max-w-xs mb-2"
 		/><br />
+		<div class="form-control">
+			<div
+				class="tooltip tooltip-info"
+				data-tip="With a public profile, users can share collections with you and view your profile on the users page."
+			>
+				<label class="label cursor-pointer">
+					<span class="label-text">Public Profile</span>
+
+					<input
+						id="public_profile"
+						name="public_profile"
+						type="checkbox"
+						class="toggle"
+						checked={user.public_profile}
+					/>
+				</label>
+			</div>
+		</div>
 		<button class="py-2 mt-2 px-4 btn btn-primary">Update</button>
 	</form>
 </div>

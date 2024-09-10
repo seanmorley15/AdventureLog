@@ -12,7 +12,7 @@
 
 <div class="dropdown dropdown-bottom dropdown-end" tabindex="0" role="button">
 	<div class="avatar placeholder">
-		<div class="bg-neutral text-neutral-content rounded-full w-10 ml-4">
+		<div class="bg-neutral rounded-full text-neutral-200 w-10 ml-4">
 			{#if user.profile_pic}
 				<img src={user.profile_pic} alt="User Profile" />
 			{:else}
@@ -24,7 +24,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<ul
 		tabindex="0"
-		class="dropdown-content z-[1] menu p-2 shadow bg-primary-content mt-2 rounded-box w-52"
+		class="dropdown-content z-[1] text-neutral-200 menu p-2 shadow bg-neutral mt-2 rounded-box w-52"
 	>
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<!-- svelte-ignore a11y-missing-attribute -->
@@ -32,6 +32,7 @@
 		<li><button on:click={() => goto('/profile')}>Profile</button></li>
 		<li><button on:click={() => goto('/adventures')}>My Adventures</button></li>
 		<li><button on:click={() => goto('/activities')}>My Activities</button></li>
+		<li><button on:click={() => goto('/shared')}>Shared With Me</button></li>
 		<li><button on:click={() => goto('/settings')}>User Settings</button></li>
 		<form method="post">
 			<li><button formaction="/?/logout">Logout</button></li>

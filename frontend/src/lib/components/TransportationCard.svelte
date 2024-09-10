@@ -1,22 +1,17 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-
-	import Launch from '~icons/mdi/launch';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
-
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
-
-	import { goto } from '$app/navigation';
 	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 
-	import Plus from '~icons/mdi/plus';
 	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
 
 	export let transportation: Transportation;
 	export let user: User | null = null;
+	export let collection: Collection | null = null;
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -40,7 +35,7 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{transportation.name}</h2>
@@ -64,7 +59,7 @@
 			{/if}
 		</div>
 
-		{#if user?.pk === transportation.user_id}
+		{#if transportation.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button

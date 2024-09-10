@@ -7,6 +7,8 @@ export type User = {
 	date_joined: string | null;
 	is_staff: boolean;
 	profile_pic: string | null;
+	uuid: string;
+	public_profile: boolean;
 };
 
 export type Adventure = {
@@ -78,6 +80,7 @@ export type Collection = {
 	notes?: Note[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
+	shared_with: string[];
 };
 
 export type OpenStreetMapPlace = {

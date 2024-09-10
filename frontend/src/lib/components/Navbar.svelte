@@ -11,7 +11,9 @@
 	import Flower from '~icons/mdi/flower';
 	import Water from '~icons/mdi/water';
 	import AboutModal from './AboutModal.svelte';
+	import AccountMultiple from '~icons/mdi/account-multiple';
 	import Avatar from './Avatar.svelte';
+	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
 
 	let query: string = '';
@@ -81,6 +83,9 @@
 					<li>
 						<button on:click={() => goto('/map')}>Map</button>
 					</li>
+					<li>
+						<button on:click={() => goto('/users')}>Users</button>
+					</li>
 				{/if}
 
 				{#if !data.user}
@@ -133,6 +138,11 @@
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/map')}>Map</button>
 				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/users')}
+						><AccountMultiple /></button
+					>
+				</li>
 			{/if}
 
 			{#if !data.user}
@@ -184,6 +194,10 @@
 					on:click={() => (window.location.href = 'https://docs.adventurelog.app/')}
 					>Documentation</button
 				>
+				<button
+					class="btn btn-sm mt-2"
+					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}>Discord</button
+				>
 				<p class="font-bold m-4 text-lg">Theme Selection</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
 					<li>
@@ -202,7 +216,12 @@
 					</li>
 					<li>
 						<button formaction="/?/setTheme&theme=forest">Forest<Forest class="w-6 h-6" /></button>
-						<button formaction="/?/setTheme&theme=garden">Garden<Flower class="w-6 h-6" /></button>
+						<button formaction="/?/setTheme&theme=aestheticLight"
+							>Aesthetic Light<PaletteOutline class="w-6 h-6" /></button
+						>
+						<button formaction="/?/setTheme&theme=aestheticDark"
+							>Aesthetic Dark<PaletteOutline class="w-6 h-6" /></button
+						>
 						<button formaction="/?/setTheme&theme=aqua">Aqua<Water class="w-6 h-6" /></button>
 					</li>
 				</form>

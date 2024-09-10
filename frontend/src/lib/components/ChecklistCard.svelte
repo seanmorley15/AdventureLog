@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { addToast } from '$lib/toasts';
-	import type { Checklist, User } from '$lib/types';
+	import type { Checklist, Collection, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
@@ -10,6 +10,7 @@
 
 	export let checklist: Checklist;
 	export let user: User | null = null;
+	export let collection: Collection | null = null;
 
 	function editChecklist() {
 		dispatch('edit', checklist);
@@ -29,7 +30,7 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-primary-content shadow-xl overflow-hidden text-base-content"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
 >
 	<div class="card-body">
 		<div class="flex justify-between">
@@ -51,10 +52,10 @@
 			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
 				><Launch class="w-6 h-6" />Open Details</button
 			> -->
-			<button class="btn btn-neutral mb-2" on:click={editChecklist}>
+			<button class="btn btn-neutral-200 mb-2" on:click={editChecklist}>
 				<Launch class="w-6 h-6" />Open
 			</button>
-			{#if checklist.user_id == user?.pk}
+			{#if checklist.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Checklist"

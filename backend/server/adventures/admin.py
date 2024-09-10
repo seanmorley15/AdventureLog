@@ -46,8 +46,9 @@ from users.models import CustomUser
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
     list_display = ['username', 'email', 'is_staff', 'is_active', 'image_display']
+    readonly_fields = ('uuid',)
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('profile_pic',)}),
+        (None, {'fields': ('profile_pic', 'uuid', 'public_profile')}),
     )
     def image_display(self, obj):
         if obj.profile_pic:

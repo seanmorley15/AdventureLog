@@ -88,16 +88,18 @@
 			return;
 		} else {
 			let adventure = event.detail;
-			let formData = new FormData();
-			formData.append('collection_id', collection.id.toString());
 
-			let res = await fetch(`/adventures/${adventure.id}?/addToCollection`, {
-				method: 'POST',
-				body: formData // Remove the Content-Type header
+			let res = await fetch(`/api/adventures/${adventure.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ collection: collection.id.toString() })
 			});
 
 			if (res.ok) {
 				console.log('Adventure added to collection');
+				adventure = await res.json();
 				adventures = [...adventures, adventure];
 			} else {
 				console.log('Error adding adventure to collection');
@@ -404,6 +406,7 @@
 					type={adventure.type}
 					{adventure}
 					on:typeChange={changeType}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -423,6 +426,7 @@
 						transportationToEdit = event.detail;
 						isTransportationEditModalOpen = true;
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -442,6 +446,7 @@
 					on:delete={(event) => {
 						notes = notes.filter((n) => n.id != event.detail);
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>
@@ -461,6 +466,7 @@
 						checklistToEdit = event.detail;
 						isShowingChecklistModal = true;
 					}}
+					{collection}
 				/>
 			{/each}
 		</div>

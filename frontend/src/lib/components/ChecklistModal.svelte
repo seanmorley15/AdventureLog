@@ -33,7 +33,7 @@
 			{
 				name: newItem,
 				is_checked: newStatus,
-				id: 0,
+				id: '',
 				user_id: 0,
 				checklist: 0,
 				created_at: '',
@@ -135,7 +135,7 @@
 			<p class="font-semibold text-md mb-2">Editing checklist {initialName}</p>
 		{/if}
 
-		{#if (checklist && user?.pk == checklist?.user_id) || !checklist}
+		{#if (checklist && user?.pk == checklist?.user_id) || (user && collection && collection.shared_with.includes(user.uuid)) || !checklist}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
 					<label for="name">Name</label>

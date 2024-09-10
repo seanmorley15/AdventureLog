@@ -4,6 +4,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
+	import ShareModal from './ShareModal.svelte';
 	let modal: HTMLDialogElement;
 
 	export let note: Note | null = null;
@@ -113,7 +114,7 @@
 			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
 		{/if}
 
-		{#if (note && user?.pk == note?.user_id) || !note}
+		{#if (note && user?.pk == note?.user_id) || (collection && user && collection.shared_with.includes(user.uuid)) || !note}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
 					<label for="name">Name</label>
