@@ -25,7 +25,11 @@
 	}
 </script>
 
-<h1 class="text-center font-bold text-4xl mb-4">Country List</h1>
+<h1 class="text-center font-bold text-4xl">Country List</h1>
+<!-- result count -->
+<p class="text-center mb-4">
+	{filteredCountries.length} countries found
+</p>
 
 <div class="flex items-center justify-center mb-4">
 	<input

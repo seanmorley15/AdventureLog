@@ -204,8 +204,11 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # if the adventure is trying to have is_public changed and its part of a collection return an error
-        if 'is_public' in serializer.validated_data and instance.collection:
-            return Response({"error": "Cannot change is_public for adventures in a collection"}, status=400)
+        if new_collection is not None:
+            serializer.validated_data['is_public'] = new_collection.is_public
+        elif instance.collection:
+            serializer.validated_data['is_public'] = instance.collection.is_public
+
 
         # Retrieve the collection from the validated data
         new_collection = serializer.validated_data.get('collection')
@@ -243,8 +246,10 @@ class AdventureViewSet(viewsets.ModelViewSet):
         print(new_collection)
 
         # if the adventure is trying to have is_public changed and its part of a collection return an error
-        if 'is_public' in serializer.validated_data and instance.collection:
-            return Response({"error": "Cannot change is_public for adventures in a collection"}, status=400)
+        if new_collection is not None:
+            serializer.validated_data['is_public'] = new_collection.is_public
+        elif instance.collection:
+            serializer.validated_data['is_public'] = instance.collection.is_public
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
