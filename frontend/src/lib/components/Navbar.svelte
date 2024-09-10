@@ -194,6 +194,10 @@
 					on:click={() => (window.location.href = 'https://docs.adventurelog.app/')}
 					>Documentation</button
 				>
+				<button
+					class="btn btn-sm mt-2"
+					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}>Discord</button
+				>
 				<p class="font-bold m-4 text-lg">Theme Selection</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
 					<li>
