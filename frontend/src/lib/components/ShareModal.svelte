@@ -91,6 +91,9 @@
 					/>
 				</div>
 			{/each}
+			{#if sharedWithUsers.length === 0}
+				<p class="text-neutral-content">No users shared with</p>
+			{/if}
 		</ul>
 		<div class="divider"></div>
 		<h3 class="font-bold text-md">Not Shared With</h3>
@@ -106,6 +109,9 @@
 					/>
 				</div>
 			{/each}
+			{#if notSharedWithUsers.length === 0}
+				<p class="text-neutral-content">No users not shared with</p>
+			{/if}
 		</ul>
 		<button class="btn btn-primary mt-4" on:click={close}>Close</button>
 	</div>

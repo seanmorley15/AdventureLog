@@ -60,6 +60,9 @@ class PublicUserListView(APIView):
     )
     def get(self, request):
         users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
+        # remove the email addresses from the response
+        for user in users:
+            user.email = None
         serializer = PublicUserSerializer(users, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -76,5 +79,7 @@ class PublicUserDetailView(APIView):
     )
     def get(self, request, user_id):
         user = get_object_or_404(User, uuid=user_id, public_profile=True)
+        # remove the email address from the response
+        user.email = None
         serializer = PublicUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
