@@ -41,6 +41,7 @@ export type Country = {
 	country_code: string;
 	subregion: string;
 	flag_url: string;
+	capital: string;
 };
 
 export type Region = {

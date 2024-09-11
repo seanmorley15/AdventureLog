@@ -14,6 +14,7 @@ class Country(models.Model):
     name = models.CharField(max_length=100)
     country_code = models.CharField(max_length=2, unique=True) #iso2 code
     subregion = models.CharField(max_length=100, blank=True, null=True)
+    capital = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = "Country"

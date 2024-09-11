@@ -6,6 +6,8 @@ from django.db import transaction
 import json
 
 from django.conf import settings
+
+COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
         
 media_root = settings.MEDIA_ROOT
 
@@ -38,7 +40,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         countries_json_path = os.path.join(settings.MEDIA_ROOT, 'countries+regions.json')
         if not os.path.exists(countries_json_path):
-            res = requests.get('https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/master/countries%2Bstates.json')
+            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/countries%2Bstates.json')
             if res.status_code == 200:
                 with open(countries_json_path, 'w') as f:
                     f.write(res.text)
@@ -65,6 +67,7 @@ class Command(BaseCommand):
                 country_code = country['iso2']
                 country_name = country['name']
                 country_subregion = country['subregion']
+                country_capital = country['capital']
 
                 processed_country_codes.add(country_code)
 
@@ -72,12 +75,14 @@ class Command(BaseCommand):
                     country_obj = existing_countries[country_code]
                     country_obj.name = country_name
                     country_obj.subregion = country_subregion
+                    country_obj.capital = country_capital
                     countries_to_update.append(country_obj)
                 else:
                     country_obj = Country(
                         name=country_name,
                         country_code=country_code,
-                        subregion=country_subregion
+                        subregion=country_subregion,
+                        capital=country_capital
                     )
                     countries_to_create.append(country_obj)
 
@@ -132,7 +137,7 @@ class Command(BaseCommand):
             Region.objects.bulk_create(regions_to_create)
 
             # Bulk update existing countries and regions
-            Country.objects.bulk_update(countries_to_update, ['name', 'subregion'])
+            Country.objects.bulk_update(countries_to_update, ['name', 'subregion', 'capital'])
             Region.objects.bulk_update(regions_to_update, ['name', 'country', 'longitude', 'latitude'])
 
             # Delete countries and regions that are no longer in the data
