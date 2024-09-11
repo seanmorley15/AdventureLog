@@ -11,7 +11,7 @@ class CountrySerializer(serializers.ModelSerializer):
 
     def get_flag_url(self, obj):
         public_url = self.get_public_url(obj)
-        return public_url + '/media/' + 'flags/' + obj.country_code + '.png'
+        return public_url + '/media/' + 'flags/' + obj.country_code.lower() + '.png'
 
     class Meta:
         model = Country
