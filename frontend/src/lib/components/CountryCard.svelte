@@ -21,7 +21,7 @@
 	</figure>
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{country.name}</h2>
-		<div class="badge badge-primary">{continentCodeToString(country.continent)}</div>
+		<div class="badge badge-primary">{country.subregion}</div>
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
 			<button class="btn btn-primary" on:click={nav}>Open</button>

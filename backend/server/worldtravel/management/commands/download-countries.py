@@ -1,19 +1,17 @@
 import os
 from django.core.management.base import BaseCommand
-from django.contrib.auth import get_user_model
 import requests
 from worldtravel.models import Country, Region
 from django.db import transaction
-from django.contrib.gis.geos import GEOSGeometry, Polygon, MultiPolygon
-from django.contrib.gis.geos.error import GEOSException
 import json
 
 from django.conf import settings
         
 media_root = settings.MEDIA_ROOT
 
-
 def saveCountryFlag(country_code):
+    # For standards, use the lowercase country_code
+    country_code = country_code.lower()
     flags_dir = os.path.join(media_root, 'flags')
 
     # Check if the flags directory exists, if not, create it
@@ -26,7 +24,7 @@ def saveCountryFlag(country_code):
         print(f'Flag for {country_code} already exists')
         return
 
-    res = requests.get(f'https://flagcdn.com/h240/{country_code.lower()}.png'.lower())
+    res = requests.get(f'https://flagcdn.com/h240/{country_code}.png'.lower())
     if res.status_code == 200:
         with open(flag_path, 'wb') as f:
             f.write(res.content)

@@ -39,15 +39,16 @@ export type Country = {
 	id: number;
 	name: string;
 	country_code: string;
-	continent: string;
+	subregion: string;
 	flag_url: string;
 };
 
 export type Region = {
 	id: number;
 	name: string;
-	name_en?: string;
 	country: number;
+	latitude: number;
+	longitude: number;
 };
 
 export type VisitedRegion = {
