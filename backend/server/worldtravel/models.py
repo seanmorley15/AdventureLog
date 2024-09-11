@@ -9,33 +9,11 @@ User = get_user_model()
 default_user_id = 1  # Replace with an actual user ID
 
 class Country(models.Model):
-    AFRICA = 'AF'
-    ANTARCTICA = 'AN'
-    ASIA = 'AS'
-    EUROPE = 'EU'
-    NORTH_AMERICA = 'NA'
-    OCEANIA = 'OC'
-    SOUTH_AMERICA = 'SA'
-    
-    CONTINENT_CHOICES = [
-        (AFRICA, 'Africa'),
-        (ANTARCTICA, 'Antarctica'),
-        (ASIA, 'Asia'),
-        (EUROPE, 'Europe'),
-        (NORTH_AMERICA, 'North America'),
-        (OCEANIA, 'Oceania'),
-        (SOUTH_AMERICA, 'South America'),
-    ]
 
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    country_code = models.CharField(max_length=2)
-    continent = models.CharField(
-        max_length=2,
-        choices=CONTINENT_CHOICES,
-        default=AFRICA
-    )
-    
+    country_code = models.CharField(max_length=2, unique=True) #iso2 code
+    subregion = models.CharField(max_length=100, blank=True, null=True)
 
     class Meta:
         verbose_name = "Country"
@@ -47,9 +25,9 @@ class Country(models.Model):
 class Region(models.Model):
     id = models.CharField(primary_key=True)
     name = models.CharField(max_length=100)
-    name_en = models.CharField(max_length=100, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    geometry = gis_models.MultiPolygonField(srid=4326, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     def __str__(self):
         return self.name

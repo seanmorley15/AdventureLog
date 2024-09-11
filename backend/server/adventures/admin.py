@@ -21,8 +21,8 @@ class AdventureAdmin(admin.ModelAdmin):
 
 
 class CountryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country_code', 'continent', 'number_of_regions')
-    list_filter = ('continent', 'country_code')
+    list_display = ('name', 'country_code', 'number_of_regions')
+    list_filter = ('country_code', 'subregion')
 
     def number_of_regions(self, obj):
         return Region.objects.filter(country=obj).count()
