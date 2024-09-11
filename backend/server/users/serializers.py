@@ -136,7 +136,7 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             return username
 
         from allauth.account.adapter import get_adapter
-        username = get_adapter().clean_username(username)
+        username = get_adapter().clean_username(username.lower())  # Convert username to lowercase
         return username
 
     class Meta:

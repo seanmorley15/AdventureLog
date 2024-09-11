@@ -9,7 +9,7 @@
 	});
 </script>
 
-<div class="toast toast-top toast-end z-50 min-w-20">
+<div class="toast toast-top mt-14 toast-end z-50 min-w-20">
 	{#each toastList as { type, message, id, duration }}
 		{#if type == 'success'}
 			<div class="alert alert-success">
