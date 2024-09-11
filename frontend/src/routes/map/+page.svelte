@@ -54,7 +54,7 @@
 	}
 	let visitedRegions = data.props.visitedRegions;
 
-	let geoJSON = [];
+	let allRegions = [];
 
 	let visitArray = [];
 
@@ -72,12 +72,12 @@
 	// mapped to the checkbox
 	let showGEO = false;
 	$: {
-		if (showGEO && geoJSON.length === 0) {
+		if (showGEO && allRegions.length === 0) {
 			(async () => {
-				geoJSON = await fetch('/api/geojson/').then((res) => res.json());
+				allRegions = await fetch('/api/visitedregion/').then((res) => res.json());
 			})();
 		} else if (!showGEO) {
-			geoJSON = [];
+			allRegions = [];
 		}
 	}
 
@@ -99,7 +99,7 @@
 				<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
 			</label>
 			<!-- <div class="divider divider-horizontal"></div> -->
-			<label for="show-geo">Show Borders</label>
+			<label for="show-geo">Show Visited Regions</label>
 			<input
 				type="checkbox"
 				id="show-geo"
@@ -183,32 +183,33 @@
 			</Marker>
 		{/if}
 	{/each}
-	{#if showGEO}
-		<GeoJSON id="states" data={geoJSON} promoteId="ISOCODE">
-			<LineLayer
-				layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-				paint={{ 'line-color': 'grey', 'line-width': 3 }}
-				beforeLayerType="symbol"
-			/>
-			<FillLayer
-				paint={{ 'fill-color': 'rgba(37, 244, 26, 0.15)' }}
-				filter={['in', 'ISOCODE', ...visitArray]}
-			/>
-			<SymbolLayer
-				layout={{
-					'text-field': ['get', 'name'],
-					'text-size': 12,
-					'text-anchor': 'center'
-				}}
-				paint={{
-					'text-color': 'black'
-				}}
-			/>
-		</GeoJSON>
-	{/if}
+
 	<MapEvents on:click={addMarker} />
 	{#each newMarker as marker}
 		<DefaultMarker lngLat={marker.lngLat} />
+	{/each}
+
+	{#each allRegions as { longitude, latitude, name, region }}
+		<Marker
+			lngLat={[longitude, latitude]}
+			on:click={() => (clickedName = name)}
+			class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 text-black shadow-md"
+		>
+			<svg
+				width="24"
+				height="24"
+				viewBox="0 0 24 24"
+				fill="none"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<!-- green circle -->
+				<circle cx="12" cy="12" r="10" stroke="green" stroke-width="2" fill="green" />
+			</svg>
+			<Popup openOn="click" offset={[0, -10]}>
+				<div class="text-lg text-black font-bold">{name}</div>
+				<p class="font-semibold text-black text-md">{region}</p>
+			</Popup>
+		</Marker>
 	{/each}
 </MapLibre>
 
