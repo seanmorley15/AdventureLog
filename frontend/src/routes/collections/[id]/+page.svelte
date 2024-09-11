@@ -290,15 +290,17 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						<p class="text-center font-bold text-lg">Link new...</p>
-						<button
-							class="btn btn-primary"
-							on:click={() => {
-								isShowingLinkModal = true;
-							}}
-						>
-							Adventure</button
-						>
+						{#if collection.user_id === data.user.pk}
+							<p class="text-center font-bold text-lg">Link new...</p>
+							<button
+								class="btn btn-primary"
+								on:click={() => {
+									isShowingLinkModal = true;
+								}}
+							>
+								Adventure</button
+							>
+						{/if}
 						<p class="text-center font-bold text-lg">Add new...</p>
 						<button
 							class="btn btn-primary"
