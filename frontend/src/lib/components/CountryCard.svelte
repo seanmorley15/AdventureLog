@@ -5,6 +5,8 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
+	import MapMarkerStar from '~icons/mdi/map-marker-star';
+
 	export let country: Country;
 
 	async function nav() {
@@ -21,7 +23,12 @@
 	</figure>
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{country.name}</h2>
-		<div class="badge badge-primary">{continentCodeToString(country.continent)}</div>
+		{#if country.subregion}
+			<div class="badge badge-primary">{country.subregion}</div>
+		{/if}
+		{#if country.capital}
+			<div class="badge badge-secondary"><MapMarkerStar class="-ml-1 mr-1" />{country.capital}</div>
+		{/if}
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
 			<button class="btn btn-primary" on:click={nav}>Open</button>

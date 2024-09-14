@@ -261,3 +261,5 @@ LOGGING = {
         },
     },
 }
+
+COUNTRY_REGION_JSON_VERSION = 'v2.4'

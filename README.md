@@ -149,6 +149,7 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 # Attribution
 
 - Logo Design by [redtechtiger](https://github.com/redtechtiger)
+- WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 - [Mexico GEOJSON](https://cartographyvectors.com/map/784-mexico-with-states)
 - [Japan GEOJSON](https://cartographyvectors.com/map/361-japan)
 - [Ireland GEOJSON](https://cartographyvectors.com/map/1399-ireland-provinces)
