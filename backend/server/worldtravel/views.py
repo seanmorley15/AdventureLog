@@ -34,7 +34,7 @@ def visits_by_country(request, country_code):
     return Response(serializer.data)
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Country.objects.all()
+    queryset = Country.objects.all().order_by('name')
     serializer_class = CountrySerializer
     permission_classes = [IsAuthenticated]
 

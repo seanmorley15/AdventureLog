@@ -38,7 +38,7 @@ class Command(BaseCommand):
     help = 'Imports the world travel data'
 
     def handle(self, *args, **options):
-        countries_json_path = os.path.join(settings.MEDIA_ROOT, 'countries+regions.json')
+        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path):
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/countries%2Bstates.json')
             if res.status_code == 200:
