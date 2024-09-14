@@ -3,7 +3,7 @@ import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure } from '$lib/types';
 
-import type { Actions, RequestEvent } from '@sveltejs/kit';
+import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 

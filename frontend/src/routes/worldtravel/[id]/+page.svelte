@@ -1,17 +1,17 @@
 <script lang="ts">
 	import RegionCard from '$lib/components/RegionCard.svelte';
 	import type { Region, VisitedRegion } from '$lib/types';
-	import {
-		DefaultMarker,
-		MapEvents,
-		MapLibre,
-		Popup,
-		Marker,
-		GeoJSON,
-		LineLayer,
-		FillLayer,
-		SymbolLayer
-	} from 'svelte-maplibre';
+	// import {
+	// 	DefaultMarker,
+	// 	MapEvents,
+	// 	MapLibre,
+	// 	Popup,
+	// 	Marker,
+	// 	GeoJSON,
+	// 	LineLayer,
+	// 	FillLayer,
+	// 	SymbolLayer
+	// } from 'svelte-maplibre';
 	import type { PageData } from './$types';
 	export let data: PageData;
 	let regions: Region[] = data.props?.regions || [];
@@ -58,7 +58,7 @@
 	{/each}
 </div>
 
-{#if data.props && data.props.regions}
+<!-- {#if data.props && data.props.regions}
 	<MapLibre
 		style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 		class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
@@ -73,7 +73,7 @@
 			</DefaultMarker>
 		{/each}
 	</MapLibre>
-{/if}
+{/if} -->
 
 <svelte:head>
 	<title
