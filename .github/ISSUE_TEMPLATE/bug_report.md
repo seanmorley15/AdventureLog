@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: "Detailed bug reports help me diagnose and fix bugs quicker! Thanks \U0001F60A"
+about: "Detailed bug reports help me diagnose and fix bugs quicker! Thanks!"
 title: "[BUG]"
 labels: bug
 assignees: ''
