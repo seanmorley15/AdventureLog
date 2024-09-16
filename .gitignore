@@ -1,0 +1,2 @@
+# Ignore everything in the .venv folder
+.venv/

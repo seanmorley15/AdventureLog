@@ -12,3 +12,4 @@ Pillow
 whitenoise
 django-resized
 django-geojson
+setuptools
