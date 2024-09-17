@@ -17,6 +17,7 @@
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string }[] = [];
+	let warningMessage: string = '';
 
 	import Earth from '~icons/mdi/earth';
 	import ActivityComplete from './ActivityComplete.svelte';
@@ -393,8 +394,10 @@
 			if (data.id) {
 				adventure = data as Adventure;
 				isDetails = false;
+				warningMessage = '';
 				addToast('success', 'Adventure created');
 			} else {
+				warningMessage = Object.values(data)[0] as string;
 				addToast('error', 'Failed to create adventure');
 			}
 		} else {
@@ -409,8 +412,10 @@
 			if (data.id) {
 				adventure = data as Adventure;
 				isDetails = false;
+				warningMessage = '';
 				addToast('success', 'Adventure updated');
 			} else {
+				warningMessage = Object.values(data)[0] as string;
 				addToast('error', 'Failed to update adventure');
 			}
 		}
@@ -726,6 +731,24 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						{/if}
 
 						<div class="mt-4">
+							{#if warningMessage != ''}
+								<div role="alert" class="alert alert-warning mb-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										class="h-6 w-6 shrink-0 stroke-current"
+										fill="none"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+										/>
+									</svg>
+									<span>Warning: {warningMessage}</span>
+								</div>
+							{/if}
 							<button type="submit" class="btn btn-primary">Save & Next</button>
 							<button type="button" class="btn" on:click={close}>Close</button>
 						</div>

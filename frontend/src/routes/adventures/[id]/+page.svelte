@@ -281,14 +281,16 @@
 										class="text-sm text-muted-foreground hover:underline"
 										target="_blank"
 									>
-										{adventure.link}
+										{adventure.link.length > 45
+											? `${adventure.link.slice(0, 45)}...`
+											: adventure.link}
 									</a>
 								</div>
 							{/if}
 						</div>
 						{#if adventure.description}
 							<div class="grid gap-2">
-								<p class="text-sm text-muted-foreground">
+								<p class="text-sm text-muted-foreground whitespace-pre-line">
 									{adventure.description}
 								</p>
 							</div>

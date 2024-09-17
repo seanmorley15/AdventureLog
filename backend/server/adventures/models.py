@@ -43,7 +43,7 @@ class Adventure(models.Model):
         max_length=100), blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
-    link = models.URLField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=2083)
     image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
     date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
