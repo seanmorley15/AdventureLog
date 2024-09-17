@@ -487,30 +487,33 @@
 		</p>
 
 		{#each Array(numberOfDays) as _, i}
-			{@const currentDate = new Date(collection.start_date)}
-			{@const temp = currentDate.setDate(currentDate.getDate() + i)}
-			{@const dateString = currentDate.toISOString().split('T')[0]}
-			{@const dayAdventures = groupAdventuresByDate(
-				adventures,
-				new Date(collection.start_date),
-				numberOfDays
-			)[dateString]}
-			{@const dayTransportations = groupTransportationsByDate(
-				transportations,
-				new Date(collection.start_date),
-				numberOfDays
-			)[dateString]}
-			{@const dayNotes = groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[
-				dateString
-			]}
-			{@const dayChecklists = groupChecklistsByDate(
-				checklists,
-				new Date(collection.start_date),
-				numberOfDays
-			)[dateString]}
+			{@const startDate = new Date(collection.start_date)}
+			{@const tempDate = new Date(startDate.getTime())}
+			<!-- Clone startDate -->
+			{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
+			<!-- Add i days in UTC -->
+			{@const dateString = adjustedDate.toISOString().split('T')[0]}
+
+			{@const dayAdventures =
+				groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
+					dateString
+				] || []}
+
+			{@const dayTransportations =
+				groupTransportationsByDate(transportations, new Date(collection.start_date), numberOfDays)[
+					dateString
+				] || []}
+
+			{@const dayNotes =
+				groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] || []}
+
+			{@const dayChecklists =
+				groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
+					dateString
+				] || []}
 
 			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
-				Day {i + 1} - {currentDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+				Day {i + 1} - {adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
 			</h2>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 				{#if dayAdventures.length > 0}

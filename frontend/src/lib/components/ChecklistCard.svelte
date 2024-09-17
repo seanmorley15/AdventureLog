@@ -38,7 +38,7 @@
 				{checklist.name}
 			</h2>
 		</div>
-		<div class="badge badge-neutral">Checklist</div>
+		<div class="badge badge-primary">Checklist</div>
 		{#if checklist.items.length > 0}
 			<p>{checklist.items.length} {checklist.items.length > 1 ? 'Items' : 'Item'}</p>
 		{/if}

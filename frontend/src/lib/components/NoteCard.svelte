@@ -39,7 +39,7 @@
 				{note.name}
 			</h2>
 		</div>
-		<div class="badge badge-neutral">Note</div>
+		<div class="badge badge-primary">Note</div>
 		{#if note.links && note.links.length > 0}
 			<p>{note.links.length} {note.links.length > 1 ? 'Links' : 'Link'}</p>
 		{/if}
