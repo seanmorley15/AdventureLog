@@ -6,7 +6,7 @@ from worldtravel.models import Country, Region, VisitedRegion
 
 
 class AdventureAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'user_id', 'is_public', 'image_display')
+    list_display = ('name', 'type', 'user_id', 'date', 'is_public', 'image_display')
     list_filter = ('type', 'user_id', 'is_public')
 
     def image_display(self, obj):
