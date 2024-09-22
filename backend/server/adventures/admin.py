@@ -6,18 +6,8 @@ from worldtravel.models import Country, Region, VisitedRegion
 
 
 class AdventureAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'user_id', 'is_public', 'image_display')
+    list_display = ('name', 'type', 'user_id', 'is_public')
     list_filter = ('type', 'user_id', 'is_public')
-
-    def image_display(self, obj):
-        if obj.image:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
-        else:
-            return
-
-    image_display.short_description = 'Image Preview'
 
 
 class CountryAdmin(admin.ModelAdmin):

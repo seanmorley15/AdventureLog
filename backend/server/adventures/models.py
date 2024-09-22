@@ -50,8 +50,8 @@ User = get_user_model()
 class Visit(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     adventure = models.ForeignKey('Adventure', on_delete=models.CASCADE, related_name='visits')
-    start_date = models.DateField()
-    end_date = models.DateField()
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -67,7 +67,7 @@ class Adventure(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    type = models.CharField(max_length=100, choices=ADVENTURE_TYPES)
+    type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True, null=True)
     activity_types = ArrayField(models.CharField(
@@ -75,13 +75,18 @@ class Adventure(models.Model):
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
-    image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
     is_public = models.BooleanField(default=False)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # DEPRECATED FIELDS - TO BE REMOVED IN FUTURE VERSIONS
+    # Migrations performed in this version will remove these fields
+    # image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
+    # date = models.DateField(blank=True, null=True)
+    # end_date = models.DateField(blank=True, null=True)
 
     def clean(self):
 
