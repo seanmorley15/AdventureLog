@@ -7,10 +7,28 @@ from django.forms import ValidationError
 from django_resized import ResizedImageField
 
 ADVENTURE_TYPES = [
-    ('visited', 'Visited'),
-    ('planned', 'Planned'),
-    ('lodging', 'Lodging'),
-    ('dining', 'Dining')
+    ('general', 'General 🌍'),
+    ('Outdoor', 'Outdoor 🏞️'),
+    ('lodging', 'Lodging 🛌'),
+    ('dining', 'Dining 🍽️'),
+    ('activity', 'Activity 🏄'),
+    ('attraction', 'Attraction 🎢'),
+    ('shopping', 'Shopping 🛍️'),
+    ('nightlife', 'Nightlife 🌃'),
+    ('event', 'Event 🎉'),
+    ('transportation', 'Transportation 🚗'),
+    ('culture', 'Culture 🎭'),
+    ('water_sports', 'Water Sports 🚤'),
+    ('hiking', 'Hiking 🥾'),
+    ('wildlife', 'Wildlife 🦒'),
+    ('historical_sites', 'Historical Sites 🏛️'),
+    ('music_concerts', 'Music & Concerts 🎶'),
+    ('fitness', 'Fitness 🏋️'),
+    ('art_museums', 'Art & Museums 🎨'),
+    ('festivals', 'Festivals 🎪'),
+    ('spiritual_journeys', 'Spiritual Journeys 🧘‍♀️'),
+    ('volunteer_work', 'Volunteer Work 🤝'),
+    ('other', 'Other')
 ]
 
 TRANSPORTATION_TYPES = [
@@ -23,7 +41,6 @@ TRANSPORTATION_TYPES = [
     ('walking', 'Walking'),
     ('other', 'Other')
 ]
-
 
 # Assuming you have a default user ID you want to use
 default_user_id = 1  # Replace with an actual user ID
