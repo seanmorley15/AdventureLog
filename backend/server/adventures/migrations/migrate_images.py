@@ -17,8 +17,13 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('adventures', '0001_initial'),
+        ('adventures', '0002_adventureimage'),
     ]
 
     operations = [
         migrations.RunPython(move_images_to_new_model),
+        migrations.RemoveField(
+            model_name='Adventure',
+            name='image',
+        ),
     ]

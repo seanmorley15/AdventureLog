@@ -23,7 +23,7 @@ def move_images_to_new_model(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('adventures', '0002_visit')
+        ('adventures', '0007_visit_model'),
     ]
 
     operations = [
