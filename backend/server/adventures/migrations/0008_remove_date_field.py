@@ -9,6 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('adventures', 'migrate_visits_categories'),
+        ('adventures', 'migrate_images'),
     ]
 
     operations = [

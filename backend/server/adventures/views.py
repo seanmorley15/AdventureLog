@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage
+from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, ADVENTURE_TYPES
 from django.core.exceptions import PermissionDenied
 from worldtravel.models import VisitedRegion, Region, Country
 from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
@@ -105,7 +105,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         types = request.query_params.get('types', '').split(',')
-        valid_types = ['visited', 'planned']
+        valid_types = [t[0] for t in ADVENTURE_TYPES]
         types = [t for t in types if t in valid_types]
 
         if not types:
@@ -114,7 +114,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         queryset = Adventure.objects.none()
 
         for adventure_type in types:
-            if adventure_type in ['visited', 'planned']:
+            if adventure_type in valid_types:
                 queryset |= Adventure.objects.filter(
                     type=adventure_type, user_id=request.user.id)
 
