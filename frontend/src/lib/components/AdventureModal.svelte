@@ -22,6 +22,7 @@
 	import Earth from '~icons/mdi/earth';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
+	import { ADVENTURE_TYPES } from '$lib';
 
 	export let startDate: string | null = null;
 	export let endDate: string | null = null;
@@ -37,8 +38,7 @@
 		id: '',
 		name: '',
 		type: 'visited',
-		date: null,
-		end_date: null,
+		visits: [],
 		link: null,
 		description: null,
 		activity_types: [],
@@ -57,9 +57,7 @@
 	adventure = {
 		id: adventureToEdit?.id || '',
 		name: adventureToEdit?.name || '',
-		type: adventureToEdit?.type || 'visited',
-		date: adventureToEdit?.date || null,
-		end_date: adventureToEdit?.end_date || null,
+		type: adventureToEdit?.type || 'general',
 		link: adventureToEdit?.link || null,
 		description: adventureToEdit?.description || null,
 		activity_types: adventureToEdit?.activity_types || [],
@@ -70,7 +68,9 @@
 		location: adventureToEdit?.location || null,
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
-		collection: adventureToEdit?.collection || collection_id || null
+		collection: adventureToEdit?.collection || collection_id || null,
+		// visits: adventureToEdit?.visits || []
+		visits: []
 	};
 
 	let markers: Point[] = [];
@@ -369,18 +369,6 @@
 			}
 		}
 
-		if (adventure.date && adventure.end_date) {
-			if (new Date(adventure.date) > new Date(adventure.end_date)) {
-				addToast('error', 'Start date must be before end date');
-				return;
-			}
-		}
-
-		if (adventure.end_date && !adventure.date) {
-			adventure.end_date = null;
-			adventure.date = null;
-		}
-
 		console.log(adventure);
 		if (adventure.id === '') {
 			let res = await fetch('/api/adventures', {
@@ -449,84 +437,14 @@
 					</div>
 
 					<div>
-						<div class="form-control">
-							<label class="label cursor-pointer">
-								<span class="label-text">Visited</span>
-								<input
-									type="radio"
-									name="radio-10"
-									class="radio checked:bg-red-500"
-									on:click={() => (adventure.type = 'visited')}
-									checked={adventure.type == 'visited'}
-								/>
-							</label>
-						</div>
-						<div class="form-control">
-							<label class="label cursor-pointer">
-								<span class="label-text">Planned</span>
-								<input
-									type="radio"
-									name="radio-10"
-									class="radio checked:bg-blue-500"
-									on:click={() => (adventure.type = 'planned')}
-									checked={adventure.type == 'planned'}
-								/>
-							</label>
-						</div>
-						{#if is_collection}
-							<div class="form-control">
-								<label class="label cursor-pointer">
-									<span class="label-text">Lodging</span>
-									<input
-										type="radio"
-										name="radio-10"
-										class="radio checked:bg-blue-500"
-										on:click={() => (adventure.type = 'lodging')}
-										checked={adventure.type == 'lodging'}
-									/>
-								</label>
-							</div>
-							<div class="form-control">
-								<label class="label cursor-pointer">
-									<span class="label-text">Dining</span>
-									<input
-										type="radio"
-										name="radio-10"
-										class="radio checked:bg-blue-500"
-										on:click={() => (adventure.type = 'dining')}
-										checked={adventure.type == 'dining'}
-									/>
-								</label>
-							</div>
-						{/if}
+						<label for="link">Category</label><br />
+						<select class="select select-bordered w-full max-w-xs" bind:value={adventure.type}>
+							<option disabled selected>Select Adventure Type</option>
+							{#each ADVENTURE_TYPES as type}
+								<option value={type.type}>{type.label}</option>
+							{/each}
+						</select>
 					</div>
-
-					<div>
-						<label for="date">{adventure.date ? 'Start Date' : 'Date'}</label><br />
-						<input
-							type="date"
-							id="date"
-							name="date"
-							min={startDate || ''}
-							max={endDate || ''}
-							bind:value={adventure.date}
-							class="input input-bordered w-full"
-						/>
-					</div>
-					{#if adventure.date}
-						<div>
-							<label for="end_date">End Date</label><br />
-							<input
-								type="date"
-								id="end_date"
-								name="end_date"
-								min={startDate || ''}
-								max={endDate || ''}
-								bind:value={adventure.end_date}
-								class="input input-bordered w-full"
-							/>
-						</div>
-					{/if}
 					<div>
 						<!-- link -->
 						<div>

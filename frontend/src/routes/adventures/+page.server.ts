@@ -30,7 +30,7 @@ export const load = (async (event) => {
 			}
 			typeString += 'planned';
 		} else if (!visited && !planned) {
-			typeString = 'visited,planned';
+			typeString = 'general';
 		}
 
 		const include_collections = event.url.searchParams.get('include_collections') || 'false';

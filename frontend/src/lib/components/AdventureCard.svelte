@@ -19,6 +19,7 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
+	import { typeToString } from '$lib';
 
 	export let type: string;
 	export let user: User | null;
@@ -209,16 +210,8 @@
 			</button>
 		</div>
 		<div>
-			{#if adventure.type == 'visited'}
-				<div class="badge badge-primary">Visited</div>
-			{:else if adventure.type == 'planned'}
-				<div class="badge badge-secondary">Planned</div>
-			{:else if adventure.type == 'lodging'}
-				<div class="badge badge-success">Lodging</div>
-			{:else if adventure.type == 'dining'}
-				<div class="badge badge-accent">Dining</div>
-			{/if}
-
+			<div class="badge badge-primary">{typeToString(adventure.type)}</div>
+			<div class="badge badge-success">{adventure.visits.length > 0 ? 'Visited' : 'Planned'}</div>
 			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
@@ -227,16 +220,13 @@
 				<p class="ml-.5">{adventure.location}</p>
 			</div>
 		{/if}
-		{#if adventure.date && adventure.date !== ''}
-			<div class="inline-flex items-center">
+		{#if adventure.visits.length > 0}
+			<!-- visited badge -->
+			<div class="flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
-				<p>
-					{new Date(adventure.date).toLocaleDateString(undefined, {
-						timeZone: 'UTC'
-					})}{adventure.end_date && adventure.end_date !== ''
-						? ' - ' +
-							new Date(adventure.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
-						: ''}
+				<p class="ml-.5">
+					{adventure.visits.length}
+					{adventure.visits.length > 1 ? 'visits' : 'visit'}
 				</p>
 			</div>
 		{/if}

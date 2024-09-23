@@ -216,3 +216,37 @@ export function continentCodeToString(code: string) {
 			return 'Unknown';
 	}
 }
+
+export let ADVENTURE_TYPES = [
+	{ type: 'general', label: 'General 🌍' },
+	{ type: 'Outdoor', label: 'Outdoor 🏞️' },
+	{ type: 'lodging', label: 'Lodging 🛌' },
+	{ type: 'dining', label: 'Dining 🍽️' },
+	{ type: 'activity', label: 'Activity 🏄' },
+	{ type: 'attraction', label: 'Attraction 🎢' },
+	{ type: 'shopping', label: 'Shopping 🛍️' },
+	{ type: 'nightlife', label: 'Nightlife 🌃' },
+	{ type: 'event', label: 'Event 🎉' },
+	{ type: 'transportation', label: 'Transportation 🚗' },
+	{ type: 'culture', label: 'Culture 🎭' },
+	{ type: 'water_sports', label: 'Water Sports 🚤' },
+	{ type: 'hiking', label: 'Hiking 🥾' },
+	{ type: 'wildlife', label: 'Wildlife 🦒' },
+	{ type: 'historical_sites', label: 'Historical Sites 🏛️' },
+	{ type: 'music_concerts', label: 'Music & Concerts 🎶' },
+	{ type: 'fitness', label: 'Fitness 🏋️' },
+	{ type: 'art_museums', label: 'Art & Museums 🎨' },
+	{ type: 'festivals', label: 'Festivals 🎪' },
+	{ type: 'spiritual_journeys', label: 'Spiritual Journeys 🧘‍♀️' },
+	{ type: 'volunteer_work', label: 'Volunteer Work 🤝' },
+	{ type: 'other', label: 'Other' }
+];
+
+export function typeToString(type: string) {
+	const typeObj = ADVENTURE_TYPES.find((t) => t.type === type);
+	if (typeObj) {
+		return typeObj.label;
+	} else {
+		return 'Unknown';
+	}
+}
