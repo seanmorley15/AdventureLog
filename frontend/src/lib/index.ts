@@ -219,7 +219,7 @@ export function continentCodeToString(code: string) {
 
 export let ADVENTURE_TYPES = [
 	{ type: 'general', label: 'General 🌍' },
-	{ type: 'Outdoor', label: 'Outdoor 🏞️' },
+	{ type: 'outdoor', label: 'Outdoor 🏞️' },
 	{ type: 'lodging', label: 'Lodging 🛌' },
 	{ type: 'dining', label: 'Dining 🍽️' },
 	{ type: 'activity', label: 'Activity 🏄' },

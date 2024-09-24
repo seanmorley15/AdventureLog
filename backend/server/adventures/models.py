@@ -8,7 +8,7 @@ from django_resized import ResizedImageField
 
 ADVENTURE_TYPES = [
     ('general', 'General 🌍'),
-    ('Outdoor', 'Outdoor 🏞️'),
+    ('outdoor', 'Outdoor 🏞️'),
     ('lodging', 'Lodging 🛌'),
     ('dining', 'Dining 🍽️'),
     ('activity', 'Activity 🏄'),

@@ -60,7 +60,7 @@ class AdventureImageAdmin(admin.ModelAdmin):
         if obj.image:
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
             public_url = public_url.replace("'", "")
-            return mark_safe(f'<img src="{public_url}/media/{obj.profile_pic.name}" width="100px" height="100px"')
+            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
         else:
             return
 
