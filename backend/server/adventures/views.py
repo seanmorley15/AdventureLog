@@ -72,23 +72,22 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
-        # if the user is not authenticated return only public adventures for  retrieve action
+        # if the user is not authenticated return only public adventures for retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Adventure.objects.filter(is_public=True)
+                return Adventure.objects.filter(is_public=True).distinct()
             return Adventure.objects.none()
 
-        
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct()
         else:
             # For other actions, include user's own adventures and shared adventures
             return Adventure.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct()
 
     def retrieve(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -270,6 +269,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer.save()
     
     # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
+    @transaction.atomic
     def perform_create(self, serializer):
         # Retrieve the collection from the validated data
         collection = serializer.validated_data.get('collection')
