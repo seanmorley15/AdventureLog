@@ -75,19 +75,19 @@ class AdventureViewSet(viewsets.ModelViewSet):
         # if the user is not authenticated return only public adventures for retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Adventure.objects.filter(is_public=True).distinct()
+                return Adventure.objects.filter(is_public=True).distinct().order_by('-updated_at')
             return Adventure.objects.none()
 
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            ).distinct()
+            ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Adventure.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            ).distinct()
+            ).distinct().order_by('-updated_at')
 
     def retrieve(self, request, *args, **kwargs):
         queryset = self.get_queryset()
