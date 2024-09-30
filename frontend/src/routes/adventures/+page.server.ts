@@ -16,22 +16,12 @@ export const load = (async (event) => {
 		let count = 0;
 		let adventures: Adventure[] = [];
 
-		const visited = event.url.searchParams.get('visited');
-		const planned = event.url.searchParams.get('planned');
+		// const visited = event.url.searchParams.get('visited');
+		// const planned = event.url.searchParams.get('planned');
 
-		let typeString: string = '';
+		let typeString: string = 'all';
 
-		if (visited == 'on') {
-			typeString += 'visited';
-		}
-		if (planned == 'on') {
-			if (typeString) {
-				typeString += ',';
-			}
-			typeString += 'planned';
-		} else if (!visited && !planned) {
-			typeString = 'general';
-		}
+		// *** FOR NOW TYPESTRING IS ALWAYS 'ALL' BECAUSE WE DON'T HAVE A WAY TO FILTER BY VISITED/PLANNED YET ***
 
 		const include_collections = event.url.searchParams.get('include_collections') || 'false';
 		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
@@ -46,6 +36,7 @@ export const load = (async (event) => {
 				}
 			}
 		);
+
 		if (!initialFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');

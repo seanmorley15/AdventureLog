@@ -216,9 +216,9 @@
 		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content rounded-lg">
 			<!-- Sidebar content here -->
 			<div class="form-control">
-				<h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3>
+				<!-- <h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3> -->
 				<form method="get">
-					<label class="label cursor-pointer">
+					<!-- <label class="label cursor-pointer">
 						<span class="label-text">Completed</span>
 						<input
 							type="checkbox"
@@ -237,7 +237,7 @@
 							class="checkbox checkbox-primary"
 							checked={currentSort.planned}
 						/>
-					</label>
+					</label> -->
 					<!-- <div class="divider"></div> -->
 					<h3 class="text-center font-bold text-lg mb-4">Sort</h3>
 					<p class="text-lg font-semibold mb-2">Order Direction</p>

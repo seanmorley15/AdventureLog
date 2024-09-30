@@ -105,6 +105,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         types = request.query_params.get('types', '').split(',')
+        # handle case where types is all
+        if 'all' in types:
+            types = [t[0] for t in ADVENTURE_TYPES]
         valid_types = [t[0] for t in ADVENTURE_TYPES]
         types = [t for t in types if t in valid_types]
 

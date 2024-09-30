@@ -26,6 +26,7 @@ export type Adventure = {
 		image: string;
 	}[];
 	visits: {
+		id: string;
 		start_date: string;
 		end_date: string;
 		notes: string;

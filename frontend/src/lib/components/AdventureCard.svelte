@@ -32,16 +32,6 @@
 	let image_url: string | null = null;
 	export let adventure: Adventure;
 
-	if (adventure.type == 'visited') {
-		keyword = 'Adventure';
-	} else if (adventure.type == 'planned') {
-		keyword = 'Adventure';
-	} else if (adventure.type == 'lodging') {
-		keyword = 'Lodging';
-	} else if (adventure.type == 'dining') {
-		keyword = 'Dining';
-	}
-
 	let activityTypes: string[] = [];
 	// makes it reactivty to changes so it updates automatically
 	$: {
@@ -258,7 +248,7 @@
 								><Launch class="w-6 h-6" />Open Details</button
 							>
 							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />Edit {keyword}
+								<FileDocumentEdit class="w-6 h-6" />Edit Adventure
 							</button>
 							{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
@@ -270,16 +260,10 @@
 									><CheckBold class="w-6 h-6" />Mark Visited</button
 								>
 							{/if}
-							<!-- remove from adventure -->
-							{#if adventure.collection && (adventure.type == 'visited' || adventure.type == 'planned') && user?.pk == adventure.user_id}
+							<!-- remove from collection -->
+							{#if adventure.collection && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
 									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
-								>
-							{/if}
-							<!-- change a non adventure to an adventure -->
-							{#if (adventure.collection && adventure.type == 'lodging') || adventure.type == 'dining'}
-								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
-									><CheckBold class="w-6 h-6" />Change to Visit</button
 								>
 							{/if}
 							{#if !adventure.collection}

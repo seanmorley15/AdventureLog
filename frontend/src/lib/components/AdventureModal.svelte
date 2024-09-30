@@ -69,8 +69,8 @@
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
 		collection: adventureToEdit?.collection || collection_id || null,
-		// visits: adventureToEdit?.visits || []
-		visits: []
+		visits: adventureToEdit?.visits || []
+		//visits: []
 	};
 
 	let markers: Point[] = [];
@@ -414,65 +414,156 @@
 <dialog id="my_modal_1" class="modal">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<div class="modal-box w-11/12 max-w-2xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">
+	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
+		<h3 class="font-bold text-2xl">
 			{adventureToEdit ? 'Edit Adventure' : 'New Adventure'}
 		</h3>
 		{#if adventure.id === '' || isDetails}
 			<div class="modal-action items-center">
 				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
 					<!-- Grid layout for form fields -->
-					<h2 class="text-2xl font-semibold mb-2">Basic Information</h2>
 					<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> -->
-					<div>
-						<label for="name">Name</label><br />
-						<input
-							type="text"
-							id="name"
-							name="name"
-							bind:value={adventure.name}
-							class="input input-bordered w-full"
-							required
-						/>
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" checked />
+						<div class="collapse-title text-xl font-medium">Basic Information</div>
+						<div class="collapse-content">
+							<div>
+								<label for="name">Name</label><br />
+								<input
+									type="text"
+									id="name"
+									name="name"
+									bind:value={adventure.name}
+									class="input input-bordered w-full"
+									required
+								/>
+							</div>
+							<div>
+								<label for="link">Category</label><br />
+								<select class="select select-bordered w-full max-w-xs" bind:value={adventure.type}>
+									<option disabled selected>Select Adventure Type</option>
+									{#each ADVENTURE_TYPES as type}
+										<option value={type.type}>{type.label}</option>
+									{/each}
+								</select>
+							</div>
+							<div>
+								<label for="rating">Rating</label><br />
+								<input
+									type="number"
+									min="0"
+									max="5"
+									hidden
+									bind:value={adventure.rating}
+									id="rating"
+									name="rating"
+									class="input input-bordered w-full max-w-xs mt-1"
+								/>
+								<div class="rating -ml-3 mt-1">
+									<input
+										type="radio"
+										name="rating-2"
+										class="rating-hidden"
+										checked={Number.isNaN(adventure.rating)}
+									/>
+									<input
+										type="radio"
+										name="rating-2"
+										class="mask mask-star-2 bg-orange-400"
+										on:click={() => (adventure.rating = 1)}
+										checked={adventure.rating === 1}
+									/>
+									<input
+										type="radio"
+										name="rating-2"
+										class="mask mask-star-2 bg-orange-400"
+										on:click={() => (adventure.rating = 2)}
+										checked={adventure.rating === 2}
+									/>
+									<input
+										type="radio"
+										name="rating-2"
+										class="mask mask-star-2 bg-orange-400"
+										on:click={() => (adventure.rating = 3)}
+										checked={adventure.rating === 3}
+									/>
+									<input
+										type="radio"
+										name="rating-2"
+										class="mask mask-star-2 bg-orange-400"
+										on:click={() => (adventure.rating = 4)}
+										checked={adventure.rating === 4}
+									/>
+									<input
+										type="radio"
+										name="rating-2"
+										class="mask mask-star-2 bg-orange-400"
+										on:click={() => (adventure.rating = 5)}
+										checked={adventure.rating === 5}
+									/>
+									{#if adventure.rating}
+										<button
+											type="button"
+											class="btn btn-sm btn-error ml-2"
+											on:click={() => (adventure.rating = NaN)}
+										>
+											Remove
+										</button>
+									{/if}
+								</div>
+							</div>
+							<div>
+								<div>
+									<label for="link">Link</label><br />
+									<input
+										type="text"
+										id="link"
+										name="link"
+										bind:value={adventure.link}
+										class="input input-bordered w-full"
+									/>
+								</div>
+							</div>
+							<div>
+								<label for="description">Description</label><br />
+								<textarea
+									id="description"
+									name="description"
+									bind:value={adventure.description}
+									class="textarea textarea-bordered w-full h-32"
+								></textarea>
+								<div class="mt-2">
+									<button type="button" class="btn btn-neutral" on:click={generateDesc}
+										>Generate Description</button
+									>
+									<p class="text-red-500">{wikiError}</p>
+								</div>
+							</div>
+							{#if !collection_id}
+								<div>
+									<div class="form-control flex items-start mt-1">
+										<label class="label cursor-pointer flex items-start space-x-2">
+											<span class="label-text">Public Adventure</span>
+											<input
+												type="checkbox"
+												class="toggle toggle-primary"
+												id="is_public"
+												name="is_public"
+												bind:checked={adventure.is_public}
+											/>
+										</label>
+									</div>
+								</div>
+							{/if}
+						</div>
 					</div>
 
-					<div>
-						<label for="link">Category</label><br />
-						<select class="select select-bordered w-full max-w-xs" bind:value={adventure.type}>
-							<option disabled selected>Select Adventure Type</option>
-							{#each ADVENTURE_TYPES as type}
-								<option value={type.type}>{type.label}</option>
-							{/each}
-						</select>
-					</div>
-					<div>
-						<!-- link -->
-						<div>
-							<label for="link">Link</label><br />
-							<input
-								type="text"
-								id="link"
-								name="link"
-								bind:value={adventure.link}
-								class="input input-bordered w-full"
-							/>
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">
+							Activity Types ({adventure.activity_types?.length || 0})
 						</div>
-					</div>
-					<div>
-						<label for="description">Description</label><br />
-						<textarea
-							id="description"
-							name="description"
-							bind:value={adventure.description}
-							class="textarea textarea-bordered w-full h-32"
-						></textarea>
-						<div class="mt-2">
-							<button type="button" class="btn btn-neutral" on:click={generateDesc}
-								>Generate Description</button
-							>
-							<p class="text-red-500">{wikiError}</p>
-						</div>
-						<div>
+						<div class="collapse-content">
 							<label for="activity_types">Activity Types</label><br />
 							<input
 								type="text"
@@ -484,170 +575,104 @@
 							/>
 							<ActivityComplete bind:activities={adventure.activity_types} />
 						</div>
-						<div>
-							<label for="rating"
-								>Rating <iconify-icon icon="mdi:star" class="text-xl -mb-1"></iconify-icon></label
-							><br />
-							<input
-								type="number"
-								min="0"
-								max="5"
-								hidden
-								bind:value={adventure.rating}
-								id="rating"
-								name="rating"
-								class="input input-bordered w-full max-w-xs mt-1"
-							/>
-							<div class="rating -ml-3 mt-1">
-								<input
-									type="radio"
-									name="rating-2"
-									class="rating-hidden"
-									checked={Number.isNaN(adventure.rating)}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (adventure.rating = 1)}
-									checked={adventure.rating === 1}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (adventure.rating = 2)}
-									checked={adventure.rating === 2}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (adventure.rating = 3)}
-									checked={adventure.rating === 3}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (adventure.rating = 4)}
-									checked={adventure.rating === 4}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (adventure.rating = 5)}
-									checked={adventure.rating === 5}
-								/>
-								{#if adventure.rating}
-									<button
-										type="button"
-										class="btn btn-sm btn-error ml-2"
-										on:click={() => (adventure.rating = NaN)}
-									>
-										Remove
-									</button>
-								{/if}
-							</div>
-							{#if !collection_id}
-								<div>
-									<div class="mt-2">
-										<div>
-											<label for="is_public"
-												>Public <Earth class="inline-block -mt-1 mb-1 w-6 h-6" /></label
-											><br />
-											<input
-												type="checkbox"
-												class="toggle toggle-primary"
-												id="is_public"
-												name="is_public"
-												bind:checked={adventure.is_public}
-											/>
-										</div>
-									</div>
-								</div>
-							{/if}
+					</div>
+
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">
+							Visits ({adventure.visits.length})
 						</div>
-						<div class="divider"></div>
-						<h2 class="text-2xl font-semibold mb-2 mt-2">Location Information</h2>
-						<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
-						<div>
-							<label for="latitude">Location</label><br />
-							<input
-								type="text"
-								id="location"
-								name="location"
-								bind:value={adventure.location}
-								class="input input-bordered w-full"
-							/>
+						<div class="collapse-content">
+							<p>hello</p>
 						</div>
-						<div>
-							<form on:submit={geocode} class="mt-2">
+					</div>
+
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">Location Information</div>
+						<div class="collapse-content">
+							<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
+							<div>
+								<label for="latitude">Location</label><br />
 								<input
 									type="text"
-									placeholder="Seach for a location"
-									class="input input-bordered w-full max-w-xs mb-2"
-									id="search"
-									name="search"
-									bind:value={query}
+									id="location"
+									name="location"
+									bind:value={adventure.location}
+									class="input input-bordered w-full"
 								/>
-								<button class="btn btn-neutral -mt-1" type="submit">Search</button>
-								<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
-									>Clear Map</button
-								>
-							</form>
-						</div>
-						{#if places.length > 0}
-							<div class="mt-4 max-w-full">
-								<h3 class="font-bold text-lg mb-4">Search Results</h3>
-
-								<div class="flex flex-wrap">
-									{#each places as place}
-										<button
-											type="button"
-											class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
-											on:click={() => {
-												markers = [
-													{
-														lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-														location: place.display_name,
-														name: place.name,
-														activity_type: place.type
-													}
-												];
-												checkPointInRegion();
-											}}
-										>
-											{place.display_name}
-										</button>
-									{/each}
-								</div>
 							</div>
-						{:else if noPlaces}
-							<p class="text-error text-lg">No results found</p>
-						{/if}
-						<!-- </div> -->
-						<div>
-							<MapLibre
-								style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
-								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
-								standardControls
-							>
-								<!-- MapEvents gives you access to map events even from other components inside the map,
+							<div>
+								<form on:submit={geocode} class="mt-2">
+									<input
+										type="text"
+										placeholder="Seach for a location"
+										class="input input-bordered w-full max-w-xs mb-2"
+										id="search"
+										name="search"
+										bind:value={query}
+									/>
+									<button class="btn btn-neutral -mt-1" type="submit">Search</button>
+									<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
+										>Clear Map</button
+									>
+								</form>
+							</div>
+							{#if places.length > 0}
+								<div class="mt-4 max-w-full">
+									<h3 class="font-bold text-lg mb-4">Search Results</h3>
+
+									<div class="flex flex-wrap">
+										{#each places as place}
+											<button
+												type="button"
+												class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
+												on:click={() => {
+													markers = [
+														{
+															lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+															location: place.display_name,
+															name: place.name,
+															activity_type: place.type
+														}
+													];
+													checkPointInRegion();
+												}}
+											>
+												{place.display_name}
+											</button>
+										{/each}
+									</div>
+								</div>
+							{:else if noPlaces}
+								<p class="text-error text-lg">No results found</p>
+							{/if}
+							<!-- </div> -->
+							<div>
+								<MapLibre
+									style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+									class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+									standardControls
+								>
+									<!-- MapEvents gives you access to map events even from other components inside the map,
 where you might not have access to the top-level `MapLibre` component. In this case
 it would also work to just use on:click on the MapLibre component itself. -->
-								<MapEvents on:click={addMarker} />
+									<MapEvents on:click={addMarker} />
 
-								{#each markers as marker}
-									<DefaultMarker lngLat={marker.lngLat} />
-								{/each}
-							</MapLibre>
+									{#each markers as marker}
+										<DefaultMarker lngLat={marker.lngLat} />
+									{/each}
+								</MapLibre>
+							</div>
+							{#if region_name}
+								<p class="text-lg font-semibold mt-2">Region: {region_name} ({region_id})</p>
+							{/if}
 						</div>
-						{#if region_name}
-							<p class="text-lg font-semibold mt-2">Region: {region_name} ({region_id})</p>
-						{/if}
+					</div>
 
+					<!-- ---OLD--- -->
+
+					<div>
 						<div class="mt-4">
 							{#if warningMessage != ''}
 								<div role="alert" class="alert alert-warning mb-2">
@@ -769,3 +794,29 @@ it would also work to just use on:click on the MapLibre component itself. -->
 		{/if}
 	</div>
 </dialog>
+
+<!-- {#each adventure.visits as visit}
+								<div class="flex flex-row">
+									<p>
+										{new Date(visit.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+										{#if visit.end_date}
+											- {new Date(visit.end_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})}
+										{/if}
+									</p>
+									
+									<button
+										type="button"
+										class="btn btn-sm btn-error absolute right-0 mt-2.5 mr-4"
+										on:click={() => {
+											adventure.visits = adventure.visits.filter((v) => v.id !== visit.id);
+										}}
+									>
+										Remove
+									</button>
+								</div>
+							{/each}
+							{#if adventure.visits.length == 0}
+								<p>No visits</p>
+							{/if} -->
