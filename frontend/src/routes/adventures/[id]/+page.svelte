@@ -185,7 +185,7 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
-							{#if adventure.date}
+							<!-- {#if adventure.date}
 								<div class="flex items-center gap-2">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -215,7 +215,7 @@
 											: ''}</span
 									>
 								</div>
-							{/if}
+							{/if} -->
 							{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg
@@ -304,11 +304,11 @@
 				></div>
 				<div class="grid gap-8">
 					<div>
-						<h2 class="text-2xl font-bold mt-4">Trip Details</h2>
+						<h2 class="text-2xl font-bold mt-4">Adventure Details</h2>
 						<div class="grid gap-4 mt-4">
 							<div class="grid md:grid-cols-2 gap-4">
 								<div>
-									<p class="text-sm text-muted-foreground">Trip Type</p>
+									<p class="text-sm text-muted-foreground">Adventure Type</p>
 									<p class="text-base font-medium">
 										{adventure.type[0].toLocaleUpperCase() + adventure.type.slice(1)}
 									</p>
@@ -353,11 +353,11 @@
 												{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
 											</p>
 											<p>
-												{adventure.date
+												<!-- {adventure.date
 													? new Date(adventure.date).toLocaleDateString(undefined, {
 															timeZone: 'UTC'
 														})
-													: ''}
+													: ''} -->
 											</p>
 										</Popup>
 									</DefaultMarker>

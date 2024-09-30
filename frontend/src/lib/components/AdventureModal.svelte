@@ -533,9 +533,14 @@
 									class="textarea textarea-bordered w-full h-32"
 								></textarea>
 								<div class="mt-2">
-									<button type="button" class="btn btn-neutral" on:click={generateDesc}
-										>Generate Description</button
+									<div
+										class="tooltip tooltip-right"
+										data-tip="Pulls excerpt from Wikipedia article matching the name of the adventure."
 									>
+										<button type="button" class="btn btn-neutral" on:click={generateDesc}
+											>Generate Description</button
+										>
+									</div>
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
@@ -558,13 +563,12 @@
 						</div>
 					</div>
 
-					<div class="collapse collapse-plus bg-base-200 mb-4">
+					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
 							Activity Types ({adventure.activity_types?.length || 0})
 						</div>
 						<div class="collapse-content">
-							<label for="activity_types">Activity Types</label><br />
 							<input
 								type="text"
 								id="activity_types"
@@ -583,7 +587,7 @@
 							Visits ({adventure.visits.length})
 						</div>
 						<div class="collapse-content">
-							<p>hello</p>
+							<p>Coming soon!</p>
 						</div>
 					</div>
 
