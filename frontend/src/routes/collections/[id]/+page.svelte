@@ -185,10 +185,7 @@
 		{adventureToEdit}
 		on:close={() => (isAdventureModalOpen = false)}
 		on:save={saveOrCreate}
-		collection_id={collection.id}
-		startDate={collection.start_date}
-		endDate={collection.end_date}
-		is_collection={true}
+		{collection}
 	/>
 {/if}
 
@@ -598,11 +595,11 @@
 							<p class="font-semibold text-black text-md">
 								{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
 							</p>
-							<p>
-								{adventure.date
+							<!-- <p>
+								{adventure.
 									? new Date(adventure.date).toLocaleDateString(undefined, { timeZone: 'UTC' })
 									: ''}
-							</p>
+							</p> -->
 						</Popup>
 					</DefaultMarker>
 				{/if}

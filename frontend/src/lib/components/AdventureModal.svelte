@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
+	import type { Adventure, Collection, OpenStreetMapPlace, Point } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
@@ -8,9 +8,7 @@
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
-	export let collection_id: string | null = null;
-
-	export let is_collection: boolean = false;
+	export let collection: Collection | null = null;
 
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
@@ -19,20 +17,13 @@
 	let images: { id: string; image: string }[] = [];
 	let warningMessage: string = '';
 
-	import Earth from '~icons/mdi/earth';
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 	import { ADVENTURE_TYPES } from '$lib';
 
-	export let startDate: string | null = null;
-	export let endDate: string | null = null;
-
 	let wikiError: string = '';
 
 	let noPlaces: boolean = false;
-
-	let region_name: string | null = null;
-	let region_id: string | null = null;
 
 	let adventure: Adventure = {
 		id: '',
@@ -49,7 +40,7 @@
 		location: null,
 		images: [],
 		user_id: null,
-		collection: collection_id || null
+		collection: collection?.id || null
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -68,9 +59,8 @@
 		location: adventureToEdit?.location || null,
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
-		collection: adventureToEdit?.collection || collection_id || null,
+		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || []
-		//visits: []
 	};
 
 	let markers: Point[] = [];
@@ -91,7 +81,6 @@
 				activity_type: ''
 			}
 		];
-		checkPointInRegion();
 	}
 
 	if (longitude && latitude) {
@@ -109,8 +98,6 @@
 	function clearMap() {
 		console.log('CLEAR');
 		markers = [];
-		region_id = null;
-		region_name = null;
 	}
 
 	let imageSearch: string = adventure.name || '';
@@ -144,13 +131,6 @@
 		}
 		if (!adventure.name) {
 			adventure.name = markers[0].name;
-		}
-	}
-
-	$: {
-		if (adventure.type != 'visited') {
-			region_id = null;
-			region_name = null;
 		}
 	}
 
@@ -236,6 +216,37 @@
 		}
 	}
 
+	let new_start_date: string = '';
+	let new_end_date: string = '';
+	let new_notes: string = '';
+	function addNewVisit() {
+		// check if start date is before end date
+		if (new_start_date > new_end_date) {
+			addToast('error', 'Start date must be before end date');
+			return;
+		}
+		if (new_start_date === '' || new_end_date === '') {
+			addToast('error', 'Please enter a start and end date');
+			return;
+		}
+		if (new_end_date && !new_start_date) {
+			addToast('error', 'Please enter a start date');
+			return;
+		}
+		adventure.visits = [
+			...adventure.visits,
+			{
+				start_date: new_start_date,
+				end_date: new_end_date,
+				notes: new_notes,
+				id: ''
+			}
+		];
+		new_start_date = '';
+		new_end_date = '';
+		new_notes = '';
+	}
+
 	async function reverseGeocode() {
 		let res = await fetch(
 			`https://nominatim.openstreetmap.org/search?q=${adventure.latitude},${adventure.longitude}&format=jsonv2`,
@@ -259,7 +270,6 @@
 						activity_type: data[0]?.type || ''
 					}
 				];
-				checkPointInRegion();
 			}
 		}
 		console.log(data);
@@ -297,29 +307,6 @@
 		}
 	}
 
-	async function checkPointInRegion() {
-		if (adventure.type == 'visited') {
-			let lat = markers[0].lngLat.lat;
-			let lon = markers[0].lngLat.lng;
-			let res = await fetch(`/api/countries/check_point_in_region/?lat=${lat}&lon=${lon}`);
-			let data = await res.json();
-			if (data.error) {
-				addToast('error', data.error);
-			} else {
-				if (data.in_region) {
-					region_name = data.region_name;
-					region_id = data.region_id;
-				} else {
-					region_id = null;
-					region_name = null;
-				}
-			}
-		} else {
-			region_id = null;
-			region_name = null;
-		}
-	}
-
 	async function addMarker(e: CustomEvent<any>) {
 		markers = [];
 		markers = [
@@ -331,8 +318,6 @@
 				activity_type: ''
 			}
 		];
-		checkPointInRegion();
-
 		console.log(markers);
 	}
 
@@ -355,20 +340,6 @@
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-
-		if (region_id && region_name) {
-			let res = await fetch(`/api/visitedregion/`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ region: region_id })
-			});
-			if (res.ok) {
-				addToast('success', `Region ${region_name} marked as visited`);
-			}
-		}
-
 		console.log(adventure);
 		if (adventure.id === '') {
 			let res = await fetch('/api/adventures', {
@@ -544,7 +515,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if !collection_id}
+							{#if !collection?.id}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">
@@ -560,34 +531,6 @@
 									</div>
 								</div>
 							{/if}
-						</div>
-					</div>
-
-					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
-						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							Activity Types ({adventure.activity_types?.length || 0})
-						</div>
-						<div class="collapse-content">
-							<input
-								type="text"
-								id="activity_types"
-								name="activity_types"
-								hidden
-								bind:value={adventure.activity_types}
-								class="input input-bordered w-full"
-							/>
-							<ActivityComplete bind:activities={adventure.activity_types} />
-						</div>
-					</div>
-
-					<div class="collapse collapse-plus bg-base-200 mb-4">
-						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							Visits ({adventure.visits.length})
-						</div>
-						<div class="collapse-content">
-							<p>Coming soon!</p>
 						</div>
 					</div>
 
@@ -640,7 +583,6 @@
 															activity_type: place.type
 														}
 													];
-													checkPointInRegion();
 												}}
 											>
 												{place.display_name}
@@ -668,13 +610,117 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									{/each}
 								</MapLibre>
 							</div>
-							{#if region_name}
-								<p class="text-lg font-semibold mt-2">Region: {region_name} ({region_id})</p>
-							{/if}
 						</div>
 					</div>
 
-					<!-- ---OLD--- -->
+					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">
+							Activity Types ({adventure.activity_types?.length || 0})
+						</div>
+						<div class="collapse-content">
+							<input
+								type="text"
+								id="activity_types"
+								name="activity_types"
+								hidden
+								bind:value={adventure.activity_types}
+								class="input input-bordered w-full"
+							/>
+							<ActivityComplete bind:activities={adventure.activity_types} />
+						</div>
+					</div>
+
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">
+							Visits ({adventure.visits.length})
+						</div>
+						<div class="collapse-content">
+							<label class="label cursor-pointer flex items-start space-x-2">
+								<span class="label-text">Constrain to collection dates</span>
+								<input
+									type="checkbox"
+									class="toggle toggle-primary"
+									id="is_public"
+									name="is_public"
+								/>
+								<!-- TODO: implement this constrain -->
+							</label>
+							<div class="flex gap-2 mb-1">
+								<input
+									type="date"
+									class="input input-bordered w-full"
+									placeholder="Start Date"
+									bind:value={new_start_date}
+									on:keydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addNewVisit();
+										}
+									}}
+								/>
+								<input
+									type="date"
+									class="input input-bordered w-full"
+									placeholder="End Date"
+									bind:value={new_end_date}
+									on:keydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addNewVisit();
+										}
+									}}
+								/>
+							</div>
+							<div class="flex gap-2 mb-1">
+								<!-- textarea for notes -->
+								<textarea
+									class="textarea textarea-bordered w-full"
+									placeholder="Add notes"
+									bind:value={new_notes}
+									on:keydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addNewVisit();
+										}
+									}}
+								></textarea>
+							</div>
+
+							<div class="flex gap-2">
+								<button type="button" class="btn btn-neutral" on:click={addNewVisit}>Add</button>
+							</div>
+
+							{#if adventure.visits.length > 0}
+								<h2 class=" font-bold text-xl mt-2">My Visits</h2>
+								{#each adventure.visits as visit}
+									<div class="flex gap-2">
+										<p>
+											{new Date(visit.start_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})}
+										</p>
+										<p>
+											{new Date(visit.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+										</p>
+										<p>{visit.notes}</p>
+										<div>
+											<button
+												type="button"
+												class="btn btn-sm btn-error mb-1"
+												on:click={() => {
+													adventure.visits = adventure.visits.filter((v) => v !== visit);
+												}}
+											>
+												Remove
+											</button>
+										</div>
+									</div>
+								{/each}
+							{/if}
+						</div>
+					</div>
 
 					<div>
 						<div class="mt-4">
@@ -798,29 +844,3 @@ it would also work to just use on:click on the MapLibre component itself. -->
 		{/if}
 	</div>
 </dialog>
-
-<!-- {#each adventure.visits as visit}
-								<div class="flex flex-row">
-									<p>
-										{new Date(visit.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-										{#if visit.end_date}
-											- {new Date(visit.end_date).toLocaleDateString(undefined, {
-												timeZone: 'UTC'
-											})}
-										{/if}
-									</p>
-									
-									<button
-										type="button"
-										class="btn btn-sm btn-error absolute right-0 mt-2.5 mr-4"
-										on:click={() => {
-											adventure.visits = adventure.visits.filter((v) => v.id !== visit.id);
-										}}
-									>
-										Remove
-									</button>
-								</div>
-							{/each}
-							{#if adventure.visits.length == 0}
-								<p>No visits</p>
-							{/if} -->

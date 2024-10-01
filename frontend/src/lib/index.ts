@@ -66,29 +66,31 @@ export function groupAdventuresByDate(
 	}
 
 	adventures.forEach((adventure) => {
-		if (adventure.date) {
-			const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
-			if (adventure.end_date) {
-				const endDate = new Date(adventure.end_date).toISOString().split('T')[0];
+		adventure.visits.forEach((visit) => {
+			if (visit.start_date) {
+				const adventureDate = new Date(visit.start_date).toISOString().split('T')[0];
+				if (visit.end_date) {
+					const endDate = new Date(visit.end_date).toISOString().split('T')[0];
 
-				// Loop through all days and include adventure if it falls within the range
-				for (let i = 0; i < numberOfDays; i++) {
-					const currentDate = new Date(startDate);
-					currentDate.setUTCDate(startDate.getUTCDate() + i);
-					const dateString = currentDate.toISOString().split('T')[0];
+					// Loop through all days and include adventure if it falls within the range
+					for (let i = 0; i < numberOfDays; i++) {
+						const currentDate = new Date(startDate);
+						currentDate.setUTCDate(startDate.getUTCDate() + i);
+						const dateString = currentDate.toISOString().split('T')[0];
 
-					// Include the current day if it falls within the adventure date range
-					if (dateString >= adventureDate && dateString <= endDate) {
-						if (groupedAdventures[dateString]) {
-							groupedAdventures[dateString].push(adventure);
+						// Include the current day if it falls within the adventure date range
+						if (dateString >= adventureDate && dateString <= endDate) {
+							if (groupedAdventures[dateString]) {
+								groupedAdventures[dateString].push(adventure);
+							}
 						}
 					}
+				} else if (groupedAdventures[adventureDate]) {
+					// If there's no end date, add adventure to the start date only
+					groupedAdventures[adventureDate].push(adventure);
 				}
-			} else if (groupedAdventures[adventureDate]) {
-				// If there's no end date, add adventure to the start date only
-				groupedAdventures[adventureDate].push(adventure);
 			}
-		}
+		});
 	});
 
 	return groupedAdventures;
