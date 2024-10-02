@@ -16,12 +16,12 @@ export const load = (async (event) => {
 		let count = 0;
 		let adventures: Adventure[] = [];
 
-		// const visited = event.url.searchParams.get('visited');
-		// const planned = event.url.searchParams.get('planned');
+		let typeString = event.url.searchParams.get('types');
 
-		let typeString: string = 'all';
-
-		// *** FOR NOW TYPESTRING IS ALWAYS 'ALL' BECAUSE WE DON'T HAVE A WAY TO FILTER BY VISITED/PLANNED YET ***
+		// If no type is specified, default to 'all'
+		if (!typeString) {
+			typeString = 'all';
+		}
 
 		const include_collections = event.url.searchParams.get('include_collections') || 'false';
 		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
