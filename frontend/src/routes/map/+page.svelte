@@ -1,5 +1,7 @@
 <script>
 	// @ts-nocheck
+
+	import { isAdventureVisited } from '$lib';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import {
 		DefaultMarker,
@@ -16,12 +18,14 @@
 
 	let clickedName = '';
 
+	console.log(data);
+
 	let showVisited = true;
 	let showPlanned = true;
 
 	$: filteredMarkers = markers.filter(
 		(marker) =>
-			(showVisited && marker.type === 'visited') || (showPlanned && marker.type === 'planned')
+			(showVisited && isAdventureVisited(marker)) || (showPlanned && !isAdventureVisited(marker))
 	);
 
 	let newMarker = [];
@@ -46,7 +50,8 @@
 		let newMarker = {
 			lngLat: [event.detail.longitude, event.detail.latitude],
 			name: event.detail.name,
-			type: event.detail.type
+			type: event.detail.type,
+			visits: event.detail.visits
 		};
 		markers = [...markers, newMarker];
 		clearMarkers();
@@ -138,11 +143,11 @@
 	class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
 	standardControls
 >
-	{#each filteredMarkers as { lngLat, name, type }}
-		{#if type == 'visited'}
+	{#each filteredMarkers as marker}
+		{#if isAdventureVisited(marker)}
 			<Marker
-				{lngLat}
-				on:click={() => (clickedName = name)}
+				lngLat={marker.lngLat}
+				on:click={() => (clickedName = marker.name)}
 				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-red-300 text-black shadow-md"
 			>
 				<svg
@@ -155,16 +160,14 @@
 					<circle cx="12" cy="12" r="10" stroke="red" stroke-width="2" fill="red" />
 				</svg>
 				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{name}</div>
+					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Visited</p>
 				</Popup>
 			</Marker>
-		{/if}
-
-		{#if type == 'planned'}
+		{:else}
 			<Marker
-				{lngLat}
-				on:click={() => (clickedName = name)}
+				lngLat={marker.lngLat}
+				on:click={() => (clickedName = marker.name)}
 				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-2xl focus:outline-2 focus:outline-black"
 			>
 				<svg
@@ -177,7 +180,7 @@
 					<circle cx="12" cy="12" r="10" stroke="blue" stroke-width="2" fill="blue" />
 				</svg>
 				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{name}</div>
+					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Planned</p>
 				</Popup>
 			</Marker>

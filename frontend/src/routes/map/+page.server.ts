@@ -8,7 +8,7 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		let visitedFetch = await fetch(`${endpoint}/api/adventures/all/`, {
+		let visitedFetch = await fetch(`${endpoint}/api/adventures/`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
 			}
@@ -25,16 +25,26 @@ export const load = (async (event) => {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
 		} else {
-			let visited = (await visitedFetch.json()) as Adventure[];
+			let visited: Adventure[] = [];
+			try {
+				let api_result = await visitedFetch.json();
+				visited = api_result.results as Adventure[];
+				if (!Array.isArray(visited) || visited.length === 0 || !visited) {
+					throw new Error('Visited adventures response is not an array');
+				}
+			} catch (error) {
+				console.error('Error parsing visited adventures:', error);
+				return redirect(302, '/login');
+			}
+
 			// make a long lat array like this { lngLat: [-20, 0], name: 'Adventure 1' },
 			let markers = visited
 				.filter((adventure) => adventure.latitude !== null && adventure.longitude !== null)
 				.map((adventure) => {
 					return {
-						lngLat: [adventure.longitude, adventure.latitude] as [number, number],
+						lngLat: [adventure.longitude, adventure.latitude],
 						name: adventure.name,
-						type: adventure.type,
-						collection: adventure.collection
+						visits: adventure.visits
 					};
 				});
 

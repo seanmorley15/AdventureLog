@@ -19,7 +19,7 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
-	import { typeToString } from '$lib';
+	import { isAdventureVisited, typeToString } from '$lib';
 
 	export let type: string;
 	export let user: User | null;
@@ -28,7 +28,6 @@
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
 
-	let keyword: string = '';
 	let image_url: string | null = null;
 	export let adventure: Adventure;
 
@@ -201,7 +200,7 @@
 		</div>
 		<div>
 			<div class="badge badge-primary">{typeToString(adventure.type)}</div>
-			<div class="badge badge-success">{adventure.visits.length > 0 ? 'Visited' : 'Planned'}</div>
+			<div class="badge badge-success">{isAdventureVisited(adventure) ? 'Visited' : 'Planned'}</div>
 			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}

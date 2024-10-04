@@ -27,13 +27,12 @@
 	}
 </script>
 
-<div class="collapse collapse-plus bg-base-300 mb-4 overflow-visible">
+<div class="collapse collapse-plus mb-4">
 	<input type="checkbox" />
-	<div class="collapse-title text-xl font-medium">Category Filter</div>
-	<div class="collapse-content">
-		<button class="btn btn-wide mb-1 btn-neutral-300" on:click={clearTypes}>Clear</button>
+	<div class="collapse-title text-xl bg-base-300 font-medium">Category Filter</div>
+	<div class="collapse-content bg-base-300">
+		<button class="btn btn-wide btn-neutral-300" on:click={clearTypes}>Clear</button>
 		{#each ADVENTURE_TYPES as type}
-			<!-- checkbox for each -->
 			<li>
 				<label class="cursor-pointer">
 					<input
