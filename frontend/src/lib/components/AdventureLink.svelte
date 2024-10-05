@@ -19,14 +19,14 @@
 		if (modal) {
 			modal.showModal();
 		}
-		let res = await fetch(`/api/adventures/all/?include_collections=false`, {
+		let res = await fetch(`/api/adventures/?include_collections=false`, {
 			method: 'GET'
 		});
 
 		const newAdventures = await res.json();
 
 		if (res.ok && adventures) {
-			adventures = newAdventures;
+			adventures = newAdventures.results;
 		}
 		isLoading = false;
 	});

@@ -40,6 +40,7 @@
 	import EditAdventure from '$lib/components/AdventureModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import { typeToString } from '$lib';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -310,7 +311,7 @@
 								<div>
 									<p class="text-sm text-muted-foreground">Adventure Type</p>
 									<p class="text-base font-medium">
-										{adventure.type[0].toLocaleUpperCase() + adventure.type.slice(1)}
+										{typeToString(adventure.type)}
 									</p>
 								</div>
 								{#if data.props.collection}
@@ -320,6 +321,34 @@
 											class="text-base font-medium link"
 											href="/collections/{data.props.collection.id}">{data.props.collection.name}</a
 										>
+									</div>
+								{/if}
+								{#if adventure.visits.length > 0}
+									<div>
+										<p class="text-sm text-muted-foreground">Visits</p>
+										<p class="text-base font-medium">
+											{adventure.visits.length}
+											{adventure.visits.length > 1 ? 'visits' : 'visit' + ':'}
+										</p>
+										<!-- show each visit start and end date as well as notes -->
+										{#each adventure.visits as visit}
+											<div class="grid gap-2">
+												<p class="text-sm text-muted-foreground">
+													{visit.start_date
+														? new Date(visit.start_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+													{visit.end_date && visit.end_date !== ''
+														? ' - ' +
+															new Date(visit.end_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+												</p>
+												<p class="text-sm text-muted-foreground -mt-2 mb-2">{visit.notes}</p>
+											</div>
+										{/each}
 									</div>
 								{/if}
 							</div>

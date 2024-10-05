@@ -16,6 +16,7 @@
 	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string }[] = [];
 	let warningMessage: string = '';
+	let constrainDates: boolean = false;
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
@@ -638,40 +639,73 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						</div>
 						<div class="collapse-content">
 							<label class="label cursor-pointer flex items-start space-x-2">
-								<span class="label-text">Constrain to collection dates</span>
-								<input
-									type="checkbox"
-									class="toggle toggle-primary"
-									id="is_public"
-									name="is_public"
-								/>
-								<!-- TODO: implement this constrain -->
+								{#if adventure.collection && collection && collection.start_date && collection.end_date}
+									<span class="label-text">Constrain to collection dates</span>
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="constrain_dates"
+										name="constrain_dates"
+										on:change={() => (constrainDates = !constrainDates)}
+									/>
+								{/if}
 							</label>
 							<div class="flex gap-2 mb-1">
-								<input
-									type="date"
-									class="input input-bordered w-full"
-									placeholder="Start Date"
-									bind:value={new_start_date}
-									on:keydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addNewVisit();
-										}
-									}}
-								/>
-								<input
-									type="date"
-									class="input input-bordered w-full"
-									placeholder="End Date"
-									bind:value={new_end_date}
-									on:keydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addNewVisit();
-										}
-									}}
-								/>
+								{#if !constrainDates}
+									<input
+										type="date"
+										class="input input-bordered w-full"
+										placeholder="Start Date"
+										bind:value={new_start_date}
+										on:keydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addNewVisit();
+											}
+										}}
+									/>
+									<input
+										type="date"
+										class="input input-bordered w-full"
+										placeholder="End Date"
+										bind:value={new_end_date}
+										on:keydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addNewVisit();
+											}
+										}}
+									/>
+								{:else}
+									<input
+										type="date"
+										class="input input-bordered w-full"
+										placeholder="Start Date"
+										min={collection?.start_date}
+										max={collection?.end_date}
+										bind:value={new_start_date}
+										on:keydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addNewVisit();
+											}
+										}}
+									/>
+									<input
+										type="date"
+										class="input input-bordered w-full"
+										placeholder="End Date"
+										bind:value={new_end_date}
+										min={collection?.start_date}
+										max={collection?.end_date}
+										on:keydown={(e) => {
+											if (e.key === 'Enter') {
+												e.preventDefault();
+												addNewVisit();
+											}
+										}}
+									/>
+								{/if}
 							</div>
 							<div class="flex gap-2 mb-1">
 								<!-- textarea for notes -->
@@ -695,27 +729,32 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							{#if adventure.visits.length > 0}
 								<h2 class=" font-bold text-xl mt-2">My Visits</h2>
 								{#each adventure.visits as visit}
-									<div class="flex gap-2">
-										<p>
-											{new Date(visit.start_date).toLocaleDateString(undefined, {
-												timeZone: 'UTC'
-											})}
-										</p>
-										<p>
-											{new Date(visit.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-										</p>
-										<p>{visit.notes}</p>
-										<div>
-											<button
-												type="button"
-												class="btn btn-sm btn-error mb-1"
-												on:click={() => {
-													adventure.visits = adventure.visits.filter((v) => v !== visit);
-												}}
-											>
-												Remove
-											</button>
+									<div class="flex flex-col gap-2">
+										<div class="flex gap-2">
+											<p>
+												{new Date(visit.start_date).toLocaleDateString(undefined, {
+													timeZone: 'UTC'
+												})}
+											</p>
+											<p>
+												{new Date(visit.end_date).toLocaleDateString(undefined, {
+													timeZone: 'UTC'
+												})}
+											</p>
+
+											<div>
+												<button
+													type="button"
+													class="btn btn-sm btn-error"
+													on:click={() => {
+														adventure.visits = adventure.visits.filter((v) => v !== visit);
+													}}
+												>
+													Remove
+												</button>
+											</div>
 										</div>
+										<p class="whitespace-pre-wrap -mt-2 mb-2">{visit.notes}</p>
 									</div>
 								{/each}
 							{/if}

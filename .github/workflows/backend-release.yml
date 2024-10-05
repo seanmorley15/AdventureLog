@@ -2,7 +2,7 @@ name: Upload the tagged release backend image to GHCR and Docker Hub
 
 on:
   release:
-    types: [published]
+    types: [released]
 
 env:
   IMAGE_NAME: "adventurelog-backend"
