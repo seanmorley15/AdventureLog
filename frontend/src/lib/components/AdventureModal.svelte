@@ -736,11 +736,13 @@ it would also work to just use on:click on the MapLibre component itself. -->
 													timeZone: 'UTC'
 												})}
 											</p>
-											<p>
-												{new Date(visit.end_date).toLocaleDateString(undefined, {
-													timeZone: 'UTC'
-												})}
-											</p>
+											{#if visit.end_date}
+												<p>
+													{new Date(visit.end_date).toLocaleDateString(undefined, {
+														timeZone: 'UTC'
+													})}
+												</p>
+											{/if}
 
 											<div>
 												<button

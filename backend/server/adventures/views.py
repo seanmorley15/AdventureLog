@@ -129,23 +129,21 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def all(self, request):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        # include_collections = request.query_params.get('include_collections', 'false')
-        # if include_collections not in ['true', 'false']:
-        #     include_collections = 'false'
+        include_collections = request.query_params.get('include_collections', 'false')
+        if include_collections not in ['true', 'false']:
+            include_collections = 'false'
 
-        # if include_collections == 'true':
-        #     queryset = Adventure.objects.filter(
-        #         Q(is_public=True) | Q(user_id=request.user.id)
-        #     )
-        # else:
-        #     queryset = Adventure.objects.filter(
-        #         Q(is_public=True) | Q(user_id=request.user.id), collection=None
-        #     )
-        allowed_types = ['visited', 'planned']
+        if include_collections == 'true':
+            queryset = Adventure.objects.filter(
+                Q(is_public=True) | Q(user_id=request.user.id)
+            )
+        else:
+            queryset = Adventure.objects.filter(
+                Q(is_public=True) | Q(user_id=request.user.id), collection=None
+            )
         queryset = Adventure.objects.filter(
-            Q(user_id=request.user.id) & Q(type__in=allowed_types)
+            Q(user_id=request.user.id)
         )
-        
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
        

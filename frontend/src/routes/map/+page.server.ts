@@ -8,7 +8,7 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		let visitedFetch = await fetch(`${endpoint}/api/adventures/`, {
+		let visitedFetch = await fetch(`${endpoint}/api/adventures/all/?include_collections=true`, {
 			headers: {
 				Cookie: `${event.cookies.get('auth')}`
 			}
@@ -28,7 +28,7 @@ export const load = (async (event) => {
 			let visited: Adventure[] = [];
 			try {
 				let api_result = await visitedFetch.json();
-				visited = api_result.results as Adventure[];
+				visited = api_result as Adventure[];
 				if (!Array.isArray(visited) || visited.length === 0 || !visited) {
 					throw new Error('Visited adventures response is not an array');
 				}
