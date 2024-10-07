@@ -64,6 +64,7 @@ class Visit(models.Model):
         return f"{self.adventure.name} - {self.start_date} to {self.end_date}"
 
 class Adventure(models.Model):
+    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -89,7 +90,10 @@ class Adventure(models.Model):
     # end_date = models.DateField(blank=True, null=True)
 
     def clean(self):
-
+        if self.date and self.end_date and self.date > self.end_date:
+            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+        if self.end_date and not self.date:
+            raise ValidationError('Adventures must have an end date. Adventure: ' + self.name)
         if self.collection:
             if self.collection.is_public and not self.is_public:
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
@@ -100,6 +104,7 @@ class Adventure(models.Model):
         return self.name
 
 class Collection(models.Model):
+    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -125,6 +130,7 @@ class Collection(models.Model):
         return self.name
     
 class Transportation(models.Model):
+    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -158,6 +164,7 @@ class Transportation(models.Model):
         return self.name
 
 class Note(models.Model):
+    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -181,6 +188,7 @@ class Note(models.Model):
         return self.name
     
 class Checklist(models.Model):
+    # id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -202,6 +210,7 @@ class Checklist(models.Model):
         return self.name
 
 class ChecklistItem(models.Model):
+    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
@@ -229,4 +238,3 @@ class AdventureImage(models.Model):
 
     def __str__(self):
         return self.image.url
-    

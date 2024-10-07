@@ -72,23 +72,22 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
-        # if the user is not authenticated return only public adventures for  retrieve action
+        # if the user is not authenticated return only public adventures for retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Adventure.objects.filter(is_public=True)
+                return Adventure.objects.filter(is_public=True).distinct().order_by('-updated_at')
             return Adventure.objects.none()
 
-        
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Adventure.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Adventure.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
 
     def retrieve(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -271,6 +270,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer.save()
     
     # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
+    @transaction.atomic
     def perform_create(self, serializer):
         # Retrieve the collection from the validated data
         collection = serializer.validated_data.get('collection')
@@ -620,7 +620,7 @@ class TransportationViewSet(viewsets.ModelViewSet):
         # if the user is not authenticated return only public transportations for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Transportation.objects.filter(is_public=True)
+                return Transportation.objects.filter(is_public=True).distinct().order_by('-updated_at')
             return Transportation.objects.none()
 
         
@@ -628,12 +628,12 @@ class TransportationViewSet(viewsets.ModelViewSet):
             # For individual adventure retrieval, include public adventures
             return Transportation.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Transportation.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
@@ -742,7 +742,7 @@ class NoteViewSet(viewsets.ModelViewSet):
         # if the user is not authenticated return only public transportations for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Note.objects.filter(is_public=True)
+                return Note.objects.filter(is_public=True).distinct().order_by('-updated_at')
             return Note.objects.none()
 
         
@@ -750,12 +750,12 @@ class NoteViewSet(viewsets.ModelViewSet):
             # For individual adventure retrieval, include public adventures
             return Note.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Note.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
@@ -864,7 +864,7 @@ class ChecklistViewSet(viewsets.ModelViewSet):
         # if the user is not authenticated return only public transportations for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
-                return Checklist.objects.filter(is_public=True)
+                return Checklist.objects.filter(is_public=True).distinct().order_by('-updated_at')
             return Checklist.objects.none()
 
         
@@ -872,12 +872,12 @@ class ChecklistViewSet(viewsets.ModelViewSet):
             # For individual adventure retrieval, include public adventures
             return Checklist.objects.filter(
                 Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Checklist.objects.filter(
                 Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
-            )
+            ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
         # Retrieve the current object
