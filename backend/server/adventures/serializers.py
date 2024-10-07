@@ -31,6 +31,46 @@ class AdventureSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         return representation
     
+    def create(self, validated_data):
+        visits_data = validated_data.pop('visits', [])
+        adventure = Adventure.objects.create(**validated_data)
+        for visit_data in visits_data:
+            Visit.objects.create(adventure=adventure, **visit_data)
+        return adventure
+    
+    def update(self, instance, validated_data):
+        visits_data = validated_data.pop('visits', [])
+        
+        # Update Adventure fields
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        
+        # Get current visits
+        current_visits = instance.visits.all()
+        current_visit_ids = set(current_visits.values_list('id', flat=True))
+        
+        # Update or create visits
+        updated_visit_ids = set()
+        for visit_data in visits_data:
+            visit_id = visit_data.get('id')
+            if visit_id and visit_id in current_visit_ids:
+                visit = current_visits.get(id=visit_id)
+                for attr, value in visit_data.items():
+                    setattr(visit, attr, value)
+                visit.save()
+                updated_visit_ids.add(visit_id)
+            else:
+                # If no ID is provided or ID doesn't exist, create new visit
+                new_visit = Visit.objects.create(adventure=instance, **visit_data)
+                updated_visit_ids.add(new_visit.id)
+        
+        # Delete visits that are not in the updated data
+        visits_to_delete = current_visit_ids - updated_visit_ids
+        instance.visits.filter(id__in=visits_to_delete).delete()
+        
+        return instance
+
 class TransportationSerializer(serializers.ModelSerializer):
 
     class Meta:

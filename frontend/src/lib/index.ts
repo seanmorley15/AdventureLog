@@ -66,29 +66,31 @@ export function groupAdventuresByDate(
 	}
 
 	adventures.forEach((adventure) => {
-		if (adventure.date) {
-			const adventureDate = new Date(adventure.date).toISOString().split('T')[0];
-			if (adventure.end_date) {
-				const endDate = new Date(adventure.end_date).toISOString().split('T')[0];
+		adventure.visits.forEach((visit) => {
+			if (visit.start_date) {
+				const adventureDate = new Date(visit.start_date).toISOString().split('T')[0];
+				if (visit.end_date) {
+					const endDate = new Date(visit.end_date).toISOString().split('T')[0];
 
-				// Loop through all days and include adventure if it falls within the range
-				for (let i = 0; i < numberOfDays; i++) {
-					const currentDate = new Date(startDate);
-					currentDate.setUTCDate(startDate.getUTCDate() + i);
-					const dateString = currentDate.toISOString().split('T')[0];
+					// Loop through all days and include adventure if it falls within the range
+					for (let i = 0; i < numberOfDays; i++) {
+						const currentDate = new Date(startDate);
+						currentDate.setUTCDate(startDate.getUTCDate() + i);
+						const dateString = currentDate.toISOString().split('T')[0];
 
-					// Include the current day if it falls within the adventure date range
-					if (dateString >= adventureDate && dateString <= endDate) {
-						if (groupedAdventures[dateString]) {
-							groupedAdventures[dateString].push(adventure);
+						// Include the current day if it falls within the adventure date range
+						if (dateString >= adventureDate && dateString <= endDate) {
+							if (groupedAdventures[dateString]) {
+								groupedAdventures[dateString].push(adventure);
+							}
 						}
 					}
+				} else if (groupedAdventures[adventureDate]) {
+					// If there's no end date, add adventure to the start date only
+					groupedAdventures[adventureDate].push(adventure);
 				}
-			} else if (groupedAdventures[adventureDate]) {
-				// If there's no end date, add adventure to the start date only
-				groupedAdventures[adventureDate].push(adventure);
 			}
-		}
+		});
 	});
 
 	return groupedAdventures;
@@ -215,4 +217,57 @@ export function continentCodeToString(code: string) {
 		default:
 			return 'Unknown';
 	}
+}
+
+export let ADVENTURE_TYPES = [
+	{ type: 'general', label: 'General 🌍' },
+	{ type: 'outdoor', label: 'Outdoor 🏞️' },
+	{ type: 'lodging', label: 'Lodging 🛌' },
+	{ type: 'dining', label: 'Dining 🍽️' },
+	{ type: 'activity', label: 'Activity 🏄' },
+	{ type: 'attraction', label: 'Attraction 🎢' },
+	{ type: 'shopping', label: 'Shopping 🛍️' },
+	{ type: 'nightlife', label: 'Nightlife 🌃' },
+	{ type: 'event', label: 'Event 🎉' },
+	{ type: 'transportation', label: 'Transportation 🚗' },
+	{ type: 'culture', label: 'Culture 🎭' },
+	{ type: 'water_sports', label: 'Water Sports 🚤' },
+	{ type: 'hiking', label: 'Hiking 🥾' },
+	{ type: 'wildlife', label: 'Wildlife 🦒' },
+	{ type: 'historical_sites', label: 'Historical Sites 🏛️' },
+	{ type: 'music_concerts', label: 'Music & Concerts 🎶' },
+	{ type: 'fitness', label: 'Fitness 🏋️' },
+	{ type: 'art_museums', label: 'Art & Museums 🎨' },
+	{ type: 'festivals', label: 'Festivals 🎪' },
+	{ type: 'spiritual_journeys', label: 'Spiritual Journeys 🧘‍♀️' },
+	{ type: 'volunteer_work', label: 'Volunteer Work 🤝' },
+	{ type: 'other', label: 'Other' }
+];
+
+export function typeToString(type: string) {
+	const typeObj = ADVENTURE_TYPES.find((t) => t.type === type);
+	if (typeObj) {
+		return typeObj.label;
+	} else {
+		return 'Unknown';
+	}
+}
+
+/**
+ * Checks if an adventure has been visited.
+ *
+ * This function determines if the `adventure.visits` array contains at least one visit
+ * with a `start_date` that is before the current date.
+ *
+ * @param adventure - The adventure object to check.
+ * @returns `true` if the adventure has been visited, otherwise `false`.
+ */
+export function isAdventureVisited(adventure: Adventure) {
+	const currentTime = Date.now();
+
+	// Check if any visit's start_date is before the current time.
+	return adventure.visits.some((visit) => {
+		const visitStartTime = new Date(visit.start_date).getTime();
+		return visit.start_date && visitStartTime <= currentTime;
+	});
 }

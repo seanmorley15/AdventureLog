@@ -1,10 +1,10 @@
-{% extends "base.html" %}
-
-{% block content %}
-  <!-- Main jumbotron for a primary marketing message or call to action -->
-  <div class="jumbotron">
-    <h1>AdventureLog API Server</h1>
-    <p>Welcome to the server side of AdventureLog!</p>
-    <p>This site is only ment for administrative users</p>
-  </div>
+{% extends "base.html" %} {% block content %}
+<!-- Main jumbotron for a primary marketing message or call to action -->
+<div class="jumbotron">
+  <h1>AdventureLog API Server</h1>
+  <p>
+    <a class="btn btn-primary btn-lg" href="/admin" role="button">Admin Site</a>
+    <a class="btn btn-secondary btn-lg" href="/docs" role="button">API Docs</a>
+  </p>
+</div>
 {% endblock %}

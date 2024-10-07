@@ -4,6 +4,7 @@
 	import { page } from '$app/stores';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Adventure } from '$lib/types';
 
@@ -27,6 +28,28 @@
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
+
+	let typeString: string = '';
+
+	$: {
+		if (typeof window !== 'undefined') {
+			let url = new URL(window.location.href);
+			url.searchParams.set('types', typeString);
+			goto(url.toString(), { invalidateAll: true, replaceState: true });
+		}
+	}
+
+	// sets typeString if present in the URL
+	$: {
+		// check to make sure its running on the client side
+		if (typeof window !== 'undefined') {
+			let url = new URL(window.location.href);
+			let types = url.searchParams.get('types');
+			if (types) {
+				typeString = types;
+			}
+		}
+	}
 
 	function handleChangePage(pageNumber: number) {
 		// let query = new URLSearchParams($page.url.searchParams.toString());
@@ -216,29 +239,10 @@
 		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content rounded-lg">
 			<!-- Sidebar content here -->
 			<div class="form-control">
-				<h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3>
+				<!-- <h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3> -->
 				<form method="get">
-					<label class="label cursor-pointer">
-						<span class="label-text">Completed</span>
-						<input
-							type="checkbox"
-							name="visited"
-							id="visited"
-							class="checkbox checkbox-primary"
-							checked={currentSort.visited}
-						/>
-					</label>
-					<label class="label cursor-pointer">
-						<span class="label-text">Planned</span>
-						<input
-							type="checkbox"
-							id="planned"
-							name="planned"
-							class="checkbox checkbox-primary"
-							checked={currentSort.planned}
-						/>
-					</label>
-					<!-- <div class="divider"></div> -->
+					<CategoryFilterDropdown bind:types={typeString} />
+					<div class="divider"></div>
 					<h3 class="text-center font-bold text-lg mb-4">Sort</h3>
 					<p class="text-lg font-semibold mb-2">Order Direction</p>
 					<div class="join">

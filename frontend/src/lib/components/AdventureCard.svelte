@@ -19,6 +19,7 @@
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
+	import { isAdventureVisited, typeToString } from '$lib';
 
 	export let type: string;
 	export let user: User | null;
@@ -27,19 +28,8 @@
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
 
-	let keyword: string = '';
 	let image_url: string | null = null;
 	export let adventure: Adventure;
-
-	if (adventure.type == 'visited') {
-		keyword = 'Adventure';
-	} else if (adventure.type == 'planned') {
-		keyword = 'Adventure';
-	} else if (adventure.type == 'lodging') {
-		keyword = 'Lodging';
-	} else if (adventure.type == 'dining') {
-		keyword = 'Dining';
-	}
 
 	let activityTypes: string[] = [];
 	// makes it reactivty to changes so it updates automatically
@@ -209,16 +199,8 @@
 			</button>
 		</div>
 		<div>
-			{#if adventure.type == 'visited'}
-				<div class="badge badge-primary">Visited</div>
-			{:else if adventure.type == 'planned'}
-				<div class="badge badge-secondary">Planned</div>
-			{:else if adventure.type == 'lodging'}
-				<div class="badge badge-success">Lodging</div>
-			{:else if adventure.type == 'dining'}
-				<div class="badge badge-accent">Dining</div>
-			{/if}
-
+			<div class="badge badge-primary">{typeToString(adventure.type)}</div>
+			<div class="badge badge-success">{isAdventureVisited(adventure) ? 'Visited' : 'Planned'}</div>
 			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
@@ -227,16 +209,13 @@
 				<p class="ml-.5">{adventure.location}</p>
 			</div>
 		{/if}
-		{#if adventure.date && adventure.date !== ''}
-			<div class="inline-flex items-center">
+		{#if adventure.visits.length > 0}
+			<!-- visited badge -->
+			<div class="flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
-				<p>
-					{new Date(adventure.date).toLocaleDateString(undefined, {
-						timeZone: 'UTC'
-					})}{adventure.end_date && adventure.end_date !== ''
-						? ' - ' +
-							new Date(adventure.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })
-						: ''}
+				<p class="ml-.5">
+					{adventure.visits.length}
+					{adventure.visits.length > 1 ? 'visits' : 'visit'}
 				</p>
 			</div>
 		{/if}
@@ -268,7 +247,7 @@
 								><Launch class="w-6 h-6" />Open Details</button
 							>
 							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />Edit {keyword}
+								<FileDocumentEdit class="w-6 h-6" />Edit Adventure
 							</button>
 							{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
@@ -280,16 +259,10 @@
 									><CheckBold class="w-6 h-6" />Mark Visited</button
 								>
 							{/if}
-							<!-- remove from adventure -->
-							{#if adventure.collection && (adventure.type == 'visited' || adventure.type == 'planned') && user?.pk == adventure.user_id}
+							<!-- remove from collection -->
+							{#if adventure.collection && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
 									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
-								>
-							{/if}
-							<!-- change a non adventure to an adventure -->
-							{#if (adventure.collection && adventure.type == 'lodging') || adventure.type == 'dining'}
-								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
-									><CheckBold class="w-6 h-6" />Change to Visit</button
 								>
 							{/if}
 							{#if !adventure.collection}

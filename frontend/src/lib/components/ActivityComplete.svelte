@@ -49,18 +49,21 @@
 </script>
 
 <div class="relative">
-	<input
-		type="text"
-		class="input input-bordered w-full"
-		placeholder="Add an activity"
-		bind:value={inputVal}
-		on:keydown={(e) => {
-			if (e.key === 'Enter') {
-				e.preventDefault();
-				addActivity();
-			}
-		}}
-	/>
+	<div class="flex gap-2">
+		<input
+			type="text"
+			class="input input-bordered w-full"
+			placeholder="Add an activity"
+			bind:value={inputVal}
+			on:keydown={(e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault();
+					addActivity();
+				}
+			}}
+		/>
+		<button type="button" class="btn btn-neutral" on:click={addActivity}>Add</button>
+	</div>
 	{#if inputVal && filteredItems.length > 0}
 		<ul class="absolute z-10 w-full bg-base-100 shadow-lg max-h-60 overflow-auto">
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
