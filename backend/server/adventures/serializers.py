@@ -24,7 +24,7 @@ class AdventureSerializer(serializers.ModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'start_date', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'end_date']
+        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
