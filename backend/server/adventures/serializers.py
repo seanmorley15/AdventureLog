@@ -17,14 +17,19 @@ class AdventureImageSerializer(serializers.ModelSerializer):
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
-
-
+    
+class VisitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Visit
+        fields = ['id', 'start_date', 'end_date', 'notes']
+        read_only_fields = ['id']
                                         
 class AdventureSerializer(serializers.ModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
+    visits = VisitSerializer(many=True, read_only=False)
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude']
+        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'visits']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
@@ -70,7 +75,7 @@ class AdventureSerializer(serializers.ModelSerializer):
         instance.visits.filter(id__in=visits_to_delete).delete()
         
         return instance
-
+    
 class TransportationSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -99,17 +104,7 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
                 'id', 'user_id', 'name', 'is_checked', 'checklist', 'created_at', 'updated_at'
             ]
             read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'checklist']
-    
-        # def validate(self, data):
-        #     # Check if the checklist is public and the checklist item is not
-        #     checklist = data.get('checklist')
-        #     is_checked = data.get('is_checked', False)
-        #     if checklist and checklist.is_public and not is_checked:
-        #         raise serializers.ValidationError(
-        #             'Checklist items associated with a public checklist must be checked.'
-        #         )
-
-    
+  
 class ChecklistSerializer(serializers.ModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
     class Meta:
@@ -172,9 +167,6 @@ class ChecklistSerializer(serializers.ModelSerializer):
             )
 
         return data
-
-   
-
 
 class CollectionSerializer(serializers.ModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
