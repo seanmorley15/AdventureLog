@@ -221,7 +221,9 @@
 	let new_end_date: string = '';
 	let new_notes: string = '';
 	function addNewVisit() {
-		// check if start date is before end date
+		if (new_start_date && !new_end_date) {
+			new_end_date = new_start_date;
+		}
 		if (new_start_date > new_end_date) {
 			addToast('error', 'Start date must be before end date');
 			return;
@@ -736,7 +738,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 													timeZone: 'UTC'
 												})}
 											</p>
-											{#if visit.end_date}
+											{#if visit.end_date && visit.end_date !== visit.start_date}
 												<p>
 													{new Date(visit.end_date).toLocaleDateString(undefined, {
 														timeZone: 'UTC'

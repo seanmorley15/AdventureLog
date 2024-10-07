@@ -339,7 +339,9 @@
 																timeZone: 'UTC'
 															})
 														: ''}
-													{visit.end_date && visit.end_date !== ''
+													{visit.end_date &&
+													visit.end_date !== '' &&
+													visit.end_date !== visit.start_date
 														? ' - ' +
 															new Date(visit.end_date).toLocaleDateString(undefined, {
 																timeZone: 'UTC'
