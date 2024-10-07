@@ -266,8 +266,11 @@ export function isAdventureVisited(adventure: Adventure) {
 	const currentTime = Date.now();
 
 	// Check if any visit's start_date is before the current time.
-	return adventure.visits.some((visit) => {
-		const visitStartTime = new Date(visit.start_date).getTime();
-		return visit.start_date && visitStartTime <= currentTime;
-	});
+	return (
+		adventure.visits &&
+		adventure.visits.some((visit) => {
+			const visitStartTime = new Date(visit.start_date).getTime();
+			return visit.start_date && visitStartTime <= currentTime;
+		})
+	);
 }
