@@ -13,7 +13,9 @@
 		name: '',
 		description: '',
 		adventures: [] as Adventure[],
-		is_public: false
+		is_public: false,
+		shared_with: [],
+		link: ''
 	};
 
 	const dispatch = createEventDispatcher();
@@ -148,6 +150,16 @@
 							id="end_date"
 							name="end_date"
 							bind:value={newCollection.end_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+					<div class="mb-2">
+						<label for="end_date">Link </label><br />
+						<input
+							type="url"
+							id="link"
+							name="link"
+							bind:value={newCollection.link}
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>
 					</div>

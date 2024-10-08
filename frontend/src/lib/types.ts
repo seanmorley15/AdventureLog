@@ -87,6 +87,7 @@ export type Collection = {
 	checklists?: Checklist[];
 	is_archived?: boolean;
 	shared_with: string[];
+	link?: string | null;
 };
 
 export type OpenStreetMapPlace = {

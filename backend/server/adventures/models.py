@@ -117,6 +117,7 @@ class Collection(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     is_archived = models.BooleanField(default=False)
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
+    link = models.URLField(blank=True, null=True, max_length=2083)
 
 
     # if connected adventures are private and collection is public, raise an error

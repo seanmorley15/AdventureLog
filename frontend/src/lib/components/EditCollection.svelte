@@ -11,16 +11,8 @@
 
 	let originalName = collectionToEdit.name;
 
-	let isPointModalOpen: boolean = false;
-
-	import MapMarker from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import Notebook from '~icons/mdi/notebook';
-	import ClipboardList from '~icons/mdi/clipboard-list';
-	import Image from '~icons/mdi/image';
-	import Star from '~icons/mdi/star';
-	import Attachment from '~icons/mdi/attachment';
-	import PointSelectionModal from './PointSelectionModal.svelte';
 	import Earth from '~icons/mdi/earth';
 
 	onMount(async () => {
@@ -153,6 +145,16 @@
 							id="end_date"
 							name="end_date"
 							bind:value={collectionToEdit.end_date}
+							class="input input-bordered w-full max-w-xs mt-1"
+						/>
+					</div>
+					<div class="mb-2">
+						<label for="end_date">Link </label><br />
+						<input
+							type="url"
+							id="link"
+							name="link"
+							bind:value={collectionToEdit.link}
 							class="input input-bordered w-full max-w-xs mt-1"
 						/>
 					</div>
