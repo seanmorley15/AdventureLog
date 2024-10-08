@@ -50,7 +50,6 @@
 
 	let notFound: boolean = false;
 	let isShowingLinkModal: boolean = false;
-	let isShowingCreateModal: boolean = false;
 	let isShowingTransportationModal: boolean = false;
 	let isShowingChecklistModal: boolean = false;
 
