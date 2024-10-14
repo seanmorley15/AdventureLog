@@ -17,7 +17,6 @@
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ShareModal from './ShareModal.svelte';
-	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import CardCarousel from './CardCarousel.svelte';
 
 	const dispatch = createEventDispatcher();

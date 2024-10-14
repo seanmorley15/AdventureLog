@@ -4,30 +4,34 @@
 
 	export let adventures: Adventure[] = [];
 
-	let adventure_images: string[] = [];
-	let currentSlide = 0; // Declare as a regular variable
-
-	let adventure: Adventure | null = null;
+	let currentSlide = 0;
 	let image_url: string | null = null;
 
-	adventures.forEach((adventure) => {
-		adventure_images = [...adventure_images, ...adventure.images.map((image) => image.image)];
-	});
+	$: adventure_images = adventures.flatMap((adventure) =>
+		adventure.images.map((image) => ({ image: image.image, adventure: adventure }))
+	);
 
-	// Reactive statement to log when currentSlide changes
-	$: console.log('Current slide:', currentSlide);
+	$: {
+		if (adventure_images.length > 0) {
+			currentSlide = 0;
+		}
+	}
 
 	function changeSlide(direction: string) {
 		if (direction === 'next' && currentSlide < adventure_images.length - 1) {
-			currentSlide = currentSlide + 1; // Use direct assignment
+			currentSlide = currentSlide + 1;
 		} else if (direction === 'prev' && currentSlide > 0) {
-			currentSlide = currentSlide - 1; // Use direct assignment
+			currentSlide = currentSlide - 1;
 		}
 	}
 </script>
 
 {#if image_url}
-	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} />
+	<ImageDisplayModal
+		adventure={adventure_images[currentSlide].adventure}
+		image={image_url}
+		on:close={() => (image_url = null)}
+	/>
 {/if}
 
 <figure>
@@ -39,13 +43,13 @@
 				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<!-- svelte-ignore a11y-missing-attribute -->
 				<a
-					on:click|stopPropagation={() => (image_url = adventure_images[currentSlide])}
+					on:click|stopPropagation={() => (image_url = adventure_images[currentSlide].image)}
 					class="cursor-pointer"
 				>
 					<img
-						src={adventure_images[currentSlide]}
+						src={adventure_images[currentSlide].image}
 						class="w-full h-48 object-cover"
-						alt={adventure_images[currentSlide]}
+						alt={adventure_images[currentSlide].adventure.name}
 					/>
 				</a>
 

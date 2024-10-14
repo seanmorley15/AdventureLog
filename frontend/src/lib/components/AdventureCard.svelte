@@ -18,7 +18,6 @@
 	import CollectionLink from './CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
-	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import { isAdventureVisited, typeToString } from '$lib';
 	import CardCarousel from './CardCarousel.svelte';
 
