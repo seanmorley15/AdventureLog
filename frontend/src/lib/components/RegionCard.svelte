@@ -57,11 +57,7 @@
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
 >
 	<div class="card-body">
-		{#if region.name_en && region.name !== region.name_en}
-			<h2 class="card-title overflow-ellipsis">{region.name} ({region.name_en})</h2>
-		{:else}
-			<h2 class="card-title overflow-ellipsis">{region.name}</h2>
-		{/if}
+		<h2 class="card-title overflow-ellipsis">{region.name}</h2>
 		<p>{region.id}</p>
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->

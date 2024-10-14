@@ -20,6 +20,7 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import { isAdventureVisited, typeToString } from '$lib';
+	import CardCarousel from './CardCarousel.svelte';
 
 	export let type: string;
 	export let user: User | null;
@@ -28,7 +29,6 @@
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
 
-	let image_url: string | null = null;
 	export let adventure: Adventure;
 
 	let activityTypes: string[] = [];
@@ -120,12 +120,6 @@
 		dispatch('edit', adventure);
 	}
 
-	let currentSlide = 0;
-
-	function goToSlide(index: number) {
-		currentSlide = index;
-	}
-
 	function link() {
 		dispatch('link', adventure);
 	}
@@ -146,48 +140,10 @@
 	/>
 {/if}
 
-{#if image_url}
-	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} {adventure} />
-{/if}
-
 <div
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
-	<figure>
-		{#if adventure.images && adventure.images.length > 0}
-			<div class="carousel w-full">
-				{#each adventure.images as image, i}
-					<div
-						class="carousel-item w-full"
-						style="display: {i === currentSlide ? 'block' : 'none'}"
-					>
-						<!-- svelte-ignore a11y-invalid-attribute -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
-						<!-- svelte-ignore a11y-no-static-element-interactions -->
-						<!-- svelte-ignore a11y-missing-attribute -->
-						<a on:click={() => (image_url = image.image)}
-							><img src={image.image} class="w-full h-48 object-cover" alt={adventure.name} /></a
-						>
-						<div class="flex justify-center w-full py-2 gap-2">
-							{#each adventure.images as _, i}
-								<button
-									on:click={() => goToSlide(i)}
-									class="btn btn-xs {i === currentSlide ? 'btn-active' : ''}">{i + 1}</button
-								>
-							{/each}
-						</div>
-					</div>
-				{/each}
-			</div>
-		{:else}
-			<!-- svelte-ignore a11y-img-redundant-alt -->
-			<img
-				src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
-				alt="No image available"
-				class="w-full h-48 object-cover"
-			/>
-		{/if}
-	</figure>
+	<CardCarousel adventures={[adventure]} />
 
 	<div class="card-body">
 		<div class="flex justify-between">

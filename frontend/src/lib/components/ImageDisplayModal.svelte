@@ -6,7 +6,6 @@
 	import type { Adventure } from '$lib/types';
 
 	export let image: string;
-	export let adventure: Adventure;
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -43,7 +42,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<div class="modal-header flex justify-between items-center mb-4">
-			<h3 class="font-bold text-2xl">{adventure.name}</h3>
+			<h3 class="font-bold text-2xl">Image Preview</h3>
 			<button class="btn btn-circle btn-neutral" on:click={close}>
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -67,7 +66,7 @@
 		>
 			<img
 				src={image}
-				alt={adventure.name}
+				alt="My Adventure"
 				style="max-width: 100%; max-height: 75vh; object-fit: contain;"
 			/>
 		</div>

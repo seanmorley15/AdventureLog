@@ -180,6 +180,7 @@
 						{collection}
 						on:delete={deleteCollection}
 						on:edit={editCollection}
+						adventures={collection.adventures}
 					/>
 				{/each}
 			</div>
