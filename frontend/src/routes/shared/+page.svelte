@@ -25,3 +25,8 @@
 		{/if}
 	</p>
 {/if}
+
+<svelte:head>
+	<title>Shared Collections</title>
+	<meta name="description" content="Collections shared with you by other users." />
+</svelte:head>

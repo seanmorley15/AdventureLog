@@ -20,7 +20,8 @@
 		groupAdventuresByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
-		groupChecklistsByDate
+		groupChecklistsByDate,
+		isAdventureVisited
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -43,13 +44,12 @@
 	let numberOfDays: number = NaN;
 
 	$: {
-		numAdventures = adventures.filter((a) => a.type === 'visited' || a.type === 'planned').length;
-		numVisited = adventures.filter((a) => a.type === 'visited').length;
+		numAdventures = adventures.length;
+		numVisited = adventures.filter(isAdventureVisited).length;
 	}
 
 	let notFound: boolean = false;
 	let isShowingLinkModal: boolean = false;
-	let isShowingCreateModal: boolean = false;
 	let isShowingTransportationModal: boolean = false;
 	let isShowingChecklistModal: boolean = false;
 
@@ -371,6 +371,14 @@
 	{#if collection.name}
 		<h1 class="text-center font-extrabold text-4xl mb-2">{collection.name}</h1>
 	{/if}
+	{#if collection.link}
+		<div class="flex items-center justify-center mb-2">
+			<a href={collection.link} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+				Visit Link
+			</a>
+		</div>
+	{/if}
+
 	{#if collection.description}
 		<p class="text-center text-lg mb-2">{collection.description}</p>
 	{/if}

@@ -511,10 +511,8 @@ class StatsViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def counts(self, request):
-        visited_count = Adventure.objects.filter(
-            type='visited', user_id=request.user.id).count()
-        planned_count = Adventure.objects.filter(
-            type='planned', user_id=request.user.id).count()
+        adventure_count = Adventure.objects.filter(
+            user_id=request.user.id).count()
         trips_count = Collection.objects.filter(
             user_id=request.user.id).count()
         visited_region_count = VisitedRegion.objects.filter(
@@ -524,8 +522,7 @@ class StatsViewSet(viewsets.ViewSet):
             user_id=request.user.id).values('region__country').distinct().count()
         total_countries = Country.objects.count()
         return Response({
-            'visited_count': visited_count,
-            'planned_count': planned_count,
+            'adventure_count': adventure_count,
             'trips_count': trips_count,
             'visited_region_count': visited_region_count,
             'total_regions': total_regions,

@@ -53,6 +53,11 @@ export const actions: Actions = {
 		const description = formData.get('description') as string | null;
 		const start_date = formData.get('start_date') as string | null;
 		const end_date = formData.get('end_date') as string | null;
+		let link = formData.get('link') as string | null;
+
+		if (link) {
+			link = checkLink(link);
+		}
 
 		if (!name) {
 			return {
@@ -66,6 +71,7 @@ export const actions: Actions = {
 		formDataToSend.append('description', description || '');
 		formDataToSend.append('start_date', start_date || '');
 		formDataToSend.append('end_date', end_date || '');
+		formDataToSend.append('link', link || '');
 		let auth = event.cookies.get('auth');
 
 		if (!auth) {
@@ -142,11 +148,16 @@ export const actions: Actions = {
 		let is_public = formData.get('is_public') as string | null | boolean;
 		const start_date = formData.get('start_date') as string | null;
 		const end_date = formData.get('end_date') as string | null;
+		let link = formData.get('link') as string | null;
 
 		if (is_public) {
 			is_public = true;
 		} else {
 			is_public = false;
+		}
+
+		if (link) {
+			link = checkLink(link);
 		}
 
 		if (!name) {
@@ -162,6 +173,7 @@ export const actions: Actions = {
 		formDataToSend.append('is_public', is_public.toString());
 		formDataToSend.append('start_date', start_date || '');
 		formDataToSend.append('end_date', end_date || '');
+		formDataToSend.append('link', link || '');
 
 		let auth = event.cookies.get('auth');
 

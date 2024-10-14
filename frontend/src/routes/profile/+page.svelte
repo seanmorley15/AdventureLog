@@ -3,10 +3,9 @@
 
 	let stats: {
 		country_count: number;
-		planned_count: number;
 		total_regions: number;
 		trips_count: number;
-		visited_count: number;
+		adventure_count: number;
 		visited_region_count: number;
 		total_countries: number;
 	} | null;
@@ -18,16 +17,6 @@
 	}
 	console.log(stats);
 </script>
-
-<!--
-  // v0 by Vercel.
-  // https://v0.dev/t/EtPnDdQYcbn
-  -->
-
-<!--
-  // v0 by Vercel.
-  // https://v0.dev/t/DYwTru570WN
-  -->
 
 {#if data.user.profile_pic}
 	<div class="avatar flex items-center justify-center">
@@ -65,17 +54,10 @@
 	<div class="flex justify-center items-center">
 		<div class="stats stats-vertical lg:stats-horizontal shadow bg-base-200">
 			<div class="stat">
-				<div class="stat-title">Completed Adventures</div>
-				<div class="stat-value text-center">{stats.visited_count}</div>
+				<div class="stat-title">Adventures</div>
+				<div class="stat-value text-center">{stats.adventure_count}</div>
 				<!-- <div class="stat-desc">Jan 1st - Feb 1st</div> -->
 			</div>
-
-			<div class="stat">
-				<div class="stat-title">Planned Adventures</div>
-				<div class="stat-value text-center">{stats.planned_count}</div>
-				<!-- <div class="stat-desc">↗︎ 400 (22%)</div> -->
-			</div>
-
 			<div class="stat">
 				<div class="stat-title">Collections</div>
 				<div class="stat-value text-center">{stats.trips_count}</div>

@@ -9,7 +9,7 @@
 	import ArchiveArrowUp from '~icons/mdi/archive-arrow-up';
 
 	import { goto } from '$app/navigation';
-	import type { Collection } from '$lib/types';
+	import type { Adventure, Collection } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 
 	import Plus from '~icons/mdi/plus';
@@ -17,13 +17,13 @@
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ShareModal from './ShareModal.svelte';
+	import CardCarousel from './CardCarousel.svelte';
 
 	const dispatch = createEventDispatcher();
 
 	export let type: String | undefined | null;
+	export let adventures: Adventure[] = [];
 	let isShareModalOpen: boolean = false;
-
-	//   export let type: String;
 
 	function editAdventure() {
 		dispatch('edit', collection);
@@ -86,6 +86,7 @@
 <div
 	class="card min-w-max lg:w-96 md:w-80 sm:w-60 xs:w-40 bg-neutral text-neutral-content shadow-xl"
 >
+	<CardCarousel {adventures} />
 	<div class="card-body">
 		<div class="flex justify-between">
 			<button
