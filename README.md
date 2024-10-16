@@ -2,6 +2,8 @@
 
 ### _"Never forget an adventure with AdventureLog - Your ultimate travel companion!"_
 
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
+
 **Documentation can be found [here](https://docs.adventurelog.app).**
 
 **Join the AdventureLog Community Discord Server [here](https://discord.gg/wRbQ9Egr8C).**
