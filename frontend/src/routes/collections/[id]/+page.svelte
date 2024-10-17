@@ -586,7 +586,7 @@
 		{/each}
 
 		<MapLibre
-			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+			style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 mt-4"
 			standardControls
 		>
