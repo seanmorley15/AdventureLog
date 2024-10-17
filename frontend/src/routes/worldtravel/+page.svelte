@@ -10,8 +10,15 @@
 
 	let filteredCountries: Country[] = [];
 	const allCountries: Country[] = data.props?.countries || [];
+	let worldSubregions: string[] = [];
+
+	worldSubregions = [...new Set(allCountries.map((country) => country.subregion))];
+	// remove blank subregions
+	worldSubregions = worldSubregions.filter((subregion) => subregion !== '');
+	console.log(worldSubregions);
 
 	let filterOption: string = 'all';
+	let subRegionOption: string = '';
 
 	$: {
 		if (searchQuery === '') {
@@ -35,6 +42,12 @@
 		} else {
 			filteredCountries = filteredCountries;
 		}
+
+		if (subRegionOption !== '') {
+			filteredCountries = filteredCountries.filter(
+				(country) => country.subregion === subRegionOption
+			);
+		}
 	}
 </script>
 
@@ -43,37 +56,44 @@
 <p class="text-center mb-4">
 	{filteredCountries.length} countries found
 </p>
-
-<div class="join flex items-center justify-center mb-4">
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="All"
-		checked
-		on:click={() => (filterOption = 'all')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Partially Visited"
-		on:click={() => (filterOption = 'partial')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Completely Visited"
-		on:click={() => (filterOption = 'complete')}
-	/>
-	<input
-		class="join-item btn"
-		type="radio"
-		name="filter"
-		aria-label="Not Visited"
-		on:click={() => (filterOption = 'not')}
-	/>
+<div class="flex items-center justify-center mb-4">
+	<div class="join">
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="All"
+			checked
+			on:click={() => (filterOption = 'all')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Partially Visited"
+			on:click={() => (filterOption = 'partial')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Completely Visited"
+			on:click={() => (filterOption = 'complete')}
+		/>
+		<input
+			class="join-item btn"
+			type="radio"
+			name="filter"
+			aria-label="Not Visited"
+			on:click={() => (filterOption = 'not')}
+		/>
+	</div>
+	<select class="select select-bordered w-full max-w-xs ml-4" bind:value={subRegionOption}>
+		<option value="">All Subregions</option>
+		{#each worldSubregions as subregion}
+			<option value={subregion}>{subregion}</option>
+		{/each}
+	</select>
 </div>
 
 <div class="flex items-center justify-center mb-4">
@@ -97,6 +117,10 @@
 		<!-- <p>Name: {item.name}, Continent: {item.continent}</p> -->
 	{/each}
 </div>
+
+{#if filteredCountries.length === 0}
+	<p class="text-center font-bold text-2xl mt-12">No countries found</p>
+{/if}
 
 <svelte:head>
 	<title>Countries | World Travel</title>
