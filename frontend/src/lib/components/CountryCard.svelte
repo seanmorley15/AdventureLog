@@ -34,7 +34,7 @@
 			{/if}
 			{#if country.num_visits > 0 && country.num_visits != country.num_regions}
 				<div class="badge badge-accent">
-					Visited {country.num_visits} time{country.num_visits > 1 ? 's' : ''}
+					Visited {country.num_visits} Region{country.num_visits > 1 ? 's' : ''}
 				</div>
 			{:else if country.num_visits > 0 && country.num_visits === country.num_regions}
 				<div class="badge badge-success">Completed</div>
