@@ -7,15 +7,25 @@ class CountrySerializer(serializers.ModelSerializer):
         return os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
 
     flag_url = serializers.SerializerMethodField()
+    num_regions = serializers.SerializerMethodField()
+    num_visits = serializers.SerializerMethodField()
 
     def get_flag_url(self, obj):
         public_url = self.get_public_url(obj)
         return public_url + '/media/' + 'flags/' + obj.country_code.lower() + '.png'
+    
+    def get_num_regions(self, obj):
+        # get the number of regions in the country
+        return Region.objects.filter(country=obj).count()
+    
+    def get_num_visits(self, obj):
+        return VisitedRegion.objects.filter(region__country=obj).count()
 
     class Meta:
         model = Country
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url']
+        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits']
+
 
 class RegionSerializer(serializers.ModelSerializer):
     class Meta:
