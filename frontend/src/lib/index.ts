@@ -1,4 +1,5 @@
 import inspirationalQuotes from './json/quotes.json';
+import randomBackgrounds from './json/backgrounds.json';
 import type { Adventure, Checklist, Collection, Note, Transportation, User } from './types';
 
 export function getRandomQuote() {
@@ -6,7 +7,7 @@ export function getRandomQuote() {
 	const randomIndex = Math.floor(Math.random() * quotes.length);
 	let quoteString = quotes[randomIndex].quote;
 	let authorString = quotes[randomIndex].author;
-	return '"' + quoteString + '" - ' + authorString;
+	return { quote: quoteString, author: authorString };
 }
 
 export function getFlag(size: number, country: string) {
@@ -273,4 +274,9 @@ export function isAdventureVisited(adventure: Adventure) {
 			return visit.start_date && visitStartTime <= currentTime;
 		})
 	);
+}
+
+export function getRandomBackground() {
+	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
+	return randomBackgrounds.backgrounds[randomIndex];
 }
