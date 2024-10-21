@@ -1,6 +1,14 @@
 import inspirationalQuotes from './json/quotes.json';
 import randomBackgrounds from './json/backgrounds.json';
-import type { Adventure, Checklist, Collection, Note, Transportation, User } from './types';
+import type {
+	Adventure,
+	Background,
+	Checklist,
+	Collection,
+	Note,
+	Transportation,
+	User
+} from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;
@@ -278,5 +286,5 @@ export function isAdventureVisited(adventure: Adventure) {
 
 export function getRandomBackground() {
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
-	return randomBackgrounds.backgrounds[randomIndex];
+	return randomBackgrounds.backgrounds[randomIndex] as Background;
 }

@@ -162,3 +162,9 @@ export type ChecklistItem = {
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 };
+
+export type Background = {
+	url: string;
+	author?: string;
+	location?: string;
+};

@@ -1,11 +1,22 @@
 import { fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
+import { getRandomBackground, getRandomQuote } from '$lib';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/');
+	} else {
+		const quote = getRandomQuote();
+		const background = getRandomBackground();
+
+		return {
+			props: {
+				quote,
+				background
+			}
+		};
 	}
 };
 

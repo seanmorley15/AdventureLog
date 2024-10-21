@@ -7,20 +7,22 @@
 	console.log(data);
 
 	import FileImageBox from '~icons/mdi/file-image-box';
-	import Account from '~icons/mdi/account';
-	import MapMarkerOutline from '~icons/mdi/map-marker-outline';
+
+	let isImageInfoModalOpen: boolean = false;
 
 	import { page } from '$app/stores';
-	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 
-	let quote: { quote: string; author: string } = { quote: '', author: '' };
+	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
+	import type { Background } from '$lib/types.js';
 
-	let background = getRandomBackground();
+	let quote: { quote: string; author: string } = data.props.quote;
 
-	onMount(async () => {
-		quote = getRandomQuote();
-	});
+	let background: Background = data.props.background;
 </script>
+
+{#if isImageInfoModalOpen}
+	<ImageInfoModal {background} on:close={() => (isImageInfoModalOpen = false)} />
+{/if}
 
 <div
 	class="min-h-screen bg-no-repeat bg-cover flex items-center justify-center"
@@ -79,25 +81,12 @@
 
 <div class="fixed bottom-4 right-4 z-[999]">
 	<div class="dropdown dropdown-left dropdown-end">
-		<div tabindex="0" role="button" class="btn m-1 btn-circle btn-md">
+		<button class="btn m-1 btn-circle btn-md" on:click={() => (isImageInfoModalOpen = true)}>
 			<FileImageBox class="w-4 h-4" />
-		</div>
-		<ul
-			class="dropdown-content menu bg-base-100 rounded-box z-[1] w-auto min-w-[200%] p-2 shadow right-0"
-		>
-			<p class="whitespace-nowrap text-left">
-				<Account class="w-4 h-4 inline-block" />
-				{background.author}
-				<MapMarkerOutline class="w-4 h-4 inline-block" />
-				{background.location}
-				<button
-					on:click={() => (window.location.href = 'https://forms.gle/2uZNnz8QS3VjuYtQ8')}
-					class="btn btn-sm btn-neutral inline-block ml-4">Submit an Image</button
-				>
-			</p>
-		</ul>
+		</button>
 	</div>
 </div>
+
 <svelte:head>
 	<title>Login | AdventureLog</title>
 	<meta
