@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { getRandomBackground, getRandomQuote } from '$lib';
-	import { onMount } from 'svelte';
 
 	export let data;
 	console.log(data);
@@ -43,19 +41,19 @@
 					<input
 						name="username"
 						id="username"
-						class="block mb-2 input input-bordered w-full max-w-xs"
+						class="block input input-bordered w-full max-w-xs"
 					/><br />
 					<label for="password">Password</label>
 					<input
 						type="password"
 						name="password"
 						id="password"
-						class="block mb-2 input input-bordered w-full max-w-xs"
+						class="block input input-bordered w-full max-w-xs"
 					/><br />
 					<button class="py-2 px-4 btn btn-primary mr-2">Login</button>
 
 					<div class="flex justify-between mt-4">
-						<p><a href="/signup" class="underline">Sign Up</a></p>
+						<p><a href="/signup" class="underline">Signup</a></p>
 						<p><a href="/settings/forgot-password" class="underline">Forgot Password</a></p>
 					</div>
 				</form>
