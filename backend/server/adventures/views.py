@@ -40,7 +40,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         order_direction = self.request.query_params.get('order_direction', 'asc')
         include_collections = self.request.query_params.get('include_collections', 'true')
 
-        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
+        valid_order_by = ['name', 'type', 'start_date', 'rating', 'updated_at']
         if order_by not in valid_order_by:
             order_by = 'name'
 
