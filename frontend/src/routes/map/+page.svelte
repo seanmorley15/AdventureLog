@@ -162,6 +162,26 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Visited</p>
+					{#if marker.visits && marker.visits.length > 0}
+						<p class="text-black text-sm">
+							{#each marker.visits as visit}
+								{visit.start_date
+									? new Date(visit.start_date).toLocaleDateString(undefined, {
+											timeZone: 'UTC'
+										})
+									: ''}
+								{visit.end_date &&
+								visit.end_date !== '' &&
+								visit.end_date !== visit.start_date
+									? ' - ' +
+										new Date(visit.end_date).toLocaleDateString(undefined, {
+											timeZone: 'UTC'
+										})
+									: ''}
+								<br />
+							{/each}
+						</p>
+					{/if}
 				</Popup>
 			</Marker>
 		{:else}
@@ -182,6 +202,26 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Planned</p>
+					{#if marker.visits && marker.visits.length > 0}
+						<p class="text-black text-sm">
+							{#each marker.visits as visit}
+								{visit.start_date
+									? new Date(visit.start_date).toLocaleDateString(undefined, {
+											timeZone: 'UTC'
+										})
+									: ''}
+								{visit.end_date &&
+								visit.end_date !== '' &&
+								visit.end_date !== visit.start_date
+									? ' - ' +
+										new Date(visit.end_date).toLocaleDateString(undefined, {
+											timeZone: 'UTC'
+										})
+									: ''}
+								<br />
+							{/each}
+						</p>
+					{/if}
 				</Popup>
 			</Marker>
 		{/if}

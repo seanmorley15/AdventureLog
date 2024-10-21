@@ -1,18 +1,3 @@
-<!-- <script lang="ts">
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import type { Adventure } from '$lib/types';
-
-	export let data;
-	console.log(data);
-	let adventure: Adventure | null = data.props.adventure;
-</script>
-
-{#if !adventure}
-	<p>Adventure not found</p>
-{:else}
-	<AdventureCard {adventure} type={adventure.type} />
-{/if} -->
-
 <script lang="ts">
 	import type { Adventure } from '$lib/types';
 	import { onMount } from 'svelte';
@@ -186,38 +171,7 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
-							<!-- {#if adventure.date}
-								<div class="flex items-center gap-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										class="w-5 h-5 text-muted-foreground"
-									>
-										<path d="M8 2v4"></path>
-										<path d="M16 2v4"></path>
-										<rect width="18" height="18" x="3" y="4" rx="2"></rect>
-										<path d="M3 10h18"></path>
-									</svg>
-									<span class="text-sm text-muted-foreground"
-										>{new Date(adventure.date).toLocaleDateString(undefined, {
-											timeZone: 'UTC'
-										})}{adventure.end_date && adventure.end_date !== ''
-											? ' - ' +
-												new Date(adventure.end_date).toLocaleDateString(undefined, {
-													timeZone: 'UTC'
-												})
-											: ''}</span
-									>
-								</div>
-							{/if} -->
-							{#if adventure.location}
+								{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -390,6 +344,26 @@
 														})
 													: ''} -->
 											</p>
+											{#if adventure.visits.length > 0}
+												<p class="text-black text-sm">
+													{#each adventure.visits as visit}
+														{visit.start_date
+															? new Date(visit.start_date).toLocaleDateString(undefined, {
+																	timeZone: 'UTC'
+																})
+															: ''}
+														{visit.end_date &&
+														visit.end_date !== '' &&
+														visit.end_date !== visit.start_date
+															? ' - ' +
+																new Date(visit.end_date).toLocaleDateString(undefined, {
+																	timeZone: 'UTC'
+																})
+															: ''}
+														<br />
+													{/each}
+												</p>
+											{/if}
 										</Popup>
 									</DefaultMarker>
 								</MapLibre>
