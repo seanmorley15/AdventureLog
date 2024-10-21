@@ -1,7 +1,7 @@
 <script>
 	// @ts-nocheck
 
-	import { isAdventureVisited } from '$lib';
+	import { isAdventureVisited, typeToString } from '$lib';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import {
 		DefaultMarker,
@@ -162,6 +162,7 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Visited</p>
+					<p class="font-semibold text-black text-md">{typeToString(marker.type)}</p>
 					{#if marker.visits && marker.visits.length > 0}
 						<p class="text-black text-sm">
 							{#each marker.visits as visit}
@@ -170,9 +171,7 @@
 											timeZone: 'UTC'
 										})
 									: ''}
-								{visit.end_date &&
-								visit.end_date !== '' &&
-								visit.end_date !== visit.start_date
+								{visit.end_date && visit.end_date !== '' && visit.end_date !== visit.start_date
 									? ' - ' +
 										new Date(visit.end_date).toLocaleDateString(undefined, {
 											timeZone: 'UTC'
@@ -202,6 +201,7 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Planned</p>
+					<p class="font-semibold text-black text-md">{typeToString(marker.type)}</p>
 					{#if marker.visits && marker.visits.length > 0}
 						<p class="text-black text-sm">
 							{#each marker.visits as visit}
@@ -210,9 +210,7 @@
 											timeZone: 'UTC'
 										})
 									: ''}
-								{visit.end_date &&
-								visit.end_date !== '' &&
-								visit.end_date !== visit.start_date
+								{visit.end_date && visit.end_date !== '' && visit.end_date !== visit.start_date
 									? ' - ' +
 										new Date(visit.end_date).toLocaleDateString(undefined, {
 											timeZone: 'UTC'

@@ -44,7 +44,8 @@ export const load = (async (event) => {
 					return {
 						lngLat: [adventure.longitude, adventure.latitude],
 						name: adventure.name,
-						visits: adventure.visits
+						visits: adventure.visits,
+						type: adventure.type,
 					};
 				});
 
