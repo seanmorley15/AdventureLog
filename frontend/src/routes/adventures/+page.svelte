@@ -32,7 +32,7 @@
 	let typeString: string = '';
 
 	$: {
-		if (typeof window !== 'undefined') {
+		if (typeof window !== 'undefined' && typeString) {
 			let url = new URL(window.location.href);
 			url.searchParams.set('types', typeString);
 			goto(url.toString(), { invalidateAll: true, replaceState: true });

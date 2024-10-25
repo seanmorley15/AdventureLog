@@ -186,7 +186,7 @@
 	</form>
 </div>
 
-<div class="flex flex-col items-center mt-4">
+<!-- <div class="flex flex-col items-center mt-4">
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
 	<p>
 		By selecting this, the server will check all of your visited adventures and mark the regions
@@ -202,7 +202,7 @@
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
 	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
 	<p>This may take a few seconds...</p>
-</div>
+</div> -->
 
 <small class="text-center"
 	><b>For Debug Use:</b> Server PK={user.pk} | Date Joined: {user.date_joined

@@ -3,7 +3,7 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: "Adventure Log",
+  title: "AdventureLog",
   tagline: "Embark, Explore, Remember. 🗺️",
   favicon: "img/favicon.png",
 
@@ -65,9 +65,9 @@ const config: Config = {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "Adventure Log Docs",
+      title: "AdventureLog Docs",
       logo: {
-        alt: "My Site Logo",
+        alt: "AdventureLog Logo",
         src: "img/favicon.png",
       },
       items: [
@@ -79,8 +79,18 @@ const config: Config = {
         },
         // { to: "/blog", label: "Blog", position: "left" },
         {
-          href: "https://github.com/seanmorley15/adventurelog",
+          to: "https://github.com/seanmorley15/adventurelog",
           label: "GitHub",
+          position: "right",
+        },
+        {
+          to: "https://discord.gg/wRbQ9Egr8C",
+          label: "Discord",
+          position: "right",
+        },
+        {
+          to: "/support",
+          label: "Support 💖",
           position: "right",
         },
       ],
@@ -107,6 +117,14 @@ const config: Config = {
             {
               label: "GitHub",
               href: "https://github.com/seanmorley15/adventurelog",
+            },
+            {
+              label: "Discord",
+              href: "https://discord.gg/wRbQ9Egr8C",
+            },
+            {
+              label: "Support 💖",
+              to: "/support",
             },
           ],
         },
