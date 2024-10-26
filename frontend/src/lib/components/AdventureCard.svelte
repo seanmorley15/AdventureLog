@@ -29,7 +29,6 @@
 	let isWarningModalOpen: boolean = false;
 
 	export let adventure: Adventure;
-
 	let activityTypes: string[] = [];
 	// makes it reactivty to changes so it updates automatically
 	$: {

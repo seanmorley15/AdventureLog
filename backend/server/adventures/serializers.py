@@ -187,3 +187,4 @@ class CollectionSerializer(serializers.ModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
+    
