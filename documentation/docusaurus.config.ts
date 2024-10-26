@@ -88,11 +88,6 @@ const config: Config = {
           label: "Discord",
           position: "right",
         },
-        {
-          to: "/support",
-          label: "Support 💖",
-          position: "right",
-        },
       ],
     },
     footer: {
@@ -121,10 +116,6 @@ const config: Config = {
             {
               label: "Discord",
               href: "https://discord.gg/wRbQ9Egr8C",
-            },
-            {
-              label: "Support 💖",
-              to: "/support",
             },
           ],
         },
