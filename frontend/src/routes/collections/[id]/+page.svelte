@@ -517,9 +517,12 @@
 					dateString
 				] || []}
 
-			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
-				Day {i + 1} - {adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+			<h2 class="text-center font-bold text-3xl mt-4">
+				Day {i + 1}
 			</h2>
+			<h3 class="text-center text-xl mb-2">
+				{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+			</h3>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 				{#if dayAdventures.length > 0}
 					{#each dayAdventures as adventure}
