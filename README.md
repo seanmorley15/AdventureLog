@@ -53,42 +53,23 @@ Here is a summary of the configuration options available in the `docker-compose.
 | Name                | Required  | Description                                                                                                                                                   | Default Value         |
 | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend.                                                                                                  | http://server:8000    |
-| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will acess the app from.                                                                  | http://localhost:8080 |
+| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will acess the app from.                                                                  | http://localhost:8015 |
 | `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **kiliobytes**. | Infinity              |
 
 ### Backend Container (server)
 
-| Name                    | Required | Description                                                                                                                                   | Default Value         |
-| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `PGHOST`                | Yes      | Databse host.                                                                                                                                 | db                    |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                     | database              |
-| `PGUSER`                | Yes      | Database user.                                                                                                                                | adventure             |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | changeme123           |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | admin                 |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                  | admin                 |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | admin@example.com     |
-| `PUBLIC_URL`            | Yes      | This is the publically accessible url to the **nginx** container. You should be able to acess nginx from this url where you access your app.  | http://127.0.0.1:81   |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                            | Needs to be changed.  |
-| `FRONTEND_URL`          | Yes      | This is the publically accessible url to the **frontend** container. This link should be accessable for all users. Used for email generation. | http://localhost:3000 |
-
-### Proxy Container (nginx) Configuration
-
-In order to use media files in a production environment, you need to configure the `nginx` container to serve the media files. The container is already in the docker compose file but you need to do a few things to make it work.
-
-1. Create a directory called `proxy` in the same directory as the `docker-compose.yml` file.
-2. Create a file called `nginx.conf` in the `proxy` directory.
-3. Add the following configuration to the `nginx.conf` file:
-
-```nginx
-server {
-    listen 80;
-    server_name localhost;
-
-    location /media/ {
-        alias /app/media/;
-    }
-}
-```
+| Name                    | Required | Description                                                                                                                                   | Default Value           |
+| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `PGHOST`                | Yes      | Databse host.                                                                                                                                 | db                      |
+| `PGDATABASE`            | Yes      | Database.                                                                                                                                     | database                |
+| `PGUSER`                | Yes      | Database user.                                                                                                                                | adventure               |
+| `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | changeme123             |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | admin                   |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                  | admin                   |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | admin@example.com       |
+| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls.   | 'http://localhost:8016' |
+| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                            | http://localhost:8016   |
+| `FRONTEND_URL`          | Yes      | This is the publically accessible url to the **frontend** container. This link should be accessable for all users. Used for email generation. | 'http://localhost:8015' |
 
 ## Running the Containers
 
@@ -118,8 +99,6 @@ View all of your adventures on a map, with the ability to filter by visit status
 ![Country Page](screenshots/countries.png)
 
 ![Region Page](screenshots/regions.png)
-
-️
 
 # About AdventureLog
 
