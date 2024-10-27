@@ -3,6 +3,7 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
+	import { t } from 'svelte-i18n';
 	import { appVersion, copyrightYear, versionChangelog } from '$lib/config';
 
 	onMount(() => {
@@ -28,7 +29,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-lg">
-			About AdventureLog<span class=" inline-block"
+			{$t('about.about')} AdventureLog<span class=" inline-block"
 				><img src="/favicon.png" alt="Map Logo" class="w-10 -mb-3 ml-2" /></span
 			>
 		</h3>
@@ -49,28 +50,30 @@
 				class="text-primary-500 underline">Sean Morley</a
 			>
 		</p>
-		<p class="py-1">Licensed under the GPL-3.0 License.</p>
+		<p class="py-1">{$t('about.license')}</p>
 		<p class="py-1">
 			<a
 				href="https://github.com/seanmorley15/AdventureLog"
 				target="_blank"
 				rel="noopener noreferrer"
-				class="text-primary-500 underline">Source Code</a
+				class="text-primary-500 underline">{$t('about.source_code')}</a
 			>
 		</p>
-		<p class="py-1">Made with ❤️ in the United States.</p>
+		<p class="py-1">{$t('about.message')}</p>
 		<div class="divider"></div>
-		<h3 class="font-bold text-md">Open Source Attributions</h3>
+		<h3 class="font-bold text-md">{$t('about.oss_attributions')}</h3>
 		<p class="py-1 mb-4">
-			Location Search and Geocoding is provided by <a
+			{$t('about.nominatim_1')}
+			<a
 				target="_blank"
 				rel="noopener noreferrer"
 				class="text-primary-500 underline"
 				href="https://operations.osmfoundation.org/policies/nominatim/">OpenStreepMap</a
-			>. Their data is liscensed under the ODbL license.
-			<br /> Additional attributions can be found in the README file.
+			>. {$t('about.nominatim_2')}
+			<br />
+			{$t('about.other_attributions')}
 		</p>
 
-		<button class="btn btn-primary" on:click={close}>Close</button>
+		<button class="btn btn-primary" on:click={close}>{$t('about.close')}</button>
 	</div>
 </dialog>

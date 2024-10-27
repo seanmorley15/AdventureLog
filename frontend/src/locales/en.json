@@ -1,0 +1,44 @@
+{
+	"navbar": {
+		"adventures": "Adventures",
+		"collections": "Collections",
+		"worldtravel": "World Travel",
+		"map": "Map",
+		"users": "Users",
+		"login": "Login",
+		"signup": "Signup",
+		"search": "Search",
+		"profile": "Profile",
+		"greeting": "Hi",
+		"my_adventures": "My Adventures",
+		"my_activities": "My Activities",
+		"shared_with_me": "Shared With Me",
+		"settings": "Settings",
+		"logout": "Logout"
+	},
+	"about": {
+		"about": "About",
+		"license": "Licensed under the GPL-3.0 License.",
+		"source_code": "Source Code",
+		"message": "Made with ❤️ in the United States.",
+		"oss_attributions": "Open Source Attributions",
+		"nominatim_1": "Location Search and Geocoding is provided by",
+		"nominatim_2": "Their data is liscensed under the ODbL license.",
+		"other_attributions": "Additional attributions can be found in the README file.",
+		"close": "Close"
+	},
+	"home": {
+		"hero_1": "Discover the World's Most Thrilling Adventures",
+		"hero_2": "Discover and plan your next adventure with AdventureLog. Explore breathtaking destinations, create custom itineraries, and stay connected on the go.",
+		"go_to": "Go To AdventureLog",
+		"key_features": "Key Features",
+		"desc_1": "Discover, Plan, and Explore with Ease",
+		"desc_2": "AdventureLog is designed to simplify your journey, providing you with the tools and resources to plan, pack, and navigate your next unforgettable adventure.",
+		"feature_1": "Travel Log",
+		"feature_1_desc": "Keep track of your adventures with a personalized travel log and share your experiences with friends and family.",
+		"feature_2": "Trip Planning",
+		"feature_2_desc": "Easily create custom itineraries and get a day-by-day breakdown of your trip.",
+		"feature_3": "Travel Map",
+		"feature_3_desc": "View your travels throughout the world with an interactive map and explore new destinations."
+	}
+}

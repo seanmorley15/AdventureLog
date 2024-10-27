@@ -35,6 +35,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
 	}
 }

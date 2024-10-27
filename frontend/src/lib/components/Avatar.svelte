@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { t } from 'svelte-i18n';
 
 	export let user: any;
 
@@ -28,14 +29,17 @@
 	>
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<!-- svelte-ignore a11y-missing-attribute -->
-		<p class="text-lg ml-4 font-bold">Hi, {user.first_name} {user.last_name}</p>
-		<li><button on:click={() => goto('/profile')}>Profile</button></li>
-		<li><button on:click={() => goto('/adventures')}>My Adventures</button></li>
-		<li><button on:click={() => goto('/activities')}>My Activities</button></li>
-		<li><button on:click={() => goto('/shared')}>Shared With Me</button></li>
-		<li><button on:click={() => goto('/settings')}>User Settings</button></li>
+		<p class="text-lg ml-4 font-bold">
+			{$t('navbar.greeting')}, {user.first_name}
+			{user.last_name}
+		</p>
+		<li><button on:click={() => goto('/profile')}>{$t('navbar.profile')}</button></li>
+		<li><button on:click={() => goto('/adventures')}>{$t('navbar.my_adventures')}</button></li>
+		<li><button on:click={() => goto('/activities')}>{$t('navbar.my_activities')}</button></li>
+		<li><button on:click={() => goto('/shared')}>{$t('navbar.shared_with_me')}</button></li>
+		<li><button on:click={() => goto('/settings')}>{$t('navbar.settings')}</button></li>
 		<form method="post">
-			<li><button formaction="/?/logout">Logout</button></li>
+			<li><button formaction="/?/logout">{$t('navbar.logout')}</button></li>
 		</form>
 	</ul>
 </div>

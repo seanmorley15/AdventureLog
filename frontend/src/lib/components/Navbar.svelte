@@ -15,6 +15,7 @@
 	import Avatar from './Avatar.svelte';
 	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
+	import { t } from 'svelte-i18n';
 
 	let query: string = '';
 
@@ -72,28 +73,32 @@
 			>
 				{#if data.user}
 					<li>
-						<button on:click={() => goto('/adventures')}>Adventures</button>
+						<button on:click={() => goto('/adventures')}>{$t('navbar.adventures')}</button>
 					</li>
 					<li>
-						<button on:click={() => goto('/collections')}>Collections</button>
+						<button on:click={() => goto('/collections')}>{$t('navbar.collections')}</button>
 					</li>
 					<li>
-						<button on:click={() => goto('/worldtravel')}>World Travel</button>
+						<button on:click={() => goto('/worldtravel')}>{$t('navbar.worldtravel')}</button>
 					</li>
 					<li>
-						<button on:click={() => goto('/map')}>Map</button>
+						<button on:click={() => goto('/map')}>{$t('navbar.map')}</button>
 					</li>
 					<li>
-						<button on:click={() => goto('/users')}>Users</button>
+						<button on:click={() => goto('/users')}>{$t('navbar.users')}</button>
 					</li>
 				{/if}
 
 				{#if !data.user}
 					<li>
-						<button class="btn btn-primary" on:click={() => goto('/login')}>Login</button>
+						<button class="btn btn-primary" on:click={() => goto('/login')}
+							>{$t('navbar.login')}</button
+						>
 					</li>
 					<li>
-						<button class="btn btn-primary" on:click={() => goto('/signup')}>Signup</button>
+						<button class="btn btn-primary" on:click={() => goto('/signup')}
+							>{$t('navbar.signup')}</button
+						>
 					</li>
 				{/if}
 
@@ -114,7 +119,9 @@
 							/>
 						</svg>
 					</label>
-					<button on:click={searchGo} type="submit" class="btn btn-primary">Search</button>
+					<button on:click={searchGo} type="submit" class="btn btn-primary"
+						>{$t('navbar.search')}</button
+					>
 				</form>
 			</ul>
 		</div>
@@ -126,17 +133,22 @@
 		<ul class="menu menu-horizontal px-1 gap-2">
 			{#if data.user}
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/adventures')}>Adventures</button>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/collections')}>Collections</button>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/worldtravel')}>World Travel</button
+					<button class="btn btn-neutral" on:click={() => goto('/adventures')}
+						>{$t('navbar.adventures')}</button
 					>
 				</li>
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/map')}>Map</button>
+					<button class="btn btn-neutral" on:click={() => goto('/collections')}
+						>{$t('navbar.collections')}</button
+					>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/worldtravel')}
+						>{$t('navbar.worldtravel')}</button
+					>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/map')}>{$t('navbar.map')}</button>
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/users')}
@@ -147,10 +159,14 @@
 
 			{#if !data.user}
 				<li>
-					<button class="btn btn-primary" on:click={() => goto('/login')}>Login</button>
+					<button class="btn btn-primary" on:click={() => goto('/login')}
+						>{$t('navbar.login')}</button
+					>
 				</li>
 				<li>
-					<button class="btn btn-primary" on:click={() => goto('/signup')}>Signup</button>
+					<button class="btn btn-primary" on:click={() => goto('/signup')}
+						>{$t('navbar.signup')}</button
+					>
 				</li>
 			{/if}
 
@@ -171,7 +187,9 @@
 						/>
 					</svg>
 				</label>
-				<button on:click={searchGo} type="submit" class="btn btn-neutral">Search</button>
+				<button on:click={searchGo} type="submit" class="btn btn-neutral"
+					>{$t('navbar.search')}</button
+				>
 			</form>
 		</ul>
 	</div>
