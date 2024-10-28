@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import { register, init, locale, waitLocale } from 'svelte-i18n';
+	import { UmamiAnalyticsEnv } from '@lukulent/svelte-umami';
 	export let data;
 
 	// Register your translations for each locale
@@ -42,6 +43,8 @@
 	<Toast />
 	<slot />
 {/await}
+
+<UmamiAnalyticsEnv />
 
 <svelte:head>
 	<title>AdventureLog</title>

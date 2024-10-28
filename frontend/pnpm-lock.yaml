@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@lukulent/svelte-umami':
+        specifier: ^0.0.3
+        version: 0.0.3(svelte@4.2.19)
       svelte-i18n:
         specifier: ^4.0.1
         version: 4.0.1(svelte@4.2.19)
@@ -420,6 +423,11 @@ packages:
   '@jsdevtools/ez-spawn@3.0.4':
     resolution: {integrity: sha512-f5DRIOZf7wxogefH03RjMPMdBF7ADTWUMoOs9kaJo06EfwF+aFhMZMDZxHg/Xe12hptN9xoZjGso2fdjapBRIA==}
     engines: {node: '>=10'}
+
+  '@lukulent/svelte-umami@0.0.3':
+    resolution: {integrity: sha512-4pL0sJapfy14yDj6CyZgewbRDadRoBJtk/dLqCJh7/tQuX7HO4hviBzhrVa4Osxaq2kcGEKdpkhAKAoaNdlNSA==}
+    peerDependencies:
+      svelte: ^4.0.0
 
   '@mapbox/geojson-rewind@0.5.2':
     resolution: {integrity: sha512-tJaT+RbYGJYStt7wI3cq4Nl4SXxG8W7JDG5DMJu97V25RnbNg3QtQtf+KD+VLjNpWKYsRvXDNmNrBgEETr1ifA==}
@@ -2234,6 +2242,10 @@ snapshots:
       cross-spawn: 7.0.3
       string-argv: 0.3.2
       type-detect: 4.0.8
+
+  '@lukulent/svelte-umami@0.0.3(svelte@4.2.19)':
+    dependencies:
+      svelte: 4.2.19
 
   '@mapbox/geojson-rewind@0.5.2':
     dependencies:
