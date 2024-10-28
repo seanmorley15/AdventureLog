@@ -109,12 +109,14 @@
 		<p>{collection.adventures.length} {$t('navbar.adventures')}</p>
 		{#if collection.start_date && collection.end_date}
 			<p>
-				Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} -
+				{$t('adventures.dates')}: {new Date(collection.start_date).toLocaleDateString(undefined, {
+					timeZone: 'UTC'
+				})} -
 				{new Date(collection.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 			</p>
 			<!-- display the duration in days -->
 			<p>
-				Duration: {Math.floor(
+				{$t('adventures.duration')}: {Math.floor(
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1}{' '}

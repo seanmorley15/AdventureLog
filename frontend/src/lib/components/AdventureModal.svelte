@@ -5,6 +5,7 @@
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
+	import { t } from 'svelte-i18n';
 
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
@@ -111,9 +112,9 @@
 			images = images.filter((image) => image.id !== id);
 			adventure.images = images;
 			console.log(images);
-			addToast('success', 'Image removed');
+			addToast('success', $t('adventures.image_removed_success'));
 		} else {
-			addToast('error', 'Failed to remove image');
+			addToast('error', $t('adventures.image_removed_error'));
 		}
 	}
 
@@ -139,7 +140,7 @@
 		let res = await fetch(url);
 		let data = await res.blob();
 		if (!data) {
-			imageError = 'No image found at that URL.';
+			imageError = $t('adventures.no_image_url');
 			return;
 		}
 		let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
@@ -155,9 +156,9 @@
 		if (data2.type === 'success') {
 			images = [...images, data2];
 			adventure.images = images;
-			addToast('success', 'Image uploaded');
+			addToast('success', $t('adventures.image_upload_success'));
 		} else {
-			addToast('error', 'Failed to upload image');
+			addToast('error', $t('adventures.image_upload_error'));
 		}
 	}
 
@@ -187,10 +188,10 @@
 				console.log(newImage);
 				images = [...images, newImage];
 				adventure.images = images;
-				addToast('success', 'Image uploaded');
+				addToast('success', $t('adventures.image_upload_success'));
 			} else {
-				addToast('error', 'Failed to upload image');
-				wikiImageError = 'Failed to upload image';
+				addToast('error', $t('adventures.image_upload_error'));
+				wikiImageError = $t('adventures.wiki_image_error');
 			}
 		}
 	}
@@ -225,7 +226,7 @@
 			new_end_date = new_start_date;
 		}
 		if (new_start_date > new_end_date) {
-			addToast('error', 'Start date must be before end date');
+			addToast('error', $t('adventures.start_before_end_error'));
 			return;
 		}
 		if (new_start_date === '' || new_end_date === '') {

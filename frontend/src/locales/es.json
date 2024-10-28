@@ -133,6 +133,38 @@
     "edit_collection": "Editar colección",
     "share": "Compartir",
     "unarchive": "Desarchivar",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "adventure_delete_success": "¡Aventura eliminada con éxito!",
+    "delete_adventure": "Eliminar aventura",
+    "planned": "Planificado",
+    "visited": "Visitado",
+    "dates": "Fechas",
+    "duration": "Duración",
+    "image_removed_error": "Error al eliminar la imagen",
+    "image_removed_success": "¡Imagen eliminada exitosamente!",
+    "image_upload_error": "Error al subir la imagen",
+    "image_upload_success": "¡Imagen cargada exitosamente!",
+    "no_image_url": "No se encontró ninguna imagen en esa URL.",
+    "start_before_end_error": "La fecha de inicio debe ser anterior a la fecha de finalización.",
+    "wiki_image_error": "Error al obtener la imagen de Wikipedia"
+  },
+  "worldtravel": {
+    "all": "Todo",
+    "all_subregions": "Todas las subregiones",
+    "clear_search": "Borrar búsqueda",
+    "completely_visited": "Completamente visitado",
+    "no_countries_found": "No se encontraron países",
+    "not_visited": "No visitado",
+    "num_countries": "países encontrados",
+    "partially_visited": "Parcialmente visitado",
+    "country_list": "Lista de países"
+  },
+  "auth": {
+    "forgot_password": "¿Has olvidado tu contraseña?",
+    "login": "Acceso",
+    "login_error": "No se puede iniciar sesión con las credenciales proporcionadas.",
+    "password": "Contraseña",
+    "signup": "Inscribirse",
+    "username": "Nombre de usuario"
   }
 }

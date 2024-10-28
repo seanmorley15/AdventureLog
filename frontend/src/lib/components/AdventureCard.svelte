@@ -49,8 +49,7 @@
 			}
 		});
 		if (res.ok) {
-			console.log('Adventure deleted');
-			addToast('info', 'Adventure deleted successfully!');
+			addToast('info', $t('adventures.adventure_delete_success'));
 			dispatch('delete', adventure.id);
 		} else {
 			console.log('Error deleting adventure');
@@ -107,7 +106,7 @@
 
 {#if isWarningModalOpen}
 	<DeleteWarning
-		title="Delete Adventure"
+		title={$t('adventures.delete_adventure')}
 		button_text="Delete"
 		description={$t('adventures.adventure_delete_confirm')}
 		is_warning={false}
@@ -132,8 +131,12 @@
 		</div>
 		<div>
 			<div class="badge badge-primary">{$t(`adventures.activities.${adventure.type}`)}</div>
-			<div class="badge badge-success">{isAdventureVisited(adventure) ? 'Visited' : 'Planned'}</div>
-			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
+			<div class="badge badge-success">
+				{isAdventureVisited(adventure) ? $t('adventures.visited') : $t('adventures.planned')}
+			</div>
+			<div class="badge badge-secondary">
+				{adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
+			</div>
 		</div>
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">
@@ -147,7 +150,7 @@
 				<Calendar class="w-5 h-5 mr-1" />
 				<p class="ml-.5">
 					{adventure.visits.length}
-					{adventure.visits.length > 1 ? 'visits' : 'visit'}
+					{adventure.visits.length > 1 ? $t('adventures.visits') : $t('adventures.visit')}
 				</p>
 			</div>
 		{/if}

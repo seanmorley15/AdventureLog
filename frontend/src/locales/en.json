@@ -110,6 +110,19 @@
 		"delete_collection_warning": "Are you sure you want to delete this collection? This will also delete all of the linked adventures. This action cannot be undone.",
 		"cancel": "Cancel",
 		"delete_collection": "Delete Collection",
+		"delete_adventure": "Delete Adventure",
+		"adventure_delete_success": "Adventure deleted successfully!",
+		"visited": "Visited",
+		"planned": "Planned",
+		"duration": "Duration",
+		"image_removed_success": "Image removed successfully!",
+		"image_removed_error": "Error removing image",
+		"no_image_url": "No image found at that URL.",
+		"image_upload_success": "Image uploaded successfully!",
+		"image_upload_error": "Error uploading image",
+		"dates": "Dates",
+		"wiki_image_error": "Error fetching image from Wikipedia",
+		"start_before_end_error": "Start date must be before end date",
 		"activities": {
 			"general": "General 🌍",
 			"outdoor": "Outdoor 🏞️",
@@ -134,5 +147,24 @@
 			"volunteer_work": "Volunteer Work 🤝",
 			"other": "Other"
 		}
+	},
+	"worldtravel": {
+		"country_list": "Country List",
+		"num_countries": "countries found",
+		"all": "All",
+		"partially_visited": "Partially Visited",
+		"not_visited": "Not Visited",
+		"completely_visited": "Completely Visited",
+		"all_subregions": "All Subregions",
+		"clear_search": "Clear Search",
+		"no_countries_found": "No countries found"
+	},
+	"auth": {
+		"username": "Username",
+		"password": "Password",
+		"forgot_password": "Forgot Password?",
+		"signup": "Signup",
+		"login_error": "Unable to login with the provided credentials.",
+		"login": "Login"
 	}
 }

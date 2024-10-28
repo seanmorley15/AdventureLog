@@ -89,7 +89,20 @@
     "unarchived_collection_message": "收藏解压成功！",
     "updated": "已更新",
     "visit": "访问",
-    "visits": "访问量"
+    "visits": "访问量",
+    "adventure_delete_success": "冒险删除成功！",
+    "dates": "枣子",
+    "delete_adventure": "删除冒险",
+    "duration": "期间",
+    "image_removed_error": "删除图像时出错",
+    "image_removed_success": "图片删除成功！",
+    "image_upload_error": "上传图片时出错",
+    "image_upload_success": "图片上传成功！",
+    "no_image_url": "在该 URL 中找不到图像。",
+    "planned": "计划",
+    "start_before_end_error": "开始日期必须早于结束日期",
+    "visited": "访问过",
+    "wiki_image_error": "从维基百科获取图像时出错"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -134,5 +147,24 @@
     },
     "users": "用户",
     "worldtravel": "环球旅行"
+  },
+  "auth": {
+    "forgot_password": "忘记密码？",
+    "login": "登录",
+    "login_error": "无法使用提供的凭据登录。",
+    "password": "密码",
+    "signup": "报名",
+    "username": "用户名"
+  },
+  "worldtravel": {
+    "all": "全部",
+    "all_subregions": "所有次区域",
+    "clear_search": "清除搜索",
+    "completely_visited": "已完全访问",
+    "country_list": "国家列表",
+    "no_countries_found": "没有找到国家",
+    "not_visited": "未访问过",
+    "num_countries": "找到的国家",
+    "partially_visited": "部分访问"
   }
 }

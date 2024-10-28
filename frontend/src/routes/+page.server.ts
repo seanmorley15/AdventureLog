@@ -1,5 +1,7 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
+import { getRandomBackground } from '$lib';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 

@@ -2,6 +2,7 @@
 	import CountryCard from '$lib/components/CountryCard.svelte';
 	import type { Country } from '$lib/types';
 	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 	console.log(data);
@@ -51,10 +52,11 @@
 	}
 </script>
 
-<h1 class="text-center font-bold text-4xl">Country List</h1>
+<h1 class="text-center font-bold text-4xl">{$t('worldtravel.country_list')}</h1>
 <!-- result count -->
 <p class="text-center mb-4">
-	{filteredCountries.length} countries found
+	{filteredCountries.length}
+	{$t('worldtravel.num_countries')}
 </p>
 <div class="flex items-center justify-center mb-4">
 	<div class="join">
@@ -62,7 +64,7 @@
 			class="join-item btn"
 			type="radio"
 			name="filter"
-			aria-label="All"
+			aria-label={$t('worldtravel.all')}
 			checked
 			on:click={() => (filterOption = 'all')}
 		/>
@@ -70,26 +72,26 @@
 			class="join-item btn"
 			type="radio"
 			name="filter"
-			aria-label="Partially Visited"
+			aria-label={$t('worldtravel.partially_visited')}
 			on:click={() => (filterOption = 'partial')}
 		/>
 		<input
 			class="join-item btn"
 			type="radio"
 			name="filter"
-			aria-label="Completely Visited"
+			aria-label={$t('worldtravel.completely_visited')}
 			on:click={() => (filterOption = 'complete')}
 		/>
 		<input
 			class="join-item btn"
 			type="radio"
 			name="filter"
-			aria-label="Not Visited"
+			aria-label={$t('worldtravel.not_visited')}
 			on:click={() => (filterOption = 'not')}
 		/>
 	</div>
 	<select class="select select-bordered w-full max-w-xs ml-4" bind:value={subRegionOption}>
-		<option value="">All Subregions</option>
+		<option value="">{$t('worldtravel.all_subregions')}</option>
 		{#each worldSubregions as subregion}
 			<option value={subregion}>{subregion}</option>
 		{/each}
@@ -99,14 +101,16 @@
 <div class="flex items-center justify-center mb-4">
 	<input
 		type="text"
-		placeholder="Search"
+		placeholder={$t('navbar.search')}
 		class="input input-bordered w-full max-w-xs"
 		bind:value={searchQuery}
 	/>
 	{#if searchQuery.length > 0}
 		<!-- clear button -->
 		<div class="flex items-center justify-center ml-4">
-			<button class="btn btn-neutral" on:click={() => (searchQuery = '')}> Clear Search </button>
+			<button class="btn btn-neutral" on:click={() => (searchQuery = '')}>
+				{$t('worldtravel.clear_search')}
+			</button>
 		</div>
 	{/if}
 </div>
@@ -119,7 +123,7 @@
 </div>
 
 {#if filteredCountries.length === 0}
-	<p class="text-center font-bold text-2xl mt-12">No countries found</p>
+	<p class="text-center font-bold text-2xl mt-12">{$t('worldtravel.no_countries_found')}</p>
 {/if}
 
 <svelte:head>

@@ -12,6 +12,7 @@
 	register('it', () => import('../locales/it.json'));
 	register('zh', () => import('../locales/zh.json'));
 	register('nl', () => import('../locales/nl.json'));
+	register('sv', () => import('../locales/sv.json'));
 
 	if (browser) {
 		init({
