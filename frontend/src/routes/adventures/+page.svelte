@@ -7,6 +7,7 @@
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Adventure } from '$lib/types';
+	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
 
@@ -174,7 +175,7 @@
 				tabindex="0"
 				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 			>
-				<p class="text-center font-bold text-lg">Create new...</p>
+				<p class="text-center font-bold text-lg">{$t('adventures.create_new')}</p>
 				<button
 					class="btn btn-primary"
 					on:click={() => {
@@ -182,7 +183,7 @@
 						adventureToEdit = null;
 					}}
 				>
-					Adventure</button
+					{$t('adventures.adventure')}</button
 				>
 
 				<!-- <button
@@ -198,8 +199,8 @@
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 	<div class="drawer-content">
 		<!-- Page content -->
-		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
-		<p class="text-center">This search returned {count} results.</p>
+		<h1 class="text-center font-bold text-4xl mb-6">{$t('navbar.my_adventures')}</h1>
+		<p class="text-center">{count} {$t('adventures.count_txt')}</p>
 		{#if adventures.length === 0}
 			<NotFound error={undefined} />
 		{/if}
@@ -208,7 +209,7 @@
 				class="btn btn-primary drawer-button lg:hidden mb-4 fixed bottom-0 left-0 ml-2 z-[999]"
 				on:click={toggleSidebar}
 			>
-				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
+				{sidebarOpen ? $t(`adventures.close_filters`) : $t(`adventures.open_filters`)}
 			</button>
 
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -250,8 +251,8 @@
 				<form method="get">
 					<CategoryFilterDropdown bind:types={typeString} />
 					<div class="divider"></div>
-					<h3 class="text-center font-bold text-lg mb-4">Sort</h3>
-					<p class="text-lg font-semibold mb-2">Order Direction</p>
+					<h3 class="text-center font-bold text-lg mb-4">{$t('adventures.sort')}</h3>
+					<p class="text-lg font-semibold mb-2">{$t('adventures.order_direction')}</p>
 					<div class="join">
 						<input
 							class="join-item btn btn-neutral"
@@ -259,7 +260,7 @@
 							name="order_direction"
 							id="asc"
 							value="asc"
-							aria-label="Ascending"
+							aria-label={$t('adventures.ascending')}
 							checked={currentSort.order === 'asc'}
 						/>
 						<input
@@ -268,55 +269,55 @@
 							name="order_direction"
 							id="desc"
 							value="desc"
-							aria-label="Descending"
+							aria-label={$t('adventures.descending')}
 							checked={currentSort.order === 'desc'}
 						/>
 					</div>
 					<br />
-					<p class="text-lg font-semibold mt-2 mb-2">Order By</p>
-					<div class="flex join overflow-auto">
+					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.order_by')}</p>
+					<div class="flex flex-wrap gap-2">
 						<input
-							class="join-item btn btn-neutral"
+							class="btn btn-neutral text-wrap"
 							type="radio"
 							name="order_by"
 							id="updated_at"
 							value="updated_at"
-							aria-label="Updated"
+							aria-label={$t('adventures.updated')}
 							checked={currentSort.order_by === 'updated_at'}
 						/>
 						<input
-							class="join-item btn btn-neutral"
+							class="btn btn-neutral text-wrap"
 							type="radio"
 							name="order_by"
 							id="name"
-							aria-label="Name"
+							aria-label={$t('adventures.name')}
 							value="name"
 							checked={currentSort.order_by === 'name'}
 						/>
 						<input
-							class="join-item btn btn-neutral"
+							class="btn btn-neutral text-wrap"
 							type="radio"
 							value="date"
 							name="order_by"
 							id="date"
-							aria-label="Date"
+							aria-label={$t('adventures.date')}
 							checked={currentSort.order_by === 'date'}
 						/>
 						<input
-							class="join-item btn btn-neutral"
+							class="btn btn-neutral text-wrap"
 							type="radio"
 							name="order_by"
 							id="rating"
-							aria-label="Rating"
+							aria-label={$t('adventures.rating')}
 							value="rating"
 							checked={currentSort.order_by === 'rating'}
 						/>
 					</div>
 
 					<br />
-					<p class="text-lg font-semibold mt-2 mb-2">Sources</p>
+					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.sources')}</p>
 					<label class="label cursor-pointer">
-						<span class="label-text">Include Collection Adventures</span>
+						<span class="label-text">{$t('adventures.collection_adventures')}</span>
 						<input
 							type="checkbox"
 							name="include_collections"
@@ -325,7 +326,7 @@
 							checked={currentSort.includeCollections}
 						/>
 					</label>
-					<button type="submit" class="btn btn-success mt-4">Filter</button>
+					<button type="submit" class="btn btn-success mt-4">{$t('adventures.filter')}</button>
 				</form>
 			</div>
 		</ul>
@@ -333,6 +334,6 @@
 </div>
 
 <svelte:head>
-	<title>Adventures</title>
+	<title>{$t('navbar.adventures')}</title>
 	<meta name="description" content="View your completed and planned adventures." />
 </svelte:head>
