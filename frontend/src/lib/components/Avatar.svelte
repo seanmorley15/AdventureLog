@@ -15,7 +15,7 @@
 	<div class="avatar placeholder">
 		<div class="bg-neutral rounded-full text-neutral-200 w-10 ml-4">
 			{#if user.profile_pic}
-				<img src={user.profile_pic} alt="User Profile" />
+				<img src={user.profile_pic} alt={$t('navbar.profile')} />
 			{:else}
 				<span class="text-2xl -mt-1">{letter}</span>
 			{/if}

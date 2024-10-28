@@ -14,7 +14,20 @@
 		"my_activities": "My Activities",
 		"shared_with_me": "Shared With Me",
 		"settings": "Settings",
-		"logout": "Logout"
+		"logout": "Logout",
+		"about": "About AdventureLog",
+		"documentation": "Documentation",
+		"discord": "Discord",
+		"theme_selection": "Theme Selection",
+		"themes": {
+			"light": "Light",
+			"dark": "Dark",
+			"night": "Night",
+			"forest": "Forest",
+			"aestetic-dark": "Aestetic Dark",
+			"aestetic-light": "Aestetic Light",
+			"aqua": "Aqua"
+		}
 	},
 	"about": {
 		"about": "About",
@@ -40,5 +53,42 @@
 		"feature_2_desc": "Easily create custom itineraries and get a day-by-day breakdown of your trip.",
 		"feature_3": "Travel Map",
 		"feature_3_desc": "View your travels throughout the world with an interactive map and explore new destinations."
+	},
+	"adventures": {
+		"collection_remove_success": "Adventure removed from collection successfully!",
+		"collection_remove_error": "Error removing adventure from collection",
+		"collection_link_success": "Adventure linked to collection successfully!",
+		"no_image_found": "No image found",
+		"collection_link_error": "Error linking adventure to collection",
+		"adventure_delete_confirm": "Are you sure you want to delete this adventure? This action cannot be undone.",
+		"open_details": "Open Details",
+		"edit_adventure": "Edit Adventure",
+		"remove_from_collection": "Remove from Collection",
+		"add_to_collection": "Add to Collection",
+		"delete": "Delete",
+		"activities": {
+			"general": "General 🌍",
+			"outdoor": "Outdoor 🏞️",
+			"lodging": "Lodging 🛌",
+			"dining": "Dining 🍽️",
+			"activity": "Activity 🏄",
+			"attraction": "Attraction 🎢",
+			"shopping": "Shopping 🛍️",
+			"nightlife": "Nightlife 🌃",
+			"event": "Event 🎉",
+			"transportation": "Transportation 🚗",
+			"culture": "Culture 🎭",
+			"water_sports": "Water Sports 🚤",
+			"hiking": "Hiking 🥾",
+			"wildlife": "Wildlife 🦒",
+			"historical_sites": "Historical Sites 🏛️",
+			"music_concerts": "Music & Concerts 🎶",
+			"fitness": "Fitness 🏋️",
+			"art_museums": "Art & Museums 🎨",
+			"festivals": "Festivals 🎪",
+			"spiritual_journeys": "Spiritual Journeys 🧘‍♀️",
+			"volunteer_work": "Volunteer Work 🤝",
+			"other": "Other"
+		}
 	}
 }

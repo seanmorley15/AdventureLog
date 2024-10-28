@@ -8,19 +8,25 @@
 	import WeatherSunny from '~icons/mdi/weather-sunny';
 	import WeatherNight from '~icons/mdi/weather-night';
 	import Forest from '~icons/mdi/forest';
-	import Flower from '~icons/mdi/flower';
 	import Water from '~icons/mdi/water';
 	import AboutModal from './AboutModal.svelte';
 	import AccountMultiple from '~icons/mdi/account-multiple';
 	import Avatar from './Avatar.svelte';
 	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
-	import { t } from 'svelte-i18n';
+	import { t, locale, locales } from 'svelte-i18n';
 
 	let query: string = '';
 
 	let isAboutModalOpen: boolean = false;
 
+	const submitLocaleChange = (event: Event) => {
+		const select = event.target as HTMLSelectElement;
+		const newLocale = select.value;
+		document.cookie = `locale=${newLocale}; path=/`;
+		locale.set(newLocale);
+		window.location.reload();
+	};
 	const submitUpdateTheme: SubmitFunction = ({ action }) => {
 		const theme = action.searchParams.get('theme');
 		console.log('theme', theme);
@@ -104,7 +110,7 @@
 
 				<form class="flex gap-2">
 					<label class="input input-bordered flex items-center gap-2">
-						<input type="text" bind:value={query} class="grow" placeholder="Search" />
+						<input type="text" bind:value={query} class="grow" placeholder={$t('navbar.search')} />
 
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -172,7 +178,7 @@
 
 			<form class="flex gap-2">
 				<label class="input input-bordered flex items-center gap-2">
-					<input type="text" bind:value={query} class="grow" placeholder="Search" />
+					<input type="text" bind:value={query} class="grow" placeholder={$t('navbar.search')} />
 
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
@@ -206,41 +212,55 @@
 				tabindex="0"
 				class="dropdown-content bg-neutral text-neutral-content z-[1] menu p-2 shadow rounded-box w-52"
 			>
-				<button class="btn" on:click={() => (isAboutModalOpen = true)}>About AdventureLog</button>
+				<button class="btn" on:click={() => (isAboutModalOpen = true)}>{$t('navbar.about')}</button>
 				<button
 					class="btn btn-sm mt-2"
 					on:click={() => (window.location.href = 'https://docs.adventurelog.app/')}
-					>Documentation</button
+					>{$t('navbar.documentation')}</button
 				>
 				<button
 					class="btn btn-sm mt-2"
-					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}>Discord</button
+					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
+					>{$t('navbar.discord')}</button
 				>
-				<p class="font-bold m-4 text-lg">Theme Selection</p>
+				<p class="font-bold m-4 text-lg">{$t('navbar.theme_selection')}</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
 					<li>
 						<button formaction="/?/setTheme&theme=light"
-							>Light<WeatherSunny class="w-6 h-6" />
+							>{$t('navbar.themes.light')}<WeatherSunny class="w-6 h-6" />
 						</button>
 					</li>
 					<li>
-						<button formaction="/?/setTheme&theme=dark">Dark<WeatherNight class="w-6 h-6" /></button
+						<button formaction="/?/setTheme&theme=dark"
+							>{$t('navbar.themes.dark')}<WeatherNight class="w-6 h-6" /></button
 						>
 					</li>
 					<li>
 						<button formaction="/?/setTheme&theme=night"
-							>Night<WeatherNight class="w-6 h-6" /></button
+							>{$t('navbar.themes.night')}<WeatherNight class="w-6 h-6" /></button
 						>
 					</li>
 					<li>
-						<button formaction="/?/setTheme&theme=forest">Forest<Forest class="w-6 h-6" /></button>
+						<button formaction="/?/setTheme&theme=forest"
+							>{$t('navbar.themes.forest')}<Forest class="w-6 h-6" /></button
+						>
 						<button formaction="/?/setTheme&theme=aestheticLight"
-							>Aesthetic Light<PaletteOutline class="w-6 h-6" /></button
+							>{$t('navbar.themes.aestetic-light')}<PaletteOutline class="w-6 h-6" /></button
 						>
 						<button formaction="/?/setTheme&theme=aestheticDark"
-							>Aesthetic Dark<PaletteOutline class="w-6 h-6" /></button
+							>{$t('navbar.themes.aestetic-dark')}<PaletteOutline class="w-6 h-6" /></button
 						>
-						<button formaction="/?/setTheme&theme=aqua">Aqua<Water class="w-6 h-6" /></button>
+						<button formaction="/?/setTheme&theme=aqua"
+							>{$t('navbar.themes.aqua')}<Water class="w-6 h-6" /></button
+						>
+						<form method="POST" use:enhance>
+							<select class="select" on:change={submitLocaleChange} bind:value={$locale}>
+								{#each $locales as loc}
+									<option value={loc}>{loc}</option>
+								{/each}
+							</select>
+							<input type="hidden" name="locale" value={$locale} />
+						</form>
 					</li>
 				</form>
 			</ul>

@@ -26,6 +26,13 @@
 	let resultsPerPage: number = 25;
 
 	let count = data.props.count || 0;
+
+	$: {
+		if (count != adventures.length) {
+			count = adventures.length;
+		}
+	}
+
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
 

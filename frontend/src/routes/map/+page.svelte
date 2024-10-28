@@ -1,7 +1,7 @@
 <script>
 	// @ts-nocheck
 
-	import { isAdventureVisited, typeToString } from '$lib';
+	import { isAdventureVisited } from '$lib';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import {
 		DefaultMarker,
@@ -14,6 +14,7 @@
 		FillLayer,
 		SymbolLayer
 	} from 'svelte-maplibre';
+	import { t } from 'svelte-i18n';
 	export let data;
 
 	let clickedName = '';
@@ -162,7 +163,9 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Visited</p>
-					<p class="font-semibold text-black text-md">{typeToString(marker.type)}</p>
+					<p class="font-semibold text-black text-md">
+						{$t(`adventures.activities.${marker.type}`)}
+					</p>
 					{#if marker.visits && marker.visits.length > 0}
 						<p class="text-black text-sm">
 							{#each marker.visits as visit}
@@ -201,7 +204,9 @@
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Planned</p>
-					<p class="font-semibold text-black text-md">{typeToString(marker.type)}</p>
+					<p class="font-semibold text-black text-md">
+						{$t(`adventures.activities.${marker.type}`)}}
+					</p>
 					{#if marker.visits && marker.visits.length > 0}
 						<p class="text-black text-sm">
 							{#each marker.visits as visit}

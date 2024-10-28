@@ -27,6 +27,12 @@
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
 
+	$: {
+		if (count != collections.length) {
+			count = collections.length;
+		}
+	}
+
 	function handleChangePage() {
 		return async ({ result }: any) => {
 			if (result.type === 'success') {

@@ -1,3 +1,29 @@
 {
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "i18n-ally.localesPaths": [
+    "frontend/src/locales",
+    "backend/server/backend/lib/python3.12/site-packages/allauth/locale",
+    "backend/server/backend/lib/python3.12/site-packages/dj_rest_auth/locale",
+    "backend/server/backend/lib/python3.12/site-packages/rest_framework/locale",
+    "backend/server/backend/lib/python3.12/site-packages/rest_framework_simplejwt/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/conf/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/messages",
+    "backend/server/backend/lib/python3.12/site-packages/allauth/templates/account/messages",
+    "backend/server/backend/lib/python3.12/site-packages/allauth/templates/mfa/messages",
+    "backend/server/backend/lib/python3.12/site-packages/allauth/templates/socialaccount/messages",
+    "backend/server/backend/lib/python3.12/site-packages/allauth/templates/usersessions/messages",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/admindocs/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/auth/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/admin/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/contenttypes/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/flatpages/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/humanize/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/gis/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/redirects/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/postgres/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/sessions/locale",
+    "backend/server/backend/lib/python3.12/site-packages/django/contrib/sites/locale",
+    "backend/server/backend/lib/python3.12/site-packages/rest_framework/templates/rest_framework/docs/langs"
+  ],
+  "i18n-ally.keystyle": "nested"
 }

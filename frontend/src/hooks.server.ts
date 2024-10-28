@@ -109,17 +109,11 @@ export const themeHook: Handle = async ({ event, resolve }) => {
 
 // hook to get the langauge cookie and set the locale
 export const i18nHook: Handle = async ({ event, resolve }) => {
-	let lang = event.cookies.get('lang');
-	if (!lang) {
-		lang = ''; // Set default locale
-		event.cookies.set('lang', lang, {
-			httpOnly: true,
-			sameSite: 'lax',
-			expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-			path: '/'
-		});
+	let locale = event.cookies.get('locale');
+	if (!locale) {
+		return await resolve(event);
 	}
-	event.locals.locale = lang; // Store the locale in locals
+	event.locals.locale = locale; // Store the locale in locals
 	return await resolve(event);
 };
 

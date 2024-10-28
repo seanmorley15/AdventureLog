@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
 	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 	console.log(data);
@@ -22,10 +23,8 @@
 	let image_url: string | null = null;
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import EditAdventure from '$lib/components/AdventureModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import { typeToString } from '$lib';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -171,7 +170,7 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
-								{#if adventure.location}
+							{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg
 										xmlns="http://www.w3.org/2000/svg"
@@ -265,7 +264,7 @@
 								<div>
 									<p class="text-sm text-muted-foreground">Adventure Type</p>
 									<p class="text-base font-medium">
-										{typeToString(adventure.type)}
+										{$t(`adventures.activities.${adventure.type}`)}
 									</p>
 								</div>
 								{#if data.props.collection}

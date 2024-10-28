@@ -11,15 +11,14 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import { addToast } from '$lib/toasts';
 	import Link from '~icons/mdi/link-variant';
-	import CheckBold from '~icons/mdi/check-bold';
-	import FormatListBulletedSquare from '~icons/mdi/format-list-bulleted-square';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
 	import CollectionLink from './CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
-	import { isAdventureVisited, typeToString } from '$lib';
+	import { isAdventureVisited } from '$lib';
 	import CardCarousel from './CardCarousel.svelte';
+	import { t } from 'svelte-i18n';
 
 	export let type: string;
 	export let user: User | null;
@@ -67,32 +66,11 @@
 			body: JSON.stringify({ collection: null })
 		});
 		if (res.ok) {
-			console.log('Adventure removed from collection');
-			addToast('info', 'Adventure removed from collection successfully!');
+			addToast('info', `${$t('adventures.collection_remove_success')}`);
 			dispatch('delete', adventure.id);
 		} else {
-			console.log('Error removing adventure from collection');
+			addToast('error', `${$t('adventures.collection_remove_error')}`);
 		}
-	}
-
-	function changeType(newType: string) {
-		return async () => {
-			let res = await fetch(`/api/adventures/${adventure.id}/`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ type: newType })
-			});
-			if (res.ok) {
-				console.log('Adventure type changed');
-				dispatch('typeChange', adventure.id);
-				addToast('info', 'Adventure type changed successfully!');
-				adventure.type = newType;
-			} else {
-				console.log('Error changing adventure type');
-			}
-		};
 	}
 
 	async function linkCollection(event: CustomEvent<number>) {
@@ -106,11 +84,11 @@
 		});
 		if (res.ok) {
 			console.log('Adventure linked to collection');
-			addToast('info', 'Adventure linked to collection successfully!');
+			addToast('info', `${$t('adventures.collection_link_success')}`);
 			isCollectionModalOpen = false;
 			dispatch('delete', adventure.id);
 		} else {
-			console.log('Error linking adventure to collection');
+			addToast('error', `${$t('adventures.collection_link_error')}`);
 		}
 	}
 
@@ -131,7 +109,7 @@
 	<DeleteWarning
 		title="Delete Adventure"
 		button_text="Delete"
-		description="Are you sure you want to delete this adventure? This action cannot be undone."
+		description={$t('adventures.adventure_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteAdventure}
@@ -153,7 +131,7 @@
 			</button>
 		</div>
 		<div>
-			<div class="badge badge-primary">{typeToString(adventure.type)}</div>
+			<div class="badge badge-primary">{$t(`adventures.activities.${adventure.type}`)}</div>
 			<div class="badge badge-success">{isAdventureVisited(adventure) ? 'Visited' : 'Planned'}</div>
 			<div class="badge badge-secondary">{adventure.is_public ? 'Public' : 'Private'}</div>
 		</div>
@@ -198,30 +176,24 @@
 							<button
 								class="btn btn-neutral mb-2"
 								on:click={() => goto(`/adventures/${adventure.id}`)}
-								><Launch class="w-6 h-6" />Open Details</button
+								><Launch class="w-6 h-6" />{$t('adventures.open_details')}</button
 							>
 							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />Edit Adventure
+								<FileDocumentEdit class="w-6 h-6" />
+								{$t('adventures.edit_adventure')}
 							</button>
-							{#if adventure.type == 'visited' && user?.pk == adventure.user_id}
-								<button class="btn btn-neutral mb-2" on:click={changeType('planned')}
-									><FormatListBulletedSquare class="w-6 h-6" />Change to Plan</button
-								>
-							{/if}
-							{#if adventure.type == 'planned' && user?.pk == adventure.user_id}
-								<button class="btn btn-neutral mb-2" on:click={changeType('visited')}
-									><CheckBold class="w-6 h-6" />Mark Visited</button
-								>
-							{/if}
+
 							<!-- remove from collection -->
 							{#if adventure.collection && user?.pk == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
-									><LinkVariantRemove class="w-6 h-6" />Remove from Collection</button
+									><LinkVariantRemove class="w-6 h-6" />{$t(
+										'adventures.remove_from_collection'
+									)}</button
 								>
 							{/if}
 							{#if !adventure.collection}
 								<button class="btn btn-neutral mb-2" on:click={() => (isCollectionModalOpen = true)}
-									><Plus class="w-6 h-6" />Add to Collection</button
+									><Plus class="w-6 h-6" />{$t('adventures.add_to_collection')}</button
 								>
 							{/if}
 							<button
@@ -229,7 +201,7 @@
 								data-umami-event="Delete Adventure"
 								class="btn btn-warning"
 								on:click={() => (isWarningModalOpen = true)}
-								><TrashCan class="w-6 h-6" />Delete</button
+								><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
 							>
 						</ul>
 					</div>

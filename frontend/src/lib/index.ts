@@ -253,15 +253,6 @@ export let ADVENTURE_TYPES = [
 	{ type: 'other', label: 'Other' }
 ];
 
-export function typeToString(type: string) {
-	const typeObj = ADVENTURE_TYPES.find((t) => t.type === type);
-	if (typeObj) {
-		return typeObj.label;
-	} else {
-		return 'Unknown';
-	}
-}
-
 /**
  * Checks if an adventure has been visited.
  *

@@ -6,6 +6,8 @@
 	// Register your translations for each locale
 	register('en', () => import('../locales/en.json'));
 	register('es', () => import('../locales/es.json'));
+	register('fr', () => import('../locales/fr.json'));
+	register('de', () => import('../locales/de.json'));
 
 	if (browser) {
 		init({
@@ -37,3 +39,11 @@
 	<Toast />
 	<slot />
 {/await}
+
+<svelte:head>
+	<title>AdventureLog</title>
+	<meta
+		name="description"
+		content="Embark, explore, remember with AdventureLog. AdventureLog is the ultimate travel companion."
+	/>
+</svelte:head>
