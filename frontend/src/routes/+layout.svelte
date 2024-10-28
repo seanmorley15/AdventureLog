@@ -8,6 +8,9 @@
 	register('es', () => import('../locales/es.json'));
 	register('fr', () => import('../locales/fr.json'));
 	register('de', () => import('../locales/de.json'));
+	register('it', () => import('../locales/it.json'));
+	register('zh', () => import('../locales/zh.json'));
+	register('nl', () => import('../locales/nl.json'));
 
 	if (browser) {
 		init({
