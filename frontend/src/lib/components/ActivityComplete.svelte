@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	export let activities: string[] | undefined | null;
 
@@ -53,7 +54,7 @@
 		<input
 			type="text"
 			class="input input-bordered w-full"
-			placeholder="Add an activity"
+			placeholder={$t('adventures.add_an_activity')}
 			bind:value={inputVal}
 			on:keydown={(e) => {
 				if (e.key === 'Enter') {
@@ -62,7 +63,9 @@
 				}
 			}}
 		/>
-		<button type="button" class="btn btn-neutral" on:click={addActivity}>Add</button>
+		<button type="button" class="btn btn-neutral" on:click={addActivity}
+			>{$t('adventures.add')}</button
+		>
 	</div>
 	{#if inputVal && filteredItems.length > 0}
 		<ul class="absolute z-10 w-full bg-base-100 shadow-lg max-h-60 overflow-auto">
@@ -95,7 +98,7 @@
 						class="btn btn-sm btn-error"
 						on:click={() => removeActivity(activity)}
 					>
-						Remove
+						{$t('adventures.remove')}
 					</button>
 				</li>
 			{/each}

@@ -166,7 +166,7 @@
 		let res = await fetch(`/api/generate/img/?name=${imageSearch}`);
 		let data = await res.json();
 		if (!res.ok) {
-			wikiImageError = 'Failed to fetch image';
+			wikiImageError = $t('adventures.image_fetch_failed');
 			return;
 		}
 		if (data.source) {
@@ -200,7 +200,7 @@
 			e.preventDefault();
 		}
 		if (!query) {
-			alert('Please enter a location');
+			alert($t('adventures.no_location'));
 			return;
 		}
 		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
@@ -229,12 +229,8 @@
 			addToast('error', $t('adventures.start_before_end_error'));
 			return;
 		}
-		if (new_start_date === '' || new_end_date === '') {
-			addToast('error', 'Please enter a start and end date');
-			return;
-		}
 		if (new_end_date && !new_start_date) {
-			addToast('error', 'Please enter a start date');
+			addToast('error', $t('adventures.no_start_date'));
 			return;
 		}
 		adventure.visits = [
@@ -307,7 +303,7 @@
 			adventure.description = data.extract;
 			wikiError = '';
 		} else {
-			wikiError = 'No description found';
+			wikiError = $t('adventures.no_description_found');
 		}
 	}
 
@@ -331,12 +327,12 @@
 				if (result.data.id && result.data.image) {
 					adventure.images = [...adventure.images, result.data];
 					images = [...images, result.data];
-					addToast('success', 'Image uploaded');
+					addToast('success', $t('adventures.image_upload_success'));
 
 					fileInput.value = '';
 					console.log(adventure);
 				} else {
-					addToast('error', result.data.error || 'Failed to upload image');
+					addToast('error', result.data.error || $t('adventures.image_upload_error'));
 				}
 			}
 		};
@@ -358,10 +354,10 @@
 				adventure = data as Adventure;
 				isDetails = false;
 				warningMessage = '';
-				addToast('success', 'Adventure created');
+				addToast('success', $t('adventures.adventure_created'));
 			} else {
 				warningMessage = Object.values(data)[0] as string;
-				addToast('error', 'Failed to create adventure');
+				addToast('error', $t('adventures.adventure_create_error'));
 			}
 		} else {
 			let res = await fetch(`/api/adventures/${adventure.id}`, {
@@ -376,10 +372,10 @@
 				adventure = data as Adventure;
 				isDetails = false;
 				warningMessage = '';
-				addToast('success', 'Adventure updated');
+				addToast('success', $t('adventures.adventure_updated'));
 			} else {
 				warningMessage = Object.values(data)[0] as string;
-				addToast('error', 'Failed to update adventure');
+				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
 	}
@@ -391,7 +387,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-2xl">
-			{adventureToEdit ? 'Edit Adventure' : 'New Adventure'}
+			{adventureToEdit ? $t('adventures.edit_adventure') : $t('adventures.new_adventure')}
 		</h3>
 		{#if adventure.id === '' || isDetails}
 			<div class="modal-action items-center">
@@ -400,10 +396,12 @@
 					<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> -->
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" checked />
-						<div class="collapse-title text-xl font-medium">Basic Information</div>
+						<div class="collapse-title text-xl font-medium">
+							{$t('adventures.basic_information')}
+						</div>
 						<div class="collapse-content">
 							<div>
-								<label for="name">Name</label><br />
+								<label for="name">{$t('adventures.name')}</label><br />
 								<input
 									type="text"
 									id="name"
@@ -414,16 +412,16 @@
 								/>
 							</div>
 							<div>
-								<label for="link">Category</label><br />
+								<label for="link">{$t('adventures.category')}</label><br />
 								<select class="select select-bordered w-full max-w-xs" bind:value={adventure.type}>
-									<option disabled selected>Select Adventure Type</option>
+									<option disabled selected>{$t('adventures.select_adventure_category')}</option>
 									{#each ADVENTURE_TYPES as type}
 										<option value={type.type}>{type.label}</option>
 									{/each}
 								</select>
 							</div>
 							<div>
-								<label for="rating">Rating</label><br />
+								<label for="rating">{$t('adventures.rating')}</label><br />
 								<input
 									type="number"
 									min="0"
@@ -482,14 +480,14 @@
 											class="btn btn-sm btn-error ml-2"
 											on:click={() => (adventure.rating = NaN)}
 										>
-											Remove
+											{$t('adventures.remove')}
 										</button>
 									{/if}
 								</div>
 							</div>
 							<div>
 								<div>
-									<label for="link">Link</label><br />
+									<label for="link">{$t('adventures.link')}</label><br />
 									<input
 										type="text"
 										id="link"
@@ -500,7 +498,7 @@
 								</div>
 							</div>
 							<div>
-								<label for="description">Description</label><br />
+								<label for="description">{$t('adventures.description')}</label><br />
 								<textarea
 									id="description"
 									name="description"
@@ -508,12 +506,9 @@
 									class="textarea textarea-bordered w-full h-32"
 								></textarea>
 								<div class="mt-2">
-									<div
-										class="tooltip tooltip-right"
-										data-tip="Pulls excerpt from Wikipedia article matching the name of the adventure."
-									>
+									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_desc')}>
 										<button type="button" class="btn btn-neutral" on:click={generateDesc}
-											>Generate Description</button
+											>{$t('adventures.generate_desc')}</button
 										>
 									</div>
 									<p class="text-red-500">{wikiError}</p>
@@ -523,7 +518,7 @@
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">
-											<span class="label-text">Public Adventure</span>
+											<span class="label-text">{$t('adventures.public_adventure')}</span>
 											<input
 												type="checkbox"
 												class="toggle toggle-primary"
@@ -540,11 +535,13 @@
 
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">Location Information</div>
+						<div class="collapse-title text-xl font-medium">
+							{$t('adventures.location_information')}
+						</div>
 						<div class="collapse-content">
 							<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
 							<div>
-								<label for="latitude">Location</label><br />
+								<label for="latitude">{$t('adventures.location')}</label><br />
 								<input
 									type="text"
 									id="location"
@@ -557,21 +554,21 @@
 								<form on:submit={geocode} class="mt-2">
 									<input
 										type="text"
-										placeholder="Seach for a location"
+										placeholder={$t('adventures.search_for_location')}
 										class="input input-bordered w-full max-w-xs mb-2"
 										id="search"
 										name="search"
 										bind:value={query}
 									/>
-									<button class="btn btn-neutral -mt-1" type="submit">Search</button>
+									<button class="btn btn-neutral -mt-1" type="submit">{$t('navbar.search')}</button>
 									<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
-										>Clear Map</button
+										>{$t('adventures.clear_map')}</button
 									>
 								</form>
 							</div>
 							{#if places.length > 0}
 								<div class="mt-4 max-w-full">
-									<h3 class="font-bold text-lg mb-4">Search Results</h3>
+									<h3 class="font-bold text-lg mb-4">{$t('adventures.search_results')}</h3>
 
 									<div class="flex flex-wrap">
 										{#each places as place}
@@ -595,7 +592,7 @@
 									</div>
 								</div>
 							{:else if noPlaces}
-								<p class="text-error text-lg">No results found</p>
+								<p class="text-error text-lg">{$t('adventures.no_results')}</p>
 							{/if}
 							<!-- </div> -->
 							<div>
@@ -620,7 +617,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
-							Activity Types ({adventure.activity_types?.length || 0})
+							{$t('adventures.activity_types')} ({adventure.activity_types?.length || 0})
 						</div>
 						<div class="collapse-content">
 							<input
@@ -638,12 +635,12 @@ it would also work to just use on:click on the MapLibre component itself. -->
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
-							Visits ({adventure.visits.length})
+							{$t('adventures.visits')} ({adventure.visits.length})
 						</div>
 						<div class="collapse-content">
 							<label class="label cursor-pointer flex items-start space-x-2">
 								{#if adventure.collection && collection && collection.start_date && collection.end_date}
-									<span class="label-text">Constrain to collection dates</span>
+									<span class="label-text">{$t('adventures.date_constrain')}</span>
 									<input
 										type="checkbox"
 										class="toggle toggle-primary"
@@ -670,7 +667,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									<input
 										type="date"
 										class="input input-bordered w-full"
-										placeholder="End Date"
+										placeholder={$t('adventures.end_date')}
 										bind:value={new_end_date}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
@@ -683,7 +680,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									<input
 										type="date"
 										class="input input-bordered w-full"
-										placeholder="Start Date"
+										placeholder={$t('adventures.start_date')}
 										min={collection?.start_date}
 										max={collection?.end_date}
 										bind:value={new_start_date}
@@ -697,7 +694,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									<input
 										type="date"
 										class="input input-bordered w-full"
-										placeholder="End Date"
+										placeholder={$t('adventures.end_date')}
 										bind:value={new_end_date}
 										min={collection?.start_date}
 										max={collection?.end_date}
@@ -714,7 +711,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								<!-- textarea for notes -->
 								<textarea
 									class="textarea textarea-bordered w-full"
-									placeholder="Add notes"
+									placeholder={$t('adventures.add_notes')}
 									bind:value={new_notes}
 									on:keydown={(e) => {
 										if (e.key === 'Enter') {
@@ -726,11 +723,13 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							</div>
 
 							<div class="flex gap-2">
-								<button type="button" class="btn btn-neutral" on:click={addNewVisit}>Add</button>
+								<button type="button" class="btn btn-neutral" on:click={addNewVisit}
+									>{$t('adventures.add')}</button
+								>
 							</div>
 
 							{#if adventure.visits.length > 0}
-								<h2 class=" font-bold text-xl mt-2">My Visits</h2>
+								<h2 class=" font-bold text-xl mt-2">{$t('adventures.my_visits')}</h2>
 								{#each adventure.visits as visit}
 									<div class="flex flex-col gap-2">
 										<div class="flex gap-2">
@@ -755,7 +754,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 														adventure.visits = adventure.visits.filter((v) => v !== visit);
 													}}
 												>
-													Remove
+													{$t('adventures.remove')}
 												</button>
 											</div>
 										</div>
@@ -783,20 +782,20 @@ it would also work to just use on:click on the MapLibre component itself. -->
 											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
 										/>
 									</svg>
-									<span>Warning: {warningMessage}</span>
+									<span>{$t('adventures.warning')}: {warningMessage}</span>
 								</div>
 							{/if}
-							<button type="submit" class="btn btn-primary">Save & Next</button>
-							<button type="button" class="btn" on:click={close}>Close</button>
+							<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
+							<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
 						</div>
 					</div>
 				</form>
 			</div>
 		{:else}
-			<p>Upload images here</p>
+			<p>{$t('adventures.upload_images_here')}</p>
 			<!-- <p>{adventureToEdit.id}</p> -->
 			<div class="mb-2">
-				<label for="image">Image </label><br />
+				<label for="image">{$t('adventures.image')} </label><br />
 				<div class="flex">
 					<form
 						method="POST"
@@ -813,11 +812,13 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							id="image"
 						/>
 						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-						<button class="btn btn-neutral mt-2 mb-2" type="submit">Upload Image</button>
+						<button class="btn btn-neutral mt-2 mb-2" type="submit"
+							>{$t('adventures.upload_image')}</button
+						>
 					</form>
 				</div>
 				<div class="mt-2">
-					<label for="url">URL</label><br />
+					<label for="url">{$t('adventures.url')}</label><br />
 					<input
 						type="text"
 						id="url"
@@ -826,11 +827,11 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						class="input input-bordered w-full"
 					/>
 					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
-						>Fetch Image</button
+						>{$t('adventures.fetch_image')}</button
 					>
 				</div>
 				<div class="mt-2">
-					<label for="name">Wikipedia</label><br />
+					<label for="name">{$t('adventures.wikipedia')}</label><br />
 					<input
 						type="text"
 						id="name"
@@ -839,14 +840,14 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						class="input input-bordered w-full"
 					/>
 					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
-						>Fetch Image</button
+						>{$t('adventures.fetch_image')}</button
 					>
 				</div>
 				<div class="divider"></div>
 				{#if images.length > 0}
-					<h1 class="font-semibold text-xl">My Images</h1>
+					<h1 class="font-semibold text-xl">{$t('adventures.my_images')}</h1>
 				{:else}
-					<h1 class="font-semibold text-xl">No Images</h1>
+					<h1 class="font-semibold text-xl">{$t('adventures.no_images')}</h1>
 				{/if}
 				<div class="flex flex-wrap gap-2 mt-2">
 					{#each images as image}
@@ -864,12 +865,14 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</div>
 			</div>
 			<div class="mt-4">
-				<button type="button" class="btn btn-primary" on:click={saveAndClose}>Close</button>
+				<button type="button" class="btn btn-primary" on:click={saveAndClose}
+					>{$t('about.close')}</button
+				>
 			</div>
 		{/if}
 		{#if adventure.is_public && adventure.id}
 			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
-				<p class=" font-semibold">Share this Adventure!</p>
+				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">
 						{window.location.origin}/adventures/{adventure.id}
@@ -881,7 +884,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						}}
 						class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
 					>
-						Copy Link
+						{$t('adventures.copy_link')}
 					</button>
 				</div>
 			</div>

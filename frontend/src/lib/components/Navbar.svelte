@@ -98,12 +98,12 @@
 				{#if !data.user}
 					<li>
 						<button class="btn btn-primary" on:click={() => goto('/login')}
-							>{$t('navbar.login')}</button
+							>{$t('auth.login')}</button
 						>
 					</li>
 					<li>
 						<button class="btn btn-primary" on:click={() => goto('/signup')}
-							>{$t('navbar.signup')}</button
+							>{$t('auth.signup')}</button
 						>
 					</li>
 				{/if}
@@ -165,13 +165,12 @@
 
 			{#if !data.user}
 				<li>
-					<button class="btn btn-primary" on:click={() => goto('/login')}
-						>{$t('navbar.login')}</button
+					<button class="btn btn-primary" on:click={() => goto('/login')}>{$t('auth.login')}</button
 					>
 				</li>
 				<li>
 					<button class="btn btn-primary" on:click={() => goto('/signup')}
-						>{$t('navbar.signup')}</button
+						>{$t('auth.signup')}</button
 					>
 				</li>
 			{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { t } from 'svelte-i18n';
 
 	export let data;
 	console.log(data);
@@ -34,46 +35,46 @@
 			{#if !is_disabled}
 				<h3 class="text-center">AdventureLog</h3>
 				<article class="text-center text-4xl mb-4 font-extrabold">
-					<h1>Signup</h1>
+					<h1>{$t('auth.signup')}</h1>
 				</article>
 
 				<div class="flex justify-center">
 					<form method="post" use:enhance class="w-full max-w-xs">
-						<label for="username">Username</label>
+						<label for="username">{$t('auth.username')}</label>
 						<input
 							name="username"
 							id="username"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
-						<label for="email">Email</label>
+						<label for="email">{$t('auth.email')}</label>
 						<input
 							name="email"
 							id="email"
 							type="email"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
-						<label for="first_name">First Name</label>
+						<label for="first_name">{$t('auth.first_name')}</label>
 						<input
 							name="first_name"
 							id="first_name"
 							type="text"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
-						<label for="last_name">Last Name</label>
+						<label for="last_name">{$t('auth.last_name')}</label>
 						<input
 							name="last_name"
 							id="last_name"
 							type="text"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
-						<label for="password">Password</label>
+						<label for="password">{$t('auth.password')}</label>
 						<input
 							type="password"
 							name="password1"
 							id="password"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
-						<label for="password">Confirm Password</label>
+						<label for="password">{$t('auth.confirm_password')}</label>
 						<input
 							type="password"
 							name="password2"
@@ -81,11 +82,15 @@
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
 
-						<button class="py-2 px-4 btn btn-primary mr-2">Signup</button>
+						<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.signup')}</button>
 
 						<div class="flex justify-between mt-4">
-							<p><a href="/login" class="underline">Login</a></p>
-							<p><a href="/settings/forgot-password" class="underline">Forgot Password</a></p>
+							<p><a href="/login" class="underline">{$t('auth.login')}</a></p>
+							<p>
+								<a href="/settings/forgot-password" class="underline"
+									>{$t('auth.forgot_password')}</a
+								>
+							</p>
 						</div>
 					</form>
 				</div>
@@ -96,7 +101,7 @@
 			{:else}
 				<div class="flex justify-center">
 					<div class="text-center mb-4">
-						<h1 class="text-4xl font-extrabold">Registration is Disabled</h1>
+						<h1 class="text-4xl font-extrabold">{$t('auth.registration_disabled')}</h1>
 						<p class="text-lg mt-4">{is_disabled_message}</p>
 					</div>
 				</div>
