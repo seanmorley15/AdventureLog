@@ -261,6 +261,22 @@
 		new_notes = '';
 	}
 
+	async function markVisited() {
+		console.log(reverseGeocodePlace);
+		if (reverseGeocodePlace) {
+			let res = await fetch(`/worldtravel?/markVisited`, {
+				method: 'POST',
+				body: JSON.stringify({ regionId: reverseGeocodePlace.id })
+			});
+			if (res.ok) {
+				reverseGeocodePlace.is_visited = true;
+				addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
+			} else {
+				addToast('error', `Failed to mark visit to ${reverseGeocodePlace.region}`);
+			}
+		}
+	}
+
 	async function reverseGeocode() {
 		let res = await fetch(
 			`/api/reverse-geocode/reverse_geocode/?lat=${adventure.latitude}&lon=${adventure.longitude}`
@@ -612,10 +628,32 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								</MapLibre>
 								{#if reverseGeocodePlace}
 									<div class="mt-2">
-										<p>{reverseGeocodePlace.id}</p>
 										<p>{reverseGeocodePlace.region}, {reverseGeocodePlace.country}</p>
 										<p>{reverseGeocodePlace.is_visited ? 'Visited' : 'Not Visited'}</p>
 									</div>
+									{#if !reverseGeocodePlace.is_visited}
+										<div role="alert" class="alert alert-info mt-2">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												class="h-6 w-6 shrink-0 stroke-current"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+												></path>
+											</svg>
+											<span
+												>Mark region {reverseGeocodePlace.region}, {reverseGeocodePlace.country} as visited?</span
+											>
+											<button type="button" class="btn btn-neutral" on:click={markVisited}>
+												Mark as Visited
+											</button>
+										</div>
+									{/if}
 								{/if}
 							</div>
 						</div>
