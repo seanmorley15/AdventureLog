@@ -191,7 +191,12 @@
     "warning": "Advertencia",
     "wiki_desc": "Extrae un extracto de un artículo de Wikipedia que coincide con el nombre de la aventura.",
     "wikipedia": "Wikipedia",
-    "add_an_activity": "Agregar una actividad"
+    "add_an_activity": "Agregar una actividad",
+    "adventure_not_found": "No hay aventuras que mostrar. \n¡Agregue algunos usando el botón más en la parte inferior derecha o intente cambiar los filtros!",
+    "no_adventures_found": "No se encontraron aventuras",
+    "no_collections_found": "No se encontraron colecciones para agregar esta aventura.",
+    "my_adventures": "mis aventuras",
+    "no_linkable_adventures": "No se encontraron aventuras que puedan vincularse a esta colección."
   },
   "worldtravel": {
     "all": "Todo",

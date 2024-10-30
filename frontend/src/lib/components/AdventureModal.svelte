@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { Adventure, Collection, OpenStreetMapPlace, Point } from '$lib/types';
+	import type {
+		Adventure,
+		Collection,
+		OpenStreetMapPlace,
+		Point,
+		ReverseGeocode
+	} from '$lib/types';
 	import { onMount } from 'svelte';
 	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
@@ -26,6 +32,8 @@
 	let wikiError: string = '';
 
 	let noPlaces: boolean = false;
+
+	let reverseGeocodePlace: ReverseGeocode | null = null;
 
 	let adventure: Adventure = {
 		id: '',
@@ -133,6 +141,12 @@
 		}
 		if (!adventure.name) {
 			adventure.name = markers[0].name;
+		}
+	}
+
+	$: {
+		if (adventure.longitude && adventure.latitude) {
+			reverseGeocode();
 		}
 	}
 
@@ -249,29 +263,15 @@
 
 	async function reverseGeocode() {
 		let res = await fetch(
-			`https://nominatim.openstreetmap.org/search?q=${adventure.latitude},${adventure.longitude}&format=jsonv2`,
-			{
-				headers: {
-					'User-Agent': `AdventureLog / ${appVersion} `
-				}
-			}
+			`/api/reverse-geocode/reverse_geocode/?lat=${adventure.latitude}&lon=${adventure.longitude}`
 		);
-		let data = (await res.json()) as OpenStreetMapPlace[];
-		if (data.length > 0) {
-			adventure.name = data[0]?.name || '';
-			adventure.activity_types?.push(data[0]?.type || '');
-			adventure.location = data[0]?.display_name || '';
-			if (longitude && latitude) {
-				markers = [
-					{
-						lngLat: { lng: longitude, lat: latitude },
-						location: data[0]?.display_name || '',
-						name: data[0]?.name || '',
-						activity_type: data[0]?.type || ''
-					}
-				];
-			}
+		let data = await res.json();
+		if (data.error) {
+			console.log(data.error);
+			reverseGeocodePlace = null;
+			return;
 		}
+		reverseGeocodePlace = data;
 		console.log(data);
 	}
 
@@ -610,6 +610,13 @@ it would also work to just use on:click on the MapLibre component itself. -->
 										<DefaultMarker lngLat={marker.lngLat} />
 									{/each}
 								</MapLibre>
+								{#if reverseGeocodePlace}
+									<div class="mt-2">
+										<p>{reverseGeocodePlace.id}</p>
+										<p>{reverseGeocodePlace.region}, {reverseGeocodePlace.country}</p>
+										<p>{reverseGeocodePlace.is_visited ? 'Visited' : 'Not Visited'}</p>
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>

@@ -1,3 +1,4 @@
+import json
 import uuid
 import requests
 from django.db import transaction
@@ -1053,3 +1054,42 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
+
+class ReverseGeocodeViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def extractIsoCode(self, data):
+        """
+        Extract the ISO code from the response data.
+        Returns a dictionary containing the region name, country name, and ISO code if found.
+        """
+        iso_code = None
+        if 'address' in data.keys():
+            keys = data['address'].keys()
+            for key in keys:
+                if key.find("ISO") != -1:
+                    iso_code = data['address'][key]
+        print(iso_code)
+        region = Region.objects.filter(id=iso_code).first()
+        visited_region = VisitedRegion.objects.filter(region=region).first()
+        is_visited = False
+        if visited_region:
+            is_visited = True
+        if region:
+            return {"id": iso_code, "region": region.name, "country": region.country.name, "is_visited": is_visited}
+        return {"error": "No region found"}
+
+    @action(detail=False, methods=['get'])
+    def reverse_geocode(self, request):
+        lat = request.query_params.get('lat', '')
+        lon = request.query_params.get('lon', '')
+        print(lat, lon)
+        url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
+        headers = {'User-Agent': 'AdventureLog Server'}
+        response = requests.get(url, headers=headers)
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            return Response({"error": "Invalid response from geocoding service"}, status=400)
+        return Response(self.extractIsoCode(data))
+    

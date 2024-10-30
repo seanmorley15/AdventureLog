@@ -3,7 +3,7 @@
 	import type { Adventure, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
-	import type { ActionResult } from '@sveltejs/kit';
+	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import AdventureCard from './AdventureCard.svelte';
 	let modal: HTMLDialogElement;
@@ -51,7 +51,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h1 class="text-center font-bold text-4xl mb-6">My Adventures</h1>
+		<h1 class="text-center font-bold text-4xl mb-6">{$t('adventures.my_adventures')}</h1>
 		{#if isLoading}
 			<div class="flex justify-center items-center w-full mt-16">
 				<span class="loading loading-spinner w-24 h-24"></span>
@@ -63,10 +63,10 @@
 			{/each}
 			{#if adventures.length === 0 && !isLoading}
 				<p class="text-center text-lg">
-					No adventures found that can be linked to this collection.
+					{$t('adventures.no_linkable_adventures')}
 				</p>
 			{/if}
 		</div>
-		<button class="btn btn-primary" on:click={close}>Close</button>
+		<button class="btn btn-primary" on:click={close}>{$t('about.close')}</button>
 	</div>
 </dialog>

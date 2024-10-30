@@ -168,3 +168,10 @@ export type Background = {
 	author?: string;
 	location?: string;
 };
+
+export type ReverseGeocode = {
+	id: string;
+	region: string;
+	country: string;
+	is_visited: boolean;
+};
