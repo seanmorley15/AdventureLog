@@ -21,7 +21,8 @@
 		order: '',
 		visited: true,
 		planned: true,
-		includeCollections: true
+		includeCollections: true,
+		is_visited: 'all'
 	};
 
 	let resultsPerPage: number = 25;
@@ -119,6 +120,10 @@
 		if (!currentSort.visited && !currentSort.planned) {
 			currentSort.visited = true;
 			currentSort.planned = true;
+		}
+
+		if (url.searchParams.get('is_visited')) {
+			currentSort.is_visited = url.searchParams.get('is_visited') || 'all';
 		}
 	}
 
@@ -314,19 +319,53 @@
 						/>
 					</div>
 
-					<br />
-					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.sources')}</p>
-					<label class="label cursor-pointer">
-						<span class="label-text">{$t('adventures.collection_adventures')}</span>
+					<!-- is visited true false or all -->
+					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.visited')}</p>
+					<div class="join">
 						<input
-							type="checkbox"
-							name="include_collections"
-							id="include_collections"
-							class="checkbox checkbox-primary"
-							checked={currentSort.includeCollections}
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="is_visited"
+							id="all"
+							value="all"
+							aria-label={$t('adventures.all')}
+							checked={currentSort.is_visited === 'all'}
 						/>
-					</label>
-					<button type="submit" class="btn btn-success mt-4">{$t('adventures.filter')}</button>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="is_visited"
+							id="true"
+							value="true"
+							aria-label={$t('adventures.visited')}
+							checked={currentSort.is_visited === 'true'}
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="is_visited"
+							id="false"
+							value="false"
+							aria-label={$t('adventures.not_visited')}
+							checked={currentSort.is_visited === 'false'}
+						/>
+					</div>
+					<div class="divider"></div>
+					<div class="form-control">
+						<br />
+						<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.sources')}</p>
+						<label class="label cursor-pointer">
+							<span class="label-text">{$t('adventures.collection_adventures')}</span>
+							<input
+								type="checkbox"
+								name="include_collections"
+								id="include_collections"
+								class="checkbox checkbox-primary"
+								checked={currentSort.includeCollections}
+							/>
+						</label>
+						<button type="submit" class="btn btn-success mt-4">{$t('adventures.filter')}</button>
+					</div>
 				</form>
 			</div>
 		</ul>

@@ -27,9 +27,10 @@ export const load = (async (event) => {
 		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
 		const order_direction = event.url.searchParams.get('order_direction') || 'asc';
 		const page = event.url.searchParams.get('page') || '1';
+		const is_visited = event.url.searchParams.get('is_visited') || 'all';
 
 		let initialFetch = await fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}`,
+			`${serverEndpoint}/api/adventures/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`,
 			{
 				headers: {
 					Cookie: `${event.cookies.get('auth')}`

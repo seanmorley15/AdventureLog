@@ -105,7 +105,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         types = request.query_params.get('types', '').split(',')
-        # handle case where types is all
+        is_visited = request.query_params.get('is_visited', 'all')
+
+        # Handle case where types is all
         if 'all' in types:
             types = [t[0] for t in ADVENTURE_TYPES]
         valid_types = [t[0] for t in ADVENTURE_TYPES]
@@ -114,17 +116,35 @@ class AdventureViewSet(viewsets.ModelViewSet):
         if not types:
             return Response({"error": "No valid types provided"}, status=400)
 
-        queryset = Adventure.objects.none()
+        queryset = Adventure.objects.filter(
+            type__in=types,
+            user_id=request.user.id
+        )
 
-        for adventure_type in types:
-            if adventure_type in valid_types:
-                queryset |= Adventure.objects.filter(
-                    type=adventure_type, user_id=request.user.id)
+        # Handle is_visited filtering
+        if is_visited.lower() == 'true':
+            serializer = self.get_serializer(queryset, many=True)
+            filtered_ids = [
+                adventure.id for adventure, serialized_adventure in zip(queryset, serializer.data)
+                if serialized_adventure['is_visited']
+            ]
+            queryset = queryset.filter(id__in=filtered_ids)
+        elif is_visited.lower() == 'false':
+            serializer = self.get_serializer(queryset, many=True)
+            filtered_ids = [
+                adventure.id for adventure, serialized_adventure in zip(queryset, serializer.data)
+                if not serialized_adventure['is_visited']
+            ]
+            queryset = queryset.filter(id__in=filtered_ids)
+        # If is_visited is 'all' or any other value, we don't apply additional filtering
 
+        # Apply sorting
         queryset = self.apply_sorting(queryset)
+
+        # Paginate and respond
         adventures = self.paginate_and_respond(queryset, request)
         return adventures
-    
+        
     @action(detail=False, methods=['get'])
     def all(self, request):
         if not request.user.is_authenticated:

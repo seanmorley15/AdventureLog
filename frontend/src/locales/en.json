@@ -151,6 +151,7 @@
 		"visited": "Visited",
 		"planned": "Planned",
 		"duration": "Duration",
+		"all": "All",
 		"image_removed_success": "Image removed successfully!",
 		"image_removed_error": "Error removing image",
 		"no_image_url": "No image found at that URL.",
