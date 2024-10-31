@@ -28,6 +28,7 @@
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 	import { ADVENTURE_TYPES } from '$lib';
+	import RegionCard from './RegionCard.svelte';
 
 	let wikiError: string = '';
 
@@ -629,7 +630,11 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								{#if reverseGeocodePlace}
 									<div class="mt-2">
 										<p>{reverseGeocodePlace.region}, {reverseGeocodePlace.country}</p>
-										<p>{reverseGeocodePlace.is_visited ? 'Visited' : 'Not Visited'}</p>
+										<p>
+											{reverseGeocodePlace.is_visited
+												? $t('adventures.visited')
+												: $t('adventures.not_visited')}
+										</p>
 									</div>
 									{#if !reverseGeocodePlace.is_visited}
 										<div role="alert" class="alert alert-info mt-2">
@@ -647,10 +652,15 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												></path>
 											</svg>
 											<span
-												>Mark region {reverseGeocodePlace.region}, {reverseGeocodePlace.country} as visited?</span
+												>{$t('adventures.mark_region_as_visited', {
+													values: {
+														region: reverseGeocodePlace.region,
+														country: reverseGeocodePlace.country
+													}
+												})}</span
 											>
 											<button type="button" class="btn btn-neutral" on:click={markVisited}>
-												Mark as Visited
+												{$t('adventures.mark_visited')}
 											</button>
 										</div>
 									{/if}

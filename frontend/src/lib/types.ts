@@ -37,6 +37,7 @@ export type Adventure = {
 	is_public: boolean;
 	created_at?: string | null;
 	updated_at?: string | null;
+	is_visited?: boolean;
 };
 
 export type Country = {

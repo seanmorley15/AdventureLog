@@ -46,6 +46,7 @@ export const load = (async (event) => {
 						name: adventure.name,
 						visits: adventure.visits,
 						type: adventure.type,
+						is_visited: adventure.is_visited
 					};
 				});
 

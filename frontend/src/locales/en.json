@@ -139,6 +139,7 @@
 		"unarchive": "Unarchive",
 		"archive": "Archive",
 		"no_collections_found": "No collections found to add this adventure to.",
+		"not_visited": "Not Visited",
 		"archived_collection_message": "Collection archived successfully!",
 		"unarchived_collection_message": "Collection unarchived successfully!",
 		"delete_collection_success": "Collection deleted successfully!",
@@ -173,6 +174,8 @@
 		"basic_information": "Basic Information",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
 		"no_adventures_found": "No adventures found",
+		"mark_region_as_visited": "Mark region {region}, {country} as visited?",
+		"mark_visited": "Mark Visited",
 		"activities": {
 			"general": "General 🌍",
 			"outdoor": "Outdoor 🏞️",

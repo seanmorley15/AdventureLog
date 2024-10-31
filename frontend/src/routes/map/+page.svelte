@@ -1,7 +1,6 @@
 <script>
 	// @ts-nocheck
 
-	import { isAdventureVisited } from '$lib';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import {
 		DefaultMarker,
@@ -25,8 +24,7 @@
 	let showPlanned = true;
 
 	$: filteredMarkers = markers.filter(
-		(marker) =>
-			(showVisited && isAdventureVisited(marker)) || (showPlanned && !isAdventureVisited(marker))
+		(marker) => (showVisited && marker.is_visited) || (showPlanned && !marker.is_visited)
 	);
 
 	let newMarker = [];
@@ -145,7 +143,7 @@
 	standardControls
 >
 	{#each filteredMarkers as marker}
-		{#if isAdventureVisited(marker)}
+		{#if marker.is_visited}
 			<Marker
 				lngLat={marker.lngLat}
 				on:click={() => (clickedName = marker.name)}
@@ -205,7 +203,7 @@
 					<div class="text-lg text-black font-bold">{marker.name}</div>
 					<p class="font-semibold text-black text-md">Planned</p>
 					<p class="font-semibold text-black text-md">
-						{$t(`adventures.activities.${marker.type}`)}}
+						{$t(`adventures.activities.${marker.type}`)}
 					</p>
 					{#if marker.visits && marker.visits.length > 0}
 						<p class="text-black text-sm">

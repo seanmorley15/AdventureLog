@@ -1,3 +1,4 @@
+from django.utils import timezone
 import os
 from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit
 from rest_framework import serializers
@@ -19,18 +20,28 @@ class AdventureImageSerializer(serializers.ModelSerializer):
         return representation
     
 class VisitSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Visit
         fields = ['id', 'start_date', 'end_date', 'notes']
         read_only_fields = ['id']
-                                        
+                                   
 class AdventureSerializer(serializers.ModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False)
+    is_visited = serializers.SerializerMethodField()
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'visits']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'visits', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
+
+    def get_is_visited(self, obj):
+        current_date = timezone.now().date()
+        for visit in obj.visits.all():
+            if visit.start_date and visit.end_date and (visit.start_date <= current_date):
+                return True
+        return False
+        
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

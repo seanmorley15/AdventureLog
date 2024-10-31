@@ -20,8 +20,7 @@
 		groupAdventuresByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
-		groupChecklistsByDate,
-		isAdventureVisited
+		groupChecklistsByDate
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -45,7 +44,7 @@
 
 	$: {
 		numAdventures = adventures.length;
-		numVisited = adventures.filter(isAdventureVisited).length;
+		numVisited = adventures.filter((adventure) => adventure.is_visited).length;
 	}
 
 	let notFound: boolean = false;

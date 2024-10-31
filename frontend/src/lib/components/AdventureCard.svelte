@@ -16,7 +16,6 @@
 	import CollectionLink from './CollectionLink.svelte';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import DeleteWarning from './DeleteWarning.svelte';
-	import { isAdventureVisited } from '$lib';
 	import CardCarousel from './CardCarousel.svelte';
 	import { t } from 'svelte-i18n';
 
@@ -132,7 +131,7 @@
 		<div>
 			<div class="badge badge-primary">{$t(`adventures.activities.${adventure.type}`)}</div>
 			<div class="badge badge-success">
-				{isAdventureVisited(adventure) ? $t('adventures.visited') : $t('adventures.planned')}
+				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
 			</div>
 			<div class="badge badge-secondary">
 				{adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
