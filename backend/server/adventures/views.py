@@ -1084,19 +1084,39 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         Returns a dictionary containing the region name, country name, and ISO code if found.
         """
         iso_code = None
+        town = None
+        city = None
+        county = None
+        display_name = None
+        country_code = None
         if 'address' in data.keys():
             keys = data['address'].keys()
             for key in keys:
                 if key.find("ISO") != -1:
                     iso_code = data['address'][key]
+            if 'town' in keys:
+                town = data['address']['town']
+            if 'county' in keys:
+                county = data['address']['county']
+            if 'city' in keys:
+                city = data['address']['city']
         print(iso_code)
         region = Region.objects.filter(id=iso_code).first()
         visited_region = VisitedRegion.objects.filter(region=region).first()
         is_visited = False
+        country_code = iso_code[:2]
+        
+        if city:
+            display_name = f"{city}, {region.name}, {country_code}"
+        elif town and region.name:
+            display_name = f"{town}, {region.name}, {country_code}"
+        elif county and region.name:
+            display_name = f"{county}, {region.name}, {country_code}"
+
         if visited_region:
             is_visited = True
         if region:
-            return {"id": iso_code, "region": region.name, "country": region.country.name, "is_visited": is_visited}
+            return {"id": iso_code, "region": region.name, "country": region.country.name, "is_visited": is_visited, "display_name": display_name}
         return {"error": "No region found"}
 
     @action(detail=False, methods=['get'])

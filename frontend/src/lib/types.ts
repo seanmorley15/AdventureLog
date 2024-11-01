@@ -175,4 +175,5 @@ export type ReverseGeocode = {
 	region: string;
 	country: string;
 	is_visited: boolean;
+	display_name: string;
 };

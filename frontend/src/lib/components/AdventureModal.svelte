@@ -111,6 +111,15 @@
 		markers = [];
 	}
 
+	$: {
+		if (
+			reverseGeocodePlace?.display_name &&
+			adventure.location != reverseGeocodePlace.display_name
+		) {
+			adventure.location = reverseGeocodePlace.display_name;
+		}
+	}
+
 	let imageSearch: string = adventure.name || '';
 
 	async function removeImage(id: string) {
