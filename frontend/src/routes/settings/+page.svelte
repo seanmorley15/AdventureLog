@@ -44,20 +44,20 @@
 	// 	URL.revokeObjectURL(url);
 	// }
 
-	// async function checkVisitedRegions() {
-	// 	let res = await fetch('/api/countries/region_check_all_adventures/', {
-	// 		method: 'POST',
-	// 		headers: {
-	// 			'Content-Type': 'application/json'
-	// 		}
-	// 	});
-	// 	let data = await res.json();
-	// 	if (res.ok) {
-	// 		addToast('success', `${data.regions_visited} regions updated`);
-	// 	} else {
-	// 		addToast('error', 'Error updating visited regions');
-	// 	}
-	// }
+	async function checkVisitedRegions() {
+		let res = await fetch('/api/reverse-geocode/mark_visited_region/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		let data = await res.json();
+		if (res.ok) {
+			addToast('success', `${data.new_regions} regions updated`);
+		} else {
+			addToast('error', 'Error updating visited regions');
+		}
+	}
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.settings_page')}</h1>
@@ -182,7 +182,7 @@
 	</form>
 </div>
 
-<!-- <div class="flex flex-col items-center mt-4">
+<div class="flex flex-col items-center mt-4">
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
 	<p>
 		By selecting this, the server will check all of your visited adventures and mark the regions
@@ -193,7 +193,7 @@
 	>
 	<p>This may take longer depending on the number of adventures you have.</p>
 </div>
-
+<!-- 
 <div class="flex flex-col items-center mt-4">
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
 	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>

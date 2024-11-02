@@ -1100,10 +1100,12 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                 county = data['address']['county']
             if 'city' in keys:
                 city = data['address']['city']
-        print(iso_code)
+        if not iso_code:
+            return {"error": "No region found"}
         region = Region.objects.filter(id=iso_code).first()
         visited_region = VisitedRegion.objects.filter(region=region).first()
         is_visited = False
+        print(iso_code)
         country_code = iso_code[:2]
         
         if city:
@@ -1123,7 +1125,6 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
     def reverse_geocode(self, request):
         lat = request.query_params.get('lat', '')
         lon = request.query_params.get('lon', '')
-        print(lat, lon)
         url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
         headers = {'User-Agent': 'AdventureLog Server'}
         response = requests.get(url, headers=headers)
@@ -1132,4 +1133,33 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         except requests.exceptions.JSONDecodeError:
             return Response({"error": "Invalid response from geocoding service"}, status=400)
         return Response(self.extractIsoCode(data))
+
+    @action(detail=False, methods=['post'])
+    def mark_visited_region(self, request):
+        # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
+        new_region_count = 0
+        new_regions = {}
+        adventures = Adventure.objects.filter(user_id=self.request.user)
+        serializer = AdventureSerializer(adventures, many=True)
+        for adventure, serialized_adventure in zip(adventures, serializer.data):
+            if serialized_adventure['is_visited'] == True:
+                lat = adventure.latitude
+                lon = adventure.longitude
+                url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
+                headers = {'User-Agent': 'AdventureLog Server'}
+                response = requests.get(url, headers=headers)
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    return Response({"error": "Invalid response from geocoding service"}, status=400)
+                region = self.extractIsoCode(data)
+                if 'error' not in region:
+                    region = Region.objects.filter(id=region['id']).first()
+                    visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
+                    if not visited_region:
+                        visited_region = VisitedRegion(region=region, user_id=self.request.user)
+                        visited_region.save()
+                        new_region_count += 1
+                        new_regions[region.id] = region.name
+        return Response({"new_regions": new_region_count, "regions": new_regions})
     

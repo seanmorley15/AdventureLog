@@ -28,7 +28,6 @@
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 	import { ADVENTURE_TYPES } from '$lib';
-	import RegionCard from './RegionCard.svelte';
 
 	let wikiError: string = '';
 
@@ -82,6 +81,12 @@
 
 	images = adventure.images || [];
 
+	if (longitude && latitude) {
+		adventure.latitude = latitude;
+		adventure.longitude = longitude;
+		reverseGeocode();
+	}
+
 	if (adventure.longitude && adventure.latitude) {
 		markers = [];
 		markers = [
@@ -92,12 +97,6 @@
 				activity_type: ''
 			}
 		];
-	}
-
-	if (longitude && latitude) {
-		adventure.latitude = latitude;
-		adventure.longitude = longitude;
-		reverseGeocode();
 	}
 
 	$: {
@@ -143,20 +142,21 @@
 		close();
 	}
 
+	let previousCoords: { lat: number; lng: number } | null = null;
+
 	$: if (markers.length > 0) {
-		adventure.latitude = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
-		adventure.longitude = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
-		if (!adventure.location) {
-			adventure.location = markers[0].location;
+		const newLat = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
+		const newLng = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
+
+		if (!previousCoords || previousCoords.lat !== newLat || previousCoords.lng !== newLng) {
+			adventure.latitude = newLat;
+			adventure.longitude = newLng;
+			previousCoords = { lat: newLat, lng: newLng };
+			reverseGeocode();
 		}
+
 		if (!adventure.name) {
 			adventure.name = markers[0].name;
-		}
-	}
-
-	$: {
-		if (adventure.longitude && adventure.latitude) {
-			reverseGeocode();
 		}
 	}
 
