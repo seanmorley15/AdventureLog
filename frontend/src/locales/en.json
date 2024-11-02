@@ -177,6 +177,12 @@
 		"no_adventures_found": "No adventures found",
 		"mark_region_as_visited": "Mark region {region}, {country} as visited?",
 		"mark_visited": "Mark Visited",
+		"error_updating_regions": "Error updating regions",
+		"regions_updated": "regions updated",
+		"visited_region_check": "Visited Region Check",
+		"visited_region_check_desc": "By selecting this, the server will check all of your visited adventures and mark the regions they are located in as visited in world travel.",
+		"update_visited_regions": "Update Visited Regions",
+		"update_visited_regions_disclaimer": "This may take a while depending on the number of adventures you have visited.",
 		"activities": {
 			"general": "General 🌍",
 			"outdoor": "Outdoor 🏞️",

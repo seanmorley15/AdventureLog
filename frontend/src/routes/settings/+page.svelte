@@ -53,9 +53,9 @@
 		});
 		let data = await res.json();
 		if (res.ok) {
-			addToast('success', `${data.new_regions} regions updated`);
+			addToast('success', `${data.new_regions} ${$t('adventures.regions_updated')}`);
 		} else {
-			addToast('error', 'Error updating visited regions');
+			addToast('error', $t('adventures.error_updating_regions'));
 		}
 	}
 </script>
@@ -183,15 +183,16 @@
 </div>
 
 <div class="flex flex-col items-center mt-4">
-	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
+	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">
+		{$t('adventures.visited_region_check')}
+	</h1>
 	<p>
-		By selecting this, the server will check all of your visited adventures and mark the regions
-		they are located in as "visited" in world travel.
+		{$t('adventures.visited_region_check_desc')}
 	</p>
 	<button class="btn btn-neutral mt-2 mb-2" on:click={checkVisitedRegions}
-		>Update Visited Regions</button
+		>{$t('adventures.update_visited_regions')}</button
 	>
-	<p>This may take longer depending on the number of adventures you have.</p>
+	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
 </div>
 <!-- 
 <div class="flex flex-col items-center mt-4">
