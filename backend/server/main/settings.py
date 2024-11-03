@@ -263,4 +263,4 @@ LOGGING = {
 }
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.4'
+COUNTRY_REGION_JSON_VERSION = 'v2.5'

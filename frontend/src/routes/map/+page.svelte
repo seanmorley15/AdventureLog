@@ -130,7 +130,9 @@
 				</span>
 				{#if isPopupOpen}
 					<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
-						<CardCarousel adventures={[adventure]} />
+						{#if adventure.images && adventure.images.length > 0}
+							<CardCarousel adventures={[adventure]} />
+						{/if}
 						<div class="text-lg text-black font-bold">{adventure.name}</div>
 						<p class="font-semibold text-black text-md">
 							{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
