@@ -149,7 +149,22 @@
     "warning": "Avvertimento",
     "wiki_desc": "Estrae un estratto dall'articolo di Wikipedia corrispondente al nome dell'avventura.",
     "wiki_image_error": "Errore durante il recupero dell'immagine da Wikipedia",
-    "wikipedia": "Wikipedia"
+    "wikipedia": "Wikipedia",
+    "adventure_not_found": "Non ci sono avventure da visualizzare. \nAggiungine alcuni utilizzando il pulsante più in basso a destra o prova a cambiare i filtri!",
+    "all": "Tutto",
+    "error_updating_regions": "Errore durante l'aggiornamento delle regioni",
+    "mark_region_as_visited": "Contrassegnare la regione {regione}, {paese} come visitata?",
+    "mark_visited": "Marco ha visitato",
+    "my_adventures": "Le mie avventure",
+    "no_adventures_found": "Nessuna avventura trovata",
+    "no_collections_found": "Nessuna raccolta trovata a cui aggiungere questa avventura.",
+    "no_linkable_adventures": "Non è stata trovata alcuna avventura che possa essere collegata a questa raccolta.",
+    "not_visited": "Non visitato",
+    "regions_updated": "regioni aggiornate",
+    "update_visited_regions": "Aggiorna le regioni visitate",
+    "update_visited_regions_disclaimer": "L'operazione potrebbe richiedere del tempo a seconda del numero di avventure che hai visitato.",
+    "visited_region_check": "Controllo della regione visitata",
+    "visited_region_check_desc": "Selezionando questa opzione, il server controllerà tutte le avventure che hai visitato e contrassegnerà le regioni in cui si trovano come visitate nei viaggi per il mondo."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -235,6 +250,16 @@
     "settings_page": "Pagina Impostazioni",
     "update": "Aggiornamento",
     "update_error": "Errore durante l'aggiornamento delle impostazioni",
-    "update_success": "Impostazioni aggiornate con successo!"
+    "update_success": "Impostazioni aggiornate con successo!",
+    "change_password": "Cambiare la password",
+    "invalid_token": "Il token non è valido o è scaduto",
+    "login_redir": "Verrai quindi reindirizzato alla pagina di accesso.",
+    "missing_email": "Inserisci un indirizzo email",
+    "password_does_not_match": "Le password non corrispondono",
+    "password_is_required": "È richiesta la password",
+    "possible_reset": "Se l'indirizzo email che hai fornito è associato a un account, riceverai un'email con le istruzioni per reimpostare la password!",
+    "reset_password": "Reimposta password",
+    "submit": "Invia",
+    "token_required": "Token e UID sono necessari per la reimpostazione della password."
   }
 }

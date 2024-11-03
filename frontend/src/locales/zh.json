@@ -149,7 +149,22 @@
     "url": "网址",
     "warning": "警告",
     "wiki_desc": "从维基百科文章中提取与冒险名称匹配的摘录。",
-    "wikipedia": "维基百科"
+    "wikipedia": "维基百科",
+    "adventure_not_found": "没有任何冒险可以展示。\n使用右下角的加号按钮添加一些或尝试更改过滤器！",
+    "all": "全部",
+    "error_updating_regions": "更新区域时出错",
+    "mark_region_as_visited": "将地区 {region}、{country} 标记为已访问？",
+    "mark_visited": "马克访问过",
+    "my_adventures": "我的冒险",
+    "no_adventures_found": "没有发现冒险",
+    "no_collections_found": "未找到可添加此冒险的集合。",
+    "no_linkable_adventures": "没有发现任何冒险可以链接到这个集合。",
+    "not_visited": "未访问过",
+    "regions_updated": "地区已更新",
+    "update_visited_regions": "更新访问过的地区",
+    "update_visited_regions_disclaimer": "这可能需要一段时间，具体取决于您访问过的冒险活动的数量。",
+    "visited_region_check": "访问地区检查",
+    "visited_region_check_desc": "通过选择此选项，服务器将检查您访问过的所有冒险活动，并将它们所在的区域标记为在世界旅行中访问过的区域。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -235,6 +250,16 @@
     "settings_page": "设置页面",
     "update": "更新",
     "update_error": "更新设置时出错",
-    "update_success": "设置更新成功！"
+    "update_success": "设置更新成功！",
+    "change_password": "更改密码",
+    "invalid_token": "令牌无效或已过期",
+    "login_redir": "然后您将被重定向到登录页面。",
+    "missing_email": "请输入电子邮件地址",
+    "password_does_not_match": "密码不匹配",
+    "password_is_required": "需要密码",
+    "possible_reset": "如果您提供的电子邮件地址与帐户关联，您将收到一封电子邮件，其中包含重置密码的说明！",
+    "reset_password": "重置密码",
+    "submit": "提交",
+    "token_required": "重置密码需要令牌和 UID。"
   }
 }

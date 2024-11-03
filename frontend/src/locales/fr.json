@@ -149,7 +149,22 @@
     "url": "URL",
     "warning": "Avertissement",
     "wiki_desc": "Extrait un extrait de l'article Wikipédia correspondant au nom de l'aventure.",
-    "wikipedia": "Wikipédia"
+    "wikipedia": "Wikipédia",
+    "adventure_not_found": "Il n'y a aucune aventure à afficher. \nAjoutez-en en utilisant le bouton plus en bas à droite ou essayez de changer les filtres !",
+    "all": "Tous",
+    "error_updating_regions": "Erreur lors de la mise à jour des régions",
+    "mark_region_as_visited": "Marquer la région {region}, {country} comme visitée ?",
+    "mark_visited": "Mark a visité",
+    "my_adventures": "Mes aventures",
+    "no_adventures_found": "Aucune aventure trouvée",
+    "no_collections_found": "Aucune collection trouvée pour ajouter cette aventure.",
+    "no_linkable_adventures": "Aucune aventure trouvée pouvant être liée à cette collection.",
+    "not_visited": "Non visité",
+    "regions_updated": "régions mises à jour",
+    "update_visited_regions": "Mettre à jour les régions visitées",
+    "update_visited_regions_disclaimer": "Cela peut prendre un certain temps en fonction du nombre d'aventures que vous avez visitées.",
+    "visited_region_check": "Vérification de la région visitée",
+    "visited_region_check_desc": "En sélectionnant cette option, le serveur vérifiera toutes vos aventures visitées et marquera les régions dans lesquelles elles se trouvent comme visitées lors des voyages dans le monde."
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -235,6 +250,16 @@
     "settings_page": "Page Paramètres",
     "update": "Mise à jour",
     "update_error": "Erreur lors de la mise à jour des paramètres",
-    "update_success": "Paramètres mis à jour avec succès !"
+    "update_success": "Paramètres mis à jour avec succès !",
+    "change_password": "Changer le mot de passe",
+    "invalid_token": "Le jeton n'est pas valide ou a expiré",
+    "login_redir": "Vous serez alors redirigé vers la page de connexion.",
+    "missing_email": "Veuillez entrer une adresse e-mail",
+    "password_does_not_match": "Les mots de passe ne correspondent pas",
+    "password_is_required": "Le mot de passe est requis",
+    "possible_reset": "Si l'adresse e-mail que vous avez fournie est associée à un compte, vous recevrez un e-mail avec des instructions pour réinitialiser votre mot de passe !",
+    "reset_password": "Réinitialiser le mot de passe",
+    "submit": "Soumettre",
+    "token_required": "Le jeton et l'UID sont requis pour la réinitialisation du mot de passe."
   }
 }

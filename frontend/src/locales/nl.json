@@ -149,7 +149,21 @@
     "url": "URL",
     "warning": "Waarschuwing",
     "wiki_desc": "Haalt een fragment uit een Wikipedia-artikel dat overeenkomt met de naam van het avontuur.",
-    "wikipedia": "Wikipedia"
+    "wikipedia": "Wikipedia",
+    "adventure_not_found": "Er zijn geen avonturen om weer te geven. \nVoeg er een paar toe via de plusknop rechtsonder of probeer de filters te wijzigen!",
+    "all": "Alle",
+    "error_updating_regions": "Fout bij updaten van regio's",
+    "mark_visited": "Mark bezocht",
+    "my_adventures": "Mijn avonturen",
+    "no_adventures_found": "Geen avonturen gevonden",
+    "no_collections_found": "Er zijn geen collecties gevonden waar dit avontuur aan kan worden toegevoegd.",
+    "no_linkable_adventures": "Er zijn geen avonturen gevonden die aan deze collectie kunnen worden gekoppeld.",
+    "not_visited": "Niet bezocht",
+    "regions_updated": "regio's bijgewerkt",
+    "update_visited_regions": "Update bezochte regio's",
+    "update_visited_regions_disclaimer": "Dit kan even duren, afhankelijk van het aantal avonturen dat je hebt bezocht.",
+    "visited_region_check": "Regiocheck bezocht",
+    "visited_region_check_desc": "Door dit te selecteren, controleert de server al uw bezochte avonturen en markeert de regio's waarin ze zich bevinden als bezocht in de wereldreizen."
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -235,6 +249,16 @@
     "settings_page": "Instellingenpagina",
     "update": "Update",
     "update_error": "Fout bij updaten van instellingen",
-    "update_success": "Instellingen succesvol bijgewerkt!"
+    "update_success": "Instellingen succesvol bijgewerkt!",
+    "change_password": "Wachtwoord wijzigen",
+    "invalid_token": "Token is ongeldig of verlopen",
+    "login_redir": "Vervolgens wordt u doorgestuurd naar de inlogpagina.",
+    "missing_email": "Voer een e-mailadres in",
+    "password_does_not_match": "Wachtwoorden komen niet overeen",
+    "password_is_required": "Wachtwoord is vereist",
+    "possible_reset": "Als het door u opgegeven e-mailadres aan een account is gekoppeld, ontvangt u een e-mail met instructies om uw wachtwoord opnieuw in te stellen!",
+    "reset_password": "Wachtwoord opnieuw instellen",
+    "submit": "Indienen",
+    "token_required": "Token en UID zijn vereist voor het opnieuw instellen van het wachtwoord."
   }
 }

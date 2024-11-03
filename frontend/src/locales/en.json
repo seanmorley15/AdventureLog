@@ -250,6 +250,16 @@
 		"email_change": "Change Email",
 		"current_email": "Current Email",
 		"no_email_set": "No email set",
-		"new_email": "New Email"
+		"new_email": "New Email",
+		"change_password": "Change Password",
+		"login_redir": "You will then be redirected to the login page.",
+		"token_required": "Token and UID are required for password reset.",
+		"reset_password": "Reset Password",
+		"possible_reset": "If the email address you provided is associated with an account, you will receive an email with instructions to reset your password!",
+		"missing_email": "Please enter an email address",
+		"submit": "Submit",
+		"password_does_not_match": "Passwords do not match",
+		"password_is_required": "Password is required",
+		"invalid_token": "Token is invalid or has expired"
 	}
 }

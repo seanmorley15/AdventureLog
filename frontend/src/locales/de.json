@@ -149,7 +149,22 @@
     "url": "URL",
     "warning": "Warnung",
     "wiki_desc": "Ruft einen Auszug aus einem Wikipedia-Artikel ab, der zum Namen des Abenteuers passt.",
-    "wikipedia": "Wikipedia"
+    "wikipedia": "Wikipedia",
+    "adventure_not_found": "Es sind keine Abenteuer zum Anzeigen vorhanden. \nFügen Sie einige über die Plus-Schaltfläche unten rechts hinzu oder versuchen Sie, die Filter zu ändern!",
+    "all": "Alle",
+    "error_updating_regions": "Fehler beim Aktualisieren der Regionen",
+    "mark_region_as_visited": "Region {region}, {country} als besucht markieren?",
+    "mark_visited": "Mark besucht",
+    "my_adventures": "Meine Abenteuer",
+    "no_adventures_found": "Keine Abenteuer gefunden",
+    "no_collections_found": "Es wurden keine Sammlungen gefunden, zu denen dieses Abenteuer hinzugefügt werden kann.",
+    "no_linkable_adventures": "Es wurden keine Abenteuer gefunden, die mit dieser Sammlung verknüpft werden können.",
+    "not_visited": "Nicht besucht",
+    "regions_updated": "Regionen aktualisiert",
+    "update_visited_regions": "Besuchte Regionen aktualisieren",
+    "update_visited_regions_disclaimer": "Dies kann je nach Anzahl der Abenteuer, die Sie besucht haben, eine Weile dauern.",
+    "visited_region_check": "Überprüfung der besuchten Region",
+    "visited_region_check_desc": "Wenn Sie diese Option auswählen, überprüft der Server alle von Ihnen besuchten Abenteuer und markiert die Regionen, in denen sie sich befinden, als im Rahmen von Weltreisen besucht."
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -206,7 +221,8 @@
     "signup": "Melden Sie sich an",
     "username": "Benutzername",
     "profile_picture": "Profilbild",
-    "public_profile": "Öffentliches Profil"
+    "public_profile": "Öffentliches Profil",
+    "public_tooltip": "Mit einem öffentlichen Profil können Benutzer Sammlungen mit Ihnen teilen und Ihr Profil auf der Benutzerseite anzeigen."
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichen Profilen gefunden."
@@ -233,6 +249,17 @@
     "settings_page": "Einstellungsseite",
     "update": "Aktualisieren",
     "update_error": "Fehler beim Aktualisieren der Einstellungen",
-    "update_success": "Einstellungen erfolgreich aktualisiert!"
+    "update_success": "Einstellungen erfolgreich aktualisiert!",
+    "change_password": "Kennwort ändern",
+    "confirm_new_password": "Bestätigen Sie das neue Passwort",
+    "invalid_token": "Token ist ungültig oder abgelaufen",
+    "login_redir": "Anschließend werden Sie zur Anmeldeseite weitergeleitet.",
+    "missing_email": "Bitte geben Sie eine E-Mail-Adresse ein",
+    "password_does_not_match": "Passwörter stimmen nicht überein",
+    "password_is_required": "Passwort ist erforderlich",
+    "possible_reset": "Wenn die von Ihnen angegebene E-Mail-Adresse mit einem Konto verknüpft ist, erhalten Sie eine E-Mail mit Anweisungen zum Zurücksetzen Ihres Passworts!",
+    "reset_password": "Passwort zurücksetzen",
+    "submit": "Einreichen",
+    "token_required": "Zum Zurücksetzen des Passworts sind Token und UID erforderlich."
   }
 }
