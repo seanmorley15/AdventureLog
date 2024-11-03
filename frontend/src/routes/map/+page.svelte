@@ -4,6 +4,8 @@
 	import { t } from 'svelte-i18n';
 	import type { Adventure, VisitedRegion } from '$lib/types.js';
 	import { getAdventureTypeLabel } from '$lib';
+	import CardCarousel from '$lib/components/CardCarousel.svelte';
+	import { goto } from '$app/navigation';
 	export let data;
 
 	let createModalOpen: boolean = false;
@@ -39,6 +41,8 @@
 	let newLongitude: number | null = null;
 	let newLatitude: number | null = null;
 
+	let openPopupId: string | null = null; // Store the ID of the currently open popup
+
 	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
 		newMarker = null;
 		newMarker = { lngLat: e.detail.lngLat };
@@ -46,16 +50,16 @@
 		newLatitude = e.detail.lngLat.lat;
 	}
 
-	// let markers = [];
-
-	// $: {
-	// 	markers = data.props.markers;
-	// }
-
 	function createNewAdventure(event: CustomEvent) {
 		adventures = [...adventures, event.detail];
 		newMarker = null;
 		createModalOpen = false;
+	}
+
+	let isPopupOpen = false;
+
+	function togglePopup() {
+		isPopupOpen = !isPopupOpen;
 	}
 </script>
 
@@ -73,7 +77,6 @@
 				<span class="label-text mr-1">Planned</span>
 				<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
 			</label>
-			<!-- <div class="divider divider-horizontal"></div> -->
 			<label for="show-geo">Show Visited Regions</label>
 			<input
 				type="checkbox"
@@ -120,37 +123,45 @@
 				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-{adventure.is_visited
 					? 'red'
 					: 'blue'}-300 text-black shadow-2xl focus:outline-2 focus:outline-black"
+				on:click={togglePopup}
 			>
 				<span class="text-xl">
 					{getAdventureTypeLabel(adventure.type)}
 				</span>
-				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{adventure.name}</div>
-					<p class="font-semibold text-black text-md">
-						{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
-					</p>
-					<p class="font-semibold text-black text-md">
-						{$t(`adventures.activities.${adventure.type}`)}
-					</p>
-					{#if adventure.visits && adventure.visits.length > 0}
-						<p class="text-black text-sm">
-							{#each adventure.visits as visit}
-								{visit.start_date
-									? new Date(visit.start_date).toLocaleDateString(undefined, {
-											timeZone: 'UTC'
-										})
-									: ''}
-								{visit.end_date && visit.end_date !== '' && visit.end_date !== visit.start_date
-									? ' - ' +
-										new Date(visit.end_date).toLocaleDateString(undefined, {
-											timeZone: 'UTC'
-										})
-									: ''}
-								<br />
-							{/each}
+				{#if isPopupOpen}
+					<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
+						<CardCarousel adventures={[adventure]} />
+						<div class="text-lg text-black font-bold">{adventure.name}</div>
+						<p class="font-semibold text-black text-md">
+							{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
 						</p>
-					{/if}
-				</Popup>
+						<p class="font-semibold text-black text-md">
+							{$t(`adventures.activities.${adventure.type}`)}
+						</p>
+						{#if adventure.visits && adventure.visits.length > 0}
+							<p class="text-black text-sm">
+								{#each adventure.visits as visit}
+									{visit.start_date
+										? new Date(visit.start_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})
+										: ''}
+									{visit.end_date && visit.end_date !== '' && visit.end_date !== visit.start_date
+										? ' - ' +
+											new Date(visit.end_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})
+										: ''}
+									<br />
+								{/each}
+							</p>
+						{/if}
+						<button
+							class="btn btn-neutral btn-wide btn-sm mt-4"
+							on:click={() => goto(`/adventures/${adventure.id}`)}>View Details</button
+						>
+					</Popup>
+				{/if}
 			</Marker>
 		{/if}
 	{/each}
