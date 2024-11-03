@@ -43,7 +43,7 @@ services:
       - DEBUG=False
       - FRONTEND_URL='http://localhost:8015' # Used for email generation. This should be the url of the frontend
     ports:
-      - "8016:80" # User can change this to any outward port without breaking the setup
+      - "8016:80"
     depends_on:
       - db
     volumes:

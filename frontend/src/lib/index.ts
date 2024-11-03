@@ -253,6 +253,39 @@ export let ADVENTURE_TYPES = [
 	{ type: 'other', label: 'Other' }
 ];
 
+// adventure type to icon mapping
+export let ADVENTURE_TYPE_ICONS = {
+	general: '🌍',
+	outdoor: '🏞️',
+	lodging: '🛌',
+	dining: '🍽️',
+	activity: '🏄',
+	attraction: '🎢',
+	shopping: '🛍️',
+	nightlife: '🌃',
+	event: '🎉',
+	transportation: '🚗',
+	culture: '🎭',
+	water_sports: '🚤',
+	hiking: '🥾',
+	wildlife: '🦒',
+	historical_sites: '🏛️',
+	music_concerts: '🎶',
+	fitness: '🏋️',
+	art_museums: '🎨',
+	festivals: '🎪',
+	spiritual_journeys: '🧘‍♀️',
+	volunteer_work: '🤝',
+	other: '❓'
+};
+
+type AdventureType = keyof typeof ADVENTURE_TYPE_ICONS;
+
+export function getAdventureTypeLabel(type: AdventureType) {
+	const typeObj = ADVENTURE_TYPE_ICONS[type];
+	return typeObj;
+}
+
 export function getRandomBackground() {
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
 	return randomBackgrounds.backgrounds[randomIndex] as Background;

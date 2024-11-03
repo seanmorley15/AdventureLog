@@ -1162,4 +1162,3 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                         new_region_count += 1
                         new_regions[region.id] = region.name
         return Response({"new_regions": new_region_count, "regions": new_regions})
-    

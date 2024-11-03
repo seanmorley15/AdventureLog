@@ -70,7 +70,8 @@
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
 		collection: adventureToEdit?.collection || collection?.id || null,
-		visits: adventureToEdit?.visits || []
+		visits: adventureToEdit?.visits || [],
+		is_visited: adventureToEdit?.is_visited || false
 	};
 
 	let markers: Point[] = [];

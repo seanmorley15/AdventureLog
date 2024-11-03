@@ -63,6 +63,9 @@ export type VisitedRegion = {
 	id: number;
 	region: number;
 	user_id: number;
+	longitude: number;
+	latitude: number;
+	name: string;
 };
 
 export type Point = {
