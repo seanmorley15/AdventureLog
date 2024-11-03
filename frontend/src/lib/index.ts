@@ -279,11 +279,13 @@ export let ADVENTURE_TYPE_ICONS = {
 	other: '❓'
 };
 
-type AdventureType = keyof typeof ADVENTURE_TYPE_ICONS;
-
-export function getAdventureTypeLabel(type: AdventureType) {
-	const typeObj = ADVENTURE_TYPE_ICONS[type];
-	return typeObj;
+export function getAdventureTypeLabel(type: string) {
+	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
+	if (type in ADVENTURE_TYPE_ICONS) {
+		return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
+	} else {
+		return '❓';
+	}
 }
 
 export function getRandomBackground() {

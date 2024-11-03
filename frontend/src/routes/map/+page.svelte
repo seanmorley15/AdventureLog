@@ -3,6 +3,7 @@
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import type { Adventure, VisitedRegion } from '$lib/types.js';
+	import { getAdventureTypeLabel } from '$lib';
 	export let data;
 
 	let createModalOpen: boolean = false;
@@ -18,6 +19,14 @@
 		filteredAdventures = adventures.filter(
 			(adventure) => (showVisited && adventure.is_visited) || (showPlanned && !adventure.is_visited)
 		);
+	}
+
+	// Reset the longitude and latitude when the newMarker is set to null so new adventures are not created at the wrong location
+	$: {
+		if (!newMarker) {
+			newLongitude = null;
+			newLatitude = null;
+		}
 	}
 
 	console.log(data);
@@ -110,24 +119,11 @@
 				lngLat={[adventure.longitude, adventure.latitude]}
 				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-{adventure.is_visited
 					? 'red'
-					: 'blue'}-300 text-black shadow-md"
+					: 'blue'}-300 text-black shadow-2xl focus:outline-2 focus:outline-black"
 			>
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<circle
-						cx="12"
-						cy="12"
-						r="10"
-						stroke={adventure.is_visited ? 'red' : 'blue'}
-						stroke-width="2"
-						fill={adventure.is_visited ? 'red' : 'blue'}
-					/>
-				</svg>
+				<span class="text-xl">
+					{getAdventureTypeLabel(adventure.type)}
+				</span>
 				<Popup openOn="click" offset={[0, -10]}>
 					<div class="text-lg text-black font-bold">{adventure.name}</div>
 					<p class="font-semibold text-black text-md">
@@ -167,7 +163,7 @@
 	{#each visitedRegions as region}
 		{#if showGeo}
 			<Marker
-				lngLat={[region.latitude, region.longitude]}
+				lngLat={[region.longitude, region.latitude]}
 				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 text-black shadow-md"
 			>
 				<svg
@@ -180,8 +176,8 @@
 					<circle cx="12" cy="12" r="10" stroke="green" stroke-width="2" fill="green" />
 				</svg>
 				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{name}</div>
-					<p class="font-semibold text-black text-md">{region.name}</p>
+					<div class="text-lg text-black font-bold">{region.name}</div>
+					<p class="font-semibold text-black text-md">{region.region}</p>
 				</Popup>
 			</Marker>
 		{/if}
