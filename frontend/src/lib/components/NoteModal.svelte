@@ -4,7 +4,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
-	import ShareModal from './ShareModal.svelte';
+	import { t } from 'svelte-i18n';
 	let modal: HTMLDialogElement;
 
 	export let note: Note | null = null;
@@ -98,8 +98,7 @@
 				}
 			} else {
 				let data = await res.json();
-				console.error('Failed to save note', data);
-				console.error('Failed to save note');
+				console.error($t('notes.failed_to_save'), data);
 			}
 		}
 	}
@@ -109,15 +108,15 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Note Editor</h3>
+		<h3 class="font-bold text-lg">{$t('notes.note_editor')}</h3>
 		{#if initialName}
-			<p class="font-semibold text-md mb-2">Editing note {initialName}</p>
+			<p class="font-semibold text-md mb-2">{$t('notes.editing_note')} {initialName}</p>
 		{/if}
 
 		{#if (note && user?.pk == note?.user_id) || (collection && user && collection.shared_with.includes(user.uuid)) || !note}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
-					<label for="name">Name</label>
+					<label for="name">{$t('adventures.name')}</label>
 					<input
 						type="text"
 						id="name"
@@ -126,7 +125,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Date</label>
+					<label for="content">{$t('adventures.date')}</label>
 					<input
 						type="date"
 						id="date"
@@ -138,7 +137,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Content</label>
+					<label for="content">{$t('notes.content')}</label>
 					<textarea
 						id="content"
 						class="textarea textarea-bordered"
@@ -147,11 +146,11 @@
 					></textarea>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Links</label>
+					<label for="content">{$t('adventures.links')}</label>
 					<input
 						type="url"
 						class="input input-bordered w-full mb-1"
-						placeholder="Add a link (e.g. https://example.com)"
+						placeholder="${$t('notes.add_a_link')} (e.g. https://example.com)"
 						bind:value={newLink}
 						on:keydown={(e) => {
 							if (e.key === 'Enter') {
@@ -160,7 +159,9 @@
 							}
 						}}
 					/>
-					<button type="button" class="btn btn-sm btn-primary" on:click={addLink}>Add</button>
+					<button type="button" class="btn btn-sm btn-primary" on:click={addLink}
+						>{$t('adventures.add')}</button
+					>
 				</div>
 				{#if newNote.links.length > 0}
 					<ul class="list-none">
@@ -174,7 +175,7 @@
 										newNote.links = newNote.links.filter((_, index) => index !== i);
 									}}
 								>
-									Remove
+									{$t('adventures.remove')}
 								</button>
 							</li>
 						{/each}
@@ -200,8 +201,8 @@
 					</div>
 				{/if}
 
-				<button class="btn btn-primary mr-1" on:click={save}>Save</button>
-				<button class="btn btn-neutral" on:click={close}>Close</button>
+				<button class="btn btn-primary mr-1" on:click={save}>{$t('notes.save')}</button>
+				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 
 				{#if collection.is_public}
 					<div role="alert" class="alert mt-4">
@@ -218,14 +219,14 @@
 								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 							></path>
 						</svg>
-						<span>This note is public because it is in a public collection.</span>
+						<span>{$t('notes.note_public')}</span>
 					</div>
 				{/if}
 			</form>
 		{:else}
 			<form>
 				<div class="form-control mb-2">
-					<label for="name">Name</label>
+					<label for="name">{$t('adventures.public')}</label>
 					<input
 						type="text"
 						id="name"
@@ -235,7 +236,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Date</label>
+					<label for="content">{$t('adventures.date')}</label>
 					<input
 						type="date"
 						id="date"
@@ -248,7 +249,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Content</label>
+					<label for="content">{$t('notes.content')}</label>
 					<textarea
 						id="content"
 						class="textarea textarea-bordered"
@@ -258,7 +259,7 @@
 					></textarea>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Links</label>
+					<label for="content">{$t('adventures.links')}</label>
 				</div>
 				{#if newNote.links.length > 0}
 					<ul class="list-none">
@@ -270,7 +271,7 @@
 					</ul>
 				{/if}
 
-				<button class="btn btn-neutral" on:click={close}>Close</button>
+				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 			</form>
 		{/if}
 	</div>
