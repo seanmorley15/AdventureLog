@@ -284,7 +284,11 @@
     "possible_reset": "Si l'adresse e-mail que vous avez fournie est associée à un compte, vous recevrez un e-mail avec des instructions pour réinitialiser votre mot de passe !",
     "reset_password": "Réinitialiser le mot de passe",
     "submit": "Soumettre",
-    "token_required": "Le jeton et l'UID sont requis pour la réinitialisation du mot de passe."
+    "token_required": "Le jeton et l'UID sont requis pour la réinitialisation du mot de passe.",
+    "about_this_background": "À propos de ce contexte",
+    "join_discord": "Rejoignez le Discord",
+    "join_discord_desc": "pour partager vos propres photos. \nPostez-les dans le",
+    "photo_by": "Photo par"
   },
   "checklist": {
     "add_item": "Ajouter un article",

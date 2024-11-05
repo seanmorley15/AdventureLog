@@ -284,7 +284,11 @@
     "possible_reset": "如果您提供的电子邮件地址与帐户关联，您将收到一封电子邮件，其中包含重置密码的说明！",
     "reset_password": "重置密码",
     "submit": "提交",
-    "token_required": "重置密码需要令牌和 UID。"
+    "token_required": "重置密码需要令牌和 UID。",
+    "about_this_background": "关于这个背景",
+    "join_discord": "加入不和谐",
+    "join_discord_desc": "分享您自己的照片。\n将它们张贴在",
+    "photo_by": "摄影："
   },
   "checklist": {
     "add_item": "添加项目",

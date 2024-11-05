@@ -284,7 +284,11 @@
     "possible_reset": "Se l'indirizzo email che hai fornito è associato a un account, riceverai un'email con le istruzioni per reimpostare la password!",
     "reset_password": "Reimposta password",
     "submit": "Invia",
-    "token_required": "Token e UID sono necessari per la reimpostazione della password."
+    "token_required": "Token e UID sono necessari per la reimpostazione della password.",
+    "about_this_background": "A proposito di questo contesto",
+    "join_discord": "Unisciti alla Discordia",
+    "join_discord_desc": "per condividere le tue foto. \nPubblicateli in",
+    "photo_by": "Foto di"
   },
   "checklist": {
     "add_item": "Aggiungi articolo",

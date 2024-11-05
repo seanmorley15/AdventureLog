@@ -284,7 +284,11 @@
 		"submit": "Submit",
 		"password_does_not_match": "Passwords do not match",
 		"password_is_required": "Password is required",
-		"invalid_token": "Token is invalid or has expired"
+		"invalid_token": "Token is invalid or has expired",
+		"about_this_background": "About this background",
+		"photo_by": "Photo by",
+		"join_discord": "Join the Discord",
+		"join_discord_desc": "to share your own photos. Post them in the #travel-share channel."
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

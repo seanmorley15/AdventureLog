@@ -284,7 +284,11 @@
     "possible_reset": "Wenn die von Ihnen angegebene E-Mail-Adresse mit einem Konto verknüpft ist, erhalten Sie eine E-Mail mit Anweisungen zum Zurücksetzen Ihres Passworts!",
     "reset_password": "Passwort zurücksetzen",
     "submit": "Einreichen",
-    "token_required": "Zum Zurücksetzen des Passworts sind Token und UID erforderlich."
+    "token_required": "Zum Zurücksetzen des Passworts sind Token und UID erforderlich.",
+    "about_this_background": "Über diesen Hintergrund",
+    "join_discord": "Treten Sie dem Discord bei",
+    "join_discord_desc": "um Ihre eigenen Fotos zu teilen. \nVeröffentlichen Sie sie im",
+    "photo_by": "Foto von"
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",

@@ -284,7 +284,11 @@
     "password_does_not_match": "Las contraseñas no coinciden",
     "password_is_required": "Se requiere contraseña",
     "submit": "Entregar",
-    "invalid_token": "El token no es válido o ha caducado"
+    "invalid_token": "El token no es válido o ha caducado",
+    "about_this_background": "Sobre este trasfondo",
+    "join_discord": "Únete a la discordia",
+    "join_discord_desc": "para compartir tus propias fotos. \nPublicarlos en el",
+    "photo_by": "Foto por"
   },
   "checklist": {
     "add_item": "Agregar artículo",

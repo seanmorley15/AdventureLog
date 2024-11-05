@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
 	export let background: Background;
+	import { t } from 'svelte-i18n';
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -29,14 +30,14 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-lg">
-			About This Background<span class=" inline-block"></span>
+			{$t('settings.about_this_background')}<span class=" inline-block"></span>
 		</h3>
 		<div class="flex flex-col items-center">
 			{#if background.author != ''}
-				<p class="text-center mt-2">Photo by {background.author}</p>
+				<p class="text-center mt-2">{$t('settings.photo_by')} {background.author}</p>
 			{/if}
 			{#if background.location != ''}
-				<p class="text-center">Location: {background.location}</p>
+				<p class="text-center">{$t('adventures.location')}: {background.location}</p>
 			{/if}
 			<p class="text-center mt-4">
 				<a
@@ -45,11 +46,11 @@
 					rel="noopener noreferrer"
 					class="text-blue-500 hover:underline"
 				>
-					Join the Discord
+					{$t('settings.join_discord')}
 				</a>
-				to share your own photos. Post them in the #travel-share channel.
+				{$t('settings.join_discord_desc')}
 			</p>
 		</div>
-		<button class="btn btn-primary" on:click={close}>Close</button>
+		<button class="btn btn-primary" on:click={close}>{$t('about.close')}</button>
 	</div>
 </dialog>

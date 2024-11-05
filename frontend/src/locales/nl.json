@@ -284,7 +284,11 @@
     "possible_reset": "Als het door u opgegeven e-mailadres aan een account is gekoppeld, ontvangt u een e-mail met instructies om uw wachtwoord opnieuw in te stellen!",
     "reset_password": "Wachtwoord opnieuw instellen",
     "submit": "Indienen",
-    "token_required": "Token en UID zijn vereist voor het opnieuw instellen van het wachtwoord."
+    "token_required": "Token en UID zijn vereist voor het opnieuw instellen van het wachtwoord.",
+    "about_this_background": "Over deze achtergrond",
+    "join_discord": "Sluit je aan bij de onenigheid",
+    "join_discord_desc": "om uw eigen foto's te delen. \nPlaats ze in de",
+    "photo_by": "Foto door"
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

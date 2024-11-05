@@ -284,7 +284,11 @@
     "possible_reset": "Om e-postadressen du angav är kopplad till ett konto kommer du att få ett e-postmeddelande med instruktioner för att återställa ditt lösenord!",
     "reset_password": "Återställ lösenord",
     "submit": "Överlämna",
-    "token_required": "Token och UID krävs för lösenordsåterställning."
+    "token_required": "Token och UID krävs för lösenordsåterställning.",
+    "about_this_background": "Om denna bakgrund",
+    "join_discord": "Gå med i Discord",
+    "join_discord_desc": "för att dela dina egna foton. \nLägg upp dem i",
+    "photo_by": "Foto av"
   },
   "checklist": {
     "add_item": "Lägg till objekt",
