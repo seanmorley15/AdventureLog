@@ -388,6 +388,15 @@
     "shared": "Delad",
     "shared_with": "Delas med",
     "unshared": "Odelat",
-    "with": "med"
+    "with": "med",
+    "go_to_settings": "Gå till inställningar",
+    "no_shared_found": "Inga samlingar hittades som delas med dig.",
+    "set_public": "För att tillåta användare att dela med dig måste du ha din profil inställd på offentlig."
+  },
+  "profile": {
+    "member_since": "Medlem sedan dess",
+    "user_stats": "Användarstatistik",
+    "visited_countries": "Besökta länder",
+    "visited_regions": "Besökte regioner"
   }
 }

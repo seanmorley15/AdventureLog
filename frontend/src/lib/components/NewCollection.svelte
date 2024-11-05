@@ -119,7 +119,7 @@
 				</div>
 				<div class="mb-2">
 					<label for="description"
-						>$t('adventures.description')<iconify-icon
+						>{$t('adventures.description')}<iconify-icon
 							icon="mdi:notebook"
 							class="text-lg ml-1 -mb-0.5"
 						></iconify-icon></label

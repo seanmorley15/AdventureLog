@@ -378,7 +378,10 @@
     "shared": "Compartido",
     "shared_with": "Compartido con",
     "unshared": "Incompartible",
-    "with": "con"
+    "with": "con",
+    "go_to_settings": "Ir a configuración",
+    "no_shared_found": "No se encontraron colecciones que se compartan contigo.",
+    "set_public": "Para permitir que los usuarios compartan contenido con usted, necesita que su perfil esté configurado como público."
   },
   "languages": {
     "de": "Alemán",
@@ -389,5 +392,11 @@
     "nl": "Holandés",
     "sv": "sueco",
     "zh": "Chino"
+  },
+  "profile": {
+    "member_since": "Miembro desde",
+    "user_stats": "Estadísticas de usuario",
+    "visited_countries": "Países visitados",
+    "visited_regions": "Regiones visitadas"
   }
 }

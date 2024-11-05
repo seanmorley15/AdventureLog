@@ -388,6 +388,15 @@
     "shared": "Gedeeld",
     "shared_with": "Gedeeld met",
     "unshared": "Niet gedeeld",
-    "with": "met"
+    "with": "met",
+    "go_to_settings": "Ga naar instellingen",
+    "no_shared_found": "Er zijn geen collecties gevonden die met u zijn gedeeld.",
+    "set_public": "Om ervoor te zorgen dat gebruikers met u kunnen delen, moet uw profiel op openbaar zijn ingesteld."
+  },
+  "profile": {
+    "member_since": "Lid sinds",
+    "user_stats": "Gebruikersstatistieken",
+    "visited_countries": "Bezochte landen",
+    "visited_regions": "Bezochte regio's"
   }
 }

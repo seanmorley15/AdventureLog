@@ -378,7 +378,10 @@
 		"share_desc": "Share this collection with other users.",
 		"shared_with": "Shared With",
 		"no_users_shared": "No users shared with",
-		"not_shared_with": "Not Shared With"
+		"not_shared_with": "Not Shared With",
+		"no_shared_found": "No collections found that are shared with you.",
+		"set_public": "In order to allow users to share with you, you need your profile set to public.",
+		"go_to_settings": "Go to settings"
 	},
 	"languages": {
 		"en": "English",
@@ -389,5 +392,11 @@
 		"nl": "Dutch",
 		"sv": "Swedish",
 		"zh": "Chinese"
+	},
+	"profile": {
+		"member_since": "Member since",
+		"user_stats": "User Stats",
+		"visited_countries": "Visited Countries",
+		"visited_regions": "Visited Regions"
 	}
 }

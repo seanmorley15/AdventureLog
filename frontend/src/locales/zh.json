@@ -388,6 +388,15 @@
     "shared": "共享",
     "shared_with": "共享对象",
     "unshared": "未共享",
-    "with": "和"
+    "with": "和",
+    "go_to_settings": "前往设置",
+    "no_shared_found": "未找到与您共享的集合。",
+    "set_public": "为了允许用户与您共享，您需要将您的个人资料设置为公开。"
+  },
+  "profile": {
+    "member_since": "会员自",
+    "user_stats": "用户统计",
+    "visited_countries": "访问过的国家",
+    "visited_regions": "访问地区"
   }
 }

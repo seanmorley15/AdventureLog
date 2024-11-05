@@ -388,6 +388,15 @@
     "shared": "Geteilt",
     "shared_with": "Geteilt mit",
     "unshared": "Nicht geteilt",
-    "with": "mit"
+    "with": "mit",
+    "go_to_settings": "Gehen Sie zu den Einstellungen",
+    "no_shared_found": "Es wurden keine Sammlungen gefunden, die mit Ihnen geteilt wurden.",
+    "set_public": "Damit Benutzer Inhalte mit Ihnen teilen können, muss Ihr Profil auf „Öffentlich“ eingestellt sein."
+  },
+  "profile": {
+    "member_since": "Mitglied seit",
+    "user_stats": "Benutzerstatistiken",
+    "visited_countries": "Besuchte Länder",
+    "visited_regions": "Besuchte Regionen"
   }
 }
