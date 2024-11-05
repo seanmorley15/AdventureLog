@@ -46,10 +46,10 @@
 						</button>
 					{:else}
 						<button on:click={() => goto('/login')} class="btn btn-primary">
-							{$t('navbar.login')}
+							{$t('auth.login')}
 						</button>
 						<button on:click={() => goto('/signup')} class="btn btn-neutral">
-							{$t('navbar.signup')}
+							{$t('auth.signup')}
 						</button>
 					{/if}
 				</div>

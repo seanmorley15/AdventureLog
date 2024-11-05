@@ -222,7 +222,7 @@
 					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
 					>{$t('navbar.discord')}</button
 				>
-				<p class="font-bold m-4 text-lg">{$t('navbar.theme_selection')}</p>
+				<p class="font-bold m-4 text-lg text-center">{$t('navbar.theme_selection')}</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
 					<li>
 						<button formaction="/?/setTheme&theme=light"
