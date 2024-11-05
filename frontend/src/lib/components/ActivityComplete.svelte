@@ -54,7 +54,7 @@
 		<input
 			type="text"
 			class="input input-bordered w-full"
-			placeholder={$t('adventures.add_an_activity')}
+			placeholder={$t('adventures.add_a_tag')}
 			bind:value={inputVal}
 			on:keydown={(e) => {
 				if (e.key === 'Enter') {

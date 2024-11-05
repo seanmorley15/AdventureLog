@@ -44,7 +44,7 @@
 		<p class="py-1">
 			© {copyrightYear}
 			<a
-				href="https://github.com/seanmorley15"
+				href="https://seanmorley.com"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="text-primary-500 underline">Sean Morley</a

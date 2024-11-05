@@ -164,7 +164,29 @@
     "update_visited_regions": "Besuchte Regionen aktualisieren",
     "update_visited_regions_disclaimer": "Dies kann je nach Anzahl der Abenteuer, die Sie besucht haben, eine Weile dauern.",
     "visited_region_check": "Überprüfung der besuchten Region",
-    "visited_region_check_desc": "Wenn Sie diese Option auswählen, überprüft der Server alle von Ihnen besuchten Abenteuer und markiert die Regionen, in denen sie sich befinden, als im Rahmen von Weltreisen besucht."
+    "visited_region_check_desc": "Wenn Sie diese Option auswählen, überprüft der Server alle von Ihnen besuchten Abenteuer und markiert die Regionen, in denen sie sich befinden, als im Rahmen von Weltreisen besucht.",
+    "add_new": "Neu hinzufügen...",
+    "checklist": "Checkliste",
+    "checklists": "Checklisten",
+    "collection_completed": "Du hast diese Sammlung vervollständigt!",
+    "collection_stats": "Sammlungsstatistiken",
+    "days": "Tage",
+    "itineary_by_date": "Reiseroute nach Datum",
+    "keep_exploring": "Entdecken Sie weiter!",
+    "link_new": "Link Neu...",
+    "linked_adventures": "Verknüpfte Abenteuer",
+    "links": "Links",
+    "no_end_date": "Bitte geben Sie ein Enddatum ein",
+    "note": "Notiz",
+    "notes": "Notizen",
+    "nothing_planned": "Für diesen Tag ist nichts geplant. \nGenieße die Reise!",
+    "transportation": "Transport",
+    "transportations": "Transporte",
+    "visit_link": "Besuchen Sie den Link",
+    "collection_archived": "Diese Sammlung wurde archiviert.",
+    "day": "Tag",
+    "add_a_tag": "Fügen Sie ein Tag hinzu",
+    "tags": "Schlagworte"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -189,7 +211,6 @@
     "greeting": "Hallo",
     "logout": "Abmelden",
     "map": "Karte",
-    "my_activities": "Meine Aktivitäten",
     "my_adventures": "Meine Abenteuer",
     "profile": "Profil",
     "search": "Suchen",
@@ -206,7 +227,9 @@
       "night": "Nacht"
     },
     "users": "Benutzer",
-    "worldtravel": "Weltreisen"
+    "worldtravel": "Weltreisen",
+    "my_tags": "Meine Tags",
+    "tag": "Etikett"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -261,5 +284,86 @@
     "reset_password": "Passwort zurücksetzen",
     "submit": "Einreichen",
     "token_required": "Zum Zurücksetzen des Passworts sind Token und UID erforderlich."
+  },
+  "checklist": {
+    "add_item": "Artikel hinzufügen",
+    "checklist_delete_error": "Fehler beim Löschen der Checkliste",
+    "checklist_deleted": "Checkliste erfolgreich gelöscht!",
+    "checklist_editor": "Checklisten-Editor",
+    "checklist_public": "Diese Checkliste ist öffentlich, da sie sich in einer öffentlichen Sammlung befindet.",
+    "editing_checklist": "Checkliste bearbeiten",
+    "failed_to_save": "Checkliste konnte nicht gespeichert werden",
+    "item": "Artikel",
+    "item_already_exists": "Artikel existiert bereits",
+    "item_cannot_be_empty": "Das Element darf nicht leer sein",
+    "items": "Artikel",
+    "new_item": "Neuer Artikel",
+    "save": "Speichern"
+  },
+  "collection": {
+    "collection_created": "Sammlung erfolgreich erstellt!",
+    "collection_edit_success": "Sammlung erfolgreich bearbeitet!",
+    "create": "Erstellen",
+    "edit_collection": "Sammlung bearbeiten",
+    "error_creating_collection": "Fehler beim Erstellen der Sammlung",
+    "error_editing_collection": "Fehler beim Bearbeiten der Sammlung",
+    "new_collection": "Neue Kollektion"
+  },
+  "notes": {
+    "add_a_link": "Fügen Sie einen Link hinzu",
+    "content": "Inhalt",
+    "editing_note": "Bearbeitungsnotiz",
+    "failed_to_save": "Notiz konnte nicht gespeichert werden",
+    "note_delete_error": "Fehler beim Löschen der Notiz",
+    "note_deleted": "Notiz erfolgreich gelöscht!",
+    "note_editor": "Notizeditor",
+    "note_public": "Diese Notiz ist öffentlich, da sie sich in einer öffentlichen Sammlung befindet.",
+    "open": "Offen",
+    "save": "Speichern",
+    "invalid_url": "Ungültige URL"
+  },
+  "transportation": {
+    "date_and_time": "Datum",
+    "date_time": "Startdatum",
+    "edit": "Bearbeiten",
+    "edit_transportation": "Transport bearbeiten",
+    "end_date_time": "Enddatum",
+    "error_editing_transportation": "Fehler beim Bearbeiten des Transports",
+    "flight_number": "Flugnummer",
+    "from_location": "Vom Standort",
+    "modes": {
+      "bike": "Fahrrad",
+      "boat": "Boot",
+      "bus": "Bus",
+      "walking": "Gehen",
+      "car": "Auto",
+      "other": "Andere",
+      "plane": "Flugzeug",
+      "train": "Zug"
+    },
+    "transportation_added": "Transport erfolgreich hinzugefügt!",
+    "transportation_delete_error": "Fehler beim Löschen des Transports",
+    "transportation_deleted": "Transport erfolgreich gelöscht!",
+    "transportation_edit_success": "Transport erfolgreich bearbeitet!",
+    "type": "Typ",
+    "new_transportation": "Neue Transportmittel",
+    "provide_start_date": "Bitte geben Sie ein Startdatum an",
+    "start": "Start",
+    "to_location": "Zum Standort",
+    "transport_type": "Transporttyp"
+  },
+  "search": {
+    "adventurelog_results": "AdventureLog-Ergebnisse",
+    "online_results": "Online-Ergebnisse",
+    "public_adventures": "Öffentliche Abenteuer"
+  },
+  "map": {
+    "add_adventure": "Neues Abenteuer hinzufügen",
+    "add_adventure_at_marker": "Neues Abenteuer bei Marker hinzufügen",
+    "adventure_map": "Abenteuerkarte",
+    "clear_marker": "Markierung löschen",
+    "map_options": "Kartenoptionen",
+    "show_visited_regions": "Besuchte Regionen anzeigen",
+    "view_details": "Details anzeigen"
   }
 }

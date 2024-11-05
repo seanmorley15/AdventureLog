@@ -9,7 +9,8 @@
 		"profile": "Profile",
 		"greeting": "Hi",
 		"my_adventures": "My Adventures",
-		"my_activities": "My Activities",
+		"my_tags": "My Tags",
+		"tag": "Tag",
 		"shared_with_me": "Shared With Me",
 		"settings": "Settings",
 		"logout": "Logout",
@@ -78,6 +79,7 @@
 		"adventure": "Adventure",
 		"count_txt": "results matching your search",
 		"sort": "Sort",
+		"order_by": "Order By",
 		"order_direction": "Order Direction",
 		"ascending": "Ascending",
 		"descending": "Descending",
@@ -85,6 +87,8 @@
 		"name": "Name",
 		"date": "Date",
 		"activity_types": "Activity Types",
+		"tags": "Tags",
+		"add_a_tag": "Add a tag",
 		"date_constrain": "Constrain to collection dates",
 		"rating": "Rating",
 		"my_images": "My Images",
@@ -198,8 +202,9 @@
 		"notes": "Notes",
 		"checklists": "Checklists",
 		"transportations": "Transportations",
+		"day": "Day",
 		"itineary_by_date": "Itinerary by Date",
-		"nothing_planned": "Nothing planned for this day. Enjoy the journey!<",
+		"nothing_planned": "Nothing planned for this day. Enjoy the journey!",
 		"days": "days",
 		"activities": {
 			"general": "General 🌍",
@@ -299,7 +304,8 @@
 		"content": "Content",
 		"save": "Save",
 		"note_public": "This note is public because it is in a public collection.",
-		"add_a_link": "Add a link"
+		"add_a_link": "Add a link",
+		"invalid_url": "Invalid URL"
 	},
 	"checklist": {
 		"checklist_deleted": "Checklist deleted successfully!",
@@ -345,5 +351,19 @@
 		"edit_transportation": "Edit Transportation",
 		"start": "Start",
 		"date_and_time": "Date & Time"
+	},
+	"search": {
+		"adventurelog_results": "AdventureLog Results",
+		"public_adventures": "Public Adventures",
+		"online_results": "Online Results"
+	},
+	"map": {
+		"view_details": "View Details",
+		"adventure_map": "Adventure Map",
+		"map_options": "Map Options",
+		"show_visited_regions": "Show Visited Regions",
+		"add_adventure_at_marker": "Add New Adventure at Marker",
+		"clear_marker": "Clear Marker",
+		"add_adventure": "Add New Adventure"
 	}
 }

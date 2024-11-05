@@ -35,7 +35,7 @@
 		</p>
 		<li><button on:click={() => goto('/profile')}>{$t('navbar.profile')}</button></li>
 		<li><button on:click={() => goto('/adventures')}>{$t('navbar.my_adventures')}</button></li>
-		<li><button on:click={() => goto('/activities')}>{$t('navbar.my_activities')}</button></li>
+		<li><button on:click={() => goto('/activities')}>{$t('navbar.my_tags')}</button></li>
 		<li><button on:click={() => goto('/shared')}>{$t('navbar.shared_with_me')}</button></li>
 		<li><button on:click={() => goto('/settings')}>{$t('navbar.settings')}</button></li>
 		<form method="post">

@@ -12,7 +12,7 @@
 <table class="table table-compact">
 	<thead>
 		<tr>
-			<th>{$t('adventures.activity')}</th>
+			<th>{$t('navbar.tag')}</th>
 			<th>{$t('adventures.actions')}</th>
 		</tr>
 	</thead>
@@ -33,6 +33,6 @@
 </table>
 
 <svelte:head>
-	<title>My Activities</title>
-	<meta name="description" content="View my activity types." />
+	<title>My Tags</title>
+	<meta name="description" content="View my tags." />
 </svelte:head>

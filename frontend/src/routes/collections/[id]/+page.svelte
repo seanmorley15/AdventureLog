@@ -508,7 +508,8 @@
 				] || []}
 
 			<h2 class="text-center font-bold text-3xl mt-4">
-				Day {i + 1}
+				{$t('adventures.day')}
+				{i + 1}
 			</h2>
 			<h3 class="text-center text-xl mb-2">
 				{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}

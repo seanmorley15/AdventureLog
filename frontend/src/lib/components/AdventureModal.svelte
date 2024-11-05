@@ -682,7 +682,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.activity_types')} ({adventure.activity_types?.length || 0})
+							{$t('adventures.tags')} ({adventure.activity_types?.length || 0})
 						</div>
 						<div class="collapse-content">
 							<input

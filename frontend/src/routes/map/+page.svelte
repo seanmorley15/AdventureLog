@@ -63,21 +63,21 @@
 	}
 </script>
 
-<h1 class="text-center font-bold text-4xl">Adventure Map</h1>
+<h1 class="text-center font-bold text-4xl">{$t('map.adventure_map')}</h1>
 
 <div class="m-2 flex flex-col items-center justify-center">
 	<div class="gap-4 border-solid border-2 rounded-lg p-2 mb-4 border-neutral max-w-4xl">
-		<p class="font-semibold text-center text-xl mb-2">Map Options</p>
+		<p class="font-semibold text-center text-xl mb-2">{$t('map.map_options')}</p>
 		<div class="flex flex-wrap items-center justify-center gap-4">
 			<label class="label cursor-pointer">
-				<span class="label-text mr-1">Visited</span>
+				<span class="label-text mr-1">{$t('adventures.visited')}</span>
 				<input type="checkbox" bind:checked={showVisited} class="checkbox checkbox-primary" />
 			</label>
 			<label class="label cursor-pointer">
-				<span class="label-text mr-1">Planned</span>
+				<span class="label-text mr-1">{$t('adventures.planned')}</span>
 				<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
 			</label>
-			<label for="show-geo">Show Visited Regions</label>
+			<label for="show-geo">{$t('map.show_visited_regions')}</label>
 			<input
 				type="checkbox"
 				id="show-geo"
@@ -88,14 +88,14 @@
 			<div class="divider divider-horizontal"></div>
 			{#if newMarker}
 				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-					>Add New Adventure at Marker</button
+					>{$t('map.add_adventure_at_marker')}</button
 				>
 				<button type="button" class="btn btn-neutral mb-2" on:click={() => (newMarker = null)}
-					>Clear Marker</button
+					>{$t('map.clear_marker')}</button
 				>
 			{:else}
 				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-					>Add New Adventure</button
+					>{$t('map.add_adventure')}</button
 				>
 			{/if}
 		</div>
@@ -160,7 +160,7 @@
 						{/if}
 						<button
 							class="btn btn-neutral btn-wide btn-sm mt-4"
-							on:click={() => goto(`/adventures/${adventure.id}`)}>View Details</button
+							on:click={() => goto(`/adventures/${adventure.id}`)}>{$t('map.view_details')}</button
 						>
 					</Popup>
 				{/if}

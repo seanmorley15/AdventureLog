@@ -9,7 +9,6 @@
     "profile": "Perfil",
     "greeting": "Hola",
     "my_adventures": "Mis Aventuras",
-    "my_activities": "Mis Actividades",
     "shared_with_me": "Compartido Conmigo",
     "settings": "Configuraciones",
     "logout": "Cerrar Sesión",
@@ -25,7 +24,9 @@
       "aestetic-dark": "Estético Oscuro",
       "aestetic-light": "Estético Claro",
       "aqua": "Aqua"
-    }
+    },
+    "my_tags": "Mis etiquetas",
+    "tag": "Etiqueta"
   },
   "about": {
     "about": "Acerca de",
@@ -206,7 +207,29 @@
     "update_visited_regions": "Actualizar regiones visitadas",
     "update_visited_regions_disclaimer": "Esto puede llevar un tiempo dependiendo de la cantidad de aventuras que hayas visitado.",
     "visited_region_check": "Verificación de región visitada",
-    "visited_region_check_desc": "Al seleccionar esto, el servidor verificará todas sus aventuras visitadas y marcará las regiones en las que se encuentran como visitadas en viajes mundiales."
+    "visited_region_check_desc": "Al seleccionar esto, el servidor verificará todas sus aventuras visitadas y marcará las regiones en las que se encuentran como visitadas en viajes mundiales.",
+    "add_new": "Agregar nuevo...",
+    "checklist": "Lista de verificación",
+    "checklists": "Listas de verificación",
+    "collection_archived": "Esta colección ha sido archivada.",
+    "collection_completed": "¡Has completado esta colección!",
+    "collection_stats": "Estadísticas de colección",
+    "days": "días",
+    "itineary_by_date": "Itinerario por fecha",
+    "keep_exploring": "¡Sigue explorando!",
+    "link_new": "Enlace nuevo...",
+    "linked_adventures": "Aventuras vinculadas",
+    "links": "Campo de golf",
+    "no_end_date": "Por favor ingresa una fecha de finalización",
+    "note": "Nota",
+    "notes": "Notas",
+    "nothing_planned": "Nada planeado para este día. \n¡Disfruta el viaje!",
+    "transportation": "Transporte",
+    "transportations": "Transportes",
+    "visit_link": "Visitar enlace",
+    "day": "Día",
+    "add_a_tag": "Agregar una etiqueta",
+    "tags": "Etiquetas"
   },
   "worldtravel": {
     "all": "Todo",
@@ -261,5 +284,86 @@
     "password_is_required": "Se requiere contraseña",
     "submit": "Entregar",
     "invalid_token": "El token no es válido o ha caducado"
+  },
+  "checklist": {
+    "add_item": "Agregar artículo",
+    "checklist_delete_error": "Error al eliminar la lista de verificación",
+    "checklist_deleted": "¡Lista de verificación eliminada exitosamente!",
+    "checklist_editor": "Editor de lista de verificación",
+    "checklist_public": "Esta lista de verificación es pública porque se encuentra en una colección pública.",
+    "editing_checklist": "Lista de verificación de edición",
+    "failed_to_save": "No se pudo guardar la lista de verificación",
+    "item": "Artículo",
+    "item_already_exists": "El artículo ya existe",
+    "item_cannot_be_empty": "El artículo no puede estar vacío",
+    "items": "Elementos",
+    "new_item": "Nuevo artículo",
+    "save": "Ahorrar"
+  },
+  "collection": {
+    "collection_created": "¡Colección creada con éxito!",
+    "collection_edit_success": "¡Colección editada con éxito!",
+    "create": "Crear",
+    "edit_collection": "Editar colección",
+    "error_creating_collection": "Error al crear la colección",
+    "error_editing_collection": "Error al editar la colección",
+    "new_collection": "Nueva colección"
+  },
+  "notes": {
+    "add_a_link": "Agregar un enlace",
+    "content": "Contenido",
+    "editing_note": "Nota de edición",
+    "failed_to_save": "No se pudo guardar la nota",
+    "note_delete_error": "Error al eliminar la nota",
+    "note_deleted": "¡Nota eliminada exitosamente!",
+    "note_editor": "Editor de notas",
+    "note_public": "Esta nota es pública porque está en una colección pública.",
+    "open": "Abierto",
+    "save": "Ahorrar",
+    "invalid_url": "URL no válida"
+  },
+  "transportation": {
+    "date_and_time": "Fecha",
+    "error_editing_transportation": "Error al editar el transporte",
+    "modes": {
+      "bus": "Autobús",
+      "bike": "Bicicleta",
+      "boat": "Bote",
+      "car": "Auto",
+      "other": "Otro",
+      "plane": "Avión",
+      "train": "Tren",
+      "walking": "Caminando"
+    },
+    "new_transportation": "Nuevo transporte",
+    "provide_start_date": "Por favor proporcione una fecha de inicio",
+    "start": "Comenzar",
+    "to_location": "A la ubicación",
+    "transport_type": "Tipo de transporte",
+    "transportation_deleted": "¡Transporte eliminado exitosamente!",
+    "transportation_edit_success": "Transporte editado exitosamente!",
+    "type": "Tipo",
+    "date_time": "Fecha de inicio",
+    "edit": "Editar",
+    "edit_transportation": "Editar transporte",
+    "end_date_time": "Fecha de finalización",
+    "flight_number": "Número de vuelo",
+    "from_location": "Desde la ubicación",
+    "transportation_added": "¡Transporte agregado exitosamente!",
+    "transportation_delete_error": "Error al eliminar el transporte"
+  },
+  "search": {
+    "adventurelog_results": "Resultados del registro de aventuras",
+    "online_results": "Resultados en línea",
+    "public_adventures": "Aventuras públicas"
+  },
+  "map": {
+    "add_adventure": "Agregar nueva aventura",
+    "add_adventure_at_marker": "Agregar nueva aventura en Marker",
+    "adventure_map": "Mapa de aventuras",
+    "clear_marker": "Borrar marcador",
+    "map_options": "Opciones de mapa",
+    "show_visited_regions": "Mostrar regiones visitadas",
+    "view_details": "Ver detalles"
   }
 }

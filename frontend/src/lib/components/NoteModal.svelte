@@ -18,7 +18,7 @@
 	function addLink() {
 		// check to make it a valid URL
 		if (!isValidUrl(newLink)) {
-			warning = 'Invalid URL';
+			warning = $t('notes.invalid_url');
 			return;
 		} else {
 			warning = null;
@@ -150,7 +150,7 @@
 					<input
 						type="url"
 						class="input input-bordered w-full mb-1"
-						placeholder="${$t('notes.add_a_link')} (e.g. https://example.com)"
+						placeholder="{$t('notes.add_a_link')} (e.g. https://example.com)"
 						bind:value={newLink}
 						on:keydown={(e) => {
 							if (e.key === 'Enter') {
