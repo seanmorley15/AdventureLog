@@ -26,7 +26,8 @@
       "aqua": "Aqua"
     },
     "my_tags": "Mis etiquetas",
-    "tag": "Etiqueta"
+    "tag": "Etiqueta",
+    "language_selection": "Idioma"
   },
   "about": {
     "about": "Acerca de",
@@ -365,5 +366,24 @@
     "map_options": "Opciones de mapa",
     "show_visited_regions": "Mostrar regiones visitadas",
     "view_details": "Ver detalles"
+  },
+  "share": {
+    "no_users_shared": "Ningún usuario compartió con",
+    "not_shared_with": "No compartido con",
+    "share_desc": "Comparte esta colección con otros usuarios.",
+    "shared": "Compartido",
+    "shared_with": "Compartido con",
+    "unshared": "Incompartible",
+    "with": "con"
+  },
+  "languages": {
+    "de": "Alemán",
+    "en": "Inglés",
+    "es": "Español",
+    "fr": "Francés",
+    "it": "italiano",
+    "nl": "Holandés",
+    "sv": "sueco",
+    "zh": "Chino"
   }
 }

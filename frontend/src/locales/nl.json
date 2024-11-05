@@ -184,7 +184,9 @@
     "transportation": "Vervoer",
     "transportations": "Transporten",
     "visit_link": "Bezoek Link",
-    "day": "Dag"
+    "day": "Dag",
+    "add_a_tag": "Voeg een label toe",
+    "tags": "Labels"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -225,7 +227,10 @@
       "night": "Nacht"
     },
     "users": "Gebruikers",
-    "worldtravel": "Wereldreizen"
+    "worldtravel": "Wereldreizen",
+    "my_tags": "Mijn tags",
+    "tag": "Label",
+    "language_selection": "Taal"
   },
   "auth": {
     "confirm_password": "Bevestig wachtwoord",
@@ -352,5 +357,33 @@
     "adventurelog_results": "AdventureLog-resultaten",
     "online_results": "Online resultaten",
     "public_adventures": "Openbare avonturen"
+  },
+  "map": {
+    "add_adventure": "Voeg nieuw avontuur toe",
+    "add_adventure_at_marker": "Voeg een nieuw avontuur toe bij Marker",
+    "adventure_map": "Avonturenkaart",
+    "clear_marker": "Duidelijke markering",
+    "map_options": "Kaartopties",
+    "show_visited_regions": "Toon bezochte regio's",
+    "view_details": "Details bekijken"
+  },
+  "languages": {
+    "de": "Duits",
+    "en": "Engels",
+    "es": "Spaans",
+    "fr": "Frans",
+    "it": "Italiaans",
+    "nl": "Nederlands",
+    "sv": "Zweeds",
+    "zh": "Chinese"
+  },
+  "share": {
+    "no_users_shared": "Er zijn geen gebruikers gedeeld",
+    "not_shared_with": "Niet gedeeld met",
+    "share_desc": "Deel deze verzameling met andere gebruikers.",
+    "shared": "Gedeeld",
+    "shared_with": "Gedeeld met",
+    "unshared": "Niet gedeeld",
+    "with": "met"
   }
 }

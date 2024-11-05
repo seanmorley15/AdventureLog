@@ -17,6 +17,7 @@
 		"about": "About AdventureLog",
 		"documentation": "Documentation",
 		"discord": "Discord",
+		"language_selection": "Language",
 		"theme_selection": "Theme Selection",
 		"themes": {
 			"light": "Light",
@@ -365,5 +366,24 @@
 		"add_adventure_at_marker": "Add New Adventure at Marker",
 		"clear_marker": "Clear Marker",
 		"add_adventure": "Add New Adventure"
+	},
+	"share": {
+		"shared": "Shared",
+		"with": "with",
+		"unshared": "Unshared",
+		"share_desc": "Share this collection with other users.",
+		"shared_with": "Shared With",
+		"no_users_shared": "No users shared with",
+		"not_shared_with": "Not Shared With"
+	},
+	"languages": {
+		"en": "English",
+		"de": "German",
+		"es": "Spanish",
+		"fr": "French",
+		"it": "Italian",
+		"nl": "Dutch",
+		"sv": "Swedish",
+		"zh": "Chinese"
 	}
 }

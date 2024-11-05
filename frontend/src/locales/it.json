@@ -184,7 +184,9 @@
     "transportation": "Trasporti",
     "transportations": "Trasporti",
     "visit_link": "Visita il collegamento",
-    "day": "Giorno"
+    "day": "Giorno",
+    "add_a_tag": "Aggiungi un'etichetta",
+    "tags": "Tag"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -225,7 +227,10 @@
       "night": "Notte"
     },
     "users": "Utenti",
-    "worldtravel": "Viaggio nel mondo"
+    "worldtravel": "Viaggio nel mondo",
+    "my_tags": "I miei tag",
+    "tag": "Etichetta",
+    "language_selection": "Lingua"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -352,5 +357,33 @@
     "adventurelog_results": "Risultati di AdventureLog",
     "online_results": "Risultati in linea",
     "public_adventures": "Avventure pubbliche"
+  },
+  "map": {
+    "add_adventure": "Aggiungi nuova avventura",
+    "add_adventure_at_marker": "Aggiungi nuova avventura a Marker",
+    "adventure_map": "Mappa dell'avventura",
+    "clear_marker": "Cancella indicatore",
+    "map_options": "Opzioni della mappa",
+    "show_visited_regions": "Mostra regioni visitate",
+    "view_details": "Visualizza dettagli"
+  },
+  "languages": {
+    "de": "tedesco",
+    "en": "Inglese",
+    "es": "spagnolo",
+    "fr": "francese",
+    "it": "Italiano",
+    "nl": "Olandese",
+    "sv": "svedese",
+    "zh": "cinese"
+  },
+  "share": {
+    "no_users_shared": "Nessun utente condiviso con",
+    "not_shared_with": "Non condiviso con",
+    "share_desc": "Condividi questa raccolta con altri utenti.",
+    "shared": "Condiviso",
+    "shared_with": "Condiviso con",
+    "unshared": "Non condiviso",
+    "with": "con"
   }
 }

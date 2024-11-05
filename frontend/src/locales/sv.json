@@ -184,7 +184,9 @@
     "transportation": "Transport",
     "transportations": "Transporter",
     "visit_link": "Besök länken",
-    "day": "Dag"
+    "day": "Dag",
+    "add_a_tag": "Lägg till en tagg",
+    "tags": "Taggar"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -225,7 +227,10 @@
       "night": "Natt"
     },
     "users": "Användare",
-    "worldtravel": "Världsresor"
+    "worldtravel": "Världsresor",
+    "my_tags": "Mina taggar",
+    "tag": "Märka",
+    "language_selection": "Språk"
   },
   "worldtravel": {
     "all": "Alla",
@@ -352,5 +357,33 @@
     "adventurelog_results": "AdventureLog-resultat",
     "online_results": "Online resultat",
     "public_adventures": "Offentliga äventyr"
+  },
+  "map": {
+    "add_adventure": "Lägg till nytt äventyr",
+    "add_adventure_at_marker": "Lägg till nytt äventyr vid Marker",
+    "adventure_map": "Äventyrskarta",
+    "clear_marker": "Rensa markör",
+    "map_options": "Kartalternativ",
+    "show_visited_regions": "Visa besökta regioner",
+    "view_details": "Visa detaljer"
+  },
+  "languages": {
+    "de": "tyska",
+    "en": "engelska",
+    "es": "spanska",
+    "fr": "franska",
+    "it": "italienska",
+    "nl": "holländska",
+    "sv": "svenska",
+    "zh": "kinesiska"
+  },
+  "share": {
+    "no_users_shared": "Inga användare delas med",
+    "not_shared_with": "Inte delad med",
+    "share_desc": "Dela den här samlingen med andra användare.",
+    "shared": "Delad",
+    "shared_with": "Delas med",
+    "unshared": "Odelat",
+    "with": "med"
   }
 }

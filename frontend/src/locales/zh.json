@@ -184,7 +184,9 @@
     "transportation": "运输",
     "transportations": "交通",
     "visit_link": "访问链接",
-    "day": "天"
+    "day": "天",
+    "add_a_tag": "添加标签",
+    "tags": "标签"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -225,7 +227,10 @@
       "night": "夜晚"
     },
     "users": "用户",
-    "worldtravel": "环球旅行"
+    "worldtravel": "环球旅行",
+    "my_tags": "我的标签",
+    "tag": "标签",
+    "language_selection": "语言"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -352,5 +357,33 @@
     "adventurelog_results": "冒险日志结果",
     "online_results": "在线结果",
     "public_adventures": "公共冒险"
+  },
+  "map": {
+    "add_adventure": "添加新冒险",
+    "add_adventure_at_marker": "在标记处添加新冒险",
+    "adventure_map": "冒险地图",
+    "clear_marker": "清除标记",
+    "map_options": "地图选项",
+    "show_visited_regions": "显示访问过的地区",
+    "view_details": "查看详情"
+  },
+  "languages": {
+    "de": "德语",
+    "en": "英语",
+    "es": "西班牙语",
+    "fr": "法语",
+    "it": "意大利语",
+    "nl": "荷兰语",
+    "sv": "瑞典",
+    "zh": "中国人"
+  },
+  "share": {
+    "no_users_shared": "没有与之共享的用户",
+    "not_shared_with": "不与共享",
+    "share_desc": "与其他用户分享此收藏。",
+    "shared": "共享",
+    "shared_with": "共享对象",
+    "unshared": "未共享",
+    "with": "和"
   }
 }

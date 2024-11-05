@@ -229,7 +229,8 @@
     "users": "Benutzer",
     "worldtravel": "Weltreisen",
     "my_tags": "Meine Tags",
-    "tag": "Etikett"
+    "tag": "Etikett",
+    "language_selection": "Sprache"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -365,5 +366,24 @@
     "map_options": "Kartenoptionen",
     "show_visited_regions": "Besuchte Regionen anzeigen",
     "view_details": "Details anzeigen"
+  },
+  "languages": {
+    "de": "Deutsch",
+    "en": "Englisch",
+    "es": "Spanisch",
+    "fr": "Französisch",
+    "it": "Italienisch",
+    "nl": "Niederländisch",
+    "sv": "Schwedisch",
+    "zh": "chinesisch"
+  },
+  "share": {
+    "no_users_shared": "Keine Benutzer geteilt mit",
+    "not_shared_with": "Nicht geteilt mit",
+    "share_desc": "Teilen Sie diese Sammlung mit anderen Benutzern.",
+    "shared": "Geteilt",
+    "shared_with": "Geteilt mit",
+    "unshared": "Nicht geteilt",
+    "with": "mit"
   }
 }

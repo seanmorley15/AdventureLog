@@ -6,6 +6,7 @@
 	import UserCard from './UserCard.svelte';
 	import { addToast } from '$lib/toasts';
 	let modal: HTMLDialogElement;
+	import { t } from 'svelte-i18n';
 
 	export let collection: Collection;
 
@@ -25,7 +26,10 @@
 			sharedWithUsers = sharedWithUsers.concat(user);
 			collection.shared_with.push(user.uuid);
 			notSharedWithUsers = notSharedWithUsers.filter((u) => u.uuid !== user.uuid);
-			addToast('success', `Shared ${collection.name} with ${user.first_name} ${user.last_name}`);
+			addToast(
+				'success',
+				`${$t('share.shared')} ${collection.name} ${$t('share.with')} ${user.first_name} ${user.last_name}`
+			);
 		}
 	}
 
@@ -40,7 +44,10 @@
 			notSharedWithUsers = notSharedWithUsers.concat(user);
 			collection.shared_with = collection.shared_with.filter((u) => u !== user.uuid);
 			sharedWithUsers = sharedWithUsers.filter((u) => u.uuid !== user.uuid);
-			addToast('success', `Unshared ${collection.name} with ${user.first_name} ${user.last_name}`);
+			addToast(
+				'success',
+				`${$t('share.unshared')} ${collection.name} ${$t('share.with')} ${user.first_name} ${user.last_name}`
+			);
 		}
 	}
 
@@ -75,10 +82,10 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Share {collection.name}</h3>
-		<p class="py-1">Share this collection with other users.</p>
+		<h3 class="font-bold text-lg">{$t('adventures.share')} {collection.name}</h3>
+		<p class="py-1">{$t('share.share_desc')}</p>
 		<div class="divider"></div>
-		<h3 class="font-bold text-md">Shared With</h3>
+		<h3 class="font-bold text-md">{$t('share.shared_with')}</h3>
 		<ul>
 			{#each sharedWithUsers as user}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -92,11 +99,11 @@
 				</div>
 			{/each}
 			{#if sharedWithUsers.length === 0}
-				<p class="text-neutral-content">No users shared with</p>
+				<p class="text-neutral-content">{$t('share.no_users_shared')}</p>
 			{/if}
 		</ul>
 		<div class="divider"></div>
-		<h3 class="font-bold text-md">Not Shared With</h3>
+		<h3 class="font-bold text-md">{$t('share.not_shared_with')}</h3>
 		<ul>
 			{#each notSharedWithUsers as user}
 				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -110,9 +117,9 @@
 				</div>
 			{/each}
 			{#if notSharedWithUsers.length === 0}
-				<p class="text-neutral-content">No users not shared with</p>
+				<p class="text-neutral-content">{$t('share.no_users_shared')}</p>
 			{/if}
 		</ul>
-		<button class="btn btn-primary mt-4" on:click={close}>Close</button>
+		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>
 	</div>
 </dialog>

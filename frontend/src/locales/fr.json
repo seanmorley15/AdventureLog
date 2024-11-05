@@ -184,7 +184,9 @@
     "transportations": "Transports",
     "visit_link": "Visitez le lien",
     "checklist": "Liste de contrôle",
-    "day": "Jour"
+    "day": "Jour",
+    "add_a_tag": "Ajouter une balise",
+    "tags": "Balises"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -225,7 +227,10 @@
       "dark": "Sombre"
     },
     "users": "Utilisateurs",
-    "worldtravel": "Voyage dans le monde"
+    "worldtravel": "Voyage dans le monde",
+    "my_tags": "Mes balises",
+    "tag": "Étiqueter",
+    "language_selection": "Langue"
   },
   "auth": {
     "confirm_password": "Confirmez le mot de passe",
@@ -352,5 +357,33 @@
     "adventurelog_results": "Résultats du journal d'aventure",
     "online_results": "Résultats en ligne",
     "public_adventures": "Aventures publiques"
+  },
+  "map": {
+    "add_adventure": "Ajouter une nouvelle aventure",
+    "add_adventure_at_marker": "Ajouter une nouvelle aventure au marqueur",
+    "adventure_map": "Carte d'aventure",
+    "clear_marker": "Effacer le marqueur",
+    "map_options": "Options de la carte",
+    "show_visited_regions": "Afficher les régions visitées",
+    "view_details": "Afficher les détails"
+  },
+  "languages": {
+    "de": "Allemand",
+    "en": "Anglais",
+    "es": "Espagnol",
+    "fr": "Français",
+    "it": "italien",
+    "nl": "Néerlandais",
+    "sv": "suédois",
+    "zh": "Chinois"
+  },
+  "share": {
+    "no_users_shared": "Aucun utilisateur partagé avec",
+    "not_shared_with": "Non partagé avec",
+    "share_desc": "Partagez cette collection avec d'autres utilisateurs.",
+    "shared": "Commun",
+    "shared_with": "Partagé avec",
+    "unshared": "Non partagé",
+    "with": "avec"
   }
 }

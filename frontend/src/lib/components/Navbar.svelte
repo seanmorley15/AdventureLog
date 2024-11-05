@@ -252,15 +252,20 @@
 						<button formaction="/?/setTheme&theme=aqua"
 							>{$t('navbar.themes.aqua')}<Water class="w-6 h-6" /></button
 						>
-						<form method="POST" use:enhance>
-							<select class="select" on:change={submitLocaleChange} bind:value={$locale}>
-								{#each $locales as loc}
-									<option value={loc}>{loc}</option>
-								{/each}
-							</select>
-							<input type="hidden" name="locale" value={$locale} />
-						</form>
 					</li>
+					<p class="font-bold m-4 text-lg text-center">{$t('navbar.language_selection')}</p>
+					<form method="POST" use:enhance>
+						<select
+							class="select select-bordered w-full max-w-xs bg-base-100 text-base-content"
+							on:change={submitLocaleChange}
+							bind:value={$locale}
+						>
+							{#each $locales as loc}
+								<option value={loc} class="text-base-content">{$t(`languages.${loc}`)}</option>
+							{/each}
+						</select>
+						<input type="hidden" name="locale" value={$locale} />
+					</form>
 				</form>
 			</ul>
 		</div>
