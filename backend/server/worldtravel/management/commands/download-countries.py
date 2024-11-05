@@ -40,7 +40,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path):
-            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/countries%2Bstates.json')
+            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/refs/tags/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates.json')
             if res.status_code == 200:
                 with open(countries_json_path, 'w') as f:
                     f.write(res.text)
