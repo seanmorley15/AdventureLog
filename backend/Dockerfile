@@ -13,12 +13,16 @@ WORKDIR /code
 # Install system dependencies (Nginx included)
 RUN apt-get update \
     && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx \
-    && apt-get clean
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY ./server/requirements.txt /code/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# Create necessary directories
+RUN mkdir -p /code/static /code/media
 
 # Copy the Django project code into the Docker image
 COPY ./server /code/
