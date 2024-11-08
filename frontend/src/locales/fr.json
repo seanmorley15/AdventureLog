@@ -186,7 +186,8 @@
     "checklist": "Liste de contrôle",
     "day": "Jour",
     "add_a_tag": "Ajouter une balise",
-    "tags": "Balises"
+    "tags": "Balises",
+    "set_to_pin": "Définir sur Épingler"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
