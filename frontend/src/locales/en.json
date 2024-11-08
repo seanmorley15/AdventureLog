@@ -177,6 +177,7 @@
 		"adventure_create_error": "Failed to create adventure",
 		"adventure_updated": "Adventure updated",
 		"adventure_update_error": "Failed to update adventure",
+		"set_to_pin": "Set to Pin",
 		"new_adventure": "New Adventure",
 		"basic_information": "Basic Information",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",

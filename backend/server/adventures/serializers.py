@@ -40,6 +40,8 @@ class AdventureSerializer(serializers.ModelSerializer):
         for visit in obj.visits.all():
             if visit.start_date and visit.end_date and (visit.start_date <= current_date):
                 return True
+            elif visit.start_date and not visit.end_date and (visit.start_date <= current_date):
+                return True
         return False
         
 

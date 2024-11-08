@@ -120,9 +120,9 @@
 		{#if adventure.latitude && adventure.longitude}
 			<Marker
 				lngLat={[adventure.longitude, adventure.latitude]}
-				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-{adventure.is_visited
-					? 'red'
-					: 'blue'}-300 text-black shadow-2xl focus:outline-2 focus:outline-black"
+				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 {adventure.is_visited
+					? 'bg-red-300'
+					: 'bg-blue-300'} text-black shadow-2xl focus:outline-2 focus:outline-black"
 				on:click={togglePopup}
 			>
 				<span class="text-xl">

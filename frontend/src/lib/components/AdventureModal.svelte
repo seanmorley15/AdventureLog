@@ -80,6 +80,8 @@
 	let imageError: string = '';
 	let wikiImageError: string = '';
 
+	let old_display_name: string = '';
+
 	images = adventure.images || [];
 
 	if (longitude && latitude) {
@@ -114,9 +116,10 @@
 	$: {
 		if (
 			reverseGeocodePlace?.display_name &&
-			adventure.location != reverseGeocodePlace.display_name
+			(old_display_name != reverseGeocodePlace.display_name || !adventure.location)
 		) {
 			adventure.location = reverseGeocodePlace.display_name;
+			old_display_name = reverseGeocodePlace.display_name;
 		}
 	}
 
@@ -569,14 +572,25 @@
 							<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
 							<div>
 								<label for="latitude">{$t('adventures.location')}</label><br />
-								<input
-									type="text"
-									id="location"
-									name="location"
-									bind:value={adventure.location}
-									class="input input-bordered w-full"
-								/>
+								<div class="flex items-center">
+									<input
+										type="text"
+										id="location"
+										name="location"
+										bind:value={adventure.location}
+										class="input input-bordered w-full"
+									/>
+									{#if reverseGeocodePlace && reverseGeocodePlace.display_name && reverseGeocodePlace.display_name != adventure.location}
+										<button
+											class="btn btn-primary ml-2"
+											type="button"
+											on:click={() => (adventure.location = reverseGeocodePlace?.display_name)}
+											>{$t('adventures.set_to_pin')}</button
+										>
+									{/if}
+								</div>
 							</div>
+
 							<div>
 								<form on:submit={geocode} class="mt-2">
 									<input
