@@ -33,6 +33,8 @@
 
 	let noPlaces: boolean = false;
 
+	let is_custom_location: boolean = false;
+
 	let reverseGeocodePlace: ReverseGeocode | null = null;
 
 	let adventure: Adventure = {
@@ -90,6 +92,11 @@
 		reverseGeocode();
 	}
 
+	$: {
+		is_custom_location =
+			adventure.location !== reverseGeocodePlace?.display_name || !reverseGeocodePlace;
+	}
+
 	if (adventure.longitude && adventure.latitude) {
 		markers = [];
 		markers = [
@@ -113,15 +120,15 @@
 		markers = [];
 	}
 
-	$: {
-		if (
-			reverseGeocodePlace?.display_name &&
-			(old_display_name != reverseGeocodePlace.display_name || !adventure.location)
-		) {
-			adventure.location = reverseGeocodePlace.display_name;
-			old_display_name = reverseGeocodePlace.display_name;
-		}
-	}
+	// $: {
+	// 	if (
+	// 		reverseGeocodePlace?.display_name &&
+	// 		(old_display_name != reverseGeocodePlace.display_name || !adventure.location)
+	// 	) {
+	// 		adventure.location = reverseGeocodePlace.display_name;
+	// 		old_display_name = reverseGeocodePlace.display_name;
+	// 	}
+	// }
 
 	let imageSearch: string = adventure.name || '';
 
@@ -302,6 +309,11 @@
 			return;
 		}
 		reverseGeocodePlace = data;
+
+		if (reverseGeocodePlace && reverseGeocodePlace.display_name && !is_custom_location) {
+			old_display_name = reverseGeocodePlace.display_name;
+			adventure.location = reverseGeocodePlace.display_name;
+		}
 		console.log(data);
 	}
 
@@ -580,7 +592,7 @@
 										bind:value={adventure.location}
 										class="input input-bordered w-full"
 									/>
-									{#if reverseGeocodePlace && reverseGeocodePlace.display_name && reverseGeocodePlace.display_name != adventure.location}
+									{#if is_custom_location}
 										<button
 											class="btn btn-primary ml-2"
 											type="button"
