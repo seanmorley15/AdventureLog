@@ -17,7 +17,7 @@
 	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
 
-	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
+	import { DefaultMarker, FillLayer, MapEvents, MapLibre } from 'svelte-maplibre';
 
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
@@ -89,7 +89,7 @@
 	if (longitude && latitude) {
 		adventure.latitude = latitude;
 		adventure.longitude = longitude;
-		reverseGeocode();
+		reverseGeocode(true);
 	}
 
 	$: {
@@ -119,16 +119,6 @@
 		console.log('CLEAR');
 		markers = [];
 	}
-
-	// $: {
-	// 	if (
-	// 		reverseGeocodePlace?.display_name &&
-	// 		(old_display_name != reverseGeocodePlace.display_name || !adventure.location)
-	// 	) {
-	// 		adventure.location = reverseGeocodePlace.display_name;
-	// 		old_display_name = reverseGeocodePlace.display_name;
-	// 	}
-	// }
 
 	let imageSearch: string = adventure.name || '';
 
@@ -298,7 +288,7 @@
 		}
 	}
 
-	async function reverseGeocode() {
+	async function reverseGeocode(force_update: boolean = false) {
 		let res = await fetch(
 			`/api/reverse-geocode/reverse_geocode/?lat=${adventure.latitude}&lon=${adventure.longitude}`
 		);
@@ -310,7 +300,11 @@
 		}
 		reverseGeocodePlace = data;
 
-		if (reverseGeocodePlace && reverseGeocodePlace.display_name && !is_custom_location) {
+		if (
+			reverseGeocodePlace &&
+			reverseGeocodePlace.display_name &&
+			(!is_custom_location || force_update)
+		) {
 			old_display_name = reverseGeocodePlace.display_name;
 			adventure.location = reverseGeocodePlace.display_name;
 		}
