@@ -245,7 +245,7 @@
 						</div>
 						{#if adventure.description}
 							<div class="grid gap-2">
-								<p class="text-sm text-muted-foreground whitespace-pre-line">
+								<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;">
 									{adventure.description}
 								</p>
 							</div>
