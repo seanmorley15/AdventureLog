@@ -15,7 +15,7 @@ You can also just use the new `docker-compose.yml` file in the repository and ch
 :::
 
 1. Remove the `nginx` service from your `docker-compose.yml` file.
-2. Update the `PUBLIC_URL` environment variable in the `server` service (backend) to match the address of your **server**, instead of the previous nginx instance. For example, if your server is exposed to `https://localhost:8000`, set `PUBLIC_URL` to `http://localhost:8000`. If you are using a domain name, set `PUBLIC_URL` to `https://api.yourdomain.com` as an example.
+2. Update the `PUBLIC_URL` environment variable in the `server` service (backend) to match the address of your **server**, instead of the previous nginx instance. For example, if your server is exposed to `http://localhost:8000`, set `PUBLIC_URL` to `http://localhost:8000`. If you are using a domain name, set `PUBLIC_URL` to `https://api.yourdomain.com` as an example.
 3. Change port mapping for the `server` service. Right now it probably looks like this:
    ```yaml
    ports:
@@ -31,5 +31,7 @@ You can also just use the new `docker-compose.yml` file in the repository and ch
 That's it! You should now be able to run the application with the new configuration! This update also includes some performance enhancements so there should be a slight speed increase as well, especially with multiple users.
 
 Enjoy the new version of AdventureLog! 🎉
+
+View the full changelog [here](https://github.com/seanmorley15/AdventureLog/releases/tag/v0.7.1)
 
 Report any bugs [GitHub repository](https://github.com/seanmorley15/adventurelog) or ask for help in the [Discord server](https://discord.gg/wRbQ9Egr8C).
