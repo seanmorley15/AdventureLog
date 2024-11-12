@@ -79,7 +79,7 @@ const config: Config = {
         },
         {
           to: "https://www.buymeacoffee.com/seanmorley15",
-          label: "Support AdventureLog 💖",
+          label: "Sponsor 💖",
           position: "right",
         },
         // { to: "/blog", label: "Blog", position: "left" },
