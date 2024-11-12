@@ -77,6 +77,11 @@ const config: Config = {
           position: "left",
           label: "Documentation",
         },
+        {
+          to: "https://www.buymeacoffee.com/seanmorley15",
+          label: "Support AdventureLog 💖",
+          position: "right",
+        },
         // { to: "/blog", label: "Blog", position: "left" },
         {
           to: "https://github.com/seanmorley15/adventurelog",
