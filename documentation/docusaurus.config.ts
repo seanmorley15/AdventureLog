@@ -3,7 +3,7 @@ import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
 const config: Config = {
-  title: "Adventure Log",
+  title: "AdventureLog",
   tagline: "Embark, Explore, Remember. 🗺️",
   favicon: "img/favicon.png",
 
@@ -15,8 +15,8 @@ const config: Config = {
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: "facebook", // Usually your GitHub org/user name.
-  projectName: "docusaurus", // Usually your repo name.
+  organizationName: "seanmorley", // Usually your GitHub org/user name.
+  projectName: "adventurelog", // Usually your repo name.
 
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
@@ -40,7 +40,7 @@ const config: Config = {
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           editUrl:
-            "https://github.com/facebook/docusaurus/tree/main/packages/create-docusaurus/templates/shared/",
+            "https://github.com/seanmorley15/AdventureLog/tree/main/documentation",
         },
         // blog: {
         //   showReadingTime: true,
@@ -65,9 +65,9 @@ const config: Config = {
     // Replace with your project's social card
     image: "img/docusaurus-social-card.jpg",
     navbar: {
-      title: "Adventure Log Docs",
+      title: "AdventureLog Docs",
       logo: {
-        alt: "My Site Logo",
+        alt: "AdventureLog Logo",
         src: "img/favicon.png",
       },
       items: [
@@ -77,10 +77,20 @@ const config: Config = {
           position: "left",
           label: "Documentation",
         },
+        {
+          to: "https://www.buymeacoffee.com/seanmorley15",
+          label: "Sponsor 💖",
+          position: "right",
+        },
         // { to: "/blog", label: "Blog", position: "left" },
         {
-          href: "https://github.com/seanmorley15/adventurelog",
+          to: "https://github.com/seanmorley15/adventurelog",
           label: "GitHub",
+          position: "right",
+        },
+        {
+          to: "https://discord.gg/wRbQ9Egr8C",
+          label: "Discord",
           position: "right",
         },
       ],
@@ -107,6 +117,10 @@ const config: Config = {
             {
               label: "GitHub",
               href: "https://github.com/seanmorley15/adventurelog",
+            },
+            {
+              label: "Discord",
+              href: "https://discord.gg/wRbQ9Egr8C",
             },
           ],
         },

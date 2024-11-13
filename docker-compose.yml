@@ -5,11 +5,11 @@ services:
     container_name: adventurelog-frontend
     restart: unless-stopped
     environment:
-      - PUBLIC_SERVER_URL=http://server:8000 # MOST DOCKER USERS WILL NEVER NEED TO CHANGE THIS, EVEN IF YOU CHANGE THE PORTS
-      - ORIGIN=http://localhost:8080
-      - BODY_SIZE_LIMIT=Infinity # This is measured in bytes
+      - PUBLIC_SERVER_URL=http://server:8000 # MOST DOCKER USERS WILL NOT NEED TO CHANGE THIS EVER EVEN IF YOU CHANGE THE OUTWARD PORT
+      - ORIGIN=http://localhost:8015
+      - BODY_SIZE_LIMIT=Infinity
     ports:
-      - "8080:3000"
+      - "8015:3000"
     depends_on:
       - server
 
@@ -33,34 +33,21 @@ services:
       - PGHOST=db
       - PGDATABASE=database
       - PGUSER=adventure
-      - PGPASSWORD=changeme123 # This should be the same as the POSTGRES_PASSWORD in the db service
+      - PGPASSWORD=changeme123
       - SECRET_KEY=changeme123
       - DJANGO_ADMIN_USERNAME=admin
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
-      - PUBLIC_URL='http://localhost:81' # NOTE: THIS IS THE PUBLIC URL TO THE **NGINX** SERVER USED FOR MEDIA FILES!
-      - CSRF_TRUSTED_ORIGINS=https://api.adventurelog.app,https://adventurelog.app # This is a comma separated list of trusted origins for CSRF, this should include where your frontend is hosted.
+      - PUBLIC_URL='http://localhost:8016' # Match the outward port, used for the creation of image urls
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8016 # Comma separated list of trusted origins for CSRF
       - DEBUG=False
-      - FRONTEND_URL='http://localhost:8080' # This is the URL of the frontend server
-      #- DISABLE_REGISTRATION=True
+      - FRONTEND_URL='http://localhost:8015' # Used for email generation. This should be the url of the frontend
     ports:
-      - "8000:8000"
+      - "8016:80"
     depends_on:
       - db
     volumes:
       - adventurelog_media:/code/media/
-
-  nginx:
-    image: nginx:latest
-    container_name: adventurelog-nginx
-    restart: unless-stopped
-    ports:
-      - "81:80"
-    volumes:
-      - adventurelog_media:/app/media
-      - ./proxy/nginx.conf:/etc/nginx/conf.d/default.conf:ro
-    depends_on:
-      - server
 
 volumes:
   postgres_data:

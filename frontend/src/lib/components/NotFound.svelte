@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Lost from '$lib/assets/undraw_lost.svg';
 	export let error: string | undefined;
+	import { t } from 'svelte-i18n';
 </script>
 
 <div
@@ -11,12 +12,11 @@
 			<img src={Lost} alt="Lost" class="w-1/2" />
 		</div>
 		<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-			No adventures found
+			{$t('adventures.no_adventures_found')}
 		</h1>
 		{#if !error}
 			<p class="mt-4 text-muted-foreground">
-				There are no adventures to display. Add some using the plus button at the bottom right or
-				try changing filters!
+				{$t('adventures.adventure_not_found')}
 			</p>
 		{:else}
 			<p class="text-error mt-2">{error}</p>

@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AdventureViewSet, ChecklistViewSet, CollectionViewSet, NoteViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet, AdventureImageViewSet
+from .views import AdventureViewSet, ChecklistViewSet, CollectionViewSet, NoteViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet, AdventureImageViewSet, ReverseGeocodeViewSet
 
 router = DefaultRouter()
 router.register(r'adventures', AdventureViewSet, basename='adventures')
@@ -12,6 +12,7 @@ router.register(r'transportations', TransportationViewSet, basename='transportat
 router.register(r'notes', NoteViewSet, basename='notes')
 router.register(r'checklists', ChecklistViewSet, basename='checklists')
 router.register(r'images', AdventureImageViewSet, basename='images')
+router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
 
 
 urlpatterns = [

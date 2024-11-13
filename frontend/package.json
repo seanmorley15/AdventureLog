@@ -1,6 +1,6 @@
 {
 	"name": "adventurelog-frontend",
-	"version": "0.7.0",
+	"version": "0.7.1",
 	"scripts": {
 		"dev": "vite dev",
 		"django": "cd .. && cd backend/server && python3 manage.py runserver",
@@ -35,6 +35,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@lukulent/svelte-umami": "^0.0.3",
+		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
 	}
 }

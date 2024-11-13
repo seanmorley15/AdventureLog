@@ -10,7 +10,7 @@ export const actions: Actions = {
 		const email = formData.get('email') as string | null | undefined;
 
 		if (!email) {
-			return fail(400, { message: 'Email is required' });
+			return fail(400, { message: 'missing_email' });
 		}
 
 		let res = await fetch(`${endpoint}/auth/password/reset/`, {

@@ -1,6 +1,6 @@
 {
-  "name": "my-website",
-  "version": "0.0.0",
+  "name": "adventurelog-docs",
+  "version": "0.7.1",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",

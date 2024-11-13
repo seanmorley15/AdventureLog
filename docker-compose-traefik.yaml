@@ -43,20 +43,6 @@ services:
       - "traefik.http.routers.adventurelog.tls=true"
       - "traefik.http.routers.adventurelog.tls.certresolver=letsencrypt"
 
-  nginx:
-    image: nginx:latest
-    restart: unless-stopped
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.nginx.entrypoints=websecure"
-      - "traefik.http.routers.nginx.rule=Host(`yourdomain.com`) && PathPrefix(`/media`)" # Replace with your domain
-      - "traefik.http.routers.nginx.tls=true"
-      - "traefik.http.routers.nginx.tls.certresolver=letsencrypt"
-      - "traefik.http.middlewares.nginx-stripprefix.stripprefix.prefixes=/media"
-      - "traefik.http.routers.nginx.middlewares=nginx-stripprefix"
-    volumes:
-      - adventurelog-media:/usr/share/nginx/html
-
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     restart: unless-stopped

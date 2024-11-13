@@ -3,6 +3,7 @@
 	import type { Checklist, Collection, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { t } from 'svelte-i18n';
 
 	import Launch from '~icons/mdi/launch';
 	import TrashCan from '~icons/mdi/trash-can';
@@ -21,10 +22,10 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('success', 'Checklist deleted successfully');
+			addToast('success', $t('checklist.checklist_deleted'));
 			dispatch('delete', checklist.id);
 		} else {
-			addToast('Failed to delete checklist', 'error');
+			addToast($t('checklist.checklist_delete_error'), 'error');
 		}
 	}
 </script>
@@ -38,9 +39,12 @@
 				{checklist.name}
 			</h2>
 		</div>
-		<div class="badge badge-primary">Checklist</div>
+		<div class="badge badge-primary">{$t('adventures.checklist')}</div>
 		{#if checklist.items.length > 0}
-			<p>{checklist.items.length} {checklist.items.length > 1 ? 'Items' : 'Item'}</p>
+			<p>
+				{checklist.items.length}
+				{checklist.items.length > 1 ? $t('checklist.items') : $t('checklist.item')}
+			</p>
 		{/if}
 		{#if checklist.date && checklist.date !== ''}
 			<div class="inline-flex items-center">
@@ -49,11 +53,8 @@
 			</div>
 		{/if}
 		<div class="card-actions justify-end">
-			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
-				><Launch class="w-6 h-6" />Open Details</button
-			> -->
 			<button class="btn btn-neutral-200 mb-2" on:click={editChecklist}>
-				<Launch class="w-6 h-6" />Open
+				<Launch class="w-6 h-6" />{$t('notes.open')}
 			</button>
 			{#if checklist.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
 				<button

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Adventure } from '$lib/types';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
+	import { t } from 'svelte-i18n';
 
 	export let adventures: Adventure[] = [];
 
@@ -79,7 +80,7 @@
 	{:else}
 		<!-- svelte-ignore a11y-img-redundant-alt -->
 		<img
-			src={'https://placehold.co/300?text=No%20Image%20Found&font=roboto'}
+			src={`https://placehold.co/300?text=${$t('adventures.no_image_found')}&font=roboto`}
 			alt="No image available"
 			class="w-full h-48 object-cover"
 		/>

@@ -16,6 +16,7 @@ declare global {
 				uuid: string;
 				public_profile: boolean;
 			} | null;
+			locale: string;
 		}
 		// interface PageData {}
 		// interface PageState {}

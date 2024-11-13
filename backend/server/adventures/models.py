@@ -90,10 +90,6 @@ class Adventure(models.Model):
     # end_date = models.DateField(blank=True, null=True)
 
     def clean(self):
-        if self.date and self.end_date and self.date > self.end_date:
-            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
-        if self.end_date and not self.date:
-            raise ValidationError('Adventures must have an end date. Adventure: ' + self.name)
         if self.collection:
             if self.collection.is_public and not self.is_public:
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)

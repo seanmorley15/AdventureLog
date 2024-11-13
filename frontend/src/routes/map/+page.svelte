@@ -1,128 +1,101 @@
-<script>
-	// @ts-nocheck
-
-	import { isAdventureVisited } from '$lib';
+<script lang="ts">
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
-	import {
-		DefaultMarker,
-		MapEvents,
-		MapLibre,
-		Popup,
-		Marker,
-		GeoJSON,
-		LineLayer,
-		FillLayer,
-		SymbolLayer
-	} from 'svelte-maplibre';
+	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
+	import { t } from 'svelte-i18n';
+	import type { Adventure, VisitedRegion } from '$lib/types.js';
+	import { getAdventureTypeLabel } from '$lib';
+	import CardCarousel from '$lib/components/CardCarousel.svelte';
+	import { goto } from '$app/navigation';
 	export let data;
 
-	let clickedName = '';
+	let createModalOpen: boolean = false;
+	let showGeo: boolean = false;
+
+	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
+	let adventures: Adventure[] = data.props.adventures;
+
+	let filteredAdventures = adventures;
+
+	// Updates the filtered adventures based on the checkboxes
+	$: {
+		filteredAdventures = adventures.filter(
+			(adventure) => (showVisited && adventure.is_visited) || (showPlanned && !adventure.is_visited)
+		);
+	}
+
+	// Reset the longitude and latitude when the newMarker is set to null so new adventures are not created at the wrong location
+	$: {
+		if (!newMarker) {
+			newLongitude = null;
+			newLatitude = null;
+		}
+	}
 
 	console.log(data);
 
-	let showVisited = true;
-	let showPlanned = true;
+	let showVisited: boolean = true;
+	let showPlanned: boolean = true;
 
-	$: filteredMarkers = markers.filter(
-		(marker) =>
-			(showVisited && isAdventureVisited(marker)) || (showPlanned && !isAdventureVisited(marker))
-	);
+	let newMarker: { lngLat: any } | null = null;
 
-	let newMarker = [];
+	let newLongitude: number | null = null;
+	let newLatitude: number | null = null;
 
-	let newLongitude = null;
-	let newLatitude = null;
+	let openPopupId: string | null = null; // Store the ID of the currently open popup
 
-	function addMarker(e) {
-		newMarker = [];
-		newMarker = [...newMarker, { lngLat: e.detail.lngLat, name: 'Marker 1' }];
+	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
+		newMarker = null;
+		newMarker = { lngLat: e.detail.lngLat };
 		newLongitude = e.detail.lngLat.lng;
 		newLatitude = e.detail.lngLat.lat;
 	}
 
-	let markers = [];
-
-	$: {
-		markers = data.props.markers;
-	}
-
-	function createNewAdventure(event) {
-		let newMarker = {
-			lngLat: [event.detail.longitude, event.detail.latitude],
-			name: event.detail.name,
-			type: event.detail.type,
-			visits: event.detail.visits
-		};
-		markers = [...markers, newMarker];
-		clearMarkers();
+	function createNewAdventure(event: CustomEvent) {
+		adventures = [...adventures, event.detail];
+		newMarker = null;
 		createModalOpen = false;
 	}
-	let visitedRegions = data.props.visitedRegions;
 
-	let allRegions = [];
+	let isPopupOpen = false;
 
-	let visitArray = [];
-
-	// turns in into an array of the visits
-	visitedRegions.forEach((el) => {
-		visitArray.push(el.region);
-	});
-
-	function clearMarkers() {
-		newMarker = [];
-		newLatitude = null;
-		newLongitude = null;
+	function togglePopup() {
+		isPopupOpen = !isPopupOpen;
 	}
-
-	// mapped to the checkbox
-	let showGEO = false;
-	$: {
-		if (showGEO && allRegions.length === 0) {
-			(async () => {
-				allRegions = await fetch('/api/visitedregion/').then((res) => res.json());
-			})();
-		} else if (!showGEO) {
-			allRegions = [];
-		}
-	}
-
-	let createModalOpen = false;
 </script>
 
-<h1 class="text-center font-bold text-4xl">Adventure Map</h1>
+<h1 class="text-center font-bold text-4xl">{$t('map.adventure_map')}</h1>
 
 <div class="m-2 flex flex-col items-center justify-center">
 	<div class="gap-4 border-solid border-2 rounded-lg p-2 mb-4 border-neutral max-w-4xl">
-		<p class="font-semibold text-center text-xl mb-2">Map Options</p>
+		<p class="font-semibold text-center text-xl mb-2">{$t('map.map_options')}</p>
 		<div class="flex flex-wrap items-center justify-center gap-4">
 			<label class="label cursor-pointer">
-				<span class="label-text mr-1">Visited</span>
+				<span class="label-text mr-1">{$t('adventures.visited')}</span>
 				<input type="checkbox" bind:checked={showVisited} class="checkbox checkbox-primary" />
 			</label>
 			<label class="label cursor-pointer">
-				<span class="label-text mr-1">Planned</span>
+				<span class="label-text mr-1">{$t('adventures.planned')}</span>
 				<input type="checkbox" bind:checked={showPlanned} class="checkbox checkbox-primary" />
 			</label>
-			<!-- <div class="divider divider-horizontal"></div> -->
-			<label for="show-geo">Show Visited Regions</label>
+			<label for="show-geo">{$t('map.show_visited_regions')}</label>
 			<input
 				type="checkbox"
 				id="show-geo"
 				name="show-geo"
 				class="checkbox"
-				bind:checked={showGEO}
+				on:click={() => (showGeo = !showGeo)}
 			/>
-			<!-- <div class="divider divider-horizontal"></div> -->
-			{#if newMarker.length > 0}
+			<div class="divider divider-horizontal"></div>
+			{#if newMarker}
 				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-					>Add New Adventure at Marker</button
+					>{$t('map.add_adventure_at_marker')}</button
 				>
-				<button type="button" class="btn btn-neutral mb-2" on:click={clearMarkers}
-					>Clear Marker</button
+				<button type="button" class="btn btn-neutral mb-2" on:click={() => (newMarker = null)}
+					>{$t('map.clear_marker')}</button
 				>
 			{:else}
 				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
-					>Add New Adventure</button
+					>{$t('map.add_adventure')}</button
 				>
 			{/if}
 		</div>
@@ -143,76 +116,84 @@
 	class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
 	standardControls
 >
-	{#each filteredMarkers as marker}
-		{#if isAdventureVisited(marker)}
+	{#each filteredAdventures as adventure}
+		{#if adventure.latitude && adventure.longitude}
 			<Marker
-				lngLat={marker.lngLat}
-				on:click={() => (clickedName = marker.name)}
-				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-red-300 text-black shadow-md"
+				lngLat={[adventure.longitude, adventure.latitude]}
+				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 {adventure.is_visited
+					? 'bg-red-300'
+					: 'bg-blue-300'} text-black focus:outline-6 focus:outline-black"
+				on:click={togglePopup}
 			>
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<circle cx="12" cy="12" r="10" stroke="red" stroke-width="2" fill="red" />
-				</svg>
-				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{marker.name}</div>
-					<p class="font-semibold text-black text-md">Visited</p>
-				</Popup>
-			</Marker>
-		{:else}
-			<Marker
-				lngLat={marker.lngLat}
-				on:click={() => (clickedName = marker.name)}
-				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black shadow-2xl focus:outline-2 focus:outline-black"
-			>
-				<svg
-					width="24"
-					height="24"
-					viewBox="0 0 24 24"
-					fill="none"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<circle cx="12" cy="12" r="10" stroke="blue" stroke-width="2" fill="blue" />
-				</svg>
-				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{marker.name}</div>
-					<p class="font-semibold text-black text-md">Planned</p>
-				</Popup>
+				<span class="text-xl">
+					{getAdventureTypeLabel(adventure.type)}
+				</span>
+				{#if isPopupOpen}
+					<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
+						{#if adventure.images && adventure.images.length > 0}
+							<CardCarousel adventures={[adventure]} />
+						{/if}
+						<div class="text-lg text-black font-bold">{adventure.name}</div>
+						<p class="font-semibold text-black text-md">
+							{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
+						</p>
+						<p class="font-semibold text-black text-md">
+							{$t(`adventures.activities.${adventure.type}`)}
+						</p>
+						{#if adventure.visits && adventure.visits.length > 0}
+							<p class="text-black text-sm">
+								{#each adventure.visits as visit}
+									{visit.start_date
+										? new Date(visit.start_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})
+										: ''}
+									{visit.end_date && visit.end_date !== '' && visit.end_date !== visit.start_date
+										? ' - ' +
+											new Date(visit.end_date).toLocaleDateString(undefined, {
+												timeZone: 'UTC'
+											})
+										: ''}
+									<br />
+								{/each}
+							</p>
+						{/if}
+						<button
+							class="btn btn-neutral btn-wide btn-sm mt-4"
+							on:click={() => goto(`/adventures/${adventure.id}`)}>{$t('map.view_details')}</button
+						>
+					</Popup>
+				{/if}
 			</Marker>
 		{/if}
 	{/each}
 
 	<MapEvents on:click={addMarker} />
-	{#each newMarker as marker}
-		<DefaultMarker lngLat={marker.lngLat} />
-	{/each}
+	{#if newMarker}
+		<DefaultMarker lngLat={newMarker.lngLat} />
+	{/if}
 
-	{#each allRegions as { longitude, latitude, name, region }}
-		<Marker
-			lngLat={[longitude, latitude]}
-			on:click={() => (clickedName = name)}
-			class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 text-black shadow-md"
-		>
-			<svg
-				width="24"
-				height="24"
-				viewBox="0 0 24 24"
-				fill="none"
-				xmlns="http://www.w3.org/2000/svg"
+	{#each visitedRegions as region}
+		{#if showGeo}
+			<Marker
+				lngLat={[region.longitude, region.latitude]}
+				class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 text-black shadow-md"
 			>
-				<!-- green circle -->
-				<circle cx="12" cy="12" r="10" stroke="green" stroke-width="2" fill="green" />
-			</svg>
-			<Popup openOn="click" offset={[0, -10]}>
-				<div class="text-lg text-black font-bold">{name}</div>
-				<p class="font-semibold text-black text-md">{region}</p>
-			</Popup>
-		</Marker>
+				<svg
+					width="24"
+					height="24"
+					viewBox="0 0 24 24"
+					fill="none"
+					xmlns="http://www.w3.org/2000/svg"
+				>
+					<circle cx="12" cy="12" r="10" stroke="green" stroke-width="2" fill="green" />
+				</svg>
+				<Popup openOn="click" offset={[0, -10]}>
+					<div class="text-lg text-black font-bold">{region.name}</div>
+					<p class="font-semibold text-black text-md">{region.region}</p>
+				</Popup>
+			</Marker>
+		{/if}
 	{/each}
 </MapLibre>
 

@@ -107,4 +107,14 @@ export const themeHook: Handle = async ({ event, resolve }) => {
 	return await resolve(event);
 };
 
-export const handle = sequence(authHook, themeHook);
+// hook to get the langauge cookie and set the locale
+export const i18nHook: Handle = async ({ event, resolve }) => {
+	let locale = event.cookies.get('locale');
+	if (!locale) {
+		return await resolve(event);
+	}
+	event.locals.locale = locale; // Store the locale in locals
+	return await resolve(event);
+};
+
+export const handle = sequence(authHook, themeHook, i18nHook);

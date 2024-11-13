@@ -13,3 +13,4 @@ whitenoise
 django-resized
 django-geojson
 setuptools
+gunicorn==23.0.0

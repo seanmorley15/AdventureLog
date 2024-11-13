@@ -25,11 +25,11 @@ export const actions: Actions = {
 		const uid = formData.get('uid') as string;
 
 		if (!new_password1 || !new_password2) {
-			return fail(400, { message: 'Password is required' });
+			return fail(400, { message: 'settings.password_is_required' });
 		}
 
 		if (new_password1 !== new_password2) {
-			return fail(400, { message: 'Passwords do not match' });
+			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 
 		if (!token || !uid) {
@@ -48,9 +48,7 @@ export const actions: Actions = {
 				})
 			});
 			if (!response.ok) {
-				let responseJson = await response.json();
-				const key = Object.keys(responseJson)[0];
-				return fail(response.status, { message: responseJson[key] });
+				return fail(response.status, { message: 'settings.invalid_token' });
 			} else {
 				return redirect(302, '/login');
 			}

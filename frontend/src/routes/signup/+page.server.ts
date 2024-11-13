@@ -1,6 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
+import { getRandomBackground, getRandomQuote } from '$lib';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -8,19 +9,20 @@ export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/');
 	}
-	let is_disabled = await event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`);
-	let is_disabled_json = await is_disabled.json();
-	console.log(is_disabled_json);
-	if (is_disabled_json.is_disabled) {
-		return {
-			is_disabled: true,
-			message: is_disabled_json.message
-		};
-	} else {
-		return {
-			is_disabled: false
-		};
-	}
+	let is_disabled_fetch = await event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`);
+	let is_disabled_json = await is_disabled_fetch.json();
+	let is_disabled = is_disabled_json.is_disabled;
+	const quote = getRandomQuote();
+	const background = getRandomBackground();
+
+	return {
+		props: {
+			is_disabled: is_disabled,
+			is_disabled_message: is_disabled_json.message,
+			quote,
+			background
+		}
+	};
 };
 export const actions: Actions = {
 	default: async (event) => {
@@ -36,6 +38,14 @@ export const actions: Actions = {
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
+
+		// console log each form data
+		console.log('username: ', username);
+		console.log('password1: ', password1);
+		console.log('password2: ', password2);
+		console.log('email: ', email);
+		console.log('first_name: ', first_name);
+		console.log('last_name: ', last_name);
 
 		if (!csrfTokenFetch.ok) {
 			event.locals.user = null;

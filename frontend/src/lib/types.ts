@@ -37,6 +37,7 @@ export type Adventure = {
 	is_public: boolean;
 	created_at?: string | null;
 	updated_at?: string | null;
+	is_visited?: boolean;
 };
 
 export type Country = {
@@ -46,6 +47,8 @@ export type Country = {
 	subregion: string;
 	flag_url: string;
 	capital: string;
+	num_regions: number;
+	num_visits: number;
 };
 
 export type Region = {
@@ -60,6 +63,9 @@ export type VisitedRegion = {
 	id: number;
 	region: number;
 	user_id: number;
+	longitude: number;
+	latitude: number;
+	name: string;
 };
 
 export type Point = {
@@ -159,4 +165,18 @@ export type ChecklistItem = {
 	checklist: number;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
+};
+
+export type Background = {
+	url: string;
+	author?: string;
+	location?: string;
+};
+
+export type ReverseGeocode = {
+	id: string;
+	region: string;
+	country: string;
+	is_visited: boolean;
+	display_name: string;
 };

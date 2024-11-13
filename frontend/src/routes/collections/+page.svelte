@@ -6,6 +6,7 @@
 	import NewCollection from '$lib/components/NewCollection.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Collection } from '$lib/types';
+	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
 
@@ -26,6 +27,12 @@
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
+
+	$: {
+		if (count != collections.length) {
+			count = collections.length;
+		}
+	}
 
 	function handleChangePage() {
 		return async ({ result }: any) => {
@@ -136,7 +143,7 @@
 				tabindex="0"
 				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 			>
-				<p class="text-center font-bold text-lg">Create new...</p>
+				<p class="text-center font-bold text-lg">{$t(`adventures.create_new`)}</p>
 				<button
 					class="btn btn-primary"
 					on:click={() => {
@@ -144,7 +151,7 @@
 						newType = 'visited';
 					}}
 				>
-					Collection</button
+					{$t(`adventures.collection`)}</button
 				>
 
 				<!-- <button
@@ -160,8 +167,8 @@
 	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 	<div class="drawer-content">
 		<!-- Page content -->
-		<h1 class="text-center font-bold text-4xl mb-6">My Collections</h1>
-		<p class="text-center">This search returned {count} results.</p>
+		<h1 class="text-center font-bold text-4xl mb-6">{$t(`adventures.my_collections`)}</h1>
+		<p class="text-center">{count} {$t(`adventures.count_txt`)}</p>
 		{#if collections.length === 0}
 			<NotFound error={undefined} />
 		{/if}
@@ -170,7 +177,7 @@
 				class="btn btn-primary drawer-button lg:hidden mb-4 fixed bottom-0 left-0 ml-2 z-[999]"
 				on:click={toggleSidebar}
 			>
-				{sidebarOpen ? 'Close Filters' : 'Open Filters'}
+				{sidebarOpen ? $t(`adventures.close_filters`) : $t(`adventures.open_filters`)}
 			</button>
 
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -211,8 +218,8 @@
 			<!-- Sidebar content here -->
 			<div class="form-control">
 				<form action="?/get" method="post" use:enhance={handleSubmit}>
-					<h3 class="text-center font-semibold text-lg mb-4">Sort</h3>
-					<p class="text-lg font-semibold mb-2">Order Direction</p>
+					<h3 class="text-center font-semibold text-lg mb-4">{$t(`adventures.sort`)}</h3>
+					<p class="text-lg font-semibold mb-2">{$t(`adventures.order_direction`)}</p>
 					<div class="join">
 						<input
 							class="join-item btn btn-neutral"
@@ -220,7 +227,7 @@
 							name="order_direction"
 							id="asc"
 							value="asc"
-							aria-label="Ascending"
+							aria-label={$t(`adventures.ascending`)}
 							checked
 						/>
 						<input
@@ -229,7 +236,7 @@
 							name="order_direction"
 							id="desc"
 							value="desc"
-							aria-label="Descending"
+							aria-label={$t(`adventures.descending`)}
 						/>
 					</div>
 					<br />
@@ -243,13 +250,16 @@
 						value="name"
 						hidden
 					/>
-					<button type="submit" class="btn btn-success btn-primary mt-4">Sort</button>
+					<button type="submit" class="btn btn-success btn-primary mt-4"
+						>{$t(`adventures.sort`)}</button
+					>
 				</form>
 				<div class="divider"></div>
 				<button
 					type="submit"
 					class="btn btn-neutral btn-primary mt-4"
-					on:click={() => goto('/collections/archived')}>Archived Collections</button
+					on:click={() => goto('/collections/archived')}
+					>{$t(`adventures.archived_collections`)}</button
 				>
 			</div>
 		</ul>
@@ -257,6 +267,6 @@
 </div>
 
 <svelte:head>
-	<title>Collections</title>
+	<title>{$t(`navbar.collections`)}</title>
 	<meta name="description" content="View your adventure collections." />
 </svelte:head>

@@ -5,6 +5,7 @@
 	import { onMount } from 'svelte';
 	import CollectionCard from './CollectionCard.svelte';
 	let modal: HTMLDialogElement;
+	import { t } from 'svelte-i18n';
 
 	let collections: Collection[] = [];
 
@@ -44,15 +45,15 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h1 class="text-center font-bold text-4xl mb-6">My Collections</h1>
+		<h1 class="text-center font-bold text-4xl mb-6">{$t('adventures.my_collections')}</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each collections as collection}
 				<CollectionCard {collection} type="link" on:link={link} />
 			{/each}
 			{#if collections.length === 0}
-				<p class="text-center text-lg">No collections found to add this adventure to.</p>
+				<p class="text-center text-lg">{$t('adventures.no_collections_found')}</p>
 			{/if}
 		</div>
-		<button class="btn btn-primary" on:click={close}>Close</button>
+		<button class="btn btn-primary" on:click={close}>{$t('about.close')}</button>
 	</div>
 </dialog>

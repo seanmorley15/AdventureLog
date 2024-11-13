@@ -1,12 +1,11 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import type { Adventure, Collection, User } from '$lib/types.js';
+	import type { User } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { exportData } from '$lib';
+	import { t } from 'svelte-i18n';
 
 	export let data;
 	let user: User;
@@ -20,7 +19,7 @@
 			const pageParam = queryParams.get('page');
 
 			if (pageParam === 'success') {
-				addToast('success', 'Settings updated successfully!');
+				addToast('success', $t('settings.update_success'));
 				console.log('Settings updated successfully!');
 			}
 		}
@@ -31,22 +30,22 @@
 			window.location.href = '/settings?page=success';
 		}
 		if (browser && $page.form?.error) {
-			addToast('error', 'Error updating settings');
+			addToast('error', $t('settings.update_error'));
 		}
 	}
 
-	async function exportAdventures() {
-		const url = await exportData();
+	// async function exportAdventures() {
+	// 	const url = await exportData();
 
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = 'adventure-log-export.json';
-		a.click();
-		URL.revokeObjectURL(url);
-	}
+	// 	const a = document.createElement('a');
+	// 	a.href = url;
+	// 	a.download = 'adventure-log-export.json';
+	// 	a.click();
+	// 	URL.revokeObjectURL(url);
+	// }
 
 	async function checkVisitedRegions() {
-		let res = await fetch('/api/countries/region_check_all_adventures/', {
+		let res = await fetch('/api/reverse-geocode/mark_visited_region/', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -54,16 +53,16 @@
 		});
 		let data = await res.json();
 		if (res.ok) {
-			addToast('success', `${data.regions_visited} regions updated`);
+			addToast('success', `${data.new_regions} ${$t('adventures.regions_updated')}`);
 		} else {
-			addToast('error', 'Error updating visited regions');
+			addToast('error', $t('adventures.error_updating_regions'));
 		}
 	}
 </script>
 
-<h1 class="text-center font-extrabold text-4xl mb-6">Settings Page</h1>
+<h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.settings_page')}</h1>
 
-<h1 class="text-center font-extrabold text-xl">User Account Settings</h1>
+<h1 class="text-center font-extrabold text-xl">{$t('settings.account_settings')}</h1>
 <div class="flex justify-center">
 	<form
 		method="post"
@@ -72,14 +71,14 @@
 		class="w-full max-w-xs"
 		enctype="multipart/form-data"
 	>
-		<label for="username">Username</label>
+		<label for="username">{$t('auth.username')}</label>
 		<input
 			bind:value={user.username}
 			name="username"
 			id="username"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/><br />
-		<label for="first_name">First Name</label>
+		<label for="first_name">{$t('auth.first_name')}</label>
 		<input
 			type="text"
 			bind:value={user.first_name}
@@ -88,7 +87,7 @@
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/><br />
 
-		<label for="last_name">Last Name</label>
+		<label for="last_name">{$t('auth.last_name')}</label>
 		<input
 			type="text"
 			bind:value={user.last_name}
@@ -104,7 +103,7 @@
 			id="email"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/><br /> -->
-		<label for="profilePicture">Profile Picture</label>
+		<label for="profilePicture">{$t('auth.profile_picture')}</label>
 		<input
 			type="file"
 			name="profile_pic"
@@ -112,12 +111,9 @@
 			class="file-input file-input-bordered w-full max-w-xs mb-2"
 		/><br />
 		<div class="form-control">
-			<div
-				class="tooltip tooltip-info"
-				data-tip="With a public profile, users can share collections with you and view your profile on the users page."
-			>
+			<div class="tooltip tooltip-info" data-tip={$t('auth.public_tooltip')}>
 				<label class="label cursor-pointer">
-					<span class="label-text">Public Profile</span>
+					<span class="label-text">{$t('auth.public_profile')}</span>
 
 					<input
 						id="public_profile"
@@ -129,7 +125,7 @@
 				</label>
 			</div>
 		</div>
-		<button class="py-2 mt-2 px-4 btn btn-primary">Update</button>
+		<button class="py-2 mt-2 px-4 btn btn-primary">{$t('settings.update')}</button>
 	</form>
 </div>
 
@@ -139,13 +135,13 @@
 	</div>
 {/if}
 
-<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Password Change</h1>
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.password_change')}</h1>
 <div class="flex justify-center">
 	<form action="?/changePassword" method="post" class="w-full max-w-xs">
 		<input
 			type="password"
 			name="password1"
-			placeholder="New Password"
+			placeholder={$t('settings.new_password')}
 			id="password1"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
@@ -154,22 +150,22 @@
 			type="password"
 			name="password2"
 			id="password2"
-			placeholder="Confirm New Password"
+			placeholder={$t('settings.confirm_new_password')}
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
-		<button class="py-2 px-4 btn btn-primary mt-2">Change Password</button>
+		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.password_change')}</button>
 		<br />
 	</form>
 </div>
 
-<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Email Change</h1>
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.email_change')}</h1>
 <div class="flex justify-center">
 	<form action="?/changeEmail" method="post" class="w-full max-w-xs">
-		<label for="current_email">Current Email</label>
+		<label for="current_email">{$t('settings.current_email')}</label>
 		<input
 			type="email"
 			name="current_email"
-			placeholder={user.email || 'No Email Set'}
+			placeholder={user.email || $t('settings.no_email_set')}
 			id="current_email"
 			readonly
 			class="block mb-2 input input-bordered w-full max-w-xs"
@@ -178,31 +174,32 @@
 		<input
 			type="email"
 			name="new_email"
-			placeholder="New Email"
+			placeholder={$t('settings.new_email')}
 			id="new_email"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
-		<button class="py-2 px-4 btn btn-primary mt-2">Change Email</button>
+		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.email_change')}</button>
 	</form>
 </div>
 
 <div class="flex flex-col items-center mt-4">
-	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Visited Region Check</h1>
+	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">
+		{$t('adventures.visited_region_check')}
+	</h1>
 	<p>
-		By selecting this, the server will check all of your visited adventures and mark the regions
-		they are located in as "visited" in world travel.
+		{$t('adventures.visited_region_check_desc')}
 	</p>
 	<button class="btn btn-neutral mt-2 mb-2" on:click={checkVisitedRegions}
-		>Update Visited Regions</button
+		>{$t('adventures.update_visited_regions')}</button
 	>
-	<p>This may take longer depending on the number of adventures you have.</p>
+	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
 </div>
-
+<!-- 
 <div class="flex flex-col items-center mt-4">
 	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
 	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
 	<p>This may take a few seconds...</p>
-</div>
+</div> -->
 
 <small class="text-center"
 	><b>For Debug Use:</b> Server PK={user.pk} | Date Joined: {user.date_joined

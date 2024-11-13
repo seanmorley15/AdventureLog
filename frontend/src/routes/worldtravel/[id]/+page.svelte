@@ -1,31 +1,22 @@
 <script lang="ts">
 	import RegionCard from '$lib/components/RegionCard.svelte';
 	import type { Region, VisitedRegion } from '$lib/types';
-	// import {
-	// 	DefaultMarker,
-	// 	MapEvents,
-	// 	MapLibre,
-	// 	Popup,
-	// 	Marker,
-	// 	GeoJSON,
-	// 	LineLayer,
-	// 	FillLayer,
-	// 	SymbolLayer
-	// } from 'svelte-maplibre';
 	import type { PageData } from './$types';
 	export let data: PageData;
+
 	let regions: Region[] = data.props?.regions || [];
 	let visitedRegions: VisitedRegion[] = data.props?.visitedRegions || [];
+
 	const country = data.props?.country || null;
 	console.log(data);
 
-	let numRegions: number = regions.length;
+	let numRegions: number = country?.num_regions || 0;
+	let numVisitedRegions: number = country?.num_visits || 0;
 
 	visitedRegions = visitedRegions.filter(
 		(visitedRegion, index, self) =>
 			index === self.findIndex((t) => t.region === visitedRegion.region)
 	);
-	let numVisitedRegions: number = visitedRegions.length;
 </script>
 
 <h1 class="text-center font-bold text-4xl mb-4">Regions in {country?.name}</h1>
@@ -57,23 +48,6 @@
 		/>
 	{/each}
 </div>
-
-<!-- {#if data.props && data.props.regions}
-	<MapLibre
-		style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-		class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
-		standardControls
-	>
-		{#each data.props.regions as marker}
-			<DefaultMarker lngLat={[marker.longitude, marker.latitude]}>
-				<Popup openOn="click" offset={[0, -10]}>
-					<div class="text-lg text-black font-bold">{marker.name}</div>
-					<p class="font-semibold text-black text-md">{marker.id}</p>
-				</Popup>
-			</DefaultMarker>
-		{/each}
-	</MapLibre>
-{/if} -->
 
 <svelte:head>
 	<title
