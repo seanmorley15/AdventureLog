@@ -93,8 +93,7 @@
 	}
 
 	$: {
-		is_custom_location =
-			adventure.location !== reverseGeocodePlace?.display_name || !reverseGeocodePlace;
+		is_custom_location = adventure.location != reverseGeocodePlace?.display_name;
 	}
 
 	if (adventure.longitude && adventure.latitude) {
@@ -299,6 +298,9 @@
 			return;
 		}
 		reverseGeocodePlace = data;
+
+		console.log(reverseGeocodePlace);
+		console.log(is_custom_location);
 
 		if (
 			reverseGeocodePlace &&
