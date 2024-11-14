@@ -1,3 +1,4 @@
+from collections.abc import Collection
 import uuid
 from django.db import models
 
@@ -68,7 +69,8 @@ class Adventure(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
+
+    category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True, null=True)
     activity_types = ArrayField(models.CharField(
@@ -88,6 +90,7 @@ class Adventure(models.Model):
     # image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
     # date = models.DateField(blank=True, null=True)
     # end_date = models.DateField(blank=True, null=True)
+    # type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
 
     def clean(self):
         if self.collection:
@@ -95,6 +98,9 @@ class Adventure(models.Model):
                 raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
             if self.user_id != self.collection.user_id:
                 raise ValidationError('Adventures must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Adventure owner: ' + self.user_id.username)
+        if self.category:
+            if self.user_id != self.category.user_id:
+                raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
 
     def __str__(self):
         return self.name
@@ -235,3 +241,24 @@ class AdventureImage(models.Model):
 
     def __str__(self):
         return self.image.url
+
+class Category(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    display_name = models.CharField(max_length=200)
+    icon = models.CharField(max_length=200, default='🌎')
+
+    class Meta:
+        verbose_name_plural = 'Categories'
+        unique_together = ['name', 'user_id']
+
+    def clean(self) -> None:
+        self.name = self.name.lower().strip()
+
+        return super().clean()
+    
+    
+    def __str__(self):
+        return self.name

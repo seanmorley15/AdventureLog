@@ -6,10 +6,10 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, ADVENTURE_TYPES
+from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, Category
 from django.core.exceptions import PermissionDenied
 from worldtravel.models import VisitedRegion, Region, Country
-from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
+from .serializers import AdventureImageSerializer, AdventureSerializer, CategorySerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .permissions import CollectionShared, IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess
@@ -610,6 +610,24 @@ class ActivityTypesView(viewsets.ViewSet):
                     allTypes.append(x)
 
         return Response(allTypes)
+    
+class CategoryViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def categories(self, request):
+        """
+        Retrieve a list of distinct categories for adventures associated with the current user.
+
+        Args:
+            request (HttpRequest): The HTTP request object.
+
+        Returns:
+            Response: A response containing a list of distinct categories.
+        """
+        categories = Category.objects.filter(user_id=request.user.id).distinct()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)
 
 class TransportationViewSet(viewsets.ModelViewSet):
     queryset = Transportation.objects.all()

@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category
 from rest_framework import serializers
 
 class AdventureImageSerializer(serializers.ModelSerializer):
@@ -19,6 +19,18 @@ class AdventureImageSerializer(serializers.ModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'display_name', 'icon', 'user_id']
+        read_only_fields = ['id', 'user_id']
+
+    def validate_name(self, value):
+        if Category.objects.filter(name=value).exists():
+            raise serializers.ValidationError('Category with this name already exists.')
+    
+        return value
+    
 class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -29,10 +41,11 @@ class VisitSerializer(serializers.ModelSerializer):
 class AdventureSerializer(serializers.ModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False)
+    category = CategorySerializer(read_only=True)
     is_visited = serializers.SerializerMethodField()
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'visits', 'is_visited']
+        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 'latitude', 'visits', 'is_visited', 'category']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
 
     def get_is_visited(self, obj):
