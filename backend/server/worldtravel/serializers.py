@@ -19,7 +19,10 @@ class CountrySerializer(serializers.ModelSerializer):
         return Region.objects.filter(country=obj).count()
     
     def get_num_visits(self, obj):
-        return VisitedRegion.objects.filter(region__country=obj).count()
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return VisitedRegion.objects.filter(region__country=obj, user_id=request.user).count()
+        return 0
 
     class Meta:
         model = Country
