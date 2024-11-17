@@ -38,6 +38,13 @@ export type Adventure = {
 	created_at?: string | null;
 	updated_at?: string | null;
 	is_visited?: boolean;
+	category: {
+		id: string;
+		name: string;
+		display_name: string;
+		icon: string;
+		user_id: number;
+	};
 };
 
 export type Country = {

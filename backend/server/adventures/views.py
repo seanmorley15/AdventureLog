@@ -109,15 +109,18 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         # Handle case where types is all
         if 'all' in types:
-            types = [t[0] for t in ADVENTURE_TYPES]
-        valid_types = [t[0] for t in ADVENTURE_TYPES]
-        types = [t for t in types if t in valid_types]
+            types = Category.objects.filter(user_id=request.user).values_list('name', flat=True)
+        
+        else:
+            for type in types:
+                if not Category.objects.filter(user_id=request.user, name=type).exists():
+                    return Response({"error": f"Category {type} does not exist"}, status=400)
 
         if not types:
             return Response({"error": "No valid types provided"}, status=400)
 
         queryset = Adventure.objects.filter(
-            type__in=types,
+            category__in=Category.objects.filter(name__in=types, user_id=request.user),
             user_id=request.user.id
         )
 

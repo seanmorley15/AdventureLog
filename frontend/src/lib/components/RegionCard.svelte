@@ -28,7 +28,10 @@
 				let newVisit: VisitedRegion = {
 					id: visit_id,
 					region: region_id,
-					user_id: user_id
+					user_id: user_id,
+					longitude: 0,
+					latitude: 0,
+					name: ''
 				};
 				addToast('success', `Visit to ${region.name} marked`);
 				dispatch('visit', newVisit);
