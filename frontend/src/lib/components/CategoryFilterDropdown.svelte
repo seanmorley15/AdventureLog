@@ -53,7 +53,7 @@
 						on:change={() => toggleSelect(type.name)}
 						checked={types.indexOf(type.name) > -1}
 					/>
-					<span>{type.display_name + ' ' + type.icon}</span>
+					<span>{type.display_name + ' ' + type.icon + ` (${type.num_adventures})`}</span>
 				</label>
 			</li>
 		{/each}

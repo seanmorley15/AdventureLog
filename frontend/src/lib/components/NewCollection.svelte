@@ -8,7 +8,7 @@
 	import Calendar from '~icons/mdi/calendar';
 
 	let newCollection: Collection = {
-		user_id: NaN,
+		user_id: '',
 		id: '',
 		name: '',
 		description: '',

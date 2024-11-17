@@ -196,6 +196,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
+        del representation['pk'] # remove the pk field from the response
         return representation
 
 class MyPasswordResetSerializer(PasswordResetSerializer):

@@ -82,7 +82,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.pk == adventure.user_id}
+	{#if data.user && data.user.uuid == adventure.user_id}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
 				><ClipboardList class="w-8 h-8" /></button

@@ -15,7 +15,6 @@
 	console.log(data);
 
 	let adventures: Adventure[] = data.props.adventures || [];
-	let categories: Category[] = data.props.categories || [];
 
 	let currentSort = {
 		order_by: '',
@@ -36,14 +35,13 @@
 	let typeString: string = '';
 
 	$: {
-		console.log(typeString);
-		if (typeof window !== 'undefined' && typeString) {
+		if (typeof window !== 'undefined') {
 			let url = new URL(window.location.href);
-			url.searchParams.set('types', typeString);
-			goto(url.toString(), { invalidateAll: true, replaceState: true });
-		} else if (typeof window !== 'undefined' && !typeString) {
-			let url = new URL(window.location.href);
-			url.searchParams.set('types', 'all');
+			if (typeString) {
+				url.searchParams.set('types', typeString);
+			} else {
+				url.searchParams.delete('types');
+			}
 			goto(url.toString(), { invalidateAll: true, replaceState: true });
 		}
 	}

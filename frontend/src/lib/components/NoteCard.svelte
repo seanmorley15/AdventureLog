@@ -59,7 +59,7 @@
 			<button class="btn btn-neutral-200 mb-2" on:click={editNote}>
 				<Launch class="w-6 h-6" />{$t('notes.open')}
 			</button>
-			{#if note.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
+			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"

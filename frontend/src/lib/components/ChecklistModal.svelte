@@ -34,7 +34,7 @@
 				name: newItem,
 				is_checked: newStatus,
 				id: '',
-				user_id: 0,
+				user_id: '',
 				checklist: 0,
 				created_at: '',
 				updated_at: ''
@@ -135,7 +135,7 @@
 			<p class="font-semibold text-md mb-2">{$t('checklist.editing_checklist')} {initialName}</p>
 		{/if}
 
-		{#if (checklist && user?.pk == checklist?.user_id) || (user && collection && collection.shared_with.includes(user.uuid)) || !checklist}
+		{#if (checklist && user?.uuid == checklist?.user_id) || (user && collection && collection.shared_with.includes(user.uuid)) || !checklist}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
 					<label for="name">{$t('adventures.name')}</label>

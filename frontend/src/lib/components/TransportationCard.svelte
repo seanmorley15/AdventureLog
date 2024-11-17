@@ -59,7 +59,7 @@
 			{/if}
 		</div>
 
-		{#if transportation.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
+		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button

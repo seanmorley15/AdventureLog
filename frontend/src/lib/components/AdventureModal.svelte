@@ -52,7 +52,14 @@
 		location: null,
 		images: [],
 		user_id: null,
-		collection: collection?.id || null
+		collection: collection?.id || null,
+		category: {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -73,7 +80,14 @@
 		user_id: adventureToEdit?.user_id || null,
 		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || [],
-		is_visited: adventureToEdit?.is_visited || false
+		is_visited: adventureToEdit?.is_visited || false,
+		category: adventureToEdit?.category || {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	let markers: Point[] = [];

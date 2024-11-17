@@ -2,8 +2,10 @@ from django.utils import timezone
 import os
 from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category
 from rest_framework import serializers
+from main.utils import CustomModelSerializer
 
-class AdventureImageSerializer(serializers.ModelSerializer):
+
+class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
         fields = ['id', 'image', 'adventure']
@@ -19,11 +21,12 @@ class AdventureImageSerializer(serializers.ModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(CustomModelSerializer):
+    num_adventures = serializers.SerializerMethodField()
     class Meta:
         model = Category
-        fields = ['id', 'name', 'display_name', 'icon', 'user_id']
-        read_only_fields = ['id', 'user_id']
+        fields = ['id', 'name', 'display_name', 'icon', 'user_id', 'num_adventures']
+        read_only_fields = ['id', 'user_id', 'num_adventures']
 
     def validate_name(self, value):
         if Category.objects.filter(name=value).exists():
@@ -31,14 +34,17 @@ class CategorySerializer(serializers.ModelSerializer):
     
         return value
     
-class VisitSerializer(serializers.ModelSerializer):
+    def get_num_adventures(self, obj):
+        return Adventure.objects.filter(category=obj, user_id=obj.user_id).count()
+    
+class VisitSerializer(CustomModelSerializer):
 
     class Meta:
         model = Visit
         fields = ['id', 'start_date', 'end_date', 'notes']
         read_only_fields = ['id']
                                    
-class AdventureSerializer(serializers.ModelSerializer):
+class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False)
     category = CategorySerializer(read_only=True)
@@ -102,7 +108,7 @@ class AdventureSerializer(serializers.ModelSerializer):
         
         return instance
     
-class TransportationSerializer(serializers.ModelSerializer):
+class TransportationSerializer(CustomModelSerializer):
 
     class Meta:
         model = Transportation
@@ -113,7 +119,7 @@ class TransportationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(CustomModelSerializer):
 
     class Meta:
         model = Note
@@ -123,7 +129,7 @@ class NoteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
     
-class ChecklistItemSerializer(serializers.ModelSerializer):
+class ChecklistItemSerializer(CustomModelSerializer):
         class Meta:
             model = ChecklistItem
             fields = [
@@ -131,7 +137,7 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
             ]
             read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'checklist']
   
-class ChecklistSerializer(serializers.ModelSerializer):
+class ChecklistSerializer(CustomModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
     class Meta:
         model = Checklist
@@ -194,7 +200,7 @@ class ChecklistSerializer(serializers.ModelSerializer):
 
         return data
 
-class CollectionSerializer(serializers.ModelSerializer):
+class CollectionSerializer(CustomModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
