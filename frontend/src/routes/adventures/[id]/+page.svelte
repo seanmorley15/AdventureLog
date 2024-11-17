@@ -265,7 +265,7 @@
 								<div>
 									<p class="text-sm text-muted-foreground">{$t('adventures.adventure_type')}</p>
 									<p class="text-base font-medium">
-										{$t(`adventures.activities.${adventure.type}`)}
+										{`${adventure.category.display_name} ${adventure.category.icon}`}
 									</p>
 								</div>
 								{#if data.props.collection}

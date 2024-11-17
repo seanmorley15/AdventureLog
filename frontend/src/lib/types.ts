@@ -187,3 +187,11 @@ export type ReverseGeocode = {
 	is_visited: boolean;
 	display_name: string;
 };
+
+export type Category = {
+	id: string;
+	name: string;
+	display_name: string;
+	icon: string;
+	user_id: number;
+};

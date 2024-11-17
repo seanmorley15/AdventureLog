@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { ADVENTURE_TYPES } from '$lib';
+	import type { Category } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	let types_arr: string[] = [];
 	export let types: string;
+	let adventure_types: Category[] = [];
 
-	onMount(() => {
-		console.log(types);
+	onMount(async () => {
+		let categoryFetch = await fetch('/api/categories/categories');
+		let categoryData = await categoryFetch.json();
+		adventure_types = categoryData;
+		console.log(categoryData);
 		types_arr = types.split(',');
 	});
 
@@ -17,12 +21,15 @@
 	}
 
 	function toggleSelect(type: string) {
-		if (types_arr.includes(type)) {
-			types_arr = types_arr.filter((t) => t !== type);
+		if (types_arr.indexOf(type) > -1) {
+			types_arr = types_arr.filter((item) => item !== type);
 		} else {
 			types_arr.push(type);
 		}
+		types_arr = types_arr.filter((item) => item !== '');
+		// turn types_arr into a comma seperated list with no spaces
 		types = types_arr.join(',');
+
 		console.log(types);
 		console.log(types_arr);
 	}
@@ -37,16 +44,16 @@
 		<button class="btn btn-wide btn-neutral-300" on:click={clearTypes}
 			>{$t(`adventures.clear`)}</button
 		>
-		{#each ADVENTURE_TYPES as type}
+		{#each adventure_types as type}
 			<li>
 				<label class="cursor-pointer">
 					<input
 						type="checkbox"
-						value={type.label}
-						on:change={() => toggleSelect(type.type)}
-						checked={types.indexOf(type.type) > -1}
+						value={type.name}
+						on:change={() => toggleSelect(type.name)}
+						checked={types.indexOf(type.name) > -1}
 					/>
-					<span>{$t(`adventures.activities.${type.type}`)}</span>
+					<span>{type.display_name + ' ' + type.icon}</span>
 				</label>
 			</li>
 		{/each}

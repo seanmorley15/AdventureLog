@@ -6,7 +6,7 @@
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure } from '$lib/types';
+	import type { Adventure, Category } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -15,6 +15,7 @@
 	console.log(data);
 
 	let adventures: Adventure[] = data.props.adventures || [];
+	let categories: Category[] = data.props.categories || [];
 
 	let currentSort = {
 		order_by: '',
@@ -35,9 +36,14 @@
 	let typeString: string = '';
 
 	$: {
+		console.log(typeString);
 		if (typeof window !== 'undefined' && typeString) {
 			let url = new URL(window.location.href);
 			url.searchParams.set('types', typeString);
+			goto(url.toString(), { invalidateAll: true, replaceState: true });
+		} else if (typeof window !== 'undefined' && !typeString) {
+			let url = new URL(window.location.href);
+			url.searchParams.set('types', 'all');
 			goto(url.toString(), { invalidateAll: true, replaceState: true });
 		}
 	}
