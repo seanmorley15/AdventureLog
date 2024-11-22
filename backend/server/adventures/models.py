@@ -1,4 +1,5 @@
 from collections.abc import Collection
+from typing import Iterable
 import uuid
 from django.db import models
 
@@ -101,6 +102,17 @@ class Adventure(models.Model):
         if self.category:
             if self.user_id != self.category.user_id:
                 raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
+            
+    def save(self, force_insert: bool = False, force_update: bool = False, using: str | None = None, update_fields: Iterable[str] | None = None) -> None:
+        """
+        Saves the current instance. If the instance is being inserted for the first time, it will be created in the database.
+        If it already exists, it will be updated.
+        """
+        if force_insert and force_update:
+            raise ValueError("Cannot force both insert and updating in model saving.")
+        if not self.category:
+            self.category = Category.objects.get_or_create(user_id=self.user_id, name='general', display_name='General', icon='🌎')[0]
+        return super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
         return self.name

@@ -337,7 +337,8 @@
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="text-lg text-black font-bold">{adventure.name}</div>
 											<p class="font-semibold text-black text-md">
-												{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+												{adventure.category.display_name}
+												{adventure.category.icon}
 											</p>
 											{#if adventure.visits.length > 0}
 												<p class="text-black text-sm">

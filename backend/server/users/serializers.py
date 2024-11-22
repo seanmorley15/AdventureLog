@@ -63,6 +63,11 @@ class RegisterSerializer(serializers.Serializer):
     def validate(self, data):
         if data['password1'] != data['password2']:
             raise serializers.ValidationError(_("The two password fields didn't match."))
+        
+        # check if a user with the same email already exists
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError("This email is already in use.")
+
         return data
 
     def custom_signup(self, request, user):

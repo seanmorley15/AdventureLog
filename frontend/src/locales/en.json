@@ -178,6 +178,7 @@
 		"adventure_updated": "Adventure updated",
 		"adventure_update_error": "Failed to update adventure",
 		"set_to_pin": "Set to Pin",
+		"category_fetch_error": "Error fetching categories",
 		"new_adventure": "New Adventure",
 		"basic_information": "Basic Information",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",

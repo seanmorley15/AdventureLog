@@ -116,8 +116,8 @@ class AdventureViewSet(viewsets.ModelViewSet):
                 if not Category.objects.filter(user_id=request.user, name=type).exists():
                     return Response({"error": f"Category {type} does not exist"}, status=400)
 
-        if not types:
-            return Response({"error": "No valid types provided"}, status=400)
+            if not types:
+                return Response({"error": "At least one type must be provided"}, status=400)
 
         queryset = Adventure.objects.filter(
             category__in=Category.objects.filter(name__in=types, user_id=request.user),

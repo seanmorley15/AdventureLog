@@ -39,6 +39,8 @@ export const load = (async (event) => {
 		);
 
 		if (!initialFetch.ok) {
+			let error_message = await initialFetch.json();
+			console.error(error_message);
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
 		} else {

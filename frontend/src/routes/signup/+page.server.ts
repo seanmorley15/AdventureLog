@@ -39,14 +39,6 @@ export const actions: Actions = {
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
 
-		// console log each form data
-		console.log('username: ', username);
-		console.log('password1: ', password1);
-		console.log('password2: ', password2);
-		console.log('email: ', email);
-		console.log('first_name: ', first_name);
-		console.log('last_name: ', last_name);
-
 		if (!csrfTokenFetch.ok) {
 			event.locals.user = null;
 			return fail(500, { message: 'Failed to fetch CSRF token' });

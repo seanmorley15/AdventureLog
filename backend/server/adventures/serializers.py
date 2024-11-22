@@ -37,7 +37,7 @@ class CategorySerializer(CustomModelSerializer):
     def get_num_adventures(self, obj):
         return Adventure.objects.filter(category=obj, user_id=obj.user_id).count()
     
-class VisitSerializer(CustomModelSerializer):
+class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
@@ -47,12 +47,33 @@ class VisitSerializer(CustomModelSerializer):
 class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False)
-    category = CategorySerializer(read_only=True)
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(),
+        write_only=True,
+        required=False
+    )
+    category_object = CategorySerializer(source='category', read_only=True)
     is_visited = serializers.SerializerMethodField()
+
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 'latitude', 'visits', 'is_visited', 'category']
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
+            'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
+            'latitude', 'visits', 'is_visited', 'category', 'category_object'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['category'] = representation.pop('category_object')
+        return representation
+
+    def validate_category(self, category):
+        # Check that the category belongs to the same user
+        if category.user_id != self.context['request'].user:
+            raise serializers.ValidationError('Category does not belong to the user.')
+        return category
 
     def get_is_visited(self, obj):
         current_date = timezone.now().date()
@@ -62,32 +83,24 @@ class AdventureSerializer(CustomModelSerializer):
             elif visit.start_date and not visit.end_date and (visit.start_date <= current_date):
                 return True
         return False
-        
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return representation
-    
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', [])
         adventure = Adventure.objects.create(**validated_data)
         for visit_data in visits_data:
             Visit.objects.create(adventure=adventure, **visit_data)
         return adventure
-    
+
     def update(self, instance, validated_data):
         visits_data = validated_data.pop('visits', [])
-        
-        # Update Adventure fields
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
-        # Get current visits
+
         current_visits = instance.visits.all()
         current_visit_ids = set(current_visits.values_list('id', flat=True))
-        
-        # Update or create visits
+
         updated_visit_ids = set()
         for visit_data in visits_data:
             visit_id = visit_data.get('id')
@@ -98,16 +111,14 @@ class AdventureSerializer(CustomModelSerializer):
                 visit.save()
                 updated_visit_ids.add(visit_id)
             else:
-                # If no ID is provided or ID doesn't exist, create new visit
                 new_visit = Visit.objects.create(adventure=instance, **visit_data)
                 updated_visit_ids.add(new_visit.id)
-        
-        # Delete visits that are not in the updated data
+
         visits_to_delete = current_visit_ids - updated_visit_ids
         instance.visits.filter(id__in=visits_to_delete).delete()
-        
+
         return instance
-    
+
 class TransportationSerializer(CustomModelSerializer):
 
     class Meta:
