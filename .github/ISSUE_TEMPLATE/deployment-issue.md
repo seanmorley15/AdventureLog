@@ -1,6 +1,6 @@
 ---
 name: Deployment Issue
-about: Request helps deploying AdventureLog on your machine. The more details, the
+about: Request help deploying AdventureLog on your machine. The more details, the
   better I can help!
 title: "[DEPLOYMENT]"
 labels: deployment
