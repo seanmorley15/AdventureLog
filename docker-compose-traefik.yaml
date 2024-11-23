@@ -38,10 +38,10 @@ services:
       BODY_SIZE_LIMIT: "100000"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.adventurelog.entrypoints=websecure"
-      - "traefik.http.routers.adventurelog.rule=Host(`yourdomain.com`) && !PathPrefix(`/media`)" # Replace with your domain
-      - "traefik.http.routers.adventurelog.tls=true"
-      - "traefik.http.routers.adventurelog.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
+      - "traefik.http.routers.adventurelogweb.rule=Host(`yourdomain.com`) && !PathPrefix(`/media`)" # Replace with your domain
+      - "traefik.http.routers.adventurelogweb.tls=true"
+      - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt" 
 
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
@@ -61,6 +61,12 @@ services:
       FRONTEND_URL: "https://yourdomain.com" # Replace with your domain
     volumes:
       - adventurelog-media:/code/media
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.adventurelogserver.entrypoints=websecure"
+      - "traefik.http.routers.adventurelogserver.rule=Host(`yourdomain.com`) && PathPrefix(`/media`)" # Replace with your domain
+      - "traefik.http.routers.adventurelogserver.tls=true"
+      - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt" 
 
 volumes:
   postgres-data:
