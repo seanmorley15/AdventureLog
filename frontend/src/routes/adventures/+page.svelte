@@ -5,6 +5,7 @@
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
+	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Adventure, Category } from '$lib/types';
 	import { t } from 'svelte-i18n';
@@ -31,6 +32,8 @@
 
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = 1;
+
+	let is_category_modal_open: boolean = false;
 
 	let typeString: string = '';
 
@@ -167,6 +170,10 @@
 	/>
 {/if}
 
+{#if is_category_modal_open}
+	<CategoryModal on:close={() => (is_category_modal_open = false)} />
+{/if}
+
 <div class="fixed bottom-4 right-4 z-[999]">
 	<div class="flex flex-row items-center justify-center gap-4">
 		<div class="dropdown dropdown-top dropdown-end">
@@ -253,6 +260,10 @@
 				<!-- <h3 class="text-center font-bold text-lg mb-4">Adventure Types</h3> -->
 				<form method="get">
 					<CategoryFilterDropdown bind:types={typeString} />
+					<button
+						on:click={() => (is_category_modal_open = true)}
+						class="btn btn-neutral btn-sm min-w-full">Manage Categories</button
+					>
 					<div class="divider"></div>
 					<h3 class="text-center font-bold text-lg mb-4">{$t('adventures.sort')}</h3>
 					<p class="text-lg font-semibold mb-2">{$t('adventures.order_direction')}</p>

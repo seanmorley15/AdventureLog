@@ -292,3 +292,16 @@ export function getRandomBackground() {
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
 	return randomBackgrounds.backgrounds[randomIndex] as Background;
 }
+
+export function findFirstValue(obj: any): any {
+	for (const key in obj) {
+		if (typeof obj[key] === 'object' && obj[key] !== null) {
+			const value = findFirstValue(obj[key]);
+			if (value !== undefined) {
+				return value;
+			}
+		} else {
+			return obj[key];
+		}
+	}
+}

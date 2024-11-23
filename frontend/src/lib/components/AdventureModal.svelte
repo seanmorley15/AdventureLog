@@ -31,6 +31,7 @@
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
 	import CategoryDropdown from './CategoryDropdown.svelte';
+	import { findFirstValue } from '$lib';
 
 	let wikiError: string = '';
 
@@ -56,7 +57,13 @@
 		images: [],
 		user_id: null,
 		collection: collection?.id || null,
-		category: ''
+		category: {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -78,7 +85,13 @@
 		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || [],
 		is_visited: adventureToEdit?.is_visited || false,
-		category: adventureToEdit?.category || ''
+		category: adventureToEdit?.category || {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	let markers: Point[] = [];
@@ -405,7 +418,8 @@
 				warningMessage = '';
 				addToast('success', $t('adventures.adventure_created'));
 			} else {
-				warningMessage = Object.values(data)[0] as string;
+				warningMessage = findFirstValue(data) as string;
+				console.error(data);
 				addToast('error', $t('adventures.adventure_create_error'));
 			}
 		} else {
@@ -450,7 +464,8 @@
 						</div>
 						<div class="collapse-content">
 							<div>
-								<label for="name">{$t('adventures.name')}</label><br />
+								<label for="name">{$t('adventures.name')}<span class="text-red-500">*</span></label
+								><br />
 								<input
 									type="text"
 									id="name"
@@ -461,9 +476,11 @@
 								/>
 							</div>
 							<div>
-								<label for="link">{$t('adventures.category')}</label><br />
+								<label for="link"
+									>{$t('adventures.category')}<span class="text-red-500">*</span></label
+								><br />
 
-								<CategoryDropdown bind:categories bind:category_id={adventure.category} />
+								<CategoryDropdown bind:categories bind:selected_category={adventure.category} />
 							</div>
 							<div>
 								<label for="rating">{$t('adventures.rating')}</label><br />

@@ -21,18 +21,28 @@ class AdventureImageSerializer(CustomModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
-class CategorySerializer(CustomModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     num_adventures = serializers.SerializerMethodField()
     class Meta:
         model = Category
-        fields = ['id', 'name', 'display_name', 'icon', 'user_id', 'num_adventures']
-        read_only_fields = ['id', 'user_id', 'num_adventures']
+        fields = ['id', 'name', 'display_name', 'icon', 'num_adventures']
+        read_only_fields = ['id', 'num_adventures']
 
     def validate_name(self, value):
-        if Category.objects.filter(name=value).exists():
-            raise serializers.ValidationError('Category with this name already exists.')
-    
-        return value
+        return value.lower()
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['name'] = validated_data['name'].lower()
+        return Category.objects.create(user_id=user, **validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if 'name' in validated_data:
+            instance.name = validated_data['name'].lower()
+        instance.save()
+        return instance
     
     def get_num_adventures(self, obj):
         return Adventure.objects.filter(category=obj, user_id=obj.user_id).count()
@@ -46,13 +56,8 @@ class VisitSerializer(serializers.ModelSerializer):
                                    
 class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
-    visits = VisitSerializer(many=True, read_only=False)
-    category = serializers.PrimaryKeyRelatedField(
-        queryset=Category.objects.all(),
-        write_only=True,
-        required=False
-    )
-    category_object = CategorySerializer(source='category', read_only=True)
+    visits = VisitSerializer(many=True, read_only=False, required=False)
+    category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
 
     class Meta:
@@ -60,19 +65,45 @@ class AdventureSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'category_object'
+            'latitude', 'visits', 'is_visited', 'category'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        representation['category'] = representation.pop('category_object')
-        return representation
+    def validate_category(self, category_data):
+        if isinstance(category_data, Category):
+            return category_data
+        if category_data:
+            user = self.context['request'].user
+            name = category_data.get('name', '').lower()
+            existing_category = Category.objects.filter(user_id=user, name=name).first()
+            if existing_category:
+                return existing_category
+            category_data['name'] = name
+        return category_data
 
-    def validate_category(self, category):
-        # Check that the category belongs to the same user
-        if category.user_id != self.context['request'].user:
-            raise serializers.ValidationError('Category does not belong to the user.')
+    def get_or_create_category(self, category_data):
+        user = self.context['request'].user
+        
+        if isinstance(category_data, Category):
+            return category_data
+        
+        if isinstance(category_data, dict):
+            name = category_data.get('name', '').lower()
+            display_name = category_data.get('display_name', name)
+            icon = category_data.get('icon', '🌎')
+        else:
+            name = category_data.name.lower()
+            display_name = category_data.display_name
+            icon = category_data.icon
+
+        category, created = Category.objects.get_or_create(
+            user_id=user,
+            name=name,
+            defaults={
+                'display_name': display_name,
+                'icon': icon
+            }
+        )
         return category
 
     def get_is_visited(self, obj):
@@ -86,16 +117,28 @@ class AdventureSerializer(CustomModelSerializer):
 
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', [])
+        category_data = validated_data.pop('category', None)
         adventure = Adventure.objects.create(**validated_data)
         for visit_data in visits_data:
             Visit.objects.create(adventure=adventure, **visit_data)
+
+        if category_data:
+            category = self.get_or_create_category(category_data)
+            adventure.category = category
+            adventure.save()
+
         return adventure
 
     def update(self, instance, validated_data):
         visits_data = validated_data.pop('visits', [])
+        category_data = validated_data.pop('category', None)
 
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
+        if category_data:
+            category = self.get_or_create_category(category_data)
+            instance.category = category
         instance.save()
 
         current_visits = instance.visits.all()

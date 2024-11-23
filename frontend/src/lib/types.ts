@@ -38,15 +38,7 @@ export type Adventure = {
 	created_at?: string | null;
 	updated_at?: string | null;
 	is_visited?: boolean;
-	category:
-		| {
-				id: string;
-				name: string;
-				display_name: string;
-				icon: string;
-				user_id: string;
-		  }
-		| string;
+	category: Category | null;
 };
 
 export type Country = {
@@ -196,5 +188,5 @@ export type Category = {
 	display_name: string;
 	icon: string;
 	user_id: string;
-	num_adventures: number;
+	num_adventures?: number | null;
 };
