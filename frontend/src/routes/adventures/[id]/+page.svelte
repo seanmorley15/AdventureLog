@@ -265,9 +265,7 @@
 								<div>
 									<p class="text-sm text-muted-foreground">{$t('adventures.adventure_type')}</p>
 									<p class="text-base font-medium">
-										{typeof adventure.category === 'object'
-											? `${adventure.category.display_name} ${adventure.category.icon}`
-											: ''}
+										{adventure.category?.display_name + ' ' + adventure.category?.icon}
 									</p>
 								</div>
 								{#if data.props.collection}
@@ -339,8 +337,7 @@
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="text-lg text-black font-bold">{adventure.name}</div>
 											<p class="font-semibold text-black text-md">
-												{typeof adventure.category === 'object' && adventure.category.display_name}
-												{typeof adventure.category === 'object' && adventure.category.icon}
+												{adventure.category?.display_name + ' ' + adventure.category?.icon}
 											</p>
 											{#if adventure.visits.length > 0}
 												<p class="text-black text-sm">

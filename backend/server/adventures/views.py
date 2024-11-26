@@ -644,7 +644,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         general_category = Category.objects.filter(user_id=request.user, name='general').first()
 
         if not general_category:
-            general_category = Category.objects.create(user_id=request.user, name='general', icon='🌎', display_name='General')
+            general_category = Category.objects.create(user_id=request.user, name='general', icon='🌍', display_name='General')
         
         Adventure.objects.filter(category=instance).update(category=general_category)
 

@@ -6,6 +6,7 @@ export default defineConfig({
   title: "AdventureLog",
   description: "The ultimate travel companion.",
   lang: "en-US",
+  // lastUpdated: true,
 
   ignoreDeadLinks: [
     // ignore exact url "/playground"
@@ -32,6 +33,10 @@ export default defineConfig({
     ],
     search: {
       provider: "local",
+    },
+    editLink: {
+      pattern:
+        "https://github.com/seanmorley15/AdventureLog/edit/main/documentation/:path",
     },
 
     footer: {

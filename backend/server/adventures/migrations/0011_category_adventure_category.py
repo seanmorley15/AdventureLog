@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
                 ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
                 ('name', models.CharField(max_length=200)),
                 ('display_name', models.CharField(max_length=200)),
-                ('icon', models.CharField(default='🌎', max_length=200)),
+                ('icon', models.CharField(default='🌍', max_length=200)),
                 ('user_id', models.ForeignKey(default=1, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={

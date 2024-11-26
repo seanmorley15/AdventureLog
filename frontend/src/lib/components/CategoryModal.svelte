@@ -10,6 +10,8 @@
 
 	let category_to_edit: Category | null = null;
 
+	let is_changed: boolean = false;
+
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		if (modal) {
@@ -39,6 +41,7 @@
 					}
 					return c;
 				});
+				is_changed = true;
 			}
 		}
 	}
@@ -60,6 +63,7 @@
 			});
 			if (response.ok) {
 				categories = categories.filter((c) => c.id !== category.id);
+				is_changed = true;
 			}
 		};
 	}
@@ -87,21 +91,44 @@
 		{/if}
 
 		{#if category_to_edit}
-			<input
-				type="text"
-				placeholder="Name"
-				bind:value={category_to_edit.display_name}
-				class="input input-bordered w-full max-w-xs"
-			/>
-			<input
-				type="text"
-				placeholder="Icon"
-				bind:value={category_to_edit.icon}
-				class="input input-bordered w-full max-w-xs"
-			/>
+			<h2 class="text-center text-xl font-semibold mt-2 mb-2">Edit Category</h2>
+			<div class="flex flex-row space-x-2 form-control">
+				<input
+					type="text"
+					placeholder="Name"
+					bind:value={category_to_edit.display_name}
+					class="input input-bordered w-full max-w-xs"
+				/>
+
+				<input
+					type="text"
+					placeholder="Icon"
+					bind:value={category_to_edit.icon}
+					class="input input-bordered w-full max-w-xs"
+				/>
+			</div>
 			<button class="btn btn-primary" on:click={saveCategory}>Save</button>
 		{/if}
 
 		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>
+
+		{#if is_changed}
+			<div role="alert" class="alert alert-info mt-6">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					class="h-6 w-6 shrink-0 stroke-current"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					></path>
+				</svg>
+				<span>The adventure cards will be updated once you refresh the page.</span>
+			</div>
+		{/if}
 	</div>
 </dialog>

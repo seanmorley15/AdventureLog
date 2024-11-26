@@ -111,7 +111,7 @@ class Adventure(models.Model):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
         if not self.category:
-            self.category = Category.objects.get_or_create(user_id=self.user_id, name='general', display_name='General', icon='🌎')[0]
+            self.category = Category.objects.get_or_create(user_id=self.user_id, name='general', display_name='General', icon='🌍')[0]
         return super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
@@ -260,7 +260,7 @@ class Category(models.Model):
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
     display_name = models.CharField(max_length=200)
-    icon = models.CharField(max_length=200, default='🌎')
+    icon = models.CharField(max_length=200, default='🌍')
 
     class Meta:
         verbose_name_plural = 'Categories'

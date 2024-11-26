@@ -90,7 +90,7 @@ class AdventureSerializer(CustomModelSerializer):
         if isinstance(category_data, dict):
             name = category_data.get('name', '').lower()
             display_name = category_data.get('display_name', name)
-            icon = category_data.get('icon', '🌎')
+            icon = category_data.get('icon', '�')
         else:
             name = category_data.name.lower()
             display_name = category_data.display_name

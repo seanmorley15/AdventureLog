@@ -361,8 +361,7 @@
 					</div>
 					<div class="divider"></div>
 					<div class="form-control">
-						<br />
-						<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.sources')}</p>
+						<p class="text-lg font-semibold mb-2">{$t('adventures.sources')}</p>
 						<label class="label cursor-pointer">
 							<span class="label-text">{$t('adventures.collection_adventures')}</span>
 							<input

@@ -126,7 +126,7 @@
 				on:click={togglePopup}
 			>
 				<span class="text-xl">
-					{typeof adventure.category === 'object' ? adventure.category.icon : adventure.category}
+					{adventure.category?.display_name + ' ' + adventure.category?.icon}
 				</span>
 				{#if isPopupOpen}
 					<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
@@ -138,7 +138,7 @@
 							{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
 						</p>
 						<p class="font-semibold text-black text-md">
-							{adventure.category.display_name + ' ' + adventure.category.icon}
+							{adventure.category?.display_name + ' ' + adventure.category?.icon}
 						</p>
 						{#if adventure.visits && adventure.visits.length > 0}
 							<p class="text-black text-sm">

@@ -404,6 +404,18 @@
 		event.preventDefault();
 		console.log(adventure);
 		if (adventure.id === '') {
+			console.log(categories);
+			if (categories.some((category) => category.name === 'general')) {
+				adventure.category = categories.find((category) => category.name === 'general') as Category;
+			} else {
+				adventure.category = {
+					id: '',
+					name: 'general',
+					display_name: 'General',
+					icon: '🌍',
+					user_id: ''
+				};
+			}
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {
