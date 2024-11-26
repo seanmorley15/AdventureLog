@@ -111,7 +111,16 @@ class Adventure(models.Model):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
         if not self.category:
-            self.category = Category.objects.get_or_create(user_id=self.user_id, name='general', display_name='General', icon='🌍')[0]
+            category, created = Category.objects.get_or_create(
+            user_id=self.user_id,
+            name='general',
+            defaults={
+                'display_name': 'General',
+                'icon': '🌍'
+            }
+        )
+            self.category = category
+            
         return super().save(force_insert, force_update, using, update_fields)
 
     def __str__(self):
@@ -273,4 +282,4 @@ class Category(models.Model):
     
     
     def __str__(self):
-        return self.name
+        return self.name + ' - ' + self.display_name + ' - ' + self.icon

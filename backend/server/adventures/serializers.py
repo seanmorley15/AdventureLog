@@ -118,6 +118,7 @@ class AdventureSerializer(CustomModelSerializer):
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
+        print(category_data)
         adventure = Adventure.objects.create(**validated_data)
         for visit_data in visits_data:
             Visit.objects.create(adventure=adventure, **visit_data)

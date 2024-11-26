@@ -187,7 +187,8 @@
     "day": "Tag",
     "add_a_tag": "Fügen Sie ein Tag hinzu",
     "tags": "Schlagworte",
-    "set_to_pin": "Auf „Anpinnen“ setzen"
+    "set_to_pin": "Auf „Anpinnen“ setzen",
+    "category_fetch_error": "Fehler beim Abrufen der Kategorien"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -219,19 +220,20 @@
     "shared_with_me": "Mit mir geteilt",
     "theme_selection": "Themenauswahl",
     "themes": {
-      "aestetic-dark": "Ästhetisches Dunkel",
-      "aestetic-light": "Ästhetisches Licht",
       "aqua": "Aqua",
       "dark": "Dunkel",
       "forest": "Wald",
       "light": "Licht",
-      "night": "Nacht"
+      "night": "Nacht",
+      "aestheticDark": "Ästhetisches Dunkel",
+      "aestheticLight": "Ästhetisches Licht"
     },
     "users": "Benutzer",
     "worldtravel": "Weltreisen",
     "my_tags": "Meine Tags",
     "tag": "Etikett",
-    "language_selection": "Sprache"
+    "language_selection": "Sprache",
+    "support": "Unterstützung"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -399,5 +401,14 @@
     "user_stats": "Benutzerstatistiken",
     "visited_countries": "Besuchte Länder",
     "visited_regions": "Besuchte Regionen"
+  },
+  "categories": {
+    "category_name": "Kategoriename",
+    "edit_category": "Kategorie bearbeiten",
+    "icon": "Symbol",
+    "manage_categories": "Kategorien verwalten",
+    "no_categories_found": "Keine Kategorien gefunden.",
+    "select_category": "Kategorie auswählen",
+    "update_after_refresh": "Die Abenteuerkarten werden aktualisiert, sobald Sie die Seite aktualisieren."
   }
 }

@@ -305,3 +305,13 @@ export function findFirstValue(obj: any): any {
 		}
 	}
 }
+
+export let themes = [
+	{ name: 'light', label: 'Light' },
+	{ name: 'dark', label: 'Dark' },
+	{ name: 'night', label: 'Night' },
+	{ name: 'forest', label: 'Forest' },
+	{ name: 'aqua', label: 'Aqua' },
+	{ name: 'aestheticLight', label: 'Aesthetic Light' },
+	{ name: 'aestheticDark', label: 'Aesthetic Dark' }
+];

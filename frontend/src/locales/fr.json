@@ -187,7 +187,8 @@
     "day": "Jour",
     "add_a_tag": "Ajouter une balise",
     "tags": "Balises",
-    "set_to_pin": "Définir sur Épingler"
+    "set_to_pin": "Définir sur Épingler",
+    "category_fetch_error": "Erreur lors de la récupération des catégories"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -222,16 +223,17 @@
       "forest": "Forêt",
       "light": "Lumière",
       "night": "Nuit",
-      "aestetic-dark": "Esthétique sombre",
-      "aestetic-light": "Lumière esthétique",
       "aqua": "Aqua",
-      "dark": "Sombre"
+      "dark": "Sombre",
+      "aestheticDark": "Esthétique sombre",
+      "aestheticLight": "Lumière esthétique"
     },
     "users": "Utilisateurs",
     "worldtravel": "Voyage dans le monde",
     "my_tags": "Mes balises",
     "tag": "Étiqueter",
-    "language_selection": "Langue"
+    "language_selection": "Langue",
+    "support": "Soutien"
   },
   "auth": {
     "confirm_password": "Confirmez le mot de passe",
@@ -399,5 +401,14 @@
     "user_stats": "Statistiques des utilisateurs",
     "visited_countries": "Pays visités",
     "visited_regions": "Régions visitées"
+  },
+  "categories": {
+    "category_name": "Nom de la catégorie",
+    "edit_category": "Modifier la catégorie",
+    "icon": "Icône",
+    "manage_categories": "Gérer les catégories",
+    "no_categories_found": "Aucune catégorie trouvée.",
+    "select_category": "Sélectionnez une catégorie",
+    "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page."
   }
 }

@@ -130,7 +130,7 @@
 		</div>
 		<div>
 			<div class="badge badge-primary">
-				{`${adventure.category.display_name} ${adventure.category.icon}`}
+				{adventure.category?.display_name + ' ' + adventure.category?.icon}
 			</div>
 			<div class="badge badge-success">
 				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}

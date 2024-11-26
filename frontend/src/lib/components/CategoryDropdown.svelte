@@ -31,13 +31,6 @@
 		selectCategory(new_category);
 	}
 
-	// function removeCategory(categoryName: string) {
-	// 	categories = categories.filter((category) => category.name !== categoryName);
-	// 	if (selected_category && selected_category.name === categoryName) {
-	// 		selected_category = null;
-	// 	}
-	// }
-
 	// Close dropdown when clicking outside
 	let dropdownRef: HTMLDivElement;
 
@@ -59,7 +52,7 @@
 	<button type="button" class="btn btn-outline w-full text-left" on:click={toggleDropdown}>
 		{selected_category && selected_category.name
 			? selected_category.display_name + ' ' + selected_category.icon
-			: 'Select Category'}
+			: $t('categories.select_category')}
 	</button>
 
 	{#if isOpen}
@@ -69,13 +62,13 @@
 			<div class="flex items-center gap-2">
 				<input
 					type="text"
-					placeholder="Category Name"
+					placeholder={$t('categories.category_name')}
 					class="input input-bordered w-full max-w-xs"
 					bind:value={new_category.display_name}
 				/>
 				<input
 					type="text"
-					placeholder="Icon"
+					placeholder={$t('categories.icon')}
 					class="input input-bordered w-full max-w-xs"
 					bind:value={new_category.icon}
 				/>
@@ -93,13 +86,6 @@
 						on:click={() => selectCategory(category)}
 					>
 						<span>{category.display_name} {category.icon} ({category.num_adventures})</span>
-						<!-- <button
-						type="button"
-						class="btn btn-xs btn-error"
-						on:click|stopPropagation={() => removeCategory(category.name)}
-					>
-						{$t('adventures.remove')}
-					</button> -->
 					</div>
 				{/each}
 			</div>

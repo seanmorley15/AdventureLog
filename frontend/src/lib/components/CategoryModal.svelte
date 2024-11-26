@@ -20,7 +20,7 @@
 		let category_fetch = await fetch('/api/categories/categories');
 		categories = await category_fetch.json();
 		// remove the general category if it exists
-		categories = categories.filter((c) => c.name !== 'general');
+		// categories = categories.filter((c) => c.name !== 'general');
 	});
 
 	async function saveCategory() {
@@ -73,7 +73,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Manage Categories</h3>
+		<h3 class="font-bold text-lg">{$t('categories.manage_categories')}</h3>
 
 		{#each categories as category}
 			<div class="flex justify-between items-center mt-2">
@@ -82,32 +82,36 @@
 					<button on:click={() => (category_to_edit = category)} class="btn btn-primary btn-sm"
 						>Edit</button
 					>
-					<button on:click={removeCategory(category)} class="btn btn-warning btn-sm">Remove</button>
+					{#if category.name != 'general'}
+						<button on:click={removeCategory(category)} class="btn btn-warning btn-sm"
+							>{$t('adventures.remove')}</button
+						>
+					{/if}
 				</div>
 			</div>
 		{/each}
 		{#if categories.length === 0}
-			<p>No categories found.</p>
+			<p>{$t('categories.no_categories_found')}</p>
 		{/if}
 
 		{#if category_to_edit}
-			<h2 class="text-center text-xl font-semibold mt-2 mb-2">Edit Category</h2>
+			<h2 class="text-center text-xl font-semibold mt-2 mb-2">{$t('categories.edit_category')}</h2>
 			<div class="flex flex-row space-x-2 form-control">
 				<input
 					type="text"
-					placeholder="Name"
+					placeholder={$t('adventures.name')}
 					bind:value={category_to_edit.display_name}
 					class="input input-bordered w-full max-w-xs"
 				/>
 
 				<input
 					type="text"
-					placeholder="Icon"
+					placeholder={$t('categories.icon')}
 					bind:value={category_to_edit.icon}
 					class="input input-bordered w-full max-w-xs"
 				/>
 			</div>
-			<button class="btn btn-primary" on:click={saveCategory}>Save</button>
+			<button class="btn btn-primary" on:click={saveCategory}>{$t('notes.save')}</button>
 		{/if}
 
 		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>
@@ -127,7 +131,7 @@
 						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 					></path>
 				</svg>
-				<span>The adventure cards will be updated once you refresh the page.</span>
+				<span>{$t('categories.update_after_refresh')}</span>
 			</div>
 		{/if}
 	</div>

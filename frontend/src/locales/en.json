@@ -18,14 +18,15 @@
 		"documentation": "Documentation",
 		"discord": "Discord",
 		"language_selection": "Language",
+		"support": "Support",
 		"theme_selection": "Theme Selection",
 		"themes": {
 			"light": "Light",
 			"dark": "Dark",
 			"night": "Night",
 			"forest": "Forest",
-			"aestetic-dark": "Aestetic Dark",
-			"aestetic-light": "Aestetic Light",
+			"aestheticLight": "Aesthetic Light",
+			"aestheticDark": "Aesthetic Dark",
 			"aqua": "Aqua"
 		}
 	},
@@ -400,5 +401,14 @@
 		"user_stats": "User Stats",
 		"visited_countries": "Visited Countries",
 		"visited_regions": "Visited Regions"
+	},
+	"categories": {
+		"manage_categories": "Manage Categories",
+		"no_categories_found": "No categories found.",
+		"edit_category": "Edit Category",
+		"icon": "Icon",
+		"update_after_refresh": "The adventure cards will be updated once you refresh the page.",
+		"select_category": "Select Category",
+		"category_name": "Category Name"
 	}
 }
