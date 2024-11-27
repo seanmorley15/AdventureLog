@@ -27,4 +27,4 @@ AdventureLog is open-source software, licensed under the GPL-3.0 license. This m
 
 ## About the Maintainer
 
-AdventureLog is created and maintined by [Sean Morley](https://seanmorley.com), a Computer Science student at the University of Connecticut. Sean is passionate about open-source software and building modern tools that help people solve real-world problems.
+AdventureLog is created and maintained by [Sean Morley](https://seanmorley.com), a Computer Science student at the University of Connecticut. Sean is passionate about open-source software and building modern tools that help people solve real-world problems.

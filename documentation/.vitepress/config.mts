@@ -41,8 +41,7 @@ export default defineConfig({
 
     footer: {
       message: "AdventureLog",
-      copyright:
-        'Copyright © 2023-2024 <a target="_blank" href="https:/seanmorley.com">Sean Morley</a>',
+      copyright: "Copyright © 2023-2024 Sean Morley",
     },
 
     logo: "/adventurelog.png",
