@@ -1,8 +1,21 @@
 import { defineConfig } from "vitepress";
 
+const inProd = process.env.NODE_ENV === "production";
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  head: [["link", { rel: "icon", href: "/adventurelog.png" }]],
+  head: [
+    ["link", { rel: "icon", href: "/adventurelog.png" }],
+
+    [
+      "script",
+      {
+        defer: "",
+        src: "https://cloud.umami.is/script.js",
+        "data-website-id": "a7552764-5a1d-4fe7-80c2-5331e1a53cb6",
+      },
+    ],
+  ],
   ignoreDeadLinks: "localhostLinks",
   title: "AdventureLog",
   description: "The ultimate travel companion.",
