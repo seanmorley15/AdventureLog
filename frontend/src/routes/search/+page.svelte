@@ -40,7 +40,7 @@
 			myAdventures = data.props.adventures;
 			publicAdventures = data.props.adventures;
 
-			if (data.user?.pk != null) {
+			if (data.user?.uuid != null) {
 				myAdventures = myAdventures.filter((adventure) => adventure.user_id === data.user?.uuid);
 			} else {
 				myAdventures = [];
