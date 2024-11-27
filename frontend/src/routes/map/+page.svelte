@@ -126,7 +126,7 @@
 				on:click={togglePopup}
 			>
 				<span class="text-xl">
-					{adventure.category?.display_name + ' ' + adventure.category?.icon}
+					{adventure.category?.icon}
 				</span>
 				{#if isPopupOpen}
 					<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>

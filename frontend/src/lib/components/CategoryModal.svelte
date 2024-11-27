@@ -6,6 +6,8 @@
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
 
+	import InformationSlabCircle from '~icons/mdi/information-slab-circle';
+
 	export let categories: Category[] = [];
 
 	let category_to_edit: Category | null = null;
@@ -86,6 +88,8 @@
 						<button on:click={removeCategory(category)} class="btn btn-warning btn-sm"
 							>{$t('adventures.remove')}</button
 						>
+					{:else}
+						<button class="btn btn-warning btn-sm btn-disabled">{$t('adventures.remove')}</button>
 					{/if}
 				</div>
 			</div>

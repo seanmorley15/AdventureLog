@@ -77,16 +77,19 @@
 				>
 			</div>
 			<div class="flex flex-wrap gap-2 mt-2">
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
-				{#each categories as category}
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
-					<!-- svelte-ignore a11y-no-static-element-interactions -->
-					<div
+				<!-- Sort the categories dynamically before rendering -->
+				{#each categories
+					.slice()
+					.sort((a, b) => (b.num_adventures || 0) - (a.num_adventures || 0)) as category}
+					<button
+						type="button"
 						class="btn btn-neutral flex items-center space-x-2"
 						on:click={() => selectCategory(category)}
+						role="option"
+						aria-selected={selected_category && selected_category.id === category.id}
 					>
 						<span>{category.display_name} {category.icon} ({category.num_adventures})</span>
-					</div>
+					</button>
 				{/each}
 			</div>
 		</div>
