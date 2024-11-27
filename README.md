@@ -4,9 +4,10 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
 
-**Documentation can be found [here](https://docs.adventurelog.app).**
+- **[Documentation](https://adventurelog.app)**  
+- **[Demo](https://demo.adventurelog.app)**  
+- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**  
 
-**Join the AdventureLog Community Discord Server [here](https://discord.gg/wRbQ9Egr8C).**
 
 # Table of Contents
 
