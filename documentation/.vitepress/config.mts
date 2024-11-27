@@ -3,12 +3,10 @@ import { defineConfig } from "vitepress";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   head: [["link", { rel: "icon", href: "/adventurelog.png" }]],
+  ignoreDeadLinks: "localhostLinks",
   title: "AdventureLog",
   description: "The ultimate travel companion.",
   lang: "en-US",
-  // lastUpdated: true,
-
-  ignoreDeadLinks: true,
 
   sitemap: {
     hostname: "https://adventurelog.app",
