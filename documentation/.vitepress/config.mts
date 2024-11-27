@@ -3,23 +3,10 @@ import { defineConfig } from "vitepress";
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   head: [["link", { rel: "icon", href: "/adventurelog.png" }]],
+  ignoreDeadLinks: "localhostLinks",
   title: "AdventureLog",
   description: "The ultimate travel companion.",
   lang: "en-US",
-  // lastUpdated: true,
-
-  ignoreDeadLinks: [
-    // ignore exact url "/playground"
-    "/playground",
-    // ignore all localhost links
-    /^https?:\/\/localhost/,
-    // ignore all links include "/repl/""
-    /\/repl\//,
-    // custom function, ignore all links include "ignore"
-    (url) => {
-      return url.toLowerCase().includes("ignore");
-    },
-  ],
 
   sitemap: {
     hostname: "https://adventurelog.app",
