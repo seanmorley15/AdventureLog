@@ -13,6 +13,11 @@ export default defineConfig({
     "/playground",
     // ignore all localhost links
     /^https?:\/\/localhost/,
+    // ignore localhost links with any port
+    // ignore http://localhost:8015
+    /^https?:\/\/localhost:\d+/,
+    /^http?:\/\/localhost:\d+/,
+    // ignore all links include "/playground/"
     // ignore all links include "/repl/""
     /\/repl\//,
     // custom function, ignore all links include "ignore"

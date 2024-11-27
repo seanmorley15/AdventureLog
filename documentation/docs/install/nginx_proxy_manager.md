@@ -26,8 +26,8 @@ Add the folowing to the bottom of the `docker-compose.yml` file for the Nginx Pr
 ```yaml
 networks:
   default:
-    external:
-      name: nginx-proxy-manager
+    name: nginx-proxy-manager
+    external: true
 ```
 
 ## Setting Up Nginx Proxy Manager
