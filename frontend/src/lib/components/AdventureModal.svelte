@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type {
 		Adventure,
+		Category,
 		Collection,
 		OpenStreetMapPlace,
 		Point,
@@ -17,7 +18,7 @@
 	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
 
-	import { DefaultMarker, FillLayer, MapEvents, MapLibre } from 'svelte-maplibre';
+	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
@@ -25,9 +26,12 @@
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
+	let categories: Category[] = [];
+
 	import ActivityComplete from './ActivityComplete.svelte';
 	import { appVersion } from '$lib/config';
-	import { ADVENTURE_TYPES } from '$lib';
+	import CategoryDropdown from './CategoryDropdown.svelte';
+	import { findFirstValue } from '$lib';
 
 	let wikiError: string = '';
 
@@ -52,7 +56,14 @@
 		location: null,
 		images: [],
 		user_id: null,
-		collection: collection?.id || null
+		collection: collection?.id || null,
+		category: {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -73,7 +84,14 @@
 		user_id: adventureToEdit?.user_id || null,
 		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || [],
-		is_visited: adventureToEdit?.is_visited || false
+		is_visited: adventureToEdit?.is_visited || false,
+		category: adventureToEdit?.category || {
+			id: '',
+			name: '',
+			display_name: '',
+			icon: '',
+			user_id: ''
+		}
 	};
 
 	let markers: Point[] = [];
@@ -322,6 +340,12 @@
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
 		console.log('open');
+		let categoryFetch = await fetch('/api/categories/categories');
+		if (categoryFetch.ok) {
+			categories = await categoryFetch.json();
+		} else {
+			addToast('error', $t('adventures.category_fetch_error'));
+		}
 	});
 
 	function close() {
@@ -380,6 +404,22 @@
 		event.preventDefault();
 		console.log(adventure);
 		if (adventure.id === '') {
+			console.log(categories);
+			if (adventure.category?.display_name == '') {
+				if (categories.some((category) => category.name === 'general')) {
+					adventure.category = categories.find(
+						(category) => category.name === 'general'
+					) as Category;
+				} else {
+					adventure.category = {
+						id: '',
+						name: 'general',
+						display_name: 'General',
+						icon: '🌍',
+						user_id: ''
+					};
+				}
+			}
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {
@@ -394,7 +434,8 @@
 				warningMessage = '';
 				addToast('success', $t('adventures.adventure_created'));
 			} else {
-				warningMessage = Object.values(data)[0] as string;
+				warningMessage = findFirstValue(data) as string;
+				console.error(data);
 				addToast('error', $t('adventures.adventure_create_error'));
 			}
 		} else {
@@ -439,7 +480,8 @@
 						</div>
 						<div class="collapse-content">
 							<div>
-								<label for="name">{$t('adventures.name')}</label><br />
+								<label for="name">{$t('adventures.name')}<span class="text-red-500">*</span></label
+								><br />
 								<input
 									type="text"
 									id="name"
@@ -450,13 +492,11 @@
 								/>
 							</div>
 							<div>
-								<label for="link">{$t('adventures.category')}</label><br />
-								<select class="select select-bordered w-full max-w-xs" bind:value={adventure.type}>
-									<option disabled selected>{$t('adventures.select_adventure_category')}</option>
-									{#each ADVENTURE_TYPES as type}
-										<option value={type.type}>{type.label}</option>
-									{/each}
-								</select>
+								<label for="link"
+									>{$t('adventures.category')}<span class="text-red-500">*</span></label
+								><br />
+
+								<CategoryDropdown bind:categories bind:selected_category={adventure.category} />
 							</div>
 							<div>
 								<label for="rating">{$t('adventures.rating')}</label><br />

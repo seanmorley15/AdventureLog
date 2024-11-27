@@ -1,6 +1,8 @@
 import os
 from .models import Country, Region, VisitedRegion
 from rest_framework import serializers
+from main.utils import CustomModelSerializer
+
 
 class CountrySerializer(serializers.ModelSerializer):
     def get_public_url(self, obj):
@@ -19,7 +21,10 @@ class CountrySerializer(serializers.ModelSerializer):
         return Region.objects.filter(country=obj).count()
     
     def get_num_visits(self, obj):
-        return VisitedRegion.objects.filter(region__country=obj).count()
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            return VisitedRegion.objects.filter(region__country=obj, user_id=request.user).count()
+        return 0
 
     class Meta:
         model = Country
@@ -33,7 +38,7 @@ class RegionSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude']
 
-class VisitedRegionSerializer(serializers.ModelSerializer):
+class VisitedRegionSerializer(CustomModelSerializer):
     longitude = serializers.DecimalField(source='region.longitude', max_digits=9, decimal_places=6, read_only=True)
     latitude = serializers.DecimalField(source='region.latitude', max_digits=9, decimal_places=6, read_only=True)
     name = serializers.CharField(source='region.name', read_only=True)

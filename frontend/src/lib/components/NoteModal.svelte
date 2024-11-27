@@ -113,7 +113,7 @@
 			<p class="font-semibold text-md mb-2">{$t('notes.editing_note')} {initialName}</p>
 		{/if}
 
-		{#if (note && user?.pk == note?.user_id) || (collection && user && collection.shared_with.includes(user.uuid)) || !note}
+		{#if (note && user?.uuid == note?.user_id) || (collection && user && collection.shared_with.includes(user.uuid)) || !note}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
 					<label for="name">{$t('adventures.name')}</label>

@@ -187,7 +187,8 @@
     "day": "Dag",
     "add_a_tag": "Lägg till en tagg",
     "tags": "Taggar",
-    "set_to_pin": "Ställ in på Pin"
+    "set_to_pin": "Ställ in på Pin",
+    "category_fetch_error": "Det gick inte att hämta kategorier"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -219,19 +220,20 @@
     "shared_with_me": "Delade med mig",
     "theme_selection": "Temaval",
     "themes": {
-      "aestetic-dark": "Estetisk mörk",
-      "aestetic-light": "Estetiskt ljus",
       "aqua": "Aqua",
       "dark": "Mörk",
       "forest": "Skog",
       "light": "Ljus",
-      "night": "Natt"
+      "night": "Natt",
+      "aestheticDark": "Estetisk mörk",
+      "aestheticLight": "Estetiskt ljus"
     },
     "users": "Användare",
     "worldtravel": "Världsresor",
     "my_tags": "Mina taggar",
     "tag": "Märka",
-    "language_selection": "Språk"
+    "language_selection": "Språk",
+    "support": "Stöd"
   },
   "worldtravel": {
     "all": "Alla",
@@ -399,5 +401,14 @@
     "user_stats": "Användarstatistik",
     "visited_countries": "Besökta länder",
     "visited_regions": "Besökte regioner"
+  },
+  "categories": {
+    "category_name": "Kategorinamn",
+    "edit_category": "Redigera kategori",
+    "icon": "Ikon",
+    "manage_categories": "Hantera kategorier",
+    "no_categories_found": "Inga kategorier hittades.",
+    "select_category": "Välj Kategori",
+    "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan."
   }
 }

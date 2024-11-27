@@ -63,6 +63,11 @@ class RegisterSerializer(serializers.Serializer):
     def validate(self, data):
         if data['password1'] != data['password2']:
             raise serializers.ValidationError(_("The two password fields didn't match."))
+        
+        # check if a user with the same email already exists
+        if User.objects.filter(email=data['email']).exists():
+            raise serializers.ValidationError("This email is already in use.")
+
         return data
 
     def custom_signup(self, request, user):
@@ -196,6 +201,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
+        del representation['pk'] # remove the pk field from the response
         return representation
 
 class MyPasswordResetSerializer(PasswordResetSerializer):

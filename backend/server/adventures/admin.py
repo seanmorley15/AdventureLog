@@ -1,14 +1,29 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit
+from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
 from worldtravel.models import Country, Region, VisitedRegion
 
 
 class AdventureAdmin(admin.ModelAdmin):
-    list_display = ('name', 'type', 'user_id', 'is_public')
-    list_filter = ('type', 'user_id', 'is_public')
+    list_display = ('name', 'get_category', 'get_visit_count',  'user_id', 'is_public')
+    list_filter = ( 'user_id', 'is_public')
     search_fields = ('name',)
+
+    def get_category(self, obj):
+        if obj.category and obj.category.display_name and obj.category.icon:
+            return obj.category.display_name + ' ' + obj.category.icon
+        elif obj.category and obj.category.name:
+            return obj.category.name
+        else:
+            return 'No Category'
+        
+    get_category.short_description = 'Category'
+
+    def get_visit_count(self, obj):
+        return obj.visits.count()
+    
+    get_visit_count.short_description = 'Visit Count'
 
 
 class CountryAdmin(admin.ModelAdmin):
@@ -80,7 +95,10 @@ class VisitAdmin(admin.ModelAdmin):
             return
 
     image_display.short_description = 'Image Preview'
-                                        
+
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user_id', 'display_name', 'icon')
+    search_fields = ('name', 'display_name')
         
 class CollectionAdmin(admin.ModelAdmin):
     def adventure_count(self, obj):
@@ -105,6 +123,7 @@ admin.site.register(Note)
 admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
 admin.site.register(AdventureImage, AdventureImageAdmin)
+admin.site.register(Category, CategoryAdmin)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

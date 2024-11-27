@@ -6,6 +6,7 @@
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import ArchiveArrowDown from '~icons/mdi/archive-arrow-down';
 	import ArchiveArrowUp from '~icons/mdi/archive-arrow-up';
+	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
 	import type { Adventure, Collection } from '$lib/types';
@@ -149,7 +150,7 @@
 									<FileDocumentEdit class="w-6 h-6" />{$t('adventures.edit_collection')}
 								</button>
 								<button class="btn btn-neutral mb-2" on:click={() => (isShareModalOpen = true)}>
-									<FileDocumentEdit class="w-6 h-6" />{$t('adventures.share')}
+									<ShareVariant class="w-6 h-6" />{$t('adventures.share')}
 								</button>
 							{/if}
 							{#if collection.is_archived}

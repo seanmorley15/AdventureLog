@@ -187,7 +187,8 @@
     "day": "Dag",
     "add_a_tag": "Voeg een label toe",
     "tags": "Labels",
-    "set_to_pin": "Stel in op Vastzetten"
+    "set_to_pin": "Stel in op Vastzetten",
+    "category_fetch_error": "Fout bij ophalen van categorieën"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -219,19 +220,20 @@
     "shared_with_me": "Gedeeld met mij",
     "theme_selection": "Thema Selectie",
     "themes": {
-      "aestetic-dark": "Esthetisch donker",
-      "aestetic-light": "Esthetisch licht",
       "aqua": "Aqua",
       "dark": "Donker",
       "forest": "Woud",
       "light": "Licht",
-      "night": "Nacht"
+      "night": "Nacht",
+      "aestheticDark": "Esthetisch donker",
+      "aestheticLight": "Esthetisch licht"
     },
     "users": "Gebruikers",
     "worldtravel": "Wereldreizen",
     "my_tags": "Mijn tags",
     "tag": "Label",
-    "language_selection": "Taal"
+    "language_selection": "Taal",
+    "support": "Steun"
   },
   "auth": {
     "confirm_password": "Bevestig wachtwoord",
@@ -399,5 +401,14 @@
     "user_stats": "Gebruikersstatistieken",
     "visited_countries": "Bezochte landen",
     "visited_regions": "Bezochte regio's"
+  },
+  "categories": {
+    "category_name": "Categorienaam",
+    "edit_category": "Categorie bewerken",
+    "icon": "Icon",
+    "manage_categories": "Beheer categorieën",
+    "no_categories_found": "Geen categorieën gevonden.",
+    "select_category": "Selecteer Categorie",
+    "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt."
   }
 }

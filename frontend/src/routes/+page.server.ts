@@ -1,7 +1,6 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import { getRandomBackground } from '$lib';
+import { themes } from '$lib';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -9,24 +8,11 @@ export const actions: Actions = {
 	setTheme: async ({ url, cookies }) => {
 		const theme = url.searchParams.get('theme');
 		// change the theme only if it is one of the allowed themes
-		if (
-			theme &&
-			[
-				'light',
-				'dark',
-				'night',
-				'retro',
-				'forest',
-				'aqua',
-				'forest',
-				'aestheticLight',
-				'aestheticDark',
-				'emerald'
-			].includes(theme)
-		) {
+		if (theme && themes.find((t) => t.name === theme)) {
 			cookies.set('colortheme', theme, {
 				path: '/',
-				maxAge: 60 * 60 * 24 * 365
+				maxAge: 60 * 60 * 24 * 365, // 1 year
+				sameSite: 'lax'
 			});
 		}
 	},
@@ -54,11 +40,11 @@ export const actions: Actions = {
 	},
 	setLocale: async ({ url, cookies }) => {
 		const locale = url.searchParams.get('locale');
-		// change the theme only if it is one of the allowed themes
-		if (locale && ['en', 'es'].includes(locale)) {
+		// change the locale only if it is one of the allowed locales
+		if (locale) {
 			cookies.set('locale', locale, {
 				path: '/',
-				maxAge: 60 * 60 * 24 * 365
+				maxAge: 60 * 60 * 24 * 365 // 1 year
 			});
 		}
 	}

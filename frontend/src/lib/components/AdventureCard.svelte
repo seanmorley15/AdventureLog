@@ -129,7 +129,9 @@
 			</button>
 		</div>
 		<div>
-			<div class="badge badge-primary">{$t(`adventures.activities.${adventure.type}`)}</div>
+			<div class="badge badge-primary">
+				{adventure.category?.display_name + ' ' + adventure.category?.icon}
+			</div>
 			<div class="badge badge-success">
 				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
 			</div>
@@ -165,7 +167,7 @@
 		<div class="card-actions justify-end mt-2">
 			<!-- action options dropdown -->
 			{#if type != 'link'}
-				{#if adventure.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
+				{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 					<div class="dropdown dropdown-end">
 						<div tabindex="0" role="button" class="btn btn-neutral-200">
 							<DotsHorizontal class="w-6 h-6" />
@@ -186,7 +188,7 @@
 							</button>
 
 							<!-- remove from collection -->
-							{#if adventure.collection && user?.pk == adventure.user_id}
+							{#if adventure.collection && user?.uuid == adventure.user_id}
 								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
 									><LinkVariantRemove class="w-6 h-6" />{$t(
 										'adventures.remove_from_collection'

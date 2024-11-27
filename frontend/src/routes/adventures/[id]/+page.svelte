@@ -82,7 +82,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.pk == adventure.user_id}
+	{#if data.user && data.user.uuid == adventure.user_id}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
 				><ClipboardList class="w-8 h-8" /></button
@@ -265,7 +265,7 @@
 								<div>
 									<p class="text-sm text-muted-foreground">{$t('adventures.adventure_type')}</p>
 									<p class="text-base font-medium">
-										{$t(`adventures.activities.${adventure.type}`)}
+										{adventure.category?.display_name + ' ' + adventure.category?.icon}
 									</p>
 								</div>
 								{#if data.props.collection}
@@ -337,7 +337,7 @@
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="text-lg text-black font-bold">{adventure.name}</div>
 											<p class="font-semibold text-black text-md">
-												{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+												{adventure.category?.display_name + ' ' + adventure.category?.icon}
 											</p>
 											{#if adventure.visits.length > 0}
 												<p class="text-black text-sm">

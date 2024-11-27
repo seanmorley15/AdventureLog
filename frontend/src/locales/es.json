@@ -21,13 +21,14 @@
       "dark": "Oscuro",
       "night": "Noche",
       "forest": "Bosque",
-      "aestetic-dark": "Estético Oscuro",
-      "aestetic-light": "Estético Claro",
-      "aqua": "Aqua"
+      "aqua": "Aqua",
+      "aestheticDark": "Estética Oscura",
+      "aestheticLight": "Luz estetica"
     },
     "my_tags": "Mis etiquetas",
     "tag": "Etiqueta",
-    "language_selection": "Idioma"
+    "language_selection": "Idioma",
+    "support": "Apoyo"
   },
   "about": {
     "about": "Acerca de",
@@ -231,7 +232,8 @@
     "day": "Día",
     "add_a_tag": "Agregar una etiqueta",
     "tags": "Etiquetas",
-    "set_to_pin": "Establecer en Fijar"
+    "set_to_pin": "Establecer en Fijar",
+    "category_fetch_error": "Error al buscar categorías"
   },
   "worldtravel": {
     "all": "Todo",
@@ -399,5 +401,14 @@
     "user_stats": "Estadísticas de usuario",
     "visited_countries": "Países visitados",
     "visited_regions": "Regiones visitadas"
+  },
+  "categories": {
+    "category_name": "Nombre de categoría",
+    "edit_category": "Editar categoría",
+    "icon": "Icono",
+    "manage_categories": "Administrar categorías",
+    "no_categories_found": "No se encontraron categorías.",
+    "select_category": "Seleccionar categoría",
+    "update_after_refresh": "Las tarjetas de aventuras se actualizarán una vez que actualices la página."
   }
 }

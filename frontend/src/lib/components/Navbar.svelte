@@ -15,6 +15,7 @@
 	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
+	import { themes } from '$lib';
 
 	let query: string = '';
 
@@ -23,7 +24,7 @@
 	const submitLocaleChange = (event: Event) => {
 		const select = event.target as HTMLSelectElement;
 		const newLocale = select.value;
-		document.cookie = `locale=${newLocale}; path=/`;
+		document.cookie = `locale=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 		locale.set(newLocale);
 		window.location.reload();
 	};
@@ -214,58 +215,40 @@
 				<button class="btn" on:click={() => (isAboutModalOpen = true)}>{$t('navbar.about')}</button>
 				<button
 					class="btn btn-sm mt-2"
-					on:click={() => (window.location.href = 'https://docs.adventurelog.app/')}
+					on:click={() => (window.location.href = 'https://adventurelog.app')}
 					>{$t('navbar.documentation')}</button
 				>
 				<button
 					class="btn btn-sm mt-2"
-					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}
-					>{$t('navbar.discord')}</button
+					on:click={() => (window.location.href = 'https://discord.gg/wRbQ9Egr8C')}>Discord</button
 				>
+				<button
+					class="btn btn-sm mt-2"
+					on:click={() => (window.location.href = 'https://buymeacoffee.com/seanmorley15')}
+					>{$t('navbar.support')} 💖</button
+				>
+				<p class="font-bold m-4 text-lg text-center">{$t('navbar.language_selection')}</p>
+				<form method="POST" use:enhance>
+					<select
+						class="select select-bordered w-full max-w-xs bg-base-100 text-base-content"
+						on:change={submitLocaleChange}
+						bind:value={$locale}
+					>
+						{#each $locales as loc}
+							<option value={loc} class="text-base-content">{$t(`languages.${loc}`)}</option>
+						{/each}
+					</select>
+					<input type="hidden" name="locale" value={$locale} />
+				</form>
 				<p class="font-bold m-4 text-lg text-center">{$t('navbar.theme_selection')}</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
-					<li>
-						<button formaction="/?/setTheme&theme=light"
-							>{$t('navbar.themes.light')}<WeatherSunny class="w-6 h-6" />
-						</button>
-					</li>
-					<li>
-						<button formaction="/?/setTheme&theme=dark"
-							>{$t('navbar.themes.dark')}<WeatherNight class="w-6 h-6" /></button
-						>
-					</li>
-					<li>
-						<button formaction="/?/setTheme&theme=night"
-							>{$t('navbar.themes.night')}<WeatherNight class="w-6 h-6" /></button
-						>
-					</li>
-					<li>
-						<button formaction="/?/setTheme&theme=forest"
-							>{$t('navbar.themes.forest')}<Forest class="w-6 h-6" /></button
-						>
-						<button formaction="/?/setTheme&theme=aestheticLight"
-							>{$t('navbar.themes.aestetic-light')}<PaletteOutline class="w-6 h-6" /></button
-						>
-						<button formaction="/?/setTheme&theme=aestheticDark"
-							>{$t('navbar.themes.aestetic-dark')}<PaletteOutline class="w-6 h-6" /></button
-						>
-						<button formaction="/?/setTheme&theme=aqua"
-							>{$t('navbar.themes.aqua')}<Water class="w-6 h-6" /></button
-						>
-					</li>
-					<p class="font-bold m-4 text-lg text-center">{$t('navbar.language_selection')}</p>
-					<form method="POST" use:enhance>
-						<select
-							class="select select-bordered w-full max-w-xs bg-base-100 text-base-content"
-							on:change={submitLocaleChange}
-							bind:value={$locale}
-						>
-							{#each $locales as loc}
-								<option value={loc} class="text-base-content">{$t(`languages.${loc}`)}</option>
-							{/each}
-						</select>
-						<input type="hidden" name="locale" value={$locale} />
-					</form>
+					{#each themes as theme}
+						<li>
+							<button formaction="/?/setTheme&theme={theme.name}"
+								>{$t(`navbar.themes.${theme.name}`)}
+							</button>
+						</li>
+					{/each}
 				</form>
 			</ul>
 		</div>

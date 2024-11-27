@@ -187,7 +187,8 @@
     "day": "天",
     "add_a_tag": "添加标签",
     "tags": "标签",
-    "set_to_pin": "设置为固定"
+    "set_to_pin": "设置为固定",
+    "category_fetch_error": "获取类别时出错"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -219,19 +220,20 @@
     "shared_with_me": "与我分享",
     "theme_selection": "主题选择",
     "themes": {
-      "aestetic-dark": "审美黑暗",
-      "aestetic-light": "审美之光",
       "aqua": "阿夸",
       "dark": "黑暗的",
       "forest": "森林",
       "light": "光",
-      "night": "夜晚"
+      "night": "夜晚",
+      "aestheticDark": "审美黑暗",
+      "aestheticLight": "美学之光"
     },
     "users": "用户",
     "worldtravel": "环球旅行",
     "my_tags": "我的标签",
     "tag": "标签",
-    "language_selection": "语言"
+    "language_selection": "语言",
+    "support": "支持"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -399,5 +401,14 @@
     "user_stats": "用户统计",
     "visited_countries": "访问过的国家",
     "visited_regions": "访问地区"
+  },
+  "categories": {
+    "category_name": "类别名称",
+    "edit_category": "编辑类别",
+    "icon": "图标",
+    "manage_categories": "管理类别",
+    "no_categories_found": "未找到类别。",
+    "select_category": "选择类别",
+    "update_after_refresh": "刷新页面后，冒险卡将更新。"
   }
 }

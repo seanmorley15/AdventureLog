@@ -187,7 +187,8 @@
     "day": "Giorno",
     "add_a_tag": "Aggiungi un'etichetta",
     "tags": "Tag",
-    "set_to_pin": "Imposta su Blocca"
+    "set_to_pin": "Imposta su Blocca",
+    "category_fetch_error": "Errore durante il recupero delle categorie"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -219,19 +220,20 @@
     "shared_with_me": "Condiviso con me",
     "theme_selection": "Selezione del tema",
     "themes": {
-      "aestetic-dark": "Oscuro estetico",
-      "aestetic-light": "Luce estetica",
       "aqua": "Acqua",
       "dark": "Buio",
       "forest": "Foresta",
       "light": "Leggero",
-      "night": "Notte"
+      "night": "Notte",
+      "aestheticDark": "Estetico scuro",
+      "aestheticLight": "Luce estetica"
     },
     "users": "Utenti",
     "worldtravel": "Viaggio nel mondo",
     "my_tags": "I miei tag",
     "tag": "Etichetta",
-    "language_selection": "Lingua"
+    "language_selection": "Lingua",
+    "support": "Supporto"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -399,5 +401,14 @@
     "user_stats": "Statistiche utente",
     "visited_countries": "Paesi visitati",
     "visited_regions": "Regioni visitate"
+  },
+  "categories": {
+    "category_name": "Nome della categoria",
+    "edit_category": "Modifica categoria",
+    "icon": "Icona",
+    "manage_categories": "Gestisci categorie",
+    "no_categories_found": "Nessuna categoria trovata.",
+    "select_category": "Seleziona Categoria",
+    "update_after_refresh": "Le carte avventura verranno aggiornate una volta aggiornata la pagina."
   }
 }
