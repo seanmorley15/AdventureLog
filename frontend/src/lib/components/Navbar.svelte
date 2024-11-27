@@ -24,7 +24,7 @@
 	const submitLocaleChange = (event: Event) => {
 		const select = event.target as HTMLSelectElement;
 		const newLocale = select.value;
-		document.cookie = `locale=${newLocale}; path=/`;
+		document.cookie = `locale=${newLocale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
 		locale.set(newLocale);
 		window.location.reload();
 	};

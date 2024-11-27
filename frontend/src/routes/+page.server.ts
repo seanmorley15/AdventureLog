@@ -11,7 +11,8 @@ export const actions: Actions = {
 		if (theme && themes.find((t) => t.name === theme)) {
 			cookies.set('colortheme', theme, {
 				path: '/',
-				maxAge: 60 * 60 * 24 * 365
+				maxAge: 60 * 60 * 24 * 365, // 1 year
+				sameSite: 'lax'
 			});
 		}
 	},
@@ -39,11 +40,11 @@ export const actions: Actions = {
 	},
 	setLocale: async ({ url, cookies }) => {
 		const locale = url.searchParams.get('locale');
-		// change the theme only if it is one of the allowed themes
-		if (locale && ['en', 'es'].includes(locale)) {
+		// change the locale only if it is one of the allowed locales
+		if (locale) {
 			cookies.set('locale', locale, {
 				path: '/',
-				maxAge: 60 * 60 * 24 * 365
+				maxAge: 60 * 60 * 24 * 365 // 1 year
 			});
 		}
 	}
