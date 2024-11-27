@@ -14,9 +14,13 @@
 	register('nl', () => import('../locales/nl.json'));
 	register('sv', () => import('../locales/sv.json'));
 
+	let locales = ['en', 'es', 'fr', 'de', 'it', 'zh', 'nl', 'sv'];
+
 	if (browser) {
 		init({
-			fallbackLocale: navigator.language.split('-')[0],
+			fallbackLocale: locales.includes(navigator.language.split('-')[0])
+				? navigator.language.split('-')[0]
+				: 'en',
 			initialLocale: data.locale
 		});
 		// get the locale cookie if it exists and set it as the initial locale if it exists
