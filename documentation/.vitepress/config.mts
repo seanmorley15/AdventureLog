@@ -8,23 +8,7 @@ export default defineConfig({
   lang: "en-US",
   // lastUpdated: true,
 
-  ignoreDeadLinks: [
-    // ignore exact url "/playground"
-    "/playground",
-    // ignore all localhost links
-    /^https?:\/\/localhost/,
-    // ignore localhost links with any port
-    // ignore http://localhost:8015
-    /^https?:\/\/localhost:\d+/,
-    /^http?:\/\/localhost:\d+/,
-    // ignore all links include "/playground/"
-    // ignore all links include "/repl/""
-    /\/repl\//,
-    // custom function, ignore all links include "ignore"
-    (url) => {
-      return url.toLowerCase().includes("ignore");
-    },
-  ],
+  ignoreDeadLinks: true,
 
   sitemap: {
     hostname: "https://adventurelog.app",
