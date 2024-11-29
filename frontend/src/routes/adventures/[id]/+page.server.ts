@@ -7,8 +7,9 @@ export const load = (async (event) => {
 	const id = event.params as { id: string };
 	let request = await fetch(`${endpoint}/api/adventures/${id.id}/`, {
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
-		}
+			Cookie: `sessionid=${event.cookies.get('sessionid')}`
+		},
+		credentials: 'include'
 	});
 	if (!request.ok) {
 		console.error('Failed to fetch adventure ' + id.id);
@@ -24,8 +25,9 @@ export const load = (async (event) => {
 		if (adventure.collection) {
 			let res2 = await fetch(`${endpoint}/api/collections/${adventure.collection}/`, {
 				headers: {
-					Cookie: `${event.cookies.get('auth')}`
-				}
+					Cookie: `sessionid=${event.cookies.get('sessionid')}`
+				},
+				credentials: 'include'
 			});
 			collection = await res2.json();
 		}
@@ -39,8 +41,8 @@ export const load = (async (event) => {
 	}
 }) satisfies PageServerLoad;
 
-import type { Actions } from '@sveltejs/kit';
-import { tryRefreshToken } from '$lib/index.server';
+import { redirect, type Actions } from '@sveltejs/kit';
+import { fetchCSRFToken } from '$lib/index.server';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -50,29 +52,7 @@ export const actions: Actions = {
 		const adventureId = id.id;
 
 		if (!event.locals.user) {
-			const refresh = event.cookies.get('refresh');
-			let auth = event.cookies.get('auth');
-			if (!refresh) {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-			let res = await tryRefreshToken(refresh);
-			if (res) {
-				auth = res;
-				event.cookies.set('auth', auth, {
-					httpOnly: true,
-					sameSite: 'lax',
-					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-					path: '/'
-				});
-			} else {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
+			return redirect(302, '/login');
 		}
 		if (!adventureId) {
 			return {
@@ -81,12 +61,15 @@ export const actions: Actions = {
 			};
 		}
 
+		let csrfToken = await fetchCSRFToken();
+
 		let res = await fetch(`${serverEndpoint}/api/adventures/${event.params.id}`, {
 			method: 'DELETE',
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`,
-				'Content-Type': 'application/json'
-			}
+				Cookie: `sessionid=${event.cookies.get('sessionid')}; csrftoken=${csrfToken}`,
+				'X-CSRFToken': csrfToken
+			},
+			credentials: 'include'
 		});
 		console.log(res);
 		if (!res.ok) {

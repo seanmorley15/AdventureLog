@@ -83,3 +83,18 @@ class PublicUserDetailView(APIView):
         user.email = None
         serializer = PublicUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+class UserMetadataView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('User metadata'),
+            400: 'Bad Request'
+        },
+        operation_description="Get user metadata."
+    )
+    def get(self, request):
+        user = request.user
+        serializer = PublicUserSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)

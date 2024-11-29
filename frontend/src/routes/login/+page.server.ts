@@ -2,6 +2,7 @@ import { fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
+import { fetchCSRFToken } from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const load: PageServerLoad = async (event) => {
@@ -24,37 +25,29 @@ export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();
 		const formUsername = formData.get('username');
-		const formPassword = formData.get('password');
 
 		let username = formUsername?.toString().toLocaleLowerCase();
 
 		const password = formData.get('password');
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
 
-		if (!csrfTokenFetch.ok) {
-			console.error('Failed to fetch CSRF token');
-			event.locals.user = null;
-			return fail(500, {
-				message: 'Failed to fetch CSRF token'
-			});
-		}
+		const csrfToken = await fetchCSRFToken();
 
-		const tokenPromise = await csrfTokenFetch.json();
-		const csrfToken = tokenPromise.csrfToken;
-
-		const loginFetch = await event.fetch(`${serverEndpoint}/auth/login/`, {
+		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/login`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: `csrftoken=${csrfToken}`
 			},
 			body: JSON.stringify({
 				username,
 				password
-			})
+			}),
+			credentials: 'include'
 		});
+
 		const loginResponse = await loginFetch.json();
 		if (!loginFetch.ok) {
 			// get the value of the first key in the object
@@ -64,25 +57,34 @@ export const actions: Actions = {
 				message: error
 			});
 		} else {
-			const token = loginResponse.access;
-			const tokenFormatted = `auth=${token}`;
-			const refreshToken = `${loginResponse.refresh}`;
-			event.cookies.set('auth', tokenFormatted, {
-				httpOnly: true,
-				sameSite: 'lax',
-				expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-				path: '/',
-				secure: false
-			});
-			event.cookies.set('refresh', refreshToken, {
-				httpOnly: true,
-				sameSite: 'lax',
-				expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-				path: '/',
-				secure: false
-			});
+			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
 
-			return redirect(302, '/');
+			console.log('setCookieHeader:', setCookieHeader);
+
+			if (setCookieHeader) {
+				// Regular expression to match sessionid cookie and its expiry
+				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
+				const match = setCookieHeader.match(sessionIdRegex);
+
+				if (match) {
+					const sessionId = match[1];
+					const expiryString = match[2];
+					const expiryDate = new Date(expiryString);
+
+					console.log('Session ID:', sessionId);
+					console.log('Expiry Date:', expiryDate);
+
+					// Set the sessionid cookie
+					event.cookies.set('sessionid', sessionId, {
+						path: '/',
+						httpOnly: true,
+						sameSite: 'lax',
+						secure: true,
+						expires: expiryDate
+					});
+				}
+			}
+			redirect(302, '/');
 		}
 	}
 };

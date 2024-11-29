@@ -47,10 +47,11 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
-    'dj_rest_auth',
+    # 'dj_rest_auth',
     'allauth',
     'allauth.account',
-    'dj_rest_auth.registration',
+    'allauth.headless',
+    # 'dj_rest_auth.registration',
     'allauth.socialaccount',
     'allauth.socialaccount.providers.facebook',
     'drf_yasg',
@@ -113,6 +114,7 @@ DATABASES = {
     }
 }
 
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -157,16 +159,6 @@ TEMPLATES = [
     },
 ]
 
-REST_AUTH = {
-    'SESSION_LOGIN': True,
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'auth',
-    'JWT_AUTH_HTTPONLY': False,
-    'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
-    'USER_DETAILS_SERIALIZER': 'users.serializers.CustomUserDetailsSerializer',
-    'PASSWORD_RESET_SERIALIZER': 'users.serializers.MyPasswordResetSerializer'
-}
-
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
@@ -181,7 +173,15 @@ STORAGES = {
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
+
 FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
+
+# HEADLESS_FRONTEND_URLS = {
+#     "account_confirm_email": "https://app.project.org/account/verify-email/{key}",
+#     "account_reset_password_from_key": "https://app.org/account/password/reset/key/{key}",
+#     "account_signup": "https://app.org/account/signup",
+# }
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
@@ -228,12 +228,14 @@ SWAGGER_SETTINGS = {
     'LOGOUT_URL': 'logout',
 }
 
-# For demo purposes only. Use a white list in the real world.
-CORS_ORIGIN_ALLOW_ALL = True
-
 from os import getenv
 
+
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
+
+
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGGING = {
@@ -260,6 +262,7 @@ LOGGING = {
         },
     },
 }
-
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.4'
+
+SESSION_SAVE_EVERY_REQUEST = True

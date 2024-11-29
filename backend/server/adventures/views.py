@@ -73,6 +73,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         return queryset.order_by(ordering)
 
     def get_queryset(self):
+        print(self.request.user)
         # if the user is not authenticated return only public adventures for retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':

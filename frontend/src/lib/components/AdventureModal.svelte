@@ -444,6 +444,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
+				credentials: 'include',
 				body: JSON.stringify(adventure)
 			});
 			let data = await res.json();

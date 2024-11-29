@@ -1,36 +1,35 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+import { fetchCSRFToken } from '$lib/index.server';
 import { json } from '@sveltejs/kit';
 
 /** @type {import('./$types').RequestHandler} */
-export async function GET({ url, params, request, fetch, cookies }) {
-	// add the param format = json to the url or add additional if anothre param is already present
-	if (url.search) {
-		url.search = url.search + '&format=json';
-	} else {
-		url.search = '?format=json';
-	}
-	return handleRequest(url, params, request, fetch, cookies);
+export async function GET(event) {
+	const { url, params, request, fetch, cookies } = event;
+	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	return handleRequest(url, params, request, fetch, cookies, searchParam);
 }
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies, true);
+	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies, true);
+	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies, true);
+	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
-	return handleRequest(url, params, request, fetch, cookies, true);
+	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
 }
-
-// Implement other HTTP methods as needed (PUT, DELETE, etc.)
 
 async function handleRequest(
 	url: any,
@@ -38,32 +37,41 @@ async function handleRequest(
 	request: any,
 	fetch: any,
 	cookies: any,
+	searchParam: string,
 	requreTrailingSlash: boolean | undefined = false
 ) {
 	const path = params.path;
-	let targetUrl = `${endpoint}/api/${path}${url.search}`;
+	let targetUrl = `${endpoint}/api/${path}`;
 
+	// Ensure the path ends with a trailing slash
 	if (requreTrailingSlash && !targetUrl.endsWith('/')) {
 		targetUrl += '/';
 	}
 
+	// Append query parameters to the path correctly
+	targetUrl += searchParam; // This will add ?format=json or &format=json to the URL
+
 	const headers = new Headers(request.headers);
 
-	const authCookie = cookies.get('auth');
-
-	if (authCookie) {
-		headers.set('Cookie', `${authCookie}`);
+	const csrfToken = await fetchCSRFToken();
+	if (!csrfToken) {
+		return json({ error: 'CSRF token is missing or invalid' }, { status: 400 });
 	}
 
 	try {
 		const response = await fetch(targetUrl, {
 			method: request.method,
-			headers: headers,
-			body: request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined
+			headers: {
+				...Object.fromEntries(headers),
+				'X-CSRFToken': csrfToken,
+				Cookie: `csrftoken=${csrfToken}`
+			},
+			body:
+				request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
+			credentials: 'include' // This line ensures cookies are sent with the request
 		});
 
 		if (response.status === 204) {
-			// For 204 No Content, return a response with no body
 			return new Response(null, {
 				status: 204,
 				headers: response.headers

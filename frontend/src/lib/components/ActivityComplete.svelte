@@ -18,6 +18,7 @@
 				'Content-Type': 'application/json'
 			}
 		});
+		console.log(res);
 		let data = await res.json();
 		console.log('ACTIVITIES' + data.activities);
 		if (data && data.activities) {
