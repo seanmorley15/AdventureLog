@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
+	import { t } from 'svelte-i18n';
 	let modal: HTMLDialogElement;
 
 	export let title: string;
@@ -41,6 +42,6 @@
 		<button class="btn btn-{is_warning ? 'warning' : 'primary'} mr-2" on:click={confirm}
 			>{button_text}</button
 		>
-		<button class="btn btn-neutral" on:click={close}>Cancel</button>
+		<button class="btn btn-neutral" on:click={close}>{$t('adventures.cancel')}</button>
 	</div>
 </dialog>

@@ -4,6 +4,7 @@
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
+	import { t } from 'svelte-i18n';
 
 	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
@@ -25,10 +26,9 @@
 			}
 		});
 		if (!res.ok) {
-			console.log('Error deleting transportation');
+			console.log($t('transportation.transportation_delete_error'));
 		} else {
-			console.log('Collection deleted');
-			addToast('info', 'Transportation deleted successfully!');
+			addToast('info', $t('transportation.transportation_deleted'));
 			dispatch('delete', transportation.id);
 		}
 	}
@@ -39,7 +39,7 @@
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{transportation.name}</h2>
-		<div class="badge badge-secondary">{transportation.type}</div>
+		<div class="badge badge-secondary">{$t(`transportation.modes.${transportation.type}`)}</div>
 		<div>
 			{#if transportation.from_location}
 				<p class="break-words text-wrap">{transportation.from_location}</p>
@@ -59,7 +59,7 @@
 			{/if}
 		</div>
 
-		{#if transportation.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
+		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
 				<button on:click={deleteTransportation} class="btn btn-secondary"
 					><TrashCanOutline class="w-5 h-5 mr-1" /></button

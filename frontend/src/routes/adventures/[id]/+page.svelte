@@ -1,18 +1,3 @@
-<!-- <script lang="ts">
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import type { Adventure } from '$lib/types';
-
-	export let data;
-	console.log(data);
-	let adventure: Adventure | null = data.props.adventure;
-</script>
-
-{#if !adventure}
-	<p>Adventure not found</p>
-{:else}
-	<AdventureCard {adventure} type={adventure.type} />
-{/if} -->
-
 <script lang="ts">
 	import type { Adventure } from '$lib/types';
 	import { onMount } from 'svelte';
@@ -20,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
 	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 	console.log(data);
@@ -37,10 +23,8 @@
 	let image_url: string | null = null;
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import EditAdventure from '$lib/components/AdventureModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
-	import { typeToString } from '$lib';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -65,14 +49,15 @@
 				<img src={Lost} alt="Lost" class="w-1/2" />
 			</div>
 			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-				Adventure not Found
+				{$t('adventures.not_found')}
 			</h1>
 			<p class="mt-4 text-muted-foreground">
-				The adventure you were looking for could not be found. Please try a different adventure or
-				check back later.
+				{$t('adventures.not_found_desc')}
 			</p>
 			<div class="mt-6">
-				<button class="btn btn-primary" on:click={() => goto('/')}>Homepage</button>
+				<button class="btn btn-primary" on:click={() => goto('/')}
+					>{$t('adventures.homepage')}</button
+				>
 			</div>
 		</div>
 	</div>
@@ -97,7 +82,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.pk == adventure.user_id}
+	{#if data.user && data.user.uuid == adventure.user_id}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<button class="btn m-1 size-16 btn-primary" on:click={() => (isEditModalOpen = true)}
 				><ClipboardList class="w-8 h-8" /></button
@@ -186,37 +171,6 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
-							<!-- {#if adventure.date}
-								<div class="flex items-center gap-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										width="24"
-										height="24"
-										viewBox="0 0 24 24"
-										fill="none"
-										stroke="currentColor"
-										stroke-width="2"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										class="w-5 h-5 text-muted-foreground"
-									>
-										<path d="M8 2v4"></path>
-										<path d="M16 2v4"></path>
-										<rect width="18" height="18" x="3" y="4" rx="2"></rect>
-										<path d="M3 10h18"></path>
-									</svg>
-									<span class="text-sm text-muted-foreground"
-										>{new Date(adventure.date).toLocaleDateString(undefined, {
-											timeZone: 'UTC'
-										})}{adventure.end_date && adventure.end_date !== ''
-											? ' - ' +
-												new Date(adventure.end_date).toLocaleDateString(undefined, {
-													timeZone: 'UTC'
-												})
-											: ''}</span
-									>
-								</div>
-							{/if} -->
 							{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg
@@ -291,7 +245,7 @@
 						</div>
 						{#if adventure.description}
 							<div class="grid gap-2">
-								<p class="text-sm text-muted-foreground whitespace-pre-line">
+								<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;">
 									{adventure.description}
 								</p>
 							</div>
@@ -305,18 +259,18 @@
 				></div>
 				<div class="grid gap-8">
 					<div>
-						<h2 class="text-2xl font-bold mt-4">Adventure Details</h2>
+						<h2 class="text-2xl font-bold mt-4">{$t('adventures.adventure_details')}</h2>
 						<div class="grid gap-4 mt-4">
 							<div class="grid md:grid-cols-2 gap-4">
 								<div>
-									<p class="text-sm text-muted-foreground">Adventure Type</p>
+									<p class="text-sm text-muted-foreground">{$t('adventures.adventure_type')}</p>
 									<p class="text-base font-medium">
-										{typeToString(adventure.type)}
+										{adventure.category?.display_name + ' ' + adventure.category?.icon}
 									</p>
 								</div>
 								{#if data.props.collection}
 									<div>
-										<p class="text-sm text-muted-foreground">Collection</p>
+										<p class="text-sm text-muted-foreground">{$t('adventures.collection')}</p>
 										<a
 											class="text-base font-medium link"
 											href="/collections/{data.props.collection.id}">{data.props.collection.name}</a
@@ -328,7 +282,9 @@
 										<p class="text-sm text-muted-foreground">Visits</p>
 										<p class="text-base font-medium">
 											{adventure.visits.length}
-											{adventure.visits.length > 1 ? 'visits' : 'visit' + ':'}
+											{adventure.visits.length > 1
+												? $t('adventures.visits')
+												: $t('adventures.visit') + ':'}
 										</p>
 										<!-- show each visit start and end date as well as notes -->
 										{#each adventure.visits as visit}
@@ -357,16 +313,16 @@
 							{#if adventure.longitude && adventure.latitude}
 								<div class="grid md:grid-cols-2 gap-4">
 									<div>
-										<p class="text-sm text-muted-foreground">Latitude</p>
+										<p class="text-sm text-muted-foreground">{$t('adventures.latitude')}</p>
 										<p class="text-base font-medium">{adventure.latitude}° N</p>
 									</div>
 									<div>
-										<p class="text-sm text-muted-foreground">Longitude</p>
+										<p class="text-sm text-muted-foreground">{$t('adventures.longitude')}</p>
 										<p class="text-base font-medium">{adventure.longitude}° W</p>
 									</div>
 								</div>
 								<MapLibre
-									style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
 									standardControls
 									center={{ lng: adventure.longitude, lat: adventure.latitude }}
@@ -381,15 +337,28 @@
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="text-lg text-black font-bold">{adventure.name}</div>
 											<p class="font-semibold text-black text-md">
-												{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
+												{adventure.category?.display_name + ' ' + adventure.category?.icon}
 											</p>
-											<p>
-												<!-- {adventure.date
-													? new Date(adventure.date).toLocaleDateString(undefined, {
-															timeZone: 'UTC'
-														})
-													: ''} -->
-											</p>
+											{#if adventure.visits.length > 0}
+												<p class="text-black text-sm">
+													{#each adventure.visits as visit}
+														{visit.start_date
+															? new Date(visit.start_date).toLocaleDateString(undefined, {
+																	timeZone: 'UTC'
+																})
+															: ''}
+														{visit.end_date &&
+														visit.end_date !== '' &&
+														visit.end_date !== visit.start_date
+															? ' - ' +
+																new Date(visit.end_date).toLocaleDateString(undefined, {
+																	timeZone: 'UTC'
+																})
+															: ''}
+														<br />
+													{/each}
+												</p>
+											{/if}
 										</Popup>
 									</DefaultMarker>
 								</MapLibre>

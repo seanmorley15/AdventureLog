@@ -36,5 +36,7 @@ fi
 # Sync the countries and world travel regions
 python manage.py download-countries
 
-# Start Django server
-python manage.py runserver 0.0.0.0:8000
+cat /code/adventurelog.txt
+
+# Start gunicorn
+gunicorn main.wsgi:application --bind 0.0.0.0:8000

@@ -3,6 +3,7 @@
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import type { Collection } from '$lib/types';
 	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 	console.log(data);
@@ -17,10 +18,11 @@
 	</div>
 {:else}
 	<p class="text-center font-semibold text-xl mt-6">
-		No collections found that are shared with you.
+		{$t('share.no_shared_found')}
 		{#if data.user && !data.user?.public_profile}
-			<p>In order to allow users to share with you, you need your profile set to public.</p>
-			<button class="btn btn-neutral mt-4" on:click={() => goto('/settings')}>Go to Settings</button
+			<p>{$t('share.set_public')}</p>
+			<button class="btn btn-neutral mt-4" on:click={() => goto('/settings')}
+				>{$t('share.go_to_settings')}</button
 			>
 		{/if}
 	</p>

@@ -1,4 +1,10 @@
-The MIT License (MIT)
+# Preface
+
+AdventureLog uses DjRestAuth, a Django REST Framework authentication backend for Django Rest Framework. DjRestAuth is licensed under the MIT License.
+
+---
+
+## The MIT License (MIT)
 
 Copyright (c) 2014 iMerica https://github.com/iMerica/
 

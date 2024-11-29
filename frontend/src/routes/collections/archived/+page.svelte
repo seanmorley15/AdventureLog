@@ -2,6 +2,7 @@
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Collection } from '$lib/types';
+	import { t } from 'svelte-i18n';
 
 	export let data: any;
 	console.log(data);
@@ -16,7 +17,7 @@
 <div class="drawer lg:drawer-open">
 	<div class="drawer-content">
 		<!-- Page content -->
-		<h1 class="text-center font-bold text-4xl mb-6">Archived Collections</h1>
+		<h1 class="text-center font-bold text-4xl mb-6">{$t('adventures.archived_collections')}</h1>
 		{#if collections.length === 0}
 			<NotFound error={undefined} />
 		{/if}

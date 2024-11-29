@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import type { Collection, Note, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
@@ -22,10 +22,10 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('success', 'Note deleted successfully');
+			addToast('success', $t('notes.note_deleted'));
 			dispatch('delete', note.id);
 		} else {
-			addToast('Failed to delete note', 'error');
+			addToast($t('notes.note_delete_error'), 'error');
 		}
 	}
 </script>
@@ -39,9 +39,12 @@
 				{note.name}
 			</h2>
 		</div>
-		<div class="badge badge-primary">Note</div>
+		<div class="badge badge-primary">{$t('adventures.note')}</div>
 		{#if note.links && note.links.length > 0}
-			<p>{note.links.length} {note.links.length > 1 ? 'Links' : 'Link'}</p>
+			<p>
+				{note.links.length}
+				{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
+			</p>
 		{/if}
 		{#if note.date && note.date !== ''}
 			<div class="inline-flex items-center">
@@ -54,9 +57,9 @@
 				><Launch class="w-6 h-6" />Open Details</button
 			> -->
 			<button class="btn btn-neutral-200 mb-2" on:click={editNote}>
-				<Launch class="w-6 h-6" />Open
+				<Launch class="w-6 h-6" />{$t('notes.open')}
 			</button>
-			{#if note.user_id == user?.pk || (collection && user && collection.shared_with.includes(user.uuid))}
+			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"

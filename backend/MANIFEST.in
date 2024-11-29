@@ -1,5 +1,0 @@
-include AUTHORS
-include LICENSE
-include MANIFEST.in
-include README.md
-graft dj_rest_auth

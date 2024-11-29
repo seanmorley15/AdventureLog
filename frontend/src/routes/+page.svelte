@@ -3,6 +3,7 @@
 
 	import AdventureOverlook from '$lib/assets/AdventureOverlook.webp';
 	import MapWithPins from '$lib/assets/MapWithPins.webp';
+	import { t } from 'svelte-i18n';
 
 	export let data;
 </script>
@@ -18,35 +19,38 @@
 								class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
 							>
 								{data.user.first_name.charAt(0).toUpperCase() + data.user.first_name.slice(1)},
-								Discover the World's Most Thrilling Adventures
+								{$t('home.hero_1')}
 							</h1>
 						{:else}
 							<h1
 								class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
 							>
-								Discover the World's Most Thrilling Adventures
+								{$t('home.hero_1')}
 							</h1>
 						{/if}
 					{:else}
 						<h1
 							class="text-3xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-4"
 						>
-							Discover the World's Most Thrilling Adventures
+							{$t('home.hero_1')}
 						</h1>
 					{/if}
 					<p class="max-w-[600px] text-gray-500 md:text-xl dark:text-gray-400">
-						Discover and plan your next adventure with AdventureLog. Explore breathtaking
-						destinations, create custom itineraries, and stay connected on the go.
+						{$t('home.hero_2')}
 					</p>
 				</div>
 				<div class="flex flex-col gap-2 min-[400px]:flex-row">
 					{#if data.user}
 						<button on:click={() => goto('/adventures')} class="btn btn-primary">
-							Go To AdventureLog
+							{$t('home.go_to')}
 						</button>
 					{:else}
-						<button on:click={() => goto('/login')} class="btn btn-primary"> Log In </button>
-						<button on:click={() => goto('/signup')} class="btn btn-neutral"> Sign Up </button>
+						<button on:click={() => goto('/login')} class="btn btn-primary">
+							{$t('auth.login')}
+						</button>
+						<button on:click={() => goto('/signup')} class="btn btn-neutral">
+							{$t('auth.signup')}
+						</button>
 					{/if}
 				</div>
 			</div>
@@ -69,18 +73,17 @@
 				<div
 					class="inline-block rounded-lg bg-gray-100 px-3 py-1 text-md dark:bg-gray-800 dark:text-gray-400"
 				>
-					Key Features
+					{$t('home.key_features')}
 				</div>
 				<h2
 					class="text-3xl font-bold tracking-tighter sm:text-5xl bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
 				>
-					Discover, Plan, and Explore with Ease
+					{$t('home.desc_1')}
 				</h2>
 				<p
 					class="max-w-[900px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400"
 				>
-					AdventureLog is designed to simplify your journey, providing you with the tools and
-					resources to plan, pack, and navigate your next unforgettable adventure.
+					{$t('home.desc_2')}
 				</p>
 			</div>
 		</div>
@@ -97,27 +100,25 @@
 				<ul class="grid gap-6">
 					<li>
 						<div class="grid gap-1">
-							<h3 class="text-xl font-bold dark:text-gray-400">Travel Log</h3>
+							<h3 class="text-xl font-bold dark:text-gray-400">{$t('home.feature_1')}</h3>
 							<p class="text-gray-500 dark:text-gray-400">
-								Keep track of your adventures with a personalized travel log and share your
-								experiences with friends and family.
+								{$t('home.feature_1_desc')}
 							</p>
 						</div>
 					</li>
 					<li>
 						<div class="grid gap-1">
-							<h3 class="text-xl font-bold dark:text-gray-400">Trip Planning</h3>
+							<h3 class="text-xl font-bold dark:text-gray-400">{$t('home.feature_2')}</h3>
 							<p class="text-gray-500 dark:text-gray-400">
-								Easily create custom itineraries and get a day-by-day breakdown of your trip.
+								{$t('home.feature_2_desc')}
 							</p>
 						</div>
 					</li>
 					<li>
 						<div class="grid gap-1">
-							<h3 class="text-xl font-bold dark:text-gray-400">Travel Map</h3>
+							<h3 class="text-xl font-bold dark:text-gray-400">{$t('home.feature_3')}</h3>
 							<p class="text-gray-500 dark:text-gray-400">
-								View your travels throughout the world with an interactive map and explore new
-								destinations.
+								{$t('home.feature_3_desc')}
 							</p>
 						</div>
 					</li>

@@ -1,3 +1,4 @@
+import json
 import uuid
 import requests
 from django.db import transaction
@@ -5,10 +6,10 @@ from rest_framework.decorators import action
 from rest_framework import viewsets
 from django.db.models.functions import Lower
 from rest_framework.response import Response
-from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, ADVENTURE_TYPES
+from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, Category
 from django.core.exceptions import PermissionDenied
 from worldtravel.models import VisitedRegion, Region, Country
-from .serializers import AdventureImageSerializer, AdventureSerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
+from .serializers import AdventureImageSerializer, AdventureSerializer, CategorySerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from .permissions import CollectionShared, IsOwnerOrSharedWithFullAccess, IsPublicOrOwnerOrSharedWithFullAccess
@@ -40,7 +41,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         order_direction = self.request.query_params.get('order_direction', 'asc')
         include_collections = self.request.query_params.get('include_collections', 'true')
 
-        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
+        valid_order_by = ['name', 'type', 'start_date', 'rating', 'updated_at']
         if order_by not in valid_order_by:
             order_by = 'name'
 
@@ -104,26 +105,49 @@ class AdventureViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         types = request.query_params.get('types', '').split(',')
-        # handle case where types is all
+        is_visited = request.query_params.get('is_visited', 'all')
+
+        # Handle case where types is all
         if 'all' in types:
-            types = [t[0] for t in ADVENTURE_TYPES]
-        valid_types = [t[0] for t in ADVENTURE_TYPES]
-        types = [t for t in types if t in valid_types]
+            types = Category.objects.filter(user_id=request.user).values_list('name', flat=True)
+        
+        else:
+            for type in types:
+                if not Category.objects.filter(user_id=request.user, name=type).exists():
+                    return Response({"error": f"Category {type} does not exist"}, status=400)
 
-        if not types:
-            return Response({"error": "No valid types provided"}, status=400)
+            if not types:
+                return Response({"error": "At least one type must be provided"}, status=400)
 
-        queryset = Adventure.objects.none()
+        queryset = Adventure.objects.filter(
+            category__in=Category.objects.filter(name__in=types, user_id=request.user),
+            user_id=request.user.id
+        )
 
-        for adventure_type in types:
-            if adventure_type in valid_types:
-                queryset |= Adventure.objects.filter(
-                    type=adventure_type, user_id=request.user.id)
+        # Handle is_visited filtering
+        if is_visited.lower() == 'true':
+            serializer = self.get_serializer(queryset, many=True)
+            filtered_ids = [
+                adventure.id for adventure, serialized_adventure in zip(queryset, serializer.data)
+                if serialized_adventure['is_visited']
+            ]
+            queryset = queryset.filter(id__in=filtered_ids)
+        elif is_visited.lower() == 'false':
+            serializer = self.get_serializer(queryset, many=True)
+            filtered_ids = [
+                adventure.id for adventure, serialized_adventure in zip(queryset, serializer.data)
+                if not serialized_adventure['is_visited']
+            ]
+            queryset = queryset.filter(id__in=filtered_ids)
+        # If is_visited is 'all' or any other value, we don't apply additional filtering
 
+        # Apply sorting
         queryset = self.apply_sorting(queryset)
+
+        # Paginate and respond
         adventures = self.paginate_and_respond(queryset, request)
         return adventures
-    
+        
     @action(detail=False, methods=['get'])
     def all(self, request):
         if not request.user.is_authenticated:
@@ -589,6 +613,43 @@ class ActivityTypesView(viewsets.ViewSet):
                     allTypes.append(x)
 
         return Response(allTypes)
+    
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return Category.objects.filter(user_id=self.request.user)
+
+    @action(detail=False, methods=['get'])
+    def categories(self, request):
+        """
+        Retrieve a list of distinct categories for adventures associated with the current user.
+        """
+        categories = self.get_queryset().distinct()
+        serializer = self.get_serializer(categories, many=True)
+        return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user_id != request.user:
+            return Response({"error": "User does not own this category"}, status
+            =400)
+        
+        if instance.name == 'general':
+            return Response({"error": "Cannot delete the general category"}, status=400)
+        
+        # set any adventures with this category to a default category called general before deleting the category, if general does not exist create it for the user
+        general_category = Category.objects.filter(user_id=request.user, name='general').first()
+
+        if not general_category:
+            general_category = Category.objects.create(user_id=request.user, name='general', icon='🌍', display_name='General')
+        
+        Adventure.objects.filter(category=instance).update(category=general_category)
+
+        return super().destroy(request, *args, **kwargs)
+    
 
 class TransportationViewSet(viewsets.ModelViewSet):
     queryset = Transportation.objects.all()
@@ -1053,3 +1114,92 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user_id=self.request.user)
+
+class ReverseGeocodeViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    def extractIsoCode(self, data):
+        """
+        Extract the ISO code from the response data.
+        Returns a dictionary containing the region name, country name, and ISO code if found.
+        """
+        iso_code = None
+        town = None
+        city = None
+        county = None
+        display_name = None
+        country_code = None
+        if 'address' in data.keys():
+            keys = data['address'].keys()
+            for key in keys:
+                if key.find("ISO") != -1:
+                    iso_code = data['address'][key]
+            if 'town' in keys:
+                town = data['address']['town']
+            if 'county' in keys:
+                county = data['address']['county']
+            if 'city' in keys:
+                city = data['address']['city']
+        if not iso_code:
+            return {"error": "No region found"}
+        region = Region.objects.filter(id=iso_code).first()
+        visited_region = VisitedRegion.objects.filter(region=region).first()
+        is_visited = False
+        print(iso_code)
+        country_code = iso_code[:2]
+        
+        if region:
+            if city:
+                display_name = f"{city}, {region.name}, {country_code}"
+            elif town:
+                display_name = f"{town}, {region.name}, {country_code}"
+            elif county:
+                display_name = f"{county}, {region.name}, {country_code}"
+
+        if visited_region:
+            is_visited = True
+        if region:
+            return {"id": iso_code, "region": region.name, "country": region.country.name, "is_visited": is_visited, "display_name": display_name}
+        return {"error": "No region found"}
+
+    @action(detail=False, methods=['get'])
+    def reverse_geocode(self, request):
+        lat = request.query_params.get('lat', '')
+        lon = request.query_params.get('lon', '')
+        url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
+        headers = {'User-Agent': 'AdventureLog Server'}
+        response = requests.get(url, headers=headers)
+        try:
+            data = response.json()
+        except requests.exceptions.JSONDecodeError:
+            return Response({"error": "Invalid response from geocoding service"}, status=400)
+        return Response(self.extractIsoCode(data))
+
+    @action(detail=False, methods=['post'])
+    def mark_visited_region(self, request):
+        # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
+        new_region_count = 0
+        new_regions = {}
+        adventures = Adventure.objects.filter(user_id=self.request.user)
+        serializer = AdventureSerializer(adventures, many=True)
+        for adventure, serialized_adventure in zip(adventures, serializer.data):
+            if serialized_adventure['is_visited'] == True:
+                lat = adventure.latitude
+                lon = adventure.longitude
+                url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
+                headers = {'User-Agent': 'AdventureLog Server'}
+                response = requests.get(url, headers=headers)
+                try:
+                    data = response.json()
+                except requests.exceptions.JSONDecodeError:
+                    return Response({"error": "Invalid response from geocoding service"}, status=400)
+                region = self.extractIsoCode(data)
+                if 'error' not in region:
+                    region = Region.objects.filter(id=region['id']).first()
+                    visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
+                    if not visited_region:
+                        visited_region = VisitedRegion(region=region, user_id=self.request.user)
+                        visited_region.save()
+                        new_region_count += 1
+                        new_regions[region.id] = region.name
+        return Response({"new_regions": new_region_count, "regions": new_regions})

@@ -1,27 +1,11 @@
 <script lang="ts">
-	// let newTransportation: Transportation = {
-	// 	id:NaN,
-	// 	user_id: NaN,
-	// 	type: '',
-	// 	name: '',
-	// 	description: null,
-	// 	rating: NaN,
-	// 	link: null,
-	// 	date: null,
-	// 	flight_number: null,
-	// 	from_location: null,
-	// 	to_location: null,
-	// 	is_public: false,
-	// 	collection: null,
-	// 	created_at: '',
-	// 	updated_at: ''
-	// };
 	import { createEventDispatcher } from 'svelte';
 	import type { Collection, Transportation } from '$lib/types';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	import { addToast } from '$lib/toasts';
 	let modal: HTMLDialogElement;
+	import { t } from 'svelte-i18n';
 
 	export let collection: Collection;
 
@@ -74,7 +58,7 @@
 
 		// make sure there is a start date if there is an end date
 		if (formData.get('end_date') && !formData.get('date')) {
-			addToast('error', 'Please provide a start date');
+			addToast('error', $t('transportation.provide_start_date'));
 			return;
 		}
 
@@ -86,11 +70,11 @@
 		if (response.ok) {
 			const result = await response.json();
 
-			addToast('success', 'Transportation added successfully!');
+			addToast('success', $t('transportation.transportation_added'));
 			dispatch('add', result);
 			close();
 		} else {
-			addToast('error', 'Error editing transportation');
+			addToast('error', $t('transportation.error_editing_transportation'));
 		}
 	}
 </script>
@@ -99,22 +83,13 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">New Transportation</h3>
+		<h3 class="font-bold text-lg">{$t('transportation.new_transportation')}</h3>
 		<div
 			class="modal-action items-center"
 			style="display: flex; flex-direction: column; align-items: center; width: 100%;"
 		>
 			<form method="post" style="width: 100%;" on:submit={handleSubmit}>
 				<div class="mb-2">
-					<!-- <input
-						type="text"
-						id="id"
-						name="id"
-						hidden
-						readonly
-						bind:value={newTransportation.id}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/> -->
 					<input
 						type="text"
 						id="collection"
@@ -134,26 +109,28 @@
 						class="input input-bordered w-full max-w-xs mt-1"
 					/>
 					<div class="mb-2">
-						<label for="type">Type <PlaneCar class="inline-block mb-1 w-6 h-6" /></label><br />
+						<label for="type"
+							>{$t('transportation.type')} <PlaneCar class="inline-block mb-1 w-6 h-6" /></label
+						><br />
 						<select
 							class="select select-bordered w-full max-w-xs"
 							name="type"
 							id="type"
 							bind:value={type}
 						>
-							<option disabled selected>Transport Type</option>
-							<option value="car">Car</option>
-							<option value="plane">Plane</option>
-							<option value="train">Train</option>
-							<option value="bus">Bus</option>
-							<option value="boat">Boat</option>
-							<option value="bike">Bike</option>
-							<option value="walking">Walking</option>
-							<option value="other">Other</option>
+							<option disabled selected>{$t('transportation.type')}</option>
+							<option value="car">{$t('transportation.modes.car')}</option>
+							<option value="plane">{$t('transportation.modes.plane')}</option>
+							<option value="train">{$t('transportation.modes.train')}</option>
+							<option value="bus">{$t('transportation.modes.bus')}</option>
+							<option value="boat">{$t('transportation.modes.boat')}</option>
+							<option value="bike">{$t('transportation.modes.bike')}</option>
+							<option value="walking">{$t('transportation.modes.walking')}</option>
+							<option value="other">{$t('transportation.modes.other')}</option>
 						</select>
 					</div>
 
-					<label for="name">Name</label><br />
+					<label for="name">{$t('adventures.name')}</label><br />
 					<input
 						type="text"
 						name="name"
@@ -162,7 +139,9 @@
 					/>
 				</div>
 				<div class="mb-2">
-					<label for="date">Description <Notebook class="inline-block -mt-1 mb-1 w-6 h-6" /></label
+					<label for="date"
+						>{$t('adventures.description')}
+						<Notebook class="inline-block -mt-1 mb-1 w-6 h-6" /></label
 					><br />
 					<div class="flex">
 						<input
@@ -174,7 +153,8 @@
 					</div>
 					<div class="mb-2">
 						<label for="start_date"
-							>Start Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+							>{$t('transportation.date_time')}
+							<Calendar class="inline-block mb-1 w-6 h-6" /></label
 						><br />
 						<input
 							type="datetime-local"
@@ -188,7 +168,8 @@
 
 					<div class="mb-2">
 						<label for="end_date"
-							>End Date & Time <Calendar class="inline-block mb-1 w-6 h-6" /></label
+							>{$t('transportation.end_date_time')}
+							<Calendar class="inline-block mb-1 w-6 h-6" /></label
 						><br />
 						<input
 							type="datetime-local"
@@ -201,7 +182,9 @@
 					</div>
 
 					<div class="mb-2">
-						<label for="rating">Rating <Star class="inline-block mb-1 w-6 h-6" /></label><br />
+						<label for="rating"
+							>{$t('adventures.rating')} <Star class="inline-block mb-1 w-6 h-6" /></label
+						><br />
 						<input
 							type="number"
 							max="5"
@@ -212,7 +195,9 @@
 						/>
 					</div>
 					<div class="mb-2">
-						<label for="rating">Link <LinkVariant class="inline-block mb-1 w-6 h-6" /></label><br />
+						<label for="rating"
+							>{$t('adventures.link')} <LinkVariant class="inline-block mb-1 w-6 h-6" /></label
+						><br />
 						<input
 							type="url"
 							id="link"
@@ -224,7 +209,8 @@
 					{#if type == 'plane'}
 						<div class="mb-2">
 							<label for="flight_number"
-								>Flight Number <Airplane class="inline-block mb-1 w-6 h-6" /></label
+								>{$t('transportation.flight_number')}
+								<Airplane class="inline-block mb-1 w-6 h-6" /></label
 							><br />
 							<input
 								type="text"
@@ -235,7 +221,9 @@
 						</div>
 					{/if}
 					<div class="mb-2">
-						<label for="rating">From Location <MapMarker class="inline-block mb-1 w-6 h-6" /></label
+						<label for="rating"
+							>{$t('transportation.from_location')}
+							<MapMarker class="inline-block mb-1 w-6 h-6" /></label
 						><br />
 						<input
 							type="text"
@@ -245,7 +233,9 @@
 						/>
 					</div>
 					<div class="mb-2">
-						<label for="rating">To Location <MapMarker class="inline-block mb-1 w-6 h-6" /></label
+						<label for="rating"
+							>{$t('transportation.to_location')}
+							<MapMarker class="inline-block mb-1 w-6 h-6" /></label
 						><br />
 						<input
 							type="text"
@@ -256,9 +246,9 @@
 					</div>
 				</div>
 
-				<button type="submit" class="btn btn-primary mr-4 mt-4">Edit</button>
+				<button type="submit" class="btn btn-primary mr-4 mt-4">{$t('transportation.edit')}</button>
 				<!-- if there is a button in form, it will close the modal -->
-				<button class="btn mt-4" on:click={close}>Close</button>
+				<button class="btn mt-4" on:click={close}>{$t('about.close')}</button>
 			</form>
 			<div class="flex items-center justify-center flex-wrap gap-4 mt-4"></div>
 		</div>

@@ -2,15 +2,16 @@
 	import { createEventDispatcher } from 'svelte';
 
 	import Launch from '~icons/mdi/launch';
-	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
 	import ArchiveArrowDown from '~icons/mdi/archive-arrow-down';
 	import ArchiveArrowUp from '~icons/mdi/archive-arrow-up';
+	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
 	import type { Adventure, Collection } from '$lib/types';
 	import { addToast } from '$lib/toasts';
+	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
@@ -39,8 +40,11 @@
 			body: JSON.stringify({ is_archived: is_archived })
 		});
 		if (res.ok) {
-			console.log(`Collection ${is_archived ? 'archived' : 'unarchived'}`);
-			addToast('info', `Collection ${is_archived ? 'archived' : 'unarchived'} successfully!`);
+			if (is_archived) {
+				addToast('info', $t('adventures.archived_collection_message'));
+			} else {
+				addToast('info', $t('adventures.unarchived_collection_message'));
+			}
 			dispatch('delete', collection.id);
 		} else {
 			console.log('Error archiving collection');
@@ -57,8 +61,7 @@
 			}
 		});
 		if (res.ok) {
-			console.log('Collection deleted');
-			addToast('info', 'Collection deleted successfully!');
+			addToast('info', $t('adventures.delete_collection_success'));
 			dispatch('delete', collection.id);
 		} else {
 			console.log('Error deleting collection');
@@ -70,9 +73,9 @@
 
 {#if isWarningModalOpen}
 	<DeleteWarning
-		title="Delete Collection"
-		button_text="Delete"
-		description="Are you sure you want to delete this collection? This will also delete all of the linked adventures. This action cannot be undone."
+		title={$t('adventures.delete_collection')}
+		button_text={$t('adventures.delete')}
+		description={$t('adventures.delete_collection_warning')}
 		is_warning={true}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteCollection}
@@ -97,20 +100,24 @@
 			</button>
 		</div>
 		<div class="inline-flex gap-2 mb-2">
-			<div class="badge badge-secondary">{collection.is_public ? 'Public' : 'Private'}</div>
+			<div class="badge badge-secondary">
+				{collection.is_public ? $t('adventures.public') : $t('adventures.private')}
+			</div>
 			{#if collection.is_archived}
-				<div class="badge badge-warning">Archived</div>
+				<div class="badge badge-warning">{$t('adventures.archived')}</div>
 			{/if}
 		</div>
-		<p>{collection.adventures.length} Adventures</p>
+		<p>{collection.adventures.length} {$t('navbar.adventures')}</p>
 		{#if collection.start_date && collection.end_date}
 			<p>
-				Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} -
+				{$t('adventures.dates')}: {new Date(collection.start_date).toLocaleDateString(undefined, {
+					timeZone: 'UTC'
+				})} -
 				{new Date(collection.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
 			</p>
 			<!-- display the duration in days -->
 			<p>
-				Duration: {Math.floor(
+				{$t('adventures.duration')}: {Math.floor(
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1}{' '}
@@ -136,23 +143,23 @@
 							<button
 								class="btn btn-neutral mb-2"
 								on:click={() => goto(`/collections/${collection.id}`)}
-								><Launch class="w-5 h-5 mr-1" />Open Details</button
+								><Launch class="w-5 h-5 mr-1" />{$t('adventures.open_details')}</button
 							>
 							{#if !collection.is_archived}
 								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-									<FileDocumentEdit class="w-6 h-6" />Edit Collection
+									<FileDocumentEdit class="w-6 h-6" />{$t('adventures.edit_collection')}
 								</button>
 								<button class="btn btn-neutral mb-2" on:click={() => (isShareModalOpen = true)}>
-									<FileDocumentEdit class="w-6 h-6" />Share
+									<ShareVariant class="w-6 h-6" />{$t('adventures.share')}
 								</button>
 							{/if}
 							{#if collection.is_archived}
 								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(false)}>
-									<ArchiveArrowUp class="w-6 h-6 mr-1" />Unarchive
+									<ArchiveArrowUp class="w-6 h-6 mr-1" />{$t('adventures.unarchive')}
 								</button>
 							{:else}
 								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(true)}>
-									<ArchiveArrowDown class="w-6 h-6 mr" />Archive
+									<ArchiveArrowDown class="w-6 h-6 mr" />{$t('adventures.archive')}
 								</button>
 							{/if}
 							<button
@@ -160,14 +167,14 @@
 								data-umami-event="Delete Adventure"
 								class="btn btn-warning"
 								on:click={() => (isWarningModalOpen = true)}
-								><TrashCan class="w-6 h-6" />Delete</button
+								><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
 							>
 						{/if}
 						{#if type == 'viewonly'}
 							<button
 								class="btn btn-neutral mb-2"
 								on:click={() => goto(`/collections/${collection.id}`)}
-								><Launch class="w-5 h-5 mr-1" />Open Details</button
+								><Launch class="w-5 h-5 mr-1" />{$t('adventures.open_details')}</button
 							>
 						{/if}
 					</ul>

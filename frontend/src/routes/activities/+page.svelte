@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 
@@ -11,8 +12,8 @@
 <table class="table table-compact">
 	<thead>
 		<tr>
-			<th>Activity</th>
-			<th>Actions</th>
+			<th>{$t('navbar.tag')}</th>
+			<th>{$t('adventures.actions')}</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -23,7 +24,7 @@
 					<button
 						class="btn btn-sm btn-primary"
 						on:click={() => goto(`/search?query=${activity}&property=activity_types`)}
-						>See Adventures</button
+						>{$t('adventures.see_adventures')}</button
 					>
 				</td>
 			</tr>
@@ -32,6 +33,6 @@
 </table>
 
 <svelte:head>
-	<title>My Activities</title>
-	<meta name="description" content="View my activity types." />
+	<title>My Tags</title>
+	<meta name="description" content="View my tags." />
 </svelte:head>

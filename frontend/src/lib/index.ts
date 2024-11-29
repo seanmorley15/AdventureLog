@@ -1,12 +1,21 @@
 import inspirationalQuotes from './json/quotes.json';
-import type { Adventure, Checklist, Collection, Note, Transportation, User } from './types';
+import randomBackgrounds from './json/backgrounds.json';
+import type {
+	Adventure,
+	Background,
+	Checklist,
+	Collection,
+	Note,
+	Transportation,
+	User
+} from './types';
 
 export function getRandomQuote() {
 	const quotes = inspirationalQuotes.quotes;
 	const randomIndex = Math.floor(Math.random() * quotes.length);
 	let quoteString = quotes[randomIndex].quote;
 	let authorString = quotes[randomIndex].author;
-	return '"' + quoteString + '" - ' + authorString;
+	return { quote: quoteString, author: authorString };
 }
 
 export function getFlag(size: number, country: string) {
@@ -244,33 +253,65 @@ export let ADVENTURE_TYPES = [
 	{ type: 'other', label: 'Other' }
 ];
 
-export function typeToString(type: string) {
-	const typeObj = ADVENTURE_TYPES.find((t) => t.type === type);
-	if (typeObj) {
-		return typeObj.label;
+// adventure type to icon mapping
+export let ADVENTURE_TYPE_ICONS = {
+	general: '🌍',
+	outdoor: '🏞️',
+	lodging: '🛌',
+	dining: '🍽️',
+	activity: '🏄',
+	attraction: '🎢',
+	shopping: '🛍️',
+	nightlife: '🌃',
+	event: '🎉',
+	transportation: '🚗',
+	culture: '🎭',
+	water_sports: '🚤',
+	hiking: '🥾',
+	wildlife: '🦒',
+	historical_sites: '🏛️',
+	music_concerts: '🎶',
+	fitness: '🏋️',
+	art_museums: '🎨',
+	festivals: '🎪',
+	spiritual_journeys: '🧘‍♀️',
+	volunteer_work: '🤝',
+	other: '❓'
+};
+
+export function getAdventureTypeLabel(type: string) {
+	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
+	if (type in ADVENTURE_TYPE_ICONS) {
+		return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
 	} else {
-		return 'Unknown';
+		return '❓';
 	}
 }
 
-/**
- * Checks if an adventure has been visited.
- *
- * This function determines if the `adventure.visits` array contains at least one visit
- * with a `start_date` that is before the current date.
- *
- * @param adventure - The adventure object to check.
- * @returns `true` if the adventure has been visited, otherwise `false`.
- */
-export function isAdventureVisited(adventure: Adventure) {
-	const currentTime = Date.now();
-
-	// Check if any visit's start_date is before the current time.
-	return (
-		adventure.visits &&
-		adventure.visits.some((visit) => {
-			const visitStartTime = new Date(visit.start_date).getTime();
-			return visit.start_date && visitStartTime <= currentTime;
-		})
-	);
+export function getRandomBackground() {
+	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
+	return randomBackgrounds.backgrounds[randomIndex] as Background;
 }
+
+export function findFirstValue(obj: any): any {
+	for (const key in obj) {
+		if (typeof obj[key] === 'object' && obj[key] !== null) {
+			const value = findFirstValue(obj[key]);
+			if (value !== undefined) {
+				return value;
+			}
+		} else {
+			return obj[key];
+		}
+	}
+}
+
+export let themes = [
+	{ name: 'light', label: 'Light' },
+	{ name: 'dark', label: 'Dark' },
+	{ name: 'night', label: 'Night' },
+	{ name: 'forest', label: 'Forest' },
+	{ name: 'aqua', label: 'Aqua' },
+	{ name: 'aestheticLight', label: 'Aesthetic Light' },
+	{ name: 'aestheticDark', label: 'Aesthetic Dark' }
+];

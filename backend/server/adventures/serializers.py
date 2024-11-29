@@ -1,8 +1,11 @@
+from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category
 from rest_framework import serializers
+from main.utils import CustomModelSerializer
 
-class AdventureImageSerializer(serializers.ModelSerializer):
+
+class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
         fields = ['id', 'image', 'adventure']
@@ -18,44 +21,130 @@ class AdventureImageSerializer(serializers.ModelSerializer):
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         return representation
     
+class CategorySerializer(serializers.ModelSerializer):
+    num_adventures = serializers.SerializerMethodField()
+    class Meta:
+        model = Category
+        fields = ['id', 'name', 'display_name', 'icon', 'num_adventures']
+        read_only_fields = ['id', 'num_adventures']
+
+    def validate_name(self, value):
+        return value.lower()
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['name'] = validated_data['name'].lower()
+        return Category.objects.create(user_id=user, **validated_data)
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if 'name' in validated_data:
+            instance.name = validated_data['name'].lower()
+        instance.save()
+        return instance
+    
+    def get_num_adventures(self, obj):
+        return Adventure.objects.filter(category=obj, user_id=obj.user_id).count()
+    
 class VisitSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = Visit
         fields = ['id', 'start_date', 'end_date', 'notes']
         read_only_fields = ['id']
-                                        
-class AdventureSerializer(serializers.ModelSerializer):
+                                   
+class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
-    visits = VisitSerializer(many=True, read_only=False)
+    visits = VisitSerializer(many=True, read_only=False, required=False)
+    category = CategorySerializer(read_only=False, required=False)
+    is_visited = serializers.SerializerMethodField()
+
     class Meta:
         model = Adventure
-        fields = ['id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'type', 'longitude', 'latitude', 'visits']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
+            'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
+            'latitude', 'visits', 'is_visited', 'category'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
 
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return representation
-    
+    def validate_category(self, category_data):
+        if isinstance(category_data, Category):
+            return category_data
+        if category_data:
+            user = self.context['request'].user
+            name = category_data.get('name', '').lower()
+            existing_category = Category.objects.filter(user_id=user, name=name).first()
+            if existing_category:
+                return existing_category
+            category_data['name'] = name
+        return category_data
+
+    def get_or_create_category(self, category_data):
+        user = self.context['request'].user
+        
+        if isinstance(category_data, Category):
+            return category_data
+        
+        if isinstance(category_data, dict):
+            name = category_data.get('name', '').lower()
+            display_name = category_data.get('display_name', name)
+            icon = category_data.get('icon', '�')
+        else:
+            name = category_data.name.lower()
+            display_name = category_data.display_name
+            icon = category_data.icon
+
+        category, created = Category.objects.get_or_create(
+            user_id=user,
+            name=name,
+            defaults={
+                'display_name': display_name,
+                'icon': icon
+            }
+        )
+        return category
+
+    def get_is_visited(self, obj):
+        current_date = timezone.now().date()
+        for visit in obj.visits.all():
+            if visit.start_date and visit.end_date and (visit.start_date <= current_date):
+                return True
+            elif visit.start_date and not visit.end_date and (visit.start_date <= current_date):
+                return True
+        return False
+
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', [])
+        category_data = validated_data.pop('category', None)
+        print(category_data)
         adventure = Adventure.objects.create(**validated_data)
         for visit_data in visits_data:
             Visit.objects.create(adventure=adventure, **visit_data)
+
+        if category_data:
+            category = self.get_or_create_category(category_data)
+            adventure.category = category
+            adventure.save()
+
         return adventure
-    
+
     def update(self, instance, validated_data):
         visits_data = validated_data.pop('visits', [])
-        
-        # Update Adventure fields
+        category_data = validated_data.pop('category', None)
+
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
+
+        if category_data:
+            category = self.get_or_create_category(category_data)
+            instance.category = category
         instance.save()
-        
-        # Get current visits
+
         current_visits = instance.visits.all()
         current_visit_ids = set(current_visits.values_list('id', flat=True))
-        
-        # Update or create visits
+
         updated_visit_ids = set()
         for visit_data in visits_data:
             visit_id = visit_data.get('id')
@@ -66,17 +155,15 @@ class AdventureSerializer(serializers.ModelSerializer):
                 visit.save()
                 updated_visit_ids.add(visit_id)
             else:
-                # If no ID is provided or ID doesn't exist, create new visit
                 new_visit = Visit.objects.create(adventure=instance, **visit_data)
                 updated_visit_ids.add(new_visit.id)
-        
-        # Delete visits that are not in the updated data
+
         visits_to_delete = current_visit_ids - updated_visit_ids
         instance.visits.filter(id__in=visits_to_delete).delete()
-        
+
         return instance
-    
-class TransportationSerializer(serializers.ModelSerializer):
+
+class TransportationSerializer(CustomModelSerializer):
 
     class Meta:
         model = Transportation
@@ -87,7 +174,7 @@ class TransportationSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
-class NoteSerializer(serializers.ModelSerializer):
+class NoteSerializer(CustomModelSerializer):
 
     class Meta:
         model = Note
@@ -97,7 +184,7 @@ class NoteSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
     
-class ChecklistItemSerializer(serializers.ModelSerializer):
+class ChecklistItemSerializer(CustomModelSerializer):
         class Meta:
             model = ChecklistItem
             fields = [
@@ -105,7 +192,7 @@ class ChecklistItemSerializer(serializers.ModelSerializer):
             ]
             read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'checklist']
   
-class ChecklistSerializer(serializers.ModelSerializer):
+class ChecklistSerializer(CustomModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
     class Meta:
         model = Checklist
@@ -168,7 +255,7 @@ class ChecklistSerializer(serializers.ModelSerializer):
 
         return data
 
-class CollectionSerializer(serializers.ModelSerializer):
+class CollectionSerializer(CustomModelSerializer):
     adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
@@ -187,3 +274,4 @@ class CollectionSerializer(serializers.ModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
+    

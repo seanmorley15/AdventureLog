@@ -3,14 +3,15 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 </script>
 
-<h1 class="text-center font-bold text-4xl mb-4">Change Password</h1>
+<h1 class="text-center font-bold text-4xl mb-4">{$t('settings.change_password')}</h1>
 
 {#if data.props.token && data.props.uid}
-	<p class="text-center">You will then be redirected to the login page.</p>
+	<p class="text-center">{$t('settings.login_redir')}</p>
 	<div
 		class="modal-action items-center"
 		style="display: flex; flex-direction: column; align-items: center; width: 100%;"
@@ -25,7 +26,7 @@
 					class="input input-bordered w-full"
 					id="new_password1"
 					name="new_password1"
-					placeholder="New Password"
+					placeholder={$t('settings.new_password')}
 				/>
 			</div>
 			<div class="mb-2 w-full">
@@ -34,13 +35,13 @@
 					class="input input-bordered w-full"
 					id="new_password2"
 					name="new_password2"
-					placeholder="Confirm Password"
+					placeholder={$t('settings.confirm_new_password')}
 				/>
 			</div>
-			<button type="submit" class="btn btn-primary w-full">Submit</button>
+			<button type="submit" class="btn btn-primary w-full">{$t('settings.submit')}</button>
 			{#if $page.form?.message}
 				<div class="text-center text-error mt-4">
-					{$page.form?.message}
+					{$t($page.form?.message)}
 				</div>
 			{/if}
 		</form>
@@ -48,10 +49,10 @@
 {:else}
 	<div class="flex justify-center">
 		<div class="items-center justify-center">
-			<p class="text-center">Token and UID are required for password reset.</p>
+			<p class="text-center">{$t('settings.token_required')}</p>
 
 			<button class="btn btn-neutral" on:click={() => goto('/settings/forgot-password')}>
-				Reset Password
+				{$t('settings.reset_password')}
 			</button>
 		</div>
 	</div>

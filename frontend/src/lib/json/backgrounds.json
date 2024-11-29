@@ -1,0 +1,24 @@
+{
+	"backgrounds": [
+		{
+			"url": "backgrounds/adventurelog_showcase_1.webp",
+			"author": "Sean Morley",
+			"location": "Franconia Notch State Park, New Hampshire, USA"
+		},
+		{
+			"url": "backgrounds/adventurelog_showcase_2.webp",
+			"author": "Sean Morley",
+			"location": "Tumbledown Mountain, Maine, USA"
+		},
+		{
+			"url": "backgrounds/adventurelog_showcase_3.webp",
+			"author": "Sean Morley",
+			"location": "Philmont Scout Ranch, New Mexico, USA"
+		},
+		{
+			"url": "backgrounds/adventurelog_showcase_4.webp",
+			"author": "Sean Morley",
+			"location": "Great Sand Dunes National Park, Colorado, USA"
+		}
+	]
+}

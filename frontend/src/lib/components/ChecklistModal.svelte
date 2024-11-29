@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { isValidUrl } from '$lib';
 	import type { Collection, Checklist, User, ChecklistItem } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
+	import { t } from 'svelte-i18n';
 
 	export let checklist: Checklist | null = null;
 	export let collection: Collection;
@@ -21,11 +21,11 @@
 
 	function addItem() {
 		if (newItem.trim() == '') {
-			warning = 'Item cannot be empty';
+			warning = $t('checklist.item_cannot_be_empty');
 			return;
 		}
 		if (newChecklist.items.find((item) => item.name.trim() == newItem)) {
-			warning = 'Item already exists';
+			warning = $t('checklist.item_already_exists');
 			return;
 		}
 		items = [
@@ -34,7 +34,7 @@
 				name: newItem,
 				is_checked: newStatus,
 				id: '',
-				user_id: 0,
+				user_id: '',
 				checklist: 0,
 				created_at: '',
 				updated_at: ''
@@ -130,15 +130,15 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg mb-2">Checklist Editor</h3>
+		<h3 class="font-bold text-lg mb-2">{$t('checklist.checklist_editor')}</h3>
 		{#if initialName}
-			<p class="font-semibold text-md mb-2">Editing checklist {initialName}</p>
+			<p class="font-semibold text-md mb-2">{$t('checklist.editing_checklist')} {initialName}</p>
 		{/if}
 
-		{#if (checklist && user?.pk == checklist?.user_id) || (user && collection && collection.shared_with.includes(user.uuid)) || !checklist}
+		{#if (checklist && user?.uuid == checklist?.user_id) || (user && collection && collection.shared_with.includes(user.uuid)) || !checklist}
 			<form on:submit|preventDefault>
 				<div class="form-control mb-2">
-					<label for="name">Name</label>
+					<label for="name">{$t('adventures.name')}</label>
 					<input
 						type="text"
 						id="name"
@@ -147,7 +147,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Date</label>
+					<label for="content">{$t('adventures.date')}</label>
 					<input
 						type="date"
 						id="date"
@@ -163,7 +163,7 @@
 					<input
 						type="text"
 						id="new_item"
-						placeholder="New Item"
+						placeholder={$t('checklist.new_item')}
 						name="new_item"
 						bind:value={newItem}
 						class="input input-bordered w-full max-w-xs mt-1"
@@ -179,12 +179,12 @@
 						class="btn btn-sm btn-primary absolute right-0 mt-2.5 mr-4"
 						on:click={addItem}
 					>
-						Add
+						{$t('adventures.add')}
 					</button>
 				</div>
 				{#if items.length > 0}
 					<div class="divider"></div>
-					<h2 class=" text-xl font-semibold mb-4 -mt-3">Items</h2>
+					<h2 class=" text-xl font-semibold mb-4 -mt-3">{$t('checklist.items')}</h2>
 				{/if}
 
 				{#each items as item, i}
@@ -202,7 +202,7 @@
 							class="btn btn-sm btn-error absolute right-0 mt-2.5 mr-4"
 							on:click={() => removeItem(i)}
 						>
-							Remove
+							{$t('adventures.remove')}
 						</button>
 					</div>
 				{/each}
@@ -226,8 +226,8 @@
 					</div>
 				{/if}
 
-				<button class="btn btn-primary mr-1" on:click={save}>Save</button>
-				<button class="btn btn-neutral" on:click={close}>Close</button>
+				<button class="btn btn-primary mr-1" on:click={save}>{$t('notes.save')}</button>
+				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 
 				{#if collection.is_public}
 					<div role="alert" class="alert mt-4">
@@ -244,14 +244,14 @@
 								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 							></path>
 						</svg>
-						<span>This checklist is public because it is in a public collection.</span>
+						<span>{$t('checklist.checklist_public')}</span>
 					</div>
 				{/if}
 			</form>
 		{:else}
 			<form>
 				<div class="form-control mb-2">
-					<label for="name">Name</label>
+					<label for="name">{$t('adventures.name')}</label>
 					<input
 						type="text"
 						id="name"
@@ -261,7 +261,7 @@
 					/>
 				</div>
 				<div class="form-control mb-2">
-					<label for="content">Date</label>
+					<label for="content">{$t('adventures.date')}</label>
 					<input
 						type="date"
 						id="date"
@@ -276,7 +276,7 @@
 
 				{#if items.length > 0}
 					<div class="divider"></div>
-					<h2 class=" text-xl font-semibold mb-4 -mt-3">Items</h2>
+					<h2 class=" text-xl font-semibold mb-4 -mt-3">{$t('checklist.items')}</h2>
 				{/if}
 
 				{#each items as item, i}
@@ -299,7 +299,7 @@
 					</div>
 				{/each}
 
-				<button class="btn btn-neutral" on:click={close}>Close</button>
+				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 			</form>
 		{/if}
 	</div>

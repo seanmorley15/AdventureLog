@@ -13,7 +13,7 @@ export type User = {
 
 export type Adventure = {
 	id: string;
-	user_id: number | null;
+	user_id: string | null;
 	type: string;
 	name: string;
 	location?: string | null;
@@ -37,6 +37,8 @@ export type Adventure = {
 	is_public: boolean;
 	created_at?: string | null;
 	updated_at?: string | null;
+	is_visited?: boolean;
+	category: Category | null;
 };
 
 export type Country = {
@@ -46,6 +48,8 @@ export type Country = {
 	subregion: string;
 	flag_url: string;
 	capital: string;
+	num_regions: number;
+	num_visits: number;
 };
 
 export type Region = {
@@ -59,7 +63,10 @@ export type Region = {
 export type VisitedRegion = {
 	id: number;
 	region: number;
-	user_id: number;
+	user_id: string;
+	longitude: number;
+	latitude: number;
+	name: string;
 };
 
 export type Point = {
@@ -74,7 +81,7 @@ export type Point = {
 
 export type Collection = {
 	id: string;
-	user_id: number;
+	user_id: string;
 	name: string;
 	description: string;
 	is_public: boolean;
@@ -109,7 +116,7 @@ export type OpenStreetMapPlace = {
 
 export type Transportation = {
 	id: string;
-	user_id: number;
+	user_id: string;
 	type: string;
 	name: string;
 	description: string | null;
@@ -128,7 +135,7 @@ export type Transportation = {
 
 export type Note = {
 	id: string;
-	user_id: number;
+	user_id: string;
 	name: string;
 	content: string | null;
 	links: string[] | null;
@@ -141,7 +148,7 @@ export type Note = {
 
 export type Checklist = {
 	id: string;
-	user_id: number;
+	user_id: string;
 	name: string;
 	items: ChecklistItem[];
 	date: string | null; // ISO 8601 date string
@@ -153,10 +160,33 @@ export type Checklist = {
 
 export type ChecklistItem = {
 	id: string;
-	user_id: number;
+	user_id: string;
 	name: string;
 	is_checked: boolean;
 	checklist: number;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
+};
+
+export type Background = {
+	url: string;
+	author?: string;
+	location?: string;
+};
+
+export type ReverseGeocode = {
+	id: string;
+	region: string;
+	country: string;
+	is_visited: boolean;
+	display_name: string;
+};
+
+export type Category = {
+	id: string;
+	name: string;
+	display_name: string;
+	icon: string;
+	user_id: string;
+	num_adventures?: number | null;
 };

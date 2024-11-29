@@ -4,6 +4,7 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
+	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
@@ -20,8 +21,7 @@
 		groupAdventuresByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
-		groupChecklistsByDate,
-		isAdventureVisited
+		groupChecklistsByDate
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -45,7 +45,7 @@
 
 	$: {
 		numAdventures = adventures.length;
-		numVisited = adventures.filter(isAdventureVisited).length;
+		numVisited = adventures.filter((adventure) => adventure.is_visited).length;
 	}
 
 	let notFound: boolean = false;
@@ -105,19 +105,6 @@
 				console.log('Error adding adventure to collection');
 			}
 		}
-	}
-
-	function changeType(event: CustomEvent<string>) {
-		adventures = adventures.map((adventure) => {
-			if (adventure.id == event.detail) {
-				if (adventure.type == 'visited') {
-					adventure.type = 'planned';
-				} else {
-					adventure.type = 'visited';
-				}
-			}
-			return adventure;
-		});
 	}
 
 	let adventureToEdit: Adventure | null = null;
@@ -256,14 +243,15 @@
 				<img src={Lost} alt="Lost" class="w-1/2" />
 			</div>
 			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-				Adventure not Found
+				{$t('adventures.not_found')}
 			</h1>
 			<p class="mt-4 text-muted-foreground">
-				The adventure you were looking for could not be found. Please try a different adventure or
-				check back later.
+				{$t('adventures.not_found_desc')}
 			</p>
 			<div class="mt-6">
-				<button class="btn btn-primary" on:click={() => goto('/')}>Homepage</button>
+				<button class="btn btn-primary" on:click={() => goto('/')}
+					>{$t('adventures.homepage')}</button
+				>
 			</div>
 		</div>
 	</div>
@@ -275,7 +263,7 @@
 	</div>
 {/if}
 {#if collection}
-	{#if data.user && !collection.is_archived}
+	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || collection.shared_with.includes(data.user.uuid)) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
 				<div class="dropdown dropdown-top dropdown-end">
@@ -287,18 +275,18 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						{#if collection.user_id === data.user.pk}
-							<p class="text-center font-bold text-lg">Link new...</p>
+						{#if collection.user_id === data.user.uuid}
+							<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 							<button
 								class="btn btn-primary"
 								on:click={() => {
 									isShowingLinkModal = true;
 								}}
 							>
-								Adventure</button
+								{$t('adventures.adventure')}</button
 							>
 						{/if}
-						<p class="text-center font-bold text-lg">Add new...</p>
+						<p class="text-center font-bold text-lg">{$t('adventures.add_new')}</p>
 						<button
 							class="btn btn-primary"
 							on:click={() => {
@@ -306,7 +294,7 @@
 								adventureToEdit = null;
 							}}
 						>
-							Adventure</button
+							{$t('adventures.adventure')}</button
 						>
 
 						<button
@@ -316,7 +304,7 @@
 								newType = '';
 							}}
 						>
-							Transportation</button
+							{$t('adventures.transportation')}</button
 						>
 						<button
 							class="btn btn-primary"
@@ -326,7 +314,7 @@
 								noteToEdit = null;
 							}}
 						>
-							Note</button
+							{$t('adventures.note')}</button
 						>
 						<button
 							class="btn btn-primary"
@@ -336,7 +324,7 @@
 								checklistToEdit = null;
 							}}
 						>
-							Checklist</button
+							{$t('adventures.checklist')}</button
 						>
 
 						<!-- <button
@@ -364,7 +352,7 @@
 						d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
 					/>
 				</svg>
-				<span>This collection has been archived.</span>
+				<span>{$t('adventures.collection_archived')}</span>
 			</div>
 		</div>
 	{/if}
@@ -374,7 +362,7 @@
 	{#if collection.link}
 		<div class="flex items-center justify-center mb-2">
 			<a href={collection.link} target="_blank" rel="noopener noreferrer" class="btn btn-primary">
-				Visit Link
+				{$t('adventures.visit_link')}
 			</a>
 		</div>
 	{/if}
@@ -386,12 +374,12 @@
 		<div class="flex items-center justify-center mb-4">
 			<div class="stats shadow bg-base-300">
 				<div class="stat">
-					<div class="stat-title">Collection Stats</div>
+					<div class="stat-title">{$t('adventures.collection_stats')}</div>
 					<div class="stat-value">{numVisited}/{numAdventures} Visited</div>
 					{#if numAdventures === numVisited}
-						<div class="stat-desc">You've completed this collection! 🎉!</div>
+						<div class="stat-desc">{$t('adventures.collection_completed')}</div>
 					{:else}
-						<div class="stat-desc">Keep exploring!</div>
+						<div class="stat-desc">{$t('adventures.keep_exploring')}</div>
 					{/if}
 				</div>
 			</div>
@@ -402,7 +390,7 @@
 		<NotFound error={undefined} />
 	{/if}
 	{#if adventures.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-2">Linked Adventures</h1>
+		<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
 
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
@@ -412,7 +400,6 @@
 					on:delete={deleteAdventure}
 					type={adventure.type}
 					{adventure}
-					on:typeChange={changeType}
 					{collection}
 				/>
 			{/each}
@@ -420,7 +407,7 @@
 	{/if}
 
 	{#if transportations.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Transportation</h1>
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each transportations as transportation}
 				<TransportationCard
@@ -440,7 +427,7 @@
 	{/if}
 
 	{#if notes.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Notes</h1>
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each notes as note}
 				<NoteCard
@@ -460,7 +447,7 @@
 	{/if}
 
 	{#if checklists.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">Checklists</h1>
+		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each checklists as checklist}
 				<ChecklistCard
@@ -481,9 +468,12 @@
 
 	{#if collection.start_date && collection.end_date}
 		<div class="divider"></div>
-		<h1 class="text-center font-bold text-4xl mt-4">Itinerary by Date</h1>
+		<h1 class="text-center font-bold text-4xl mt-4">{$t('adventures.itineary_by_date')}</h1>
 		{#if numberOfDays}
-			<p class="text-center text-lg pl-16 pr-16">Duration: {numberOfDays} days</p>
+			<p class="text-center text-lg pl-16 pr-16">
+				{$t('adventures.duration')}: {numberOfDays}
+				{$t('adventures.days')}
+			</p>
 		{/if}
 		<p class="text-center text-lg pl-16 pr-16">
 			Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} - {new Date(
@@ -517,9 +507,13 @@
 					dateString
 				] || []}
 
-			<h2 class="text-center font-semibold text-2xl mb-2 mt-4">
-				Day {i + 1} - {adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+			<h2 class="text-center font-bold text-3xl mt-4">
+				{$t('adventures.day')}
+				{i + 1}
 			</h2>
+			<h3 class="text-center text-xl mb-2">
+				{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+			</h3>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 				{#if dayAdventures.length > 0}
 					{#each dayAdventures as adventure}
@@ -529,7 +523,6 @@
 							on:delete={deleteAdventure}
 							type={adventure.type}
 							{adventure}
-							on:typeChange={changeType}
 						/>
 					{/each}
 				{/if}
@@ -580,13 +573,13 @@
 				{/if}
 
 				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
-					<p class="text-center text-lg mt-2">Nothing planned for this day. Enjoy the journey!</p>
+					<p class="text-center text-lg mt-2">{$t('adventures.nothing_planned')}</p>
 				{/if}
 			</div>
 		{/each}
 
 		<MapLibre
-			style="https://basemaps.cartocdn.com/gl/positron-gl-style/style.json"
+			style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 mt-4"
 			standardControls
 		>
@@ -603,11 +596,6 @@
 							<p class="font-semibold text-black text-md">
 								{adventure.type.charAt(0).toUpperCase() + adventure.type.slice(1)}
 							</p>
-							<!-- <p>
-								{adventure.
-									? new Date(adventure.date).toLocaleDateString(undefined, { timeZone: 'UTC' })
-									: ''}
-							</p> -->
 						</Popup>
 					</DefaultMarker>
 				{/if}
@@ -620,7 +608,7 @@
 	<title
 		>{data.props.adventure && data.props.adventure.name
 			? `${data.props.adventure.name}`
-			: 'Collection'}</title
+			: $t('adventures.collection')}</title
 	>
 	<meta
 		name="description"

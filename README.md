@@ -4,9 +4,10 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
 
-**Documentation can be found [here](https://docs.adventurelog.app).**
+- **[Documentation](https://adventurelog.app)**  
+- **[Demo](https://demo.adventurelog.app)**  
+- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**  
 
-**Join the AdventureLog Community Discord Server [here](https://discord.gg/wRbQ9Egr8C).**
 
 # Table of Contents
 
@@ -53,42 +54,23 @@ Here is a summary of the configuration options available in the `docker-compose.
 | Name                | Required  | Description                                                                                                                                                   | Default Value         |
 | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend.                                                                                                  | http://server:8000    |
-| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will acess the app from.                                                                  | http://localhost:8080 |
+| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will acess the app from.                                                                  | http://localhost:8015 |
 | `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **kiliobytes**. | Infinity              |
 
 ### Backend Container (server)
 
-| Name                    | Required | Description                                                                                                                                   | Default Value         |
-| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `PGHOST`                | Yes      | Databse host.                                                                                                                                 | db                    |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                     | database              |
-| `PGUSER`                | Yes      | Database user.                                                                                                                                | adventure             |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | changeme123           |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | admin                 |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                  | admin                 |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | admin@example.com     |
-| `PUBLIC_URL`            | Yes      | This is the publically accessible url to the **nginx** container. You should be able to acess nginx from this url where you access your app.  | http://127.0.0.1:81   |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                            | Needs to be changed.  |
-| `FRONTEND_URL`          | Yes      | This is the publically accessible url to the **frontend** container. This link should be accessable for all users. Used for email generation. | http://localhost:3000 |
-
-### Proxy Container (nginx) Configuration
-
-In order to use media files in a production environment, you need to configure the `nginx` container to serve the media files. The container is already in the docker compose file but you need to do a few things to make it work.
-
-1. Create a directory called `proxy` in the same directory as the `docker-compose.yml` file.
-2. Create a file called `nginx.conf` in the `proxy` directory.
-3. Add the following configuration to the `nginx.conf` file:
-
-```nginx
-server {
-    listen 80;
-    server_name localhost;
-
-    location /media/ {
-        alias /app/media/;
-    }
-}
-```
+| Name                    | Required | Description                                                                                                                                 | Default Value           |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `PGHOST`                | Yes      | Databse host.                                                                                                                               | db                      |
+| `PGDATABASE`            | Yes      | Database.                                                                                                                                   | database                |
+| `PGUSER`                | Yes      | Database user.                                                                                                                              | adventure               |
+| `PGPASSWORD`            | Yes      | Database password.                                                                                                                          | changeme123             |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                           | admin                   |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                | admin                   |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                       | admin@example.com       |
+| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls. | 'http://localhost:8016' |
+| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                          | http://localhost:8016   |
+| `FRONTEND_URL`          | Yes      | This is the publicly accessible url to the **frontend** container. This link should be accessible for all users. Used for email generation. | 'http://localhost:8015' |
 
 ## Running the Containers
 
@@ -119,8 +101,6 @@ View all of your adventures on a map, with the ability to filter by visit status
 
 ![Region Page](screenshots/regions.png)
 
-️
-
 # About AdventureLog
 
 AdventureLog is a Svelte Kit and Django application that utilizes a PostgreSQL database. Users can log the adventures they have experienced, as well as plan future ones. Key features include:
@@ -150,12 +130,5 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 
 # Attribution
 
-- Logo Design by [redtechtiger](https://github.com/redtechtiger)
+- Logo Design by [nordtechtiger](https://github.com/nordtechtiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
-- [Mexico GEOJSON](https://cartographyvectors.com/map/784-mexico-with-states)
-- [Japan GEOJSON](https://cartographyvectors.com/map/361-japan)
-- [Ireland GEOJSON](https://cartographyvectors.com/map/1399-ireland-provinces)
-- [Sweden GEOJSON](https://cartographyvectors.com/map/1521-sweden-with-regions)
-- [Switzerland GEOJSON](https://cartographyvectors.com/map/1522-switzerland-with-regions)
-- [Iceland GEOJSON](https://cartographyvectors.com/map/1453-iceland-with-regions)
-- [Austria GEOJSON](https://github.com/codeforgermany/click_that_hood/blob/main/public/data/austria-states.geojson)
