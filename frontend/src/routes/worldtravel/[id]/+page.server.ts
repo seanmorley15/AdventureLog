@@ -12,10 +12,16 @@ export const load = (async (event) => {
 	let visitedRegions: VisitedRegion[] = [];
 	let country: Country;
 
+	let sessionId = event.cookies.get('sessionid');
+
+	if (!sessionId) {
+		return redirect(302, '/login');
+	}
+
 	let res = await fetch(`${endpoint}/api/${id}/regions/`, {
 		method: 'GET',
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
+			Cookie: `sessionid=${sessionId}`
 		}
 	});
 	if (!res.ok) {
@@ -28,7 +34,7 @@ export const load = (async (event) => {
 	res = await fetch(`${endpoint}/api/${id}/visits/`, {
 		method: 'GET',
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
+			Cookie: `sessionid=${sessionId}`
 		}
 	});
 	if (!res.ok) {
@@ -41,7 +47,7 @@ export const load = (async (event) => {
 	res = await fetch(`${endpoint}/api/countries/${regions[0].country}/`, {
 		method: 'GET',
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
+			Cookie: `sessionid=${sessionId}`
 		}
 	});
 	if (!res.ok) {

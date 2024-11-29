@@ -8,13 +8,11 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
-		let next = null;
-		let previous = null;
-		let count = 0;
+		let sessionId = event.cookies.get('sessionid');
 		let adventures: Adventure[] = [];
 		let initialFetch = await fetch(`${serverEndpoint}/api/collections/archived/`, {
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+				Cookie: `sessionid=${sessionId}`
 			}
 		});
 		if (!initialFetch.ok) {

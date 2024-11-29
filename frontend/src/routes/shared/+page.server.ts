@@ -8,9 +8,10 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
+		let sessionId = event.cookies.get('sessionid');
 		let res = await fetch(`${serverEndpoint}/api/collections/shared/`, {
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+				Cookie: `sessionid=${sessionId}`
 			}
 		});
 		if (!res.ok) {

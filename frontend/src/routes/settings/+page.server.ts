@@ -2,18 +2,20 @@ import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { User } from '$lib/types';
+import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/');
 	}
-	if (!event.cookies.get('auth')) {
+	let sessionId = event.cookies.get('sessionid');
+	if (!sessionId) {
 		return redirect(302, '/');
 	}
 	let res = await fetch(`${endpoint}/auth/user/`, {
 		headers: {
-			Cookie: event.cookies.get('auth') || ''
+			Cookie: `sessionid=${sessionId}`
 		}
 	});
 	let user = (await res.json()) as User;
@@ -34,7 +36,8 @@ export const actions: Actions = {
 		if (!event.locals.user) {
 			return redirect(302, '/');
 		}
-		if (!event.cookies.get('auth')) {
+		let sessionId = event.cookies.get('sessionid');
+		if (!sessionId) {
 			return redirect(302, '/');
 		}
 
@@ -49,7 +52,7 @@ export const actions: Actions = {
 
 			const resCurrent = await fetch(`${endpoint}/auth/user/`, {
 				headers: {
-					Cookie: event.cookies.get('auth') || ''
+					Cookie: `sessionid=${sessionId}`
 				}
 			});
 
@@ -94,10 +97,13 @@ export const actions: Actions = {
 			}
 			formDataToSend.append('public_profile', public_profile.toString());
 
+			let csrfToken = await fetchCSRFToken();
+
 			let res = await fetch(`${endpoint}/auth/user/`, {
 				method: 'PATCH',
 				headers: {
-					Cookie: event.cookies.get('auth') || ''
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'X-CSRFToken': csrfToken
 				},
 				body: formDataToSend
 			});
@@ -120,7 +126,8 @@ export const actions: Actions = {
 		if (!event.locals.user) {
 			return redirect(302, '/');
 		}
-		if (!event.cookies.get('auth')) {
+		let sessionId = event.cookies.get('sessionid');
+		if (!sessionId) {
 			return redirect(302, '/');
 		}
 		console.log('changePassword');
@@ -133,10 +140,13 @@ export const actions: Actions = {
 			return fail(400, { message: 'Passwords do not match' });
 		}
 
+		let csrfToken = await fetchCSRFToken();
+
 		let res = await fetch(`${endpoint}/auth/password/change/`, {
 			method: 'POST',
 			headers: {
-				Cookie: event.cookies.get('auth') || '',
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'X-CSRFToken': csrfToken,
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
@@ -153,7 +163,8 @@ export const actions: Actions = {
 		if (!event.locals.user) {
 			return redirect(302, '/');
 		}
-		if (!event.cookies.get('auth')) {
+		let sessionId = event.cookies.get('sessionid');
+		if (!sessionId) {
 			return redirect(302, '/');
 		}
 		const formData = await event.request.formData();
@@ -161,11 +172,13 @@ export const actions: Actions = {
 		if (!new_email) {
 			return fail(400, { message: 'Email is required' });
 		} else {
+			let csrfToken = await fetchCSRFToken();
 			let res = await fetch(`${endpoint}/auth/change-email/`, {
 				method: 'POST',
 				headers: {
-					Cookie: event.cookies.get('auth') || '',
-					'Content-Type': 'application/json'
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrfToken
 				},
 				body: JSON.stringify({
 					new_email

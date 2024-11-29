@@ -8,15 +8,16 @@ export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {
+		let sessionId = event.cookies.get('sessionid');
 		let visitedFetch = await fetch(`${endpoint}/api/adventures/all/?include_collections=true`, {
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+				Cookie: `sessionid=${sessionId}`
 			}
 		});
 
 		let visitedRegionsFetch = await fetch(`${endpoint}/api/visitedregion/`, {
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`
+				Cookie: `sessionid=${sessionId}`
 			}
 		});
 

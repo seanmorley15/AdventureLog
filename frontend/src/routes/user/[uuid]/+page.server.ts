@@ -4,7 +4,8 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
-	if (!event.cookies.get('auth')) {
+	let sessionId = event.cookies.get('sessionid');
+	if (!sessionId) {
 		return redirect(302, '/login');
 	}
 	const uuid = event.params.uuid;
@@ -13,7 +14,7 @@ export const load = (async (event) => {
 	}
 	let res = await fetch(`${serverEndpoint}/auth/user/${uuid}/`, {
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
+			Cookie: `sessionid=${sessionId}`
 		}
 	});
 	if (!res.ok) {

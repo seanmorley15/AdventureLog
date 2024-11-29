@@ -2,6 +2,7 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Country } from '$lib/types';
 import { redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
+import { fetchCSRFToken } from '$lib/index.server';
 
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -11,6 +12,9 @@ export const load = (async (event) => {
 	} else {
 		const res = await event.fetch(`${endpoint}/api/countries/`, {
 			method: 'GET',
+			headers: {
+				Cookie: `sessionid=${event.cookies.get('sessionid')}`
+			},
 			credentials: 'include'
 		});
 		if (!res.ok) {
@@ -25,8 +29,6 @@ export const load = (async (event) => {
 			};
 		}
 	}
-
-	return {};
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
@@ -39,15 +41,20 @@ export const actions: Actions = {
 			};
 		}
 
-		if (!event.locals.user || !event.cookies.get('auth')) {
+		let sessionId = event.cookies.get('sessionid');
+
+		if (!event.locals.user || !sessionId) {
 			return redirect(302, '/login');
 		}
+
+		let csrfToken = await fetchCSRFToken();
 
 		const res = await fetch(`${endpoint}/api/visitedregion/`, {
 			method: 'POST',
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`,
-				'Content-Type': 'application/json'
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken
 			},
 			body: JSON.stringify({ region: body.regionId })
 		});
@@ -73,15 +80,20 @@ export const actions: Actions = {
 
 		const visitId = body.visitId as number;
 
-		if (!event.locals.user || !event.cookies.get('auth')) {
+		let sessionId = event.cookies.get('sessionid');
+
+		if (!event.locals.user || !sessionId) {
 			return redirect(302, '/login');
 		}
+
+		let csrfToken = await fetchCSRFToken();
 
 		const res = await fetch(`${endpoint}/api/visitedregion/${visitId}/`, {
 			method: 'DELETE',
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`,
-				'Content-Type': 'application/json'
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken
 			}
 		});
 

@@ -50,6 +50,7 @@ INSTALLED_APPS = (
     "allauth_ui",
     'allauth',
     'allauth.account',
+    'allauth.mfa',
     'allauth.headless',
     'allauth.socialaccount',
     "widget_tweaks",
