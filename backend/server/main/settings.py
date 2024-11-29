@@ -47,20 +47,16 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
-    # 'dj_rest_auth',
     'allauth',
     'allauth.account',
     'allauth.headless',
-    # 'dj_rest_auth.registration',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',
     'drf_yasg',
     'corsheaders',
     'adventures',
     'worldtravel',
     'users',
     'django.contrib.gis',
-
 )
 
 MIDDLEWARE = (
@@ -84,18 +80,12 @@ CACHES = {
     }
 }
 
-
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
 
 ROOT_URLCONF = 'main.urls'
 
 # WSGI_APPLICATION = 'demo.wsgi.application'
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=365),
-}
 
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
@@ -140,8 +130,6 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 STATICFILES_DIRS = [BASE_DIR / 'static']
-
-# TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
 
 TEMPLATES = [
     {
@@ -214,13 +202,8 @@ else:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    # 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ],
 }
 
 SWAGGER_SETTINGS = {
