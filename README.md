@@ -130,5 +130,5 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 
 # Attribution
 
-- Logo Design by [redtechtiger](https://github.com/redtechtiger)
+- Logo Design by [nordtechtiger](https://github.com/nordtechtiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
