@@ -3,6 +3,11 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
 from worldtravel.models import Country, Region, VisitedRegion
+from allauth.account.decorators import secure_admin_login
+
+admin.autodiscover()
+admin.site.login = secure_admin_login(admin.site.login)
+
 
 
 class AdventureAdmin(admin.ModelAdmin):

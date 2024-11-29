@@ -47,10 +47,13 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
+    "allauth_ui",
     'allauth',
     'allauth.account',
     'allauth.headless',
     'allauth.socialaccount',
+    "widget_tweaks",
+    "slippers",
     'drf_yasg',
     'corsheaders',
     'adventures',
@@ -118,6 +121,9 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+ALLAUTH_UI_THEME = "dark"
+SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
