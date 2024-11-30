@@ -34,16 +34,6 @@
 		}
 	}
 
-	// async function exportAdventures() {
-	// 	const url = await exportData();
-
-	// 	const a = document.createElement('a');
-	// 	a.href = url;
-	// 	a.download = 'adventure-log-export.json';
-	// 	a.click();
-	// 	URL.revokeObjectURL(url);
-	// }
-
 	async function checkVisitedRegions() {
 		let res = await fetch('/api/reverse-geocode/mark_visited_region/', {
 			method: 'POST',
@@ -137,7 +127,15 @@
 
 <h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.password_change')}</h1>
 <div class="flex justify-center">
-	<form action="?/changePassword" method="post" class="w-full max-w-xs">
+	<form action="?/changePassword" method="post" class="w-full max-w-xs" use:enhance>
+		<input
+			type="password"
+			name="current_password"
+			placeholder={$t('settings.current_password')}
+			id="current_password"
+			class="block mb-2 input input-bordered w-full max-w-xs"
+		/>
+		<br />
 		<input
 			type="password"
 			name="password1"
@@ -202,9 +200,7 @@
 </div> -->
 
 <small class="text-center"
-	><b>For Debug Use:</b> Server PK={user.pk} | Date Joined: {user.date_joined
-		? new Date(user.date_joined).toDateString()
-		: ''} | Staff user: {user.is_staff}</small
+	><b>For Debug Use:</b> UUID={user.uuid} | Staff user: {user.is_staff}</small
 >
 
 <svelte:head>

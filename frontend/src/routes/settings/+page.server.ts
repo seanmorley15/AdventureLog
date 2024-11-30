@@ -13,7 +13,7 @@ export const load: PageServerLoad = async (event) => {
 	if (!sessionId) {
 		return redirect(302, '/');
 	}
-	let res = await fetch(`${endpoint}/auth/user/`, {
+	let res = await fetch(`${endpoint}/auth/user-metadata/`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}
@@ -50,7 +50,7 @@ export const actions: Actions = {
 			let profile_pic = formData.get('profile_pic') as File | null | undefined;
 			let public_profile = formData.get('public_profile') as string | null | undefined | boolean;
 
-			const resCurrent = await fetch(`${endpoint}/auth/user/`, {
+			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
 				headers: {
 					Cookie: `sessionid=${sessionId}`
 				}
@@ -60,12 +60,12 @@ export const actions: Actions = {
 				return fail(resCurrent.status, await resCurrent.json());
 			}
 
+			// Gets the boolean value of the public_profile input
 			if (public_profile === 'on') {
 				public_profile = true;
 			} else {
 				public_profile = false;
 			}
-			console.log(public_profile);
 
 			let currentUser = (await resCurrent.json()) as User;
 
@@ -83,6 +83,7 @@ export const actions: Actions = {
 			}
 
 			let formDataToSend = new FormData();
+
 			if (username) {
 				formDataToSend.append('username', username);
 			}
@@ -99,7 +100,7 @@ export const actions: Actions = {
 
 			let csrfToken = await fetchCSRFToken();
 
-			let res = await fetch(`${endpoint}/auth/user/`, {
+			let res = await fetch(`${endpoint}/auth/update-user/`, {
 				method: 'PATCH',
 				headers: {
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
@@ -111,8 +112,6 @@ export const actions: Actions = {
 			let response = await res.json();
 
 			if (!res.ok) {
-				// change the first key in the response to 'message' for the fail function
-				response = { message: Object.values(response)[0] };
 				return fail(res.status, response);
 			}
 
@@ -130,19 +129,23 @@ export const actions: Actions = {
 		if (!sessionId) {
 			return redirect(302, '/');
 		}
-		console.log('changePassword');
+
 		const formData = await event.request.formData();
 
 		const password1 = formData.get('password1') as string | null | undefined;
 		const password2 = formData.get('password2') as string | null | undefined;
+		const current_password = formData.get('current_password') as string | null | undefined;
 
 		if (password1 !== password2) {
 			return fail(400, { message: 'Passwords do not match' });
 		}
+		if (!current_password) {
+			return fail(400, { message: 'Current password is required' });
+		}
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${endpoint}/auth/password/change/`, {
+		let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
 			method: 'POST',
 			headers: {
 				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
@@ -150,12 +153,18 @@ export const actions: Actions = {
 				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
-				new_password1: password1,
-				new_password2: password2
+				current_password,
+				new_password: password1
 			})
 		});
 		if (!res.ok) {
-			return fail(res.status, await res.json());
+			let error_message = await res.text();
+			if (res.status === 400) {
+				// get the message key of the object
+				// {"status": 400, "errors": [{"message": "Please type your current password.", "code": "enter_current_password", "param": "current_password"}]}
+				error_message = JSON.parse(error_message).errors[0].message;
+			}
+			return fail(res.status, { message: error_message });
 		}
 		return { success: true };
 	},

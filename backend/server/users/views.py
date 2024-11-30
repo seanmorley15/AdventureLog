@@ -98,3 +98,26 @@ class UserMetadataView(APIView):
         user = request.user
         serializer = PublicUserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+class UpdateUserMetadataView(APIView):
+    """
+    Update user metadata using fields from the PublicUserSerializer.
+    Using patch opposed to put allows for partial updates, covers the case where it checks the username and says it's already taken. Duplicate uesrname values should not be included in the request to avoid this.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=PublicUserSerializer,
+        responses={
+            200: openapi.Response('User metadata updated'),
+            400: 'Bad Request'
+        },
+        operation_description="Update user metadata."
+    )
+    def patch(self, request):
+        user = request.user
+        serializer = PublicUserSerializer(user, data=request.data, partial=True, context={'request': request})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

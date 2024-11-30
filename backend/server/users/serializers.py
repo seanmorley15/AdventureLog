@@ -106,6 +106,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
         fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
+        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid',)
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

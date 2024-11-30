@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 from dotenv import load_dotenv
-from datetime import timedelta
 from os import getenv
 from pathlib import Path
 # Load environment variables from .env file
@@ -35,8 +34,6 @@ DEBUG = getenv('DEBUG', 'True') == 'True'
 # ]
 ALLOWED_HOSTS = ['*']
 
-# Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -50,7 +47,7 @@ INSTALLED_APPS = (
     "allauth_ui",
     'allauth',
     'allauth.account',
-    'allauth.mfa',
+    # 'allauth.mfa',
     'allauth.headless',
     'allauth.socialaccount',
     "widget_tweaks",
@@ -108,7 +105,7 @@ DATABASES = {
     }
 }
 
-ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -123,8 +120,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-ALLAUTH_UI_THEME = "dark"
-SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -137,6 +133,16 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
+}
+
 
 TEMPLATES = [
     {
@@ -154,21 +160,21 @@ TEMPLATES = [
     },
 ]
 
+# Authentication settings
+
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    }
-}
+ALLAUTH_UI_THEME = "dark"
+SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
 ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
+
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+
+SESSION_SAVE_EVERY_REQUEST = True
 
 FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 
@@ -218,9 +224,6 @@ SWAGGER_SETTINGS = {
     'LOGOUT_URL': 'logout',
 }
 
-from os import getenv
-
-
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
 
@@ -254,5 +257,3 @@ LOGGING = {
 }
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.4'
-
-SESSION_SAVE_EVERY_REQUEST = True
