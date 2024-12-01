@@ -2,23 +2,13 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
 from adventures.models import Collection
-from dj_rest_auth.serializers import PasswordResetSerializer
 
 User = get_user_model()
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError as DjangoValidationError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
-try:
-    from allauth.account import app_settings as allauth_account_settings
-    from allauth.account.adapter import get_adapter
-    from allauth.account.utils import setup_user_email
-    from allauth.socialaccount.models import EmailAddress
-    from allauth.utils import get_username_max_length
-except ImportError:
-    raise ImportError('allauth needs to be added to INSTALLED_APPS.')
 
 class ChangeEmailSerializer(serializers.Serializer):
     new_email = serializers.EmailField(required=True)
@@ -37,7 +27,7 @@ from django.contrib.auth import get_user_model
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 UserModel = get_user_model()
-from dj_rest_auth.serializers import UserDetailsSerializer
+# from dj_rest_auth.serializers import UserDetailsSerializer
 from .models import CustomUser
 
 from rest_framework import serializers
@@ -77,9 +67,9 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         if hasattr(UserModel, 'public_profile'):
             extra_fields.append('public_profile')
 
-        class Meta(UserDetailsSerializer.Meta):
+        class Meta:
             model = CustomUser
-            fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
+            fields = ('profile_pic', 'uuid', 'public_profile', 'email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
 
         model = UserModel
         fields = ('pk', *extra_fields)

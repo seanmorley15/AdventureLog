@@ -1,7 +1,7 @@
 services:
   web:
-    #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    build: ./frontend/
+    #image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
     environment:
@@ -14,7 +14,7 @@ services:
       - server
 
   db:
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:16-3.4
     container_name: adventurelog-db
     restart: unless-stopped
     environment:
@@ -25,8 +25,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    build: ./backend/
+    #image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
     environment:
@@ -39,7 +39,7 @@ services:
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
       - PUBLIC_URL='http://localhost:8016' # Match the outward port, used for the creation of image urls
-      - CSRF_TRUSTED_ORIGINS=http://localhost:8016 # Comma separated list of trusted origins for CSRF
+      - CSRF_TRUSTED_ORIGINS=http://localhost:8016,http://localhost:8015 # Comma separated list of trusted origins for CSRF
       - DEBUG=False
       - FRONTEND_URL='http://localhost:8015' # Used for email generation. This should be the url of the frontend
     ports:
