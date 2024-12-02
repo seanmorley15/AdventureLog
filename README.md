@@ -4,9 +4,10 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
 
-**Documentation can be found [here](https://docs.adventurelog.app).**
+- **[Documentation](https://adventurelog.app)**  
+- **[Demo](https://demo.adventurelog.app)**  
+- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**  
 
-**Join the AdventureLog Community Discord Server [here](https://discord.gg/wRbQ9Egr8C).**
 
 # Table of Contents
 
@@ -129,5 +130,5 @@ AdventureLog is licensed under the GNU General Public License v3.0.
 
 # Attribution
 
-- Logo Design by [redtechtiger](https://github.com/redtechtiger)
+- Logo Design by [nordtechtiger](https://github.com/nordtechtiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
