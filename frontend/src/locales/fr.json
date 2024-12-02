@@ -226,7 +226,8 @@
       "aqua": "Aqua",
       "dark": "Sombre",
       "aestheticDark": "Esthétique sombre",
-      "aestheticLight": "Lumière esthétique"
+      "aestheticLight": "Lumière esthétique",
+      "northernLights": "Aurores boréales"
     },
     "users": "Utilisateurs",
     "worldtravel": "Voyage dans le monde",
@@ -291,7 +292,9 @@
     "about_this_background": "À propos de ce contexte",
     "join_discord": "Rejoignez le Discord",
     "join_discord_desc": "pour partager vos propres photos. \nPostez-les dans le",
-    "photo_by": "Photo par"
+    "photo_by": "Photo par",
+    "change_password_error": "Impossible de changer le mot de passe. \nMot de passe actuel invalide ou nouveau mot de passe invalide.",
+    "current_password": "Mot de passe actuel"
   },
   "checklist": {
     "add_item": "Ajouter un article",

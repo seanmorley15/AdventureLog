@@ -100,6 +100,33 @@ export default {
 
 					fontFamily:
 						'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace'
+				},
+				northernLights: {
+					primary: '#479bb3', // Primary color
+					'primary-focus': '#81A1C1', // Primary color - focused
+					'primary-content': '#ECEFF4', // Foreground content color to use on primary color
+
+					secondary: '#5E81AC', // Secondary color
+					'secondary-focus': '#4C566A', // Secondary color - focused
+					'secondary-content': '#ECEFF4', // Foreground content color to use on secondary color
+
+					accent: '#B48EAD', // Accent color
+					'accent-focus': '#A3BE8C', // Accent color - focused
+					'accent-content': '#ECEFF4', // Foreground content color to use on accent color
+
+					neutral: '#4C566A', // Neutral color
+					'neutral-focus': '#3B4252', // Neutral color - focused
+					'neutral-content': '#D8DEE9', // Foreground content color to use on neutral color
+
+					'base-100': '#2E3440', // Base color of page, used for blank backgrounds
+					'base-200': '#3B4252', // Base color, a little lighter
+					'base-300': '#434C5E', // Base color, even more lighter
+					'base-content': '#ECEFF4', // Foreground content color to use on base color
+
+					info: '#88C0D0', // Info
+					success: '#A3BE8C', // Success
+					warning: '#D08770', // Warning
+					error: '#BF616A' // Error
 				}
 			}
 		]

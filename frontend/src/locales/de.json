@@ -226,7 +226,8 @@
       "light": "Licht",
       "night": "Nacht",
       "aestheticDark": "Ästhetisches Dunkel",
-      "aestheticLight": "Ästhetisches Licht"
+      "aestheticLight": "Ästhetisches Licht",
+      "northernLights": "Nordlicht"
     },
     "users": "Benutzer",
     "worldtravel": "Weltreisen",
@@ -291,7 +292,9 @@
     "about_this_background": "Über diesen Hintergrund",
     "join_discord": "Treten Sie dem Discord bei",
     "join_discord_desc": "um Ihre eigenen Fotos zu teilen. \nVeröffentlichen Sie sie im",
-    "photo_by": "Foto von"
+    "photo_by": "Foto von",
+    "change_password_error": "Passwort kann nicht geändert werden. \nUngültiges aktuelles Passwort oder ungültiges neues Passwort.",
+    "current_password": "Aktuelles Passwort"
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",

@@ -226,7 +226,8 @@
       "light": "Leggero",
       "night": "Notte",
       "aestheticDark": "Estetico scuro",
-      "aestheticLight": "Luce estetica"
+      "aestheticLight": "Luce estetica",
+      "northernLights": "Aurora boreale"
     },
     "users": "Utenti",
     "worldtravel": "Viaggio nel mondo",
@@ -291,7 +292,9 @@
     "about_this_background": "A proposito di questo contesto",
     "join_discord": "Unisciti alla Discordia",
     "join_discord_desc": "per condividere le tue foto. \nPubblicateli in",
-    "photo_by": "Foto di"
+    "photo_by": "Foto di",
+    "change_password_error": "Impossibile modificare la password. \nPassword attuale non valida o nuova password non valida.",
+    "current_password": "password attuale"
   },
   "checklist": {
     "add_item": "Aggiungi articolo",

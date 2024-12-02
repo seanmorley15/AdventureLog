@@ -226,7 +226,8 @@
       "light": "光",
       "night": "夜晚",
       "aestheticDark": "审美黑暗",
-      "aestheticLight": "美学之光"
+      "aestheticLight": "美学之光",
+      "northernLights": "北极光"
     },
     "users": "用户",
     "worldtravel": "环球旅行",
@@ -291,7 +292,9 @@
     "about_this_background": "关于这个背景",
     "join_discord": "加入不和谐",
     "join_discord_desc": "分享您自己的照片。\n将它们张贴在",
-    "photo_by": "摄影："
+    "photo_by": "摄影：",
+    "change_password_error": "无法更改密码。\n当前密码无效或新密码无效。",
+    "current_password": "当前密码"
   },
   "checklist": {
     "add_item": "添加项目",

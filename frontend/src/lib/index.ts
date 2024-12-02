@@ -313,5 +313,6 @@ export let themes = [
 	{ name: 'forest', label: 'Forest' },
 	{ name: 'aqua', label: 'Aqua' },
 	{ name: 'aestheticLight', label: 'Aesthetic Light' },
-	{ name: 'aestheticDark', label: 'Aesthetic Dark' }
+	{ name: 'aestheticDark', label: 'Aesthetic Dark' },
+	{ name: 'northernLights', label: 'Northern Lights' }
 ];

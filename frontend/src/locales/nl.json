@@ -226,7 +226,8 @@
       "light": "Licht",
       "night": "Nacht",
       "aestheticDark": "Esthetisch donker",
-      "aestheticLight": "Esthetisch licht"
+      "aestheticLight": "Esthetisch licht",
+      "northernLights": "Noorderlicht"
     },
     "users": "Gebruikers",
     "worldtravel": "Wereldreizen",
@@ -291,7 +292,9 @@
     "about_this_background": "Over deze achtergrond",
     "join_discord": "Sluit je aan bij de onenigheid",
     "join_discord_desc": "om uw eigen foto's te delen. \nPlaats ze in de",
-    "photo_by": "Foto door"
+    "photo_by": "Foto door",
+    "change_password_error": "Kan wachtwoord niet wijzigen. \nOngeldig huidig ​​wachtwoord of ongeldig nieuw wachtwoord.",
+    "current_password": "Huidig ​​wachtwoord"
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

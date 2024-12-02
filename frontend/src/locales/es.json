@@ -23,7 +23,8 @@
       "forest": "Bosque",
       "aqua": "Aqua",
       "aestheticDark": "Estética Oscura",
-      "aestheticLight": "Luz estetica"
+      "aestheticLight": "Luz estetica",
+      "northernLights": "Aurora boreal"
     },
     "my_tags": "Mis etiquetas",
     "tag": "Etiqueta",
@@ -291,7 +292,9 @@
     "about_this_background": "Sobre este trasfondo",
     "join_discord": "Únete a la discordia",
     "join_discord_desc": "para compartir tus propias fotos. \nPublicarlos en el",
-    "photo_by": "Foto por"
+    "photo_by": "Foto por",
+    "change_password_error": "No se puede cambiar la contraseña. \nContraseña actual no válida o contraseña nueva no válida.",
+    "current_password": "Contraseña actual"
   },
   "checklist": {
     "add_item": "Agregar artículo",

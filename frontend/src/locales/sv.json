@@ -226,7 +226,8 @@
       "light": "Ljus",
       "night": "Natt",
       "aestheticDark": "Estetisk mörk",
-      "aestheticLight": "Estetiskt ljus"
+      "aestheticLight": "Estetiskt ljus",
+      "northernLights": "Norrsken"
     },
     "users": "Användare",
     "worldtravel": "Världsresor",
@@ -291,7 +292,9 @@
     "about_this_background": "Om denna bakgrund",
     "join_discord": "Gå med i Discord",
     "join_discord_desc": "för att dela dina egna foton. \nLägg upp dem i",
-    "photo_by": "Foto av"
+    "photo_by": "Foto av",
+    "change_password_error": "Det går inte att ändra lösenord. \nOgiltigt nuvarande lösenord eller ogiltigt nytt lösenord.",
+    "current_password": "Aktuellt lösenord"
   },
   "checklist": {
     "add_item": "Lägg till objekt",
