@@ -1145,7 +1145,6 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         region = Region.objects.filter(id=iso_code).first()
         visited_region = VisitedRegion.objects.filter(region=region).first()
         is_visited = False
-        print(iso_code)
         country_code = iso_code[:2]
         
         if region:
