@@ -294,7 +294,8 @@
     "join_discord_desc": "om uw eigen foto's te delen. \nPlaats ze in de",
     "photo_by": "Foto door",
     "change_password_error": "Kan wachtwoord niet wijzigen. \nOngeldig huidig ​​wachtwoord of ongeldig nieuw wachtwoord.",
-    "current_password": "Huidig ​​wachtwoord"
+    "current_password": "Huidig ​​wachtwoord",
+    "password_change_lopout_warning": "Na het wijzigen van uw wachtwoord wordt u uitgelogd."
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

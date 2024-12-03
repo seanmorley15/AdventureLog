@@ -294,7 +294,8 @@
     "join_discord_desc": "pour partager vos propres photos. \nPostez-les dans le",
     "photo_by": "Photo par",
     "change_password_error": "Impossible de changer le mot de passe. \nMot de passe actuel invalide ou nouveau mot de passe invalide.",
-    "current_password": "Mot de passe actuel"
+    "current_password": "Mot de passe actuel",
+    "password_change_lopout_warning": "Vous serez déconnecté après avoir modifié votre mot de passe."
   },
   "checklist": {
     "add_item": "Ajouter un article",

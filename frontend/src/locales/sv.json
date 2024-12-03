@@ -294,7 +294,8 @@
     "join_discord_desc": "för att dela dina egna foton. \nLägg upp dem i",
     "photo_by": "Foto av",
     "change_password_error": "Det går inte att ändra lösenord. \nOgiltigt nuvarande lösenord eller ogiltigt nytt lösenord.",
-    "current_password": "Aktuellt lösenord"
+    "current_password": "Aktuellt lösenord",
+    "password_change_lopout_warning": "Du kommer att loggas ut efter att du har ändrat ditt lösenord."
   },
   "checklist": {
     "add_item": "Lägg till objekt",

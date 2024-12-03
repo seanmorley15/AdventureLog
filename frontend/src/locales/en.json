@@ -294,7 +294,8 @@
 		"join_discord": "Join the Discord",
 		"join_discord_desc": "to share your own photos. Post them in the #travel-share channel.",
 		"current_password": "Current Password",
-		"change_password_error": "Unable to change password. Invalid current password or invalid new password."
+		"change_password_error": "Unable to change password. Invalid current password or invalid new password.",
+		"password_change_lopout_warning": "You will be logged out after changing your password."
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

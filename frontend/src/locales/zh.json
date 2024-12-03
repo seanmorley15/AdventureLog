@@ -294,7 +294,8 @@
     "join_discord_desc": "分享您自己的照片。\n将它们张贴在",
     "photo_by": "摄影：",
     "change_password_error": "无法更改密码。\n当前密码无效或新密码无效。",
-    "current_password": "当前密码"
+    "current_password": "当前密码",
+    "password_change_lopout_warning": "更改密码后您将退出。"
   },
   "checklist": {
     "add_item": "添加项目",

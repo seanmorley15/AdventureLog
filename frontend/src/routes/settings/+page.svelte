@@ -151,7 +151,9 @@
 			placeholder={$t('settings.confirm_new_password')}
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
-		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.password_change')}</button>
+		<div class="tooltip tooltip-warning" data-tip={$t('settings.password_change_lopout_warning')}>
+			<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.password_change')}</button>
+		</div>
 		<br />
 	</form>
 </div>

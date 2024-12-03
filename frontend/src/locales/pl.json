@@ -294,7 +294,8 @@
     "join_discord": "Dołącz do Discorda",
     "join_discord_desc": "aby podzielić się swoimi zdjęciami. Zamieść je w kanale #travel-share.",
     "change_password_error": "Nie można zmienić hasła. \nNieprawidłowe bieżące hasło lub nieprawidłowe nowe hasło.",
-    "current_password": "Aktualne hasło"
+    "current_password": "Aktualne hasło",
+    "password_change_lopout_warning": "Po zmianie hasła nastąpi wylogowanie."
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",

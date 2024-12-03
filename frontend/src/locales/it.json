@@ -294,7 +294,8 @@
     "join_discord_desc": "per condividere le tue foto. \nPubblicateli in",
     "photo_by": "Foto di",
     "change_password_error": "Impossibile modificare la password. \nPassword attuale non valida o nuova password non valida.",
-    "current_password": "password attuale"
+    "current_password": "password attuale",
+    "password_change_lopout_warning": "Verrai disconnesso dopo aver modificato la password."
   },
   "checklist": {
     "add_item": "Aggiungi articolo",
