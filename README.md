@@ -3,8 +3,6 @@
 ### _"Never forget an adventure with AdventureLog - Your ultimate travel companion!"_
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
-<br />
-<a href="https://www.producthunt.com/posts/adventurelog?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-adventurelog" target="_blank"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=671249&theme=light" alt="AdventureLog - The&#0032;ultimate&#0032;travel&#0032;companion&#0032;for&#0032;the&#0032;modern&#0045;day&#0032;explorer | Product Hunt" style="width: 200px; height: 54px;" width="250" height="54" /></a>
 
 - **[Documentation](https://adventurelog.app)**  
 - **[Demo](https://demo.adventurelog.app)**  
