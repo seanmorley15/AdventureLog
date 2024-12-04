@@ -1,27 +1,9 @@
 <script lang="ts">
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import type { PageData } from './$types';
-	// @ts-ignore
-	import Calendar from '@event-calendar/core';
-	// @ts-ignore
-	import TimeGrid from '@event-calendar/time-grid';
-	// @ts-ignore
-	import DayGrid from '@event-calendar/day-grid';
 
 	export let data: PageData;
 
-	let plugins = [DayGrid, TimeGrid];
-	let options = {
-		view: 'dayGridMonth',
-		events: [
-			// 2024 december 1st
-			{ start: '2024-12-01', end: '2024-12-02', title: 'Event 1' },
-			// 2024 december 2nd
-			{ start: '2024-12-02', end: '2024-12-03', title: 'Event 2' }
-		]
-	};
-
-	// Mock data
 	const user = data.user;
 	const recentAdventures = data.props.adventures;
 	const stats = data.props.stats;
@@ -117,7 +99,6 @@
 		</div>
 	</div>
 </div>
-<Calendar {plugins} {options} />
 
 <svelte:head>
 	<title>Dashboard | AdventureLog</title>
