@@ -114,6 +114,10 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
+            text: "Admin Panel",
+            link: "/docs/guides/admin_panel",
+          },
+          {
             text: "v0.7.1 Migration Guide",
             link: "/docs/guides/v0-7-1_migration",
           },
