@@ -398,7 +398,6 @@
 					user={data.user}
 					on:edit={editAdventure}
 					on:delete={deleteAdventure}
-					type={adventure.type}
 					{adventure}
 					{collection}
 				/>
@@ -521,7 +520,6 @@
 							user={data.user}
 							on:edit={editAdventure}
 							on:delete={deleteAdventure}
-							type={adventure.type}
 							{adventure}
 						/>
 					{/each}

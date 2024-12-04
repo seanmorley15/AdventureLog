@@ -19,9 +19,10 @@
 	import CardCarousel from './CardCarousel.svelte';
 	import { t } from 'svelte-i18n';
 
-	export let type: string;
+	export let type: string | null = null;
 	export let user: User | null;
 	export let collection: Collection | null = null;
+	export let readOnly: boolean = false;
 
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
@@ -164,61 +165,67 @@
 				{/each}
 			</ul>
 		{/if}
-		<div class="card-actions justify-end mt-2">
-			<!-- action options dropdown -->
-			{#if type != 'link'}
-				{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
-					<div class="dropdown dropdown-end">
-						<div tabindex="0" role="button" class="btn btn-neutral-200">
-							<DotsHorizontal class="w-6 h-6" />
-						</div>
-						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-						<ul
-							tabindex="0"
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
-						>
-							<button
-								class="btn btn-neutral mb-2"
-								on:click={() => goto(`/adventures/${adventure.id}`)}
-								><Launch class="w-6 h-6" />{$t('adventures.open_details')}</button
-							>
-							<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-								<FileDocumentEdit class="w-6 h-6" />
-								{$t('adventures.edit_adventure')}
-							</button>
+		{#if !readOnly}
+			<div class="card-actions justify-end mt-2">
+				<!-- action options dropdown -->
 
-							<!-- remove from collection -->
-							{#if adventure.collection && user?.uuid == adventure.user_id}
-								<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
-									><LinkVariantRemove class="w-6 h-6" />{$t(
-										'adventures.remove_from_collection'
-									)}</button
-								>
-							{/if}
-							{#if !adventure.collection}
-								<button class="btn btn-neutral mb-2" on:click={() => (isCollectionModalOpen = true)}
-									><Plus class="w-6 h-6" />{$t('adventures.add_to_collection')}</button
-								>
-							{/if}
-							<button
-								id="delete_adventure"
-								data-umami-event="Delete Adventure"
-								class="btn btn-warning"
-								on:click={() => (isWarningModalOpen = true)}
-								><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
+				{#if type != 'link'}
+					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+						<div class="dropdown dropdown-end">
+							<div tabindex="0" role="button" class="btn btn-neutral-200">
+								<DotsHorizontal class="w-6 h-6" />
+							</div>
+							<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+							<ul
+								tabindex="0"
+								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 							>
-						</ul>
-					</div>
-				{:else}
-					<button
-						class="btn btn-neutral-200 mb-2"
-						on:click={() => goto(`/adventures/${adventure.id}`)}><Launch class="w-6 h-6" /></button
-					>
+								<button
+									class="btn btn-neutral mb-2"
+									on:click={() => goto(`/adventures/${adventure.id}`)}
+									><Launch class="w-6 h-6" />{$t('adventures.open_details')}</button
+								>
+								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
+									<FileDocumentEdit class="w-6 h-6" />
+									{$t('adventures.edit_adventure')}
+								</button>
+
+								<!-- remove from collection -->
+								{#if adventure.collection && user?.uuid == adventure.user_id}
+									<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
+										><LinkVariantRemove class="w-6 h-6" />{$t(
+											'adventures.remove_from_collection'
+										)}</button
+									>
+								{/if}
+								{#if !adventure.collection}
+									<button
+										class="btn btn-neutral mb-2"
+										on:click={() => (isCollectionModalOpen = true)}
+										><Plus class="w-6 h-6" />{$t('adventures.add_to_collection')}</button
+									>
+								{/if}
+								<button
+									id="delete_adventure"
+									data-umami-event="Delete Adventure"
+									class="btn btn-warning"
+									on:click={() => (isWarningModalOpen = true)}
+									><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
+								>
+							</ul>
+						</div>
+					{:else}
+						<button
+							class="btn btn-neutral-200 mb-2"
+							on:click={() => goto(`/adventures/${adventure.id}`)}
+							><Launch class="w-6 h-6" /></button
+						>
+					{/if}
 				{/if}
-			{/if}
-			{#if type == 'link'}
-				<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
-			{/if}
-		</div>
+				{#if type == 'link'}
+					<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>

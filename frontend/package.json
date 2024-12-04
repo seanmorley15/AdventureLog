@@ -12,6 +12,9 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@event-calendar/core": "^3.7.1",
+		"@event-calendar/day-grid": "^3.7.1",
+		"@event-calendar/time-grid": "^3.7.1",
 		"@iconify-json/mdi": "^1.1.67",
 		"@sveltejs/adapter-auto": "^3.2.2",
 		"@sveltejs/adapter-node": "^5.2.0",

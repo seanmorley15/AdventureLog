@@ -226,7 +226,6 @@
 				{#each adventures as adventure}
 					<AdventureCard
 						user={data.user}
-						type={adventure.type}
 						{adventure}
 						on:delete={deleteAdventure}
 						on:edit={editAdventure}

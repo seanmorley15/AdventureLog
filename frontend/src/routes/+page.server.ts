@@ -2,8 +2,15 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
 import { themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
+import type { PageServerLoad } from './$types';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
+export const load = (async (event) => {
+	if (event.locals.user) {
+		return redirect(302, '/dashboard');
+	}
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
 	setTheme: async ({ url, cookies }) => {

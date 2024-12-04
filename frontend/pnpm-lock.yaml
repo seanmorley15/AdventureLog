@@ -18,6 +18,15 @@ importers:
         specifier: ^0.9.8
         version: 0.9.8(svelte@4.2.19)
     devDependencies:
+      '@event-calendar/core':
+        specifier: ^3.7.1
+        version: 3.7.1
+      '@event-calendar/day-grid':
+        specifier: ^3.7.1
+        version: 3.7.1
+      '@event-calendar/time-grid':
+        specifier: ^3.7.1
+        version: 3.7.1
       '@iconify-json/mdi':
         specifier: ^1.1.67
         version: 1.1.67
@@ -373,6 +382,15 @@ packages:
     engines: {node: '>=12'}
     cpu: [x64]
     os: [win32]
+
+  '@event-calendar/core@3.7.1':
+    resolution: {integrity: sha512-S5D4arG7b47uhXmcT/rC7FT3UO9+KB+QhDuhfOzDgKCpAFlEBU1wt1UoHmPTbGy3J+yVMR+rmcresYUvM44+pA==}
+
+  '@event-calendar/day-grid@3.7.1':
+    resolution: {integrity: sha512-kwmadkhUxtQDv+0azMkePrmilFp5dljWLHsluHl1uepfJa1yXlrvFy3GMFnYuPo2Gva0MV+HnU/GMqVG8vIcWw==}
+
+  '@event-calendar/time-grid@3.7.1':
+    resolution: {integrity: sha512-kPC4+XhFcSoNSnYG0TSQeGylpvrbFF1g+cTcFFIW6qH3wPIeBBCo0fRuD4Tr5/q4ewZQ5lNrCkZXOpZxHJxOfw==}
 
   '@formatjs/ecma402-abstract@2.2.1':
     resolution: {integrity: sha512-O4ywpkdJybrjFc9zyL8qK5aklleIAi5O4nYhBVJaOFtCkNrnU+lKFeJOFC48zpsZQmR8Aok2V79hGpHnzbmFpg==}
@@ -2166,6 +2184,20 @@ snapshots:
 
   '@esbuild/win32-x64@0.21.5':
     optional: true
+
+  '@event-calendar/core@3.7.1':
+    dependencies:
+      svelte: 4.2.19
+
+  '@event-calendar/day-grid@3.7.1':
+    dependencies:
+      '@event-calendar/core': 3.7.1
+      svelte: 4.2.19
+
+  '@event-calendar/time-grid@3.7.1':
+    dependencies:
+      '@event-calendar/core': 3.7.1
+      svelte: 4.2.19
 
   '@formatjs/ecma402-abstract@2.2.1':
     dependencies:

@@ -5,16 +5,11 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 export const authHook: Handle = async ({ event, resolve }) => {
 	try {
 		let sessionid = event.cookies.get('sessionid');
-		console.log('sessionid:', sessionid);
 
 		if (!sessionid) {
-			console.log('No sessionid cookie');
 			event.locals.user = null;
 			return await resolve(event);
 		}
-
-		// print all cookies in the request
-		console.log('Cookies:', event.request.headers.get('cookie'));
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -37,8 +32,6 @@ export const authHook: Handle = async ({ event, resolve }) => {
 			event.locals.user = user;
 			const setCookieHeader = userFetch.headers.get('Set-Cookie');
 
-			console.log('setCookieHeader:', setCookieHeader);
-
 			if (setCookieHeader) {
 				// Regular expression to match sessionid cookie and its expiry
 				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
@@ -48,9 +41,6 @@ export const authHook: Handle = async ({ event, resolve }) => {
 					const sessionId = match[1];
 					const expiryString = match[2];
 					const expiryDate = new Date(expiryString);
-
-					console.log('Session ID:', sessionId);
-					console.log('Expiry Date:', expiryDate);
 
 					// Set the sessionid cookie
 					event.cookies.set('sessionid', sessionId, {
