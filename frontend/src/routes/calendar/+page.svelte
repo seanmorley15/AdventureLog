@@ -11,24 +11,7 @@
 	export let data: PageData;
 
 	let adventures = data.props.adventures;
-
-	let dates: Array<{
-		id: string;
-		start: string;
-		end: string;
-		title: string;
-		backgroundColor?: string;
-	}> = [];
-	adventures.forEach((adventure) => {
-		adventure.visits.forEach((visit) => {
-			dates.push({
-				id: adventure.id,
-				start: visit.start_date,
-				end: visit.end_date,
-				title: adventure.name + ' ' + adventure.category?.icon
-			});
-		});
-	});
+	let dates = data.props.dates;
 
 	let plugins = [TimeGrid, DayGrid];
 	let options = {

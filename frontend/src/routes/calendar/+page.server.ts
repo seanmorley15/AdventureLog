@@ -12,9 +12,28 @@ export const load = (async (event) => {
 	});
 	let adventures = (await visitedFetch.json()) as Adventure[];
 
+	let dates: Array<{
+		id: string;
+		start: string;
+		end: string;
+		title: string;
+		backgroundColor?: string;
+	}> = [];
+	adventures.forEach((adventure) => {
+		adventure.visits.forEach((visit) => {
+			dates.push({
+				id: adventure.id,
+				start: visit.start_date,
+				end: visit.end_date || visit.start_date,
+				title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
+			});
+		});
+	});
+
 	return {
 		props: {
-			adventures
+			adventures,
+			dates
 		}
 	};
 }) satisfies PageServerLoad;

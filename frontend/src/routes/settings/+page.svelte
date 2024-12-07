@@ -9,8 +9,10 @@
 
 	export let data;
 	let user: User;
+	let emails: typeof data.props.emails;
 	if (data.user) {
 		user = data.user;
+		emails = data.props.emails;
 	}
 
 	onMount(async () => {
@@ -46,6 +48,22 @@
 			addToast('success', `${data.new_regions} ${$t('adventures.regions_updated')}`);
 		} else {
 			addToast('error', $t('adventures.error_updating_regions'));
+		}
+	}
+
+	async function removeEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email })
+		});
+		if (res.ok) {
+			addToast('success', 'Email removed');
+			emails = emails.filter((e) => e.email !== email.email);
+		} else {
+			addToast('error', 'Error removing email');
 		}
 	}
 </script>
@@ -160,17 +178,21 @@
 
 <h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.email_change')}</h1>
 <div class="flex justify-center">
-	<form action="?/changeEmail" method="post" class="w-full max-w-xs">
-		<label for="current_email">{$t('settings.current_email')}</label>
-		<input
-			type="email"
-			name="current_email"
-			placeholder={user.email || $t('settings.no_email_set')}
-			id="current_email"
-			readonly
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/>
-		<br />
+	<div>
+		{#each emails as email}
+			<p>
+				{email.email}
+				{email.verified ? '✅' : '❌'}
+				{email.primary ? '🔑' : ''}
+				<button class="btn btn-sm btn-warning" on:click={() => removeEmail(email)}>Remove</button>
+			</p>
+		{/each}
+		{#if emails.length === 0}
+			<p>No emails</p>
+		{/if}
+	</div>
+
+	<div>
 		<input
 			type="email"
 			name="new_email"
@@ -178,8 +200,10 @@
 			id="new_email"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
+	</div>
+	<div>
 		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.email_change')}</button>
-	</form>
+	</div>
 </div>
 
 <div class="flex flex-col items-center mt-4">

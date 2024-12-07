@@ -20,13 +20,24 @@ export const load: PageServerLoad = async (event) => {
 	});
 	let user = (await res.json()) as User;
 
-	if (!res.ok) {
+	let emailFetch = await fetch(`${endpoint}/_allauth/browser/v1/account/email`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	let emailResponse = (await emailFetch.json()) as {
+		status: number;
+		data: { email: string; verified: boolean; primary: boolean }[];
+	};
+	let emails = emailResponse.data;
+	if (!res.ok || !emailFetch.ok) {
 		return redirect(302, '/');
 	}
 
 	return {
 		props: {
-			user
+			user,
+			emails
 		}
 	};
 };

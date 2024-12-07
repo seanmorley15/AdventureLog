@@ -27,8 +27,8 @@ export async function PUT({ url, params, request, fetch, cookies }) {
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 async function handleRequest(
@@ -41,7 +41,7 @@ async function handleRequest(
 	requreTrailingSlash: boolean | undefined = false
 ) {
 	const path = params.path;
-	let targetUrl = `${endpoint}/api/${path}`;
+	let targetUrl = `${endpoint}/_allauth/${path}`;
 
 	// Ensure the path ends with a trailing slash
 	if (requreTrailingSlash && !targetUrl.endsWith('/')) {
