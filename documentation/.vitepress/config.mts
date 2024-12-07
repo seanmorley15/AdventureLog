@@ -65,6 +65,10 @@ export default defineConfig({
           { text: "Docker 🐋", link: "/docs/install/docker" },
           { text: "Proxmox LXC 🐧", link: "/docs/install/proxmox_lxc" },
           { text: "Synology NAS ☁️", link: "/docs/install/synology_nas" },
+          {
+            text: "Kubernetes and Kustomize 🌐",
+            link: "/docs/install/kustomize",
+          },
 
           {
             text: "With A Reverse Proxy",

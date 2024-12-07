@@ -1,4 +1,3 @@
-```yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -36,7 +35,7 @@ spec:
               value: "http://url-typed-into-browser.io:80"
             - name: BODY_SIZE_LIMIT
               value: "Infinity"
-              
+
         - name: adventure-db
           image: postgis/postgis:15-3.3
           imagePullPolicy: IfNotPresent
@@ -53,7 +52,7 @@ spec:
             - name: POSTGRES_USER
               value: adventure
             - name: POSTGRES_PASSWORD
-              valueFrom: 
+              valueFrom:
                 secretKeyRef:
                   name: adventurelog-secret
                   key: adventure-postgres-password
@@ -75,7 +74,7 @@ spec:
             - name: PGUSER
               value: "adventure"
             - name: PGPASSWORD
-              valueFrom: 
+              valueFrom:
                 secretKeyRef:
                   name: adventurelog-secret
                   key: adventure-postgres-password
@@ -125,7 +124,7 @@ spec:
       protocol: TCP
       port: 80
       targetPort: 80
-    - name: base 
+    - name: base
       protocol: TCP
       port: 8000
       targetPort: 8000
@@ -152,4 +151,3 @@ spec:
   resources:
     requests:
       storage: 10Gi
-```

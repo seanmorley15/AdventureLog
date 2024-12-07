@@ -1,4 +1,4 @@
-# Kustomize (k8s)
+# Kubernetes and Kustomize (k8s)
 
 _AdventureLog can be run inside a kubernetes cluster using [kustomize](https://kustomize.io/)._
 
@@ -7,6 +7,7 @@ _AdventureLog can be run inside a kubernetes cluster using [kustomize](https://k
 A working kubernetes cluster. AdventureLog has been tested on k8s, but any Kustomize-capable flavor should be easy to use.
 
 ## Cluster Routing
+
 Because the AdventureLog backend must be reachable by **both** the web browser and the AdventureLog frontend, k8s-internal routing mechanisms traditional for standing up other similar applications **cannot** be used.
 
 In order to host AdventureLog in your cluster, you must therefor configure an internally and externally resolvable ingress that routes to your AdventureLog backend container.
@@ -14,6 +15,7 @@ In order to host AdventureLog in your cluster, you must therefor configure an in
 Once you have made said ingress, set `PUBLIC_SERVER_URL` and `PUBLIC_URL` env variables below to the url of that ingress.
 
 ## Tailscale and Headscale
+
 Many k8s homelabs choose to use [Tailscale](https://tailscale.com/) or similar projects to remove the need for open ports in your home firewall.
 
 The [Tailscale k8s Operator](https://tailscale.com/kb/1185/kubernetes/) will set up an externally resolvable service/ingress for your AdventureLog instance,
@@ -23,7 +25,7 @@ You must [expose tailnet IPs to your cluster](https://tailscale.com/kb/1438/kube
 
 ## Getting Started
 
-Take a look at the [example config](kustomize_example.md) and modify it for your usecase.
+Take a look at the [example config](https://github.com/seanmorley15/AdventureLog/blob/main/kustomization.yml) and modify it for your usecase.
 
 ## Environment Variables
 
