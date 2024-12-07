@@ -5,6 +5,7 @@ AdventureLog can be installed in a variety of ways. The following are the most c
 - [Docker](docker.md) 🐳
 - [Proxmox LXC](proxmox_lxc.md) 🐧
 - [Synology NAS](synology_nas.md) ☁️
+- [Kubernetes and Kustomize](kustomize.md) 🌐
 
 ### Other Options
 
