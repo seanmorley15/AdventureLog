@@ -51,6 +51,15 @@
 						id="password"
 						class="block input input-bordered w-full max-w-xs"
 					/><br />
+					{#if $page.form?.mfa_required}
+						<label for="password">TOTP</label>
+						<input
+							type="password"
+							name="totp"
+							id="totp"
+							class="block input input-bordered w-full max-w-xs"
+						/><br />
+					{/if}
 					<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.login')}</button>
 
 					<div class="flex justify-between mt-4">

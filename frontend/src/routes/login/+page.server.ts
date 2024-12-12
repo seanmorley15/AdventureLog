@@ -1,6 +1,6 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
 
-import type { Actions, PageServerLoad } from './$types';
+import type { Actions, PageServerLoad, RouteParams } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
@@ -25,15 +25,14 @@ export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();
 		const formUsername = formData.get('username');
-
-		let username = formUsername?.toString().toLocaleLowerCase();
-
+		const username = formUsername?.toString().toLowerCase();
 		const password = formData.get('password');
+		const totp = formData.get('totp');
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-
 		const csrfToken = await fetchCSRFToken();
 
+		// Initial login attempt
 		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/login`, {
 			method: 'POST',
 			headers: {
@@ -41,50 +40,84 @@ export const actions: Actions = {
 				'Content-Type': 'application/json',
 				Cookie: `csrftoken=${csrfToken}`
 			},
-			body: JSON.stringify({
-				username,
-				password
-			}),
+			body: JSON.stringify({ username, password }),
 			credentials: 'include'
 		});
 
-		const loginResponse = await loginFetch.json();
-		if (!loginFetch.ok) {
-			// get the value of the first key in the object
-			const firstKey = Object.keys(loginResponse)[0] || 'error';
-			const error = loginResponse[firstKey][0] || 'Invalid username or password';
-			return fail(400, {
-				message: error
-			});
-		} else {
-			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
+		if (loginFetch.status === 200) {
+			// Login successful without MFA
+			handleSuccessfulLogin(event, loginFetch);
+			return redirect(302, '/');
+		} else if (loginFetch.status === 401) {
+			// MFA required
+			if (!totp) {
+				return fail(401, {
+					message: 'Multi-factor authentication required',
+					mfa_required: true
+				});
+			} else {
+				// Attempt MFA authentication
+				const sessionId = extractSessionId(loginFetch.headers.get('Set-Cookie'));
+				const mfaLoginFetch = await event.fetch(
+					`${serverEndpoint}/_allauth/browser/v1/auth/2fa/authenticate`,
+					{
+						method: 'POST',
+						headers: {
+							'X-CSRFToken': csrfToken,
+							'Content-Type': 'application/json',
+							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`
+						},
+						body: JSON.stringify({ code: totp }),
+						credentials: 'include'
+					}
+				);
 
-			console.log('setCookieHeader:', setCookieHeader);
-
-			if (setCookieHeader) {
-				// Regular expression to match sessionid cookie and its expiry
-				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
-				const match = setCookieHeader.match(sessionIdRegex);
-
-				if (match) {
-					const sessionId = match[1];
-					const expiryString = match[2];
-					const expiryDate = new Date(expiryString);
-
-					console.log('Session ID:', sessionId);
-					console.log('Expiry Date:', expiryDate);
-
-					// Set the sessionid cookie
-					event.cookies.set('sessionid', sessionId, {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'lax',
-						secure: true,
-						expires: expiryDate
+				if (mfaLoginFetch.ok) {
+					// MFA successful
+					handleSuccessfulLogin(event, mfaLoginFetch);
+					return redirect(302, '/');
+				} else {
+					// MFA failed
+					const mfaLoginResponse = await mfaLoginFetch.json();
+					return fail(401, {
+						message: mfaLoginResponse.error || 'Invalid MFA code',
+						mfa_required: true
 					});
 				}
 			}
-			redirect(302, '/');
+		} else {
+			// Login failed
+			const loginResponse = await loginFetch.json();
+			const firstKey = Object.keys(loginResponse)[0] || 'error';
+			const error = loginResponse[firstKey][0] || 'Invalid username or password';
+			return fail(400, { message: error });
 		}
 	}
 };
+
+function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
+	const setCookieHeader = response.headers.get('Set-Cookie');
+	if (setCookieHeader) {
+		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
+		const match = setCookieHeader.match(sessionIdRegex);
+		if (match) {
+			const [, sessionId, expiryString] = match;
+			event.cookies.set('sessionid', sessionId, {
+				path: '/',
+				httpOnly: true,
+				sameSite: 'lax',
+				secure: true,
+				expires: new Date(expiryString)
+			});
+		}
+	}
+}
+
+function extractSessionId(setCookieHeader: string | null) {
+	if (setCookieHeader) {
+		const sessionIdRegex = /sessionid=([^;]+)/;
+		const match = setCookieHeader.match(sessionIdRegex);
+		return match ? match[1] : '';
+	}
+	return '';
+}
