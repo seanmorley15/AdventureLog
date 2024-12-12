@@ -56,7 +56,7 @@
 					<div class="flex justify-between mt-4">
 						<p><a href="/signup" class="underline">{$t('auth.signup')}</a></p>
 						<p>
-							<a href="/settings/forgot-password" class="underline">{$t('auth.forgot_password')}</a>
+							<a href="/user/reset-password" class="underline">{$t('auth.forgot_password')}</a>
 						</p>
 					</div>
 				</form>
