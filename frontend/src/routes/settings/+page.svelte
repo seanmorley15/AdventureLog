@@ -100,6 +100,30 @@
 			addToast('error', 'Error adding email');
 		}
 	}
+
+	async function primaryEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email, primary: true })
+		});
+		if (res.ok) {
+			addToast('success', 'Email set as primary');
+			// remove primary from all other emails and set this one as primary
+			emails = emails.map((e) => {
+				if (e.email === email.email) {
+					e.primary = true;
+				} else {
+					e.primary = false;
+				}
+				return e;
+			});
+		} else {
+			addToast('error', 'Error setting email as primary');
+		}
+	}
 </script>
 
 <h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.settings_page')}</h1>
@@ -225,14 +249,19 @@
 				{#if email.primary}
 					<div class="badge badge-primary">Primary</div>
 				{/if}
-				<button class="btn btn-sm btn-warning ml-2" on:click={() => removeEmail(email)}
-					>Remove</button
-				>
 				{#if !email.verified}
 					<button class="btn btn-sm btn-secondary ml-2" on:click={() => verifyEmail(email)}
 						>Verify</button
 					>
 				{/if}
+				{#if !email.primary}
+					<button class="btn btn-sm btn-secondary ml-2" on:click={() => primaryEmail(email)}
+						>Make Primary</button
+					>
+				{/if}
+				<button class="btn btn-sm btn-warning ml-2" on:click={() => removeEmail(email)}
+					>Remove</button
+				>
 			</p>
 		{/each}
 		{#if emails.length === 0}

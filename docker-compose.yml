@@ -14,7 +14,7 @@ services:
       - server
 
   db:
-    image: postgis/postgis:16-3.4
+    image: postgis/postgis:15-3.3
     container_name: adventurelog-db
     restart: unless-stopped
     environment:

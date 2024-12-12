@@ -17,8 +17,8 @@ export async function POST({ url, params, request, fetch, cookies }) {
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {

@@ -178,11 +178,15 @@ SESSION_SAVE_EVERY_REQUEST = True
 
 FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 
-# HEADLESS_FRONTEND_URLS = {
-#     "account_confirm_email": "https://app.project.org/account/verify-email/{key}",
-#     "account_reset_password_from_key": "https://app.org/account/password/reset/key/{key}",
-#     "account_signup": "https://app.org/account/signup",
-# }
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",
+    "account_reset_password": f"{FRONTEND_URL}/user/reset-password",
+    "account_reset_password_from_key": f"{FRONTEND_URL}/user/reset-password/{{key}}",
+    "account_signup": f"{FRONTEND_URL}/signup",
+    # Fallback in case the state containing the `next` URL is lost and the handshake
+    # with the third-party provider fails.
+    "socialaccount_login_error": f"{FRONTEND_URL}/account/provider/callback",
+}
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
