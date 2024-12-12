@@ -15,6 +15,8 @@
 		emails = data.props.emails;
 	}
 
+	let new_email: string = '';
+
 	onMount(async () => {
 		if (browser) {
 			const queryParams = new URLSearchParams($page.url.search);
@@ -64,6 +66,38 @@
 			emails = emails.filter((e) => e.email !== email.email);
 		} else {
 			addToast('error', 'Error removing email');
+		}
+	}
+
+	async function verifyEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email })
+		});
+		if (res.ok) {
+			addToast('success', 'Email sent to verify');
+		} else {
+			addToast('error', 'Error verifying email. Try again in a few minutes.');
+		}
+	}
+
+	async function addEmail() {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: new_email })
+		});
+		if (res.ok) {
+			addToast('success', 'Email added');
+			emails = [...emails, { email: new_email, verified: false, primary: false }];
+			new_email = '';
+		} else {
+			addToast('error', 'Error adding email');
 		}
 	}
 </script>
@@ -177,33 +211,52 @@
 </div>
 
 <h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.email_change')}</h1>
-<div class="flex justify-center">
+
+<div class="flex justify-center mb-4">
 	<div>
 		{#each emails as email}
-			<p>
+			<p class="mb-2">
 				{email.email}
-				{email.verified ? '✅' : '❌'}
-				{email.primary ? '🔑' : ''}
-				<button class="btn btn-sm btn-warning" on:click={() => removeEmail(email)}>Remove</button>
+				{#if email.verified}
+					<div class="badge badge-success">Verified</div>
+				{:else}
+					<div class="badge badge-error">Not Verified</div>
+				{/if}
+				{#if email.primary}
+					<div class="badge badge-primary">Primary</div>
+				{/if}
+				<button class="btn btn-sm btn-warning ml-2" on:click={() => removeEmail(email)}
+					>Remove</button
+				>
+				{#if !email.verified}
+					<button class="btn btn-sm btn-secondary ml-2" on:click={() => verifyEmail(email)}
+						>Verify</button
+					>
+				{/if}
 			</p>
 		{/each}
 		{#if emails.length === 0}
 			<p>No emails</p>
 		{/if}
 	</div>
+</div>
 
-	<div>
-		<input
-			type="email"
-			name="new_email"
-			placeholder={$t('settings.new_email')}
-			id="new_email"
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/>
-	</div>
-	<div>
-		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.email_change')}</button>
-	</div>
+<div class="flex justify-center mt-4">
+	<form class="w-full max-w-xs" on:submit={addEmail}>
+		<div class="mb-4">
+			<input
+				type="email"
+				name="new_email"
+				placeholder={$t('settings.new_email')}
+				bind:value={new_email}
+				id="new_email"
+				class="block mb-2 input input-bordered w-full max-w-xs"
+			/>
+		</div>
+		<div>
+			<button class="py-2 px-4 btn btn-primary">{$t('settings.email_change')}</button>
+		</div>
+	</form>
 </div>
 
 <div class="flex flex-col items-center mt-4">
@@ -213,10 +266,11 @@
 	<p>
 		{$t('adventures.visited_region_check_desc')}
 	</p>
+	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
+
 	<button class="btn btn-neutral mt-2 mb-2" on:click={checkVisitedRegions}
 		>{$t('adventures.update_visited_regions')}</button
 	>
-	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
 </div>
 <!-- 
 <div class="flex flex-col items-center mt-4">
