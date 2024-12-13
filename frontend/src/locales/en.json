@@ -211,6 +211,8 @@
 		"day": "Day",
 		"itineary_by_date": "Itinerary by Date",
 		"nothing_planned": "Nothing planned for this day. Enjoy the journey!",
+		"copied_to_clipboard": "Copied to clipboard!",
+		"copy_failed": "Copy failed",
 		"days": "days",
 		"activities": {
 			"general": "General 🌍",

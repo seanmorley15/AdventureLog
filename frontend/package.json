@@ -23,6 +23,7 @@
 		"@sveltejs/vite-plugin-svelte": "^3.1.1",
 		"@tailwindcss/typography": "^0.5.13",
 		"@types/node": "^22.5.4",
+		"@types/qrcode": "^1.5.5",
 		"autoprefixer": "^10.4.19",
 		"daisyui": "^4.12.6",
 		"postcss": "^8.4.38",
@@ -39,6 +40,7 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
+		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
 	}

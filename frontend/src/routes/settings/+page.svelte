@@ -6,6 +6,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
+	import TotpModal from '$lib/components/TOTPModal.svelte';
 
 	export let data;
 	let user: User;
@@ -16,6 +17,8 @@
 	}
 
 	let new_email: string = '';
+
+	let is2FAModalOpen: boolean = false;
 
 	onMount(async () => {
 		if (browser) {
@@ -124,7 +127,30 @@
 			addToast('error', $t('settings.email_set_primary_error'));
 		}
 	}
+
+	async function disableMfa() {
+		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
+			method: 'DELETE'
+		});
+		if (res.ok) {
+			addToast('success', '2FA disabled');
+			data.props.authenticators = false;
+		} else {
+			if (res.status == 401) {
+				addToast('error', 'Logout and back in to refresh your session and try again.');
+			}
+			addToast('error', $t('settings.generic_error'));
+		}
+	}
 </script>
+
+{#if is2FAModalOpen}
+	<TotpModal
+		user={data.user}
+		on:close={() => (is2FAModalOpen = false)}
+		bind:is_enabled={data.props.authenticators}
+	/>
+{/if}
 
 <h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.settings_page')}</h1>
 
@@ -284,14 +310,14 @@
 
 <div class="flex justify-center mb-4">
 	<div>
-		{#if data.props.authenticators.length === 0}
+		{#if !data.props.authenticators}
 			<p>MFA not enabled</p>
+			<button class="btn btn-primary mt-2" on:click={() => (is2FAModalOpen = true)}
+				>Enable MFA</button
+			>
+		{:else}
+			<button class="btn btn-warning mt-2" on:click={disableMfa}>Disable MFA</button>
 		{/if}
-		{#each data.props.authenticators as authenticator}
-			<p class="mb-2">
-				{authenticator.type} - {authenticator.created_at}
-			</p>
-		{/each}
 	</div>
 </div>
 

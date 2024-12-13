@@ -54,7 +54,7 @@ export const load: PageServerLoad = async (event) => {
 		}
 	);
 	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
-	let authenticators = mfaAuthenticatorResponse.data;
+	let authenticators = (mfaAuthenticatorResponse.data.length > 0) as boolean;
 
 	return {
 		props: {
