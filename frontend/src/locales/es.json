@@ -29,7 +29,8 @@
     "my_tags": "Mis etiquetas",
     "tag": "Etiqueta",
     "language_selection": "Idioma",
-    "support": "Apoyo"
+    "support": "Apoyo",
+    "calendar": "Calendario"
   },
   "about": {
     "about": "Acerca de",
@@ -261,7 +262,8 @@
     "registration_disabled": "El registro está actualmente deshabilitado.",
     "profile_picture": "Foto de perfil",
     "public_profile": "Perfil público",
-    "public_tooltip": "Con un perfil público, los usuarios pueden compartir colecciones con usted y ver su perfil en la página de usuarios."
+    "public_tooltip": "Con un perfil público, los usuarios pueden compartir colecciones con usted y ver su perfil en la página de usuarios.",
+    "email_required": "Se requiere correo electrónico"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."
@@ -295,7 +297,23 @@
     "photo_by": "Foto por",
     "change_password_error": "No se puede cambiar la contraseña. \nContraseña actual no válida o contraseña nueva no válida.",
     "current_password": "Contraseña actual",
-    "password_change_lopout_warning": "Se cerrará su sesión después de cambiar su contraseña."
+    "password_change_lopout_warning": "Se cerrará su sesión después de cambiar su contraseña.",
+    "generic_error": "Se produjo un error al procesar su solicitud.",
+    "email_added": "¡Correo electrónico agregado exitosamente!",
+    "email_added_error": "Error al agregar correo electrónico",
+    "email_removed": "¡El correo electrónico se eliminó correctamente!",
+    "email_removed_error": "Error al eliminar el correo electrónico",
+    "email_set_primary": "¡El correo electrónico se configuró como principal correctamente!",
+    "email_set_primary_error": "Error al configurar el correo electrónico como principal",
+    "make_primary": "Hacer primario",
+    "no_emai_set": "No hay correo electrónico configurado",
+    "not_verified": "No verificado",
+    "primary": "Primario",
+    "verified": "Verificado",
+    "verify": "Verificar",
+    "verify_email_error": "Error al verificar el correo electrónico. \nInténtalo de nuevo en unos minutos.",
+    "verify_email_success": "¡La verificación por correo electrónico se envió correctamente!",
+    "error_change_password": "Error al cambiar la contraseña. \nPor favor verifique su contraseña actual e inténtelo nuevamente."
   },
   "checklist": {
     "add_item": "Agregar artículo",

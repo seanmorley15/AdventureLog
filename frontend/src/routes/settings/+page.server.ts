@@ -5,6 +5,17 @@ import type { User } from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
+type MFAAuthenticatorResponse = {
+	status: number;
+	data: {
+		type: string;
+		created_at: number;
+		last_used_at: number | null;
+		total_code_count?: number;
+		unused_code_count?: number;
+	}[];
+};
+
 export const load: PageServerLoad = async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/');
@@ -34,10 +45,22 @@ export const load: PageServerLoad = async (event) => {
 		return redirect(302, '/');
 	}
 
+	let mfaAuthenticatorFetch = await fetch(
+		`${endpoint}/_allauth/browser/v1/account/authenticators`,
+		{
+			headers: {
+				Cookie: `sessionid=${sessionId}`
+			}
+		}
+	);
+	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
+	let authenticators = mfaAuthenticatorResponse.data;
+
 	return {
 		props: {
 			user,
-			emails
+			emails,
+			authenticators
 		}
 	};
 };
@@ -129,7 +152,7 @@ export const actions: Actions = {
 			return { success: true };
 		} catch (error) {
 			console.error('Error:', error);
-			return { error: 'An error occurred while processing your request.' };
+			return { error: 'settings.generic_error' };
 		}
 	},
 	changePassword: async (event) => {
@@ -148,10 +171,10 @@ export const actions: Actions = {
 		const current_password = formData.get('current_password') as string | null | undefined;
 
 		if (password1 !== password2) {
-			return fail(400, { message: 'Passwords do not match' });
+			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 		if (!current_password) {
-			return fail(400, { message: 'Current password is required' });
+			return fail(400, { message: 'settings.password_is_required' });
 		}
 
 		let csrfToken = await fetchCSRFToken();
@@ -169,13 +192,7 @@ export const actions: Actions = {
 			})
 		});
 		if (!res.ok) {
-			let error_message = await res.text();
-			if (res.status === 400) {
-				// get the message key of the object
-				// {"status": 400, "errors": [{"message": "Please type your current password.", "code": "enter_current_password", "param": "current_password"}]}
-				error_message = JSON.parse(error_message).errors[0].message;
-			}
-			return fail(res.status, { message: error_message });
+			return fail(res.status, { message: 'settings.error_change_password' });
 		}
 		return { success: true };
 	},
@@ -190,7 +207,7 @@ export const actions: Actions = {
 		const formData = await event.request.formData();
 		const new_email = formData.get('new_email') as string | null | undefined;
 		if (!new_email) {
-			return fail(400, { message: 'Email is required' });
+			return fail(400, { message: 'auth.email_required' });
 		} else {
 			let csrfToken = await fetchCSRFToken();
 			let res = await fetch(`${endpoint}/auth/change-email/`, {

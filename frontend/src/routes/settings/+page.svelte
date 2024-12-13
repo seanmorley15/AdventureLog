@@ -62,10 +62,10 @@
 			body: JSON.stringify({ email: email.email })
 		});
 		if (res.ok) {
-			addToast('success', 'Email removed');
+			addToast('success', $t('settings.email_removed'));
 			emails = emails.filter((e) => e.email !== email.email);
 		} else {
-			addToast('error', 'Error removing email');
+			addToast('error', $t('settings.email_removed_error'));
 		}
 	}
 
@@ -78,9 +78,9 @@
 			body: JSON.stringify({ email: email.email })
 		});
 		if (res.ok) {
-			addToast('success', 'Email sent to verify');
+			addToast('success', $t('settings.verify_email_success'));
 		} else {
-			addToast('error', 'Error verifying email. Try again in a few minutes.');
+			addToast('error', $t('settings.verify_email_error'));
 		}
 	}
 
@@ -93,11 +93,11 @@
 			body: JSON.stringify({ email: new_email })
 		});
 		if (res.ok) {
-			addToast('success', 'Email added');
+			addToast('success', $t('settings.email_added'));
 			emails = [...emails, { email: new_email, verified: false, primary: false }];
 			new_email = '';
 		} else {
-			addToast('error', 'Error adding email');
+			addToast('error', $t('settings.email_added_error'));
 		}
 	}
 
@@ -110,7 +110,7 @@
 			body: JSON.stringify({ email: email.email, primary: true })
 		});
 		if (res.ok) {
-			addToast('success', 'Email set as primary');
+			addToast('success', $t('settings.email_set_primary'));
 			// remove primary from all other emails and set this one as primary
 			emails = emails.map((e) => {
 				if (e.email === email.email) {
@@ -121,7 +121,7 @@
 				return e;
 			});
 		} else {
-			addToast('error', 'Error setting email as primary');
+			addToast('error', $t('settings.email_set_primary_error'));
 		}
 	}
 </script>
@@ -161,14 +161,6 @@
 			id="last_name"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/><br />
-		<!-- <label for="first_name">Email</label>
-		<input
-			type="email"
-			bind:value={user.email}
-			name="email"
-			id="email"
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/><br /> -->
 		<label for="profilePicture">{$t('auth.profile_picture')}</label>
 		<input
 			type="file"
@@ -197,7 +189,7 @@
 
 {#if $page.form?.message}
 	<div class="text-center text-error mt-4">
-		{$page.form?.message}
+		{$t($page.form.message)}
 	</div>
 {/if}
 
@@ -242,30 +234,30 @@
 			<p class="mb-2">
 				{email.email}
 				{#if email.verified}
-					<div class="badge badge-success">Verified</div>
+					<div class="badge badge-success">{$t('settings.verified')}</div>
 				{:else}
-					<div class="badge badge-error">Not Verified</div>
+					<div class="badge badge-error">{$t('settings.not_verified')}</div>
 				{/if}
 				{#if email.primary}
-					<div class="badge badge-primary">Primary</div>
+					<div class="badge badge-primary">{$t('settings.primary')}</div>
 				{/if}
 				{#if !email.verified}
 					<button class="btn btn-sm btn-secondary ml-2" on:click={() => verifyEmail(email)}
-						>Verify</button
+						>{$t('settings.verify')}</button
 					>
 				{/if}
 				{#if !email.primary}
 					<button class="btn btn-sm btn-secondary ml-2" on:click={() => primaryEmail(email)}
-						>Make Primary</button
+						>{$t('settings.make_primary')}</button
 					>
 				{/if}
 				<button class="btn btn-sm btn-warning ml-2" on:click={() => removeEmail(email)}
-					>Remove</button
+					>{$t('adventures.remove')}</button
 				>
 			</p>
 		{/each}
 		{#if emails.length === 0}
-			<p>No emails</p>
+			<p>{$t('settings.no_emai_set')}</p>
 		{/if}
 	</div>
 </div>
@@ -283,9 +275,24 @@
 			/>
 		</div>
 		<div>
-			<button class="py-2 px-4 btn btn-primary">{$t('settings.email_change')}</button>
+			<button class="py-2 px-4 mb-4 btn btn-primary">{$t('settings.email_change')}</button>
 		</div>
 	</form>
+</div>
+
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Multi-factor Authentication Settings</h1>
+
+<div class="flex justify-center mb-4">
+	<div>
+		{#if data.props.authenticators.length === 0}
+			<p>MFA not enabled</p>
+		{/if}
+		{#each data.props.authenticators as authenticator}
+			<p class="mb-2">
+				{authenticator.type} - {authenticator.created_at}
+			</p>
+		{/each}
+	</div>
 </div>
 
 <div class="flex flex-col items-center mt-4">
@@ -301,12 +308,6 @@
 		>{$t('adventures.update_visited_regions')}</button
 	>
 </div>
-<!-- 
-<div class="flex flex-col items-center mt-4">
-	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
-	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
-	<p>This may take a few seconds...</p>
-</div> -->
 
 <small class="text-center"
 	><b>For Debug Use:</b> UUID={user.uuid} | Staff user: {user.is_staff}</small

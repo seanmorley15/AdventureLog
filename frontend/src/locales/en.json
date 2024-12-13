@@ -262,7 +262,8 @@
 		"registration_disabled": "Registration is currently disabled.",
 		"profile_picture": "Profile Picture",
 		"public_profile": "Public Profile",
-		"public_tooltip": "With a public profile, users can share collections with you and view your profile on the users page."
+		"public_tooltip": "With a public profile, users can share collections with you and view your profile on the users page.",
+		"email_required": "Email is required"
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles."
@@ -296,7 +297,23 @@
 		"join_discord_desc": "to share your own photos. Post them in the #travel-share channel.",
 		"current_password": "Current Password",
 		"change_password_error": "Unable to change password. Invalid current password or invalid new password.",
-		"password_change_lopout_warning": "You will be logged out after changing your password."
+		"password_change_lopout_warning": "You will be logged out after changing your password.",
+		"generic_error": "An error occurred while processing your request.",
+		"email_removed": "Email removed successfully!",
+		"email_removed_error": "Error removing email",
+		"verify_email_success": "Email verification sent successfully!",
+		"verify_email_error": "Error verifying email. Try again in a few minutes.",
+		"email_added": "Email added successfully!",
+		"email_added_error": "Error adding email",
+		"email_set_primary": "Email set as primary successfully!",
+		"email_set_primary_error": "Error setting email as primary",
+		"verified": "Verified",
+		"primary": "Primary",
+		"not_verified": "Not Verified",
+		"make_primary": "Make Primary",
+		"verify": "Verify",
+		"no_emai_set": "No email set",
+		"error_change_password": "Error changing password. Please check your current password and try again."
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",
