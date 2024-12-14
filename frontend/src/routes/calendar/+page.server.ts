@@ -30,10 +30,18 @@ export const load = (async (event) => {
 		});
 	});
 
+	let icsFetch = await fetch(`${endpoint}/api/ics-calendar/generate`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	let ics_calendar = await icsFetch.text();
+
 	return {
 		props: {
 			adventures,
-			dates
+			dates,
+			ics_calendar
 		}
 	};
 }) satisfies PageServerLoad;

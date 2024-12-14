@@ -14,6 +14,10 @@
 	let adventures = data.props.adventures;
 	let dates = data.props.dates;
 
+	let icsCalendar = data.props.ics_calendar;
+	// turn the ics calendar into a data URL
+	let icsCalendarDataUrl = URL.createObjectURL(new Blob([icsCalendar], { type: 'text/calendar' }));
+
 	let plugins = [TimeGrid, DayGrid];
 	let options = {
 		view: 'dayGridMonth',
@@ -24,3 +28,10 @@
 <h1 class="text-center text-2xl font-bold">{$t('adventures.adventure_calendar')}</h1>
 
 <Calendar {plugins} {options} />
+
+<!-- download calendar -->
+<div class="flex items-center justify-center mt-4">
+	<a href={icsCalendarDataUrl} download="adventures.ics" class="btn btn-primary"
+		>Download Calendar</a
+	>
+</div>
