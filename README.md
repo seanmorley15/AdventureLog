@@ -4,10 +4,9 @@
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
 
-- **[Documentation](https://adventurelog.app)**  
-- **[Demo](https://demo.adventurelog.app)**  
-- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**  
-
+- **[Documentation](https://adventurelog.app)**
+- **[Demo](https://demo.adventurelog.app)**
+- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**
 
 # Table of Contents
 
@@ -59,18 +58,18 @@ Here is a summary of the configuration options available in the `docker-compose.
 
 ### Backend Container (server)
 
-| Name                    | Required | Description                                                                                                                                 | Default Value           |
-| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `PGHOST`                | Yes      | Databse host.                                                                                                                               | db                      |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                   | database                |
-| `PGUSER`                | Yes      | Database user.                                                                                                                              | adventure               |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                          | changeme123             |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                           | admin                   |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                | admin                   |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                       | admin@example.com       |
-| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls. | 'http://localhost:8016' |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                          | http://localhost:8016   |
-| `FRONTEND_URL`          | Yes      | This is the publicly accessible url to the **frontend** container. This link should be accessible for all users. Used for email generation. | 'http://localhost:8015' |
+| Name                    | Required | Description                                                                                                                                 | Default Value         |
+| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| `PGHOST`                | Yes      | Databse host.                                                                                                                               | db                    |
+| `PGDATABASE`            | Yes      | Database.                                                                                                                                   | database              |
+| `PGUSER`                | Yes      | Database user.                                                                                                                              | adventure             |
+| `PGPASSWORD`            | Yes      | Database password.                                                                                                                          | changeme123           |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                           | admin                 |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                | admin                 |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                       | admin@example.com     |
+| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls. | http://localhost:8016 |
+| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                          | http://localhost:8016 |
+| `FRONTEND_URL`          | Yes      | This is the publicly accessible url to the **frontend** container. This link should be accessible for all users. Used for email generation. | http://localhost:8015 |
 
 ## Running the Containers
 
