@@ -94,7 +94,7 @@
 				</div>
 
 				{#if $page.form?.message}
-					<div class="text-center text-error mt-4">{$page.form?.message}</div>
+					<div class="text-center text-error mt-4">{$t($page.form?.message)}</div>
 				{/if}
 			{:else}
 				<div class="flex justify-center">

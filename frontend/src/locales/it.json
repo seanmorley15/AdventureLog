@@ -190,7 +190,8 @@
     "set_to_pin": "Imposta su Blocca",
     "category_fetch_error": "Errore durante il recupero delle categorie",
     "copied_to_clipboard": "Copiato negli appunti!",
-    "copy_failed": "Copia non riuscita"
+    "copy_failed": "Copia non riuscita",
+    "adventure_calendar": "Calendario delle avventure"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -333,7 +334,13 @@
     "verified": "Verificato",
     "verify_email_success": "Verifica email inviata con successo!",
     "verify": "Verificare",
-    "verify_email_error": "Errore durante la verifica dell'e-mail. \nRiprova tra qualche minuto."
+    "verify_email_error": "Errore durante la verifica dell'e-mail. \nRiprova tra qualche minuto.",
+    "add_email_blocked": "Non è possibile aggiungere un indirizzo email a un account protetto dall'autenticazione a due fattori.",
+    "required": "Questo campo è obbligatorio",
+    "csrf_failed": "Impossibile recuperare il token CSRF",
+    "duplicate_email": "Questo indirizzo email è già in uso.",
+    "email_taken": "Questo indirizzo email è già in uso.",
+    "username_taken": "Questo nome utente è già in uso."
   },
   "checklist": {
     "add_item": "Aggiungi articolo",
@@ -453,5 +460,14 @@
     "no_categories_found": "Nessuna categoria trovata.",
     "select_category": "Seleziona Categoria",
     "update_after_refresh": "Le carte avventura verranno aggiornate una volta aggiornata la pagina."
+  },
+  "dashboard": {
+    "add_some": "Perché non iniziare a pianificare la tua prossima avventura? \nPuoi aggiungere una nuova avventura facendo clic sul pulsante in basso.",
+    "countries_visited": "Paesi visitati",
+    "no_recent_adventures": "Nessuna avventura recente?",
+    "recent_adventures": "Avventure recenti",
+    "total_adventures": "Avventure totali",
+    "total_visited_regions": "Totale regioni visitate",
+    "welcome_back": "Bentornato"
   }
 }

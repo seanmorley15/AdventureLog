@@ -190,7 +190,8 @@
     "set_to_pin": "设置为固定",
     "category_fetch_error": "获取类别时出错",
     "copied_to_clipboard": "已复制到剪贴板！",
-    "copy_failed": "复制失败"
+    "copy_failed": "复制失败",
+    "adventure_calendar": "冒险日历"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -333,7 +334,13 @@
     "verified": "已验证",
     "verify": "核实",
     "verify_email_error": "验证电子邮件时出错。\n几分钟后重试。",
-    "verify_email_success": "邮箱验证发送成功！"
+    "verify_email_success": "邮箱验证发送成功！",
+    "add_email_blocked": "您无法将电子邮件地址添加到受双因素身份验证保护的帐户。",
+    "required": "此字段是必需的",
+    "csrf_failed": "获取 CSRF 令牌失败",
+    "duplicate_email": "该电子邮件地址已被使用。",
+    "email_taken": "该电子邮件地址已被使用。",
+    "username_taken": "该用户名已被使用。"
   },
   "checklist": {
     "add_item": "添加项目",
@@ -453,5 +460,14 @@
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
     "update_after_refresh": "刷新页面后，冒险卡将更新。"
+  },
+  "dashboard": {
+    "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",
+    "countries_visited": "访问国家",
+    "no_recent_adventures": "最近没有冒险吗？",
+    "recent_adventures": "最近的冒险",
+    "total_adventures": "全面冒险",
+    "total_visited_regions": "总访问地区",
+    "welcome_back": "欢迎回来"
   }
 }

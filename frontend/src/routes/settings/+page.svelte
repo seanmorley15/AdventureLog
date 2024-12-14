@@ -100,7 +100,9 @@
 			emails = [...emails, { email: new_email, verified: false, primary: false }];
 			new_email = '';
 		} else {
-			addToast('error', $t('settings.email_added_error'));
+			let error = await res.json();
+			let error_code = error.errors[0].code;
+			addToast('error', $t(`settings.${error_code}`) || $t('settings.generic_error'));
 		}
 	}
 

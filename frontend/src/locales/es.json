@@ -237,7 +237,8 @@
     "set_to_pin": "Establecer en Fijar",
     "category_fetch_error": "Error al buscar categorías",
     "copied_to_clipboard": "¡Copiado al portapapeles!",
-    "copy_failed": "Copia fallida"
+    "copy_failed": "Copia fallida",
+    "adventure_calendar": "Calendario de aventuras"
   },
   "worldtravel": {
     "all": "Todo",
@@ -333,7 +334,13 @@
     "email_verified_success": "Su correo electrónico ha sido verificado. \nAhora puedes iniciar sesión.",
     "invalid_code": "Código MFA no válido",
     "invalid_credentials": "Nombre de usuario o contraseña no válidos",
-    "mfa_required": "Se requiere autenticación multifactor"
+    "mfa_required": "Se requiere autenticación multifactor",
+    "add_email_blocked": "No puede agregar una dirección de correo electrónico a una cuenta protegida por autenticación de dos factores.",
+    "required": "Este campo es obligatorio",
+    "csrf_failed": "No se pudo recuperar el token CSRF",
+    "duplicate_email": "Esta dirección de correo electrónico ya está en uso.",
+    "email_taken": "Esta dirección de correo electrónico ya está en uso.",
+    "username_taken": "Este nombre de usuario ya está en uso."
   },
   "checklist": {
     "add_item": "Agregar artículo",
@@ -453,5 +460,14 @@
     "no_categories_found": "No se encontraron categorías.",
     "select_category": "Seleccionar categoría",
     "update_after_refresh": "Las tarjetas de aventuras se actualizarán una vez que actualices la página."
+  },
+  "dashboard": {
+    "add_some": "¿Por qué no empezar a planificar tu próxima aventura? \nPuedes agregar una nueva aventura haciendo clic en el botón de abajo.",
+    "countries_visited": "Países visitados",
+    "no_recent_adventures": "¿Sin aventuras recientes?",
+    "recent_adventures": "Aventuras recientes",
+    "total_adventures": "Aventuras totales",
+    "total_visited_regions": "Total de regiones visitadas",
+    "welcome_back": "Bienvenido de nuevo"
   }
 }

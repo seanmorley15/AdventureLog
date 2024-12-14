@@ -7,6 +7,7 @@
 	import TimeGrid from '@event-calendar/time-grid';
 	// @ts-ignore
 	import DayGrid from '@event-calendar/day-grid';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 
@@ -20,6 +21,6 @@
 	};
 </script>
 
-<h1 class="text-center text-2xl font-bold">Adventure Calendar</h1>
+<h1 class="text-center text-2xl font-bold">{$t('adventures.adventure_calendar')}</h1>
 
 <Calendar {plugins} {options} />

@@ -237,7 +237,8 @@
       "other": "Inne"
     },
     "copied_to_clipboard": "Skopiowano do schowka!",
-    "copy_failed": "Kopiowanie nie powiodło się"
+    "copy_failed": "Kopiowanie nie powiodło się",
+    "adventure_calendar": "Kalendarz przygód"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -333,7 +334,13 @@
     "verified": "Zweryfikowano",
     "verify": "Zweryfikować",
     "verify_email_error": "Błąd podczas weryfikacji adresu e-mail. \nSpróbuj ponownie za kilka minut.",
-    "verify_email_success": "Weryfikacja e-mailowa została wysłana pomyślnie!"
+    "verify_email_success": "Weryfikacja e-mailowa została wysłana pomyślnie!",
+    "add_email_blocked": "Nie można dodać adresu e-mail do konta chronionego uwierzytelnianiem dwuskładnikowym.",
+    "required": "To pole jest wymagane",
+    "csrf_failed": "Nie udało się pobrać tokena CSRF",
+    "duplicate_email": "Ten adres e-mail jest już używany.",
+    "email_taken": "Ten adres e-mail jest już używany.",
+    "username_taken": "Ta nazwa użytkownika jest już używana."
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -453,5 +460,14 @@
     "update_after_refresh": "Karty podróży zostaną zaktualizowane po odświeżeniu strony.",
     "select_category": "Wybierz kategorię",
     "category_name": "Nazwa kategorii"
+  },
+  "dashboard": {
+    "add_some": "Dlaczego nie zacząć planować kolejnej przygody? \nMożesz dodać nową przygodę, klikając przycisk poniżej.",
+    "countries_visited": "Odwiedzone kraje",
+    "no_recent_adventures": "Brak nowych przygód?",
+    "recent_adventures": "Ostatnie przygody",
+    "total_adventures": "Totalne przygody",
+    "total_visited_regions": "Łączna liczba odwiedzonych regionów",
+    "welcome_back": "Witamy z powrotem"
   }
 }

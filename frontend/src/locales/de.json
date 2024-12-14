@@ -190,7 +190,8 @@
     "set_to_pin": "Auf „Anpinnen“ setzen",
     "category_fetch_error": "Fehler beim Abrufen der Kategorien",
     "copied_to_clipboard": "In die Zwischenablage kopiert!",
-    "copy_failed": "Das Kopieren ist fehlgeschlagen"
+    "copy_failed": "Das Kopieren ist fehlgeschlagen",
+    "adventure_calendar": "Abenteuerkalender"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -333,7 +334,13 @@
     "verified": "Verifiziert",
     "verify": "Verifizieren",
     "verify_email_error": "Fehler bei der E-Mail-Bestätigung. \nVersuchen Sie es in ein paar Minuten noch einmal.",
-    "verify_email_success": "E-Mail-Bestätigung erfolgreich gesendet!"
+    "verify_email_success": "E-Mail-Bestätigung erfolgreich gesendet!",
+    "add_email_blocked": "Sie können keine E-Mail-Adresse zu einem Konto hinzufügen, das durch die Zwei-Faktor-Authentifizierung geschützt ist.",
+    "required": "Dieses Feld ist erforderlich",
+    "csrf_failed": "CSRF-Token konnte nicht abgerufen werden",
+    "duplicate_email": "Diese E-Mail-Adresse wird bereits verwendet.",
+    "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
+    "username_taken": "Dieser Benutzername wird bereits verwendet."
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",
@@ -453,5 +460,14 @@
     "no_categories_found": "Keine Kategorien gefunden.",
     "select_category": "Kategorie auswählen",
     "update_after_refresh": "Die Abenteuerkarten werden aktualisiert, sobald Sie die Seite aktualisieren."
+  },
+  "dashboard": {
+    "add_some": "Warum beginnen Sie nicht mit der Planung Ihres nächsten Abenteuers? \nSie können ein neues Abenteuer hinzufügen, indem Sie auf die Schaltfläche unten klicken.",
+    "countries_visited": "Besuchte Länder",
+    "no_recent_adventures": "Keine aktuellen Abenteuer?",
+    "recent_adventures": "Aktuelle Abenteuer",
+    "total_adventures": "Totale Abenteuer",
+    "total_visited_regions": "Insgesamt besuchte Regionen",
+    "welcome_back": "Willkommen zurück"
   }
 }

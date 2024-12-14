@@ -190,7 +190,8 @@
     "set_to_pin": "Stel in op pin",
     "category_fetch_error": "Fout bij ophalen van categorieën",
     "copied_to_clipboard": "Gekopieerd naar klembord!",
-    "copy_failed": "Kopiëren mislukt"
+    "copy_failed": "Kopiëren mislukt",
+    "adventure_calendar": "Avonturenkalender"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -333,7 +334,13 @@
     "verified": "Geverifieerd",
     "verify": "Verifiëren",
     "verify_email_error": "Fout bij het verifiëren van e-mailadres. \nProbeer het over een paar minuten opnieuw.",
-    "verify_email_success": "E-mailverificatie succesvol verzonden!"
+    "verify_email_success": "E-mailverificatie succesvol verzonden!",
+    "add_email_blocked": "U kunt geen e-mailadres toevoegen aan een account dat is beveiligd met tweefactorauthenticatie.",
+    "required": "Dit veld is verplicht",
+    "csrf_failed": "Kan CSRF-token niet ophalen",
+    "duplicate_email": "Dit e-mailadres is al in gebruik.",
+    "email_taken": "Dit e-mailadres is al in gebruik.",
+    "username_taken": "Deze gebruikersnaam is al in gebruik."
   },
   "checklist": {
     "add_item": "Artikel toevoegen",
@@ -453,5 +460,14 @@
     "no_categories_found": "Geen categorieën gevonden.",
     "select_category": "Selecteer categorie",
     "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt."
+  },
+  "dashboard": {
+    "add_some": "Waarom begint u niet met het plannen van uw volgende avontuur? \nJe kunt een nieuw avontuur toevoegen door op de onderstaande knop te klikken.",
+    "countries_visited": "Bezochte landen",
+    "no_recent_adventures": "Geen recente avonturen?",
+    "recent_adventures": "Recente avonturen",
+    "total_adventures": "Totale avonturen",
+    "total_visited_regions": "Totaal bezochte regio's",
+    "welcome_back": "Welkom terug"
   }
 }

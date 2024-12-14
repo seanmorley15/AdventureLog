@@ -190,7 +190,8 @@
     "set_to_pin": "Définir sur Épingler",
     "category_fetch_error": "Erreur lors de la récupération des catégories",
     "copied_to_clipboard": "Copié dans le presse-papier !",
-    "copy_failed": "Échec de la copie"
+    "copy_failed": "Échec de la copie",
+    "adventure_calendar": "Calendrier d'aventure"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -333,7 +334,13 @@
     "verified": "Vérifié",
     "verify": "Vérifier",
     "verify_email_error": "Erreur lors de la vérification de l'e-mail. \nRéessayez dans quelques minutes.",
-    "verify_email_success": "Vérification par e-mail envoyée avec succès !"
+    "verify_email_success": "Vérification par e-mail envoyée avec succès !",
+    "add_email_blocked": "Vous ne pouvez pas ajouter une adresse e-mail à un compte protégé par une authentification à deux facteurs.",
+    "required": "Ce champ est obligatoire",
+    "csrf_failed": "Échec de la récupération du jeton CSRF",
+    "duplicate_email": "Cette adresse e-mail est déjà utilisée.",
+    "email_taken": "Cette adresse e-mail est déjà utilisée.",
+    "username_taken": "Ce nom d'utilisateur est déjà utilisé."
   },
   "checklist": {
     "add_item": "Ajouter un article",
@@ -453,5 +460,14 @@
     "no_categories_found": "Aucune catégorie trouvée.",
     "select_category": "Sélectionnez une catégorie",
     "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page."
+  },
+  "dashboard": {
+    "add_some": "Pourquoi ne pas commencer à planifier votre prochaine aventure ? \nVous pouvez ajouter une nouvelle aventure en cliquant sur le bouton ci-dessous.",
+    "countries_visited": "Pays visités",
+    "no_recent_adventures": "Pas d'aventures récentes ?",
+    "recent_adventures": "Aventures récentes",
+    "total_adventures": "Aventures totales",
+    "total_visited_regions": "Total des régions visitées",
+    "welcome_back": "Content de te revoir"
   }
 }

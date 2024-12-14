@@ -1,22 +1,19 @@
 <script lang="ts">
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
 
 	export let data: PageData;
 
 	const user = data.user;
 	const recentAdventures = data.props.adventures;
 	const stats = data.props.stats;
-	console.log(stats);
-
-	const inspirationQuote = 'The world is a book, and those who do not travel read only one page.';
-	const inspirationImage = 'https://picsum.photos/seed/inspiration/800/400';
 </script>
 
 <div class="container mx-auto p-4">
 	<!-- Welcome Message -->
 	<div class="mb-8">
-		<h1 class="text-4xl font-extrabold">Welcome back, {user?.first_name}!</h1>
+		<h1 class="text-4xl font-extrabold">{$t('dashboard.welcome_back')}, {user?.first_name}!</h1>
 	</div>
 
 	<!-- Stats -->
@@ -36,7 +33,7 @@
 					></path></svg
 				>
 			</div>
-			<div class="stat-title text-neutral-content">Countries Visited</div>
+			<div class="stat-title text-neutral-content">{$t('dashboard.countries_visited')}</div>
 			<div class="stat-value text-primary">{stats.country_count}</div>
 		</div>
 		<div class="stat">
@@ -54,7 +51,7 @@
 					></path></svg
 				>
 			</div>
-			<div class="stat-title text-neutral-content">Total Adventures</div>
+			<div class="stat-title text-neutral-content">{$t('dashboard.total_adventures')}</div>
 			<div class="stat-value text-secondary">{stats.adventure_count}</div>
 		</div>
 		<div class="stat">
@@ -72,32 +69,31 @@
 					></path></svg
 				>
 			</div>
-			<div class="stat-title text-neutral-content">Total Visited Regions</div>
+			<div class="stat-title text-neutral-content">{$t('dashboard.total_visited_regions')}</div>
 			<div class="stat-value text-success">{stats.visited_region_count}</div>
 		</div>
 	</div>
 
 	<!-- Recent Adventures -->
-	<h2 class="text-3xl font-semibold mb-4">Recent Adventures</h2>
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-		{#each recentAdventures as adventure}
-			<AdventureCard {adventure} user={data.user} readOnly />
-		{/each}
-	</div>
-
-	<!-- Inspiration -->
-	<div class="card lg:card-side bg-base-100 shadow-xl mb-8">
-		<figure class="lg:w-1/2">
-			<img src={inspirationImage} alt="Inspiration" class="w-full h-full object-cover" />
-		</figure>
-		<div class="card-body lg:w-1/2">
-			<h2 class="card-title">Get Inspired</h2>
-			<p class="text-lg italic">"{inspirationQuote}"</p>
-			<div class="card-actions justify-end">
-				<button class="btn btn-primary">Plan Your Next Adventure</button>
-			</div>
+	{#if recentAdventures.length > 0}
+		<h2 class="text-3xl font-semibold mb-4">{$t('dashboard.recent_adventures')}</h2>
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+			{#each recentAdventures as adventure}
+				<AdventureCard {adventure} user={data.user} readOnly />
+			{/each}
 		</div>
-	</div>
+	{/if}
+
+	<!-- Inspiration if there are no recent adventures -->
+	{#if recentAdventures.length === 0}
+		<div class="flex flex-col items-center justify-center bg-neutral shadow p-8 mb-8 rounded-lg">
+			<h2 class="text-3xl font-semibold mb-4">{$t('dashboard.no_recent_adventures')}</h2>
+			<p class="text-lg text-center">
+				{$t('dashboard.add_some')}
+			</p>
+			<a href="/adventures" class="btn btn-primary mt-4">{$t('map.add_adventure')}</a>
+		</div>
+	{/if}
 </div>
 
 <svelte:head>

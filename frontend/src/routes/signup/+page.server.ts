@@ -41,11 +41,11 @@ export const actions: Actions = {
 
 		if (!csrfTokenFetch.ok) {
 			event.locals.user = null;
-			return fail(500, { message: 'Failed to fetch CSRF token' });
+			return fail(500, { message: 'settings.csrf_failed' });
 		}
 
 		if (password1 !== password2) {
-			return fail(400, { message: 'Passwords do not match' });
+			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 
 		const tokenPromise = await csrfTokenFetch.json();
@@ -69,7 +69,7 @@ export const actions: Actions = {
 		const loginResponse = await loginFetch.json();
 
 		if (!loginFetch.ok) {
-			return fail(loginFetch.status, loginResponse);
+			return fail(loginFetch.status, { message: loginResponse.errors[0].code });
 		} else {
 			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
 

@@ -208,6 +208,7 @@
 		"notes": "Notes",
 		"checklists": "Checklists",
 		"transportations": "Transportations",
+		"adventure_calendar": "Adventure Calendar",
 		"day": "Day",
 		"itineary_by_date": "Itinerary by Date",
 		"nothing_planned": "Nothing planned for this day. Enjoy the journey!",
@@ -333,7 +334,13 @@
 		"email_verified_erorr_desc": "Your email could not be verified. Please try again.",
 		"invalid_code": "Invalid MFA code",
 		"invalid_credentials": "Invalid username or password",
-		"mfa_required": "Multi-factor authentication is required"
+		"mfa_required": "Multi-factor authentication is required",
+		"required": "This field is required",
+		"add_email_blocked": "You cannot add an email address to an account protected by two-factor authentication.",
+		"duplicate_email": "This email address is already in use.",
+		"csrf_failed": "Failed to fetch CSRF token",
+		"email_taken": "This email address is already in use.",
+		"username_taken": "This username is already in use."
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",
@@ -453,5 +460,14 @@
 		"update_after_refresh": "The adventure cards will be updated once you refresh the page.",
 		"select_category": "Select Category",
 		"category_name": "Category Name"
+	},
+	"dashboard": {
+		"welcome_back": "Welcome back",
+		"countries_visited": "Countries Visited",
+		"total_adventures": "Total Adventures",
+		"total_visited_regions": "Total Visited Regions",
+		"recent_adventures": "Recent Adventures",
+		"no_recent_adventures": "No recent adventures?",
+		"add_some": "Why not start planning your next adventure? You can add a new adventure by clicking the button below."
 	}
 }

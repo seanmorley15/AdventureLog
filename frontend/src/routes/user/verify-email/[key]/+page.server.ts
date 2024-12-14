@@ -21,13 +21,14 @@ export const load = (async (event) => {
 
 		body: JSON.stringify({ key: key })
 	});
-	if (!verifyFetch.ok) {
+	if (verifyFetch.ok || verifyFetch.status == 401) {
+		return {
+			verified: true
+		};
+	} else {
 		let error_message = await verifyFetch.json();
 		console.error(error_message);
 		console.error('Failed to verify email');
 		return { status: 404 };
 	}
-	return {
-		verified: true
-	};
 }) satisfies PageServerLoad;

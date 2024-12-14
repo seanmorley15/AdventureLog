@@ -38,10 +38,10 @@ services:
       - DJANGO_ADMIN_USERNAME=admin
       - DJANGO_ADMIN_PASSWORD=admin
       - DJANGO_ADMIN_EMAIL=admin@example.com
-      - PUBLIC_URL='http://localhost:8016' # Match the outward port, used for the creation of image urls
+      - PUBLIC_URL=http://localhost:8016 # Match the outward port, used for the creation of image urls
       - CSRF_TRUSTED_ORIGINS=http://localhost:8016,http://localhost:8015 # Comma separated list of trusted origins for CSRF
       - DEBUG=False
-      - FRONTEND_URL='http://localhost:8015' # Used for email generation. This should be the url of the frontend
+      - FRONTEND_URL=http://localhost:8015 # Used for email generation. This should be the url of the frontend
     ports:
       - "8016:80"
     depends_on:

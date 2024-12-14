@@ -190,7 +190,8 @@
     "set_to_pin": "Ställ in på Pin",
     "category_fetch_error": "Det gick inte att hämta kategorier",
     "copied_to_clipboard": "Kopierat till urklipp!",
-    "copy_failed": "Kopieringen misslyckades"
+    "copy_failed": "Kopieringen misslyckades",
+    "adventure_calendar": "Äventyrskalender"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -333,7 +334,13 @@
     "verified": "Verifierad",
     "verify": "Kontrollera",
     "verify_email_error": "Fel vid verifiering av e-post. \nFörsök igen om några minuter.",
-    "verify_email_success": "E-postverifiering har skickats!"
+    "verify_email_success": "E-postverifiering har skickats!",
+    "add_email_blocked": "Du kan inte lägga till en e-postadress till ett konto som skyddas av tvåfaktorsautentisering.",
+    "required": "Detta fält är obligatoriskt",
+    "csrf_failed": "Det gick inte att hämta CSRF-token",
+    "duplicate_email": "Den här e-postadressen används redan.",
+    "email_taken": "Den här e-postadressen används redan.",
+    "username_taken": "Detta användarnamn används redan."
   },
   "checklist": {
     "add_item": "Lägg till objekt",
@@ -453,5 +460,14 @@
     "no_categories_found": "Inga kategorier hittades.",
     "select_category": "Välj Kategori",
     "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan."
+  },
+  "dashboard": {
+    "add_some": "Varför inte börja planera ditt nästa äventyr? \nDu kan lägga till ett nytt äventyr genom att klicka på knappen nedan.",
+    "countries_visited": "Besökta länder",
+    "no_recent_adventures": "Inga nya äventyr?",
+    "recent_adventures": "Senaste äventyr",
+    "total_adventures": "Totala äventyr",
+    "total_visited_regions": "Totalt antal besökta regioner",
+    "welcome_back": "Välkommen tillbaka"
   }
 }
