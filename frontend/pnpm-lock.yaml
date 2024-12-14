@@ -11,6 +11,9 @@ importers:
       '@lukulent/svelte-umami':
         specifier: ^0.0.3
         version: 0.0.3(svelte@4.2.19)
+      emoji-picker-element:
+        specifier: ^1.26.0
+        version: 1.26.0
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -984,6 +987,9 @@ packages:
 
   electron-to-chromium@1.4.810:
     resolution: {integrity: sha512-Kaxhu4T7SJGpRQx99tq216gCq2nMxJo+uuT6uzz9l8TVN2stL7M06MIIXAtr9jsrLs2Glflgf2vMQRepxawOdQ==}
+
+  emoji-picker-element@1.26.0:
+    resolution: {integrity: sha512-IcffFc+LNymYScmMuxOJooZulOCOACGc1Xvj+s7XeKqpc+0EoZfWrV9o4rBjEiuM7XjsgcEjD+m5DHg0aIfnnA==}
 
   emoji-regex@8.0.0:
     resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
@@ -2884,6 +2890,8 @@ snapshots:
   eastasianwidth@0.2.0: {}
 
   electron-to-chromium@1.4.810: {}
+
+  emoji-picker-element@1.26.0: {}
 
   emoji-regex@8.0.0: {}
 
