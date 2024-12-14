@@ -191,7 +191,10 @@
     "category_fetch_error": "Errore durante il recupero delle categorie",
     "copied_to_clipboard": "Copiato negli appunti!",
     "copy_failed": "Copia non riuscita",
-    "adventure_calendar": "Calendario delle avventure"
+    "adventure_calendar": "Calendario delle avventure",
+    "emoji_picker": "Selettore di emoji",
+    "hide": "Nascondere",
+    "show": "Spettacolo"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -255,7 +258,10 @@
     "profile_picture": "Immagine del profilo",
     "public_profile": "Profilo pubblico",
     "public_tooltip": "Con un profilo pubblico, gli utenti possono condividere raccolte con te e visualizzare il tuo profilo nella pagina degli utenti.",
-    "email_required": "L'e-mail è obbligatoria"
+    "email_required": "L'e-mail è obbligatoria",
+    "both_passwords_required": "Sono necessarie entrambe le password",
+    "new_password": "Nuova parola d'ordine",
+    "reset_failed": "Impossibile reimpostare la password"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."

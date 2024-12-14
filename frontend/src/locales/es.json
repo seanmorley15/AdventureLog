@@ -238,7 +238,10 @@
     "category_fetch_error": "Error al buscar categorías",
     "copied_to_clipboard": "¡Copiado al portapapeles!",
     "copy_failed": "Copia fallida",
-    "adventure_calendar": "Calendario de aventuras"
+    "adventure_calendar": "Calendario de aventuras",
+    "emoji_picker": "Selector de emojis",
+    "hide": "Esconder",
+    "show": "Espectáculo"
   },
   "worldtravel": {
     "all": "Todo",
@@ -266,7 +269,10 @@
     "profile_picture": "Foto de perfil",
     "public_profile": "Perfil público",
     "public_tooltip": "Con un perfil público, los usuarios pueden compartir colecciones con usted y ver su perfil en la página de usuarios.",
-    "email_required": "Se requiere correo electrónico"
+    "email_required": "Se requiere correo electrónico",
+    "both_passwords_required": "Se requieren ambas contraseñas",
+    "new_password": "Nueva contraseña",
+    "reset_failed": "No se pudo restablecer la contraseña"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."

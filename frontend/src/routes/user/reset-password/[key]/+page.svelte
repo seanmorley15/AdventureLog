@@ -9,34 +9,40 @@
 
 <h1 class="text-center font-bold text-4xl mb-4">{$t('settings.change_password')}</h1>
 
-<form method="POST" use:enhance>
-	<div class="mb-4">
-		<label for="password" class="block mb-2">{$t('auth.new_password')}</label>
+<form method="POST" use:enhance class="flex flex-col items-center justify-center space-y-4">
+	<div class="w-full max-w-xs">
+		<label for="password" class="label">
+			<span class="label-text">{$t('auth.new_password')}</span>
+		</label>
 		<input
 			type="password"
 			id="password"
 			name="password"
 			required
-			class="w-full p-2 border rounded"
+			class="input input-bordered w-full"
 		/>
 	</div>
-	<div class="mb-4">
-		<label for="confirm_password" class="block mb-2">{$t('auth.confirm_password')}</label>
+
+	<div class="w-full max-w-xs">
+		<label for="confirm_password" class="label">
+			<span class="label-text">{$t('auth.confirm_password')}</span>
+		</label>
 		<input
 			type="password"
 			id="confirm_password"
 			name="confirm_password"
 			required
-			class="w-full p-2 border rounded"
+			class="input input-bordered w-full"
 		/>
 	</div>
-	<button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded"
-		>{$t('auth.reset_password')}</button
-	>
+
+	<button type="submit" class="btn btn-primary">
+		{$t('settings.reset_password')}
+	</button>
 
 	{#if $page.form?.message}
-		<div class="text-center text-error mt-4">
-			{$page.form?.message}
+		<div class="text-error">
+			{$t($page.form?.message)}
 		</div>
 	{/if}
 </form>

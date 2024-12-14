@@ -214,6 +214,9 @@
 		"nothing_planned": "Nothing planned for this day. Enjoy the journey!",
 		"copied_to_clipboard": "Copied to clipboard!",
 		"copy_failed": "Copy failed",
+		"show": "Show",
+		"hide": "Hide",
+		"emoji_picker": "Emoji Picker",
 		"days": "days",
 		"activities": {
 			"general": "General 🌍",
@@ -266,7 +269,10 @@
 		"profile_picture": "Profile Picture",
 		"public_profile": "Public Profile",
 		"public_tooltip": "With a public profile, users can share collections with you and view your profile on the users page.",
-		"email_required": "Email is required"
+		"email_required": "Email is required",
+		"new_password": "New Password",
+		"both_passwords_required": "Both passwords are required",
+		"reset_failed": "Failed to reset password"
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles."

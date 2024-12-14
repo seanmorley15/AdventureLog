@@ -191,7 +191,10 @@
     "category_fetch_error": "Erreur lors de la récupération des catégories",
     "copied_to_clipboard": "Copié dans le presse-papier !",
     "copy_failed": "Échec de la copie",
-    "adventure_calendar": "Calendrier d'aventure"
+    "adventure_calendar": "Calendrier d'aventure",
+    "emoji_picker": "Sélecteur d'émoticônes",
+    "hide": "Cacher",
+    "show": "Montrer"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -255,7 +258,10 @@
     "profile_picture": "Photo de profil",
     "public_profile": "Profil public",
     "public_tooltip": "Avec un profil public, les utilisateurs peuvent partager des collections avec vous et afficher votre profil sur la page des utilisateurs.",
-    "email_required": "L'e-mail est requis"
+    "email_required": "L'e-mail est requis",
+    "both_passwords_required": "Les deux mots de passe sont requis",
+    "new_password": "Nouveau mot de passe",
+    "reset_failed": "Échec de la réinitialisation du mot de passe"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec des profils publics."

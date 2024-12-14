@@ -86,7 +86,8 @@
 						bind:value={new_category.icon}
 					/>
 					<button on:click={toggleEmojiPicker} type="button" class="btn btn-secondary">
-						{isEmojiPickerVisible ? 'Hide' : 'Show'} Emoji Picker
+						{isEmojiPickerVisible ? $t('adventures.hide') : $t('adventures.hide')}
+						{$t('adventures.emoji_picker')}
 					</button>
 					<button on:click={custom_category} type="button" class="btn btn-primary">
 						{$t('adventures.add')}

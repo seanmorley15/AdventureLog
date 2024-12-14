@@ -18,11 +18,11 @@ export const actions: Actions = {
 		const key = event.params.key;
 
 		if (!password || !confirm_password) {
-			return fail(400, { message: 'both_passwords_required' });
+			return fail(400, { message: 'auth.both_passwords_required' });
 		}
 
 		if (password !== confirm_password) {
-			return fail(400, { message: 'passwords_not_match' });
+			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 
 		const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
@@ -47,7 +47,7 @@ export const actions: Actions = {
 			const error_message = await response.json();
 			console.error(error_message);
 			console.log(response);
-			return fail(response.status, { message: 'reset_failed' });
+			return fail(response.status, { message: 'auth.reset_failed' });
 		}
 
 		return redirect(302, '/login');

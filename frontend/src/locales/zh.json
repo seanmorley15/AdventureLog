@@ -191,7 +191,10 @@
     "category_fetch_error": "获取类别时出错",
     "copied_to_clipboard": "已复制到剪贴板！",
     "copy_failed": "复制失败",
-    "adventure_calendar": "冒险日历"
+    "adventure_calendar": "冒险日历",
+    "emoji_picker": "表情符号选择器",
+    "hide": "隐藏",
+    "show": "展示"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -255,7 +258,10 @@
     "profile_picture": "个人资料图片",
     "public_profile": "公开资料",
     "public_tooltip": "通过公开个人资料，用户可以与您共享收藏并在用户页面上查看您的个人资料。",
-    "email_required": "电子邮件为必填项"
+    "email_required": "电子邮件为必填项",
+    "both_passwords_required": "两个密码都需要",
+    "new_password": "新密码",
+    "reset_failed": "重置密码失败"
   },
   "worldtravel": {
     "all": "全部",

@@ -238,7 +238,10 @@
     },
     "copied_to_clipboard": "Skopiowano do schowka!",
     "copy_failed": "Kopiowanie nie powiodło się",
-    "adventure_calendar": "Kalendarz przygód"
+    "adventure_calendar": "Kalendarz przygód",
+    "emoji_picker": "Wybór emoji",
+    "hide": "Ukrywać",
+    "show": "Pokazywać"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -266,7 +269,10 @@
     "profile_picture": "Zdjęcie profilowe",
     "public_profile": "Publiczny profil",
     "public_tooltip": "Dzięki publicznemu profilowi użytkownicy mogą dzielić się z Tobą kolekcjami i oglądać Twój profil na stronie użytkowników.",
-    "email_required": "Adres e-mail jest wymagany"
+    "email_required": "Adres e-mail jest wymagany",
+    "both_passwords_required": "Obydwa hasła są wymagane",
+    "new_password": "Nowe hasło",
+    "reset_failed": "Nie udało się zresetować hasła"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."

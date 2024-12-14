@@ -191,7 +191,10 @@
     "category_fetch_error": "Det gick inte att hämta kategorier",
     "copied_to_clipboard": "Kopierat till urklipp!",
     "copy_failed": "Kopieringen misslyckades",
-    "adventure_calendar": "Äventyrskalender"
+    "adventure_calendar": "Äventyrskalender",
+    "emoji_picker": "Emoji-väljare",
+    "hide": "Dölja",
+    "show": "Visa"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -266,7 +269,10 @@
     "public_tooltip": "Med en offentlig profil kan användare dela samlingar med dig och se din profil på användarsidan.",
     "profile_picture": "Profilbild",
     "public_profile": "Offentlig profil",
-    "email_required": "E-post krävs"
+    "email_required": "E-post krävs",
+    "both_passwords_required": "Båda lösenorden krävs",
+    "new_password": "Nytt lösenord",
+    "reset_failed": "Det gick inte att återställa lösenordet"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."

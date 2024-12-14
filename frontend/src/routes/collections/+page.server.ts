@@ -4,7 +4,7 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure, Collection } from '$lib/types';
 
 import type { Actions, RequestEvent } from '@sveltejs/kit';
-import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
+import { fetchCSRFToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';

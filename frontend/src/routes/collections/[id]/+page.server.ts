@@ -31,7 +31,7 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 import type { Actions } from '@sveltejs/kit';
-import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
+import { fetchCSRFToken } from '$lib/index.server';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
