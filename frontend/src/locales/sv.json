@@ -188,7 +188,9 @@
     "add_a_tag": "Lägg till en tagg",
     "tags": "Taggar",
     "set_to_pin": "Ställ in på Pin",
-    "category_fetch_error": "Det gick inte att hämta kategorier"
+    "category_fetch_error": "Det gick inte att hämta kategorier",
+    "copied_to_clipboard": "Kopierat till urklipp!",
+    "copy_failed": "Kopieringen misslyckades"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -234,7 +236,8 @@
     "my_tags": "Mina taggar",
     "tag": "Märka",
     "language_selection": "Språk",
-    "support": "Stöd"
+    "support": "Stöd",
+    "calendar": "Kalender"
   },
   "worldtravel": {
     "all": "Alla",
@@ -261,7 +264,8 @@
     "username": "Användarnamn",
     "public_tooltip": "Med en offentlig profil kan användare dela samlingar med dig och se din profil på användarsidan.",
     "profile_picture": "Profilbild",
-    "public_profile": "Offentlig profil"
+    "public_profile": "Offentlig profil",
+    "email_required": "E-post krävs"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."
@@ -295,7 +299,41 @@
     "photo_by": "Foto av",
     "change_password_error": "Det går inte att ändra lösenord. \nOgiltigt nuvarande lösenord eller ogiltigt nytt lösenord.",
     "current_password": "Aktuellt lösenord",
-    "password_change_lopout_warning": "Du kommer att loggas ut efter att du har ändrat ditt lösenord."
+    "password_change_lopout_warning": "Du kommer att loggas ut efter att du har ändrat ditt lösenord.",
+    "authenticator_code": "Autentiseringskod",
+    "copy": "Kopiera",
+    "disable_mfa": "Inaktivera MFA",
+    "email_added": "E-post har lagts till!",
+    "email_added_error": "Det gick inte att lägga till e-post",
+    "email_removed": "E-post har tagits bort!",
+    "email_removed_error": "Det gick inte att ta bort e-post",
+    "email_set_primary": "E-post har angetts som primärt!",
+    "email_set_primary_error": "Det gick inte att ställa in e-post som primär",
+    "email_verified": "E-post har verifierats!",
+    "email_verified_erorr_desc": "Din e-postadress kunde inte verifieras. \nFörsök igen.",
+    "email_verified_error": "Fel vid verifiering av e-post",
+    "email_verified_success": "Din e-postadress har verifierats. \nDu kan nu logga in.",
+    "enable_mfa": "Aktivera MFA",
+    "error_change_password": "Fel vid byte av lösenord. \nKontrollera ditt nuvarande lösenord och försök igen.",
+    "generic_error": "Ett fel uppstod när din begäran bearbetades.",
+    "invalid_code": "Ogiltig MFA-kod",
+    "invalid_credentials": "Ogiltigt användarnamn eller lösenord",
+    "make_primary": "Gör Primär",
+    "mfa_disabled": "Multifaktorautentisering har inaktiverats!",
+    "mfa_enabled": "Multifaktorautentisering har aktiverats!",
+    "mfa_not_enabled": "MFA är inte aktiverat",
+    "mfa_page_title": "Multifaktorautentisering",
+    "mfa_required": "Flerfaktorsautentisering krävs",
+    "no_emai_set": "Ingen e-post inställd",
+    "not_verified": "Ej verifierad",
+    "primary": "Primär",
+    "recovery_codes": "Återställningskoder",
+    "recovery_codes_desc": "Det här är dina återställningskoder. \nHåll dem säkra. \nDu kommer inte att kunna se dem igen.",
+    "reset_session_error": "Logga ut och in igen för att uppdatera din session och försök igen.",
+    "verified": "Verifierad",
+    "verify": "Kontrollera",
+    "verify_email_error": "Fel vid verifiering av e-post. \nFörsök igen om några minuter.",
+    "verify_email_success": "E-postverifiering har skickats!"
   },
   "checklist": {
     "add_item": "Lägg till objekt",

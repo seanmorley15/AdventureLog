@@ -18,7 +18,7 @@
 
 	let new_email: string = '';
 
-	let is2FAModalOpen: boolean = false;
+	let isMFAModalOpen: boolean = false;
 
 	onMount(async () => {
 		if (browser) {
@@ -133,21 +133,21 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('success', '2FA disabled');
+			addToast('success', $t('settings.mfa_disabled'));
 			data.props.authenticators = false;
 		} else {
 			if (res.status == 401) {
-				addToast('error', 'Logout and back in to refresh your session and try again.');
+				addToast('error', $t('settings.reset_session_error'));
 			}
 			addToast('error', $t('settings.generic_error'));
 		}
 	}
 </script>
 
-{#if is2FAModalOpen}
+{#if isMFAModalOpen}
 	<TotpModal
 		user={data.user}
-		on:close={() => (is2FAModalOpen = false)}
+		on:close={() => (isMFAModalOpen = false)}
 		bind:is_enabled={data.props.authenticators}
 	/>
 {/if}
@@ -306,17 +306,19 @@
 	</form>
 </div>
 
-<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Multi-factor Authentication Settings</h1>
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.mfa_page_title')}</h1>
 
 <div class="flex justify-center mb-4">
 	<div>
 		{#if !data.props.authenticators}
-			<p>MFA not enabled</p>
-			<button class="btn btn-primary mt-2" on:click={() => (is2FAModalOpen = true)}
-				>Enable MFA</button
+			<p>{$t('settings.mfa_not_enabled')}</p>
+			<button class="btn btn-primary mt-2" on:click={() => (isMFAModalOpen = true)}
+				>{$t('settings.enable_mfa')}</button
 			>
 		{:else}
-			<button class="btn btn-warning mt-2" on:click={disableMfa}>Disable MFA</button>
+			<button class="btn btn-warning mt-2" on:click={disableMfa}
+				>{$t('settings.disable_mfa')}</button
+			>
 		{/if}
 	</div>
 </div>

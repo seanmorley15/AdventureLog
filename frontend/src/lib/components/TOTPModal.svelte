@@ -53,18 +53,10 @@
 	}
 
 	async function sendTotp() {
-		console.log('sending totp');
-
-		let sessionid = document.cookie
-			.split('; ')
-			.find((row) => row.startsWith('sessionid'))
-			?.split('=')[1];
-
 		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json',
-				Cookie: `sessionid=${sessionid}`
+				'Content-Type': 'application/json'
 			},
 			body: JSON.stringify({
 				code: first_code
@@ -73,7 +65,7 @@
 		});
 		console.log(res);
 		if (res.ok) {
-			addToast('success', '2FA enabled');
+			addToast('success', $t('settings.mfa_enabled'));
 			is_enabled = true;
 			getRecoveryCodes();
 		} else {
@@ -125,10 +117,10 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">Enable 2FA</h3>
+		<h3 class="font-bold text-lg">{$t('settings.enable_mfa')}</h3>
 
 		{#if qrCodeDataUrl}
-			<div class="mb-4 flex items-center justify-center">
+			<div class="mb-4 flex items-center justify-center mt-2">
 				<img src={qrCodeDataUrl} alt="QR Code" class="w-64 h-64" />
 			</div>
 		{/if}
@@ -141,7 +133,8 @@
 						class="input input-bordered w-full max-w-xs"
 						readonly
 					/>
-					<button class="btn btn-primary ml-2" on:click={() => copyToClipboard(secret)}>Copy</button
+					<button class="btn btn-primary ml-2" on:click={() => copyToClipboard(secret)}
+						>{$t('settings.copy')}</button
 					>
 				</div>
 			{/if}
@@ -149,20 +142,20 @@
 
 		<input
 			type="text"
-			placeholder="Authenticator Code"
+			placeholder={$t('settings.authenticator_code')}
 			class="input input-bordered w-full max-w-xs"
 			bind:value={first_code}
 		/>
 
 		<div class="recovery-codes-container">
 			{#if recovery_codes.length > 0}
-				<h3 class="mt-4 text-center font-bold text-lg">Recovery Codes</h3>
+				<h3 class="mt-4 text-center font-bold text-lg">{$t('settings.recovery_codes')}</h3>
 				<p class="text-center text-lg mb-2">
-					These are your recovery codes. Keep them safe. You will not be able to see them again.
+					{$t('settings.recovery_codes_desc')}
 				</p>
 				<button
 					class="btn btn-primary ml-2"
-					on:click={() => copyToClipboard(recovery_codes.join(', '))}>Copy</button
+					on:click={() => copyToClipboard(recovery_codes.join(', '))}>{$t('settings.copy')}</button
 				>
 			{/if}
 			<div class="recovery-codes-grid flex flex-wrap">
@@ -178,12 +171,12 @@
 
 		{#if reauthError}
 			<div class="alert alert-error mt-4">
-				Please logout and back in to refresh your session and try again.
+				{$t('settings.reset_session_error')}
 			</div>
 		{/if}
 
 		{#if !is_enabled}
-			<button class="btn btn-primary mt-4" on:click={sendTotp}>Enable 2FA</button>
+			<button class="btn btn-primary mt-4" on:click={sendTotp}>{$t('settings.enable_mfa')}</button>
 		{/if}
 
 		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>

@@ -188,7 +188,9 @@
     "add_a_tag": "Fügen Sie ein Tag hinzu",
     "tags": "Schlagworte",
     "set_to_pin": "Auf „Anpinnen“ setzen",
-    "category_fetch_error": "Fehler beim Abrufen der Kategorien"
+    "category_fetch_error": "Fehler beim Abrufen der Kategorien",
+    "copied_to_clipboard": "In die Zwischenablage kopiert!",
+    "copy_failed": "Das Kopieren ist fehlgeschlagen"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -234,7 +236,8 @@
     "my_tags": "Meine Tags",
     "tag": "Etikett",
     "language_selection": "Sprache",
-    "support": "Unterstützung"
+    "support": "Unterstützung",
+    "calendar": "Kalender"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -250,7 +253,8 @@
     "username": "Benutzername",
     "profile_picture": "Profilbild",
     "public_profile": "Öffentliches Profil",
-    "public_tooltip": "Mit einem öffentlichen Profil können Benutzer Sammlungen mit Ihnen teilen und Ihr Profil auf der Benutzerseite anzeigen."
+    "public_tooltip": "Mit einem öffentlichen Profil können Benutzer Sammlungen mit Ihnen teilen und Ihr Profil auf der Benutzerseite anzeigen.",
+    "email_required": "E-Mail ist erforderlich"
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichen Profilen gefunden."
@@ -295,7 +299,41 @@
     "photo_by": "Foto von",
     "change_password_error": "Passwort kann nicht geändert werden. \nUngültiges aktuelles Passwort oder ungültiges neues Passwort.",
     "current_password": "Aktuelles Passwort",
-    "password_change_lopout_warning": "Nach der Passwortänderung werden Sie abgemeldet."
+    "password_change_lopout_warning": "Nach der Passwortänderung werden Sie abgemeldet.",
+    "authenticator_code": "Authentifikatorcode",
+    "copy": "Kopie",
+    "disable_mfa": "Deaktivieren Sie MFA",
+    "email_added": "E-Mail erfolgreich hinzugefügt!",
+    "email_added_error": "Fehler beim Hinzufügen der E-Mail",
+    "email_removed": "E-Mail erfolgreich entfernt!",
+    "email_removed_error": "Fehler beim Entfernen der E-Mail",
+    "email_set_primary": "E-Mail erfolgreich als primäre E-Mail-Adresse festgelegt!",
+    "email_set_primary_error": "Fehler beim Festlegen der E-Mail-Adresse als primär",
+    "email_verified": "E-Mail erfolgreich bestätigt!",
+    "email_verified_erorr_desc": "Ihre E-Mail-Adresse konnte nicht bestätigt werden. \nBitte versuchen Sie es erneut.",
+    "email_verified_error": "Fehler bei der E-Mail-Bestätigung",
+    "email_verified_success": "Ihre E-Mail-Adresse wurde bestätigt. \nSie können sich jetzt anmelden.",
+    "enable_mfa": "Aktivieren Sie MFA",
+    "error_change_password": "Fehler beim Ändern des Passworts. \nBitte überprüfen Sie Ihr aktuelles Passwort und versuchen Sie es erneut.",
+    "generic_error": "Bei der Bearbeitung Ihrer Anfrage ist ein Fehler aufgetreten.",
+    "invalid_code": "Ungültiger MFA-Code",
+    "invalid_credentials": "Ungültiger Benutzername oder Passwort",
+    "make_primary": "Machen Sie primär",
+    "mfa_disabled": "Multi-Faktor-Authentifizierung erfolgreich deaktiviert!",
+    "mfa_enabled": "Multi-Faktor-Authentifizierung erfolgreich aktiviert!",
+    "mfa_not_enabled": "MFA ist nicht aktiviert",
+    "mfa_page_title": "Multi-Faktor-Authentifizierung",
+    "mfa_required": "Eine Multi-Faktor-Authentifizierung ist erforderlich",
+    "no_emai_set": "Keine E-Mail-Adresse festgelegt",
+    "not_verified": "Nicht verifiziert",
+    "primary": "Primär",
+    "recovery_codes": "Wiederherstellungscodes",
+    "recovery_codes_desc": "Dies sind Ihre Wiederherstellungscodes. \nBewahren Sie sie sicher auf. \nSie werden sie nicht mehr sehen können.",
+    "reset_session_error": "Bitte melden Sie sich ab und wieder an, um Ihre Sitzung zu aktualisieren, und versuchen Sie es erneut.",
+    "verified": "Verifiziert",
+    "verify": "Verifizieren",
+    "verify_email_error": "Fehler bei der E-Mail-Bestätigung. \nVersuchen Sie es in ein paar Minuten noch einmal.",
+    "verify_email_success": "E-Mail-Bestätigung erfolgreich gesendet!"
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",

@@ -29,7 +29,8 @@
       "aestheticDark": "Estetyczny Ciemny",
       "aqua": "Aqua",
       "northernLights": "Zorza Polarna"
-    }
+    },
+    "calendar": "Kalendarz"
   },
   "about": {
     "about": "O aplikacji",
@@ -234,7 +235,9 @@
       "spiritual_journeys": "Podróże duchowe 🧘‍♀️",
       "volunteer_work": "Praca wolontariacka 🤝",
       "other": "Inne"
-    }
+    },
+    "copied_to_clipboard": "Skopiowano do schowka!",
+    "copy_failed": "Kopiowanie nie powiodło się"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -261,7 +264,8 @@
     "registration_disabled": "Rejestracja jest obecnie wyłączona.",
     "profile_picture": "Zdjęcie profilowe",
     "public_profile": "Publiczny profil",
-    "public_tooltip": "Dzięki publicznemu profilowi użytkownicy mogą dzielić się z Tobą kolekcjami i oglądać Twój profil na stronie użytkowników."
+    "public_tooltip": "Dzięki publicznemu profilowi użytkownicy mogą dzielić się z Tobą kolekcjami i oglądać Twój profil na stronie użytkowników.",
+    "email_required": "Adres e-mail jest wymagany"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -295,7 +299,41 @@
     "join_discord_desc": "aby podzielić się swoimi zdjęciami. Zamieść je w kanale #travel-share.",
     "change_password_error": "Nie można zmienić hasła. \nNieprawidłowe bieżące hasło lub nieprawidłowe nowe hasło.",
     "current_password": "Aktualne hasło",
-    "password_change_lopout_warning": "Po zmianie hasła nastąpi wylogowanie."
+    "password_change_lopout_warning": "Po zmianie hasła nastąpi wylogowanie.",
+    "authenticator_code": "Kod uwierzytelniający",
+    "copy": "Kopia",
+    "disable_mfa": "Wyłącz usługę MFA",
+    "email_added": "Adres e-mail został pomyślnie dodany!",
+    "email_added_error": "Błąd podczas dodawania adresu e-mail",
+    "email_removed": "E-mail został pomyślnie usunięty!",
+    "email_removed_error": "Błąd podczas usuwania wiadomości e-mail",
+    "email_set_primary": "Adres e-mail został pomyślnie ustawiony jako podstawowy!",
+    "email_set_primary_error": "Błąd podczas ustawiania adresu e-mail jako głównego",
+    "email_verified": "E-mail zweryfikowany pomyślnie!",
+    "email_verified_erorr_desc": "Nie udało się zweryfikować Twojego adresu e-mail. \nSpróbuj ponownie.",
+    "email_verified_error": "Błąd podczas weryfikacji adresu e-mail",
+    "email_verified_success": "Twój e-mail został zweryfikowany. \nMożesz się teraz zalogować.",
+    "enable_mfa": "Włącz usługę MFA",
+    "error_change_password": "Błąd podczas zmiany hasła. \nSprawdź swoje aktualne hasło i spróbuj ponownie.",
+    "generic_error": "Wystąpił błąd podczas przetwarzania Twojego żądania.",
+    "invalid_code": "Nieprawidłowy kod MFA",
+    "invalid_credentials": "Nieprawidłowa nazwa użytkownika lub hasło",
+    "make_primary": "Ustaw jako podstawowy",
+    "mfa_disabled": "Uwierzytelnianie wieloskładnikowe zostało pomyślnie wyłączone!",
+    "mfa_enabled": "Uwierzytelnianie wieloskładnikowe zostało pomyślnie włączone!",
+    "mfa_not_enabled": "Usługa MFA nie jest włączona",
+    "mfa_page_title": "Uwierzytelnianie wieloskładnikowe",
+    "mfa_required": "Wymagane jest uwierzytelnianie wieloskładnikowe",
+    "no_emai_set": "Nie ustawiono adresu e-mail",
+    "not_verified": "Nie zweryfikowano",
+    "primary": "Podstawowy",
+    "recovery_codes": "Kody odzyskiwania",
+    "recovery_codes_desc": "To są Twoje kody odzyskiwania. \nZapewnij im bezpieczeństwo. \nNie będziesz mógł ich ponownie zobaczyć.",
+    "reset_session_error": "Wyloguj się i zaloguj ponownie, aby odświeżyć sesję i spróbuj ponownie.",
+    "verified": "Zweryfikowano",
+    "verify": "Zweryfikować",
+    "verify_email_error": "Błąd podczas weryfikacji adresu e-mail. \nSpróbuj ponownie za kilka minut.",
+    "verify_email_success": "Weryfikacja e-mailowa została wysłana pomyślnie!"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",

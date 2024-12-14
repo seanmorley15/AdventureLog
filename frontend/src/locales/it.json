@@ -188,7 +188,9 @@
     "add_a_tag": "Aggiungi un'etichetta",
     "tags": "Tag",
     "set_to_pin": "Imposta su Blocca",
-    "category_fetch_error": "Errore durante il recupero delle categorie"
+    "category_fetch_error": "Errore durante il recupero delle categorie",
+    "copied_to_clipboard": "Copiato negli appunti!",
+    "copy_failed": "Copia non riuscita"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -234,7 +236,8 @@
     "my_tags": "I miei tag",
     "tag": "Etichetta",
     "language_selection": "Lingua",
-    "support": "Supporto"
+    "support": "Supporto",
+    "calendar": "Calendario"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -250,7 +253,8 @@
     "username": "Nome utente",
     "profile_picture": "Immagine del profilo",
     "public_profile": "Profilo pubblico",
-    "public_tooltip": "Con un profilo pubblico, gli utenti possono condividere raccolte con te e visualizzare il tuo profilo nella pagina degli utenti."
+    "public_tooltip": "Con un profilo pubblico, gli utenti possono condividere raccolte con te e visualizzare il tuo profilo nella pagina degli utenti.",
+    "email_required": "L'e-mail è obbligatoria"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -295,7 +299,41 @@
     "photo_by": "Foto di",
     "change_password_error": "Impossibile modificare la password. \nPassword attuale non valida o nuova password non valida.",
     "current_password": "password attuale",
-    "password_change_lopout_warning": "Verrai disconnesso dopo aver modificato la password."
+    "password_change_lopout_warning": "Verrai disconnesso dopo aver modificato la password.",
+    "authenticator_code": "Codice Autenticatore",
+    "copy": "Copia",
+    "disable_mfa": "Disabilita MFA",
+    "email_added": "Email aggiunta con successo!",
+    "email_added_error": "Errore durante l'aggiunta dell'e-mail",
+    "email_removed": "Email rimossa con successo!",
+    "email_removed_error": "Errore durante la rimozione dell'e-mail",
+    "email_set_primary": "Email impostata come primaria con successo!",
+    "email_set_primary_error": "Errore durante l'impostazione dell'e-mail come principale",
+    "email_verified": "Email verificata con successo!",
+    "email_verified_erorr_desc": "Non è stato possibile verificare la tua email. \nPer favore riprova.",
+    "email_verified_error": "Errore durante la verifica dell'e-mail",
+    "email_verified_success": "La tua email è stata verificata. \nOra puoi accedere.",
+    "enable_mfa": "Abilita MFA",
+    "error_change_password": "Errore durante la modifica della password. \nControlla la tua password attuale e riprova.",
+    "generic_error": "Si è verificato un errore durante l'elaborazione della tua richiesta.",
+    "invalid_code": "Codice MFA non valido",
+    "invalid_credentials": "Nome utente o password non validi",
+    "make_primary": "Rendi primario",
+    "mfa_disabled": "Autenticazione a più fattori disabilitata correttamente!",
+    "mfa_enabled": "Autenticazione a più fattori abilitata correttamente!",
+    "mfa_not_enabled": "L'MFA non è abilitata",
+    "mfa_page_title": "Autenticazione a più fattori",
+    "mfa_required": "È richiesta l'autenticazione a più fattori",
+    "no_emai_set": "Nessuna e-mail impostata",
+    "not_verified": "Non verificato",
+    "primary": "Primario",
+    "recovery_codes": "Codici di ripristino",
+    "recovery_codes_desc": "Questi sono i tuoi codici di ripristino. \nTeneteli al sicuro. \nNon potrai vederli più.",
+    "reset_session_error": "Esci, effettua nuovamente l'accesso per aggiornare la sessione e riprova.",
+    "verified": "Verificato",
+    "verify_email_success": "Verifica email inviata con successo!",
+    "verify": "Verificare",
+    "verify_email_error": "Errore durante la verifica dell'e-mail. \nRiprova tra qualche minuto."
   },
   "checklist": {
     "add_item": "Aggiungi articolo",

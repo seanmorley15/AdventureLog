@@ -52,7 +52,7 @@ export const actions: Actions = {
 			// MFA required
 			if (!totp) {
 				return fail(401, {
-					message: 'Multi-factor authentication required',
+					message: 'settings.mfa_required',
 					mfa_required: true
 				});
 			} else {
@@ -80,7 +80,7 @@ export const actions: Actions = {
 					// MFA failed
 					const mfaLoginResponse = await mfaLoginFetch.json();
 					return fail(401, {
-						message: mfaLoginResponse.error || 'Invalid MFA code',
+						message: mfaLoginResponse.error || 'settings.invalid_code',
 						mfa_required: true
 					});
 				}
@@ -89,7 +89,7 @@ export const actions: Actions = {
 			// Login failed
 			const loginResponse = await loginFetch.json();
 			const firstKey = Object.keys(loginResponse)[0] || 'error';
-			const error = loginResponse[firstKey][0] || 'Invalid username or password';
+			const error = loginResponse[firstKey][0] || 'settings.invalid_credentials';
 			return fail(400, { message: error });
 		}
 	}

@@ -188,7 +188,9 @@
     "add_a_tag": "Voeg een label toe",
     "tags": "Labels",
     "set_to_pin": "Stel in op pin",
-    "category_fetch_error": "Fout bij ophalen van categorieën"
+    "category_fetch_error": "Fout bij ophalen van categorieën",
+    "copied_to_clipboard": "Gekopieerd naar klembord!",
+    "copy_failed": "Kopiëren mislukt"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -234,7 +236,8 @@
     "my_tags": "Mijn labels",
     "tag": "Label",
     "language_selection": "Taal",
-    "support": "Steun"
+    "support": "Steun",
+    "calendar": "Kalender"
   },
   "auth": {
     "confirm_password": "Bevestig wachtwoord",
@@ -250,7 +253,8 @@
     "username": "Gebruikersnaam",
     "profile_picture": "Profielfoto",
     "public_profile": "Openbaar profiel",
-    "public_tooltip": "Met een openbaar profiel kunnen gebruikers collecties met u delen en uw profiel bekijken op de gebruikerspagina."
+    "public_tooltip": "Met een openbaar profiel kunnen gebruikers collecties met u delen en uw profiel bekijken op de gebruikerspagina.",
+    "email_required": "E-mail is vereist"
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."
@@ -295,7 +299,41 @@
     "photo_by": "Foto door",
     "change_password_error": "Kan wachtwoord niet wijzigen. \nOngeldig huidig ​​wachtwoord of ongeldig nieuw wachtwoord.",
     "current_password": "Huidig ​​wachtwoord",
-    "password_change_lopout_warning": "Na het wijzigen van uw wachtwoord wordt u uitgelogd."
+    "password_change_lopout_warning": "Na het wijzigen van uw wachtwoord wordt u uitgelogd.",
+    "authenticator_code": "Authenticatiecode",
+    "copy": "Kopiëren",
+    "disable_mfa": "Schakel MFA uit",
+    "email_added": "E-mailadres succesvol toegevoegd!",
+    "email_added_error": "Fout bij het toevoegen van e-mailadres",
+    "email_removed": "E-mail succesvol verwijderd!",
+    "email_removed_error": "Fout bij verwijderen van e-mail",
+    "email_set_primary": "E-mailadres is succesvol ingesteld als primair!",
+    "email_set_primary_error": "Fout bij het instellen van e-mail als primair",
+    "email_verified": "E-mail succesvol geverifieerd!",
+    "email_verified_erorr_desc": "Uw e-mailadres kan niet worden geverifieerd. \nProbeer het opnieuw.",
+    "email_verified_error": "Fout bij het verifiëren van e-mailadres",
+    "email_verified_success": "Uw e-mailadres is geverifieerd. \nU kunt nu inloggen.",
+    "enable_mfa": "Schakel MFA in",
+    "error_change_password": "Fout bij wijzigen van wachtwoord. \nControleer uw huidige wachtwoord en probeer het opnieuw.",
+    "generic_error": "Er is een fout opgetreden tijdens het verwerken van uw verzoek.",
+    "invalid_code": "Ongeldige MFA-code",
+    "invalid_credentials": "Ongeldige gebruikersnaam of wachtwoord",
+    "make_primary": "Maak primair",
+    "mfa_disabled": "Multi-factor authenticatie is succesvol uitgeschakeld!",
+    "mfa_enabled": "Multi-factor authenticatie succesvol ingeschakeld!",
+    "mfa_not_enabled": "MFA is niet ingeschakeld",
+    "mfa_page_title": "Authenticatie met meerdere factoren",
+    "mfa_required": "Multi-factor authenticatie is vereist",
+    "no_emai_set": "Geen e-mailadres ingesteld",
+    "not_verified": "Niet geverifieerd",
+    "primary": "Primair",
+    "recovery_codes": "Herstelcodes",
+    "recovery_codes_desc": "Dit zijn uw herstelcodes. \nBewaar ze veilig. \nJe zult ze niet meer kunnen zien.",
+    "reset_session_error": "Meld u af en weer aan om uw sessie te vernieuwen en het opnieuw te proberen.",
+    "verified": "Geverifieerd",
+    "verify": "Verifiëren",
+    "verify_email_error": "Fout bij het verifiëren van e-mailadres. \nProbeer het over een paar minuten opnieuw.",
+    "verify_email_success": "E-mailverificatie succesvol verzonden!"
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

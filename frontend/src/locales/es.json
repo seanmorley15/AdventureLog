@@ -235,7 +235,9 @@
     "add_a_tag": "Agregar una etiqueta",
     "tags": "Etiquetas",
     "set_to_pin": "Establecer en Fijar",
-    "category_fetch_error": "Error al buscar categorías"
+    "category_fetch_error": "Error al buscar categorías",
+    "copied_to_clipboard": "¡Copiado al portapapeles!",
+    "copy_failed": "Copia fallida"
   },
   "worldtravel": {
     "all": "Todo",
@@ -313,7 +315,25 @@
     "verify": "Verificar",
     "verify_email_error": "Error al verificar el correo electrónico. \nInténtalo de nuevo en unos minutos.",
     "verify_email_success": "¡La verificación por correo electrónico se envió correctamente!",
-    "error_change_password": "Error al cambiar la contraseña. \nPor favor verifique su contraseña actual e inténtelo nuevamente."
+    "error_change_password": "Error al cambiar la contraseña. \nPor favor verifique su contraseña actual e inténtelo nuevamente.",
+    "disable_mfa": "Deshabilitar MFA",
+    "enable_mfa": "Habilitar MFA",
+    "mfa_disabled": "¡La autenticación multifactor se deshabilitó correctamente!",
+    "mfa_not_enabled": "MFA no está habilitado",
+    "mfa_page_title": "Autenticación multifactor",
+    "copy": "Copiar",
+    "mfa_enabled": "¡La autenticación multifactor se habilitó correctamente!",
+    "recovery_codes": "Códigos de recuperación",
+    "recovery_codes_desc": "Estos son tus códigos de recuperación. \nMantenlos a salvo. \nNo podrás volver a verlos.",
+    "reset_session_error": "Por favor cierre sesión y vuelva a iniciarla para actualizar su sesión e inténtelo nuevamente.",
+    "authenticator_code": "Código de autenticación",
+    "email_verified": "¡Correo electrónico verificado exitosamente!",
+    "email_verified_erorr_desc": "Su correo electrónico no pudo ser verificado. \nPor favor inténtalo de nuevo.",
+    "email_verified_error": "Error al verificar el correo electrónico",
+    "email_verified_success": "Su correo electrónico ha sido verificado. \nAhora puedes iniciar sesión.",
+    "invalid_code": "Código MFA no válido",
+    "invalid_credentials": "Nombre de usuario o contraseña no válidos",
+    "mfa_required": "Se requiere autenticación multifactor"
   },
   "checklist": {
     "add_item": "Agregar artículo",

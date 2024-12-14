@@ -73,7 +73,7 @@
 
 			{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
 				<div class="text-center text-error mt-4">
-					{$page.form.message || $t('auth.login_error')}
+					{$t($page.form.message) || $t('auth.login_error')}
 				</div>
 			{/if}
 		</div>

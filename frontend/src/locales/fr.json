@@ -188,7 +188,9 @@
     "add_a_tag": "Ajouter une balise",
     "tags": "Balises",
     "set_to_pin": "Définir sur Épingler",
-    "category_fetch_error": "Erreur lors de la récupération des catégories"
+    "category_fetch_error": "Erreur lors de la récupération des catégories",
+    "copied_to_clipboard": "Copié dans le presse-papier !",
+    "copy_failed": "Échec de la copie"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -234,7 +236,8 @@
     "my_tags": "Mes balises",
     "tag": "Étiqueter",
     "language_selection": "Langue",
-    "support": "Soutien"
+    "support": "Soutien",
+    "calendar": "Calendrier"
   },
   "auth": {
     "confirm_password": "Confirmez le mot de passe",
@@ -250,7 +253,8 @@
     "username": "Nom d'utilisateur",
     "profile_picture": "Photo de profil",
     "public_profile": "Profil public",
-    "public_tooltip": "Avec un profil public, les utilisateurs peuvent partager des collections avec vous et afficher votre profil sur la page des utilisateurs."
+    "public_tooltip": "Avec un profil public, les utilisateurs peuvent partager des collections avec vous et afficher votre profil sur la page des utilisateurs.",
+    "email_required": "L'e-mail est requis"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec des profils publics."
@@ -295,7 +299,41 @@
     "photo_by": "Photo par",
     "change_password_error": "Impossible de changer le mot de passe. \nMot de passe actuel invalide ou nouveau mot de passe invalide.",
     "current_password": "Mot de passe actuel",
-    "password_change_lopout_warning": "Vous serez déconnecté après avoir modifié votre mot de passe."
+    "password_change_lopout_warning": "Vous serez déconnecté après avoir modifié votre mot de passe.",
+    "authenticator_code": "Code d'authentification",
+    "copy": "Copie",
+    "disable_mfa": "Désactiver MFA",
+    "email_added": "E-mail ajouté avec succès !",
+    "email_added_error": "Erreur lors de l'ajout de l'e-mail",
+    "email_removed": "E-mail supprimé avec succès !",
+    "email_removed_error": "Erreur lors de la suppression de l'e-mail",
+    "email_set_primary": "E-mail défini comme principal avec succès !",
+    "email_set_primary_error": "Erreur lors de la définition de l'adresse e-mail comme adresse principale",
+    "email_verified": "E-mail vérifié avec succès !",
+    "email_verified_erorr_desc": "Votre email n'a pas pu être vérifié. \nVeuillez réessayer.",
+    "email_verified_error": "Erreur lors de la vérification de l'e-mail",
+    "email_verified_success": "Votre email a été vérifié. \nVous pouvez maintenant vous connecter.",
+    "enable_mfa": "Activer l'authentification multifacteur",
+    "error_change_password": "Erreur lors du changement de mot de passe. \nVeuillez vérifier votre mot de passe actuel et réessayer.",
+    "generic_error": "Une erreur s'est produite lors du traitement de votre demande.",
+    "invalid_code": "Code MFA invalide",
+    "invalid_credentials": "Nom d'utilisateur ou mot de passe invalide",
+    "make_primary": "Rendre primaire",
+    "mfa_disabled": "Authentification multifacteur désactivée avec succès !",
+    "mfa_enabled": "Authentification multifacteur activée avec succès !",
+    "mfa_not_enabled": "MFA n'est pas activé",
+    "mfa_page_title": "Authentification multifacteur",
+    "mfa_required": "Une authentification multifacteur est requise",
+    "no_emai_set": "Aucune adresse e-mail définie",
+    "not_verified": "Non vérifié",
+    "primary": "Primaire",
+    "recovery_codes": "Codes de récupération",
+    "recovery_codes_desc": "Ce sont vos codes de récupération. \nGardez-les en sécurité. \nVous ne pourrez plus les revoir.",
+    "reset_session_error": "Veuillez vous déconnecter, puis vous reconnecter pour actualiser votre session et réessayer.",
+    "verified": "Vérifié",
+    "verify": "Vérifier",
+    "verify_email_error": "Erreur lors de la vérification de l'e-mail. \nRéessayez dans quelques minutes.",
+    "verify_email_success": "Vérification par e-mail envoyée avec succès !"
   },
   "checklist": {
     "add_item": "Ajouter un article",
