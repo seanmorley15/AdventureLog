@@ -246,7 +246,7 @@
 					</div>
 				</div>
 
-				<button type="submit" class="btn btn-primary mr-4 mt-4">{$t('transportation.edit')}</button>
+				<button type="submit" class="btn btn-primary mr-4 mt-4">{$t('collection.create')}</button>
 				<!-- if there is a button in form, it will close the modal -->
 				<button class="btn mt-4" on:click={close}>{$t('about.close')}</button>
 			</form>
