@@ -14,12 +14,14 @@ export const load = (async (event) => {
 		return { data: [] };
 	}
 
+	let sessionId = event.cookies.get('sessionid');
+
 	let res = await fetch(
 		`${serverEndpoint}/api/adventures/search/?query=${query}&property=${property}`,
 		{
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: `${event.cookies.get('auth')}`
+				Cookie: `sessionid=${sessionId}`
 			}
 		}
 	);

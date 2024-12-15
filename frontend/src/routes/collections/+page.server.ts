@@ -4,7 +4,7 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Adventure, Collection } from '$lib/types';
 
 import type { Actions, RequestEvent } from '@sveltejs/kit';
-import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
+import { fetchCSRFToken } from '$lib/index.server';
 import { checkLink } from '$lib';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
@@ -17,10 +17,12 @@ export const load = (async (event) => {
 		let previous = null;
 		let count = 0;
 		let adventures: Adventure[] = [];
+		let sessionId = event.cookies.get('sessionid');
 		let initialFetch = await fetch(`${serverEndpoint}/api/collections/?order_by=updated_at`, {
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`
-			}
+				Cookie: `sessionid=${sessionId}`
+			},
+			credentials: 'include'
 		});
 		if (!initialFetch.ok) {
 			console.error('Failed to fetch visited adventures');
@@ -72,34 +74,9 @@ export const actions: Actions = {
 		formDataToSend.append('start_date', start_date || '');
 		formDataToSend.append('end_date', end_date || '');
 		formDataToSend.append('link', link || '');
-		let auth = event.cookies.get('auth');
+		let sessionid = event.cookies.get('sessionid');
 
-		if (!auth) {
-			const refresh = event.cookies.get('refresh');
-			if (!refresh) {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-			let res = await tryRefreshToken(refresh);
-			if (res) {
-				auth = res;
-				event.cookies.set('auth', auth, {
-					httpOnly: true,
-					sameSite: 'lax',
-					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-					path: '/'
-				});
-			} else {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-		}
-
-		if (!auth) {
+		if (!sessionid) {
 			return {
 				status: 401,
 				body: { message: 'Unauthorized' }
@@ -119,7 +96,7 @@ export const actions: Actions = {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
-				Cookie: auth
+				Cookie: `sessionid=${sessionid}; csrftoken=${csrfToken}`
 			},
 			body: formDataToSend
 		});
@@ -175,34 +152,9 @@ export const actions: Actions = {
 		formDataToSend.append('end_date', end_date || '');
 		formDataToSend.append('link', link || '');
 
-		let auth = event.cookies.get('auth');
+		let sessionId = event.cookies.get('sessionid');
 
-		if (!auth) {
-			const refresh = event.cookies.get('refresh');
-			if (!refresh) {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-			let res = await tryRefreshToken(refresh);
-			if (res) {
-				auth = res;
-				event.cookies.set('auth', auth, {
-					httpOnly: true,
-					sameSite: 'lax',
-					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-					path: '/'
-				});
-			} else {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-		}
-
-		if (!auth) {
+		if (!sessionId) {
 			return {
 				status: 401,
 				body: { message: 'Unauthorized' }
@@ -222,9 +174,10 @@ export const actions: Actions = {
 			method: 'PATCH',
 			headers: {
 				'X-CSRFToken': csrfToken,
-				Cookie: auth
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
 			},
-			body: formDataToSend
+			body: formDataToSend,
+			credentials: 'include'
 		});
 
 		if (!res.ok) {
@@ -241,6 +194,10 @@ export const actions: Actions = {
 	},
 	get: async (event) => {
 		if (!event.locals.user) {
+			return {
+				status: 401,
+				body: { message: 'Unauthorized' }
+			};
 		}
 
 		const formData = await event.request.formData();
@@ -263,19 +220,20 @@ export const actions: Actions = {
 		let previous = null;
 		let count = 0;
 
-		let visitedFetch = await fetch(
+		let collectionsFetch = await fetch(
 			`${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}`,
 			{
 				headers: {
-					Cookie: `${event.cookies.get('auth')}`
-				}
+					Cookie: `sessionid=${event.cookies.get('sessionid')}`
+				},
+				credentials: 'include'
 			}
 		);
-		if (!visitedFetch.ok) {
+		if (!collectionsFetch.ok) {
 			console.error('Failed to fetch visited adventures');
 			return redirect(302, '/login');
 		} else {
-			let res = await visitedFetch.json();
+			let res = await collectionsFetch.json();
 			let visited = res.results as Adventure[];
 			next = res.next;
 			previous = res.previous;
@@ -332,15 +290,16 @@ export const actions: Actions = {
 		}
 
 		const fullUrl = `${serverEndpoint}${url}`;
-		console.log(fullUrl);
-		console.log(serverEndpoint);
+
+		let sessionId = event.cookies.get('sessionid');
 
 		try {
 			const response = await fetch(fullUrl, {
 				headers: {
 					'Content-Type': 'application/json',
-					Cookie: `${event.cookies.get('auth')}`
-				}
+					Cookie: `sessionid=${sessionId}`
+				},
+				credentials: 'include'
 			});
 
 			if (!response.ok) {

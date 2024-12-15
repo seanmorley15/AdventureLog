@@ -14,7 +14,12 @@
 		num_adventures: 0
 	};
 
-	let isOpen = false;
+	let isOpen: boolean = false;
+	let isEmojiPickerVisible: boolean = false;
+
+	function toggleEmojiPicker() {
+		isEmojiPickerVisible = !isEmojiPickerVisible;
+	}
 
 	function toggleDropdown() {
 		isOpen = !isOpen;
@@ -29,6 +34,10 @@
 	function custom_category() {
 		new_category.name = new_category.display_name.toLowerCase().replace(/ /g, '_');
 		selectCategory(new_category);
+	}
+
+	function handleEmojiSelect(event: CustomEvent) {
+		new_category.icon = event.detail.unicode;
 	}
 
 	// Close dropdown when clicking outside
@@ -46,6 +55,9 @@
 			document.removeEventListener('click', handleClickOutside);
 		};
 	});
+	onMount(async () => {
+		await import('emoji-picker-element');
+	});
 </script>
 
 <div class="mt-2 relative" bind:this={dropdownRef}>
@@ -59,23 +71,36 @@
 		<div class="absolute z-10 w-full mt-1 bg-base-300 rounded shadow-lg p-2">
 			<!-- svelte-ignore a11y-click-events-have-key-events -->
 			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div class="flex items-center gap-2">
-				<input
-					type="text"
-					placeholder={$t('categories.category_name')}
-					class="input input-bordered w-full max-w-xs"
-					bind:value={new_category.display_name}
-				/>
-				<input
-					type="text"
-					placeholder={$t('categories.icon')}
-					class="input input-bordered w-full max-w-xs"
-					bind:value={new_category.icon}
-				/>
-				<button on:click={custom_category} type="button" class="btn btn-primary"
-					>{$t('adventures.add')}</button
-				>
+			<div class="flex flex-col gap-2">
+				<div class="flex items-center gap-2">
+					<input
+						type="text"
+						placeholder={$t('categories.category_name')}
+						class="input input-bordered w-full max-w-xs"
+						bind:value={new_category.display_name}
+					/>
+					<input
+						type="text"
+						placeholder={$t('categories.icon')}
+						class="input input-bordered w-full max-w-xs"
+						bind:value={new_category.icon}
+					/>
+					<button on:click={toggleEmojiPicker} type="button" class="btn btn-secondary">
+						{isEmojiPickerVisible ? $t('adventures.hide') : $t('adventures.hide')}
+						{$t('adventures.emoji_picker')}
+					</button>
+					<button on:click={custom_category} type="button" class="btn btn-primary">
+						{$t('adventures.add')}
+					</button>
+				</div>
+
+				{#if isEmojiPickerVisible}
+					<div class="mt-2">
+						<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+					</div>
+				{/if}
 			</div>
+
 			<div class="flex flex-wrap gap-2 mt-2">
 				<!-- Sort the categories dynamically before rendering -->
 				{#each categories

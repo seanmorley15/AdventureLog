@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="Django-dj-rest-auth demo" />
-    <meta name="author" content="iMerica, Inc." />
+    <meta name="description" content="AdventureLog Server" />
+    <meta name="author" content="Sean Morley" />
 
     <title>AdventureLog API Server</title>
 
@@ -31,39 +31,6 @@
   <body role="document">
     <div class="navbar navbar-inverse" role="navigation">
       <div class="container">
-        <ul class="nav navbar-nav navbar-right">
-          <li class="dropdown">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown"
-              >API endpoints <span class="caret"></span
-            ></a>
-
-            <ul class="dropdown-menu" role="menu">
-              <!-- these pages don't require user token -->
-              <li><a href="{% url 'signup' %}">Signup</a></li>
-              <li>
-                <a href="{% url 'email-verification' %}">E-mail verification</a>
-              </li>
-              <li>
-                <a href="{% url 'resend-email-verification' %}"
-                  >Resend E-mail verification</a
-                >
-              </li>
-              <li><a href="{% url 'login' %}">Login</a></li>
-              <li><a href="{% url 'password-reset' %}">Password Reset</a></li>
-              <li>
-                <a href="{% url 'password-reset-confirm' %}"
-                  >Password Reset Confirm</a
-                >
-              </li>
-              <li class="divider"></li>
-              <!-- these pages require user token -->
-              <li><a href="{% url 'user-details' %}">User details</a></li>
-              <li><a href="{% url 'logout' %}">Logout</a></li>
-              <li><a href="{% url 'password-change' %}">Password change</a></li>
-            </ul>
-          </li>
-        </ul>
-
         <div class="navbar-header">
           <button
             type="button"
@@ -80,20 +47,19 @@
         </div>
         <div class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-            <li class="active"><a href="/">Demo</a></li>
+            <li class="active"><a href="/">Server Home</a></li>
             <li>
-              <a
-                target="_blank"
-                href="http://dj-rest-auth.readthedocs.org/en/latest/"
+              <a target="_blank" href="http://adventurelog.app"
                 >Documentation</a
               >
             </li>
             <li>
-              <a target="_blank" href="https://github.com/iMerica/dj-rest-auth"
-                >Source code</a
+              <a
+                target="_blank"
+                href="https://github.com/seanmorley15/AdventureLog"
+                >Source Code</a
               >
             </li>
-            <li><a target="_blank" href="{% url 'api_docs' %}">API Docs</a></li>
           </ul>
         </div>
         <!--/.nav-collapse -->

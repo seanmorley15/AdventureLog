@@ -6,9 +6,10 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
+	let sessionid = event.cookies.get('sessionid');
 	let request = await fetch(`${endpoint}/api/collections/${id.id}/`, {
 		headers: {
-			Cookie: `${event.cookies.get('auth')}`
+			Cookie: `sessionid=${sessionid}`
 		}
 	});
 	if (!request.ok) {
@@ -30,7 +31,7 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 import type { Actions } from '@sveltejs/kit';
-import { tryRefreshToken } from '$lib/index.server';
+import { fetchCSRFToken } from '$lib/index.server';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -39,31 +40,6 @@ export const actions: Actions = {
 		const id = event.params as { id: string };
 		const adventureId = id.id;
 
-		if (!event.locals.user) {
-			const refresh = event.cookies.get('refresh');
-			let auth = event.cookies.get('auth');
-			if (!refresh) {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-			let res = await tryRefreshToken(refresh);
-			if (res) {
-				auth = res;
-				event.cookies.set('auth', auth, {
-					httpOnly: true,
-					sameSite: 'lax',
-					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-					path: '/'
-				});
-			} else {
-				return {
-					status: 401,
-					body: { message: 'Unauthorized' }
-				};
-			}
-		}
 		if (!adventureId) {
 			return {
 				status: 400,
@@ -71,15 +47,27 @@ export const actions: Actions = {
 			};
 		}
 
+		let sessionId = event.cookies.get('sessionid');
+
+		if (!sessionId) {
+			return {
+				status: 401,
+				error: new Error('Unauthorized')
+			};
+		}
+
+		let csrfToken = await fetchCSRFToken();
+
 		let res = await fetch(`${serverEndpoint}/api/collections/${event.params.id}`, {
 			method: 'DELETE',
 			headers: {
-				Cookie: `${event.cookies.get('auth')}`,
-				'Content-Type': 'application/json'
-			}
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken
+			},
+			credentials: 'include'
 		});
 
-		console.log(res);
 		if (!res.ok) {
 			return {
 				status: res.status,

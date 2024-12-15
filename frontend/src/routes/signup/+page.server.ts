@@ -41,22 +41,26 @@ export const actions: Actions = {
 
 		if (!csrfTokenFetch.ok) {
 			event.locals.user = null;
-			return fail(500, { message: 'Failed to fetch CSRF token' });
+			return fail(500, { message: 'settings.csrf_failed' });
+		}
+
+		if (password1 !== password2) {
+			return fail(400, { message: 'settings.password_does_not_match' });
 		}
 
 		const tokenPromise = await csrfTokenFetch.json();
 		const csrfToken = tokenPromise.csrfToken;
 
-		const loginFetch = await event.fetch(`${serverEndpoint}/auth/registration/`, {
+		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/signup`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				Cookie: `csrftoken=${csrfToken}`
 			},
 			body: JSON.stringify({
 				username: username,
-				password1: password1,
-				password2: password2,
+				password: password1,
 				email: email,
 				first_name,
 				last_name
@@ -65,31 +69,36 @@ export const actions: Actions = {
 		const loginResponse = await loginFetch.json();
 
 		if (!loginFetch.ok) {
-			// get the value of the first key in the object
-			const firstKey = Object.keys(loginResponse)[0] || 'error';
-			const error =
-				loginResponse[firstKey][0] || 'Failed to register user. Check your inputs and try again.';
-			return fail(400, {
-				message: error
-			});
+			return fail(loginFetch.status, { message: loginResponse.errors[0].code });
 		} else {
-			const token = loginResponse.access;
-			const tokenFormatted = `auth=${token}`;
-			const refreshToken = `${loginResponse.refresh}`;
-			event.cookies.set('auth', tokenFormatted, {
-				httpOnly: true,
-				sameSite: 'lax',
-				expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-				path: '/'
-			});
-			event.cookies.set('refresh', refreshToken, {
-				httpOnly: true,
-				sameSite: 'lax',
-				expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
-				path: '/'
-			});
+			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
 
-			return redirect(302, '/');
+			console.log('setCookieHeader:', setCookieHeader);
+
+			if (setCookieHeader) {
+				// Regular expression to match sessionid cookie and its expiry
+				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
+				const match = setCookieHeader.match(sessionIdRegex);
+
+				if (match) {
+					const sessionId = match[1];
+					const expiryString = match[2];
+					const expiryDate = new Date(expiryString);
+
+					console.log('Session ID:', sessionId);
+					console.log('Expiry Date:', expiryDate);
+
+					// Set the sessionid cookie
+					event.cookies.set('sessionid', sessionId, {
+						path: '/',
+						httpOnly: true,
+						sameSite: 'lax',
+						secure: true,
+						expires: expiryDate
+					});
+				}
+			}
+			redirect(302, '/');
 		}
 	}
 };

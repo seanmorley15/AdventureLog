@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/1.7/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 from dotenv import load_dotenv
-from datetime import timedelta
 from os import getenv
 from pathlib import Path
 # Load environment variables from .env file
@@ -35,8 +34,6 @@ DEBUG = getenv('DEBUG', 'True') == 'True'
 # ]
 ALLOWED_HOSTS = ['*']
 
-# Application definition
-
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -47,19 +44,19 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
-    'dj_rest_auth',
     'allauth',
     'allauth.account',
-    'dj_rest_auth.registration',
+    'allauth.mfa',
+    'allauth.headless',
     'allauth.socialaccount',
-    'allauth.socialaccount.providers.facebook',
+    # "widget_tweaks",
+    # "slippers",
     'drf_yasg',
     'corsheaders',
     'adventures',
     'worldtravel',
     'users',
     'django.contrib.gis',
-
 )
 
 MIDDLEWARE = (
@@ -83,18 +80,12 @@ CACHES = {
     }
 }
 
-
 # For backwards compatibility for Django 1.8
 MIDDLEWARE_CLASSES = MIDDLEWARE
 
 ROOT_URLCONF = 'main.urls'
 
 # WSGI_APPLICATION = 'demo.wsgi.application'
-
-SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=365),
-}
 
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
@@ -114,6 +105,7 @@ DATABASES = {
 }
 
 
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
@@ -127,6 +119,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
 
@@ -139,7 +133,15 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
-# TEMPLATE_DIRS = [os.path.join(BASE_DIR, 'templates')]
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    }
+}
+
 
 TEMPLATES = [
     {
@@ -157,31 +159,33 @@ TEMPLATES = [
     },
 ]
 
-REST_AUTH = {
-    'SESSION_LOGIN': True,
-    'USE_JWT': True,
-    'JWT_AUTH_COOKIE': 'auth',
-    'JWT_AUTH_HTTPONLY': False,
-    'REGISTER_SERIALIZER': 'users.serializers.RegisterSerializer',
-    'USER_DETAILS_SERIALIZER': 'users.serializers.CustomUserDetailsSerializer',
-    'PASSWORD_RESET_SERIALIZER': 'users.serializers.MyPasswordResetSerializer'
-}
+# Authentication settings
 
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-    "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
-    }
-}
+ALLAUTH_UI_THEME = "dark"
+SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
 AUTH_USER_MODEL = 'users.CustomUser'
 
+ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
+
+ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
+
+SESSION_SAVE_EVERY_REQUEST = True
+
 FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
+
+HEADLESS_FRONTEND_URLS = {
+    "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",
+    "account_reset_password": f"{FRONTEND_URL}/user/reset-password",
+    "account_reset_password_from_key": f"{FRONTEND_URL}/user/reset-password/{{key}}",
+    "account_signup": f"{FRONTEND_URL}/signup",
+    # Fallback in case the state containing the `next` URL is lost and the handshake
+    # with the third-party provider fails.
+    "socialaccount_login_error": f"{FRONTEND_URL}/account/provider/callback",
+}
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
@@ -214,13 +218,8 @@ else:
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
-        'dj_rest_auth.jwt_auth.JWTCookieAuthentication'
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-    # 'DEFAULT_PERMISSION_CLASSES': [
-    #     'rest_framework.permissions.IsAuthenticated',
-    # ],
 }
 
 SWAGGER_SETTINGS = {
@@ -228,12 +227,11 @@ SWAGGER_SETTINGS = {
     'LOGOUT_URL': 'logout',
 }
 
-# For demo purposes only. Use a white list in the real world.
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
-from os import getenv
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGGING = {
@@ -260,6 +258,5 @@ LOGGING = {
         },
     },
 }
-
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.4'

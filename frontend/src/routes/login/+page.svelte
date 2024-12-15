@@ -51,12 +51,21 @@
 						id="password"
 						class="block input input-bordered w-full max-w-xs"
 					/><br />
+					{#if $page.form?.mfa_required}
+						<label for="password">TOTP</label>
+						<input
+							type="password"
+							name="totp"
+							id="totp"
+							class="block input input-bordered w-full max-w-xs"
+						/><br />
+					{/if}
 					<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.login')}</button>
 
 					<div class="flex justify-between mt-4">
 						<p><a href="/signup" class="underline">{$t('auth.signup')}</a></p>
 						<p>
-							<a href="/settings/forgot-password" class="underline">{$t('auth.forgot_password')}</a>
+							<a href="/user/reset-password" class="underline">{$t('auth.forgot_password')}</a>
 						</p>
 					</div>
 				</form>
@@ -64,7 +73,7 @@
 
 			{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
 				<div class="text-center text-error mt-4">
-					{$page.form.message || $t('auth.login_error')}
+					{$t($page.form.message) || $t('auth.login_error')}
 				</div>
 			{/if}
 		</div>

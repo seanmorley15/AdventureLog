@@ -188,7 +188,14 @@
     "add_a_tag": "Lägg till en tagg",
     "tags": "Taggar",
     "set_to_pin": "Ställ in på Pin",
-    "category_fetch_error": "Det gick inte att hämta kategorier"
+    "category_fetch_error": "Det gick inte att hämta kategorier",
+    "copied_to_clipboard": "Kopierat till urklipp!",
+    "copy_failed": "Kopieringen misslyckades",
+    "adventure_calendar": "Äventyrskalender",
+    "emoji_picker": "Emoji-väljare",
+    "hide": "Dölja",
+    "show": "Visa",
+    "download_calendar": "Ladda ner kalender"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -226,14 +233,16 @@
       "light": "Ljus",
       "night": "Natt",
       "aestheticDark": "Estetisk mörk",
-      "aestheticLight": "Estetiskt ljus"
+      "aestheticLight": "Estetiskt ljus",
+      "northernLights": "Norrsken"
     },
     "users": "Användare",
     "worldtravel": "Världsresor",
     "my_tags": "Mina taggar",
     "tag": "Märka",
     "language_selection": "Språk",
-    "support": "Stöd"
+    "support": "Stöd",
+    "calendar": "Kalender"
   },
   "worldtravel": {
     "all": "Alla",
@@ -260,7 +269,11 @@
     "username": "Användarnamn",
     "public_tooltip": "Med en offentlig profil kan användare dela samlingar med dig och se din profil på användarsidan.",
     "profile_picture": "Profilbild",
-    "public_profile": "Offentlig profil"
+    "public_profile": "Offentlig profil",
+    "email_required": "E-post krävs",
+    "both_passwords_required": "Båda lösenorden krävs",
+    "new_password": "Nytt lösenord",
+    "reset_failed": "Det gick inte att återställa lösenordet"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."
@@ -291,7 +304,50 @@
     "about_this_background": "Om denna bakgrund",
     "join_discord": "Gå med i Discord",
     "join_discord_desc": "för att dela dina egna foton. \nLägg upp dem i",
-    "photo_by": "Foto av"
+    "photo_by": "Foto av",
+    "change_password_error": "Det går inte att ändra lösenord. \nOgiltigt nuvarande lösenord eller ogiltigt nytt lösenord.",
+    "current_password": "Aktuellt lösenord",
+    "password_change_lopout_warning": "Du kommer att loggas ut efter att du har ändrat ditt lösenord.",
+    "authenticator_code": "Autentiseringskod",
+    "copy": "Kopiera",
+    "disable_mfa": "Inaktivera MFA",
+    "email_added": "E-post har lagts till!",
+    "email_added_error": "Det gick inte att lägga till e-post",
+    "email_removed": "E-post har tagits bort!",
+    "email_removed_error": "Det gick inte att ta bort e-post",
+    "email_set_primary": "E-post har angetts som primärt!",
+    "email_set_primary_error": "Det gick inte att ställa in e-post som primär",
+    "email_verified": "E-post har verifierats!",
+    "email_verified_erorr_desc": "Din e-postadress kunde inte verifieras. \nFörsök igen.",
+    "email_verified_error": "Fel vid verifiering av e-post",
+    "email_verified_success": "Din e-postadress har verifierats. \nDu kan nu logga in.",
+    "enable_mfa": "Aktivera MFA",
+    "error_change_password": "Fel vid byte av lösenord. \nKontrollera ditt nuvarande lösenord och försök igen.",
+    "generic_error": "Ett fel uppstod när din begäran bearbetades.",
+    "invalid_code": "Ogiltig MFA-kod",
+    "invalid_credentials": "Ogiltigt användarnamn eller lösenord",
+    "make_primary": "Gör Primär",
+    "mfa_disabled": "Multifaktorautentisering har inaktiverats!",
+    "mfa_enabled": "Multifaktorautentisering har aktiverats!",
+    "mfa_not_enabled": "MFA är inte aktiverat",
+    "mfa_page_title": "Multifaktorautentisering",
+    "mfa_required": "Flerfaktorsautentisering krävs",
+    "no_emai_set": "Ingen e-post inställd",
+    "not_verified": "Ej verifierad",
+    "primary": "Primär",
+    "recovery_codes": "Återställningskoder",
+    "recovery_codes_desc": "Det här är dina återställningskoder. \nHåll dem säkra. \nDu kommer inte att kunna se dem igen.",
+    "reset_session_error": "Logga ut och in igen för att uppdatera din session och försök igen.",
+    "verified": "Verifierad",
+    "verify": "Kontrollera",
+    "verify_email_error": "Fel vid verifiering av e-post. \nFörsök igen om några minuter.",
+    "verify_email_success": "E-postverifiering har skickats!",
+    "add_email_blocked": "Du kan inte lägga till en e-postadress till ett konto som skyddas av tvåfaktorsautentisering.",
+    "required": "Detta fält är obligatoriskt",
+    "csrf_failed": "Det gick inte att hämta CSRF-token",
+    "duplicate_email": "Den här e-postadressen används redan.",
+    "email_taken": "Den här e-postadressen används redan.",
+    "username_taken": "Detta användarnamn används redan."
   },
   "checklist": {
     "add_item": "Lägg till objekt",
@@ -411,5 +467,14 @@
     "no_categories_found": "Inga kategorier hittades.",
     "select_category": "Välj Kategori",
     "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan."
+  },
+  "dashboard": {
+    "add_some": "Varför inte börja planera ditt nästa äventyr? \nDu kan lägga till ett nytt äventyr genom att klicka på knappen nedan.",
+    "countries_visited": "Besökta länder",
+    "no_recent_adventures": "Inga nya äventyr?",
+    "recent_adventures": "Senaste äventyr",
+    "total_adventures": "Totala äventyr",
+    "total_visited_regions": "Totalt antal besökta regioner",
+    "welcome_back": "Välkommen tillbaka"
   }
 }

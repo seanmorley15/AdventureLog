@@ -1,7 +1,5 @@
 Django==5.0.8
-dj-rest-auth @ git+https://github.com/iMerica/dj-rest-auth.git@master
 djangorestframework>=3.15.2
-djangorestframework-simplejwt==5.3.1
 django-allauth==0.63.3
 drf-yasg==1.21.4
 django-cors-headers==4.4.0
@@ -14,3 +12,9 @@ django-resized
 django-geojson
 setuptools
 gunicorn==23.0.0
+qrcode==8.0
+# slippers==0.6.2
+# django-allauth-ui==1.5.1
+# django-widget-tweaks==1.5.0
+django-ical==1.9.2
+icalendar==6.1.0

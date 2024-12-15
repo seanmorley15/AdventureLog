@@ -87,16 +87,14 @@
 						<div class="flex justify-between mt-4">
 							<p><a href="/login" class="underline">{$t('auth.login')}</a></p>
 							<p>
-								<a href="/settings/forgot-password" class="underline"
-									>{$t('auth.forgot_password')}</a
-								>
+								<a href="/user/reset-password" class="underline">{$t('auth.forgot_password')}</a>
 							</p>
 						</div>
 					</form>
 				</div>
 
 				{#if $page.form?.message}
-					<div class="text-center text-error mt-4">{$page.form?.message}</div>
+					<div class="text-center text-error mt-4">{$t($page.form?.message)}</div>
 				{/if}
 			{:else}
 				<div class="flex justify-center">

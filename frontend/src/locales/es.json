@@ -23,12 +23,14 @@
       "forest": "Bosque",
       "aqua": "Aqua",
       "aestheticDark": "Estética Oscura",
-      "aestheticLight": "Luz estetica"
+      "aestheticLight": "Luz estetica",
+      "northernLights": "Aurora boreal"
     },
     "my_tags": "Mis etiquetas",
     "tag": "Etiqueta",
     "language_selection": "Idioma",
-    "support": "Apoyo"
+    "support": "Apoyo",
+    "calendar": "Calendario"
   },
   "about": {
     "about": "Acerca de",
@@ -233,7 +235,14 @@
     "add_a_tag": "Agregar una etiqueta",
     "tags": "Etiquetas",
     "set_to_pin": "Establecer en Fijar",
-    "category_fetch_error": "Error al buscar categorías"
+    "category_fetch_error": "Error al buscar categorías",
+    "copied_to_clipboard": "¡Copiado al portapapeles!",
+    "copy_failed": "Copia fallida",
+    "adventure_calendar": "Calendario de aventuras",
+    "emoji_picker": "Selector de emojis",
+    "hide": "Esconder",
+    "show": "Espectáculo",
+    "download_calendar": "Descargar Calendario"
   },
   "worldtravel": {
     "all": "Todo",
@@ -260,7 +269,11 @@
     "registration_disabled": "El registro está actualmente deshabilitado.",
     "profile_picture": "Foto de perfil",
     "public_profile": "Perfil público",
-    "public_tooltip": "Con un perfil público, los usuarios pueden compartir colecciones con usted y ver su perfil en la página de usuarios."
+    "public_tooltip": "Con un perfil público, los usuarios pueden compartir colecciones con usted y ver su perfil en la página de usuarios.",
+    "email_required": "Se requiere correo electrónico",
+    "both_passwords_required": "Se requieren ambas contraseñas",
+    "new_password": "Nueva contraseña",
+    "reset_failed": "No se pudo restablecer la contraseña"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."
@@ -291,7 +304,50 @@
     "about_this_background": "Sobre este trasfondo",
     "join_discord": "Únete a la discordia",
     "join_discord_desc": "para compartir tus propias fotos. \nPublicarlos en el",
-    "photo_by": "Foto por"
+    "photo_by": "Foto por",
+    "change_password_error": "No se puede cambiar la contraseña. \nContraseña actual no válida o contraseña nueva no válida.",
+    "current_password": "Contraseña actual",
+    "password_change_lopout_warning": "Se cerrará su sesión después de cambiar su contraseña.",
+    "generic_error": "Se produjo un error al procesar su solicitud.",
+    "email_added": "¡Correo electrónico agregado exitosamente!",
+    "email_added_error": "Error al agregar correo electrónico",
+    "email_removed": "¡El correo electrónico se eliminó correctamente!",
+    "email_removed_error": "Error al eliminar el correo electrónico",
+    "email_set_primary": "¡El correo electrónico se configuró como principal correctamente!",
+    "email_set_primary_error": "Error al configurar el correo electrónico como principal",
+    "make_primary": "Hacer primario",
+    "no_emai_set": "No hay correo electrónico configurado",
+    "not_verified": "No verificado",
+    "primary": "Primario",
+    "verified": "Verificado",
+    "verify": "Verificar",
+    "verify_email_error": "Error al verificar el correo electrónico. \nInténtalo de nuevo en unos minutos.",
+    "verify_email_success": "¡La verificación por correo electrónico se envió correctamente!",
+    "error_change_password": "Error al cambiar la contraseña. \nPor favor verifique su contraseña actual e inténtelo nuevamente.",
+    "disable_mfa": "Deshabilitar MFA",
+    "enable_mfa": "Habilitar MFA",
+    "mfa_disabled": "¡La autenticación multifactor se deshabilitó correctamente!",
+    "mfa_not_enabled": "MFA no está habilitado",
+    "mfa_page_title": "Autenticación multifactor",
+    "copy": "Copiar",
+    "mfa_enabled": "¡La autenticación multifactor se habilitó correctamente!",
+    "recovery_codes": "Códigos de recuperación",
+    "recovery_codes_desc": "Estos son tus códigos de recuperación. \nMantenlos a salvo. \nNo podrás volver a verlos.",
+    "reset_session_error": "Por favor cierre sesión y vuelva a iniciarla para actualizar su sesión e inténtelo nuevamente.",
+    "authenticator_code": "Código de autenticación",
+    "email_verified": "¡Correo electrónico verificado exitosamente!",
+    "email_verified_erorr_desc": "Su correo electrónico no pudo ser verificado. \nPor favor inténtalo de nuevo.",
+    "email_verified_error": "Error al verificar el correo electrónico",
+    "email_verified_success": "Su correo electrónico ha sido verificado. \nAhora puedes iniciar sesión.",
+    "invalid_code": "Código MFA no válido",
+    "invalid_credentials": "Nombre de usuario o contraseña no válidos",
+    "mfa_required": "Se requiere autenticación multifactor",
+    "add_email_blocked": "No puede agregar una dirección de correo electrónico a una cuenta protegida por autenticación de dos factores.",
+    "required": "Este campo es obligatorio",
+    "csrf_failed": "No se pudo recuperar el token CSRF",
+    "duplicate_email": "Esta dirección de correo electrónico ya está en uso.",
+    "email_taken": "Esta dirección de correo electrónico ya está en uso.",
+    "username_taken": "Este nombre de usuario ya está en uso."
   },
   "checklist": {
     "add_item": "Agregar artículo",
@@ -411,5 +467,14 @@
     "no_categories_found": "No se encontraron categorías.",
     "select_category": "Seleccionar categoría",
     "update_after_refresh": "Las tarjetas de aventuras se actualizarán una vez que actualices la página."
+  },
+  "dashboard": {
+    "add_some": "¿Por qué no empezar a planificar tu próxima aventura? \nPuedes agregar una nueva aventura haciendo clic en el botón de abajo.",
+    "countries_visited": "Países visitados",
+    "no_recent_adventures": "¿Sin aventuras recientes?",
+    "recent_adventures": "Aventuras recientes",
+    "total_adventures": "Aventuras totales",
+    "total_visited_regions": "Total de regiones visitadas",
+    "welcome_back": "Bienvenido de nuevo"
   }
 }

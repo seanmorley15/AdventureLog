@@ -1,95 +1,65 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import { fetchCSRFToken, tryRefreshToken } from '$lib/index.server';
 
 export const authHook: Handle = async ({ event, resolve }) => {
 	try {
-		let authCookie = event.cookies.get('auth');
-		let refreshCookie = event.cookies.get('refresh');
+		let sessionid = event.cookies.get('sessionid');
 
-		if (!authCookie && !refreshCookie) {
+		if (!sessionid) {
 			event.locals.user = null;
 			return await resolve(event);
 		}
 
-		if (!authCookie && refreshCookie) {
-			event.locals.user = null;
-			const token = await tryRefreshToken(event.cookies.get('refresh') || '');
-			if (token) {
-				authCookie = token;
-				event.cookies.set('auth', authCookie, {
-					httpOnly: true,
-					sameSite: 'lax',
-					expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-					path: '/'
-				});
-			} else {
-				return await resolve(event);
-			}
-		}
-
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
-		let userFetch = await event.fetch(`${serverEndpoint}/auth/user/`, {
+		const cookie = event.request.headers.get('cookie') || '';
+
+		let userFetch = await event.fetch(`${serverEndpoint}/auth/user-metadata/`, {
 			headers: {
-				Cookie: `${authCookie}`
+				cookie
 			}
 		});
 
 		if (!userFetch.ok) {
-			console.log('Refreshing token');
-			const refreshCookie = event.cookies.get('refresh');
-
-			if (refreshCookie) {
-				const csrfToken = await fetchCSRFToken();
-				if (!csrfToken) {
-					console.error('Failed to fetch CSRF token');
-					event.locals.user = null;
-					return await resolve(event);
-				}
-
-				const refreshFetch = await event.fetch(`${serverEndpoint}/auth/token/refresh/`, {
-					method: 'POST',
-					headers: {
-						'X-CSRFToken': csrfToken,
-						'Content-Type': 'application/json'
-					},
-					body: JSON.stringify({ refresh: refreshCookie })
-				});
-
-				if (refreshFetch.ok) {
-					const refresh = await refreshFetch.json();
-					event.cookies.set('auth', 'auth=' + refresh.access, {
-						httpOnly: true,
-						sameSite: 'lax',
-						expires: new Date(Date.now() + 60 * 60 * 1000), // 60 minutes
-						path: '/'
-					});
-
-					userFetch = await event.fetch(`${serverEndpoint}/auth/user/`, {
-						headers: {
-							'X-CSRFToken': csrfToken,
-							Cookie: `auth=${refresh.access}`
-						}
-					});
-				}
-			}
+			event.locals.user = null;
+			event.cookies.delete('sessionid', { path: '/' });
+			return await resolve(event);
 		}
 
 		if (userFetch.ok) {
 			const user = await userFetch.json();
 			event.locals.user = user;
+			const setCookieHeader = userFetch.headers.get('Set-Cookie');
+
+			if (setCookieHeader) {
+				// Regular expression to match sessionid cookie and its expiry
+				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
+				const match = setCookieHeader.match(sessionIdRegex);
+
+				if (match) {
+					const sessionId = match[1];
+					const expiryString = match[2];
+					const expiryDate = new Date(expiryString);
+
+					// Set the sessionid cookie
+					event.cookies.set('sessionid', sessionId, {
+						path: '/',
+						httpOnly: true,
+						sameSite: 'lax',
+						secure: true,
+						expires: expiryDate
+					});
+				}
+			}
 		} else {
 			event.locals.user = null;
-			event.cookies.delete('auth', { path: '/' });
-			event.cookies.delete('refresh', { path: '/' });
+			event.cookies.delete('sessionid', { path: '/' });
 		}
 	} catch (error) {
 		console.error('Error in authHook:', error);
 		event.locals.user = null;
-		event.cookies.delete('auth', { path: '/' });
-		event.cookies.delete('refresh', { path: '/' });
+		event.cookies.delete('sessionid', { path: '/' });
 	}
 
 	return await resolve(event);

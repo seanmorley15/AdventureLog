@@ -188,7 +188,14 @@
     "add_a_tag": "添加标签",
     "tags": "标签",
     "set_to_pin": "设置为固定",
-    "category_fetch_error": "获取类别时出错"
+    "category_fetch_error": "获取类别时出错",
+    "copied_to_clipboard": "已复制到剪贴板！",
+    "copy_failed": "复制失败",
+    "adventure_calendar": "冒险日历",
+    "emoji_picker": "表情符号选择器",
+    "hide": "隐藏",
+    "show": "展示",
+    "download_calendar": "下载日历"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -226,14 +233,16 @@
       "light": "光",
       "night": "夜晚",
       "aestheticDark": "审美黑暗",
-      "aestheticLight": "美学之光"
+      "aestheticLight": "美学之光",
+      "northernLights": "北极光"
     },
     "users": "用户",
     "worldtravel": "环球旅行",
     "my_tags": "我的标签",
     "tag": "标签",
     "language_selection": "语言",
-    "support": "支持"
+    "support": "支持",
+    "calendar": "日历"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -249,7 +258,11 @@
     "registration_disabled": "目前已禁用注册。",
     "profile_picture": "个人资料图片",
     "public_profile": "公开资料",
-    "public_tooltip": "通过公开个人资料，用户可以与您共享收藏并在用户页面上查看您的个人资料。"
+    "public_tooltip": "通过公开个人资料，用户可以与您共享收藏并在用户页面上查看您的个人资料。",
+    "email_required": "电子邮件为必填项",
+    "both_passwords_required": "两个密码都需要",
+    "new_password": "新密码",
+    "reset_failed": "重置密码失败"
   },
   "worldtravel": {
     "all": "全部",
@@ -291,7 +304,50 @@
     "about_this_background": "关于这个背景",
     "join_discord": "加入不和谐",
     "join_discord_desc": "分享您自己的照片。\n将它们张贴在",
-    "photo_by": "摄影："
+    "photo_by": "摄影：",
+    "change_password_error": "无法更改密码。\n当前密码无效或新密码无效。",
+    "current_password": "当前密码",
+    "password_change_lopout_warning": "更改密码后您将退出。",
+    "authenticator_code": "验证码",
+    "copy": "复制",
+    "disable_mfa": "禁用 MFA",
+    "email_added": "邮箱添加成功！",
+    "email_added_error": "添加电子邮件时出错",
+    "email_removed": "电子邮件删除成功！",
+    "email_removed_error": "删除电子邮件时出错",
+    "email_set_primary": "成功将电子邮件设置为主！",
+    "email_set_primary_error": "将电子邮件设置为主要电子邮件时出错",
+    "email_verified": "邮箱验证成功！",
+    "email_verified_erorr_desc": "无法验证您的电子邮件。\n请再试一次。",
+    "email_verified_error": "验证电子邮件时出错",
+    "email_verified_success": "您的电子邮件已被验证。\n您现在可以登录了。",
+    "enable_mfa": "启用 MFA",
+    "error_change_password": "更改密码时出错。\n请检查您当前的密码，然后重试。",
+    "generic_error": "处理您的请求时发生错误。",
+    "invalid_code": "MFA 代码无效",
+    "invalid_credentials": "用户名或密码无效",
+    "make_primary": "设为主要",
+    "mfa_disabled": "多重身份验证已成功禁用！",
+    "mfa_enabled": "多重身份验证启用成功！",
+    "mfa_not_enabled": "MFA 未启用",
+    "mfa_page_title": "多重身份验证",
+    "mfa_required": "需要多重身份验证",
+    "no_emai_set": "没有设置电子邮件",
+    "not_verified": "未验证",
+    "primary": "基本的",
+    "recovery_codes": "恢复代码",
+    "recovery_codes_desc": "这些是您的恢复代码。\n确保他们的安全。\n你将无法再见到他们。",
+    "reset_session_error": "请注销并重新登录以刷新您的会话，然后重试。",
+    "verified": "已验证",
+    "verify": "核实",
+    "verify_email_error": "验证电子邮件时出错。\n几分钟后重试。",
+    "verify_email_success": "邮箱验证发送成功！",
+    "add_email_blocked": "您无法将电子邮件地址添加到受双因素身份验证保护的帐户。",
+    "required": "此字段是必需的",
+    "csrf_failed": "获取 CSRF 令牌失败",
+    "duplicate_email": "该电子邮件地址已被使用。",
+    "email_taken": "该电子邮件地址已被使用。",
+    "username_taken": "该用户名已被使用。"
   },
   "checklist": {
     "add_item": "添加项目",
@@ -411,5 +467,14 @@
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
     "update_after_refresh": "刷新页面后，冒险卡将更新。"
+  },
+  "dashboard": {
+    "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",
+    "countries_visited": "访问国家",
+    "no_recent_adventures": "最近没有冒险吗？",
+    "recent_adventures": "最近的冒险",
+    "total_adventures": "全面冒险",
+    "total_visited_regions": "总访问地区",
+    "welcome_back": "欢迎回来"
   }
 }

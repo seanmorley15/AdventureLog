@@ -1,3 +1,4 @@
+import { fetchCSRFToken } from '$lib/index.server';
 import { fail, type Actions } from '@sveltejs/kit';
 
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
@@ -13,10 +14,14 @@ export const actions: Actions = {
 			return fail(400, { message: 'missing_email' });
 		}
 
-		let res = await fetch(`${endpoint}/auth/password/reset/`, {
+		let csrfToken = await fetchCSRFToken();
+
+		let res = await fetch(`${endpoint}/_allauth/browser/v1/auth/password/request`, {
 			method: 'POST',
 			headers: {
-				'Content-Type': 'application/json'
+				'Content-Type': 'application/json',
+				'X-CSRFToken': csrfToken,
+				Cookie: `csrftoken=${csrfToken}`
 			},
 			body: JSON.stringify({
 				email
@@ -25,10 +30,7 @@ export const actions: Actions = {
 
 		if (!res.ok) {
 			let message = await res.json();
-
-			const key = Object.keys(message)[0];
-
-			return fail(res.status, { message: message[key] });
+			return fail(res.status, message);
 		}
 		return { success: true };
 	}

@@ -6,12 +6,19 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
+	import TotpModal from '$lib/components/TOTPModal.svelte';
 
 	export let data;
 	let user: User;
+	let emails: typeof data.props.emails;
 	if (data.user) {
 		user = data.user;
+		emails = data.props.emails;
 	}
+
+	let new_email: string = '';
+
+	let isMFAModalOpen: boolean = false;
 
 	onMount(async () => {
 		if (browser) {
@@ -34,16 +41,6 @@
 		}
 	}
 
-	// async function exportAdventures() {
-	// 	const url = await exportData();
-
-	// 	const a = document.createElement('a');
-	// 	a.href = url;
-	// 	a.download = 'adventure-log-export.json';
-	// 	a.click();
-	// 	URL.revokeObjectURL(url);
-	// }
-
 	async function checkVisitedRegions() {
 		let res = await fetch('/api/reverse-geocode/mark_visited_region/', {
 			method: 'POST',
@@ -58,7 +55,104 @@
 			addToast('error', $t('adventures.error_updating_regions'));
 		}
 	}
+
+	async function removeEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email })
+		});
+		if (res.ok) {
+			addToast('success', $t('settings.email_removed'));
+			emails = emails.filter((e) => e.email !== email.email);
+		} else {
+			addToast('error', $t('settings.email_removed_error'));
+		}
+	}
+
+	async function verifyEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email })
+		});
+		if (res.ok) {
+			addToast('success', $t('settings.verify_email_success'));
+		} else {
+			addToast('error', $t('settings.verify_email_error'));
+		}
+	}
+
+	async function addEmail() {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: new_email })
+		});
+		if (res.ok) {
+			addToast('success', $t('settings.email_added'));
+			emails = [...emails, { email: new_email, verified: false, primary: false }];
+			new_email = '';
+		} else {
+			let error = await res.json();
+			let error_code = error.errors[0].code;
+			addToast('error', $t(`settings.${error_code}`) || $t('settings.generic_error'));
+		}
+	}
+
+	async function primaryEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
+		let res = await fetch('/_allauth/browser/v1/account/email/', {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ email: email.email, primary: true })
+		});
+		if (res.ok) {
+			addToast('success', $t('settings.email_set_primary'));
+			// remove primary from all other emails and set this one as primary
+			emails = emails.map((e) => {
+				if (e.email === email.email) {
+					e.primary = true;
+				} else {
+					e.primary = false;
+				}
+				return e;
+			});
+		} else {
+			addToast('error', $t('settings.email_set_primary_error'));
+		}
+	}
+
+	async function disableMfa() {
+		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
+			method: 'DELETE'
+		});
+		if (res.ok) {
+			addToast('success', $t('settings.mfa_disabled'));
+			data.props.authenticators = false;
+		} else {
+			if (res.status == 401) {
+				addToast('error', $t('settings.reset_session_error'));
+			}
+			addToast('error', $t('settings.generic_error'));
+		}
+	}
 </script>
+
+{#if isMFAModalOpen}
+	<TotpModal
+		user={data.user}
+		on:close={() => (isMFAModalOpen = false)}
+		bind:is_enabled={data.props.authenticators}
+	/>
+{/if}
 
 <h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.settings_page')}</h1>
 
@@ -95,14 +189,6 @@
 			id="last_name"
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/><br />
-		<!-- <label for="first_name">Email</label>
-		<input
-			type="email"
-			bind:value={user.email}
-			name="email"
-			id="email"
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/><br /> -->
 		<label for="profilePicture">{$t('auth.profile_picture')}</label>
 		<input
 			type="file"
@@ -131,13 +217,21 @@
 
 {#if $page.form?.message}
 	<div class="text-center text-error mt-4">
-		{$page.form?.message}
+		{$t($page.form.message)}
 	</div>
 {/if}
 
 <h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.password_change')}</h1>
 <div class="flex justify-center">
-	<form action="?/changePassword" method="post" class="w-full max-w-xs">
+	<form action="?/changePassword" method="post" class="w-full max-w-xs" use:enhance>
+		<input
+			type="password"
+			name="current_password"
+			placeholder={$t('settings.current_password')}
+			id="current_password"
+			class="block mb-2 input input-bordered w-full max-w-xs"
+		/>
+		<br />
 		<input
 			type="password"
 			name="password1"
@@ -153,33 +247,82 @@
 			placeholder={$t('settings.confirm_new_password')}
 			class="block mb-2 input input-bordered w-full max-w-xs"
 		/>
-		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.password_change')}</button>
+		<div class="tooltip tooltip-warning" data-tip={$t('settings.password_change_lopout_warning')}>
+			<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.password_change')}</button>
+		</div>
 		<br />
 	</form>
 </div>
 
 <h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.email_change')}</h1>
-<div class="flex justify-center">
-	<form action="?/changeEmail" method="post" class="w-full max-w-xs">
-		<label for="current_email">{$t('settings.current_email')}</label>
-		<input
-			type="email"
-			name="current_email"
-			placeholder={user.email || $t('settings.no_email_set')}
-			id="current_email"
-			readonly
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/>
-		<br />
-		<input
-			type="email"
-			name="new_email"
-			placeholder={$t('settings.new_email')}
-			id="new_email"
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/>
-		<button class="py-2 px-4 btn btn-primary mt-2">{$t('settings.email_change')}</button>
+
+<div class="flex justify-center mb-4">
+	<div>
+		{#each emails as email}
+			<p class="mb-2">
+				{email.email}
+				{#if email.verified}
+					<div class="badge badge-success">{$t('settings.verified')}</div>
+				{:else}
+					<div class="badge badge-error">{$t('settings.not_verified')}</div>
+				{/if}
+				{#if email.primary}
+					<div class="badge badge-primary">{$t('settings.primary')}</div>
+				{/if}
+				{#if !email.verified}
+					<button class="btn btn-sm btn-secondary ml-2" on:click={() => verifyEmail(email)}
+						>{$t('settings.verify')}</button
+					>
+				{/if}
+				{#if !email.primary}
+					<button class="btn btn-sm btn-secondary ml-2" on:click={() => primaryEmail(email)}
+						>{$t('settings.make_primary')}</button
+					>
+				{/if}
+				<button class="btn btn-sm btn-warning ml-2" on:click={() => removeEmail(email)}
+					>{$t('adventures.remove')}</button
+				>
+			</p>
+		{/each}
+		{#if emails.length === 0}
+			<p>{$t('settings.no_emai_set')}</p>
+		{/if}
+	</div>
+</div>
+
+<div class="flex justify-center mt-4">
+	<form class="w-full max-w-xs" on:submit={addEmail}>
+		<div class="mb-4">
+			<input
+				type="email"
+				name="new_email"
+				placeholder={$t('settings.new_email')}
+				bind:value={new_email}
+				id="new_email"
+				class="block mb-2 input input-bordered w-full max-w-xs"
+			/>
+		</div>
+		<div>
+			<button class="py-2 px-4 mb-4 btn btn-primary">{$t('settings.email_change')}</button>
+		</div>
 	</form>
+</div>
+
+<h1 class="text-center font-extrabold text-xl mt-4 mb-2">{$t('settings.mfa_page_title')}</h1>
+
+<div class="flex justify-center mb-4">
+	<div>
+		{#if !data.props.authenticators}
+			<p>{$t('settings.mfa_not_enabled')}</p>
+			<button class="btn btn-primary mt-2" on:click={() => (isMFAModalOpen = true)}
+				>{$t('settings.enable_mfa')}</button
+			>
+		{:else}
+			<button class="btn btn-warning mt-2" on:click={disableMfa}
+				>{$t('settings.disable_mfa')}</button
+			>
+		{/if}
+	</div>
 </div>
 
 <div class="flex flex-col items-center mt-4">
@@ -189,22 +332,15 @@
 	<p>
 		{$t('adventures.visited_region_check_desc')}
 	</p>
+	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
+
 	<button class="btn btn-neutral mt-2 mb-2" on:click={checkVisitedRegions}
 		>{$t('adventures.update_visited_regions')}</button
 	>
-	<p>{$t('adventures.update_visited_regions_disclaimer')}</p>
 </div>
-<!-- 
-<div class="flex flex-col items-center mt-4">
-	<h1 class="text-center font-extrabold text-xl mt-4 mb-2">Data Export</h1>
-	<button class="btn btn-neutral mb-4" on:click={exportAdventures}> Export to JSON </button>
-	<p>This may take a few seconds...</p>
-</div> -->
 
 <small class="text-center"
-	><b>For Debug Use:</b> Server PK={user.pk} | Date Joined: {user.date_joined
-		? new Date(user.date_joined).toDateString()
-		: ''} | Staff user: {user.is_staff}</small
+	><b>For Debug Use:</b> UUID={user.uuid} | Staff user: {user.is_staff}</small
 >
 
 <svelte:head>

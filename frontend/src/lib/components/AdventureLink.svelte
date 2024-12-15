@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { deserialize } from '$app/forms';
 	import type { Adventure, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
@@ -59,7 +58,7 @@
 		{/if}
 		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 			{#each adventures as adventure}
-				<AdventureCard user={user ?? null} type="link" {adventure} on:link={add} />
+				<AdventureCard {user} type="link" {adventure} on:link={add} />
 			{/each}
 			{#if adventures.length === 0 && !isLoading}
 				<p class="text-center text-lg">

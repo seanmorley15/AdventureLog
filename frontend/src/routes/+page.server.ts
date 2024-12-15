@@ -1,8 +1,16 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
 import { themes } from '$lib';
+import { fetchCSRFToken } from '$lib/index.server';
+import type { PageServerLoad } from './$types';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
+export const load = (async (event) => {
+	if (event.locals.user) {
+		return redirect(302, '/dashboard');
+	}
+}) satisfies PageServerLoad;
 
 export const actions: Actions = {
 	setTheme: async ({ url, cookies }) => {
@@ -16,23 +24,24 @@ export const actions: Actions = {
 			});
 		}
 	},
-	logout: async ({ cookies }: { cookies: any }) => {
-		const cookie = cookies.get('auth') || null;
+	logout: async (event) => {
+		let sessionId = event.cookies.get('sessionid');
+		let csrfToken = await fetchCSRFToken();
 
-		if (!cookie) {
+		if (!sessionId) {
 			return;
 		}
 
-		const res = await fetch(`${serverEndpoint}/auth/logout/`, {
-			method: 'POST',
+		const res = await fetch(`${serverEndpoint}/_allauth/browser/v1/auth/session`, {
+			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: cookies.get('auth')
-			}
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'X-CSRFToken': csrfToken
+			},
+			credentials: 'include'
 		});
-		if (res.ok) {
-			cookies.delete('auth', { path: '/', secure: false });
-			cookies.delete('refresh', { path: '/', secure: false });
+		if (res.status == 401) {
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');

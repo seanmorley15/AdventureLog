@@ -155,7 +155,6 @@
 		{#each myAdventures as adventure}
 			<AdventureCard
 				user={data.user}
-				type={adventure.type}
 				{adventure}
 				on:delete={deleteAdventure}
 				on:edit={editAdventure}
@@ -168,13 +167,7 @@
 	<h2 class="text-center font-bold text-2xl mb-4">{$t('search.public_adventures')}</h2>
 	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
 		{#each publicAdventures as adventure}
-			<AdventureCard
-				user={null}
-				type={adventure.type}
-				{adventure}
-				on:delete={deleteAdventure}
-				on:edit={editAdventure}
-			/>
+			<AdventureCard user={null} {adventure} on:delete={deleteAdventure} on:edit={editAdventure} />
 		{/each}
 	</div>
 {/if}

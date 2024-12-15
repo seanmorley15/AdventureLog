@@ -12,14 +12,18 @@
 		"format": "prettier --write ."
 	},
 	"devDependencies": {
+		"@event-calendar/core": "^3.7.1",
+		"@event-calendar/day-grid": "^3.7.1",
+		"@event-calendar/time-grid": "^3.7.1",
 		"@iconify-json/mdi": "^1.1.67",
 		"@sveltejs/adapter-auto": "^3.2.2",
 		"@sveltejs/adapter-node": "^5.2.0",
 		"@sveltejs/adapter-vercel": "^5.4.1",
-		"@sveltejs/kit": "^2.5.17",
+		"@sveltejs/kit": "^2.8.3",
 		"@sveltejs/vite-plugin-svelte": "^3.1.1",
 		"@tailwindcss/typography": "^0.5.13",
 		"@types/node": "^22.5.4",
+		"@types/qrcode": "^1.5.5",
 		"autoprefixer": "^10.4.19",
 		"daisyui": "^4.12.6",
 		"postcss": "^8.4.38",
@@ -36,6 +40,8 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
+		"emoji-picker-element": "^1.26.0",
+		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
 	}

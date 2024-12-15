@@ -3,6 +3,11 @@ from django.contrib import admin
 from django.utils.html import mark_safe
 from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
 from worldtravel.models import Country, Region, VisitedRegion
+from allauth.account.decorators import secure_admin_login
+
+admin.autodiscover()
+admin.site.login = secure_admin_login(admin.site.login)
+
 
 
 class AdventureAdmin(admin.ModelAdmin):
@@ -54,9 +59,9 @@ from users.models import CustomUser
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ['username', 'email', 'is_staff', 'is_active', 'image_display']
+    list_display = ['username', 'is_staff', 'is_active', 'image_display']
     readonly_fields = ('uuid',)
-    search_fields = ('username', 'email')
+    search_fields = ('username',)
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields': ('profile_pic', 'uuid', 'public_profile')}),
     )

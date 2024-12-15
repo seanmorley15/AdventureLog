@@ -5,14 +5,10 @@
 	import type { SubmitFunction } from '@sveltejs/kit';
 
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
-	import WeatherSunny from '~icons/mdi/weather-sunny';
-	import WeatherNight from '~icons/mdi/weather-night';
-	import Forest from '~icons/mdi/forest';
-	import Water from '~icons/mdi/water';
+	import Calendar from '~icons/mdi/calendar';
 	import AboutModal from './AboutModal.svelte';
 	import AccountMultiple from '~icons/mdi/account-multiple';
 	import Avatar from './Avatar.svelte';
-	import PaletteOutline from '~icons/mdi/palette-outline';
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '$lib';
@@ -92,6 +88,9 @@
 						<button on:click={() => goto('/map')}>{$t('navbar.map')}</button>
 					</li>
 					<li>
+						<button on:click={() => goto('/calendar')}>{$t('navbar.calendar')}</button>
+					</li>
+					<li>
 						<button on:click={() => goto('/users')}>{$t('navbar.users')}</button>
 					</li>
 				{/if}
@@ -156,6 +155,9 @@
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/map')}>{$t('navbar.map')}</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral" on:click={() => goto('/calendar')}><Calendar /></button>
 				</li>
 				<li>
 					<button class="btn btn-neutral" on:click={() => goto('/users')}
