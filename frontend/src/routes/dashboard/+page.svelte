@@ -57,7 +57,9 @@
 
 	<!-- Inspiration if there are no recent adventures -->
 	{#if recentAdventures.length === 0}
-		<div class="flex flex-col items-center justify-center bg-neutral shadow p-8 mb-8 rounded-lg">
+		<div
+			class="flex flex-col items-center justify-center bg-neutral shadow p-8 mb-8 rounded-lg text-neutral-content"
+		>
 			<h2 class="text-3xl font-semibold mb-4">{$t('dashboard.no_recent_adventures')}</h2>
 			<p class="text-lg text-center">
 				{$t('dashboard.add_some')}
