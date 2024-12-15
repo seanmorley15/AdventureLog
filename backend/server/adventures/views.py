@@ -1234,10 +1234,24 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
         for adventure in serializer.data:
             if adventure['visits']:
                 for visit in adventure['visits']:
+                    # Skip if start_date is missing
+                    if not visit.get('start_date'):
+                        continue
+
+                    # Parse start_date and handle end_date
+                    try:
+                        start_date = datetime.strptime(visit['start_date'], '%Y-%m-%d').date()
+                    except ValueError:
+                        continue  # Skip if the start_date is invalid
+
+                    end_date = (
+                        datetime.strptime(visit['end_date'], '%Y-%m-%d').date() + timedelta(days=1)
+                        if visit.get('end_date') else start_date + timedelta(days=1)
+                    )
+                    
+                    # Create event
                     event = Event()
                     event.add('summary', adventure['name'])
-                    start_date = datetime.strptime(visit['start_date'], '%Y-%m-%d').date()
-                    end_date = datetime.strptime(visit['end_date'], '%Y-%m-%d').date() + timedelta(days=1) if visit['end_date'] else start_date + timedelta(days=1)
                     event.add('dtstart', start_date)
                     event.add('dtend', end_date)
                     event.add('dtstamp', datetime.now())
