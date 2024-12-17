@@ -195,7 +195,9 @@
     "emoji_picker": "Emoji-kiezer",
     "hide": "Verbergen",
     "show": "Show",
-    "download_calendar": "Agenda downloaden"
+    "download_calendar": "Agenda downloaden",
+    "md_instructions": "Schrijf hier uw korting...",
+    "preview": "Voorbeeld"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -218,6 +218,8 @@
 		"hide": "Hide",
 		"emoji_picker": "Emoji Picker",
 		"download_calendar": "Download Calendar",
+		"preview": "Preview",
+		"md_instructions": "Write your markdown here...",
 		"days": "days",
 		"activities": {
 			"general": "General 🌍",

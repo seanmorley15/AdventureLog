@@ -242,7 +242,9 @@
     "emoji_picker": "Wybór emoji",
     "hide": "Ukrywać",
     "show": "Pokazywać",
-    "download_calendar": "Pobierz Kalendarz"
+    "download_calendar": "Pobierz Kalendarz",
+    "md_instructions": "Napisz tutaj swoją przecenę...",
+    "preview": "Zapowiedź"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

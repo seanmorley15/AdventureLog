@@ -14,6 +14,9 @@ importers:
       emoji-picker-element:
         specifier: ^1.26.0
         version: 1.26.0
+      marked:
+        specifier: ^15.0.4
+        version: 15.0.4
       qrcode:
         specifier: ^1.5.4
         version: 1.5.4
@@ -1350,6 +1353,11 @@ packages:
   maplibre-gl@4.5.0:
     resolution: {integrity: sha512-qOS1hn4d/pn2i0uva4S5Oz+fACzTkgBKq+NpwT/Tqzi4MSyzcWNtDELzLUSgWqHfNIkGCl5CZ/w7dtis+t4RCw==}
     engines: {node: '>=16.14.0', npm: '>=8.1.0'}
+
+  marked@15.0.4:
+    resolution: {integrity: sha512-TCHvDqmb3ZJ4PWG7VEGVgtefA5/euFmsIhxtD0XsBxI39gUSKL81mIRFdt0AiNQozUahd4ke98ZdirExd/vSEw==}
+    engines: {node: '>= 18'}
+    hasBin: true
 
   mdn-data@2.0.30:
     resolution: {integrity: sha512-GaqWWShW4kv/G9IEucWScBx9G1/vsFZZJUO+tD26M8J8z3Kw5RDQjaoZe03YAClgeS/SWPOcb4nkFBTEi5DUEA==}
@@ -3317,6 +3325,8 @@ snapshots:
       supercluster: 8.0.1
       tinyqueue: 2.0.3
       vt-pbf: 3.1.3
+
+  marked@15.0.4: {}
 
   mdn-data@2.0.30: {}
 

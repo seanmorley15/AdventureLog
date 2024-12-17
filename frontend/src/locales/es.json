@@ -242,7 +242,9 @@
     "emoji_picker": "Selector de emojis",
     "hide": "Esconder",
     "show": "Espectáculo",
-    "download_calendar": "Descargar Calendario"
+    "download_calendar": "Descargar Calendario",
+    "md_instructions": "Escriba su descuento aquí...",
+    "preview": "Avance"
   },
   "worldtravel": {
     "all": "Todo",
