@@ -59,7 +59,6 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         for adventure in adventures:
             if adventure.latitude is not None and adventure.longitude is not None:
                 try:
-                    print(f"Adventure {adventure.id}: lat={adventure.latitude}, lon={adventure.longitude}")
                     point = Point(float(adventure.longitude), float(adventure.latitude), srid=4326)
                     region = Region.objects.filter(geometry__contains=point).first()
                     if region:
