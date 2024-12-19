@@ -5,8 +5,7 @@
 	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
-
-	import ArrowDownThick from '~icons/mdi/arrow-down-thick';
+	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
 
@@ -37,35 +36,67 @@
 <div
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
-	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{transportation.name}</h2>
-		<div class="badge badge-secondary">{$t(`transportation.modes.${transportation.type}`)}</div>
-		<div>
+	<div class="card-body space-y-4">
+		<!-- Title and Type -->
+		<div class="flex items-center justify-between">
+			<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
+			<div class="badge badge-secondary">
+				{$t(`transportation.modes.${transportation.type}`)}
+			</div>
+		</div>
+
+		<!-- Locations -->
+		<div class="space-y-2">
 			{#if transportation.from_location}
-				<p class="break-words text-wrap">{transportation.from_location}</p>
+				<div class="flex items-center gap-2">
+					<span class="font-medium text-sm">{$t('adventures.from')}:</span>
+					<p class="break-words">{transportation.from_location}</p>
+				</div>
 			{/if}
 			{#if transportation.to_location}
-				<ArrowDownThick class="w-6 h-6" />
-				<p class="break-words text-wrap">{transportation.to_location}</p>
-			{/if}
-		</div>
-		<div>
-			{#if transportation.date}
-				<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
-			{/if}
-			{#if transportation.end_date}
-				<ArrowDownThick class="w-6 h-6" />
-				<p>{new Date(transportation.end_date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+				<!-- <ArrowDownThick class="w-4 h-4" /> -->
+				<div class="flex items-center gap-2">
+					<span class="font-medium text-sm">{$t('adventures.to')}:</span>
+
+					<p class="break-words">{transportation.to_location}</p>
+				</div>
 			{/if}
 		</div>
 
+		<!-- Dates -->
+		<div class="space-y-2">
+			{#if transportation.date}
+				<div class="flex items-center gap-2">
+					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
+					<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+				</div>
+			{/if}
+			{#if transportation.end_date}
+				<div class="flex items-center gap-2">
+					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
+					<p>{new Date(transportation.end_date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Actions -->
 		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
-				<button on:click={deleteTransportation} class="btn btn-secondary"
-					><TrashCanOutline class="w-5 h-5 mr-1" /></button
+				<button
+					class="btn btn-primary btn-sm flex items-center gap-1"
+					on:click={editTransportation}
+					title="Edit"
 				>
-				<button class="btn btn-primary" on:click={editTransportation}>
-					<FileDocumentEdit class="w-6 h-6" />
+					<FileDocumentEdit class="w-5 h-5" />
+					<span>{$t('transportation.edit')}</span>
+				</button>
+				<button
+					on:click={deleteTransportation}
+					class="btn btn-secondary btn-sm flex items-center gap-1"
+					title="Delete"
+				>
+					<TrashCanOutline class="w-5 h-5" />
+					<span>{$t('adventures.delete')}</span>
 				</button>
 			</div>
 		{/if}

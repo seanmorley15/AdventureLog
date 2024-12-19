@@ -12,8 +12,6 @@
 	import NotFound from '$lib/components/NotFound.svelte';
 	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
-	import EditTransportation from '$lib/components/EditTransportation.svelte';
-	import NewTransportation from '$lib/components/NewTransportation.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 
@@ -26,6 +24,7 @@
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import TransportationModal from '$lib/components/TransportationModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -108,9 +107,8 @@
 	}
 
 	let adventureToEdit: Adventure | null = null;
-	let transportationToEdit: Transportation;
+	let transportationToEdit: Transportation | null = null;
 	let isAdventureModalOpen: boolean = false;
-	let isTransportationEditModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
 	let checklistToEdit: Checklist | null;
@@ -122,17 +120,12 @@
 		isAdventureModalOpen = true;
 	}
 
-	function saveNewTransportation(event: CustomEvent<Transportation>) {
-		transportations = transportations.map((transportation) => {
-			if (transportation.id === event.detail.id) {
-				return event.detail;
-			}
-			return transportation;
-		});
-		isTransportationEditModalOpen = false;
+	function editTransportation(event: CustomEvent<Transportation>) {
+		transportationToEdit = event.detail;
+		isShowingTransportationModal = true;
 	}
 
-	function saveOrCreate(event: CustomEvent<Adventure>) {
+	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
 		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
 			adventures = adventures.map((adventure) => {
 				if (adventure.id === event.detail.id) {
@@ -144,6 +137,22 @@
 			adventures = [event.detail, ...adventures];
 		}
 		isAdventureModalOpen = false;
+	}
+
+	function saveOrCreateTransportation(event: CustomEvent<Transportation>) {
+		if (transportations.find((transportation) => transportation.id === event.detail.id)) {
+			// Update existing transportation
+			transportations = transportations.map((transportation) => {
+				if (transportation.id === event.detail.id) {
+					return event.detail;
+				}
+				return transportation;
+			});
+		} else {
+			// Create new transportation
+			transportations = [event.detail, ...transportations];
+		}
+		isShowingTransportationModal = false;
 	}
 </script>
 
@@ -157,13 +166,12 @@
 	/>
 {/if}
 
-{#if isTransportationEditModalOpen}
-	<EditTransportation
+{#if isShowingTransportationModal}
+	<TransportationModal
 		{transportationToEdit}
-		on:close={() => (isTransportationEditModalOpen = false)}
-		on:saveEdit={saveNewTransportation}
-		startDate={collection.start_date}
-		endDate={collection.end_date}
+		on:close={() => (isShowingTransportationModal = false)}
+		on:save={saveOrCreateTransportation}
+		{collection}
 	/>
 {/if}
 
@@ -171,7 +179,7 @@
 	<AdventureModal
 		{adventureToEdit}
 		on:close={() => (isAdventureModalOpen = false)}
-		on:save={saveOrCreate}
+		on:save={saveOrCreateAdventure}
 		{collection}
 	/>
 {/if}
@@ -218,19 +226,6 @@
 			});
 			isShowingChecklistModal = false;
 		}}
-	/>
-{/if}
-
-{#if isShowingTransportationModal}
-	<NewTransportation
-		on:close={() => (isShowingTransportationModal = false)}
-		on:add={(event) => {
-			transportations = [event.detail, ...transportations];
-			isShowingTransportationModal = false;
-		}}
-		{collection}
-		startDate={collection.start_date}
-		endDate={collection.end_date}
 	/>
 {/if}
 
@@ -300,6 +295,8 @@
 						<button
 							class="btn btn-primary"
 							on:click={() => {
+								// Reset the transportation object for creating a new one
+								transportationToEdit = null;
 								isShowingTransportationModal = true;
 								newType = '';
 							}}
@@ -415,10 +412,7 @@
 					on:delete={(event) => {
 						transportations = transportations.filter((t) => t.id != event.detail);
 					}}
-					on:edit={(event) => {
-						transportationToEdit = event.detail;
-						isTransportationEditModalOpen = true;
-					}}
+					on:edit={editTransportation}
 					{collection}
 				/>
 			{/each}
@@ -534,7 +528,7 @@
 							}}
 							on:edit={(event) => {
 								transportationToEdit = event.detail;
-								isTransportationEditModalOpen = true;
+								isShowingTransportationModal = true;
 							}}
 						/>
 					{/each}

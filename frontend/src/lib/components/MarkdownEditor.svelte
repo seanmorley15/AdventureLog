@@ -3,6 +3,7 @@
 	import { t } from 'svelte-i18n';
 
 	export let text: string | null | undefined = ''; // Markdown text
+	export let editor_height: string = 'h-64'; // Editor height
 	let is_preview: boolean = false; // Toggle between Edit and Preview mode
 
 	// Function to parse markdown to HTML
@@ -46,7 +47,7 @@
 	<!-- Markdown Editor -->
 	{#if !is_preview}
 		<textarea
-			class="textarea textarea-bordered resize-none h-64 w-full"
+			class="textarea textarea-bordered resize-none {editor_height}  w-full"
 			bind:this={editorRef}
 			bind:value={text}
 			placeholder={$t('adventures.md_instructions')}
