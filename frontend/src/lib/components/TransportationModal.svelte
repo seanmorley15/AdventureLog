@@ -123,8 +123,9 @@
 		}
 
 		if (transportation.type == 'plane') {
-			transportation.from_location = startingData[0].name + ' (' + starting_airport + ')';
-			transportation.to_location = endingData[0].name + ' (' + ending_airport + ')';
+			transportation.from_location =
+				startingData[0].name + ' (' + starting_airport.toUpperCase() + ')';
+			transportation.to_location = endingData[0].name + ' (' + ending_airport.toUpperCase() + ')';
 		} else {
 			transportation.from_location = startingData[0].display_name;
 			transportation.to_location = endingData[0].display_name;
@@ -536,7 +537,7 @@
 						<div class="mt-4">
 							<MapLibre
 								style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 								standardControls
 							>
 								<!-- MapEvents gives you access to map events even from other components inside the map,
@@ -560,7 +561,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							</MapLibre>
 							<!-- button to clear to and from location -->
 						</div>
-						{#if transportation.from_location && transportation.to_location}
+						{#if transportation.from_location || transportation.to_location}
 							<button
 								type="button"
 								class="btn btn-error btn-sm mt-2"

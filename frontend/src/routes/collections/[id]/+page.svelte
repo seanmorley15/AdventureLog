@@ -10,7 +10,7 @@
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapLibre, Marker, Popup } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
@@ -41,6 +41,29 @@
 	let checklists: Checklist[] = [];
 
 	let numberOfDays: number = NaN;
+
+	function getTransportationEmoji(type: string): string {
+		switch (type) {
+			case 'car':
+				return '🚗';
+			case 'plane':
+				return '✈️';
+			case 'train':
+				return '🚆';
+			case 'bus':
+				return '🚌';
+			case 'boat':
+				return '⛵';
+			case 'bike':
+				return '🚲';
+			case 'walking':
+				return '🚶';
+			case 'other':
+				return '🚀';
+			default:
+				return '🚀';
+		}
+	}
 
 	$: {
 		numAdventures = adventures.length;
@@ -229,29 +252,6 @@
 	/>
 {/if}
 
-{#if notFound}
-	<div
-		class="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8 -mt-20"
-	>
-		<div class="mx-auto max-w-md text-center">
-			<div class="flex items-center justify-center">
-				<img src={Lost} alt="Lost" class="w-1/2" />
-			</div>
-			<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-				{$t('adventures.not_found')}
-			</h1>
-			<p class="mt-4 text-muted-foreground">
-				{$t('adventures.not_found_desc')}
-			</p>
-			<div class="mt-6">
-				<button class="btn btn-primary" on:click={() => goto('/')}
-					>{$t('adventures.homepage')}</button
-				>
-			</div>
-		</div>
-	</div>
-{/if}
-
 {#if !collection && !notFound}
 	<div class="flex justify-center items-center w-full mt-16">
 		<span class="loading loading-spinner w-24 h-24"></span>
@@ -383,9 +383,6 @@
 		</div>
 	{/if}
 
-	{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
-		<NotFound error={undefined} />
-	{/if}
 	{#if adventures.length > 0}
 		<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
 
@@ -460,139 +457,195 @@
 	{/if}
 
 	{#if collection.start_date && collection.end_date}
-		<div class="divider"></div>
-		<h1 class="text-center font-bold text-4xl mt-4">{$t('adventures.itineary_by_date')}</h1>
-		{#if numberOfDays}
-			<p class="text-center text-lg pl-16 pr-16">
-				{$t('adventures.duration')}: {numberOfDays}
-				{$t('adventures.days')}
-			</p>
-		{/if}
-		<p class="text-center text-lg pl-16 pr-16">
-			Dates: {new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} - {new Date(
-				collection.end_date
-			).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-		</p>
-
-		{#each Array(numberOfDays) as _, i}
-			{@const startDate = new Date(collection.start_date)}
-			{@const tempDate = new Date(startDate.getTime())}
-			<!-- Clone startDate -->
-			{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
-			<!-- Add i days in UTC -->
-			{@const dateString = adjustedDate.toISOString().split('T')[0]}
-
-			{@const dayAdventures =
-				groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
-					dateString
-				] || []}
-
-			{@const dayTransportations =
-				groupTransportationsByDate(transportations, new Date(collection.start_date), numberOfDays)[
-					dateString
-				] || []}
-
-			{@const dayNotes =
-				groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] || []}
-
-			{@const dayChecklists =
-				groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
-					dateString
-				] || []}
-
-			<h2 class="text-center font-bold text-3xl mt-4">
-				{$t('adventures.day')}
-				{i + 1}
-			</h2>
-			<h3 class="text-center text-xl mb-2">
-				{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
-			</h3>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#if dayAdventures.length > 0}
-					{#each dayAdventures as adventure}
-						<AdventureCard
-							user={data.user}
-							on:edit={editAdventure}
-							on:delete={deleteAdventure}
-							{adventure}
-						/>
-					{/each}
-				{/if}
-				{#if dayTransportations.length > 0}
-					{#each dayTransportations as transportation}
-						<TransportationCard
-							{transportation}
-							user={data?.user}
-							on:delete={(event) => {
-								transportations = transportations.filter((t) => t.id != event.detail);
-							}}
-							on:edit={(event) => {
-								transportationToEdit = event.detail;
-								isShowingTransportationModal = true;
-							}}
-						/>
-					{/each}
-				{/if}
-				{#if dayNotes.length > 0}
-					{#each dayNotes as note}
-						<NoteCard
-							{note}
-							user={data.user || null}
-							on:edit={(event) => {
-								noteToEdit = event.detail;
-								isNoteModalOpen = true;
-							}}
-							on:delete={(event) => {
-								notes = notes.filter((n) => n.id != event.detail);
-							}}
-						/>
-					{/each}
-				{/if}
-				{#if dayChecklists.length > 0}
-					{#each dayChecklists as checklist}
-						<ChecklistCard
-							{checklist}
-							user={data.user || null}
-							on:delete={(event) => {
-								notes = notes.filter((n) => n.id != event.detail);
-							}}
-							on:edit={(event) => {
-								checklistToEdit = event.detail;
-								isShowingChecklistModal = true;
-							}}
-						/>
-					{/each}
-				{/if}
-
-				{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
-					<p class="text-center text-lg mt-2">{$t('adventures.nothing_planned')}</p>
-				{/if}
+		<div class="hero bg-base-200 py-8 mt-8">
+			<div class="hero-content text-center">
+				<div class="max-w-md">
+					<h1 class="text-5xl font-bold mb-4">{$t('adventures.itineary_by_date')}</h1>
+					{#if numberOfDays}
+						<p class="text-lg mb-2">
+							{$t('adventures.duration')}:
+							<span class="badge badge-primary">{numberOfDays} {$t('adventures.days')}</span>
+						</p>
+					{/if}
+					<p class="text-lg">
+						Dates: <span class="font-semibold"
+							>{new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} -
+							{new Date(collection.end_date).toLocaleDateString(undefined, {
+								timeZone: 'UTC'
+							})}</span
+						>
+					</p>
+				</div>
 			</div>
-		{/each}
+		</div>
 
-		<MapLibre
-			style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-			class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 mt-4"
-			standardControls
-		>
-			<!-- MapEvents gives you access to map events even from other components inside the map,
-  where you might not have access to the top-level `MapLibre` component. In this case
-  it would also work to just use on:click on the MapLibre component itself. -->
-			<!-- <MapEvents on:click={addMarker} /> -->
+		<div class="container mx-auto px-4">
+			{#each Array(numberOfDays) as _, i}
+				{@const startDate = new Date(collection.start_date)}
+				{@const tempDate = new Date(startDate.getTime())}
+				{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
+				{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
-			{#each adventures as adventure}
-				{#if adventure.longitude && adventure.latitude}
-					<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-						<Popup openOn="click" offset={[0, -10]}>
-							<div class="text-lg text-black font-bold">{adventure.name}</div>
-							<p class="font-semibold text-black text-md">
-								{adventure.category?.display_name + ' ' + adventure.category?.icon}
-							</p>
-						</Popup>
-					</DefaultMarker>
-				{/if}
+				{@const dayAdventures =
+					groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
+						dateString
+					] || []}
+				{@const dayTransportations =
+					groupTransportationsByDate(
+						transportations,
+						new Date(collection.start_date),
+						numberOfDays
+					)[dateString] || []}
+				{@const dayNotes =
+					groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] || []}
+				{@const dayChecklists =
+					groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
+						dateString
+					] || []}
+
+				<div class="card bg-base-100 shadow-xl my-8">
+					<div class="card-body bg-base-200">
+						<h2 class="card-title text-3xl justify-center g">
+							{$t('adventures.day')}
+							{i + 1}
+							<div class="badge badge-lg">
+								{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+							</div>
+						</h2>
+
+						<div class="divider"></div>
+
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+							{#if dayAdventures.length > 0}
+								{#each dayAdventures as adventure}
+									<AdventureCard
+										user={data.user}
+										on:edit={editAdventure}
+										on:delete={deleteAdventure}
+										{adventure}
+									/>
+								{/each}
+							{/if}
+							{#if dayTransportations.length > 0}
+								{#each dayTransportations as transportation}
+									<TransportationCard
+										{transportation}
+										user={data?.user}
+										on:delete={(event) => {
+											transportations = transportations.filter((t) => t.id != event.detail);
+										}}
+										on:edit={(event) => {
+											transportationToEdit = event.detail;
+											isShowingTransportationModal = true;
+										}}
+									/>
+								{/each}
+							{/if}
+							{#if dayNotes.length > 0}
+								{#each dayNotes as note}
+									<NoteCard
+										{note}
+										user={data.user || null}
+										on:edit={(event) => {
+											noteToEdit = event.detail;
+											isNoteModalOpen = true;
+										}}
+										on:delete={(event) => {
+											notes = notes.filter((n) => n.id != event.detail);
+										}}
+									/>
+								{/each}
+							{/if}
+							{#if dayChecklists.length > 0}
+								{#each dayChecklists as checklist}
+									<ChecklistCard
+										{checklist}
+										user={data.user || null}
+										on:delete={(event) => {
+											notes = notes.filter((n) => n.id != event.detail);
+										}}
+										on:edit={(event) => {
+											checklistToEdit = event.detail;
+											isShowingChecklistModal = true;
+										}}
+									/>
+								{/each}
+							{/if}
+						</div>
+
+						{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
+							<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
+						{/if}
+					</div>
+				</div>
 			{/each}
-		</MapLibre>
+		</div>
+
+		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+			<div class="card-body">
+				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
+				<MapLibre
+					style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
+					standardControls
+				>
+					{#each adventures as adventure}
+						{#if adventure.longitude && adventure.latitude}
+							<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{adventure.name}</div>
+									<p class="font-semibold text-black text-md">
+										{adventure.category?.display_name + ' ' + adventure.category?.icon}
+									</p>
+								</Popup>
+							</DefaultMarker>
+						{/if}
+					{/each}
+					{#each transportations as transportation}
+						{#if transportation.destination_latitude && transportation.destination_longitude}
+							<Marker
+								lngLat={{
+									lng: transportation.destination_longitude,
+									lat: transportation.destination_latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								bg-red-300 text-black focus:outline-6 focus:outline-black"
+							>
+								<span class="text-xl">
+									{getTransportationEmoji(transportation.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{transportation.name}</div>
+									<p class="font-semibold text-black text-md">
+										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+						{/if}
+						{#if transportation.origin_latitude && transportation.origin_longitude}
+							<Marker
+								lngLat={{
+									lng: transportation.origin_longitude,
+									lat: transportation.origin_latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								bg-green-300 text-black focus:outline-6 focus:outline-black"
+							>
+								<span class="text-xl">
+									{getTransportationEmoji(transportation.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{transportation.name}</div>
+									<p class="font-semibold text-black text-md">
+										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+						{/if}
+					{/each}
+				</MapLibre>
+			</div>
+		</div>
 	{/if}
 {/if}
 
