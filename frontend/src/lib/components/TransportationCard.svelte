@@ -55,8 +55,13 @@
 		<!-- Title and Type -->
 		<div class="flex items-center justify-between">
 			<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
-			<div class="badge badge-secondary">
-				{$t(`transportation.modes.${transportation.type}`)}
+			<div class="flex items-center gap-2">
+				<div class="badge badge-secondary">
+					{$t(`transportation.modes.${transportation.type}`)}
+				</div>
+				{#if transportation.type == 'plane' && transportation.flight_number}
+					<div class="badge badge-neutral-200">{transportation.flight_number}</div>
+				{/if}
 			</div>
 		</div>
 

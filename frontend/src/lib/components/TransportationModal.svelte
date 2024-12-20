@@ -184,6 +184,10 @@
 			return;
 		}
 
+		if (transportation.type != 'plane') {
+			transportation.flight_number = '';
+		}
+
 		if (transportation.id === '') {
 			let res = await fetch('/api/transportations', {
 				method: 'POST',
