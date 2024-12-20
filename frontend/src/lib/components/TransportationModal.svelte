@@ -14,6 +14,8 @@
 	export let collection: Collection;
 	export let transportationToEdit: Transportation | null = null;
 
+	let constrainDates: boolean = false;
+
 	function toLocalDatetime(value: string | null): string {
 		if (!value) return '';
 		const date = new Date(value);
@@ -161,6 +163,24 @@
 		if (transportation.destination_longitude) {
 			transportation.destination_longitude =
 				Math.round(transportation.destination_longitude * 1e6) / 1e6;
+		}
+
+		if (transportation.end_date && !transportation.date) {
+			transportation.date = null;
+			transportation.end_date = null;
+		}
+
+		if (transportation.date && !transportation.end_date) {
+			transportation.end_date = transportation.date;
+		}
+
+		if (
+			transportation.date &&
+			transportation.end_date &&
+			transportation.date > transportation.end_date
+		) {
+			addToast('error', $t('adventures.start_before_end_error'));
+			return;
 		}
 
 		if (transportation.id === '') {
@@ -351,14 +371,28 @@
 							<label for="date">
 								{$t('adventures.start_date')}
 							</label>
+
+							{#if collection && collection.start_date && collection.end_date}<label
+									class="label cursor-pointer flex items-start space-x-2"
+								>
+									<span class="label-text">{$t('adventures.date_constrain')}</span>
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="constrain_dates"
+										name="constrain_dates"
+										on:change={() => (constrainDates = !constrainDates)}
+									/></label
+								>
+							{/if}
 							<div>
 								<input
 									type="datetime-local"
 									id="date"
 									name="date"
 									bind:value={transportation.date}
-									min={fullStartDate || ''}
-									max={fullEndDate || ''}
+									min={constrainDates ? fullStartDate : ''}
+									max={constrainDates ? fullEndDate : ''}
 									class="input input-bordered w-full max-w-xs mt-1"
 								/>
 							</div>
@@ -374,8 +408,8 @@
 										type="datetime-local"
 										id="end_date"
 										name="end_date"
-										min={fullStartDate || ''}
-										max={fullEndDate || ''}
+										min={constrainDates ? transportation.date : ''}
+										max={constrainDates ? fullEndDate : ''}
 										bind:value={transportation.end_date}
 										class="input input-bordered w-full max-w-xs mt-1"
 									/>

@@ -8,10 +8,13 @@
 	import Launch from '~icons/mdi/launch';
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
+	import DeleteWarning from './DeleteWarning.svelte';
 
 	export let note: Note;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
+
+	let isWarningModalOpen: boolean = false;
 
 	function editNote() {
 		dispatch('edit', note);
@@ -23,12 +26,24 @@
 		});
 		if (res.ok) {
 			addToast('success', $t('notes.note_deleted'));
+			isWarningModalOpen = false;
 			dispatch('delete', note.id);
 		} else {
 			addToast($t('notes.note_delete_error'), 'error');
 		}
 	}
 </script>
+
+{#if isWarningModalOpen}
+	<DeleteWarning
+		title={$t('adventures.delete_note')}
+		button_text="Delete"
+		description={$t('adventures.note_delete_confirm')}
+		is_warning={false}
+		on:close={() => (isWarningModalOpen = false)}
+		on:confirm={deleteNote}
+	/>
+{/if}
 
 <div
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md overflow-hidden bg-neutral text-neutral-content shadow-xl"
@@ -64,7 +79,7 @@
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"
 					class="btn btn-warning"
-					on:click={deleteNote}><TrashCan class="w-6 h-6" /></button
+					on:click={() => (isWarningModalOpen = true)}><TrashCan class="w-6 h-6" /></button
 				>
 			{/if}
 		</div>

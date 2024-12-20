@@ -5,6 +5,7 @@
 	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
+	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
@@ -12,6 +13,8 @@
 	export let transportation: Transportation;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
+
+	let isWarningModalOpen: boolean = false;
 
 	function editTransportation() {
 		dispatch('edit', transportation);
@@ -28,10 +31,22 @@
 			console.log($t('transportation.transportation_delete_error'));
 		} else {
 			addToast('info', $t('transportation.transportation_deleted'));
+			isWarningModalOpen = false;
 			dispatch('delete', transportation.id);
 		}
 	}
 </script>
+
+{#if isWarningModalOpen}
+	<DeleteWarning
+		title={$t('adventures.delete_transportation')}
+		button_text="Delete"
+		description={$t('adventures.transportation_delete_confirm')}
+		is_warning={false}
+		on:close={() => (isWarningModalOpen = false)}
+		on:confirm={deleteTransportation}
+	/>
+{/if}
 
 <div
 	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
@@ -91,7 +106,7 @@
 					<span>{$t('transportation.edit')}</span>
 				</button>
 				<button
-					on:click={deleteTransportation}
+					on:click={() => (isWarningModalOpen = true)}
 					class="btn btn-secondary btn-sm flex items-center gap-1"
 					title="Delete"
 				>
