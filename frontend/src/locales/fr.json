@@ -195,7 +195,9 @@
     "emoji_picker": "Sélecteur d'émoticônes",
     "hide": "Cacher",
     "show": "Montrer",
-    "download_calendar": "Télécharger le calendrier"
+    "download_calendar": "Télécharger le calendrier",
+    "md_instructions": "Écrivez votre démarque ici...",
+    "preview": "Aperçu"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

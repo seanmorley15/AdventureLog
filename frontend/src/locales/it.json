@@ -195,7 +195,9 @@
     "emoji_picker": "Selettore di emoji",
     "hide": "Nascondere",
     "show": "Spettacolo",
-    "download_calendar": "Scarica Calendario"
+    "download_calendar": "Scarica Calendario",
+    "md_instructions": "Scrivi qui il tuo ribasso...",
+    "preview": "Anteprima"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

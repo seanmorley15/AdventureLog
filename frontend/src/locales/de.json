@@ -195,7 +195,9 @@
     "emoji_picker": "Emoji-Picker",
     "hide": "Verstecken",
     "show": "Zeigen",
-    "download_calendar": "Kalender herunterladen"
+    "download_calendar": "Kalender herunterladen",
+    "md_instructions": "Schreiben Sie hier Ihren Abschlag...",
+    "preview": "Vorschau"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",

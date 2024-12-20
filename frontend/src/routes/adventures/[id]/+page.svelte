@@ -6,6 +6,11 @@
 	import Lost from '$lib/assets/undraw_lost.svg';
 	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
+	import { marked } from 'marked'; // Import the markdown parser
+
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
 
 	export let data: PageData;
 	console.log(data);
@@ -244,11 +249,12 @@
 							{/if}
 						</div>
 						{#if adventure.description}
-							<div class="grid gap-2">
-								<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;">
-									{adventure.description}
-								</p>
-							</div>
+							<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;"></p>
+							<article
+								class="prose overflow-auto h-full max-w-full p-4 border border-base-300 rounded-lg"
+							>
+								{@html renderMarkdown(adventure.description)}
+							</article>
 						{/if}
 					</div>
 				</div>
@@ -323,7 +329,7 @@
 								</div>
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12"
+									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 									standardControls
 									center={{ lng: adventure.longitude, lat: adventure.latitude }}
 									zoom={12}

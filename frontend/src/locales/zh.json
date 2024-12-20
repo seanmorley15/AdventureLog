@@ -195,7 +195,9 @@
     "emoji_picker": "表情符号选择器",
     "hide": "隐藏",
     "show": "展示",
-    "download_calendar": "下载日历"
+    "download_calendar": "下载日历",
+    "md_instructions": "在这里写下你的标记...",
+    "preview": "预览"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",

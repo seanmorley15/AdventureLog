@@ -195,7 +195,9 @@
     "emoji_picker": "Emoji-väljare",
     "hide": "Dölja",
     "show": "Visa",
-    "download_calendar": "Ladda ner kalender"
+    "download_calendar": "Ladda ner kalender",
+    "md_instructions": "Skriv din avskrivning här...",
+    "preview": "Förhandsvisning"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

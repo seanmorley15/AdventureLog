@@ -3,7 +3,6 @@
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import type { Adventure, VisitedRegion } from '$lib/types.js';
-	import { getAdventureTypeLabel } from '$lib';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	export let data;
