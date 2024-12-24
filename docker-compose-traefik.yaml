@@ -39,7 +39,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
-      - "traefik.http.routers.adventurelogweb.rule=Host(`yourdomain.com`) && !PathPrefix(`/media`)" # Replace with your domain
+      - "traefik.http.routers.adventurelogweb.rule=Host(`yourdomain.com`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`))" # Replace with your domain
       - "traefik.http.routers.adventurelogweb.tls=true"
       - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt" 
 
@@ -64,7 +64,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogserver.entrypoints=websecure"
-      - "traefik.http.routers.adventurelogserver.rule=Host(`yourdomain.com`) && PathPrefix(`/media`)" # Replace with your domain
+      - "traefik.http.routers.adventurelogserver.rule=Host(`yourdomain.com`) &&  && (PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`))" # Replace with your domain
       - "traefik.http.routers.adventurelogserver.tls=true"
       - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt" 
 
