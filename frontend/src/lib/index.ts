@@ -289,6 +289,37 @@ export function getAdventureTypeLabel(type: string) {
 }
 
 export function getRandomBackground() {
+	const today = new Date();
+
+	// Special dates for specific backgrounds
+	// New Years week
+
+	const newYearsStart = new Date(today.getFullYear() - 1, 11, 31);
+	newYearsStart.setHours(0, 0, 0, 0);
+	const newYearsEnd = new Date(today.getFullYear(), 0, 7);
+	newYearsEnd.setHours(23, 59, 59, 999);
+	if (today >= newYearsStart && today <= newYearsEnd) {
+		return {
+			url: 'backgrounds/adventurelog_new_year.webp',
+			author: 'Roven Images',
+			location: "Happy New Year's from the AdventureLog team!"
+		} as Background;
+	}
+
+	// Christmas 12/24 - 12/25
+	const christmasStart = new Date(today.getFullYear(), 11, 24);
+	christmasStart.setHours(0, 0, 0, 0);
+	const christmasEnd = new Date(today.getFullYear(), 11, 25);
+	christmasEnd.setHours(23, 59, 59, 999);
+
+	if (today >= christmasStart && today <= christmasEnd) {
+		return {
+			url: 'backgrounds/adventurelog_christmas.webp',
+			author: 'Annie Spratt',
+			location: 'Merry Christmas from the AdventureLog team!'
+		} as Background;
+	}
+
 	const randomIndex = Math.floor(Math.random() * randomBackgrounds.backgrounds.length);
 	return randomBackgrounds.backgrounds[randomIndex] as Background;
 }

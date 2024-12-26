@@ -23,6 +23,7 @@
 		view: 'dayGridMonth',
 		events: [...dates]
 	};
+	console.log(dates);
 </script>
 
 <h1 class="text-center text-2xl font-bold">{$t('adventures.adventure_calendar')}</h1>

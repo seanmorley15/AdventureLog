@@ -4,32 +4,47 @@
 	import { t } from 'svelte-i18n';
 </script>
 
-<h1 class="text-center font-extrabold text-4xl mb-6">{$t('settings.reset_password')}</h1>
+<section class="flex flex-col items-center justify-center min-h-screen px-4 py-8 bg-base-100">
+	<h1 class="text-4xl font-bold text-center mb-6 text-primary">{$t('settings.reset_password')}</h1>
 
-<div class="flex justify-center">
-	<form method="post" action="?/forgotPassword" class="w-full max-w-xs" use:enhance>
-		<label for="email">{$t('auth.email')}</label>
-		<input
-			name="email"
-			type="email"
-			id="email"
-			class="block mb-2 input input-bordered w-full max-w-xs"
-		/><br />
-		<button class="py-2 px-4 btn btn-primary mr-2">{$t('settings.reset_password')}</button>
-		{#if $page.form?.message}
-			<div class="text-center text-error mt-4">
-				{$t(`settings.${$page.form?.message}`)}
+	<div class="w-full max-w-md p-6 shadow-lg rounded-lg bg-base-200">
+		<form method="post" action="?/forgotPassword" class="flex flex-col space-y-4" use:enhance>
+			<div class="form-control">
+				<label for="email" class="label">
+					<span class="label-text">{$t('auth.email')}</span>
+				</label>
+				<input
+					name="email"
+					type="email"
+					id="email"
+					placeholder="Enter your email"
+					class="input input-bordered w-full"
+					required
+				/>
 			</div>
-		{/if}
-		{#if $page.form?.success}
-			<div class="text-center text-success mt-4">
-				{$t('settings.possible_reset')}
+
+			<div class="form-control mt-4">
+				<button type="submit" class="btn btn-primary w-full">
+					{$t('settings.reset_password')}
+				</button>
 			</div>
-		{/if}
-	</form>
-</div>
+
+			{#if $page.form?.message}
+				<div class="mt-4 text-center text-error">
+					{$t(`settings.${$page.form?.message}`)}
+				</div>
+			{/if}
+
+			{#if $page.form?.success}
+				<div class="mt-4 text-center text-success">
+					{$t('settings.possible_reset')}
+				</div>
+			{/if}
+		</form>
+	</div>
+</section>
 
 <svelte:head>
-	<title>Forgot Password</title>
+	<title>Reset Password</title>
 	<meta name="description" content="Reset your password for AdventureLog." />
 </svelte:head>

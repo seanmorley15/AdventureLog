@@ -2,8 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
-	import EditCollection from '$lib/components/EditCollection.svelte';
-	import NewCollection from '$lib/components/NewCollection.svelte';
+	import CollectionModal from '$lib/components/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Collection } from '$lib/types';
 	import { t } from 'svelte-i18n';
@@ -17,10 +16,10 @@
 
 	let currentSort = { attribute: 'name', order: 'asc' };
 
-	let isShowingCreateModal: boolean = false;
 	let newType: string = '';
 
 	let resultsPerPage: number = 25;
+	let isShowingCollectionModal: boolean = false;
 
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
@@ -86,8 +85,7 @@
 		}
 	}
 
-	let collectionToEdit: Collection;
-	let isEditModalOpen: boolean = false;
+	let collectionToEdit: Collection | null = null;
 
 	function deleteAdventure(event: CustomEvent<string>) {
 		collections = collections.filter((adventure) => adventure.id !== event.detail);
@@ -95,12 +93,12 @@
 
 	function createAdventure(event: CustomEvent<Collection>) {
 		collections = [event.detail, ...collections];
-		isShowingCreateModal = false;
+		isShowingCollectionModal = false;
 	}
 
 	function editCollection(event: CustomEvent<Collection>) {
 		collectionToEdit = event.detail;
-		isEditModalOpen = true;
+		isShowingCollectionModal = true;
 	}
 
 	function saveEdit(event: CustomEvent<Collection>) {
@@ -110,7 +108,7 @@
 			}
 			return adventure;
 		});
-		isEditModalOpen = false;
+		isShowingCollectionModal = false;
 	}
 
 	let sidebarOpen = false;
@@ -120,18 +118,13 @@
 	}
 </script>
 
-{#if isShowingCreateModal}
-	<NewCollection on:create={createAdventure} on:close={() => (isShowingCreateModal = false)} />
-{/if}
-
-{#if isEditModalOpen}
-	<EditCollection
+{#if isShowingCollectionModal}
+	<CollectionModal
 		{collectionToEdit}
-		on:close={() => (isEditModalOpen = false)}
+		on:close={() => (isShowingCollectionModal = false)}
 		on:saveEdit={saveEdit}
 	/>
 {/if}
-
 <div class="fixed bottom-4 right-4 z-[999]">
 	<div class="flex flex-row items-center justify-center gap-4">
 		<div class="dropdown dropdown-top dropdown-end">
@@ -147,17 +140,13 @@
 				<button
 					class="btn btn-primary"
 					on:click={() => {
-						isShowingCreateModal = true;
+						collectionToEdit = null;
+						isShowingCollectionModal = true;
 						newType = 'visited';
 					}}
 				>
 					{$t(`adventures.collection`)}</button
 				>
-
-				<!-- <button
-			class="btn btn-primary"
-			on:click={() => (isShowingNewTrip = true)}>Trip Planner</button
-		  > -->
 			</ul>
 		</div>
 	</div>

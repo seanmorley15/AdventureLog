@@ -6,7 +6,7 @@ import type { PageServerLoad } from './$types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
-	const id = event.params.id;
+	const id = event.params.id.toUpperCase();
 
 	let regions: Region[] = [];
 	let visitedRegions: VisitedRegion[] = [];

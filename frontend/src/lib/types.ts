@@ -86,9 +86,9 @@ export type Collection = {
 	description: string;
 	is_public: boolean;
 	adventures: Adventure[];
-	created_at?: string;
-	start_date?: string;
-	end_date?: string;
+	created_at?: string | null;
+	start_date: string | null;
+	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
 	checklists?: Checklist[];

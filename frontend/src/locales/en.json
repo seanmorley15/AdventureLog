@@ -290,7 +290,7 @@
 		"public_profile": "Public Profile",
 		"public_tooltip": "With a public profile, users can share collections with you and view your profile on the users page.",
 		"email_required": "Email is required",
-		"new_password": "New Password",
+		"new_password": "New Password (6+ characters)",
 		"both_passwords_required": "Both passwords are required",
 		"reset_failed": "Failed to reset password"
 	},
@@ -375,7 +375,8 @@
 		"create": "Create",
 		"collection_edit_success": "Collection edited successfully!",
 		"error_editing_collection": "Error editing collection",
-		"edit_collection": "Edit Collection"
+		"edit_collection": "Edit Collection",
+		"public_collection": "Public Collection"
 	},
 	"notes": {
 		"note_deleted": "Note deleted successfully!",

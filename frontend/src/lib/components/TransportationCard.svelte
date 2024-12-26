@@ -73,22 +73,22 @@
 					<p class="break-words">{transportation.from_location}</p>
 				</div>
 			{/if}
-			{#if transportation.to_location}
-				<!-- <ArrowDownThick class="w-4 h-4" /> -->
+			{#if transportation.date}
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.to')}:</span>
-
-					<p class="break-words">{transportation.to_location}</p>
+					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
+					<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
 				</div>
 			{/if}
 		</div>
 
 		<!-- Dates -->
 		<div class="space-y-2">
-			{#if transportation.date}
+			{#if transportation.to_location}
+				<!-- <ArrowDownThick class="w-4 h-4" /> -->
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+					<span class="font-medium text-sm">{$t('adventures.to')}:</span>
+
+					<p class="break-words">{transportation.to_location}</p>
 				</div>
 			{/if}
 			{#if transportation.end_date}

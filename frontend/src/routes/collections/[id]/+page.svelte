@@ -2,9 +2,16 @@
 	import type { Adventure, Checklist, Collection, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
-	import Lost from '$lib/assets/undraw_lost.svg';
+	import { marked } from 'marked'; // Import the markdown parser
+
 	import { t } from 'svelte-i18n';
+
+	// @ts-ignore
+	import Calendar from '@event-calendar/core';
+	// @ts-ignore
+	import TimeGrid from '@event-calendar/time-grid';
+	// @ts-ignore
+	import DayGrid from '@event-calendar/day-grid';
 
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
@@ -29,7 +36,57 @@
 	export let data: PageData;
 	console.log(data);
 
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
+
 	let collection: Collection;
+
+	// add christmas and new years
+	// dates = Array.from({ length: 25 }, (_, i) => {
+	// 	const date = new Date();
+	// 	date.setMonth(11);
+	// 	date.setDate(i + 1);
+	// 	return {
+	// 		id: i.toString(),
+	// 		start: date.toISOString(),
+	// 		end: date.toISOString(),
+	// 		title: '🎄'
+	// 	};
+	// });
+
+	let dates: Array<{
+		id: string;
+		start: string;
+		end: string;
+		title: string;
+		backgroundColor?: string;
+	}> = [];
+
+	// Initialize calendar plugins and options
+	let plugins = [TimeGrid, DayGrid];
+	let options = {
+		view: 'dayGridMonth',
+		events: dates // Assign `dates` reactively
+	};
+
+	// Compute `dates` array reactively
+	$: {
+		if (adventures) {
+			dates = adventures.flatMap((adventure) =>
+				adventure.visits.map((visit) => ({
+					id: adventure.id,
+					start: visit.start_date, // Convert to ISO format if needed
+					end: visit.end_date || visit.start_date,
+					title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
+				}))
+			);
+		}
+		// Update `options.events` when `dates` changes
+		options = { ...options, events: dates };
+	}
+
+	let currentView: string = 'itinerary';
 
 	let adventures: Adventure[] = [];
 
@@ -364,9 +421,20 @@
 		</div>
 	{/if}
 
-	{#if collection.description}
-		<p class="text-center text-lg mb-2">{collection.description}</p>
+	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+		<NotFound error={undefined} />
 	{/if}
+
+	{#if collection.description}
+		<div class="flex justify-center mt-4">
+			<article
+				class="prose overflow-auto h-96 max-w-full p-4 border border-base-300 rounded-lg bg-base-300"
+			>
+				{@html renderMarkdown(collection.description)}
+			</article>
+		</div>
+	{/if}
+
 	{#if adventures.length > 0}
 		<div class="flex items-center justify-center mb-4">
 			<div class="stats shadow bg-base-300">
@@ -383,269 +451,323 @@
 		</div>
 	{/if}
 
-	{#if adventures.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
-
-		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-			{#each adventures as adventure}
-				<AdventureCard
-					user={data.user}
-					on:edit={editAdventure}
-					on:delete={deleteAdventure}
-					{adventure}
-					{collection}
-				/>
-			{/each}
+	<div class="flex justify-center mx-auto">
+		<!-- svelte-ignore a11y-missing-attribute -->
+		<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-xl">
+			<!-- svelte-ignore a11y-missing-attribute -->
+			<a
+				role="tab"
+				class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
+				tabindex="0"
+				on:click={() => (currentView = 'itinerary')}
+				on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
+			>
+			<a
+				role="tab"
+				class="tab {currentView === 'all' ? 'tab-active' : ''}"
+				tabindex="0"
+				on:click={() => (currentView = 'all')}
+				on:keydown={(e) => e.key === 'Enter' && (currentView = 'all')}>All Linked Items</a
+			>
+			<a
+				role="tab"
+				class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
+				tabindex="0"
+				on:click={() => (currentView = 'calendar')}
+				on:keydown={(e) => e.key === 'Enter' && (currentView = 'calendar')}>Calendar</a
+			>
+			<a
+				role="tab"
+				class="tab {currentView === 'map' ? 'tab-active' : ''}"
+				tabindex="0"
+				on:click={() => (currentView = 'map')}
+				on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
+			>
 		</div>
-	{/if}
+	</div>
 
-	{#if transportations.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
-		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-			{#each transportations as transportation}
-				<TransportationCard
-					{transportation}
-					user={data?.user}
-					on:delete={(event) => {
-						transportations = transportations.filter((t) => t.id != event.detail);
-					}}
-					on:edit={editTransportation}
-					{collection}
-				/>
-			{/each}
-		</div>
-	{/if}
+	{#if currentView == 'all'}
+		{#if adventures.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
 
-	{#if notes.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
-		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-			{#each notes as note}
-				<NoteCard
-					{note}
-					user={data.user || null}
-					on:edit={(event) => {
-						noteToEdit = event.detail;
-						isNoteModalOpen = true;
-					}}
-					on:delete={(event) => {
-						notes = notes.filter((n) => n.id != event.detail);
-					}}
-					{collection}
-				/>
-			{/each}
-		</div>
-	{/if}
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each adventures as adventure}
+					<AdventureCard
+						user={data.user}
+						on:edit={editAdventure}
+						on:delete={deleteAdventure}
+						{adventure}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
 
-	{#if checklists.length > 0}
-		<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
-		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-			{#each checklists as checklist}
-				<ChecklistCard
-					{checklist}
-					user={data.user || null}
-					on:delete={(event) => {
-						checklists = checklists.filter((n) => n.id != event.detail);
-					}}
-					on:edit={(event) => {
-						checklistToEdit = event.detail;
-						isShowingChecklistModal = true;
-					}}
-					{collection}
-				/>
-			{/each}
-		</div>
+		{#if transportations.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each transportations as transportation}
+					<TransportationCard
+						{transportation}
+						user={data?.user}
+						on:delete={(event) => {
+							transportations = transportations.filter((t) => t.id != event.detail);
+						}}
+						on:edit={editTransportation}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if notes.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each notes as note}
+					<NoteCard
+						{note}
+						user={data.user || null}
+						on:edit={(event) => {
+							noteToEdit = event.detail;
+							isNoteModalOpen = true;
+						}}
+						on:delete={(event) => {
+							notes = notes.filter((n) => n.id != event.detail);
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if checklists.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each checklists as checklist}
+					<ChecklistCard
+						{checklist}
+						user={data.user || null}
+						on:delete={(event) => {
+							checklists = checklists.filter((n) => n.id != event.detail);
+						}}
+						on:edit={(event) => {
+							checklistToEdit = event.detail;
+							isShowingChecklistModal = true;
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
 	{/if}
 
 	{#if collection.start_date && collection.end_date}
-		<div class="hero bg-base-200 py-8 mt-8">
-			<div class="hero-content text-center">
-				<div class="max-w-md">
-					<h1 class="text-5xl font-bold mb-4">{$t('adventures.itineary_by_date')}</h1>
-					{#if numberOfDays}
-						<p class="text-lg mb-2">
-							{$t('adventures.duration')}:
-							<span class="badge badge-primary">{numberOfDays} {$t('adventures.days')}</span>
-						</p>
-					{/if}
-					<p class="text-lg">
-						Dates: <span class="font-semibold"
-							>{new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} -
-							{new Date(collection.end_date).toLocaleDateString(undefined, {
-								timeZone: 'UTC'
-							})}</span
-						>
-					</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="container mx-auto px-4">
-			{#each Array(numberOfDays) as _, i}
-				{@const startDate = new Date(collection.start_date)}
-				{@const tempDate = new Date(startDate.getTime())}
-				{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
-				{@const dateString = adjustedDate.toISOString().split('T')[0]}
-
-				{@const dayAdventures =
-					groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
-						dateString
-					] || []}
-				{@const dayTransportations =
-					groupTransportationsByDate(
-						transportations,
-						new Date(collection.start_date),
-						numberOfDays
-					)[dateString] || []}
-				{@const dayNotes =
-					groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] || []}
-				{@const dayChecklists =
-					groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
-						dateString
-					] || []}
-
-				<div class="card bg-base-100 shadow-xl my-8">
-					<div class="card-body bg-base-200">
-						<h2 class="card-title text-3xl justify-center g">
-							{$t('adventures.day')}
-							{i + 1}
-							<div class="badge badge-lg">
-								{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
-							</div>
-						</h2>
-
-						<div class="divider"></div>
-
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{#if dayAdventures.length > 0}
-								{#each dayAdventures as adventure}
-									<AdventureCard
-										user={data.user}
-										on:edit={editAdventure}
-										on:delete={deleteAdventure}
-										{adventure}
-									/>
-								{/each}
-							{/if}
-							{#if dayTransportations.length > 0}
-								{#each dayTransportations as transportation}
-									<TransportationCard
-										{transportation}
-										user={data?.user}
-										on:delete={(event) => {
-											transportations = transportations.filter((t) => t.id != event.detail);
-										}}
-										on:edit={(event) => {
-											transportationToEdit = event.detail;
-											isShowingTransportationModal = true;
-										}}
-									/>
-								{/each}
-							{/if}
-							{#if dayNotes.length > 0}
-								{#each dayNotes as note}
-									<NoteCard
-										{note}
-										user={data.user || null}
-										on:edit={(event) => {
-											noteToEdit = event.detail;
-											isNoteModalOpen = true;
-										}}
-										on:delete={(event) => {
-											notes = notes.filter((n) => n.id != event.detail);
-										}}
-									/>
-								{/each}
-							{/if}
-							{#if dayChecklists.length > 0}
-								{#each dayChecklists as checklist}
-									<ChecklistCard
-										{checklist}
-										user={data.user || null}
-										on:delete={(event) => {
-											notes = notes.filter((n) => n.id != event.detail);
-										}}
-										on:edit={(event) => {
-											checklistToEdit = event.detail;
-											isShowingChecklistModal = true;
-										}}
-									/>
-								{/each}
-							{/if}
-						</div>
-
-						{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
-							<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
+		{#if currentView == 'itinerary'}
+			<div class="hero bg-base-200 py-8 mt-8">
+				<div class="hero-content text-center">
+					<div class="max-w-md">
+						<h1 class="text-5xl font-bold mb-4">{$t('adventures.itineary_by_date')}</h1>
+						{#if numberOfDays}
+							<p class="text-lg mb-2">
+								{$t('adventures.duration')}:
+								<span class="badge badge-primary">{numberOfDays} {$t('adventures.days')}</span>
+							</p>
 						{/if}
+						<p class="text-lg">
+							Dates: <span class="font-semibold"
+								>{new Date(collection.start_date).toLocaleDateString(undefined, {
+									timeZone: 'UTC'
+								})} -
+								{new Date(collection.end_date).toLocaleDateString(undefined, {
+									timeZone: 'UTC'
+								})}</span
+							>
+						</p>
 					</div>
 				</div>
-			{/each}
-		</div>
-
-		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
-			<div class="card-body">
-				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
-				<MapLibre
-					style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
-					standardControls
-				>
-					{#each adventures as adventure}
-						{#if adventure.longitude && adventure.latitude}
-							<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{adventure.name}</div>
-									<p class="font-semibold text-black text-md">
-										{adventure.category?.display_name + ' ' + adventure.category?.icon}
-									</p>
-								</Popup>
-							</DefaultMarker>
-						{/if}
-					{/each}
-					{#each transportations as transportation}
-						{#if transportation.destination_latitude && transportation.destination_longitude}
-							<Marker
-								lngLat={{
-									lng: transportation.destination_longitude,
-									lat: transportation.destination_latitude
-								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
-								bg-red-300 text-black focus:outline-6 focus:outline-black"
-							>
-								<span class="text-xl">
-									{getTransportationEmoji(transportation.type)}
-								</span>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{transportation.name}</div>
-									<p class="font-semibold text-black text-md">
-										{transportation.type}
-									</p>
-								</Popup>
-							</Marker>
-						{/if}
-						{#if transportation.origin_latitude && transportation.origin_longitude}
-							<Marker
-								lngLat={{
-									lng: transportation.origin_longitude,
-									lat: transportation.origin_latitude
-								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
-								bg-green-300 text-black focus:outline-6 focus:outline-black"
-							>
-								<span class="text-xl">
-									{getTransportationEmoji(transportation.type)}
-								</span>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{transportation.name}</div>
-									<p class="font-semibold text-black text-md">
-										{transportation.type}
-									</p>
-								</Popup>
-							</Marker>
-						{/if}
-					{/each}
-				</MapLibre>
 			</div>
-		</div>
+
+			<div class="container mx-auto px-4">
+				{#each Array(numberOfDays) as _, i}
+					{@const startDate = new Date(collection.start_date)}
+					{@const tempDate = new Date(startDate.getTime())}
+					{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
+					{@const dateString = adjustedDate.toISOString().split('T')[0]}
+
+					{@const dayAdventures =
+						groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
+							dateString
+						] || []}
+					{@const dayTransportations =
+						groupTransportationsByDate(
+							transportations,
+							new Date(collection.start_date),
+							numberOfDays
+						)[dateString] || []}
+					{@const dayNotes =
+						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] ||
+						[]}
+					{@const dayChecklists =
+						groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
+							dateString
+						] || []}
+
+					<div class="card bg-base-100 shadow-xl my-8">
+						<div class="card-body bg-base-200">
+							<h2 class="card-title text-3xl justify-center g">
+								{$t('adventures.day')}
+								{i + 1}
+								<div class="badge badge-lg">
+									{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+								</div>
+							</h2>
+
+							<div class="divider"></div>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{#if dayAdventures.length > 0}
+									{#each dayAdventures as adventure}
+										<AdventureCard
+											user={data.user}
+											on:edit={editAdventure}
+											on:delete={deleteAdventure}
+											{adventure}
+										/>
+									{/each}
+								{/if}
+								{#if dayTransportations.length > 0}
+									{#each dayTransportations as transportation}
+										<TransportationCard
+											{transportation}
+											user={data?.user}
+											on:delete={(event) => {
+												transportations = transportations.filter((t) => t.id != event.detail);
+											}}
+											on:edit={(event) => {
+												transportationToEdit = event.detail;
+												isShowingTransportationModal = true;
+											}}
+										/>
+									{/each}
+								{/if}
+								{#if dayNotes.length > 0}
+									{#each dayNotes as note}
+										<NoteCard
+											{note}
+											user={data.user || null}
+											on:edit={(event) => {
+												noteToEdit = event.detail;
+												isNoteModalOpen = true;
+											}}
+											on:delete={(event) => {
+												notes = notes.filter((n) => n.id != event.detail);
+											}}
+										/>
+									{/each}
+								{/if}
+								{#if dayChecklists.length > 0}
+									{#each dayChecklists as checklist}
+										<ChecklistCard
+											{checklist}
+											user={data.user || null}
+											on:delete={(event) => {
+												notes = notes.filter((n) => n.id != event.detail);
+											}}
+											on:edit={(event) => {
+												checklistToEdit = event.detail;
+												isShowingChecklistModal = true;
+											}}
+										/>
+									{/each}
+								{/if}
+							</div>
+
+							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
+								<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
+
+		{#if currentView == 'map'}
+			<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+				<div class="card-body">
+					<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
+					<MapLibre
+						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+						class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
+						standardControls
+					>
+						{#each adventures as adventure}
+							{#if adventure.longitude && adventure.latitude}
+								<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+									<Popup openOn="click" offset={[0, -10]}>
+										<div class="text-lg text-black font-bold">{adventure.name}</div>
+										<p class="font-semibold text-black text-md">
+											{adventure.category?.display_name + ' ' + adventure.category?.icon}
+										</p>
+									</Popup>
+								</DefaultMarker>
+							{/if}
+						{/each}
+						{#each transportations as transportation}
+							{#if transportation.destination_latitude && transportation.destination_longitude}
+								<Marker
+									lngLat={{
+										lng: transportation.destination_longitude,
+										lat: transportation.destination_latitude
+									}}
+									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								bg-red-300 text-black focus:outline-6 focus:outline-black"
+								>
+									<span class="text-xl">
+										{getTransportationEmoji(transportation.type)}
+									</span>
+									<Popup openOn="click" offset={[0, -10]}>
+										<div class="text-lg text-black font-bold">{transportation.name}</div>
+										<p class="font-semibold text-black text-md">
+											{transportation.type}
+										</p>
+									</Popup>
+								</Marker>
+							{/if}
+							{#if transportation.origin_latitude && transportation.origin_longitude}
+								<Marker
+									lngLat={{
+										lng: transportation.origin_longitude,
+										lat: transportation.origin_latitude
+									}}
+									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								bg-green-300 text-black focus:outline-6 focus:outline-black"
+								>
+									<span class="text-xl">
+										{getTransportationEmoji(transportation.type)}
+									</span>
+									<Popup openOn="click" offset={[0, -10]}>
+										<div class="text-lg text-black font-bold">{transportation.name}</div>
+										<p class="font-semibold text-black text-md">
+											{transportation.type}
+										</p>
+									</Popup>
+								</Marker>
+							{/if}
+						{/each}
+					</MapLibre>
+				</div>
+			</div>
+		{/if}
+		{#if currentView == 'calendar'}
+			<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+				<div class="card-body">
+					<h2 class="card-title text-3xl justify-center mb-4">
+						{$t('adventures.adventure_calendar')}
+					</h2>
+					<Calendar {plugins} {options} />
+				</div>
+			</div>
+		{/if}
 	{/if}
 {/if}
 
