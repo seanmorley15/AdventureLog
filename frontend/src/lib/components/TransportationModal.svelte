@@ -589,7 +589,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				<!-- Form Actions -->
 				<div class="mt-4">
 					<button type="submit" class="btn btn-primary">
-						{$t('adventures.save_next')}
+						{$t('notes.save')}
 					</button>
 					<button type="button" class="btn" on:click={close}>
 						{$t('about.close')}

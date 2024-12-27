@@ -25,7 +25,7 @@
 			const endOutsideRange =
 				note.date && collection.start_date > note.date && collection.end_date > note.date;
 
-			unlinked = !!(startOutsideRange || endOutsideRange);
+			unlinked = !!(startOutsideRange || endOutsideRange || !note.date);
 		}
 	}
 

@@ -426,7 +426,7 @@
 	{/if}
 
 	{#if collection.description}
-		<div class="flex justify-center mt-4">
+		<div class="flex justify-center mt-4 max-w-screen-lg mx-auto">
 			<article
 				class="prose overflow-auto max-h-96 max-w-full p-4 border border-base-300 rounded-lg bg-base-300 mb-4"
 				style="overflow-y: auto;"

@@ -293,10 +293,9 @@
 				{/if}
 
 				<div class="mt-4">
-					<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 					<button class="btn btn-primary mr-1" disabled={isReadOnly} on:click={save}
 						>{$t('notes.save')}</button
-					>
+					><button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
 				</div>
 			</form>
 		</div>

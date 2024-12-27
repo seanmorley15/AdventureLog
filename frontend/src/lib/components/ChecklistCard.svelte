@@ -30,7 +30,7 @@
 				collection.start_date > checklist.date &&
 				collection.end_date > checklist.date;
 
-			unlinked = !!(startOutsideRange || endOutsideRange);
+			unlinked = !!(startOutsideRange || endOutsideRange || !checklist.date);
 		}
 	}
 
