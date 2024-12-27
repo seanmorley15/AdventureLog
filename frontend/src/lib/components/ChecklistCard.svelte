@@ -16,6 +16,24 @@
 
 	let isWarningModalOpen: boolean = false;
 
+	let unlinked: boolean = false;
+
+	$: {
+		if (collection?.start_date && collection.end_date) {
+			const startOutsideRange =
+				checklist.date &&
+				collection.start_date < checklist.date &&
+				collection.end_date < checklist.date;
+
+			const endOutsideRange =
+				checklist.date &&
+				collection.start_date > checklist.date &&
+				collection.end_date > checklist.date;
+
+			unlinked = !!(startOutsideRange || endOutsideRange);
+		}
+	}
+
 	function editChecklist() {
 		dispatch('edit', checklist);
 	}
@@ -61,6 +79,9 @@
 				{checklist.items.length > 1 ? $t('checklist.items') : $t('checklist.item')}
 			</p>
 		{/if}
+		{#if unlinked}
+			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+		{/if}
 		{#if checklist.date && checklist.date !== ''}
 			<div class="inline-flex items-center">
 				<Calendar class="w-5 h-5 mr-1" />
@@ -71,7 +92,7 @@
 			<button class="btn btn-neutral-200 mb-2" on:click={editChecklist}>
 				<Launch class="w-6 h-6" />{$t('notes.open')}
 			</button>
-			{#if checklist.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+			{#if checklist.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Checklist"

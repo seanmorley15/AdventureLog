@@ -41,6 +41,24 @@
 		}
 	}
 
+	let unlinked: boolean = false;
+
+	// Reactive block to update `unlinked` when dependencies change
+	$: {
+		if (collection && collection?.start_date && collection.end_date) {
+			unlinked = adventure.visits.every((visit) => {
+				// Check if visit dates exist
+				if (!visit.start_date || !visit.end_date) return true; // Consider "unlinked" for incomplete visit data
+
+				// Check if collection dates are completely outside this visit's range
+				const isBeforeVisit = collection.end_date && collection.end_date < visit.start_date;
+				const isAfterVisit = collection.start_date && collection.start_date > visit.end_date;
+
+				return isBeforeVisit || isAfterVisit;
+			});
+		}
+	}
+
 	async function deleteAdventure() {
 		let res = await fetch(`/adventures/${adventure.id}?/delete`, {
 			method: 'POST',
@@ -140,6 +158,9 @@
 				{adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
 			</div>
 		</div>
+		{#if unlinked}
+			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+		{/if}
 		{#if adventure.location && adventure.location !== ''}
 			<div class="inline-flex items-center">
 				<MapMarker class="w-5 h-5 mr-1" />

@@ -5,11 +5,24 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+	import MarkdownEditor from './MarkdownEditor.svelte';
 	let modal: HTMLDialogElement;
+	import { marked } from 'marked'; // Import the markdown parser
+
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
 
 	export let note: Note | null = null;
 	export let collection: Collection;
 	export let user: User | null = null;
+
+	let constrainDates: boolean = false;
+
+	let isReadOnly =
+		!(note && user?.uuid == note?.user_id) &&
+		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
+		!!note;
 
 	let warning: string | null = '';
 
@@ -105,85 +118,137 @@
 </script>
 
 <dialog id="my_modal_1" class="modal">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">{$t('notes.note_editor')}</h3>
-		{#if initialName}
-			<p class="font-semibold text-md mb-2">{$t('notes.editing_note')} {initialName}</p>
-		{/if}
+	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
+		<h3 class="font-bold text-2xl">
+			{#if note?.id && !isReadOnly}
+				<p class="font-semibold text-md mb-2">
+					{$t('notes.editing_note')}
+					{initialName}
+				</p>
+			{:else if !isReadOnly}
+				{$t('notes.note_editor')}
+			{:else}
+				{$t('notes.note_viewer')}
+			{/if}
+		</h3>
 
-		{#if (note && user?.uuid == note?.user_id) || (collection && user && collection.shared_with.includes(user.uuid)) || !note}
-			<form on:submit|preventDefault>
-				<div class="form-control mb-2">
-					<label for="name">{$t('adventures.name')}</label>
-					<input
-						type="text"
-						id="name"
-						class="input input-bordered w-full max-w-xs"
-						bind:value={newNote.name}
-					/>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('adventures.date')}</label>
-					<input
-						type="date"
-						id="date"
-						name="date"
-						min={collection.start_date || ''}
-						max={collection.end_date || ''}
-						bind:value={newNote.date}
-						class="input input-bordered w-full max-w-xs mt-1"
-					/>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('notes.content')}</label>
-					<textarea
-						id="content"
-						class="textarea textarea-bordered"
-						bind:value={newNote.content}
-						rows="5"
-					></textarea>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('adventures.links')}</label>
-					<input
-						type="url"
-						class="input input-bordered w-full mb-1"
-						placeholder="{$t('notes.add_a_link')} (e.g. https://example.com)"
-						bind:value={newLink}
-						on:keydown={(e) => {
-							if (e.key === 'Enter') {
-								e.preventDefault();
-								addLink();
-							}
-						}}
-					/>
-					<button type="button" class="btn btn-sm btn-primary" on:click={addLink}
-						>{$t('adventures.add')}</button
-					>
-				</div>
-				{#if newNote.links.length > 0}
-					<ul class="list-none">
-						{#each newNote.links as link, i}
-							<li class="mb-4">
-								<a href={link} class="link link-primary" target="_blank">{link}</a>
-								<button
-									type="button"
-									class="btn btn-sm btn-error absolute right-0 mr-4"
-									on:click={() => {
-										newNote.links = newNote.links.filter((_, index) => index !== i);
-									}}
+		<div class="modal-action items-center">
+			<form method="post" style="width: 100%;" on:submit|preventDefault>
+				<!-- Basic Information Section -->
+				<div class="collapse collapse-plus bg-base-200 mb-4">
+					<input type="checkbox" id="collapse-plus-1" checked />
+					<div class="collapse-title text-lg font-bold">
+						{$t('adventures.basic_information')}
+					</div>
+					<div class="collapse-content">
+						<!-- Name Input -->
+						<div class="form-control mb-2">
+							<label for="name">{$t('adventures.name')}</label>
+							<input
+								type="text"
+								id="name"
+								readonly={isReadOnly}
+								class="input input-bordered w-full max-w-xs"
+								bind:value={newNote.name}
+							/>
+						</div>
+
+						<!-- Date Input -->
+						<div class="form-control mb-2">
+							<label for="content">{$t('adventures.date')}</label>
+							{#if collection && collection.start_date && collection.end_date && !isReadOnly}<label
+									class="label cursor-pointer flex items-start space-x-2"
 								>
-									{$t('adventures.remove')}
-								</button>
-							</li>
-						{/each}
-					</ul>
-				{/if}
+									<span class="label-text">{$t('adventures.date_constrain')}</span>
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										id="constrain_dates"
+										name="constrain_dates"
+										on:change={() => (constrainDates = !constrainDates)}
+									/></label
+								>
+							{/if}
+							<input
+								type="date"
+								id="date"
+								name="date"
+								readonly={isReadOnly}
+								min={constrainDates ? collection.start_date : ''}
+								max={constrainDates ? collection.end_date : ''}
+								bind:value={newNote.date}
+								class="input input-bordered w-full max-w-xs mt-1"
+							/>
+						</div>
 
+						<!-- Content Textarea -->
+
+						<div>
+							<label for="content">{$t('notes.content')}</label><br />
+							{#if !isReadOnly}
+								<MarkdownEditor bind:text={newNote.content} editor_height={'h-32'} />
+							{:else if note}
+								<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;"></p>
+								<article
+									class="prose overflow-auto h-full max-w-full p-4 border border-base-300 rounded-lg mb-4 mt-4"
+								>
+									{@html renderMarkdown(note.content || '')}
+								</article>
+							{/if}
+						</div>
+
+						<!-- Links Section -->
+						{#if !isReadOnly}
+							<div class="form-control mb-2">
+								<label for="content">{$t('adventures.links')}</label>
+								<input
+									type="url"
+									class="input input-bordered w-full mb-1"
+									placeholder="{$t('notes.add_a_link')} (e.g. https://example.com)"
+									bind:value={newLink}
+									on:keydown={(e) => {
+										if (e.key === 'Enter') {
+											e.preventDefault();
+											addLink();
+										}
+									}}
+								/>
+								<button type="button" class="btn btn-sm btn-primary mt-1" on:click={addLink}>
+									{$t('adventures.add')}
+								</button>
+							</div>
+						{/if}
+
+						<!-- Links List -->
+						{#if newNote.links.length > 0}
+							<ul class="list-none">
+								{#each newNote.links as link, i}
+									<li class="mb-4 flex justify-between items-center">
+										<a href={link} class="link link-primary" target="_blank">
+											{link}
+										</a>
+										<button
+											type="button"
+											class="btn btn-sm btn-error"
+											disabled={isReadOnly}
+											on:click={() => {
+												newNote.links = newNote.links.filter((_, index) => index !== i);
+											}}
+										>
+											{$t('adventures.remove')}
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Warning Message -->
 				{#if warning}
-					<div role="alert" class="alert alert-error">
+					<div role="alert" class="alert alert-error mb-4">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							class="h-6 w-6 shrink-0 stroke-current"
@@ -201,11 +266,9 @@
 					</div>
 				{/if}
 
-				<button class="btn btn-primary mr-1" on:click={save}>{$t('notes.save')}</button>
-				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
-
+				<!-- Public Note Alert -->
 				{#if collection.is_public}
-					<div role="alert" class="alert mt-4">
+					<div role="alert" class="alert mb-4">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
@@ -222,57 +285,17 @@
 						<span>{$t('notes.note_public')}</span>
 					</div>
 				{/if}
-			</form>
-		{:else}
-			<form>
-				<div class="form-control mb-2">
-					<label for="name">{$t('adventures.public')}</label>
-					<input
-						type="text"
-						id="name"
-						class="input input-bordered w-full max-w-xs"
-						bind:value={newNote.name}
-						readonly
-					/>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('adventures.date')}</label>
-					<input
-						type="date"
-						id="date"
-						name="date"
-						min={collection.start_date || ''}
-						max={collection.end_date || ''}
-						bind:value={newNote.date}
-						class="input input-bordered w-full max-w-xs mt-1"
-						readonly
-					/>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('notes.content')}</label>
-					<textarea
-						id="content"
-						class="textarea textarea-bordered"
-						bind:value={newNote.content}
-						rows="5"
-						readonly
-					></textarea>
-				</div>
-				<div class="form-control mb-2">
-					<label for="content">{$t('adventures.links')}</label>
-				</div>
-				{#if newNote.links.length > 0}
-					<ul class="list-none">
-						{#each newNote.links as link, i}
-							<li class="mb-1">
-								<a href={link} target="_blank">{link}</a>
-							</li>
-						{/each}
-					</ul>
-				{/if}
 
-				<button class="btn btn-neutral" on:click={close}>{$t('about.close')}</button>
+				<!-- Action Buttons -->
+				<div class="mt-4">
+					<button class="btn btn-neutral" on:click={close}>
+						{$t('about.close')}
+					</button>
+					<button class="btn btn-primary mr-1" disabled={isReadOnly} on:click={save}>
+						{$t('notes.save')}
+					</button>
+				</div>
 			</form>
-		{/if}
+		</div>
 	</div>
 </dialog>

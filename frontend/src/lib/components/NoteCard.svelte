@@ -15,6 +15,19 @@
 	export let collection: Collection | null = null;
 
 	let isWarningModalOpen: boolean = false;
+	let unlinked: boolean = false;
+
+	$: {
+		if (collection?.start_date && collection.end_date) {
+			const startOutsideRange =
+				note.date && collection.start_date < note.date && collection.end_date < note.date;
+
+			const endOutsideRange =
+				note.date && collection.start_date > note.date && collection.end_date > note.date;
+
+			unlinked = !!(startOutsideRange || endOutsideRange);
+		}
+	}
 
 	function editNote() {
 		dispatch('edit', note);
@@ -55,6 +68,9 @@
 			</h2>
 		</div>
 		<div class="badge badge-primary">{$t('adventures.note')}</div>
+		{#if unlinked}
+			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+		{/if}
 		{#if note.links && note.links.length > 0}
 			<p>
 				{note.links.length}
@@ -74,7 +90,7 @@
 			<button class="btn btn-neutral-200 mb-2" on:click={editNote}>
 				<Launch class="w-6 h-6" />{$t('notes.open')}
 			</button>
-			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"

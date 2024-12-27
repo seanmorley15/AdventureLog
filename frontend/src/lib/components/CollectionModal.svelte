@@ -21,7 +21,7 @@
 		is_public: collectionToEdit?.is_public || false,
 		adventures: collectionToEdit?.adventures || [],
 		link: collectionToEdit?.link || '',
-		shared_with: collectionToEdit?.shared_with || []
+		shared_with: undefined
 	};
 
 	console.log(collection);
@@ -46,6 +46,10 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		console.log(collection);
+
+		if (collection.start_date && !collection.end_date) {
+			collection.end_date = collection.start_date;
+		}
 
 		if (collection.id === '') {
 			let res = await fetch('/api/collections', {

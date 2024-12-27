@@ -20,6 +20,25 @@
 		dispatch('edit', transportation);
 	}
 
+	let unlinked: boolean = false;
+
+	// unlinked if collection.start_date and collection.end_date are not within transportation.date and transportation.end_date. check for null in the collection dates first to avoid errors
+	$: {
+		if (collection?.start_date && collection.end_date) {
+			const startOutsideRange =
+				transportation.date &&
+				collection.start_date < transportation.date &&
+				collection.end_date < transportation.date;
+
+			const endOutsideRange =
+				transportation.end_date &&
+				collection.start_date > transportation.end_date &&
+				collection.end_date > transportation.end_date;
+
+			unlinked = !!(startOutsideRange || endOutsideRange);
+		}
+	}
+
 	async function deleteTransportation() {
 		let res = await fetch(`/api/transportations/${transportation.id}`, {
 			method: 'DELETE',
@@ -64,6 +83,9 @@
 				{/if}
 			</div>
 		</div>
+		{#if unlinked}
+			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+		{/if}
 
 		<!-- Locations -->
 		<div class="space-y-2">
@@ -100,7 +122,7 @@
 		</div>
 
 		<!-- Actions -->
-		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
 			<div class="card-actions justify-end">
 				<button
 					class="btn btn-primary btn-sm flex items-center gap-1"

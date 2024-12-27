@@ -2,6 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
+	import CollectionLink from '$lib/components/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
 	import type { Collection } from '$lib/types';
@@ -73,26 +74,31 @@
 		collections = collections.filter((collection) => collection.id !== event.detail);
 	}
 
-	function sort({ attribute, order }: { attribute: string; order: string }) {
-		currentSort.attribute = attribute;
-		currentSort.order = order;
-		if (attribute === 'name') {
-			if (order === 'asc') {
-				collections = collections.sort((a, b) => b.name.localeCompare(a.name));
-			} else {
-				collections = collections.sort((a, b) => a.name.localeCompare(b.name));
-			}
-		}
-	}
+	// function sort({ attribute, order }: { attribute: string; order: string }) {
+	// 	currentSort.attribute = attribute;
+	// 	currentSort.order = order;
+	// 	if (attribute === 'name') {
+	// 		if (order === 'asc') {
+	// 			collections = collections.sort((a, b) => b.name.localeCompare(a.name));
+	// 		} else {
+	// 			collections = collections.sort((a, b) => a.name.localeCompare(b.name));
+	// 		}
+	// 	}
+	// }
 
 	let collectionToEdit: Collection | null = null;
 
-	function deleteAdventure(event: CustomEvent<string>) {
-		collections = collections.filter((adventure) => adventure.id !== event.detail);
-	}
-
-	function createAdventure(event: CustomEvent<Collection>) {
-		collections = [event.detail, ...collections];
+	function saveOrCreate(event: CustomEvent<Collection>) {
+		if (collections.find((collection) => collection.id === event.detail.id)) {
+			collections = collections.map((collection) => {
+				if (collection.id === event.detail.id) {
+					return event.detail;
+				}
+				return collection;
+			});
+		} else {
+			collections = [event.detail, ...collections];
+		}
 		isShowingCollectionModal = false;
 	}
 
@@ -123,6 +129,7 @@
 		{collectionToEdit}
 		on:close={() => (isShowingCollectionModal = false)}
 		on:saveEdit={saveEdit}
+		on:save={saveOrCreate}
 	/>
 {/if}
 <div class="fixed bottom-4 right-4 z-[999]">
@@ -256,6 +263,6 @@
 </div>
 
 <svelte:head>
-	<title>{$t(`navbar.collections`)}</title>
+	<title>Collections</title>
 	<meta name="description" content="View your adventure collections." />
 </svelte:head>

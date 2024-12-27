@@ -93,7 +93,7 @@ export type Collection = {
 	notes?: Note[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
-	shared_with: string[];
+	shared_with: string[] | undefined;
 	link?: string | null;
 };
 

@@ -315,7 +315,7 @@
 	</div>
 {/if}
 {#if collection}
-	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || collection.shared_with.includes(data.user.uuid)) && !collection.is_archived}
+	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
 				<div class="dropdown dropdown-top dropdown-end">
@@ -428,7 +428,8 @@
 	{#if collection.description}
 		<div class="flex justify-center mt-4">
 			<article
-				class="prose overflow-auto h-96 max-w-full p-4 border border-base-300 rounded-lg bg-base-300"
+				class="prose overflow-auto max-h-96 max-w-full p-4 border border-base-300 rounded-lg bg-base-300 mb-4"
+				style="overflow-y: auto;"
 			>
 				{@html renderMarkdown(collection.description)}
 			</article>
@@ -451,40 +452,42 @@
 		</div>
 	{/if}
 
-	<div class="flex justify-center mx-auto">
-		<!-- svelte-ignore a11y-missing-attribute -->
-		<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-xl">
+	{#if collection.start_date}
+		<div class="flex justify-center mx-auto">
 			<!-- svelte-ignore a11y-missing-attribute -->
-			<a
-				role="tab"
-				class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-				tabindex="0"
-				on:click={() => (currentView = 'itinerary')}
-				on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
-			>
-			<a
-				role="tab"
-				class="tab {currentView === 'all' ? 'tab-active' : ''}"
-				tabindex="0"
-				on:click={() => (currentView = 'all')}
-				on:keydown={(e) => e.key === 'Enter' && (currentView = 'all')}>All Linked Items</a
-			>
-			<a
-				role="tab"
-				class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
-				tabindex="0"
-				on:click={() => (currentView = 'calendar')}
-				on:keydown={(e) => e.key === 'Enter' && (currentView = 'calendar')}>Calendar</a
-			>
-			<a
-				role="tab"
-				class="tab {currentView === 'map' ? 'tab-active' : ''}"
-				tabindex="0"
-				on:click={() => (currentView = 'map')}
-				on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
-			>
+			<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-xl">
+				<!-- svelte-ignore a11y-missing-attribute -->
+				<a
+					role="tab"
+					class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
+					tabindex="0"
+					on:click={() => (currentView = 'itinerary')}
+					on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
+				>
+				<a
+					role="tab"
+					class="tab {currentView === 'all' ? 'tab-active' : ''}"
+					tabindex="0"
+					on:click={() => (currentView = 'all')}
+					on:keydown={(e) => e.key === 'Enter' && (currentView = 'all')}>All Linked Items</a
+				>
+				<a
+					role="tab"
+					class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
+					tabindex="0"
+					on:click={() => (currentView = 'calendar')}
+					on:keydown={(e) => e.key === 'Enter' && (currentView = 'calendar')}>Calendar</a
+				>
+				<a
+					role="tab"
+					class="tab {currentView === 'map' ? 'tab-active' : ''}"
+					tabindex="0"
+					on:click={() => (currentView = 'map')}
+					on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
+				>
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	{#if currentView == 'all'}
 		{#if adventures.length > 0}
@@ -558,6 +561,11 @@
 					/>
 				{/each}
 			</div>
+		{/if}
+
+		<!-- if none found -->
+		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+			<NotFound error={undefined} />
 		{/if}
 	{/if}
 
