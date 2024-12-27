@@ -35,7 +35,11 @@
 				collection.start_date > transportation.end_date &&
 				collection.end_date > transportation.end_date;
 
-			unlinked = !!(startOutsideRange || endOutsideRange);
+			unlinked = !!(
+				startOutsideRange ||
+				endOutsideRange ||
+				(!transportation.date && !transportation.end_date)
+			);
 		}
 	}
 
