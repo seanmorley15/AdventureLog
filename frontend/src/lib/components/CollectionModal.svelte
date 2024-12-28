@@ -51,6 +51,19 @@
 			collection.end_date = collection.start_date;
 		}
 
+		if (
+			collection.start_date &&
+			collection.end_date &&
+			collection.start_date > collection.end_date
+		) {
+			addToast('error', $t('adventures.start_before_end_error'));
+			return;
+		}
+
+		if (!collection.start_date && collection.end_date) {
+			collection.start_date = collection.end_date;
+		}
+
 		if (collection.id === '') {
 			let res = await fetch('/api/collections', {
 				method: 'POST',
