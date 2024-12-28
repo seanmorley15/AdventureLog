@@ -171,6 +171,11 @@
 		if (collection.checklists) {
 			checklists = collection.checklists;
 		}
+		if (!collection.start_date) {
+			currentView = 'all';
+		} else {
+			currentView = 'itinerary';
+		}
 	});
 
 	function deleteAdventure(event: CustomEvent<string>) {
@@ -468,18 +473,20 @@
 		</div>
 	{/if}
 
-	{#if collection.start_date}
+	{#if collection.id}
 		<div class="flex justify-center mx-auto">
 			<!-- svelte-ignore a11y-missing-attribute -->
 			<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-xl">
 				<!-- svelte-ignore a11y-missing-attribute -->
-				<a
-					role="tab"
-					class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'itinerary')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
-				>
+				{#if collection.start_date}
+					<a
+						role="tab"
+						class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
+						tabindex="0"
+						on:click={() => (currentView = 'itinerary')}
+						on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
+					>
+				{/if}
 				<a
 					role="tab"
 					class="tab {currentView === 'all' ? 'tab-active' : ''}"
@@ -714,84 +721,84 @@
 				{/each}
 			</div>
 		{/if}
+	{/if}
 
-		{#if currentView == 'map'}
-			<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
-				<div class="card-body">
-					<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
-					<MapLibre
-						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-						class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
-						standardControls
-					>
-						{#each adventures as adventure}
-							{#if adventure.longitude && adventure.latitude}
-								<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="text-lg text-black font-bold">{adventure.name}</div>
-										<p class="font-semibold text-black text-md">
-											{adventure.category?.display_name + ' ' + adventure.category?.icon}
-										</p>
-									</Popup>
-								</DefaultMarker>
-							{/if}
-						{/each}
-						{#each transportations as transportation}
-							{#if transportation.destination_latitude && transportation.destination_longitude}
-								<Marker
-									lngLat={{
-										lng: transportation.destination_longitude,
-										lat: transportation.destination_latitude
-									}}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+	{#if currentView == 'map'}
+		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+			<div class="card-body">
+				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
+				<MapLibre
+					style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
+					standardControls
+				>
+					{#each adventures as adventure}
+						{#if adventure.longitude && adventure.latitude}
+							<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{adventure.name}</div>
+									<p class="font-semibold text-black text-md">
+										{adventure.category?.display_name + ' ' + adventure.category?.icon}
+									</p>
+								</Popup>
+							</DefaultMarker>
+						{/if}
+					{/each}
+					{#each transportations as transportation}
+						{#if transportation.destination_latitude && transportation.destination_longitude}
+							<Marker
+								lngLat={{
+									lng: transportation.destination_longitude,
+									lat: transportation.destination_latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
 								bg-red-300 text-black focus:outline-6 focus:outline-black"
-								>
-									<span class="text-xl">
-										{getTransportationEmoji(transportation.type)}
-									</span>
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="text-lg text-black font-bold">{transportation.name}</div>
-										<p class="font-semibold text-black text-md">
-											{transportation.type}
-										</p>
-									</Popup>
-								</Marker>
-							{/if}
-							{#if transportation.origin_latitude && transportation.origin_longitude}
-								<Marker
-									lngLat={{
-										lng: transportation.origin_longitude,
-										lat: transportation.origin_latitude
-									}}
-									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+							>
+								<span class="text-xl">
+									{getTransportationEmoji(transportation.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{transportation.name}</div>
+									<p class="font-semibold text-black text-md">
+										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+						{/if}
+						{#if transportation.origin_latitude && transportation.origin_longitude}
+							<Marker
+								lngLat={{
+									lng: transportation.origin_longitude,
+									lat: transportation.origin_latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
 								bg-green-300 text-black focus:outline-6 focus:outline-black"
-								>
-									<span class="text-xl">
-										{getTransportationEmoji(transportation.type)}
-									</span>
-									<Popup openOn="click" offset={[0, -10]}>
-										<div class="text-lg text-black font-bold">{transportation.name}</div>
-										<p class="font-semibold text-black text-md">
-											{transportation.type}
-										</p>
-									</Popup>
-								</Marker>
-							{/if}
-						{/each}
-					</MapLibre>
-				</div>
+							>
+								<span class="text-xl">
+									{getTransportationEmoji(transportation.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{transportation.name}</div>
+									<p class="font-semibold text-black text-md">
+										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+						{/if}
+					{/each}
+				</MapLibre>
 			</div>
-		{/if}
-		{#if currentView == 'calendar'}
-			<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
-				<div class="card-body">
-					<h2 class="card-title text-3xl justify-center mb-4">
-						{$t('adventures.adventure_calendar')}
-					</h2>
-					<Calendar {plugins} {options} />
-				</div>
+		</div>
+	{/if}
+	{#if currentView == 'calendar'}
+		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+			<div class="card-body">
+				<h2 class="card-title text-3xl justify-center mb-4">
+					{$t('adventures.adventure_calendar')}
+				</h2>
+				<Calendar {plugins} {options} />
 			</div>
-		{/if}
+		</div>
 	{/if}
 {/if}
 

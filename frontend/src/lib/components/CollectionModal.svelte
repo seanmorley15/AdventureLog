@@ -64,6 +64,11 @@
 			collection.start_date = collection.end_date;
 		}
 
+		if (!collection.start_date && !collection.end_date) {
+			collection.start_date = null;
+			collection.end_date = null;
+		}
+
 		if (collection.id === '') {
 			let res = await fetch('/api/collections', {
 				method: 'POST',

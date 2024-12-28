@@ -244,7 +244,25 @@
     "show": "Pokazywać",
     "download_calendar": "Pobierz Kalendarz",
     "md_instructions": "Napisz tutaj swoją przecenę...",
-    "preview": "Zapowiedź"
+    "preview": "Zapowiedź",
+    "checklist_delete_confirm": "Czy na pewno chcesz usunąć tę listę kontrolną? \nTej akcji nie można cofnąć.",
+    "clear_location": "Wyczyść lokalizację",
+    "date_information": "Informacje o dacie",
+    "delete_checklist": "Usuń listę kontrolną",
+    "delete_note": "Usuń notatkę",
+    "delete_transportation": "Usuń transport",
+    "end": "Koniec",
+    "ending_airport": "Kończy się lotnisko",
+    "flight_information": "Informacje o locie",
+    "from": "Z",
+    "no_location_found": "Nie znaleziono lokalizacji",
+    "note_delete_confirm": "Czy na pewno chcesz usunąć tę notatkę? \nTej akcji nie można cofnąć.",
+    "out_of_range": "Nie mieści się w zakresie dat planu podróży",
+    "show_region_labels": "Pokaż etykiety regionów",
+    "start": "Start",
+    "starting_airport": "Początkowe lotnisko",
+    "to": "Do",
+    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć."
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -358,7 +376,8 @@
     "create": "Utwórz",
     "collection_edit_success": "Kolekcja została pomyślnie edytowana!",
     "error_editing_collection": "Błąd podczas edytowania kolekcji",
-    "edit_collection": "Edytuj kolekcję"
+    "edit_collection": "Edytuj kolekcję",
+    "public_collection": "Kolekcja publiczna"
   },
   "notes": {
     "note_deleted": "Notatka została pomyślnie usunięta!",
@@ -371,7 +390,8 @@
     "save": "Zapisz",
     "note_public": "Ta notatka jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "add_a_link": "Dodaj link",
-    "invalid_url": "Nieprawidłowy URL"
+    "invalid_url": "Nieprawidłowy URL",
+    "note_viewer": "Przeglądarka notatek"
   },
   "checklist": {
     "checklist_deleted": "Lista kontrolna została pomyślnie usunięta!",
@@ -386,7 +406,9 @@
     "save": "Zapisz",
     "checklist_public": "Ta lista kontrolna jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "item_cannot_be_empty": "Element nie może być pusty",
-    "item_already_exists": "Element już istnieje"
+    "item_already_exists": "Element już istnieje",
+    "checklist_viewer": "Przeglądarka listy kontrolnej",
+    "new_checklist": "Nowa lista kontrolna"
   },
   "transportation": {
     "transportation_deleted": "Transport został pomyślnie usunięty!",

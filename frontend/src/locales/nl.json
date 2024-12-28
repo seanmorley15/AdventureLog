@@ -197,7 +197,25 @@
     "show": "Show",
     "download_calendar": "Agenda downloaden",
     "md_instructions": "Schrijf hier uw korting...",
-    "preview": "Voorbeeld"
+    "preview": "Voorbeeld",
+    "checklist_delete_confirm": "Weet u zeker dat u deze checklist wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "clear_location": "Locatie wissen",
+    "date_information": "Datuminformatie",
+    "delete_checklist": "Controlelijst verwijderen",
+    "delete_note": "Notitie verwijderen",
+    "delete_transportation": "Transport verwijderen",
+    "end": "Einde",
+    "flight_information": "Vluchtinformatie",
+    "from": "Van",
+    "no_location_found": "Geen locatie gevonden",
+    "note_delete_confirm": "Weet u zeker dat u deze notitie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "out_of_range": "Niet binnen het datumbereik van het reisplan",
+    "show_region_labels": "Toon regiolabels",
+    "start": "Begin",
+    "starting_airport": "Startende luchthaven",
+    "to": "Naar",
+    "transportation_delete_confirm": "Weet u zeker dat u dit transport wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "ending_airport": "Einde luchthaven"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -364,7 +382,9 @@
     "item_cannot_be_empty": "Artikel mag niet leeg zijn",
     "items": "Artikelen",
     "new_item": "Nieuw artikel",
-    "save": "Opslaan"
+    "save": "Opslaan",
+    "checklist_viewer": "Controlelijstviewer",
+    "new_checklist": "Nieuwe checklist"
   },
   "collection": {
     "collection_created": "Collectie succesvol aangemaakt!",
@@ -373,7 +393,8 @@
     "edit_collection": "Collectie bewerken",
     "error_creating_collection": "Fout bij aanmaken collectie",
     "error_editing_collection": "Fout bij bewerken collectie",
-    "new_collection": "Nieuwe collectie"
+    "new_collection": "Nieuwe collectie",
+    "public_collection": "Openbare collectie"
   },
   "notes": {
     "add_a_link": "Voeg een link toe",
@@ -386,7 +407,8 @@
     "note_public": "Deze opmerking is openbaar omdat deze zich in een openbare collectie bevindt.",
     "open": "Open",
     "save": "Opslaan",
-    "invalid_url": "Ongeldige URL"
+    "invalid_url": "Ongeldige URL",
+    "note_viewer": "Notitieviewer"
   },
   "transportation": {
     "date_and_time": "Datum",

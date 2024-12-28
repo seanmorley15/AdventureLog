@@ -197,7 +197,25 @@
     "show": "Spettacolo",
     "download_calendar": "Scarica Calendario",
     "md_instructions": "Scrivi qui il tuo ribasso...",
-    "preview": "Anteprima"
+    "preview": "Anteprima",
+    "checklist_delete_confirm": "Sei sicuro di voler eliminare questa lista di controllo? \nQuesta azione non può essere annullata.",
+    "clear_location": "Cancella posizione",
+    "date_information": "Informazioni sulla data",
+    "delete_checklist": "Elimina lista di controllo",
+    "delete_note": "Elimina nota",
+    "delete_transportation": "Elimina trasporto",
+    "end": "FINE",
+    "ending_airport": "Fine dell'aeroporto",
+    "flight_information": "Informazioni sul volo",
+    "from": "Da",
+    "no_location_found": "Nessuna posizione trovata",
+    "note_delete_confirm": "Sei sicuro di voler eliminare questa nota? \nQuesta azione non può essere annullata.",
+    "out_of_range": "Non nell'intervallo di date dell'itinerario",
+    "show_region_labels": "Mostra etichette regione",
+    "start": "Inizio",
+    "starting_airport": "Inizio aeroporto",
+    "to": "A",
+    "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -364,7 +382,9 @@
     "item_cannot_be_empty": "L'articolo non può essere vuoto",
     "items": "Elementi",
     "save": "Salva",
-    "new_item": "Nuovo articolo"
+    "new_item": "Nuovo articolo",
+    "checklist_viewer": "Visualizzatore della lista di controllo",
+    "new_checklist": "Nuova lista di controllo"
   },
   "collection": {
     "edit_collection": "Modifica raccolta",
@@ -373,7 +393,8 @@
     "new_collection": "Nuova collezione",
     "collection_created": "Collezione creata con successo!",
     "collection_edit_success": "Raccolta modificata con successo!",
-    "create": "Creare"
+    "create": "Creare",
+    "public_collection": "Collezione pubblica"
   },
   "notes": {
     "add_a_link": "Aggiungi un collegamento",
@@ -386,7 +407,8 @@
     "note_public": "Questa nota è pubblica perché è in una collezione pubblica.",
     "open": "Aprire",
     "save": "Salva",
-    "invalid_url": "URL non valido"
+    "invalid_url": "URL non valido",
+    "note_viewer": "Visualizzatore di note"
   },
   "transportation": {
     "date_and_time": "Data",
