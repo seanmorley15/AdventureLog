@@ -429,7 +429,11 @@
 				<div class="collapse collapse-plus bg-base-200 mb-4">
 					<input type="checkbox" checked />
 					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.flight_information')}
+						{#if transportation?.type == 'plane'}
+							{$t('adventures.flight_information')}
+						{:else}
+							{$t('adventures.location_information')}
+						{/if}
 					</div>
 
 					<div class="collapse-content">

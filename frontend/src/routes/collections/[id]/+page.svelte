@@ -72,16 +72,32 @@
 
 	// Compute `dates` array reactively
 	$: {
+		dates = [];
+
 		if (adventures) {
-			dates = adventures.flatMap((adventure) =>
-				adventure.visits.map((visit) => ({
-					id: adventure.id,
-					start: visit.start_date, // Convert to ISO format if needed
-					end: visit.end_date || visit.start_date,
-					title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
+			dates = dates.concat(
+				adventures.flatMap((adventure) =>
+					adventure.visits.map((visit) => ({
+						id: adventure.id,
+						start: visit.start_date || '', // Ensure it's a string
+						end: visit.end_date || visit.start_date || '', // Ensure it's a string
+						title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
+					}))
+				)
+			);
+		}
+
+		if (transportations) {
+			dates = dates.concat(
+				transportations.map((transportation) => ({
+					id: transportation.id,
+					start: transportation.date || '', // Ensure it's a string
+					end: transportation.end_date || transportation.date || '', // Ensure it's a string
+					title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
 				}))
 			);
 		}
+
 		// Update `options.events` when `dates` changes
 		options = { ...options, events: dates };
 	}

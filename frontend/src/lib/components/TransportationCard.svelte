@@ -22,23 +22,49 @@
 
 	let unlinked: boolean = false;
 
-	// unlinked if collection.start_date and collection.end_date are not within transportation.date and transportation.end_date. check for null in the collection dates first to avoid errors
 	$: {
 		if (collection?.start_date && collection.end_date) {
+			// Parse transportation dates
+			let transportationStartDate = transportation.date
+				? new Date(transportation.date.split('T')[0]) // Ensure proper date parsing
+				: null;
+			let transportationEndDate = transportation.end_date
+				? new Date(transportation.end_date.split('T')[0])
+				: null;
+
+			// Parse collection dates
+			let collectionStartDate = new Date(collection.start_date);
+			let collectionEndDate = new Date(collection.end_date);
+
+			// // Debugging outputs
+			// console.log(
+			// 	'Transportation Start Date:',
+			// 	transportationStartDate,
+			// 	'Transportation End Date:',
+			// 	transportationEndDate
+			// );
+			// console.log(
+			// 	'Collection Start Date:',
+			// 	collectionStartDate,
+			// 	'Collection End Date:',
+			// 	collectionEndDate
+			// );
+
+			// Check if the collection range is outside the transportation range
 			const startOutsideRange =
-				transportation.date &&
-				collection.start_date < transportation.date &&
-				collection.end_date < transportation.date;
+				transportationStartDate &&
+				collectionStartDate < transportationStartDate &&
+				collectionEndDate < transportationStartDate;
 
 			const endOutsideRange =
-				transportation.end_date &&
-				collection.start_date > transportation.end_date &&
-				collection.end_date > transportation.end_date;
+				transportationEndDate &&
+				collectionStartDate > transportationEndDate &&
+				collectionEndDate > transportationEndDate;
 
 			unlinked = !!(
 				startOutsideRange ||
 				endOutsideRange ||
-				(!transportation.date && !transportation.end_date)
+				(!transportationStartDate && !transportationEndDate)
 			);
 		}
 	}

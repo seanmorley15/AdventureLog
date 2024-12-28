@@ -114,14 +114,6 @@
 				class="join-item btn"
 				type="radio"
 				name="filter"
-				aria-label={$t('transportation.type')}
-				id="type"
-				on:change={() => (property = 'type')}
-			/>
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
 				aria-label={$t('adventures.location')}
 				id="location"
 				on:change={() => (property = 'location')}
