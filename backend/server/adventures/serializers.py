@@ -170,7 +170,7 @@ class TransportationSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 

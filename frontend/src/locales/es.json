@@ -242,7 +242,27 @@
     "emoji_picker": "Selector de emojis",
     "hide": "Esconder",
     "show": "Espectáculo",
-    "download_calendar": "Descargar Calendario"
+    "download_calendar": "Descargar Calendario",
+    "md_instructions": "Escriba su descuento aquí...",
+    "preview": "Avance",
+    "checklist_delete_confirm": "¿Está seguro de que desea eliminar esta lista de verificación? \nEsta acción no se puede deshacer.",
+    "clear_location": "Borrar ubicación",
+    "date_information": "Información de fecha",
+    "delete_checklist": "Eliminar lista de verificación",
+    "delete_note": "Eliminar nota",
+    "delete_transportation": "Eliminar transporte",
+    "end": "Fin",
+    "ending_airport": "Aeropuerto final",
+    "flight_information": "Información de vuelo",
+    "from": "De",
+    "no_location_found": "No se encontró ninguna ubicación",
+    "note_delete_confirm": "¿Estás seguro de que deseas eliminar esta nota? \nEsta acción no se puede deshacer.",
+    "out_of_range": "No en el rango de fechas del itinerario",
+    "show_region_labels": "Mostrar etiquetas de región",
+    "start": "Comenzar",
+    "starting_airport": "Aeropuerto de inicio",
+    "to": "A",
+    "transportation_delete_confirm": "¿Está seguro de que desea eliminar este transporte? \nEsta acción no se puede deshacer."
   },
   "worldtravel": {
     "all": "Todo",
@@ -362,7 +382,9 @@
     "item_cannot_be_empty": "El artículo no puede estar vacío",
     "items": "Elementos",
     "new_item": "Nuevo artículo",
-    "save": "Ahorrar"
+    "save": "Ahorrar",
+    "checklist_viewer": "Visor de lista de verificación",
+    "new_checklist": "Nueva lista de verificación"
   },
   "collection": {
     "collection_created": "¡Colección creada con éxito!",
@@ -371,7 +393,8 @@
     "edit_collection": "Editar colección",
     "error_creating_collection": "Error al crear la colección",
     "error_editing_collection": "Error al editar la colección",
-    "new_collection": "Nueva colección"
+    "new_collection": "Nueva colección",
+    "public_collection": "Colección pública"
   },
   "notes": {
     "add_a_link": "Agregar un enlace",
@@ -384,7 +407,8 @@
     "note_public": "Esta nota es pública porque está en una colección pública.",
     "open": "Abierto",
     "save": "Ahorrar",
-    "invalid_url": "URL no válida"
+    "invalid_url": "URL no válida",
+    "note_viewer": "Visor de notas"
   },
   "transportation": {
     "date_and_time": "Fecha",

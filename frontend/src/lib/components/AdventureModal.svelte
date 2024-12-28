@@ -32,6 +32,7 @@
 	import { appVersion } from '$lib/config';
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue } from '$lib';
+	import MarkdownEditor from './MarkdownEditor.svelte';
 
 	let wikiError: string = '';
 
@@ -577,15 +578,10 @@
 							</div>
 							<div>
 								<label for="description">{$t('adventures.description')}</label><br />
-								<textarea
-									id="description"
-									name="description"
-									bind:value={adventure.description}
-									class="textarea textarea-bordered w-full h-32"
-								></textarea>
+								<MarkdownEditor bind:text={adventure.description} />
 								<div class="mt-2">
 									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_desc')}>
-										<button type="button" class="btn btn-neutral" on:click={generateDesc}
+										<button type="button" class="btn btn-neutral mt-2" on:click={generateDesc}
 											>{$t('adventures.generate_desc')}</button
 										>
 									</div>
@@ -687,7 +683,7 @@
 							<div>
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+									class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 									standardControls
 								>
 									<!-- MapEvents gives you access to map events even from other components inside the map,
