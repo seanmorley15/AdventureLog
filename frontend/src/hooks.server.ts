@@ -23,7 +23,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 
 		if (!userFetch.ok) {
 			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/' });
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 			return await resolve(event);
 		}
 
@@ -54,12 +54,12 @@ export const authHook: Handle = async ({ event, resolve }) => {
 			}
 		} else {
 			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/' });
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 		}
 	} catch (error) {
 		console.error('Error in authHook:', error);
 		event.locals.user = null;
-		event.cookies.delete('sessionid', { path: '/' });
+		event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 	}
 
 	return await resolve(event);
