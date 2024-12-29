@@ -47,7 +47,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 						path: '/',
 						httpOnly: true,
 						sameSite: 'lax',
-						secure: true,
+						secure: event.url.protocol === 'https:',
 						expires: expiryDate
 					});
 				}
