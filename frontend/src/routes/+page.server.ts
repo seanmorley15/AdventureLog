@@ -42,6 +42,7 @@ export const actions: Actions = {
 			credentials: 'include'
 		});
 		if (res.status == 401) {
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');

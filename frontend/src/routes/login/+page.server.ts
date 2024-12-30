@@ -106,7 +106,7 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
-				secure: true,
+				secure: event.url.protocol === 'https:',
 				expires: new Date(expiryString)
 			});
 		}
