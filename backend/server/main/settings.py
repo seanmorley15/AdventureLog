@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'integrations',
     'django.contrib.gis',
 )
 
