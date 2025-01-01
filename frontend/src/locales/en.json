@@ -500,5 +500,14 @@
 		"recent_adventures": "Recent Adventures",
 		"no_recent_adventures": "No recent adventures?",
 		"add_some": "Why not start planning your next adventure? You can add a new adventure by clicking the button below."
+	},
+	"immich": {
+		"immich": "Immich",
+		"integration_fetch_error": "Error fetching data from the Immich integration",
+		"integration_missing": "The Immich integration is missing from the backend",
+		"query_required": "Query is required",
+		"server_down": "The Immich server is currently down or unreachable",
+		"no_items_found": "No items found",
+		"imageid_required": "Image ID is required"
 	}
 }

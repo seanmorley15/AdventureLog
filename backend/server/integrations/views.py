@@ -7,6 +7,22 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.pagination import PageNumberPagination
 
+class IntegrationView(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+    def list(self, request):
+        """
+        RESTful GET method for listing all integrations.
+        """
+        immich_integrations = ImmichIntegration.objects.filter(user=request.user)
+
+        return Response(
+            {
+                'immich': immich_integrations.exists()
+            },
+            status=status.HTTP_200_OK
+        )
+
+
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 25
     page_size_query_param = 'page_size'

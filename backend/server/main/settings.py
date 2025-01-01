@@ -165,9 +165,6 @@ TEMPLATES = [
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
-ALLAUTH_UI_THEME = "dark"
-SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
-
 AUTH_USER_MODEL = 'users.CustomUser'
 
 ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
@@ -221,11 +218,6 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
-}
-
-SWAGGER_SETTINGS = {
-    'LOGIN_URL': 'login',
-    'LOGOUT_URL': 'logout',
 }
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
