@@ -915,84 +915,105 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</form>
 			</div>
 		{:else}
-			<p>{$t('adventures.upload_images_here')}</p>
-			<!-- <p>{adventureToEdit.id}</p> -->
-			<div class="mb-2">
-				<label for="image">{$t('adventures.image')} </label><br />
-				<div class="flex">
-					<form
-						method="POST"
-						action="/adventures?/image"
-						use:enhance={imageSubmit}
-						enctype="multipart/form-data"
-					>
-						<input
-							type="file"
-							name="image"
-							class="file-input file-input-bordered w-full max-w-xs"
-							bind:this={fileInput}
-							accept="image/*"
-							id="image"
-						/>
-						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-						<button class="btn btn-neutral mt-2 mb-2" type="submit"
-							>{$t('adventures.upload_image')}</button
-						>
-					</form>
-				</div>
-				<div class="mt-2">
-					<label for="url">{$t('adventures.url')}</label><br />
+			<p class="text-lg text-gray-600">{$t('adventures.upload_images_here')}</p>
+
+			<div class="mb-4">
+				<label for="image" class="block font-medium text-gray-700 mb-2">
+					{$t('adventures.image')}
+				</label>
+				<form
+					method="POST"
+					action="/adventures?/image"
+					use:enhance={imageSubmit}
+					enctype="multipart/form-data"
+					class="flex flex-col items-start gap-2"
+				>
+					<input
+						type="file"
+						name="image"
+						class="file-input file-input-bordered w-full max-w-sm"
+						bind:this={fileInput}
+						accept="image/*"
+						id="image"
+					/>
+					<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
+					<button class="btn btn-neutral w-full max-w-sm" type="submit">
+						{$t('adventures.upload_image')}
+					</button>
+				</form>
+			</div>
+
+			<div class="mb-4">
+				<label for="url" class="block font-medium text-gray-700 mb-2">
+					{$t('adventures.url')}
+				</label>
+				<div class="flex gap-2">
 					<input
 						type="text"
 						id="url"
 						name="url"
 						bind:value={url}
-						class="input input-bordered w-full"
+						class="input input-bordered flex-1"
+						placeholder="Enter image URL"
 					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
-						>{$t('adventures.fetch_image')}</button
-					>
+					<button class="btn btn-neutral" type="button" on:click={fetchImage}>
+						{$t('adventures.fetch_image')}
+					</button>
 				</div>
-				<div class="mt-2">
-					<label for="name">{$t('adventures.wikipedia')}</label><br />
+			</div>
+
+			<div class="mb-4">
+				<label for="name" class="block font-medium text-gray-700 mb-2">
+					{$t('adventures.wikipedia')}
+				</label>
+				<div class="flex gap-2">
 					<input
 						type="text"
 						id="name"
 						name="name"
 						bind:value={imageSearch}
-						class="input input-bordered w-full"
+						class="input input-bordered flex-1"
+						placeholder="Search Wikipedia for images"
 					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
-						>{$t('adventures.fetch_image')}</button
-					>
+					<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
+						{$t('adventures.fetch_image')}
+					</button>
 				</div>
-				<div class="divider"></div>
-				{#if images.length > 0}
-					<h1 class="font-semibold text-xl">{$t('adventures.my_images')}</h1>
-				{:else}
-					<h1 class="font-semibold text-xl">{$t('adventures.no_images')}</h1>
-				{/if}
-				<div class="flex flex-wrap gap-2 mt-2">
+			</div>
+
+			<div class="divider"></div>
+
+			{#if images.length > 0}
+				<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
+				<div class="flex flex-wrap gap-4">
 					{#each images as image}
 						<div class="relative h-32 w-32">
 							<button
 								type="button"
-								class="absolute top-0 left-0 btn btn-error btn-sm z-10"
+								class="absolute top-1 right-1 btn btn-error btn-xs z-10"
 								on:click={() => removeImage(image.id)}
 							>
-								X
+								✕
 							</button>
-							<img src={image.image} alt={image.id} class="w-full h-full object-cover" />
+							<img
+								src={image.image}
+								alt={image.id}
+								class="w-full h-full object-cover rounded-md shadow-md"
+							/>
 						</div>
 					{/each}
 				</div>
-			</div>
-			<div class="mt-4">
-				<button type="button" class="btn btn-primary" on:click={saveAndClose}
-					>{$t('about.close')}</button
-				>
+			{:else}
+				<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
+			{/if}
+
+			<div class="mt-6">
+				<button type="button" class="btn btn-primary w-full max-w-sm" on:click={saveAndClose}>
+					{$t('about.close')}
+				</button>
 			</div>
 		{/if}
+
 		{#if adventure.is_public && adventure.id}
 			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
 				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
