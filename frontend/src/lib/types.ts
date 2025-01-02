@@ -202,3 +202,31 @@ export type ImmichIntegration = {
 	server_url: string;
 	api_key: string;
 };
+
+export type ImmichAlbum = {
+	albumName: string;
+	description: string;
+	albumThumbnailAssetId: string;
+	createdAt: string;
+	updatedAt: string;
+	id: string;
+	ownerId: string;
+	owner: {
+		id: string;
+		email: string;
+		name: string;
+		profileImagePath: string;
+		avatarColor: string;
+		profileChangedAt: string;
+	};
+	albumUsers: any[];
+	shared: boolean;
+	hasSharedLink: boolean;
+	startDate: string;
+	endDate: string;
+	assets: any[];
+	assetCount: number;
+	isActivityEnabled: boolean;
+	order: string;
+	lastModifiedAssetTimestamp: string;
+};

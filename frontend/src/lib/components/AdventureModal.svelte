@@ -13,7 +13,6 @@
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	import ImmichLogo from '$lib/assets/immich.svg';
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
@@ -33,6 +32,7 @@
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
+	import ImmichSelect from './ImmichSelect.svelte';
 
 	let wikiError: string = '';
 
@@ -207,7 +207,7 @@
 
 				// Assuming the first object in the array is the new image
 				let newImage = {
-					id: rawData[0].id,
+					id: rawData[1],
 					image: rawData[2] // This is the URL for the image
 				};
 				console.log('New Image:', newImage);
@@ -217,74 +217,13 @@
 				adventure.images = images;
 
 				addToast('success', $t('adventures.image_upload_success'));
+				url = '';
 			} else {
 				addToast('error', $t('adventures.image_upload_error'));
 			}
 		} catch (error) {
 			console.error('Error in fetchImage:', error);
 			addToast('error', $t('adventures.image_upload_error'));
-		}
-	}
-
-	let immichSearchValue: string = '';
-	let immichError: string = '';
-	let immichNext: string = '';
-	let immichPage: number = 1;
-
-	async function searchImmich() {
-		let res = await fetch(`/api/integrations/immich/search/?query=${immichSearchValue}`);
-		if (!res.ok) {
-			let data = await res.json();
-			let errorMessage = data.message;
-			console.log(errorMessage);
-			immichError = $t(data.code);
-		} else {
-			let data = await res.json();
-			console.log(data);
-			immichError = '';
-			if (data.results && data.results.length > 0) {
-				immichImages = data.results;
-			} else {
-				immichError = $t('immich.no_items_found');
-			}
-			if (data.next) {
-				immichNext =
-					'/api/integrations/immich/search?query=' +
-					immichSearchValue +
-					'&page=' +
-					(immichPage + 1);
-			} else {
-				immichNext = '';
-			}
-		}
-	}
-
-	async function loadMoreImmich() {
-		let res = await fetch(immichNext);
-		if (!res.ok) {
-			let data = await res.json();
-			let errorMessage = data.message;
-			console.log(errorMessage);
-			immichError = $t(data.code);
-		} else {
-			let data = await res.json();
-			console.log(data);
-			immichError = '';
-			if (data.results && data.results.length > 0) {
-				immichImages = [...immichImages, ...data.results];
-			} else {
-				immichError = $t('immich.no_items_found');
-			}
-			if (data.next) {
-				immichNext =
-					'/api/integrations/immich/search?query=' +
-					immichSearchValue +
-					'&page=' +
-					(immichPage + 1);
-				immichPage++;
-			} else {
-				immichNext = '';
-			}
 		}
 	}
 
@@ -421,7 +360,6 @@
 	let modal: HTMLDialogElement;
 
 	let immichIntegration: boolean = false;
-	let immichImages: any[] = [];
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -1078,52 +1016,12 @@ it would also work to just use on:click on the MapLibre component itself. -->
 			</div>
 
 			{#if immichIntegration}
-				<div class="mb-4">
-					<label for="immich" class="block font-medium mb-2">
-						{$t('immich.immich')}
-						<img src={ImmichLogo} alt="Immich Logo" class="h-6 w-6 inline-block -mt-1" />
-					</label>
-					<!-- search bar -->
-					<div>
-						<input
-							type="text"
-							placeholder="Type here"
-							bind:value={immichSearchValue}
-							class="input input-bordered w-full max-w-xs"
-						/>
-						<button on:click={searchImmich} class="btn btn-neutral mt-2">Search</button>
-					</div>
-					<p class="text-red-500">{immichError}</p>
-					<div class="flex flex-wrap gap-4 mr-4 mt-2">
-						{#each immichImages as image}
-							<div class="flex flex-col items-center gap-2">
-								<!-- svelte-ignore a11y-img-redundant-alt -->
-								<img
-									src={`/immich/${image.id}`}
-									alt="Image from Immich"
-									class="h-24 w-24 object-cover rounded-md"
-								/>
-								<button
-									type="button"
-									class="btn btn-sm btn-primary"
-									on:click={() => {
-										let currentDomain = window.location.origin;
-										let fullUrl = `${currentDomain}/immich/${image.id}`;
-										url = fullUrl;
-										fetchImage();
-									}}
-								>
-									{$t('adventures.upload_image')}
-								</button>
-							</div>
-						{/each}
-						{#if immichNext}
-							<button class="btn btn-neutral" on:click={loadMoreImmich}
-								>{$t('immich.load_more')}</button
-							>
-						{/if}
-					</div>
-				</div>
+				<ImmichSelect
+					on:fetchImage={(e) => {
+						url = e.detail;
+						fetchImage();
+					}}
+				/>
 			{/if}
 
 			<div class="divider"></div>

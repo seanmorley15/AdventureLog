@@ -150,6 +150,88 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
+        
+    @action(detail=False, methods=['get'])
+    def albums(self, request):
+        """
+        RESTful GET method for retrieving all Immich albums.
+        """
+        # Check for integration before proceeding
+        integration = self.check_integration(request)
+        if isinstance(integration, Response):
+            return integration
+
+        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
+        try:
+            immich_fetch = requests.get(f'{integration.server_url}/albums', headers={
+                'x-api-key': integration.api_key
+            })
+            res = immich_fetch.json()
+        except requests.exceptions.ConnectionError:
+            return Response(
+                {
+                    'message': 'The Immich server is currently down or unreachable.',
+                    'error': True,
+                    'code': 'immich.server_down'
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        return Response(
+            res,
+            status=status.HTTP_200_OK
+        )
+
+    @action(detail=False, methods=['get'], url_path='albums/(?P<albumid>[^/.]+)')
+    def album(self, request, albumid=None):
+        """
+        RESTful GET method for retrieving a specific Immich album by ID.
+        """
+        # Check for integration before proceeding
+        integration = self.check_integration(request)
+        if isinstance(integration, Response):
+            return integration
+
+        if not albumid:
+            return Response(
+                {
+                    'message': 'Album ID is required.',
+                    'error': True,
+                    'code': 'immich.albumid_required'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
+        try:
+            immich_fetch = requests.get(f'{integration.server_url}/albums/{albumid}', headers={
+                'x-api-key': integration.api_key
+            })
+            res = immich_fetch.json()
+        except requests.exceptions.ConnectionError:
+            return Response(
+                {
+                    'message': 'The Immich server is currently down or unreachable.',
+                    'error': True,
+                    'code': 'immich.server_down'
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        if 'assets' in res:
+            return Response(
+                res['assets'],
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {
+                    'message': 'No assets found in this album.',
+                    'error': True,
+                    'code': 'immich.no_assets_found'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
 
 class ImmichIntegrationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
