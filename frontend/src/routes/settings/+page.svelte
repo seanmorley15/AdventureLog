@@ -232,7 +232,9 @@
 				class="space-y-6"
 			>
 				<div>
-					<label for="username" class="text-sm font-medium">{$t('auth.username')}</label>
+					<label for="username" class="text-sm font-medium text-neutral-content"
+						>{$t('auth.username')}</label
+					>
 					<input
 						type="text"
 						id="username"
@@ -243,7 +245,9 @@
 				</div>
 
 				<div>
-					<label for="first_name" class="text-sm font-medium">{$t('auth.first_name')}</label>
+					<label for="first_name" class="text-sm font-medium text-neutral-content"
+						>{$t('auth.first_name')}</label
+					>
 					<input
 						type="text"
 						id="first_name"
@@ -254,7 +258,9 @@
 				</div>
 
 				<div>
-					<label for="last_name" class="text-sm font-medium">{$t('auth.last_name')}</label>
+					<label for="last_name" class="text-sm font-medium text-neutral-content"
+						>{$t('auth.last_name')}</label
+					>
 					<input
 						type="text"
 						id="last_name"
@@ -265,7 +271,9 @@
 				</div>
 
 				<div>
-					<label for="profile_pic" class="text-sm font-medium">{$t('auth.profile_picture')}</label>
+					<label for="profile_pic" class="text-sm font-medium text-neutral-content"
+						>{$t('auth.profile_picture')}</label
+					>
 					<input
 						type="file"
 						id="profile_pic"
@@ -282,7 +290,9 @@
 						bind:checked={user.public_profile}
 						class="toggle toggle-primary"
 					/>
-					<label for="public_profile" class="ml-2 text-sm">{$t('auth.public_profile')}</label>
+					<label for="public_profile" class="ml-2 text-sm text-neutral-content"
+						>{$t('auth.public_profile')}</label
+					>
 				</div>
 
 				<button class="w-full mt-4 btn btn-primary py-2">{$t('settings.update')}</button>
@@ -298,7 +308,7 @@
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
 			<form method="post" action="?/changePassword" use:enhance class="space-y-6">
 				<div>
-					<label for="current_password" class="text-sm font-medium"
+					<label for="current_password" class="text-sm font-medium text-neutral-content"
 						>{$t('settings.current_password')}</label
 					>
 					<input
@@ -310,7 +320,9 @@
 				</div>
 
 				<div>
-					<label for="password1" class="text-sm font-medium">{$t('settings.new_password')}</label>
+					<label for="password1" class="text-sm font-medium text-neutral-content"
+						>{$t('settings.new_password')}</label
+					>
 					<input
 						type="password"
 						id="password1"
@@ -320,7 +332,7 @@
 				</div>
 
 				<div>
-					<label for="password2" class="text-sm font-medium"
+					<label for="password2" class="text-sm font-medium text-neutral-content"
 						>{$t('settings.confirm_new_password')}</label
 					>
 					<input
@@ -375,7 +387,7 @@
 					</div>
 				{/each}
 				{#if emails.length === 0}
-					<p class="text-center">{$t('settings.no_email_set')}</p>
+					<p class="text-center text-neutral-content">{$t('settings.no_email_set')}</p>
 				{/if}
 			</div>
 
@@ -400,7 +412,7 @@
 		</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
 			{#if !data.props.authenticators}
-				<p>{$t('settings.mfa_not_enabled')}</p>
+				<p class="text-neutral-content">{$t('settings.mfa_not_enabled')}</p>
 				<button class="btn btn-primary mt-4" on:click={() => (isMFAModalOpen = true)}
 					>{$t('settings.enable_mfa')}</button
 				>
@@ -422,7 +434,7 @@
 			/>
 		</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
-			<p class="text-center">
+			<p class="text-center text-neutral-content">
 				Integrate your Immich account with AdventureLog to allow you to search your photos library
 				and import photos for your adventures.
 			</p>
@@ -443,7 +455,9 @@
 			{#if !immichIntegration || newImmichIntegration.id}
 				<div class="mt-4">
 					<div>
-						<label for="immich_url" class="text-sm font-medium">Immich Server URL</label>
+						<label for="immich_url" class="text-sm font-medium text-neutral-content"
+							>Immich Server URL</label
+						>
 						<input
 							type="url"
 							id="immich_url"
@@ -453,14 +467,16 @@
 							class="block w-full mt-1 input input-bordered input-primary"
 						/>
 						{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
-							<p class="text-xs text-warning mt-1">
+							<p class="text-s text-warning mt-2">
 								Note: this must be the URL to the Immich API server so it likely ends with /api
 								unless you have a custom config.
 							</p>
 						{/if}
 					</div>
 					<div class="mt-4">
-						<label for="immich_api_key" class="text-sm font-medium">Immich API Key</label>
+						<label for="immich_api_key" class="text-sm font-medium text-neutral-content"
+							>Immich API Key</label
+						>
 						<input
 							type="text"
 							id="immich_api_key"
