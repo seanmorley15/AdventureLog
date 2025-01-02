@@ -1,6 +1,8 @@
 import os
 from rest_framework.response import Response
 from rest_framework import viewsets, status
+
+from .serializers import ImmichIntegrationSerializer
 from .models import ImmichIntegration
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -147,4 +149,84 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     'code': 'immich.server_down'
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+
+class ImmichIntegrationViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ImmichIntegrationSerializer
+    queryset = ImmichIntegration.objects.all()
+
+    def get_queryset(self):
+        return ImmichIntegration.objects.filter(user=self.request.user)
+
+    def create(self, request):
+        """
+        RESTful POST method for creating a new Immich integration.
+        """
+
+        # Check if the user already has an integration
+        user_integrations = ImmichIntegration.objects.filter(user=request.user)
+        if user_integrations.exists():
+            return Response(
+                {
+                    'message': 'You already have an active Immich integration.',
+                    'error': True,
+                    'code': 'immich.integration_exists'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(
+                serializer.data,
+                status=status.HTTP_201_CREATED
+            )
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def destroy(self, request, pk=None):
+        """
+        RESTful DELETE method for deleting an existing Immich integration.
+        """
+        integration = ImmichIntegration.objects.filter(user=request.user, id=pk).first()
+        if not integration:
+            return Response(
+                {
+                    'message': 'Integration not found.',
+                    'error': True,
+                    'code': 'immich.integration_not_found'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+        integration.delete()
+        return Response(
+            {
+                'message': 'Integration deleted successfully.'
+            },
+            status=status.HTTP_200_OK
+        )
+    
+    def list(self, request, *args, **kwargs):
+        # If the user has an integration, we only want to return that integration
+
+        user_integrations = ImmichIntegration.objects.filter(user=request.user)
+        if user_integrations.exists():
+            integration = user_integrations.first()
+            serializer = self.serializer_class(integration)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {
+                    'message': 'No integration found.',
+                    'error': True,
+                    'code': 'immich.integration_not_found'
+                },
+                status=status.HTTP_404_NOT_FOUND
             )

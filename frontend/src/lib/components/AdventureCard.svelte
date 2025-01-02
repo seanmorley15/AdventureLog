@@ -191,7 +191,7 @@
 				<!-- action options dropdown -->
 
 				{#if type != 'link'}
-					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 						<div class="dropdown dropdown-end">
 							<div tabindex="0" role="button" class="btn btn-neutral-200">
 								<DotsHorizontal class="w-6 h-6" />

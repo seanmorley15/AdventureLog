@@ -228,6 +228,8 @@
 
 	let immichSearchValue: string = '';
 	let immichError: string = '';
+	let immichNext: string = '';
+	let immichPage: number = 1;
 
 	async function searchImmich() {
 		let res = await fetch(`/api/integrations/immich/search/?query=${immichSearchValue}`);
@@ -244,6 +246,44 @@
 				immichImages = data.results;
 			} else {
 				immichError = $t('immich.no_items_found');
+			}
+			if (data.next) {
+				immichNext =
+					'/api/integrations/immich/search?query=' +
+					immichSearchValue +
+					'&page=' +
+					(immichPage + 1);
+			} else {
+				immichNext = '';
+			}
+		}
+	}
+
+	async function loadMoreImmich() {
+		let res = await fetch(immichNext);
+		if (!res.ok) {
+			let data = await res.json();
+			let errorMessage = data.message;
+			console.log(errorMessage);
+			immichError = $t(data.code);
+		} else {
+			let data = await res.json();
+			console.log(data);
+			immichError = '';
+			if (data.results && data.results.length > 0) {
+				immichImages = [...immichImages, ...data.results];
+			} else {
+				immichError = $t('immich.no_items_found');
+			}
+			if (data.next) {
+				immichNext =
+					'/api/integrations/immich/search?query=' +
+					immichSearchValue +
+					'&page=' +
+					(immichPage + 1);
+				immichPage++;
+			} else {
+				immichNext = '';
 			}
 		}
 	}
@@ -1077,6 +1117,11 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								</button>
 							</div>
 						{/each}
+						{#if immichNext}
+							<button class="btn btn-neutral" on:click={loadMoreImmich}
+								>{$t('immich.load_more')}</button
+							>
+						{/if}
 					</div>
 				</div>
 			{/if}

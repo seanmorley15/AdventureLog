@@ -196,3 +196,9 @@ export type Category = {
 	user_id: string;
 	num_adventures?: number | null;
 };
+
+export type ImmichIntegration = {
+	id: string;
+	server_url: string;
+	api_key: string;
+};

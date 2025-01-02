@@ -509,6 +509,7 @@
 		"query_required": "Query is required",
 		"server_down": "The Immich server is currently down or unreachable",
 		"no_items_found": "No items found",
-		"imageid_required": "Image ID is required"
+		"imageid_required": "Image ID is required",
+		"load_more": "Load More"
 	}
 }

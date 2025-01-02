@@ -2,14 +2,16 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import type { User } from '$lib/types.js';
+	import type { ImmichIntegration, User } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import { appTitle, appVersion } from '$lib/config.js';
+	import ImmichLogo from '$lib/assets/immich.svg';
 
 	export let data;
+	console.log(data);
 	let user: User;
 	let emails: typeof data.props.emails;
 	if (data.user) {
@@ -18,6 +20,14 @@
 	}
 
 	let new_email: string = '';
+
+	let immichIntegration = data.props.immichIntegration;
+
+	let newImmichIntegration: ImmichIntegration = {
+		server_url: '',
+		api_key: '',
+		id: ''
+	};
 
 	let isMFAModalOpen: boolean = false;
 
@@ -128,6 +138,54 @@
 			});
 		} else {
 			addToast('error', $t('settings.email_set_primary_error'));
+		}
+	}
+
+	async function enableImmichIntegration() {
+		if (!immichIntegration?.id) {
+			let res = await fetch('/api/integrations/immich/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(newImmichIntegration)
+			});
+			let data = await res.json();
+			if (res.ok) {
+				addToast('success', $t('settings.immich_enabled'));
+				immichIntegration = data;
+			} else {
+				addToast('error', $t('settings.immich_error'));
+			}
+		} else {
+			let res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(newImmichIntegration)
+			});
+			let data = await res.json();
+			if (res.ok) {
+				addToast('success', $t('settings.immich_updated'));
+				immichIntegration = data;
+			} else {
+				addToast('error', $t('settings.immich_error'));
+			}
+		}
+	}
+
+	async function disableImmichIntegration() {
+		if (immichIntegration && immichIntegration.id) {
+			let res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
+				method: 'DELETE'
+			});
+			if (res.ok) {
+				addToast('success', $t('settings.immich_disabled'));
+				immichIntegration = null;
+			} else {
+				addToast('error', $t('settings.immich_error'));
+			}
 		}
 	}
 
@@ -350,6 +408,72 @@
 				<button class="btn btn-warning mt-4" on:click={disableMfa}
 					>{$t('settings.disable_mfa')}</button
 				>
+			{/if}
+		</div>
+	</section>
+
+	<!-- Immich Integration Section -->
+	<section class="space-y-8">
+		<h2 class="text-2xl font-semibold text-center mt-8">
+			Immich Integration <img
+				src={ImmichLogo}
+				alt="Immich Logo"
+				class="inline-block w-8 h-8 -mt-1"
+			/>
+		</h2>
+		<div class="bg-neutral p-6 rounded-lg shadow-md">
+			<p class="text-center">
+				Integrate your Immich account with AdventureLog to allow you to search your photos library
+				and import photos for your adventures.
+			</p>
+			{#if immichIntegration}
+				<div class="flex flex-col items-center justify-center mt-1 space-y-2">
+					<div class="badge badge-success">Integration Enabled</div>
+					<div class="flex space-x-2">
+						<button
+							class="btn btn-warning"
+							on:click={() => {
+								if (immichIntegration) newImmichIntegration = immichIntegration;
+							}}>Edit</button
+						>
+						<button class="btn btn-error" on:click={disableImmichIntegration}>Disable</button>
+					</div>
+				</div>
+			{/if}
+			{#if !immichIntegration || newImmichIntegration.id}
+				<div class="mt-4">
+					<div>
+						<label for="immich_url" class="text-sm font-medium">Immich Server URL</label>
+						<input
+							type="url"
+							id="immich_url"
+							name="immich_url"
+							bind:value={newImmichIntegration.server_url}
+							placeholder="Immich Server URL (e.g. https://immich.example.com/api)"
+							class="block w-full mt-1 input input-bordered input-primary"
+						/>
+						{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
+							<p class="text-xs text-warning mt-1">
+								Note: this must be the URL to the Immich API server so it likely ends with /api
+								unless you have a custom config.
+							</p>
+						{/if}
+					</div>
+					<div class="mt-4">
+						<label for="immich_api_key" class="text-sm font-medium">Immich API Key</label>
+						<input
+							type="text"
+							id="immich_api_key"
+							name="immich_api_key"
+							bind:value={newImmichIntegration.api_key}
+							placeholder="Immich API Key"
+							class="block w-full mt-1 input input-bordered input-primary"
+						/>
+					</div>
+					<button on:click={enableImmichIntegration} class="w-full mt-4 btn btn-primary py-2"
+						>{!immichIntegration?.id ? 'Enable Immich' : 'Edit Integration'}</button
+					>
+				</div>
 			{/if}
 		</div>
 	</section>
