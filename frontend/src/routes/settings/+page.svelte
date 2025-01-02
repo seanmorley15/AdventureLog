@@ -152,10 +152,10 @@
 			});
 			let data = await res.json();
 			if (res.ok) {
-				addToast('success', $t('settings.immich_enabled'));
+				addToast('success', $t('immich.immich_enabled'));
 				immichIntegration = data;
 			} else {
-				addToast('error', $t('settings.immich_error'));
+				addToast('error', $t('immich.immich_error'));
 			}
 		} else {
 			let res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
@@ -167,10 +167,10 @@
 			});
 			let data = await res.json();
 			if (res.ok) {
-				addToast('success', $t('settings.immich_updated'));
+				addToast('success', $t('immich.immich_updated'));
 				immichIntegration = data;
 			} else {
-				addToast('error', $t('settings.immich_error'));
+				addToast('error', $t('immich.immich_error'));
 			}
 		}
 	}
@@ -181,10 +181,10 @@
 				method: 'DELETE'
 			});
 			if (res.ok) {
-				addToast('success', $t('settings.immich_disabled'));
+				addToast('success', $t('immich.immich_disabled'));
 				immichIntegration = null;
 			} else {
-				addToast('error', $t('settings.immich_error'));
+				addToast('error', $t('immich.immich_error'));
 			}
 		}
 	}
@@ -427,20 +427,16 @@
 	<!-- Immich Integration Section -->
 	<section class="space-y-8">
 		<h2 class="text-2xl font-semibold text-center mt-8">
-			Immich Integration <img
-				src={ImmichLogo}
-				alt="Immich Logo"
-				class="inline-block w-8 h-8 -mt-1"
-			/>
+			{$t('immich.immich_integration')}
+			<img src={ImmichLogo} alt="Immich" class="inline-block w-8 h-8 -mt-1" />
 		</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
 			<p class="text-center text-neutral-content">
-				Integrate your Immich account with AdventureLog to allow you to search your photos library
-				and import photos for your adventures.
+				{$t('immich.immich_desc')}
 			</p>
 			{#if immichIntegration}
 				<div class="flex flex-col items-center justify-center mt-1 space-y-2">
-					<div class="badge badge-success">Integration Enabled</div>
+					<div class="badge badge-success">{$t('immich.integration_enabled')}</div>
 					<div class="flex space-x-2">
 						<button
 							class="btn btn-warning"
@@ -448,7 +444,9 @@
 								if (immichIntegration) newImmichIntegration = immichIntegration;
 							}}>Edit</button
 						>
-						<button class="btn btn-error" on:click={disableImmichIntegration}>Disable</button>
+						<button class="btn btn-error" on:click={disableImmichIntegration}
+							>{$t('immich.disable')}</button
+						>
 					</div>
 				</div>
 			{/if}
@@ -456,38 +454,39 @@
 				<div class="mt-4">
 					<div>
 						<label for="immich_url" class="text-sm font-medium text-neutral-content"
-							>Immich Server URL</label
+							>{$t('immich.server_url')}</label
 						>
 						<input
 							type="url"
 							id="immich_url"
 							name="immich_url"
 							bind:value={newImmichIntegration.server_url}
-							placeholder="Immich Server URL (e.g. https://immich.example.com/api)"
+							placeholder="{$t('immich.server_url')} (e.g. https://immich.example.com/api)"
 							class="block w-full mt-1 input input-bordered input-primary"
 						/>
 						{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
 							<p class="text-s text-warning mt-2">
-								Note: this must be the URL to the Immich API server so it likely ends with /api
-								unless you have a custom config.
+								{$t('immich.api_note')}
 							</p>
 						{/if}
 					</div>
 					<div class="mt-4">
 						<label for="immich_api_key" class="text-sm font-medium text-neutral-content"
-							>Immich API Key</label
+							>{$t('immich.api_key')}</label
 						>
 						<input
 							type="text"
 							id="immich_api_key"
 							name="immich_api_key"
 							bind:value={newImmichIntegration.api_key}
-							placeholder="Immich API Key"
+							placeholder={$t('immich.api_key')}
 							class="block w-full mt-1 input input-bordered input-primary"
 						/>
 					</div>
 					<button on:click={enableImmichIntegration} class="w-full mt-4 btn btn-primary py-2"
-						>{!immichIntegration?.id ? 'Enable Immich' : 'Edit Integration'}</button
+						>{!immichIntegration?.id
+							? $t('immich.enable_immich')
+							: $t('immich.update_integration')}</button
 					>
 				</div>
 			{/if}

@@ -262,7 +262,8 @@
     "start": "Start",
     "starting_airport": "Początkowe lotnisko",
     "to": "Do",
-    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć."
+    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć.",
+    "show_map": "Pokaż mapę"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -500,5 +501,28 @@
     "total_adventures": "Totalne przygody",
     "total_visited_regions": "Łączna liczba odwiedzonych regionów",
     "welcome_back": "Witamy z powrotem"
+  },
+  "immich": {
+    "api_key": "Klucz API Immicha",
+    "api_note": "Uwaga: musi to być adres URL serwera API Immich, więc prawdopodobnie kończy się na /api, chyba że masz niestandardową konfigurację.",
+    "disable": "Wyłączyć",
+    "enable_immich": "Włącz Immicha",
+    "immich": "Immich",
+    "immich_enabled": "Integracja z Immich została pomyślnie włączona!",
+    "immich_error": "Błąd podczas aktualizacji integracji Immich",
+    "immich_integration": "Integracja Immicha",
+    "immich_updated": "Ustawienia Immich zostały pomyślnie zaktualizowane!",
+    "integration_enabled": "Integracja włączona",
+    "integration_fetch_error": "Błąd podczas pobierania danych z integracji Immich",
+    "integration_missing": "W backendie brakuje integracji z Immich",
+    "load_more": "Załaduj więcej",
+    "no_items_found": "Nie znaleziono żadnych elementów",
+    "query_required": "Zapytanie jest wymagane",
+    "server_down": "Serwer Immich jest obecnie wyłączony lub nieosiągalny",
+    "server_url": "Adres URL serwera Immich",
+    "update_integration": "Zaktualizuj integrację",
+    "imageid_required": "Wymagany jest identyfikator obrazu",
+    "immich_desc": "Zintegruj swoje konto Immich z AdventureLog, aby móc przeszukiwać bibliotekę zdjęć i importować zdjęcia do swoich przygód.",
+    "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!"
   }
 }

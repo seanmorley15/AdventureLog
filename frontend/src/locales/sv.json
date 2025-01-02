@@ -1,5 +1,4 @@
 {
-
   "about": {
     "about": "Om",
     "close": "Stäng",
@@ -216,7 +215,8 @@
     "start": "Start",
     "starting_airport": "Startar flygplats",
     "to": "Till",
-    "transportation_delete_confirm": "Är du säker på att du vill ta bort denna transport? \nDenna åtgärd kan inte ångras."
+    "transportation_delete_confirm": "Är du säker på att du vill ta bort denna transport? \nDenna åtgärd kan inte ångras.",
+    "show_map": "Visa karta"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -501,5 +501,28 @@
     "total_adventures": "Totala äventyr",
     "total_visited_regions": "Totalt antal besökta regioner",
     "welcome_back": "Välkommen tillbaka"
+  },
+  "immich": {
+    "api_key": "Immich API-nyckel",
+    "api_note": "Obs: detta måste vara URL:en till Immich API-servern så den slutar troligen med /api om du inte har en anpassad konfiguration.",
+    "disable": "Inaktivera",
+    "enable_immich": "Aktivera Immich",
+    "imageid_required": "Bild-ID krävs",
+    "immich": "Immich",
+    "immich_desc": "Integrera ditt Immich-konto med AdventureLog så att du kan söka i ditt fotobibliotek och importera bilder för dina äventyr.",
+    "immich_disabled": "Immich-integrationen inaktiverades framgångsrikt!",
+    "immich_enabled": "Immich-integrationen har aktiverats framgångsrikt!",
+    "immich_error": "Fel vid uppdatering av Immich-integration",
+    "immich_integration": "Immich Integration",
+    "immich_updated": "Immich-inställningarna har uppdaterats framgångsrikt!",
+    "integration_enabled": "Integration aktiverad",
+    "integration_fetch_error": "Fel vid hämtning av data från Immich-integrationen",
+    "integration_missing": "Immich-integrationen saknas i backend",
+    "load_more": "Ladda mer",
+    "no_items_found": "Inga föremål hittades",
+    "query_required": "Fråga krävs",
+    "server_down": "Immich-servern är för närvarande nere eller kan inte nås",
+    "server_url": "Immich Server URL",
+    "update_integration": "Uppdatera integration"
   }
 }

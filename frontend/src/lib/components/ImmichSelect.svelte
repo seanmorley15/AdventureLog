@@ -13,6 +13,7 @@
 
 	$: {
 		if (currentAlbum) {
+			immichImages = [];
 			fetchAlbumAssets(currentAlbum);
 		} else {
 			immichImages = [];
@@ -104,29 +105,44 @@
 		{$t('immich.immich')}
 		<img src={ImmichLogo} alt="Immich Logo" class="h-6 w-6 inline-block -mt-1" />
 	</label>
-	<div>
-		<label>
-			<input type="radio" bind:group={searchOrSelect} value="search" /> Search
-		</label>
-		<label>
-			<input type="radio" bind:group={searchOrSelect} value="select" /> Select Album
-		</label>
-		{#if searchOrSelect === 'search'}
+	<div class="mt-4">
+		<div class="join">
 			<input
-				type="text"
-				placeholder="Type here"
-				bind:value={immichSearchValue}
-				class="input input-bordered w-full max-w-xs"
+				on:click={() => (currentAlbum = '')}
+				type="radio"
+				class="join-item btn"
+				bind:group={searchOrSelect}
+				value="search"
+				aria-label="Search"
 			/>
-			<button on:click={searchImmich} class="btn btn-neutral mt-2">Search</button>
-		{:else}
-			<select class="select select-bordered w-full max-w-xs" bind:value={currentAlbum}>
-				<option value="" disabled selected>Select an Album</option>
-				{#each albums as album}
-					<option value={album.id}>{album.albumName}</option>
-				{/each}
-			</select>
-		{/if}
+			<input
+				type="radio"
+				class="join-item btn"
+				bind:group={searchOrSelect}
+				value="select"
+				aria-label="Select Album"
+			/>
+		</div>
+		<div>
+			{#if searchOrSelect === 'search'}
+				<form on:submit|preventDefault={searchImmich}>
+					<input
+						type="text"
+						placeholder="Type here"
+						bind:value={immichSearchValue}
+						class="input input-bordered w-full max-w-xs"
+					/>
+					<button type="submit" class="btn btn-neutral mt-2">Search</button>
+				</form>
+			{:else}
+				<select class="select select-bordered w-full max-w-xs mt-2" bind:value={currentAlbum}>
+					<option value="" disabled selected>Select an Album</option>
+					{#each albums as album}
+						<option value={album.id}>{album.albumName}</option>
+					{/each}
+				</select>
+			{/if}
+		</div>
 	</div>
 
 	<p class="text-red-500">{immichError}</p>

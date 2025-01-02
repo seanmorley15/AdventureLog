@@ -510,6 +510,19 @@
 		"server_down": "The Immich server is currently down or unreachable",
 		"no_items_found": "No items found",
 		"imageid_required": "Image ID is required",
-		"load_more": "Load More"
+		"load_more": "Load More",
+		"immich_updated": "Immich settings updated successfully!",
+		"immich_enabled": "Immich integration enabled successfully!",
+		"immich_error": "Error updating Immich integration",
+		"immich_disabled": "Immich integration disabled successfully!",
+		"immich_desc": "Integrate your Immich account with AdventureLog to allow you to search your photos library and import photos for your adventures.",
+		"integration_enabled": "Integration Enabled",
+		"disable": "Disable",
+		"server_url": "Immich Server URL",
+		"api_note": "Note: this must be the URL to the Immich API server so it likely ends with /api unless you have a custom config.",
+		"api_key": "Immich API Key",
+		"enable_immich": "Enable Immich",
+		"update_integration": "Update Integration",
+		"immich_integration": "Immich Integration"
 	}
 }
