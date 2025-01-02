@@ -455,17 +455,7 @@
     "show_visited_regions": "Besuchte Regionen anzeigen",
     "view_details": "Details anzeigen"
   },
-  "languages": {
-    "de": "Deutsch",
-    "en": "Englisch",
-    "es": "Spanisch",
-    "fr": "Französisch",
-    "it": "Italienisch",
-    "nl": "Niederländisch",
-    "sv": "Schwedisch",
-    "zh": "chinesisch",
-    "pl": "Polnisch"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Keine Benutzer geteilt mit",
     "not_shared_with": "Nicht geteilt mit",

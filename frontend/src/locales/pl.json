@@ -467,17 +467,7 @@
     "set_public": "Aby umożliwić użytkownikom udostępnianie Tobie, musisz ustawić swój profil jako publiczny.",
     "go_to_settings": "Przejdź do ustawień"
   },
-  "languages": {
-    "en": "Angielski",
-    "de": "Niemiecki",
-    "es": "Hiszpański",
-    "fr": "Francuski",
-    "it": "Włoski",
-    "nl": "Holenderski",
-    "sv": "Szwedzki",
-    "zh": "Chiński",
-    "pl": "Polski"
-  },
+  "languages": {},
   "profile": {
     "member_since": "Użytkownik od",
     "user_stats": "Statystyki użytkownika",

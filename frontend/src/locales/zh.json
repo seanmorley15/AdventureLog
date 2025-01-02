@@ -455,17 +455,7 @@
     "show_visited_regions": "显示访问过的地区",
     "view_details": "查看详情"
   },
-  "languages": {
-    "de": "德语",
-    "en": "英语",
-    "es": "西班牙语",
-    "fr": "法语",
-    "it": "意大利语",
-    "nl": "荷兰语",
-    "sv": "瑞典",
-    "zh": "中国人",
-    "pl": "波兰语"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "没有与之共享的用户",
     "not_shared_with": "不与共享",

@@ -455,17 +455,7 @@
     "show_visited_regions": "Visa besökta regioner",
     "view_details": "Visa detaljer"
   },
-  "languages": {
-    "de": "tyska",
-    "en": "engelska",
-    "es": "spanska",
-    "fr": "franska",
-    "it": "italienska",
-    "nl": "holländska",
-    "sv": "svenska",
-    "zh": "kinesiska",
-    "pl": "polska"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Inga användare delas med",
     "not_shared_with": "Inte delad med",

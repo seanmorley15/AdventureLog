@@ -467,17 +467,7 @@
 		"set_public": "In order to allow users to share with you, you need your profile set to public.",
 		"go_to_settings": "Go to settings"
 	},
-	"languages": {
-		"en": "English",
-		"de": "German",
-		"es": "Spanish",
-		"fr": "French",
-		"it": "Italian",
-		"nl": "Dutch",
-		"sv": "Swedish",
-		"zh": "Chinese",
-		"pl": "Polish"
-	},
+	"languages": {},
 	"profile": {
 		"member_since": "Member since",
 		"user_stats": "User Stats",

@@ -455,17 +455,7 @@
     "show_visited_regions": "Toon bezochte regio's",
     "view_details": "Details bekijken"
   },
-  "languages": {
-    "de": "Duits",
-    "en": "Engels",
-    "es": "Spaans",
-    "fr": "Frans",
-    "it": "Italiaans",
-    "nl": "Nederlands",
-    "sv": "Zweeds",
-    "zh": "Chinese",
-    "pl": "Pools"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Er zijn geen gebruikers gedeeld",
     "not_shared_with": "Niet gedeeld met",
