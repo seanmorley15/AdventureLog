@@ -1057,6 +1057,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 					<div class="flex flex-wrap gap-4 mr-4 mt-2">
 						{#each immichImages as image}
 							<div class="flex flex-col items-center gap-2">
+								<!-- svelte-ignore a11y-img-redundant-alt -->
 								<img
 									src={`/immich/${image.id}`}
 									alt="Image from Immich"

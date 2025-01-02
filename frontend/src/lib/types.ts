@@ -50,6 +50,8 @@ export type Country = {
 	capital: string;
 	num_regions: number;
 	num_visits: number;
+	longitude: number | null;
+	latitude: number | null;
 };
 
 export type Region = {

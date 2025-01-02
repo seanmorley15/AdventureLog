@@ -1,7 +1,9 @@
 from collections.abc import Collection
+import os
 from typing import Iterable
 import uuid
 from django.db import models
+from django.utils.deconstruct import deconstructible
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
@@ -257,11 +259,26 @@ class ChecklistItem(models.Model):
     def __str__(self):
         return self.name
 
+@deconstructible
+class PathAndRename:
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, instance, filename):
+        ext = filename.split('.')[-1]
+        # Generate a new UUID for the filename
+        filename = f"{uuid.uuid4()}.{ext}"
+        return os.path.join(self.path, filename)
+
 class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    image = ResizedImageField(force_format="WEBP", quality=75, upload_to='images/')
+    image = ResizedImageField(
+        force_format="WEBP",
+        quality=75,
+        upload_to=PathAndRename('images/')  # Use the callable class here
+    )
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
 
     def __str__(self):
