@@ -542,7 +542,7 @@
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
-		if (adventure.is_visited) {
+		if (adventure.is_visited && !reverseGeocodePlace?.is_visited) {
 			markVisited();
 		}
 	}
