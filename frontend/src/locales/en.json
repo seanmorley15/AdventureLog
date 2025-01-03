@@ -514,6 +514,8 @@
 		"api_key": "Immich API Key",
 		"enable_immich": "Enable Immich",
 		"update_integration": "Update Integration",
-		"immich_integration": "Immich Integration"
+		"immich_integration": "Immich Integration",
+		"localhost_note": "Note: localhost will most likely not work unless you have setup docker networks accordingly. It is recommended to use the IP address of the server or the domain name.",
+		"documentation": "Immich Integration Documentation"
 	}
 }

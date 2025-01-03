@@ -433,6 +433,11 @@
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
 			<p class="text-center text-neutral-content">
 				{$t('immich.immich_desc')}
+				<a
+					class="link link-primary"
+					href="https://adventurelog.app/docs/configuration/immich_integration.html"
+					target="_blank">{$t('immich.documentation')}</a
+				>
 			</p>
 			{#if immichIntegration}
 				<div class="flex flex-col items-center justify-center mt-1 space-y-2">
@@ -467,6 +472,11 @@
 						{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
 							<p class="text-s text-warning mt-2">
 								{$t('immich.api_note')}
+							</p>
+						{/if}
+						{#if newImmichIntegration.server_url && (newImmichIntegration.server_url.indexOf('localhost') !== -1 || newImmichIntegration.server_url.indexOf('127.0.0.1') !== -1)}
+							<p class="text-s text-warning mt-2">
+								{$t('immich.localhost_note')}
 							</p>
 						{/if}
 					</div>
