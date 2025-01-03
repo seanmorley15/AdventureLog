@@ -21,7 +21,7 @@
 
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
-	let images: { id: string; image: string }[] = [];
+	let images: { id: string; image: string; is_primary: boolean }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
@@ -33,6 +33,9 @@
 	import { findFirstValue } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import ImmichSelect from './ImmichSelect.svelte';
+
+	import Star from '~icons/mdi/star';
+	import Crown from '~icons/mdi/crown';
 
 	let wikiError: string = '';
 
@@ -179,6 +182,25 @@
 		}
 	}
 
+	async function makePrimaryImage(image_id: string) {
+		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
+			method: 'POST'
+		});
+		if (res.ok) {
+			images = images.map((image) => {
+				if (image.id === image_id) {
+					image.is_primary = true;
+				} else {
+					image.is_primary = false;
+				}
+				return image;
+			});
+			adventure.images = images;
+		} else {
+			console.error('Error in makePrimaryImage:', res);
+		}
+	}
+
 	async function fetchImage() {
 		try {
 			let res = await fetch(url);
@@ -208,7 +230,8 @@
 				// Assuming the first object in the array is the new image
 				let newImage = {
 					id: rawData[1],
-					image: rawData[2] // This is the URL for the image
+					image: rawData[2], // This is the URL for the image
+					is_primary: false
 				};
 				console.log('New Image:', newImage);
 
@@ -249,7 +272,7 @@
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
 				console.log(newData);
-				let newImage = { id: newData.data.id, image: newData.data.image };
+				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
 				console.log(newImage);
 				images = [...images, newImage];
 				adventure.images = images;
@@ -1038,6 +1061,21 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							>
 								✕
 							</button>
+							{#if !image.is_primary}
+								<button
+									type="button"
+									class="absolute top-1 left-1 btn btn-success btn-xs z-10"
+									on:click={() => makePrimaryImage(image.id)}
+								>
+									<Star class="h-4 w-4" />
+								</button>
+							{:else}
+								<!-- crown icon -->
+
+								<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
+									<Crown class="h-4 w-4" />
+								</div>
+							{/if}
 							<img
 								src={image.image}
 								alt={image.id}

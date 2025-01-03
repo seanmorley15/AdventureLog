@@ -24,6 +24,7 @@ export type Adventure = {
 	images: {
 		id: string;
 		image: string;
+		is_primary: boolean;
 	}[];
 	visits: {
 		id: string;

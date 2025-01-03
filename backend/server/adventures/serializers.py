@@ -8,7 +8,7 @@ from main.utils import CustomModelSerializer
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure']
+        fields = ['id', 'image', 'adventure', 'is_primary']
         read_only_fields = ['id']
 
     def to_representation(self, instance):

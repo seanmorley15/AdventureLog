@@ -280,6 +280,7 @@ class AdventureImage(models.Model):
         upload_to=PathAndRename('images/')  # Use the callable class here
     )
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
+    is_primary = models.BooleanField(default=False)
 
     def __str__(self):
         return self.image.url
