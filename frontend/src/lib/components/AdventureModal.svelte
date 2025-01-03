@@ -545,6 +545,7 @@
 		if (adventure.is_visited && !reverseGeocodePlace?.is_visited) {
 			markVisited();
 		}
+		imageSearch = adventure.name;
 	}
 </script>
 
