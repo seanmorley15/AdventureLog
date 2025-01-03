@@ -164,6 +164,33 @@
 		close();
 	}
 
+	let willBeMarkedVisited: boolean = false;
+
+	$: {
+		willBeMarkedVisited = false; // Reset before evaluating
+
+		const today = new Date(); // Cache today's date to avoid redundant calculations
+
+		for (const visit of adventure.visits) {
+			const startDate = new Date(visit.start_date);
+			const endDate = visit.end_date ? new Date(visit.end_date) : null;
+
+			// If the visit has both a start date and an end date, check if it started by today
+			if (startDate && endDate && startDate <= today) {
+				willBeMarkedVisited = true;
+				break; // Exit the loop since we've determined the result
+			}
+
+			// If the visit has a start date but no end date, check if it started by today
+			if (startDate && !endDate && startDate <= today) {
+				willBeMarkedVisited = true;
+				break; // Exit the loop since we've determined the result
+			}
+		}
+
+		console.log('WMBV:', willBeMarkedVisited);
+	}
+
 	let previousCoords: { lat: number; lng: number } | null = null;
 
 	$: if (markers.length > 0) {
@@ -515,6 +542,9 @@
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
+		if (adventure.is_visited) {
+			markVisited();
+		}
 	}
 </script>
 
@@ -761,7 +791,12 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												: $t('adventures.not_visited')}
 										</p>
 									</div>
-									{#if !reverseGeocodePlace.is_visited}
+									{#if !reverseGeocodePlace.is_visited && !willBeMarkedVisited}
+										<button type="button" class="btn btn-neutral" on:click={markVisited}>
+											{$t('adventures.mark_visited')}
+										</button>
+									{/if}
+									{#if !reverseGeocodePlace.is_visited && willBeMarkedVisited}
 										<div role="alert" class="alert alert-info mt-2">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -777,16 +812,10 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												></path>
 											</svg>
 											<span
-												>{$t('adventures.mark_region_as_visited', {
-													values: {
-														region: reverseGeocodePlace.region,
-														country: reverseGeocodePlace.country
-													}
-												})}</span
+												>{reverseGeocodePlace.region},
+												{reverseGeocodePlace.country} will be marked as visited once the adventure is
+												saved.</span
 											>
-											<button type="button" class="btn btn-neutral" on:click={markVisited}>
-												{$t('adventures.mark_visited')}
-											</button>
 										</div>
 									{/if}
 								{/if}
