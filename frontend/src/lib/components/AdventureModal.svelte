@@ -813,8 +813,8 @@ it would also work to just use on:click on the MapLibre component itself. -->
 											</svg>
 											<span
 												>{reverseGeocodePlace.region},
-												{reverseGeocodePlace.country} will be marked as visited once the adventure is
-												saved.</span
+												{reverseGeocodePlace.country}
+												{$t('adventures.will_be_marked')}</span
 											>
 										</div>
 									{/if}

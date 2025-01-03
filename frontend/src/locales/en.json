@@ -229,6 +229,7 @@
 		"no_location_found": "No location found",
 		"from": "From",
 		"to": "To",
+		"will_be_marked": "will be marked as visited once the adventure is saved.",
 		"start": "Start",
 		"end": "End",
 		"show_map": "Show Map",

@@ -263,7 +263,8 @@
     "starting_airport": "Początkowe lotnisko",
     "to": "Do",
     "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć.",
-    "show_map": "Pokaż mapę"
+    "show_map": "Pokaż mapę",
+    "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody."
   },
   "worldtravel": {
     "country_list": "Lista krajów",

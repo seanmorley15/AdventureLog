@@ -216,7 +216,8 @@
     "to": "Naar",
     "transportation_delete_confirm": "Weet u zeker dat u dit transport wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "ending_airport": "Einde luchthaven",
-    "show_map": "Toon kaart"
+    "show_map": "Toon kaart",
+    "will_be_marked": "wordt gemarkeerd als bezocht zodra het avontuur is opgeslagen."
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

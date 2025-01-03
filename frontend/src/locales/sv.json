@@ -216,7 +216,8 @@
     "starting_airport": "Startar flygplats",
     "to": "Till",
     "transportation_delete_confirm": "Är du säker på att du vill ta bort denna transport? \nDenna åtgärd kan inte ångras.",
-    "show_map": "Visa karta"
+    "show_map": "Visa karta",
+    "will_be_marked": "kommer att markeras som besökt när äventyret har sparats."
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

@@ -216,7 +216,8 @@
     "starting_airport": "出发机场",
     "to": "到",
     "transportation_delete_confirm": "您确定要删除此交通工具吗？\n此操作无法撤消。",
-    "show_map": "显示地图"
+    "show_map": "显示地图",
+    "will_be_marked": "保存冒险后将被标记为已访问。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",

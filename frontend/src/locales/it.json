@@ -216,7 +216,8 @@
     "starting_airport": "Inizio aeroporto",
     "to": "A",
     "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata.",
-    "show_map": "Mostra mappa"
+    "show_map": "Mostra mappa",
+    "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

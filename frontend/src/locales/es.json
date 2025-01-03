@@ -263,7 +263,8 @@
     "starting_airport": "Aeropuerto de inicio",
     "to": "A",
     "transportation_delete_confirm": "¿Está seguro de que desea eliminar este transporte? \nEsta acción no se puede deshacer.",
-    "show_map": "Mostrar mapa"
+    "show_map": "Mostrar mapa",
+    "will_be_marked": "se marcará como visitado una vez guardada la aventura."
   },
   "worldtravel": {
     "all": "Todo",

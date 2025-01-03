@@ -216,7 +216,8 @@
     "starting_airport": "Startflughafen",
     "to": "Zu",
     "transportation_delete_confirm": "Sind Sie sicher, dass Sie diesen Transport löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
-    "show_map": "Karte anzeigen"
+    "show_map": "Karte anzeigen",
+    "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist."
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
