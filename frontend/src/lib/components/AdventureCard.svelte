@@ -80,7 +80,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ collection: null, visits: adventure.visits })
+			body: JSON.stringify({ collection: null })
 		});
 		if (res.ok) {
 			addToast('info', `${$t('adventures.collection_remove_success')}`);
@@ -97,7 +97,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ collection: collectionId, visits: adventure.visits })
+			body: JSON.stringify({ collection: collectionId })
 		});
 		if (res.ok) {
 			console.log('Adventure linked to collection');
