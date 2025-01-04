@@ -39,6 +39,8 @@ urlpatterns = [
     # path('auth/account-confirm-email/', VerifyEmailView.as_view(), name='account_email_verification_sent'),
     path("accounts/", include("allauth.urls")),
 
+    path("api/integrations/", include("integrations.urls")),
+
     # Include the API endpoints:
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

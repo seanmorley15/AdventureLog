@@ -68,6 +68,8 @@ class Command(BaseCommand):
                 country_name = country['name']
                 country_subregion = country['subregion']
                 country_capital = country['capital']
+                longitude = round(float(country['longitude']), 6) if country['longitude'] else None
+                latitude = round(float(country['latitude']), 6) if country['latitude'] else None
 
                 processed_country_codes.add(country_code)
 
@@ -76,13 +78,17 @@ class Command(BaseCommand):
                     country_obj.name = country_name
                     country_obj.subregion = country_subregion
                     country_obj.capital = country_capital
+                    country_obj.longitude = longitude
+                    country_obj.latitude = latitude
                     countries_to_update.append(country_obj)
                 else:
                     country_obj = Country(
                         name=country_name,
                         country_code=country_code,
                         subregion=country_subregion,
-                        capital=country_capital
+                        capital=country_capital,
+                        longitude=longitude,
+                        latitude=latitude
                     )
                     countries_to_create.append(country_obj)
 

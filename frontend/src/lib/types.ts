@@ -24,6 +24,7 @@ export type Adventure = {
 	images: {
 		id: string;
 		image: string;
+		is_primary: boolean;
 	}[];
 	visits: {
 		id: string;
@@ -50,6 +51,8 @@ export type Country = {
 	capital: string;
 	num_regions: number;
 	num_visits: number;
+	longitude: number | null;
+	latitude: number | null;
 };
 
 export type Region = {
@@ -193,4 +196,38 @@ export type Category = {
 	icon: string;
 	user_id: string;
 	num_adventures?: number | null;
+};
+
+export type ImmichIntegration = {
+	id: string;
+	server_url: string;
+	api_key: string;
+};
+
+export type ImmichAlbum = {
+	albumName: string;
+	description: string;
+	albumThumbnailAssetId: string;
+	createdAt: string;
+	updatedAt: string;
+	id: string;
+	ownerId: string;
+	owner: {
+		id: string;
+		email: string;
+		name: string;
+		profileImagePath: string;
+		avatarColor: string;
+		profileChangedAt: string;
+	};
+	albumUsers: any[];
+	shared: boolean;
+	hasSharedLink: boolean;
+	startDate: string;
+	endDate: string;
+	assets: any[];
+	assetCount: number;
+	isActivityEnabled: boolean;
+	order: string;
+	lastModifiedAssetTimestamp: string;
 };

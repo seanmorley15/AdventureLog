@@ -56,6 +56,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'integrations',
     'django.contrib.gis',
 )
 
@@ -164,9 +165,6 @@ TEMPLATES = [
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
-ALLAUTH_UI_THEME = "dark"
-SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
-
 AUTH_USER_MODEL = 'users.CustomUser'
 
 ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
@@ -222,10 +220,16 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 
-SWAGGER_SETTINGS = {
-    'LOGIN_URL': 'login',
-    'LOGOUT_URL': 'logout',
-}
+if DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+else:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+    )
+
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 

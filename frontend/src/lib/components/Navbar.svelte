@@ -13,6 +13,18 @@
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '$lib';
 
+	let languages: { [key: string]: string } = {
+		en: 'English',
+		de: 'Deutsch',
+		es: 'Español',
+		fr: 'Français',
+		it: 'Italiano',
+		nl: 'Nederlands',
+		sv: 'Svenska',
+		zh: '中文',
+		pl: 'Polski'
+	};
+
 	let query: string = '';
 
 	let isAboutModalOpen: boolean = false;
@@ -236,8 +248,8 @@
 						on:change={submitLocaleChange}
 						bind:value={$locale}
 					>
-						{#each $locales as loc}
-							<option value={loc} class="text-base-content">{$t(`languages.${loc}`)}</option>
+						{#each $locales as loc (loc)}
+							<option value={loc} class="text-base-content">{languages[loc]}</option>
 						{/each}
 					</select>
 					<input type="hidden" name="locale" value={$locale} />

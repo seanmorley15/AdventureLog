@@ -34,6 +34,16 @@
 	onMount(() => {
 		if (data.props.adventure) {
 			adventure = data.props.adventure;
+			// sort so that any image in adventure_images .is_primary is first
+			adventure.images.sort((a, b) => {
+				if (a.is_primary && !b.is_primary) {
+					return -1;
+				} else if (!a.is_primary && b.is_primary) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
 		} else {
 			notFound = true;
 		}

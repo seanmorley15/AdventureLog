@@ -296,7 +296,7 @@ export function getRandomBackground() {
 
 	const newYearsStart = new Date(today.getFullYear() - 1, 11, 31);
 	newYearsStart.setHours(0, 0, 0, 0);
-	const newYearsEnd = new Date(today.getFullYear(), 0, 7);
+	const newYearsEnd = new Date(today.getFullYear(), 0, 2);
 	newYearsEnd.setHours(23, 59, 59, 999);
 	if (today >= newYearsStart && today <= newYearsEnd) {
 		return {

@@ -88,6 +88,10 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
+            text: "Immich Integration",
+            link: "/docs/configuration/immich_integration",
+          },
+          {
             text: "Update App",
             link: "/docs/configuration/updating",
           },
@@ -131,6 +135,10 @@ export default defineConfig({
         text: "Changelogs",
         collapsed: false,
         items: [
+          {
+            text: "v0.8.0",
+            link: "/docs/changelogs/v0-8-0",
+          },
           {
             text: "v0.7.1",
             link: "/docs/changelogs/v0-7-1",
