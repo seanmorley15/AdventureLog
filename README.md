@@ -83,22 +83,28 @@ Enjoy AdventureLog! 🎉
 
 # Screenshots
 
-![Adventure Page](screenshots/adventures.png)
-Displaying the adventures you have visited and the ones you plan to embark on. You can also filter and sort the adventures.
+![Adventure Page](brand/screenshots/adventures.png)
+Displays the adventures you have visited and the ones you plan to embark on. You can also filter and sort the adventures.
 
-![Detail Page](screenshots/details.png)
+![Detail Page](brand/screenshots/details.png)
 Shows specific details about an adventure, including the name, date, location, description, and rating.
 
-![Edit](screenshots/edit.png)
+![Edit](brand/screenshots/edit.png)
 
-![Map Page](screenshots/map.png)
+![Map Page](brand/screenshots/map.png)
 View all of your adventures on a map, with the ability to filter by visit status and add new ones by click on the map.
 
-![Itinerary Page](screenshots/itinerary.png)
+![Dashboard Page](brand/screenshots/dashboard.png)
+Displays a summary of your adventures, including your world travel stats.
 
-![Country Page](screenshots/countries.png)
+![Itinerary Page](brand/screenshots/itinerary.png)
+Plan your adventures and travel itinerary with a list of activities and a map view. View your trip in a variety of ways, including an itinerary list, a map view, and a calendar view.
 
-![Region Page](screenshots/regions.png)
+![Country Page](brand/screenshots/countries.png)
+Lists all the countries you have visited and plan to visit, with the ability to filter by visit status.
+
+![Region Page](brand/screenshots/regions.png)
+Displays the regions for a specific country, includes a map view to visually select regions.
 
 # About AdventureLog
 
