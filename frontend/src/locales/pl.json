@@ -514,6 +514,8 @@
     "update_integration": "Zaktualizuj integrację",
     "imageid_required": "Wymagany jest identyfikator obrazu",
     "immich_desc": "Zintegruj swoje konto Immich z AdventureLog, aby móc przeszukiwać bibliotekę zdjęć i importować zdjęcia do swoich przygód.",
-    "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!"
+    "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!",
+    "documentation": "Dokumentacja integracji Immicha",
+    "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny."
   }
 }

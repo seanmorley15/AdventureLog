@@ -514,6 +514,8 @@
     "server_down": "Der Immich-Server ist derzeit ausgefallen oder nicht erreichbar",
     "server_url": "Immich-Server-URL",
     "update_integration": "Update-Integration",
-    "immich_integration": "Immich-Integration"
+    "immich_integration": "Immich-Integration",
+    "documentation": "Immich-Integrationsdokumentation",
+    "localhost_note": "Hinweis: localhost wird höchstwahrscheinlich nicht funktionieren, es sei denn, Sie haben Docker-Netzwerke entsprechend eingerichtet. \nEs wird empfohlen, die IP-Adresse des Servers oder den Domänennamen zu verwenden."
   }
 }

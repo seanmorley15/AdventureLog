@@ -514,6 +514,8 @@
     "query_required": "Er is een zoekopdracht vereist",
     "server_down": "De Immich-server is momenteel offline of onbereikbaar",
     "server_url": "Immich-server-URL",
-    "update_integration": "Integratie bijwerken"
+    "update_integration": "Integratie bijwerken",
+    "documentation": "Immich-integratiedocumentatie",
+    "localhost_note": "Opmerking: localhost zal hoogstwaarschijnlijk niet werken tenzij u de docker-netwerken dienovereenkomstig hebt ingesteld. \nHet wordt aanbevolen om het IP-adres van de server of de domeinnaam te gebruiken."
   }
 }

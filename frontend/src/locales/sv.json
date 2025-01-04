@@ -514,6 +514,8 @@
     "query_required": "Fråga krävs",
     "server_down": "Immich-servern är för närvarande nere eller kan inte nås",
     "server_url": "Immich Server URL",
-    "update_integration": "Uppdatera integration"
+    "update_integration": "Uppdatera integration",
+    "documentation": "Immich Integrationsdokumentation",
+    "localhost_note": "Obs: localhost kommer sannolikt inte att fungera om du inte har konfigurerat docker-nätverk i enlighet med detta. \nDet rekommenderas att använda serverns IP-adress eller domännamnet."
   }
 }

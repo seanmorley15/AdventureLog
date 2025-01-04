@@ -514,6 +514,8 @@
     "query_required": "需要查询",
     "server_down": "Immich 服务器当前已关闭或无法访问",
     "server_url": "伊米奇服务器网址",
-    "update_integration": "更新集成"
+    "update_integration": "更新集成",
+    "documentation": "Immich 集成文档",
+    "localhost_note": "注意：除非您相应地设置了 docker 网络，否则 localhost 很可能无法工作。\n建议使用服务器的IP地址或域名。"
   }
 }

@@ -514,6 +514,8 @@
     "query_required": "La domanda è obbligatoria",
     "server_down": "Il server Immich è attualmente inattivo o irraggiungibile",
     "server_url": "URL del server Immich",
-    "update_integration": "Aggiorna integrazione"
+    "update_integration": "Aggiorna integrazione",
+    "documentation": "Documentazione sull'integrazione di Immich",
+    "localhost_note": "Nota: molto probabilmente localhost non funzionerà a meno che tu non abbia configurato le reti docker di conseguenza. \nSi consiglia di utilizzare l'indirizzo IP del server o il nome del dominio."
   }
 }

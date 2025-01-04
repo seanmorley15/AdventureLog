@@ -514,6 +514,8 @@
     "server_down": "El servidor Immich está actualmente inactivo o inaccesible",
     "server_url": "URL del servidor Immich",
     "update_integration": "Integración de actualización",
-    "immich_integration": "Integración Immich"
+    "immich_integration": "Integración Immich",
+    "documentation": "Documentación de integración de Immich",
+    "localhost_note": "Nota: lo más probable es que localhost no funcione a menos que haya configurado las redes acoplables en consecuencia. \nSe recomienda utilizar la dirección IP del servidor o el nombre de dominio."
   }
 }
