@@ -229,8 +229,10 @@
 		"no_location_found": "No location found",
 		"from": "From",
 		"to": "To",
+		"will_be_marked": "will be marked as visited once the adventure is saved.",
 		"start": "Start",
 		"end": "End",
+		"show_map": "Show Map",
 		"emoji_picker": "Emoji Picker",
 		"download_calendar": "Download Calendar",
 		"date_information": "Date Information",
@@ -466,17 +468,7 @@
 		"set_public": "In order to allow users to share with you, you need your profile set to public.",
 		"go_to_settings": "Go to settings"
 	},
-	"languages": {
-		"en": "English",
-		"de": "German",
-		"es": "Spanish",
-		"fr": "French",
-		"it": "Italian",
-		"nl": "Dutch",
-		"sv": "Swedish",
-		"zh": "Chinese",
-		"pl": "Polish"
-	},
+	"languages": {},
 	"profile": {
 		"member_since": "Member since",
 		"user_stats": "User Stats",
@@ -500,5 +492,30 @@
 		"recent_adventures": "Recent Adventures",
 		"no_recent_adventures": "No recent adventures?",
 		"add_some": "Why not start planning your next adventure? You can add a new adventure by clicking the button below."
+	},
+	"immich": {
+		"immich": "Immich",
+		"integration_fetch_error": "Error fetching data from the Immich integration",
+		"integration_missing": "The Immich integration is missing from the backend",
+		"query_required": "Query is required",
+		"server_down": "The Immich server is currently down or unreachable",
+		"no_items_found": "No items found",
+		"imageid_required": "Image ID is required",
+		"load_more": "Load More",
+		"immich_updated": "Immich settings updated successfully!",
+		"immich_enabled": "Immich integration enabled successfully!",
+		"immich_error": "Error updating Immich integration",
+		"immich_disabled": "Immich integration disabled successfully!",
+		"immich_desc": "Integrate your Immich account with AdventureLog to allow you to search your photos library and import photos for your adventures.",
+		"integration_enabled": "Integration Enabled",
+		"disable": "Disable",
+		"server_url": "Immich Server URL",
+		"api_note": "Note: this must be the URL to the Immich API server so it likely ends with /api unless you have a custom config.",
+		"api_key": "Immich API Key",
+		"enable_immich": "Enable Immich",
+		"update_integration": "Update Integration",
+		"immich_integration": "Immich Integration",
+		"localhost_note": "Note: localhost will most likely not work unless you have setup docker networks accordingly. It is recommended to use the IP address of the server or the domain name.",
+		"documentation": "Immich Integration Documentation"
 	}
 }

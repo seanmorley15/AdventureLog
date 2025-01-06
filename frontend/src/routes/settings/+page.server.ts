@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { User } from '$lib/types';
+import type { ImmichIntegration, User } from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -56,11 +56,22 @@ export const load: PageServerLoad = async (event) => {
 	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
 	let authenticators = (mfaAuthenticatorResponse.data.length > 0) as boolean;
 
+	let immichIntegration: ImmichIntegration | null = null;
+	let immichIntegrationsFetch = await fetch(`${endpoint}/api/integrations/immich/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (immichIntegrationsFetch.ok) {
+		immichIntegration = await immichIntegrationsFetch.json();
+	}
+
 	return {
 		props: {
 			user,
 			emails,
-			authenticators
+			authenticators,
+			immichIntegration
 		}
 	};
 };

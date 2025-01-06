@@ -215,7 +215,9 @@
     "start": "Commencer",
     "starting_airport": "Aéroport de départ",
     "to": "À",
-    "transportation_delete_confirm": "Etes-vous sûr de vouloir supprimer ce transport ? \nCette action ne peut pas être annulée."
+    "transportation_delete_confirm": "Etes-vous sûr de vouloir supprimer ce transport ? \nCette action ne peut pas être annulée.",
+    "show_map": "Afficher la carte",
+    "will_be_marked": "sera marqué comme visité une fois l’aventure sauvegardée."
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -454,17 +456,7 @@
     "show_visited_regions": "Afficher les régions visitées",
     "view_details": "Afficher les détails"
   },
-  "languages": {
-    "de": "Allemand",
-    "en": "Anglais",
-    "es": "Espagnol",
-    "fr": "Français",
-    "it": "italien",
-    "nl": "Néerlandais",
-    "sv": "suédois",
-    "zh": "Chinois",
-    "pl": "Polonais"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Aucun utilisateur partagé avec",
     "not_shared_with": "Non partagé avec",
@@ -500,5 +492,30 @@
     "total_adventures": "Aventures totales",
     "total_visited_regions": "Total des régions visitées",
     "welcome_back": "Content de te revoir"
+  },
+  "immich": {
+    "api_key": "Clé API Immich",
+    "api_note": "Remarque : il doit s'agir de l'URL du serveur API Immich, elle se termine donc probablement par /api, sauf si vous disposez d'une configuration personnalisée.",
+    "disable": "Désactiver",
+    "enable_immich": "Activer Immich",
+    "imageid_required": "L'identifiant de l'image est requis",
+    "immich": "Immich",
+    "immich_desc": "Intégrez votre compte Immich à AdventureLog pour vous permettre de rechercher dans votre bibliothèque de photos et d'importer des photos pour vos aventures.",
+    "immich_disabled": "Intégration Immich désactivée avec succès !",
+    "immich_enabled": "Intégration Immich activée avec succès !",
+    "immich_error": "Erreur lors de la mise à jour de l'intégration Immich",
+    "immich_integration": "Intégration Immich",
+    "immich_updated": "Paramètres Immich mis à jour avec succès !",
+    "integration_enabled": "Intégration activée",
+    "integration_fetch_error": "Erreur lors de la récupération des données de l'intégration Immich",
+    "integration_missing": "L'intégration Immich est absente du backend",
+    "load_more": "Charger plus",
+    "no_items_found": "Aucun article trouvé",
+    "query_required": "La requête est obligatoire",
+    "server_down": "Le serveur Immich est actuellement en panne ou inaccessible",
+    "server_url": "URL du serveur Immich",
+    "update_integration": "Intégration des mises à jour",
+    "documentation": "Documentation d'intégration Immich",
+    "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine."
   }
 }

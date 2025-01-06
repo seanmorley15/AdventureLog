@@ -22,3 +22,13 @@ environment:
   - EMAIL_HOST_PASSWORD='password'
   - DEFAULT_FROM_EMAIL='user@example.com'
 ```
+
+## Customizing Emails
+
+By default, the email will display `[example.com]` in the subject. You can customize this in the admin site.
+
+1. Go to the admin site (serverurl/admin)
+2. Click on `Sites`
+3. Click on first site, it will probably be `example.com`
+4. Change the `Domain name` and `Display name` to your desired values
+5. Click `Save`

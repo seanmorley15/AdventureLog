@@ -8,8 +8,6 @@ from allauth.account.decorators import secure_admin_login
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
 
-
-
 class AdventureAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_category', 'get_visit_count',  'user_id', 'is_public')
     list_filter = ( 'user_id', 'is_public')

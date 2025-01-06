@@ -1032,7 +1032,29 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def image_delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_primary(self, request, *args, **kwargs):
+        # Makes the image the primary image for the adventure, if there is already a primary image linked to the adventure, it is set to false and the new image is set to true. make sure that the permission is set to the owner of the adventure
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        instance = self.get_object()
+        adventure = instance.adventure
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if the image is already the primary image
+        if instance.is_primary:
+            return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set the current primary image to false
+        AdventureImage.objects.filter(adventure=adventure, is_primary=True).update(is_primary=False)
 
+        # Set the new image to true
+        instance.is_primary = True
+        instance.save()
+        return Response({"success": "Image set as primary image"})
 
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

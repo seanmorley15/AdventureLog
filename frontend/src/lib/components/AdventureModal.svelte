@@ -13,7 +13,6 @@
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
-
 	export let longitude: number | null = null;
 	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
@@ -22,7 +21,7 @@
 
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
-	let images: { id: string; image: string }[] = [];
+	let images: { id: string; image: string; is_primary: boolean }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
@@ -33,6 +32,10 @@
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
+	import ImmichSelect from './ImmichSelect.svelte';
+
+	import Star from '~icons/mdi/star';
+	import Crown from '~icons/mdi/crown';
 
 	let wikiError: string = '';
 
@@ -161,6 +164,33 @@
 		close();
 	}
 
+	let willBeMarkedVisited: boolean = false;
+
+	$: {
+		willBeMarkedVisited = false; // Reset before evaluating
+
+		const today = new Date(); // Cache today's date to avoid redundant calculations
+
+		for (const visit of adventure.visits) {
+			const startDate = new Date(visit.start_date);
+			const endDate = visit.end_date ? new Date(visit.end_date) : null;
+
+			// If the visit has both a start date and an end date, check if it started by today
+			if (startDate && endDate && startDate <= today) {
+				willBeMarkedVisited = true;
+				break; // Exit the loop since we've determined the result
+			}
+
+			// If the visit has a start date but no end date, check if it started by today
+			if (startDate && !endDate && startDate <= today) {
+				willBeMarkedVisited = true;
+				break; // Exit the loop since we've determined the result
+			}
+		}
+
+		console.log('WMBV:', willBeMarkedVisited);
+	}
+
 	let previousCoords: { lat: number; lng: number } | null = null;
 
 	$: if (markers.length > 0) {
@@ -179,28 +209,70 @@
 		}
 	}
 
-	async function fetchImage() {
-		let res = await fetch(url);
-		let data = await res.blob();
-		if (!data) {
-			imageError = $t('adventures.no_image_url');
-			return;
-		}
-		let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
-		let formData = new FormData();
-		formData.append('image', file);
-		formData.append('adventure', adventure.id);
-		let res2 = await fetch(`/adventures?/image`, {
-			method: 'POST',
-			body: formData
+	async function makePrimaryImage(image_id: string) {
+		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
+			method: 'POST'
 		});
-		let data2 = await res2.json();
-		console.log(data2);
-		if (data2.type === 'success') {
-			images = [...images, data2];
+		if (res.ok) {
+			images = images.map((image) => {
+				if (image.id === image_id) {
+					image.is_primary = true;
+				} else {
+					image.is_primary = false;
+				}
+				return image;
+			});
 			adventure.images = images;
-			addToast('success', $t('adventures.image_upload_success'));
 		} else {
+			console.error('Error in makePrimaryImage:', res);
+		}
+	}
+
+	async function fetchImage() {
+		try {
+			let res = await fetch(url);
+			let data = await res.blob();
+			if (!data) {
+				imageError = $t('adventures.no_image_url');
+				return;
+			}
+			let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
+			let formData = new FormData();
+			formData.append('image', file);
+			formData.append('adventure', adventure.id);
+
+			let res2 = await fetch(`/adventures?/image`, {
+				method: 'POST',
+				body: formData
+			});
+			let data2 = await res2.json();
+
+			if (data2.type === 'success') {
+				console.log('Response Data:', data2);
+
+				// Deserialize the nested data
+				let rawData = JSON.parse(data2.data); // Parse the data field
+				console.log('Deserialized Data:', rawData);
+
+				// Assuming the first object in the array is the new image
+				let newImage = {
+					id: rawData[1],
+					image: rawData[2], // This is the URL for the image
+					is_primary: false
+				};
+				console.log('New Image:', newImage);
+
+				// Update images and adventure
+				images = [...images, newImage];
+				adventure.images = images;
+
+				addToast('success', $t('adventures.image_upload_success'));
+				url = '';
+			} else {
+				addToast('error', $t('adventures.image_upload_error'));
+			}
+		} catch (error) {
+			console.error('Error in fetchImage:', error);
 			addToast('error', $t('adventures.image_upload_error'));
 		}
 	}
@@ -227,7 +299,7 @@
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
 				console.log(newData);
-				let newImage = { id: newData.data.id, image: newData.data.image };
+				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
 				console.log(newImage);
 				images = [...images, newImage];
 				adventure.images = images;
@@ -337,6 +409,8 @@
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
+	let immichIntegration: boolean = false;
+
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
@@ -346,6 +420,16 @@
 			categories = await categoryFetch.json();
 		} else {
 			addToast('error', $t('adventures.category_fetch_error'));
+		}
+		// Check for Immich Integration
+		let res = await fetch('/api/integrations');
+		if (!res.ok) {
+			addToast('error', $t('immich.integration_fetch_error'));
+		} else {
+			let data = await res.json();
+			if (data.immich) {
+				immichIntegration = true;
+			}
 		}
 	});
 
@@ -458,6 +542,10 @@
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
+		if (adventure.is_visited && !reverseGeocodePlace?.is_visited) {
+			markVisited();
+		}
+		imageSearch = adventure.name;
 	}
 </script>
 
@@ -704,7 +792,12 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												: $t('adventures.not_visited')}
 										</p>
 									</div>
-									{#if !reverseGeocodePlace.is_visited}
+									{#if !reverseGeocodePlace.is_visited && !willBeMarkedVisited}
+										<button type="button" class="btn btn-neutral" on:click={markVisited}>
+											{$t('adventures.mark_visited')}
+										</button>
+									{/if}
+									{#if !reverseGeocodePlace.is_visited && willBeMarkedVisited}
 										<div role="alert" class="alert alert-info mt-2">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -720,16 +813,10 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												></path>
 											</svg>
 											<span
-												>{$t('adventures.mark_region_as_visited', {
-													values: {
-														region: reverseGeocodePlace.region,
-														country: reverseGeocodePlace.country
-													}
-												})}</span
+												>{reverseGeocodePlace.region},
+												{reverseGeocodePlace.country}
+												{$t('adventures.will_be_marked')}</span
 											>
-											<button type="button" class="btn btn-neutral" on:click={markVisited}>
-												{$t('adventures.mark_visited')}
-											</button>
 										</div>
 									{/if}
 								{/if}
@@ -915,84 +1002,129 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</form>
 			</div>
 		{:else}
-			<p>{$t('adventures.upload_images_here')}</p>
-			<!-- <p>{adventureToEdit.id}</p> -->
-			<div class="mb-2">
-				<label for="image">{$t('adventures.image')} </label><br />
-				<div class="flex">
-					<form
-						method="POST"
-						action="/adventures?/image"
-						use:enhance={imageSubmit}
-						enctype="multipart/form-data"
-					>
-						<input
-							type="file"
-							name="image"
-							class="file-input file-input-bordered w-full max-w-xs"
-							bind:this={fileInput}
-							accept="image/*"
-							id="image"
-						/>
-						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-						<button class="btn btn-neutral mt-2 mb-2" type="submit"
-							>{$t('adventures.upload_image')}</button
-						>
-					</form>
-				</div>
-				<div class="mt-2">
-					<label for="url">{$t('adventures.url')}</label><br />
+			<p class="text-lg">{$t('adventures.upload_images_here')}</p>
+
+			<div class="mb-4">
+				<label for="image" class="block font-medium mb-2">
+					{$t('adventures.image')}
+				</label>
+				<form
+					method="POST"
+					action="/adventures?/image"
+					use:enhance={imageSubmit}
+					enctype="multipart/form-data"
+					class="flex flex-col items-start gap-2"
+				>
+					<input
+						type="file"
+						name="image"
+						class="file-input file-input-bordered w-full max-w-sm"
+						bind:this={fileInput}
+						accept="image/*"
+						id="image"
+					/>
+					<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
+					<button class="btn btn-neutral w-full max-w-sm" type="submit">
+						{$t('adventures.upload_image')}
+					</button>
+				</form>
+			</div>
+
+			<div class="mb-4">
+				<label for="url" class="block font-medium mb-2">
+					{$t('adventures.url')}
+				</label>
+				<div class="flex gap-2">
 					<input
 						type="text"
 						id="url"
 						name="url"
 						bind:value={url}
-						class="input input-bordered w-full"
+						class="input input-bordered flex-1"
+						placeholder="Enter image URL"
 					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
-						>{$t('adventures.fetch_image')}</button
-					>
+					<button class="btn btn-neutral" type="button" on:click={fetchImage}>
+						{$t('adventures.fetch_image')}
+					</button>
 				</div>
-				<div class="mt-2">
-					<label for="name">{$t('adventures.wikipedia')}</label><br />
+			</div>
+
+			<div class="mb-4">
+				<label for="name" class="block font-medium mb-2">
+					{$t('adventures.wikipedia')}
+				</label>
+				<div class="flex gap-2">
 					<input
 						type="text"
 						id="name"
 						name="name"
 						bind:value={imageSearch}
-						class="input input-bordered w-full"
+						class="input input-bordered flex-1"
+						placeholder="Search Wikipedia for images"
 					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
-						>{$t('adventures.fetch_image')}</button
-					>
+					<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
+						{$t('adventures.fetch_image')}
+					</button>
 				</div>
-				<div class="divider"></div>
-				{#if images.length > 0}
-					<h1 class="font-semibold text-xl">{$t('adventures.my_images')}</h1>
-				{:else}
-					<h1 class="font-semibold text-xl">{$t('adventures.no_images')}</h1>
-				{/if}
-				<div class="flex flex-wrap gap-2 mt-2">
+			</div>
+
+			{#if immichIntegration}
+				<ImmichSelect
+					on:fetchImage={(e) => {
+						url = e.detail;
+						fetchImage();
+					}}
+				/>
+			{/if}
+
+			<div class="divider"></div>
+
+			{#if images.length > 0}
+				<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
+				<div class="flex flex-wrap gap-4">
 					{#each images as image}
 						<div class="relative h-32 w-32">
 							<button
 								type="button"
-								class="absolute top-0 left-0 btn btn-error btn-sm z-10"
+								class="absolute top-1 right-1 btn btn-error btn-xs z-10"
 								on:click={() => removeImage(image.id)}
 							>
-								X
+								✕
 							</button>
-							<img src={image.image} alt={image.id} class="w-full h-full object-cover" />
+							{#if !image.is_primary}
+								<button
+									type="button"
+									class="absolute top-1 left-1 btn btn-success btn-xs z-10"
+									on:click={() => makePrimaryImage(image.id)}
+								>
+									<Star class="h-4 w-4" />
+								</button>
+							{:else}
+								<!-- crown icon -->
+
+								<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
+									<Crown class="h-4 w-4" />
+								</div>
+							{/if}
+							<img
+								src={image.image}
+								alt={image.id}
+								class="w-full h-full object-cover rounded-md shadow-md"
+							/>
 						</div>
 					{/each}
 				</div>
-			</div>
-			<div class="mt-4">
-				<button type="button" class="btn btn-primary" on:click={saveAndClose}
-					>{$t('about.close')}</button
-				>
+			{:else}
+				<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
+			{/if}
+
+			<div class="mt-6">
+				<button type="button" class="btn btn-primary w-full max-w-sm" on:click={saveAndClose}>
+					{$t('about.close')}
+				</button>
 			</div>
 		{/if}
+
 		{#if adventure.is_public && adventure.id}
 			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
 				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>

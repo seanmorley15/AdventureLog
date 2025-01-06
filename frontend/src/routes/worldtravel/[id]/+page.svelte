@@ -161,7 +161,6 @@
 			{/if}
 		{/each}
 	</MapLibre>
-	<!-- button to clear to and from location -->
 </div>
 
 <svelte:head>
