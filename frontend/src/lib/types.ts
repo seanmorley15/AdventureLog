@@ -9,6 +9,7 @@ export type User = {
 	profile_pic: string | null;
 	uuid: string;
 	public_profile: boolean;
+	has_password: boolean;
 };
 
 export type Adventure = {

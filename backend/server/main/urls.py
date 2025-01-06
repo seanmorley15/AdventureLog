@@ -4,7 +4,7 @@ from django.views.generic import RedirectView, TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView
-from .views import get_csrf_token
+from .views import get_csrf_token, get_public_url
 from drf_yasg.views import get_schema_view
 
 from drf_yasg import openapi
@@ -30,6 +30,7 @@ urlpatterns = [
     path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
+    path('public-url/', get_public_url, name='get_public_url'),
     
     path('', TemplateView.as_view(template_name='home.html')),
     

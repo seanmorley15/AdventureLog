@@ -9,6 +9,7 @@
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import { appTitle, appVersion } from '$lib/config.js';
 	import ImmichLogo from '$lib/assets/immich.svg';
+	import { goto } from '$app/navigation';
 
 	export let data;
 	console.log(data);
@@ -20,7 +21,7 @@
 	}
 
 	let new_email: string = '';
-
+	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 
 	let newImmichIntegration: ImmichIntegration = {
@@ -307,17 +308,19 @@
 		</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
 			<form method="post" action="?/changePassword" use:enhance class="space-y-6">
-				<div>
-					<label for="current_password" class="text-sm font-medium text-neutral-content"
-						>{$t('settings.current_password')}</label
-					>
-					<input
-						type="password"
-						id="current_password"
-						name="current_password"
-						class="block w-full mt-1 input input-bordered input-primary"
-					/>
-				</div>
+				{#if user.has_password}
+					<div>
+						<label for="current_password" class="text-sm font-medium text-neutral-content"
+							>{$t('settings.current_password')}</label
+						>
+						<input
+							type="password"
+							id="current_password"
+							name="current_password"
+							class="block w-full mt-1 input input-bordered input-primary"
+						/>
+					</div>
+				{/if}
 
 				<div>
 					<label for="password1" class="text-sm font-medium text-neutral-content"
@@ -421,6 +424,58 @@
 					>{$t('settings.disable_mfa')}</button
 				>
 			{/if}
+		</div>
+	</section>
+
+	<!-- Admin Settings -->
+	{#if user.is_staff}
+		<section class="space-y-8">
+			<h2 class="text-2xl font-semibold text-center mt-8">Administration Settings</h2>
+			<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
+				<a class="btn btn-primary mt-4" href={`${public_url}/admin/`} target="_blank"
+					>Launch Administration Pannel</a
+				>
+			</div>
+		</section>
+	{/if}
+
+	<!-- Social Auth Settings -->
+	<section class="space-y-8">
+		<h2 class="text-2xl font-semibold text-center mt-8">Social and ODIC Authentication</h2>
+		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
+			<p>
+				Enable or disable social and OIDC authentication providers for your account. These
+				connections allow you to sign in with self hosted authentication identity providers like
+				Authentik or 3rd party providers like GitHub.
+			</p>
+			<div role="alert" class="alert alert-info mt-2">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					class="h-6 w-6 shrink-0 stroke-current"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					></path>
+				</svg>
+				<span
+					>These settings are managed in the AdventureLog server and must be manually enabled by the
+					administrator. <a
+						href="https://adventurelog.app/docs/configuration/social_auth.html"
+						class="link link-neutral"
+						target="_blank">Documentation Link</a
+					>.
+				</span>
+			</div>
+			<a
+				class="btn btn-primary mt-4"
+				href={`${public_url}/accounts/social/connections/`}
+				target="_blank">Launch Account Connections</a
+			>
 		</div>
 	</section>
 

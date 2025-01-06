@@ -17,7 +17,11 @@
 <div class="container mx-auto p-4">
 	<!-- Welcome Message -->
 	<div class="mb-8">
-		<h1 class="text-4xl font-extrabold">{$t('dashboard.welcome_back')}, {user?.first_name}!</h1>
+		<h1 class="text-4xl font-extrabold">
+			{$t('dashboard.welcome_back')}, {user?.first_name
+				? `${user.first_name} ${user.last_name}`
+				: user?.username}!
+		</h1>
 	</div>
 
 	<!-- Stats -->

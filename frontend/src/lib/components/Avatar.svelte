@@ -30,8 +30,9 @@
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<p class="text-lg ml-4 font-bold">
-			{$t('navbar.greeting')}, {user.first_name}
-			{user.last_name}
+			{$t('navbar.greeting')}, {user.first_name
+				? `${user.first_name} ${user.last_name}`
+				: user.username}
 		</p>
 		<li><button on:click={() => goto('/profile')}>{$t('navbar.profile')}</button></li>
 		<li><button on:click={() => goto('/adventures')}>{$t('navbar.my_adventures')}</button></li>
