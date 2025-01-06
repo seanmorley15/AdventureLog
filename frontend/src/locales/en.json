@@ -295,7 +295,8 @@
 		"email_required": "Email is required",
 		"new_password": "New Password (6+ characters)",
 		"both_passwords_required": "Both passwords are required",
-		"reset_failed": "Failed to reset password"
+		"reset_failed": "Failed to reset password",
+		"or_3rd_party": "Or login with a third-party service"
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles."

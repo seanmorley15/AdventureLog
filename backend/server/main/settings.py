@@ -42,6 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    "allauth_ui",
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -49,8 +50,8 @@ INSTALLED_APPS = (
     'allauth.mfa',
     'allauth.headless',
     'allauth.socialaccount',
-    # "widget_tweaks",
-    # "slippers",
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.openid_connect',
     'drf_yasg',
     'corsheaders',
     'adventures',
@@ -58,6 +59,9 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
+    'widget_tweaks',
+    'slippers',
+
 )
 
 MIDDLEWARE = (
@@ -74,6 +78,8 @@ MIDDLEWARE = (
 
 # disable verifications for new users
 ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+ALLAUTH_UI_THEME = "night"
 
 CACHES = {
     'default': {
@@ -120,7 +126,7 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+SESSION_COOKIE_SAMESITE = None
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -143,6 +149,7 @@ STORAGES = {
     }
 }
 
+SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
 TEMPLATES = [
     {
@@ -174,6 +181,9 @@ ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 SESSION_SAVE_EVERY_REQUEST = True
 
 FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
+
+# Set login redirect URL to the frontend
+LOGIN_REDIRECT_URL = FRONTEND_URL
 
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",

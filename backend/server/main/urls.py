@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView
+from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView
 from .views import get_csrf_token
 from drf_yasg.views import get_schema_view
 
@@ -26,6 +26,8 @@ urlpatterns = [
     path('auth/update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),
 
     path('auth/user-metadata/', UserMetadataView.as_view(), name='user-metadata'),
+
+    path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     

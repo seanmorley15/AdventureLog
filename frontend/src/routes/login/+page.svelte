@@ -9,14 +9,19 @@
 
 	let isImageInfoModalOpen: boolean = false;
 
+	let socialProviders = data.props?.socialProviders ?? [];
+
+	import GitHub from '~icons/mdi/github';
+	import OpenIdConnect from '~icons/mdi/openid';
+
 	import { page } from '$app/stores';
 
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
-	let quote: { quote: string; author: string } = data.props.quote;
+	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
 
-	let background: Background = data.props.background;
+	let background: Background = data.props?.background ?? { url: '' };
 </script>
 
 {#if isImageInfoModalOpen}
@@ -61,6 +66,22 @@
 						/><br />
 					{/if}
 					<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.login')}</button>
+
+					{#if socialProviders.length > 0}
+						<div class="divider text-center text-sm my-4">{$t('auth.or_3rd_party')}</div>
+						<div class="flex justify-center">
+							{#each socialProviders as provider}
+								<a href={provider.url} class="btn btn-primary mr-2 flex items-center">
+									{#if provider.provider === 'github'}
+										<GitHub class="w-4 h-4 mr-2" />
+									{:else if provider.provider === 'openid_connect'}
+										<OpenIdConnect class="w-4 h-4 mr-2" />
+									{/if}
+									{provider.name}
+								</a>
+							{/each}
+						</div>
+					{/if}
 
 					<div class="flex justify-between mt-4">
 						<p><a href="/signup" class="underline">{$t('auth.signup')}</a></p>

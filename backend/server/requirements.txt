@@ -13,8 +13,8 @@ django-geojson
 setuptools
 gunicorn==23.0.0
 qrcode==8.0
-# slippers==0.6.2
-# django-allauth-ui==1.5.1
-# django-widget-tweaks==1.5.0
+slippers==0.6.2
+django-allauth-ui==1.5.1
+django-widget-tweaks==1.5.0
 django-ical==1.9.2
 icalendar==6.1.0

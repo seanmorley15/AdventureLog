@@ -4,6 +4,7 @@ import type { Actions, PageServerLoad, RouteParams } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -12,10 +13,17 @@ export const load: PageServerLoad = async (event) => {
 		const quote = getRandomQuote();
 		const background = getRandomBackground();
 
+		let socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
+		if (!socialProviderFetch.ok) {
+			return fail(500, { message: 'settings.social_providers_error' });
+		}
+		let socialProviders = await socialProviderFetch.json();
+
 		return {
 			props: {
 				quote,
-				background
+				background,
+				socialProviders
 			}
 		};
 	}
