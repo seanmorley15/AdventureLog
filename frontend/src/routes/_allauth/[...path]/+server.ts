@@ -12,23 +12,23 @@ export async function GET(event) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 async function handleRequest(
@@ -53,17 +53,10 @@ async function handleRequest(
 
 	const headers = new Headers(request.headers);
 
-	// Delete existing csrf cookie by setting an expired date
-	cookies.delete('csrftoken', { path: '/' });
-
-	// Generate a new csrf token (using your existing fetchCSRFToken function)
 	const csrfToken = await fetchCSRFToken();
 	if (!csrfToken) {
 		return json({ error: 'CSRF token is missing or invalid' }, { status: 400 });
 	}
-
-	// Set the new csrf token in both headers and cookies
-	const cookieHeader = `csrftoken=${csrfToken}; Path=/; HttpOnly; SameSite=Lax`;
 
 	try {
 		const response = await fetch(targetUrl, {
@@ -71,7 +64,7 @@ async function handleRequest(
 			headers: {
 				...Object.fromEntries(headers),
 				'X-CSRFToken': csrfToken,
-				Cookie: cookieHeader
+				Cookie: `csrftoken=${csrfToken}`
 			},
 			body:
 				request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,

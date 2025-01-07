@@ -186,6 +186,8 @@ FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 # Set login redirect URL to the frontend
 LOGIN_REDIRECT_URL = FRONTEND_URL
 
+SOCIALACCOUNT_LOGIN_ON_GET = True
+
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",
     "account_reset_password": f"{FRONTEND_URL}/user/reset-password",
