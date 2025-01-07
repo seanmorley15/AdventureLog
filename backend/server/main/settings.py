@@ -42,7 +42,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    "allauth_ui",
+    # "allauth_ui",
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -59,8 +59,8 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
-    'widget_tweaks',
-    'slippers',
+    # 'widget_tweaks',
+    # 'slippers',
 
 )
 

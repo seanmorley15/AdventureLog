@@ -20,18 +20,37 @@ done
 python manage.py migrate
 
 # Create superuser if environment variables are set and there are no users present at all.
-if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -n "$DJANGO_ADMIN_PASSWORD" ]; then
+if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -n "$DJANGO_ADMIN_PASSWORD" ] && [ -n "$DJANGO_ADMIN_EMAIL" ]; then
   echo "Creating superuser..."
   python manage.py shell << EOF
 from django.contrib.auth import get_user_model
+from allauth.account.models import EmailAddress
+
 User = get_user_model()
-if User.objects.count() == 0:
-    User.objects.create_superuser('$DJANGO_ADMIN_USERNAME', '$DJANGO_ADMIN_EMAIL', '$DJANGO_ADMIN_PASSWORD')
+
+# Check if the user already exists
+if not User.objects.filter(username='$DJANGO_ADMIN_USERNAME').exists():
+    # Create the superuser
+    superuser = User.objects.create_superuser(
+        username='$DJANGO_ADMIN_USERNAME',
+        email='$DJANGO_ADMIN_EMAIL',
+        password='$DJANGO_ADMIN_PASSWORD'
+    )
     print("Superuser created successfully.")
+
+    # Create the EmailAddress object for AllAuth
+    EmailAddress.objects.create(
+        user=superuser,
+        email='$DJANGO_ADMIN_EMAIL',
+        verified=True,
+        primary=True
+    )
+    print("EmailAddress object created successfully for AllAuth.")
 else:
     print("Superuser already exists.")
 EOF
 fi
+
 
 # Sync the countries and world travel regions
 python manage.py download-countries

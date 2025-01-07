@@ -416,9 +416,15 @@
 		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
 			{#if !data.props.authenticators}
 				<p class="text-neutral-content">{$t('settings.mfa_not_enabled')}</p>
-				<button class="btn btn-primary mt-4" on:click={() => (isMFAModalOpen = true)}
-					>{$t('settings.enable_mfa')}</button
-				>
+				{#if !emails.some((e) => e.verified)}
+					<div class="alert alert-warning mt-4">
+						{$t('settings.no_verified_email_warning')}
+					</div>
+				{:else}
+					<button class="btn btn-primary mt-4" on:click={() => (isMFAModalOpen = true)}
+						>{$t('settings.enable_mfa')}</button
+					>
+				{/if}
 			{:else}
 				<button class="btn btn-warning mt-4" on:click={disableMfa}
 					>{$t('settings.disable_mfa')}</button

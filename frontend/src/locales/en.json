@@ -307,6 +307,7 @@
 		"settings_page": "Settings Page",
 		"account_settings": "User Account Settings",
 		"update": "Update",
+		"no_verified_email_warning": "You must have a verified email address to enable two-factor authentication.",
 		"password_change": "Change Password",
 		"new_password": "New Password",
 		"confirm_new_password": "Confirm New Password",
