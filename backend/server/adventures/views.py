@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from icalendar import Calendar, Event, vText, vCalAddress
 from django.http import HttpResponse
 from datetime import datetime
+from django.db.models import Min
 
 User = get_user_model()
 
@@ -44,17 +45,25 @@ class AdventureViewSet(viewsets.ModelViewSet):
         order_direction = self.request.query_params.get('order_direction', 'asc')
         include_collections = self.request.query_params.get('include_collections', 'true')
 
-        valid_order_by = ['name', 'type', 'start_date', 'rating', 'updated_at']
+        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
         if order_by not in valid_order_by:
             order_by = 'name'
 
         if order_direction not in ['asc', 'desc']:
             order_direction = 'asc'
 
+        if order_by == 'date':
+            # order by the earliest visit object associated with the adventure
+            queryset = queryset.annotate(earliest_visit=Min('visits__start_date'))
+            queryset = queryset.filter(earliest_visit__isnull=False)
+            ordering = 'earliest_visit'
         # Apply case-insensitive sorting for the 'name' field
-        if order_by == 'name':
+        elif order_by == 'name':
             queryset = queryset.annotate(lower_name=Lower('name'))
             ordering = 'lower_name'
+        elif order_by == 'rating':
+            queryset = queryset.filter(rating__isnull=False)
+            ordering = 'rating'
         else:
             ordering = order_by
 

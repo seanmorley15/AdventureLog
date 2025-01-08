@@ -371,7 +371,14 @@
 		"duplicate_email": "This email address is already in use.",
 		"csrf_failed": "Failed to fetch CSRF token",
 		"email_taken": "This email address is already in use.",
-		"username_taken": "This username is already in use."
+		"username_taken": "This username is already in use.",
+		"administration_settings": "Administration Settings",
+		"launch_administration_panel": "Launch Administration Panel",
+		"social_oidc_auth": "Social and OIDC Authentication",
+		"social_auth_desc": "Enable or disable social and OIDC authentication providers for your account. These connections allow you to sign in with self hosted authentication identity providers like Authentik or 3rd party providers like GitHub.",
+		"social_auth_desc_2": "These settings are managed in the AdventureLog server and must be manually enabled by the administrator.",
+		"documentation_link": "Documentation Link",
+		"launch_account_connections": "Launch Account Connections"
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

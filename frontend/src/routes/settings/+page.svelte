@@ -436,10 +436,12 @@
 	<!-- Admin Settings -->
 	{#if user.is_staff}
 		<section class="space-y-8">
-			<h2 class="text-2xl font-semibold text-center mt-8">Administration Settings</h2>
+			<h2 class="text-2xl font-semibold text-center mt-8">
+				{$t('settings.administration_settings')}
+			</h2>
 			<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
 				<a class="btn btn-primary mt-4" href={`${public_url}/admin/`} target="_blank"
-					>Launch Administration Pannel</a
+					>{$t('settings.launch_administration_panel')}</a
 				>
 			</div>
 		</section>
@@ -447,12 +449,10 @@
 
 	<!-- Social Auth Settings -->
 	<section class="space-y-8">
-		<h2 class="text-2xl font-semibold text-center mt-8">Social and ODIC Authentication</h2>
+		<h2 class="text-2xl font-semibold text-center mt-8">{$t('settings.social_oidc_auth')}</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
 			<p>
-				Enable or disable social and OIDC authentication providers for your account. These
-				connections allow you to sign in with self hosted authentication identity providers like
-				Authentik or 3rd party providers like GitHub.
+				{$t('settings.social_auth_desc')}
 			</p>
 			<div role="alert" class="alert alert-info mt-2">
 				<svg
@@ -469,18 +469,18 @@
 					></path>
 				</svg>
 				<span
-					>These settings are managed in the AdventureLog server and must be manually enabled by the
-					administrator. <a
+					>{$t('settings.social_auth_desc_2')}
+					<a
 						href="https://adventurelog.app/docs/configuration/social_auth.html"
 						class="link link-neutral"
-						target="_blank">Documentation Link</a
+						target="_blank">{$t('settings.documentation_link')}</a
 					>.
 				</span>
 			</div>
 			<a
 				class="btn btn-primary mt-4"
 				href={`${public_url}/accounts/social/connections/`}
-				target="_blank">Launch Account Connections</a
+				target="_blank">{$t('settings.launch_account_connections')}</a
 			>
 		</div>
 	</section>

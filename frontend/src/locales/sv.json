@@ -295,7 +295,8 @@
     "email_required": "E-post krävs",
     "both_passwords_required": "Båda lösenorden krävs",
     "new_password": "Nytt lösenord",
-    "reset_failed": "Det gick inte att återställa lösenordet"
+    "reset_failed": "Det gick inte att återställa lösenordet",
+    "or_3rd_party": "Eller logga in med en tredjepartstjänst"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."
@@ -369,7 +370,15 @@
     "csrf_failed": "Det gick inte att hämta CSRF-token",
     "duplicate_email": "Den här e-postadressen används redan.",
     "email_taken": "Den här e-postadressen används redan.",
-    "username_taken": "Detta användarnamn används redan."
+    "username_taken": "Detta användarnamn används redan.",
+    "administration_settings": "Administrationsinställningar",
+    "documentation_link": "Dokumentationslänk",
+    "launch_account_connections": "Starta kontoanslutningar",
+    "launch_administration_panel": "Starta administrationspanelen",
+    "no_verified_email_warning": "Du måste ha en verifierad e-postadress för att aktivera tvåfaktorsautentisering.",
+    "social_auth_desc": "Aktivera eller inaktivera sociala och OIDC-autentiseringsleverantörer för ditt konto. \nDessa anslutningar gör att du kan logga in med leverantörer av autentiseringsidentitetsidentitet som är värd för dig som Authentik eller tredjepartsleverantörer som GitHub.",
+    "social_auth_desc_2": "Dessa inställningar hanteras i AdventureLog-servern och måste aktiveras manuellt av administratören.",
+    "social_oidc_auth": "Social och OIDC-autentisering"
   },
   "checklist": {
     "add_item": "Lägg till objekt",

@@ -284,7 +284,8 @@
     "email_required": "电子邮件为必填项",
     "both_passwords_required": "两个密码都需要",
     "new_password": "新密码",
-    "reset_failed": "重置密码失败"
+    "reset_failed": "重置密码失败",
+    "or_3rd_party": "或者使用第三方服务登录"
   },
   "worldtravel": {
     "all": "全部",
@@ -369,7 +370,15 @@
     "csrf_failed": "获取 CSRF 令牌失败",
     "duplicate_email": "该电子邮件地址已被使用。",
     "email_taken": "该电子邮件地址已被使用。",
-    "username_taken": "该用户名已被使用。"
+    "username_taken": "该用户名已被使用。",
+    "administration_settings": "管理设置",
+    "documentation_link": "文档链接",
+    "launch_account_connections": "启动帐户连接",
+    "launch_administration_panel": "启动管理面板",
+    "no_verified_email_warning": "您必须拥有经过验证的电子邮件地址才能启用双因素身份验证。",
+    "social_auth_desc": "为您的帐户启用或禁用社交和 OIDC 身份验证提供商。\n这些连接允许您使用自托管身份验证身份提供商（如 Authentik）或第三方提供商（如 GitHub）登录。",
+    "social_auth_desc_2": "这些设置在 AdventureLog 服务器中进行管理，并且必须由管理员手动启用。",
+    "social_oidc_auth": "社交和 OIDC 身份验证"
   },
   "checklist": {
     "add_item": "添加项目",

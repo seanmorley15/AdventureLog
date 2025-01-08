@@ -284,7 +284,8 @@
     "email_required": "L'e-mail è obbligatoria",
     "both_passwords_required": "Sono necessarie entrambe le password",
     "new_password": "Nuova parola d'ordine",
-    "reset_failed": "Impossibile reimpostare la password"
+    "reset_failed": "Impossibile reimpostare la password",
+    "or_3rd_party": "Oppure accedi con un servizio di terze parti"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -369,7 +370,15 @@
     "csrf_failed": "Impossibile recuperare il token CSRF",
     "duplicate_email": "Questo indirizzo email è già in uso.",
     "email_taken": "Questo indirizzo email è già in uso.",
-    "username_taken": "Questo nome utente è già in uso."
+    "username_taken": "Questo nome utente è già in uso.",
+    "administration_settings": "Impostazioni di amministrazione",
+    "documentation_link": "Collegamento alla documentazione",
+    "launch_account_connections": "Avvia Connessioni account",
+    "launch_administration_panel": "Avvia il pannello di amministrazione",
+    "no_verified_email_warning": "È necessario disporre di un indirizzo e-mail verificato per abilitare l'autenticazione a due fattori.",
+    "social_auth_desc": "Abilita o disabilita i provider di autenticazione social e OIDC per il tuo account. \nQueste connessioni ti consentono di accedere con provider di identità di autenticazione self-hosted come Authentik o provider di terze parti come GitHub.",
+    "social_auth_desc_2": "Queste impostazioni sono gestite nel server AdventureLog e devono essere abilitate manualmente dall'amministratore.",
+    "social_oidc_auth": "Autenticazione sociale e OIDC"
   },
   "checklist": {
     "add_item": "Aggiungi articolo",

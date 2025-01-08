@@ -284,7 +284,8 @@
     "email_required": "E-mail is vereist",
     "both_passwords_required": "Beide wachtwoorden zijn vereist",
     "new_password": "Nieuw wachtwoord",
-    "reset_failed": "Kan het wachtwoord niet opnieuw instellen"
+    "reset_failed": "Kan het wachtwoord niet opnieuw instellen",
+    "or_3rd_party": "Of log in met een service van derden"
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."
@@ -369,7 +370,15 @@
     "csrf_failed": "Kan CSRF-token niet ophalen",
     "duplicate_email": "Dit e-mailadres is al in gebruik.",
     "email_taken": "Dit e-mailadres is al in gebruik.",
-    "username_taken": "Deze gebruikersnaam is al in gebruik."
+    "username_taken": "Deze gebruikersnaam is al in gebruik.",
+    "administration_settings": "Beheerinstellingen",
+    "documentation_link": "Documentatielink",
+    "launch_account_connections": "Start Accountverbindingen",
+    "launch_administration_panel": "Start het Beheerpaneel",
+    "no_verified_email_warning": "U moet een geverifieerd e-mailadres hebben om tweefactorauthenticatie in te schakelen.",
+    "social_auth_desc": "Schakel sociale en OIDC-authenticatieproviders in of uit voor uw account. \nMet deze verbindingen kunt u inloggen met zelfgehoste authenticatie-identiteitsproviders zoals Authentik of externe providers zoals GitHub.",
+    "social_auth_desc_2": "Deze instellingen worden beheerd op de AdventureLog-server en moeten handmatig worden ingeschakeld door de beheerder.",
+    "social_oidc_auth": "Sociale en OIDC-authenticatie"
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

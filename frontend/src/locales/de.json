@@ -284,7 +284,8 @@
     "email_required": "E-Mail ist erforderlich",
     "both_passwords_required": "Beide Passwörter sind erforderlich",
     "new_password": "Neues Passwort",
-    "reset_failed": "Passwort konnte nicht zurückgesetzt werden"
+    "reset_failed": "Passwort konnte nicht zurückgesetzt werden",
+    "or_3rd_party": "Oder melden Sie sich bei einem Drittanbieter an"
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichen Profilen gefunden."
@@ -369,7 +370,15 @@
     "csrf_failed": "CSRF-Token konnte nicht abgerufen werden",
     "duplicate_email": "Diese E-Mail-Adresse wird bereits verwendet.",
     "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
-    "username_taken": "Dieser Benutzername wird bereits verwendet."
+    "username_taken": "Dieser Benutzername wird bereits verwendet.",
+    "administration_settings": "Verwaltungseinstellungen",
+    "documentation_link": "Dokumentationslink",
+    "launch_account_connections": "Kontoverbindungen starten",
+    "launch_administration_panel": "Starten Sie das Administrationspanel",
+    "no_verified_email_warning": "Sie müssen über eine verifizierte E-Mail-Adresse verfügen, um die Zwei-Faktor-Authentifizierung zu aktivieren.",
+    "social_auth_desc": "Aktivieren oder deaktivieren Sie soziale und OIDC-Authentifizierungsanbieter für Ihr Konto. \nMit diesen Verbindungen können Sie sich bei selbst gehosteten Authentifizierungsidentitätsanbietern wie Authentik oder Drittanbietern wie GitHub anmelden.",
+    "social_auth_desc_2": "Diese Einstellungen werden auf dem AdventureLog-Server verwaltet und müssen vom Administrator manuell aktiviert werden.",
+    "social_oidc_auth": "Soziale und OIDC-Authentifizierung"
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",

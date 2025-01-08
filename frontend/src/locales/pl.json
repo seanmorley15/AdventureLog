@@ -295,7 +295,8 @@
     "email_required": "Adres e-mail jest wymagany",
     "both_passwords_required": "Obydwa hasła są wymagane",
     "new_password": "Nowe hasło",
-    "reset_failed": "Nie udało się zresetować hasła"
+    "reset_failed": "Nie udało się zresetować hasła",
+    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -369,7 +370,15 @@
     "csrf_failed": "Nie udało się pobrać tokena CSRF",
     "duplicate_email": "Ten adres e-mail jest już używany.",
     "email_taken": "Ten adres e-mail jest już używany.",
-    "username_taken": "Ta nazwa użytkownika jest już używana."
+    "username_taken": "Ta nazwa użytkownika jest już używana.",
+    "administration_settings": "Ustawienia administracyjne",
+    "documentation_link": "Link do dokumentacji",
+    "launch_account_connections": "Uruchom Połączenia kont",
+    "launch_administration_panel": "Uruchom Panel administracyjny",
+    "no_verified_email_warning": "Aby włączyć uwierzytelnianie dwuskładnikowe, musisz mieć zweryfikowany adres e-mail.",
+    "social_auth_desc": "Włącz lub wyłącz dostawców uwierzytelniania społecznościowego i OIDC dla swojego konta. \nPołączenia te umożliwiają logowanie się za pośrednictwem dostawców tożsamości uwierzytelniających, takich jak Authentik, lub dostawców zewnętrznych, takich jak GitHub.",
+    "social_auth_desc_2": "Ustawienia te są zarządzane na serwerze AdventureLog i muszą zostać włączone ręcznie przez administratora.",
+    "social_oidc_auth": "Uwierzytelnianie społecznościowe i OIDC"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
