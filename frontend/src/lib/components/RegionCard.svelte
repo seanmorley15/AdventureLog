@@ -54,7 +54,14 @@
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{region.name}</h2>
-		<p>{region.id}</p>
+		<div>
+			<div class="badge badge-primary">
+				<p>{region.id}</p>
+			</div>
+			<div class="badge badge-neutral-300">
+				<p>{region.num_cities} {$t('worldtravel.cities')}</p>
+			</div>
+		</div>
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
 			{#if !visited}
@@ -65,9 +72,11 @@
 			{#if visited}
 				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
 			{/if}
-			<button class="btn btn-neutral-300" on:click={goToCity}
-				>{$t('worldtravel.view_cities')}</button
-			>
+			{#if region.num_cities > 0}
+				<button class="btn btn-neutral-300" on:click={goToCity}
+					>{$t('worldtravel.view_cities')}</button
+				>
+			{/if}
 		</div>
 	</div>
 </div>

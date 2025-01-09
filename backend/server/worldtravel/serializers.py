@@ -33,10 +33,14 @@ class CountrySerializer(serializers.ModelSerializer):
 
 
 class RegionSerializer(serializers.ModelSerializer):
+    num_cities = serializers.SerializerMethodField()
     class Meta:
         model = Region
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude']
+        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities']
+
+    def get_num_cities(self, obj):
+        return City.objects.filter(region=obj).count()
 
 class CitySerializer(serializers.ModelSerializer):
     class Meta:

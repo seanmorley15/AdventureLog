@@ -287,7 +287,8 @@
 		"marked_visited": "marked as visited",
 		"regions_in": "Regions in",
 		"region_stats": "Region Stats",
-		"all_visited": "You've visited all regions in"
+		"all_visited": "You've visited all regions in",
+		"cities": "cities"
 	},
 	"auth": {
 		"username": "Username",
