@@ -1,5 +1,5 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { City, Country, Region, VisitedRegion } from '$lib/types';
+import type { City, Country, Region, VisitedCity, VisitedRegion } from '$lib/types';
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 
@@ -10,6 +10,7 @@ export const load = (async (event) => {
 
 	let cities: City[] = [];
 	let region = {} as Region;
+	let visitedCities: VisitedCity[] = [];
 
 	let sessionId = event.cookies.get('sessionid');
 
@@ -30,19 +31,6 @@ export const load = (async (event) => {
 		cities = (await res.json()) as City[];
 	}
 
-	// res = await fetch(`${endpoint}/api/${id}/visits/`, {
-	// 	method: 'GET',
-	// 	headers: {
-	// 		Cookie: `sessionid=${sessionId}`
-	// 	}
-	// });
-	// if (!res.ok) {
-	// 	console.error('Failed to fetch visited regions');
-	// 	return { status: 500 };
-	// } else {
-	// 	visitedRegions = (await res.json()) as VisitedRegion[];
-	// }
-
 	res = await fetch(`${endpoint}/api/regions/${id}/`, {
 		method: 'GET',
 		headers: {
@@ -56,10 +44,24 @@ export const load = (async (event) => {
 		region = (await res.json()) as Region;
 	}
 
+	res = await fetch(`${endpoint}/api/regions/${region.id}/cities/visits/`, {
+		method: 'GET',
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (!res.ok) {
+		console.error('Failed to fetch visited regions');
+		return { status: 500 };
+	} else {
+		visitedCities = (await res.json()) as VisitedCity[];
+	}
+
 	return {
 		props: {
 			cities,
-			region
+			region,
+			visitedCities
 		}
 	};
 }) satisfies PageServerLoad;

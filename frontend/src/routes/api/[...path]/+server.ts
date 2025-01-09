@@ -12,7 +12,7 @@ export async function GET(event) {
 
 /** @type {import('./$types').RequestHandler} */
 export async function POST({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	const searchParam = url.search ? `${url.search}` : '';
 	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
 }
 

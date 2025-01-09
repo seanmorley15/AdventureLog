@@ -276,7 +276,8 @@
 		"all_subregions": "All Subregions",
 		"clear_search": "Clear Search",
 		"no_countries_found": "No countries found",
-		"view_cities": "View Cities"
+		"view_cities": "View Cities",
+		"no_cities_found": "No cities found"
 	},
 	"auth": {
 		"username": "Username",

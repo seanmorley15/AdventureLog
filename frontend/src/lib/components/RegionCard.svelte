@@ -9,55 +9,39 @@
 	export let region: Region;
 	export let visited: boolean;
 
-	export let visit_id: number | undefined | null;
-
 	function goToCity() {
 		console.log(region);
 		goto(`/worldtravel/${region.id.split('-')[0]}/${region.id}`);
 	}
 
 	async function markVisited() {
-		let res = await fetch(`/worldtravel?/markVisited`, {
+		let res = await fetch(`/api/visitedregion/`, {
+			headers: { 'Content-Type': 'application/json' },
 			method: 'POST',
-			body: JSON.stringify({ regionId: region.id })
+			body: JSON.stringify({ region: region.id })
 		});
 		if (res.ok) {
-			// visited = true;
-			const result = await res.json();
-			const data = JSON.parse(result.data);
-			if (data[1] !== undefined) {
-				console.log('New adventure created with id:', data[3]);
-				let visit_id = data[3];
-				let region_id = data[5];
-				let user_id = data[4];
-
-				let newVisit: VisitedRegion = {
-					id: visit_id,
-					region: region_id,
-					user_id: user_id,
-					longitude: 0,
-					latitude: 0,
-					name: ''
-				};
-				addToast('success', `Visit to ${region.name} marked`);
-				dispatch('visit', newVisit);
-			}
+			visited = true;
+			let data = await res.json();
+			addToast('success', `Visit to ${region.name} marked`);
+			dispatch('visit', data);
 		} else {
 			console.error('Failed to mark region as visited');
 			addToast('error', `Failed to mark visit to ${region.name}`);
 		}
 	}
 	async function removeVisit() {
-		let res = await fetch(`/worldtravel?/removeVisited`, {
-			method: 'POST',
-			body: JSON.stringify({ visitId: visit_id })
+		let res = await fetch(`/api/visitedregion/${region.id}`, {
+			headers: { 'Content-Type': 'application/json' },
+			method: 'DELETE'
 		});
 		if (res.ok) {
 			visited = false;
 			addToast('info', `Visit to ${region.name} removed`);
-			dispatch('remove', null);
+			dispatch('remove', region);
 		} else {
 			console.error('Failed to remove visit');
+			addToast('error', `Failed to remove visit to ${region.name}`);
 		}
 	}
 </script>

@@ -74,7 +74,16 @@ export type City = {
 
 export type VisitedRegion = {
 	id: number;
-	region: number;
+	region: string;
+	user_id: string;
+	longitude: number;
+	latitude: number;
+	name: string;
+};
+
+export type VisitedCity = {
+	id: number;
+	city: string;
 	user_id: string;
 	longitude: number;
 	latitude: number;

@@ -61,3 +61,20 @@ class VisitedRegion(models.Model):
         if VisitedRegion.objects.filter(user_id=self.user_id, region=self.region).exists():
             raise ValidationError("Region already visited by user.")
         super().save(*args, **kwargs)
+
+class VisitedCity(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    city = models.ForeignKey(City, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.city.name} ({self.city.region.name}) visited by: {self.user_id.username}'
+    
+    def save(self, *args, **kwargs):
+        if VisitedCity.objects.filter(user_id=self.user_id, city=self.city).exists():
+            raise ValidationError("City already visited by user.")
+        super().save(*args, **kwargs)
+
+    class Meta:
+        verbose_name_plural = "Visited Cities"

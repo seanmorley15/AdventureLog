@@ -1,13 +1,42 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
-	import { continentCodeToString, getFlag } from '$lib';
-	import type { City, Country } from '$lib/types';
+	import { addToast } from '$lib/toasts';
+	import type { City } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
-
-	import MapMarkerStar from '~icons/mdi/map-marker-star';
+	import { t } from 'svelte-i18n';
 
 	export let city: City;
+	export let visited: boolean;
+
+	async function markVisited() {
+		let res = await fetch(`/api/visitedcity/`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ city: city.id })
+		});
+		if (res.ok) {
+			visited = true;
+			let data = await res.json();
+			addToast('success', `Visit to ${city.name} marked`);
+			dispatch('visit', data);
+		} else {
+			console.error('Failed to mark city as visited');
+			addToast('error', `Failed to mark visit to ${city.name}`);
+		}
+	}
+	async function removeVisit() {
+		let res = await fetch(`/api/visitedcity/${city.id}`, {
+			method: 'DELETE'
+		});
+		if (res.ok) {
+			visited = false;
+			addToast('info', `Visit to ${city.name} removed`);
+			dispatch('remove', city);
+		} else {
+			console.error('Failed to remove visit');
+			addToast('error', `Failed to remove visit to ${city.name}`);
+		}
+	}
 </script>
 
 <div
@@ -16,17 +45,15 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{city.name}</h2>
 		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-primary">{city.region}</div>
-			<!-- 
-			{#if country.num_visits > 0 && country.num_visits != country.num_regions}
-				<div class="badge badge-accent">
-					Visited {country.num_visits} Region{country.num_visits > 1 ? 's' : ''}
-				</div>
-			{:else if country.num_visits > 0 && country.num_visits === country.num_regions}
-				<div class="badge badge-success">Completed</div>
-			{:else}
-				<div class="badge badge-error">Not Visited</div>
-			{/if} -->
+			<div class="badge badge-primary">{city.id}</div>
+			{#if !visited}
+				<button class="btn btn-primary" on:click={markVisited}
+					>{$t('adventures.mark_visited')}</button
+				>
+			{/if}
+			{#if visited}
+				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
+			{/if}
 		</div>
 
 		<div class="card-actions justify-end">

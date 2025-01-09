@@ -24,7 +24,7 @@
 				visitedRegions = visitedRegions.filter(
 					(visitedRegion) => visitedRegion.region !== region.id
 				);
-				removeVisit(region, visitedRegion.id);
+				removeVisit(region);
 			} else {
 				markVisited(region);
 			}
@@ -32,48 +32,32 @@
 	}
 
 	async function markVisited(region: Region) {
-		let res = await fetch(`/worldtravel?/markVisited`, {
+		let res = await fetch(`/api/visitedregion/`, {
 			method: 'POST',
-			body: JSON.stringify({ regionId: region.id })
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ region: region.id })
 		});
-		if (res.ok) {
-			// visited = true;
-			const result = await res.json();
-			const data = JSON.parse(result.data);
-			if (data[1] !== undefined) {
-				console.log('New adventure created with id:', data[3]);
-				let visit_id = data[3];
-				let region_id = data[5];
-				let user_id = data[4];
-
-				visitedRegions = [
-					...visitedRegions,
-					{
-						id: visit_id,
-						region: region_id,
-						user_id: user_id,
-						longitude: 0,
-						latitude: 0,
-						name: ''
-					}
-				];
-
-				addToast('success', `Visit to ${region.name} marked`);
-			}
-		} else {
+		if (!res.ok) {
 			console.error('Failed to mark region as visited');
 			addToast('error', `Failed to mark visit to ${region.name}`);
+			return;
+		} else {
+			visitedRegions = [...visitedRegions, await res.json()];
+			addToast('success', `Visit to ${region.name} marked`);
 		}
 	}
-	async function removeVisit(region: Region, visitId: number) {
-		let res = await fetch(`/worldtravel?/removeVisited`, {
-			method: 'POST',
-			body: JSON.stringify({ visitId: visitId })
+	async function removeVisit(region: Region) {
+		let res = await fetch(`/api/visitedregion/${region.id}`, {
+			headers: { 'Content-Type': 'application/json' },
+			method: 'DELETE'
 		});
-		if (res.ok) {
-			addToast('info', `Visit to ${region.name} removed`);
-		} else {
+		if (!res.ok) {
 			console.error('Failed to remove visit');
+			addToast('error', `Failed to remove visit to ${region.name}`);
+			return;
+		} else {
+			visitedRegions = visitedRegions.filter((visitedRegion) => visitedRegion.region !== region.id);
+			addToast('info', `Visit to ${region.name} removed`);
 		}
 	}
 
@@ -110,8 +94,12 @@
 				visitedRegions = [...visitedRegions, e.detail];
 				numVisitedRegions++;
 			}}
-			visit_id={visitedRegions.find((visitedRegion) => visitedRegion.region === region.id)?.id}
-			on:remove={() => numVisitedRegions--}
+			on:remove={() => {
+				visitedRegions = visitedRegions.filter(
+					(visitedRegion) => visitedRegion.region !== region.id
+				);
+				numVisitedRegions--;
+			}}
 		/>
 	{/each}
 </div>
