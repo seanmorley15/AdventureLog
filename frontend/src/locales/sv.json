@@ -275,7 +275,20 @@
     "no_countries_found": "Inga länder hittades",
     "not_visited": "Ej besökta",
     "num_countries": "länder hittades",
-    "partially_visited": "Delvis besökta"
+    "partially_visited": "Delvis besökta",
+    "all_visited": "Du har besökt alla regioner i",
+    "cities": "städer",
+    "failed_to_mark_visit": "Det gick inte att markera besök till",
+    "failed_to_remove_visit": "Det gick inte att ta bort besök på",
+    "marked_visited": "markerad som besökt",
+    "no_cities_found": "Inga städer hittades",
+    "region_failed_visited": "Det gick inte att markera regionen som besökt",
+    "region_stats": "Regionstatistik",
+    "regions_in": "Regioner i",
+    "removed": "tas bort",
+    "view_cities": "Visa städer",
+    "visit_remove_failed": "Det gick inte att ta bort besöket",
+    "visit_to": "Besök till"
   },
   "auth": {
     "confirm_password": "Bekräfta lösenord",
@@ -378,7 +391,9 @@
     "no_verified_email_warning": "Du måste ha en verifierad e-postadress för att aktivera tvåfaktorsautentisering.",
     "social_auth_desc": "Aktivera eller inaktivera sociala och OIDC-autentiseringsleverantörer för ditt konto. \nDessa anslutningar gör att du kan logga in med leverantörer av autentiseringsidentitetsidentitet som är värd för dig som Authentik eller tredjepartsleverantörer som GitHub.",
     "social_auth_desc_2": "Dessa inställningar hanteras i AdventureLog-servern och måste aktiveras manuellt av administratören.",
-    "social_oidc_auth": "Social och OIDC-autentisering"
+    "social_oidc_auth": "Social och OIDC-autentisering",
+    "add_email": "Lägg till e-post",
+    "password_too_short": "Lösenordet måste bestå av minst 6 tecken"
   },
   "checklist": {
     "add_item": "Lägg till objekt",

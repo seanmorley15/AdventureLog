@@ -345,6 +345,11 @@
 						class="block w-full mt-1 input input-bordered input-primary"
 					/>
 				</div>
+				{#if $page.form?.message}
+					<div class="alert alert-warning">
+						{$t($page.form?.message)}
+					</div>
+				{/if}
 
 				<div
 					class="tooltip tooltip-warning"
@@ -394,7 +399,7 @@
 				{/if}
 			</div>
 
-			<form class="mt-4" on:submit={addEmail}>
+			<form class="mt-4" on:submit|preventDefault={addEmail}>
 				<input
 					type="email"
 					id="new_email"
@@ -403,7 +408,7 @@
 					placeholder={$t('settings.new_email')}
 					class="block w-full input input-bordered input-primary"
 				/>
-				<button class="w-full mt-4 btn btn-primary py-2">{$t('settings.email_change')}</button>
+				<button class="w-full mt-4 btn btn-primary py-2">{$t('settings.add_email')}</button>
 			</form>
 		</div>
 	</section>

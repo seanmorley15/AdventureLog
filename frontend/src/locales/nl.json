@@ -299,7 +299,20 @@
     "no_countries_found": "Geen landen gevonden",
     "not_visited": "Niet bezocht",
     "num_countries": "landen gevonden",
-    "partially_visited": "Gedeeltelijk bezocht"
+    "partially_visited": "Gedeeltelijk bezocht",
+    "all_visited": "Je hebt alle regio's in bezocht",
+    "cities": "steden",
+    "failed_to_mark_visit": "Kan bezoek aan niet markeren",
+    "failed_to_remove_visit": "Kan bezoek aan niet verwijderen",
+    "marked_visited": "gemarkeerd als bezocht",
+    "no_cities_found": "Geen steden gevonden",
+    "region_failed_visited": "Kan de regio niet als bezocht markeren",
+    "region_stats": "Regiostatistieken",
+    "regions_in": "Regio's binnen",
+    "removed": "VERWIJDERD",
+    "view_cities": "Steden bekijken",
+    "visit_remove_failed": "Kan bezoek niet verwijderen",
+    "visit_to": "Bezoek aan"
   },
   "settings": {
     "account_settings": "Gebruikersaccount instellingen",
@@ -378,7 +391,9 @@
     "no_verified_email_warning": "U moet een geverifieerd e-mailadres hebben om tweefactorauthenticatie in te schakelen.",
     "social_auth_desc": "Schakel sociale en OIDC-authenticatieproviders in of uit voor uw account. \nMet deze verbindingen kunt u inloggen met zelfgehoste authenticatie-identiteitsproviders zoals Authentik of externe providers zoals GitHub.",
     "social_auth_desc_2": "Deze instellingen worden beheerd op de AdventureLog-server en moeten handmatig worden ingeschakeld door de beheerder.",
-    "social_oidc_auth": "Sociale en OIDC-authenticatie"
+    "social_oidc_auth": "Sociale en OIDC-authenticatie",
+    "add_email": "E-mail toevoegen",
+    "password_too_short": "Wachtwoord moet minimaal 6 tekens lang zijn"
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

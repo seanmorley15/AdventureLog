@@ -45,7 +45,9 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{city.name}</h2>
 		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-primary">{city.id}</div>
+			<div class="badge badge-neutral-300">{city.id}</div>
+		</div>
+		<div class="card-actions justify-end">
 			{#if !visited}
 				<button class="btn btn-primary" on:click={markVisited}
 					>{$t('adventures.mark_visited')}</button
@@ -54,10 +56,6 @@
 			{#if visited}
 				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
 			{/if}
-		</div>
-
-		<div class="card-actions justify-end">
-			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
 		</div>
 	</div>
 </div>

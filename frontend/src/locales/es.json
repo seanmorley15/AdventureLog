@@ -275,7 +275,20 @@
     "not_visited": "No visitado",
     "num_countries": "países encontrados",
     "partially_visited": "Parcialmente visitado",
-    "country_list": "Lista de países"
+    "country_list": "Lista de países",
+    "all_visited": "Has visitado todas las regiones en",
+    "cities": "ciudades",
+    "failed_to_mark_visit": "No se pudo marcar la visita a",
+    "failed_to_remove_visit": "No se pudo eliminar la visita a",
+    "marked_visited": "marcado como visitado",
+    "no_cities_found": "No se encontraron ciudades",
+    "region_failed_visited": "No se pudo marcar la región como visitada",
+    "region_stats": "Estadísticas de la región",
+    "regions_in": "Regiones en",
+    "removed": "remoto",
+    "view_cities": "Ver ciudades",
+    "visit_remove_failed": "No se pudo eliminar la visita",
+    "visit_to": "Visita a"
   },
   "auth": {
     "forgot_password": "¿Has olvidado tu contraseña?",
@@ -378,7 +391,9 @@
     "no_verified_email_warning": "Debe tener una dirección de correo electrónico verificada para habilitar la autenticación de dos factores.",
     "social_auth_desc": "Habilite o deshabilite los proveedores de autenticación social y OIDC para su cuenta. \nEstas conexiones le permiten iniciar sesión con proveedores de identidad de autenticación autohospedados como Authentik o proveedores externos como GitHub.",
     "social_auth_desc_2": "Estas configuraciones se administran en el servidor AdventureLog y el administrador debe habilitarlas manualmente.",
-    "social_oidc_auth": "Autenticación social y OIDC"
+    "social_oidc_auth": "Autenticación social y OIDC",
+    "add_email": "Agregar correo electrónico",
+    "password_too_short": "La contraseña debe tener al menos 6 caracteres."
   },
   "checklist": {
     "add_item": "Agregar artículo",

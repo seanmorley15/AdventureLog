@@ -194,8 +194,13 @@ export const actions: Actions = {
 		if (password1 !== password2) {
 			return fail(400, { message: 'settings.password_does_not_match' });
 		}
+
 		if (!current_password) {
 			current_password = null;
+		}
+
+		if (password1 && password1?.length < 6) {
+			return fail(400, { message: 'settings.password_too_short' });
 		}
 
 		let csrfToken = await fetchCSRFToken();

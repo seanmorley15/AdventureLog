@@ -296,7 +296,20 @@
     "no_countries_found": "没有找到国家",
     "not_visited": "未访问过",
     "num_countries": "找到的国家",
-    "partially_visited": "部分访问"
+    "partially_visited": "部分访问",
+    "all_visited": "您已访问过所有地区",
+    "cities": "城市",
+    "failed_to_mark_visit": "无法标记访问",
+    "failed_to_remove_visit": "无法删除对的访问",
+    "marked_visited": "标记为已访问",
+    "no_cities_found": "没有找到城市",
+    "region_failed_visited": "无法将区域标记为已访问",
+    "region_stats": "地区统计",
+    "regions_in": "地区位于",
+    "removed": "已删除",
+    "view_cities": "查看城市",
+    "visit_remove_failed": "删除访问失败",
+    "visit_to": "参观"
   },
   "users": {
     "no_users_found": "未找到具有公开个人资料的用户。"
@@ -378,7 +391,9 @@
     "no_verified_email_warning": "您必须拥有经过验证的电子邮件地址才能启用双因素身份验证。",
     "social_auth_desc": "为您的帐户启用或禁用社交和 OIDC 身份验证提供商。\n这些连接允许您使用自托管身份验证身份提供商（如 Authentik）或第三方提供商（如 GitHub）登录。",
     "social_auth_desc_2": "这些设置在 AdventureLog 服务器中进行管理，并且必须由管理员手动启用。",
-    "social_oidc_auth": "社交和 OIDC 身份验证"
+    "social_oidc_auth": "社交和 OIDC 身份验证",
+    "add_email": "添加电子邮件",
+    "password_too_short": "密码必须至少为 6 个字符"
   },
   "checklist": {
     "add_item": "添加项目",

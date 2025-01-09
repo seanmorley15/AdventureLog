@@ -391,7 +391,9 @@
 		"social_auth_desc": "Enable or disable social and OIDC authentication providers for your account. These connections allow you to sign in with self hosted authentication identity providers like Authentik or 3rd party providers like GitHub.",
 		"social_auth_desc_2": "These settings are managed in the AdventureLog server and must be manually enabled by the administrator.",
 		"documentation_link": "Documentation Link",
-		"launch_account_connections": "Launch Account Connections"
+		"launch_account_connections": "Launch Account Connections",
+		"password_too_short": "Password must be at least 6 characters",
+		"add_email": "Add Email"
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

@@ -275,7 +275,20 @@
     "completely_visited": "Całkowicie odwiedzone",
     "all_subregions": "Wszystkie podregiony",
     "clear_search": "Wyczyść wyszukiwanie",
-    "no_countries_found": "Nie znaleziono krajów"
+    "no_countries_found": "Nie znaleziono krajów",
+    "all_visited": "Odwiedziłeś wszystkie regiony w",
+    "cities": "miasta",
+    "failed_to_mark_visit": "Nie udało się oznaczyć wizyty w",
+    "failed_to_remove_visit": "Nie udało się usunąć wizyty w",
+    "marked_visited": "oznaczone jako odwiedzone",
+    "no_cities_found": "Nie znaleziono żadnych miast",
+    "region_failed_visited": "Nie udało się oznaczyć regionu jako odwiedzony",
+    "region_stats": "Statystyki regionu",
+    "regions_in": "Regiony w",
+    "removed": "REMOVED",
+    "view_cities": "Zobacz Miasta",
+    "visit_remove_failed": "Nie udało się usunąć wizyty",
+    "visit_to": "Wizyta w"
   },
   "auth": {
     "username": "Nazwa użytkownika",
@@ -378,7 +391,9 @@
     "no_verified_email_warning": "Aby włączyć uwierzytelnianie dwuskładnikowe, musisz mieć zweryfikowany adres e-mail.",
     "social_auth_desc": "Włącz lub wyłącz dostawców uwierzytelniania społecznościowego i OIDC dla swojego konta. \nPołączenia te umożliwiają logowanie się za pośrednictwem dostawców tożsamości uwierzytelniających, takich jak Authentik, lub dostawców zewnętrznych, takich jak GitHub.",
     "social_auth_desc_2": "Ustawienia te są zarządzane na serwerze AdventureLog i muszą zostać włączone ręcznie przez administratora.",
-    "social_oidc_auth": "Uwierzytelnianie społecznościowe i OIDC"
+    "social_oidc_auth": "Uwierzytelnianie społecznościowe i OIDC",
+    "add_email": "Dodaj e-mail",
+    "password_too_short": "Hasło musi mieć co najmniej 6 znaków"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
