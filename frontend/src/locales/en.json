@@ -277,7 +277,17 @@
 		"clear_search": "Clear Search",
 		"no_countries_found": "No countries found",
 		"view_cities": "View Cities",
-		"no_cities_found": "No cities found"
+		"no_cities_found": "No cities found",
+		"visit_to": "Visit to",
+		"region_failed_visited": "Failed to mark region as visited",
+		"failed_to_mark_visit": "Failed to mark visit to",
+		"visit_remove_failed": "Failed to remove visit",
+		"removed": "removed",
+		"failed_to_remove_visit": "Failed to remove visit to",
+		"marked_visited": "marked as visited",
+		"regions_in": "Regions in",
+		"region_stats": "Region Stats",
+		"all_visited": "You've visited all regions in"
 	},
 	"auth": {
 		"username": "Username",

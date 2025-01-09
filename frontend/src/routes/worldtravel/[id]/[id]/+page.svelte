@@ -218,6 +218,6 @@
 {/if}
 
 <svelte:head>
-	<title>Countries | World Travel</title>
+	<title>Cities in {data.props?.region.name} | World Travel</title>
 	<meta name="description" content="Explore the world and add countries to your visited list!" />
 </svelte:head>

@@ -57,7 +57,7 @@ class Command(BaseCommand):
         elif os.path.getsize(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
         else:
-            self.stdout.write(self.style.SUCCESS('countries+regions+states.json already exists'))
+            self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
             return
             
         with open(countries_json_path, 'r') as f:

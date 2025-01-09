@@ -39,11 +39,14 @@
 		});
 		if (!res.ok) {
 			console.error('Failed to mark region as visited');
-			addToast('error', `Failed to mark visit to ${region.name}`);
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
 			return;
 		} else {
 			visitedRegions = [...visitedRegions, await res.json()];
-			addToast('success', `Visit to ${region.name} marked`);
+			addToast(
+				'success',
+				`${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.marked_visited')}`
+			);
 		}
 	}
 	async function removeVisit(region: Region) {
@@ -52,12 +55,12 @@
 			method: 'DELETE'
 		});
 		if (!res.ok) {
-			console.error('Failed to remove visit');
-			addToast('error', `Failed to remove visit to ${region.name}`);
+			console.error($t('worldtravel.region_failed_visited'));
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
 			return;
 		} else {
 			visitedRegions = visitedRegions.filter((visitedRegion) => visitedRegion.region !== region.id);
-			addToast('info', `Visit to ${region.name} removed`);
+			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 		}
 	}
 
@@ -70,16 +73,16 @@
 	);
 </script>
 
-<h1 class="text-center font-bold text-4xl mb-4">Regions in {country?.name}</h1>
+<h1 class="text-center font-bold text-4xl mb-4">{$t('worldtravel.regions_in')} {country?.name}</h1>
 <div class="flex items-center justify-center mb-4">
 	<div class="stats shadow bg-base-300">
 		<div class="stat">
-			<div class="stat-title">Region Stats</div>
-			<div class="stat-value">{numVisitedRegions}/{numRegions} Visited</div>
+			<div class="stat-title">{$t('worldtravel.region_stats')}</div>
+			<div class="stat-value">{numVisitedRegions}/{numRegions} {$t('adventures.visited')}</div>
 			{#if numRegions === numVisitedRegions}
-				<div class="stat-desc">You've visited all regions in {country?.name} 🎉!</div>
+				<div class="stat-desc">{$t('worldtravel.all_visited')} {country?.name} 🎉!</div>
 			{:else}
-				<div class="stat-desc">Keep exploring!</div>
+				<div class="stat-desc">{$t('adventures.keep_exploring')}</div>
 			{/if}
 		</div>
 	</div>

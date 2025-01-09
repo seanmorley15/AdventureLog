@@ -23,11 +23,14 @@
 		if (res.ok) {
 			visited = true;
 			let data = await res.json();
-			addToast('success', `Visit to ${region.name} marked`);
+			addToast(
+				'success',
+				`${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.marked_visited')}`
+			);
 			dispatch('visit', data);
 		} else {
-			console.error('Failed to mark region as visited');
-			addToast('error', `Failed to mark visit to ${region.name}`);
+			console.error($t('worldtravel.region_failed_visited'));
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
 		}
 	}
 	async function removeVisit() {
@@ -37,11 +40,11 @@
 		});
 		if (res.ok) {
 			visited = false;
-			addToast('info', `Visit to ${region.name} removed`);
+			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 			dispatch('remove', region);
 		} else {
-			console.error('Failed to remove visit');
-			addToast('error', `Failed to remove visit to ${region.name}`);
+			console.error($t('worldtravel.visit_remove_failed'));
+			addToast('error', `${$t('worldtravel.failed_to_remove_visit')} ${region.name}`);
 		}
 	}
 </script>
