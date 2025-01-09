@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Country, Region, VisitedRegion
-from .serializers import CountrySerializer, RegionSerializer, VisitedRegionSerializer
+from .models import Country, Region, VisitedRegion, City
+from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
@@ -31,6 +31,14 @@ def visits_by_country(request, country_code):
     visits = VisitedRegion.objects.filter(region__country=country, user_id=request.user.id)
 
     serializer = VisitedRegionSerializer(visits, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cities_by_region(request, region_id):
+    region = get_object_or_404(Region, id=region_id)
+    cities = City.objects.filter(region=region).order_by('name')
+    serializer = CitySerializer(cities, many=True)
     return Response(serializer.data)
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):

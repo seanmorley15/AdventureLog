@@ -275,7 +275,8 @@
 		"completely_visited": "Completely Visited",
 		"all_subregions": "All Subregions",
 		"clear_search": "Clear Search",
-		"no_countries_found": "No countries found"
+		"no_countries_found": "No countries found",
+		"view_cities": "View Cities"
 	},
 	"auth": {
 		"username": "Username",

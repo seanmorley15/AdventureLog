@@ -1,7 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 import requests
-from worldtravel.models import Country, Region
+from worldtravel.models import Country, Region, City
 from django.db import transaction
 import json
 
@@ -37,16 +37,28 @@ def saveCountryFlag(country_code):
 class Command(BaseCommand):
     help = 'Imports the world travel data'
 
+    def add_arguments(self, parser):
+        parser.add_argument('--force', action='store_true', help='Force download the countries+regions+states.json file')
+
     def handle(self, *args, **options):
-        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions-{COUNTRY_REGION_JSON_VERSION}.json')
-        if not os.path.exists(countries_json_path):
-            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/countries%2Bstates.json')
+        force = options['force']
+        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
+        if not os.path.exists(countries_json_path) or force:
+            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
             if res.status_code == 200:
                 with open(countries_json_path, 'w') as f:
                     f.write(res.text)
             else:
-                self.stdout.write(self.style.ERROR('Error downloading countries+regions.json'))
+                self.stdout.write(self.style.ERROR('Error downloading countries+regions+states.json'))
                 return
+        elif not os.path.isfile(countries_json_path):
+            self.stdout.write(self.style.ERROR('countries+regions+states.json is not a file'))
+            return
+        elif os.path.getsize(countries_json_path) == 0:
+            self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
+        else:
+            self.stdout.write(self.style.SUCCESS('countries+regions+states.json already exists'))
+            return
             
         with open(countries_json_path, 'r') as f:
             data = json.load(f)
@@ -54,14 +66,18 @@ class Command(BaseCommand):
         with transaction.atomic():
             existing_countries = {country.country_code: country for country in Country.objects.all()}
             existing_regions = {region.id: region for region in Region.objects.all()}
+            existing_cities = {city.id: city for city in City.objects.all()}
 
             countries_to_create = []
             regions_to_create = []
             countries_to_update = []
             regions_to_update = []
+            cities_to_create = []
+            cities_to_update = []
 
             processed_country_codes = set()
             processed_region_ids = set()
+            processed_city_ids = set()
 
             for country in data:
                 country_code = country['iso2']
@@ -102,6 +118,11 @@ class Command(BaseCommand):
                         latitude = round(float(state['latitude']), 6) if state['latitude'] else None
                         longitude = round(float(state['longitude']), 6) if state['longitude'] else None
 
+                        # Check for duplicate regions
+                        if state_id in processed_region_ids:
+                            self.stdout.write(self.style.ERROR(f'State {state_id} already processed'))
+                            continue
+
                         processed_region_ids.add(state_id)
 
                         if state_id in existing_regions:
@@ -121,6 +142,39 @@ class Command(BaseCommand):
                             )
                             regions_to_create.append(region_obj)
                         self.stdout.write(self.style.SUCCESS(f'State {state_id} prepared'))
+
+                        if 'cities' in state and len(state['cities']) > 0:
+                            for city in state['cities']:
+                                city_id = f"{state_id}-{city['id']}"
+                                city_name = city['name']
+                                latitude = round(float(city['latitude']), 6) if city['latitude'] else None
+                                longitude = round(float(city['longitude']), 6) if city['longitude'] else None
+
+                                # Check for duplicate cities
+                                if city_id in processed_city_ids:
+                                    self.stdout.write(self.style.ERROR(f'City {city_id} already processed'))
+                                    continue
+
+                                processed_city_ids.add(city_id)
+
+                                if city_id in existing_cities:
+                                    city_obj = existing_cities[city_id]
+                                    city_obj.name = city_name
+                                    city_obj.region = region_obj
+                                    city_obj.longitude = longitude
+                                    city_obj.latitude = latitude
+                                    cities_to_update.append(city_obj)
+                                else:
+                                    city_obj = City(
+                                        id=city_id,
+                                        name=city_name,
+                                        region=region_obj,
+                                        longitude=longitude,
+                                        latitude=latitude
+                                    )
+                                    cities_to_create.append(city_obj)
+                                self.stdout.write(self.style.SUCCESS(f'City {city_id} prepared'))
+
                 else:
                     state_id = f"{country_code}-00"
                     processed_region_ids.add(state_id)
@@ -141,13 +195,16 @@ class Command(BaseCommand):
             # Bulk create new countries and regions
             Country.objects.bulk_create(countries_to_create)
             Region.objects.bulk_create(regions_to_create)
+            City.objects.bulk_create(cities_to_create)
 
             # Bulk update existing countries and regions
             Country.objects.bulk_update(countries_to_update, ['name', 'subregion', 'capital'])
             Region.objects.bulk_update(regions_to_update, ['name', 'country', 'longitude', 'latitude'])
+            City.objects.bulk_update(cities_to_update, ['name', 'region', 'longitude', 'latitude'])
 
             # Delete countries and regions that are no longer in the data
             Country.objects.exclude(country_code__in=processed_country_codes).delete()
             Region.objects.exclude(id__in=processed_region_ids).delete()
+            City.objects.exclude(id__in=processed_city_ids).delete()
 
         self.stdout.write(self.style.SUCCESS('All data imported successfully'))

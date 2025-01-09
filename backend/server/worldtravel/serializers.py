@@ -1,5 +1,5 @@
 import os
-from .models import Country, Region, VisitedRegion
+from .models import Country, Region, VisitedRegion, City
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 
@@ -37,6 +37,12 @@ class RegionSerializer(serializers.ModelSerializer):
         model = Region
         fields = '__all__'
         read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude']
+
+class CitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = City
+        fields = '__all__'
+        read_only_fields = ['id', 'name', 'region', 'longitude', 'latitude']
 
 class VisitedRegionSerializer(CustomModelSerializer):
     longitude = serializers.DecimalField(source='region.longitude', max_digits=9, decimal_places=6, read_only=True)

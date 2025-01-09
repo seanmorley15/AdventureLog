@@ -2,7 +2,7 @@ import os
 from django.contrib import admin
 from django.utils.html import mark_safe
 from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
-from worldtravel.models import Country, Region, VisitedRegion
+from worldtravel.models import Country, Region, VisitedRegion, City
 from allauth.account.decorators import secure_admin_login
 
 admin.autodiscover()
@@ -50,6 +50,16 @@ class RegionAdmin(admin.ModelAdmin):
         return VisitedRegion.objects.filter(region=obj).count()
     
     number_of_visits.short_description = 'Number of Visits'
+
+class CityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'region', 'country')
+    list_filter = ('region', 'region__country')
+    search_fields = ('name', 'region__name', 'region__country__name')
+
+    def country(self, obj):
+        return obj.region.country.name
+
+    country.short_description = 'Country'
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -127,6 +137,7 @@ admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
 admin.site.register(AdventureImage, AdventureImageAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(City, CityAdmin)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

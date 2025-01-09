@@ -4,11 +4,17 @@
 	import type { Region, VisitedRegion } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { t } from 'svelte-i18n';
 
 	export let region: Region;
 	export let visited: boolean;
 
 	export let visit_id: number | undefined | null;
+
+	function goToCity() {
+		console.log(region);
+		goto(`/worldtravel/${region.id.split('-')[0]}/${region.id}`);
+	}
 
 	async function markVisited() {
 		let res = await fetch(`/worldtravel?/markVisited`, {
@@ -65,11 +71,16 @@
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
 			{#if !visited}
-				<button class="btn btn-primary" on:click={markVisited}>Mark Visited</button>
+				<button class="btn btn-primary" on:click={markVisited}
+					>{$t('adventures.mark_visited')}</button
+				>
 			{/if}
 			{#if visited}
-				<button class="btn btn-warning" on:click={removeVisit}>Remove</button>
+				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
 			{/if}
+			<button class="btn btn-neutral-300" on:click={goToCity}
+				>{$t('worldtravel.view_cities')}</button
+			>
 		</div>
 	</div>
 </div>

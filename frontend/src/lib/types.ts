@@ -57,11 +57,19 @@ export type Country = {
 };
 
 export type Region = {
-	id: number;
+	id: string;
 	name: string;
-	country: number;
+	country: string;
 	latitude: number;
 	longitude: number;
+};
+
+export type City = {
+	id: string;
+	name: string;
+	latitude: number | null;
+	longitude: number | null;
+	region: string;
 };
 
 export type VisitedRegion = {

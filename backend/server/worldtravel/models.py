@@ -34,6 +34,19 @@ class Region(models.Model):
 
     def __str__(self):
         return self.name
+    
+class City(models.Model):
+    id = models.CharField(primary_key=True)
+    name = models.CharField(max_length=100)
+    region = models.ForeignKey(Region, on_delete=models.CASCADE)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    class Meta:
+        verbose_name_plural = "Cities"
+
+    def __str__(self):
+        return self.name
 
 class VisitedRegion(models.Model):
     id = models.AutoField(primary_key=True)
