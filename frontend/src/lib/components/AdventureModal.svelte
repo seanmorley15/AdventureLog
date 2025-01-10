@@ -365,15 +365,31 @@
 	async function markVisited() {
 		console.log(reverseGeocodePlace);
 		if (reverseGeocodePlace) {
-			let res = await fetch(`/worldtravel?/markVisited`, {
-				method: 'POST',
-				body: JSON.stringify({ regionId: reverseGeocodePlace.id })
-			});
-			if (res.ok) {
-				reverseGeocodePlace.is_visited = true;
-				addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
-			} else {
-				addToast('error', `Failed to mark visit to ${reverseGeocodePlace.region}`);
+			if (!reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) {
+				let region_res = await fetch(`/api/visitedregion`, {
+					headers: { 'Content-Type': 'application/json' },
+					method: 'POST',
+					body: JSON.stringify({ region: reverseGeocodePlace.region_id })
+				});
+				if (region_res.ok) {
+					reverseGeocodePlace.region_visited = true;
+					addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
+				} else {
+					addToast('error', `Failed to mark visit to ${reverseGeocodePlace.region}`);
+				}
+			}
+			if (!reverseGeocodePlace.city_visited && reverseGeocodePlace.city_id != null) {
+				let city_res = await fetch(`/api/visitedcity`, {
+					headers: { 'Content-Type': 'application/json' },
+					method: 'POST',
+					body: JSON.stringify({ city: reverseGeocodePlace.city_id })
+				});
+				if (city_res.ok) {
+					reverseGeocodePlace.city_visited = true;
+					addToast('success', `Visit to ${reverseGeocodePlace.city} marked`);
+				} else {
+					addToast('error', `Failed to mark visit to ${reverseGeocodePlace.city}`);
+				}
 			}
 		}
 	}
@@ -542,7 +558,10 @@
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
-		if (adventure.is_visited && !reverseGeocodePlace?.is_visited) {
+		if (
+			(adventure.is_visited && !reverseGeocodePlace?.region_visited) ||
+			!reverseGeocodePlace?.city_visited
+		) {
 			markVisited();
 		}
 		imageSearch = adventure.name;
@@ -785,19 +804,33 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								</MapLibre>
 								{#if reverseGeocodePlace}
 									<div class="mt-2">
-										<p>{reverseGeocodePlace.region}, {reverseGeocodePlace.country}</p>
 										<p>
-											{reverseGeocodePlace.is_visited
+											{reverseGeocodePlace.city
+												? reverseGeocodePlace.city + ',  '
+												: ''}{reverseGeocodePlace.region},
+											{reverseGeocodePlace.country}
+										</p>
+										<p>
+											{reverseGeocodePlace.region}:
+											{reverseGeocodePlace.region_visited
 												? $t('adventures.visited')
 												: $t('adventures.not_visited')}
 										</p>
+										{#if reverseGeocodePlace.city}
+											<p>
+												{reverseGeocodePlace.city}:
+												{reverseGeocodePlace.city_visited
+													? $t('adventures.visited')
+													: $t('adventures.not_visited')}
+											</p>
+										{/if}
 									</div>
-									{#if !reverseGeocodePlace.is_visited && !willBeMarkedVisited}
+									{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && !willBeMarkedVisited)}
 										<button type="button" class="btn btn-neutral" on:click={markVisited}>
 											{$t('adventures.mark_visited')}
 										</button>
 									{/if}
-									{#if !reverseGeocodePlace.is_visited && willBeMarkedVisited}
+									{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && willBeMarkedVisited)}
 										<div role="alert" class="alert alert-info mt-2">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -813,7 +846,9 @@ it would also work to just use on:click on the MapLibre component itself. -->
 												></path>
 											</svg>
 											<span
-												>{reverseGeocodePlace.region},
+												>{reverseGeocodePlace.city
+													? reverseGeocodePlace.city + ',  '
+													: ''}{reverseGeocodePlace.region},
 												{reverseGeocodePlace.country}
 												{$t('adventures.will_be_marked')}</span
 											>

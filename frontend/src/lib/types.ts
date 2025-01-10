@@ -201,11 +201,14 @@ export type Background = {
 };
 
 export type ReverseGeocode = {
-	id: string;
+	region_id: string;
 	region: string;
 	country: string;
-	is_visited: boolean;
+	region_visited: boolean;
+	city_visited: boolean;
 	display_name: string;
+	city: string;
+	city_id: string;
 };
 
 export type Category = {

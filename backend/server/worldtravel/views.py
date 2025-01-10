@@ -137,6 +137,10 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
+        # if the region is not visited, visit it
+        region = serializer.validated_data['city'].region
+        if not VisitedRegion.objects.filter(user_id=request.user.id, region=region).exists():
+            VisitedRegion.objects.create(user_id=request.user, region=region)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
