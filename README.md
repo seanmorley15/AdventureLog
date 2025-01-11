@@ -10,7 +10,7 @@
 <h4>
     <a href="https://demo.adventurelog.app">View Demo</a>
   <span> · </span>
-    <a href="https://demo.adventurelog.app">Documentation</a>
+    <a href="https://adventurelog.app">Documentation</a>
   <span> · </span>
     <a href="https://discord.gg/wRbQ9Egr8C">Discord</a>
   <span> · </span>
