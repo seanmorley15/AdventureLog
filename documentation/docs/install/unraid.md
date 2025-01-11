@@ -9,7 +9,7 @@ Communuity Applications Page: [AdventureLog on CA Store](https://unraid.net/comm
 ## Backend
 
 - Cache is only for when you have your appdata share on a cache drive
-- For this example we call the container `server` so the the frntend can connect to it at `http://server:8000` although this can be named anything you like as long as the frontend is configured to connect to the correct address
+- For this example we call the container `server` so the the frontend can connect to it at `http://server:8000` although this can be named anything you like as long as the frontend is configured to connect to the correct address
 
 ![/static/img/unraid-config-1.png](/static/img/unraid-config-1.png)
 
