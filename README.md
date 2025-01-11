@@ -12,7 +12,7 @@
   <span> · </span>
     <a href="https://demo.adventurelog.app">Documentation</a>
   <span> · </span>
-    <a href="https://github.com/seanmorley15/AdventureLog/issues/new/choose">Discord</a>
+    <a href="https://discord.gg/wRbQ9Egr8C">Discord</a>
   <span> · </span>
     <a href="https://buymeacoffee.com/seanmorley15">Support 💖</a>
   </h4>
