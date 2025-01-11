@@ -1,139 +1,144 @@
-# AdventureLog: Embark, Explore, Remember. 🌍
+<div align="center">
 
-### _"Never forget an adventure with AdventureLog - Your ultimate travel companion!"_
+  <img src="brand/adventurelog.png" alt="logo" width="200" height="auto" />
+  <h1>AdventureLog</h1>
+  
+  <p>
+    The ultimate travel companion for the modern-day explorer.
+  </p>
+   
+<h4>
+    <a href="https://demo.adventurelog.app">View Demo</a>
+  <span> · </span>
+    <a href="https://demo.adventurelog.app">Documentation</a>
+  <span> · </span>
+    <a href="https://github.com/seanmorley15/AdventureLog/issues/new/choose">Discord</a>
+  <span> · </span>
+    <a href="https://buymeacoffee.com/seanmorley15">Support 💖</a>
+  </h4>
+</div>
 
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/seanmorley15)
+<br />
 
-- **[Documentation](https://adventurelog.app)**
-- **[Demo](https://demo.adventurelog.app)**
-- **[Join the AdventureLog Community Discord Server](https://discord.gg/wRbQ9Egr8C)**
+<!-- Table of Contents -->
 
 # Table of Contents
 
-- [Installation](#installation)
-  - [Docker 🐋](#docker-)
-    - [Prerequisites](#prerequisites)
-    - [Getting Started](#getting-started)
-    - [Configuration](#configuration)
-      - [Frontend Container (web)](#frontend-container-web)
-      - [Backend Container (server)](#backend-container-server)
-      - [Proxy Container (nginx) Configuration](#proxy-container-nginx-configuration)
-    - [Running the Containers](#running-the-containers)
-- [Screenshots 🖼️](#screenshots)
-- [About AdventureLog](#about-adventurelog)
-- [Attribution](#attribution)
+- [About the Project](#-about-the-project)
+  - [Screenshots](#-screenshots)
+  - [Tech Stack](#-tech-stack)
+  - [Features](#-features)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+- [Contact](#-contact)
+- [Acknowledgements](#-acknowledgements)
 
-# Installation
+<!-- About the Project -->
 
-# Docker 🐋
+## ⭐ About the Project
 
-Docker is the preferred way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
-**Note**: This guide mainly focuses on installation with a linux based host machine, but the steps are similar for other operating systems.
+Starting from a simple idea of tracking travel locations (called adventures), AdventureLog has grown into a full-fledged travel companion. With AdventureLog, you can log your adventures, keep track of where you've been on the world map, plan your next trip collaboratively, and share your experiences with friends and family.
 
-## Prerequisites
+AdventureLog was created to solve a problem: the lack of a modern, open-source, user-friendly travel companion. Many existing travel apps are either too complex, too expensive, or too closed-off to be useful for the average traveler. AdventureLog aims to be the opposite: simple, beautiful, and open to everyone.
 
-- Docker installed on your machine/server. You can learn how to download it [here](https://docs.docker.com/engine/install/).
+<!-- Screenshots -->
 
-## Getting Started
+### 📷 Screenshots
 
-Get the `docker-compose.yml` file from the AdventureLog repository. You can download it from [here](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml) or run this command to download it directly to your machine:
+<div align="center"> 
+  <img src="./brand/screenshots/adventures.png" alt="Adventures" />
+  <p>Displays the adventures you have visited and the ones you plan to embark on. You can also filter and sort the adventures.</p>
+  <img src="./brand/screenshots/details.png" alt="Adventure Details" />
+  <p>Shows specific details about an adventure, including the name, date, location, description, and rating.</p>
+  <img src="./brand/screenshots/edit.png" alt="Edit Modal" />
+  <img src="./brand/screenshots/map.png" alt="Adventure Details" />
+  <p>View all of your adventures on a map, with the ability to filter by visit status and add new ones by click on the map</p>
+  <img src="./brand/screenshots/dashboard.png" alt="Dashboard" />
+  <p>Displays a summary of your adventures, including your world travel stats.</p>
+  <img src="./brand/screenshots/itinerary.png" alt="Itinerary" />
+  <p>Plan your adventures and travel itinerary with a list of activities and a map view. View your trip in a variety of ways, including an itinerary list, a map view, and a calendar view.</p>
+  <img src="./brand/screenshots/countries.png" alt="Countries" />
+  <p>Lists all the countries you have visited and plan to visit, with the ability to filter by visit status.</p>
+  <img src="./brand/screenshots/regions.png" alt="Regions" />
+  <p>Displays the regions for a specific country, includes a map view to visually select regions.</p>
+</div>
 
-```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
-```
+<!-- TechStack -->
 
-## Configuration
+### 🚀 Tech Stack
 
-Here is a summary of the configuration options available in the `docker-compose.yml` file:
+<details>
+  <summary>Client</summary>
+  <ul>
+    <li><a href="https://svelte.dev/">SvelteKit</a></li>
+    <li><a href="https://tailwindcss.com/">TailwindCSS</a></li>
+    <li><a href="https://daisyui.com/">DaisyUI</a></li>
+    <li><a href="https://github.com/dimfeld/svelte-maplibre/">Svelte MapLibre</a></li>
+  </ul>
+</details>
 
-<!-- make a table with colum name, is required, other -->
+<details>
+  <summary>Server</summary>
+  <ul>
+    <li><a href="https://www.djangoproject.com/">Django</a></li>
+    <li><a href="https://postgis.net/">PostGIS</a></li>
+    <li><a href="https://www.django-rest-framework.org/">Django REST Framework</a></li>
+    <li><a href="https://allauth.org/">AllAuth</a></li>
+  </ul>
+</details>
+<!-- Features -->
 
-### Frontend Container (web)
+### 🎯 Features
 
-| Name                | Required  | Description                                                                                                                                                   | Default Value         |
-| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend.                                                                                                  | http://server:8000    |
-| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will acess the app from.                                                                  | http://localhost:8015 |
-| `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **kiliobytes**. | Infinity              |
+- **Track Your Adventures** 🌍: Log your adventures and keep track of where you've been on the world map.
+  - Adventures can store a variety of information, including the location, date, and description.
+  - Adventures can be sorted into custom categories for easy organization.
+  - Adventures can be marked as private or public, allowing you to share your adventures with friends and family.
+  - Keep track of the countries and regions you've visited with the world travel book.
+- **Plan Your Next Trip** 📃: Take the guesswork out of planning your next adventure with an easy-to-use itinerary planner.
+  - Itineraries can be created for any number of days and can include multiple destinations.
+  - Itineraries include many planning features like flight information, notes, checklists, and links to external resources.
+  - Itineraries can be shared with friends and family for collaborative planning.
+- **Share Your Experiences** 📸: Share your adventures with friends and family and collaborate on trips together.
+  - Adventures and itineraries can be shared via a public link or directly with other AdventureLog users.
+  - Collaborators can view and edit shared itineraries (collections), making planning a breeze.
 
-### Backend Container (server)
+<!-- Roadmap -->
 
-| Name                    | Required | Description                                                                                                                                 | Default Value         |
-| ----------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| `PGHOST`                | Yes      | Databse host.                                                                                                                               | db                    |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                   | database              |
-| `PGUSER`                | Yes      | Database user.                                                                                                                              | adventure             |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                          | changeme123           |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                           | admin                 |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                | admin                 |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                       | admin@example.com     |
-| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls. | http://localhost:8016 |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the orgins where you use your backend server and frontend. These values are comma seperated.                          | http://localhost:8016 |
-| `FRONTEND_URL`          | Yes      | This is the publicly accessible url to the **frontend** container. This link should be accessible for all users. Used for email generation. | http://localhost:8015 |
+## 🧭 Roadmap
 
-## Running the Containers
+The AdventureLog Roadmap can be found [here](https://github.com/users/seanmorley15/projects/5)
 
-To start the containers, run the following command:
+<!-- Contributing -->
 
-```bash
-docker compose up -d
-```
+## 👋 Contributing
 
-Enjoy AdventureLog! 🎉
+<a href="https://github.com/seanmorley15/AdventureLog/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=seanmorley15/AdventureLog" />
+</a>
 
-# Screenshots
+Contributions are always welcome!
 
-![Adventure Page](brand/screenshots/adventures.png)
-Displays the adventures you have visited and the ones you plan to embark on. You can also filter and sort the adventures.
+See `contributing.md` for ways to get started.
 
-![Detail Page](brand/screenshots/details.png)
-Shows specific details about an adventure, including the name, date, location, description, and rating.
+<!-- License -->
 
-![Edit](brand/screenshots/edit.png)
+## 📃 License
 
-![Map Page](brand/screenshots/map.png)
-View all of your adventures on a map, with the ability to filter by visit status and add new ones by click on the map.
+Distributed under the GNU General Public License v3.0. See `LICENSE` for more information.
 
-![Dashboard Page](brand/screenshots/dashboard.png)
-Displays a summary of your adventures, including your world travel stats.
+<!-- Contact -->
 
-![Itinerary Page](brand/screenshots/itinerary.png)
-Plan your adventures and travel itinerary with a list of activities and a map view. View your trip in a variety of ways, including an itinerary list, a map view, and a calendar view.
+## 🤝 Contact
 
-![Country Page](brand/screenshots/countries.png)
-Lists all the countries you have visited and plan to visit, with the ability to filter by visit status.
+Sean Morley - [website](https://seanmorley.com)
 
-![Region Page](brand/screenshots/regions.png)
-Displays the regions for a specific country, includes a map view to visually select regions.
+Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software developer with a passion for travel and adventure. I created AdventureLog to help people like me document their adventures and plan new ones effortlessly. As a student, I am always looking for more opportunities to learn and grow, so feel free to reach out via the contact on my website if you would like to collaborate or chat!
 
-# About AdventureLog
+<!-- Acknowledgments -->
 
-AdventureLog is a Svelte Kit and Django application that utilizes a PostgreSQL database. Users can log the adventures they have experienced, as well as plan future ones. Key features include:
-
-- Logging past adventures with fields like name, date, location, description, and rating.
-- Planning future adventures with similar fields.
-- Tagging different activity types for better organization.
-- Viewing countries, regions, and marking visited regions.
-
-AdventureLog aims to be your ultimate travel companion, helping you document your adventures and plan new ones effortlessly.
-
-AdventureLog is licensed under the GNU General Public License v3.0.
-
-<!-- ## Screenshots 🖼️
-
-![Visited Log](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/visited.png?raw=true)
-![Planner Log](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/ideas.png?raw=true)
-![Country List](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/countrylist.png?raw=true)
-![Region List for the United States](https://github.com/seanmorley15/AdventureLog/blob/main/brand/screenshots/regions.png?raw=true)
-
-## Roadmap 🛣️
-
-- Improved mobile device support
-- Password reset functionality
-- Improved error handling
-- Handling of adventure cards with variable width -->
-
-# Attribution
+## 💎 Acknowledgements
 
 - Logo Design by [nordtechtiger](https://github.com/nordtechtiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)

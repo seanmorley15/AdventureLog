@@ -11,6 +11,12 @@ Docker is the preferred way to run AdventureLog on your local machine. It is a l
 
 Get the `docker-compose.yml` file from the AdventureLog repository. You can download it from [here](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml) or run this command to download it directly to your machine:
 
+::: tip
+
+If running on an ARM based machine, you will need to use a different PostGIS Image. It is recommended to use the `tobi312/rpi-postgresql-postgis:15-3.3-alpine-arm` image or a custom version found [here](https://hub.docker.com/r/tobi312/rpi-postgresql-postgis/tags). The AdventureLog containers are ARM compatible.
+
+:::
+
 ```bash
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
 ```
