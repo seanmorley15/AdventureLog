@@ -11,6 +11,7 @@ It is recommended to install applications in this order.
 ## Database
 
 - To find the Database Application, search for `PostGIS` on the Unraid App Store and fill out the fields as follows:
+- Ensure that the POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_DB are set in the PostGIS container if not add them custom variables
 
 ![/static/img/unraid-config-2.png](/static/img/unraid-config-2.png)
 
