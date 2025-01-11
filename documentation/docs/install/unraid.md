@@ -6,7 +6,7 @@ Community Applications Page: [AdventureLog on CA Store](https://unraid.net/commu
 
 ## Installation Configuration
 
-It is recommeneded to install applications in this order.
+It is recommended to install applications in this order.
 
 ## Database
 
@@ -16,7 +16,7 @@ It is recommeneded to install applications in this order.
 
 ## Backend
 
-- Cache is only for when you have your appdata share on a cache drive
+- Cache Configuration: This option is useful only if your appdata share is stored on a cache drive, which is used to speed up read/write operations for your containerized applications.
 
 ![/static/img/unraid-config-1.png](/static/img/unraid-config-1.png)
 
