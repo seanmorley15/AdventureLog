@@ -18,6 +18,7 @@ It is recommended to install applications in this order.
 ## Backend
 
 - Cache Configuration: This option is useful only if your appdata share is stored on a cache drive, which is used to speed up read/write operations for your containerized applications.
+- Note: if your running the server in a docker network that is other than "host" (for example "bridge") than you need to add the IP of the host machine in the CSRF Trusted Origins variable.
 
 ![/static/img/unraid-config-1.png](/static/img/unraid-config-1.png)
 
