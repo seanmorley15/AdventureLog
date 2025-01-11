@@ -69,6 +69,7 @@ export default defineConfig({
             text: "Kubernetes and Kustomize 🌐",
             link: "/docs/install/kustomize",
           },
+          { text: "Unraid 🧡", link: "/docs/install/unraid" },
 
           {
             text: "With A Reverse Proxy",
