@@ -195,7 +195,29 @@
     "emoji_picker": "表情符号选择器",
     "hide": "隐藏",
     "show": "展示",
-    "download_calendar": "下载日历"
+    "download_calendar": "下载日历",
+    "md_instructions": "在这里写下你的标记...",
+    "preview": "预览",
+    "checklist_delete_confirm": "您确定要删除此清单吗？\n此操作无法撤消。",
+    "clear_location": "明确的位置",
+    "date_information": "日期信息",
+    "delete_checklist": "删除清单",
+    "delete_note": "删除注释",
+    "delete_transportation": "删除交通",
+    "end": "结尾",
+    "ending_airport": "结束机场",
+    "flight_information": "航班信息",
+    "from": "从",
+    "no_location_found": "没有找到位置",
+    "note_delete_confirm": "您确定要删除此注释吗？\n此操作无法撤消。",
+    "out_of_range": "不在行程日期范围内",
+    "show_region_labels": "显示区域标签",
+    "start": "开始",
+    "starting_airport": "出发机场",
+    "to": "到",
+    "transportation_delete_confirm": "您确定要删除此交通工具吗？\n此操作无法撤消。",
+    "show_map": "显示地图",
+    "will_be_marked": "保存冒险后将被标记为已访问。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -362,7 +384,9 @@
     "item_cannot_be_empty": "项目不能为空",
     "items": "项目",
     "new_item": "新商品",
-    "save": "节省"
+    "save": "节省",
+    "checklist_viewer": "清单查看器",
+    "new_checklist": "新清单"
   },
   "collection": {
     "collection_created": "收藏创建成功！",
@@ -371,7 +395,8 @@
     "edit_collection": "编辑收藏",
     "error_creating_collection": "创建集合时出错",
     "error_editing_collection": "编辑集合时出错",
-    "new_collection": "新系列"
+    "new_collection": "新系列",
+    "public_collection": "公共收藏"
   },
   "notes": {
     "add_a_link": "添加链接",
@@ -384,7 +409,8 @@
     "note_public": "该笔记是公开的，因为它属于公共收藏。",
     "open": "打开",
     "save": "节省",
-    "invalid_url": "无效网址"
+    "invalid_url": "无效网址",
+    "note_viewer": "笔记查看器"
   },
   "transportation": {
     "date_and_time": "日期",
@@ -430,17 +456,7 @@
     "show_visited_regions": "显示访问过的地区",
     "view_details": "查看详情"
   },
-  "languages": {
-    "de": "德语",
-    "en": "英语",
-    "es": "西班牙语",
-    "fr": "法语",
-    "it": "意大利语",
-    "nl": "荷兰语",
-    "sv": "瑞典",
-    "zh": "中国人",
-    "pl": "波兰语"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "没有与之共享的用户",
     "not_shared_with": "不与共享",
@@ -476,5 +492,30 @@
     "total_adventures": "全面冒险",
     "total_visited_regions": "总访问地区",
     "welcome_back": "欢迎回来"
+  },
+  "immich": {
+    "api_key": "伊米奇 API 密钥",
+    "api_note": "注意：这必须是 Immich API 服务器的 URL，因此它可能以 /api 结尾，除非您有自定义配置。",
+    "disable": "禁用",
+    "enable_immich": "启用伊米奇",
+    "imageid_required": "需要图像 ID",
+    "immich": "伊米奇",
+    "immich_desc": "将您的 Immich 帐户与 AdventureLog 集成，以便您搜索照片库并导入冒险照片。",
+    "immich_disabled": "Immich 集成成功禁用！",
+    "immich_enabled": "Immich 集成成功启用！",
+    "immich_error": "更新 Immich 集成时出错",
+    "immich_integration": "伊米奇整合",
+    "immich_updated": "Immich 设置更新成功！",
+    "integration_enabled": "启用集成",
+    "integration_fetch_error": "从 Immich 集成获取数据时出错",
+    "integration_missing": "后端缺少 Immich 集成",
+    "load_more": "加载更多",
+    "no_items_found": "没有找到物品",
+    "query_required": "需要查询",
+    "server_down": "Immich 服务器当前已关闭或无法访问",
+    "server_url": "伊米奇服务器网址",
+    "update_integration": "更新集成",
+    "documentation": "Immich 集成文档",
+    "localhost_note": "注意：除非您相应地设置了 docker 网络，否则 localhost 很可能无法工作。\n建议使用服务器的IP地址或域名。"
   }
 }

@@ -93,7 +93,7 @@ export const actions: Actions = {
 						path: '/',
 						httpOnly: true,
 						sameSite: 'lax',
-						secure: true,
+						secure: event.url.protocol === 'https:',
 						expires: expiryDate
 					});
 				}

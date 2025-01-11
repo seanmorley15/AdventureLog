@@ -1,6 +1,6 @@
 {
 	"name": "adventurelog-frontend",
-	"version": "0.7.1",
+	"version": "0.8.0",
 	"scripts": {
 		"dev": "vite dev",
 		"django": "cd .. && cd backend/server && python3 manage.py runserver",
@@ -41,6 +41,7 @@
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
 		"emoji-picker-element": "^1.26.0",
+		"marked": "^15.0.4",
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"

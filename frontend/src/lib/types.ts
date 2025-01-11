@@ -24,6 +24,7 @@ export type Adventure = {
 	images: {
 		id: string;
 		image: string;
+		is_primary: boolean;
 	}[];
 	visits: {
 		id: string;
@@ -50,6 +51,8 @@ export type Country = {
 	capital: string;
 	num_regions: number;
 	num_visits: number;
+	longitude: number | null;
+	latitude: number | null;
 };
 
 export type Region = {
@@ -86,14 +89,14 @@ export type Collection = {
 	description: string;
 	is_public: boolean;
 	adventures: Adventure[];
-	created_at?: string;
-	start_date?: string;
-	end_date?: string;
+	created_at?: string | null;
+	start_date: string | null;
+	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
-	shared_with: string[];
+	shared_with: string[] | undefined;
 	link?: string | null;
 };
 
@@ -127,8 +130,12 @@ export type Transportation = {
 	flight_number: string | null;
 	from_location: string | null;
 	to_location: string | null;
+	origin_latitude: number | null;
+	origin_longitude: number | null;
+	destination_latitude: number | null;
+	destination_longitude: number | null;
 	is_public: boolean;
-	collection: Collection | null;
+	collection: Collection | null | string;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 };
@@ -189,4 +196,38 @@ export type Category = {
 	icon: string;
 	user_id: string;
 	num_adventures?: number | null;
+};
+
+export type ImmichIntegration = {
+	id: string;
+	server_url: string;
+	api_key: string;
+};
+
+export type ImmichAlbum = {
+	albumName: string;
+	description: string;
+	albumThumbnailAssetId: string;
+	createdAt: string;
+	updatedAt: string;
+	id: string;
+	ownerId: string;
+	owner: {
+		id: string;
+		email: string;
+		name: string;
+		profileImagePath: string;
+		avatarColor: string;
+		profileChangedAt: string;
+	};
+	albumUsers: any[];
+	shared: boolean;
+	hasSharedLink: boolean;
+	startDate: string;
+	endDate: string;
+	assets: any[];
+	assetCount: number;
+	isActivityEnabled: boolean;
+	order: string;
+	lastModifiedAssetTimestamp: string;
 };

@@ -8,7 +8,7 @@ from main.utils import CustomModelSerializer
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure']
+        fields = ['id', 'image', 'adventure', 'is_primary']
         read_only_fields = ['id']
 
     def to_representation(self, instance):
@@ -116,7 +116,7 @@ class AdventureSerializer(CustomModelSerializer):
         return False
 
     def create(self, validated_data):
-        visits_data = validated_data.pop('visits', [])
+        visits_data = validated_data.pop('visits', None)
         category_data = validated_data.pop('category', None)
         print(category_data)
         adventure = Adventure.objects.create(**validated_data)
@@ -131,6 +131,7 @@ class AdventureSerializer(CustomModelSerializer):
         return adventure
 
     def update(self, instance, validated_data):
+        has_visits = 'visits' in validated_data
         visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
 
@@ -142,24 +143,25 @@ class AdventureSerializer(CustomModelSerializer):
             instance.category = category
         instance.save()
 
-        current_visits = instance.visits.all()
-        current_visit_ids = set(current_visits.values_list('id', flat=True))
+        if has_visits:
+            current_visits = instance.visits.all()
+            current_visit_ids = set(current_visits.values_list('id', flat=True))
 
-        updated_visit_ids = set()
-        for visit_data in visits_data:
-            visit_id = visit_data.get('id')
-            if visit_id and visit_id in current_visit_ids:
-                visit = current_visits.get(id=visit_id)
-                for attr, value in visit_data.items():
-                    setattr(visit, attr, value)
-                visit.save()
-                updated_visit_ids.add(visit_id)
-            else:
-                new_visit = Visit.objects.create(adventure=instance, **visit_data)
-                updated_visit_ids.add(new_visit.id)
+            updated_visit_ids = set()
+            for visit_data in visits_data:
+                visit_id = visit_data.get('id')
+                if visit_id and visit_id in current_visit_ids:
+                    visit = current_visits.get(id=visit_id)
+                    for attr, value in visit_data.items():
+                        setattr(visit, attr, value)
+                    visit.save()
+                    updated_visit_ids.add(visit_id)
+                else:
+                    new_visit = Visit.objects.create(adventure=instance, **visit_data)
+                    updated_visit_ids.add(new_visit.id)
 
-        visits_to_delete = current_visit_ids - updated_visit_ids
-        instance.visits.filter(id__in=visits_to_delete).delete()
+            visits_to_delete = current_visit_ids - updated_visit_ids
+            instance.visits.filter(id__in=visits_to_delete).delete()
 
         return instance
 
@@ -170,7 +172,7 @@ class TransportationSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 

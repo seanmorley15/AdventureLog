@@ -195,7 +195,29 @@
     "emoji_picker": "Emoji-Picker",
     "hide": "Verstecken",
     "show": "Zeigen",
-    "download_calendar": "Kalender herunterladen"
+    "download_calendar": "Kalender herunterladen",
+    "md_instructions": "Schreiben Sie hier Ihren Abschlag...",
+    "preview": "Vorschau",
+    "checklist_delete_confirm": "Sind Sie sicher, dass Sie diese Checkliste löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "clear_location": "Standort löschen",
+    "date_information": "Datumsinformationen",
+    "delete_checklist": "Checkliste löschen",
+    "delete_note": "Notiz löschen",
+    "delete_transportation": "Transport löschen",
+    "end": "Ende",
+    "ending_airport": "Endflughafen",
+    "flight_information": "Fluginformationen",
+    "from": "Aus",
+    "no_location_found": "Kein Standort gefunden",
+    "note_delete_confirm": "Sind Sie sicher, dass Sie diese Notiz löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "out_of_range": "Nicht im Datumsbereich der Reiseroute",
+    "show_region_labels": "Regionsbeschriftungen anzeigen",
+    "start": "Start",
+    "starting_airport": "Startflughafen",
+    "to": "Zu",
+    "transportation_delete_confirm": "Sind Sie sicher, dass Sie diesen Transport löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "show_map": "Karte anzeigen",
+    "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist."
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -362,7 +384,9 @@
     "item_cannot_be_empty": "Das Element darf nicht leer sein",
     "items": "Artikel",
     "new_item": "Neuer Artikel",
-    "save": "Speichern"
+    "save": "Speichern",
+    "checklist_viewer": "Checklisten-Viewer",
+    "new_checklist": "Neue Checkliste"
   },
   "collection": {
     "collection_created": "Sammlung erfolgreich erstellt!",
@@ -371,7 +395,8 @@
     "edit_collection": "Sammlung bearbeiten",
     "error_creating_collection": "Fehler beim Erstellen der Sammlung",
     "error_editing_collection": "Fehler beim Bearbeiten der Sammlung",
-    "new_collection": "Neue Kollektion"
+    "new_collection": "Neue Kollektion",
+    "public_collection": "Öffentliche Sammlung"
   },
   "notes": {
     "add_a_link": "Fügen Sie einen Link hinzu",
@@ -384,7 +409,8 @@
     "note_public": "Diese Notiz ist öffentlich, da sie sich in einer öffentlichen Sammlung befindet.",
     "open": "Offen",
     "save": "Speichern",
-    "invalid_url": "Ungültige URL"
+    "invalid_url": "Ungültige URL",
+    "note_viewer": "Notizenbetrachter"
   },
   "transportation": {
     "date_and_time": "Datum",
@@ -430,17 +456,7 @@
     "show_visited_regions": "Besuchte Regionen anzeigen",
     "view_details": "Details anzeigen"
   },
-  "languages": {
-    "de": "Deutsch",
-    "en": "Englisch",
-    "es": "Spanisch",
-    "fr": "Französisch",
-    "it": "Italienisch",
-    "nl": "Niederländisch",
-    "sv": "Schwedisch",
-    "zh": "chinesisch",
-    "pl": "Polnisch"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Keine Benutzer geteilt mit",
     "not_shared_with": "Nicht geteilt mit",
@@ -476,5 +492,30 @@
     "total_adventures": "Totale Abenteuer",
     "total_visited_regions": "Insgesamt besuchte Regionen",
     "welcome_back": "Willkommen zurück"
+  },
+  "immich": {
+    "api_key": "Immich-API-Schlüssel",
+    "api_note": "Hinweis: Dies muss die URL zum Immich-API-Server sein, daher endet sie wahrscheinlich mit /api, es sei denn, Sie haben eine benutzerdefinierte Konfiguration.",
+    "disable": "Deaktivieren",
+    "enable_immich": "Immich aktivieren",
+    "imageid_required": "Bild-ID ist erforderlich",
+    "immich": "Immich",
+    "immich_desc": "Integrieren Sie Ihr Immich-Konto mit AdventureLog, damit Sie Ihre Fotobibliothek durchsuchen und Fotos für Ihre Abenteuer importieren können.",
+    "immich_disabled": "Immich-Integration erfolgreich deaktiviert!",
+    "immich_enabled": "Immich-Integration erfolgreich aktiviert!",
+    "immich_error": "Fehler beim Aktualisieren der Immich-Integration",
+    "immich_updated": "Immich-Einstellungen erfolgreich aktualisiert!",
+    "integration_enabled": "Integration aktiviert",
+    "integration_fetch_error": "Fehler beim Abrufen der Daten aus der Immich-Integration",
+    "integration_missing": "Im Backend fehlt die Immich-Integration",
+    "load_more": "Mehr laden",
+    "no_items_found": "Keine Artikel gefunden",
+    "query_required": "Abfrage ist erforderlich",
+    "server_down": "Der Immich-Server ist derzeit ausgefallen oder nicht erreichbar",
+    "server_url": "Immich-Server-URL",
+    "update_integration": "Update-Integration",
+    "immich_integration": "Immich-Integration",
+    "documentation": "Immich-Integrationsdokumentation",
+    "localhost_note": "Hinweis: localhost wird höchstwahrscheinlich nicht funktionieren, es sei denn, Sie haben Docker-Netzwerke entsprechend eingerichtet. \nEs wird empfohlen, die IP-Adresse des Servers oder den Domänennamen zu verwenden."
   }
 }

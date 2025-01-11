@@ -21,12 +21,14 @@ export const load = (async (event) => {
 	}> = [];
 	adventures.forEach((adventure) => {
 		adventure.visits.forEach((visit) => {
-			dates.push({
-				id: adventure.id,
-				start: visit.start_date,
-				end: visit.end_date || visit.start_date,
-				title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
-			});
+			if (visit.start_date) {
+				dates.push({
+					id: adventure.id,
+					start: visit.start_date,
+					end: visit.end_date || visit.start_date,
+					title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
+				});
+			}
 		});
 	});
 

@@ -1032,7 +1032,29 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def image_delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+    
+    @action(detail=True, methods=['post'])
+    def toggle_primary(self, request, *args, **kwargs):
+        # Makes the image the primary image for the adventure, if there is already a primary image linked to the adventure, it is set to false and the new image is set to true. make sure that the permission is set to the owner of the adventure
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        instance = self.get_object()
+        adventure = instance.adventure
+        if adventure.user_id != request.user:
+            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if the image is already the primary image
+        if instance.is_primary:
+            return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Set the current primary image to false
+        AdventureImage.objects.filter(adventure=adventure, is_primary=True).update(is_primary=False)
 
+        # Set the new image to true
+        instance.is_primary = True
+        instance.save()
+        return Response({"success": "Image set as primary image"})
 
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -1233,10 +1255,24 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
         for adventure in serializer.data:
             if adventure['visits']:
                 for visit in adventure['visits']:
+                    # Skip if start_date is missing
+                    if not visit.get('start_date'):
+                        continue
+
+                    # Parse start_date and handle end_date
+                    try:
+                        start_date = datetime.strptime(visit['start_date'], '%Y-%m-%d').date()
+                    except ValueError:
+                        continue  # Skip if the start_date is invalid
+
+                    end_date = (
+                        datetime.strptime(visit['end_date'], '%Y-%m-%d').date() + timedelta(days=1)
+                        if visit.get('end_date') else start_date + timedelta(days=1)
+                    )
+                    
+                    # Create event
                     event = Event()
                     event.add('summary', adventure['name'])
-                    start_date = datetime.strptime(visit['start_date'], '%Y-%m-%d').date()
-                    end_date = datetime.strptime(visit['end_date'], '%Y-%m-%d').date() + timedelta(days=1) if visit['end_date'] else start_date + timedelta(days=1)
                     event.add('dtstart', start_date)
                     event.add('dtend', end_date)
                     event.add('dtstamp', datetime.now())

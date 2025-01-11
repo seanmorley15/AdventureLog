@@ -1,7 +1,9 @@
 from collections.abc import Collection
+import os
 from typing import Iterable
 import uuid
 from django.db import models
+from django.utils.deconstruct import deconstructible
 
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
@@ -167,6 +169,10 @@ class Transportation(models.Model):
     end_date = models.DateTimeField(blank=True, null=True)
     flight_number = models.CharField(max_length=100, blank=True, null=True)
     from_location = models.CharField(max_length=200, blank=True, null=True)
+    origin_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    origin_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    destination_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    destination_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     to_location = models.CharField(max_length=200, blank=True, null=True)
     is_public = models.BooleanField(default=False)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
@@ -253,12 +259,28 @@ class ChecklistItem(models.Model):
     def __str__(self):
         return self.name
 
+@deconstructible
+class PathAndRename:
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, instance, filename):
+        ext = filename.split('.')[-1]
+        # Generate a new UUID for the filename
+        filename = f"{uuid.uuid4()}.{ext}"
+        return os.path.join(self.path, filename)
+
 class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    image = ResizedImageField(force_format="WEBP", quality=75, upload_to='images/')
+    image = ResizedImageField(
+        force_format="WEBP",
+        quality=75,
+        upload_to=PathAndRename('images/')  # Use the callable class here
+    )
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
+    is_primary = models.BooleanField(default=False)
 
     def __str__(self):
         return self.image.url

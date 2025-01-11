@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import CountryCard from '$lib/components/CountryCard.svelte';
 	import type { Country } from '$lib/types';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
+	import { MapLibre, Marker } from 'svelte-maplibre';
 
 	export let data: PageData;
 	console.log(data);
@@ -12,6 +14,7 @@
 	let filteredCountries: Country[] = [];
 	const allCountries: Country[] = data.props?.countries || [];
 	let worldSubregions: string[] = [];
+	let showMap: boolean = false;
 
 	worldSubregions = [...new Set(allCountries.map((country) => country.subregion))];
 	// remove blank subregions
@@ -96,6 +99,16 @@
 			<option value={subregion}>{subregion}</option>
 		{/each}
 	</select>
+	<!-- borderd checkbox -->
+	<div class="flex items-center justify-center ml-4">
+		<input
+			type="checkbox"
+			class="checkbox checkbox-bordered"
+			bind:checked={showMap}
+			aria-label={$t('adventures.show_map')}
+		/>
+		<span class="ml-2">{$t('adventures.show_map')}</span>
+	</div>
 </div>
 
 <div class="flex items-center justify-center mb-4">
@@ -114,6 +127,33 @@
 		</div>
 	{/if}
 </div>
+
+{#if showMap}
+	<div class="mt-4 mb-4 flex justify-center">
+		<!-- checkbox to toggle marker -->
+
+		<MapLibre
+			style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+			class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
+			standardControls
+			zoom={2}
+		>
+			{#each filteredCountries as country}
+				{#if country.latitude && country.longitude}
+					<Marker
+						lngLat={[country.longitude, country.latitude]}
+						class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 bg-green-200 text-black focus:outline-6 focus:outline-black"
+						on:click={() => goto(`/worldtravel/${country.country_code}`)}
+					>
+						<span class="text-xs">
+							{country.name}
+						</span>
+					</Marker>
+				{/if}
+			{/each}
+		</MapLibre>
+	</div>
+{/if}
 
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each filteredCountries as country}

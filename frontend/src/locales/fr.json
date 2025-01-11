@@ -195,7 +195,29 @@
     "emoji_picker": "Sélecteur d'émoticônes",
     "hide": "Cacher",
     "show": "Montrer",
-    "download_calendar": "Télécharger le calendrier"
+    "download_calendar": "Télécharger le calendrier",
+    "md_instructions": "Écrivez votre démarque ici...",
+    "preview": "Aperçu",
+    "checklist_delete_confirm": "Êtes-vous sûr de vouloir supprimer cette liste de contrôle ? \nCette action ne peut pas être annulée.",
+    "clear_location": "Effacer l'emplacement",
+    "date_information": "Informations sur les dates",
+    "delete_checklist": "Supprimer la liste de contrôle",
+    "delete_note": "Supprimer la note",
+    "delete_transportation": "Supprimer le transport",
+    "end": "Fin",
+    "ending_airport": "Aéroport de fin",
+    "flight_information": "Informations sur le vol",
+    "from": "Depuis",
+    "no_location_found": "Aucun emplacement trouvé",
+    "note_delete_confirm": "Êtes-vous sûr de vouloir supprimer cette note ? \nCette action ne peut pas être annulée.",
+    "out_of_range": "Pas dans la plage de dates de l'itinéraire",
+    "show_region_labels": "Afficher les étiquettes de région",
+    "start": "Commencer",
+    "starting_airport": "Aéroport de départ",
+    "to": "À",
+    "transportation_delete_confirm": "Etes-vous sûr de vouloir supprimer ce transport ? \nCette action ne peut pas être annulée.",
+    "show_map": "Afficher la carte",
+    "will_be_marked": "sera marqué comme visité une fois l’aventure sauvegardée."
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -362,7 +384,9 @@
     "item_cannot_be_empty": "L'élément ne peut pas être vide",
     "items": "Articles",
     "new_item": "Nouvel article",
-    "save": "Sauvegarder"
+    "save": "Sauvegarder",
+    "checklist_viewer": "Visionneuse de liste de contrôle",
+    "new_checklist": "Nouvelle liste de contrôle"
   },
   "collection": {
     "collection_created": "Collection créée avec succès !",
@@ -371,7 +395,8 @@
     "edit_collection": "Modifier la collection",
     "error_creating_collection": "Erreur lors de la création de la collection",
     "error_editing_collection": "Erreur lors de la modification de la collection",
-    "new_collection": "Nouvelle collection"
+    "new_collection": "Nouvelle collection",
+    "public_collection": "Collection publique"
   },
   "notes": {
     "add_a_link": "Ajouter un lien",
@@ -384,7 +409,8 @@
     "note_public": "Cette note est publique car elle fait partie d'une collection publique.",
     "open": "Ouvrir",
     "save": "Sauvegarder",
-    "invalid_url": "URL invalide"
+    "invalid_url": "URL invalide",
+    "note_viewer": "Visionneuse de notes"
   },
   "transportation": {
     "date_time": "Date de début",
@@ -430,17 +456,7 @@
     "show_visited_regions": "Afficher les régions visitées",
     "view_details": "Afficher les détails"
   },
-  "languages": {
-    "de": "Allemand",
-    "en": "Anglais",
-    "es": "Espagnol",
-    "fr": "Français",
-    "it": "italien",
-    "nl": "Néerlandais",
-    "sv": "suédois",
-    "zh": "Chinois",
-    "pl": "Polonais"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Aucun utilisateur partagé avec",
     "not_shared_with": "Non partagé avec",
@@ -476,5 +492,30 @@
     "total_adventures": "Aventures totales",
     "total_visited_regions": "Total des régions visitées",
     "welcome_back": "Content de te revoir"
+  },
+  "immich": {
+    "api_key": "Clé API Immich",
+    "api_note": "Remarque : il doit s'agir de l'URL du serveur API Immich, elle se termine donc probablement par /api, sauf si vous disposez d'une configuration personnalisée.",
+    "disable": "Désactiver",
+    "enable_immich": "Activer Immich",
+    "imageid_required": "L'identifiant de l'image est requis",
+    "immich": "Immich",
+    "immich_desc": "Intégrez votre compte Immich à AdventureLog pour vous permettre de rechercher dans votre bibliothèque de photos et d'importer des photos pour vos aventures.",
+    "immich_disabled": "Intégration Immich désactivée avec succès !",
+    "immich_enabled": "Intégration Immich activée avec succès !",
+    "immich_error": "Erreur lors de la mise à jour de l'intégration Immich",
+    "immich_integration": "Intégration Immich",
+    "immich_updated": "Paramètres Immich mis à jour avec succès !",
+    "integration_enabled": "Intégration activée",
+    "integration_fetch_error": "Erreur lors de la récupération des données de l'intégration Immich",
+    "integration_missing": "L'intégration Immich est absente du backend",
+    "load_more": "Charger plus",
+    "no_items_found": "Aucun article trouvé",
+    "query_required": "La requête est obligatoire",
+    "server_down": "Le serveur Immich est actuellement en panne ou inaccessible",
+    "server_url": "URL du serveur Immich",
+    "update_integration": "Intégration des mises à jour",
+    "documentation": "Documentation d'intégration Immich",
+    "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine."
   }
 }

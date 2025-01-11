@@ -24,7 +24,11 @@
 		});
 		if (res.ok) {
 			sharedWithUsers = sharedWithUsers.concat(user);
-			collection.shared_with.push(user.uuid);
+			if (collection.shared_with) {
+				collection.shared_with.push(user.uuid);
+			} else {
+				collection.shared_with = [user.uuid];
+			}
 			notSharedWithUsers = notSharedWithUsers.filter((u) => u.uuid !== user.uuid);
 			addToast(
 				'success',
@@ -42,7 +46,9 @@
 		});
 		if (res.ok) {
 			notSharedWithUsers = notSharedWithUsers.concat(user);
-			collection.shared_with = collection.shared_with.filter((u) => u !== user.uuid);
+			if (collection.shared_with) {
+				collection.shared_with = collection.shared_with.filter((u) => u !== user.uuid);
+			}
 			sharedWithUsers = sharedWithUsers.filter((u) => u.uuid !== user.uuid);
 			addToast(
 				'success',
@@ -60,8 +66,12 @@
 		if (res.ok) {
 			let data = await res.json();
 			allUsers = data;
-			sharedWithUsers = allUsers.filter((user) => collection.shared_with.includes(user.uuid));
-			notSharedWithUsers = allUsers.filter((user) => !collection.shared_with.includes(user.uuid));
+			sharedWithUsers = allUsers.filter((user) =>
+				(collection.shared_with ?? []).includes(user.uuid)
+			);
+			notSharedWithUsers = allUsers.filter(
+				(user) => !(collection.shared_with ?? []).includes(user.uuid)
+			);
 			console.log(sharedWithUsers);
 			console.log(notSharedWithUsers);
 		}

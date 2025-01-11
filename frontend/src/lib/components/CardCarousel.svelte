@@ -9,13 +9,30 @@
 	let image_url: string | null = null;
 
 	$: adventure_images = adventures.flatMap((adventure) =>
-		adventure.images.map((image) => ({ image: image.image, adventure: adventure }))
+		adventure.images.map((image) => ({
+			image: image.image,
+			adventure: adventure,
+			is_primary: image.is_primary
+		}))
 	);
 
 	$: {
 		if (adventure_images.length > 0) {
 			currentSlide = 0;
 		}
+	}
+
+	$: {
+		// sort so that any image in adventure_images .is_primary is first
+		adventure_images.sort((a, b) => {
+			if (a.is_primary && !b.is_primary) {
+				return -1;
+			} else if (!a.is_primary && b.is_primary) {
+				return 1;
+			} else {
+				return 0;
+			}
+		});
 	}
 
 	function changeSlide(direction: string) {

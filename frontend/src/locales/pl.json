@@ -242,7 +242,29 @@
     "emoji_picker": "Wybór emoji",
     "hide": "Ukrywać",
     "show": "Pokazywać",
-    "download_calendar": "Pobierz Kalendarz"
+    "download_calendar": "Pobierz Kalendarz",
+    "md_instructions": "Napisz tutaj swoją przecenę...",
+    "preview": "Zapowiedź",
+    "checklist_delete_confirm": "Czy na pewno chcesz usunąć tę listę kontrolną? \nTej akcji nie można cofnąć.",
+    "clear_location": "Wyczyść lokalizację",
+    "date_information": "Informacje o dacie",
+    "delete_checklist": "Usuń listę kontrolną",
+    "delete_note": "Usuń notatkę",
+    "delete_transportation": "Usuń transport",
+    "end": "Koniec",
+    "ending_airport": "Kończy się lotnisko",
+    "flight_information": "Informacje o locie",
+    "from": "Z",
+    "no_location_found": "Nie znaleziono lokalizacji",
+    "note_delete_confirm": "Czy na pewno chcesz usunąć tę notatkę? \nTej akcji nie można cofnąć.",
+    "out_of_range": "Nie mieści się w zakresie dat planu podróży",
+    "show_region_labels": "Pokaż etykiety regionów",
+    "start": "Start",
+    "starting_airport": "Początkowe lotnisko",
+    "to": "Do",
+    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć.",
+    "show_map": "Pokaż mapę",
+    "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody."
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -356,7 +378,8 @@
     "create": "Utwórz",
     "collection_edit_success": "Kolekcja została pomyślnie edytowana!",
     "error_editing_collection": "Błąd podczas edytowania kolekcji",
-    "edit_collection": "Edytuj kolekcję"
+    "edit_collection": "Edytuj kolekcję",
+    "public_collection": "Kolekcja publiczna"
   },
   "notes": {
     "note_deleted": "Notatka została pomyślnie usunięta!",
@@ -369,7 +392,8 @@
     "save": "Zapisz",
     "note_public": "Ta notatka jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "add_a_link": "Dodaj link",
-    "invalid_url": "Nieprawidłowy URL"
+    "invalid_url": "Nieprawidłowy URL",
+    "note_viewer": "Przeglądarka notatek"
   },
   "checklist": {
     "checklist_deleted": "Lista kontrolna została pomyślnie usunięta!",
@@ -384,7 +408,9 @@
     "save": "Zapisz",
     "checklist_public": "Ta lista kontrolna jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "item_cannot_be_empty": "Element nie może być pusty",
-    "item_already_exists": "Element już istnieje"
+    "item_already_exists": "Element już istnieje",
+    "checklist_viewer": "Przeglądarka listy kontrolnej",
+    "new_checklist": "Nowa lista kontrolna"
   },
   "transportation": {
     "transportation_deleted": "Transport został pomyślnie usunięty!",
@@ -442,17 +468,7 @@
     "set_public": "Aby umożliwić użytkownikom udostępnianie Tobie, musisz ustawić swój profil jako publiczny.",
     "go_to_settings": "Przejdź do ustawień"
   },
-  "languages": {
-    "en": "Angielski",
-    "de": "Niemiecki",
-    "es": "Hiszpański",
-    "fr": "Francuski",
-    "it": "Włoski",
-    "nl": "Holenderski",
-    "sv": "Szwedzki",
-    "zh": "Chiński",
-    "pl": "Polski"
-  },
+  "languages": {},
   "profile": {
     "member_since": "Użytkownik od",
     "user_stats": "Statystyki użytkownika",
@@ -476,5 +492,30 @@
     "total_adventures": "Totalne przygody",
     "total_visited_regions": "Łączna liczba odwiedzonych regionów",
     "welcome_back": "Witamy z powrotem"
+  },
+  "immich": {
+    "api_key": "Klucz API Immicha",
+    "api_note": "Uwaga: musi to być adres URL serwera API Immich, więc prawdopodobnie kończy się na /api, chyba że masz niestandardową konfigurację.",
+    "disable": "Wyłączyć",
+    "enable_immich": "Włącz Immicha",
+    "immich": "Immich",
+    "immich_enabled": "Integracja z Immich została pomyślnie włączona!",
+    "immich_error": "Błąd podczas aktualizacji integracji Immich",
+    "immich_integration": "Integracja Immicha",
+    "immich_updated": "Ustawienia Immich zostały pomyślnie zaktualizowane!",
+    "integration_enabled": "Integracja włączona",
+    "integration_fetch_error": "Błąd podczas pobierania danych z integracji Immich",
+    "integration_missing": "W backendie brakuje integracji z Immich",
+    "load_more": "Załaduj więcej",
+    "no_items_found": "Nie znaleziono żadnych elementów",
+    "query_required": "Zapytanie jest wymagane",
+    "server_down": "Serwer Immich jest obecnie wyłączony lub nieosiągalny",
+    "server_url": "Adres URL serwera Immich",
+    "update_integration": "Zaktualizuj integrację",
+    "imageid_required": "Wymagany jest identyfikator obrazu",
+    "immich_desc": "Zintegruj swoje konto Immich z AdventureLog, aby móc przeszukiwać bibliotekę zdjęć i importować zdjęcia do swoich przygód.",
+    "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!",
+    "documentation": "Dokumentacja integracji Immicha",
+    "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny."
   }
 }
