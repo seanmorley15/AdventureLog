@@ -1,4 +1,4 @@
-# Authentik Social Authentication
+# Authentik OIDC Authentication
 
 <img src="https://repository-images.githubusercontent.com/230885748/19f01d00-8e26-11eb-9a14-cf0d28a1b68d" alt="Authentik Logo" width="400" />
 
@@ -47,6 +47,6 @@ This configuration is done in the [Admin Panel](../../guides/admin_panel.md). Yo
 
 ![Authentik Social Auth Configuration](/authentik_settings.png)
 
-4. Save the configuration and restart the AdventureLog server.
+4. Save the configuration.
 
 Ensure that the Authentik server is running and accessible by AdventureLog. Users should now be able to log in to AdventureLog using their Authentik account.

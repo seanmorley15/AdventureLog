@@ -92,7 +92,7 @@ export default defineConfig({
             link: "/docs/configuration/immich_integration",
           },
           {
-            text: "Social Auth",
+            text: "Social Auth and OIDC",
             link: "/docs/configuration/social_auth",
           },
           {
