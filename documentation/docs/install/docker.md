@@ -37,6 +37,7 @@ Here is a summary of the configuration options available in the `docker-compose.
 | `PGDATABASE`            | Yes      | Database.                                                                                                                                     | database              |
 | `PGUSER`                | Yes      | Database user.                                                                                                                                | adventure             |
 | `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | changeme123           |
+| `PGPORT`                | No      | Database port.             | 5432           |
 | `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | admin                 |
 | `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after inital login.                                                                                                  | admin                 |
 | `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | admin@example.com     |
