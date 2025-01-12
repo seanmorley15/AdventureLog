@@ -228,6 +228,37 @@
 		}
 	}
 
+	async function handleMultipleFiles(event: Event) {
+		const files = (event.target as HTMLInputElement).files;
+		if (files) {
+			for (const file of files) {
+				await uploadImage(file);
+			}
+		}
+	}
+
+	async function uploadImage(file: File) {
+		let formData = new FormData();
+		formData.append('image', file);
+		formData.append('adventure', adventure.id);
+
+		let res = await fetch(`/adventures?/image`, {
+			method: 'POST',
+			body: formData
+		});
+		if (res.ok) {
+			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
+			console.log(newData);
+			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+			console.log(newImage);
+			images = [...images, newImage];
+			adventure.images = images;
+			addToast('success', $t('adventures.image_upload_success'));
+		} else {
+			addToast('error', $t('adventures.image_upload_error'));
+		}
+	}
+
 	async function fetchImage() {
 		try {
 			let res = await fetch(url);
@@ -241,39 +272,10 @@
 			formData.append('image', file);
 			formData.append('adventure', adventure.id);
 
-			let res2 = await fetch(`/adventures?/image`, {
-				method: 'POST',
-				body: formData
-			});
-			let data2 = await res2.json();
-
-			if (data2.type === 'success') {
-				console.log('Response Data:', data2);
-
-				// Deserialize the nested data
-				let rawData = JSON.parse(data2.data); // Parse the data field
-				console.log('Deserialized Data:', rawData);
-
-				// Assuming the first object in the array is the new image
-				let newImage = {
-					id: rawData[1],
-					image: rawData[2], // This is the URL for the image
-					is_primary: false
-				};
-				console.log('New Image:', newImage);
-
-				// Update images and adventure
-				images = [...images, newImage];
-				adventure.images = images;
-
-				addToast('success', $t('adventures.image_upload_success'));
-				url = '';
-			} else {
-				addToast('error', $t('adventures.image_upload_error'));
-			}
-		} catch (error) {
-			console.error('Error in fetchImage:', error);
-			addToast('error', $t('adventures.image_upload_error'));
+			await uploadImage(file);
+			url = '';
+		} catch (e) {
+			imageError = $t('adventures.image_fetch_failed');
 		}
 	}
 
@@ -830,7 +832,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 											{$t('adventures.mark_visited')}
 										</button>
 									{/if}
-									{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && willBeMarkedVisited)}
+									{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited)}
 										<div role="alert" class="alert alert-info mt-2">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
@@ -1057,11 +1059,13 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						bind:this={fileInput}
 						accept="image/*"
 						id="image"
+						multiple
+						on:change={handleMultipleFiles}
 					/>
 					<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-					<button class="btn btn-neutral w-full max-w-sm" type="submit">
+					<!-- <button class="btn btn-neutral w-full max-w-sm" type="submit">
 						{$t('adventures.upload_image')}
-					</button>
+					</button> -->
 				</form>
 			</div>
 
