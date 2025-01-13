@@ -40,8 +40,9 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('--force', action='store_true', help='Force download the countries+regions+states.json file')
 
-    def handle(self, *args, **options):
+    def handle(self, **options):
         force = options['force']
+        batch_size = 1000
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path) or force:
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
@@ -112,7 +113,7 @@ class Command(BaseCommand):
                     countries_to_create.append(country_obj)
 
                 saveCountryFlag(country_code)
-                self.stdout.write(self.style.SUCCESS(f'Country {country_name} prepared'))
+                # self.stdout.write(self.style.SUCCESS(f'Country {country_name} prepared'))
 
                 if country['states']:
                     for state in country['states']:
@@ -144,7 +145,7 @@ class Command(BaseCommand):
                                 latitude=latitude
                             )
                             regions_to_create.append(region_obj)
-                        self.stdout.write(self.style.SUCCESS(f'State {state_id} prepared'))
+                        # self.stdout.write(self.style.SUCCESS(f'State {state_id} prepared'))
 
                         if 'cities' in state and len(state['cities']) > 0:
                             for city in state['cities']:
@@ -176,7 +177,7 @@ class Command(BaseCommand):
                                         latitude=latitude
                                     )
                                     cities_to_create.append(city_obj)
-                                self.stdout.write(self.style.SUCCESS(f'City {city_id} prepared'))
+                                # self.stdout.write(self.style.SUCCESS(f'City {city_id} prepared'))
 
                 else:
                     state_id = f"{country_code}-00"
@@ -193,16 +194,38 @@ class Command(BaseCommand):
                             country=country_obj
                         )
                         regions_to_create.append(region_obj)
-                    self.stdout.write(self.style.SUCCESS(f'Region {state_id} prepared for {country_name}'))
+                    # self.stdout.write(self.style.SUCCESS(f'Region {state_id} prepared for {country_name}'))
+            # Process in batches
+            for i in range(0, len(countries_to_create), batch_size):
+                batch = countries_to_create[i:i + batch_size]
+                Country.objects.bulk_create(batch)
+                self.stdout.write(self.style.SUCCESS(f'Processed countries batch {i//batch_size + 1}/{(len(countries_to_create)-1)//batch_size + 1}'))
 
-            # Bulk create new countries and regions
-            Country.objects.bulk_create(countries_to_create)
-            Region.objects.bulk_create(regions_to_create)
-            City.objects.bulk_create(cities_to_create)
+            for i in range(0, len(regions_to_create), batch_size):
+                batch = regions_to_create[i:i + batch_size]
+                Region.objects.bulk_create(batch)
+                self.stdout.write(self.style.SUCCESS(f'Processed regions batch {i//batch_size + 1}/{(len(regions_to_create)-1)//batch_size + 1}'))
 
-            # Bulk update existing countries and regions
-            Country.objects.bulk_update(countries_to_update, ['name', 'subregion', 'capital'])
-            Region.objects.bulk_update(regions_to_update, ['name', 'country', 'longitude', 'latitude'])
+            for i in range(0, len(cities_to_create), batch_size):
+                batch = cities_to_create[i:i + batch_size]
+                City.objects.bulk_create(batch)
+                self.stdout.write(self.style.SUCCESS(f'Processed cities batch {i//batch_size + 1}/{(len(cities_to_create)-1)//batch_size + 1}'))
+
+            # Process updates in batches
+            for i in range(0, len(countries_to_update), batch_size):
+                batch = countries_to_update[i:i + batch_size]
+                Country.objects.bulk_update(batch, ['name', 'subregion', 'capital'])
+                self.stdout.write(self.style.SUCCESS(f'Updated countries batch {i//batch_size + 1}/{(len(countries_to_update)-1)//batch_size + 1}'))
+
+            for i in range(0, len(regions_to_update), batch_size):
+                batch = regions_to_update[i:i + batch_size]
+                Region.objects.bulk_update(batch, ['name', 'country', 'longitude', 'latitude'])
+                self.stdout.write(self.style.SUCCESS(f'Updated regions batch {i//batch_size + 1}/{(len(regions_to_update)-1)//batch_size + 1}'))
+
+            for i in range(0, len(cities_to_update), batch_size):
+                batch = cities_to_update[i:i + batch_size]
+                City.objects.bulk_update(batch, ['name', 'region', 'longitude', 'latitude'])
+                self.stdout.write(self.style.SUCCESS(f'Updated cities batch {i//batch_size + 1}/{(len(cities_to_update)-1)//batch_size + 1}'))
             City.objects.bulk_update(cities_to_update, ['name', 'region', 'longitude', 'latitude'])
 
             # Delete countries and regions that are no longer in the data
