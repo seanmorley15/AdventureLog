@@ -19,3 +19,4 @@ django-widget-tweaks==1.5.0
 django-ical==1.9.2
 icalendar==6.1.0
 ijson==3.3.0
+psutil==6.1.1
