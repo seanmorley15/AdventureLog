@@ -103,19 +103,39 @@ export const actions: Actions = {
 	}
 };
 
-function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
+function handleSuccessfulLogin(event: RequestEvent, response: Response) {
 	const setCookieHeader = response.headers.get('Set-Cookie');
 	if (setCookieHeader) {
 		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
 		const match = setCookieHeader.match(sessionIdRegex);
 		if (match) {
 			const [, sessionId, expiryString] = match;
+
+			// Get the proper cookie domain
+			const hostname = event.url.hostname;
+			const domainParts = hostname.split('.');
+			let cookieDomain: string | undefined = undefined;
+
+			if (domainParts.length > 2) {
+				// For subdomains like app.mydomain.com -> .mydomain.com
+				cookieDomain = '.' + domainParts.slice(-2).join('.');
+			} else if (domainParts.length === 2) {
+				// For root domains like mydomain.com -> .mydomain.com
+				cookieDomain = '.' + hostname;
+			} else {
+				// For localhost or single-part domains (e.g., "localhost")
+				cookieDomain = undefined; // Do not set the domain
+			}
+
+			console.log('Setting sessionid cookie with domain:', cookieDomain);
+
 			event.cookies.set('sessionid', sessionId, {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
 				secure: event.url.protocol === 'https:',
-				expires: new Date(expiryString)
+				expires: new Date(expiryString),
+				domain: cookieDomain // Set the domain dynamically
 			});
 		}
 	}
