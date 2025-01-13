@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         force = options['force']
-        batch_size = 250
+        batch_size = 100
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path) or force:
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
