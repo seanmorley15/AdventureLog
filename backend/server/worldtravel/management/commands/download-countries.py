@@ -3,12 +3,12 @@ from django.core.management.base import BaseCommand
 import requests
 from worldtravel.models import Country, Region, City
 from django.db import transaction
-import json
+import ijson
 
 from django.conf import settings
 
 COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
-        
+
 media_root = settings.MEDIA_ROOT
 
 def saveCountryFlag(country_code):
@@ -64,10 +64,10 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
             return
             
-        with open(countries_json_path, 'r') as f:
-            data = json.load(f)
-
         with transaction.atomic():
+            # Process data in chunks using ijson
+            f = open(countries_json_path, 'rb')
+            parser = ijson.items(f, 'item')
             existing_countries = {country.country_code: country for country in Country.objects.all()}
             existing_regions = {region.id: region for region in Region.objects.all()}
             existing_cities = {city.id: city for city in City.objects.all()}
@@ -83,7 +83,7 @@ class Command(BaseCommand):
             processed_region_ids = set()
             processed_city_ids = set()
 
-            for country in data:
+            for country in parser:
                 country_code = country['iso2']
                 country_name = country['name']
                 country_subregion = country['subregion']
