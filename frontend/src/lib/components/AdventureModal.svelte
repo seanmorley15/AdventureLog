@@ -832,7 +832,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 											{$t('adventures.mark_visited')}
 										</button>
 									{/if}
-									{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited)}
+									{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited && reverseGeocodePlace.city_id)}
 										<div role="alert" class="alert alert-info mt-2">
 											<svg
 												xmlns="http://www.w3.org/2000/svg"
