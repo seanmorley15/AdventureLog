@@ -48,6 +48,7 @@ class Command(BaseCommand):
             if res.status_code == 200:
                 with open(countries_json_path, 'w') as f:
                     f.write(res.text)
+                    self.stdout.write(self.style.SUCCESS('countries+regions+states.json downloaded successfully'))
             else:
                 self.stdout.write(self.style.ERROR('Error downloading countries+regions+states.json'))
                 return
@@ -56,6 +57,8 @@ class Command(BaseCommand):
             return
         elif os.path.getsize(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
+        elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
+            self.stdout.write(self.style.WARNING('Some region data is missing. Re-importing all data.'))
         else:
             self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
             return

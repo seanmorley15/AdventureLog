@@ -561,8 +561,8 @@
 			}
 		}
 		if (
-			(adventure.is_visited && !reverseGeocodePlace?.region_visited) ||
-			!reverseGeocodePlace?.city_visited
+			adventure.is_visited &&
+			(!reverseGeocodePlace?.region_visited || !reverseGeocodePlace?.city_visited)
 		) {
 			markVisited();
 		}
