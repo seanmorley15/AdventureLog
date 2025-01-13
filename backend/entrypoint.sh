@@ -53,7 +53,12 @@ fi
 
 
 # Sync the countries and world travel regions
+# Sync the countries and world travel regions
 python manage.py download-countries
+if [ $? -eq 137 ]; then
+  >&2 echo "WARNING: The download-countries command was interrupted. This is likely due to lack of memory allocated to the container or the host. Please try again with more memory."
+  exit 1
+fi
 
 cat /code/adventurelog.txt
 
