@@ -42,7 +42,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         force = options['force']
-        batch_size = 1000
+        batch_size = 250
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path) or force:
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
@@ -214,7 +214,7 @@ class Command(BaseCommand):
             # Process updates in batches
             for i in range(0, len(countries_to_update), batch_size):
                 batch = countries_to_update[i:i + batch_size]
-                Country.objects.bulk_update(batch, ['name', 'subregion', 'capital'])
+                Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude'])
                 self.stdout.write(self.style.SUCCESS(f'Updated countries batch {i//batch_size + 1}/{(len(countries_to_update)-1)//batch_size + 1}'))
 
             for i in range(0, len(regions_to_update), batch_size):
@@ -226,7 +226,6 @@ class Command(BaseCommand):
                 batch = cities_to_update[i:i + batch_size]
                 City.objects.bulk_update(batch, ['name', 'region', 'longitude', 'latitude'])
                 self.stdout.write(self.style.SUCCESS(f'Updated cities batch {i//batch_size + 1}/{(len(cities_to_update)-1)//batch_size + 1}'))
-            City.objects.bulk_update(cities_to_update, ['name', 'region', 'longitude', 'latitude'])
 
             # Delete countries and regions that are no longer in the data
             Country.objects.exclude(country_code__in=processed_country_codes).delete()
