@@ -20,5 +20,5 @@ docker exec -it <container> bash
 Once you are in the container run the following command to resync the region data.
 
 ```bash
-python manage.py download-countries
+python manage.py download-countries --force
 ```

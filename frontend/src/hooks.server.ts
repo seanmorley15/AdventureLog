@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const authHook: Handle = async ({ event, resolve }) => {
+	event.cookies.delete('csrftoken', { path: '/' });
 	try {
 		let sessionid = event.cookies.get('sessionid');
 

@@ -284,7 +284,8 @@
     "email_required": "E-Mail ist erforderlich",
     "both_passwords_required": "Beide Passwörter sind erforderlich",
     "new_password": "Neues Passwort",
-    "reset_failed": "Passwort konnte nicht zurückgesetzt werden"
+    "reset_failed": "Passwort konnte nicht zurückgesetzt werden",
+    "or_3rd_party": "Oder melden Sie sich bei einem Drittanbieter an"
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichen Profilen gefunden."
@@ -298,7 +299,20 @@
     "no_countries_found": "Keine Länder gefunden",
     "not_visited": "Nicht besucht",
     "num_countries": "Länder gefunden",
-    "partially_visited": "Teilweise besucht"
+    "partially_visited": "Teilweise besucht",
+    "all_visited": "Sie haben alle Regionen in besucht",
+    "cities": "Städte",
+    "failed_to_mark_visit": "Der Besuch konnte nicht markiert werden",
+    "failed_to_remove_visit": "Der Besuch von konnte nicht entfernt werden",
+    "marked_visited": "als besucht markiert",
+    "no_cities_found": "Keine Städte gefunden",
+    "region_failed_visited": "Die Region konnte nicht als besucht markiert werden",
+    "region_stats": "Regionsstatistiken",
+    "regions_in": "Regionen in",
+    "removed": "ENTFERNT",
+    "view_cities": "Städte anzeigen",
+    "visit_remove_failed": "Der Besuch konnte nicht entfernt werden",
+    "visit_to": "Besuch bei"
   },
   "settings": {
     "account_settings": "Benutzerkontoeinstellungen",
@@ -369,7 +383,17 @@
     "csrf_failed": "CSRF-Token konnte nicht abgerufen werden",
     "duplicate_email": "Diese E-Mail-Adresse wird bereits verwendet.",
     "email_taken": "Diese E-Mail-Adresse wird bereits verwendet.",
-    "username_taken": "Dieser Benutzername wird bereits verwendet."
+    "username_taken": "Dieser Benutzername wird bereits verwendet.",
+    "administration_settings": "Verwaltungseinstellungen",
+    "documentation_link": "Dokumentationslink",
+    "launch_account_connections": "Kontoverbindungen starten",
+    "launch_administration_panel": "Starten Sie das Administrationspanel",
+    "no_verified_email_warning": "Sie müssen über eine verifizierte E-Mail-Adresse verfügen, um die Zwei-Faktor-Authentifizierung zu aktivieren.",
+    "social_auth_desc": "Aktivieren oder deaktivieren Sie soziale und OIDC-Authentifizierungsanbieter für Ihr Konto. \nMit diesen Verbindungen können Sie sich bei selbst gehosteten Authentifizierungsidentitätsanbietern wie Authentik oder Drittanbietern wie GitHub anmelden.",
+    "social_auth_desc_2": "Diese Einstellungen werden auf dem AdventureLog-Server verwaltet und müssen vom Administrator manuell aktiviert werden.",
+    "social_oidc_auth": "Soziale und OIDC-Authentifizierung",
+    "add_email": "E-Mail hinzufügen",
+    "password_too_short": "Das Passwort muss mindestens 6 Zeichen lang sein"
   },
   "checklist": {
     "add_item": "Artikel hinzufügen",

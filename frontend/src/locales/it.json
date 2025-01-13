@@ -284,7 +284,8 @@
     "email_required": "L'e-mail è obbligatoria",
     "both_passwords_required": "Sono necessarie entrambe le password",
     "new_password": "Nuova parola d'ordine",
-    "reset_failed": "Impossibile reimpostare la password"
+    "reset_failed": "Impossibile reimpostare la password",
+    "or_3rd_party": "Oppure accedi con un servizio di terze parti"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -298,7 +299,20 @@
     "no_countries_found": "Nessun paese trovato",
     "not_visited": "Non visitato",
     "num_countries": "paesi trovati",
-    "partially_visited": "Parzialmente visitato"
+    "partially_visited": "Parzialmente visitato",
+    "all_visited": "Hai visitato tutte le regioni in",
+    "cities": "città",
+    "failed_to_mark_visit": "Impossibile contrassegnare la visita a",
+    "failed_to_remove_visit": "Impossibile rimuovere la visita a",
+    "marked_visited": "contrassegnato come visitato",
+    "no_cities_found": "Nessuna città trovata",
+    "region_failed_visited": "Impossibile contrassegnare la regione come visitata",
+    "region_stats": "Statistiche della regione",
+    "regions_in": "Regioni dentro",
+    "removed": "RIMOSSO",
+    "view_cities": "Visualizza città",
+    "visit_remove_failed": "Impossibile rimuovere la visita",
+    "visit_to": "Visita a"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",
@@ -369,7 +383,17 @@
     "csrf_failed": "Impossibile recuperare il token CSRF",
     "duplicate_email": "Questo indirizzo email è già in uso.",
     "email_taken": "Questo indirizzo email è già in uso.",
-    "username_taken": "Questo nome utente è già in uso."
+    "username_taken": "Questo nome utente è già in uso.",
+    "administration_settings": "Impostazioni di amministrazione",
+    "documentation_link": "Collegamento alla documentazione",
+    "launch_account_connections": "Avvia Connessioni account",
+    "launch_administration_panel": "Avvia il pannello di amministrazione",
+    "no_verified_email_warning": "È necessario disporre di un indirizzo e-mail verificato per abilitare l'autenticazione a due fattori.",
+    "social_auth_desc": "Abilita o disabilita i provider di autenticazione social e OIDC per il tuo account. \nQueste connessioni ti consentono di accedere con provider di identità di autenticazione self-hosted come Authentik o provider di terze parti come GitHub.",
+    "social_auth_desc_2": "Queste impostazioni sono gestite nel server AdventureLog e devono essere abilitate manualmente dall'amministratore.",
+    "social_oidc_auth": "Autenticazione sociale e OIDC",
+    "add_email": "Aggiungi e-mail",
+    "password_too_short": "La password deve contenere almeno 6 caratteri"
   },
   "checklist": {
     "add_item": "Aggiungi articolo",

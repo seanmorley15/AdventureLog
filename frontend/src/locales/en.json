@@ -275,7 +275,20 @@
 		"completely_visited": "Completely Visited",
 		"all_subregions": "All Subregions",
 		"clear_search": "Clear Search",
-		"no_countries_found": "No countries found"
+		"no_countries_found": "No countries found",
+		"view_cities": "View Cities",
+		"no_cities_found": "No cities found",
+		"visit_to": "Visit to",
+		"region_failed_visited": "Failed to mark region as visited",
+		"failed_to_mark_visit": "Failed to mark visit to",
+		"visit_remove_failed": "Failed to remove visit",
+		"removed": "removed",
+		"failed_to_remove_visit": "Failed to remove visit to",
+		"marked_visited": "marked as visited",
+		"regions_in": "Regions in",
+		"region_stats": "Region Stats",
+		"all_visited": "You've visited all regions in",
+		"cities": "cities"
 	},
 	"auth": {
 		"username": "Username",
@@ -295,7 +308,8 @@
 		"email_required": "Email is required",
 		"new_password": "New Password (6+ characters)",
 		"both_passwords_required": "Both passwords are required",
-		"reset_failed": "Failed to reset password"
+		"reset_failed": "Failed to reset password",
+		"or_3rd_party": "Or login with a third-party service"
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles."
@@ -306,6 +320,7 @@
 		"settings_page": "Settings Page",
 		"account_settings": "User Account Settings",
 		"update": "Update",
+		"no_verified_email_warning": "You must have a verified email address to enable two-factor authentication.",
 		"password_change": "Change Password",
 		"new_password": "New Password",
 		"confirm_new_password": "Confirm New Password",
@@ -369,7 +384,16 @@
 		"duplicate_email": "This email address is already in use.",
 		"csrf_failed": "Failed to fetch CSRF token",
 		"email_taken": "This email address is already in use.",
-		"username_taken": "This username is already in use."
+		"username_taken": "This username is already in use.",
+		"administration_settings": "Administration Settings",
+		"launch_administration_panel": "Launch Administration Panel",
+		"social_oidc_auth": "Social and OIDC Authentication",
+		"social_auth_desc": "Enable or disable social and OIDC authentication providers for your account. These connections allow you to sign in with self hosted authentication identity providers like Authentik or 3rd party providers like GitHub.",
+		"social_auth_desc_2": "These settings are managed in the AdventureLog server and must be manually enabled by the administrator.",
+		"documentation_link": "Documentation Link",
+		"launch_account_connections": "Launch Account Connections",
+		"password_too_short": "Password must be at least 6 characters",
+		"add_email": "Add Email"
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

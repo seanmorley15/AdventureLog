@@ -284,7 +284,8 @@
     "email_required": "L'e-mail est requis",
     "both_passwords_required": "Les deux mots de passe sont requis",
     "new_password": "Nouveau mot de passe",
-    "reset_failed": "Échec de la réinitialisation du mot de passe"
+    "reset_failed": "Échec de la réinitialisation du mot de passe",
+    "or_3rd_party": "Ou connectez-vous avec un service tiers"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec des profils publics."
@@ -298,7 +299,20 @@
     "no_countries_found": "Aucun pays trouvé",
     "not_visited": "Non visité",
     "num_countries": "pays trouvés",
-    "partially_visited": "Partiellement visité"
+    "partially_visited": "Partiellement visité",
+    "all_visited": "Vous avez visité toutes les régions de",
+    "cities": "villes",
+    "failed_to_mark_visit": "Échec de la notation de la visite à",
+    "failed_to_remove_visit": "Échec de la suppression de la visite à",
+    "marked_visited": "marqué comme visité",
+    "no_cities_found": "Aucune ville trouvée",
+    "region_failed_visited": "Échec du marquage de la région comme visitée",
+    "region_stats": "Statistiques de la région",
+    "regions_in": "Régions dans",
+    "removed": "supprimé",
+    "view_cities": "Voir les villes",
+    "visit_remove_failed": "Échec de la suppression de la visite",
+    "visit_to": "Visite à"
   },
   "settings": {
     "account_settings": "Paramètres du compte utilisateur",
@@ -369,7 +383,17 @@
     "csrf_failed": "Échec de la récupération du jeton CSRF",
     "duplicate_email": "Cette adresse e-mail est déjà utilisée.",
     "email_taken": "Cette adresse e-mail est déjà utilisée.",
-    "username_taken": "Ce nom d'utilisateur est déjà utilisé."
+    "username_taken": "Ce nom d'utilisateur est déjà utilisé.",
+    "administration_settings": "Paramètres d'administration",
+    "documentation_link": "Lien vers la documentation",
+    "launch_account_connections": "Lancer les connexions au compte",
+    "launch_administration_panel": "Lancer le panneau d'administration",
+    "no_verified_email_warning": "Vous devez disposer d'une adresse e-mail vérifiée pour activer l'authentification à deux facteurs.",
+    "social_auth_desc": "Activez ou désactivez les fournisseurs d'authentification sociale et OIDC pour votre compte. \nCes connexions vous permettent de vous connecter avec des fournisseurs d'identité d'authentification auto-hébergés comme Authentik ou des fournisseurs tiers comme GitHub.",
+    "social_auth_desc_2": "Ces paramètres sont gérés sur le serveur AdventureLog et doivent être activés manuellement par l'administrateur.",
+    "social_oidc_auth": "Authentification sociale et OIDC",
+    "add_email": "Ajouter un e-mail",
+    "password_too_short": "Le mot de passe doit contenir au moins 6 caractères"
   },
   "checklist": {
     "add_item": "Ajouter un article",

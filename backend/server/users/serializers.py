@@ -36,7 +36,7 @@ import os
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
-    User model w/o password
+    User model without exposing the password.
     """
 
     @staticmethod
@@ -49,8 +49,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
         return username
 
     class Meta:
+        model = CustomUser
         extra_fields = ['profile_pic', 'uuid', 'public_profile']
-        profile_pic = serializers.ImageField(required=False)
 
         if hasattr(UserModel, 'USERNAME_FIELD'):
             extra_fields.append(UserModel.USERNAME_FIELD)
@@ -64,19 +64,14 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('date_joined')
         if hasattr(UserModel, 'is_staff'):
             extra_fields.append('is_staff')
-        if hasattr(UserModel, 'public_profile'):
-            extra_fields.append('public_profile')
 
-        class Meta:
-            model = CustomUser
-            fields = ('profile_pic', 'uuid', 'public_profile', 'email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
-
-        model = UserModel
-        fields = ('pk', *extra_fields)
+        fields = ['pk', *extra_fields]
         read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
 
     def handle_public_profile_change(self, instance, validated_data):
-        """Remove user from `shared_with` if public profile is set to False."""
+        """
+        Remove user from `shared_with` if public profile is set to False.
+        """
         if 'public_profile' in validated_data and not validated_data['public_profile']:
             for collection in Collection.objects.filter(shared_with=instance):
                 collection.shared_with.remove(instance)
@@ -91,20 +86,37 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
+    """
+    Custom serializer to add additional fields and logic for the user details.
+    """
 
+    has_password = serializers.SerializerMethodField()
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ('profile_pic', 'uuid', 'public_profile')
-        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid',)
+        fields = UserDetailsSerializer.Meta.fields + ['profile_pic', 'uuid', 'public_profile', 'has_password']
+        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password')
+
+    @staticmethod
+    def get_has_password(instance):
+        """
+        Computes whether the user has a usable password set.
+        """
+        return instance.has_usable_password()
 
     def to_representation(self, instance):
+        """
+        Customizes the serialized output to modify `profile_pic` URL and add computed fields.
+        """
         representation = super().to_representation(instance)
+
+        # Construct profile picture URL if it exists
         if instance.profile_pic:
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            #print(public_url)
-            # remove any  ' from the url
-            public_url = public_url.replace("'", "")
+            public_url = public_url.replace("'", "")  # Sanitize URL
             representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
-        del representation['pk'] # remove the pk field from the response
+
+        # Remove `pk` field from the response
+        representation.pop('pk', None)
+
         return representation

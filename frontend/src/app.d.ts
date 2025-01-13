@@ -15,6 +15,7 @@ declare global {
 				profile_pic: string | null;
 				uuid: string;
 				public_profile: boolean;
+				has_password: boolean;
 			} | null;
 			locale: string;
 		}

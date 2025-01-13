@@ -66,12 +66,22 @@ export const load: PageServerLoad = async (event) => {
 		immichIntegration = await immichIntegrationsFetch.json();
 	}
 
+	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
+	let publicUrl = '';
+	if (!publicUrlFetch.ok) {
+		return redirect(302, '/');
+	} else {
+		let publicUrlJson = await publicUrlFetch.json();
+		publicUrl = publicUrlJson.PUBLIC_URL;
+	}
+
 	return {
 		props: {
 			user,
 			emails,
 			authenticators,
-			immichIntegration
+			immichIntegration,
+			publicUrl
 		}
 	};
 };
@@ -179,33 +189,57 @@ export const actions: Actions = {
 
 		const password1 = formData.get('password1') as string | null | undefined;
 		const password2 = formData.get('password2') as string | null | undefined;
-		const current_password = formData.get('current_password') as string | null | undefined;
+		let current_password = formData.get('current_password') as string | null | undefined;
 
 		if (password1 !== password2) {
 			return fail(400, { message: 'settings.password_does_not_match' });
 		}
+
 		if (!current_password) {
-			return fail(400, { message: 'settings.password_is_required' });
+			current_password = null;
+		}
+
+		if (password1 && password1?.length < 6) {
+			return fail(400, { message: 'settings.password_too_short' });
 		}
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
-			method: 'POST',
-			headers: {
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				current_password,
-				new_password: password1
-			})
-		});
-		if (!res.ok) {
-			return fail(res.status, { message: 'settings.error_change_password' });
+		if (current_password) {
+			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
+				method: 'POST',
+				headers: {
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'X-CSRFToken': csrfToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					current_password,
+					new_password: password1
+				})
+			});
+			if (!res.ok) {
+				return fail(res.status, { message: 'settings.error_change_password' });
+			}
+			return { success: true };
+		} else {
+			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
+				method: 'POST',
+				headers: {
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'X-CSRFToken': csrfToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					new_password: password1
+				})
+			});
+			if (!res.ok) {
+				console.log('Error:', await res.json());
+				return fail(res.status, { message: 'settings.error_change_password' });
+			}
+			return { success: true };
 		}
-		return { success: true };
 	},
 	changeEmail: async (event) => {
 		if (!event.locals.user) {

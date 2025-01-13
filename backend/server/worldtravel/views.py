@@ -1,6 +1,6 @@
 from django.shortcuts import render
-from .models import Country, Region, VisitedRegion
-from .serializers import CountrySerializer, RegionSerializer, VisitedRegionSerializer
+from .models import Country, Region, VisitedRegion, City, VisitedCity
+from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
@@ -31,6 +31,23 @@ def visits_by_country(request, country_code):
     visits = VisitedRegion.objects.filter(region__country=country, user_id=request.user.id)
 
     serializer = VisitedRegionSerializer(visits, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def cities_by_region(request, region_id):
+    region = get_object_or_404(Region, id=region_id)
+    cities = City.objects.filter(region=region).order_by('name')
+    serializer = CitySerializer(cities, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def visits_by_region(request, region_id):
+    region = get_object_or_404(Region, id=region_id)
+    visits = VisitedCity.objects.filter(city__region=region, user_id=request.user.id)
+
+    serializer = VisitedCitySerializer(visits, many=True)
     return Response(serializer.data)
 
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
@@ -94,3 +111,45 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def destroy(self, request, **kwargs):
+        # delete by region id
+        region = get_object_or_404(Region, id=kwargs['pk'])
+        visited_region = VisitedRegion.objects.filter(user_id=request.user.id, region=region)
+        if visited_region.exists():
+            visited_region.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"error": "Visited region not found."}, status=status.HTTP_404_NOT_FOUND)
+    
+class VisitedCityViewSet(viewsets.ModelViewSet):
+    serializer_class = VisitedCitySerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return VisitedCity.objects.filter(user_id=self.request.user.id)
+    
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        request.data['user_id'] = request.user
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        # if the region is not visited, visit it
+        region = serializer.validated_data['city'].region
+        if not VisitedRegion.objects.filter(user_id=request.user.id, region=region).exists():
+            VisitedRegion.objects.create(user_id=request.user, region=region)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+    
+    def destroy(self, request, **kwargs):
+        # delete by city id
+        city = get_object_or_404(City, id=kwargs['pk'])
+        visited_city = VisitedCity.objects.filter(user_id=request.user.id, city=city)
+        if visited_city.exists():
+            visited_city.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"error": "Visited city not found."}, status=status.HTTP_404_NOT_FOUND)

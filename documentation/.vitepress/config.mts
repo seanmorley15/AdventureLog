@@ -93,6 +93,28 @@ export default defineConfig({
             link: "/docs/configuration/immich_integration",
           },
           {
+            text: "Social Auth and OIDC",
+            link: "/docs/configuration/social_auth",
+          },
+          {
+            text: "Authentication Providers",
+            collapsed: false,
+            items: [
+              {
+                text: "Authentik",
+                link: "/docs/configuration/social_auth/authentik",
+              },
+              {
+                text: "GitHub",
+                link: "/docs/configuration/social_auth/github",
+              },
+              {
+                text: "Open ID Connect",
+                link: "/docs/configuration/social_auth/oidc",
+              },
+            ],
+          },
+          {
             text: "Update App",
             link: "/docs/configuration/updating",
           },

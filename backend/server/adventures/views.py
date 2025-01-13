@@ -8,7 +8,7 @@ from django.db.models.functions import Lower
 from rest_framework.response import Response
 from .models import Adventure, Checklist, Collection, Transportation, Note, AdventureImage, Category
 from django.core.exceptions import PermissionDenied
-from worldtravel.models import VisitedRegion, Region, Country
+from worldtravel.models import VisitedCity, VisitedRegion, Region, Country, City
 from .serializers import AdventureImageSerializer, AdventureSerializer, CategorySerializer, CollectionSerializer, NoteSerializer, TransportationSerializer, ChecklistSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
@@ -20,6 +20,7 @@ from django.contrib.auth import get_user_model
 from icalendar import Calendar, Event, vText, vCalAddress
 from django.http import HttpResponse
 from datetime import datetime
+from django.db.models import Min
 
 User = get_user_model()
 
@@ -44,17 +45,25 @@ class AdventureViewSet(viewsets.ModelViewSet):
         order_direction = self.request.query_params.get('order_direction', 'asc')
         include_collections = self.request.query_params.get('include_collections', 'true')
 
-        valid_order_by = ['name', 'type', 'start_date', 'rating', 'updated_at']
+        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
         if order_by not in valid_order_by:
             order_by = 'name'
 
         if order_direction not in ['asc', 'desc']:
             order_direction = 'asc'
 
+        if order_by == 'date':
+            # order by the earliest visit object associated with the adventure
+            queryset = queryset.annotate(earliest_visit=Min('visits__start_date'))
+            queryset = queryset.filter(earliest_visit__isnull=False)
+            ordering = 'earliest_visit'
         # Apply case-insensitive sorting for the 'name' field
-        if order_by == 'name':
+        elif order_by == 'name':
             queryset = queryset.annotate(lower_name=Lower('name'))
             ordering = 'lower_name'
+        elif order_by == 'rating':
+            queryset = queryset.filter(rating__isnull=False)
+            ordering = 'rating'
         else:
             ordering = order_by
 
@@ -1150,41 +1159,48 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         Returns a dictionary containing the region name, country name, and ISO code if found.
         """
         iso_code = None
-        town = None
-        city = None
-        county = None
+        town_city_or_county = None
         display_name = None
         country_code = None
+        city = None
+
+        # town = None
+        # city = None
+        # county = None
+        
         if 'address' in data.keys():
             keys = data['address'].keys()
             for key in keys:
                 if key.find("ISO") != -1:
                     iso_code = data['address'][key]
             if 'town' in keys:
-                town = data['address']['town']
+                town_city_or_county = data['address']['town']
             if 'county' in keys:
-                county = data['address']['county']
+                town_city_or_county = data['address']['county']
             if 'city' in keys:
-                city = data['address']['city']
+                town_city_or_county = data['address']['city']
         if not iso_code:
             return {"error": "No region found"}
+        
         region = Region.objects.filter(id=iso_code).first()
         visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
-        is_visited = False
+        
+        region_visited = False
+        city_visited = False
         country_code = iso_code[:2]
         
         if region:
-            if city:
-                display_name = f"{city}, {region.name}, {country_code}"
-            elif town:
-                display_name = f"{town}, {region.name}, {country_code}"
-            elif county:
-                display_name = f"{county}, {region.name}, {country_code}"
+            if town_city_or_county:
+                display_name = f"{town_city_or_county}, {region.name}, {country_code}"
+                city = City.objects.filter(name__contains=town_city_or_county, region=region).first()
+                visited_city = VisitedCity.objects.filter(city=city, user_id=self.request.user).first()
 
         if visited_region:
-            is_visited = True
+            region_visited = True
+        if visited_city:
+            city_visited = True
         if region:
-            return {"id": iso_code, "region": region.name, "country": region.country.name, "is_visited": is_visited, "display_name": display_name}
+            return {"region_id": iso_code, "region": region.name, "country": region.country.name, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited}
         return {"error": "No region found"}
 
     @action(detail=False, methods=['get'])

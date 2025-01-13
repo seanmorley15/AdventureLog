@@ -24,7 +24,7 @@
 				visitedRegions = visitedRegions.filter(
 					(visitedRegion) => visitedRegion.region !== region.id
 				);
-				removeVisit(region, visitedRegion.id);
+				removeVisit(region);
 			} else {
 				markVisited(region);
 			}
@@ -32,48 +32,35 @@
 	}
 
 	async function markVisited(region: Region) {
-		let res = await fetch(`/worldtravel?/markVisited`, {
+		let res = await fetch(`/api/visitedregion/`, {
 			method: 'POST',
-			body: JSON.stringify({ regionId: region.id })
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ region: region.id })
 		});
-		if (res.ok) {
-			// visited = true;
-			const result = await res.json();
-			const data = JSON.parse(result.data);
-			if (data[1] !== undefined) {
-				console.log('New adventure created with id:', data[3]);
-				let visit_id = data[3];
-				let region_id = data[5];
-				let user_id = data[4];
-
-				visitedRegions = [
-					...visitedRegions,
-					{
-						id: visit_id,
-						region: region_id,
-						user_id: user_id,
-						longitude: 0,
-						latitude: 0,
-						name: ''
-					}
-				];
-
-				addToast('success', `Visit to ${region.name} marked`);
-			}
-		} else {
+		if (!res.ok) {
 			console.error('Failed to mark region as visited');
-			addToast('error', `Failed to mark visit to ${region.name}`);
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
+			return;
+		} else {
+			visitedRegions = [...visitedRegions, await res.json()];
+			addToast(
+				'success',
+				`${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.marked_visited')}`
+			);
 		}
 	}
-	async function removeVisit(region: Region, visitId: number) {
-		let res = await fetch(`/worldtravel?/removeVisited`, {
-			method: 'POST',
-			body: JSON.stringify({ visitId: visitId })
+	async function removeVisit(region: Region) {
+		let res = await fetch(`/api/visitedregion/${region.id}`, {
+			headers: { 'Content-Type': 'application/json' },
+			method: 'DELETE'
 		});
-		if (res.ok) {
-			addToast('info', `Visit to ${region.name} removed`);
+		if (!res.ok) {
+			console.error($t('worldtravel.region_failed_visited'));
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
+			return;
 		} else {
-			console.error('Failed to remove visit');
+			visitedRegions = visitedRegions.filter((visitedRegion) => visitedRegion.region !== region.id);
+			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 		}
 	}
 
@@ -86,16 +73,16 @@
 	);
 </script>
 
-<h1 class="text-center font-bold text-4xl mb-4">Regions in {country?.name}</h1>
+<h1 class="text-center font-bold text-4xl mb-4">{$t('worldtravel.regions_in')} {country?.name}</h1>
 <div class="flex items-center justify-center mb-4">
 	<div class="stats shadow bg-base-300">
 		<div class="stat">
-			<div class="stat-title">Region Stats</div>
-			<div class="stat-value">{numVisitedRegions}/{numRegions} Visited</div>
+			<div class="stat-title">{$t('worldtravel.region_stats')}</div>
+			<div class="stat-value">{numVisitedRegions}/{numRegions} {$t('adventures.visited')}</div>
 			{#if numRegions === numVisitedRegions}
-				<div class="stat-desc">You've visited all regions in {country?.name} 🎉!</div>
+				<div class="stat-desc">{$t('worldtravel.all_visited')} {country?.name} 🎉!</div>
 			{:else}
-				<div class="stat-desc">Keep exploring!</div>
+				<div class="stat-desc">{$t('adventures.keep_exploring')}</div>
 			{/if}
 		</div>
 	</div>
@@ -110,8 +97,12 @@
 				visitedRegions = [...visitedRegions, e.detail];
 				numVisitedRegions++;
 			}}
-			visit_id={visitedRegions.find((visitedRegion) => visitedRegion.region === region.id)?.id}
-			on:remove={() => numVisitedRegions--}
+			on:remove={() => {
+				visitedRegions = visitedRegions.filter(
+					(visitedRegion) => visitedRegion.region !== region.id
+				);
+				numVisitedRegions--;
+			}}
 		/>
 	{/each}
 </div>

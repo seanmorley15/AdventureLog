@@ -21,3 +21,22 @@ class PrintCookiesMiddleware:
         print(request.COOKIES)
         response = self.get_response(request)
         return response
+    
+# middlewares.py
+
+import os
+from django.http import HttpRequest
+
+class OverrideHostMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request: HttpRequest):
+        # Override the host with the PUBLIC_URL environment variable
+        public_url = os.getenv('PUBLIC_URL', None)
+        if public_url:
+            # Split the public URL to extract the host and port (if available)
+            host = public_url.split("//")[-1].split("/")[0]
+            request.META['HTTP_HOST'] = host  # Override the HTTP_HOST header
+        response = self.get_response(request)
+        return response

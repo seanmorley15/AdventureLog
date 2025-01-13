@@ -9,6 +9,7 @@ export type User = {
 	profile_pic: string | null;
 	uuid: string;
 	public_profile: boolean;
+	has_password: boolean;
 };
 
 export type Adventure = {
@@ -56,16 +57,34 @@ export type Country = {
 };
 
 export type Region = {
-	id: number;
+	id: string;
 	name: string;
-	country: number;
+	country: string;
 	latitude: number;
 	longitude: number;
+	num_cities: number;
+};
+
+export type City = {
+	id: string;
+	name: string;
+	latitude: number | null;
+	longitude: number | null;
+	region: string;
 };
 
 export type VisitedRegion = {
 	id: number;
-	region: number;
+	region: string;
+	user_id: string;
+	longitude: number;
+	latitude: number;
+	name: string;
+};
+
+export type VisitedCity = {
+	id: number;
+	city: string;
 	user_id: string;
 	longitude: number;
 	latitude: number;
@@ -182,11 +201,14 @@ export type Background = {
 };
 
 export type ReverseGeocode = {
-	id: string;
+	region_id: string;
 	region: string;
 	country: string;
-	is_visited: boolean;
+	region_visited: boolean;
+	city_visited: boolean;
 	display_name: string;
+	city: string;
+	city_id: string;
 };
 
 export type Category = {

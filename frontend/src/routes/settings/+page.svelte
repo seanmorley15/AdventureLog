@@ -9,6 +9,7 @@
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import { appTitle, appVersion } from '$lib/config.js';
 	import ImmichLogo from '$lib/assets/immich.svg';
+	import { goto } from '$app/navigation';
 
 	export let data;
 	console.log(data);
@@ -20,7 +21,7 @@
 	}
 
 	let new_email: string = '';
-
+	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 
 	let newImmichIntegration: ImmichIntegration = {
@@ -307,17 +308,19 @@
 		</h2>
 		<div class="bg-neutral p-6 rounded-lg shadow-md">
 			<form method="post" action="?/changePassword" use:enhance class="space-y-6">
-				<div>
-					<label for="current_password" class="text-sm font-medium text-neutral-content"
-						>{$t('settings.current_password')}</label
-					>
-					<input
-						type="password"
-						id="current_password"
-						name="current_password"
-						class="block w-full mt-1 input input-bordered input-primary"
-					/>
-				</div>
+				{#if user.has_password}
+					<div>
+						<label for="current_password" class="text-sm font-medium text-neutral-content"
+							>{$t('settings.current_password')}</label
+						>
+						<input
+							type="password"
+							id="current_password"
+							name="current_password"
+							class="block w-full mt-1 input input-bordered input-primary"
+						/>
+					</div>
+				{/if}
 
 				<div>
 					<label for="password1" class="text-sm font-medium text-neutral-content"
@@ -342,6 +345,11 @@
 						class="block w-full mt-1 input input-bordered input-primary"
 					/>
 				</div>
+				{#if $page.form?.message}
+					<div class="alert alert-warning">
+						{$t($page.form?.message)}
+					</div>
+				{/if}
 
 				<div
 					class="tooltip tooltip-warning"
@@ -391,7 +399,7 @@
 				{/if}
 			</div>
 
-			<form class="mt-4" on:submit={addEmail}>
+			<form class="mt-4" on:submit|preventDefault={addEmail}>
 				<input
 					type="email"
 					id="new_email"
@@ -400,7 +408,7 @@
 					placeholder={$t('settings.new_email')}
 					class="block w-full input input-bordered input-primary"
 				/>
-				<button class="w-full mt-4 btn btn-primary py-2">{$t('settings.email_change')}</button>
+				<button class="w-full mt-4 btn btn-primary py-2">{$t('settings.add_email')}</button>
 			</form>
 		</div>
 	</section>
@@ -413,14 +421,72 @@
 		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
 			{#if !data.props.authenticators}
 				<p class="text-neutral-content">{$t('settings.mfa_not_enabled')}</p>
-				<button class="btn btn-primary mt-4" on:click={() => (isMFAModalOpen = true)}
-					>{$t('settings.enable_mfa')}</button
-				>
+				{#if !emails.some((e) => e.verified)}
+					<div class="alert alert-warning mt-4">
+						{$t('settings.no_verified_email_warning')}
+					</div>
+				{:else}
+					<button class="btn btn-primary mt-4" on:click={() => (isMFAModalOpen = true)}
+						>{$t('settings.enable_mfa')}</button
+					>
+				{/if}
 			{:else}
 				<button class="btn btn-warning mt-4" on:click={disableMfa}
 					>{$t('settings.disable_mfa')}</button
 				>
 			{/if}
+		</div>
+	</section>
+
+	<!-- Admin Settings -->
+	{#if user.is_staff}
+		<section class="space-y-8">
+			<h2 class="text-2xl font-semibold text-center mt-8">
+				{$t('settings.administration_settings')}
+			</h2>
+			<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
+				<a class="btn btn-primary mt-4" href={`${public_url}/admin/`} target="_blank"
+					>{$t('settings.launch_administration_panel')}</a
+				>
+			</div>
+		</section>
+	{/if}
+
+	<!-- Social Auth Settings -->
+	<section class="space-y-8">
+		<h2 class="text-2xl font-semibold text-center mt-8">{$t('settings.social_oidc_auth')}</h2>
+		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
+			<p>
+				{$t('settings.social_auth_desc')}
+			</p>
+			<div role="alert" class="alert alert-info mt-2">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					fill="none"
+					viewBox="0 0 24 24"
+					class="h-6 w-6 shrink-0 stroke-current"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					></path>
+				</svg>
+				<span
+					>{$t('settings.social_auth_desc_2')}
+					<a
+						href="https://adventurelog.app/docs/configuration/social_auth.html"
+						class="link link-neutral"
+						target="_blank">{$t('settings.documentation_link')}</a
+					>.
+				</span>
+			</div>
+			<a
+				class="btn btn-primary mt-4"
+				href={`${public_url}/accounts/social/connections/`}
+				target="_blank">{$t('settings.launch_account_connections')}</a
+			>
 		</div>
 	</section>
 

@@ -1,3 +1,4 @@
+from os import getenv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +10,7 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
+from allauth.socialaccount.models import SocialApp
 
 User = get_user_model()
 
@@ -121,3 +123,30 @@ class UpdateUserMetadataView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class EnabledSocialProvidersView(APIView):
+    """
+    Get enabled social providers for social authentication. This is used to determine which buttons to show on the frontend. Also returns a URL for each to start the authentication flow.
+    """
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Enabled social providers'),
+            400: 'Bad Request'
+        },
+        operation_description="Get enabled social providers."
+    )
+    def get(self, request):
+        social_providers = SocialApp.objects.filter(sites=settings.SITE_ID)
+        providers = []
+        for provider in social_providers:
+            if provider.provider == 'openid_connect':
+                new_provider = f'oidc/{provider.client_id}'
+            else:
+                new_provider = provider.provider
+            providers.append({
+                'provider': provider.provider,
+                'url': f"{getenv('PUBLIC_URL')}/accounts/{new_provider}/login/",
+                'name': provider.name
+            })
+        return Response(providers, status=status.HTTP_200_OK)
