@@ -3,25 +3,8 @@ from django.core.management.base import BaseCommand
 import requests
 from worldtravel.models import Country, Region, City
 from django.db import transaction
-import psutil
+from tqdm import tqdm
 import ijson
-import resource
-
-def limit_memory(max_memory):
-    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-    resource.setrlimit(resource.RLIMIT_AS, (max_memory, hard))
-
-# Set memory limit to 800MB
-limit_memory(800 * 1024 * 1024)
-
-def get_memory_usage():
-    process = psutil.Process(os.getpid())
-    memory_info = process.memory_info()
-    return memory_info.rss  # in bytes
-
-def log_memory_usage(stage):
-    memory_usage = get_memory_usage()
-    print(f"Memory usage at {stage}: {memory_usage / 1024 / 1024:.2f} MB")
 
 from django.conf import settings
 
@@ -142,7 +125,7 @@ class Command(BaseCommand):
 
                         # Check for duplicate regions
                         if state_id in processed_region_ids:
-                            self.stdout.write(self.style.ERROR(f'State {state_id} already processed'))
+                            # self.stdout.write(self.style.ERROR(f'State {state_id} already processed'))
                             continue
 
                         processed_region_ids.add(state_id)
@@ -164,7 +147,6 @@ class Command(BaseCommand):
                             )
                             regions_to_create.append(region_obj)
                         # self.stdout.write(self.style.SUCCESS(f'State {state_id} prepared'))
-                        log_memory_usage('state')
 
                         if 'cities' in state and len(state['cities']) > 0:
                             for city in state['cities']:
@@ -175,7 +157,7 @@ class Command(BaseCommand):
 
                                 # Check for duplicate cities
                                 if city_id in processed_city_ids:
-                                    self.stdout.write(self.style.ERROR(f'City {city_id} already processed'))
+                                    # self.stdout.write(self.style.ERROR(f'City {city_id} already processed'))
                                     continue
 
                                 processed_city_ids.add(city_id)
@@ -197,7 +179,6 @@ class Command(BaseCommand):
                                     )
                                     cities_to_create.append(city_obj)
                                 # self.stdout.write(self.style.SUCCESS(f'City {city_id} prepared'))
-                                log_memory_usage('city')
 
                 else:
                     state_id = f"{country_code}-00"
@@ -215,45 +196,32 @@ class Command(BaseCommand):
                         )
                         regions_to_create.append(region_obj)
                     # self.stdout.write(self.style.SUCCESS(f'Region {state_id} prepared for {country_name}'))
-            # Process in batches
-            for i in range(0, len(countries_to_create), batch_size):
+            for i in tqdm(range(0, len(countries_to_create), batch_size), desc="Processing countries"):
                 batch = countries_to_create[i:i + batch_size]
                 Country.objects.bulk_create(batch)
-                self.stdout.write(self.style.SUCCESS(f'Processed countries batch {i//batch_size + 1}/{(len(countries_to_create)-1)//batch_size + 1}'))
-                log_memory_usage('country')
 
-            for i in range(0, len(regions_to_create), batch_size):
+            for i in tqdm(range(0, len(regions_to_create), batch_size), desc="Processing regions"):
                 batch = regions_to_create[i:i + batch_size]
                 Region.objects.bulk_create(batch)
-                self.stdout.write(self.style.SUCCESS(f'Processed regions batch {i//batch_size + 1}/{(len(regions_to_create)-1)//batch_size + 1}'))
-                log_memory_usage('region')
 
-            for i in range(0, len(cities_to_create), batch_size):
+            for i in tqdm(range(0, len(cities_to_create), batch_size), desc="Processing cities"):
                 batch = cities_to_create[i:i + batch_size]
                 City.objects.bulk_create(batch)
-                self.stdout.write(self.style.SUCCESS(f'Processed cities batch {i//batch_size + 1}/{(len(cities_to_create)-1)//batch_size + 1}'))
-                log_memory_usage('city')
 
             # Process updates in batches
             for i in range(0, len(countries_to_update), batch_size):
                 batch = countries_to_update[i:i + batch_size]
+            for i in tqdm(range(0, len(countries_to_update), batch_size), desc="Updating countries"):
+                batch = countries_to_update[i:i + batch_size]
                 Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude'])
-                self.stdout.write(self.style.SUCCESS(f'Updated countries batch {i//batch_size + 1}/{(len(countries_to_update)-1)//batch_size + 1}'))
-                log_memory_usage('country')
 
-            for i in range(0, len(regions_to_update), batch_size):
+            for i in tqdm(range(0, len(regions_to_update), batch_size), desc="Updating regions"):
                 batch = regions_to_update[i:i + batch_size]
                 Region.objects.bulk_update(batch, ['name', 'country', 'longitude', 'latitude'])
-                self.stdout.write(self.style.SUCCESS(f'Updated regions batch {i//batch_size + 1}/{(len(regions_to_update)-1)//batch_size + 1}'))
-                log_memory_usage('region')
 
-            for i in range(0, len(cities_to_update), batch_size):
+            for i in tqdm(range(0, len(cities_to_update), batch_size), desc="Updating cities"):
                 batch = cities_to_update[i:i + batch_size]
                 City.objects.bulk_update(batch, ['name', 'region', 'longitude', 'latitude'])
-                self.stdout.write(self.style.SUCCESS(f'Updated cities batch {i//batch_size + 1}/{(len(cities_to_update)-1)//batch_size + 1}'))
-                log_memory_usage('city')
-
-            # Delete countries and regions that are no longer in the data
             Country.objects.exclude(country_code__in=processed_country_codes).delete()
             Region.objects.exclude(id__in=processed_region_ids).delete()
             City.objects.exclude(id__in=processed_city_ids).delete()
