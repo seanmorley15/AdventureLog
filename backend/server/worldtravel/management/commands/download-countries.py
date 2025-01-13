@@ -3,8 +3,16 @@ from django.core.management.base import BaseCommand
 import requests
 from worldtravel.models import Country, Region, City
 from django.db import transaction
-import ijson
 import psutil
+import ijson
+import resource
+
+def limit_memory(max_memory):
+    soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+    resource.setrlimit(resource.RLIMIT_AS, (max_memory, hard))
+
+# Set memory limit to 800MB
+limit_memory(800 * 1024 * 1024)
 
 def get_memory_usage():
     process = psutil.Process(os.getpid())
@@ -18,7 +26,7 @@ def log_memory_usage(stage):
 from django.conf import settings
 
 COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
-
+        
 media_root = settings.MEDIA_ROOT
 
 def saveCountryFlag(country_code):
@@ -52,7 +60,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         force = options['force']
-        batch_size = 250
+        batch_size = 100
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
         if not os.path.exists(countries_json_path) or force:
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
@@ -74,19 +82,14 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
             return
             
-        with transaction.atomic():
-            # Process data in chunks using ijson
+        with open(countries_json_path, 'r') as f:
             f = open(countries_json_path, 'rb')
             parser = ijson.items(f, 'item')
-            existing_countries = {}
-            for country in Country.objects.iterator():
-                existing_countries[country.country_code] = country
-            existing_regions = {}
-            for region in Region.objects.iterator():
-                existing_regions[region.id] = region
-            existing_cities = {}
-            for city in City.objects.iterator():
-                existing_cities[city.id] = city
+
+        with transaction.atomic():
+            existing_countries = {country.country_code: country for country in Country.objects.all()}
+            existing_regions = {region.id: region for region in Region.objects.all()}
+            existing_cities = {city.id: city for city in City.objects.all()}
 
             countries_to_create = []
             regions_to_create = []
@@ -129,7 +132,6 @@ class Command(BaseCommand):
                     countries_to_create.append(country_obj)
 
                 saveCountryFlag(country_code)
-                # self.stdout.write(self.style.SUCCESS(f'Country {country_name} prepared'))
 
                 if country['states']:
                     for state in country['states']:
@@ -142,7 +144,6 @@ class Command(BaseCommand):
                         if state_id in processed_region_ids:
                             self.stdout.write(self.style.ERROR(f'State {state_id} already processed'))
                             continue
-                        log_memory_usage(f"State {state_id} processing")
 
                         processed_region_ids.add(state_id)
 
@@ -163,6 +164,7 @@ class Command(BaseCommand):
                             )
                             regions_to_create.append(region_obj)
                         # self.stdout.write(self.style.SUCCESS(f'State {state_id} prepared'))
+                        log_memory_usage('state')
 
                         if 'cities' in state and len(state['cities']) > 0:
                             for city in state['cities']:
@@ -195,6 +197,7 @@ class Command(BaseCommand):
                                     )
                                     cities_to_create.append(city_obj)
                                 # self.stdout.write(self.style.SUCCESS(f'City {city_id} prepared'))
+                                log_memory_usage('city')
 
                 else:
                     state_id = f"{country_code}-00"
@@ -217,46 +220,42 @@ class Command(BaseCommand):
                 batch = countries_to_create[i:i + batch_size]
                 Country.objects.bulk_create(batch)
                 self.stdout.write(self.style.SUCCESS(f'Processed countries batch {i//batch_size + 1}/{(len(countries_to_create)-1)//batch_size + 1}'))
-                log_memory_usage(f"Country batch {i//batch_size + 1}/{(len(countries_to_create)-1)//batch_size + 1}")
+                log_memory_usage('country')
 
             for i in range(0, len(regions_to_create), batch_size):
                 batch = regions_to_create[i:i + batch_size]
                 Region.objects.bulk_create(batch)
                 self.stdout.write(self.style.SUCCESS(f'Processed regions batch {i//batch_size + 1}/{(len(regions_to_create)-1)//batch_size + 1}'))
-                log_memory_usage(f"Region batch {i//batch_size + 1}/{(len(regions_to_create)-1)//batch_size + 1}")
+                log_memory_usage('region')
 
             for i in range(0, len(cities_to_create), batch_size):
                 batch = cities_to_create[i:i + batch_size]
                 City.objects.bulk_create(batch)
                 self.stdout.write(self.style.SUCCESS(f'Processed cities batch {i//batch_size + 1}/{(len(cities_to_create)-1)//batch_size + 1}'))
-                log_memory_usage(f"City batch {i//batch_size + 1}/{(len(cities_to_create)-1)//batch_size + 1}")
+                log_memory_usage('city')
 
             # Process updates in batches
             for i in range(0, len(countries_to_update), batch_size):
                 batch = countries_to_update[i:i + batch_size]
                 Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude'])
                 self.stdout.write(self.style.SUCCESS(f'Updated countries batch {i//batch_size + 1}/{(len(countries_to_update)-1)//batch_size + 1}'))
-                log_memory_usage(f"Country update batch {i//batch_size + 1}/{(len(countries_to_update)-1)//batch_size + 1}")
+                log_memory_usage('country')
 
             for i in range(0, len(regions_to_update), batch_size):
                 batch = regions_to_update[i:i + batch_size]
                 Region.objects.bulk_update(batch, ['name', 'country', 'longitude', 'latitude'])
                 self.stdout.write(self.style.SUCCESS(f'Updated regions batch {i//batch_size + 1}/{(len(regions_to_update)-1)//batch_size + 1}'))
-                log_memory_usage(f"Region update batch {i//batch_size + 1}/{(len(regions_to_update)-1)//batch_size + 1}")
+                log_memory_usage('region')
 
             for i in range(0, len(cities_to_update), batch_size):
                 batch = cities_to_update[i:i + batch_size]
                 City.objects.bulk_update(batch, ['name', 'region', 'longitude', 'latitude'])
                 self.stdout.write(self.style.SUCCESS(f'Updated cities batch {i//batch_size + 1}/{(len(cities_to_update)-1)//batch_size + 1}'))
-                log_memory_usage(f"City update batch {i//batch_size + 1}/{(len(cities_to_update)-1)//batch_size + 1}")
+                log_memory_usage('city')
 
             # Delete countries and regions that are no longer in the data
             Country.objects.exclude(country_code__in=processed_country_codes).delete()
-            log_memory_usage("Extra Countries deleted")
             Region.objects.exclude(id__in=processed_region_ids).delete()
-            log_memory_usage("Extra Regions deleted")
             City.objects.exclude(id__in=processed_city_ids).delete()
-            log_memory_usage("Extra Cities deleted")
-
 
         self.stdout.write(self.style.SUCCESS('All data imported successfully'))
