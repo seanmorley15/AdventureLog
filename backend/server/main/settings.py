@@ -135,7 +135,6 @@ frontend_url = getenv('FRONTEND_URL', 'http://localhost:3000')
 parsed_url = urlparse(frontend_url)
 domain_parts = parsed_url.hostname.split('.')
 SESSION_COOKIE_DOMAIN = '.' + '.'.join(domain_parts[-2:]) if len(domain_parts) > 1 else parsed_url.hostname
-print(SESSION_COOKIE_DOMAIN)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
