@@ -116,16 +116,19 @@ function handleSuccessfulLogin(event: RequestEvent, response: Response) {
 			const domainParts = hostname.split('.');
 			let cookieDomain: string | undefined = undefined;
 
-			if (domainParts.length > 2) {
-				// For subdomains like app.mydomain.com -> .mydomain.com
-				cookieDomain = '.' + domainParts.slice(-2).join('.');
-			} else if (domainParts.length === 2) {
-				// For root domains like mydomain.com -> .mydomain.com
-				cookieDomain = '.' + hostname;
-			} else {
-				// For localhost or single-part domains (e.g., "localhost")
-				cookieDomain = undefined; // Do not set the domain
+			// Check if hostname is an IP address
+			const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+
+			if (!isIPAddress) {
+				if (domainParts.length > 2) {
+					// For subdomains like app.mydomain.com -> .mydomain.com
+					cookieDomain = '.' + domainParts.slice(-2).join('.');
+				} else if (domainParts.length === 2) {
+					// For root domains like mydomain.com -> .mydomain.com
+					cookieDomain = '.' + hostname;
+				}
 			}
+			// Do not set a domain for IP addresses or single-part hostnames
 
 			console.log('Setting sessionid cookie with domain:', cookieDomain);
 
@@ -135,7 +138,7 @@ function handleSuccessfulLogin(event: RequestEvent, response: Response) {
 				sameSite: 'lax',
 				secure: event.url.protocol === 'https:',
 				expires: new Date(expiryString),
-				domain: cookieDomain // Set the domain dynamically
+				domain: cookieDomain // Set the domain dynamically or omit if undefined
 			});
 		}
 	}

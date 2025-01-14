@@ -46,24 +46,26 @@ export const actions: Actions = {
 		// Determine the proper cookie domain
 		const hostname = event.url.hostname;
 		const domainParts = hostname.split('.');
+		const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
 		let cookieDomain: string | undefined = undefined;
 
-		if (domainParts.length > 2) {
-			// For subdomains like app.mydomain.com -> .mydomain.com
-			cookieDomain = '.' + domainParts.slice(-2).join('.');
-		} else if (domainParts.length === 2) {
-			// For root domains like mydomain.com -> .mydomain.com
-			cookieDomain = '.' + hostname;
-		} else {
-			// For localhost or single-part domains (e.g., "localhost")
-			cookieDomain = undefined; // Do not set the domain
+		if (!isIPAddress) {
+			// Handle domain names
+			if (domainParts.length > 2) {
+				// For subdomains like app.mydomain.com -> .mydomain.com
+				cookieDomain = '.' + domainParts.slice(-2).join('.');
+			} else if (domainParts.length === 2) {
+				// For root domains like mydomain.com -> .mydomain.com
+				cookieDomain = '.' + hostname;
+			}
 		}
+		// No domain is set for IP addresses or single-part hostnames like "localhost"
 
 		// Delete the session cookie
 		event.cookies.delete('sessionid', {
 			path: '/',
 			secure: event.url.protocol === 'https:',
-			domain: cookieDomain
+			domain: cookieDomain // Undefined for IP addresses, used for domain names
 		});
 
 		if (res.status === 401) {
