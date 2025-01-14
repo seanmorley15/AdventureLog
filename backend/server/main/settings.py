@@ -13,6 +13,7 @@ import os
 from dotenv import load_dotenv
 from os import getenv
 from pathlib import Path
+from urllib.parse import urlparse
 # Load environment variables from .env file
 load_dotenv()
 
@@ -127,14 +128,23 @@ USE_L10N = True
 
 USE_TZ = True
 
-SESSION_COOKIE_SAMESITE = None
-SESSION_COOKIE_SECURE = getenv('FRONTEND_URL', 'http://localhost:3000').startswith('https://')
-from urllib.parse import urlparse
+FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 
-frontend_url = getenv('FRONTEND_URL', 'http://localhost:3000')
-parsed_url = urlparse(frontend_url)
-domain_parts = parsed_url.hostname.split('.')
-SESSION_COOKIE_DOMAIN = '.' + '.'.join(domain_parts[-2:]) if len(domain_parts) > 1 else parsed_url.hostname
+SESSION_COOKIE_SAMESITE = None
+
+SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+
+parsed_url = urlparse(FRONTEND_URL)
+hostname = parsed_url.hostname
+is_ip_address = hostname.replace('.', '').isdigit()
+if is_ip_address:
+    # Do not set a domain for IP addresses
+    SESSION_COOKIE_DOMAIN = None
+else:
+    # Calculate the cookie domain for valid domain names
+    domain_parts = hostname.split('.')
+    SESSION_COOKIE_DOMAIN = '.' + '.'.join(domain_parts[-2:]) if len(domain_parts) > 1 else hostname
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -189,8 +199,6 @@ ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
 ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 
 SESSION_SAVE_EVERY_REQUEST = True
-
-FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
 
 # Set login redirect URL to the frontend
 LOGIN_REDIRECT_URL = FRONTEND_URL
