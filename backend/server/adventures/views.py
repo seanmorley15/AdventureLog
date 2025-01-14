@@ -1236,7 +1236,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                     return Response({"error": "Invalid response from geocoding service"}, status=400)
                 region = self.extractIsoCode(data)
                 if 'error' not in region:
-                    region = Region.objects.filter(id=region['id']).first()
+                    region = Region.objects.filter(id=region['region_id']).first()
                     visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
                     if not visited_region:
                         visited_region = VisitedRegion(region=region, user_id=self.request.user)
