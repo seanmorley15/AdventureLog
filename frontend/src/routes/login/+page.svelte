@@ -57,11 +57,14 @@
 						class="block input input-bordered w-full max-w-xs"
 					/><br />
 					{#if $page.form?.mfa_required}
-						<label for="password">TOTP</label>
+						<label for="totp">TOTP</label>
 						<input
-							type="password"
+							type="text"
 							name="totp"
 							id="totp"
+							inputmode="numeric"
+							pattern="[0-9]*"
+							autocomplete="one-time-code"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
 					{/if}
