@@ -37,8 +37,9 @@ export const actions: Actions = {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken, // Ensure CSRF token is in header
+				Referer: event.url.origin, // Include Referer header
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
 			},
 			credentials: 'include'
 		});
@@ -58,8 +59,6 @@ export const actions: Actions = {
 			// For localhost or single-part domains (e.g., "localhost")
 			cookieDomain = undefined; // Do not set the domain
 		}
-
-		console.log('Deleting sessionid cookie with domain:', cookieDomain);
 
 		// Delete the session cookie
 		event.cookies.delete('sessionid', {
