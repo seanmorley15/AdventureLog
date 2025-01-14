@@ -36,13 +36,37 @@ export const actions: Actions = {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken, // Ensure CSRF token is in header
+				Referer: event.url.origin, // Include Referer header
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
 			},
 			credentials: 'include'
 		});
-		if (res.status == 401) {
-			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+
+		// Determine the proper cookie domain
+		const hostname = event.url.hostname;
+		const domainParts = hostname.split('.');
+		let cookieDomain: string | undefined = undefined;
+
+		if (domainParts.length > 2) {
+			// For subdomains like app.mydomain.com -> .mydomain.com
+			cookieDomain = '.' + domainParts.slice(-2).join('.');
+		} else if (domainParts.length === 2) {
+			// For root domains like mydomain.com -> .mydomain.com
+			cookieDomain = '.' + hostname;
+		} else {
+			// For localhost or single-part domains (e.g., "localhost")
+			cookieDomain = undefined; // Do not set the domain
+		}
+
+		// Delete the session cookie
+		event.cookies.delete('sessionid', {
+			path: '/',
+			secure: event.url.protocol === 'https:',
+			domain: cookieDomain
+		});
+
+		if (res.status === 401) {
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');
