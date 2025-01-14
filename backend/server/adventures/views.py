@@ -1163,6 +1163,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         display_name = None
         country_code = None
         city = None
+        visited_city = None
 
         # town = None
         # city = None
