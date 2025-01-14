@@ -15,11 +15,6 @@ To enable GitHub as an identity provider, the administrator must first configure
    - Application Name: `AdventureLog` or any other name you prefer.
    - Homepage URL: `<adventurelog-frontend-url>` where `<adventurelog-frontend-url>` is the URL of your AdventureLog Frontend service.
    - Application Description: `AdventureLog` or any other description you prefer.
-
-   ::: warning
-   Known issue: The uthorization callback URL should use `http` even if your site uses `https`. This is a known issue with AdventureLog and will be fixed in a future release.
-   :::
-
    - Authorization callback URL: `http://<adventurelog-backend-url>/accounts/github/login/callback/` where `<adventurelog-backend-url>` is the URL of your AdventureLog Backend service.
    - If you want the logo, you can find it [here](https://adventurelog.app/adventurelog.png).
 

@@ -3,6 +3,7 @@ import { redirect, type Actions } from '@sveltejs/kit';
 import { themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
+import { log } from 'console';
 
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -41,8 +42,33 @@ export const actions: Actions = {
 			},
 			credentials: 'include'
 		});
-		if (res.status == 401) {
-			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+
+		// Determine the proper cookie domain
+		const hostname = event.url.hostname;
+		const domainParts = hostname.split('.');
+		let cookieDomain: string | undefined = undefined;
+
+		if (domainParts.length > 2) {
+			// For subdomains like app.mydomain.com -> .mydomain.com
+			cookieDomain = '.' + domainParts.slice(-2).join('.');
+		} else if (domainParts.length === 2) {
+			// For root domains like mydomain.com -> .mydomain.com
+			cookieDomain = '.' + hostname;
+		} else {
+			// For localhost or single-part domains (e.g., "localhost")
+			cookieDomain = undefined; // Do not set the domain
+		}
+
+		console.log('Deleting sessionid cookie with domain:', cookieDomain);
+
+		// Delete the session cookie
+		event.cookies.delete('sessionid', {
+			path: '/',
+			secure: event.url.protocol === 'https:',
+			domain: cookieDomain
+		});
+
+		if (res.status === 401) {
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');
