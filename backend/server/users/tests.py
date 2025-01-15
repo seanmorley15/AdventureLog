@@ -22,7 +22,6 @@ class UserAPITestCase(APITestCase):
         response = self.client.get('/auth/user-metadata/', format='json')
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        print(data)
         self.assertEqual(data['username'], 'testuser')
         self.assertEqual(data['email'], 'testuser@example.com')
         self.assertEqual(data['first_name'], 'Test')
@@ -52,7 +51,6 @@ class UserAPITestCase(APITestCase):
         data = response.json()
         # Note that the email field is not updated because that is a seperate endpoint
         userModel = CustomUser.objects.get(username='testuser2')
-        print(userModel)
         self.assertEqual(data['username'], 'testuser2')
         self.assertEqual(data['email'], 'testuser@example.com')
         self.assertEqual(data['first_name'], 'Test2')
