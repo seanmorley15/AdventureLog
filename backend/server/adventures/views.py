@@ -1235,6 +1235,8 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             if serialized_adventure['is_visited'] == True:
                 lat = adventure.latitude
                 lon = adventure.longitude
+                if not lat or not lon:
+                    continue
                 url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
                 headers = {'User-Agent': 'AdventureLog Server'}
                 response = requests.get(url, headers=headers)

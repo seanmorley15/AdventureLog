@@ -197,6 +197,7 @@
 		"mark_visited": "Mark Visited",
 		"error_updating_regions": "Error updating regions",
 		"regions_updated": "regions updated",
+		"cities_updated": "cities updated",
 		"visited_region_check": "Visited Region Check",
 		"visited_region_check_desc": "By selecting this, the server will check all of your visited adventures and mark the regions they are located in as visited in world travel.",
 		"update_visited_regions": "Update Visited Regions",
@@ -497,7 +498,8 @@
 		"member_since": "Member since",
 		"user_stats": "User Stats",
 		"visited_countries": "Visited Countries",
-		"visited_regions": "Visited Regions"
+		"visited_regions": "Visited Regions",
+		"visited_cities": "Visited Cities"
 	},
 	"categories": {
 		"manage_categories": "Manage Categories",
@@ -513,6 +515,7 @@
 		"countries_visited": "Countries Visited",
 		"total_adventures": "Total Adventures",
 		"total_visited_regions": "Total Visited Regions",
+		"total_visited_cities": "Total Visited Cities",
 		"recent_adventures": "Recent Adventures",
 		"no_recent_adventures": "No recent adventures?",
 		"add_some": "Why not start planning your next adventure? You can add a new adventure by clicking the button below."

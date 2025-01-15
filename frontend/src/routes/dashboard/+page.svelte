@@ -8,6 +8,7 @@
 	import FlagCheckeredVariantIcon from '~icons/mdi/flag-checkered-variant';
 	import Airplane from '~icons/mdi/airplane';
 	import CityVariantOutline from '~icons/mdi/city-variant-outline';
+	import MapMarkerStarOutline from '~icons/mdi/map-marker-star-outline';
 
 	const user = data.user;
 	const recentAdventures = data.props.adventures;
@@ -27,13 +28,6 @@
 	<!-- Stats -->
 	<div class="stats shadow mb-8 w-full bg-neutral">
 		<div class="stat">
-			<div class="stat-figure text-primary">
-				<FlagCheckeredVariantIcon class="w-10 h-10 inline-block" />
-			</div>
-			<div class="stat-title text-neutral-content">{$t('dashboard.countries_visited')}</div>
-			<div class="stat-value text-primary">{stats.country_count}</div>
-		</div>
-		<div class="stat">
 			<div class="stat-figure text-secondary">
 				<Airplane class="w-10 h-10 inline-block" />
 			</div>
@@ -41,11 +35,25 @@
 			<div class="stat-value text-secondary">{stats.adventure_count}</div>
 		</div>
 		<div class="stat">
+			<div class="stat-figure text-primary">
+				<FlagCheckeredVariantIcon class="w-10 h-10 inline-block" />
+			</div>
+			<div class="stat-title text-neutral-content">{$t('dashboard.countries_visited')}</div>
+			<div class="stat-value text-primary">{stats.visited_country_count}</div>
+		</div>
+		<div class="stat">
 			<div class="stat-figure text-success">
-				<CityVariantOutline class="w-10 h-10 inline-block" />
+				<MapMarkerStarOutline class="w-10 h-10 inline-block" />
 			</div>
 			<div class="stat-title text-neutral-content">{$t('dashboard.total_visited_regions')}</div>
 			<div class="stat-value text-success">{stats.visited_region_count}</div>
+		</div>
+		<div class="stat">
+			<div class="stat-figure text-info">
+				<CityVariantOutline class="w-10 h-10 inline-block" />
+			</div>
+			<div class="stat-title text-neutral-content">{$t('dashboard.total_visited_cities')}</div>
+			<div class="stat-value text-info">{stats.visited_city_count}</div>
 		</div>
 	</div>
 
