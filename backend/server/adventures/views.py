@@ -20,7 +20,7 @@ from django.contrib.auth import get_user_model
 from icalendar import Calendar, Event, vText, vCalAddress
 from django.http import HttpResponse
 from datetime import datetime
-from django.db.models import Min
+from django.db.models import Max
 
 User = get_user_model()
 
@@ -54,9 +54,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         if order_by == 'date':
             # order by the earliest visit object associated with the adventure
-            queryset = queryset.annotate(earliest_visit=Min('visits__start_date'))
-            queryset = queryset.filter(earliest_visit__isnull=False)
-            ordering = 'earliest_visit'
+            queryset = queryset.annotate(latest_visit=Max('visits__start_date'))
+            queryset = queryset.filter(latest_visit__isnull=False)
+            ordering = 'latest_visit'
         # Apply case-insensitive sorting for the 'name' field
         elif order_by == 'name':
             queryset = queryset.annotate(lower_name=Lower('name'))
@@ -1163,6 +1163,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         display_name = None
         country_code = None
         city = None
+        visited_city = None
 
         # town = None
         # city = None
@@ -1221,6 +1222,8 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
         new_region_count = 0
         new_regions = {}
+        new_city_count = 0
+        new_cities = {}
         adventures = Adventure.objects.filter(user_id=self.request.user)
         serializer = AdventureSerializer(adventures, many=True)
         for adventure, serialized_adventure in zip(adventures, serializer.data):
@@ -1234,17 +1237,25 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                     data = response.json()
                 except requests.exceptions.JSONDecodeError:
                     return Response({"error": "Invalid response from geocoding service"}, status=400)
-                region = self.extractIsoCode(data)
-                if 'error' not in region:
-                    region = Region.objects.filter(id=region['id']).first()
+                extracted_region = self.extractIsoCode(data)
+                if 'error' not in extracted_region:
+                    region = Region.objects.filter(id=extracted_region['region_id']).first()
                     visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
                     if not visited_region:
                         visited_region = VisitedRegion(region=region, user_id=self.request.user)
                         visited_region.save()
                         new_region_count += 1
                         new_regions[region.id] = region.name
-        return Response({"new_regions": new_region_count, "regions": new_regions})
 
+                    if extracted_region['city_id'] is not None:
+                        city = City.objects.filter(id=extracted_region['city_id']).first()
+                        visited_city = VisitedCity.objects.filter(city=city, user_id=self.request.user).first()
+                        if not visited_city:
+                            visited_city = VisitedCity(city=city, user_id=self.request.user)
+                            visited_city.save()
+                            new_city_count += 1
+                            new_cities[city.id] = city.name
+        return Response({"new_regions": new_region_count, "regions": new_regions, "new_cities": new_city_count, "cities": new_cities})
 
 from django.http import HttpResponse
 from rest_framework import viewsets
