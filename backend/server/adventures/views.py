@@ -552,18 +552,23 @@ class StatsViewSet(viewsets.ViewSet):
             user_id=request.user.id).count()
         trips_count = Collection.objects.filter(
             user_id=request.user.id).count()
+        visited_city_count = VisitedCity.objects.filter(
+            user_id=request.user.id).count()
+        total_cities = City.objects.count()
         visited_region_count = VisitedRegion.objects.filter(
             user_id=request.user.id).count()
         total_regions = Region.objects.count()
-        country_count = VisitedRegion.objects.filter(
+        visited_country_count = VisitedRegion.objects.filter(
             user_id=request.user.id).values('region__country').distinct().count()
         total_countries = Country.objects.count()
         return Response({
             'adventure_count': adventure_count,
             'trips_count': trips_count,
+            'visited_city_count': visited_city_count,
+            'total_cities': total_cities,
             'visited_region_count': visited_region_count,
             'total_regions': total_regions,
-            'country_count': country_count,
+            'visited_country_count': visited_country_count,
             'total_countries': total_countries
         })
     
