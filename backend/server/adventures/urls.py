@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AdventureViewSet, ChecklistViewSet, CollectionViewSet, NoteViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet, AdventureImageViewSet, ReverseGeocodeViewSet, CategoryViewSet, IcsCalendarGeneratorViewSet
+from .views import AdventureViewSet, ChecklistViewSet, CollectionViewSet, NoteViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet, AdventureImageViewSet, ReverseGeocodeViewSet, CategoryViewSet, IcsCalendarGeneratorViewSet, OverpassViewSet
 
 router = DefaultRouter()
 router.register(r'adventures', AdventureViewSet, basename='adventures')
@@ -15,6 +15,7 @@ router.register(r'images', AdventureImageViewSet, basename='images')
 router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
+router.register(r'overpass', OverpassViewSet, basename='overpass')
 
 
 urlpatterns = [

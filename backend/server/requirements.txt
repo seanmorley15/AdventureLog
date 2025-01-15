@@ -20,3 +20,4 @@ django-ical==1.9.2
 icalendar==6.1.0
 ijson==3.3.0
 tqdm==4.67.1
+overpy==0.7
