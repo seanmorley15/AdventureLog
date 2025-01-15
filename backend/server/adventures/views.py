@@ -20,7 +20,7 @@ from django.contrib.auth import get_user_model
 from icalendar import Calendar, Event, vText, vCalAddress
 from django.http import HttpResponse
 from datetime import datetime
-from django.db.models import Min
+from django.db.models import Max
 
 User = get_user_model()
 
@@ -54,9 +54,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         if order_by == 'date':
             # order by the earliest visit object associated with the adventure
-            queryset = queryset.annotate(earliest_visit=Min('visits__start_date'))
-            queryset = queryset.filter(earliest_visit__isnull=False)
-            ordering = 'earliest_visit'
+            queryset = queryset.annotate(latest_visit=Max('visits__start_date'))
+            queryset = queryset.filter(latest_visit__isnull=False)
+            ordering = 'latest_visit'
         # Apply case-insensitive sorting for the 'name' field
         elif order_by == 'name':
             queryset = queryset.annotate(lower_name=Lower('name'))
