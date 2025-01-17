@@ -54,3 +54,13 @@ This configuration is done in the [Admin Panel](../../guides/admin_panel.md). Yo
 4. Save the configuration.
 
 Ensure that the Authentik server is running and accessible by AdventureLog. Users should now be able to log in to AdventureLog using their Authentik account.
+
+## Troubleshooting
+
+### 404 error when logging in.
+
+Ensure the <adventurelog-server-url>/accounts path is routed to the backend, as it shouldn't hit the frontend when it's properly configured.
+
+### Authentik - No Permission
+
+In the Authentik instance, check access to the AdventureLog application from a specific user by using the Check Access/Test button on the Application dashboard. If the user doesn't have access, you can add an existing user/group policy to give your specific user/group access to the AdventureLog application.
