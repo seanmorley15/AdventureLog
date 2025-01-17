@@ -1,6 +1,6 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
-from .views import AdventureViewSet, ChecklistViewSet, CollectionViewSet, NoteViewSet, StatsViewSet, GenerateDescription, ActivityTypesView, TransportationViewSet, AdventureImageViewSet, ReverseGeocodeViewSet, CategoryViewSet, IcsCalendarGeneratorViewSet, OverpassViewSet
+from adventures.views import *
 
 router = DefaultRouter()
 router.register(r'adventures', AdventureViewSet, basename='adventures')

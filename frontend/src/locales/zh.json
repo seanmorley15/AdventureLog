@@ -218,7 +218,9 @@
     "transportation_delete_confirm": "您确定要删除此交通工具吗？\n此操作无法撤消。",
     "show_map": "显示地图",
     "will_be_marked": "保存冒险后将被标记为已访问。",
-    "cities_updated": "城市已更新"
+    "cities_updated": "城市已更新",
+    "create_adventure": "创造冒险",
+    "no_adventures_to_recommendations": "没有发现任何冒险。\n至少添加一次冒险以获得推荐。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
