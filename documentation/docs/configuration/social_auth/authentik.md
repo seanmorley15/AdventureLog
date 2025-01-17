@@ -59,7 +59,7 @@ Ensure that the Authentik server is running and accessible by AdventureLog. User
 
 ### 404 error when logging in.
 
-Ensure the <adventurelog-server-url>/accounts path is routed to the backend, as it shouldn't hit the frontend when it's properly configured.
+Ensure the `<adventurelog-server-url>/accounts` path is routed to the backend, as it shouldn't hit the frontend when it's properly configured.
 
 ### Authentik - No Permission
 
