@@ -69,7 +69,8 @@ export const actions: Actions = {
 			method: 'POST',
 			headers: {
 				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: formData
 		});

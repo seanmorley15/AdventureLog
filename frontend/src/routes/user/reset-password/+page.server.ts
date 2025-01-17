@@ -21,7 +21,8 @@ export const actions: Actions = {
 			headers: {
 				'Content-Type': 'application/json',
 				'X-CSRFToken': csrfToken,
-				Cookie: `csrftoken=${csrfToken}`
+				Cookie: `csrftoken=${csrfToken}`,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: JSON.stringify({
 				email

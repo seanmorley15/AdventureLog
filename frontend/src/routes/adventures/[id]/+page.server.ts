@@ -66,7 +66,9 @@ export const actions: Actions = {
 		let res = await fetch(`${serverEndpoint}/api/adventures/${event.params.id}`, {
 			method: 'DELETE',
 			headers: {
-				Cookie: `sessionid=${event.cookies.get('sessionid')}; csrftoken=${csrfToken}`,
+				Referer: event.url.origin, // Include Referer header
+				Cookie: `sessionid=${event.cookies.get('sessionid')};
+				csrftoken=${csrfToken}`,
 				'X-CSRFToken': csrfToken
 			},
 			credentials: 'include'
