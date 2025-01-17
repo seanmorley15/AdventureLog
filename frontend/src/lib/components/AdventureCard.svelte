@@ -60,11 +60,8 @@
 	}
 
 	async function deleteAdventure() {
-		let res = await fetch(`/adventures/${adventure.id}?/delete`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
+		let res = await fetch(`/api/adventures/${adventure.id}`, {
+			method: 'DELETE'
 		});
 		if (res.ok) {
 			addToast('info', $t('adventures.adventure_delete_success'));

@@ -46,7 +46,8 @@ export const actions: Actions = {
 			headers: {
 				'X-CSRFToken': csrfToken,
 				'Content-Type': 'application/json',
-				Cookie: `csrftoken=${csrfToken}`
+				Cookie: `csrftoken=${csrfToken}`,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: JSON.stringify({ username, password }),
 			credentials: 'include'
@@ -73,7 +74,8 @@ export const actions: Actions = {
 						headers: {
 							'X-CSRFToken': csrfToken,
 							'Content-Type': 'application/json',
-							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`
+							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
+							Referer: event.url.origin // Include Referer header
 						},
 						body: JSON.stringify({ code: totp }),
 						credentials: 'include'
