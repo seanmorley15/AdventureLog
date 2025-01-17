@@ -24,8 +24,8 @@ class OverpassViewSet(viewsets.ViewSet):
             response = requests.get(url, headers=self.HEADERS)
             response.raise_for_status()  # Raise an exception for HTTP errors
             return response.json()
-        except requests.exceptions.RequestException as e:
-            return Response({"error": str(e)}, status=500)
+        except requests.exceptions.RequestException:
+            return Response({"error": "Failed to connect to Overpass API"}, status=500)
         except requests.exceptions.JSONDecodeError:
             return Response({"error": "Invalid response from Overpass API"}, status=400)
         
