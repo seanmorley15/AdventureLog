@@ -218,7 +218,9 @@
     "transportation_delete_confirm": "Sind Sie sicher, dass Sie diesen Transport löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "show_map": "Karte anzeigen",
     "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist.",
-    "cities_updated": "Städte aktualisiert"
+    "cities_updated": "Städte aktualisiert",
+    "create_adventure": "Erstelle Abenteuer",
+    "no_adventures_to_recommendations": "Keine Abenteuer gefunden. \nFügen Sie mindestens ein Abenteuer hinzu, um Empfehlungen zu erhalten."
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",

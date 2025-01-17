@@ -218,7 +218,9 @@
     "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata.",
     "show_map": "Mostra mappa",
     "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura.",
-    "cities_updated": "città aggiornate"
+    "cities_updated": "città aggiornate",
+    "create_adventure": "Crea Avventura",
+    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

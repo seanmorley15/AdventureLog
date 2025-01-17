@@ -208,6 +208,30 @@
 		}
 	}
 
+	function recomendationToAdventure(recomendation: any) {
+		adventureToEdit = {
+			id: '',
+			user_id: null,
+			name: recomendation.name,
+			latitude: recomendation.latitude,
+			longitude: recomendation.longitude,
+			images: [],
+			is_visited: false,
+			is_public: false,
+			visits: [],
+			category: {
+				display_name: recomendation.tag
+					.replace(/_/g, ' ')
+					.replace(/\b\w/g, (char: string) => char.toUpperCase()),
+				icon: osmTagToEmoji(recomendation.tag),
+				id: '',
+				name: recomendation.tag,
+				user_id: ''
+			}
+		};
+		isAdventureModalOpen = true;
+	}
+
 	let adventureToEdit: Adventure | null = null;
 	let transportationToEdit: Transportation | null = null;
 	let isAdventureModalOpen: boolean = false;
@@ -251,11 +275,24 @@
 	let loadingRecomendations: boolean = false;
 	let recomendationsRange: number = 1600;
 	let recomendationType: string = 'tourism';
-	let recomendationTags: string[] = [];
+	let recomendationTags: { name: string; display_name: string }[] = [];
 	let selectedRecomendationTag: string = '';
+	let filteredRecomendations: any[] = [];
 
+	$: {
+		if (recomendationsData && selectedRecomendationTag) {
+			filteredRecomendations = recomendationsData.filter(
+				(r: any) => r.tag === selectedRecomendationTag
+			);
+		} else {
+			filteredRecomendations = recomendationsData;
+		}
+		console.log(filteredRecomendations);
+		console.log(selectedRecomendationTag);
+	}
 	async function getRecomendations(adventure: Adventure) {
 		recomendationsData = null;
+		selectedRecomendationTag = '';
 		loadingRecomendations = true;
 		let res = await fetch(
 			`/api/overpass/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
@@ -267,11 +304,28 @@
 		let data = await res.json();
 		recomendationsData = data;
 
-		console.log(data);
-		if (recomendationsData) {
-			recomendationTags = [
-				...new Set(recomendationsData.map((r: any) => r.tag).filter(Boolean))
-			] as string[];
+		if (recomendationsData && recomendationsData.some((r: any) => r.longitude && r.latitude)) {
+			const tagMap = new Map();
+			recomendationsData.forEach((r: any) => {
+				const tag = formatTag(r.tag);
+				if (tag) {
+					tagMap.set(r.tag, { name: r.tag, display_name: tag });
+				}
+			});
+			recomendationTags = Array.from(tagMap.values());
+
+			function formatTag(tag: string): string {
+				if (tag) {
+					return (
+						tag
+							.split('_')
+							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(' ') + osmTagToEmoji(tag)
+					);
+				} else {
+					return '';
+				}
+			}
 		}
 		loadingRecomendations = false;
 		console.log(recomendationTags);
@@ -850,10 +904,17 @@
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>
 				{#each adventures as adventure}
-					<button on:click={() => getRecomendations(adventure)} class="btn btn-neutral"
-						>{adventure.name}</button
-					>
+					{#if adventure.longitude && adventure.latitude}
+						<button on:click={() => getRecomendations(adventure)} class="btn btn-neutral"
+							>{adventure.name}</button
+						>
+					{/if}
 				{/each}
+				{#if adventures.length == 0}
+					<div class="alert alert-info">
+						<p class="text-center text-lg">{$t('adventures.no_adventures_to_recommendations')}</p>
+					</div>
+				{/if}
 				<div class="mt-4">
 					<input
 						type="range"
@@ -898,10 +959,13 @@
 						/>
 					</div>
 					{#if recomendationTags.length > 0}
-						<select class="select select-bordered w-full max-w-xs">
-							<option disabled selected>Select a tag</option>
+						<select
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedRecomendationTag}
+						>
+							<option value="">All</option>
 							{#each recomendationTags as tag}
-								<option on:click={() => (selectedRecomendationTag = tag)}>{tag}</option>
+								<option value={tag.name}>{tag.display_name}</option>
 							{/each}
 						</select>
 					{/if}
@@ -916,7 +980,7 @@
 						center={{ lng: recomendationsData[0].longitude, lat: recomendationsData[0].latitude }}
 						zoom={12}
 					>
-						{#each recomendationsData as recomendation}
+						{#each filteredRecomendations as recomendation}
 							{#if recomendation.longitude && recomendation.latitude && recomendation.name}
 								<Marker
 									lngLat={[recomendation.longitude, recomendation.latitude]}
@@ -942,13 +1006,18 @@
 														'_blank'
 													)}>{$t('map.view_details')}</button
 											>
+											<button
+												class="btn btn-neutral btn-wide btn-sm mt-4"
+												on:click={() => recomendationToAdventure(recomendation)}
+												>{$t('adventures.create_adventure')}</button
+											>
 										</Popup>
 									{/if}
 								</Marker>
 							{/if}
 						{/each}
 					</MapLibre>
-					{#each recomendationsData as recomendation}
+					{#each filteredRecomendations as recomendation}
 						{#if recomendation.name && recomendation.longitude && recomendation.latitude}
 							<div class="card bg-base-100 shadow-xl my-4 w-full">
 								<div class="card-body">
@@ -984,6 +1053,12 @@
 											{/if}
 										</p>
 									{/if}
+									<button
+										class="btn btn-primary"
+										on:click={() => recomendationToAdventure(recomendation)}
+									>
+										{$t('adventures.create_adventure')}
+									</button>
 								</div>
 							</div>
 						{/if}

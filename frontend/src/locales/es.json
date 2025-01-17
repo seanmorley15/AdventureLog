@@ -265,7 +265,9 @@
     "transportation_delete_confirm": "¿Está seguro de que desea eliminar este transporte? \nEsta acción no se puede deshacer.",
     "show_map": "Mostrar mapa",
     "will_be_marked": "se marcará como visitado una vez guardada la aventura.",
-    "cities_updated": "ciudades actualizadas"
+    "cities_updated": "ciudades actualizadas",
+    "create_adventure": "Crear aventura",
+    "no_adventures_to_recommendations": "No se encontraron aventuras. \nAñade al menos una aventura para obtener recomendaciones."
   },
   "worldtravel": {
     "all": "Todo",

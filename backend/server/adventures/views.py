@@ -1409,13 +1409,10 @@ class OverpassViewSet(viewsets.ViewSet):
                 # "tags": tags,  # Include all raw tags for future use
             }
 
-            # Filter out adventures with no meaningful data
-            if any([
-                adventure["name"],
-                adventure["latitude"],
-                adventure["longitude"],
-            ]
-            ) or all:
+            # Filter out adventures with no name, latitude, or longitude
+            if (adventure["name"] and 
+                adventure["latitude"] is not None and -90 <= adventure["latitude"] <= 90 and 
+                adventure["longitude"] is not None and -180 <= adventure["longitude"] <= 180) or all:
                 adventures.append(adventure)
 
         return adventures

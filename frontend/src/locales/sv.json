@@ -218,7 +218,9 @@
     "transportation_delete_confirm": "Är du säker på att du vill ta bort denna transport? \nDenna åtgärd kan inte ångras.",
     "show_map": "Visa karta",
     "will_be_marked": "kommer att markeras som besökt när äventyret har sparats.",
-    "cities_updated": "städer uppdaterade"
+    "cities_updated": "städer uppdaterade",
+    "create_adventure": "Skapa äventyr",
+    "no_adventures_to_recommendations": "Inga äventyr hittades. \nLägg till minst ett äventyr för att få rekommendationer."
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
