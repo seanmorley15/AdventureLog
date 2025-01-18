@@ -63,7 +63,8 @@ export const actions: Actions = {
 			headers: {
 				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 				'Content-Type': 'application/json',
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin // Include Referer header
 			},
 			credentials: 'include'
 		});

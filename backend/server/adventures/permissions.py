@@ -61,6 +61,10 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
 
     def has_object_permission(self, request, view, obj):
+        
+        # Allow GET only for a public object
+        if request.method in permissions.SAFE_METHODS and obj.is_public:
+            return True
         # Check if the object has a collection
         if hasattr(obj, 'collection') and obj.collection:
             # Allow all actions for shared users
@@ -70,28 +74,6 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         # Always allow GET, HEAD, or OPTIONS requests (safe methods)
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # Allow all actions for the owner
-        return obj.user_id == request.user
-
-class IsPublicOrOwnerOrSharedWithFullAccess(permissions.BasePermission):
-    """
-    Custom permission to allow:
-    - Read-only access for public objects
-    - Full access for shared users
-    - Full access for owners
-    """
-
-    def has_object_permission(self, request, view, obj):
-        # Allow read-only access for public objects
-        if obj.is_public and request.method in permissions.SAFE_METHODS:
-            return True
-
-        # Check if the object has a collection
-        if hasattr(obj, 'collection') and obj.collection:
-            # Allow all actions for shared users
-            if request.user in obj.collection.shared_with.all():
-                return True
 
         # Allow all actions for the owner
         return obj.user_id == request.user

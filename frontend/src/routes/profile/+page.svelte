@@ -3,12 +3,14 @@
 	import { t } from 'svelte-i18n';
 
 	let stats: {
-		country_count: number;
+		visited_country_count: number;
 		total_regions: number;
 		trips_count: number;
 		adventure_count: number;
 		visited_region_count: number;
 		total_countries: number;
+		visited_city_count: number;
+		total_cities: number;
 	} | null;
 
 	stats = data.stats || null;
@@ -73,10 +75,10 @@
 				<div class="stat">
 					<div class="stat-title">{$t('profile.visited_countries')}</div>
 					<div class="stat-value text-center">
-						{Math.round((stats.country_count / stats.total_countries) * 100)}%
+						{Math.round((stats.visited_country_count / stats.total_countries) * 100)}%
 					</div>
 					<div class="stat-desc text-center">
-						{stats.country_count}/{stats.total_countries}
+						{stats.visited_country_count}/{stats.total_countries}
 					</div>
 				</div>
 
@@ -87,6 +89,16 @@
 					</div>
 					<div class="stat-desc text-center">
 						{stats.visited_region_count}/{stats.total_regions}
+					</div>
+				</div>
+
+				<div class="stat">
+					<div class="stat-title">{$t('profile.visited_cities')}</div>
+					<div class="stat-value text-center">
+						{Math.round((stats.visited_city_count / stats.total_cities) * 100)}%
+					</div>
+					<div class="stat-desc text-center">
+						{stats.visited_city_count}/{stats.total_cities}
 					</div>
 				</div>
 			</div>

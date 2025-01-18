@@ -264,7 +264,10 @@
     "to": "Do",
     "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć.",
     "show_map": "Pokaż mapę",
-    "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody."
+    "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody.",
+    "cities_updated": "miasta zaktualizowane",
+    "create_adventure": "Stwórz przygodę",
+    "no_adventures_to_recommendations": "Nie znaleziono żadnych przygód. \nDodaj co najmniej jedną przygodę, aby uzyskać rekomendacje."
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -497,7 +500,8 @@
     "member_since": "Użytkownik od",
     "user_stats": "Statystyki użytkownika",
     "visited_countries": "Odwiedzone kraje",
-    "visited_regions": "Odwiedzone regiony"
+    "visited_regions": "Odwiedzone regiony",
+    "visited_cities": "Odwiedzone miasta"
   },
   "categories": {
     "manage_categories": "Zarządzaj kategoriami",
@@ -515,7 +519,8 @@
     "recent_adventures": "Ostatnie przygody",
     "total_adventures": "Totalne przygody",
     "total_visited_regions": "Łączna liczba odwiedzonych regionów",
-    "welcome_back": "Witamy z powrotem"
+    "welcome_back": "Witamy z powrotem",
+    "total_visited_cities": "Łączna liczba odwiedzonych miast"
   },
   "immich": {
     "api_key": "Klucz API Immicha",

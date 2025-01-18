@@ -62,7 +62,10 @@
 		});
 		let data = await res.json();
 		if (res.ok) {
-			addToast('success', `${data.new_regions} ${$t('adventures.regions_updated')}`);
+			addToast(
+				'success',
+				`${data.new_regions} ${$t('adventures.regions_updated')}. ${data.new_cities} ${$t('adventures.cities_updated')}.`
+			);
 		} else {
 			addToast('error', $t('adventures.error_updating_regions'));
 		}

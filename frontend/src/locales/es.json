@@ -264,7 +264,10 @@
     "to": "A",
     "transportation_delete_confirm": "¿Está seguro de que desea eliminar este transporte? \nEsta acción no se puede deshacer.",
     "show_map": "Mostrar mapa",
-    "will_be_marked": "se marcará como visitado una vez guardada la aventura."
+    "will_be_marked": "se marcará como visitado una vez guardada la aventura.",
+    "cities_updated": "ciudades actualizadas",
+    "create_adventure": "Crear aventura",
+    "no_adventures_to_recommendations": "No se encontraron aventuras. \nAñade al menos una aventura para obtener recomendaciones."
   },
   "worldtravel": {
     "all": "Todo",
@@ -497,7 +500,8 @@
     "member_since": "Miembro desde",
     "user_stats": "Estadísticas de usuario",
     "visited_countries": "Países visitados",
-    "visited_regions": "Regiones visitadas"
+    "visited_regions": "Regiones visitadas",
+    "visited_cities": "Ciudades Visitadas"
   },
   "categories": {
     "category_name": "Nombre de categoría",
@@ -515,7 +519,8 @@
     "recent_adventures": "Aventuras recientes",
     "total_adventures": "Aventuras totales",
     "total_visited_regions": "Total de regiones visitadas",
-    "welcome_back": "Bienvenido de nuevo"
+    "welcome_back": "Bienvenido de nuevo",
+    "total_visited_cities": "Total de ciudades visitadas"
   },
   "immich": {
     "api_key": "Clave API de Immich",

@@ -217,7 +217,10 @@
     "to": "到",
     "transportation_delete_confirm": "您确定要删除此交通工具吗？\n此操作无法撤消。",
     "show_map": "显示地图",
-    "will_be_marked": "保存冒险后将被标记为已访问。"
+    "will_be_marked": "保存冒险后将被标记为已访问。",
+    "cities_updated": "城市已更新",
+    "create_adventure": "创造冒险",
+    "no_adventures_to_recommendations": "没有发现任何冒险。\n至少添加一次冒险以获得推荐。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -497,7 +500,8 @@
     "member_since": "会员自",
     "user_stats": "用户统计",
     "visited_countries": "访问过的国家",
-    "visited_regions": "访问地区"
+    "visited_regions": "访问地区",
+    "visited_cities": "访问城市"
   },
   "categories": {
     "category_name": "类别名称",
@@ -515,7 +519,8 @@
     "recent_adventures": "最近的冒险",
     "total_adventures": "全面冒险",
     "total_visited_regions": "总访问地区",
-    "welcome_back": "欢迎回来"
+    "welcome_back": "欢迎回来",
+    "total_visited_cities": "访问城市总数"
   },
   "immich": {
     "api_key": "伊米奇 API 密钥",

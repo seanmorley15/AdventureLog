@@ -26,7 +26,8 @@
 		groupAdventuresByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
-		groupChecklistsByDate
+		groupChecklistsByDate,
+		osmTagToEmoji
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -207,6 +208,30 @@
 		}
 	}
 
+	function recomendationToAdventure(recomendation: any) {
+		adventureToEdit = {
+			id: '',
+			user_id: null,
+			name: recomendation.name,
+			latitude: recomendation.latitude,
+			longitude: recomendation.longitude,
+			images: [],
+			is_visited: false,
+			is_public: false,
+			visits: [],
+			category: {
+				display_name: recomendation.tag
+					.replace(/_/g, ' ')
+					.replace(/\b\w/g, (char: string) => char.toUpperCase()),
+				icon: osmTagToEmoji(recomendation.tag),
+				id: '',
+				name: recomendation.tag,
+				user_id: ''
+			}
+		};
+		isAdventureModalOpen = true;
+	}
+
 	let adventureToEdit: Adventure | null = null;
 	let transportationToEdit: Transportation | null = null;
 	let isAdventureModalOpen: boolean = false;
@@ -238,6 +263,72 @@
 			adventures = [event.detail, ...adventures];
 		}
 		isAdventureModalOpen = false;
+	}
+
+	let isPopupOpen = false;
+
+	function togglePopup() {
+		isPopupOpen = !isPopupOpen;
+	}
+
+	let recomendationsData: any;
+	let loadingRecomendations: boolean = false;
+	let recomendationsRange: number = 1600;
+	let recomendationType: string = 'tourism';
+	let recomendationTags: { name: string; display_name: string }[] = [];
+	let selectedRecomendationTag: string = '';
+	let filteredRecomendations: any[] = [];
+
+	$: {
+		if (recomendationsData && selectedRecomendationTag) {
+			filteredRecomendations = recomendationsData.filter(
+				(r: any) => r.tag === selectedRecomendationTag
+			);
+		} else {
+			filteredRecomendations = recomendationsData;
+		}
+		console.log(filteredRecomendations);
+		console.log(selectedRecomendationTag);
+	}
+	async function getRecomendations(adventure: Adventure) {
+		recomendationsData = null;
+		selectedRecomendationTag = '';
+		loadingRecomendations = true;
+		let res = await fetch(
+			`/api/overpass/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
+		);
+		if (!res.ok) {
+			console.log('Error fetching recommendations');
+			return;
+		}
+		let data = await res.json();
+		recomendationsData = data;
+
+		if (recomendationsData && recomendationsData.some((r: any) => r.longitude && r.latitude)) {
+			const tagMap = new Map();
+			recomendationsData.forEach((r: any) => {
+				const tag = formatTag(r.tag);
+				if (tag) {
+					tagMap.set(r.tag, { name: r.tag, display_name: tag });
+				}
+			});
+			recomendationTags = Array.from(tagMap.values());
+
+			function formatTag(tag: string): string {
+				if (tag) {
+					return (
+						tag
+							.split('_')
+							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(' ') + osmTagToEmoji(tag)
+					);
+				} else {
+					return '';
+				}
+			}
+		}
+		loadingRecomendations = false;
+		console.log(recomendationTags);
 	}
 
 	function saveOrCreateTransportation(event: CustomEvent<Transportation>) {
@@ -476,7 +567,7 @@
 	{#if collection.id}
 		<div class="flex justify-center mx-auto">
 			<!-- svelte-ignore a11y-missing-attribute -->
-			<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-xl">
+			<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-full">
 				<!-- svelte-ignore a11y-missing-attribute -->
 				{#if collection.start_date}
 					<a
@@ -507,6 +598,14 @@
 					tabindex="0"
 					on:click={() => (currentView = 'map')}
 					on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
+				>
+				<a
+					role="tab"
+					class="tab {currentView === 'recommendations' ? 'tab-active' : ''}"
+					tabindex="0"
+					on:click={() => (currentView = 'recommendations')}
+					on:keydown={(e) => e.key === 'Enter' && (currentView = 'recommendations')}
+					>Recommendations</a
 				>
 			</div>
 		</div>
@@ -797,6 +896,188 @@
 					{$t('adventures.adventure_calendar')}
 				</h2>
 				<Calendar {plugins} {options} />
+			</div>
+		</div>
+	{/if}
+	{#if currentView == 'recommendations'}
+		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
+			<div class="card-body">
+				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>
+				{#each adventures as adventure}
+					{#if adventure.longitude && adventure.latitude}
+						<button on:click={() => getRecomendations(adventure)} class="btn btn-neutral"
+							>{adventure.name}</button
+						>
+					{/if}
+				{/each}
+				{#if adventures.length == 0}
+					<div class="alert alert-info">
+						<p class="text-center text-lg">{$t('adventures.no_adventures_to_recommendations')}</p>
+					</div>
+				{/if}
+				<div class="mt-4">
+					<input
+						type="range"
+						min="1600"
+						max="80467"
+						class="range"
+						step="1600"
+						bind:value={recomendationsRange}
+					/>
+					<div class="flex w-full justify-between px-2">
+						<span class="text-lg"
+							>{Math.round(recomendationsRange / 1600)} mile ({(
+								(recomendationsRange / 1600) *
+								1.6
+							).toFixed(1)} km)</span
+						>
+					</div>
+					<div class="join flex items-center justify-center mt-4">
+						<input
+							class="join-item btn"
+							type="radio"
+							name="options"
+							aria-label="Tourism"
+							checked={recomendationType == 'tourism'}
+							on:click={() => (recomendationType = 'tourism')}
+						/>
+						<input
+							class="join-item btn"
+							type="radio"
+							name="options"
+							aria-label="Food"
+							checked={recomendationType == 'food'}
+							on:click={() => (recomendationType = 'food')}
+						/>
+						<input
+							class="join-item btn"
+							type="radio"
+							name="options"
+							aria-label="Lodging"
+							checked={recomendationType == 'lodging'}
+							on:click={() => (recomendationType = 'lodging')}
+						/>
+					</div>
+					{#if recomendationTags.length > 0}
+						<select
+							class="select select-bordered w-full max-w-xs"
+							bind:value={selectedRecomendationTag}
+						>
+							<option value="">All</option>
+							{#each recomendationTags as tag}
+								<option value={tag.name}>{tag.display_name}</option>
+							{/each}
+						</select>
+					{/if}
+				</div>
+
+				{#if recomendationsData}
+					<MapLibre
+						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+						class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max
+						-h-full w-full rounded-lg"
+						standardControls
+						center={{ lng: recomendationsData[0].longitude, lat: recomendationsData[0].latitude }}
+						zoom={12}
+					>
+						{#each filteredRecomendations as recomendation}
+							{#if recomendation.longitude && recomendation.latitude && recomendation.name}
+								<Marker
+									lngLat={[recomendation.longitude, recomendation.latitude]}
+									class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 text-black focus:outline-6 focus:outline-black"
+									on:click={togglePopup}
+								>
+									<span class="text-xl">
+										{osmTagToEmoji(recomendation.tag)}
+									</span>
+									{#if isPopupOpen}
+										<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
+											<div class="text-lg text-black font-bold">{recomendation.name}</div>
+
+											<p class="font-semibold text-black text-md">
+												{`${recomendation.tag} ${osmTagToEmoji(recomendation.tag)}`}
+											</p>
+
+											<button
+												class="btn btn-neutral btn-wide btn-sm mt-4"
+												on:click={() =>
+													window.open(
+														`https://www.openstreetmap.org/node/${recomendation.id}`,
+														'_blank'
+													)}>{$t('map.view_details')}</button
+											>
+											<button
+												class="btn btn-neutral btn-wide btn-sm mt-4"
+												on:click={() => recomendationToAdventure(recomendation)}
+												>{$t('adventures.create_adventure')}</button
+											>
+										</Popup>
+									{/if}
+								</Marker>
+							{/if}
+						{/each}
+					</MapLibre>
+					{#each filteredRecomendations as recomendation}
+						{#if recomendation.name && recomendation.longitude && recomendation.latitude}
+							<div class="card bg-base-100 shadow-xl my-4 w-full">
+								<div class="card-body">
+									<h2 class="card-title text-xl font-bold">
+										{recomendation.name || 'Recommendation'}
+									</h2>
+									<div class="badge badge-primary">{recomendation.tag}</div>
+									<p class="text-md">{recomendation.description || 'No description available.'}</p>
+									{#if recomendation.address}
+										<p class="text-md">
+											<strong>Address:</strong>
+											{recomendation.address.housenumber}
+											{recomendation.address.street}, {recomendation.address.city}, {recomendation
+												.address.state}
+											{recomendation.address.postcode}
+										</p>
+									{/if}
+									{#if recomendation.contact}
+										<p class="text-md">
+											<strong>Contact:</strong>
+											{#if recomendation.contact.phone}
+												Phone: {recomendation.contact.phone}
+											{/if}
+											{#if recomendation.contact.email}
+												Email: {recomendation.contact.email}
+											{/if}
+											{#if recomendation.contact.website}
+												Website: <a
+													href={recomendation.contact.website}
+													target="_blank"
+													rel="noopener noreferrer">{recomendation.contact.website}</a
+												>
+											{/if}
+										</p>
+									{/if}
+									<button
+										class="btn btn-primary"
+										on:click={() => recomendationToAdventure(recomendation)}
+									>
+										{$t('adventures.create_adventure')}
+									</button>
+								</div>
+							</div>
+						{/if}
+					{/each}
+				{/if}
+				{#if loadingRecomendations}
+					<div class="card bg-base-100 shadow-xl my-4 w-full">
+						<div class="card-body">
+							<div class="flex flex-col items-center justify-center">
+								<span class="loading loading-ring loading-lg"></span>
+								<div class="mt-2">
+									<p class="text-center text-lg">
+										Discovering hidden gems for your next adventure...
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}

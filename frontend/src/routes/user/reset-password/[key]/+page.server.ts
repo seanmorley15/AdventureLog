@@ -35,7 +35,8 @@ export const actions: Actions = {
 				headers: {
 					'Content-Type': 'application/json',
 					Cookie: `csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken
+					'X-CSRFToken': csrfToken,
+					Referer: event.url.origin // Include Referer header
 				},
 				method: 'POST',
 				credentials: 'include',

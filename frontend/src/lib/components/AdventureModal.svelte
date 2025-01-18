@@ -48,7 +48,6 @@
 	let adventure: Adventure = {
 		id: '',
 		name: '',
-		type: 'visited',
 		visits: [],
 		link: null,
 		description: null,
@@ -75,7 +74,6 @@
 	adventure = {
 		id: adventureToEdit?.id || '',
 		name: adventureToEdit?.name || '',
-		type: adventureToEdit?.type || 'general',
 		link: adventureToEdit?.link || null,
 		description: adventureToEdit?.description || null,
 		activity_types: adventureToEdit?.activity_types || [],
@@ -1045,13 +1043,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				<label for="image" class="block font-medium mb-2">
 					{$t('adventures.image')}
 				</label>
-				<form
-					method="POST"
-					action="/adventures?/image"
-					use:enhance={imageSubmit}
-					enctype="multipart/form-data"
-					class="flex flex-col items-start gap-2"
-				>
+				<form class="flex flex-col items-start gap-2">
 					<input
 						type="file"
 						name="image"

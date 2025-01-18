@@ -217,7 +217,10 @@
     "transportation_delete_confirm": "Weet u zeker dat u dit transport wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "ending_airport": "Einde luchthaven",
     "show_map": "Toon kaart",
-    "will_be_marked": "wordt gemarkeerd als bezocht zodra het avontuur is opgeslagen."
+    "will_be_marked": "wordt gemarkeerd als bezocht zodra het avontuur is opgeslagen.",
+    "cities_updated": "steden bijgewerkt",
+    "create_adventure": "Creëer avontuur",
+    "no_adventures_to_recommendations": "Geen avonturen gevonden. \nVoeg ten minste één avontuur toe om aanbevelingen te krijgen."
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -497,7 +500,8 @@
     "member_since": "Lid sinds",
     "user_stats": "Gebruikersstatistieken",
     "visited_countries": "Bezochte landen",
-    "visited_regions": "Bezochte regio's"
+    "visited_regions": "Bezochte regio's",
+    "visited_cities": "Steden bezocht"
   },
   "categories": {
     "category_name": "Categorienaam",
@@ -515,7 +519,8 @@
     "recent_adventures": "Recente avonturen",
     "total_adventures": "Totale avonturen",
     "total_visited_regions": "Totaal bezochte regio's",
-    "welcome_back": "Welkom terug"
+    "welcome_back": "Welkom terug",
+    "total_visited_cities": "Totaal bezochte steden"
   },
   "immich": {
     "api_key": "Immich API-sleutel",

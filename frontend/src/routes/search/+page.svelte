@@ -130,7 +130,7 @@
 				class="join-item btn"
 				type="radio"
 				name="filter"
-				aria-label={$t('adventures.activity_types')}
+				aria-label={$t('adventures.tags')}
 				id="activity_types"
 				on:change={() => (property = 'activity_types')}
 			/>

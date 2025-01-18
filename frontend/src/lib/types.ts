@@ -15,7 +15,6 @@ export type User = {
 export type Adventure = {
 	id: string;
 	user_id: string | null;
-	type: string;
 	name: string;
 	location?: string | null;
 	activity_types?: string[] | null;

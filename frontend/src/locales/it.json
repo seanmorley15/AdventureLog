@@ -217,7 +217,10 @@
     "to": "A",
     "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata.",
     "show_map": "Mostra mappa",
-    "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura."
+    "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura.",
+    "cities_updated": "città aggiornate",
+    "create_adventure": "Crea Avventura",
+    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -497,7 +500,8 @@
     "member_since": "Membro da allora",
     "user_stats": "Statistiche utente",
     "visited_countries": "Paesi visitati",
-    "visited_regions": "Regioni visitate"
+    "visited_regions": "Regioni visitate",
+    "visited_cities": "Città visitate"
   },
   "categories": {
     "category_name": "Nome della categoria",
@@ -515,7 +519,8 @@
     "recent_adventures": "Avventure recenti",
     "total_adventures": "Avventure totali",
     "total_visited_regions": "Totale regioni visitate",
-    "welcome_back": "Bentornato"
+    "welcome_back": "Bentornato",
+    "total_visited_cities": "Totale città visitate"
   },
   "immich": {
     "api_key": "Chiave API Immich",

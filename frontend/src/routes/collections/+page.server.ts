@@ -96,6 +96,7 @@ export const actions: Actions = {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin, // Include Referer header
 				Cookie: `sessionid=${sessionid}; csrftoken=${csrfToken}`
 			},
 			body: formDataToSend
@@ -174,9 +175,11 @@ export const actions: Actions = {
 			method: 'PATCH',
 			headers: {
 				'X-CSRFToken': csrfToken,
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: formDataToSend,
+
 			credentials: 'include'
 		});
 

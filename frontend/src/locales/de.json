@@ -217,7 +217,10 @@
     "to": "Zu",
     "transportation_delete_confirm": "Sind Sie sicher, dass Sie diesen Transport löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "show_map": "Karte anzeigen",
-    "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist."
+    "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist.",
+    "cities_updated": "Städte aktualisiert",
+    "create_adventure": "Erstelle Abenteuer",
+    "no_adventures_to_recommendations": "Keine Abenteuer gefunden. \nFügen Sie mindestens ein Abenteuer hinzu, um Empfehlungen zu erhalten."
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -497,7 +500,8 @@
     "member_since": "Mitglied seit",
     "user_stats": "Benutzerstatistiken",
     "visited_countries": "Besuchte Länder",
-    "visited_regions": "Besuchte Regionen"
+    "visited_regions": "Besuchte Regionen",
+    "visited_cities": "Besuchte Städte"
   },
   "categories": {
     "category_name": "Kategoriename",
@@ -515,7 +519,8 @@
     "recent_adventures": "Aktuelle Abenteuer",
     "total_adventures": "Totale Abenteuer",
     "total_visited_regions": "Insgesamt besuchte Regionen",
-    "welcome_back": "Willkommen zurück"
+    "welcome_back": "Willkommen zurück",
+    "total_visited_cities": "Insgesamt besuchte Städte"
   },
   "immich": {
     "api_key": "Immich-API-Schlüssel",
