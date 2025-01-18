@@ -242,6 +242,7 @@
 		"flight_information": "Flight Information",
 		"out_of_range": "Not in itinerary date range",
 		"preview": "Preview",
+		"finding_recommendations": "Discovering hidden gems for your next adventure",
 		"md_instructions": "Write your markdown here...",
 		"days": "days",
 		"activities": {
@@ -546,5 +547,12 @@
 		"immich_integration": "Immich Integration",
 		"localhost_note": "Note: localhost will most likely not work unless you have setup docker networks accordingly. It is recommended to use the IP address of the server or the domain name.",
 		"documentation": "Immich Integration Documentation"
+	},
+	"recomendations": {
+		"address": "Address",
+		"phone": "Phone",
+		"contact": "Contact",
+		"website": "Website",
+		"recommendation": "Recommendation"
 	}
 }

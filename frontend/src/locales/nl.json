@@ -220,7 +220,8 @@
     "will_be_marked": "wordt gemarkeerd als bezocht zodra het avontuur is opgeslagen.",
     "cities_updated": "steden bijgewerkt",
     "create_adventure": "Creëer avontuur",
-    "no_adventures_to_recommendations": "Geen avonturen gevonden. \nVoeg ten minste één avontuur toe om aanbevelingen te krijgen."
+    "no_adventures_to_recommendations": "Geen avonturen gevonden. \nVoeg ten minste één avontuur toe om aanbevelingen te krijgen.",
+    "finding_recommendations": "Ontdek verborgen juweeltjes voor je volgende avontuur"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -546,5 +547,12 @@
     "update_integration": "Integratie bijwerken",
     "documentation": "Immich-integratiedocumentatie",
     "localhost_note": "Opmerking: localhost zal hoogstwaarschijnlijk niet werken tenzij u de docker-netwerken dienovereenkomstig hebt ingesteld. \nHet wordt aanbevolen om het IP-adres van de server of de domeinnaam te gebruiken."
+  },
+  "recomendations": {
+    "address": "Adres",
+    "contact": "Contact",
+    "phone": "Telefoon",
+    "recommendation": "Aanbeveling",
+    "website": "Website"
   }
 }

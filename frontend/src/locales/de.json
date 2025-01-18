@@ -220,7 +220,8 @@
     "will_be_marked": "wird als besucht markiert, sobald das Abenteuer gespeichert ist.",
     "cities_updated": "Städte aktualisiert",
     "create_adventure": "Erstelle Abenteuer",
-    "no_adventures_to_recommendations": "Keine Abenteuer gefunden. \nFügen Sie mindestens ein Abenteuer hinzu, um Empfehlungen zu erhalten."
+    "no_adventures_to_recommendations": "Keine Abenteuer gefunden. \nFügen Sie mindestens ein Abenteuer hinzu, um Empfehlungen zu erhalten.",
+    "finding_recommendations": "Entdecken Sie verborgene Schätze für Ihr nächstes Abenteuer"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -546,5 +547,12 @@
     "immich_integration": "Immich-Integration",
     "documentation": "Immich-Integrationsdokumentation",
     "localhost_note": "Hinweis: localhost wird höchstwahrscheinlich nicht funktionieren, es sei denn, Sie haben Docker-Netzwerke entsprechend eingerichtet. \nEs wird empfohlen, die IP-Adresse des Servers oder den Domänennamen zu verwenden."
+  },
+  "recomendations": {
+    "address": "Adresse",
+    "contact": "Kontakt",
+    "phone": "Telefon",
+    "recommendation": "Empfehlung",
+    "website": "Webseite"
   }
 }

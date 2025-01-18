@@ -220,7 +220,8 @@
     "will_be_marked": "sera marqué comme visité une fois l’aventure sauvegardée.",
     "cities_updated": "villes mises à jour",
     "create_adventure": "Créer une aventure",
-    "no_adventures_to_recommendations": "Aucune aventure trouvée. \nAjoutez au moins une aventure pour obtenir des recommandations."
+    "no_adventures_to_recommendations": "Aucune aventure trouvée. \nAjoutez au moins une aventure pour obtenir des recommandations.",
+    "finding_recommendations": "Découvrir des trésors cachés pour votre prochaine aventure"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -546,5 +547,12 @@
     "update_integration": "Intégration des mises à jour",
     "documentation": "Documentation d'intégration Immich",
     "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine."
+  },
+  "recomendations": {
+    "address": "Adresse",
+    "contact": "Contact",
+    "phone": "Téléphone",
+    "recommendation": "Recommandation",
+    "website": "Site web"
   }
 }

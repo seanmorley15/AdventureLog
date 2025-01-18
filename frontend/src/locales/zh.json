@@ -220,7 +220,8 @@
     "will_be_marked": "保存冒险后将被标记为已访问。",
     "cities_updated": "城市已更新",
     "create_adventure": "创造冒险",
-    "no_adventures_to_recommendations": "没有发现任何冒险。\n至少添加一次冒险以获得推荐。"
+    "no_adventures_to_recommendations": "没有发现任何冒险。\n至少添加一次冒险以获得推荐。",
+    "finding_recommendations": "为您的下一次冒险发现隐藏的宝石"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -546,5 +547,12 @@
     "update_integration": "更新集成",
     "documentation": "Immich 集成文档",
     "localhost_note": "注意：除非您相应地设置了 docker 网络，否则 localhost 很可能无法工作。\n建议使用服务器的IP地址或域名。"
+  },
+  "recomendations": {
+    "address": "地址",
+    "contact": "接触",
+    "phone": "电话",
+    "recommendation": "推荐",
+    "website": "网站"
   }
 }

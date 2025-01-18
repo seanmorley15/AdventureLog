@@ -1022,13 +1022,12 @@
 							<div class="card bg-base-100 shadow-xl my-4 w-full">
 								<div class="card-body">
 									<h2 class="card-title text-xl font-bold">
-										{recomendation.name || 'Recommendation'}
+										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									<p class="text-md">{recomendation.description || 'No description available.'}</p>
 									{#if recomendation.address}
 										<p class="text-md">
-											<strong>Address:</strong>
+											<strong>{$t('recomendations.address')}:</strong>
 											{recomendation.address.housenumber}
 											{recomendation.address.street}, {recomendation.address.city}, {recomendation
 												.address.state}
@@ -1037,15 +1036,16 @@
 									{/if}
 									{#if recomendation.contact}
 										<p class="text-md">
-											<strong>Contact:</strong>
+											<strong>{$t('recomendations.contact')}:</strong>
 											{#if recomendation.contact.phone}
-												Phone: {recomendation.contact.phone}
+												{$t('recomendations.phone')}: {recomendation.contact.phone}
 											{/if}
 											{#if recomendation.contact.email}
-												Email: {recomendation.contact.email}
+												{$t('auth.email')}: {recomendation.contact.email}
 											{/if}
 											{#if recomendation.contact.website}
-												Website: <a
+												{$t('recomendations.website')}:
+												<a
 													href={recomendation.contact.website}
 													target="_blank"
 													rel="noopener noreferrer">{recomendation.contact.website}</a
@@ -1071,7 +1071,7 @@
 								<span class="loading loading-ring loading-lg"></span>
 								<div class="mt-2">
 									<p class="text-center text-lg">
-										Discovering hidden gems for your next adventure...
+										{$t('adventures.finding_recommendations')}...
 									</p>
 								</div>
 							</div>
