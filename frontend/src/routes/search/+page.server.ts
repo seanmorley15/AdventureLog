@@ -8,7 +8,6 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const query = event.url.searchParams.get('query');
-	const property = event.url.searchParams.get('property') || 'all';
 
 	if (!query) {
 		return { data: [] };
@@ -16,15 +15,12 @@ export const load = (async (event) => {
 
 	let sessionId = event.cookies.get('sessionid');
 
-	let res = await fetch(
-		`${serverEndpoint}/api/adventures/search/?query=${query}&property=${property}`,
-		{
-			headers: {
-				'Content-Type': 'application/json',
-				Cookie: `sessionid=${sessionId}`
-			}
+	let res = await fetch(`${serverEndpoint}/api/search/?query=${query}`, {
+		headers: {
+			'Content-Type': 'application/json',
+			Cookie: `sessionid=${sessionId}`
 		}
-	);
+	});
 
 	if (!res.ok) {
 		console.error('Failed to fetch search data');
@@ -32,27 +28,16 @@ export const load = (async (event) => {
 		return { error: error.error };
 	}
 
-	let adventures: Adventure[] = await res.json();
-
-	let osmRes = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-		headers: {
-			'User-Agent': `AdventureLog / ${appVersion} `
-		}
-	});
-
-	if (!osmRes.ok) {
-		console.error('Failed to fetch OSM data');
-		let error = await res.json();
-		return { error: error.error };
-	}
-
-	let osmData = (await osmRes.json()) as OpenStreetMapPlace[];
+	let data = await res.json();
 
 	return {
-		props: {
-			adventures,
-			query,
-			osmData
-		}
+		adventures: data.adventures,
+		collections: data.collections,
+		users: data.users,
+		countries: data.countries,
+		regions: data.regions,
+		cities: data.cities,
+		visited_cities: data.visited_cities,
+		visited_regions: data.visited_regions
 	};
 }) satisfies PageServerLoad;
