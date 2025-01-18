@@ -16,6 +16,7 @@ router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geo
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
 router.register(r'overpass', OverpassViewSet, basename='overpass')
+router.register(r'search', GlobalSearchView, basename='search')
 
 
 urlpatterns = [

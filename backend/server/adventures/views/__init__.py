@@ -11,3 +11,4 @@ from .overpass_view import *
 from .reverse_geocode_view import *
 from .stats_view import *
 from .transportation_view import *
+from .global_search_view import *

@@ -4,11 +4,12 @@ from typing import Iterable
 import uuid
 from django.db import models
 from django.utils.deconstruct import deconstructible
-
+from adventures.managers import AdventureManager
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
+
 
 ADVENTURE_TYPES = [
     ('general', 'General 🌍'),
@@ -87,6 +88,8 @@ class Adventure(models.Model):
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = AdventureManager()
 
     # DEPRECATED FIELDS - TO BE REMOVED IN FUTURE VERSIONS
     # Migrations performed in this version will remove these fields

@@ -289,6 +289,7 @@
 			let res = await fetch(imageUrl);
 			let blob = await res.blob();
 			let file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
+			wikiImageError = '';
 			let formData = new FormData();
 			formData.append('image', file);
 			formData.append('adventure', adventure.id);
@@ -1097,6 +1098,9 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						{$t('adventures.fetch_image')}
 					</button>
 				</div>
+				{#if wikiImageError}
+					<p class="text-red-500">{$t('adventures.wiki_image_error')}</p>
+				{/if}
 			</div>
 
 			{#if immichIntegration}

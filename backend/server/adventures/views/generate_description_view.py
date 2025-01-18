@@ -12,7 +12,7 @@ class GenerateDescription(viewsets.ViewSet):
         name = self.request.query_params.get('name', '')
         # un url encode the name
         name = name.replace('%20', ' ')
-        print(name)
+        name = self.get_search_term(name)
         url = 'https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=extracts&exintro&explaintext&format=json&titles=%s' % name
         response = requests.get(url)
         data = response.json()
@@ -27,6 +27,7 @@ class GenerateDescription(viewsets.ViewSet):
         name = self.request.query_params.get('name', '')
         # un url encode the name
         name = name.replace('%20', ' ')
+        name = self.get_search_term(name)
         url = 'https://en.wikipedia.org/w/api.php?origin=*&action=query&prop=pageimages&format=json&piprop=original&titles=%s' % name
         response = requests.get(url)
         data = response.json()
@@ -35,3 +36,9 @@ class GenerateDescription(viewsets.ViewSet):
         if extract.get('original') is None:
             return Response({"error": "No image found"}, status=400)
         return Response(extract["original"])
+    
+    def get_search_term(self, term):
+        response = requests.get(f'https://en.wikipedia.org/w/api.php?action=opensearch&search={term}&limit=10&namespace=0&format=json')
+        data = response.json()
+        if data[1] and len(data[1]) > 0:
+            return data[1][0]
