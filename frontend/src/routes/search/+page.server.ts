@@ -1,12 +1,14 @@
-import type { Adventure, OpenStreetMapPlace } from '$lib/types';
-import { fail } from '@sveltejs/kit';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { appVersion } from '$lib/config';
 
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
+	if (!event.locals.user) {
+		return redirect(302, '/login');
+	}
+
 	const query = event.url.searchParams.get('query');
 
 	if (!query) {
