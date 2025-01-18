@@ -107,7 +107,8 @@ export const actions: Actions = {
 
 			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
 				headers: {
-					Cookie: `sessionid=${sessionId}`
+					Cookie: `sessionid=${sessionId}`,
+					Referer: event.url.origin // Include Referer header
 				}
 			});
 
@@ -158,6 +159,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/auth/update-user/`, {
 				method: 'PATCH',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'X-CSRFToken': csrfToken
 				},
@@ -209,6 +211,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
 				method: 'POST',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'X-CSRFToken': csrfToken,
 					'Content-Type': 'application/json'
@@ -226,6 +229,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
 				method: 'POST',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'X-CSRFToken': csrfToken,
 					'Content-Type': 'application/json'
@@ -258,6 +262,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/auth/change-email/`, {
 				method: 'POST',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'Content-Type': 'application/json',
 					'X-CSRFToken': csrfToken
