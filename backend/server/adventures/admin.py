@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
+from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category, Attachment
 from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity
 from allauth.account.decorators import secure_admin_login
 
@@ -139,6 +139,7 @@ admin.site.register(AdventureImage, AdventureImageAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(VisitedCity)
+admin.site.register(Attachment)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

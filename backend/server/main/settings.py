@@ -81,8 +81,6 @@ MIDDLEWARE = (
 # disable verifications for new users
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 
-ALLAUTH_UI_THEME = "night"
-
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',

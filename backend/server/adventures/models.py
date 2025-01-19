@@ -287,6 +287,16 @@ class AdventureImage(models.Model):
 
     def __str__(self):
         return self.image.url
+    
+class Attachment(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    file = models.FileField(upload_to='attachments/')
+    adventure = models.ForeignKey(Adventure, related_name='attachments', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.file.url
 
 class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
