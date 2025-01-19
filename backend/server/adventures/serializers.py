@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 
@@ -19,6 +19,26 @@ class AdventureImageSerializer(CustomModelSerializer):
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
+        return representation
+    
+class AttachmentSerializer(CustomModelSerializer):
+    extension = serializers.SerializerMethodField()
+    class Meta:
+        model = Attachment
+        fields = ['id', 'file', 'adventure', 'extension']
+        read_only_fields = ['id']
+
+    def get_extension(self, obj):
+        return obj.file.name.split('.')[-1]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.file:
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            #print(public_url)
+            # remove any  ' from the url
+            public_url = public_url.replace("'", "")
+            representation['file'] = f"{public_url}/media/{instance.file.name}"
         return representation
     
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,6 +77,7 @@ class VisitSerializer(serializers.ModelSerializer):
 class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False, required=False)
+    attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
 
@@ -65,7 +86,7 @@ class AdventureSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
 

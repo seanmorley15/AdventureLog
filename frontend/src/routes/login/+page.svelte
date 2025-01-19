@@ -15,6 +15,29 @@
 	import OpenIdConnect from '~icons/mdi/openid';
 
 	import { page } from '$app/stores';
+	import { gsap } from 'gsap'; // Import GSAP
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		gsap.from('.card', {
+			opacity: 0,
+			y: 50,
+			duration: 1,
+			ease: 'power3.out'
+		});
+		gsap.from('.text-center', {
+			opacity: 0,
+			x: -50,
+			duration: 1,
+			ease: 'power2.out'
+		});
+		gsap.from('.input', {
+			opacity: 0,
+			y: 30,
+			duration: 1,
+			ease: 'power2.out'
+		});
+	});
 
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
