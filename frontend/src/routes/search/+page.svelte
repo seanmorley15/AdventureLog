@@ -1,32 +1,39 @@
 <script lang="ts">
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import { onMount } from 'svelte';
-	import type { PageData } from './$types';
-	import { t } from 'svelte-i18n';
 	import RegionCard from '$lib/components/RegionCard.svelte';
 	import CityCard from '$lib/components/CityCard.svelte';
 	import CountryCard from '$lib/components/CountryCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import UserCard from '$lib/components/UserCard.svelte';
+	import { page } from '$app/stores';
+	import type { PageData } from './$types';
+	import { t } from 'svelte-i18n';
+	import type {
+		Adventure,
+		Collection,
+		User,
+		Country,
+		Region,
+		City,
+		VisitedRegion,
+		VisitedCity
+	} from '$lib/types';
 
 	export let data: PageData;
 
-	let adventures = data.adventures;
-	let collections = data.collections;
-	let users = data.users;
-	let countries = data.countries;
-	let regions = data.regions;
-	let cities = data.cities;
+	// Whenever the query changes in the URL, SvelteKit automatically re-calls +page.server.ts
+	// and updates 'data'. This reactive statement reads the updated 'query' from $page:
+	$: query = $page.url.searchParams.get('query') ?? '';
 
-	let visited_regions: { region: any }[] = data.visited_regions;
-	let visited_cities: { city: any }[] = data.visited_cities;
-
-	let query: string | null = '';
-
-	onMount(() => {
-		const urlParams = new URLSearchParams(window.location.search);
-		query = urlParams.get('query');
-	});
+	// Assign updated results from data, so when data changes, the displayed items update:
+	$: adventures = data.adventures as Adventure[];
+	$: collections = data.collections as Collection[];
+	$: users = data.users as User[];
+	$: countries = data.countries as Country[];
+	$: regions = data.regions as Region[];
+	$: cities = data.cities as City[];
+	$: visited_regions = data.visited_regions as VisitedRegion[];
+	$: visited_cities = data.visited_cities as VisitedCity[];
 </script>
 
 <h1 class="text-4xl font-bold text-center m-4">Search{query ? `: ${query}` : ''}</h1>
@@ -44,7 +51,7 @@
 	<h2 class="text-3xl font-bold text-center m-4">Collections</h2>
 	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 		{#each collections as collection}
-			<CollectionCard {collection} type={''} />
+			<CollectionCard {collection} type="" />
 		{/each}
 	</div>
 {/if}
@@ -62,10 +69,7 @@
 	<h2 class="text-3xl font-bold text-center m-4">Regions</h2>
 	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 		{#each regions as region}
-			<RegionCard
-				{region}
-				visited={visited_regions.some((visitedRegion) => visitedRegion.region === region.id)}
-			/>
+			<RegionCard {region} visited={visited_regions.some((vr) => vr.region === region.id)} />
 		{/each}
 	</div>
 {/if}
@@ -74,10 +78,7 @@
 	<h2 class="text-3xl font-bold text-center m-4">Cities</h2>
 	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 		{#each cities as city}
-			<CityCard
-				{city}
-				visited={visited_cities.some((visitedCity) => visitedCity.city === city.id)}
-			/>
+			<CityCard {city} visited={visited_cities.some((vc) => vc.city === city.id)} />
 		{/each}
 	</div>
 {/if}
@@ -96,8 +97,3 @@
 		{$t('adventures.no_results')}
 	</p>
 {/if}
-
-<svelte:head>
-	<title>Search{query ? `: ${query}` : ''}</title>
-	<meta name="description" content="Search your adventures." />
-</svelte:head>
