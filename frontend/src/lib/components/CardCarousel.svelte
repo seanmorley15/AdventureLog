@@ -95,11 +95,14 @@
 			</div>
 		</div>
 	{:else}
-		<!-- svelte-ignore a11y-img-redundant-alt -->
-		<img
-			src={`https://placehold.co/300?text=${$t('adventures.no_image_found')}&font=roboto`}
-			alt="No image available"
-			class="w-full h-48 object-cover"
-		/>
+		<!-- add a figure with a gradient instead -  -->
+		<div class="w-full h-48 bg-gradient-to-r from-success via-base to-primary relative">
+			<!-- subtle button bottom left text -->
+			<div
+				class="absolute bottom-0 left-0 px-2 py-1 text-md font-medium bg-neutral rounded-tr-lg shadow-md"
+			>
+				{$t('adventures.no_image_found')}
+			</div>
+		</div>
 	{/if}
 </figure>
