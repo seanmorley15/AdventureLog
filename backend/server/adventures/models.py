@@ -292,8 +292,9 @@ class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    file = models.FileField(upload_to='attachments/')
+    file = models.FileField(upload_to=PathAndRename('attachments/'))
     adventure = models.ForeignKey(Adventure, related_name='attachments', on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return self.file.url

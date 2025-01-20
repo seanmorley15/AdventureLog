@@ -21,7 +21,7 @@
 			x: -50, // Smaller movement for quicker animation
 			duration: 0.6, // Quicker animation duration
 			stagger: 0.1, // Faster staggering
-			ease: 'power2.out'
+			ease: 'power2.out' // Slightly sharper easing for quicker feel
 		});
 
 		// Stat values with faster reveal and snappier effect
@@ -30,8 +30,8 @@
 			scale: 0.8, // Slightly less scaling for a snappier effect
 			duration: 1, // Shorter duration
 			stagger: 0.2, // Faster staggering
-			ease: 'power2.out', // Snappier easing
-			delay: 0.3 // Faster delay for quicker sequencing
+			ease: 'elastic.out(0.75, 0.5)', // Slightly snappier bounce
+			delay: 0 // Faster delay for quicker sequencing
 		});
 
 		// Adventure card animations with quicker reveal
@@ -41,7 +41,7 @@
 			duration: 0.8, // Quicker duration
 			stagger: 0.1, // Faster staggering
 			ease: 'power2.out',
-			delay: 0.6 // Shorter delay for quicker appearance
+			delay: 0 // Shorter delay for quicker appearance
 		});
 
 		// Inspiration section with faster bounce effect
@@ -50,7 +50,7 @@
 			scale: 0.7, // Less scale for snappier effect
 			duration: 1, // Slightly quicker duration
 			ease: 'elastic.out(0.75, 0.5)', // Snappier bounce
-			delay: 1 // Reduced delay for quicker animation
+			delay: 0 // Reduced delay for quicker animation
 		});
 	});
 

@@ -25,7 +25,7 @@ class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     class Meta:
         model = Attachment
-        fields = ['id', 'file', 'adventure', 'extension']
+        fields = ['id', 'file', 'adventure', 'extension', 'name']
         read_only_fields = ['id']
 
     def get_extension(self, obj):

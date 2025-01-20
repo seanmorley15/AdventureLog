@@ -12,6 +12,12 @@
 		return marked(markdown);
 	};
 
+	function deleteAttachment(event: CustomEvent<string>) {
+		adventure.attachments = adventure.attachments.filter(
+			(attachment) => attachment.id !== event.detail
+		);
+	}
+
 	export let data: PageData;
 	console.log(data);
 
@@ -30,6 +36,7 @@
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 
 	onMount(() => {
 		if (data.props.adventure) {
@@ -380,6 +387,52 @@
 								</MapLibre>
 							{/if}
 						</div>
+						{#if adventure.attachments && adventure.attachments.length > 0}
+							<div>
+								<!-- attachments -->
+								<h2 class="text-2xl font-bold mt-4">{$t('adventures.attachments')}</h2>
+								<div class="grid gap-4 mt-4">
+									{#if adventure.attachments && adventure.attachments.length > 0}
+										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+											{#each adventure.attachments as attachment}
+												<AttachmentCard {attachment} on:delete={deleteAttachment} />
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/if}
+						{#if adventure.images && adventure.images.length > 0}
+							<div>
+								<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
+								<div class="grid gap-4 mt-4">
+									{#if adventure.images && adventure.images.length > 0}
+										<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+											{#each adventure.images as image}
+												<div class="relative">
+													<!-- svelte-ignore a11y-no-static-element-interactions -->
+													<!-- svelte-ignore a11y-missing-attribute -->
+													<!-- svelte-ignore a11y-missing-content -->
+													<!-- svelte-ignore a11y-click-events-have-key-events -->
+													<div
+														class="w-full h-48 bg-cover bg-center rounded-lg"
+														style="background-image: url({image.image})"
+														on:click={() => (image_url = image.image)}
+													></div>
+													{#if image.is_primary}
+														<div
+															class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
+														>
+															{$t('adventures.primary')}
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>

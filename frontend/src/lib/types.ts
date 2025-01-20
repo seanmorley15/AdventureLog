@@ -40,6 +40,7 @@ export type Adventure = {
 	updated_at?: string | null;
 	is_visited?: boolean;
 	category: Category | null;
+	attachments: Attachment[];
 };
 
 export type Country = {
@@ -251,4 +252,13 @@ export type ImmichAlbum = {
 	isActivityEnabled: boolean;
 	order: string;
 	lastModifiedAssetTimestamp: string;
+};
+
+export type Attachment = {
+	id: string;
+	file: string;
+	adventure: string;
+	extension: string;
+	user_id: string;
+	name: string;
 };

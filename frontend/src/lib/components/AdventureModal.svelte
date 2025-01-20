@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type {
 		Adventure,
+		Attachment,
 		Category,
 		Collection,
 		OpenStreetMapPlace,
@@ -36,6 +37,7 @@
 
 	import Star from '~icons/mdi/star';
 	import Crown from '~icons/mdi/crown';
+	import AttachmentCard from './AttachmentCard.svelte';
 
 	let wikiError: string = '';
 
@@ -66,7 +68,8 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+		attachments: []
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -93,7 +96,9 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+
+		attachments: adventureToEdit?.attachments || []
 	};
 
 	let markers: Point[] = [];
@@ -131,6 +136,86 @@
 	$: {
 		if (!adventure.rating) {
 			adventure.rating = NaN;
+		}
+	}
+
+	function deleteAttachment(event: CustomEvent<string>) {
+		adventure.attachments = adventure.attachments.filter(
+			(attachment) => attachment.id !== event.detail
+		);
+	}
+
+	let attachmentName: string = '';
+	let attachmentToEdit: Attachment | null = null;
+
+	async function editAttachment() {
+		if (attachmentToEdit) {
+			let res = await fetch(`/api/attachments/${attachmentToEdit.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ name: attachmentToEdit.name })
+			});
+			if (res.ok) {
+				let newAttachment = (await res.json()) as Attachment;
+				adventure.attachments = adventure.attachments.map((attachment) => {
+					if (attachment.id === newAttachment.id) {
+						return newAttachment;
+					}
+					return attachment;
+				});
+				attachmentToEdit = null;
+				addToast('success', $t('adventures.attachment_update_success'));
+			} else {
+				addToast('error', $t('adventures.attachment_update_error'));
+			}
+		}
+	}
+
+	async function uploadAttachment(event: Event) {
+		event.preventDefault();
+		console.log('UPLOAD');
+
+		if (!fileInput || !fileInput.files || fileInput.files.length === 0) {
+			console.error('No files selected');
+			return;
+		}
+
+		const file = fileInput.files[0];
+		console.log(file);
+
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('adventure', adventure.id);
+		formData.append('name', attachmentName);
+
+		console.log(formData);
+
+		try {
+			const res = await fetch('/adventures?/attachment', {
+				method: 'POST',
+				body: formData
+			});
+
+			console.log(res);
+
+			if (res.ok) {
+				const newData = deserialize(await res.text()) as { data: Attachment };
+				adventure.attachments = [...adventure.attachments, newData.data];
+				addToast('success', $t('adventures.attachment_upload_success'));
+				attachmentName = '';
+			} else {
+				addToast('error', $t('adventures.attachment_upload_error'));
+			}
+		} catch (err) {
+			console.error(err);
+			addToast('error', $t('adventures.attachment_upload_error'));
+		} finally {
+			// Reset the file input for a new upload
+			if (fileInput) {
+				fileInput.value = '';
+			}
 		}
 	}
 
@@ -878,6 +963,68 @@ it would also work to just use on:click on the MapLibre component itself. -->
 						</div>
 					</div>
 
+					<div class="collapse collapse-plus bg-base-200 mb-4">
+						<input type="checkbox" />
+						<div class="collapse-title text-xl font-medium">
+							{$t('adventures.attachments')} ({adventure.attachments?.length || 0})
+						</div>
+						<div class="collapse-content">
+							<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+								{#each adventure.attachments as attachment}
+									<AttachmentCard
+										{attachment}
+										on:delete={deleteAttachment}
+										allowEdit
+										on:edit={(e) => (attachmentToEdit = e.detail)}
+									/>
+								{/each}
+							</div>
+							<form
+								on:submit={(e) => {
+									e.preventDefault();
+									uploadAttachment(e);
+								}}
+							>
+								<div class="flex gap-2 m-4">
+									<input
+										type="file"
+										id="fileInput"
+										class="file-input file-input-bordered w-full max-w-xs"
+										accept="image/*,video/*,audio/*,application/pdf"
+										bind:this={fileInput}
+									/>
+
+									<input
+										type="text"
+										class="input input-bordered w-full"
+										placeholder="Attachment Name"
+										bind:value={attachmentName}
+									/>
+									<button type="submit" class="btn btn-neutral">{$t('adventures.upload')}</button>
+								</div>
+							</form>
+							{#if attachmentToEdit}
+								<form
+									on:submit={(e) => {
+										e.preventDefault();
+										editAttachment();
+									}}
+								>
+									<div class="flex gap-2 m-4">
+										<input
+											type="text"
+											class="input input-bordered w-full"
+											placeholder="Attachment Name"
+											bind:value={attachmentToEdit.name}
+										/>
+										<button type="submit" class="btn btn-neutral"
+											>{$t('transportation.edit')}</button
+										>
+									</div>
+								</form>
+							{/if}
+						</div>
+					</div>
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
