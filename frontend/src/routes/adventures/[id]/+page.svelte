@@ -12,12 +12,6 @@
 		return marked(markdown);
 	};
 
-	function deleteAttachment(event: CustomEvent<string>) {
-		adventure.attachments = adventure.attachments.filter(
-			(attachment) => attachment.id !== event.detail
-		);
-	}
-
 	export let data: PageData;
 	console.log(data);
 
@@ -395,7 +389,7 @@
 									{#if adventure.attachments && adventure.attachments.length > 0}
 										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 											{#each adventure.attachments as attachment}
-												<AttachmentCard {attachment} on:delete={deleteAttachment} />
+												<AttachmentCard {attachment} />
 											{/each}
 										</div>
 									{/if}

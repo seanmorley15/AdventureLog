@@ -90,10 +90,10 @@
 				>
 					{$t('transportation.edit')}
 				</button>
+				<button class="btn btn-sm btn-danger btn-outline" type="button" on:click={deleteAttachment}>
+					{$t('adventures.delete')}
+				</button>
 			{/if}
-			<button class="btn btn-sm btn-danger btn-outline" type="button" on:click={deleteAttachment}>
-				{$t('adventures.delete')}
-			</button>
 		</div>
 	</div>
 </div>
