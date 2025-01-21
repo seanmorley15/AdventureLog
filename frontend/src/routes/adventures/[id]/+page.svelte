@@ -4,13 +4,64 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked'; // Import the markdown parser
+
+	// @ts-ignore
+	import toGeoJSON from '@mapbox/togeojson';
+
+	let geojson: any;
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown);
 	};
+
+	async function getGpxFiles() {
+		let gpxfiles: string[] = [];
+
+		// Collect all GPX file attachments
+		if (adventure.attachments && adventure.attachments.length > 0) {
+			adventure.attachments
+				.filter((attachment) => attachment.extension === 'gpx')
+				.forEach((attachment) => gpxfiles.push(attachment.file));
+		}
+
+		// Initialize a collection GeoJSON object
+		geojson = {
+			type: 'FeatureCollection',
+			features: []
+		};
+
+		// Process each GPX file
+		if (gpxfiles.length > 0) {
+			for (const gpxfile of gpxfiles) {
+				try {
+					let gpxFileName = gpxfile.split('/').pop();
+					let res = await fetch('/gpx/' + gpxFileName);
+
+					if (!res.ok) {
+						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
+						continue;
+					}
+
+					let gpxData = await res.text();
+					let parser = new DOMParser();
+					let gpx = parser.parseFromString(gpxData, 'text/xml');
+
+					// Convert GPX to GeoJSON and merge features
+					let convertedGeoJSON = toGeoJSON.gpx(gpx);
+					if (convertedGeoJSON.features) {
+						geojson.features.push(...convertedGeoJSON.features);
+					}
+				} catch (error) {
+					console.error(`Error processing GPX file ${gpxfile}:`, error);
+				}
+			}
+
+			// Log the final GeoJSON for debugging
+		}
+	}
 
 	export let data: PageData;
 	console.log(data);
@@ -32,7 +83,7 @@
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 
-	onMount(() => {
+	onMount(async () => {
 		if (data.props.adventure) {
 			adventure = data.props.adventure;
 			// sort so that any image in adventure_images .is_primary is first
@@ -48,6 +99,7 @@
 		} else {
 			notFound = true;
 		}
+		getGpxFiles();
 	});
 
 	function saveEdit(event: CustomEvent<Adventure>) {
@@ -345,6 +397,19 @@
 									center={{ lng: adventure.longitude, lat: adventure.latitude }}
 									zoom={12}
 								>
+									<!-- use the geojson to make a line -->
+									{#if geojson}
+										<!-- Add the GeoJSON data -->
+										<GeoJSON data={geojson}>
+											<LineLayer
+												paint={{
+													'line-color': '#FF0000', // Red line color
+													'line-width': 4 // Adjust the line thickness
+												}}
+											/>
+										</GeoJSON>
+									{/if}
+
 									<!-- MapEvents gives you access to map events even from other components inside the map,
   where you might not have access to the top-level `MapLibre` component. In this case
   it would also work to just use on:click on the MapLibre component itself. -->

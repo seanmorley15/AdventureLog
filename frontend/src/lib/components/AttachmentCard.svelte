@@ -27,7 +27,7 @@
 		const isImage = ['.jpg', '.jpeg', '.png', '.gif', '.webp'].some((ext) =>
 			attachment.file.endsWith(ext)
 		);
-		return isImage ? `url(${attachment.file})` : 'url(/path/to/default-placeholder.png)';
+		return isImage ? `url(${attachment.file})` : '';
 	}
 </script>
 
