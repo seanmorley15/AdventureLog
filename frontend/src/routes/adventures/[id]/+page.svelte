@@ -58,8 +58,6 @@
 					console.error(`Error processing GPX file ${gpxfile}:`, error);
 				}
 			}
-
-			// Log the final GeoJSON for debugging
 		}
 	}
 
