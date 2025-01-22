@@ -990,7 +990,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 										type="file"
 										id="fileInput"
 										class="file-input file-input-bordered w-full max-w-xs"
-										accept="image/*,video/*,audio/*,application/pdf"
+										accept="image/*,video/*,audio/*,application/pdf,.gpx"
 										bind:this={fileInput}
 									/>
 

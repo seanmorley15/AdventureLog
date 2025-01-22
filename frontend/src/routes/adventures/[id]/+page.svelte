@@ -99,7 +99,7 @@
 		} else {
 			notFound = true;
 		}
-		getGpxFiles();
+		await getGpxFiles();
 	});
 
 	function saveEdit(event: CustomEvent<Adventure>) {
@@ -379,23 +379,25 @@
 									</div>
 								{/if}
 							</div>
-							{#if adventure.longitude && adventure.latitude}
-								<div class="grid md:grid-cols-2 gap-4">
-									<div>
-										<p class="text-sm text-muted-foreground">{$t('adventures.latitude')}</p>
-										<p class="text-base font-medium">{adventure.latitude}° N</p>
+							{#if (adventure.longitude && adventure.latitude) || geojson}
+								{#if adventure.longitude && adventure.latitude}
+									<div class="grid md:grid-cols-2 gap-4">
+										<div>
+											<p class="text-sm text-muted-foreground">{$t('adventures.latitude')}</p>
+											<p class="text-base font-medium">{adventure.latitude}° N</p>
+										</div>
+										<div>
+											<p class="text-sm text-muted-foreground">{$t('adventures.longitude')}</p>
+											<p class="text-base font-medium">{adventure.longitude}° W</p>
+										</div>
 									</div>
-									<div>
-										<p class="text-sm text-muted-foreground">{$t('adventures.longitude')}</p>
-										<p class="text-base font-medium">{adventure.longitude}° W</p>
-									</div>
-								</div>
+								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 									standardControls
-									center={{ lng: adventure.longitude, lat: adventure.latitude }}
-									zoom={12}
+									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
+									zoom={adventure.longitude ? 12 : 1}
 								>
 									<!-- use the geojson to make a line -->
 									{#if geojson}
@@ -415,34 +417,36 @@
   it would also work to just use on:click on the MapLibre component itself. -->
 									<!-- <MapEvents on:click={addMarker} /> -->
 
-									<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-										<Popup openOn="click" offset={[0, -10]}>
-											<div class="text-lg text-black font-bold">{adventure.name}</div>
-											<p class="font-semibold text-black text-md">
-												{adventure.category?.display_name + ' ' + adventure.category?.icon}
-											</p>
-											{#if adventure.visits.length > 0}
-												<p class="text-black text-sm">
-													{#each adventure.visits as visit}
-														{visit.start_date
-															? new Date(visit.start_date).toLocaleDateString(undefined, {
-																	timeZone: 'UTC'
-																})
-															: ''}
-														{visit.end_date &&
-														visit.end_date !== '' &&
-														visit.end_date !== visit.start_date
-															? ' - ' +
-																new Date(visit.end_date).toLocaleDateString(undefined, {
-																	timeZone: 'UTC'
-																})
-															: ''}
-														<br />
-													{/each}
+									{#if adventure.longitude && adventure.latitude}
+										<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+											<Popup openOn="click" offset={[0, -10]}>
+												<div class="text-lg text-black font-bold">{adventure.name}</div>
+												<p class="font-semibold text-black text-md">
+													{adventure.category?.display_name + ' ' + adventure.category?.icon}
 												</p>
-											{/if}
-										</Popup>
-									</DefaultMarker>
+												{#if adventure.visits.length > 0}
+													<p class="text-black text-sm">
+														{#each adventure.visits as visit}
+															{visit.start_date
+																? new Date(visit.start_date).toLocaleDateString(undefined, {
+																		timeZone: 'UTC'
+																	})
+																: ''}
+															{visit.end_date &&
+															visit.end_date !== '' &&
+															visit.end_date !== visit.start_date
+																? ' - ' +
+																	new Date(visit.end_date).toLocaleDateString(undefined, {
+																		timeZone: 'UTC'
+																	})
+																: ''}
+															<br />
+														{/each}
+													</p>
+												{/if}
+											</Popup>
+										</DefaultMarker>
+									{/if}
 								</MapLibre>
 							{/if}
 						</div>
