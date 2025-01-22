@@ -35,3 +35,6 @@ class AttachmentViewSet(viewsets.ModelViewSet):
                 return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().create(request, *args, **kwargs)
+    
+    def perform_create(self, serializer):
+        serializer.save(user_id=self.request.user)

@@ -8,8 +8,8 @@ from main.utils import CustomModelSerializer
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure', 'is_primary']
-        read_only_fields = ['id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -25,8 +25,8 @@ class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     class Meta:
         model = Attachment
-        fields = ['id', 'file', 'adventure', 'extension', 'name']
-        read_only_fields = ['id']
+        fields = ['id', 'file', 'adventure', 'extension', 'name', 'user_id']
+        read_only_fields = ['id', 'user_id']
 
     def get_extension(self, obj):
         return obj.file.name.split('.')[-1]

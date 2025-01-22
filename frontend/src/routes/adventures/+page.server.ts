@@ -91,6 +91,9 @@ export const actions: Actions = {
 			body: formData
 		});
 		let data = await res.json();
+
+		console.log(res);
+		console.log(data);
 		return data;
 	}
 };

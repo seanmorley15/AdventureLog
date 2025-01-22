@@ -102,9 +102,11 @@
 		await getGpxFiles();
 	});
 
-	function saveEdit(event: CustomEvent<Adventure>) {
+	async function saveEdit(event: CustomEvent<Adventure>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
+		geojson = null;
+		await getGpxFiles();
 	}
 </script>
 
