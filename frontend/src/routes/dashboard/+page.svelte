@@ -43,17 +43,7 @@
 			ease: 'power2.out',
 			delay: 0 // Shorter delay for quicker appearance
 		});
-
-		// Inspiration section with faster bounce effect
-		gsap.from('.inspiration', {
-			opacity: 0,
-			scale: 0.7, // Less scale for snappier effect
-			duration: 1, // Slightly quicker duration
-			ease: 'elastic.out(0.75, 0.5)', // Snappier bounce
-			delay: 0 // Reduced delay for quicker animation
-		});
 	});
-
 	export let data: PageData;
 
 	import FlagCheckeredVariantIcon from '~icons/mdi/flag-checkered-variant';
