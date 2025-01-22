@@ -42,7 +42,7 @@
 	<h2 class="text-3xl font-bold text-center m-4">Adventures</h2>
 	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 		{#each adventures as adventure}
-			<AdventureCard {adventure} user={data.user} />
+			<AdventureCard {adventure} user={null} />
 		{/each}
 	</div>
 {/if}
@@ -97,3 +97,8 @@
 		{$t('adventures.no_results')}
 	</p>
 {/if}
+
+<svelte:head>
+	<title>Search: {query}</title>
+	<meta name="description" content="AdventureLog global search results for {query}" />
+</svelte:head>

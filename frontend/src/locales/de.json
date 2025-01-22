@@ -221,7 +221,20 @@
     "cities_updated": "Städte aktualisiert",
     "create_adventure": "Erstelle Abenteuer",
     "no_adventures_to_recommendations": "Keine Abenteuer gefunden. \nFügen Sie mindestens ein Abenteuer hinzu, um Empfehlungen zu erhalten.",
-    "finding_recommendations": "Entdecken Sie verborgene Schätze für Ihr nächstes Abenteuer"
+    "finding_recommendations": "Entdecken Sie verborgene Schätze für Ihr nächstes Abenteuer",
+    "attachment": "Anhang",
+    "attachment_delete_success": "Anhang erfolgreich gelöscht!",
+    "attachment_name": "Anhangsname",
+    "attachment_update_error": "Fehler beim Aktualisieren des Anhangs",
+    "attachment_update_success": "Anhang erfolgreich aktualisiert!",
+    "attachment_upload_error": "Fehler beim Hochladen des Anhangs",
+    "attachment_upload_success": "Anhang erfolgreich hochgeladen!",
+    "attachments": "Anhänge",
+    "gpx_tip": "Laden Sie GPX-Dateien als Anhänge hoch, um sie auf der Karte anzuzeigen!",
+    "images": "Bilder",
+    "primary": "Primär",
+    "upload": "Hochladen",
+    "view_attachment": "Anhang anzeigen"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",

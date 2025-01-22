@@ -255,6 +255,8 @@
 		"upload": "Upload",
 		"attachment_delete_success": "Attachment deleted successfully!",
 		"attachment_update_success": "Attachment updated successfully!",
+		"attachment_name": "Attachment Name",
+		"gpx_tip": "Upload GPX files to attachments to view them on the map!",
 		"attachment_update_error": "Error updating attachment",
 		"activities": {
 			"general": "General 🌍",

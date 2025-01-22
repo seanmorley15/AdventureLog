@@ -75,13 +75,15 @@
 			{attachment.name}
 		</span>
 		<div class="flex space-x-2">
-			<button
-				class="btn btn-sm btn-secondary btn-outline"
-				type="button"
-				on:click={() => window.open(attachment.file, '_blank')}
-			>
-				{$t('notes.open')}
-			</button>
+			{#if !allowEdit}
+				<button
+					class="btn btn-sm btn-secondary btn-outline"
+					type="button"
+					on:click={() => window.open(attachment.file, '_blank')}
+				>
+					{$t('notes.open')}
+				</button>
+			{/if}
 			{#if allowEdit}
 				<button
 					class="btn btn-sm btn-info btn-outline"

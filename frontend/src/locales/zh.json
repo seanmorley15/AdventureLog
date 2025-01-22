@@ -221,7 +221,20 @@
     "cities_updated": "城市已更新",
     "create_adventure": "创造冒险",
     "no_adventures_to_recommendations": "没有发现任何冒险。\n至少添加一次冒险以获得推荐。",
-    "finding_recommendations": "为您的下一次冒险发现隐藏的宝石"
+    "finding_recommendations": "为您的下一次冒险发现隐藏的宝石",
+    "attachment": "依恋",
+    "attachment_delete_success": "附件删除成功！",
+    "attachment_name": "附件名称",
+    "attachment_update_error": "更新附件时出错",
+    "attachment_update_success": "附件更新成功！",
+    "attachment_upload_error": "上传附件时出错",
+    "attachment_upload_success": "附件上传成功！",
+    "attachments": "附件",
+    "gpx_tip": "将 GPX 文件上传到附件即可在地图上查看！",
+    "images": "图片",
+    "primary": "基本的",
+    "upload": "上传",
+    "view_attachment": "查看附件"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",

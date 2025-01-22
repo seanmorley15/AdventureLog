@@ -11,6 +11,8 @@
 	// @ts-ignore
 	import toGeoJSON from '@mapbox/togeojson';
 
+	import LightbulbOn from '~icons/mdi/lightbulb-on';
+
 	let geojson: any;
 
 	const renderMarkdown = (markdown: string) => {
@@ -447,7 +449,15 @@
 						{#if adventure.attachments && adventure.attachments.length > 0}
 							<div>
 								<!-- attachments -->
-								<h2 class="text-2xl font-bold mt-4">{$t('adventures.attachments')}</h2>
+								<h2 class="text-2xl font-bold mt-4">
+									{$t('adventures.attachments')}
+									<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
+										<button class="btn btn-sm btn-circle btn-neutral">
+											<LightbulbOn class="w-6 h-6" />
+										</button>
+									</div>
+								</h2>
+
 								<div class="grid gap-4 mt-4">
 									{#if adventure.attachments && adventure.attachments.length > 0}
 										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

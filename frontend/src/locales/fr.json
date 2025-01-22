@@ -221,7 +221,20 @@
     "cities_updated": "villes mises à jour",
     "create_adventure": "Créer une aventure",
     "no_adventures_to_recommendations": "Aucune aventure trouvée. \nAjoutez au moins une aventure pour obtenir des recommandations.",
-    "finding_recommendations": "Découvrir des trésors cachés pour votre prochaine aventure"
+    "finding_recommendations": "Découvrir des trésors cachés pour votre prochaine aventure",
+    "attachment": "Pièce jointe",
+    "attachment_delete_success": "Pièce jointe supprimée avec succès !",
+    "attachment_name": "Nom de la pièce jointe",
+    "attachment_update_error": "Erreur lors de la mise à jour de la pièce jointe",
+    "attachment_update_success": "Pièce jointe mise à jour avec succès !",
+    "attachment_upload_error": "Erreur lors du téléchargement de la pièce jointe",
+    "attachment_upload_success": "Pièce jointe téléchargée avec succès !",
+    "attachments": "Pièces jointes",
+    "gpx_tip": "Téléchargez des fichiers GPX en pièces jointes pour les afficher sur la carte !",
+    "images": "Images",
+    "primary": "Primaire",
+    "upload": "Télécharger",
+    "view_attachment": "Voir la pièce jointe"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

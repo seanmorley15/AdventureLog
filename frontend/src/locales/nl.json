@@ -221,7 +221,20 @@
     "cities_updated": "steden bijgewerkt",
     "create_adventure": "Creëer avontuur",
     "no_adventures_to_recommendations": "Geen avonturen gevonden. \nVoeg ten minste één avontuur toe om aanbevelingen te krijgen.",
-    "finding_recommendations": "Ontdek verborgen juweeltjes voor je volgende avontuur"
+    "finding_recommendations": "Ontdek verborgen juweeltjes voor je volgende avontuur",
+    "attachment": "Bijlage",
+    "attachment_delete_success": "Bijlage succesvol verwijderd!",
+    "attachment_name": "Naam van bijlage",
+    "attachment_update_error": "Fout bij bijwerken van bijlage",
+    "attachment_update_success": "Bijlage succesvol bijgewerkt!",
+    "attachment_upload_error": "Fout bij het uploaden van bijlage",
+    "attachment_upload_success": "Bijlage succesvol geüpload!",
+    "attachments": "Bijlagen",
+    "gpx_tip": "Upload GPX-bestanden naar bijlagen om ze op de kaart te bekijken!",
+    "images": "Afbeeldingen",
+    "primary": "Primair",
+    "upload": "Uploaden",
+    "view_attachment": "Bijlage bekijken"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -221,7 +221,20 @@
     "cities_updated": "städer uppdaterade",
     "create_adventure": "Skapa äventyr",
     "no_adventures_to_recommendations": "Inga äventyr hittades. \nLägg till minst ett äventyr för att få rekommendationer.",
-    "finding_recommendations": "Upptäck dolda pärlor för ditt nästa äventyr"
+    "finding_recommendations": "Upptäck dolda pärlor för ditt nästa äventyr",
+    "attachment": "Fastsättning",
+    "attachment_delete_success": "Bilagan har raderats!",
+    "attachment_name": "Bilagans namn",
+    "attachment_update_error": "Fel vid uppdatering av bilaga",
+    "attachment_update_success": "Bilagan har uppdaterats!",
+    "attachment_upload_error": "Det gick inte att ladda upp bilagan",
+    "attachment_upload_success": "Bilagan har laddats upp!",
+    "attachments": "Bilagor",
+    "gpx_tip": "Ladda upp GPX-filer till bilagor för att se dem på kartan!",
+    "images": "Bilder",
+    "primary": "Primär",
+    "upload": "Ladda upp",
+    "view_attachment": "Visa bilaga"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

@@ -997,7 +997,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									<input
 										type="text"
 										class="input input-bordered w-full"
-										placeholder="Attachment Name"
+										placeholder={$t('adventures.attachment_name')}
 										bind:value={attachmentName}
 									/>
 									<button type="submit" class="btn btn-neutral">{$t('adventures.upload')}</button>
@@ -1014,7 +1014,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 										<input
 											type="text"
 											class="input input-bordered w-full"
-											placeholder="Attachment Name"
+											placeholder={$t('adventures.attachment_name')}
 											bind:value={attachmentToEdit.name}
 										/>
 										<button type="submit" class="btn btn-neutral"
