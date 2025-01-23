@@ -164,6 +164,9 @@
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1;
+
+			// Update `options.evdateents` when `collection.start_date` changes
+			options = { ...options, date: collection.start_date };
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
