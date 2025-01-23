@@ -108,5 +108,5 @@
 
 <svelte:head>
 	<title>Profile | AdventureLog</title>
-	<meta name="description" content="{data.user.first_name}'s profile on AdventureLog." />
+	<meta name="description" content="View your adventure collections." />
 </svelte:head>
