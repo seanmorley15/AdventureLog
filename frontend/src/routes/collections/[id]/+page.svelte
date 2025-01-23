@@ -33,6 +33,8 @@
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
+	import CardCarousel from '$lib/components/CardCarousel.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data: PageData;
 	console.log(data);
@@ -840,16 +842,55 @@
 				>
 					{#each adventures as adventure}
 						{#if adventure.longitude && adventure.latitude}
-							<Marker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+							<Marker
+								lngLat={[adventure.longitude, adventure.latitude]}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 {adventure.is_visited
+									? 'bg-red-300'
+									: 'bg-blue-300'} text-black focus:outline-6 focus:outline-black"
+								on:click={togglePopup}
+							>
 								<span class="text-xl">
 									{adventure.category?.icon}
 								</span>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{adventure.name}</div>
-									<p class="font-semibold text-black text-md">
-										{adventure.category?.display_name + ' ' + adventure.category?.icon}
-									</p>
-								</Popup>
+								{#if isPopupOpen}
+									<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
+										{#if adventure.images && adventure.images.length > 0}
+											<CardCarousel adventures={[adventure]} />
+										{/if}
+										<div class="text-lg text-black font-bold">{adventure.name}</div>
+										<p class="font-semibold text-black text-md">
+											{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
+										</p>
+										<p class="font-semibold text-black text-md">
+											{adventure.category?.display_name + ' ' + adventure.category?.icon}
+										</p>
+										{#if adventure.visits && adventure.visits.length > 0}
+											<p class="text-black text-sm">
+												{#each adventure.visits as visit}
+													{visit.start_date
+														? new Date(visit.start_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+													{visit.end_date &&
+													visit.end_date !== '' &&
+													visit.end_date !== visit.start_date
+														? ' - ' +
+															new Date(visit.end_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+													<br />
+												{/each}
+											</p>
+										{/if}
+										<button
+											class="btn btn-neutral btn-wide btn-sm mt-4"
+											on:click={() => goto(`/adventures/${adventure.id}`)}
+											>{$t('map.view_details')}</button
+										>
+									</Popup>
+								{/if}
 							</Marker>
 						{/if}
 					{/each}
