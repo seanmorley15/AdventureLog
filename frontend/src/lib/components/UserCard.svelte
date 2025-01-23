@@ -4,6 +4,7 @@
 	import type { User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { t } from 'svelte-i18n';
 
 	import Calendar from '~icons/mdi/calendar';
 
@@ -43,7 +44,8 @@
 		<div class="flex items-center justify-center mt-4 space-x-2 text-sm">
 			<Calendar class="w-5 h-5 text-primary" />
 			<p>
-				{user.date_joined ? 'Joined ' + new Date(user.date_joined).toLocaleDateString() : ''}
+				{$t('profile.member_since')}
+				{new Date(user.date_joined).toLocaleDateString()}
 			</p>
 		</div>
 
