@@ -90,12 +90,14 @@
 
 		if (transportations) {
 			dates = dates.concat(
-				transportations.map((transportation) => ({
-					id: transportation.id,
-					start: transportation.date || '', // Ensure it's a string
-					end: transportation.end_date || transportation.date || '', // Ensure it's a string
-					title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
-				}))
+				transportations
+					.filter((i) => i.date)
+					.map((transportation) => ({
+						id: transportation.id,
+						start: transportation.date || '', // Ensure it's a string
+						end: transportation.end_date || transportation.date || '', // Ensure it's a string
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+					}))
 			);
 		}
 
@@ -162,6 +164,9 @@
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1;
+
+			// Update `options.evdateents` when `collection.start_date` changes
+			options = { ...options, date: collection.start_date };
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
