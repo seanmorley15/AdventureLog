@@ -833,14 +833,17 @@
 				>
 					{#each adventures as adventure}
 						{#if adventure.longitude && adventure.latitude}
-							<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+							<Marker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+								<span class="text-xl">
+									{adventure.category?.icon}
+								</span>
 								<Popup openOn="click" offset={[0, -10]}>
 									<div class="text-lg text-black font-bold">{adventure.name}</div>
 									<p class="font-semibold text-black text-md">
 										{adventure.category?.display_name + ' ' + adventure.category?.icon}
 									</p>
 								</Popup>
-							</DefaultMarker>
+							</Marker>
 						{/if}
 					{/each}
 					{#each transportations as transportation}
