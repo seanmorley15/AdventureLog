@@ -90,12 +90,14 @@
 
 		if (transportations) {
 			dates = dates.concat(
-				transportations.map((transportation) => ({
-					id: transportation.id,
-					start: transportation.date || '', // Ensure it's a string
-					end: transportation.end_date || transportation.date || '', // Ensure it's a string
-					title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
-				}))
+				transportations
+					.filter((i) => i.date)
+					.map((transportation) => ({
+						id: transportation.id,
+						start: transportation.date || '', // Ensure it's a string
+						end: transportation.end_date || transportation.date || '', // Ensure it's a string
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+					}))
 			);
 		}
 
