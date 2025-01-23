@@ -166,6 +166,7 @@
 				) + 1;
 
 			// Update `options.evdateents` when `collection.start_date` changes
+			// @ts-ignore
 			options = { ...options, date: collection.start_date };
 		}
 		if (collection.transportations) {
@@ -232,7 +233,8 @@
 				id: '',
 				name: recomendation.tag,
 				user_id: ''
-			}
+			},
+			attachments: []
 		};
 		isAdventureModalOpen = true;
 	}
