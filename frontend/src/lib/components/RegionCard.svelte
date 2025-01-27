@@ -7,7 +7,7 @@
 	import { t } from 'svelte-i18n';
 
 	export let region: Region;
-	export let visited: boolean;
+	export let visited: boolean | undefined;
 
 	function goToCity() {
 		console.log(region);
@@ -64,12 +64,12 @@
 		</div>
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
-			{#if !visited}
+			{#if !visited && visited !== undefined}
 				<button class="btn btn-primary" on:click={markVisited}
 					>{$t('adventures.mark_visited')}</button
 				>
 			{/if}
-			{#if visited}
+			{#if visited && visited !== undefined}
 				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
 			{/if}
 			{#if region.num_cities > 0}

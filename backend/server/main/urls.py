@@ -1,12 +1,9 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from django.conf import settings
-from django.conf.urls.static import static
 from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView
-from .views import get_csrf_token, get_public_url
+from .views import get_csrf_token, get_public_url, serve_protected_media
 from drf_yasg.views import get_schema_view
-
 from drf_yasg import openapi
 
 schema_view = get_schema_view(
@@ -19,6 +16,9 @@ urlpatterns = [
     path('api/', include('adventures.urls')),
     path('api/', include('worldtravel.urls')),
     path("_allauth/", include("allauth.headless.urls")),
+
+    # Serve protected media files
+    re_path(r'^media/(?P<path>.*)$', serve_protected_media, name='serve-protected-media'),
 
     path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
     path('auth/users/', PublicUserListView.as_view(), name='public-user-list'),
@@ -44,6 +44,5 @@ urlpatterns = [
 
     path("api/integrations/", include("integrations.urls")),
 
-    # Include the API endpoints:
-    
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Include the API endpoints:   
+]

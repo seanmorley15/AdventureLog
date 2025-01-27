@@ -1,5 +1,7 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
+// @ts-ignore
+import psl from 'psl';
 import { themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
@@ -43,23 +45,21 @@ export const actions: Actions = {
 			credentials: 'include'
 		});
 
-		// Determine the proper cookie domain
+		// Get the proper cookie domain using psl
 		const hostname = event.url.hostname;
-		const domainParts = hostname.split('.');
+		let cookieDomain;
+
+		// Check if hostname is an IP address
 		const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
-		let cookieDomain: string | undefined = undefined;
 
 		if (!isIPAddress) {
-			// Handle domain names
-			if (domainParts.length > 2) {
-				// For subdomains like app.mydomain.com -> .mydomain.com
-				cookieDomain = '.' + domainParts.slice(-2).join('.');
-			} else if (domainParts.length === 2) {
-				// For root domains like mydomain.com -> .mydomain.com
-				cookieDomain = '.' + hostname;
+			const parsed = psl.parse(hostname);
+
+			if (parsed && parsed.domain) {
+				// Use the parsed domain (e.g., mydomain.com)
+				cookieDomain = `.${parsed.domain}`;
 			}
 		}
-		// No domain is set for IP addresses or single-part hostnames like "localhost"
 
 		// Delete the session cookie
 		event.cookies.delete('sessionid', {

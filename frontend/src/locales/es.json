@@ -267,7 +267,21 @@
     "will_be_marked": "se marcará como visitado una vez guardada la aventura.",
     "cities_updated": "ciudades actualizadas",
     "create_adventure": "Crear aventura",
-    "no_adventures_to_recommendations": "No se encontraron aventuras. \nAñade al menos una aventura para obtener recomendaciones."
+    "no_adventures_to_recommendations": "No se encontraron aventuras. \nAñade al menos una aventura para obtener recomendaciones.",
+    "finding_recommendations": "Descubriendo gemas ocultas para tu próxima aventura",
+    "attachment": "Adjunto",
+    "attachment_delete_success": "¡El archivo adjunto se eliminó exitosamente!",
+    "attachment_update_error": "Error al actualizar el archivo adjunto",
+    "attachment_update_success": "¡Adjunto actualizado exitosamente!",
+    "attachment_upload_error": "Error al cargar el archivo adjunto",
+    "attachment_upload_success": "¡El archivo adjunto se cargó exitosamente!",
+    "attachments": "Adjuntos",
+    "gpx_tip": "¡Sube archivos GPX a archivos adjuntos para verlos en el mapa!",
+    "images": "Imágenes",
+    "primary": "Primario",
+    "upload": "Subir",
+    "view_attachment": "Ver archivo adjunto",
+    "attachment_name": "Nombre del archivo adjunto"
   },
   "worldtravel": {
     "all": "Todo",
@@ -546,5 +560,12 @@
     "immich_integration": "Integración Immich",
     "documentation": "Documentación de integración de Immich",
     "localhost_note": "Nota: lo más probable es que localhost no funcione a menos que haya configurado las redes acoplables en consecuencia. \nSe recomienda utilizar la dirección IP del servidor o el nombre de dominio."
+  },
+  "recomendations": {
+    "address": "DIRECCIÓN",
+    "contact": "Contacto",
+    "phone": "Teléfono",
+    "recommendation": "Recomendación",
+    "website": "Sitio web"
   }
 }

@@ -1,185 +1,104 @@
 <script lang="ts">
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure, OpenStreetMapPlace } from '$lib/types';
-	import { onMount } from 'svelte';
+	import RegionCard from '$lib/components/RegionCard.svelte';
+	import CityCard from '$lib/components/CityCard.svelte';
+	import CountryCard from '$lib/components/CountryCard.svelte';
+	import CollectionCard from '$lib/components/CollectionCard.svelte';
+	import UserCard from '$lib/components/UserCard.svelte';
+	import { page } from '$app/stores';
 	import type { PageData } from './$types';
-	import { goto } from '$app/navigation';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import { t } from 'svelte-i18n';
+	import type {
+		Adventure,
+		Collection,
+		User,
+		Country,
+		Region,
+		City,
+		VisitedRegion,
+		VisitedCity
+	} from '$lib/types';
 
 	export let data: PageData;
 
-	function deleteAdventure(event: CustomEvent<string>) {
-		myAdventures = myAdventures.filter((adventure) => adventure.id !== event.detail);
-	}
+	// Whenever the query changes in the URL, SvelteKit automatically re-calls +page.server.ts
+	// and updates 'data'. This reactive statement reads the updated 'query' from $page:
+	$: query = $page.url.searchParams.get('query') ?? '';
 
-	let osmResults: OpenStreetMapPlace[] = [];
-	let myAdventures: Adventure[] = [];
-	let publicAdventures: Adventure[] = [];
-
-	let query: string | null = '';
-	let property: string = 'all';
-
-	// on chage of property, console log the property
-
-	function filterByProperty() {
-		let url = new URL(window.location.href);
-		url.searchParams.set('property', property);
-		goto(url.toString(), { invalidateAll: true });
-	}
-
-	onMount(() => {
-		const urlParams = new URLSearchParams(window.location.search);
-		query = urlParams.get('query');
-	});
-
-	console.log(data);
-	$: {
-		if (data.props) {
-			myAdventures = data.props.adventures;
-			publicAdventures = data.props.adventures;
-
-			if (data.user?.uuid != null) {
-				myAdventures = myAdventures.filter((adventure) => adventure.user_id === data.user?.uuid);
-			} else {
-				myAdventures = [];
-			}
-
-			publicAdventures = publicAdventures.filter(
-				(adventure) => adventure.user_id !== data.user?.uuid
-			);
-
-			if (data.props.osmData) {
-				osmResults = data.props.osmData;
-			}
-		}
-	}
-
-	let adventureToEdit: Adventure;
-	let isAdventureModalOpen: boolean = false;
-
-	function editAdventure(event: CustomEvent<Adventure>) {
-		adventureToEdit = event.detail;
-		isAdventureModalOpen = true;
-	}
-
-	function saveEdit(event: CustomEvent<Adventure>) {
-		console.log(event.detail);
-		myAdventures = myAdventures.map((adventure) => {
-			if (adventure.id === event.detail.id) {
-				return event.detail;
-			}
-			return adventure;
-		});
-		isAdventureModalOpen = false;
-		console.log(myAdventures);
-	}
+	// Assign updated results from data, so when data changes, the displayed items update:
+	$: adventures = data.adventures as Adventure[];
+	$: collections = data.collections as Collection[];
+	$: users = data.users as User[];
+	$: countries = data.countries as Country[];
+	$: regions = data.regions as Region[];
+	$: cities = data.cities as City[];
+	$: visited_regions = data.visited_regions as VisitedRegion[];
+	$: visited_cities = data.visited_cities as VisitedCity[];
 </script>
 
-{#if isAdventureModalOpen}
-	<AdventureModal
-		{adventureToEdit}
-		on:close={() => (isAdventureModalOpen = false)}
-		on:save={filterByProperty}
-	/>
-{/if}
+<h1 class="text-4xl font-bold text-center m-4">Search{query ? `: ${query}` : ''}</h1>
 
-{#if myAdventures.length === 0 && osmResults.length === 0}
-	<NotFound error={data.error} />
-{/if}
-
-{#if myAdventures.length !== 0}
-	<h2 class="text-center font-bold text-2xl mb-4">{$t('search.adventurelog_results')}</h2>
-	<div class="flex items-center justify-center mt-2 mb-2">
-		<div class="join">
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
-				aria-label={$t('adventures.all')}
-				id="all"
-				checked
-				on:change={() => (property = 'all')}
-			/>
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
-				aria-label={$t('adventures.name')}
-				id="name"
-				on:change={() => (property = 'name')}
-			/>
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
-				aria-label={$t('adventures.location')}
-				id="location"
-				on:change={() => (property = 'location')}
-			/>
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
-				aria-label={$t('adventures.description')}
-				id="description"
-				on:change={() => (property = 'description')}
-			/>
-			<input
-				class="join-item btn"
-				type="radio"
-				name="filter"
-				aria-label={$t('adventures.tags')}
-				id="activity_types"
-				on:change={() => (property = 'activity_types')}
-			/>
-		</div>
-		<button class="btn btn-primary ml-2" type="button" on:click={filterByProperty}
-			>{$t('adventures.filter')}</button
-		>
-	</div>
-{/if}
-
-{#if myAdventures.length > 0}
-	<h2 class="text-center font-bold text-2xl mb-4">{$t('adventures.my_adventures')}</h2>
-	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-		{#each myAdventures as adventure}
-			<AdventureCard
-				user={data.user}
-				{adventure}
-				on:delete={deleteAdventure}
-				on:edit={editAdventure}
-			/>
+{#if adventures.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Adventures</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each adventures as adventure}
+			<AdventureCard {adventure} user={null} />
 		{/each}
 	</div>
 {/if}
 
-{#if publicAdventures.length > 0}
-	<h2 class="text-center font-bold text-2xl mb-4">{$t('search.public_adventures')}</h2>
-	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-		{#each publicAdventures as adventure}
-			<AdventureCard user={null} {adventure} on:delete={deleteAdventure} on:edit={editAdventure} />
+{#if collections.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Collections</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each collections as collection}
+			<CollectionCard {collection} type="" />
 		{/each}
 	</div>
 {/if}
-{#if myAdventures.length > 0 && osmResults.length > 0 && publicAdventures.length > 0}
-	<div class="divider"></div>
-{/if}
-{#if osmResults.length > 0}
-	<h2 class="text-center font-bold mt-2 text-2xl mb-4">{$t('search.online_results')}</h2>
-	<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-		{#each osmResults as result}
-			<div class="bg-base-300 rounded-lg shadow-md p-4 w-96 mb-2">
-				<h2 class="text-xl font-bold">{result.display_name}</h2>
-				<p>{result.type}</p>
-				<p>{result.lat}, {result.lon}</p>
-			</div>
+
+{#if countries.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Countries</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each countries as country}
+			<CountryCard {country} />
 		{/each}
 	</div>
+{/if}
+
+{#if regions.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Regions</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each regions as region}
+			<RegionCard {region} visited={visited_regions.some((vr) => vr.region === region.id)} />
+		{/each}
+	</div>
+{/if}
+
+{#if cities.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Cities</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each cities as city}
+			<CityCard {city} visited={visited_cities.some((vc) => vc.city === city.id)} />
+		{/each}
+	</div>
+{/if}
+
+{#if users.length > 0}
+	<h2 class="text-3xl font-bold text-center m-4">Users</h2>
+	<div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
+		{#each users as user}
+			<UserCard {user} />
+		{/each}
+	</div>
+{/if}
+
+{#if adventures.length === 0 && regions.length === 0 && cities.length === 0 && countries.length === 0 && collections.length === 0 && users.length === 0}
+	<p class="text-center text-lg m-4">
+		{$t('adventures.no_results')}
+	</p>
 {/if}
 
 <svelte:head>
-	<title>Search{query ? `: ${query}` : ''}</title>
-	<meta name="description" content="Search your adventures." />
+	<title>Search: {query}</title>
+	<meta name="description" content="AdventureLog global search results for {query}" />
 </svelte:head>

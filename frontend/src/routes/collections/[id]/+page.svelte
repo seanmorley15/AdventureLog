@@ -33,6 +33,8 @@
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
+	import CardCarousel from '$lib/components/CardCarousel.svelte';
+	import { goto } from '$app/navigation';
 
 	export let data: PageData;
 	console.log(data);
@@ -90,12 +92,14 @@
 
 		if (transportations) {
 			dates = dates.concat(
-				transportations.map((transportation) => ({
-					id: transportation.id,
-					start: transportation.date || '', // Ensure it's a string
-					end: transportation.end_date || transportation.date || '', // Ensure it's a string
-					title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
-				}))
+				transportations
+					.filter((i) => i.date)
+					.map((transportation) => ({
+						id: transportation.id,
+						start: transportation.date || '', // Ensure it's a string
+						end: transportation.end_date || transportation.date || '', // Ensure it's a string
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+					}))
 			);
 		}
 
@@ -162,6 +166,10 @@
 					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
 						(1000 * 60 * 60 * 24)
 				) + 1;
+
+			// Update `options.evdateents` when `collection.start_date` changes
+			// @ts-ignore
+			options = { ...options, date: collection.start_date };
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
@@ -227,7 +235,8 @@
 				id: '',
 				name: recomendation.tag,
 				user_id: ''
-			}
+			},
+			attachments: []
 		};
 		isAdventureModalOpen = true;
 	}
@@ -833,14 +842,56 @@
 				>
 					{#each adventures as adventure}
 						{#if adventure.longitude && adventure.latitude}
-							<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{adventure.name}</div>
-									<p class="font-semibold text-black text-md">
-										{adventure.category?.display_name + ' ' + adventure.category?.icon}
-									</p>
-								</Popup>
-							</DefaultMarker>
+							<Marker
+								lngLat={[adventure.longitude, adventure.latitude]}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 {adventure.is_visited
+									? 'bg-red-300'
+									: 'bg-blue-300'} text-black focus:outline-6 focus:outline-black"
+								on:click={togglePopup}
+							>
+								<span class="text-xl">
+									{adventure.category?.icon}
+								</span>
+								{#if isPopupOpen}
+									<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
+										{#if adventure.images && adventure.images.length > 0}
+											<CardCarousel adventures={[adventure]} />
+										{/if}
+										<div class="text-lg text-black font-bold">{adventure.name}</div>
+										<p class="font-semibold text-black text-md">
+											{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
+										</p>
+										<p class="font-semibold text-black text-md">
+											{adventure.category?.display_name + ' ' + adventure.category?.icon}
+										</p>
+										{#if adventure.visits && adventure.visits.length > 0}
+											<p class="text-black text-sm">
+												{#each adventure.visits as visit}
+													{visit.start_date
+														? new Date(visit.start_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+													{visit.end_date &&
+													visit.end_date !== '' &&
+													visit.end_date !== visit.start_date
+														? ' - ' +
+															new Date(visit.end_date).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})
+														: ''}
+													<br />
+												{/each}
+											</p>
+										{/if}
+										<button
+											class="btn btn-neutral btn-wide btn-sm mt-4"
+											on:click={() => goto(`/adventures/${adventure.id}`)}
+											>{$t('map.view_details')}</button
+										>
+									</Popup>
+								{/if}
+							</Marker>
 						{/if}
 					{/each}
 					{#each transportations as transportation}
@@ -1022,13 +1073,12 @@
 							<div class="card bg-base-100 shadow-xl my-4 w-full">
 								<div class="card-body">
 									<h2 class="card-title text-xl font-bold">
-										{recomendation.name || 'Recommendation'}
+										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									<p class="text-md">{recomendation.description || 'No description available.'}</p>
 									{#if recomendation.address}
 										<p class="text-md">
-											<strong>Address:</strong>
+											<strong>{$t('recomendations.address')}:</strong>
 											{recomendation.address.housenumber}
 											{recomendation.address.street}, {recomendation.address.city}, {recomendation
 												.address.state}
@@ -1037,15 +1087,16 @@
 									{/if}
 									{#if recomendation.contact}
 										<p class="text-md">
-											<strong>Contact:</strong>
+											<strong>{$t('recomendations.contact')}:</strong>
 											{#if recomendation.contact.phone}
-												Phone: {recomendation.contact.phone}
+												{$t('recomendations.phone')}: {recomendation.contact.phone}
 											{/if}
 											{#if recomendation.contact.email}
-												Email: {recomendation.contact.email}
+												{$t('auth.email')}: {recomendation.contact.email}
 											{/if}
 											{#if recomendation.contact.website}
-												Website: <a
+												{$t('recomendations.website')}:
+												<a
 													href={recomendation.contact.website}
 													target="_blank"
 													rel="noopener noreferrer">{recomendation.contact.website}</a
@@ -1071,7 +1122,7 @@
 								<span class="loading loading-ring loading-lg"></span>
 								<div class="mt-2">
 									<p class="text-center text-lg">
-										Discovering hidden gems for your next adventure...
+										{$t('adventures.finding_recommendations')}...
 									</p>
 								</div>
 							</div>

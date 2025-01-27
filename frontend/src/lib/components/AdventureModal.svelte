@@ -2,6 +2,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import type {
 		Adventure,
+		Attachment,
 		Category,
 		Collection,
 		OpenStreetMapPlace,
@@ -36,6 +37,7 @@
 
 	import Star from '~icons/mdi/star';
 	import Crown from '~icons/mdi/crown';
+	import AttachmentCard from './AttachmentCard.svelte';
 
 	let wikiError: string = '';
 
@@ -66,7 +68,8 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+		attachments: []
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -93,7 +96,9 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+
+		attachments: adventureToEdit?.attachments || []
 	};
 
 	let markers: Point[] = [];
@@ -131,6 +136,97 @@
 	$: {
 		if (!adventure.rating) {
 			adventure.rating = NaN;
+		}
+	}
+
+	function deleteAttachment(event: CustomEvent<string>) {
+		adventure.attachments = adventure.attachments.filter(
+			(attachment) => attachment.id !== event.detail
+		);
+	}
+
+	let attachmentName: string = '';
+	let attachmentToEdit: Attachment | null = null;
+
+	async function editAttachment() {
+		if (attachmentToEdit) {
+			let res = await fetch(`/api/attachments/${attachmentToEdit.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ name: attachmentToEdit.name })
+			});
+			if (res.ok) {
+				let newAttachment = (await res.json()) as Attachment;
+				adventure.attachments = adventure.attachments.map((attachment) => {
+					if (attachment.id === newAttachment.id) {
+						return newAttachment;
+					}
+					return attachment;
+				});
+				attachmentToEdit = null;
+				addToast('success', $t('adventures.attachment_update_success'));
+			} else {
+				addToast('error', $t('adventures.attachment_update_error'));
+			}
+		}
+	}
+
+	let selectedFile: File | null = null;
+
+	function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files.length) {
+			selectedFile = input.files[0];
+			console.log('Selected file:', selectedFile);
+		}
+	}
+
+	async function uploadAttachment(event: Event) {
+		event.preventDefault();
+		console.log('UPLOAD');
+		console.log(selectedFile);
+
+		if (!selectedFile) {
+			console.error('No files selected');
+			return;
+		}
+
+		const file = selectedFile;
+		console.log(file);
+
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('adventure', adventure.id);
+		formData.append('name', attachmentName);
+
+		console.log(formData);
+
+		try {
+			const res = await fetch('/adventures?/attachment', {
+				method: 'POST',
+				body: formData
+			});
+
+			console.log(res);
+
+			if (res.ok) {
+				const newData = deserialize(await res.text()) as { data: Attachment };
+				adventure.attachments = [...adventure.attachments, newData.data];
+				addToast('success', $t('adventures.attachment_upload_success'));
+				attachmentName = '';
+			} else {
+				addToast('error', $t('adventures.attachment_upload_error'));
+			}
+		} catch (err) {
+			console.error(err);
+			addToast('error', $t('adventures.attachment_upload_error'));
+		} finally {
+			// Reset the file input for a new upload
+			if (fileInput) {
+				fileInput.value = '';
+			}
 		}
 	}
 
@@ -289,6 +385,7 @@
 			let res = await fetch(imageUrl);
 			let blob = await res.blob();
 			let file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
+			wikiImageError = '';
 			let formData = new FormData();
 			formData.append('image', file);
 			formData.append('adventure', adventure.id);
@@ -876,7 +973,6 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							<ActivityComplete bind:activities={adventure.activity_types} />
 						</div>
 					</div>
-
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
@@ -1037,119 +1133,180 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</form>
 			</div>
 		{:else}
-			<p class="text-lg">{$t('adventures.upload_images_here')}</p>
-
-			<div class="mb-4">
-				<label for="image" class="block font-medium mb-2">
-					{$t('adventures.image')}
-				</label>
-				<form class="flex flex-col items-start gap-2">
-					<input
-						type="file"
-						name="image"
-						class="file-input file-input-bordered w-full max-w-sm"
-						bind:this={fileInput}
-						accept="image/*"
-						id="image"
-						multiple
-						on:change={handleMultipleFiles}
-					/>
-					<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-					<!-- <button class="btn btn-neutral w-full max-w-sm" type="submit">
-						{$t('adventures.upload_image')}
-					</button> -->
-				</form>
-			</div>
-
-			<div class="mb-4">
-				<label for="url" class="block font-medium mb-2">
-					{$t('adventures.url')}
-				</label>
-				<div class="flex gap-2">
-					<input
-						type="text"
-						id="url"
-						name="url"
-						bind:value={url}
-						class="input input-bordered flex-1"
-						placeholder="Enter image URL"
-					/>
-					<button class="btn btn-neutral" type="button" on:click={fetchImage}>
-						{$t('adventures.fetch_image')}
-					</button>
-				</div>
-			</div>
-
-			<div class="mb-4">
-				<label for="name" class="block font-medium mb-2">
-					{$t('adventures.wikipedia')}
-				</label>
-				<div class="flex gap-2">
-					<input
-						type="text"
-						id="name"
-						name="name"
-						bind:value={imageSearch}
-						class="input input-bordered flex-1"
-						placeholder="Search Wikipedia for images"
-					/>
-					<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
-						{$t('adventures.fetch_image')}
-					</button>
-				</div>
-			</div>
-
-			{#if immichIntegration}
-				<ImmichSelect
-					on:fetchImage={(e) => {
-						url = e.detail;
-						fetchImage();
-					}}
-				/>
-			{/if}
-
-			<div class="divider"></div>
-
-			{#if images.length > 0}
-				<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
-				<div class="flex flex-wrap gap-4">
-					{#each images as image}
-						<div class="relative h-32 w-32">
-							<button
-								type="button"
-								class="absolute top-1 right-1 btn btn-error btn-xs z-10"
-								on:click={() => removeImage(image.id)}
-							>
-								✕
-							</button>
-							{#if !image.is_primary}
-								<button
-									type="button"
-									class="absolute top-1 left-1 btn btn-success btn-xs z-10"
-									on:click={() => makePrimaryImage(image.id)}
-								>
-									<Star class="h-4 w-4" />
-								</button>
-							{:else}
-								<!-- crown icon -->
-
-								<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
-									<Crown class="h-4 w-4" />
-								</div>
-							{/if}
-							<img
-								src={image.image}
-								alt={image.id}
-								class="w-full h-full object-cover rounded-md shadow-md"
-							/>
+			<div class="modal-action items-center">
+				<div class="collapse collapse-plus bg-base-200 mb-4">
+					<input type="checkbox" />
+					<div class="collapse-title text-xl font-medium">
+						{$t('adventures.attachments')} ({adventure.attachments?.length || 0})
+					</div>
+					<div class="collapse-content">
+						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{#each adventure.attachments as attachment}
+								<AttachmentCard
+									{attachment}
+									on:delete={deleteAttachment}
+									allowEdit
+									on:edit={(e) => (attachmentToEdit = e.detail)}
+								/>
+							{/each}
 						</div>
-					{/each}
-				</div>
-			{:else}
-				<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
-			{/if}
+						<div class="flex gap-2 m-4">
+							<input
+								type="file"
+								id="fileInput"
+								class="file-input file-input-bordered w-full max-w-xs"
+								accept="image/*,video/*,audio/*,application/pdf,.gpx"
+								on:change={handleFileChange}
+							/>
 
-			<div class="mt-6">
+							<input
+								type="text"
+								class="input input-bordered w-full"
+								placeholder={$t('adventures.attachment_name')}
+								bind:value={attachmentName}
+							/>
+							<button class="btn btn-neutral" on:click={uploadAttachment}>
+								{$t('adventures.upload')}
+							</button>
+						</div>
+
+						{#if attachmentToEdit}
+							<form
+								on:submit={(e) => {
+									e.preventDefault();
+									editAttachment();
+								}}
+							>
+								<div class="flex gap-2 m-4">
+									<input
+										type="text"
+										class="input input-bordered w-full"
+										placeholder={$t('adventures.attachment_name')}
+										bind:value={attachmentToEdit.name}
+									/>
+									<button type="submit" class="btn btn-neutral">{$t('transportation.edit')}</button>
+								</div>
+							</form>
+						{/if}
+					</div>
+				</div>
+			</div>
+			<div class="collapse collapse-plus bg-base-200 mb-4">
+				<input type="checkbox" checked />
+				<div class="collapse-title text-xl font-medium">
+					{$t('adventures.images')} ({adventure.images?.length || 0})
+				</div>
+				<div class="collapse-content">
+					<label for="image" class="block font-medium mb-2">
+						{$t('adventures.image')}
+					</label>
+					<form class="flex flex-col items-start gap-2">
+						<input
+							type="file"
+							name="image"
+							class="file-input file-input-bordered w-full max-w-sm"
+							bind:this={fileInput}
+							accept="image/*"
+							id="image"
+							multiple
+							on:change={handleMultipleFiles}
+						/>
+						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
+					</form>
+
+					<div class="mb-4">
+						<label for="url" class="block font-medium mb-2">
+							{$t('adventures.url')}
+						</label>
+						<div class="flex gap-2">
+							<input
+								type="text"
+								id="url"
+								name="url"
+								bind:value={url}
+								class="input input-bordered flex-1"
+								placeholder="Enter image URL"
+							/>
+							<button class="btn btn-neutral" type="button" on:click={fetchImage}>
+								{$t('adventures.fetch_image')}
+							</button>
+						</div>
+					</div>
+
+					<div class="mb-4">
+						<label for="name" class="block font-medium mb-2">
+							{$t('adventures.wikipedia')}
+						</label>
+						<div class="flex gap-2">
+							<input
+								type="text"
+								id="name"
+								name="name"
+								bind:value={imageSearch}
+								class="input input-bordered flex-1"
+								placeholder="Search Wikipedia for images"
+							/>
+							<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
+								{$t('adventures.fetch_image')}
+							</button>
+						</div>
+						{#if wikiImageError}
+							<p class="text-red-500">{$t('adventures.wiki_image_error')}</p>
+						{/if}
+					</div>
+
+					{#if immichIntegration}
+						<ImmichSelect
+							on:fetchImage={(e) => {
+								url = e.detail;
+								fetchImage();
+							}}
+						/>
+					{/if}
+
+					<div class="divider"></div>
+
+					{#if images.length > 0}
+						<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
+						<div class="flex flex-wrap gap-4">
+							{#each images as image}
+								<div class="relative h-32 w-32">
+									<button
+										type="button"
+										class="absolute top-1 right-1 btn btn-error btn-xs z-10"
+										on:click={() => removeImage(image.id)}
+									>
+										✕
+									</button>
+									{#if !image.is_primary}
+										<button
+											type="button"
+											class="absolute top-1 left-1 btn btn-success btn-xs z-10"
+											on:click={() => makePrimaryImage(image.id)}
+										>
+											<Star class="h-4 w-4" />
+										</button>
+									{:else}
+										<!-- crown icon -->
+
+										<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
+											<Crown class="h-4 w-4" />
+										</div>
+									{/if}
+									<img
+										src={image.image}
+										alt={image.id}
+										class="w-full h-full object-cover rounded-md shadow-md"
+									/>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
+					{/if}
+				</div>
+			</div>
+			<div class="mt-4">
 				<button type="button" class="btn btn-primary w-full max-w-sm" on:click={saveAndClose}>
 					{$t('about.close')}
 				</button>

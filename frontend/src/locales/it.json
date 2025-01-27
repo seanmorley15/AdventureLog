@@ -220,7 +220,21 @@
     "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura.",
     "cities_updated": "città aggiornate",
     "create_adventure": "Crea Avventura",
-    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli."
+    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli.",
+    "finding_recommendations": "Alla scoperta di gemme nascoste per la tua prossima avventura",
+    "attachment": "Allegato",
+    "attachment_delete_success": "Allegato eliminato con successo!",
+    "attachment_name": "Nome dell'allegato",
+    "attachment_update_error": "Errore durante l'aggiornamento dell'allegato",
+    "attachment_update_success": "Allegato aggiornato con successo!",
+    "attachment_upload_error": "Errore durante il caricamento dell'allegato",
+    "attachment_upload_success": "Allegato caricato con successo!",
+    "attachments": "Allegati",
+    "gpx_tip": "Carica i file GPX negli allegati per visualizzarli sulla mappa!",
+    "images": "Immagini",
+    "primary": "Primario",
+    "upload": "Caricamento",
+    "view_attachment": "Visualizza allegato"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -546,5 +560,12 @@
     "update_integration": "Aggiorna integrazione",
     "documentation": "Documentazione sull'integrazione di Immich",
     "localhost_note": "Nota: molto probabilmente localhost non funzionerà a meno che tu non abbia configurato le reti docker di conseguenza. \nSi consiglia di utilizzare l'indirizzo IP del server o il nome del dominio."
+  },
+  "recomendations": {
+    "address": "Indirizzo",
+    "contact": "Contatto",
+    "phone": "Telefono",
+    "recommendation": "Raccomandazione",
+    "website": "Sito web"
   }
 }

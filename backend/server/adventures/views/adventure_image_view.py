@@ -11,10 +11,6 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureImageSerializer
     permission_classes = [IsAuthenticated]
 
-    def dispatch(self, request, *args, **kwargs):
-        print(f"Method: {request.method}")
-        return super().dispatch(request, *args, **kwargs)
-
     @action(detail=True, methods=['post'])
     def image_delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)

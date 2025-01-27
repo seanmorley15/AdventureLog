@@ -1,5 +1,6 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-
+// @ts-ignore
+import psl from 'psl';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
@@ -105,7 +106,7 @@ export const actions: Actions = {
 	}
 };
 
-function handleSuccessfulLogin(event: RequestEvent, response: Response) {
+function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
 	const setCookieHeader = response.headers.get('Set-Cookie');
 	if (setCookieHeader) {
 		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
@@ -113,26 +114,22 @@ function handleSuccessfulLogin(event: RequestEvent, response: Response) {
 		if (match) {
 			const [, sessionId, expiryString] = match;
 
-			// Get the proper cookie domain
+			// Get the proper cookie domain using psl
 			const hostname = event.url.hostname;
-			const domainParts = hostname.split('.');
-			let cookieDomain: string | undefined = undefined;
+			let cookieDomain;
 
 			// Check if hostname is an IP address
 			const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
 
 			if (!isIPAddress) {
-				if (domainParts.length > 2) {
-					// For subdomains like app.mydomain.com -> .mydomain.com
-					cookieDomain = '.' + domainParts.slice(-2).join('.');
-				} else if (domainParts.length === 2) {
-					// For root domains like mydomain.com -> .mydomain.com
-					cookieDomain = '.' + hostname;
+				const parsed = psl.parse(hostname);
+
+				if (parsed && parsed.domain) {
+					// Use the parsed domain (e.g., mydomain.com)
+					cookieDomain = `.${parsed.domain}`;
 				}
 			}
-			// Do not set a domain for IP addresses or single-part hostnames
-
-			console.log('Setting sessionid cookie with domain:', cookieDomain);
+			// Do not set a domain for IP addresses or invalid hostnames
 
 			event.cookies.set('sessionid', sessionId, {
 				path: '/',

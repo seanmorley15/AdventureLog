@@ -35,15 +35,19 @@
 		"tslib": "^2.6.3",
 		"typescript": "^5.5.2",
 		"unplugin-icons": "^0.19.0",
-		"vite": "^5.3.6"
+		"vite": "^5.4.12"
 	},
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
+		"@mapbox/togeojson": "^0.16.2",
 		"emoji-picker-element": "^1.26.0",
+		"gsap": "^3.12.7",
 		"marked": "^15.0.4",
+		"psl": "^1.15.0",
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
-		"svelte-maplibre": "^0.9.8"
+		"svelte-maplibre": "^0.9.8",
+		"tsparticles": "^3.7.1"
 	}
 }

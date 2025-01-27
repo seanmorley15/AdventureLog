@@ -267,7 +267,21 @@
     "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody.",
     "cities_updated": "miasta zaktualizowane",
     "create_adventure": "Stwórz przygodę",
-    "no_adventures_to_recommendations": "Nie znaleziono żadnych przygód. \nDodaj co najmniej jedną przygodę, aby uzyskać rekomendacje."
+    "no_adventures_to_recommendations": "Nie znaleziono żadnych przygód. \nDodaj co najmniej jedną przygodę, aby uzyskać rekomendacje.",
+    "finding_recommendations": "Odkrywanie ukrytych klejnotów na następną przygodę",
+    "attachment": "Załącznik",
+    "attachment_delete_success": "Załącznik został pomyślnie usunięty!",
+    "attachment_name": "Nazwa załącznika",
+    "attachment_update_error": "Błąd podczas aktualizacji załącznika",
+    "attachment_update_success": "Załącznik został pomyślnie zaktualizowany!",
+    "attachment_upload_error": "Błąd podczas przesyłania załącznika",
+    "attachment_upload_success": "Załącznik przesłany pomyślnie!",
+    "attachments": "Załączniki",
+    "gpx_tip": "Przesyłaj pliki GPX do załączników, aby wyświetlić je na mapie!",
+    "images": "Obrazy",
+    "primary": "Podstawowy",
+    "upload": "Wgrywać",
+    "view_attachment": "Zobacz załącznik"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -546,5 +560,12 @@
     "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!",
     "documentation": "Dokumentacja integracji Immicha",
     "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny."
+  },
+  "recomendations": {
+    "address": "Adres",
+    "contact": "Kontakt",
+    "phone": "Telefon",
+    "recommendation": "Zalecenie",
+    "website": "Strona internetowa"
   }
 }
