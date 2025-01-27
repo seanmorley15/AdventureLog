@@ -131,8 +131,6 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 			}
 			// Do not set a domain for IP addresses or invalid hostnames
 
-			console.log('Setting sessionid cookie with domain:', cookieDomain);
-
 			event.cookies.set('sessionid', sessionId, {
 				path: '/',
 				httpOnly: true,
