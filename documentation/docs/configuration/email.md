@@ -13,14 +13,14 @@ environment:
 
 ```yaml
 environment:
-  - EMAIL_BACKEND='email'
-  - EMAIL_HOST='smtp.gmail.com'
-  - EMAIL_USE_TLS=False
+  - EMAIL_BACKEND=email
+  - EMAIL_HOST=smtp.gmail.com
+  - EMAIL_USE_TLS=True
   - EMAIL_PORT=587
-  - EMAIL_USE_SSL=True
-  - EMAIL_HOST_USER='user'
-  - EMAIL_HOST_PASSWORD='password'
-  - DEFAULT_FROM_EMAIL='user@example.com'
+  - EMAIL_USE_SSL=False
+  - EMAIL_HOST_USER=user
+  - EMAIL_HOST_PASSWORD=password
+  - DEFAULT_FROM_EMAIL=user@example.com
 ```
 
 ## Customizing Emails
