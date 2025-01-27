@@ -14,6 +14,7 @@ from dotenv import load_dotenv
 from os import getenv
 from pathlib import Path
 from urllib.parse import urlparse
+from publicsuffix2 import get_sld
 # Load environment variables from .env file
 load_dotenv()
 
@@ -132,16 +133,26 @@ SESSION_COOKIE_SAMESITE = None
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
+# Parse the FRONTEND_URL
 parsed_url = urlparse(FRONTEND_URL)
 hostname = parsed_url.hostname
+
+# Check if the hostname is an IP address
 is_ip_address = hostname.replace('.', '').isdigit()
+
 if is_ip_address:
     # Do not set a domain for IP addresses
     SESSION_COOKIE_DOMAIN = None
 else:
-    # Calculate the cookie domain for valid domain names
-    domain_parts = hostname.split('.')
-    SESSION_COOKIE_DOMAIN = '.' + '.'.join(domain_parts[-2:]) if len(domain_parts) > 1 else hostname
+    # Use publicsuffix2 to calculate the correct cookie domain
+    cookie_domain = get_sld(hostname)
+    if cookie_domain:
+        SESSION_COOKIE_DOMAIN = f".{cookie_domain}"
+    else:
+        # Fallback to the hostname if parsing fails
+        SESSION_COOKIE_DOMAIN = hostname
+
+print("SESSION_COOKIE_DOMAIN:", SESSION_COOKIE_DOMAIN)
 
 
 # Static files (CSS, JavaScript, Images)

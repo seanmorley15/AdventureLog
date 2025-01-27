@@ -44,6 +44,7 @@
 		"emoji-picker-element": "^1.26.0",
 		"gsap": "^3.12.7",
 		"marked": "^15.0.4",
+		"psl": "^1.15.0",
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8",
