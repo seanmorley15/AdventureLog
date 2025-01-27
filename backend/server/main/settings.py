@@ -127,13 +127,16 @@ USE_L10N = True
 
 USE_TZ = True
 
-FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
+unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = unParsedFrontenedUrl.replace("'", "").replace('"', '')
 
 SESSION_COOKIE_SAMESITE = None
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
 # Parse the FRONTEND_URL
+# Remove and ' from the URL
+
 parsed_url = urlparse(FRONTEND_URL)
 hostname = parsed_url.hostname
 
