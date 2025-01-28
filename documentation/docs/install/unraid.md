@@ -8,6 +8,7 @@ Community Applications Page for PostGIS: [PostGIS on CA Store](https://unraid.ne
 ## Installation Configuration
 
 It is recommended to install the applications in the order of these instructions.
+
 Also insure they are all on the same custom network so they can communicate to one another, you can create one by running the following command in your command line with example being set to your wanted name. This network will then showup for selection when making the apps/containers.
 ```bash
 docker network create example
