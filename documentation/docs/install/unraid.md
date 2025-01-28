@@ -19,6 +19,7 @@ docker network create example
 - Network type should be set to your custom network
 - Change the repository version to `postgis/postgis:15-3.3`
 - Ensure that the POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD are set in the PostGIS container, if not then add them as custom variables, the other variables are irrelevant for this setup and should be removed.
+
 | Name                | Required  | Description                                                                                                                                                   | Default Value         |
 | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `POSTGRES_DB`       | Yes       | What the name of the database in PostGIS will be.                                                                                                             | N/A                   |
@@ -31,6 +32,7 @@ docker network create example
 
 - Network type should be set to your custom network
 - **Note:** If you're running the server in a docker network that is other than "host" (for example "bridge") than you need to add the IP of the host machine in the CSRF Trusted Origins variable instead of using localhost, this is only necessary when accessing locally, otherwise you will use the domain name.
+
 | Name                    | Required | Description                                                                                                                                                                         | Default Value         |
 | ----------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `API Port`              | Yes      | This is the port of the backend. This is a port not a variable.                                                                                                                     | 8016                  |
@@ -52,6 +54,7 @@ docker network create example
 ## Frontend
 
 - By default, the frontend connects to the backend using `http://server:8000`. This will work if both the frontend and backend are on the same network and the backend is named server. Otherwise, you’ll need to configure it to use the exposed port (default: 8016).
+
 | Name                | Required  | Description                                                                                                                                                   | Default Value         |
 | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
 | `WEB UI Port`       | Yes       | The port of the frontend. This is not a variable.                                                                                                             | 8015                  |
