@@ -22,14 +22,14 @@ To enable Authentik as an identity provider, the administrator must first config
 
 ### AdventureLog Configuration
 
-This configuration is done in the [Admin Panel](../../guides/admin_panel.md). You can either launch the pannel directly from the `Settings` page or navigate to `/admin` on your AdventureLog server.
+This configuration is done in the [Admin Panel](../../guides/admin_panel.md). You can either launch the panel directly from the `Settings` page or navigate to `/admin` on your AdventureLog server.
 
 1. Login to AdventureLog as an administrator and navigate to the `Settings` page.
 2. Scroll down to the `Administration Settings` and launch the admin panel.
 3. In the admin panel, navigate to the `Social Accounts` section and click the add button next to `Social applications`. Fill in the following fields:
 
    - Provider: `OpenID Connect`
-   - Provider ID: Autnentik Client ID
+   - Provider ID: Authentik Client ID
    - Name: `Authentik`
    - Client ID: Authentik Client ID
    - Secret Key: Authentik Client Secret

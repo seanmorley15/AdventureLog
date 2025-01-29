@@ -1,6 +1,6 @@
 # Social Authentication
 
-AdventureLog support autentication via 3rd party services and self-hosted identity providers. Once these services are enabled, users can log in to AdventureLog using their accounts from these services and link exising AdventureLog accounts to these services for easier access.
+AdventureLog support authentication via 3rd party services and self-hosted identity providers. Once these services are enabled, users can log in to AdventureLog using their accounts from these services and link existing AdventureLog accounts to these services for easier access.
 
 The steps for each service varies so please refer to the specific service's documentation for more information.
 
