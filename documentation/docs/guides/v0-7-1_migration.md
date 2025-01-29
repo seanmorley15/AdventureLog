@@ -1,6 +1,6 @@
 # AdventureLog v0.7.1 Migration
 
-In order to make installation easier, the AdventureLog v0.7.1 release has **removed the need for a seperate nginx container** and cofig to serve the media files. Instead, the media files are now served by an instance of nginx running in the same container as the Django application.
+In order to make installation easier, the AdventureLog v0.7.1 release has **removed the need for a separate nginx container** and config to serve the media files. Instead, the media files are now served by an instance of nginx running in the same container as the Django application.
 
 ## Docker Compose Changes
 
