@@ -4,11 +4,12 @@
 	import type { Adventure, ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
 
+	let immichImages: any[] = [];
 	let immichSearchValue: string = '';
 	let searchCategory: 'search' | 'date' | 'album' = 'search';
 	let immichError: string = '';
 	let immichNextURL: string = '';
-    let loading = false; // TODO: Implement loading indicator
+    let loading = false;
 
 	export let adventure: Adventure | null = null;
     
@@ -61,11 +62,8 @@
                 } else {
                     immichError = $t('immich.no_items_found');
                 }
-                if (data.next) {
-                    immichNextURL = data.next;
-                } else {
-                    immichNextURL = '';
-                }
+
+                immichNextURL = data.next || '';
             }
         } finally {
             loading = false;
@@ -84,9 +82,7 @@
 		}
 	});
 
-	let immichImages: any[] = [];
 	
-
     function buildQueryParams() {
         let params = new URLSearchParams();
         if (immichSearchValue && searchCategory === 'search') {
@@ -167,8 +163,14 @@
 
 	<p class="text-red-500">{immichError}</p>
 	<div class="flex flex-wrap gap-4 mr-4 mt-2">
+        {#if loading}
+        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24">
+            <span class="loading loading-spinner w-24 h-24"></span>
+        </div>
+        {/if}
+
 		{#each immichImages as image}
-			<div class="flex flex-col items-center gap-2">
+			<div class="flex flex-col items-center gap-2" class:blur-sm={loading}>
 				<!-- svelte-ignore a11y-img-redundant-alt -->
 				<img
 					src={`/immich/${image.id}`}
