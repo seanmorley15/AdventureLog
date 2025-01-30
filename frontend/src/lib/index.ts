@@ -464,3 +464,13 @@ export function osmTagToEmoji(tag: string) {
 			return '📍'; // Default placeholder emoji for unknown tags
 	}
 }
+
+export function debounce(func: Function, timeout: number) {
+    let timer: number | NodeJS.Timeout;
+    return (...args: any) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+            func(...args);
+        }, timeout);
+    };
+}

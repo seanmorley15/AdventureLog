@@ -1,32 +1,69 @@
 <script lang="ts">
 	let immichSearchValue: string = '';
-	let searchOrSelect: string = 'search';
+	let searchCategory: 'search' | 'date' | 'album' = 'search';
 	let immichError: string = '';
-	let immichNext: string = '';
-	let immichPage: number = 1;
+	let immichNextURL: string = '';
+    let loading = false; // TODO: Implement loading indicator
 
+
+    // TODO: Show date of pictures somewhere?
 	import { createEventDispatcher, onMount } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	let albums: ImmichAlbum[] = [];
 	let currentAlbum: string = '';
+    let selectedDate: string = new Date().toISOString().split('T')[0]; // TODO: Auto select from adventure.
 
 	$: {
-		if (currentAlbum) {
-			immichImages = [];
+        if (currentAlbum) {
+            immichImages = [];
 			fetchAlbumAssets(currentAlbum);
-		} else {
-			immichImages = [];
-		}
+		} else if (searchCategory === 'date' && selectedDate) {
+            searchImmich();
+        }
+	}
+    
+	async function loadMoreImmich() {
+        // The next URL returned by our API is a absolute url to API, but we need to use the relative path, to use the frontend api proxy.
+        const url = new URL(immichNextURL);
+        immichNextURL = url.pathname + url.search;
+        return fetchAssets(immichNextURL, true);
 	}
 
-	async function fetchAlbumAssets(album_id: string) {
-		let res = await fetch(`/api/integrations/immich/albums/${album_id}`);
-		if (res.ok) {
-			let data = await res.json();
-			immichNext = '';
-			immichImages = data;
-		}
+    async function fetchAssets(url: string, usingNext = false) {
+        loading = true;
+        try {
+            let res = await fetch(url);
+            immichError = '';
+            if (!res.ok) {
+                let data = await res.json();
+                let errorMessage = data.message;
+                console.error('Error in handling fetchAsstes', errorMessage);
+                immichError = $t(data.code);
+            } else {
+                let data = await res.json();
+                if (data.results && data.results.length > 0) {
+                    if (usingNext) {
+                        immichImages = [...immichImages, ...data.results];
+                    } else {
+                        immichImages = data.results;
+                    }
+                } else {
+                    immichError = $t('immich.no_items_found');
+                }
+                if (data.next) {
+                    immichNextURL = data.next;
+                } else {
+                    immichNextURL = '';
+                }
+            }
+        } finally {
+            loading = false;
+        }
+    }
+
+	async function fetchAlbumAssets(album_id: string,) {
+        return fetchAssets(`/api/integrations/immich/albums/${album_id}`);
 	}
 
 	onMount(async () => {
@@ -41,63 +78,26 @@
 	import { t } from 'svelte-i18n';
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import type { ImmichAlbum } from '$lib/types';
+	import { debounce } from '$lib';
 
-	async function searchImmich() {
-		let res = await fetch(`/api/integrations/immich/search/?query=${immichSearchValue}`);
-		if (!res.ok) {
-			let data = await res.json();
-			let errorMessage = data.message;
-			console.log(errorMessage);
-			immichError = $t(data.code);
-		} else {
-			let data = await res.json();
-			console.log(data);
-			immichError = '';
-			if (data.results && data.results.length > 0) {
-				immichImages = data.results;
-			} else {
-				immichError = $t('immich.no_items_found');
-			}
-			if (data.next) {
-				immichNext =
-					'/api/integrations/immich/search?query=' +
-					immichSearchValue +
-					'&page=' +
-					(immichPage + 1);
-			} else {
-				immichNext = '';
-			}
-		}
+    function buildQueryParams() {
+        let params = new URLSearchParams();
+        if (immichSearchValue && searchCategory === 'search') {
+            params.append('query', immichSearchValue);
+        } else if (selectedDate && searchCategory === 'date') {
+            params.append('date', selectedDate);
+        } 
+        return params.toString();
+    }
+
+    const searchImmich = debounce(() => {
+        _searchImmich();
+    }, 500); // Debounce the search function to avoid multiple requests on every key press
+
+	async function _searchImmich() {
+        return fetchAssets(`/api/integrations/immich/search/?${buildQueryParams()}`);
 	}
 
-	async function loadMoreImmich() {
-		let res = await fetch(immichNext);
-		if (!res.ok) {
-			let data = await res.json();
-			let errorMessage = data.message;
-			console.log(errorMessage);
-			immichError = $t(data.code);
-		} else {
-			let data = await res.json();
-			console.log(data);
-			immichError = '';
-			if (data.results && data.results.length > 0) {
-				immichImages = [...immichImages, ...data.results];
-			} else {
-				immichError = $t('immich.no_items_found');
-			}
-			if (data.next) {
-				immichNext =
-					'/api/integrations/immich/search?query=' +
-					immichSearchValue +
-					'&page=' +
-					(immichPage + 1);
-				immichPage++;
-			} else {
-				immichNext = '';
-			}
-		}
-	}
 </script>
 
 <div class="mb-4">
@@ -111,20 +111,27 @@
 				on:click={() => (currentAlbum = '')}
 				type="radio"
 				class="join-item btn"
-				bind:group={searchOrSelect}
+				bind:group={searchCategory}
 				value="search"
 				aria-label="Search"
+			/>
+            <input
+				type="radio"
+				class="join-item btn"
+				bind:group={searchCategory}
+				value="date"
+				aria-label="Show by date"
 			/>
 			<input
 				type="radio"
 				class="join-item btn"
-				bind:group={searchOrSelect}
-				value="select"
+				bind:group={searchCategory}
+				value="album"
 				aria-label="Select Album"
 			/>
 		</div>
 		<div>
-			{#if searchOrSelect === 'search'}
+			{#if searchCategory === 'search'}
 				<form on:submit|preventDefault={searchImmich}>
 					<input
 						type="text"
@@ -134,7 +141,13 @@
 					/>
 					<button type="submit" class="btn btn-neutral mt-2">Search</button>
 				</form>
-			{:else}
+            {:else if searchCategory === 'date'}
+                <input
+                    type="date"
+                    bind:value={selectedDate}
+                    class="input input-bordered w-full max-w-xs mt-2"
+                />
+			{:else if searchCategory === 'album'}
 				<select class="select select-bordered w-full max-w-xs mt-2" bind:value={currentAlbum}>
 					<option value="" disabled selected>Select an Album</option>
 					{#each albums as album}
@@ -168,7 +181,7 @@
 				</button>
 			</div>
 		{/each}
-		{#if immichNext}
+		{#if immichNextURL}
 			<button class="btn btn-neutral" on:click={loadMoreImmich}>{$t('immich.load_more')}</button>
 		{/if}
 	</div>
