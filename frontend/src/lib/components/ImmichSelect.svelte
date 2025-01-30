@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher, onMount } from 'svelte';
     import { t } from 'svelte-i18n';
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import type { Adventure, ImmichAlbum } from '$lib/types';
@@ -6,15 +7,13 @@
 
 	let immichImages: any[] = [];
 	let immichSearchValue: string = '';
-	let searchCategory: 'search' | 'date' | 'album' = 'search';
+	let searchCategory: 'search' | 'date' | 'album' = 'date';
 	let immichError: string = '';
 	let immichNextURL: string = '';
     let loading = false;
 
 	export let adventure: Adventure | null = null;
     
-    // TODO: Show date of pictures somewhere?
-	import { createEventDispatcher, onMount } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	let albums: ImmichAlbum[] = [];
@@ -177,6 +176,9 @@
 					alt="Image from Immich"
 					class="h-24 w-24 object-cover rounded-md"
 				/>
+                <h4>
+                    {image.fileCreatedAt?.split('T')[0] || "Unknown"}
+                </h4>
 				<button
 					type="button"
 					class="btn btn-sm btn-primary"
