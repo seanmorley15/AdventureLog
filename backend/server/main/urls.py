@@ -22,7 +22,7 @@ urlpatterns = [
 
     path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
     path('auth/users/', PublicUserListView.as_view(), name='public-user-list'),
-    path('auth/user/<uuid:user_id>/', PublicUserDetailView.as_view(), name='public-user-detail'),
+    path('auth/user/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
     path('auth/update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),
 
     path('auth/user-metadata/', UserMetadataView.as_view(), name='user-metadata'),

@@ -326,7 +326,11 @@
 		"new_password": "New Password (6+ characters)",
 		"both_passwords_required": "Both passwords are required",
 		"reset_failed": "Failed to reset password",
-		"or_3rd_party": "Or login with a third-party service"
+		"or_3rd_party": "Or login with a third-party service",
+		"no_public_adventures": "No public adventures found",
+		"no_public_collections": "No public collections found",
+		"user_adventures": "User Adventures",
+		"user_collections": "User Collections"
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles."

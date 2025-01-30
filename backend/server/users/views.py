@@ -11,6 +11,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
 from allauth.socialaccount.models import SocialApp
+from adventures.serializers import AdventureSerializer, CollectionSerializer
+from adventures.models import Adventure, Collection
 
 User = get_user_model()
 
@@ -79,12 +81,28 @@ class PublicUserDetailView(APIView):
         },
         operation_description="Get public user information."
     )
-    def get(self, request, user_id):
-        user = get_object_or_404(User, uuid=user_id, public_profile=True)
+    def get(self, request, username):
+        print(request.user)
+        if request.user.username == username:
+            user = get_object_or_404(User, username=username)
+        else:
+            user = get_object_or_404(User, username=username, public_profile=True)
+        serializer = PublicUserSerializer(user)
+        
         # remove the email address from the response
         user.email = None
-        serializer = PublicUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # Get the users adventures and collections to include in the response
+        adventures = Adventure.objects.filter(user_id=user, is_public=True)
+        collections = Collection.objects.filter(user_id=user, is_public=True)
+        adventure_serializer = AdventureSerializer(adventures, many=True)
+        collection_serializer = CollectionSerializer(collections, many=True)
+
+        return Response({
+            'user': serializer.data,
+            'adventures': adventure_serializer.data,
+            'collections': collection_serializer.data
+        }, status=status.HTTP_200_OK)
 
 class UserMetadataView(APIView):
     permission_classes = [IsAuthenticated]
