@@ -1,18 +1,28 @@
 <script lang="ts">
+    import { t } from 'svelte-i18n';
+	import ImmichLogo from '$lib/assets/immich.svg';
+	import type { Adventure, ImmichAlbum } from '$lib/types';
+	import { debounce } from '$lib';
+
 	let immichSearchValue: string = '';
 	let searchCategory: 'search' | 'date' | 'album' = 'search';
 	let immichError: string = '';
 	let immichNextURL: string = '';
     let loading = false; // TODO: Implement loading indicator
 
-
+	export let adventure: Adventure | null = null;
+    
     // TODO: Show date of pictures somewhere?
 	import { createEventDispatcher, onMount } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	let albums: ImmichAlbum[] = [];
 	let currentAlbum: string = '';
-    let selectedDate: string = new Date().toISOString().split('T')[0]; // TODO: Auto select from adventure.
+
+	let selectedDate: string =  (adventure as Adventure | null)?.visits.map(v => new Date(v.end_date || v.start_date)).sort((a,b) => +b - +a)[0]?.toISOString().split('T')[0] || '';
+	if (!selectedDate) {
+		selectedDate = new Date().toISOString().split('T')[0];
+	}
 
 	$: {
         if (currentAlbum) {
@@ -75,10 +85,7 @@
 	});
 
 	let immichImages: any[] = [];
-	import { t } from 'svelte-i18n';
-	import ImmichLogo from '$lib/assets/immich.svg';
-	import type { ImmichAlbum } from '$lib/types';
-	import { debounce } from '$lib';
+	
 
     function buildQueryParams() {
         let params = new URLSearchParams();

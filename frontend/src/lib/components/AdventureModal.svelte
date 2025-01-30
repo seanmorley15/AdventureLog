@@ -1257,6 +1257,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 
 					{#if immichIntegration}
 						<ImmichSelect
+                            adventure={adventure}
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
