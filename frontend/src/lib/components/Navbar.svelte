@@ -17,10 +17,10 @@
 
 	// Event listener for focusing input
 	function handleKeydown(event: KeyboardEvent) {
-        // Ignore any keypresses in an input/textarea field, so we don't interfere with typing.
+		// Ignore any keypresses in an input/textarea field, so we don't interfere with typing.
 		if (event.key === '/' && !["INPUT", "TEXTAREA"].includes((event.target as HTMLElement)?.tagName)) {
 			event.preventDefault(); // Prevent browser's search shortcut
-            if (inputElement) {
+			if (inputElement) {
 				inputElement.focus();
 			}
 		}
@@ -223,7 +223,7 @@
 							bind:value={query}
 							class="grow"
 							placeholder={$t('navbar.search')}
-                            bind:this={inputElement}
+							bind:this={inputElement}
 						/><kbd class="kbd">/</kbd>
 					</label>
 					<button on:click={searchGo} type="submit" class="btn btn-neutral"

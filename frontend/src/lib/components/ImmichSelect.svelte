@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-    import { t } from 'svelte-i18n';
+	import { t } from 'svelte-i18n';
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import type { Adventure, ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
@@ -10,67 +10,68 @@
 	let searchCategory: 'search' | 'date' | 'album' = 'date';
 	let immichError: string = '';
 	let immichNextURL: string = '';
-    let loading = false;
+	let loading = false;
 
 	export let adventure: Adventure | null = null;
-    
+	
 	const dispatch = createEventDispatcher();
 
 	let albums: ImmichAlbum[] = [];
 	let currentAlbum: string = '';
 
-	let selectedDate: string =  (adventure as Adventure | null)?.visits.map(v => new Date(v.end_date || v.start_date)).sort((a,b) => +b - +a)[0]?.toISOString().split('T')[0] || '';
+	let selectedDate: string =  (adventure as Adventure | null)?.visits.map(v => new Date(v.end_date || v.start_date)).sort((a,b) => +b - +a)[0]?.toISOString()?.split('T')[0] || '';
 	if (!selectedDate) {
 		selectedDate = new Date().toISOString().split('T')[0];
 	}
 
+
 	$: {
-        if (currentAlbum) {
-            immichImages = [];
+		if (currentAlbum) {
+			immichImages = [];
 			fetchAlbumAssets(currentAlbum);
 		} else if (searchCategory === 'date' && selectedDate) {
-            searchImmich();
-        }
+			searchImmich();
+		}
 	}
-    
+	
 	async function loadMoreImmich() {
-        // The next URL returned by our API is a absolute url to API, but we need to use the relative path, to use the frontend api proxy.
-        const url = new URL(immichNextURL);
-        immichNextURL = url.pathname + url.search;
-        return fetchAssets(immichNextURL, true);
+		// The next URL returned by our API is a absolute url to API, but we need to use the relative path, to use the frontend api proxy.
+		const url = new URL(immichNextURL);
+		immichNextURL = url.pathname + url.search;
+		return fetchAssets(immichNextURL, true);
 	}
 
-    async function fetchAssets(url: string, usingNext = false) {
-        loading = true;
-        try {
-            let res = await fetch(url);
-            immichError = '';
-            if (!res.ok) {
-                let data = await res.json();
-                let errorMessage = data.message;
-                console.error('Error in handling fetchAsstes', errorMessage);
-                immichError = $t(data.code);
-            } else {
-                let data = await res.json();
-                if (data.results && data.results.length > 0) {
-                    if (usingNext) {
-                        immichImages = [...immichImages, ...data.results];
-                    } else {
-                        immichImages = data.results;
-                    }
-                } else {
-                    immichError = $t('immich.no_items_found');
-                }
+	async function fetchAssets(url: string, usingNext = false) {
+		loading = true;
+		try {
+			let res = await fetch(url);
+			immichError = '';
+			if (!res.ok) {
+				let data = await res.json();
+				let errorMessage = data.message;
+				console.error('Error in handling fetchAsstes', errorMessage);
+				immichError = $t(data.code);
+			} else {
+				let data = await res.json();
+				if (data.results && data.results.length > 0) {
+					if (usingNext) {
+						immichImages = [...immichImages, ...data.results];
+					} else {
+						immichImages = data.results;
+					}
+				} else {
+					immichError = $t('immich.no_items_found');
+				}
 
-                immichNextURL = data.next || '';
-            }
-        } finally {
-            loading = false;
-        }
-    }
+				immichNextURL = data.next || '';
+			}
+		} finally {
+			loading = false;
+		}
+	}
 
 	async function fetchAlbumAssets(album_id: string,) {
-        return fetchAssets(`/api/integrations/immich/albums/${album_id}`);
+		return fetchAssets(`/api/integrations/immich/albums/${album_id}`);
 	}
 
 	onMount(async () => {
@@ -82,22 +83,22 @@
 	});
 
 	
-    function buildQueryParams() {
-        let params = new URLSearchParams();
-        if (immichSearchValue && searchCategory === 'search') {
-            params.append('query', immichSearchValue);
-        } else if (selectedDate && searchCategory === 'date') {
-            params.append('date', selectedDate);
-        } 
-        return params.toString();
-    }
+	function buildQueryParams() {
+		let params = new URLSearchParams();
+		if (immichSearchValue && searchCategory === 'search') {
+			params.append('query', immichSearchValue);
+		} else if (selectedDate && searchCategory === 'date') {
+			params.append('date', selectedDate);
+		} 
+		return params.toString();
+	}
 
-    const searchImmich = debounce(() => {
-        _searchImmich();
-    }, 500); // Debounce the search function to avoid multiple requests on every key press
+	const searchImmich = debounce(() => {
+		_searchImmich();
+	}, 500); // Debounce the search function to avoid multiple requests on every key press
 
 	async function _searchImmich() {
-        return fetchAssets(`/api/integrations/immich/search/?${buildQueryParams()}`);
+		return fetchAssets(`/api/integrations/immich/search/?${buildQueryParams()}`);
 	}
 
 </script>
@@ -117,7 +118,7 @@
 				value="search"
 				aria-label="Search"
 			/>
-            <input
+			<input
 				type="radio"
 				class="join-item btn"
 				bind:group={searchCategory}
@@ -143,12 +144,12 @@
 					/>
 					<button type="submit" class="btn btn-neutral mt-2">Search</button>
 				</form>
-            {:else if searchCategory === 'date'}
-                <input
-                    type="date"
-                    bind:value={selectedDate}
-                    class="input input-bordered w-full max-w-xs mt-2"
-                />
+			{:else if searchCategory === 'date'}
+				<input
+					type="date"
+					bind:value={selectedDate}
+					class="input input-bordered w-full max-w-xs mt-2"
+				/>
 			{:else if searchCategory === 'album'}
 				<select class="select select-bordered w-full max-w-xs mt-2" bind:value={currentAlbum}>
 					<option value="" disabled selected>Select an Album</option>
@@ -162,11 +163,11 @@
 
 	<p class="text-red-500">{immichError}</p>
 	<div class="flex flex-wrap gap-4 mr-4 mt-2">
-        {#if loading}
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24">
-            <span class="loading loading-spinner w-24 h-24"></span>
-        </div>
-        {/if}
+		{#if loading}
+		<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24">
+			<span class="loading loading-spinner w-24 h-24"></span>
+		</div>
+		{/if}
 
 		{#each immichImages as image}
 			<div class="flex flex-col items-center gap-2" class:blur-sm={loading}>
@@ -176,9 +177,9 @@
 					alt="Image from Immich"
 					class="h-24 w-24 object-cover rounded-md"
 				/>
-                <h4>
-                    {image.fileCreatedAt?.split('T')[0] || "Unknown"}
-                </h4>
+				<h4>
+					{image.fileCreatedAt?.split('T')[0] || "Unknown"}
+				</h4>
 				<button
 					type="button"
 					class="btn btn-sm btn-primary"
