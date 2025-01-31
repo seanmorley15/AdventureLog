@@ -65,7 +65,7 @@ docker network create example
 | `WEB UI Port`       | Yes      | The port of the frontend. This is not a variable.                                                                                                            | `8015`                   |
 | `PUBLIC_SERVER_URL` | Yes      | What the frontend SSR server uses to connect to the backend. Change `IP_ADDRESS` to the name of the backend container.                                       | `http://IP_ADDRESS:8000` |
 | `ORIGIN`            | Sometimes| Set to the URL you will access the frontend from, such as localhost with correct port, or set it to the domain of what you will access the app from.         | `http://IP_ADDRESS:8015` |
-| `BODY_SIZE_LIMIT`   | Yes      | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **kilobytes**. | `Infinity`               |
+| `BODY_SIZE_LIMIT`   | Yes      | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **bytes**. | `Infinity`               |
 
 - Here's some visual instructions of how to configure the frontend template, click the image to open larger version in new tab.\
 [![/static/img/unraid-config-3.png](/unraid-config-3.png)](/unraid-config-3.png)
