@@ -21,7 +21,7 @@ Ensure that the Nginx Proxy Manager and AdventureLog containers are on the same 
 docker network create nginx-proxy-manager
 ```
 
-Add the folowing to the bottom of the `docker-compose.yml` file for the Nginx Proxy Manager service and the AdventureLog service.
+Add the following to the bottom of the `docker-compose.yml` file for the Nginx Proxy Manager service and the AdventureLog service.
 
 ```yaml
 networks:

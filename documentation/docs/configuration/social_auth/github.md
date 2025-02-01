@@ -20,7 +20,7 @@ To enable GitHub as an identity provider, the administrator must first configure
 
 ### AdventureLog Configuration
 
-This configuration is done in the [Admin Panel](../../guides/admin_panel.md). You can either launch the pannel directly from the `Settings` page or navigate to `/admin` on your AdventureLog server.
+This configuration is done in the [Admin Panel](../../guides/admin_panel.md). You can either launch the panel directly from the `Settings` page or navigate to `/admin` on your AdventureLog server.
 
 1. Login to AdventureLog as an administrator and navigate to the `Settings` page.
 2. Scroll down to the `Administration Settings` and launch the admin panel.
@@ -41,4 +41,4 @@ This configuration is done in the [Admin Panel](../../guides/admin_panel.md). Yo
 
 4. Save the configuration.
 
-Users should now be able to log in to AdventureLog using their GitHub account, and link it to exisiting accounts.
+Users should now be able to log in to AdventureLog using their GitHub account, and link it to existing accounts.
