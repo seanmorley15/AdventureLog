@@ -128,7 +128,7 @@ USE_L10N = True
 USE_TZ = True
 
 unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
-FRONTEND_URL = unParsedFrontenedUrl.replace("'", "").replace('"', '')
+FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = None
 

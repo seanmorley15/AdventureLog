@@ -1,7 +1,6 @@
 export type User = {
 	pk: number;
 	username: string;
-	email: string | null;
 	first_name: string | null;
 	last_name: string | null;
 	date_joined: string | null;
@@ -41,6 +40,7 @@ export type Adventure = {
 	is_visited?: boolean;
 	category: Category | null;
 	attachments: Attachment[];
+	user: User
 };
 
 export type Country = {

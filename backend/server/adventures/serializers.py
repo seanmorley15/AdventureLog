@@ -3,6 +3,7 @@ import os
 from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
+from users.serializers import CustomUserDetailsSerializer
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -80,15 +81,16 @@ class AdventureSerializer(CustomModelSerializer):
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
@@ -126,7 +128,11 @@ class AdventureSerializer(CustomModelSerializer):
             }
         )
         return category
-
+    
+    def get_user(self, obj):
+        user = obj.user_id
+        return CustomUserDetailsSerializer(user).data
+    
     def get_is_visited(self, obj):
         current_date = timezone.now().date()
         for visit in obj.visits.all():
