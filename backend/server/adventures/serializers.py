@@ -9,7 +9,7 @@ from users.serializers import CustomUserDetailsSerializer
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id', 'external_url']
         read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
@@ -20,6 +20,11 @@ class AdventureImageSerializer(CustomModelSerializer):
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
+            representation['external_url'] = representation['image']
+        elif instance.external_url:
+            representation['image'] = instance.external_url
+            representation['external_url'] = instance.external_url
+            
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):
