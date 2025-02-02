@@ -8,6 +8,7 @@ services:
       - PUBLIC_SERVER_URL=http://server:8000 # Should be the service name of the backend with port 8000, even if you change the port in the backend service
       - ORIGIN=http://localhost:8015
       - BODY_SIZE_LIMIT=Infinity
+      - VITE_IMMICH_UPLOAD_URLS_ONLY=false
     ports:
       - "8015:3000"
     depends_on:

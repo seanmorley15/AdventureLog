@@ -20,6 +20,8 @@
 
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
+	const immichUploadURLSOnly = import.meta.env.VITE_IMMICH_UPLOAD_URLS_ONLY === 'true';
+
 	let query: string = '';
 	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string; is_primary: boolean }[] = [];
@@ -328,6 +330,27 @@
 			for (const file of files) {
 				await uploadImage(file);
 			}
+		}
+	}
+
+	async function uploadURLToImage(url: string) {
+		let formData = new FormData();
+		formData.append('external_url', url);
+		formData.append('adventure', adventure.id);
+
+		let res = await fetch(`/adventures?/image`, {
+			method: 'POST',
+			body: formData
+		});
+		if (res.ok) {
+			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
+			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+			images = [...images, newImage];
+
+			adventure.images = images;
+			addToast('success', $t('adventures.image_upload_success'));
+		} else {
+			addToast('error', $t('adventures.image_upload_error'));
 		}
 	}
 
@@ -1256,11 +1279,21 @@ it would also work to just use on:click on the MapLibre component itself. -->
 					</div>
 
 					{#if immichIntegration}
+						{#if immichUploadURLSOnly}
+						<i>
+							We are only uploading the URL of your immich picture, not the picture itself. This is to save space on our servers. If you want to upload the picture, please disable this feature in the frontend environment.
+						</i>
+						<br/>
+						{/if}
 						<ImmichSelect
 							adventure={adventure}
 							on:fetchImage={(e) => {
 								url = e.detail;
-								fetchImage();
+								if (immichUploadURLSOnly) {
+									uploadURLToImage(url);
+								} else {
+									fetchImage();
+								}
 							}}
 						/>
 					{/if}

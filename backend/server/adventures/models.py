@@ -277,16 +277,35 @@ class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
+    
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
-        upload_to=PathAndRename('images/')  # Use the callable class here
+        upload_to=PathAndRename('images/'),  # Use the callable class here
+        blank=True
     )
+
+    external_url = models.URLField(null=True)
+
+    class Meta:
+        # Require image, or external_url, but not both -> XOR(^)
+        # Image is a string(Path to a file), so we can check if it is empty
+        constraints = [
+            models.CheckConstraint(
+                check=models.Q(image__exact='') ^ models.Q(external_url__isnull=True),
+                name="image_xor_external_url"
+            )
+        ]
+
+
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
     is_primary = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.image.url
+        if self.external_url is not None:
+            return self.external_url
+        else:
+            return self.image.url
     
 class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
