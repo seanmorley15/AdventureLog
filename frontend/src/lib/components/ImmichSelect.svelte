@@ -13,17 +13,21 @@
 	let loading = false;
 
 	export let adventure: Adventure | null = null;
-	
+
 	const dispatch = createEventDispatcher();
 
 	let albums: ImmichAlbum[] = [];
 	let currentAlbum: string = '';
 
-	let selectedDate: string =  (adventure as Adventure | null)?.visits.map(v => new Date(v.end_date || v.start_date)).sort((a,b) => +b - +a)[0]?.toISOString()?.split('T')[0] || '';
+	let selectedDate: string =
+		(adventure as Adventure | null)?.visits
+			.map((v) => new Date(v.end_date || v.start_date))
+			.sort((a, b) => +b - +a)[0]
+			?.toISOString()
+			?.split('T')[0] || '';
 	if (!selectedDate) {
 		selectedDate = new Date().toISOString().split('T')[0];
 	}
-
 
 	$: {
 		if (currentAlbum) {
@@ -33,7 +37,7 @@
 			searchImmich();
 		}
 	}
-	
+
 	async function loadMoreImmich() {
 		// The next URL returned by our API is a absolute url to API, but we need to use the relative path, to use the frontend api proxy.
 		const url = new URL(immichNextURL);
@@ -70,7 +74,7 @@
 		}
 	}
 
-	async function fetchAlbumAssets(album_id: string,) {
+	async function fetchAlbumAssets(album_id: string) {
 		return fetchAssets(`/api/integrations/immich/albums/${album_id}`);
 	}
 
@@ -82,14 +86,13 @@
 		}
 	});
 
-	
 	function buildQueryParams() {
 		let params = new URLSearchParams();
 		if (immichSearchValue && searchCategory === 'search') {
 			params.append('query', immichSearchValue);
 		} else if (selectedDate && searchCategory === 'date') {
 			params.append('date', selectedDate);
-		} 
+		}
 		return params.toString();
 	}
 
@@ -98,9 +101,9 @@
 	}, 500); // Debounce the search function to avoid multiple requests on every key press
 
 	async function _searchImmich() {
+		immichImages = [];
 		return fetchAssets(`/api/integrations/immich/search/?${buildQueryParams()}`);
 	}
-
 </script>
 
 <div class="mb-4">
@@ -164,9 +167,11 @@
 	<p class="text-red-500">{immichError}</p>
 	<div class="flex flex-wrap gap-4 mr-4 mt-2">
 		{#if loading}
-		<div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24">
-			<span class="loading loading-spinner w-24 h-24"></span>
-		</div>
+			<div
+				class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24"
+			>
+				<span class="loading loading-spinner w-24 h-24"></span>
+			</div>
 		{/if}
 
 		{#each immichImages as image}
@@ -178,7 +183,7 @@
 					class="h-24 w-24 object-cover rounded-md"
 				/>
 				<h4>
-					{image.fileCreatedAt?.split('T')[0] || "Unknown"}
+					{image.fileCreatedAt?.split('T')[0] || 'Unknown'}
 				</h4>
 				<button
 					type="button"

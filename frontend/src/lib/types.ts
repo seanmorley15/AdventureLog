@@ -40,7 +40,7 @@ export type Adventure = {
 	is_visited?: boolean;
 	category: Category | null;
 	attachments: Attachment[];
-	user: User
+	user?: User | null;
 };
 
 export type Country = {
