@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Hotel
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -304,3 +304,13 @@ class CollectionSerializer(CustomModelSerializer):
         representation['shared_with'] = shared_uuids
         return representation
     
+class HotelSerializer(CustomModelSerializer):
+
+    class Meta:
+        model = Hotel
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
+            'collection', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']

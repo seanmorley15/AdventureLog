@@ -262,3 +262,23 @@ export type Attachment = {
 	user_id: string;
 	name: string;
 };
+
+export type Hotel = {
+	id: string;
+	user_id: string;
+	name: string;
+	description: string | null;
+	rating: number | null;
+	link: string | null;
+	check_in: string | null; // ISO 8601 date string
+	check_out: string | null; // ISO 8601 date string
+	reservation_number: string | null;
+	price: number | null;
+	latitude: number | null;
+	longitude: number | null;
+	location: string | null;
+	is_public: boolean;
+	collection: string | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+};
