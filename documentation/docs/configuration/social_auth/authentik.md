@@ -55,6 +55,10 @@ This configuration is done in the [Admin Panel](../../guides/admin_panel.md). Yo
 
 Ensure that the Authentik server is running and accessible by AdventureLog. Users should now be able to log in to AdventureLog using their Authentik account.
 
+## Linking to Existing Account
+
+If a user has an existing AdventureLog account and wants to link it to their Authentik account, they can do so by logging in to their AdventureLog account and navigating to the `Settings` page. There is a button that says `Launch Account Connections`, click that and then choose the provider to link to the existing account.
+
 ## Troubleshooting
 
 ### 404 error when logging in.
