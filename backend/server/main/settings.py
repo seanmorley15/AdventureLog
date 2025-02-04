@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
+    'achievements',
     # 'widget_tweaks',
     # 'slippers',
 
