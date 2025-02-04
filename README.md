@@ -144,6 +144,7 @@ Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software de
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 
 ### Top Supporters 💖
+
 - [Veymax](https://x.com/veymax)
 - [nebriv](https://github.com/nebriv)
 - [Victor Butler](https://x.com/victor_butler)
