@@ -2,55 +2,86 @@ import requests
 import json
 import os
 
+# The version of the CDN, this should be updated when the CDN data is updated so the client can check if it has the latest version
+ADVENTURELOG_CDN_VERSION = 'v0.0.1'
+
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.5' # Should match the version stated in the settings.py file of AdventureLog
+COUNTRY_REGION_JSON_VERSION = 'v2.5' # Test on past and latest versions to ensure that the data schema is consistent before updating
+
+def makeDataDir():
+    """
+    Creates the data directory if it doesn't exist
+    """
+    path = os.path.join(os.path.dirname(__file__), 'data')
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+def saveCdnVersion():
+    """
+    Saves the CDN version to a JSON file so the client can check if it has the latest version
+    """
+    path = os.path.join(os.path.dirname(__file__), 'data', 'version.json')
+    with open(path, 'w') as f:
+        json.dump({'version': ADVENTURELOG_CDN_VERSION}, f)
+        print('CDN Version saved')
 
 def downloadCountriesStateCities():
+    """
+    Downloads the countries, states and cities data from the countries-states-cities-database repository
+    """
     res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
 
-def downloadGeojson(iso_code=None, region_name=None):
+    path = os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities_{COUNTRY_REGION_JSON_VERSION}.json')
+
+    with open(path, 'w') as f:
+        f.write(res.text)
+        print('Countries, states and cities data downloaded successfully')
+
+def saveCountryFlag(country_code, name):
     """
-    Download geojson data for a specific region using the Overpass API.
-    :param iso_code: ISO 3166-2 code for the region (e.g. "US-CT")
-    :param region_name: Name of the region (e.g. "Connecticut")
-    :return: Geojson data for the region
+    Downloads the flag of a country and saves it in the data/flags directory
     """
-    base_url = "https://overpass-api.de/api/interpreter"
-    
-    # Get the directory where the script is located
-    script_dir = os.path.dirname(__file__)
+    # For standards, use the lowercase country_code
+    country_code = country_code.lower()
+    # Save the flag in the data/flags directory
+    flags_dir = os.path.join(os.path.dirname(__file__), 'data', 'flags')
 
-    # Ensure the ./data directory exists
-    data_dir = os.path.join(script_dir, "data")
-    os.makedirs(data_dir, exist_ok=True)
+    # Check if the flags directory exists, if not, create it
+    if not os.path.exists(flags_dir):
+        os.makedirs(flags_dir)
 
-    # Set the path for the geojson file
-    geojson_path = os.path.join(data_dir, "geojson.json")
+    # Check if the flag already exists in the media folder
+    flag_path = os.path.join(flags_dir, f'{country_code}.png')
+    if os.path.exists(flag_path):
+        # remove the flag if it already exists
+        os.remove(flag_path)
+        print(f'Flag for {country_code} ({name}) removed')
 
-    if iso_code:
-        query = f'[out:json];relation["boundary"="administrative"]["admin_level"="4"]["ISO3166-2"="{iso_code}"];out body;way(r);(._;>;);out geom;'
-        response = requests.post(base_url, data=query)
-        if response.ok and response.json().get("elements"):
-            data = response.json()
-            with open(geojson_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-            return data
-    
-    if region_name:
-        query = f'[out:json];relation["boundary"="administrative"]["admin_level"="4"]["name"="{region_name}"];out body;way(r);(._;>;);out geom;'
-        response = requests.post(base_url, data=query)
-        if response.ok and response.json().get("elements"):
-            data = response.json()
-            with open(geojson_path, "w", encoding="utf-8") as f:
-                json.dump(data, f, indent=4)
-            return data
+    res = requests.get(f'https://flagcdn.com/h240/{country_code}.png'.lower())
+    if res.status_code == 200:
+        with open(flag_path, 'wb') as f:
+            f.write(res.content)
+        print(f'Flag for {country_code} downloaded')
+    else:
+        print(f'Error downloading flag for {country_code} ({name})')
 
-    return None  # No results found
+def saveCountryFlags():
+    """
+    Downloads the flags of all countries and saves them in the data/flags directory
+    """
+    # Load the countries data
+    with open(os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities_{COUNTRY_REGION_JSON_VERSION}.json')) as f:
+        data = json.load(f)
 
-# Example usage
-data = downloadGeojson(iso_code="US-CT", region_name="Connecticut")
+    for country in data:
+        country_code = country['iso2']
+        name = country['name']
+        saveCountryFlag(country_code, name)
 
-if data:
-    print(f"Region data found and saved to {os.path.join(os.path.dirname(__file__), 'data', 'geojson.json')}!")
-else:
-    print("No region data found.")
+# Run the functions
+print('Starting CDN update')
+makeDataDir()
+saveCdnVersion()
+downloadCountriesStateCities()
+saveCountryFlags()
+print('CDN update complete')

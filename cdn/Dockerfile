@@ -26,6 +26,9 @@ RUN mkdir -p /var/www/html/data && cp -r /app/data/* /var/www/html/data/
 # Copy Nginx configuration
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Copy the index.html file to the Nginx serving directory
+COPY index.html /usr/share/nginx/html/index.html
+
 # Expose port 80 for Nginx
 EXPOSE 80
 

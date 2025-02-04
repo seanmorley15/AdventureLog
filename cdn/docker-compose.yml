@@ -1,5 +1,5 @@
 services:
-  geojson:
+  cdn:
     build: .
     container_name: adventurelog-cdn
     ports:
