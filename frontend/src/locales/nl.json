@@ -234,7 +234,8 @@
     "images": "Afbeeldingen",
     "primary": "Primair",
     "upload": "Uploaden",
-    "view_attachment": "Bijlage bekijken"
+    "view_attachment": "Bijlage bekijken",
+    "of": "van"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -302,7 +303,11 @@
     "both_passwords_required": "Beide wachtwoorden zijn vereist",
     "new_password": "Nieuw wachtwoord",
     "reset_failed": "Kan het wachtwoord niet opnieuw instellen",
-    "or_3rd_party": "Of log in met een service van derden"
+    "or_3rd_party": "Of log in met een service van derden",
+    "no_public_adventures": "Geen openbare avonturen gevonden",
+    "no_public_collections": "Geen openbare collecties gevonden",
+    "user_adventures": "Gebruikersavonturen",
+    "user_collections": "Gebruikerscollecties"
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."

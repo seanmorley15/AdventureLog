@@ -165,6 +165,7 @@
 		"delete_collection_success": "Collection deleted successfully!",
 		"delete_collection_warning": "Are you sure you want to delete this collection? This will also delete all of the linked adventures. This action cannot be undone.",
 		"cancel": "Cancel",
+		"of": "of",
 		"delete_collection": "Delete Collection",
 		"delete_adventure": "Delete Adventure",
 		"adventure_delete_success": "Adventure deleted successfully!",

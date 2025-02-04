@@ -1,31 +1,29 @@
 import { redirect, error } from '@sveltejs/kit';
 import type { PageServerLoad, RequestEvent } from '../../$types';
+import { t } from 'svelte-i18n';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
 	const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
-	let uuid = event.params.uuid as string;
+	// @ts-ignore
+	let username = event.params.uuid as string;
 
-	if (!uuid) {
+	if (!username) {
 		return error(404, 'Not found');
 	}
 
 	// let sessionId = event.cookies.get('sessionid');
-	// let stats = null;
+	let stats = null;
 
-	// let res = await event.fetch(`${endpoint}/api/stats/counts/`, {
-	// 	headers: {
-	// 		Cookie: `sessionid=${sessionId}`
-	// 	}
-	// });
-	// if (!res.ok) {
-	// 	console.error('Failed to fetch user stats');
-	// } else {
-	// 	stats = await res.json();
-	// }
+	let res = await event.fetch(`${endpoint}/api/stats/counts/${username}`, {});
+	if (!res.ok) {
+		console.error('Failed to fetch user stats');
+	} else {
+		stats = await res.json();
+	}
 
-	let userData = await event.fetch(`${endpoint}/auth/user/${uuid}/`);
+	let userData = await event.fetch(`${endpoint}/auth/user/${username}/`);
 	if (!userData.ok) {
 		return error(404, 'Not found');
 	}
@@ -35,6 +33,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	return {
 		user: data.user,
 		adventures: data.adventures,
-		collections: data.collections
+		collections: data.collections,
+		stats: stats
 	};
 };

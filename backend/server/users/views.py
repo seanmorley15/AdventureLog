@@ -82,7 +82,6 @@ class PublicUserDetailView(APIView):
         operation_description="Get public user information."
     )
     def get(self, request, username):
-        print(request.user)
         if request.user.username == username:
             user = get_object_or_404(User, username=username)
         else:

@@ -234,7 +234,8 @@
     "images": "Bilder",
     "primary": "Primär",
     "upload": "Hochladen",
-    "view_attachment": "Anhang anzeigen"
+    "view_attachment": "Anhang anzeigen",
+    "of": "von"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -302,7 +303,11 @@
     "both_passwords_required": "Beide Passwörter sind erforderlich",
     "new_password": "Neues Passwort",
     "reset_failed": "Passwort konnte nicht zurückgesetzt werden",
-    "or_3rd_party": "Oder melden Sie sich bei einem Drittanbieter an"
+    "or_3rd_party": "Oder melden Sie sich bei einem Drittanbieter an",
+    "no_public_adventures": "Keine öffentlichen Abenteuer gefunden",
+    "no_public_collections": "Keine öffentlichen Sammlungen gefunden",
+    "user_adventures": "Benutzerabenteuer",
+    "user_collections": "Benutzersammlungen"
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichen Profilen gefunden."

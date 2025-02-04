@@ -10,7 +10,6 @@
 		ReverseGeocode
 	} from '$lib/types';
 	import { onMount } from 'svelte';
-	import { enhance } from '$app/forms';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
@@ -1257,7 +1256,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 
 					{#if immichIntegration}
 						<ImmichSelect
-							adventure={adventure}
+							{adventure}
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();

@@ -5,26 +5,21 @@
 	import type { Adventure, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
 
-	// let stats: {
-	// 	visited_country_count: number;
-	// 	total_regions: number;
-	// 	trips_count: number;
-	// 	adventure_count: number;
-	// 	visited_region_count: number;
-	// 	total_countries: number;
-	// 	visited_city_count: number;
-	// 	total_cities: number;
-	// } | null;
+	let stats: {
+		visited_country_count: number;
+		total_regions: number;
+		trips_count: number;
+		adventure_count: number;
+		visited_region_count: number;
+		total_countries: number;
+		visited_city_count: number;
+		total_cities: number;
+	} | null;
 
 	const user: User = data.user;
 	const adventures: Adventure[] = data.adventures;
 	const collections: Collection[] = data.collections;
-
-	// console.log(user);
-	// console.log(adventures);
-	// console.log(collections);
-
-	// stats = data.stats || null;
+	stats = data.stats || null;
 </script>
 
 <section class="min-h-screen bg-base-100 py-8 px-4">
@@ -83,7 +78,7 @@
 	</div>
 
 	<!-- Stats Section -->
-	<!-- {#if stats}
+	{#if stats}
 		<div class="divider my-8"></div>
 
 		<h2 class="text-2xl font-bold text-center mb-6 text-primary">
@@ -105,35 +100,44 @@
 				<div class="stat">
 					<div class="stat-title">{$t('profile.visited_countries')}</div>
 					<div class="stat-value text-center">
-						{Math.round((stats.visited_country_count / stats.total_countries) * 100)}%
+						{stats.visited_country_count}
 					</div>
 					<div class="stat-desc text-center">
-						{stats.visited_country_count}/{stats.total_countries}
+						{Math.round((stats.visited_country_count / stats.total_countries) * 100)}% {$t(
+							'adventures.of'
+						)}
+						{stats.total_countries}
 					</div>
 				</div>
 
 				<div class="stat">
 					<div class="stat-title">{$t('profile.visited_regions')}</div>
 					<div class="stat-value text-center">
-						{Math.round((stats.visited_region_count / stats.total_regions) * 100)}%
+						{stats.visited_region_count}
 					</div>
 					<div class="stat-desc text-center">
-						{stats.visited_region_count}/{stats.total_regions}
+						{Math.round((stats.visited_region_count / stats.total_regions) * 100)}% {$t(
+							'adventures.of'
+						)}
+						{stats.total_regions}
 					</div>
 				</div>
 
 				<div class="stat">
 					<div class="stat-title">{$t('profile.visited_cities')}</div>
 					<div class="stat-value text-center">
-						{Math.round((stats.visited_city_count / stats.total_cities) * 100)}%
+						{stats.visited_city_count}
 					</div>
 					<div class="stat-desc text-center">
-						{stats.visited_city_count}/{stats.total_cities}
+						{Math.round((stats.visited_city_count / stats.total_cities) * 100)}% {$t(
+							'adventures.of'
+						)}
+						{stats.total_cities}
 					</div>
 				</div>
 			</div>
 		</div>
-	{/if} -->
+	{/if}
 
 	<!-- Adventures Section -->
 	<div class="divider my-8"></div>

@@ -234,7 +234,8 @@
     "images": "Immagini",
     "primary": "Primario",
     "upload": "Caricamento",
-    "view_attachment": "Visualizza allegato"
+    "view_attachment": "Visualizza allegato",
+    "of": "Di"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -302,7 +303,11 @@
     "both_passwords_required": "Sono necessarie entrambe le password",
     "new_password": "Nuova parola d'ordine",
     "reset_failed": "Impossibile reimpostare la password",
-    "or_3rd_party": "Oppure accedi con un servizio di terze parti"
+    "or_3rd_party": "Oppure accedi con un servizio di terze parti",
+    "no_public_adventures": "Nessuna avventura pubblica trovata",
+    "no_public_collections": "Nessuna collezione pubblica trovata",
+    "user_adventures": "Avventure utente",
+    "user_collections": "Collezioni utente"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
