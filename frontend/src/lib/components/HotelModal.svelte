@@ -1,83 +1,119 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import type { Collection, Hotel } from '$lib/types';
-	const dispatch = createEventDispatcher();
-	import { onMount } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { addToast } from '$lib/toasts';
-	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
-
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import { appVersion } from '$lib/config';
-	import { DefaultMarker, MapLibre } from 'svelte-maplibre';
+	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
+	import type { Collection, Hotel, ReverseGeocode, OpenStreetMapPlace, Point } from '$lib/types';
+
+	const dispatch = createEventDispatcher();
 
 	export let collection: Collection;
 	export let hotelToEdit: Hotel | null = null;
 
+	let modal: HTMLDialogElement;
 	let constrainDates: boolean = false;
+	let hotel: Hotel = { ...initializeHotel(hotelToEdit) };
+	let fullStartDate: string = '';
+	let fullEndDate: string = '';
+	let reverseGeocodePlace: ReverseGeocode | null = null;
+	let query: string = '';
+	let places: OpenStreetMapPlace[] = [];
+	let noPlaces: boolean = false;
+	let is_custom_location: boolean = false;
+	let markers: Point[] = [];
 
+	// Format date as local datetime
 	function toLocalDatetime(value: string | null): string {
 		if (!value) return '';
 		const date = new Date(value);
 		return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
 	}
 
-	let hotel: Hotel = {
-		id: hotelToEdit?.id || '',
-		user_id: hotelToEdit?.user_id || '',
-		name: hotelToEdit?.name || '',
-		description: hotelToEdit?.description || '',
-		rating: hotelToEdit?.rating || NaN,
-		link: hotelToEdit?.link || '',
-		check_in: hotelToEdit?.check_in || null,
-		check_out: hotelToEdit?.check_out || null,
-		reservation_number: hotelToEdit?.reservation_number || '',
-		price: hotelToEdit?.price || null,
-		latitude: hotelToEdit?.latitude || null,
-		longitude: hotelToEdit?.longitude || null,
-		location: hotelToEdit?.location || '',
-		is_public: hotelToEdit?.is_public || false,
-		collection: hotelToEdit?.collection || '',
-		created_at: hotelToEdit?.created_at || '',
-		updated_at: hotelToEdit?.updated_at || ''
-	};
+	// Initialize hotel with values from hotelToEdit or default values
+	function initializeHotel(hotelToEdit: Hotel | null): Hotel {
+		return {
+			id: hotelToEdit?.id || '',
+			user_id: hotelToEdit?.user_id || '',
+			name: hotelToEdit?.name || '',
+			description: hotelToEdit?.description || '',
+			rating: hotelToEdit?.rating || NaN,
+			link: hotelToEdit?.link || '',
+			check_in: hotelToEdit?.check_in || null,
+			check_out: hotelToEdit?.check_out || null,
+			reservation_number: hotelToEdit?.reservation_number || '',
+			price: hotelToEdit?.price || null,
+			latitude: hotelToEdit?.latitude || null,
+			longitude: hotelToEdit?.longitude || null,
+			location: hotelToEdit?.location || '',
+			is_public: hotelToEdit?.is_public || false,
+			collection: hotelToEdit?.collection || '',
+			created_at: hotelToEdit?.created_at || '',
+			updated_at: hotelToEdit?.updated_at || ''
+		};
+	}
 
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
-
+	// Set full start and end dates from collection
 	if (collection.start_date && collection.end_date) {
 		fullStartDate = `${collection.start_date}T00:00`;
 		fullEndDate = `${collection.end_date}T23:59`;
 	}
 
+	// Handle rating change
 	$: {
 		if (!hotel.rating) {
 			hotel.rating = NaN;
 		}
 	}
 
-	console.log(hotel);
-
-	onMount(async () => {
+	// Show modal on mount
+	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		if (modal) {
-			modal.showModal();
-		}
+		if (modal) modal.showModal();
 	});
 
+	// Close modal
 	function close() {
 		dispatch('close');
 	}
 
+	// Close modal on escape key press
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			close();
-		}
+		if (event.key === 'Escape') close();
 	}
 
+	// Geocode location search
+	async function geocode(e: Event | null) {
+		if (e) e.preventDefault();
+		if (!query) {
+			alert($t('adventures.no_location'));
+			return;
+		}
+		const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			headers: { 'User-Agent': `AdventureLog / ${appVersion}` }
+		});
+		const data = (await res.json()) as OpenStreetMapPlace[];
+		places = data;
+		noPlaces = data.length === 0;
+	}
+
+	// Set custom location flag based on hotel location
+	$: is_custom_location = hotel.location !== (reverseGeocodePlace?.display_name || '');
+
+	// Add marker to map
+	async function addMarker(e: CustomEvent<any>) {
+		markers = [{ lngLat: e.detail.lngLat, name: '', location: '', activity_type: '' }];
+	}
+
+	// Clear all markers from the map
+	function clearMap() {
+		markers = [];
+	}
+
+	// Handle form submission (save hotel)
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		console.log(hotel);
 
 		if (hotel.check_in && !hotel.check_out) {
 			const checkInDate = new Date(hotel.check_in);
@@ -90,39 +126,25 @@
 			return;
 		}
 
-		if (hotel.id === '') {
-			let res = await fetch('/api/hotels', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(hotel)
-			});
-			let data = await res.json();
-			if (data.id) {
-				hotel = data as Hotel;
-				addToast('success', $t('adventures.adventure_created'));
-				dispatch('save', hotel);
-			} else {
-				console.error(data);
-				addToast('error', $t('adventures.adventure_create_error'));
-			}
+		// Create or update hotel
+		const url = hotel.id === '' ? '/api/hotels' : `/api/hotels/${hotel.id}`;
+		const method = hotel.id === '' ? 'POST' : 'PATCH';
+		const res = await fetch(url, {
+			method,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(hotel)
+		});
+		const data = await res.json();
+		if (data.id) {
+			hotel = data as Hotel;
+			const toastMessage =
+				hotel.id === '' ? 'adventures.adventure_created' : 'adventures.adventure_updated';
+			addToast('success', $t(toastMessage));
+			dispatch('save', hotel);
 		} else {
-			let res = await fetch(`/api/hotels/${hotel.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(hotel)
-			});
-			let data = await res.json();
-			if (data.id) {
-				hotel = data as Hotel;
-				addToast('success', $t('adventures.adventure_updated'));
-				dispatch('save', hotel);
-			} else {
-				addToast('error', $t('adventures.adventure_update_error'));
-			}
+			const errorMessage =
+				hotel.id === '' ? 'adventures.adventure_create_error' : 'adventures.adventure_update_error';
+			addToast('error', $t(errorMessage));
 		}
 	}
 </script>
@@ -303,6 +325,97 @@
 				</div>
 
 				<!-- Location Information -->
+				<div class="collapse collapse-plus bg-base-200 mb-4">
+					<input type="checkbox" />
+					<div class="collapse-title text-xl font-medium">
+						{$t('adventures.location_information')}
+					</div>
+					<div class="collapse-content">
+						<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
+						<div>
+							<label for="latitude">{$t('adventures.location')}</label><br />
+							<div class="flex items-center">
+								<input
+									type="text"
+									id="location"
+									name="location"
+									bind:value={hotel.location}
+									class="input input-bordered w-full"
+								/>
+								{#if is_custom_location}
+									<button
+										class="btn btn-primary ml-2"
+										type="button"
+										on:click={() => (hotel.location = reverseGeocodePlace?.display_name)}
+										>{$t('adventures.set_to_pin')}</button
+									>
+								{/if}
+							</div>
+						</div>
+
+						<div>
+							<form on:submit={geocode} class="mt-2">
+								<input
+									type="text"
+									placeholder={$t('adventures.search_for_location')}
+									class="input input-bordered w-full max-w-xs mb-2"
+									id="search"
+									name="search"
+									bind:value={query}
+								/>
+								<button class="btn btn-neutral -mt-1" type="submit">{$t('navbar.search')}</button>
+								<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
+									>{$t('adventures.clear_map')}</button
+								>
+							</form>
+						</div>
+						{#if places.length > 0}
+							<div class="mt-4 max-w-full">
+								<h3 class="font-bold text-lg mb-4">{$t('adventures.search_results')}</h3>
+
+								<div class="flex flex-wrap">
+									{#each places as place}
+										<button
+											type="button"
+											class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
+											on:click={() => {
+												markers = [
+													{
+														lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
+														location: place.display_name,
+														name: place.name,
+														activity_type: place.type
+													}
+												];
+											}}
+										>
+											{place.display_name}
+										</button>
+									{/each}
+								</div>
+							</div>
+						{:else if noPlaces}
+							<p class="text-error text-lg">{$t('adventures.no_results')}</p>
+						{/if}
+						<!-- </div> -->
+						<div>
+							<MapLibre
+								style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
+								standardControls
+							>
+								<!-- MapEvents gives you access to map events even from other components inside the map,
+where you might not have access to the top-level `MapLibre` component. In this case
+it would also work to just use on:click on the MapLibre component itself. -->
+								<MapEvents on:click={addMarker} />
+
+								{#each markers as marker}
+									<DefaultMarker lngLat={marker.lngLat} />
+								{/each}
+							</MapLibre>
+						</div>
+					</div>
+				</div>
 
 				<div class="collapse collapse-plus bg-base-200 mb-4">
 					<input type="checkbox" checked />
