@@ -31,7 +31,7 @@ def downloadCountriesStateCities():
     """
     res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
 
-    path = os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities_{COUNTRY_REGION_JSON_VERSION}.json')
+    path = os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities.json')
 
     with open(path, 'w') as f:
         f.write(res.text)
