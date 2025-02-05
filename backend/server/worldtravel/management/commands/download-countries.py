@@ -60,7 +60,7 @@ class Command(BaseCommand):
                     f.write(cdn_version)
                     self.stdout.write(self.style.SUCCESS('Version updated successfully to ' + cdn_version))
             else:
-                self.stdout.write(self.style.SUCCESS('Data is already up-to-date.'))
+                self.stdout.write(self.style.SUCCESS('Data is already up-to-date. Run with --force to re-download'))
                 return
         else:
             self.stdout.write(self.style.ERROR('Error downloading version.json'))
@@ -78,6 +78,7 @@ class Command(BaseCommand):
         countries_json_path = os.path.join(media_root, 'countries_states_cities.json')
         if os.path.exists(countries_json_path):
             os.remove(countries_json_path)
+            self.stdout.write(self.style.SUCCESS('countries_states_cities.json deleted successfully'))
 
         # Download the latest countries, regions, and cities json file
         res = requests.get(f'{ADVENTURELOG_CDN_URL}/data/countries_states_cities.json')

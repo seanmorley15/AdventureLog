@@ -70,7 +70,7 @@ def saveCountryFlags():
     Downloads the flags of all countries and saves them in the data/flags directory
     """
     # Load the countries data
-    with open(os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities_{COUNTRY_REGION_JSON_VERSION}.json')) as f:
+    with open(os.path.join(os.path.dirname(__file__), 'data', f'countries_states_cities.json')) as f:
         data = json.load(f)
 
     for country in data:
