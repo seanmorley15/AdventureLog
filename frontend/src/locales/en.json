@@ -191,6 +191,7 @@
 		"no_description_found": "No description found",
 		"adventure_created": "Adventure created",
 		"adventure_create_error": "Failed to create adventure",
+		"hotel": "Hotel",
 		"create_adventure": "Create Adventure",
 		"adventure_updated": "Adventure updated",
 		"adventure_update_error": "Failed to update adventure",

@@ -203,6 +203,17 @@ class TransportationSerializer(CustomModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
+class HotelSerializer(CustomModelSerializer):
+
+    class Meta:
+        model = Hotel
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
+            'collection', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+
 class NoteSerializer(CustomModelSerializer):
 
     class Meta:
@@ -289,10 +300,11 @@ class CollectionSerializer(CustomModelSerializer):
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
+    hotels = HotelSerializer(many=True, read_only=True, source='hotel_set')
 
     class Meta:
         model = Collection
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'hotels']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
@@ -303,14 +315,3 @@ class CollectionSerializer(CustomModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
-    
-class HotelSerializer(CustomModelSerializer):
-
-    class Meta:
-        model = Hotel
-        fields = [
-            'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
-            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']

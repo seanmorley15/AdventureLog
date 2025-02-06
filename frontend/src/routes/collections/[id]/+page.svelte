@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Checklist, Collection, Note, Transportation } from '$lib/types';
+	import type { Adventure, Checklist, Collection, Hotel, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
@@ -35,6 +35,7 @@
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
+	import HotelModal from '$lib/components/HotelModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -115,6 +116,7 @@
 	let numAdventures: number = 0;
 
 	let transportations: Transportation[] = [];
+	let hotels: Hotel[] = [];
 	let notes: Note[] = [];
 	let checklists: Checklist[] = [];
 
@@ -173,6 +175,9 @@
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
+		}
+		if (collection.hotels) {
+			hotels = collection.hotels;
 		}
 		if (collection.notes) {
 			notes = collection.notes;
@@ -243,6 +248,8 @@
 
 	let adventureToEdit: Adventure | null = null;
 	let transportationToEdit: Transportation | null = null;
+	let isShowingHotelModal: boolean = false;
+	let hotelToEdit: Hotel | null = null;
 	let isAdventureModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
@@ -258,6 +265,11 @@
 	function editTransportation(event: CustomEvent<Transportation>) {
 		transportationToEdit = event.detail;
 		isShowingTransportationModal = true;
+	}
+
+	function editHotel(event: CustomEvent<Hotel>) {
+		hotelToEdit = event.detail;
+		isShowingHotelModal = true;
 	}
 
 	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
@@ -355,6 +367,22 @@
 		}
 		isShowingTransportationModal = false;
 	}
+
+	function saveOrCreateHotel(event: CustomEvent<Hotel>) {
+		if (hotels.find((hotel) => hotel.id === event.detail.id)) {
+			// Update existing hotel
+			hotels = hotels.map((hotel) => {
+				if (hotel.id === event.detail.id) {
+					return event.detail;
+				}
+				return hotel;
+			});
+		} else {
+			// Create new hotel
+			hotels = [event.detail, ...hotels];
+		}
+		isShowingHotelModal = false;
+	}
 </script>
 
 {#if isShowingLinkModal}
@@ -372,6 +400,15 @@
 		{transportationToEdit}
 		on:close={() => (isShowingTransportationModal = false)}
 		on:save={saveOrCreateTransportation}
+		{collection}
+	/>
+{/if}
+
+{#if isShowingHotelModal}
+	<HotelModal
+		{hotelToEdit}
+		on:close={() => (isShowingHotelModal = false)}
+		on:save={saveOrCreateHotel}
 		{collection}
 	/>
 {/if}
@@ -500,6 +537,16 @@
 							}}
 						>
 							{$t('adventures.checklist')}</button
+						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingHotelModal = true;
+								newType = '';
+								hotelToEdit = null;
+							}}
+						>
+							{$t('adventures.hotel')}</button
 						>
 
 						<!-- <button

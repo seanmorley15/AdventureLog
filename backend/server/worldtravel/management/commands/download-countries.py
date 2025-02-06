@@ -45,8 +45,9 @@ class Command(BaseCommand):
         force = options['force']
         batch_size = 100
         current_version_json = os.path.join(settings.MEDIA_ROOT, 'data_version.json')
-        cdn_version_json = requests.get(f'{ADVENTURELOG_CDN_URL}/data/version.json')
-        if cdn_version_json.status_code == 200:
+        try:
+            cdn_version_json = requests.get(f'{ADVENTURELOG_CDN_URL}/data/version.json')
+            cdn_version_json.raise_for_status()
             cdn_version = cdn_version_json.json().get('version')
             if os.path.exists(current_version_json):
                 with open(current_version_json, 'r') as f:
@@ -62,8 +63,8 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS('Data is already up-to-date. Run with --force to re-download'))
                 return
-        else:
-            self.stdout.write(self.style.ERROR('Error downloading version.json'))
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f'Error fetching version from the CDN: {e}, skipping data import. Try restarting the container once CDN connection has been restored.'))
             return
         
         self.stdout.write(self.style.SUCCESS('Fetching latest data from the AdventureLog CDN located at: ' + ADVENTURELOG_CDN_URL))
@@ -89,27 +90,6 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.ERROR('Error downloading countries_states_cities.json'))
             return
-            
-
-        # if not os.path.exists(version_json) or force:
-        #     res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
-        #     if res.status_code == 200:
-        #         with open(countries_json_path, 'w') as f:
-        #             f.write(res.text)
-        #             self.stdout.write(self.style.SUCCESS('countries+regions+states.json downloaded successfully'))
-        #     else:
-        #         self.stdout.write(self.style.ERROR('Error downloading countries+regions+states.json'))
-        #         return
-        # elif not os.path.isfile(countries_json_path):
-        #     self.stdout.write(self.style.ERROR('countries+regions+states.json is not a file'))
-        #     return
-        # elif os.path.getsize(countries_json_path) == 0:
-        #     self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
-        # elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
-        #     self.stdout.write(self.style.WARNING('Some region data is missing. Re-importing all data.'))
-        # else:
-        #     self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
-        #     return
             
         with open(countries_json_path, 'r') as f:
             f = open(countries_json_path, 'rb')

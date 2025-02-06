@@ -113,6 +113,7 @@ export type Collection = {
 	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
+	hotels?: Hotel[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
 	shared_with: string[] | undefined;
