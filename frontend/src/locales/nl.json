@@ -414,7 +414,7 @@
   },
   "checklist": {
     "add_item": "Artikel toevoegen",
-    "checklist_delete_error": "Fout bij verwijderen van de controlelijst",
+    "checklist_delete_error": "Fout bij het verwijderen van de controlelijst",
     "checklist_deleted": "Controlelijst succesvol verwijderd!",
     "checklist_editor": "Controlelijsten bewerken",
     "checklist_public": "Deze controlelijst is openbaar omdat deze zich in een openbare collectie bevindt.",
