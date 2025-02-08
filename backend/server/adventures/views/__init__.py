@@ -13,4 +13,4 @@ from .stats_view import *
 from .transportation_view import *
 from .global_search_view import *
 from .attachment_view import *
-from .hotel_view import *
+from .lodging_view import *

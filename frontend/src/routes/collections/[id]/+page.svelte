@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Checklist, Collection, Hotel, Note, Transportation } from '$lib/types';
+	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
@@ -35,7 +35,8 @@
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
-	import HotelModal from '$lib/components/HotelModal.svelte';
+	import LodgingModal from '$lib/components/LodgingModal.svelte';
+	import LodgingCard from '$lib/components/LodgingCard.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -104,6 +105,19 @@
 			);
 		}
 
+		if (lodging) {
+			dates = dates.concat(
+				lodging
+					.filter((i) => i.check_in)
+					.map((lodging) => ({
+						id: lodging.id,
+						start: lodging.check_in || '', // Ensure it's a string
+						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
+						title: lodging.name
+					}))
+			);
+		}
+
 		// Update `options.events` when `dates` changes
 		options = { ...options, events: dates };
 	}
@@ -116,7 +130,7 @@
 	let numAdventures: number = 0;
 
 	let transportations: Transportation[] = [];
-	let hotels: Hotel[] = [];
+	let lodging: Lodging[] = [];
 	let notes: Note[] = [];
 	let checklists: Checklist[] = [];
 
@@ -176,8 +190,8 @@
 		if (collection.transportations) {
 			transportations = collection.transportations;
 		}
-		if (collection.hotels) {
-			hotels = collection.hotels;
+		if (collection.lodging) {
+			lodging = collection.lodging;
 		}
 		if (collection.notes) {
 			notes = collection.notes;
@@ -248,8 +262,8 @@
 
 	let adventureToEdit: Adventure | null = null;
 	let transportationToEdit: Transportation | null = null;
-	let isShowingHotelModal: boolean = false;
-	let hotelToEdit: Hotel | null = null;
+	let isShowingLodgingModal: boolean = false;
+	let lodgingToEdit: Lodging | null = null;
 	let isAdventureModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
@@ -267,9 +281,9 @@
 		isShowingTransportationModal = true;
 	}
 
-	function editHotel(event: CustomEvent<Hotel>) {
-		hotelToEdit = event.detail;
-		isShowingHotelModal = true;
+	function editLodging(event: CustomEvent<Lodging>) {
+		lodgingToEdit = event.detail;
+		isShowingLodgingModal = true;
 	}
 
 	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
@@ -368,20 +382,20 @@
 		isShowingTransportationModal = false;
 	}
 
-	function saveOrCreateHotel(event: CustomEvent<Hotel>) {
-		if (hotels.find((hotel) => hotel.id === event.detail.id)) {
+	function saveOrCreateLodging(event: CustomEvent<Lodging>) {
+		if (lodging.find((lodging) => lodging.id === event.detail.id)) {
 			// Update existing hotel
-			hotels = hotels.map((hotel) => {
-				if (hotel.id === event.detail.id) {
+			lodging = lodging.map((lodging) => {
+				if (lodging.id === event.detail.id) {
 					return event.detail;
 				}
-				return hotel;
+				return lodging;
 			});
 		} else {
-			// Create new hotel
-			hotels = [event.detail, ...hotels];
+			// Create new lodging
+			lodging = [event.detail, ...lodging];
 		}
-		isShowingHotelModal = false;
+		isShowingLodgingModal = false;
 	}
 </script>
 
@@ -404,11 +418,11 @@
 	/>
 {/if}
 
-{#if isShowingHotelModal}
-	<HotelModal
-		{hotelToEdit}
-		on:close={() => (isShowingHotelModal = false)}
-		on:save={saveOrCreateHotel}
+{#if isShowingLodgingModal}
+	<LodgingModal
+		{lodgingToEdit}
+		on:close={() => (isShowingLodgingModal = false)}
+		on:save={saveOrCreateLodging}
 		{collection}
 	/>
 {/if}
@@ -541,12 +555,12 @@
 						<button
 							class="btn btn-primary"
 							on:click={() => {
-								isShowingHotelModal = true;
+								isShowingLodgingModal = true;
 								newType = '';
-								hotelToEdit = null;
+								lodgingToEdit = null;
 							}}
 						>
-							{$t('adventures.hotel')}</button
+							{$t('adventures.lodging')}</button
 						>
 
 						<!-- <button
@@ -589,7 +603,7 @@
 		</div>
 	{/if}
 
-	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
 		<NotFound error={undefined} />
 	{/if}
 
@@ -701,6 +715,63 @@
 			</div>
 		{/if}
 
+		{#if lodging.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.lodging')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each lodging as hotel}
+					<LodgingCard
+						lodging={hotel}
+						user={data?.user}
+						on:delete={(event) => {
+							lodging = lodging.filter((t) => t.id != event.detail);
+						}}
+						on:edit={editLodging}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if notes.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each notes as note}
+					<NoteCard
+						{note}
+						user={data.user || null}
+						on:edit={(event) => {
+							noteToEdit = event.detail;
+							isNoteModalOpen = true;
+						}}
+						on:delete={(event) => {
+							notes = notes.filter((n) => n.id != event.detail);
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if checklists.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each checklists as checklist}
+					<ChecklistCard
+						{checklist}
+						user={data.user || null}
+						on:delete={(event) => {
+							checklists = checklists.filter((n) => n.id != event.detail);
+						}}
+						on:edit={(event) => {
+							checklistToEdit = event.detail;
+							isShowingChecklistModal = true;
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
 		{#if notes.length > 0}
 			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -742,7 +813,7 @@
 		{/if}
 
 		<!-- if none found -->
-		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
 			<NotFound error={undefined} />
 		{/if}
 	{/if}

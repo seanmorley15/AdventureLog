@@ -2,21 +2,21 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
-from adventures.models import Hotel
-from adventures.serializers import HotelSerializer
+from adventures.models import Lodging
+from adventures.serializers import LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from rest_framework.permissions import IsAuthenticated
 
-class HotelViewSet(viewsets.ModelViewSet):
-    queryset = Hotel.objects.all()
-    serializer_class = HotelSerializer
+class LodgingViewSet(viewsets.ModelViewSet):
+    queryset = Lodging.objects.all()
+    serializer_class = LodgingSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
     def list(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response(status=status.HTTP_403_FORBIDDEN)
-        queryset = Hotel.objects.filter(
+        queryset = Lodging.objects.filter(
             Q(user_id=request.user.id)
         )
         serializer = self.get_serializer(queryset, many=True)
@@ -26,11 +26,11 @@ class HotelViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures, user's own adventures and shared adventures
-            return Hotel.objects.filter(
+            return Lodging.objects.filter(
                 Q(is_public=True) | Q(user_id=user.id) | Q(collection__shared_with=user.id)
             ).distinct().order_by('-updated_at')
         # For other actions, include user's own adventures and shared adventures
-        return Hotel.objects.filter(
+        return Lodging.objects.filter(
             Q(user_id=user.id) | Q(collection__shared_with=user.id)
         ).distinct().order_by('-updated_at')
 

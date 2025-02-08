@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth import get_user_model
 
@@ -11,8 +12,8 @@ VALID_ACHIEVEMENT_TYPES = [
 class Achievement(models.Model):
     """Stores all possible achievements"""
     name = models.CharField(max_length=255, unique=True)
-    key = models.CharField(max_length=255, unique=True) # Used for frontend lookups, e.g. "achievements.first_adventure"
-    type = models.CharField(max_length=255)  # adventure_count, country_count, etc.
+    key = models.CharField(max_length=255, unique=True, default='achievements.other') # Used for frontend lookups, e.g. "achievements.first_adventure"
+    type = models.CharField(max_length=255, choices=[(tag, tag) for tag in VALID_ACHIEVEMENT_TYPES], default='adventure_count')  # adventure_count, country_count, etc.
     description = models.TextField()
     icon = models.ImageField(upload_to="achievements/", null=True, blank=True)
     condition = models.JSONField()  # Stores rules like {"type": "adventure_count", "value": 10}

@@ -113,7 +113,7 @@ export type Collection = {
 	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
-	hotels?: Hotel[];
+	lodging?: Lodging[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
 	shared_with: string[] | undefined;
@@ -264,10 +264,11 @@ export type Attachment = {
 	name: string;
 };
 
-export type Hotel = {
+export type Lodging = {
 	id: string;
 	user_id: string;
 	name: string;
+	type: string;
 	description: string | null;
 	rating: number | null;
 	link: string | null;

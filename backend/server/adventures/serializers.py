@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Hotel
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Lodging
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -203,14 +203,14 @@ class TransportationSerializer(CustomModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
-class HotelSerializer(CustomModelSerializer):
+class LodgingSerializer(CustomModelSerializer):
 
     class Meta:
-        model = Hotel
+        model = Lodging
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
             'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at'
+            'collection', 'created_at', 'updated_at', 'type'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
@@ -300,11 +300,11 @@ class CollectionSerializer(CustomModelSerializer):
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
-    hotels = HotelSerializer(many=True, read_only=True, source='hotel_set')
+    lodging = LodgingSerializer(many=True, read_only=True, source='lodging_set')
 
     class Meta:
         model = Collection
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'hotels']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):

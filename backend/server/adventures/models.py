@@ -36,6 +36,20 @@ ADVENTURE_TYPES = [
     ('other', 'Other')
 ]
 
+LODGING_TYPES = [
+    ('hotel', 'Hotel'),
+    ('hostel', 'Hostel'),
+    ('resort', 'Resort'),
+    ('bnb', 'Bed & Breakfast'),
+    ('campground', 'Campground'),
+    ('cabin', 'Cabin'),
+    ('apartment', 'Apartment'),
+    ('house', 'House'),
+    ('villa', 'Villa'),
+    ('motel', 'Motel'),
+    ('other', 'Other')
+]
+
 TRANSPORTATION_TYPES = [
     ('car', 'Car'),
     ('plane', 'Plane'),
@@ -320,11 +334,12 @@ class Category(models.Model):
     def __str__(self):
         return self.name + ' - ' + self.display_name + ' - ' + self.icon
     
-class Hotel(models.Model):
+class Lodging(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
     name = models.CharField(max_length=200)
+    type = models.CharField(max_length=100, choices=LODGING_TYPES, default='other')
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
@@ -346,9 +361,9 @@ class Hotel(models.Model):
         
         if self.collection:
             if self.collection.is_public and not self.is_public:
-                raise ValidationError('Hotels associated with a public collection must be public. Collection: ' + self.collection.name + ' Hotel: ' + self.name)
+                raise ValidationError('Lodging associated with a public collection must be public. Collection: ' + self.collection.name + ' Loging: ' + self.name)
             if self.user_id != self.collection.user_id:
-                raise ValidationError('Hotels must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Hotel owner: ' + self.user_id.username)
+                raise ValidationError('Lodging must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Lodging owner: ' + self.user_id.username)
 
     def __str__(self):
         return self.name

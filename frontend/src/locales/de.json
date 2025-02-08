@@ -235,7 +235,12 @@
     "primary": "Primär",
     "upload": "Hochladen",
     "view_attachment": "Anhang anzeigen",
-    "of": "von"
+    "of": "von",
+    "city": "Stadt",
+    "display_name": "Anzeigename",
+    "location_details": "Standortdetails",
+    "lodging": "Unterkunft",
+    "region": "Region"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",

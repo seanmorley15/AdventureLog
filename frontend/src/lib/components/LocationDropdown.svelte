@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
-	import type { Adventure, Hotel, OpenStreetMapPlace, Point, ReverseGeocode } from '$lib/types';
+	import type { Adventure, Lodging, OpenStreetMapPlace, Point, ReverseGeocode } from '$lib/types';
 	import { t } from 'svelte-i18n';
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
-	export let item: Adventure | Hotel;
+	export let item: Adventure | Lodging;
 	export let triggerMarkVisted: boolean = false;
 
 	let reverseGeocodePlace: ReverseGeocode | null = null;
@@ -279,40 +279,39 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				{/each}
 			</MapLibre>
 			{#if reverseGeocodePlace}
-				<div class="mt-2">
-					<p>
+				<div class="mt-2 p-4 bg-neutral rounded-lg shadow-md">
+					<h3 class="text-lg font-bold mb-2">{$t('adventures.location_details')}</h3>
+					<p class="mb-1">
+						<span class="font-semibold">{$t('adventures.display_name')}:</span>
 						{reverseGeocodePlace.city
-							? reverseGeocodePlace.city + ',  '
-							: ''}{reverseGeocodePlace.region},
-						{reverseGeocodePlace.country}
+							? reverseGeocodePlace.city + ', '
+							: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
 					</p>
-					<p>
-						{reverseGeocodePlace.region}:
-						{reverseGeocodePlace.region_visited
-							? $t('adventures.visited')
-							: $t('adventures.not_visited')}
+					<p class="mb-1">
+						<span class="font-semibold">{$t('adventures.region')}:</span>
+						{reverseGeocodePlace.region}
+						{reverseGeocodePlace.region_visited ? '✅' : '❌'}
 					</p>
 					{#if reverseGeocodePlace.city}
-						<p>
-							{reverseGeocodePlace.city}:
-							{reverseGeocodePlace.city_visited
-								? $t('adventures.visited')
-								: $t('adventures.not_visited')}
+						<p class="mb-1">
+							<span class="font-semibold">{$t('adventures.city')}:</span>
+							{reverseGeocodePlace.city}
+							{reverseGeocodePlace.city_visited ? '✅' : '❌'}
 						</p>
 					{/if}
 				</div>
 				{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && !willBeMarkedVisited)}
-					<button type="button" class="btn btn-neutral" on:click={markVisited}>
+					<button type="button" class="btn btn-primary mt-2" on:click={markVisited}>
 						{$t('adventures.mark_visited')}
 					</button>
 				{/if}
 				{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited && reverseGeocodePlace.city_id)}
-					<div role="alert" class="alert alert-info mt-2">
+					<div role="alert" class="alert alert-info mt-2 flex items-center">
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
 							fill="none"
 							viewBox="0 0 24 24"
-							class="h-6 w-6 shrink-0 stroke-current"
+							class="h-6 w-6 shrink-0 stroke-current mr-2"
 						>
 							<path
 								stroke-linecap="round"
@@ -321,13 +320,12 @@ it would also work to just use on:click on the MapLibre component itself. -->
 								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 							></path>
 						</svg>
-						<span
-							>{reverseGeocodePlace.city
-								? reverseGeocodePlace.city + ',  '
-								: ''}{reverseGeocodePlace.region},
-							{reverseGeocodePlace.country}
-							{$t('adventures.will_be_marked')}</span
-						>
+						<span>
+							{reverseGeocodePlace.city
+								? reverseGeocodePlace.city + ', '
+								: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
+							{$t('adventures.will_be_marked')}
+						</span>
 					</div>
 				{/if}
 			{/if}

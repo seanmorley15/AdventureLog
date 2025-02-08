@@ -3,27 +3,19 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
-	import { appVersion } from '$lib/config';
-	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
-	import type { Collection, Hotel, ReverseGeocode, OpenStreetMapPlace, Point } from '$lib/types';
+	import type { Collection, Lodging } from '$lib/types';
 	import LocationDropdown from './LocationDropdown.svelte';
 
 	const dispatch = createEventDispatcher();
 
 	export let collection: Collection;
-	export let hotelToEdit: Hotel | null = null;
+	export let lodgingToEdit: Lodging | null = null;
 
 	let modal: HTMLDialogElement;
 	let constrainDates: boolean = false;
-	let hotel: Hotel = { ...initializeHotel(hotelToEdit) };
+	let lodging: Lodging = { ...initializeLodging(lodgingToEdit) };
 	let fullStartDate: string = '';
 	let fullEndDate: string = '';
-	let reverseGeocodePlace: any | null = null;
-	let query: string = '';
-	let places: OpenStreetMapPlace[] = [];
-	let noPlaces: boolean = false;
-	let is_custom_location: boolean = false;
-	let markers: Point[] = [];
 
 	// Format date as local datetime
 	function toLocalDatetime(value: string | null): string {
@@ -32,12 +24,32 @@
 		return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
 	}
 
+	type LodgingType = {
+		value: string;
+		label: string;
+	};
+
+	const LODGING_TYPES: LodgingType[] = [
+		{ value: 'hotel', label: 'Hotel' },
+		{ value: 'hostel', label: 'Hostel' },
+		{ value: 'resort', label: 'Resort' },
+		{ value: 'bnb', label: 'Bed & Breakfast' },
+		{ value: 'campground', label: 'Campground' },
+		{ value: 'cabin', label: 'Cabin' },
+		{ value: 'apartment', label: 'Apartment' },
+		{ value: 'house', label: 'House' },
+		{ value: 'villa', label: 'Villa' },
+		{ value: 'motel', label: 'Motel' },
+		{ value: 'other', label: 'Other' }
+	];
+
 	// Initialize hotel with values from hotelToEdit or default values
-	function initializeHotel(hotelToEdit: Hotel | null): Hotel {
+	function initializeLodging(hotelToEdit: Lodging | null): Lodging {
 		return {
 			id: hotelToEdit?.id || '',
 			user_id: hotelToEdit?.user_id || '',
 			name: hotelToEdit?.name || '',
+			type: hotelToEdit?.type || 'other',
 			description: hotelToEdit?.description || '',
 			rating: hotelToEdit?.rating || NaN,
 			link: hotelToEdit?.link || '',
@@ -49,7 +61,7 @@
 			longitude: hotelToEdit?.longitude || null,
 			location: hotelToEdit?.location || '',
 			is_public: hotelToEdit?.is_public || false,
-			collection: hotelToEdit?.collection || '',
+			collection: hotelToEdit?.collection || collection.id,
 			created_at: hotelToEdit?.created_at || '',
 			updated_at: hotelToEdit?.updated_at || ''
 		};
@@ -63,8 +75,8 @@
 
 	// Handle rating change
 	$: {
-		if (!hotel.rating) {
-			hotel.rating = NaN;
+		if (!lodging.rating) {
+			lodging.rating = NaN;
 		}
 	}
 
@@ -88,35 +100,37 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 
-		if (hotel.check_in && !hotel.check_out) {
-			const checkInDate = new Date(hotel.check_in);
+		if (lodging.check_in && !lodging.check_out) {
+			const checkInDate = new Date(lodging.check_in);
 			checkInDate.setDate(checkInDate.getDate() + 1);
-			hotel.check_out = checkInDate.toISOString();
+			lodging.check_out = checkInDate.toISOString();
 		}
 
-		if (hotel.check_in && hotel.check_out && hotel.check_in > hotel.check_out) {
+		if (lodging.check_in && lodging.check_out && lodging.check_in > lodging.check_out) {
 			addToast('error', $t('adventures.start_before_end_error'));
 			return;
 		}
 
 		// Create or update hotel
-		const url = hotel.id === '' ? '/api/hotels' : `/api/hotels/${hotel.id}`;
-		const method = hotel.id === '' ? 'POST' : 'PATCH';
+		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
+		const method = lodging.id === '' ? 'POST' : 'PATCH';
 		const res = await fetch(url, {
 			method,
 			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(hotel)
+			body: JSON.stringify(lodging)
 		});
 		const data = await res.json();
 		if (data.id) {
-			hotel = data as Hotel;
+			lodging = data as Lodging;
 			const toastMessage =
-				hotel.id === '' ? 'adventures.adventure_created' : 'adventures.adventure_updated';
+				lodging.id === '' ? 'adventures.adventure_created' : 'adventures.adventure_updated';
 			addToast('success', $t(toastMessage));
-			dispatch('save', hotel);
+			dispatch('save', lodging);
 		} else {
 			const errorMessage =
-				hotel.id === '' ? 'adventures.adventure_create_error' : 'adventures.adventure_update_error';
+				lodging.id === ''
+					? 'adventures.adventure_create_error'
+					: 'adventures.adventure_update_error';
 			addToast('error', $t(errorMessage));
 		}
 	}
@@ -127,9 +141,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-2xl">
-			{hotelToEdit
-				? $t('transportation.edit_transportation')
-				: $t('transportation.new_transportation')}
+			{lodgingToEdit ? $t('lodging.edit_lodging') : $t('lodging.new_lodging')}
 		</h3>
 		<div class="modal-action items-center">
 			<form method="post" style="width: 100%;" on:submit={handleSubmit}>
@@ -149,7 +161,7 @@
 								type="text"
 								id="name"
 								name="name"
-								bind:value={hotel.name}
+								bind:value={lodging.name}
 								class="input input-bordered w-full"
 								required
 							/>
@@ -157,7 +169,7 @@
 						<!-- Description -->
 						<div>
 							<label for="description">{$t('adventures.description')}</label><br />
-							<MarkdownEditor bind:text={hotel.description} editor_height={'h-32'} />
+							<MarkdownEditor bind:text={lodging.description} editor_height={'h-32'} />
 						</div>
 						<!-- Rating -->
 						<div>
@@ -167,7 +179,7 @@
 								min="0"
 								max="5"
 								hidden
-								bind:value={hotel.rating}
+								bind:value={lodging.rating}
 								id="rating"
 								name="rating"
 								class="input input-bordered w-full max-w-xs mt-1"
@@ -177,48 +189,48 @@
 									type="radio"
 									name="rating-2"
 									class="rating-hidden"
-									checked={Number.isNaN(hotel.rating)}
+									checked={Number.isNaN(lodging.rating)}
 								/>
 								<input
 									type="radio"
 									name="rating-2"
 									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (hotel.rating = 1)}
-									checked={hotel.rating === 1}
+									on:click={() => (lodging.rating = 1)}
+									checked={lodging.rating === 1}
 								/>
 								<input
 									type="radio"
 									name="rating-2"
 									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (hotel.rating = 2)}
-									checked={hotel.rating === 2}
+									on:click={() => (lodging.rating = 2)}
+									checked={lodging.rating === 2}
 								/>
 								<input
 									type="radio"
 									name="rating-2"
 									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (hotel.rating = 3)}
-									checked={hotel.rating === 3}
+									on:click={() => (lodging.rating = 3)}
+									checked={lodging.rating === 3}
 								/>
 								<input
 									type="radio"
 									name="rating-2"
 									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (hotel.rating = 4)}
-									checked={hotel.rating === 4}
+									on:click={() => (lodging.rating = 4)}
+									checked={lodging.rating === 4}
 								/>
 								<input
 									type="radio"
 									name="rating-2"
 									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (hotel.rating = 5)}
-									checked={hotel.rating === 5}
+									on:click={() => (lodging.rating = 5)}
+									checked={lodging.rating === 5}
 								/>
-								{#if hotel.rating}
+								{#if lodging.rating}
 									<button
 										type="button"
 										class="btn btn-sm btn-error ml-2"
-										on:click={() => (hotel.rating = NaN)}
+										on:click={() => (lodging.rating = NaN)}
 									>
 										{$t('adventures.remove')}
 									</button>
@@ -232,7 +244,7 @@
 								type="url"
 								id="link"
 								name="link"
-								bind:value={hotel.link}
+								bind:value={lodging.link}
 								class="input input-bordered w-full"
 							/>
 						</div>
@@ -247,7 +259,7 @@
 						<!-- Start Date -->
 						<div>
 							<label for="date">
-								{$t('adventures.start_date')}
+								{$t('lodging.check_in')}
 							</label>
 
 							{#if collection && collection.start_date && collection.end_date}<label
@@ -268,7 +280,7 @@
 									type="datetime-local"
 									id="date"
 									name="date"
-									bind:value={hotel.check_in}
+									bind:value={lodging.check_in}
 									min={constrainDates ? fullStartDate : ''}
 									max={constrainDates ? fullEndDate : ''}
 									class="input input-bordered w-full max-w-xs mt-1"
@@ -276,19 +288,19 @@
 							</div>
 						</div>
 						<!-- End Date -->
-						{#if hotel.check_in}
+						{#if lodging.check_out}
 							<div>
 								<label for="end_date">
-									{$t('adventures.end_date')}
+									{$t('lodging.check_out')}
 								</label>
 								<div>
 									<input
 										type="datetime-local"
 										id="end_date"
 										name="end_date"
-										min={constrainDates ? hotel.check_in : ''}
+										min={constrainDates ? lodging.check_in : ''}
 										max={constrainDates ? fullEndDate : ''}
-										bind:value={hotel.check_out}
+										bind:value={lodging.check_out}
 										class="input input-bordered w-full max-w-xs mt-1"
 									/>
 								</div>
@@ -298,7 +310,7 @@
 				</div>
 
 				<!-- Location Information -->
-				<LocationDropdown bind:item={hotel} />
+				<LocationDropdown bind:item={lodging} />
 
 				<!-- Form Actions -->
 				<div class="mt-4">
