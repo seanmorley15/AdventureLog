@@ -234,7 +234,8 @@
     "images": "图片",
     "primary": "基本的",
     "upload": "上传",
-    "view_attachment": "查看附件"
+    "view_attachment": "查看附件",
+    "of": "的"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -302,7 +303,11 @@
     "both_passwords_required": "两个密码都需要",
     "new_password": "新密码",
     "reset_failed": "重置密码失败",
-    "or_3rd_party": "或者使用第三方服务登录"
+    "or_3rd_party": "或者使用第三方服务登录",
+    "no_public_adventures": "找不到公共冒险",
+    "no_public_collections": "找不到公共收藏",
+    "user_adventures": "用户冒险",
+    "user_collections": "用户收集"
   },
   "worldtravel": {
     "all": "全部",

@@ -35,10 +35,15 @@ This configuration is done in the [Admin Panel](../../guides/admin_panel.md). Yo
    - Settings: can be left blank
    - Sites: move over the sites you want to enable Authentik on, usually `example.com` and `www.example.com` unless you renamed your sites.
 
+4. Save the configuration.
+
+Users should now be able to log in to AdventureLog using their GitHub account, and link it to existing accounts.
+
+## Linking to Existing Account
+
+If a user has an existing AdventureLog account and wants to link it to their Github account, they can do so by logging in to their AdventureLog account and navigating to the `Settings` page. There is a button that says `Launch Account Connections`, click that and then choose the provider to link to the existing account.
+
 #### What it Should Look Like
 
 ![Authentik Social Auth Configuration](/github_settings.png)
 
-4. Save the configuration.
-
-Users should now be able to log in to AdventureLog using their GitHub account, and link it to existing accounts.

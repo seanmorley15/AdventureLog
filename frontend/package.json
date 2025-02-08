@@ -16,7 +16,6 @@
 		"@event-calendar/day-grid": "^3.7.1",
 		"@event-calendar/time-grid": "^3.7.1",
 		"@iconify-json/mdi": "^1.1.67",
-		"@sveltejs/adapter-auto": "^3.2.2",
 		"@sveltejs/adapter-node": "^5.2.0",
 		"@sveltejs/adapter-vercel": "^5.4.1",
 		"@sveltejs/kit": "^2.8.3",
@@ -47,7 +46,6 @@
 		"psl": "^1.15.0",
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
-		"svelte-maplibre": "^0.9.8",
-		"tsparticles": "^3.7.1"
+		"svelte-maplibre": "^0.9.8"
 	}
 }

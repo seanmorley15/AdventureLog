@@ -17,7 +17,8 @@
 
 	// Event listener for focusing input
 	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === '/' && document.activeElement !== inputElement) {
+		// Ignore any keypresses in an input/textarea field, so we don't interfere with typing.
+		if (event.key === '/' && !["INPUT", "TEXTAREA"].includes((event.target as HTMLElement)?.tagName)) {
 			event.preventDefault(); // Prevent browser's search shortcut
 			if (inputElement) {
 				inputElement.focus();

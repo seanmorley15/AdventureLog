@@ -118,5 +118,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
         # Remove `pk` field from the response
         representation.pop('pk', None)
+        # Remove the email field
+        representation.pop('email', None)
 
         return representation

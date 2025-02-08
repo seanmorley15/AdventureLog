@@ -234,7 +234,8 @@
     "images": "Images",
     "primary": "Primaire",
     "upload": "Télécharger",
-    "view_attachment": "Voir la pièce jointe"
+    "view_attachment": "Voir la pièce jointe",
+    "of": "de"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -302,7 +303,11 @@
     "both_passwords_required": "Les deux mots de passe sont requis",
     "new_password": "Nouveau mot de passe",
     "reset_failed": "Échec de la réinitialisation du mot de passe",
-    "or_3rd_party": "Ou connectez-vous avec un service tiers"
+    "or_3rd_party": "Ou connectez-vous avec un service tiers",
+    "no_public_adventures": "Aucune aventure publique trouvée",
+    "no_public_collections": "Aucune collection publique trouvée",
+    "user_adventures": "Aventures utilisateur",
+    "user_collections": "Collections d'utilisateurs"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec des profils publics."

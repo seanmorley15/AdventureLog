@@ -281,7 +281,8 @@
     "primary": "Primario",
     "upload": "Subir",
     "view_attachment": "Ver archivo adjunto",
-    "attachment_name": "Nombre del archivo adjunto"
+    "attachment_name": "Nombre del archivo adjunto",
+    "of": "de"
   },
   "worldtravel": {
     "all": "Todo",
@@ -326,7 +327,11 @@
     "both_passwords_required": "Se requieren ambas contraseñas",
     "new_password": "Nueva contraseña",
     "reset_failed": "No se pudo restablecer la contraseña",
-    "or_3rd_party": "O inicie sesión con un servicio de terceros"
+    "or_3rd_party": "O inicie sesión con un servicio de terceros",
+    "no_public_adventures": "No se encontraron aventuras públicas",
+    "no_public_collections": "No se encontraron colecciones públicas",
+    "user_adventures": "Aventuras de usuario",
+    "user_collections": "Colecciones de usuarios"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."

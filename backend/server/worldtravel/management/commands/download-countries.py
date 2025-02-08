@@ -8,7 +8,7 @@ import ijson
 
 from django.conf import settings
 
-COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
+ADVENTURELOG_CDN_URL = settings.ADVENTURELOG_CDN_URL
         
 media_root = settings.MEDIA_ROOT
 
@@ -27,7 +27,7 @@ def saveCountryFlag(country_code):
         print(f'Flag for {country_code} already exists')
         return
 
-    res = requests.get(f'https://flagcdn.com/h240/{country_code}.png'.lower())
+    res = requests.get(f'{ADVENTURELOG_CDN_URL}/data/flags/{country_code}.png'.lower())
     if res.status_code == 200:
         with open(flag_path, 'wb') as f:
             f.write(res.content)
@@ -39,30 +39,56 @@ class Command(BaseCommand):
     help = 'Imports the world travel data'
 
     def add_arguments(self, parser):
-        parser.add_argument('--force', action='store_true', help='Force download the countries+regions+states.json file')
+        parser.add_argument('--force', action='store_true', help='Force re-download of AdventureLog setup content from the CDN')
 
     def handle(self, **options):
         force = options['force']
         batch_size = 100
-        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
-        if not os.path.exists(countries_json_path) or force:
-            res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
-            if res.status_code == 200:
-                with open(countries_json_path, 'w') as f:
-                    f.write(res.text)
-                    self.stdout.write(self.style.SUCCESS('countries+regions+states.json downloaded successfully'))
+        current_version_json = os.path.join(settings.MEDIA_ROOT, 'data_version.json')
+        try:
+            cdn_version_json = requests.get(f'{ADVENTURELOG_CDN_URL}/data/version.json')
+            cdn_version_json.raise_for_status()
+            cdn_version = cdn_version_json.json().get('version')
+            if os.path.exists(current_version_json):
+                with open(current_version_json, 'r') as f:
+                    local_version = f.read().strip()
+                    self.stdout.write(self.style.SUCCESS(f'Local version: {local_version}'))
             else:
-                self.stdout.write(self.style.ERROR('Error downloading countries+regions+states.json'))
+                local_version = None
+
+            if force or local_version != cdn_version:
+                with open(current_version_json, 'w') as f:
+                    f.write(cdn_version)
+                    self.stdout.write(self.style.SUCCESS('Version updated successfully to ' + cdn_version))
+            else:
+                self.stdout.write(self.style.SUCCESS('Data is already up-to-date. Run with --force to re-download'))
                 return
-        elif not os.path.isfile(countries_json_path):
-            self.stdout.write(self.style.ERROR('countries+regions+states.json is not a file'))
+        except requests.RequestException as e:
+            self.stdout.write(self.style.ERROR(f'Error fetching version from the CDN: {e}, skipping data import. Try restarting the container once CDN connection has been restored.'))
             return
-        elif os.path.getsize(countries_json_path) == 0:
-            self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
-        elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
-            self.stdout.write(self.style.WARNING('Some region data is missing. Re-importing all data.'))
+        
+        self.stdout.write(self.style.SUCCESS('Fetching latest data from the AdventureLog CDN located at: ' + ADVENTURELOG_CDN_URL))
+
+        # Delete the existing flags
+        flags_dir = os.path.join(media_root, 'flags')
+        if os.path.exists(flags_dir):
+            for file in os.listdir(flags_dir):
+                os.remove(os.path.join(flags_dir, file))
+
+        # Delete the existing countries, regions, and cities json files
+        countries_json_path = os.path.join(media_root, 'countries_states_cities.json')
+        if os.path.exists(countries_json_path):
+            os.remove(countries_json_path)
+            self.stdout.write(self.style.SUCCESS('countries_states_cities.json deleted successfully'))
+
+        # Download the latest countries, regions, and cities json file
+        res = requests.get(f'{ADVENTURELOG_CDN_URL}/data/countries_states_cities.json')
+        if res.status_code == 200:
+            with open(countries_json_path, 'w') as f:
+                f.write(res.text)
+                self.stdout.write(self.style.SUCCESS('countries_states_cities.json downloaded successfully'))
         else:
-            self.stdout.write(self.style.SUCCESS('Latest country, region, and state data already downloaded.'))
+            self.stdout.write(self.style.ERROR('Error downloading countries_states_cities.json'))
             return
             
         with open(countries_json_path, 'r') as f:

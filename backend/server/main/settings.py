@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
+    'achievements',
     # 'widget_tweaks',
     # 'slippers',
 
@@ -128,7 +129,7 @@ USE_L10N = True
 USE_TZ = True
 
 unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
-FRONTEND_URL = unParsedFrontenedUrl.replace("'", "").replace('"', '')
+FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = None
 
@@ -301,5 +302,5 @@ LOGGING = {
         },
     },
 }
-# https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.5'
+
+ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')

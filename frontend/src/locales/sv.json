@@ -234,7 +234,8 @@
     "images": "Bilder",
     "primary": "Primär",
     "upload": "Ladda upp",
-    "view_attachment": "Visa bilaga"
+    "view_attachment": "Visa bilaga",
+    "of": "av"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -326,7 +327,11 @@
     "both_passwords_required": "Båda lösenorden krävs",
     "new_password": "Nytt lösenord",
     "reset_failed": "Det gick inte att återställa lösenordet",
-    "or_3rd_party": "Eller logga in med en tredjepartstjänst"
+    "or_3rd_party": "Eller logga in med en tredjepartstjänst",
+    "no_public_adventures": "Inga offentliga äventyr hittades",
+    "no_public_collections": "Inga offentliga samlingar hittades",
+    "user_adventures": "Användaräventyr",
+    "user_collections": "Användarsamlingar"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."

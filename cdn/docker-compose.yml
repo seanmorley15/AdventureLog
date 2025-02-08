@@ -1,0 +1,9 @@
+services:
+  cdn:
+    build: .
+    container_name: adventurelog-cdn
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data # Ensures new data files persist

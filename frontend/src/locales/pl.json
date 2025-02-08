@@ -281,7 +281,8 @@
     "images": "Obrazy",
     "primary": "Podstawowy",
     "upload": "Wgrywać",
-    "view_attachment": "Zobacz załącznik"
+    "view_attachment": "Zobacz załącznik",
+    "of": "z"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -326,7 +327,11 @@
     "both_passwords_required": "Obydwa hasła są wymagane",
     "new_password": "Nowe hasło",
     "reset_failed": "Nie udało się zresetować hasła",
-    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej"
+    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej",
+    "no_public_adventures": "Nie znaleziono publicznych przygód",
+    "no_public_collections": "Nie znaleziono publicznych kolekcji",
+    "user_adventures": "Przygody użytkowników",
+    "user_collections": "Kolekcje użytkowników"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."

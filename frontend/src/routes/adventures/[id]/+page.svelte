@@ -12,6 +12,7 @@
 	import toGeoJSON from '@mapbox/togeojson';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
+	import Account from '~icons/mdi/account';
 
 	let geojson: any;
 
@@ -222,6 +223,40 @@
 						</div>
 						<div class="grid gap-2">
 							<div class="flex items-center gap-2">
+								{#if adventure.user.profile_pic}
+									<div class="avatar">
+										<div class="w-8 rounded-full">
+											<img src={adventure.user.profile_pic} />
+										</div>
+									</div>
+								{:else}
+									<div class="avatar placeholder">
+										<div class="bg-neutral text-neutral-content w-8 rounded-full">
+											<span class="text-lg"
+												>{adventure.user.first_name
+													? adventure.user.first_name.charAt(0)
+													: adventure.user.username.charAt(0)}{adventure.user.last_name
+													? adventure.user.last_name.charAt(0)
+													: ''}</span
+											>
+										</div>
+									</div>
+								{/if}
+								<div>
+									{#if adventure.user.public_profile}
+										<a href={`/profile/${adventure.user.username}`} class="text-base font-medium">
+											{adventure.user.first_name || adventure.user.username}{' '}
+											{adventure.user.last_name}
+										</a>
+									{:else}
+										<span class="text-base font-medium">
+											{adventure.user.first_name || adventure.user.username}{' '}
+											{adventure.user.last_name}
+										</span>
+									{/if}
+								</div>
+							</div>
+							<div class="flex items-center gap-2">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									width="24"
@@ -241,6 +276,7 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
+
 							{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg

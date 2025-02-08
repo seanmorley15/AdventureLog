@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
 from django.db.models import Q, Max
@@ -5,7 +6,6 @@ from django.db.models.functions import Lower
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
 from adventures.models import Adventure, Category
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import AdventureSerializer
@@ -98,9 +98,17 @@ class AdventureViewSet(viewsets.ModelViewSet):
             user_id=request.user.id
         )
 
-        if is_visited.lower() in ['true', 'false']:
-            is_visited_bool = is_visited.lower() == 'true'
-            queryset = queryset.filter(is_visited=is_visited_bool)
+        is_visited_param = request.query_params.get('is_visited')
+        if is_visited_param is not None:
+            # Convert is_visited_param to a boolean
+            is_visited_bool = (is_visited_param.lower() == 'true')
+
+            # Filter logic: "visited" means at least one visit with start_date <= today
+            now = timezone.now().date()
+            if is_visited_bool:
+                queryset = queryset.filter(visits__start_date__lte=now).distinct()
+            else:
+                queryset = queryset.exclude(visits__start_date__lte=now).distinct()
 
         queryset = self.apply_sorting(queryset)
         return self.paginate_and_respond(queryset, request)

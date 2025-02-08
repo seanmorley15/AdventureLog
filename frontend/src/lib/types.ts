@@ -1,7 +1,6 @@
 export type User = {
 	pk: number;
 	username: string;
-	email: string | null;
 	first_name: string | null;
 	last_name: string | null;
 	date_joined: string | null;
@@ -41,6 +40,7 @@ export type Adventure = {
 	is_visited?: boolean;
 	category: Category | null;
 	attachments: Attachment[];
+	user?: User | null;
 };
 
 export type Country = {
@@ -113,6 +113,7 @@ export type Collection = {
 	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
+	hotels?: Hotel[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
 	shared_with: string[] | undefined;
@@ -261,4 +262,24 @@ export type Attachment = {
 	extension: string;
 	user_id: string;
 	name: string;
+};
+
+export type Hotel = {
+	id: string;
+	user_id: string;
+	name: string;
+	description: string | null;
+	rating: number | null;
+	link: string | null;
+	check_in: string | null; // ISO 8601 date string
+	check_out: string | null; // ISO 8601 date string
+	reservation_number: string | null;
+	price: number | null;
+	latitude: number | null;
+	longitude: number | null;
+	location: string | null;
+	is_public: boolean;
+	collection: string | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
 };

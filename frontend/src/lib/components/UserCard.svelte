@@ -50,7 +50,7 @@
 		<!-- Card Actions -->
 		<div class="card-actions justify-center mt-6">
 			{#if !sharing}
-				<button class="btn btn-primary" on:click={() => goto(`/user/${user.uuid}`)}>
+				<button class="btn btn-primary" on:click={() => goto(`/profile/${user.username}`)}>
 					View Profile
 				</button>
 			{:else if shared_with && !shared_with.includes(user.uuid)}
