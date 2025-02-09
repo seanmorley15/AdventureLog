@@ -1,6 +1,6 @@
 {
   "about": {
-    "about": "Um",
+    "about": "Über",
     "close": "Schließen",
     "license": "Lizenziert unter der GPL-3.0-Lizenz.",
     "message": "Hergestellt mit ❤️ in den Vereinigten Staaten.",
@@ -64,7 +64,7 @@
     "about": "Über AdventureLog",
     "adventures": "Abenteuer",
     "collections": "Sammlungen",
-    "discord": "Zwietracht",
+    "discord": "Discord",
     "documentation": "Dokumentation",
     "greeting": "Hallo",
     "login": "Login",
