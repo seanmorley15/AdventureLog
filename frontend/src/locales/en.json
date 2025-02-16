@@ -293,7 +293,8 @@
       "other": "Other"
     },
     "lodging_information": "Lodging Information",
-    "price": "Price"
+    "price": "Price",
+    "reservation_number": "Reservation Number"
   },
   "worldtravel": {
     "country_list": "Country List",

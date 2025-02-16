@@ -133,6 +133,20 @@
 					</p>
 				</div>
 			{/if}
+			{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
+				{#if lodging.reservation_number}
+					<div class="flex items-center gap-2">
+						<span class="font-medium text-sm">{$t('adventures.reservation_number')}:</span>
+						<p>{lodging.reservation_number}</p>
+					</div>
+				{/if}
+				{#if lodging.price}
+					<div class="flex items-center gap-2">
+						<span class="font-medium text-sm">{$t('adventures.price')}:</span>
+						<p>{lodging.price}</p>
+					</div>
+				{/if}
+			{/if}
 		</div>
 
 		<!-- Actions -->

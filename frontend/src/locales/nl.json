@@ -235,7 +235,18 @@
     "primary": "Primair",
     "upload": "Uploaden",
     "view_attachment": "Bijlage bekijken",
-    "of": "van"
+    "of": "van",
+    "city": "Stad",
+    "delete_lodging": "Verwijder accommodatie",
+    "display_name": "Weergavenaam",
+    "location_details": "Locatiegegevens",
+    "lodging": "Onderdak",
+    "reservation_number": "Reserveringsnummer",
+    "welcome_map_info": "Publieke avonturen op deze server",
+    "lodging_delete_confirm": "Weet u zeker dat u deze accommodatielocatie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "lodging_information": "Informatie overliggen",
+    "price": "Prijs",
+    "region": "Regio"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -282,7 +293,8 @@
     "tag": "Label",
     "language_selection": "Taal",
     "support": "Steun",
-    "calendar": "Kalender"
+    "calendar": "Kalender",
+    "admin_panel": "Admin -paneel"
   },
   "auth": {
     "confirm_password": "Bevestig wachtwoord",
@@ -572,5 +584,34 @@
     "phone": "Telefoon",
     "recommendation": "Aanbeveling",
     "website": "Website"
+  },
+  "lodging": {
+    "apartment": "Appartement",
+    "bnb": "Bed and breakfast",
+    "cabin": "Cabine",
+    "campground": "Camping",
+    "check_in": "Inchecken",
+    "check_out": "Uitchecken",
+    "date_and_time": "Datum",
+    "edit": "Bewerking",
+    "edit_lodging": "Bewerkingen bewerken",
+    "error_editing_lodging": "Foutbewerkingsbewerkingen",
+    "hostel": "Hostel",
+    "hotel": "Hotel",
+    "house": "Huis",
+    "lodging_added": "Lodging met succes toegevoegd!",
+    "lodging_delete_error": "Fout bij het verwijderen van accommodatie",
+    "lodging_deleted": "Met succes verwijderd!",
+    "lodging_edit_success": "Lodging met succes bewerkt!",
+    "lodging_type": "Lodging type",
+    "motel": "Motel",
+    "new_lodging": "Nieuwe accommodatie",
+    "other": "Ander",
+    "provide_start_date": "Geef een startdatum op",
+    "reservation_number": "Reserveringsnummer",
+    "resort": "Toevlucht",
+    "start": "Begin",
+    "type": "Type",
+    "villa": "Villa"
   }
 }

@@ -235,7 +235,18 @@
     "primary": "Primär",
     "upload": "Ladda upp",
     "view_attachment": "Visa bilaga",
-    "of": "av"
+    "of": "av",
+    "city": "Stad",
+    "delete_lodging": "Ta bort logi",
+    "display_name": "Visningsnamn",
+    "location_details": "Platsinformation",
+    "lodging": "Logi",
+    "welcome_map_info": "Offentliga äventyr på denna server",
+    "lodging_delete_confirm": "Är du säker på att du vill ta bort den här logiplatsen? \nDenna åtgärd kan inte ångras.",
+    "lodging_information": "Logi information",
+    "price": "Pris",
+    "region": "Område",
+    "reservation_number": "Bokningsnummer"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -282,7 +293,8 @@
     "tag": "Tagg",
     "language_selection": "Språk",
     "support": "Support",
-    "calendar": "Kalender"
+    "calendar": "Kalender",
+    "admin_panel": "Administratör"
   },
   "worldtravel": {
     "all": "Alla",
@@ -572,5 +584,34 @@
     "phone": "Telefon",
     "recommendation": "Rekommendation",
     "website": "Webbplats"
+  },
+  "lodging": {
+    "apartment": "Lägenhet",
+    "bnb": "Säng och frukost",
+    "cabin": "Stuga",
+    "campground": "Campingplats",
+    "error_editing_lodging": "Felredigeringsbefäl",
+    "hostel": "Vandrarhem",
+    "hotel": "Hotell",
+    "house": "Hus",
+    "lodging_added": "Logi tillagd framgångsrikt!",
+    "lodging_delete_error": "Felladering logi",
+    "lodging_deleted": "Logga raderas framgångsrikt!",
+    "lodging_edit_success": "LOGGE Redigerad framgångsrikt!",
+    "lodging_type": "Logi",
+    "motel": "Motell",
+    "new_lodging": "Inställning",
+    "other": "Andra",
+    "provide_start_date": "Vänligen ange ett startdatum",
+    "reservation_number": "Bokningsnummer",
+    "resort": "Tillflykt",
+    "start": "Start",
+    "type": "Typ",
+    "villa": "Villa",
+    "check_in": "Checka in",
+    "check_out": "Checka ut",
+    "date_and_time": "Datum",
+    "edit": "Redigera",
+    "edit_lodging": "Redigera logi"
   }
 }

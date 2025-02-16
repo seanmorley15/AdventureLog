@@ -30,7 +30,8 @@
       "aqua": "Aqua",
       "northernLights": "Zorza Polarna"
     },
-    "calendar": "Kalendarz"
+    "calendar": "Kalendarz",
+    "admin_panel": "Panel administracyjny"
   },
   "about": {
     "about": "O aplikacji",
@@ -282,7 +283,18 @@
     "primary": "Podstawowy",
     "upload": "Wgrywać",
     "view_attachment": "Zobacz załącznik",
-    "of": "z"
+    "of": "z",
+    "city": "Miasto",
+    "delete_lodging": "Usunąć zakwaterowanie",
+    "display_name": "Nazwa wyświetlania",
+    "location_details": "Szczegóły lokalizacji",
+    "lodging": "Kwatera",
+    "lodging_delete_confirm": "Czy na pewno chcesz usunąć tę lokalizację zakwaterowania? \nTego działania nie można cofnąć.",
+    "lodging_information": "Informacje o zakwaterowaniu",
+    "price": "Cena",
+    "region": "Region",
+    "reservation_number": "Numer rezerwacji",
+    "welcome_map_info": "Publiczne przygody na tym serwerze"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -572,5 +584,34 @@
     "phone": "Telefon",
     "recommendation": "Zalecenie",
     "website": "Strona internetowa"
+  },
+  "lodging": {
+    "apartment": "Apartament",
+    "bnb": "Nocleg i śniadanie",
+    "cabin": "Kabina",
+    "campground": "Obozowisko",
+    "lodging_added": "Lodowanie dodane pomyślnie!",
+    "lodging_delete_error": "Usuwanie błędów",
+    "lodging_deleted": "Z powodzeniem usunięto!",
+    "lodging_edit_success": "Złożone zredagowane zredagowane!",
+    "lodging_type": "Typ składowania",
+    "motel": "Motel",
+    "start": "Start",
+    "type": "Typ",
+    "villa": "Willa",
+    "check_in": "Zameldować się",
+    "check_out": "Wymeldować się",
+    "date_and_time": "Data",
+    "edit": "Redagować",
+    "edit_lodging": "Edytuj zakwaterowanie",
+    "error_editing_lodging": "Edycja błędów",
+    "hostel": "Schronisko",
+    "hotel": "Hotel",
+    "house": "Dom",
+    "new_lodging": "Nowe zakwaterowanie",
+    "other": "Inny",
+    "provide_start_date": "Proszę podać datę rozpoczęcia",
+    "reservation_number": "Numer rezerwacji",
+    "resort": "Uciec"
   }
 }

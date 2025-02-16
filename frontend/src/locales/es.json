@@ -30,7 +30,8 @@
     "tag": "Etiqueta",
     "language_selection": "Idioma",
     "support": "Apoyo",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "admin_panel": "Panel de administración"
   },
   "about": {
     "about": "Acerca de",
@@ -282,7 +283,18 @@
     "upload": "Subir",
     "view_attachment": "Ver archivo adjunto",
     "attachment_name": "Nombre del archivo adjunto",
-    "of": "de"
+    "of": "de",
+    "city": "Ciudad",
+    "delete_lodging": "Eliminar alojamiento",
+    "display_name": "Nombre para mostrar",
+    "location_details": "Detalles de la ubicación",
+    "lodging": "Alojamiento",
+    "lodging_delete_confirm": "¿Estás seguro de que quieres eliminar este lugar de alojamiento? \nEsta acción no se puede deshacer.",
+    "lodging_information": "Información de alojamiento",
+    "price": "Precio",
+    "region": "Región",
+    "reservation_number": "Número de reserva",
+    "welcome_map_info": "Aventuras públicas en este servidor"
   },
   "worldtravel": {
     "all": "Todo",
@@ -572,5 +584,34 @@
     "phone": "Teléfono",
     "recommendation": "Recomendación",
     "website": "Sitio web"
+  },
+  "lodging": {
+    "apartment": "Departamento",
+    "bnb": "Cama y desayuno",
+    "cabin": "Cabina",
+    "campground": "Terreno de camping",
+    "check_in": "Registrarse",
+    "check_out": "Verificar",
+    "date_and_time": "Fecha",
+    "edit": "Editar",
+    "error_editing_lodging": "Error de edición de alojamiento",
+    "hostel": "Albergue",
+    "hotel": "Hotel",
+    "house": "Casa",
+    "lodging_added": "¡Alojamiento agregado con éxito!",
+    "lodging_delete_error": "Error de eliminación de alojamiento",
+    "lodging_deleted": "¡Alojamiento eliminado con éxito!",
+    "lodging_edit_success": "¡Alojamiento editado con éxito!",
+    "lodging_type": "Tipo de alojamiento",
+    "motel": "Motel",
+    "new_lodging": "Nuevo alojamiento",
+    "other": "Otro",
+    "provide_start_date": "Proporcione una fecha de inicio",
+    "reservation_number": "Número de reserva",
+    "resort": "Complejo",
+    "start": "Comenzar",
+    "type": "Tipo",
+    "villa": "Villa",
+    "edit_lodging": "Editar alojamiento"
   }
 }

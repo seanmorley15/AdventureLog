@@ -235,7 +235,18 @@
     "primary": "Primario",
     "upload": "Caricamento",
     "view_attachment": "Visualizza allegato",
-    "of": "Di"
+    "of": "Di",
+    "city": "Città",
+    "delete_lodging": "Elimina alloggio",
+    "display_name": "Nome da visualizzare",
+    "location_details": "Dettagli della posizione",
+    "lodging": "Alloggio",
+    "lodging_delete_confirm": "Sei sicuro di voler eliminare questa posizione di alloggio? \nQuesta azione non può essere annullata.",
+    "lodging_information": "Informazioni di alloggio",
+    "price": "Prezzo",
+    "region": "Regione",
+    "welcome_map_info": "Avventure pubbliche su questo server",
+    "reservation_number": "Numero di prenotazione"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -282,7 +293,8 @@
     "tag": "Etichetta",
     "language_selection": "Lingua",
     "support": "Supporto",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "admin_panel": "Pannello di amministrazione"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -572,5 +584,34 @@
     "phone": "Telefono",
     "recommendation": "Raccomandazione",
     "website": "Sito web"
+  },
+  "lodging": {
+    "apartment": "Appartamento",
+    "bnb": "Bed and Breakfast",
+    "cabin": "Cabina",
+    "campground": "Campeggio",
+    "check_in": "Check -in",
+    "check_out": "Guardare",
+    "date_and_time": "Data",
+    "edit": "Modificare",
+    "edit_lodging": "Modifica alloggio",
+    "error_editing_lodging": "Alloggio di modifica degli errori",
+    "hostel": "Ostello",
+    "hotel": "Hotel",
+    "house": "Casa",
+    "lodging_added": "Alloggio aggiunto con successo!",
+    "new_lodging": "Nuovo alloggio",
+    "other": "Altro",
+    "provide_start_date": "Si prega di fornire una data di inizio",
+    "reservation_number": "Numero di prenotazione",
+    "resort": "Ricorrere",
+    "start": "Inizio",
+    "type": "Tipo",
+    "villa": "Villa",
+    "lodging_delete_error": "Errore di eliminazione dell'alloggio",
+    "lodging_deleted": "Alloggio eliminato con successo!",
+    "lodging_edit_success": "Alloggio modificato con successo!",
+    "lodging_type": "Tipo di alloggio",
+    "motel": "Motel"
   }
 }

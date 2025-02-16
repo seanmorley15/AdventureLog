@@ -240,7 +240,13 @@
     "display_name": "Anzeigename",
     "location_details": "Standortdetails",
     "lodging": "Unterkunft",
-    "region": "Region"
+    "region": "Region",
+    "delete_lodging": "Unterkunft löschen",
+    "lodging_delete_confirm": "Sind Sie sicher, dass Sie diesen Standort löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "lodging_information": "Unterkunftsinformationen",
+    "price": "Preis",
+    "reservation_number": "Reservierungsnummer",
+    "welcome_map_info": "Öffentliche Abenteuer auf diesem Server"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",
@@ -287,7 +293,8 @@
     "tag": "Etikett",
     "language_selection": "Sprache",
     "support": "Unterstützung",
-    "calendar": "Kalender"
+    "calendar": "Kalender",
+    "admin_panel": "Admin -Panel"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -577,5 +584,34 @@
     "phone": "Telefon",
     "recommendation": "Empfehlung",
     "website": "Webseite"
+  },
+  "lodging": {
+    "apartment": "Wohnung",
+    "bnb": "Übernachtung mit Frühstück",
+    "cabin": "Kabine",
+    "campground": "Campingplatz",
+    "check_in": "Einchecken",
+    "check_out": "Kasse",
+    "date_and_time": "Datum",
+    "edit": "Bearbeiten",
+    "edit_lodging": "Unterkunft bearbeiten",
+    "error_editing_lodging": "Fehlerbearbeitung",
+    "hostel": "Herberge",
+    "hotel": "Hotel",
+    "house": "Haus",
+    "lodging_added": "Unterkunft erfolgreich hinzugefügt!",
+    "lodging_delete_error": "Fehler beim Löschen von Unterkünften",
+    "lodging_deleted": "Unterkunft erfolgreich gelöscht!",
+    "lodging_edit_success": "Unterbringung erfolgreich bearbeitet!",
+    "lodging_type": "Unterkunftstyp",
+    "motel": "Motel",
+    "new_lodging": "Neue Unterkunft",
+    "other": "Andere",
+    "provide_start_date": "Bitte geben Sie einen Startdatum an",
+    "reservation_number": "Reservierungsnummer",
+    "resort": "Resort",
+    "start": "Start",
+    "type": "Typ",
+    "villa": "Villa"
   }
 }

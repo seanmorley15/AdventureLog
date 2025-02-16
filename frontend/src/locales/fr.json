@@ -235,7 +235,18 @@
     "primary": "Primaire",
     "upload": "Télécharger",
     "view_attachment": "Voir la pièce jointe",
-    "of": "de"
+    "of": "de",
+    "city": "Ville",
+    "delete_lodging": "Supprimer l'hébergement",
+    "display_name": "Nom d'affichage",
+    "location_details": "Détails de l'emplacement",
+    "lodging": "Hébergement",
+    "lodging_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet emplacement d'hébergement? \nCette action ne peut pas être annulée.",
+    "lodging_information": "Informations sur l'hébergement",
+    "price": "Prix",
+    "region": "Région",
+    "reservation_number": "Numéro de réservation",
+    "welcome_map_info": "Aventures publiques sur ce serveur"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -282,7 +293,8 @@
     "tag": "Étiqueter",
     "language_selection": "Langue",
     "support": "Soutien",
-    "calendar": "Calendrier"
+    "calendar": "Calendrier",
+    "admin_panel": "Panneau d'administration"
   },
   "auth": {
     "confirm_password": "Confirmez le mot de passe",
@@ -572,5 +584,34 @@
     "phone": "Téléphone",
     "recommendation": "Recommandation",
     "website": "Site web"
+  },
+  "lodging": {
+    "apartment": "Appartement",
+    "bnb": "Bed and petit-déjeuner",
+    "cabin": "Cabine",
+    "campground": "Camping",
+    "check_in": "Enregistrement",
+    "check_out": "Vérifier",
+    "date_and_time": "Date",
+    "edit": "Modifier",
+    "edit_lodging": "Modifier l'hébergement",
+    "error_editing_lodging": "Édition d'erreurs Hébergement",
+    "hostel": "Auberge",
+    "hotel": "Hôtel",
+    "house": "Maison",
+    "lodging_added": "L'hébergement a ajouté avec succès!",
+    "lodging_delete_error": "Erreur de suppression de l'hébergement",
+    "lodging_deleted": "L'hébergement est supprimé avec succès!",
+    "lodging_edit_success": "L'hébergement édité avec succès!",
+    "lodging_type": "Type d'hébergement",
+    "motel": "Motel",
+    "new_lodging": "Nouveau logement",
+    "other": "Autre",
+    "provide_start_date": "Veuillez fournir une date de début",
+    "reservation_number": "Numéro de réservation",
+    "resort": "Station balnéaire",
+    "start": "Commencer",
+    "type": "Taper",
+    "villa": "Villa"
   }
 }
