@@ -89,6 +89,22 @@
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
+		let categoryFetch = await fetch('/api/categories/categories');
+		if (categoryFetch.ok) {
+			categories = await categoryFetch.json();
+		} else {
+			addToast('error', $t('adventures.category_fetch_error'));
+		}
+		// Check for Immich Integration
+		let res = await fetch('/api/integrations');
+		if (!res.ok) {
+			addToast('error', $t('immich.integration_fetch_error'));
+		} else {
+			let data = await res.json();
+			if (data.immich) {
+				immichIntegration = true;
+			}
+		}
 	});
 
 	let url: string = '';
