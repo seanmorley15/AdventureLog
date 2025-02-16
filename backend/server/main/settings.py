@@ -131,7 +131,7 @@ USE_TZ = True
 unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
 FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
-SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
