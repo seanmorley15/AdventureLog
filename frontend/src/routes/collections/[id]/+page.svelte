@@ -27,7 +27,8 @@
 		groupNotesByDate,
 		groupTransportationsByDate,
 		groupChecklistsByDate,
-		osmTagToEmoji
+		osmTagToEmoji,
+		groupLodgingByDate
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -861,6 +862,10 @@
 							new Date(collection.start_date),
 							numberOfDays
 						)[dateString] || []}
+					{@const dayLodging =
+						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
+							dateString
+						] || []}
 					{@const dayNotes =
 						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] ||
 						[]}
@@ -922,6 +927,18 @@
 										/>
 									{/each}
 								{/if}
+								{#if dayLodging.length > 0}
+									{#each dayLodging as hotel}
+										<LodgingCard
+											lodging={hotel}
+											user={data?.user}
+											on:delete={(event) => {
+												lodging = lodging.filter((t) => t.id != event.detail);
+											}}
+											on:edit={editLodging}
+										/>
+									{/each}
+								{/if}
 								{#if dayChecklists.length > 0}
 									{#each dayChecklists as checklist}
 										<ChecklistCard
@@ -939,7 +956,7 @@
 								{/if}
 							</div>
 
-							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
+							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
 								<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
 							{/if}
 						</div>
@@ -1068,7 +1085,7 @@
 			</div>
 		</div>
 	{/if}
-	{#if currentView == 'recommendations'}
+	{#if currentView == 'recommendations' && data.user}
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>

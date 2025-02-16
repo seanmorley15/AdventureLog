@@ -210,6 +210,7 @@ export type ReverseGeocode = {
 	display_name: string;
 	city: string;
 	city_id: string;
+	location_name: string;
 };
 
 export type Category = {

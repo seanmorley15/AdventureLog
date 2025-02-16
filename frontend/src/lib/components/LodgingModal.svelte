@@ -53,8 +53,8 @@
 			description: hotelToEdit?.description || '',
 			rating: hotelToEdit?.rating || NaN,
 			link: hotelToEdit?.link || '',
-			check_in: hotelToEdit?.check_in || null,
-			check_out: hotelToEdit?.check_out || null,
+			check_in: hotelToEdit?.check_in ? toLocalDatetime(hotelToEdit.check_in) : null,
+			check_out: hotelToEdit?.check_out ? toLocalDatetime(hotelToEdit.check_out) : null,
 			reservation_number: hotelToEdit?.reservation_number || '',
 			price: hotelToEdit?.price || null,
 			latitude: hotelToEdit?.latitude || null,
@@ -166,6 +166,32 @@
 								required
 							/>
 						</div>
+						<div>
+							<label for="type">
+								{$t('transportation.type')}<span class="text-red-500">*</span>
+							</label>
+							<div>
+								<select
+									class="select select-bordered w-full max-w-xs"
+									name="type"
+									id="type"
+									bind:value={lodging.type}
+								>
+									<option disabled selected>{$t('transportation.type')}</option>
+									<option value="hotel">{$t('lodging.hotel')}</option>
+									<option value="hostel">{$t('lodging.hostel')}</option>
+									<option value="resort">{$t('lodging.resort')}</option>
+									<option value="bnb">{$t('lodging.bnb')}</option>
+									<option value="campground">{$t('lodging.campground')}</option>
+									<option value="cabin">{$t('lodging.cabin')}</option>
+									<option value="apartment">{$t('lodging.apartment')}</option>
+									<option value="house">{$t('lodging.house')}</option>
+									<option value="villa">{$t('lodging.villa')}</option>
+									<option value="motel">{$t('lodging.motel')}</option>
+									<option value="other">{$t('lodging.other')}</option>
+								</select>
+							</div>
+						</div>
 						<!-- Description -->
 						<div>
 							<label for="description">{$t('adventures.description')}</label><br />
@@ -250,13 +276,53 @@
 						</div>
 					</div>
 				</div>
+
+				<div class="collapse collapse-plus bg-base-200 mb-4">
+					<input type="checkbox" checked />
+					<div class="collapse-title text-xl font-medium">
+						{$t('adventures.lodging_information')}
+					</div>
+					<div class="collapse-content">
+						<!-- Reservation Number -->
+						<div>
+							<label for="date">
+								{$t('lodging.reservation_number')}
+							</label>
+							<div>
+								<input
+									type="text"
+									id="reservation_number"
+									name="reservation_number"
+									bind:value={lodging.reservation_number}
+									class="input input-bordered w-full max-w-xs mt-1"
+								/>
+							</div>
+						</div>
+						<!-- Price -->
+						<div>
+							<label for="price">
+								{$t('adventures.price')}
+							</label>
+							<div>
+								<input
+									type="number"
+									id="price"
+									name="price"
+									bind:value={lodging.price}
+									class="input input-bordered w-full max-w-xs mt-1"
+								/>
+							</div>
+						</div>
+					</div>
+				</div>
+
 				<div class="collapse collapse-plus bg-base-200 mb-4">
 					<input type="checkbox" checked />
 					<div class="collapse-title text-xl font-medium">
 						{$t('adventures.date_information')}
 					</div>
 					<div class="collapse-content">
-						<!-- Start Date -->
+						<!-- Check In -->
 						<div>
 							<label for="date">
 								{$t('lodging.check_in')}

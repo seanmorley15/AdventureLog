@@ -6,7 +6,6 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
-	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 
 	const dispatch = createEventDispatcher();
 
@@ -35,20 +34,6 @@
 			// Parse collection dates
 			let collectionStartDate = new Date(collection.start_date);
 			let collectionEndDate = new Date(collection.end_date);
-
-			// // Debugging outputs
-			// console.log(
-			// 	'Transportation Start Date:',
-			// 	transportationStartDate,
-			// 	'Transportation End Date:',
-			// 	transportationEndDate
-			// );
-			// console.log(
-			// 	'Collection Start Date:',
-			// 	collectionStartDate,
-			// 	'Collection End Date:',
-			// 	collectionEndDate
-			// );
 
 			// Check if the collection range is outside the transportation range
 			const startOutsideRange =
@@ -88,9 +73,9 @@
 
 {#if isWarningModalOpen}
 	<DeleteWarning
-		title={$t('adventures.delete_transportation')}
+		title={$t('adventures.delete_lodging')}
 		button_text="Delete"
-		description={$t('adventures.transportation_delete_confirm')}
+		description={$t('adventures.lodging_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteTransportation}
@@ -106,7 +91,7 @@
 			<h2 class="card-title text-lg font-semibold truncate">{lodging.name}</h2>
 			<div class="flex items-center gap-2">
 				<div class="badge badge-secondary">
-					{lodging.type}
+					{$t(`lodging.${lodging.type}`)}
 				</div>
 				<!-- {#if hotel.type == 'plane' && hotel.flight_number}
 					<div class="badge badge-neutral-200">{hotel.flight_number}</div>
@@ -117,36 +102,35 @@
 			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 		{/if}
 
-		<!-- Locations -->
+		<!-- Location -->
 		<div class="space-y-2">
 			{#if lodging.location}
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.from')}:</span>
-					<p class="break-words">{lodging.location}</p>
+					<span class="font-medium text-sm">{$t('adventures.location')}:</span>
+					<p>{lodging.location}</p>
 				</div>
 			{/if}
+
 			{#if lodging.check_in && lodging.check_out}
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>{new Date(lodging.check_in).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
-				</div>
-			{/if}
-		</div>
-
-		<!-- Dates -->
-		<div class="space-y-2">
-			{#if lodging.location}
-				<!-- <ArrowDownThick class="w-4 h-4" /> -->
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.to')}:</span>
-
-					<p class="break-words">{lodging.location}</p>
-				</div>
-			{/if}
-			{#if lodging.check_out}
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
-					<p>{new Date(lodging.check_out).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
+					<span class="font-medium text-sm">{$t('adventures.dates')}:</span>
+					<p>
+						{new Date(lodging.check_in).toLocaleString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							year: 'numeric',
+							hour: 'numeric',
+							minute: 'numeric'
+						})}
+						-
+						{new Date(lodging.check_out).toLocaleString('en-US', {
+							month: 'short',
+							day: 'numeric',
+							year: 'numeric',
+							hour: 'numeric',
+							minute: 'numeric'
+						})}
+					</p>
 				</div>
 			{/if}
 		</div>

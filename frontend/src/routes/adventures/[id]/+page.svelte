@@ -12,7 +12,6 @@
 	import toGeoJSON from '@mapbox/togeojson';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
-	import Account from '~icons/mdi/account';
 
 	let geojson: any;
 
@@ -186,7 +185,10 @@
 											alt={adventure.name}
 										/>
 									</a>
-									<div class="flex justify-center w-full py-2 gap-2">
+									<!-- Scrollable button container -->
+									<div
+										class="flex w-full py-2 gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide justify-start"
+									>
 										{#each adventure.images as _, i}
 											<button
 												on:click={() => goToSlide(i)}
@@ -198,6 +200,7 @@
 							{/each}
 						</div>
 					{/if}
+
 					<div class="grid gap-4">
 						<div class="flex items-center justify-between">
 							<div>
@@ -222,40 +225,43 @@
 							</div>
 						</div>
 						<div class="grid gap-2">
-							<div class="flex items-center gap-2">
-								{#if adventure.user.profile_pic}
-									<div class="avatar">
-										<div class="w-8 rounded-full">
-											<img src={adventure.user.profile_pic} />
+							{#if adventure.user}
+								<div class="flex items-center gap-2">
+									{#if adventure.user.profile_pic}
+										<div class="avatar">
+											<div class="w-8 rounded-full">
+												<img src={adventure.user.profile_pic} alt={adventure.user.username} />
+											</div>
 										</div>
-									</div>
-								{:else}
-									<div class="avatar placeholder">
-										<div class="bg-neutral text-neutral-content w-8 rounded-full">
-											<span class="text-lg"
-												>{adventure.user.first_name
-													? adventure.user.first_name.charAt(0)
-													: adventure.user.username.charAt(0)}{adventure.user.last_name
-													? adventure.user.last_name.charAt(0)
-													: ''}</span
-											>
-										</div>
-									</div>
-								{/if}
-								<div>
-									{#if adventure.user.public_profile}
-										<a href={`/profile/${adventure.user.username}`} class="text-base font-medium">
-											{adventure.user.first_name || adventure.user.username}{' '}
-											{adventure.user.last_name}
-										</a>
 									{:else}
-										<span class="text-base font-medium">
-											{adventure.user.first_name || adventure.user.username}{' '}
-											{adventure.user.last_name}
-										</span>
+										<div class="avatar placeholder">
+											<div class="bg-neutral text-neutral-content w-8 rounded-full">
+												<span class="text-lg"
+													>{adventure.user.first_name
+														? adventure.user.first_name.charAt(0)
+														: adventure.user.username.charAt(0)}{adventure.user.last_name
+														? adventure.user.last_name.charAt(0)
+														: ''}</span
+												>
+											</div>
+										</div>
 									{/if}
+
+									<div>
+										{#if adventure.user.public_profile}
+											<a href={`/profile/${adventure.user.username}`} class="text-base font-medium">
+												{adventure.user.first_name || adventure.user.username}{' '}
+												{adventure.user.last_name}
+											</a>
+										{:else}
+											<span class="text-base font-medium">
+												{adventure.user.first_name || adventure.user.username}{' '}
+												{adventure.user.last_name}
+											</span>
+										{/if}
+									</div>
 								</div>
-							</div>
+							{/if}
 							<div class="flex items-center gap-2">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"

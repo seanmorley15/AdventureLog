@@ -2,11 +2,14 @@
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
 	import type { Adventure, Lodging, OpenStreetMapPlace, Point, ReverseGeocode } from '$lib/types';
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
 	export let item: Adventure | Lodging;
 	export let triggerMarkVisted: boolean = false;
+
+	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 
 	let reverseGeocodePlace: ReverseGeocode | null = null;
 	let markers: Point[] = [];
@@ -18,6 +21,22 @@
 	let old_display_name: string = '';
 	let places: OpenStreetMapPlace[] = [];
 	let noPlaces: boolean = false;
+
+	onMount(() => {
+		if (initialLatLng) {
+			markers = [
+				{
+					lngLat: { lng: initialLatLng.lng, lat: initialLatLng.lat },
+					name: '',
+					location: '',
+					activity_type: ''
+				}
+			];
+			item.latitude = initialLatLng.lat;
+			item.longitude = initialLatLng.lng;
+			reverseGeocode();
+		}
+	});
 
 	$: if (markers.length > 0) {
 		const newLat = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
@@ -33,10 +52,6 @@
 		if (!item.name) {
 			item.name = markers[0].name;
 		}
-	}
-
-	$: {
-		console.log(triggerMarkVisted);
 	}
 
 	$: if (triggerMarkVisted && willBeMarkedVisited) {
@@ -84,8 +99,6 @@
 					break; // Exit the loop since we've determined the result
 				}
 			}
-
-			console.log('WMBV:', willBeMarkedVisited);
 		}
 	}
 
@@ -180,6 +193,9 @@
 		) {
 			old_display_name = reverseGeocodePlace.display_name;
 			item.location = reverseGeocodePlace.display_name;
+			if (reverseGeocodePlace.location_name) {
+				item.name = reverseGeocodePlace.location_name;
+			}
 		}
 		console.log(data);
 	}
@@ -187,6 +203,8 @@
 	function clearMap() {
 		console.log('CLEAR');
 		markers = [];
+		item.latitude = null;
+		item.longitude = null;
 	}
 </script>
 
@@ -268,6 +286,8 @@
 				style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 				class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 				standardControls
+				zoom={item.latitude && item.longitude ? 12 : 1}
+				center={{ lng: item.longitude || 0, lat: item.latitude || 0 }}
 			>
 				<!-- MapEvents gives you access to map events even from other components inside the map,
 where you might not have access to the top-level `MapLibre` component. In this case

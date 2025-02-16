@@ -243,6 +243,20 @@
 						{$t('adventures.basic_information')}
 					</div>
 					<div class="collapse-content">
+						<!-- Name -->
+						<div>
+							<label for="name">
+								{$t('adventures.name')}<span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="name"
+								name="name"
+								bind:value={transportation.name}
+								class="input input-bordered w-full"
+								required
+							/>
+						</div>
 						<!-- Type selection -->
 						<div>
 							<label for="type">
@@ -266,20 +280,6 @@
 									<option value="other">{$t('transportation.modes.other')}</option>
 								</select>
 							</div>
-						</div>
-						<!-- Name -->
-						<div>
-							<label for="name">
-								{$t('adventures.name')}<span class="text-red-500">*</span>
-							</label>
-							<input
-								type="text"
-								id="name"
-								name="name"
-								bind:value={transportation.name}
-								class="input input-bordered w-full"
-								required
-							/>
 						</div>
 						<!-- Description -->
 						<div>

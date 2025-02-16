@@ -10,6 +10,8 @@
 	let createModalOpen: boolean = false;
 	let showGeo: boolean = false;
 
+	export let initialLatLng: { lat: number; lng: number } | null = null;
+
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
 	let adventures: Adventure[] = data.props.adventures;
 
@@ -49,6 +51,11 @@
 		newLatitude = e.detail.lngLat.lat;
 	}
 
+	function newAdventure() {
+		initialLatLng = { lat: newLatitude, lng: newLongitude } as { lat: number; lng: number };
+		createModalOpen = true;
+	}
+
 	function createNewAdventure(event: CustomEvent) {
 		adventures = [...adventures, event.detail];
 		newMarker = null;
@@ -86,7 +93,7 @@
 			/>
 			<div class="divider divider-horizontal"></div>
 			{#if newMarker}
-				<button type="button" class="btn btn-primary mb-2" on:click={() => (createModalOpen = true)}
+				<button type="button" class="btn btn-primary mb-2" on:click={newAdventure}
 					>{$t('map.add_adventure_at_marker')}</button
 				>
 				<button type="button" class="btn btn-neutral mb-2" on:click={() => (newMarker = null)}
@@ -105,14 +112,13 @@
 	<AdventureModal
 		on:close={() => (createModalOpen = false)}
 		on:save={createNewAdventure}
-		latitude={newLatitude}
-		longitude={newLongitude}
+		{initialLatLng}
 	/>
 {/if}
 
 <MapLibre
 	style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-	class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full"
+	class="mx-auto aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 	standardControls
 >
 	{#each filteredAdventures as adventure}

@@ -68,6 +68,9 @@ class PublicUserListView(APIView):
         for user in users:
             user.email = None
         serializer = PublicUserSerializer(users, many=True)
+        # for every user, remove the field has_password
+        for user in serializer.data:
+            user.pop('has_password', None)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PublicUserDetailView(APIView):
@@ -87,6 +90,8 @@ class PublicUserDetailView(APIView):
         else:
             user = get_object_or_404(User, username=username, public_profile=True)
         serializer = PublicUserSerializer(user)
+        # for every user, remove the field has_password
+        serializer.data.pop('has_password', None)
         
         # remove the email address from the response
         user.email = None

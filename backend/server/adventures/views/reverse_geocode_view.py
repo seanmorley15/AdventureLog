@@ -21,10 +21,14 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         country_code = None
         city = None
         visited_city = None
+        location_name = None
 
         # town = None
         # city = None
         # county = None
+
+        if 'name' in data.keys():
+            location_name = data['name']
         
         if 'address' in data.keys():
             keys = data['address'].keys()
@@ -58,7 +62,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         if visited_city:
             city_visited = True
         if region:
-            return {"region_id": iso_code, "region": region.name, "country": region.country.name, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited}
+            return {"region_id": iso_code, "region": region.name, "country": region.country.name, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited, 'location_name': location_name}
         return {"error": "No region found"}
 
     @action(detail=False, methods=['get'])

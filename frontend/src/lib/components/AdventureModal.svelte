@@ -14,6 +14,8 @@
 
 	let categories: Category[] = [];
 
+	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
+
 	let fileInput: HTMLInputElement;
 	let immichIntegration: boolean = false;
 
@@ -87,7 +89,6 @@
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
-		console.log('open');
 	});
 
 	let url: string = '';
@@ -142,14 +143,11 @@
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files.length) {
 			selectedFile = input.files[0];
-			console.log('Selected file:', selectedFile);
 		}
 	}
 
 	async function uploadAttachment(event: Event) {
 		event.preventDefault();
-		console.log('UPLOAD');
-		console.log(selectedFile);
 
 		if (!selectedFile) {
 			console.error('No files selected');
@@ -157,22 +155,17 @@
 		}
 
 		const file = selectedFile;
-		console.log(file);
 
 		const formData = new FormData();
 		formData.append('file', file);
 		formData.append('adventure', adventure.id);
 		formData.append('name', attachmentName);
 
-		console.log(formData);
-
 		try {
 			const res = await fetch('/adventures?/attachment', {
 				method: 'POST',
 				body: formData
 			});
-
-			console.log(res);
 
 			if (res.ok) {
 				const newData = deserialize(await res.text()) as { data: Attachment };
@@ -202,7 +195,6 @@
 		if (res.status === 204) {
 			images = images.filter((image) => image.id !== id);
 			adventure.images = images;
-			console.log(images);
 			addToast('success', $t('adventures.image_removed_success'));
 		} else {
 			addToast('error', $t('adventures.image_removed_error'));
@@ -255,9 +247,7 @@
 		});
 		if (res.ok) {
 			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			console.log(newData);
 			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
-			console.log(newImage);
 			images = [...images, newImage];
 			adventure.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
@@ -308,9 +298,7 @@
 			});
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
-				console.log(newData);
 				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
-				console.log(newImage);
 				images = [...images, newImage];
 				adventure.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
@@ -371,30 +359,11 @@
 		}
 	}
 
-	function imageSubmit() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				if (result.data.id && result.data.image) {
-					adventure.images = [...adventure.images, result.data];
-					images = [...images, result.data];
-					addToast('success', $t('adventures.image_upload_success'));
-
-					fileInput.value = '';
-					console.log(adventure);
-				} else {
-					addToast('error', result.data.error || $t('adventures.image_upload_error'));
-				}
-			}
-		};
-	}
-
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		triggerMarkVisted = true;
 
-		console.log(adventure);
 		if (adventure.id === '') {
-			console.log(categories);
 			if (adventure.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
 					adventure.category = categories.find(
@@ -597,7 +566,7 @@
 						</div>
 					</div>
 
-					<LocationDropdown bind:item={adventure} bind:triggerMarkVisted />
+					<LocationDropdown bind:item={adventure} bind:triggerMarkVisted {initialLatLng} />
 
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
@@ -958,7 +927,7 @@
 		{/if}
 
 		{#if adventure.is_public && adventure.id}
-			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
+			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
 				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">

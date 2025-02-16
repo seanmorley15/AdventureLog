@@ -11,6 +11,19 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/dashboard');
+	} else {
+		let res = await fetch(`${serverEndpoint}/api/stats/locations/`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		let data = await res.json();
+		return {
+			props: {
+				locations: data
+			}
+		};
 	}
 }) satisfies PageServerLoad;
 

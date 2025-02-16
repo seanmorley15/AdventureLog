@@ -61,7 +61,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
-    'achievements',
+    # 'achievements', # Not done yet, will be added later in a future update
     # 'widget_tweaks',
     # 'slippers',
 
@@ -303,4 +303,7 @@ LOGGING = {
     },
 }
 
-ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+# ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+
+# https://github.com/dr5hn/countries-states-cities-database/tags
+COUNTRY_REGION_JSON_VERSION = 'v2.5'

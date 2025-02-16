@@ -49,3 +49,10 @@ class StatsViewSet(viewsets.ViewSet):
             'visited_country_count': visited_country_count,
             'total_countries': total_countries
         })
+
+    # locations - returns a list of all of the latitude, longitude locations of all public adventrues on the server
+    @action(detail=False, methods=['get'], url_path='locations')
+    def locations(self, request):
+        adventures = Adventure.objects.filter(
+            is_public=True).values('latitude', 'longitude', 'id', 'name')
+        return Response(adventures)
