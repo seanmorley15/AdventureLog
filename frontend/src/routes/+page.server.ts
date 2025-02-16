@@ -2,7 +2,7 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
 // @ts-ignore
 import psl from 'psl';
-import { themes } from '$lib';
+import { getRandomBackground, themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
 
@@ -12,16 +12,10 @@ export const load = (async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/dashboard');
 	} else {
-		let res = await fetch(`${serverEndpoint}/api/stats/locations/`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		let data = await res.json();
+		const background = getRandomBackground();
 		return {
 			props: {
-				locations: data
+				background
 			}
 		};
 	}

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
-	import { DefaultMarker, MapLibre, Marker, Popup } from 'svelte-maplibre';
 
 	import MapWithPins from '$lib/assets/MapWithPins.webp';
-
-	import InformationSlabCircleOutline from '~icons/mdi/information-slab-circle-outline';
+	import type { Background } from '$lib/types.js';
 
 	export let data;
+
+	let background: Background = data.props?.background ?? { url: '' };
 </script>
 
 <!-- Hero Section -->
@@ -58,35 +58,11 @@
 		</div>
 		<!-- Image -->
 		<div class="w-full md:w-1/2">
-			<p class="flex items-center text-neutral-content">
-				<InformationSlabCircleOutline class="w-4 h-4 mr-1" />
-				{$t('adventures.welcome_map_info')}
-			</p>
-			<MapLibre
-				style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-				class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
-				standardControls
-			>
-				{#each data.props.locations as location}
-					{#if location.latitude && location.longitude}
-						<DefaultMarker
-							lngLat={[location.longitude, location.latitude]}
-							on:click={() => goto(`/locations/${location.id}`)}
-						>
-							<span class="text-xl">{location.name}</span>
-							<Popup openOn="click" offset={[0, -10]}>
-								<div class="text-lg text-black font-bold">{location.name}</div>
-								<button
-									class="btn btn-neutral btn-wide btn-sm mt-4"
-									on:click={() => goto(`/adventures/${location.id}`)}
-								>
-									{$t('map.view_details')}
-								</button>
-							</Popup>
-						</DefaultMarker>
-					{/if}
-				{/each}
-			</MapLibre>
+			<img
+				src={background.url}
+				alt={background.location}
+				class="rounded-lg shadow-lg object-cover w-full h-full"
+			/>
 		</div>
 	</div>
 </section>
