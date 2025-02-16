@@ -101,13 +101,18 @@ class AdventureViewSet(viewsets.ModelViewSet):
         is_visited_param = request.query_params.get('is_visited')
         if is_visited_param is not None:
             # Convert is_visited_param to a boolean
-            is_visited_bool = (is_visited_param.lower() == 'true')
+            if is_visited_param.lower() == 'true':
+                is_visited_bool = True
+            elif is_visited_param.lower() == 'false':
+                is_visited_bool = False
+            else:
+                is_visited_bool = None
 
             # Filter logic: "visited" means at least one visit with start_date <= today
             now = timezone.now().date()
-            if is_visited_bool:
+            if is_visited_bool is True:
                 queryset = queryset.filter(visits__start_date__lte=now).distinct()
-            else:
+            elif is_visited_bool is False:
                 queryset = queryset.exclude(visits__start_date__lte=now).distinct()
 
         queryset = self.apply_sorting(queryset)
