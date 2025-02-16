@@ -33,6 +33,6 @@
 <!-- download calendar -->
 <div class="flex items-center justify-center mt-4">
 	<a href={icsCalendarDataUrl} download="adventures.ics" class="btn btn-primary"
-		>Download Calendar</a
+		>{$t('adventures.download_calendar')}</a
 	>
 </div>

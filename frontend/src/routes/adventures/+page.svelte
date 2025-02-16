@@ -261,7 +261,7 @@
 					<CategoryFilterDropdown bind:types={typeString} />
 					<button
 						on:click={() => (is_category_modal_open = true)}
-						class="btn btn-neutral btn-sm min-w-full">Manage Categories</button
+						class="btn btn-neutral btn-sm min-w-full">{$t('categories.manage_categories')}</button
 					>
 					<div class="divider"></div>
 					<h3 class="text-center font-bold text-lg mb-4">{$t('adventures.sort')}</h3>
