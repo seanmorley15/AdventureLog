@@ -16,14 +16,24 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 	// let sessionId = event.cookies.get('sessionid');
 	let stats = null;
 
-	let res = await event.fetch(`${endpoint}/api/stats/counts/${username}`, {});
+	let res = await event.fetch(`${endpoint}/api/stats/counts/${username}`, {
+		headers: {
+			'Content-Type': 'application/json',
+			Cookie: `sessionid=${event.cookies.get('sessionid')}`
+		}
+	});
 	if (!res.ok) {
 		console.error('Failed to fetch user stats');
 	} else {
 		stats = await res.json();
 	}
 
-	let userData = await event.fetch(`${endpoint}/auth/user/${username}/`);
+	let userData = await event.fetch(`${endpoint}/auth/user/${username}/`, {
+		headers: {
+			'Content-Type': 'application/json',
+			Cookie: `sessionid=${event.cookies.get('sessionid')}`
+		}
+	});
 	if (!userData.ok) {
 		return error(404, 'Not found');
 	}
