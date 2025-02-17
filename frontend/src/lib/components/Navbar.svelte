@@ -45,7 +45,7 @@
 		sv: 'Svenska',
 		zh: '中文',
 		pl: 'Polski',
-		ko: '한국인'
+		ko: '한국어'
 	};
 
 	let query: string = '';
