@@ -215,8 +215,7 @@
 				<li>
 					<button class="btn btn-neutral flex items-center gap-1" on:click={() => goto('/map')}>
 						<Map class="w-5 h-5" />
-						{$t('navbar.map')}</button
-					>
+					</button>
 				</li>
 				<li>
 					<button class="btn btn-neutral flex items-center gap-1" on:click={() => goto('/calendar')}
@@ -255,8 +254,7 @@
 					</label>
 					<button on:click={searchGo} type="submit" class="btn btn-neutral flex items-center gap-1">
 						<Magnify class="w-5 h-5" />
-						{$t('navbar.search')}</button
-					>
+					</button>
 				</form>
 			{/if}
 		</ul>
