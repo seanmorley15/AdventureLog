@@ -58,8 +58,10 @@ export const actions: Actions = {
 
 		// Check if hostname is an IP address
 		const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+		const isLocalhost = hostname === 'localhost';
+		const isSingleLabel = hostname.split('.').length === 1;
 
-		if (!isIPAddress) {
+		if (!isIPAddress && !isSingleLabel && !isLocalhost) {
 			const parsed = psl.parse(hostname);
 
 			if (parsed && parsed.domain) {

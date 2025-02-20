@@ -135,17 +135,14 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
-# Parse the FRONTEND_URL
-# Remove and ' from the URL
-
-parsed_url = urlparse(FRONTEND_URL)
-hostname = parsed_url.hostname
-
-# Check if the hostname is an IP address
+hostname = urlparse(FRONTEND_URL).hostname
 is_ip_address = hostname.replace('.', '').isdigit()
 
-if is_ip_address:
-    # Do not set a domain for IP addresses
+# Check if the hostname is single-label (no dots)
+is_single_label = '.' not in hostname
+
+if is_ip_address or is_single_label:
+    # Do not set a domain for IP addresses or single-label hostnames
     SESSION_COOKIE_DOMAIN = None
 else:
     # Use publicsuffix2 to calculate the correct cookie domain
@@ -155,6 +152,7 @@ else:
     else:
         # Fallback to the hostname if parsing fails
         SESSION_COOKIE_DOMAIN = hostname
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
