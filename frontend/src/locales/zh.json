@@ -234,7 +234,19 @@
     "images": "图片",
     "primary": "基本的",
     "upload": "上传",
-    "view_attachment": "查看附件"
+    "view_attachment": "查看附件",
+    "of": "的",
+    "city": "城市",
+    "delete_lodging": "删除住宿",
+    "display_name": "显示名称",
+    "location_details": "位置详细信息",
+    "lodging": "住宿",
+    "lodging_delete_confirm": "您确定要删除此住宿地点吗？\n该动作不能撤消。",
+    "lodging_information": "住宿信息",
+    "price": "价格",
+    "region": "地区",
+    "reservation_number": "预订号",
+    "welcome_map_info": "该服务器上的公共冒险"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -281,7 +293,8 @@
     "tag": "标签",
     "language_selection": "语言",
     "support": "支持",
-    "calendar": "日历"
+    "calendar": "日历",
+    "admin_panel": "管理面板"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -302,7 +315,11 @@
     "both_passwords_required": "两个密码都需要",
     "new_password": "新密码",
     "reset_failed": "重置密码失败",
-    "or_3rd_party": "或者使用第三方服务登录"
+    "or_3rd_party": "或者使用第三方服务登录",
+    "no_public_adventures": "找不到公共冒险",
+    "no_public_collections": "找不到公共收藏",
+    "user_adventures": "用户冒险",
+    "user_collections": "用户收集"
   },
   "worldtravel": {
     "all": "全部",
@@ -481,7 +498,10 @@
     "transportation_delete_error": "删除交通时出错",
     "transportation_deleted": "交通删除成功！",
     "transportation_edit_success": "交通编辑成功！",
-    "type": "类型"
+    "type": "类型",
+    "ending_airport_desc": "输入结束机场代码（例如LAX）",
+    "fetch_location_information": "获取位置信息",
+    "starting_airport_desc": "输入启动机场代码（例如肯尼迪国际机构）"
   },
   "search": {
     "adventurelog_results": "冒险日志结果",
@@ -567,5 +587,35 @@
     "phone": "电话",
     "recommendation": "推荐",
     "website": "网站"
+  },
+  "lodging": {
+    "campground": "营地",
+    "check_in": "报到",
+    "check_out": "查看",
+    "date_and_time": "日期",
+    "edit": "编辑",
+    "edit_lodging": "编辑住宿",
+    "error_editing_lodging": "错误编辑住宿",
+    "hostel": "旅馆",
+    "hotel": "酒店",
+    "house": "房子",
+    "lodging_added": "住宿成功增加了！",
+    "lodging_delete_error": "错误删除住宿",
+    "lodging_deleted": "住宿成功删除了！",
+    "lodging_edit_success": "住宿成功编辑了！",
+    "lodging_type": "住宿类型",
+    "motel": "汽车旅馆",
+    "start": "开始",
+    "type": "类型",
+    "villa": "别墅",
+    "apartment": "公寓",
+    "bnb": "床和早餐",
+    "cabin": "舱",
+    "new_lodging": "新住宿",
+    "other": "其他",
+    "provide_start_date": "请提供开始日期",
+    "reservation_number": "预订号",
+    "resort": "采取",
+    "current_timezone": "当前时区"
   }
 }

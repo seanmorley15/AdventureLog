@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { continentCodeToString, getFlag } from '$lib';
 	import type { Country } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
+	import { t } from 'svelte-i18n';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';
 
@@ -37,15 +36,15 @@
 					Visited {country.num_visits} Region{country.num_visits > 1 ? 's' : ''}
 				</div>
 			{:else if country.num_visits > 0 && country.num_visits === country.num_regions}
-				<div class="badge badge-success">Completed</div>
+				<div class="badge badge-success">{$t('adventures.visited')}</div>
 			{:else}
-				<div class="badge badge-error">Not Visited</div>
+				<div class="badge badge-error">{$t('adventures.not_visited')}</div>
 			{/if}
 		</div>
 
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
-			<button class="btn btn-primary" on:click={nav}>Open</button>
+			<button class="btn btn-primary" on:click={nav}>{$t('notes.open')}</button>
 		</div>
 	</div>
 </div>

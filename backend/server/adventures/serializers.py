@@ -1,8 +1,9 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Lodging
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
+from users.serializers import CustomUserDetailsSerializer
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -80,15 +81,16 @@ class AdventureSerializer(CustomModelSerializer):
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
@@ -126,7 +128,11 @@ class AdventureSerializer(CustomModelSerializer):
             }
         )
         return category
-
+    
+    def get_user(self, obj):
+        user = obj.user_id
+        return CustomUserDetailsSerializer(user).data
+    
     def get_is_visited(self, obj):
         current_date = timezone.now().date()
         for visit in obj.visits.all():
@@ -194,6 +200,17 @@ class TransportationSerializer(CustomModelSerializer):
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+
+class LodgingSerializer(CustomModelSerializer):
+
+    class Meta:
+        model = Lodging
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
+            'collection', 'created_at', 'updated_at', 'type'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
@@ -283,10 +300,11 @@ class CollectionSerializer(CustomModelSerializer):
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
+    lodging = LodgingSerializer(many=True, read_only=True, source='lodging_set')
 
     class Meta:
         model = Collection
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
@@ -297,4 +315,3 @@ class CollectionSerializer(CustomModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
-    

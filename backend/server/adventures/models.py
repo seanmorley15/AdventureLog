@@ -36,6 +36,20 @@ ADVENTURE_TYPES = [
     ('other', 'Other')
 ]
 
+LODGING_TYPES = [
+    ('hotel', 'Hotel'),
+    ('hostel', 'Hostel'),
+    ('resort', 'Resort'),
+    ('bnb', 'Bed & Breakfast'),
+    ('campground', 'Campground'),
+    ('cabin', 'Cabin'),
+    ('apartment', 'Apartment'),
+    ('house', 'House'),
+    ('villa', 'Villa'),
+    ('motel', 'Motel'),
+    ('other', 'Other')
+]
+
 TRANSPORTATION_TYPES = [
     ('car', 'Car'),
     ('plane', 'Plane'),
@@ -319,3 +333,37 @@ class Category(models.Model):
     
     def __str__(self):
         return self.name + ' - ' + self.display_name + ' - ' + self.icon
+    
+class Lodging(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=100, choices=LODGING_TYPES, default='other')
+    description = models.TextField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=2083)
+    check_in = models.DateTimeField(blank=True, null=True)
+    check_out = models.DateTimeField(blank=True, null=True)
+    reservation_number = models.CharField(max_length=100, blank=True, null=True)
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    location = models.CharField(max_length=200, blank=True, null=True)
+    is_public = models.BooleanField(default=False)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.date and self.end_date and self.date > self.end_date:
+            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+        
+        if self.collection:
+            if self.collection.is_public and not self.is_public:
+                raise ValidationError('Lodging associated with a public collection must be public. Collection: ' + self.collection.name + ' Loging: ' + self.name)
+            if self.user_id != self.collection.user_id:
+                raise ValidationError('Lodging must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Lodging owner: ' + self.user_id.username)
+
+    def __str__(self):
+        return self.name

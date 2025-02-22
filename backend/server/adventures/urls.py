@@ -18,6 +18,7 @@ router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-cale
 router.register(r'overpass', OverpassViewSet, basename='overpass')
 router.register(r'search', GlobalSearchView, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
+router.register(r'lodging', LodgingViewSet, basename='lodging')
 
 
 urlpatterns = [

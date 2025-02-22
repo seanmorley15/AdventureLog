@@ -5,6 +5,7 @@ import type {
 	Background,
 	Checklist,
 	Collection,
+	Lodging,
 	Note,
 	Transportation,
 	User
@@ -125,6 +126,50 @@ export function groupTransportationsByDate(
 			const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
 			if (transportation.end_date) {
 				const endDate = new Date(transportation.end_date).toISOString().split('T')[0];
+
+				// Loop through all days and include transportation if it falls within the range
+				for (let i = 0; i < numberOfDays; i++) {
+					const currentDate = new Date(startDate);
+					currentDate.setUTCDate(startDate.getUTCDate() + i);
+					const dateString = currentDate.toISOString().split('T')[0];
+
+					// Include the current day if it falls within the transportation date range
+					if (dateString >= transportationDate && dateString <= endDate) {
+						if (groupedTransportations[dateString]) {
+							groupedTransportations[dateString].push(transportation);
+						}
+					}
+				}
+			} else if (groupedTransportations[transportationDate]) {
+				// If there's no end date, add transportation to the start date only
+				groupedTransportations[transportationDate].push(transportation);
+			}
+		}
+	});
+
+	return groupedTransportations;
+}
+
+export function groupLodgingByDate(
+	transportations: Lodging[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Lodging[]> {
+	const groupedTransportations: Record<string, Lodging[]> = {};
+
+	// Initialize all days in the range
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setUTCDate(startDate.getUTCDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedTransportations[dateString] = [];
+	}
+
+	transportations.forEach((transportation) => {
+		if (transportation.check_in) {
+			const transportationDate = new Date(transportation.check_in).toISOString().split('T')[0];
+			if (transportation.check_out) {
+				const endDate = new Date(transportation.check_out).toISOString().split('T')[0];
 
 				// Loop through all days and include transportation if it falls within the range
 				for (let i = 0; i < numberOfDays; i++) {
@@ -463,4 +508,14 @@ export function osmTagToEmoji(tag: string) {
 		default:
 			return '📍'; // Default placeholder emoji for unknown tags
 	}
+}
+
+export function debounce(func: Function, timeout: number) {
+	let timer: number | NodeJS.Timeout;
+	return (...args: any) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			func(...args);
+		}, timeout);
+	};
 }

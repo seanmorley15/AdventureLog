@@ -94,6 +94,7 @@
 					'User-Agent': `AdventureLog / ${appVersion} `
 				}
 			});
+			console.log(query);
 			let data = await res.json();
 			return data;
 		};
@@ -243,6 +244,20 @@
 						{$t('adventures.basic_information')}
 					</div>
 					<div class="collapse-content">
+						<!-- Name -->
+						<div>
+							<label for="name">
+								{$t('adventures.name')}<span class="text-red-500">*</span>
+							</label>
+							<input
+								type="text"
+								id="name"
+								name="name"
+								bind:value={transportation.name}
+								class="input input-bordered w-full"
+								required
+							/>
+						</div>
 						<!-- Type selection -->
 						<div>
 							<label for="type">
@@ -266,20 +281,6 @@
 									<option value="other">{$t('transportation.modes.other')}</option>
 								</select>
 							</div>
-						</div>
-						<!-- Name -->
-						<div>
-							<label for="name">
-								{$t('adventures.name')}<span class="text-red-500">*</span>
-							</label>
-							<input
-								type="text"
-								id="name"
-								name="name"
-								bind:value={transportation.name}
-								class="input input-bordered w-full"
-								required
-							/>
 						</div>
 						<!-- Description -->
 						<div>
@@ -464,7 +465,7 @@
 										bind:value={starting_airport}
 										name="starting_airport"
 										class="input input-bordered w-full"
-										placeholder="Enter starting airport code (e.g., JFK)"
+										placeholder={$t('transportation.starting_airport_desc')}
 									/>
 									<label for="ending_airport" class="label">
 										<span class="label-text">{$t('adventures.ending_airport')}</span>
@@ -475,10 +476,10 @@
 										bind:value={ending_airport}
 										name="ending_airport"
 										class="input input-bordered w-full"
-										placeholder="Enter ending airport code (e.g., LAX)"
+										placeholder={$t('transportation.ending_airport_desc')}
 									/>
 									<button type="button" class="btn btn-primary mt-2" on:click={geocode}>
-										Fetch Location Information
+										{$t('transportation.fetch_location_information')}
 									</button>
 								</div>
 							{/if}

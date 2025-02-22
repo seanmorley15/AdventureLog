@@ -178,6 +178,8 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/seanmorley15/AdventureLog" },
       { icon: "discord", link: "https://discord.gg/wRbQ9Egr8C" },
       { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
+      { icon: "x", link: "https://x.com/AdventureLogApp" },
+      { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
     ],
   },
 });

@@ -63,25 +63,31 @@ class ImmichIntegrationView(viewsets.ViewSet):
             return integration
         
         query = request.query_params.get('query', '')
+        date = request.query_params.get('date', '')
 
-        if not query:
+        if not query and not date:
             return Response(
                 {
-                    'message': 'Query is required.',
+                    'message': 'Query or date is required.',
                     'error': True,
                     'code': 'immich.query_required'
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
         
+        arguments = {}
+        if query:
+            arguments['query'] = query
+        if date:
+            arguments['takenBefore'] = date
+
         # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
         try:
-            immich_fetch = requests.post(f'{integration.server_url}/search/smart', headers={
+            url = f'{integration.server_url}/search/{"smart" if query else "metadata"}'
+            immich_fetch = requests.post(url, headers={
                 'x-api-key': integration.api_key
             },
-            json = {
-                'query': query
-            }
+            json = arguments
             )
             res = immich_fetch.json()
         except requests.exceptions.ConnectionError:
@@ -219,10 +225,14 @@ class ImmichIntegrationView(viewsets.ViewSet):
             )
         
         if 'assets' in res:
-            return Response(
-                res['assets'],
-                status=status.HTTP_200_OK
-            )
+            paginator = self.pagination_class()
+            # for each item in the items, we need to add the image url to the item so we can display it in the frontend
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            public_url = public_url.replace("'", "")
+            for item in res['assets']:
+                item['image_url'] = f'{public_url}/api/integrations/immich/get/{item["id"]}'
+            result_page = paginator.paginate_queryset(res['assets'], request)
+            return paginator.get_paginated_response(result_page)
         else:
             return Response(
                 {

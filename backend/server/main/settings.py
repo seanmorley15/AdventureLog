@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
+    # 'achievements', # Not done yet, will be added later in a future update
     # 'widget_tweaks',
     # 'slippers',
 
@@ -128,23 +129,20 @@ USE_L10N = True
 USE_TZ = True
 
 unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
-FRONTEND_URL = unParsedFrontenedUrl.replace("'", "").replace('"', '')
+FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
-SESSION_COOKIE_SAMESITE = None
+SESSION_COOKIE_SAMESITE = 'Lax'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
-# Parse the FRONTEND_URL
-# Remove and ' from the URL
-
-parsed_url = urlparse(FRONTEND_URL)
-hostname = parsed_url.hostname
-
-# Check if the hostname is an IP address
+hostname = urlparse(FRONTEND_URL).hostname
 is_ip_address = hostname.replace('.', '').isdigit()
 
-if is_ip_address:
-    # Do not set a domain for IP addresses
+# Check if the hostname is single-label (no dots)
+is_single_label = '.' not in hostname
+
+if is_ip_address or is_single_label:
+    # Do not set a domain for IP addresses or single-label hostnames
     SESSION_COOKIE_DOMAIN = None
 else:
     # Use publicsuffix2 to calculate the correct cookie domain
@@ -154,6 +152,7 @@ else:
     else:
         # Fallback to the hostname if parsing fails
         SESSION_COOKIE_DOMAIN = hostname
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
@@ -301,5 +300,8 @@ LOGGING = {
         },
     },
 }
+
+# ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.5'

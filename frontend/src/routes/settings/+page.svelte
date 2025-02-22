@@ -458,7 +458,7 @@
 	<!-- Social Auth Settings -->
 	<section class="space-y-8">
 		<h2 class="text-2xl font-semibold text-center mt-8">{$t('settings.social_oidc_auth')}</h2>
-		<div class="bg-neutral p-6 rounded-lg shadow-md text-center">
+		<div class="bg-neutral p-6 rounded-lg shadow-md text-center text-neutral-content">
 			<p>
 				{$t('settings.social_auth_desc')}
 			</p>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Checklist, Collection, Note, Transportation } from '$lib/types';
+	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
@@ -27,7 +27,8 @@
 		groupNotesByDate,
 		groupTransportationsByDate,
 		groupChecklistsByDate,
-		osmTagToEmoji
+		osmTagToEmoji,
+		groupLodgingByDate
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -35,6 +36,8 @@
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
+	import LodgingModal from '$lib/components/LodgingModal.svelte';
+	import LodgingCard from '$lib/components/LodgingCard.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -103,6 +106,19 @@
 			);
 		}
 
+		if (lodging) {
+			dates = dates.concat(
+				lodging
+					.filter((i) => i.check_in)
+					.map((lodging) => ({
+						id: lodging.id,
+						start: lodging.check_in || '', // Ensure it's a string
+						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
+						title: lodging.name
+					}))
+			);
+		}
+
 		// Update `options.events` when `dates` changes
 		options = { ...options, events: dates };
 	}
@@ -115,6 +131,7 @@
 	let numAdventures: number = 0;
 
 	let transportations: Transportation[] = [];
+	let lodging: Lodging[] = [];
 	let notes: Note[] = [];
 	let checklists: Checklist[] = [];
 
@@ -173,6 +190,9 @@
 		}
 		if (collection.transportations) {
 			transportations = collection.transportations;
+		}
+		if (collection.lodging) {
+			lodging = collection.lodging;
 		}
 		if (collection.notes) {
 			notes = collection.notes;
@@ -243,6 +263,8 @@
 
 	let adventureToEdit: Adventure | null = null;
 	let transportationToEdit: Transportation | null = null;
+	let isShowingLodgingModal: boolean = false;
+	let lodgingToEdit: Lodging | null = null;
 	let isAdventureModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
@@ -258,6 +280,11 @@
 	function editTransportation(event: CustomEvent<Transportation>) {
 		transportationToEdit = event.detail;
 		isShowingTransportationModal = true;
+	}
+
+	function editLodging(event: CustomEvent<Lodging>) {
+		lodgingToEdit = event.detail;
+		isShowingLodgingModal = true;
 	}
 
 	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
@@ -355,6 +382,22 @@
 		}
 		isShowingTransportationModal = false;
 	}
+
+	function saveOrCreateLodging(event: CustomEvent<Lodging>) {
+		if (lodging.find((lodging) => lodging.id === event.detail.id)) {
+			// Update existing hotel
+			lodging = lodging.map((lodging) => {
+				if (lodging.id === event.detail.id) {
+					return event.detail;
+				}
+				return lodging;
+			});
+		} else {
+			// Create new lodging
+			lodging = [event.detail, ...lodging];
+		}
+		isShowingLodgingModal = false;
+	}
 </script>
 
 {#if isShowingLinkModal}
@@ -372,6 +415,15 @@
 		{transportationToEdit}
 		on:close={() => (isShowingTransportationModal = false)}
 		on:save={saveOrCreateTransportation}
+		{collection}
+	/>
+{/if}
+
+{#if isShowingLodgingModal}
+	<LodgingModal
+		{lodgingToEdit}
+		on:close={() => (isShowingLodgingModal = false)}
+		on:save={saveOrCreateLodging}
 		{collection}
 	/>
 {/if}
@@ -501,6 +553,16 @@
 						>
 							{$t('adventures.checklist')}</button
 						>
+						<button
+							class="btn btn-primary"
+							on:click={() => {
+								isShowingLodgingModal = true;
+								newType = '';
+								lodgingToEdit = null;
+							}}
+						>
+							{$t('adventures.lodging')}</button
+						>
 
 						<!-- <button
 			class="btn btn-primary"
@@ -542,7 +604,7 @@
 		</div>
 	{/if}
 
-	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
 		<NotFound error={undefined} />
 	{/if}
 
@@ -654,6 +716,63 @@
 			</div>
 		{/if}
 
+		{#if lodging.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.lodging')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each lodging as hotel}
+					<LodgingCard
+						lodging={hotel}
+						user={data?.user}
+						on:delete={(event) => {
+							lodging = lodging.filter((t) => t.id != event.detail);
+						}}
+						on:edit={editLodging}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if notes.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each notes as note}
+					<NoteCard
+						{note}
+						user={data.user || null}
+						on:edit={(event) => {
+							noteToEdit = event.detail;
+							isNoteModalOpen = true;
+						}}
+						on:delete={(event) => {
+							notes = notes.filter((n) => n.id != event.detail);
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
+		{#if checklists.length > 0}
+			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
+			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+				{#each checklists as checklist}
+					<ChecklistCard
+						{checklist}
+						user={data.user || null}
+						on:delete={(event) => {
+							checklists = checklists.filter((n) => n.id != event.detail);
+						}}
+						on:edit={(event) => {
+							checklistToEdit = event.detail;
+							isShowingChecklistModal = true;
+						}}
+						{collection}
+					/>
+				{/each}
+			</div>
+		{/if}
+
 		{#if notes.length > 0}
 			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
@@ -695,7 +814,7 @@
 		{/if}
 
 		<!-- if none found -->
-		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0}
+		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
 			<NotFound error={undefined} />
 		{/if}
 	{/if}
@@ -743,6 +862,10 @@
 							new Date(collection.start_date),
 							numberOfDays
 						)[dateString] || []}
+					{@const dayLodging =
+						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
+							dateString
+						] || []}
 					{@const dayNotes =
 						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] ||
 						[]}
@@ -804,6 +927,18 @@
 										/>
 									{/each}
 								{/if}
+								{#if dayLodging.length > 0}
+									{#each dayLodging as hotel}
+										<LodgingCard
+											lodging={hotel}
+											user={data?.user}
+											on:delete={(event) => {
+												lodging = lodging.filter((t) => t.id != event.detail);
+											}}
+											on:edit={editLodging}
+										/>
+									{/each}
+								{/if}
 								{#if dayChecklists.length > 0}
 									{#each dayChecklists as checklist}
 										<ChecklistCard
@@ -821,7 +956,7 @@
 								{/if}
 							</div>
 
-							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0}
+							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
 								<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
 							{/if}
 						</div>
@@ -950,7 +1085,7 @@
 			</div>
 		</div>
 	{/if}
-	{#if currentView == 'recommendations'}
+	{#if currentView == 'recommendations' && data.user}
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="https://adventurelog.app/adventurelog.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AdventureLog CDN</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: linear-gradient(to right, #1e3c72, #2a5298);
+        color: white;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+      }
+      .hero-container {
+        max-width: 600px;
+        padding: 2rem;
+        border-radius: 15px;
+        background: rgba(0, 0, 0, 0.3);
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+      }
+      .attribution-background {
+        background: rgba(42, 71, 105, 0.808);
+        border-radius: 15px;
+        padding: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hero-container">
+      <div>
+        <h1 class="fw-bold">Welcome to the AdventureLog CDN</h1>
+        <p class="fs-5">
+          This is a content delivery network for the AdventureLog project. You
+          can browse the content by clicking the button below.
+        </p>
+        <a href="/data/" class="btn btn-light btn-lg fw-bold">Browse Content</a>
+      </div>
+      <div class="container mt-5">
+        <h2 class="fw-bold">About AdventureLog</h2>
+        <p class="fs-5">
+          AdventureLog is a project that aims to provide a platform for users to
+          log their adventures and share them with the world. The project is
+          developed by <a href="https://seanmorley.com">Sean Morley</a> and is
+          open source. View it on GitHub here:
+          <a href="https://github.com/seanmorley15/AdventureLog">AdventureLog</a
+          >.
+        </p>
+      </div>
+      <!-- Data Attributions -->
+      <div class="container mt-5">
+        <div class="card shadow-sm border-0 attribution-background">
+          <div class="card-body">
+            <h2 class="fw-bold text-primary">Data Attributions</h2>
+            <p class="fs-5 text-white">
+              The data provided in this CDN is sourced from the following
+              repositories:
+            </p>
+            <ul class="list-group">
+              <li class="list-group-item">
+                <a
+                  href="https://flagpedia.net/"
+                  class="text-decoration-none fw-semibold"
+                >
+                  🌍 Flagpedia - Flags of the World
+                </a>
+              </li>
+              <li class="list-group-item">
+                <a
+                  href="https://github.com/dr5hn/countries-states-cities-database/"
+                  class="text-decoration-none fw-semibold"
+                >
+                  🏙️ dr5hn/countries-states-cities-database - Country, Region,
+                  and City Data
+                </a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

@@ -30,7 +30,8 @@
       "aqua": "Aqua",
       "northernLights": "Zorza Polarna"
     },
-    "calendar": "Kalendarz"
+    "calendar": "Kalendarz",
+    "admin_panel": "Panel administracyjny"
   },
   "about": {
     "about": "O aplikacji",
@@ -281,7 +282,19 @@
     "images": "Obrazy",
     "primary": "Podstawowy",
     "upload": "Wgrywać",
-    "view_attachment": "Zobacz załącznik"
+    "view_attachment": "Zobacz załącznik",
+    "of": "z",
+    "city": "Miasto",
+    "delete_lodging": "Usunąć zakwaterowanie",
+    "display_name": "Nazwa wyświetlania",
+    "location_details": "Szczegóły lokalizacji",
+    "lodging": "Kwatera",
+    "lodging_delete_confirm": "Czy na pewno chcesz usunąć tę lokalizację zakwaterowania? \nTego działania nie można cofnąć.",
+    "lodging_information": "Informacje o zakwaterowaniu",
+    "price": "Cena",
+    "region": "Region",
+    "reservation_number": "Numer rezerwacji",
+    "welcome_map_info": "Publiczne przygody na tym serwerze"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -326,7 +339,11 @@
     "both_passwords_required": "Obydwa hasła są wymagane",
     "new_password": "Nowe hasło",
     "reset_failed": "Nie udało się zresetować hasła",
-    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej"
+    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej",
+    "no_public_adventures": "Nie znaleziono publicznych przygód",
+    "no_public_collections": "Nie znaleziono publicznych kolekcji",
+    "user_adventures": "Przygody użytkowników",
+    "user_collections": "Kolekcje użytkowników"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -481,7 +498,10 @@
     "transportation_edit_success": "Transport edytowany pomyślnie!",
     "edit_transportation": "Edytuj transport",
     "start": "Początek",
-    "date_and_time": "Data i godzina"
+    "date_and_time": "Data i godzina",
+    "ending_airport_desc": "Wprowadź końcowe kod lotniska (np. LAX)",
+    "fetch_location_information": "Pobierać informacje o lokalizacji",
+    "starting_airport_desc": "Wprowadź początkowy kod lotniska (np. JFK)"
   },
   "search": {
     "adventurelog_results": "Wyniki AdventureLog",
@@ -567,5 +587,35 @@
     "phone": "Telefon",
     "recommendation": "Zalecenie",
     "website": "Strona internetowa"
+  },
+  "lodging": {
+    "apartment": "Apartament",
+    "bnb": "Nocleg i śniadanie",
+    "cabin": "Kabina",
+    "campground": "Obozowisko",
+    "lodging_added": "Lodowanie dodane pomyślnie!",
+    "lodging_delete_error": "Usuwanie błędów",
+    "lodging_deleted": "Z powodzeniem usunięto!",
+    "lodging_edit_success": "Złożone zredagowane zredagowane!",
+    "lodging_type": "Typ składowania",
+    "motel": "Motel",
+    "start": "Start",
+    "type": "Typ",
+    "villa": "Willa",
+    "check_in": "Zameldować się",
+    "check_out": "Wymeldować się",
+    "date_and_time": "Data",
+    "edit": "Redagować",
+    "edit_lodging": "Edytuj zakwaterowanie",
+    "error_editing_lodging": "Edycja błędów",
+    "hostel": "Schronisko",
+    "hotel": "Hotel",
+    "house": "Dom",
+    "new_lodging": "Nowe zakwaterowanie",
+    "other": "Inny",
+    "provide_start_date": "Proszę podać datę rozpoczęcia",
+    "reservation_number": "Numer rezerwacji",
+    "resort": "Uciec",
+    "current_timezone": "Obecna strefa czasowa"
   }
 }

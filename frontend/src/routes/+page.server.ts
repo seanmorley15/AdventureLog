@@ -2,7 +2,7 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
 // @ts-ignore
 import psl from 'psl';
-import { themes } from '$lib';
+import { getRandomBackground, themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
 
@@ -11,6 +11,13 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/dashboard');
+	} else {
+		const background = getRandomBackground();
+		return {
+			props: {
+				background
+			}
+		};
 	}
 }) satisfies PageServerLoad;
 
@@ -51,8 +58,10 @@ export const actions: Actions = {
 
 		// Check if hostname is an IP address
 		const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+		const isLocalhost = hostname === 'localhost';
+		const isSingleLabel = hostname.split('.').length === 1;
 
-		if (!isIPAddress) {
+		if (!isIPAddress && !isSingleLabel && !isLocalhost) {
 			const parsed = psl.parse(hostname);
 
 			if (parsed && parsed.domain) {

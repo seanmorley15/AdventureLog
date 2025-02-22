@@ -1,91 +1,50 @@
 # Contributing to AdventureLog
 
-When contributing to this repository, please first discuss the change you wish to make via issue,
-email, or any other method with the owners of this repository before making a change.
-
-Please note we have a code of conduct, please follow it in all your interactions with the project.
+We’re excited to have you contribute to AdventureLog! To ensure that this community remains welcoming and productive for all users and developers, please follow this simple Code of Conduct.
 
 ## Pull Request Process
 
-1. Please make sure you create an issue first for your change so you can link any pull requests to this issue. There should be a clear relationship between pull requests and issues.
-2. Update the README.md with details of changes to the interface, this includes new environment
-   variables, exposed ports, useful file locations and container parameters.
-3. Increase the version numbers in any examples files and the README.md to the new version that this
-   Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
-4. You may merge the Pull Request in once you have the sign-off of two other developers, or if you
-   do not have permission to do that, you may request the second reviewer to merge it for you.
+1. **Open an Issue First**: Discuss any changes or features you plan to implement by opening an issue. This helps to clarify your idea and ensures there’s a shared understanding.
+2. **Document Changes**: If your changes impact the user interface, add new environment variables, or introduce new container configurations, make sure to update the documentation accordingly. The documentation is located in the `documentation` folder.
+3. **Pull Request**: Submit a pull request with your changes. Make sure to reference the issue you opened in the description.
 
 ## Code of Conduct
 
 ### Our Pledge
 
-In the interest of fostering an open and welcoming environment, we as
-contributors and maintainers pledge to making participation in our project and
-our community a harassment-free experience for everyone, regardless of age, body
-size, disability, ethnicity, gender identity and expression, level of experience,
-nationality, personal appearance, race, religion, or sexual identity and
-orientation.
+At AdventureLog, we are committed to creating a community that fosters adventure, exploration, and innovation. We encourage diverse participation and strive to maintain a space where everyone feels welcome to contribute, regardless of their background or experience level. We ask that you contribute with respect and kindness, making sure to prioritize collaboration and mutual growth.
 
 ### Our Standards
 
-Examples of behavior that contributes to creating a positive environment
-include:
+In order to maintain a positive environment, we encourage the following behaviors:
 
-- Using welcoming and inclusive language
-- Being respectful of differing viewpoints and experiences
-- Gracefully accepting constructive criticism
-- Focusing on what is best for the community
-- Showing empathy towards other community members
+- **Inclusivity**: Use welcoming and inclusive language that fosters collaboration across all perspectives and experiences.
+- **Respect**: Respect differing opinions and engage with empathy, understanding that each person’s perspective is valuable.
+- **Constructive Feedback**: Offer feedback that helps improve the project and allows contributors to grow from it.
+- **Adventure Spirit**: Bring the same sense of curiosity, discovery, and positivity that drives AdventureLog into all interactions with the community.
 
-Examples of unacceptable behavior by participants include:
+Examples of unacceptable behavior include:
 
-- The use of sexualized language or imagery and unwelcome sexual attention or
-  advances
-- Trolling, insulting/derogatory comments, and personal or political attacks
-- Public or private harassment
-- Publishing others' private information, such as a physical or electronic
-  address, without explicit permission
-- Other conduct which could reasonably be considered inappropriate in a
-  professional setting
+- Personal attacks, trolling, or any form of harassment.
+- Insensitive or discriminatory language, including sexualized comments or imagery.
+- Spamming or misusing project spaces for personal gain.
+- Publishing or using others’ private information without permission.
+- Anything else that could be seen as disrespectful or unprofessional in a collaborative environment.
 
 ### Our Responsibilities
 
-Project maintainers are responsible for clarifying the standards of acceptable
-behavior and are expected to take appropriate and fair corrective action in
-response to any instances of unacceptable behavior.
+As maintainers of AdventureLog, we are committed to enforcing this Code of Conduct and taking corrective action when necessary. This may involve moderating comments, pulling code, or banning users who engage in harmful behaviors.
 
-Project maintainers have the right and responsibility to remove, edit, or
-reject comments, commits, code, wiki edits, issues, and other contributions
-that are not aligned to this Code of Conduct, or to ban temporarily or
-permanently any contributor for other behaviors that they deem inappropriate,
-threatening, offensive, or harmful.
+We strive to foster a community that balances open collaboration with respect for all contributors.
 
 ### Scope
 
-This Code of Conduct applies both within project spaces and in public spaces
-when an individual is representing the project or its community. Examples of
-representing a project or community include using an official project e-mail
-address, posting via an official social media account, or acting as an appointed
-representative at an online or offline event. Representation of a project may be
-further defined and clarified by project maintainers.
+This Code of Conduct applies in all spaces related to AdventureLog. This includes our GitHub repository, discussions, documentation, social media accounts, and events—both online and in person.
 
 ### Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported by contacting the project team at [INSERT EMAIL ADDRESS]. All
-complaints will be reviewed and investigated and will result in a response that
-is deemed necessary and appropriate to the circumstances. The project team is
-obligated to maintain confidentiality with regard to the reporter of an incident.
-Further details of specific enforcement policies may be posted separately.
-
-Project maintainers who do not follow or enforce the Code of Conduct in good
-faith may face temporary or permanent repercussions as determined by other
-members of the project's leadership.
+If you experience or witness unacceptable behavior, please report it to the project team at `contact@adventurelog.app`. All reports will be confidential and handled swiftly. The maintainers will investigate the issue and take appropriate action as needed.
 
 ### Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
-available at [http://contributor-covenant.org/version/1/4][version]
-
-[homepage]: http://contributor-covenant.org
-[version]: http://contributor-covenant.org/version/1/4/
+This Code of Conduct is inspired by the [Contributor Covenant](http://contributor-covenant.org), version 1.4, and adapted to fit the unique spirit of AdventureLog.

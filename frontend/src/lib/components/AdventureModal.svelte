@@ -1,51 +1,36 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import type {
-		Adventure,
-		Attachment,
-		Category,
-		Collection,
-		OpenStreetMapPlace,
-		Point,
-		ReverseGeocode
-	} from '$lib/types';
-	import { onMount } from 'svelte';
-	import { enhance } from '$app/forms';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import type { Adventure, Attachment, Category, Collection } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
-	export let longitude: number | null = null;
-	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
 
-	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
+	const dispatch = createEventDispatcher();
 
-	let query: string = '';
-	let places: OpenStreetMapPlace[] = [];
 	let images: { id: string; image: string; is_primary: boolean }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
 	let categories: Category[] = [];
 
+	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
+
+	let fileInput: HTMLInputElement;
+	let immichIntegration: boolean = false;
+
 	import ActivityComplete from './ActivityComplete.svelte';
-	import { appVersion } from '$lib/config';
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import ImmichSelect from './ImmichSelect.svelte';
-
 	import Star from '~icons/mdi/star';
 	import Crown from '~icons/mdi/crown';
 	import AttachmentCard from './AttachmentCard.svelte';
+	import LocationDropdown from './LocationDropdown.svelte';
+	let modal: HTMLDialogElement;
 
 	let wikiError: string = '';
-
-	let noPlaces: boolean = false;
-
-	let is_custom_location: boolean = false;
-
-	let reverseGeocodePlace: ReverseGeocode | null = null;
 
 	let adventure: Adventure = {
 		id: '',
@@ -101,38 +86,33 @@
 		attachments: adventureToEdit?.attachments || []
 	};
 
-	let markers: Point[] = [];
+	onMount(async () => {
+		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
+		modal.showModal();
+		let categoryFetch = await fetch('/api/categories/categories');
+		if (categoryFetch.ok) {
+			categories = await categoryFetch.json();
+		} else {
+			addToast('error', $t('adventures.category_fetch_error'));
+		}
+		// Check for Immich Integration
+		let res = await fetch('/api/integrations');
+		if (!res.ok) {
+			addToast('error', $t('immich.integration_fetch_error'));
+		} else {
+			let data = await res.json();
+			if (data.immich) {
+				immichIntegration = true;
+			}
+		}
+	});
 
 	let url: string = '';
 	let imageError: string = '';
 	let wikiImageError: string = '';
-
-	let old_display_name: string = '';
+	let triggerMarkVisted: boolean = false;
 
 	images = adventure.images || [];
-
-	if (longitude && latitude) {
-		adventure.latitude = latitude;
-		adventure.longitude = longitude;
-		reverseGeocode(true);
-	}
-
-	$: {
-		is_custom_location = adventure.location != reverseGeocodePlace?.display_name;
-	}
-
-	if (adventure.longitude && adventure.latitude) {
-		markers = [];
-		markers = [
-			{
-				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
-				location: adventure.location || '',
-				name: adventure.name,
-				activity_type: ''
-			}
-		];
-	}
-
 	$: {
 		if (!adventure.rating) {
 			adventure.rating = NaN;
@@ -179,14 +159,11 @@
 		const input = event.target as HTMLInputElement;
 		if (input.files && input.files.length) {
 			selectedFile = input.files[0];
-			console.log('Selected file:', selectedFile);
 		}
 	}
 
 	async function uploadAttachment(event: Event) {
 		event.preventDefault();
-		console.log('UPLOAD');
-		console.log(selectedFile);
 
 		if (!selectedFile) {
 			console.error('No files selected');
@@ -194,22 +171,17 @@
 		}
 
 		const file = selectedFile;
-		console.log(file);
 
 		const formData = new FormData();
 		formData.append('file', file);
 		formData.append('adventure', adventure.id);
 		formData.append('name', attachmentName);
 
-		console.log(formData);
-
 		try {
 			const res = await fetch('/adventures?/attachment', {
 				method: 'POST',
 				body: formData
 			});
-
-			console.log(res);
 
 			if (res.ok) {
 				const newData = deserialize(await res.text()) as { data: Attachment };
@@ -230,11 +202,6 @@
 		}
 	}
 
-	function clearMap() {
-		console.log('CLEAR');
-		markers = [];
-	}
-
 	let imageSearch: string = adventure.name || '';
 
 	async function removeImage(id: string) {
@@ -244,7 +211,6 @@
 		if (res.status === 204) {
 			images = images.filter((image) => image.id !== id);
 			adventure.images = images;
-			console.log(images);
 			addToast('success', $t('adventures.image_removed_success'));
 		} else {
 			addToast('error', $t('adventures.image_removed_error'));
@@ -256,51 +222,6 @@
 	function saveAndClose() {
 		dispatch('save', adventure);
 		close();
-	}
-
-	let willBeMarkedVisited: boolean = false;
-
-	$: {
-		willBeMarkedVisited = false; // Reset before evaluating
-
-		const today = new Date(); // Cache today's date to avoid redundant calculations
-
-		for (const visit of adventure.visits) {
-			const startDate = new Date(visit.start_date);
-			const endDate = visit.end_date ? new Date(visit.end_date) : null;
-
-			// If the visit has both a start date and an end date, check if it started by today
-			if (startDate && endDate && startDate <= today) {
-				willBeMarkedVisited = true;
-				break; // Exit the loop since we've determined the result
-			}
-
-			// If the visit has a start date but no end date, check if it started by today
-			if (startDate && !endDate && startDate <= today) {
-				willBeMarkedVisited = true;
-				break; // Exit the loop since we've determined the result
-			}
-		}
-
-		console.log('WMBV:', willBeMarkedVisited);
-	}
-
-	let previousCoords: { lat: number; lng: number } | null = null;
-
-	$: if (markers.length > 0) {
-		const newLat = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
-		const newLng = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
-
-		if (!previousCoords || previousCoords.lat !== newLat || previousCoords.lng !== newLng) {
-			adventure.latitude = newLat;
-			adventure.longitude = newLng;
-			previousCoords = { lat: newLat, lng: newLng };
-			reverseGeocode();
-		}
-
-		if (!adventure.name) {
-			adventure.name = markers[0].name;
-		}
 	}
 
 	async function makePrimaryImage(image_id: string) {
@@ -342,9 +263,7 @@
 		});
 		if (res.ok) {
 			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			console.log(newData);
 			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
-			console.log(newImage);
 			images = [...images, newImage];
 			adventure.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
@@ -395,9 +314,7 @@
 			});
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
-				console.log(newData);
 				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
-				console.log(newImage);
 				images = [...images, newImage];
 				adventure.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
@@ -405,28 +322,6 @@
 				addToast('error', $t('adventures.image_upload_error'));
 				wikiImageError = $t('adventures.wiki_image_error');
 			}
-		}
-	}
-	async function geocode(e: Event | null) {
-		if (e) {
-			e.preventDefault();
-		}
-		if (!query) {
-			alert($t('adventures.no_location'));
-			return;
-		}
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
-		console.log(res);
-		let data = (await res.json()) as OpenStreetMapPlace[];
-		places = data;
-		if (data.length === 0) {
-			noPlaces = true;
-		} else {
-			noPlaces = false;
 		}
 	}
 
@@ -459,93 +354,6 @@
 		new_notes = '';
 	}
 
-	async function markVisited() {
-		console.log(reverseGeocodePlace);
-		if (reverseGeocodePlace) {
-			if (!reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) {
-				let region_res = await fetch(`/api/visitedregion`, {
-					headers: { 'Content-Type': 'application/json' },
-					method: 'POST',
-					body: JSON.stringify({ region: reverseGeocodePlace.region_id })
-				});
-				if (region_res.ok) {
-					reverseGeocodePlace.region_visited = true;
-					addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
-				} else {
-					addToast('error', `Failed to mark visit to ${reverseGeocodePlace.region}`);
-				}
-			}
-			if (!reverseGeocodePlace.city_visited && reverseGeocodePlace.city_id != null) {
-				let city_res = await fetch(`/api/visitedcity`, {
-					headers: { 'Content-Type': 'application/json' },
-					method: 'POST',
-					body: JSON.stringify({ city: reverseGeocodePlace.city_id })
-				});
-				if (city_res.ok) {
-					reverseGeocodePlace.city_visited = true;
-					addToast('success', `Visit to ${reverseGeocodePlace.city} marked`);
-				} else {
-					addToast('error', `Failed to mark visit to ${reverseGeocodePlace.city}`);
-				}
-			}
-		}
-	}
-
-	async function reverseGeocode(force_update: boolean = false) {
-		let res = await fetch(
-			`/api/reverse-geocode/reverse_geocode/?lat=${adventure.latitude}&lon=${adventure.longitude}`
-		);
-		let data = await res.json();
-		if (data.error) {
-			console.log(data.error);
-			reverseGeocodePlace = null;
-			return;
-		}
-		reverseGeocodePlace = data;
-
-		console.log(reverseGeocodePlace);
-		console.log(is_custom_location);
-
-		if (
-			reverseGeocodePlace &&
-			reverseGeocodePlace.display_name &&
-			(!is_custom_location || force_update)
-		) {
-			old_display_name = reverseGeocodePlace.display_name;
-			adventure.location = reverseGeocodePlace.display_name;
-		}
-		console.log(data);
-	}
-
-	let fileInput: HTMLInputElement;
-
-	const dispatch = createEventDispatcher();
-	let modal: HTMLDialogElement;
-
-	let immichIntegration: boolean = false;
-
-	onMount(async () => {
-		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		modal.showModal();
-		console.log('open');
-		let categoryFetch = await fetch('/api/categories/categories');
-		if (categoryFetch.ok) {
-			categories = await categoryFetch.json();
-		} else {
-			addToast('error', $t('adventures.category_fetch_error'));
-		}
-		// Check for Immich Integration
-		let res = await fetch('/api/integrations');
-		if (!res.ok) {
-			addToast('error', $t('immich.integration_fetch_error'));
-		} else {
-			let data = await res.json();
-			if (data.immich) {
-				immichIntegration = true;
-			}
-		}
-	});
-
 	function close() {
 		dispatch('close');
 	}
@@ -567,42 +375,11 @@
 		}
 	}
 
-	async function addMarker(e: CustomEvent<any>) {
-		markers = [];
-		markers = [
-			...markers,
-			{
-				lngLat: e.detail.lngLat,
-				name: '',
-				location: '',
-				activity_type: ''
-			}
-		];
-		console.log(markers);
-	}
-
-	function imageSubmit() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				if (result.data.id && result.data.image) {
-					adventure.images = [...adventure.images, result.data];
-					images = [...images, result.data];
-					addToast('success', $t('adventures.image_upload_success'));
-
-					fileInput.value = '';
-					console.log(adventure);
-				} else {
-					addToast('error', result.data.error || $t('adventures.image_upload_error'));
-				}
-			}
-		};
-	}
-
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		console.log(adventure);
+		triggerMarkVisted = true;
+
 		if (adventure.id === '') {
-			console.log(categories);
 			if (adventure.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
 					adventure.category = categories.find(
@@ -654,12 +431,6 @@
 				warningMessage = Object.values(data)[0] as string;
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
-		}
-		if (
-			adventure.is_visited &&
-			(!reverseGeocodePlace?.region_visited || !reverseGeocodePlace?.city_visited)
-		) {
-			markVisited();
 		}
 		imageSearch = adventure.name;
 	}
@@ -811,150 +582,7 @@
 						</div>
 					</div>
 
-					<div class="collapse collapse-plus bg-base-200 mb-4">
-						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.location_information')}
-						</div>
-						<div class="collapse-content">
-							<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
-							<div>
-								<label for="latitude">{$t('adventures.location')}</label><br />
-								<div class="flex items-center">
-									<input
-										type="text"
-										id="location"
-										name="location"
-										bind:value={adventure.location}
-										class="input input-bordered w-full"
-									/>
-									{#if is_custom_location}
-										<button
-											class="btn btn-primary ml-2"
-											type="button"
-											on:click={() => (adventure.location = reverseGeocodePlace?.display_name)}
-											>{$t('adventures.set_to_pin')}</button
-										>
-									{/if}
-								</div>
-							</div>
-
-							<div>
-								<form on:submit={geocode} class="mt-2">
-									<input
-										type="text"
-										placeholder={$t('adventures.search_for_location')}
-										class="input input-bordered w-full max-w-xs mb-2"
-										id="search"
-										name="search"
-										bind:value={query}
-									/>
-									<button class="btn btn-neutral -mt-1" type="submit">{$t('navbar.search')}</button>
-									<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
-										>{$t('adventures.clear_map')}</button
-									>
-								</form>
-							</div>
-							{#if places.length > 0}
-								<div class="mt-4 max-w-full">
-									<h3 class="font-bold text-lg mb-4">{$t('adventures.search_results')}</h3>
-
-									<div class="flex flex-wrap">
-										{#each places as place}
-											<button
-												type="button"
-												class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
-												on:click={() => {
-													markers = [
-														{
-															lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-															location: place.display_name,
-															name: place.name,
-															activity_type: place.type
-														}
-													];
-												}}
-											>
-												{place.display_name}
-											</button>
-										{/each}
-									</div>
-								</div>
-							{:else if noPlaces}
-								<p class="text-error text-lg">{$t('adventures.no_results')}</p>
-							{/if}
-							<!-- </div> -->
-							<div>
-								<MapLibre
-									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
-									standardControls
-								>
-									<!-- MapEvents gives you access to map events even from other components inside the map,
-where you might not have access to the top-level `MapLibre` component. In this case
-it would also work to just use on:click on the MapLibre component itself. -->
-									<MapEvents on:click={addMarker} />
-
-									{#each markers as marker}
-										<DefaultMarker lngLat={marker.lngLat} />
-									{/each}
-								</MapLibre>
-								{#if reverseGeocodePlace}
-									<div class="mt-2">
-										<p>
-											{reverseGeocodePlace.city
-												? reverseGeocodePlace.city + ',  '
-												: ''}{reverseGeocodePlace.region},
-											{reverseGeocodePlace.country}
-										</p>
-										<p>
-											{reverseGeocodePlace.region}:
-											{reverseGeocodePlace.region_visited
-												? $t('adventures.visited')
-												: $t('adventures.not_visited')}
-										</p>
-										{#if reverseGeocodePlace.city}
-											<p>
-												{reverseGeocodePlace.city}:
-												{reverseGeocodePlace.city_visited
-													? $t('adventures.visited')
-													: $t('adventures.not_visited')}
-											</p>
-										{/if}
-									</div>
-									{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && !willBeMarkedVisited)}
-										<button type="button" class="btn btn-neutral" on:click={markVisited}>
-											{$t('adventures.mark_visited')}
-										</button>
-									{/if}
-									{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited && reverseGeocodePlace.city_id)}
-										<div role="alert" class="alert alert-info mt-2">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												class="h-6 w-6 shrink-0 stroke-current"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-												></path>
-											</svg>
-											<span
-												>{reverseGeocodePlace.city
-													? reverseGeocodePlace.city + ',  '
-													: ''}{reverseGeocodePlace.region},
-												{reverseGeocodePlace.country}
-												{$t('adventures.will_be_marked')}</span
-											>
-										</div>
-									{/if}
-								{/if}
-							</div>
-						</div>
-					</div>
+					<LocationDropdown bind:item={adventure} bind:triggerMarkVisted {initialLatLng} />
 
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
@@ -1257,6 +885,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 
 					{#if immichIntegration}
 						<ImmichSelect
+							{adventure}
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
@@ -1314,7 +943,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 		{/if}
 
 		{#if adventure.is_public && adventure.id}
-			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
+			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
 				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">

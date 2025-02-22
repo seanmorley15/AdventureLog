@@ -34,9 +34,14 @@
 				? `${user.first_name} ${user.last_name}`
 				: user.username}
 		</p>
-		<li><button on:click={() => goto('/profile')}>{$t('navbar.profile')}</button></li>
+		<li>
+			<button on:click={() => goto(`/profile/${user.username}`)}>{$t('navbar.profile')}</button>
+		</li>
 		<li><button on:click={() => goto('/adventures')}>{$t('navbar.my_adventures')}</button></li>
 		<li><button on:click={() => goto('/shared')}>{$t('navbar.shared_with_me')}</button></li>
+		{#if user.is_staff}
+			<li><button on:click={() => goto('/admin')}>{$t('navbar.admin_panel')}</button></li>
+		{/if}
 		<li><button on:click={() => goto('/settings')}>{$t('navbar.settings')}</button></li>
 		<form method="post">
 			<li><button formaction="/?/logout">{$t('navbar.logout')}</button></li>
