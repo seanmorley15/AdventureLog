@@ -498,7 +498,10 @@
     "transportation_added": "Transport ajouté avec succès !",
     "transportation_delete_error": "Erreur lors de la suppression du transport",
     "transportation_deleted": "Transport supprimé avec succès !",
-    "transportation_edit_success": "Transport modifié avec succès !"
+    "transportation_edit_success": "Transport modifié avec succès !",
+    "ending_airport_desc": "Entrez la fin du code aéroportuaire (par exemple, laxiste)",
+    "fetch_location_information": "Récupérer les informations de localisation",
+    "starting_airport_desc": "Entrez le code aéroport de démarrage (par exemple, JFK)"
   },
   "search": {
     "adventurelog_results": "Résultats du journal d'aventure",
@@ -612,6 +615,7 @@
     "resort": "Station balnéaire",
     "start": "Commencer",
     "type": "Taper",
-    "villa": "Villa"
+    "villa": "Villa",
+    "current_timezone": "Fuseau horaire actuel"
   }
 }

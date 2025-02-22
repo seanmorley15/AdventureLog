@@ -530,7 +530,8 @@
 		"villa": "Villa",
 		"motel": "Motel",
 		"other": "Other",
-		"reservation_number": "Reservation Number"
+		"reservation_number": "Reservation Number",
+		"current_timezone": "Current Timezone"
 	},
 	"search": {
 		"adventurelog_results": "AdventureLog Results",

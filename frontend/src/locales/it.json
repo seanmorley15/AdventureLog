@@ -498,7 +498,10 @@
     "transportation_delete_error": "Errore durante l'eliminazione del trasporto",
     "transportation_deleted": "Trasporto eliminato con successo!",
     "transportation_edit_success": "Trasporti modificati con successo!",
-    "type": "Tipo"
+    "type": "Tipo",
+    "ending_airport_desc": "Immettere il codice aeroportuale finale (ad es. LAX)",
+    "fetch_location_information": "Informazioni sulla posizione di recupero",
+    "starting_airport_desc": "Immettere il codice dell'aeroporto di partenza (ad es. JFK)"
   },
   "search": {
     "adventurelog_results": "Risultati di AdventureLog",
@@ -612,6 +615,7 @@
     "lodging_deleted": "Alloggio eliminato con successo!",
     "lodging_edit_success": "Alloggio modificato con successo!",
     "lodging_type": "Tipo di alloggio",
-    "motel": "Motel"
+    "motel": "Motel",
+    "current_timezone": "Fuso orario attuale"
   }
 }

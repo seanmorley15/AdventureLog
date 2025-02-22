@@ -498,7 +498,10 @@
     "transportation_delete_error": "删除交通时出错",
     "transportation_deleted": "交通删除成功！",
     "transportation_edit_success": "交通编辑成功！",
-    "type": "类型"
+    "type": "类型",
+    "ending_airport_desc": "输入结束机场代码（例如LAX）",
+    "fetch_location_information": "获取位置信息",
+    "starting_airport_desc": "输入启动机场代码（例如肯尼迪国际机构）"
   },
   "search": {
     "adventurelog_results": "冒险日志结果",
@@ -612,6 +615,7 @@
     "other": "其他",
     "provide_start_date": "请提供开始日期",
     "reservation_number": "预订号",
-    "resort": "采取"
+    "resort": "采取",
+    "current_timezone": "当前时区"
   }
 }

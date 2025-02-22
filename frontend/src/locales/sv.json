@@ -498,7 +498,10 @@
     "transportation_delete_error": "Det gick inte att ta bort transport",
     "transportation_deleted": "Transporten har raderats!",
     "transportation_edit_success": "Transporten har redigerats!",
-    "type": "Typ"
+    "type": "Typ",
+    "ending_airport_desc": "Ange slut på flygplatskoden (t.ex. LAX)",
+    "fetch_location_information": "Hämta platsinformation",
+    "starting_airport_desc": "Ange start av flygplatskoden (t.ex. JFK)"
   },
   "search": {
     "adventurelog_results": "AdventureLog-resultat",
@@ -612,6 +615,7 @@
     "check_out": "Checka ut",
     "date_and_time": "Datum",
     "edit": "Redigera",
-    "edit_lodging": "Redigera logi"
+    "edit_lodging": "Redigera logi",
+    "current_timezone": "Nuvarande tidszon"
   }
 }

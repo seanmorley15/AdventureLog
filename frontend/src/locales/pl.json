@@ -498,7 +498,10 @@
     "transportation_edit_success": "Transport edytowany pomyślnie!",
     "edit_transportation": "Edytuj transport",
     "start": "Początek",
-    "date_and_time": "Data i godzina"
+    "date_and_time": "Data i godzina",
+    "ending_airport_desc": "Wprowadź końcowe kod lotniska (np. LAX)",
+    "fetch_location_information": "Pobierać informacje o lokalizacji",
+    "starting_airport_desc": "Wprowadź początkowy kod lotniska (np. JFK)"
   },
   "search": {
     "adventurelog_results": "Wyniki AdventureLog",
@@ -612,6 +615,7 @@
     "other": "Inny",
     "provide_start_date": "Proszę podać datę rozpoczęcia",
     "reservation_number": "Numer rezerwacji",
-    "resort": "Uciec"
+    "resort": "Uciec",
+    "current_timezone": "Obecna strefa czasowa"
   }
 }

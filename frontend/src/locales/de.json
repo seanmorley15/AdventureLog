@@ -334,7 +334,7 @@
     "not_visited": "Nicht besucht",
     "num_countries": "Länder gefunden",
     "partially_visited": "Teilweise besucht",
-    "all_visited": "Sie haben alle Regionen besucht in", 
+    "all_visited": "Sie haben alle Regionen besucht in",
     "cities": "Städte",
     "failed_to_mark_visit": "Der Besuch konnte nicht markiert werden",
     "failed_to_remove_visit": "Der Besuch von konnte nicht entfernt werden",
@@ -498,7 +498,10 @@
     "provide_start_date": "Bitte geben Sie ein Startdatum an",
     "start": "Start",
     "to_location": "Zum Standort",
-    "transport_type": "Transporttyp"
+    "transport_type": "Transporttyp",
+    "ending_airport_desc": "Geben Sie den Ending Airport Code ein (z. B. lax)",
+    "fetch_location_information": "Standortinformationen abrufen",
+    "starting_airport_desc": "Geben Sie den Start -Flughafencode ein (z. B. JFK)"
   },
   "search": {
     "adventurelog_results": "AdventureLog-Ergebnisse",
@@ -612,6 +615,7 @@
     "resort": "Resort",
     "start": "Start",
     "type": "Typ",
-    "villa": "Villa"
+    "villa": "Villa",
+    "current_timezone": "Aktuelle Zeitzone"
   }
 }

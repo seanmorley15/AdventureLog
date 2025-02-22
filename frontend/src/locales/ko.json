@@ -234,7 +234,19 @@
     "will_be_marked": "모험이 저장되면 방문했다고 표시합니다.",
     "checklists": "체크리스트",
     "cities_updated": "도시 업데이트됨",
-    "clear": "초기화"
+    "clear": "초기화",
+    "city": "도시",
+    "delete_lodging": "숙박을 삭제하십시오",
+    "display_name": "표시 이름",
+    "location_details": "위치 세부 사항",
+    "lodging": "하숙",
+    "lodging_delete_confirm": "이 숙소 위치를 삭제 하시겠습니까? \n이 조치는 취소 할 수 없습니다.",
+    "lodging_information": "숙박 정보",
+    "of": "~의",
+    "price": "가격",
+    "region": "지역",
+    "reservation_number": "예약 번호",
+    "welcome_map_info": "이 서버의 공개 모험"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",
@@ -255,7 +267,11 @@
     "registration_disabled": "현재 등록할 수 없습니다.",
     "reset_failed": "비밀번호 재설정 실패",
     "signup": "가입",
-    "username": "사용자 이름"
+    "username": "사용자 이름",
+    "no_public_adventures": "공개 모험이 발견되지 않았습니다",
+    "no_public_collections": "공개 컬렉션이 발견되지 않았습니다",
+    "user_adventures": "사용자 모험",
+    "user_collections": "사용자 수집"
   },
   "categories": {
     "category_name": "카테고리 이름",
@@ -382,7 +398,8 @@
       "northernLights": "Northern Lights"
     },
     "users": "사용자",
-    "worldtravel": "세계 여행"
+    "worldtravel": "세계 여행",
+    "admin_panel": "관리자 패널"
   },
   "notes": {
     "add_a_link": "링크 추가",
@@ -538,7 +555,10 @@
     "transportation_delete_error": "교통수단 삭제 오류",
     "transportation_deleted": "교통수단이 성공적으로 삭제되었습니다!",
     "transportation_edit_success": "교통수단이 성공적으로 편집되었습니다!",
-    "type": "유형"
+    "type": "유형",
+    "ending_airport_desc": "엔드 공항 코드 입력 (예 : LAX)",
+    "fetch_location_information": "위치 정보를 가져 오십시오",
+    "starting_airport_desc": "공항 시작 코드 입력 (예 : JFK)"
   },
   "users": {
     "no_users_found": "공개 프로필인 사용자가 없습니다."
@@ -566,5 +586,35 @@
     "view_cities": "도시 보기",
     "visit_remove_failed": "방문 표시 제거 실패",
     "visit_to": "방문함"
+  },
+  "lodging": {
+    "apartment": "아파트",
+    "bnb": "숙박 및 아침 식사",
+    "cabin": "선실",
+    "campground": "캠프장",
+    "check_in": "체크인",
+    "current_timezone": "현재 시간대",
+    "date_and_time": "날짜",
+    "edit": "편집하다",
+    "edit_lodging": "숙박 편집",
+    "error_editing_lodging": "오류 편집 숙소",
+    "hostel": "숙박소",
+    "hotel": "호텔",
+    "house": "집",
+    "lodging_added": "숙박이 성공적으로 추가되었습니다!",
+    "lodging_delete_error": "오류 삭제 숙박",
+    "lodging_deleted": "숙박 시설이 성공적으로 삭제되었습니다!",
+    "lodging_edit_success": "숙박이 성공적으로 편집되었습니다!",
+    "lodging_type": "숙박 유형",
+    "motel": "모텔",
+    "new_lodging": "새로운 숙박",
+    "other": "다른",
+    "provide_start_date": "시작 날짜를 제공하십시오",
+    "reservation_number": "예약 번호",
+    "resort": "의지",
+    "start": "시작",
+    "type": "유형",
+    "villa": "별장",
+    "check_out": "체크 아웃"
   }
 }

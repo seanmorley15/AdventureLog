@@ -18,10 +18,14 @@
 	let fullEndDate: string = '';
 
 	// Format date as local datetime
+	// Convert an ISO date to a datetime-local value in local time.
 	function toLocalDatetime(value: string | null): string {
 		if (!value) return '';
 		const date = new Date(value);
-		return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+		// Adjust the time by subtracting the timezone offset.
+		date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+		// Return format YYYY-MM-DDTHH:mm
+		return date.toISOString().slice(0, 16);
 	}
 
 	type LodgingType = {
@@ -111,7 +115,17 @@
 			return;
 		}
 
-		// Create or update hotel
+		// Only convert to UTC if the time is still in local format.
+		if (lodging.check_in && !lodging.check_in.includes('Z')) {
+			// new Date(lodging.check_in) interprets the input as local time.
+			lodging.check_in = new Date(lodging.check_in).toISOString();
+		}
+		if (lodging.check_out && !lodging.check_out.includes('Z')) {
+			lodging.check_out = new Date(lodging.check_out).toISOString();
+		}
+		console.log(lodging.check_in, lodging.check_out);
+
+		// Create or update lodging...
 		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
 		const method = lodging.id === '' ? 'POST' : 'PATCH';
 		const res = await fetch(url, {
@@ -354,24 +368,45 @@
 							</div>
 						</div>
 						<!-- End Date -->
-						{#if lodging.check_out}
+						<div>
+							<label for="end_date">
+								{$t('lodging.check_out')}
+							</label>
 							<div>
-								<label for="end_date">
-									{$t('lodging.check_out')}
-								</label>
-								<div>
-									<input
-										type="datetime-local"
-										id="end_date"
-										name="end_date"
-										min={constrainDates ? lodging.check_in : ''}
-										max={constrainDates ? fullEndDate : ''}
-										bind:value={lodging.check_out}
-										class="input input-bordered w-full max-w-xs mt-1"
-									/>
-								</div>
+								<input
+									type="datetime-local"
+									id="end_date"
+									name="end_date"
+									min={constrainDates ? lodging.check_in : ''}
+									max={constrainDates ? fullEndDate : ''}
+									bind:value={lodging.check_out}
+									class="input input-bordered w-full max-w-xs mt-1"
+								/>
 							</div>
-						{/if}
+						</div>
+						<div role="alert" class="alert shadow-lg bg-neutral mt-4">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								class="stroke-info h-6 w-6 shrink-0"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								></path>
+							</svg>
+							<span>
+								{$t('lodging.current_timezone')}:
+								{(() => {
+									const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+									const [continent, city] = tz.split('/');
+									return `${continent} (${city.replace('_', ' ')})`;
+								})()}
+							</span>
+						</div>
 					</div>
 				</div>
 

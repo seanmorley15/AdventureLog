@@ -498,7 +498,10 @@
     "transport_type": "Vervoerstype",
     "transportation_added": "Vervoer succesvol toegevoegd!",
     "transportation_delete_error": "Fout bij verwijderen vervoer",
-    "transportation_deleted": "Vervoer succesvol verwijderd!"
+    "transportation_deleted": "Vervoer succesvol verwijderd!",
+    "ending_airport_desc": "Voer eindigende luchthavencode in (bijv. LAX)",
+    "fetch_location_information": "Locatie -informatie ophalen",
+    "starting_airport_desc": "Voer de startende luchthavencode in (bijv. JFK)"
   },
   "search": {
     "adventurelog_results": "AdventureLog-resultaten",
@@ -612,6 +615,7 @@
     "resort": "Toevlucht",
     "start": "Begin",
     "type": "Type",
-    "villa": "Villa"
+    "villa": "Villa",
+    "current_timezone": "Huidige tijdzone"
   }
 }

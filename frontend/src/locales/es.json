@@ -498,7 +498,10 @@
     "flight_number": "Número de vuelo",
     "from_location": "Desde la ubicación",
     "transportation_added": "¡Transporte agregado exitosamente!",
-    "transportation_delete_error": "Error al eliminar el transporte"
+    "transportation_delete_error": "Error al eliminar el transporte",
+    "ending_airport_desc": "Ingrese el código de aeropuerto final (por ejemplo, LAX)",
+    "fetch_location_information": "Información de ubicación para obtener",
+    "starting_airport_desc": "Ingrese el código de aeropuerto inicial (por ejemplo, JFK)"
   },
   "search": {
     "adventurelog_results": "Resultados del registro de aventuras",
@@ -612,6 +615,7 @@
     "start": "Comenzar",
     "type": "Tipo",
     "villa": "Villa",
-    "edit_lodging": "Editar alojamiento"
+    "edit_lodging": "Editar alojamiento",
+    "current_timezone": "Zona horaria"
   }
 }
