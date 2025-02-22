@@ -484,6 +484,9 @@
 		"flight_number": "Flight Number",
 		"from_location": "From Location",
 		"to_location": "To Location",
+		"fetch_location_information": "Fetch Location Information",
+		"starting_airport_desc": "Enter starting airport code (e.g., JFK)",
+		"ending_airport_desc": "Enter ending airport code (e.g., LAX)",
 		"edit": "Edit",
 		"modes": {
 			"car": "Car",

@@ -203,7 +203,7 @@
 </MapLibre>
 
 <svelte:head>
-	<title>Travel Map</title>
+	<title>Adventure Map</title>
 	<meta name="description" content="View your travels on a map." />
 </svelte:head>
 
