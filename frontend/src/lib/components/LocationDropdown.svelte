@@ -49,9 +49,9 @@
 			reverseGeocode();
 		}
 
-		if (!item.name) {
-			item.name = markers[0].name;
-		}
+		// if (!item.name) {
+		// 	item.name = markers[0].name;
+		// }
 	}
 
 	$: if (triggerMarkVisted && willBeMarkedVisited) {
@@ -193,7 +193,7 @@
 		) {
 			old_display_name = reverseGeocodePlace.display_name;
 			item.location = reverseGeocodePlace.display_name;
-			if (reverseGeocodePlace.location_name) {
+			if (reverseGeocodePlace.location_name && !item.name) {
 				item.name = reverseGeocodePlace.location_name;
 			}
 		}
@@ -270,6 +270,8 @@
 										activity_type: place.type
 									}
 								];
+
+								item.name = place.name;
 							}}
 						>
 							{place.display_name}
