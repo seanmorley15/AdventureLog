@@ -51,7 +51,7 @@ export const actions: Actions = {
 		const tokenPromise = await csrfTokenFetch.json();
 		const csrfToken = tokenPromise.csrfToken;
 
-		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/signup`, {
+		const loginFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/signup`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,

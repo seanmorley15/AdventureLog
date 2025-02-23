@@ -42,7 +42,7 @@ export const actions: Actions = {
 		const csrfToken = await fetchCSRFToken();
 
 		// Initial login attempt
-		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/login`, {
+		const loginFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/login`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
@@ -69,7 +69,7 @@ export const actions: Actions = {
 				// Attempt MFA authentication
 				const sessionId = extractSessionId(loginFetch.headers.get('Set-Cookie'));
 				const mfaLoginFetch = await event.fetch(
-					`${serverEndpoint}/_allauth/browser/v1/auth/2fa/authenticate`,
+					`${serverEndpoint}/auth/browser/v1/auth/2fa/authenticate`,
 					{
 						method: 'POST',
 						headers: {
