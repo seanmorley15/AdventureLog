@@ -14,7 +14,7 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for listing the stats of a user.
     """
-    @action(detail=False, methods=['get'], url_path='counts/(?P<username>[^/.]+)')
+    @action(detail=False, methods=['get'], url_path='counts/(?P<username>[^/]+)')
     def counts(self, request, username):
         if request.user.username == username:
             user = get_object_or_404(User, username=username)
