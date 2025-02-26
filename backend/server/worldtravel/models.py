@@ -18,7 +18,8 @@ class Country(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     insert_id = models.UUIDField(unique=False, blank=True, null=True)
-
+    translations = models.JSONField(default=dict, blank=True)
+    
     class Meta:
         verbose_name = "Country"
         verbose_name_plural = "Countries"

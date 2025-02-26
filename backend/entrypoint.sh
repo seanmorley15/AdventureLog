@@ -51,8 +51,6 @@ else:
 EOF
 fi
 
-
-# Sync the countries and world travel regions
 # Sync the countries and world travel regions
 python manage.py download-countries
 if [ $? -eq 137 ]; then
