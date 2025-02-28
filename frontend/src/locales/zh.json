@@ -246,7 +246,8 @@
     "price": "价格",
     "region": "地区",
     "reservation_number": "预订号",
-    "welcome_map_info": "该服务器上的公共冒险"
+    "welcome_map_info": "该服务器上的公共冒险",
+    "open_in_maps": "在地图上打开"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
