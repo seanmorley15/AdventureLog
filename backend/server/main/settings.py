@@ -69,6 +69,8 @@ INSTALLED_APPS = (
 
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'adventures.middleware.XSessionTokenMiddleware',
+    'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -132,6 +134,8 @@ unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
 FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = 'Lax'
+
+SESSION_COOKIE_NAME = 'sessionid'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 

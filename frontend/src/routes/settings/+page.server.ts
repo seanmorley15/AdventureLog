@@ -31,7 +31,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 	let user = (await res.json()) as User;
 
-	let emailFetch = await fetch(`${endpoint}/_allauth/browser/v1/account/email`, {
+	let emailFetch = await fetch(`${endpoint}/auth/browser/v1/account/email`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}
@@ -45,14 +45,11 @@ export const load: PageServerLoad = async (event) => {
 		return redirect(302, '/');
 	}
 
-	let mfaAuthenticatorFetch = await fetch(
-		`${endpoint}/_allauth/browser/v1/account/authenticators`,
-		{
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
+	let mfaAuthenticatorFetch = await fetch(`${endpoint}/auth/browser/v1/account/authenticators`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
 		}
-	);
+	});
 	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
 	let authenticators = (mfaAuthenticatorResponse.data.length > 0) as boolean;
 
@@ -208,7 +205,7 @@ export const actions: Actions = {
 		let csrfToken = await fetchCSRFToken();
 
 		if (current_password) {
-			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
+			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin, // Include Referer header
@@ -226,7 +223,7 @@ export const actions: Actions = {
 			}
 			return { success: true };
 		} else {
-			let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
+			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
 				method: 'POST',
 				headers: {
 					Referer: event.url.origin, // Include Referer header

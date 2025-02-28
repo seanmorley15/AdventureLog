@@ -246,7 +246,8 @@
     "lodging_information": "Logi information",
     "price": "Pris",
     "region": "Område",
-    "reservation_number": "Bokningsnummer"
+    "reservation_number": "Bokningsnummer",
+    "open_in_maps": "Kappas in"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

@@ -133,35 +133,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['get'])
-    def search(self, request):
-        query = request.query_params.get('query', '')
-        property = request.query_params.get('property', 'all')
-
-        if len(query) < 2:
-            return Response({"error": "Query must be at least 2 characters long"}, status=400)
-
-        valid_properties = ['name', 'location', 'description', 'activity_types']
-        if property not in valid_properties:
-            property = 'all'
-
-        filters = {
-            'name': Q(name__icontains=query),
-            'location': Q(location__icontains=query),
-            'description': Q(description__icontains=query),
-            'activity_types': Q(activity_types__icontains=query),
-            'all': Q(name__icontains=query) | Q(description__icontains=query) |
-                   Q(location__icontains=query) | Q(activity_types__icontains=query)
-        }
-
-        queryset = Adventure.objects.filter(
-            filters[property] & (Q(user_id=request.user.id) | Q(is_public=True))
-        )
-
-        queryset = self.apply_sorting(queryset)
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
         serializer = self.get_serializer(instance, data=request.data, partial=True)

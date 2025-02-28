@@ -246,7 +246,8 @@
     "lodging_information": "Unterkunftsinformationen",
     "price": "Preis",
     "reservation_number": "Reservierungsnummer",
-    "welcome_map_info": "Öffentliche Abenteuer auf diesem Server"
+    "welcome_map_info": "Öffentliche Abenteuer auf diesem Server",
+    "open_in_maps": "In Karten geöffnet"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mit Leichtigkeit",

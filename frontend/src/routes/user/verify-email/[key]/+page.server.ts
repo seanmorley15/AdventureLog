@@ -11,7 +11,7 @@ export const load = (async (event) => {
 	const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 	const csrfToken = await fetchCSRFToken();
 
-	let verifyFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/email/verify`, {
+	let verifyFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/email/verify`, {
 		headers: {
 			Cookie: `csrftoken=${csrfToken}`,
 			'X-CSRFToken': csrfToken

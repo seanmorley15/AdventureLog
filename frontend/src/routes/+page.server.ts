@@ -41,7 +41,7 @@ export const actions: Actions = {
 			return;
 		}
 
-		const res = await fetch(`${serverEndpoint}/_allauth/browser/v1/auth/session`, {
+		const res = await fetch(`${serverEndpoint}/auth/browser/v1/auth/session`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',

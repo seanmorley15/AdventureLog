@@ -72,7 +72,7 @@
 	}
 
 	async function removeEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/_allauth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email', {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json'
@@ -88,7 +88,7 @@
 	}
 
 	async function verifyEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/_allauth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email/', {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
@@ -103,7 +103,7 @@
 	}
 
 	async function addEmail() {
-		let res = await fetch('/_allauth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email/', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -122,7 +122,7 @@
 	}
 
 	async function primaryEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/_allauth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email/', {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -194,7 +194,7 @@
 	}
 
 	async function disableMfa() {
-		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
+		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
 			method: 'DELETE'
 		});
 		if (res.ok) {

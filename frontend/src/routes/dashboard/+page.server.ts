@@ -21,7 +21,7 @@ export const load = (async (event) => {
 		let stats = null;
 
 		let res = await event.fetch(
-			`${serverEndpoint}/api/stats/counts/${event.locals.user.username}`,
+			`${serverEndpoint}/api/stats/counts/${event.locals.user.username}/`,
 			{
 				headers: {
 					Cookie: `sessionid=${event.cookies.get('sessionid')}`
