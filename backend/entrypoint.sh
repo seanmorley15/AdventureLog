@@ -58,6 +58,17 @@ if [ $? -eq 137 ]; then
   exit 1
 fi
 
+# Sync the translations if $COUNTRY_TRANSLATIONS is true
+if [ -n "$COUNTRY_TRANSLATIONS" -a "$COUNTRY_TRANSLATIONS" = "true" ]; then
+  echo "Syncing translations for countries..."
+  # Get the translations for all countries
+  python manage.py cities --import=country
+  # Get the translations for all alt names
+  python manage.py cities --import=alt_name
+  # Get the translations for all countries
+  python manage.py get-translations
+fi
+
 cat /code/adventurelog.txt
 
 # Start gunicorn

@@ -22,7 +22,7 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 # Create necessary directories
-RUN mkdir -p /code/static /code/media
+RUN mkdir -p /code/static /code/media /code/media/cities_data
 # RUN mkdir -p /code/staticfiles /code/media
 
 # Copy the Django project code into the Docker image

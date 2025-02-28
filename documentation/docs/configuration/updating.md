@@ -22,3 +22,13 @@ Once you are in the container run the following command to resync the region dat
 ```bash
 python manage.py download-countries --force
 ```
+
+## Updating the Country Translations
+
+If you would like to get translations for country names, you can run the following command. This will get the translations for all countries and save them to the database.
+
+```bash
+python manage.py cities --import=country
+python manage.py cities --import=alt_name # This takes a while to run, around 20 - 30 minutes, but only needs to be done once
+python manage.py get-translations
+```
