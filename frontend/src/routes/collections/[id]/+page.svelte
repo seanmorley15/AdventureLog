@@ -753,26 +753,6 @@
 			</div>
 		{/if}
 
-		{#if checklists.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each checklists as checklist}
-					<ChecklistCard
-						{checklist}
-						user={data.user || null}
-						on:delete={(event) => {
-							checklists = checklists.filter((n) => n.id != event.detail);
-						}}
-						on:edit={(event) => {
-							checklistToEdit = event.detail;
-							isShowingChecklistModal = true;
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
 		{#if notes.length > 0}
 			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
 			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
