@@ -16,7 +16,7 @@ export const actions: Actions = {
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${endpoint}/_allauth/browser/v1/auth/password/request`, {
+		let res = await fetch(`${endpoint}/auth/browser/v1/auth/password/request`, {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',

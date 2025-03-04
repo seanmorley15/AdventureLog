@@ -246,7 +246,8 @@
     "price": "Prezzo",
     "region": "Regione",
     "welcome_map_info": "Avventure pubbliche su questo server",
-    "reservation_number": "Numero di prenotazione"
+    "reservation_number": "Numero di prenotazione",
+    "open_in_maps": "Aperto in mappe"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

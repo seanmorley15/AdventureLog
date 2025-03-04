@@ -163,10 +163,21 @@
 								{/each}
 							</p>
 						{/if}
-						<button
-							class="btn btn-neutral btn-wide btn-sm mt-4"
-							on:click={() => goto(`/adventures/${adventure.id}`)}>{$t('map.view_details')}</button
-						>
+						<div class="flex flex-col">
+							{#if adventure.longitude && adventure.latitude}
+								<a
+									class="btn btn-neutral btn-wide btn-sm mt-4"
+									href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+									target="_blank"
+									rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
+								>
+							{/if}
+							<button
+								class="btn btn-neutral btn-wide btn-sm mt-2"
+								on:click={() => goto(`/adventures/${adventure.id}`)}
+								>{$t('map.view_details')}</button
+							>
+						</div>
 					</Popup>
 				{/if}
 			</Marker>

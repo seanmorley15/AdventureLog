@@ -294,7 +294,8 @@
     "price": "Precio",
     "region": "Región",
     "reservation_number": "Número de reserva",
-    "welcome_map_info": "Aventuras públicas en este servidor"
+    "welcome_map_info": "Aventuras públicas en este servidor",
+    "open_in_maps": "Abrir en mapas"
   },
   "worldtravel": {
     "all": "Todo",

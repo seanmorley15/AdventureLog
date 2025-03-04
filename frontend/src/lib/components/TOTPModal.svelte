@@ -37,7 +37,7 @@
 	}
 
 	async function fetchSetupInfo() {
-		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
+		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
 			method: 'GET'
 		});
 		const data = await res.json();
@@ -53,7 +53,7 @@
 	}
 
 	async function sendTotp() {
-		const res = await fetch('/_allauth/browser/v1/account/authenticators/totp', {
+		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -78,7 +78,7 @@
 
 	async function getRecoveryCodes() {
 		console.log('getting recovery codes');
-		const res = await fetch('/_allauth/browser/v1/account/authenticators/recovery-codes', {
+		const res = await fetch('/auth/browser/v1/account/authenticators/recovery-codes', {
 			method: 'GET'
 		});
 		if (res.ok) {

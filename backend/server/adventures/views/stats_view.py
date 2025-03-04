@@ -14,13 +14,13 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for listing the stats of a user.
     """
-    @action(detail=False, methods=['get'], url_path='counts/(?P<username>[^/]+)')
+    @action(detail=False, methods=['get'], url_path='counts/(?P<username>[\w.@+-]+)')
     def counts(self, request, username):
         if request.user.username == username:
             user = get_object_or_404(User, username=username)
         else:
             user = get_object_or_404(User, username=username, public_profile=True)
-        serializer = PublicUserSerializer(user)
+        # serializer = PublicUserSerializer(user)
         
         # remove the email address from the response
         user.email = None

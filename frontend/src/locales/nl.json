@@ -246,7 +246,8 @@
     "lodging_delete_confirm": "Weet u zeker dat u deze accommodatielocatie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "lodging_information": "Informatie overliggen",
     "price": "Prijs",
-    "region": "Regio"
+    "region": "Regio",
+    "open_in_maps": "Open in kaarten"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -8,7 +8,7 @@ class UserAPITestCase(APITestCase):
     
     def setUp(self):
         # Signup a new user
-        response = self.client.post('/_allauth/browser/v1/auth/signup', {
+        response = self.client.post('/auth/browser/v1/auth/signup', {
             'username': 'testuser',
             'email': 'testuser@example.com',
             'password': 'testpassword',
@@ -63,7 +63,7 @@ class UserAPITestCase(APITestCase):
 
     def test_003_user_add_email(self):
         # Update user email
-        response = self.client.post('/_allauth/browser/v1/account/email', {
+        response = self.client.post('/auth/browser/v1/account/email', {
             'email': 'testuser2@example.com',
         }, format='json')
         self.assertEqual(response.status_code, 200)
