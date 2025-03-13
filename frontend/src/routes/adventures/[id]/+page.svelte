@@ -24,42 +24,51 @@
 
 		// Collect all GPX file attachments
 		if (adventure.attachments && adventure.attachments.length > 0) {
-			adventure.attachments
+			gpxfiles = adventure.attachments
 				.filter((attachment) => attachment.extension === 'gpx')
-				.forEach((attachment) => gpxfiles.push(attachment.file));
+				.map((attachment) => attachment.file);
 		}
 
-		// Initialize a collection GeoJSON object
+		// Initialize the GeoJSON collection
 		geojson = {
 			type: 'FeatureCollection',
 			features: []
 		};
 
-		// Process each GPX file
+		// Process each GPX file concurrently
 		if (gpxfiles.length > 0) {
-			for (const gpxfile of gpxfiles) {
+			const promises = gpxfiles.map(async (gpxfile) => {
 				try {
-					let gpxFileName = gpxfile.split('/').pop();
-					let res = await fetch('/gpx/' + gpxFileName);
+					const gpxFileName = gpxfile.split('/').pop();
+					const res = await fetch('/gpx/' + gpxFileName);
 
 					if (!res.ok) {
 						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
-						continue;
+						return [];
 					}
 
-					let gpxData = await res.text();
-					let parser = new DOMParser();
-					let gpx = parser.parseFromString(gpxData, 'text/xml');
+					const gpxData = await res.text();
+					const parser = new DOMParser();
+					const gpx = parser.parseFromString(gpxData, 'text/xml');
 
-					// Convert GPX to GeoJSON and merge features
-					let convertedGeoJSON = toGeoJSON.gpx(gpx);
-					if (convertedGeoJSON.features) {
-						geojson.features.push(...convertedGeoJSON.features);
-					}
+					// Convert GPX to GeoJSON and return features
+					const convertedGeoJSON = toGeoJSON.gpx(gpx);
+					return convertedGeoJSON.features || [];
 				} catch (error) {
 					console.error(`Error processing GPX file ${gpxfile}:`, error);
+					return [];
 				}
-			}
+			});
+
+			// Use Promise.allSettled to ensure every promise resolves,
+			// even if some requests fail.
+			const results = await Promise.allSettled(promises);
+
+			results.forEach((result) => {
+				if (result.status === 'fulfilled' && result.value.length > 0) {
+					geojson.features.push(...result.value);
+				}
+			});
 		}
 	}
 
