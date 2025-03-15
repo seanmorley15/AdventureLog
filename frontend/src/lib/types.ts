@@ -54,6 +54,7 @@ export type Country = {
 	num_visits: number;
 	longitude: number | null;
 	latitude: number | null;
+	translations: Record<string, string>;
 };
 
 export type Region = {
