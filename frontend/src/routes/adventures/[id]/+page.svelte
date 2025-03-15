@@ -7,7 +7,7 @@
 	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked'; // Import the markdown parser
-
+	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import toGeoJSON from '@mapbox/togeojson';
 
@@ -16,7 +16,7 @@
 	let geojson: any;
 
 	const renderMarkdown = (markdown: string) => {
-		return marked(markdown);
+		return marked(markdown) as string;
 	};
 
 	async function getGpxFiles() {
@@ -369,7 +369,7 @@
 							<article
 								class="prose overflow-auto h-full max-w-full p-4 border border-base-300 rounded-lg"
 							>
-								{@html renderMarkdown(adventure.description)}
+								{@html DOMPurify.sanitize(renderMarkdown(adventure.description))}
 							</article>
 						{/if}
 					</div>

@@ -14,6 +14,57 @@
 
 	let categories: Category[] = [];
 
+	const allowedFileTypes = [
+		'.pdf',
+		'.doc',
+		'.docx',
+		'.xls',
+		'.xlsx',
+		'.ppt',
+		'.pptx',
+		'.txt',
+		'.png',
+		'.jpg',
+		'.jpeg',
+		'.gif',
+		'.webp',
+		'.mp4',
+		'.mov',
+		'.avi',
+		'.mkv',
+		'.mp3',
+		'.wav',
+		'.flac',
+		'.ogg',
+		'.m4a',
+		'.wma',
+		'.aac',
+		'.opus',
+		'.zip',
+		'.rar',
+		'.7z',
+		'.tar',
+		'.gz',
+		'.bz2',
+		'.xz',
+		'.zst',
+		'.lz4',
+		'.lzma',
+		'.lzo',
+		'.z',
+		'.tar.gz',
+		'.tar.bz2',
+		'.tar.xz',
+		'.tar.zst',
+		'.tar.lz4',
+		'.tar.lzma',
+		'.tar.lzo',
+		'.tar.z',
+		'gpx',
+		'md',
+		'pdf'
+	];
+
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 
 	let fileInput: HTMLInputElement;
@@ -783,7 +834,7 @@
 								type="file"
 								id="fileInput"
 								class="file-input file-input-bordered w-full max-w-xs"
-								accept="image/*,video/*,audio/*,application/pdf,.gpx"
+								accept={allowedFileTypes.join(',')}
 								on:change={handleFileChange}
 							/>
 

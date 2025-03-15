@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { marked } from 'marked'; // Import the markdown parser
 	import { t } from 'svelte-i18n';
+	import DOMPurify from 'dompurify'; // Import DOMPurify to sanitize HTML
 
 	export let text: string | null | undefined = ''; // Markdown text
 	export let editor_height: string = 'h-64'; // Editor height
@@ -8,7 +9,7 @@
 
 	// Function to parse markdown to HTML
 	const renderMarkdown = (markdown: string) => {
-		return marked(markdown);
+		return marked(markdown) as string;
 	};
 
 	// References for scroll syncing
@@ -61,7 +62,7 @@
 			class="prose overflow-auto h-96 max-w-full w-full p-4 border border-base-300 rounded-lg bg-base-300"
 			bind:this={previewRef}
 		>
-			{@html renderMarkdown(text || '')}
+			{@html DOMPurify.sanitize(renderMarkdown(text || ''))}
 		</article>
 	{/if}
 </div>
