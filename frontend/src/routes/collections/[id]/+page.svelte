@@ -17,7 +17,7 @@
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import { DefaultMarker, MapLibre, Marker, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
@@ -995,34 +995,15 @@
 						{/if}
 					{/each}
 					{#each transportations as transportation}
-						{#if transportation.destination_latitude && transportation.destination_longitude}
-							<Marker
-								lngLat={{
-									lng: transportation.destination_longitude,
-									lat: transportation.destination_latitude
-								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
-								bg-red-300 text-black focus:outline-6 focus:outline-black"
-							>
-								<span class="text-xl">
-									{getTransportationEmoji(transportation.type)}
-								</span>
-								<Popup openOn="click" offset={[0, -10]}>
-									<div class="text-lg text-black font-bold">{transportation.name}</div>
-									<p class="font-semibold text-black text-md">
-										{transportation.type}
-									</p>
-								</Popup>
-							</Marker>
-						{/if}
-						{#if transportation.origin_latitude && transportation.origin_longitude}
+						{#if transportation.origin_latitude && transportation.origin_longitude && transportation.destination_latitude && transportation.destination_longitude}
+							<!-- Origin Marker -->
 							<Marker
 								lngLat={{
 									lng: transportation.origin_longitude,
 									lat: transportation.origin_latitude
 								}}
 								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
-								bg-green-300 text-black focus:outline-6 focus:outline-black"
+			bg-green-300 text-black focus:outline-6 focus:outline-black"
 							>
 								<span class="text-xl">
 									{getTransportationEmoji(transportation.type)}
@@ -1034,8 +1015,57 @@
 									</p>
 								</Popup>
 							</Marker>
+
+							<!-- Destination Marker -->
+							<Marker
+								lngLat={{
+									lng: transportation.destination_longitude,
+									lat: transportation.destination_latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+			bg-red-300 text-black focus:outline-6 focus:outline-black"
+							>
+								<span class="text-xl">
+									{getTransportationEmoji(transportation.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{transportation.name}</div>
+									<p class="font-semibold text-black text-md">
+										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+
+							<!-- Line connecting origin and destination -->
+							<GeoJSON
+								data={{
+									type: 'Feature',
+									properties: {
+										name: transportation.name,
+										type: transportation.type
+									},
+									geometry: {
+										type: 'LineString',
+										coordinates: [
+											[transportation.origin_longitude, transportation.origin_latitude],
+											[transportation.destination_longitude, transportation.destination_latitude]
+										]
+									}
+								}}
+							>
+								<LineLayer
+									layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+									paint={{
+										'line-width': 3,
+										'line-color': '#898989', // customize your line color here
+										'line-opacity': 0.8
+										// 'line-dasharray': [5, 2]
+									}}
+								/>
+							</GeoJSON>
 						{/if}
 					{/each}
+
 					{#each lodging as hotel}
 						{#if hotel.longitude && hotel.latitude}
 							<Marker
