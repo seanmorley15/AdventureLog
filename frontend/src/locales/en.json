@@ -203,7 +203,7 @@
 		"category_fetch_error": "Error fetching categories",
 		"new_adventure": "New Adventure",
 		"basic_information": "Basic Information",
-		"no_adventures_to_recommendations": "No adventures found. Add at leat one adventure to get recommendations.",
+		"no_adventures_to_recommendations": "No adventures found. Add at least one adventure to get recommendations.",
 		"display_name": "Display Name",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
 		"no_adventures_found": "No adventures found",

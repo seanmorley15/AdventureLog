@@ -29,7 +29,7 @@
 		groupChecklistsByDate,
 		osmTagToEmoji,
 		groupLodgingByDate,
-		ADVENTURE_TYPE_ICONS
+		LODGING_TYPES_ICONS
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -48,8 +48,8 @@
 	};
 
 	function getLodgingIcon(type: string) {
-		if (type in ADVENTURE_TYPE_ICONS) {
-			return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
+		if (type in LODGING_TYPES_ICONS) {
+			return LODGING_TYPES_ICONS[type as keyof typeof LODGING_TYPES_ICONS];
 		} else {
 			return '🏨';
 		}
@@ -613,10 +613,6 @@
 		</div>
 	{/if}
 
-	{#if collection && !collection.start_date && adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
-		<NotFound error={undefined} />
-	{/if}
-
 	{#if collection.description}
 		<div class="flex justify-center mt-4 max-w-screen-lg mx-auto">
 			<article
@@ -1111,7 +1107,7 @@
 					</div>
 					<div class="join flex items-center justify-center mt-4">
 						<input
-							class="join-item btn"
+							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
 							aria-label="Tourism"
@@ -1119,7 +1115,7 @@
 							on:click={() => (recomendationType = 'tourism')}
 						/>
 						<input
-							class="join-item btn"
+							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
 							aria-label="Food"
@@ -1127,7 +1123,7 @@
 							on:click={() => (recomendationType = 'food')}
 						/>
 						<input
-							class="join-item btn"
+							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
 							aria-label="Lodging"
