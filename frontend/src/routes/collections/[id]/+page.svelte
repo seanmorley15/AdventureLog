@@ -28,7 +28,8 @@
 		groupTransportationsByDate,
 		groupChecklistsByDate,
 		osmTagToEmoji,
-		groupLodgingByDate
+		groupLodgingByDate,
+		ADVENTURE_TYPE_ICONS
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -45,6 +46,14 @@
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown);
 	};
+
+	function getLodgingIcon(type: string) {
+		if (type in ADVENTURE_TYPE_ICONS) {
+			return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
+		} else {
+			return '🏨';
+		}
+	}
 
 	let collection: Collection;
 
@@ -1026,6 +1035,28 @@
 									<div class="text-lg text-black font-bold">{transportation.name}</div>
 									<p class="font-semibold text-black text-md">
 										{transportation.type}
+									</p>
+								</Popup>
+							</Marker>
+						{/if}
+					{/each}
+					{#each lodging as hotel}
+						{#if hotel.longitude && hotel.latitude}
+							<Marker
+								lngLat={{
+									lng: hotel.longitude,
+									lat: hotel.latitude
+								}}
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								bg-yellow-300 text-black focus:outline-6 focus:outline-black"
+							>
+								<span class="text-xl">
+									{getLodgingIcon(hotel.type)}
+								</span>
+								<Popup openOn="click" offset={[0, -10]}>
+									<div class="text-lg text-black font-bold">{hotel.name}</div>
+									<p class="font-semibold text-black text-md">
+										{hotel.type}
 									</p>
 								</Popup>
 							</Marker>
