@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Ustawienia te są zarządzane na serwerze AdventureLog i muszą zostać włączone ręcznie przez administratora.",
     "social_oidc_auth": "Uwierzytelnianie społecznościowe i OIDC",
     "add_email": "Dodaj e-mail",
-    "password_too_short": "Hasło musi mieć co najmniej 6 znaków"
+    "password_too_short": "Hasło musi mieć co najmniej 6 znaków",
+    "disable_password": "Wyłącz hasło",
+    "password_disable": "Wyłącz uwierzytelnianie hasła",
+    "password_disable_desc": "Wyłączenie uwierzytelniania hasła uniemożliwia logowanie hasłem. \nAby się zalogować, będziesz musiał użyć dostawcy społeczności lub OIDC. Jeśli dostawca społecznościowy zostanie niezbędny, uwierzytelnianie hasła zostanie automatycznie ponowne odnowione, nawet jeśli to ustawienie zostanie wyłączone.",
+    "password_disable_warning": "Obecnie uwierzytelnianie hasła jest wyłączone. \nWymagane jest zalogowanie się za pośrednictwem dostawcy społeczności lub OIDC.",
+    "password_disabled": "Uwierzytelnianie hasła wyłączone",
+    "password_disabled_error": "Błąd wyłączający uwierzytelnianie hasła. \nUpewnij się, że dostawca społecznościowy lub OIDC jest powiązany z Twoim kontem.",
+    "password_enabled": "Włączone uwierzytelnianie hasła",
+    "password_enabled_error": "Błąd umożliwiający uwierzytelnianie hasła."
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",

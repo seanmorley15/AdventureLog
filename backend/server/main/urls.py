@@ -1,7 +1,7 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView
+from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView, DisablePasswordAuthenticationView
 from .views import get_csrf_token, get_public_url, serve_protected_media
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -28,6 +28,8 @@ urlpatterns = [
     path('auth/user-metadata/', UserMetadataView.as_view(), name='user-metadata'),
 
     path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
+
+    path('auth/disable-password/', DisablePasswordAuthenticationView.as_view(), name='disable-password-authentication'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     path('public-url/', get_public_url, name='get_public_url'),

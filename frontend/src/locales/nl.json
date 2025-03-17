@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Deze instellingen worden beheerd op de AdventureLog-server en moeten handmatig worden ingeschakeld door de beheerder.",
     "social_oidc_auth": "Sociale en OIDC-authenticatie",
     "add_email": "E-mail toevoegen",
-    "password_too_short": "Wachtwoord moet minimaal 6 tekens lang zijn"
+    "password_too_short": "Wachtwoord moet minimaal 6 tekens lang zijn",
+    "disable_password": "Schakel het wachtwoord uit",
+    "password_disable": "Schakel wachtwoordverificatie uit",
+    "password_disable_desc": "Het uitschakelen van wachtwoordverificatie zal voorkomen dat u zich aanmeldt met een wachtwoord. \nU moet een sociale of OIDC-provider gebruiken om in te loggen. Als uw sociale provider niet wordt gekoppeld, wordt wachtwoordverificatie automatisch opnieuw ingeschakeld, zelfs als deze instelling is uitgeschakeld.",
+    "password_disable_warning": "Momenteel is wachtwoordverificatie uitgeschakeld. \nLogin via een sociale of OIDC -provider is vereist.",
+    "password_disabled": "Wachtwoordverificatie uitgeschakeld",
+    "password_disabled_error": "Fout het uitschakelen van wachtwoordverificatie. \nZorg ervoor dat een sociale of OIDC -provider is gekoppeld aan uw account.",
+    "password_enabled": "Wachtwoordverificatie ingeschakeld",
+    "password_enabled_error": "Fout bij het inschakelen van wachtwoordverificatie."
   },
   "checklist": {
     "add_item": "Artikel toevoegen",

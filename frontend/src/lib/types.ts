@@ -9,6 +9,7 @@ export type User = {
 	uuid: string;
 	public_profile: boolean;
 	has_password: boolean;
+	disable_password: boolean;
 };
 
 export type Adventure = {
@@ -63,6 +64,7 @@ export type Region = {
 	latitude: number;
 	longitude: number;
 	num_cities: number;
+	country_name: string;
 };
 
 export type City = {
@@ -71,6 +73,8 @@ export type City = {
 	latitude: number | null;
 	longitude: number | null;
 	region: string;
+	region_name: string;
+	country_name: string;
 };
 
 export type VisitedRegion = {

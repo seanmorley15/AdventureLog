@@ -34,19 +34,23 @@ class CountrySerializer(serializers.ModelSerializer):
 
 class RegionSerializer(serializers.ModelSerializer):
     num_cities = serializers.SerializerMethodField()
+    country_name = serializers.CharField(source='country.name', read_only=True)
     class Meta:
         model = Region
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities']
+        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
 
     def get_num_cities(self, obj):
         return City.objects.filter(region=obj).count()
 
 class CitySerializer(serializers.ModelSerializer):
+    region_name = serializers.CharField(source='region.name', read_only=True)
+    country_name = serializers.CharField(source='region.country.name', read_only=True
+    )
     class Meta:
         model = City
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'region', 'longitude', 'latitude']
+        read_only_fields = ['id', 'name', 'region', 'longitude', 'latitude', 'region_name', 'country_name']
 
 class VisitedRegionSerializer(CustomModelSerializer):
     longitude = serializers.DecimalField(source='region.longitude', max_digits=9, decimal_places=6, read_only=True)

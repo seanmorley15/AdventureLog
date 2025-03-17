@@ -6,8 +6,17 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
+	import { LODGING_TYPES_ICONS } from '$lib';
 
 	const dispatch = createEventDispatcher();
+
+	function getLodgingIcon(type: string) {
+		if (type in LODGING_TYPES_ICONS) {
+			return LODGING_TYPES_ICONS[type as keyof typeof LODGING_TYPES_ICONS];
+		} else {
+			return '🏨';
+		}
+	}
 
 	export let lodging: Lodging;
 	export let user: User | null = null;
@@ -91,7 +100,7 @@
 			<h2 class="card-title text-lg font-semibold truncate">{lodging.name}</h2>
 			<div class="flex items-center gap-2">
 				<div class="badge badge-secondary">
-					{$t(`lodging.${lodging.type}`)}
+					{$t(`lodging.${lodging.type}`) + ' ' + getLodgingIcon(lodging.type)}
 				</div>
 				<!-- {#if hotel.type == 'plane' && hotel.flight_number}
 					<div class="badge badge-neutral-200">{hotel.flight_number}</div>

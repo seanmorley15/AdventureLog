@@ -71,7 +71,7 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('uuid',)
     search_fields = ('username',)
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('profile_pic', 'uuid', 'public_profile')}),
+        (None, {'fields': ('profile_pic', 'uuid', 'public_profile', 'disable_password')}),
     )
     def image_display(self, obj):
         if obj.profile_pic:

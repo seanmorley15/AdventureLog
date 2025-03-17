@@ -324,6 +324,20 @@ export let ADVENTURE_TYPE_ICONS = {
 	other: '❓'
 };
 
+export let LODGING_TYPES_ICONS = {
+	hotel: '🏨',
+	hostel: '🛏️',
+	resort: '🏝️',
+	bnb: '🍳',
+	campground: '🏕️',
+	cabin: '🏚️',
+	apartment: '🏢',
+	house: '🏠',
+	villa: '🏡',
+	motel: '🚗🏨',
+	other: '❓'
+};
+
 export function getAdventureTypeLabel(type: string) {
 	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
 	if (type in ADVENTURE_TYPE_ICONS) {

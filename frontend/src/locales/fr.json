@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Ces paramètres sont gérés sur le serveur AdventureLog et doivent être activés manuellement par l'administrateur.",
     "social_oidc_auth": "Authentification sociale et OIDC",
     "add_email": "Ajouter un e-mail",
-    "password_too_short": "Le mot de passe doit contenir au moins 6 caractères"
+    "password_too_short": "Le mot de passe doit contenir au moins 6 caractères",
+    "disable_password": "Désactiver le mot de passe",
+    "password_disable": "Désactiver l'authentification du mot de passe",
+    "password_disable_desc": "La désactivation de l'authentification du mot de passe vous empêchera de vous connecter avec un mot de passe. \nVous devrez utiliser un fournisseur social ou OIDC pour vous connecter. Si votre fournisseur social est non lié, l'authentification du mot de passe sera automatiquement réactivé même si ce paramètre est désactivé.",
+    "password_disable_warning": "Actuellement, l'authentification du mot de passe est désactivée. \nLa connexion via un fournisseur social ou OIDC est requise.",
+    "password_disabled": "Authentification du mot de passe désactivé",
+    "password_disabled_error": "Erreur de désactivation de l'authentification du mot de passe. \nAssurez-vous qu'un fournisseur social ou OIDC est lié à votre compte.",
+    "password_enabled": "Authentification du mot de passe activé",
+    "password_enabled_error": "Erreur permettant l'authentification du mot de passe."
   },
   "checklist": {
     "add_item": "Ajouter un article",

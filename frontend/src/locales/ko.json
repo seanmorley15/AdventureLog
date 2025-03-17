@@ -514,7 +514,15 @@
     "documentation_link": "문서화 링크",
     "email_set_primary": "기본 이메일 세트로 설정했습니다!",
     "email_set_primary_error": "기본 이메일 설정 오류",
-    "email_taken": "이 이메일 주소는 이미 사용 중입니다."
+    "email_taken": "이 이메일 주소는 이미 사용 중입니다.",
+    "disable_password": "비밀번호를 비활성화합니다",
+    "password_disable": "비밀번호 인증을 비활성화합니다",
+    "password_disable_desc": "비밀번호 인증을 비활성화하면 비밀번호로 로그인하지 못하게됩니다. \n소셜 또는 OIDC 제공 업체를 사용하여 로그인해야합니다. 소셜 제공 업체가 끊어지지 않으면이 설정이 비활성화 된 경우에도 비밀번호 인증이 자동으로 다시 활성화됩니다.",
+    "password_disable_warning": "현재 비밀번호 인증이 비활성화되어 있습니다. \n소셜 또는 OIDC 제공 업체를 통해 로그인해야합니다.",
+    "password_disabled": "비밀번호 인증 비활성화",
+    "password_disabled_error": "비밀번호 인증 오류. \n소셜 또는 OIDC 제공 업체가 귀하의 계정에 연결되어 있는지 확인하십시오.",
+    "password_enabled": "비밀번호 인증 활성화",
+    "password_enabled_error": "비밀번호 인증을 활성화하는 오류."
   },
   "share": {
     "go_to_settings": "설정으로 이동",

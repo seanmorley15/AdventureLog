@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Dessa inställningar hanteras i AdventureLog-servern och måste aktiveras manuellt av administratören.",
     "social_oidc_auth": "Social och OIDC-autentisering",
     "add_email": "Lägg till e-post",
-    "password_too_short": "Lösenordet måste bestå av minst 6 tecken"
+    "password_too_short": "Lösenordet måste bestå av minst 6 tecken",
+    "disable_password": "Inaktivera lösenord",
+    "password_disable": "Inaktivera lösenordsautentisering",
+    "password_disable_desc": "Inaktivering av lösenordsautentisering förhindrar dig att logga in med ett lösenord. \nDu måste använda en social eller OIDC-leverantör för att logga in. Om din sociala leverantör lossnar kommer lösenordsautentisering automatiskt att aktiveras även om den här inställningen är inaktiverad.",
+    "password_disable_warning": "För närvarande är lösenordsautentisering inaktiverad. \nLogga in via en social eller OIDC -leverantör krävs.",
+    "password_disabled": "Lösenordsautentisering inaktiverad",
+    "password_disabled_error": "Fel Inaktivera lösenordsautentisering. \nSe till att en social eller OIDC -leverantör är länkad till ditt konto.",
+    "password_enabled": "Lösenordsautentisering aktiverad",
+    "password_enabled_error": "Fel som aktiverar lösenordsautentisering."
   },
   "checklist": {
     "add_item": "Lägg till objekt",

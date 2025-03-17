@@ -1,4 +1,4 @@
-from collections.abc import Collection
+from django.core.exceptions import ValidationError
 import os
 from typing import Iterable
 import uuid
@@ -10,6 +10,13 @@ from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
 
+def validate_file_extension(value):
+    import os
+    from django.core.exceptions import ValidationError
+    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
+    valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.mov', '.avi', '.mkv', '.mp3', '.wav', '.flac', '.ogg', '.m4a', '.wma', '.aac', '.opus', '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz', '.zst', '.lz4', '.lzma', '.lzo', '.z', '.tar.gz', '.tar.bz2', '.tar.xz', '.tar.zst', '.tar.lz4', '.tar.lzma', '.tar.lzo', '.tar.z', 'gpx', 'md', 'pdf']
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Unsupported file extension.')
 
 ADVENTURE_TYPES = [
     ('general', 'General 🌍'),
@@ -306,7 +313,7 @@ class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    file = models.FileField(upload_to=PathAndRename('attachments/'))
+    file = models.FileField(upload_to=PathAndRename('attachments/'),validators=[validate_file_extension])
     adventure = models.ForeignKey(Adventure, related_name='attachments', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True, blank=True)
 

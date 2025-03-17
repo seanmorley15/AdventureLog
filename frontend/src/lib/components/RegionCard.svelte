@@ -56,10 +56,13 @@
 		<h2 class="card-title overflow-ellipsis">{region.name}</h2>
 		<div>
 			<div class="badge badge-primary">
-				<p>{region.id}</p>
+				<p>{region.country_name}</p>
 			</div>
 			<div class="badge badge-neutral-300">
 				<p>{region.num_cities} {$t('worldtravel.cities')}</p>
+			</div>
+			<div class="badge badge-neutral-300">
+				<p>{region.id}</p>
 			</div>
 		</div>
 		<div class="card-actions justify-end">
