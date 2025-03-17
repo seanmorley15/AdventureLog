@@ -46,7 +46,7 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{city.name}</h2>
 		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-neutral-300">
+			<div class="badge badge-primary">
 				{city.region_name}, {city.country_name}
 			</div>
 			<div class="badge badge-neutral-300">{city.region}</div>

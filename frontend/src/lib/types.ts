@@ -64,6 +64,7 @@ export type Region = {
 	latitude: number;
 	longitude: number;
 	num_cities: number;
+	country_name: string;
 };
 
 export type City = {
