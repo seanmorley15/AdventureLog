@@ -72,6 +72,8 @@ export type City = {
 	latitude: number | null;
 	longitude: number | null;
 	region: string;
+	region_name: string;
+	country_name: string;
 };
 
 export type VisitedRegion = {

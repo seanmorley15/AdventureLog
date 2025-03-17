@@ -100,6 +100,7 @@
 				addToast('success', $t('settings.password_disabled'));
 			} else {
 				addToast('error', $t('settings.password_disabled_error'));
+				user.disable_password = false;
 			}
 		} else {
 			let res = await fetch('/auth/disable-password/', {
@@ -112,6 +113,7 @@
 				addToast('success', $t('settings.password_enabled'));
 			} else {
 				addToast('error', $t('settings.password_enabled_error'));
+				user.disable_password = true;
 			}
 		}
 	}
@@ -520,37 +522,40 @@
 				target="_blank">{$t('settings.launch_account_connections')}</a
 			>
 
-			<div class="mt-8">
-				<h2 class="text-2xl font-semibold text-center">{$t('settings.password_disable')}</h2>
-				<p>{$t('settings.password_disable_desc')}</p>
+			{#if data.props.socialProviders && data.props.socialProviders.length > 0}
+				<div class="mt-8">
+					<h2 class="text-2xl font-semibold text-center">{$t('settings.password_disable')}</h2>
+					<p>{$t('settings.password_disable_desc')}</p>
 
-				<div class="flex flex-col items-center mt-4">
-					<input
-						type="checkbox"
-						id="disable_password"
-						name="disable_password"
-						bind:checked={user.disable_password}
-						class="checkbox checkbox-primary"
-					/>
-					<label for="disable_password" class="ml-2 text-sm text-neutral-content"
-						>{$t('settings.disable_password')}</label
-					>
-					<button class="btn btn-primary mt-4" on:click={disablePassword}
-						>{$t('settings.update')}</button
-					>
-					{#if user.disable_password}
-						<div class="badge badge-error mt-2">{$t('settings.password_disabled')}</div>
-					{/if}
-					{#if !user.disable_password}
-						<div class="badge badge-success mt-2">{$t('settings.password_enabled')}</div>
-					{/if}
-					{#if user.disable_password}
-						<div class="alert alert-warning mt-4">
-							{$t('settings.password_disable_warning')}
-						</div>
-					{/if}
+					<div class="flex flex-col items-center mt-4">
+						<input
+							type="checkbox"
+							id="disable_password"
+							name="disable_password"
+							bind:checked={user.disable_password}
+							class="toggle toggle-primary"
+							on:change={disablePassword}
+						/>
+						<label for="disable_password" class="ml-2 text-sm text-neutral-content"
+							>{$t('settings.disable_password')}</label
+						>
+						<!-- <button class="btn btn-primary mt-4" on:click={disablePassword}
+							>{$t('settings.update')}</button
+						> -->
+						{#if user.disable_password}
+							<div class="badge badge-error mt-2">{$t('settings.password_disabled')}</div>
+						{/if}
+						{#if !user.disable_password}
+							<div class="badge badge-success mt-2">{$t('settings.password_enabled')}</div>
+						{/if}
+						{#if user.disable_password}
+							<div class="alert alert-warning mt-4">
+								{$t('settings.password_disable_warning')}
+							</div>
+						{/if}
+					</div>
 				</div>
-			</div>
+			{/if}
 		</div>
 	</section>
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
 	import type { City } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
@@ -45,7 +46,10 @@
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{city.name}</h2>
 		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-neutral-300">{city.id}</div>
+			<div class="badge badge-neutral-300">
+				{city.region_name}, {city.country_name}
+			</div>
+			<div class="badge badge-neutral-300">{city.region}</div>
 		</div>
 		<div class="card-actions justify-end">
 			{#if !visited}

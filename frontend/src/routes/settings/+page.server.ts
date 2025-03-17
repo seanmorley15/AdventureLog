@@ -63,6 +63,13 @@ export const load: PageServerLoad = async (event) => {
 		immichIntegration = await immichIntegrationsFetch.json();
 	}
 
+	let socialProvidersFetch = await fetch(`${endpoint}/auth/social-providers`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	let socialProviders = await socialProvidersFetch.json();
+
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
 	if (!publicUrlFetch.ok) {
@@ -78,7 +85,8 @@ export const load: PageServerLoad = async (event) => {
 			emails,
 			authenticators,
 			immichIntegration,
-			publicUrl
+			publicUrl,
+			socialProviders
 		}
 	};
 };
