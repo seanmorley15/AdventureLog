@@ -13,6 +13,7 @@ from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
 from allauth.socialaccount.models import SocialApp
 from adventures.serializers import AdventureSerializer, CollectionSerializer
 from adventures.models import Adventure, Collection
+from allauth.socialaccount.models import SocialAccount
 
 User = get_user_model()
 
@@ -172,3 +173,34 @@ class EnabledSocialProvidersView(APIView):
                 'name': provider.name
             })
         return Response(providers, status=status.HTTP_200_OK)
+    
+
+class DisablePasswordAuthenticationView(APIView):
+    """
+    Disable password authentication for a user. This is used when a user signs up with a social provider.
+    """
+
+# Allows the user to set the disable_password field to True if they have a social account linked
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Password authentication disabled'),
+            400: 'Bad Request'
+        },
+        operation_description="Disable password authentication."
+    )
+    def post(self, request):
+        user = request.user
+        if SocialAccount.objects.filter(user=user).exists():
+            user.disable_password = True
+            user.save()
+            return Response({"detail": "Password authentication disabled."}, status=status.HTTP_200_OK)
+        return Response({"detail": "No social account linked."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        user.disable_password = False
+        user.save()
+        return Response({"detail": "Password authentication enabled."}, status=status.HTTP_200_OK)
+    

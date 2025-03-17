@@ -9,6 +9,7 @@ export type User = {
 	uuid: string;
 	public_profile: boolean;
 	has_password: boolean;
+	disable_password: boolean;
 };
 
 export type Adventure = {

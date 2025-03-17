@@ -64,9 +64,11 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('date_joined')
         if hasattr(UserModel, 'is_staff'):
             extra_fields.append('is_staff')
+        if hasattr(UserModel, 'disable_password'):
+            extra_fields.append('disable_password')
 
         fields = ['pk', *extra_fields]
-        read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk')
+        read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk', 'disable_password')
 
     def handle_public_profile_change(self, instance, validated_data):
         """
@@ -95,7 +97,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
         fields = UserDetailsSerializer.Meta.fields + ['profile_pic', 'uuid', 'public_profile', 'has_password']
-        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password')
+        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password', 'disable_password')
 
     @staticmethod
     def get_has_password(instance):

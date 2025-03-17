@@ -428,7 +428,15 @@
 		"documentation_link": "Documentation Link",
 		"launch_account_connections": "Launch Account Connections",
 		"password_too_short": "Password must be at least 6 characters",
-		"add_email": "Add Email"
+		"add_email": "Add Email",
+		"password_disable": "Disable Password Authentication",
+		"password_disable_desc": "Disabling password authentication will prevent you from logging in with a password. You will need to use a social or OIDC provider to log in. Should your social provider be unlinked, password authentication will be automatically re-enabled even if this setting is disabled.",
+		"disable_password": "Disable Password",
+		"password_enabled": "Password authentication enabled",
+		"password_disabled": "Password authentication disabled",
+		"password_disable_warning": "Currently, password authentication is disabled. Login via a social or OIDC provider is required.",
+		"password_disabled_error": "Error disabling password authentication. Make sure a social or OIDC provider is linked to your account.",
+		"password_enabled_error": "Error enabling password authentication."
 	},
 	"collection": {
 		"collection_created": "Collection created successfully!",

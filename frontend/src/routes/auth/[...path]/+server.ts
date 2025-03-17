@@ -6,7 +6,7 @@ import { json } from '@sveltejs/kit';
 /** @type {import('./$types').RequestHandler} */
 export async function GET(event) {
 	const { url, params, request, fetch, cookies } = event;
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
+	const searchParam = url.search ? `${url.search}` : '';
 	return handleRequest(url, params, request, fetch, cookies, searchParam);
 }
 
@@ -17,13 +17,13 @@ export async function POST({ url, params, request, fetch, cookies }) {
 }
 
 export async function PATCH({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function PUT({ url, params, request, fetch, cookies }) {
-	const searchParam = url.search ? `${url.search}&format=json` : '?format=json';
-	return handleRequest(url, params, request, fetch, cookies, searchParam, true);
+	const searchParam = url.search ? `${url.search}` : '';
+	return handleRequest(url, params, request, fetch, cookies, searchParam, false);
 }
 
 export async function DELETE({ url, params, request, fetch, cookies }) {
@@ -43,13 +43,15 @@ async function handleRequest(
 	const path = params.path;
 	let targetUrl = `${endpoint}/auth/${path}`;
 
+	const add_trailing_slash_list = ['disable-password'];
+
 	// Ensure the path ends with a trailing slash
-	if (requreTrailingSlash && !targetUrl.endsWith('/')) {
+	if ((requreTrailingSlash && !targetUrl.endsWith('/')) || add_trailing_slash_list.includes(path)) {
 		targetUrl += '/';
 	}
 
 	// Append query parameters to the path correctly
-	targetUrl += searchParam; // This will add ?format=json or &format=json to the URL
+	targetUrl += searchParam; // This will add  or  to the URL
 
 	const headers = new Headers(request.headers);
 

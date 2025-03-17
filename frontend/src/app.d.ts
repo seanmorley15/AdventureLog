@@ -16,6 +16,7 @@ declare global {
 				uuid: string;
 				public_profile: boolean;
 				has_password: boolean;
+				disable_password: boolean;
 			} | null;
 			locale: string;
 		}

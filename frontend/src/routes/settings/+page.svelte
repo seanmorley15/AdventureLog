@@ -9,7 +9,6 @@
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import { appTitle, appVersion } from '$lib/config.js';
 	import ImmichLogo from '$lib/assets/immich.svg';
-	import { goto } from '$app/navigation';
 
 	export let data;
 	console.log(data);
@@ -19,6 +18,8 @@
 		user = data.user;
 		emails = data.props.emails;
 	}
+
+	let new_password_disable_setting: boolean = false;
 
 	let new_email: string = '';
 	let public_url: string = data.props.publicUrl;
@@ -87,8 +88,36 @@
 		}
 	}
 
+	async function disablePassword() {
+		if (user.disable_password) {
+			let res = await fetch('/auth/disable-password/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (res.ok) {
+				addToast('success', $t('settings.password_disabled'));
+			} else {
+				addToast('error', $t('settings.password_disabled_error'));
+			}
+		} else {
+			let res = await fetch('/auth/disable-password/', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (res.ok) {
+				addToast('success', $t('settings.password_enabled'));
+			} else {
+				addToast('error', $t('settings.password_enabled_error'));
+			}
+		}
+	}
+
 	async function verifyEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/auth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email', {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json'
@@ -103,7 +132,7 @@
 	}
 
 	async function addEmail() {
-		let res = await fetch('/auth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
@@ -122,7 +151,7 @@
 	}
 
 	async function primaryEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/auth/browser/v1/account/email/', {
+		let res = await fetch('/auth/browser/v1/account/email', {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -490,6 +519,38 @@
 				href={`${public_url}/accounts/social/connections/`}
 				target="_blank">{$t('settings.launch_account_connections')}</a
 			>
+
+			<div class="mt-8">
+				<h2 class="text-2xl font-semibold text-center">{$t('settings.password_disable')}</h2>
+				<p>{$t('settings.password_disable_desc')}</p>
+
+				<div class="flex flex-col items-center mt-4">
+					<input
+						type="checkbox"
+						id="disable_password"
+						name="disable_password"
+						bind:checked={user.disable_password}
+						class="checkbox checkbox-primary"
+					/>
+					<label for="disable_password" class="ml-2 text-sm text-neutral-content"
+						>{$t('settings.disable_password')}</label
+					>
+					<button class="btn btn-primary mt-4" on:click={disablePassword}
+						>{$t('settings.update')}</button
+					>
+					{#if user.disable_password}
+						<div class="badge badge-error mt-2">{$t('settings.password_disabled')}</div>
+					{/if}
+					{#if !user.disable_password}
+						<div class="badge badge-success mt-2">{$t('settings.password_enabled')}</div>
+					{/if}
+					{#if user.disable_password}
+						<div class="alert alert-warning mt-4">
+							{$t('settings.password_disable_warning')}
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
 	</section>
 

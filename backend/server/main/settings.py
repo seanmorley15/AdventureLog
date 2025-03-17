@@ -227,6 +227,10 @@ HEADLESS_FRONTEND_URLS = {
     "socialaccount_login_error": f"{FRONTEND_URL}/account/provider/callback",
 }
 
+AUTHENTICATION_BACKENDS = [
+    'users.backends.NoPasswordAuthBackend',
+]
+
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
