@@ -20,7 +20,7 @@
 			filteredCities = allCities;
 		} else {
 			// otherwise, filter countries by name
-			filteredCities = filteredCities.filter((country) =>
+			filteredCities = allCities.filter((country) =>
 				country.name.toLowerCase().includes(searchQuery.toLowerCase())
 			);
 		}
@@ -97,74 +97,7 @@
 	</div>
 </div>
 
-<!-- <div class="flex items-center justify-center mb-4">
-	<div class="join">
-		<input
-			class="join-item btn"
-			type="radio"
-			name="filter"
-			aria-label={$t('worldtravel.all')}
-			checked
-			on:click={() => (filterOption = 'all')}
-		/>
-		<input
-			class="join-item btn"
-			type="radio"
-			name="filter"
-			aria-label={$t('worldtravel.partially_visited')}
-			on:click={() => (filterOption = 'partial')}
-		/>
-		<input
-			class="join-item btn"
-			type="radio"
-			name="filter"
-			aria-label={$t('worldtravel.completely_visited')}
-			on:click={() => (filterOption = 'complete')}
-		/>
-		<input
-			class="join-item btn"
-			type="radio"
-			name="filter"
-			aria-label={$t('worldtravel.not_visited')}
-			on:click={() => (filterOption = 'not')}
-		/>
-	</div>
-	<select class="select select-bordered w-full max-w-xs ml-4" bind:value={subRegionOption}>
-		<option value="">{$t('worldtravel.all_subregions')}</option>
-		{#each worldSubregions as subregion}
-			<option value={subregion}>{subregion}</option>
-		{/each}
-	</select>
-
-	<div class="flex items-center justify-center ml-4">
-		<input
-			type="checkbox"
-			class="checkbox checkbox-bordered"
-			bind:checked={showMap}
-			aria-label={$t('adventures.show_map')}
-		/>
-		<span class="ml-2">{$t('adventures.show_map')}</span>
-	</div>
-</div> -->
-
 {#if allCities.length > 0}
-	<div class="flex items-center justify-center mb-4">
-		<input
-			type="text"
-			placeholder={$t('navbar.search')}
-			class="input input-bordered w-full max-w-xs"
-			bind:value={searchQuery}
-		/>
-		{#if searchQuery.length > 0}
-			<!-- clear button -->
-			<div class="flex items-center justify-center ml-4">
-				<button class="btn btn-neutral" on:click={() => (searchQuery = '')}>
-					{$t('worldtravel.clear_search')}
-				</button>
-			</div>
-		{/if}
-	</div>
-
 	<div class="mt-4 mb-4 flex justify-center">
 		<!-- checkbox to toggle marker -->
 
@@ -197,6 +130,23 @@
 		</MapLibre>
 	</div>
 {/if}
+
+<div class="flex items-center justify-center mb-4">
+	<input
+		type="text"
+		placeholder={$t('navbar.search')}
+		class="input input-bordered w-full max-w-xs"
+		bind:value={searchQuery}
+	/>
+	{#if searchQuery.length > 0}
+		<!-- clear button -->
+		<div class="flex items-center justify-center ml-4">
+			<button class="btn btn-neutral" on:click={() => (searchQuery = '')}>
+				{$t('worldtravel.clear_search')}
+			</button>
+		</div>
+	{/if}
+</div>
 
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
 	{#each filteredCities as city}

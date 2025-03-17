@@ -10,6 +10,21 @@
 	let regions: Region[] = data.props?.regions || [];
 	let visitedRegions: VisitedRegion[] = data.props?.visitedRegions || [];
 
+	let filteredRegions: Region[] = [];
+
+	let searchQuery: string = '';
+
+	$: {
+		if (searchQuery === '') {
+			filteredRegions = regions;
+		} else {
+			// always filter from the original regions list
+			filteredRegions = regions.filter((region) =>
+				region.name.toLowerCase().includes(searchQuery.toLowerCase())
+			);
+		}
+	}
+
 	const country = data.props?.country || null;
 	console.log(data);
 
@@ -88,8 +103,25 @@
 	</div>
 </div>
 
+<div class="flex items-center justify-center mb-4">
+	<input
+		type="text"
+		placeholder={$t('navbar.search')}
+		class="input input-bordered w-full max-w-xs"
+		bind:value={searchQuery}
+	/>
+	{#if searchQuery.length > 0}
+		<!-- clear button -->
+		<div class="flex items-center justify-center ml-4">
+			<button class="btn btn-neutral" on:click={() => (searchQuery = '')}>
+				{$t('worldtravel.clear_search')}
+			</button>
+		</div>
+	{/if}
+</div>
+
 <div class="flex flex-wrap gap-4 mr-4 ml-4 justify-center content-center">
-	{#each regions as region}
+	{#each filteredRegions as region}
 		<RegionCard
 			{region}
 			visited={visitedRegions.some((visitedRegion) => visitedRegion.region === region.id)}
