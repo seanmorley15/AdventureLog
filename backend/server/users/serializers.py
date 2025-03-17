@@ -96,7 +96,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ['profile_pic', 'uuid', 'public_profile', 'has_password']
+        fields = UserDetailsSerializer.Meta.fields + ['profile_pic', 'uuid', 'public_profile', 'has_password', 'disable_password']
         read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password', 'disable_password')
 
     @staticmethod
@@ -122,5 +122,5 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         representation.pop('pk', None)
         # Remove the email field
         representation.pop('email', None)
-
+        
         return representation

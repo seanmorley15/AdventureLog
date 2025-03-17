@@ -72,6 +72,7 @@ class PublicUserListView(APIView):
         # for every user, remove the field has_password
         for user in serializer.data:
             user.pop('has_password', None)
+            user.pop('disable_password', None)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PublicUserDetailView(APIView):
