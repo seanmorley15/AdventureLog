@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Diese Einstellungen werden auf dem AdventureLog-Server verwaltet und müssen vom Administrator manuell aktiviert werden.",
     "social_oidc_auth": "Soziale und OIDC-Authentifizierung",
     "add_email": "E-Mail hinzufügen",
-    "password_too_short": "Das Passwort muss mindestens 6 Zeichen lang sein"
+    "password_too_short": "Das Passwort muss mindestens 6 Zeichen lang sein",
+    "disable_password": "Passwort deaktivieren",
+    "password_disable": "Deaktivieren Sie die Passwortauthentifizierung",
+    "password_disable_desc": "Durch Deaktivieren der Kennwortauthentifizierung werden Sie daran hindern, sich mit einem Kennwort anzumelden. \nSie müssen einen sozialen oder OIDC-Anbieter verwenden, um sich anzumelden. Sollte Ihr sozialer Anbieter nicht verknüpft werden, wird die Kennwortauthentifizierung automatisch wieder aufgenommen, auch wenn diese Einstellung deaktiviert ist.",
+    "password_disable_warning": "Derzeit ist die Kennwortauthentifizierung deaktiviert. \nAnmelden Sie über einen sozialen oder OIDC -Anbieter erforderlich.",
+    "password_disabled": "Kennwortauthentifizierung deaktiviert",
+    "password_disabled_error": "Fehler beim Deaktivieren der Kennwortauthentifizierung. \nStellen Sie sicher, dass ein sozialer oder OIDC -Anbieter mit Ihrem Konto verknüpft ist.",
+    "password_enabled": "Kennwortauthentifizierung aktiviert",
+    "password_enabled_error": "Fehler zur Kennwortauthentifizierung."
   },
   "checklist": {
     "add_item": "Eintrag hinzufügen",

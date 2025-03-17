@@ -428,7 +428,15 @@
     "social_auth_desc_2": "Estas configuraciones se administran en el servidor AdventureLog y el administrador debe habilitarlas manualmente.",
     "social_oidc_auth": "Autenticación social y OIDC",
     "add_email": "Agregar correo electrónico",
-    "password_too_short": "La contraseña debe tener al menos 6 caracteres."
+    "password_too_short": "La contraseña debe tener al menos 6 caracteres.",
+    "disable_password": "Desactivar contraseña",
+    "password_disable": "Desactivar la autenticación de contraseña",
+    "password_disable_desc": "Desactivar la autenticación de contraseña le impedirá iniciar sesión con una contraseña. \nDeberá utilizar un proveedor social o OIDC para iniciar sesión. Si su proveedor social no está vinculado, la autenticación de contraseña se volverá a habilitar automáticamente incluso si esta configuración está deshabilitada.",
+    "password_disable_warning": "Actualmente, la autenticación de contraseña está deshabilitada. \nIniciar sesión a través de un proveedor social o OIDC se requiere.",
+    "password_disabled": "Autenticación de contraseña deshabilitada",
+    "password_disabled_error": "Error a deshabilitar la autenticación de contraseña. \nAsegúrese de que un proveedor social o OIDC esté vinculado a su cuenta.",
+    "password_enabled": "Autenticación de contraseña habilitada",
+    "password_enabled_error": "Error al habilitar la autenticación de contraseña."
   },
   "checklist": {
     "add_item": "Agregar artículo",
