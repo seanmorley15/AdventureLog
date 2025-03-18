@@ -136,6 +136,66 @@
 
 	let adventures: Adventure[] = [];
 
+	// Add this after your existing MapLibre markers
+
+	// Add this after your existing MapLibre markers
+
+	// Create line data from orderedItems
+	$: lineData = createLineData(orderedItems);
+
+	// Function to create GeoJSON line data from ordered items
+	function createLineData(
+		items: Array<{
+			item: Adventure | Transportation | Lodging | Note | Checklist;
+			start: string;
+			end: string;
+		}>
+	) {
+		if (items.length < 2) return null;
+
+		const coordinates: [number, number][] = [];
+
+		// Extract coordinates from each item
+		for (const orderItem of items) {
+			const item = orderItem.item;
+
+			if (
+				'origin_longitude' in item &&
+				'origin_latitude' in item &&
+				'destination_longitude' in item &&
+				'destination_latitude' in item &&
+				item.origin_longitude &&
+				item.origin_latitude &&
+				item.destination_longitude &&
+				item.destination_latitude
+			) {
+				// For Transportation, add both origin and destination points
+				coordinates.push([item.origin_longitude, item.origin_latitude]);
+				coordinates.push([item.destination_longitude, item.destination_latitude]);
+			} else if ('longitude' in item && 'latitude' in item && item.longitude && item.latitude) {
+				// Handle Adventure and Lodging types
+				coordinates.push([item.longitude, item.latitude]);
+			}
+		}
+
+		// Only create line data if we have at least 2 coordinates
+		if (coordinates.length >= 2) {
+			return {
+				type: 'Feature' as const,
+				properties: {
+					name: 'Itinerary Path',
+					description: 'Path connecting chronological items'
+				},
+				geometry: {
+					type: 'LineString' as const,
+					coordinates: coordinates
+				}
+			};
+		}
+
+		return null;
+	}
+
 	let numVisited: number = 0;
 	let numAdventures: number = 0;
 
@@ -167,6 +227,63 @@
 			default:
 				return '🚀';
 		}
+	}
+
+	let orderedItems: Array<{
+		item: Adventure | Transportation | Lodging;
+		type: 'adventure' | 'transportation' | 'lodging';
+		start: string; // ISO date string
+		end: string; // ISO date string
+	}> = [];
+
+	$: {
+		// Reset ordered items
+		orderedItems = [];
+
+		// Add Adventures (using visit dates)
+		adventures.forEach((adventure) => {
+			adventure.visits.forEach((visit) => {
+				orderedItems.push({
+					item: adventure,
+					start: visit.start_date,
+					end: visit.end_date,
+					type: 'adventure'
+				});
+			});
+		});
+
+		// Add Transportation
+		transportations.forEach((transport) => {
+			if (transport.date) {
+				// Only add if date exists
+				orderedItems.push({
+					item: transport,
+					start: transport.date,
+					end: transport.end_date || transport.date, // Use end_date if available, otherwise use date,
+					type: 'transportation'
+				});
+			}
+		});
+
+		// Add Lodging
+		lodging.forEach((lodging) => {
+			if (lodging.check_in) {
+				// Only add if check_in exists
+				orderedItems.push({
+					item: lodging,
+					start: lodging.check_in,
+					end: lodging.check_out || lodging.check_in, // Use check_out if available, otherwise use check_in,
+					type: 'lodging'
+				});
+			}
+		});
+
+		// Sort all items chronologically by start date
+		orderedItems.sort((a, b) => {
+			const dateA = new Date(a.start).getTime();
+			const dateB = new Date(b.start).getTime();
+			return dateA - dateB;
+		});
 	}
 
 	$: {
@@ -994,6 +1111,19 @@
 							</Marker>
 						{/if}
 					{/each}
+					{#if lineData}
+						<GeoJSON data={lineData}>
+							<LineLayer
+								layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+								paint={{
+									'line-width': 4,
+									'line-color': '#0088CC', // Blue line to distinguish from transportation lines
+									'line-opacity': 0.8,
+									'line-dasharray': [2, 1] // Dashed line to differentiate from direct transportation lines
+								}}
+							/>
+						</GeoJSON>
+					{/if}
 					{#each transportations as transportation}
 						{#if transportation.origin_latitude && transportation.origin_longitude && transportation.destination_latitude && transportation.destination_longitude}
 							<!-- Origin Marker -->
@@ -1035,34 +1165,6 @@
 									</p>
 								</Popup>
 							</Marker>
-
-							<!-- Line connecting origin and destination -->
-							<GeoJSON
-								data={{
-									type: 'Feature',
-									properties: {
-										name: transportation.name,
-										type: transportation.type
-									},
-									geometry: {
-										type: 'LineString',
-										coordinates: [
-											[transportation.origin_longitude, transportation.origin_latitude],
-											[transportation.destination_longitude, transportation.destination_latitude]
-										]
-									}
-								}}
-							>
-								<LineLayer
-									layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-									paint={{
-										'line-width': 3,
-										'line-color': '#898989', // customize your line color here
-										'line-opacity': 0.8
-										// 'line-dasharray': [5, 2]
-									}}
-								/>
-							</GeoJSON>
 						{/if}
 					{/each}
 
@@ -1285,6 +1387,43 @@
 		</div>
 	{/if}
 {/if}
+
+{#each orderedItems as orderedItem}
+	<p>{orderedItem.type}</p>
+	{#if orderedItem.type === 'adventure'}
+		{#if orderedItem.item && 'images' in orderedItem.item}
+			<AdventureCard
+				user={data.user}
+				on:edit={editAdventure}
+				on:delete={deleteAdventure}
+				adventure={orderedItem.item}
+				{collection}
+			/>
+		{/if}
+	{/if}
+	{#if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
+		<TransportationCard
+			transportation={orderedItem.item}
+			user={data?.user}
+			on:delete={(event) => {
+				transportations = transportations.filter((t) => t.id != event.detail);
+			}}
+			on:edit={editTransportation}
+			{collection}
+		/>
+	{/if}
+	{#if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
+		<LodgingCard
+			lodging={orderedItem.item}
+			user={data?.user}
+			on:delete={(event) => {
+				lodging = lodging.filter((t) => t.id != event.detail);
+			}}
+			on:edit={editLodging}
+			{collection}
+		/>
+	{/if}
+{/each}
 
 <svelte:head>
 	<title
