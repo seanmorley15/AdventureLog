@@ -91,6 +91,7 @@
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
+	import { isAllDay } from '$lib';
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -410,23 +411,33 @@
 										</p>
 										<!-- show each visit start and end date as well as notes -->
 										{#each adventure.visits as visit}
-											<div class="grid gap-2">
-												<p class="text-sm text-muted-foreground">
-													{visit.start_date
-														? new Date(visit.start_date).toLocaleDateString(undefined, {
+											<div class="flex flex-col gap-2">
+												<div class="flex gap-2 items-center">
+													<p>
+														{#if isAllDay(visit.start_date)}
+															<!-- For all-day events, show just the date -->
+															{new Date(visit.start_date).toLocaleDateString(undefined, {
 																timeZone: 'UTC'
-															})
-														: ''}
-													{visit.end_date &&
-													visit.end_date !== '' &&
-													visit.end_date !== visit.start_date
-														? ' - ' +
-															new Date(visit.end_date).toLocaleDateString(undefined, {
+															})}
+														{:else}
+															<!-- For timed events, show date and time -->
+															{new Date(visit.start_date).toLocaleDateString()} ({new Date(
+																visit.start_date
+															).toLocaleTimeString()})
+														{/if}
+													</p>
+													{#if visit.end_date && visit.end_date !== visit.start_date}
+														<p>
+															- {new Date(visit.end_date).toLocaleDateString(undefined, {
 																timeZone: 'UTC'
-															})
-														: ''}
-												</p>
-												<p class="text-sm text-muted-foreground -mt-2 mb-2">{visit.notes}</p>
+															})}
+															{#if !isAllDay(visit.end_date)}
+																({new Date(visit.end_date).toLocaleTimeString()})
+															{/if}
+														</p>
+													{/if}
+												</div>
+												<p class="whitespace-pre-wrap -mt-2 mb-2">{visit.notes}</p>
 											</div>
 										{/each}
 									</div>
