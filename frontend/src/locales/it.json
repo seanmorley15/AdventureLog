@@ -247,7 +247,8 @@
     "region": "Regione",
     "welcome_map_info": "Avventure pubbliche su questo server",
     "reservation_number": "Numero di prenotazione",
-    "open_in_maps": "Aperto in mappe"
+    "open_in_maps": "Aperto in mappe",
+    "all_day": "Tutto il giorno"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

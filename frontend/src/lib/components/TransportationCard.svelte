@@ -7,7 +7,15 @@
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
+	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
 
+	function getTransportationIcon(type: string) {
+		if (type in TRANSPORTATION_TYPES_ICONS) {
+			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
+		} else {
+			return '🚗';
+		}
+	}
 	const dispatch = createEventDispatcher();
 
 	export let transportation: Transportation;
@@ -106,7 +114,9 @@
 			<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
 			<div class="flex items-center gap-2">
 				<div class="badge badge-secondary">
-					{$t(`transportation.modes.${transportation.type}`)}
+					{$t(`transportation.modes.${transportation.type}`) +
+						' ' +
+						getTransportationIcon(transportation.type)}
 				</div>
 				{#if transportation.type == 'plane' && transportation.flight_number}
 					<div class="badge badge-neutral-200">{transportation.flight_number}</div>
@@ -128,7 +138,7 @@
 			{#if transportation.date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+					<p>{new Date(transportation.date).toLocaleString()}</p>
 				</div>
 			{/if}
 		</div>
@@ -146,7 +156,7 @@
 			{#if transportation.end_date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
-					<p>{new Date(transportation.end_date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+					<p>{new Date(transportation.end_date).toLocaleString()}</p>
 				</div>
 			{/if}
 		</div>

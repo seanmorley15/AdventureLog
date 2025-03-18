@@ -295,7 +295,8 @@
     "lodging_information": "住宿信息",
     "price": "价格",
     "reservation_number": "预订号",
-    "open_in_maps": "在地图上打开"
+    "open_in_maps": "在地图上打开",
+    "all_day": "整天"
   },
   "auth": {
     "forgot_password": "忘记密码？",

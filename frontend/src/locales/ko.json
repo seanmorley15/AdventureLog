@@ -247,7 +247,8 @@
     "region": "지역",
     "reservation_number": "예약 번호",
     "welcome_map_info": "이 서버의 공개 모험",
-    "open_in_maps": "지도에서 열립니다"
+    "open_in_maps": "지도에서 열립니다",
+    "all_day": "하루 종일"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

@@ -338,6 +338,17 @@ export let LODGING_TYPES_ICONS = {
 	other: '❓'
 };
 
+export let TRANSPORTATION_TYPES_ICONS = {
+	car: '🚗',
+	plane: '✈️',
+	train: '🚆',
+	bus: '🚌',
+	boat: '⛵',
+	bike: '🚲',
+	walking: '🚶',
+	other: '❓'
+};
+
 // Helper to check if a given date string represents midnight (all-day)
 export function isAllDay(dateStr: string | string[]) {
 	// Checks for the pattern "T00:00:00.000Z"

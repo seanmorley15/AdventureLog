@@ -8,7 +8,7 @@
 
 	let fullStartDate: string = '';
 	let fullEndDate: string = '';
-	let allDay: boolean = false;
+	let allDay: boolean = true;
 
 	// Set full start and end dates from collection
 	if (collection && collection.start_date && collection.end_date) {
@@ -698,13 +698,13 @@
 										on:change={() => (constrainDates = !constrainDates)}
 									/>
 								{/if}
-								<span class="label-text">All Day</span>
+								<span class="label-text">{$t('adventures.all_day')}</span>
 								<input
 									type="checkbox"
 									class="toggle toggle-primary"
 									id="constrain_dates"
 									name="constrain_dates"
-									on:change={() => (allDay = !allDay)}
+									bind:checked={allDay}
 								/>
 							</label>
 							<div class="flex gap-2 mb-1">
@@ -782,30 +782,31 @@
 									}}
 								></textarea>
 							</div>
-
-							<div role="alert" class="alert shadow-lg bg-neutral mt-2 mb-2">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									fill="none"
-									viewBox="0 0 24 24"
-									class="stroke-info h-6 w-6 shrink-0"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-									></path>
-								</svg>
-								<span>
-									{$t('lodging.current_timezone')}:
-									{(() => {
-										const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-										const [continent, city] = tz.split('/');
-										return `${continent} (${city.replace('_', ' ')})`;
-									})()}
-								</span>
-							</div>
+							{#if !allDay}
+								<div role="alert" class="alert shadow-lg bg-neutral mt-2 mb-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										class="stroke-info h-6 w-6 shrink-0"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										></path>
+									</svg>
+									<span>
+										{$t('lodging.current_timezone')}:
+										{(() => {
+											const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+											const [continent, city] = tz.split('/');
+											return `${continent} (${city.replace('_', ' ')})`;
+										})()}
+									</span>
+								</div>
+							{/if}
 
 							<div class="flex gap-2">
 								<button type="button" class="btn btn-neutral" on:click={addNewVisit}

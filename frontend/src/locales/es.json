@@ -295,7 +295,8 @@
     "region": "Región",
     "reservation_number": "Número de reserva",
     "welcome_map_info": "Aventuras públicas en este servidor",
-    "open_in_maps": "Abrir en mapas"
+    "open_in_maps": "Abrir en mapas",
+    "all_day": "Todo el día"
   },
   "worldtravel": {
     "all": "Todo",

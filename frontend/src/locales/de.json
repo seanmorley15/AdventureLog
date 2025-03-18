@@ -247,7 +247,8 @@
     "price": "Preis",
     "reservation_number": "Reservierungsnummer",
     "welcome_map_info": "Frei zugängliche Abenteuer auf diesem Server",
-    "open_in_maps": "In Karten öffnen"
+    "open_in_maps": "In Karten öffnen",
+    "all_day": "Den ganzen Tag"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

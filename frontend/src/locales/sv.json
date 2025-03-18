@@ -247,7 +247,8 @@
     "price": "Pris",
     "region": "Område",
     "reservation_number": "Bokningsnummer",
-    "open_in_maps": "Kappas in"
+    "open_in_maps": "Kappas in",
+    "all_day": "Hela dagen"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

@@ -456,12 +456,14 @@
 										</div>
 									</div>
 								{/if}
-								<a
-									class="btn btn-neutral btn-sm max-w-32"
-									href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-									target="_blank"
-									rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
-								>
+								{#if adventure.longitude && adventure.latitude}
+									<a
+										class="btn btn-neutral btn-sm max-w-32"
+										href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+										target="_blank"
+										rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
+									>
+								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"

@@ -247,7 +247,8 @@
     "lodging_information": "Informatie overliggen",
     "price": "Prijs",
     "region": "Regio",
-    "open_in_maps": "Open in kaarten"
+    "open_in_maps": "Open in kaarten",
+    "all_day": "De hele dag"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
