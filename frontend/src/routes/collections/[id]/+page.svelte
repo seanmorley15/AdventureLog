@@ -859,6 +859,7 @@
 											on:edit={editAdventure}
 											on:delete={deleteAdventure}
 											{adventure}
+											{collection}
 										/>
 									{/each}
 								{/if}
@@ -866,6 +867,7 @@
 									{#each dayTransportations as transportation}
 										<TransportationCard
 											{transportation}
+											{collection}
 											user={data?.user}
 											on:delete={(event) => {
 												transportations = transportations.filter((t) => t.id != event.detail);
@@ -881,6 +883,7 @@
 									{#each dayNotes as note}
 										<NoteCard
 											{note}
+											{collection}
 											user={data.user || null}
 											on:edit={(event) => {
 												noteToEdit = event.detail;
@@ -896,6 +899,7 @@
 									{#each dayLodging as hotel}
 										<LodgingCard
 											lodging={hotel}
+											{collection}
 											user={data?.user}
 											on:delete={(event) => {
 												lodging = lodging.filter((t) => t.id != event.detail);
@@ -908,6 +912,7 @@
 									{#each dayChecklists as checklist}
 										<ChecklistCard
 											{checklist}
+											{collection}
 											user={data.user || null}
 											on:delete={(event) => {
 												notes = notes.filter((n) => n.id != event.detail);
