@@ -70,23 +70,23 @@ export function groupAdventuresByDate(
 	// Initialize all days in the range
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = new Date(startDate);
-		currentDate.setUTCDate(startDate.getUTCDate() + i);
-		const dateString = currentDate.toISOString().split('T')[0];
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = getLocalDateString(currentDate);
 		groupedAdventures[dateString] = [];
 	}
 
 	adventures.forEach((adventure) => {
 		adventure.visits.forEach((visit) => {
 			if (visit.start_date) {
-				const adventureDate = new Date(visit.start_date).toISOString().split('T')[0];
+				const adventureDate = getLocalDateString(new Date(visit.start_date));
 				if (visit.end_date) {
 					const endDate = new Date(visit.end_date).toISOString().split('T')[0];
 
 					// Loop through all days and include adventure if it falls within the range
 					for (let i = 0; i < numberOfDays; i++) {
 						const currentDate = new Date(startDate);
-						currentDate.setUTCDate(startDate.getUTCDate() + i);
-						const dateString = currentDate.toISOString().split('T')[0];
+						currentDate.setDate(startDate.getDate() + i);
+						const dateString = getLocalDateString(currentDate);
 
 						// Include the current day if it falls within the adventure date range
 						if (dateString >= adventureDate && dateString <= endDate) {
@@ -116,22 +116,22 @@ export function groupTransportationsByDate(
 	// Initialize all days in the range
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = new Date(startDate);
-		currentDate.setUTCDate(startDate.getUTCDate() + i);
-		const dateString = currentDate.toISOString().split('T')[0];
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = getLocalDateString(currentDate);
 		groupedTransportations[dateString] = [];
 	}
 
 	transportations.forEach((transportation) => {
 		if (transportation.date) {
-			const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
+			const transportationDate = getLocalDateString(new Date(transportation.date));
 			if (transportation.end_date) {
 				const endDate = new Date(transportation.end_date).toISOString().split('T')[0];
 
 				// Loop through all days and include transportation if it falls within the range
 				for (let i = 0; i < numberOfDays; i++) {
 					const currentDate = new Date(startDate);
-					currentDate.setUTCDate(startDate.getUTCDate() + i);
-					const dateString = currentDate.toISOString().split('T')[0];
+					currentDate.setDate(startDate.getDate() + i);
+					const dateString = getLocalDateString(currentDate);
 
 					// Include the current day if it falls within the transportation date range
 					if (dateString >= transportationDate && dateString <= endDate) {
@@ -150,6 +150,13 @@ export function groupTransportationsByDate(
 	return groupedTransportations;
 }
 
+function getLocalDateString(date: Date): string {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
 export function groupLodgingByDate(
 	transportations: Lodging[],
 	startDate: Date,
@@ -157,35 +164,32 @@ export function groupLodgingByDate(
 ): Record<string, Lodging[]> {
 	const groupedTransportations: Record<string, Lodging[]> = {};
 
-	// Initialize all days in the range
+	// Initialize all days in the range using local dates
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = new Date(startDate);
-		currentDate.setUTCDate(startDate.getUTCDate() + i);
-		const dateString = currentDate.toISOString().split('T')[0];
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = getLocalDateString(currentDate);
 		groupedTransportations[dateString] = [];
 	}
 
 	transportations.forEach((transportation) => {
 		if (transportation.check_in) {
-			const transportationDate = new Date(transportation.check_in).toISOString().split('T')[0];
+			// Use local date string conversion
+			const transportationDate = getLocalDateString(new Date(transportation.check_in));
 			if (transportation.check_out) {
-				const endDate = new Date(transportation.check_out).toISOString().split('T')[0];
+				const endDate = getLocalDateString(new Date(transportation.check_out));
 
-				// Loop through all days and include transportation if it falls within the range
+				// Loop through all days and include transportation if it falls within the transportation date range
 				for (let i = 0; i < numberOfDays; i++) {
 					const currentDate = new Date(startDate);
-					currentDate.setUTCDate(startDate.getUTCDate() + i);
-					const dateString = currentDate.toISOString().split('T')[0];
+					currentDate.setDate(startDate.getDate() + i);
+					const dateString = getLocalDateString(currentDate);
 
-					// Include the current day if it falls within the transportation date range
 					if (dateString >= transportationDate && dateString <= endDate) {
-						if (groupedTransportations[dateString]) {
-							groupedTransportations[dateString].push(transportation);
-						}
+						groupedTransportations[dateString].push(transportation);
 					}
 				}
 			} else if (groupedTransportations[transportationDate]) {
-				// If there's no end date, add transportation to the start date only
 				groupedTransportations[transportationDate].push(transportation);
 			}
 		}
@@ -201,19 +205,18 @@ export function groupNotesByDate(
 ): Record<string, Note[]> {
 	const groupedNotes: Record<string, Note[]> = {};
 
-	// Initialize all days in the range
+	// Initialize all days in the range using local dates
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = new Date(startDate);
-		currentDate.setUTCDate(startDate.getUTCDate() + i);
-		const dateString = currentDate.toISOString().split('T')[0];
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = getLocalDateString(currentDate);
 		groupedNotes[dateString] = [];
 	}
 
 	notes.forEach((note) => {
 		if (note.date) {
-			const noteDate = new Date(note.date).toISOString().split('T')[0];
-
-			// Add note to the appropriate date group if it exists
+			// Use the date string as is since it's already in "YYYY-MM-DD" format.
+			const noteDate = note.date;
 			if (groupedNotes[noteDate]) {
 				groupedNotes[noteDate].push(note);
 			}
@@ -230,19 +233,18 @@ export function groupChecklistsByDate(
 ): Record<string, Checklist[]> {
 	const groupedChecklists: Record<string, Checklist[]> = {};
 
-	// Initialize all days in the range
+	// Initialize all days in the range using local dates
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = new Date(startDate);
-		currentDate.setUTCDate(startDate.getUTCDate() + i);
-		const dateString = currentDate.toISOString().split('T')[0];
+		currentDate.setDate(startDate.getDate() + i);
+		const dateString = getLocalDateString(currentDate);
 		groupedChecklists[dateString] = [];
 	}
 
 	checklists.forEach((checklist) => {
 		if (checklist.date) {
-			const checklistDate = new Date(checklist.date).toISOString().split('T')[0];
-
-			// Add checklist to the appropriate date group if it exists
+			// Use the date string as is since it's already in "YYYY-MM-DD" format.
+			const checklistDate = checklist.date;
 			if (groupedChecklists[checklistDate]) {
 				groupedChecklists[checklistDate].push(checklist);
 			}

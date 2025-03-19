@@ -935,24 +935,25 @@
 					{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
 					{@const dayAdventures =
-						groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
+						groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
 							dateString
 						] || []}
 					{@const dayTransportations =
 						groupTransportationsByDate(
 							transportations,
 							new Date(collection.start_date),
-							numberOfDays
+							numberOfDays + 1
 						)[dateString] || []}
 					{@const dayLodging =
-						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
+						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
 							dateString
 						] || []}
 					{@const dayNotes =
-						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] ||
-						[]}
+						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays + 1)[
+							dateString
+						] || []}
 					{@const dayChecklists =
-						groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
+						groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays + 1)[
 							dateString
 						] || []}
 

@@ -834,11 +834,16 @@
 											</p>
 											{#if visit.end_date && visit.end_date !== visit.start_date}
 												<p>
-													{new Date(visit.end_date).toLocaleDateString(undefined, {
-														timeZone: 'UTC'
-													})}
-													{#if !isAllDay(visit.end_date)}
-														({new Date(visit.end_date).toLocaleTimeString()})
+													{#if isAllDay(visit.end_date)}
+														<!-- For all-day events, show just the date -->
+														{new Date(visit.end_date).toLocaleDateString(undefined, {
+															timeZone: 'UTC'
+														})}
+													{:else}
+														<!-- For timed events, show date and time -->
+														{new Date(visit.end_date).toLocaleDateString()} ({new Date(
+															visit.end_date
+														).toLocaleTimeString()})
 													{/if}
 												</p>
 											{/if}
