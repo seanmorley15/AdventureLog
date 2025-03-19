@@ -159,6 +159,10 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
+            text: "v0.9.0",
+            link: "/docs/changelogs/v0-9-0",
+          },
+          {
             text: "v0.8.0",
             link: "/docs/changelogs/v0-8-0",
           },
