@@ -92,6 +92,7 @@ class Command(BaseCommand):
                 country_capital = country['capital']
                 longitude = round(float(country['longitude']), 6) if country['longitude'] else None
                 latitude = round(float(country['latitude']), 6) if country['latitude'] else None
+                translations = country['translations']
 
                 processed_country_codes.add(country_code)
 
@@ -102,6 +103,7 @@ class Command(BaseCommand):
                     country_obj.capital = country_capital
                     country_obj.longitude = longitude
                     country_obj.latitude = latitude
+                    country_obj.translations = translations
                     countries_to_update.append(country_obj)
                 else:
                     country_obj = Country(
@@ -110,7 +112,8 @@ class Command(BaseCommand):
                         subregion=country_subregion,
                         capital=country_capital,
                         longitude=longitude,
-                        latitude=latitude
+                        latitude=latitude,
+                        translations=translations
                     )
                     countries_to_create.append(country_obj)
 
@@ -213,7 +216,7 @@ class Command(BaseCommand):
                 batch = countries_to_update[i:i + batch_size]
             for i in tqdm(range(0, len(countries_to_update), batch_size), desc="Updating countries"):
                 batch = countries_to_update[i:i + batch_size]
-                Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude'])
+                Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude', 'translations'])
 
             for i in tqdm(range(0, len(regions_to_update), batch_size), desc="Updating regions"):
                 batch = regions_to_update[i:i + batch_size]

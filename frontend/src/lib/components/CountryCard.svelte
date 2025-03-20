@@ -1,12 +1,40 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import type { Country } from '$lib/types';
-	import { createEventDispatcher } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';
 
 	export let country: Country;
+
+	// Country name in the current locale
+	let country_name_locale = country.name;
+
+	// Subscribe to locale changes
+	locale.subscribe((lang) => {
+		country_name_locale = get_country_name(lang);
+	});
+
+	/**
+	 * Get the country name in the current locale
+	 * @param lang - The current locale
+	 * @returns The country name in the current locale
+	 */
+	function get_country_name(lang: string | null | undefined) {
+		if (!lang) {
+			return country.name;
+		}
+		const translations = country.translations;
+		if (translations[lang]) {
+			return translations[lang];
+		}
+		for (const [key, value] of Object.entries(translations)) {
+			if (key.toLowerCase().includes(lang.toLowerCase())) {
+				return value;
+			}
+		}
+		return country.name;
+	}
 
 	async function nav() {
 		goto(`/worldtravel/${country.country_code}`);
@@ -21,7 +49,7 @@
 		<img src={country.flag_url} alt="No image available" class="w-full h-48 object-cover" />
 	</figure>
 	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{country.name}</h2>
+		<h2 class="card-title overflow-ellipsis">{country_name_locale}</h2>
 		<div class="flex flex-wrap gap-2">
 			{#if country.subregion}
 				<div class="badge badge-primary">{country.subregion}</div>
