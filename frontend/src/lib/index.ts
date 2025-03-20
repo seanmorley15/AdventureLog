@@ -78,32 +78,77 @@ export function groupAdventuresByDate(
 	adventures.forEach((adventure) => {
 		adventure.visits.forEach((visit) => {
 			if (visit.start_date) {
-				const adventureDate = getLocalDateString(new Date(visit.start_date));
-				if (visit.end_date) {
-					const endDate = new Date(visit.end_date).toISOString().split('T')[0];
+				// Check if this is an all-day event (both start and end at midnight)
+				const isAllDayEvent =
+					isAllDay(visit.start_date) && (visit.end_date ? isAllDay(visit.end_date) : false);
 
-					// Loop through all days and include adventure if it falls within the range
+				// For all-day events, we need to handle dates differently
+				if (isAllDayEvent && visit.end_date) {
+					// Extract just the date parts without time
+					const startDateStr = visit.start_date.split('T')[0];
+					const endDateStr = visit.end_date.split('T')[0];
+
+					// Loop through all days in the range
 					for (let i = 0; i < numberOfDays; i++) {
 						const currentDate = new Date(startDate);
 						currentDate.setDate(startDate.getDate() + i);
-						const dateString = getLocalDateString(currentDate);
+						const currentDateStr = getLocalDateString(currentDate);
 
 						// Include the current day if it falls within the adventure date range
-						if (dateString >= adventureDate && dateString <= endDate) {
-							if (groupedAdventures[dateString]) {
-								groupedAdventures[dateString].push(adventure);
+						if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
+							if (groupedAdventures[currentDateStr]) {
+								groupedAdventures[currentDateStr].push(adventure);
 							}
 						}
 					}
-				} else if (groupedAdventures[adventureDate]) {
-					// If there's no end date, add adventure to the start date only
-					groupedAdventures[adventureDate].push(adventure);
+				} else {
+					// Handle regular events with time components
+					const adventureStartDate = new Date(visit.start_date);
+					const adventureDateStr = getLocalDateString(adventureStartDate);
+
+					if (visit.end_date) {
+						const adventureEndDate = new Date(visit.end_date);
+						const endDateStr = getLocalDateString(adventureEndDate);
+
+						// Loop through all days and include adventure if it falls within the range
+						for (let i = 0; i < numberOfDays; i++) {
+							const currentDate = new Date(startDate);
+							currentDate.setDate(startDate.getDate() + i);
+							const dateString = getLocalDateString(currentDate);
+
+							// Include the current day if it falls within the adventure date range
+							if (dateString >= adventureDateStr && dateString <= endDateStr) {
+								if (groupedAdventures[dateString]) {
+									groupedAdventures[dateString].push(adventure);
+								}
+							}
+						}
+					} else {
+						// If there's no end date, add adventure to the start date only
+						if (groupedAdventures[adventureDateStr]) {
+							groupedAdventures[adventureDateStr].push(adventure);
+						}
+					}
 				}
 			}
 		});
 	});
 
 	return groupedAdventures;
+}
+
+function getLocalDateString(date: Date): string {
+	const year = date.getFullYear();
+	const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${year}-${month}-${day}`;
+}
+
+// Helper to check if a given date string represents midnight (all-day)
+// Improved isAllDay function to handle different ISO date formats
+export function isAllDay(dateStr: string): boolean {
+	// Check for various midnight formats in UTC
+	return dateStr.endsWith('T00:00:00Z') || dateStr.endsWith('T00:00:00.000Z');
 }
 
 export function groupTransportationsByDate(
@@ -148,13 +193,6 @@ export function groupTransportationsByDate(
 	});
 
 	return groupedTransportations;
-}
-
-function getLocalDateString(date: Date): string {
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
-	const day = String(date.getDate()).padStart(2, '0');
-	return `${year}-${month}-${day}`;
 }
 
 export function groupLodgingByDate(
@@ -350,12 +388,6 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	walking: '🚶',
 	other: '❓'
 };
-
-// Helper to check if a given date string represents midnight (all-day)
-export function isAllDay(dateStr: string | string[]) {
-	// Checks for the pattern "T00:00:00.000Z"
-	return dateStr.includes('T00:00:00Z') || dateStr.includes('T00:00:00.000Z');
-}
 
 export function getAdventureTypeLabel(type: string) {
 	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
