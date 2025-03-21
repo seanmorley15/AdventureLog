@@ -998,6 +998,7 @@
 												on:edit={editAdventure}
 												on:delete={deleteAdventure}
 												{adventure}
+												{collection}
 											/>
 										{/each}
 									{/if}
@@ -1013,6 +1014,7 @@
 													transportationToEdit = event.detail;
 													isShowingTransportationModal = true;
 												}}
+												{collection}
 											/>
 										{/each}
 									{/if}
@@ -1028,6 +1030,7 @@
 												on:delete={(event) => {
 													notes = notes.filter((n) => n.id != event.detail);
 												}}
+												{collection}
 											/>
 										{/each}
 									{/if}
@@ -1040,6 +1043,7 @@
 													lodging = lodging.filter((t) => t.id != event.detail);
 												}}
 												on:edit={editLodging}
+												{collection}
 											/>
 										{/each}
 									{/if}
@@ -1055,6 +1059,7 @@
 													checklistToEdit = event.detail;
 													isShowingChecklistModal = true;
 												}}
+												{collection}
 											/>
 										{/each}
 									{/if}
