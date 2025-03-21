@@ -1094,7 +1094,7 @@
 										<!-- Card Content -->
 										<div class="bg-base-200 p-6 rounded-lg shadow-lg">
 											<div class="flex justify-between items-center mb-4">
-												<span class="badge badge-lg">{orderedItem.type}</span>
+												<span class="badge badge-lg">{$t(`adventures.${orderedItem.type}`)}</span>
 												<div class="text-sm opacity-80 text-right">
 													{new Date(orderedItem.start).toLocaleDateString(undefined, {
 														month: 'short',
@@ -1106,6 +1106,36 @@
 																hour: '2-digit',
 																minute: '2-digit'
 															})}
+															-
+															{new Date(orderedItem.end).toLocaleTimeString(undefined, {
+																hour: '2-digit',
+																minute: '2-digit'
+															})}
+														</div>
+														<div>
+															<!-- Duration -->
+															{Math.round(
+																(new Date(orderedItem.end).getTime() -
+																	new Date(orderedItem.start).getTime()) /
+																	1000 /
+																	60 /
+																	60
+															)}h
+															{Math.round(
+																((new Date(orderedItem.end).getTime() -
+																	new Date(orderedItem.start).getTime()) /
+																	1000 /
+																	60 /
+																	60 -
+																	Math.floor(
+																		(new Date(orderedItem.end).getTime() -
+																			new Date(orderedItem.start).getTime()) /
+																			1000 /
+																			60 /
+																			60
+																	)) *
+																	60
+															)}m
 														</div>
 													{:else}
 														<p>{$t('adventures.all_day')} ⏱️</p>

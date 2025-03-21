@@ -8,12 +8,16 @@
 
 	let fullStartDate: string = '';
 	let fullEndDate: string = '';
+	let fullStartDateOnly: string = '';
+	let fullEndDateOnly: string = '';
 	let allDay: boolean = true;
 
 	// Set full start and end dates from collection
 	if (collection && collection.start_date && collection.end_date) {
 		fullStartDate = `${collection.start_date}T00:00`;
 		fullEndDate = `${collection.end_date}T23:59`;
+		fullStartDateOnly = collection.start_date;
+		fullEndDateOnly = collection.end_date;
 	}
 
 	const dispatch = createEventDispatcher();
@@ -742,8 +746,8 @@
 										type="date"
 										class="input input-bordered w-full"
 										placeholder={$t('adventures.start_date')}
-										min={constrainDates ? fullStartDate : ''}
-										max={constrainDates ? fullEndDate : ''}
+										min={constrainDates ? fullStartDateOnly : ''}
+										max={constrainDates ? fullEndDateOnly : ''}
 										bind:value={new_start_date}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
@@ -757,8 +761,8 @@
 										class="input input-bordered w-full"
 										placeholder={$t('adventures.end_date')}
 										bind:value={new_end_date}
-										min={constrainDates ? fullStartDate : ''}
-										max={constrainDates ? fullEndDate : ''}
+										min={constrainDates ? fullStartDateOnly : ''}
+										max={constrainDates ? fullEndDateOnly : ''}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
 												e.preventDefault();
@@ -848,6 +852,53 @@
 												</p>
 											{/if}
 											<div>
+												<button
+													type="button"
+													class="btn btn-sm btn-neutral"
+													on:click={() => {
+														// Determine if this is an all-day event
+														const isAllDayEvent = isAllDay(visit.start_date);
+														allDay = isAllDayEvent;
+
+														if (isAllDayEvent) {
+															// For all-day events, use date only
+															new_start_date = visit.start_date.split('T')[0];
+															new_end_date = visit.end_date.split('T')[0];
+														} else {
+															// For timed events, format properly for datetime-local input
+															const startDate = new Date(visit.start_date);
+															const endDate = new Date(visit.end_date);
+
+															// Format as yyyy-MM-ddThh:mm
+															new_start_date =
+																startDate.getFullYear() +
+																'-' +
+																String(startDate.getMonth() + 1).padStart(2, '0') +
+																'-' +
+																String(startDate.getDate()).padStart(2, '0') +
+																'T' +
+																String(startDate.getHours()).padStart(2, '0') +
+																':' +
+																String(startDate.getMinutes()).padStart(2, '0');
+
+															new_end_date =
+																endDate.getFullYear() +
+																'-' +
+																String(endDate.getMonth() + 1).padStart(2, '0') +
+																'-' +
+																String(endDate.getDate()).padStart(2, '0') +
+																'T' +
+																String(endDate.getHours()).padStart(2, '0') +
+																':' +
+																String(endDate.getMinutes()).padStart(2, '0');
+														}
+
+														new_notes = visit.notes;
+														adventure.visits = adventure.visits.filter((v) => v !== visit);
+													}}
+												>
+													{$t('lodging.edit')}
+												</button>
 												<button
 													type="button"
 													class="btn btn-sm btn-error"
