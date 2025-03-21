@@ -133,6 +133,7 @@
 	}
 
 	let currentView: string = 'itinerary';
+	let currentItineraryView: string = 'date';
 
 	let adventures: Adventure[] = [];
 
@@ -303,6 +304,7 @@
 		} else {
 			notFound = true;
 		}
+
 		if (collection.start_date && collection.end_date) {
 			numberOfDays =
 				Math.floor(
@@ -923,129 +925,233 @@
 								})}</span
 							>
 						</p>
+						<div class="join mt-2">
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="options"
+								aria-label="Date Itinerary"
+								checked={currentItineraryView == 'date'}
+								on:change={() => (currentItineraryView = 'date')}
+							/>
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="options"
+								aria-label="Ordered Itinerary"
+								checked={currentItineraryView == 'ordered'}
+								on:change={() => (currentItineraryView = 'ordered')}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="container mx-auto px-4">
-				{#each Array(numberOfDays) as _, i}
-					{@const startDate = new Date(collection.start_date)}
-					{@const tempDate = new Date(startDate.getTime())}
-					{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
-					{@const dateString = adjustedDate.toISOString().split('T')[0]}
+			{#if currentItineraryView == 'date'}
+				<div class="container mx-auto px-4">
+					{#each Array(numberOfDays) as _, i}
+						{@const startDate = new Date(collection.start_date)}
+						{@const tempDate = new Date(startDate.getTime())}
+						{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
+						{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
-					{@const dayAdventures =
-						groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
-							dateString
-						] || []}
-					{@const dayTransportations =
-						groupTransportationsByDate(
-							transportations,
-							new Date(collection.start_date),
-							numberOfDays + 1
-						)[dateString] || []}
-					{@const dayLodging =
-						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
-							dateString
-						] || []}
-					{@const dayNotes =
-						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays + 1)[
-							dateString
-						] || []}
-					{@const dayChecklists =
-						groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays + 1)[
-							dateString
-						] || []}
+						{@const dayAdventures =
+							groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayTransportations =
+							groupTransportationsByDate(
+								transportations,
+								new Date(collection.start_date),
+								numberOfDays + 1
+							)[dateString] || []}
+						{@const dayLodging =
+							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayNotes =
+							groupNotesByDate(notes, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayChecklists =
+							groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
 
-					<div class="card bg-base-100 shadow-xl my-8">
-						<div class="card-body bg-base-200">
-							<h2 class="card-title text-3xl justify-center g">
-								{$t('adventures.day')}
-								{i + 1}
-								<div class="badge badge-lg">
-									{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+						<div class="card bg-base-100 shadow-xl my-8">
+							<div class="card-body bg-base-200">
+								<h2 class="card-title text-3xl justify-center g">
+									{$t('adventures.day')}
+									{i + 1}
+									<div class="badge badge-lg">
+										{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+									</div>
+								</h2>
+
+								<div class="divider"></div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+									{#if dayAdventures.length > 0}
+										{#each dayAdventures as adventure}
+											<AdventureCard
+												user={data.user}
+												on:edit={editAdventure}
+												on:delete={deleteAdventure}
+												{adventure}
+											/>
+										{/each}
+									{/if}
+									{#if dayTransportations.length > 0}
+										{#each dayTransportations as transportation}
+											<TransportationCard
+												{transportation}
+												user={data?.user}
+												on:delete={(event) => {
+													transportations = transportations.filter((t) => t.id != event.detail);
+												}}
+												on:edit={(event) => {
+													transportationToEdit = event.detail;
+													isShowingTransportationModal = true;
+												}}
+											/>
+										{/each}
+									{/if}
+									{#if dayNotes.length > 0}
+										{#each dayNotes as note}
+											<NoteCard
+												{note}
+												user={data.user || null}
+												on:edit={(event) => {
+													noteToEdit = event.detail;
+													isNoteModalOpen = true;
+												}}
+												on:delete={(event) => {
+													notes = notes.filter((n) => n.id != event.detail);
+												}}
+											/>
+										{/each}
+									{/if}
+									{#if dayLodging.length > 0}
+										{#each dayLodging as hotel}
+											<LodgingCard
+												lodging={hotel}
+												user={data?.user}
+												on:delete={(event) => {
+													lodging = lodging.filter((t) => t.id != event.detail);
+												}}
+												on:edit={editLodging}
+											/>
+										{/each}
+									{/if}
+									{#if dayChecklists.length > 0}
+										{#each dayChecklists as checklist}
+											<ChecklistCard
+												{checklist}
+												user={data.user || null}
+												on:delete={(event) => {
+													notes = notes.filter((n) => n.id != event.detail);
+												}}
+												on:edit={(event) => {
+													checklistToEdit = event.detail;
+													isShowingChecklistModal = true;
+												}}
+											/>
+										{/each}
+									{/if}
 								</div>
-							</h2>
 
-							<div class="divider"></div>
-
-							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{#if dayAdventures.length > 0}
-									{#each dayAdventures as adventure}
-										<AdventureCard
-											user={data.user}
-											on:edit={editAdventure}
-											on:delete={deleteAdventure}
-											{adventure}
-										/>
-									{/each}
-								{/if}
-								{#if dayTransportations.length > 0}
-									{#each dayTransportations as transportation}
-										<TransportationCard
-											{transportation}
-											user={data?.user}
-											on:delete={(event) => {
-												transportations = transportations.filter((t) => t.id != event.detail);
-											}}
-											on:edit={(event) => {
-												transportationToEdit = event.detail;
-												isShowingTransportationModal = true;
-											}}
-										/>
-									{/each}
-								{/if}
-								{#if dayNotes.length > 0}
-									{#each dayNotes as note}
-										<NoteCard
-											{note}
-											user={data.user || null}
-											on:edit={(event) => {
-												noteToEdit = event.detail;
-												isNoteModalOpen = true;
-											}}
-											on:delete={(event) => {
-												notes = notes.filter((n) => n.id != event.detail);
-											}}
-										/>
-									{/each}
-								{/if}
-								{#if dayLodging.length > 0}
-									{#each dayLodging as hotel}
-										<LodgingCard
-											lodging={hotel}
-											user={data?.user}
-											on:delete={(event) => {
-												lodging = lodging.filter((t) => t.id != event.detail);
-											}}
-											on:edit={editLodging}
-										/>
-									{/each}
-								{/if}
-								{#if dayChecklists.length > 0}
-									{#each dayChecklists as checklist}
-										<ChecklistCard
-											{checklist}
-											user={data.user || null}
-											on:delete={(event) => {
-												notes = notes.filter((n) => n.id != event.detail);
-											}}
-											on:edit={(event) => {
-												checklistToEdit = event.detail;
-												isShowingChecklistModal = true;
-											}}
-										/>
-									{/each}
+								{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
+									<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
 								{/if}
 							</div>
-
-							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
-								<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<div class="container mx-auto px-4 py-8">
+					<div class="flex flex-col items-center">
+						<div class="w-full max-w-4xl relative">
+							<!-- Vertical timeline line that spans the entire height -->
+							<div class="absolute left-8 top-0 bottom-0 w-1 bg-primary"></div>
+							<ul class="relative">
+								{#each orderedItems as orderedItem, index}
+									<li class="relative pl-20 mb-8">
+										<!-- Timeline Icon -->
+										<div
+											class="absolute left-0 top-0 flex items-center justify-center w-16 h-16 bg-base-200 rounded-full border-2 border-primary"
+										>
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'category' in orderedItem.item && orderedItem.item.category && 'icon' in orderedItem.item.category}
+												<span class="text-2xl">{orderedItem.item.category.icon}</span>
+											{:else if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
+												<span class="text-2xl">{getTransportationEmoji(orderedItem.item.type)}</span
+												>
+											{:else if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
+												<span class="text-2xl">{getLodgingIcon(orderedItem.item.type)}</span>
+											{/if}
+										</div>
+										<!-- Card Content -->
+										<div class="bg-base-200 p-6 rounded-lg shadow-lg">
+											<div class="flex justify-between items-center mb-4">
+												<span class="badge badge-lg">{orderedItem.type}</span>
+												<div class="text-sm opacity-80 text-right">
+													{new Date(orderedItem.start).toLocaleDateString(undefined, {
+														month: 'short',
+														day: 'numeric'
+													})}
+													{#if orderedItem.start !== orderedItem.end}
+														<div>
+															{new Date(orderedItem.start).toLocaleTimeString(undefined, {
+																hour: '2-digit',
+																minute: '2-digit'
+															})}
+														</div>
+													{:else}
+														<p>{$t('adventures.all_day')} ⏱️</p>
+													{/if}
+												</div>
+											</div>
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
+												<AdventureCard
+													user={data.user}
+													on:edit={editAdventure}
+													on:delete={deleteAdventure}
+													adventure={orderedItem.item}
+													{collection}
+												/>
+											{:else if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
+												<TransportationCard
+													transportation={orderedItem.item}
+													user={data?.user}
+													on:delete={(event) => {
+														transportations = transportations.filter((t) => t.id != event.detail);
+													}}
+													on:edit={editTransportation}
+													{collection}
+												/>
+											{:else if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
+												<LodgingCard
+													lodging={orderedItem.item}
+													user={data?.user}
+													on:delete={(event) => {
+														lodging = lodging.filter((t) => t.id != event.detail);
+													}}
+													on:edit={editLodging}
+													{collection}
+												/>
+											{/if}
+										</div>
+									</li>
+								{/each}
+							</ul>
+							{#if orderedItems.length === 0}
+								<div class="alert alert-info">
+									<p class="text-center text-lg">{$t('adventures.nothing_planned')}</p>
+								</div>
 							{/if}
 						</div>
 					</div>
-				{/each}
-			</div>
+				</div>
+			{/if}
 		{/if}
 	{/if}
 
@@ -1331,13 +1437,16 @@
 										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									{#if recomendation.address}
+									{#if recomendation.address && (recomendation.address.housenumber || recomendation.address.street || recomendation.address.city || recomendation.address.state || recomendation.address.postcode)}
 										<p class="text-md">
 											<strong>{$t('recomendations.address')}:</strong>
-											{recomendation.address.housenumber}
-											{recomendation.address.street}, {recomendation.address.city}, {recomendation
-												.address.state}
-											{recomendation.address.postcode}
+											{#if recomendation.address.housenumber}{recomendation.address
+													.housenumber}{/if}
+											{#if recomendation.address.street}
+												{recomendation.address.street}{/if}
+											{#if recomendation.address.city}, {recomendation.address.city}{/if}
+											{#if recomendation.address.state}, {recomendation.address.state}{/if}
+											{#if recomendation.address.postcode}, {recomendation.address.postcode}{/if}
 										</p>
 									{/if}
 									{#if recomendation.contact}
@@ -1388,43 +1497,6 @@
 		</div>
 	{/if}
 {/if}
-
-{#each orderedItems as orderedItem}
-	<p>{orderedItem.type}</p>
-	{#if orderedItem.type === 'adventure'}
-		{#if orderedItem.item && 'images' in orderedItem.item}
-			<AdventureCard
-				user={data.user}
-				on:edit={editAdventure}
-				on:delete={deleteAdventure}
-				adventure={orderedItem.item}
-				{collection}
-			/>
-		{/if}
-	{/if}
-	{#if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
-		<TransportationCard
-			transportation={orderedItem.item}
-			user={data?.user}
-			on:delete={(event) => {
-				transportations = transportations.filter((t) => t.id != event.detail);
-			}}
-			on:edit={editTransportation}
-			{collection}
-		/>
-	{/if}
-	{#if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
-		<LodgingCard
-			lodging={orderedItem.item}
-			user={data?.user}
-			on:delete={(event) => {
-				lodging = lodging.filter((t) => t.id != event.detail);
-			}}
-			on:edit={editLodging}
-			{collection}
-		/>
-	{/if}
-{/each}
 
 <svelte:head>
 	<title
