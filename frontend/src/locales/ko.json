@@ -248,7 +248,11 @@
     "reservation_number": "예약 번호",
     "welcome_map_info": "이 서버의 공개 모험",
     "open_in_maps": "지도에서 열립니다",
-    "all_day": "하루 종일"
+    "all_day": "하루 종일",
+    "collection_no_start_end_date": "컬렉션에 시작 및 종료 날짜를 추가하면 컬렉션 페이지에서 여정 계획 기능이 잠금 해제됩니다.",
+    "date_itinerary": "날짜 일정",
+    "no_ordered_items": "컬렉션에 날짜가있는 항목을 추가하여 여기에서 확인하십시오.",
+    "ordered_itinerary": "주문한 여정"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

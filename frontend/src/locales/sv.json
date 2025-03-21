@@ -248,7 +248,11 @@
     "region": "Område",
     "reservation_number": "Bokningsnummer",
     "open_in_maps": "Kappas in",
-    "all_day": "Hela dagen"
+    "all_day": "Hela dagen",
+    "collection_no_start_end_date": "Att lägga till ett start- och slutdatum till samlingen kommer att låsa upp planeringsfunktioner för resplan på insamlingssidan.",
+    "date_itinerary": "Datum resplan",
+    "no_ordered_items": "Lägg till objekt med datum i samlingen för att se dem här.",
+    "ordered_itinerary": "Beställd resplan"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

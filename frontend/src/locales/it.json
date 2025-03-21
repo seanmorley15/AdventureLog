@@ -248,7 +248,11 @@
     "welcome_map_info": "Avventure pubbliche su questo server",
     "reservation_number": "Numero di prenotazione",
     "open_in_maps": "Aperto in mappe",
-    "all_day": "Tutto il giorno"
+    "all_day": "Tutto il giorno",
+    "collection_no_start_end_date": "L'aggiunta di una data di inizio e fine alla raccolta sbloccherà le funzionalità di pianificazione dell'itinerario nella pagina di raccolta.",
+    "date_itinerary": "Itinerario della data",
+    "no_ordered_items": "Aggiungi articoli con date alla collezione per vederli qui.",
+    "ordered_itinerary": "Itinerario ordinato"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
