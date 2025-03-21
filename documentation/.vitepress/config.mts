@@ -135,6 +135,10 @@ export default defineConfig({
             link: "/docs/troubleshooting/no_images",
           },
           {
+            text: "Login and Registration Unresponsive",
+            link: "/docs/troubleshooting/login_unresponsive",
+          },
+          {
             text: "Failed to Start Nginx",
             link: "/docs/troubleshooting/nginx_failed",
           },

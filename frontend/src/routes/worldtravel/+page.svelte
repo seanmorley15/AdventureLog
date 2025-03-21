@@ -164,6 +164,14 @@
 
 {#if filteredCountries.length === 0}
 	<p class="text-center font-bold text-2xl mt-12">{$t('worldtravel.no_countries_found')}</p>
+
+	<div class="text-center mt-4">
+		<a
+			class="link link-primary"
+			href="https://adventurelog.app/docs/configuration/updating.html#updating-the-region-data"
+			target="_blank">{$t('settings.documentation_link')}</a
+		>
+	</div>
 {/if}
 
 <svelte:head>

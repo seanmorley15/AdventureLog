@@ -930,7 +930,7 @@
 								class="join-item btn btn-neutral"
 								type="radio"
 								name="options"
-								aria-label="Date Itinerary"
+								aria-label={$t('adventures.date_itinerary')}
 								checked={currentItineraryView == 'date'}
 								on:change={() => (currentItineraryView = 'date')}
 							/>
@@ -938,7 +938,7 @@
 								class="join-item btn btn-neutral"
 								type="radio"
 								name="options"
-								aria-label="Ordered Itinerary"
+								aria-label={$t('adventures.ordered_itinerary')}
 								checked={currentItineraryView == 'ordered'}
 								on:change={() => (currentItineraryView = 'ordered')}
 							/>
@@ -1072,7 +1072,9 @@
 					<div class="flex flex-col items-center">
 						<div class="w-full max-w-4xl relative">
 							<!-- Vertical timeline line that spans the entire height -->
-							<div class="absolute left-8 top-0 bottom-0 w-1 bg-primary"></div>
+							{#if orderedItems.length > 0}
+								<div class="absolute left-8 top-0 bottom-0 w-1 bg-primary"></div>
+							{/if}
 							<ul class="relative">
 								{#each orderedItems as orderedItem, index}
 									<li class="relative pl-20 mb-8">
@@ -1145,7 +1147,7 @@
 							</ul>
 							{#if orderedItems.length === 0}
 								<div class="alert alert-info">
-									<p class="text-center text-lg">{$t('adventures.nothing_planned')}</p>
+									<p class="text-center text-lg">{$t('adventures.no_ordered_items')}</p>
 								</div>
 							{/if}
 						</div>
