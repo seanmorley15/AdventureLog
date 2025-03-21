@@ -85,6 +85,16 @@ export default defineConfig({
         ],
       },
       {
+        text: "Usage",
+        collapsed: false,
+        items: [
+          {
+            text: "How to use AdventureLog",
+            link: "/docs/usage/usage",
+          },
+        ],
+      },
+      {
         text: "Configuration",
         collapsed: false,
         items: [
