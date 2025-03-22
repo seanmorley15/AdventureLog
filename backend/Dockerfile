@@ -12,7 +12,7 @@ WORKDIR /code
 
 # Install system dependencies (Nginx included)
 RUN apt-get update \
-    && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx \
+    && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx supervisor \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -31,6 +31,9 @@ COPY ./server /code/
 # Copy Nginx configuration
 COPY ./nginx.conf /etc/nginx/nginx.conf
 
+# Copy Supervisor configuration
+COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
 # Collect static files
 RUN python3 manage.py collectstatic --noinput --verbosity 2
 
@@ -41,5 +44,5 @@ RUN chmod +x /code/entrypoint.sh
 # Expose ports for NGINX and Gunicorn
 EXPOSE 80 8000
 
-# Command to start Nginx and Gunicorn
-CMD ["bash", "-c", "service nginx start && /code/entrypoint.sh"]
+# Command to start Supervisor (which starts Nginx and Gunicorn)
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

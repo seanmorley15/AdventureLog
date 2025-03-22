@@ -22,7 +22,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
 
-        valid_order_by = ['name', 'upated_at']
+        valid_order_by = ['name', 'upated_at', 'start_date']
         if order_by not in valid_order_by:
             order_by = 'updated_at'
 
@@ -35,6 +35,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
             ordering = 'lower_name'
             if order_direction == 'desc':
                 ordering = f'-{ordering}'
+        elif order_by == 'start_date':
+            ordering = 'start_date'
+            if order_direction == 'asc':
+                ordering = 'start_date'
+            else:
+                ordering = '-start_date'
         else:
             order_by == 'updated_at'
             ordering = 'updated_at'

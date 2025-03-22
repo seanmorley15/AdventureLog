@@ -44,6 +44,15 @@ export type Adventure = {
 	user?: User | null;
 };
 
+export type AdditionalAdventure = Adventure & {
+	sun_times: {
+		date: string;
+		visit_id: string;
+		sunrise: string;
+		sunset: string;
+	}[];
+};
+
 export type Country = {
 	id: number;
 	name: string;

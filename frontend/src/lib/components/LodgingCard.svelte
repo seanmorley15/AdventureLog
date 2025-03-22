@@ -124,7 +124,7 @@
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.dates')}:</span>
 					<p>
-						{new Date(lodging.check_in).toLocaleString('en-US', {
+						{new Date(lodging.check_in).toLocaleString(undefined, {
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',
@@ -132,7 +132,7 @@
 							minute: 'numeric'
 						})}
 						-
-						{new Date(lodging.check_out).toLocaleString('en-US', {
+						{new Date(lodging.check_out).toLocaleString(undefined, {
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',

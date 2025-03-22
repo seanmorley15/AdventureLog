@@ -136,9 +136,11 @@ class AdventureSerializer(CustomModelSerializer):
     def get_is_visited(self, obj):
         current_date = timezone.now().date()
         for visit in obj.visits.all():
-            if visit.start_date and visit.end_date and (visit.start_date <= current_date):
+            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
+            if start_date and end_date and (start_date <= current_date):
                 return True
-            elif visit.start_date and not visit.end_date and (visit.start_date <= current_date):
+            elif start_date and not end_date and (start_date <= current_date):
                 return True
         return False
 

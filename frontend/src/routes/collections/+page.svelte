@@ -15,8 +15,6 @@
 
 	let collections: Collection[] = data.props.adventures || [];
 
-	let currentSort = { attribute: 'name', order: 'asc' };
-
 	let newType: string = '';
 
 	let resultsPerPage: number = 25;
@@ -235,17 +233,36 @@
 							aria-label={$t(`adventures.descending`)}
 						/>
 					</div>
+					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.order_by')}</p>
+					<div class="join">
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="upated_at"
+							value="upated_at"
+							aria-label={$t('adventures.updated')}
+							checked
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="start_date"
+							value="start_date"
+							aria-label={$t('adventures.start_date')}
+						/>
+						<input
+							class="join-item btn btn-neutral"
+							type="radio"
+							name="order_by"
+							id="name"
+							value="name"
+							aria-label={$t('adventures.name')}
+						/>
+					</div>
 					<br />
 
-					<input
-						type="radio"
-						name="order_by"
-						id="name"
-						class="radio radio-primary"
-						checked
-						value="name"
-						hidden
-					/>
 					<button type="submit" class="btn btn-success btn-primary mt-4"
 						>{$t(`adventures.sort`)}</button
 					>

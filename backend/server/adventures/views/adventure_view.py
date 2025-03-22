@@ -10,6 +10,7 @@ from adventures.models import Adventure, Category, Transportation, Lodging
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import AdventureSerializer, TransportationSerializer, LodgingSerializer
 from adventures.utils import pagination
+import requests
 
 class AdventureViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureSerializer
@@ -170,48 +171,38 @@ class AdventureViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    # @action(detail=True, methods=['post'])
-    # def convert(self, request, pk=None):
-    #     """
-    #     Convert an Adventure instance into a Transportation or Lodging instance.
-    #     Expects a JSON body with "target_type": "transportation" or "lodging".
-    #     """
-    #     adventure = self.get_object()
-    #     target_type = request.data.get("target_type", "").lower()
+    @action(detail=True, methods=['get'], url_path='additional-info')
+    def additional_info(self, request, pk=None):
+        adventure = self.get_object()
 
-    #     if target_type not in ["transportation", "lodging"]:
-    #         return Response(
-    #             {"error": "Invalid target type. Must be 'transportation' or 'lodging'."},
-    #             status=400
-    #         )
-    #     if not adventure.collection:
-    #         return Response(
-    #             {"error": "Adventure must be part of a collection to be converted."},
-    #             status=400
-    #         )
+        # Permission check: owner or shared collection member
+        if adventure.user_id != request.user:
+            if not (adventure.collection and adventure.collection.shared_with.filter(id=request.user.id).exists()):
+                return Response({"error": "User does not have permission to access this adventure"},
+                                status=status.HTTP_403_FORBIDDEN)
 
-    #     # Define the overlapping fields that both the Adventure and target models share.
-    #     overlapping_fields = ["name", "description",  "is_public", 'collection']
+        serializer = self.get_serializer(adventure)
+        response_data = serializer.data
 
-    #     # Gather the overlapping data from the adventure instance.
-    #     conversion_data = {}
-    #     for field in overlapping_fields:
-    #         if hasattr(adventure, field):
-    #             conversion_data[field] = getattr(adventure, field)
+        visits = response_data.get('visits', [])
+        sun_times = []
 
-    #     # Make sure to include the user reference
-    #     conversion_data["user_id"] = adventure.user_id
+        for visit in visits:
+            date = visit.get('start_date')
+            if date and adventure.longitude and adventure.latitude:
+                api_url = f'https://api.sunrisesunset.io/json?lat={adventure.latitude}&lng={adventure.longitude}&date={date}'
+                res = requests.get(api_url)
+                if res.status_code == 200:
+                    data = res.json()
+                    results = data.get('results', {})
+                    if results.get('sunrise') and results.get('sunset'):
+                        sun_times.append({
+                            "date": date,
+                            "visit_id": visit.get('id'),
+                            "sunrise": results.get('sunrise'),
+                            "sunset": results.get('sunset')
+                        })
+                
 
-    #     # Convert the adventure instance within an atomic transaction.
-    #     with transaction.atomic():
-    #         if target_type == "transportation":
-    #             new_instance = Transportation.objects.create(**conversion_data)
-    #             serializer = TransportationSerializer(new_instance)
-    #         else:  # target_type == "lodging"
-    #             new_instance = Lodging.objects.create(**conversion_data)
-    #             serializer = LodgingSerializer(new_instance)
-
-    #         # Optionally, delete the original adventure to avoid duplicates.
-    #         adventure.delete()
-
-    #     return Response(serializer.data)
+        response_data['sun_times'] = sun_times
+        return Response(response_data)

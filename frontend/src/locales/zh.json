@@ -295,7 +295,12 @@
     "lodging_information": "住宿信息",
     "price": "价格",
     "reservation_number": "预订号",
-    "open_in_maps": "在地图上打开"
+    "open_in_maps": "在地图上打开",
+    "all_day": "整天",
+    "collection_no_start_end_date": "在集合页面中添加开始日期和结束日期将在“收集”页面中解锁行程计划功能。",
+    "date_itinerary": "日期行程",
+    "no_ordered_items": "将带有日期的项目添加到集合中，以便在此处查看它们。",
+    "ordered_itinerary": "订购了行程"
   },
   "auth": {
     "forgot_password": "忘记密码？",

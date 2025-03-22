@@ -247,7 +247,12 @@
     "price": "Preis",
     "reservation_number": "Reservierungsnummer",
     "welcome_map_info": "Frei zugängliche Abenteuer auf diesem Server",
-    "open_in_maps": "In Karten öffnen"
+    "open_in_maps": "In Karten öffnen",
+    "all_day": "Den ganzen Tag",
+    "collection_no_start_end_date": "Durch das Hinzufügen eines Start- und Enddatums zur Sammlung werden Reiseroutenplanungsfunktionen auf der Sammlungsseite freigegeben.",
+    "date_itinerary": "Datumstrecke",
+    "no_ordered_items": "Fügen Sie der Sammlung Elemente mit Daten hinzu, um sie hier zu sehen.",
+    "ordered_itinerary": "Reiseroute bestellt"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
