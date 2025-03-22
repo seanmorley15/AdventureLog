@@ -295,7 +295,12 @@
     "region": "Region",
     "reservation_number": "Numer rezerwacji",
     "welcome_map_info": "Publiczne przygody na tym serwerze",
-    "open_in_maps": "Otwarte w mapach"
+    "open_in_maps": "Otwarte w mapach",
+    "all_day": "Cały dzień",
+    "collection_no_start_end_date": "Dodanie daty rozpoczęcia i końca do kolekcji odblokuje funkcje planowania planu podróży na stronie kolekcji.",
+    "date_itinerary": "Trasa daty",
+    "no_ordered_items": "Dodaj przedmioty z datami do kolekcji, aby je zobaczyć tutaj.",
+    "ordered_itinerary": "Zamówiono trasę"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

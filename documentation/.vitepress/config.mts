@@ -85,6 +85,16 @@ export default defineConfig({
         ],
       },
       {
+        text: "Usage",
+        collapsed: false,
+        items: [
+          {
+            text: "How to use AdventureLog",
+            link: "/docs/usage/usage",
+          },
+        ],
+      },
+      {
         text: "Configuration",
         collapsed: false,
         items: [
@@ -133,6 +143,10 @@ export default defineConfig({
           {
             text: "No Images Displaying",
             link: "/docs/troubleshooting/no_images",
+          },
+          {
+            text: "Login and Registration Unresponsive",
+            link: "/docs/troubleshooting/login_unresponsive",
           },
           {
             text: "Failed to Start Nginx",

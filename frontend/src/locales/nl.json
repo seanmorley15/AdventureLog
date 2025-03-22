@@ -247,7 +247,12 @@
     "lodging_information": "Informatie overliggen",
     "price": "Prijs",
     "region": "Regio",
-    "open_in_maps": "Open in kaarten"
+    "open_in_maps": "Open in kaarten",
+    "all_day": "De hele dag",
+    "collection_no_start_end_date": "Als u een start- en einddatum aan de collectie toevoegt, ontgrendelt u de functies van de planning van de route ontgrendelen in de verzamelpagina.",
+    "date_itinerary": "Datumroute",
+    "no_ordered_items": "Voeg items toe met datums aan de collectie om ze hier te zien.",
+    "ordered_itinerary": "Besteld reisschema"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

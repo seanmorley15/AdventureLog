@@ -6,6 +6,20 @@
 	import { t } from 'svelte-i18n';
 	export let collection: Collection | null = null;
 
+	let fullStartDate: string = '';
+	let fullEndDate: string = '';
+	let fullStartDateOnly: string = '';
+	let fullEndDateOnly: string = '';
+	let allDay: boolean = true;
+
+	// Set full start and end dates from collection
+	if (collection && collection.start_date && collection.end_date) {
+		fullStartDate = `${collection.start_date}T00:00`;
+		fullEndDate = `${collection.end_date}T23:59`;
+		fullStartDateOnly = collection.start_date;
+		fullEndDateOnly = collection.end_date;
+	}
+
 	const dispatch = createEventDispatcher();
 
 	let images: { id: string; image: string; is_primary: boolean }[] = [];
@@ -72,7 +86,7 @@
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
-	import { findFirstValue } from '$lib';
+	import { findFirstValue, isAllDay } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import ImmichSelect from './ImmichSelect.svelte';
 	import Star from '~icons/mdi/star';
@@ -379,7 +393,10 @@
 	let new_start_date: string = '';
 	let new_end_date: string = '';
 	let new_notes: string = '';
+
+	// Function to add a new visit.
 	function addNewVisit() {
+		// If an end date isn’t provided, assume it’s the same as start.
 		if (new_start_date && !new_end_date) {
 			new_end_date = new_start_date;
 		}
@@ -391,15 +408,31 @@
 			addToast('error', $t('adventures.no_start_date'));
 			return;
 		}
+		// Convert input to UTC if not already.
+		if (new_start_date && !new_start_date.includes('Z')) {
+			new_start_date = new Date(new_start_date).toISOString();
+		}
+		if (new_end_date && !new_end_date.includes('Z')) {
+			new_end_date = new Date(new_end_date).toISOString();
+		}
+
+		// If the visit is all day, force the times to midnight.
+		if (allDay) {
+			new_start_date = new_start_date.split('T')[0] + 'T00:00:00.000Z';
+			new_end_date = new_end_date.split('T')[0] + 'T00:00:00.000Z';
+		}
+
 		adventure.visits = [
 			...adventure.visits,
 			{
 				start_date: new_start_date,
 				end_date: new_end_date,
 				notes: new_notes,
-				id: ''
+				id: '' // or generate an id as needed
 			}
 		];
+
+		// Clear the input fields.
 		new_start_date = '';
 		new_end_date = '';
 		new_notes = '';
@@ -669,13 +702,23 @@
 										on:change={() => (constrainDates = !constrainDates)}
 									/>
 								{/if}
+								<span class="label-text">{$t('adventures.all_day')}</span>
+								<input
+									type="checkbox"
+									class="toggle toggle-primary"
+									id="constrain_dates"
+									name="constrain_dates"
+									bind:checked={allDay}
+								/>
 							</label>
 							<div class="flex gap-2 mb-1">
-								{#if !constrainDates}
+								{#if !allDay}
 									<input
-										type="date"
+										type="datetime-local"
 										class="input input-bordered w-full"
-										placeholder="Start Date"
+										placeholder={$t('adventures.start_date')}
+										min={constrainDates ? fullStartDate : ''}
+										max={constrainDates ? fullEndDate : ''}
 										bind:value={new_start_date}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
@@ -685,10 +728,12 @@
 										}}
 									/>
 									<input
-										type="date"
+										type="datetime-local"
 										class="input input-bordered w-full"
 										placeholder={$t('adventures.end_date')}
 										bind:value={new_end_date}
+										min={constrainDates ? fullStartDate : ''}
+										max={constrainDates ? fullEndDate : ''}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
 												e.preventDefault();
@@ -701,8 +746,8 @@
 										type="date"
 										class="input input-bordered w-full"
 										placeholder={$t('adventures.start_date')}
-										min={collection?.start_date}
-										max={collection?.end_date}
+										min={constrainDates ? fullStartDateOnly : ''}
+										max={constrainDates ? fullEndDateOnly : ''}
 										bind:value={new_start_date}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
@@ -716,8 +761,8 @@
 										class="input input-bordered w-full"
 										placeholder={$t('adventures.end_date')}
 										bind:value={new_end_date}
-										min={collection?.start_date}
-										max={collection?.end_date}
+										min={constrainDates ? fullStartDateOnly : ''}
+										max={constrainDates ? fullEndDateOnly : ''}
 										on:keydown={(e) => {
 											if (e.key === 'Enter') {
 												e.preventDefault();
@@ -741,6 +786,31 @@
 									}}
 								></textarea>
 							</div>
+							{#if !allDay}
+								<div role="alert" class="alert shadow-lg bg-neutral mt-2 mb-2">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										class="stroke-info h-6 w-6 shrink-0"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										></path>
+									</svg>
+									<span>
+										{$t('lodging.current_timezone')}:
+										{(() => {
+											const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+											const [continent, city] = tz.split('/');
+											return `${continent} (${city.replace('_', ' ')})`;
+										})()}
+									</span>
+								</div>
+							{/if}
 
 							<div class="flex gap-2">
 								<button type="button" class="btn btn-neutral" on:click={addNewVisit}
@@ -749,24 +819,86 @@
 							</div>
 
 							{#if adventure.visits.length > 0}
-								<h2 class=" font-bold text-xl mt-2">{$t('adventures.my_visits')}</h2>
+								<h2 class="font-bold text-xl mt-2">{$t('adventures.my_visits')}</h2>
 								{#each adventure.visits as visit}
 									<div class="flex flex-col gap-2">
-										<div class="flex gap-2">
+										<div class="flex gap-2 items-center">
 											<p>
-												{new Date(visit.start_date).toLocaleDateString(undefined, {
-													timeZone: 'UTC'
-												})}
+												{#if isAllDay(visit.start_date)}
+													<!-- For all-day events, show just the date -->
+													{new Date(visit.start_date).toLocaleDateString(undefined, {
+														timeZone: 'UTC'
+													})}
+												{:else}
+													<!-- For timed events, show date and time -->
+													{new Date(visit.start_date).toLocaleDateString()} ({new Date(
+														visit.start_date
+													).toLocaleTimeString()})
+												{/if}
 											</p>
 											{#if visit.end_date && visit.end_date !== visit.start_date}
 												<p>
-													{new Date(visit.end_date).toLocaleDateString(undefined, {
-														timeZone: 'UTC'
-													})}
+													{#if isAllDay(visit.end_date)}
+														<!-- For all-day events, show just the date -->
+														{new Date(visit.end_date).toLocaleDateString(undefined, {
+															timeZone: 'UTC'
+														})}
+													{:else}
+														<!-- For timed events, show date and time -->
+														{new Date(visit.end_date).toLocaleDateString()} ({new Date(
+															visit.end_date
+														).toLocaleTimeString()})
+													{/if}
 												</p>
 											{/if}
-
 											<div>
+												<button
+													type="button"
+													class="btn btn-sm btn-neutral"
+													on:click={() => {
+														// Determine if this is an all-day event
+														const isAllDayEvent = isAllDay(visit.start_date);
+														allDay = isAllDayEvent;
+
+														if (isAllDayEvent) {
+															// For all-day events, use date only
+															new_start_date = visit.start_date.split('T')[0];
+															new_end_date = visit.end_date.split('T')[0];
+														} else {
+															// For timed events, format properly for datetime-local input
+															const startDate = new Date(visit.start_date);
+															const endDate = new Date(visit.end_date);
+
+															// Format as yyyy-MM-ddThh:mm
+															new_start_date =
+																startDate.getFullYear() +
+																'-' +
+																String(startDate.getMonth() + 1).padStart(2, '0') +
+																'-' +
+																String(startDate.getDate()).padStart(2, '0') +
+																'T' +
+																String(startDate.getHours()).padStart(2, '0') +
+																':' +
+																String(startDate.getMinutes()).padStart(2, '0');
+
+															new_end_date =
+																endDate.getFullYear() +
+																'-' +
+																String(endDate.getMonth() + 1).padStart(2, '0') +
+																'-' +
+																String(endDate.getDate()).padStart(2, '0') +
+																'T' +
+																String(endDate.getHours()).padStart(2, '0') +
+																':' +
+																String(endDate.getMinutes()).padStart(2, '0');
+														}
+
+														new_notes = visit.notes;
+														adventure.visits = adventure.visits.filter((v) => v !== visit);
+													}}
+												>
+													{$t('lodging.edit')}
+												</button>
 												<button
 													type="button"
 													class="btn btn-sm btn-error"
