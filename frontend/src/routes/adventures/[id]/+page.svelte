@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure } from '$lib/types';
+	import type { AdditionalAdventure, Adventure } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -12,6 +12,7 @@
 	import toGeoJSON from '@mapbox/togeojson';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
+	import WeatherSunset from '~icons/mdi/weather-sunset';
 
 	let geojson: any;
 
@@ -75,7 +76,7 @@
 	export let data: PageData;
 	console.log(data);
 
-	let adventure: Adventure;
+	let adventure: AdditionalAdventure;
 
 	let currentSlide = 0;
 
@@ -112,7 +113,7 @@
 		await getGpxFiles();
 	});
 
-	async function saveEdit(event: CustomEvent<Adventure>) {
+	async function saveEdit(event: CustomEvent<AdditionalAdventure>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
 		geojson = null;
@@ -522,60 +523,108 @@
 								</MapLibre>
 							{/if}
 						</div>
-						{#if adventure.attachments && adventure.attachments.length > 0}
-							<div>
-								<!-- attachments -->
-								<h2 class="text-2xl font-bold mt-4">
-									{$t('adventures.attachments')}
-									<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
-										<button class="btn btn-sm btn-circle btn-neutral">
-											<LightbulbOn class="w-6 h-6" />
-										</button>
-									</div>
-								</h2>
 
-								<div class="grid gap-4 mt-4">
-									{#if adventure.attachments && adventure.attachments.length > 0}
-										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-											{#each adventure.attachments as attachment}
-												<AttachmentCard {attachment} />
-											{/each}
+						<!-- Additional Info Display Section -->
+
+						<div>
+							{#if adventure.sun_times && adventure.sun_times.length > 0}
+								<h2 class="text-2xl font-bold mt-4 mb-4">{$t('adventures.additional_info')}</h2>
+								{#if adventure.sun_times && adventure.sun_times.length > 0}
+									<div class="collapse collapse-plus bg-base-200 mb-2 overflow-visible">
+										<input type="checkbox" />
+										<div class="collapse-title text-xl font-medium">
+											<span>
+												{$t('adventures.sunrise_sunset')}
+												<WeatherSunset class="w-6 h-6 inline-block ml-2 -mt-1" />
+											</span>
 										</div>
-									{/if}
-								</div>
-							</div>
-						{/if}
-						{#if adventure.images && adventure.images.length > 0}
-							<div>
-								<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
-								<div class="grid gap-4 mt-4">
-									{#if adventure.images && adventure.images.length > 0}
-										<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-											{#each adventure.images as image}
-												<div class="relative">
-													<!-- svelte-ignore a11y-no-static-element-interactions -->
-													<!-- svelte-ignore a11y-missing-attribute -->
-													<!-- svelte-ignore a11y-missing-content -->
-													<!-- svelte-ignore a11y-click-events-have-key-events -->
-													<div
-														class="w-full h-48 bg-cover bg-center rounded-lg"
-														style="background-image: url({image.image})"
-														on:click={() => (image_url = image.image)}
-													></div>
-													{#if image.is_primary}
-														<div
-															class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
-														>
-															{$t('adventures.primary')}
+
+										<div class="collapse-content">
+											<div class="grid gap-4 mt-4">
+												<!-- Sunrise and Sunset times -->
+												{#each adventure.sun_times as sun_time}
+													<div class="grid md:grid-cols-3 gap-4">
+														<div>
+															<p class="text-sm text-muted-foreground">Date</p>
+															<p class="text-base font-medium">
+																{new Date(sun_time.date).toLocaleDateString()}
+															</p>
 														</div>
-													{/if}
-												</div>
-											{/each}
+														<div>
+															<p class="text-sm text-muted-foreground">Sunrise</p>
+															<p class="text-base font-medium">
+																{sun_time.sunrise}
+															</p>
+														</div>
+														<div>
+															<p class="text-sm text-muted-foreground">Sunset</p>
+															<p class="text-base font-medium">
+																{sun_time.sunset}
+															</p>
+														</div>
+													</div>
+												{/each}
+											</div>
 										</div>
-									{/if}
+									</div>
+								{/if}
+							{/if}
+
+							{#if adventure.attachments && adventure.attachments.length > 0}
+								<div>
+									<!-- attachments -->
+									<h2 class="text-2xl font-bold mt-4">
+										{$t('adventures.attachments')}
+										<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
+											<button class="btn btn-sm btn-circle btn-neutral">
+												<LightbulbOn class="w-6 h-6" />
+											</button>
+										</div>
+									</h2>
+
+									<div class="grid gap-4 mt-4">
+										{#if adventure.attachments && adventure.attachments.length > 0}
+											<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+												{#each adventure.attachments as attachment}
+													<AttachmentCard {attachment} />
+												{/each}
+											</div>
+										{/if}
+									</div>
 								</div>
-							</div>
-						{/if}
+							{/if}
+							{#if adventure.images && adventure.images.length > 0}
+								<div>
+									<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
+									<div class="grid gap-4 mt-4">
+										{#if adventure.images && adventure.images.length > 0}
+											<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+												{#each adventure.images as image}
+													<div class="relative">
+														<!-- svelte-ignore a11y-no-static-element-interactions -->
+														<!-- svelte-ignore a11y-missing-attribute -->
+														<!-- svelte-ignore a11y-missing-content -->
+														<!-- svelte-ignore a11y-click-events-have-key-events -->
+														<div
+															class="w-full h-48 bg-cover bg-center rounded-lg"
+															style="background-image: url({image.image})"
+															on:click={() => (image_url = image.image)}
+														></div>
+														{#if image.is_primary}
+															<div
+																class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
+															>
+																{$t('adventures.primary')}
+															</div>
+														{/if}
+													</div>
+												{/each}
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
