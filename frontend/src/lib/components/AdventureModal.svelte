@@ -74,9 +74,9 @@
 		'.tar.lzma',
 		'.tar.lzo',
 		'.tar.z',
-		'gpx',
-		'md',
-		'pdf'
+		'.gpx',
+		'.md',
+		'.pdf'
 	];
 
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
