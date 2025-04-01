@@ -9,14 +9,42 @@
 
 	let isImageInfoModalOpen: boolean = false;
 
+	let socialProviders = data.props?.socialProviders ?? [];
+
+	import GitHub from '~icons/mdi/github';
+	import OpenIdConnect from '~icons/mdi/openid';
+
 	import { page } from '$app/stores';
+	import { gsap } from 'gsap'; // Import GSAP
+	import { onMount } from 'svelte';
+
+	onMount(() => {
+		gsap.from('.card', {
+			opacity: 0,
+			y: 50,
+			duration: 1,
+			ease: 'power3.out'
+		});
+		gsap.from('.text-center', {
+			opacity: 0,
+			x: -50,
+			duration: 1,
+			ease: 'power2.out'
+		});
+		gsap.from('.input', {
+			opacity: 0,
+			y: 30,
+			duration: 1,
+			ease: 'power2.out'
+		});
+	});
 
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
-	let quote: { quote: string; author: string } = data.props.quote;
+	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
 
-	let background: Background = data.props.background;
+	let background: Background = data.props?.background ?? { url: '' };
 </script>
 
 {#if isImageInfoModalOpen}
@@ -52,15 +80,34 @@
 						class="block input input-bordered w-full max-w-xs"
 					/><br />
 					{#if $page.form?.mfa_required}
-						<label for="password">TOTP</label>
+						<label for="totp">TOTP</label>
 						<input
-							type="password"
+							type="text"
 							name="totp"
 							id="totp"
+							inputmode="numeric"
+							pattern="[0-9]*"
+							autocomplete="one-time-code"
 							class="block input input-bordered w-full max-w-xs"
 						/><br />
 					{/if}
 					<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.login')}</button>
+
+					{#if socialProviders.length > 0}
+						<div class="divider text-center text-sm my-4">{$t('auth.or_3rd_party')}</div>
+						<div class="flex justify-center">
+							{#each socialProviders as provider}
+								<a href={provider.url} class="btn btn-primary mr-2 flex items-center">
+									{#if provider.provider === 'github'}
+										<GitHub class="w-4 h-4 mr-2" />
+									{:else if provider.provider === 'openid_connect'}
+										<OpenIdConnect class="w-4 h-4 mr-2" />
+									{/if}
+									{provider.name}
+								</a>
+							{/each}
+						</div>
+					{/if}
 
 					<div class="flex justify-between mt-4">
 						<p><a href="/signup" class="underline">{$t('auth.signup')}</a></p>

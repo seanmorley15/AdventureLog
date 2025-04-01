@@ -3,6 +3,7 @@ import { sequence } from '@sveltejs/kit/hooks';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 
 export const authHook: Handle = async ({ event, resolve }) => {
+	event.cookies.delete('csrftoken', { path: '/' });
 	try {
 		let sessionid = event.cookies.get('sessionid');
 
@@ -23,7 +24,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 
 		if (!userFetch.ok) {
 			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/' });
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 			return await resolve(event);
 		}
 
@@ -47,19 +48,19 @@ export const authHook: Handle = async ({ event, resolve }) => {
 						path: '/',
 						httpOnly: true,
 						sameSite: 'lax',
-						secure: true,
+						secure: event.url.protocol === 'https:',
 						expires: expiryDate
 					});
 				}
 			}
 		} else {
 			event.locals.user = null;
-			event.cookies.delete('sessionid', { path: '/' });
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 		}
 	} catch (error) {
 		console.error('Error in authHook:', error);
 		event.locals.user = null;
-		event.cookies.delete('sessionid', { path: '/' });
+		event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 	}
 
 	return await resolve(event);

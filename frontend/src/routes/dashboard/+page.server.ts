@@ -20,11 +20,14 @@ export const load = (async (event) => {
 
 		let stats = null;
 
-		let res = await event.fetch(`${serverEndpoint}/api/stats/counts/`, {
-			headers: {
-				Cookie: `sessionid=${event.cookies.get('sessionid')}`
+		let res = await event.fetch(
+			`${serverEndpoint}/api/stats/counts/${event.locals.user.username}/`,
+			{
+				headers: {
+					Cookie: `sessionid=${event.cookies.get('sessionid')}`
+				}
 			}
-		});
+		);
 		if (!res.ok) {
 			console.error('Failed to fetch user stats');
 		} else {

@@ -1,7 +1,6 @@
 export type User = {
 	pk: number;
 	username: string;
-	email: string | null;
 	first_name: string | null;
 	last_name: string | null;
 	date_joined: string | null;
@@ -9,12 +8,13 @@ export type User = {
 	profile_pic: string | null;
 	uuid: string;
 	public_profile: boolean;
+	has_password: boolean;
+	disable_password: boolean;
 };
 
 export type Adventure = {
 	id: string;
 	user_id: string | null;
-	type: string;
 	name: string;
 	location?: string | null;
 	activity_types?: string[] | null;
@@ -24,6 +24,7 @@ export type Adventure = {
 	images: {
 		id: string;
 		image: string;
+		is_primary: boolean;
 	}[];
 	visits: {
 		id: string;
@@ -39,6 +40,8 @@ export type Adventure = {
 	updated_at?: string | null;
 	is_visited?: boolean;
 	category: Category | null;
+	attachments: Attachment[];
+	user?: User | null;
 };
 
 export type Country = {
@@ -50,19 +53,42 @@ export type Country = {
 	capital: string;
 	num_regions: number;
 	num_visits: number;
+	longitude: number | null;
+	latitude: number | null;
 };
 
 export type Region = {
-	id: number;
+	id: string;
 	name: string;
-	country: number;
+	country: string;
 	latitude: number;
 	longitude: number;
+	num_cities: number;
+	country_name: string;
+};
+
+export type City = {
+	id: string;
+	name: string;
+	latitude: number | null;
+	longitude: number | null;
+	region: string;
+	region_name: string;
+	country_name: string;
 };
 
 export type VisitedRegion = {
 	id: number;
-	region: number;
+	region: string;
+	user_id: string;
+	longitude: number;
+	latitude: number;
+	name: string;
+};
+
+export type VisitedCity = {
+	id: number;
+	city: string;
 	user_id: string;
 	longitude: number;
 	latitude: number;
@@ -91,6 +117,7 @@ export type Collection = {
 	end_date: string | null;
 	transportations?: Transportation[];
 	notes?: Note[];
+	lodging?: Lodging[];
 	checklists?: Checklist[];
 	is_archived?: boolean;
 	shared_with: string[] | undefined;
@@ -179,11 +206,15 @@ export type Background = {
 };
 
 export type ReverseGeocode = {
-	id: string;
+	region_id: string;
 	region: string;
 	country: string;
-	is_visited: boolean;
+	region_visited: boolean;
+	city_visited: boolean;
 	display_name: string;
+	city: string;
+	city_id: string;
+	location_name: string;
 };
 
 export type Category = {
@@ -193,4 +224,68 @@ export type Category = {
 	icon: string;
 	user_id: string;
 	num_adventures?: number | null;
+};
+
+export type ImmichIntegration = {
+	id: string;
+	server_url: string;
+	api_key: string;
+};
+
+export type ImmichAlbum = {
+	albumName: string;
+	description: string;
+	albumThumbnailAssetId: string;
+	createdAt: string;
+	updatedAt: string;
+	id: string;
+	ownerId: string;
+	owner: {
+		id: string;
+		email: string;
+		name: string;
+		profileImagePath: string;
+		avatarColor: string;
+		profileChangedAt: string;
+	};
+	albumUsers: any[];
+	shared: boolean;
+	hasSharedLink: boolean;
+	startDate: string;
+	endDate: string;
+	assets: any[];
+	assetCount: number;
+	isActivityEnabled: boolean;
+	order: string;
+	lastModifiedAssetTimestamp: string;
+};
+
+export type Attachment = {
+	id: string;
+	file: string;
+	adventure: string;
+	extension: string;
+	user_id: string;
+	name: string;
+};
+
+export type Lodging = {
+	id: string;
+	user_id: string;
+	name: string;
+	type: string;
+	description: string | null;
+	rating: number | null;
+	link: string | null;
+	check_in: string | null; // ISO 8601 date string
+	check_out: string | null; // ISO 8601 date string
+	reservation_number: string | null;
+	price: number | null;
+	latitude: number | null;
+	longitude: number | null;
+	location: string | null;
+	is_public: boolean;
+	collection: string | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
 };

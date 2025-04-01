@@ -4,13 +4,73 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked'; // Import the markdown parser
+	import DOMPurify from 'dompurify';
+	// @ts-ignore
+	import toGeoJSON from '@mapbox/togeojson';
+
+	import LightbulbOn from '~icons/mdi/lightbulb-on';
+
+	let geojson: any;
 
 	const renderMarkdown = (markdown: string) => {
-		return marked(markdown);
+		return marked(markdown) as string;
 	};
+
+	async function getGpxFiles() {
+		let gpxfiles: string[] = [];
+
+		// Collect all GPX file attachments
+		if (adventure.attachments && adventure.attachments.length > 0) {
+			gpxfiles = adventure.attachments
+				.filter((attachment) => attachment.extension === 'gpx')
+				.map((attachment) => attachment.file);
+		}
+
+		// Initialize the GeoJSON collection
+		geojson = {
+			type: 'FeatureCollection',
+			features: []
+		};
+
+		// Process each GPX file concurrently
+		if (gpxfiles.length > 0) {
+			const promises = gpxfiles.map(async (gpxfile) => {
+				try {
+					const gpxFileName = gpxfile.split('/').pop();
+					const res = await fetch('/gpx/' + gpxFileName);
+
+					if (!res.ok) {
+						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
+						return [];
+					}
+
+					const gpxData = await res.text();
+					const parser = new DOMParser();
+					const gpx = parser.parseFromString(gpxData, 'text/xml');
+
+					// Convert GPX to GeoJSON and return features
+					const convertedGeoJSON = toGeoJSON.gpx(gpx);
+					return convertedGeoJSON.features || [];
+				} catch (error) {
+					console.error(`Error processing GPX file ${gpxfile}:`, error);
+					return [];
+				}
+			});
+
+			// Use Promise.allSettled to ensure every promise resolves,
+			// even if some requests fail.
+			const results = await Promise.allSettled(promises);
+
+			results.forEach((result) => {
+				if (result.status === 'fulfilled' && result.value.length > 0) {
+					geojson.features.push(...result.value);
+				}
+			});
+		}
+	}
 
 	export let data: PageData;
 	console.log(data);
@@ -30,18 +90,32 @@
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 
-	onMount(() => {
+	onMount(async () => {
 		if (data.props.adventure) {
 			adventure = data.props.adventure;
+			// sort so that any image in adventure_images .is_primary is first
+			adventure.images.sort((a, b) => {
+				if (a.is_primary && !b.is_primary) {
+					return -1;
+				} else if (!a.is_primary && b.is_primary) {
+					return 1;
+				} else {
+					return 0;
+				}
+			});
 		} else {
 			notFound = true;
 		}
+		await getGpxFiles();
 	});
 
-	function saveEdit(event: CustomEvent<Adventure>) {
+	async function saveEdit(event: CustomEvent<Adventure>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
+		geojson = null;
+		await getGpxFiles();
 	}
 </script>
 
@@ -120,7 +194,10 @@
 											alt={adventure.name}
 										/>
 									</a>
-									<div class="flex justify-center w-full py-2 gap-2">
+									<!-- Scrollable button container -->
+									<div
+										class="flex w-full py-2 gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide justify-start"
+									>
 										{#each adventure.images as _, i}
 											<button
 												on:click={() => goToSlide(i)}
@@ -132,6 +209,7 @@
 							{/each}
 						</div>
 					{/if}
+
 					<div class="grid gap-4">
 						<div class="flex items-center justify-between">
 							<div>
@@ -156,6 +234,43 @@
 							</div>
 						</div>
 						<div class="grid gap-2">
+							{#if adventure.user}
+								<div class="flex items-center gap-2">
+									{#if adventure.user.profile_pic}
+										<div class="avatar">
+											<div class="w-8 rounded-full">
+												<img src={adventure.user.profile_pic} alt={adventure.user.username} />
+											</div>
+										</div>
+									{:else}
+										<div class="avatar placeholder">
+											<div class="bg-neutral text-neutral-content w-8 rounded-full">
+												<span class="text-lg"
+													>{adventure.user.first_name
+														? adventure.user.first_name.charAt(0)
+														: adventure.user.username.charAt(0)}{adventure.user.last_name
+														? adventure.user.last_name.charAt(0)
+														: ''}</span
+												>
+											</div>
+										</div>
+									{/if}
+
+									<div>
+										{#if adventure.user.public_profile}
+											<a href={`/profile/${adventure.user.username}`} class="text-base font-medium">
+												{adventure.user.first_name || adventure.user.username}{' '}
+												{adventure.user.last_name}
+											</a>
+										{:else}
+											<span class="text-base font-medium">
+												{adventure.user.first_name || adventure.user.username}{' '}
+												{adventure.user.last_name}
+											</span>
+										{/if}
+									</div>
+								</div>
+							{/if}
 							<div class="flex items-center gap-2">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
@@ -176,6 +291,7 @@
 									>{adventure.is_public ? 'Public' : 'Private'}</span
 								>
 							</div>
+
 							{#if adventure.location}
 								<div class="flex items-center gap-2">
 									<svg
@@ -253,7 +369,7 @@
 							<article
 								class="prose overflow-auto h-full max-w-full p-4 border border-base-300 rounded-lg"
 							>
-								{@html renderMarkdown(adventure.description)}
+								{@html DOMPurify.sanitize(renderMarkdown(adventure.description))}
 							</article>
 						{/if}
 					</div>
@@ -316,60 +432,137 @@
 									</div>
 								{/if}
 							</div>
-							{#if adventure.longitude && adventure.latitude}
-								<div class="grid md:grid-cols-2 gap-4">
-									<div>
-										<p class="text-sm text-muted-foreground">{$t('adventures.latitude')}</p>
-										<p class="text-base font-medium">{adventure.latitude}° N</p>
+							{#if (adventure.longitude && adventure.latitude) || geojson}
+								{#if adventure.longitude && adventure.latitude}
+									<div class="grid md:grid-cols-2 gap-4">
+										<div>
+											<p class="text-sm text-muted-foreground">{$t('adventures.latitude')}</p>
+											<p class="text-base font-medium">{adventure.latitude}° N</p>
+										</div>
+										<div>
+											<p class="text-sm text-muted-foreground">{$t('adventures.longitude')}</p>
+											<p class="text-base font-medium">{adventure.longitude}° W</p>
+										</div>
 									</div>
-									<div>
-										<p class="text-sm text-muted-foreground">{$t('adventures.longitude')}</p>
-										<p class="text-base font-medium">{adventure.longitude}° W</p>
-									</div>
-								</div>
+								{/if}
+								<a
+									class="btn btn-neutral btn-sm max-w-32"
+									href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+									target="_blank"
+									rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
+								>
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
 									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 									standardControls
-									center={{ lng: adventure.longitude, lat: adventure.latitude }}
-									zoom={12}
+									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
+									zoom={adventure.longitude ? 12 : 1}
 								>
+									<!-- use the geojson to make a line -->
+									{#if geojson}
+										<!-- Add the GeoJSON data -->
+										<GeoJSON data={geojson}>
+											<LineLayer
+												paint={{
+													'line-color': '#FF0000', // Red line color
+													'line-width': 4 // Adjust the line thickness
+												}}
+											/>
+										</GeoJSON>
+									{/if}
+
 									<!-- MapEvents gives you access to map events even from other components inside the map,
   where you might not have access to the top-level `MapLibre` component. In this case
   it would also work to just use on:click on the MapLibre component itself. -->
 									<!-- <MapEvents on:click={addMarker} /> -->
 
-									<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
-										<Popup openOn="click" offset={[0, -10]}>
-											<div class="text-lg text-black font-bold">{adventure.name}</div>
-											<p class="font-semibold text-black text-md">
-												{adventure.category?.display_name + ' ' + adventure.category?.icon}
-											</p>
-											{#if adventure.visits.length > 0}
-												<p class="text-black text-sm">
-													{#each adventure.visits as visit}
-														{visit.start_date
-															? new Date(visit.start_date).toLocaleDateString(undefined, {
-																	timeZone: 'UTC'
-																})
-															: ''}
-														{visit.end_date &&
-														visit.end_date !== '' &&
-														visit.end_date !== visit.start_date
-															? ' - ' +
-																new Date(visit.end_date).toLocaleDateString(undefined, {
-																	timeZone: 'UTC'
-																})
-															: ''}
-														<br />
-													{/each}
+									{#if adventure.longitude && adventure.latitude}
+										<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
+											<Popup openOn="click" offset={[0, -10]}>
+												<div class="text-lg text-black font-bold">{adventure.name}</div>
+												<p class="font-semibold text-black text-md">
+													{adventure.category?.display_name + ' ' + adventure.category?.icon}
 												</p>
-											{/if}
-										</Popup>
-									</DefaultMarker>
+												{#if adventure.visits.length > 0}
+													<p class="text-black text-sm">
+														{#each adventure.visits as visit}
+															{visit.start_date
+																? new Date(visit.start_date).toLocaleDateString(undefined, {
+																		timeZone: 'UTC'
+																	})
+																: ''}
+															{visit.end_date &&
+															visit.end_date !== '' &&
+															visit.end_date !== visit.start_date
+																? ' - ' +
+																	new Date(visit.end_date).toLocaleDateString(undefined, {
+																		timeZone: 'UTC'
+																	})
+																: ''}
+															<br />
+														{/each}
+													</p>
+												{/if}
+											</Popup>
+										</DefaultMarker>
+									{/if}
 								</MapLibre>
 							{/if}
 						</div>
+						{#if adventure.attachments && adventure.attachments.length > 0}
+							<div>
+								<!-- attachments -->
+								<h2 class="text-2xl font-bold mt-4">
+									{$t('adventures.attachments')}
+									<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
+										<button class="btn btn-sm btn-circle btn-neutral">
+											<LightbulbOn class="w-6 h-6" />
+										</button>
+									</div>
+								</h2>
+
+								<div class="grid gap-4 mt-4">
+									{#if adventure.attachments && adventure.attachments.length > 0}
+										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+											{#each adventure.attachments as attachment}
+												<AttachmentCard {attachment} />
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/if}
+						{#if adventure.images && adventure.images.length > 0}
+							<div>
+								<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
+								<div class="grid gap-4 mt-4">
+									{#if adventure.images && adventure.images.length > 0}
+										<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+											{#each adventure.images as image}
+												<div class="relative">
+													<!-- svelte-ignore a11y-no-static-element-interactions -->
+													<!-- svelte-ignore a11y-missing-attribute -->
+													<!-- svelte-ignore a11y-missing-content -->
+													<!-- svelte-ignore a11y-click-events-have-key-events -->
+													<div
+														class="w-full h-48 bg-cover bg-center rounded-lg"
+														style="background-image: url({image.image})"
+														on:click={() => (image_url = image.image)}
+													></div>
+													{#if image.is_primary}
+														<div
+															class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
+														>
+															{$t('adventures.primary')}
+														</div>
+													{/if}
+												</div>
+											{/each}
+										</div>
+									{/if}
+								</div>
+							</div>
+						{/if}
 					</div>
 				</div>
 			</div>

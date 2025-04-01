@@ -1,5 +1,5 @@
 import os
-from .models import Country, Region, VisitedRegion
+from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 
@@ -29,14 +29,28 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits']
+        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
 
 
 class RegionSerializer(serializers.ModelSerializer):
+    num_cities = serializers.SerializerMethodField()
+    country_name = serializers.CharField(source='country.name', read_only=True)
     class Meta:
         model = Region
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude']
+        read_only_fields = ['id', 'name', 'country', 'longitude', 'latitude', 'num_cities', 'country_name']
+
+    def get_num_cities(self, obj):
+        return City.objects.filter(region=obj).count()
+
+class CitySerializer(serializers.ModelSerializer):
+    region_name = serializers.CharField(source='region.name', read_only=True)
+    country_name = serializers.CharField(source='region.country.name', read_only=True
+    )
+    class Meta:
+        model = City
+        fields = '__all__'
+        read_only_fields = ['id', 'name', 'region', 'longitude', 'latitude', 'region_name', 'country_name']
 
 class VisitedRegionSerializer(CustomModelSerializer):
     longitude = serializers.DecimalField(source='region.longitude', max_digits=9, decimal_places=6, read_only=True)
@@ -46,4 +60,14 @@ class VisitedRegionSerializer(CustomModelSerializer):
     class Meta:
         model = VisitedRegion
         fields = ['id', 'user_id', 'region', 'longitude', 'latitude', 'name']
+        read_only_fields = ['user_id', 'id', 'longitude', 'latitude', 'name']
+
+class VisitedCitySerializer(CustomModelSerializer):
+    longitude = serializers.DecimalField(source='city.longitude', max_digits=9, decimal_places=6, read_only=True)
+    latitude = serializers.DecimalField(source='city.latitude', max_digits=9, decimal_places=6, read_only=True)
+    name = serializers.CharField(source='city.name', read_only=True)
+
+    class Meta:
+        model = VisitedCity
+        fields = ['id', 'user_id', 'city', 'longitude', 'latitude', 'name']
         read_only_fields = ['user_id', 'id', 'longitude', 'latitude', 'name']

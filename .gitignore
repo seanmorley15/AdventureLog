@@ -1,3 +1,4 @@
 # Ignore everything in the .venv folder
 .venv/
 .vscode/settings.json
+.pnpm-store/

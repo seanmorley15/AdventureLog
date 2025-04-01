@@ -25,7 +25,7 @@ You must [expose tailnet IPs to your cluster](https://tailscale.com/kb/1438/kube
 
 ## Getting Started
 
-Take a look at the [example config](https://github.com/seanmorley15/AdventureLog/blob/main/kustomization.yml) and modify it for your usecase.
+Take a look at the [example config](https://github.com/seanmorley15/AdventureLog/blob/main/kustomization.yml) and modify it for your use case.
 
 ## Environment Variables
 

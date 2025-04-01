@@ -6,13 +6,13 @@
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
 
-	import InformationSlabCircle from '~icons/mdi/information-slab-circle';
-
 	export let categories: Category[] = [];
 
 	let category_to_edit: Category | null = null;
 
 	let is_changed: boolean = false;
+
+	let has_loaded: boolean = false;
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -21,6 +21,7 @@
 		}
 		let category_fetch = await fetch('/api/categories/categories');
 		categories = await category_fetch.json();
+		has_loaded = true;
 		// remove the general category if it exists
 		// categories = categories.filter((c) => c.name !== 'general');
 	});
@@ -77,25 +78,31 @@
 	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-lg">{$t('categories.manage_categories')}</h3>
 
-		{#each categories as category}
-			<div class="flex justify-between items-center mt-2">
-				<span>{category.display_name} {category.icon}</span>
-				<div class="flex space-x-2">
-					<button on:click={() => (category_to_edit = category)} class="btn btn-primary btn-sm"
-						>Edit</button
-					>
-					{#if category.name != 'general'}
-						<button on:click={removeCategory(category)} class="btn btn-warning btn-sm"
-							>{$t('adventures.remove')}</button
+		{#if has_loaded}
+			{#each categories as category}
+				<div class="flex justify-between items-center mt-2">
+					<span>{category.display_name} {category.icon}</span>
+					<div class="flex space-x-2">
+						<button on:click={() => (category_to_edit = category)} class="btn btn-primary btn-sm"
+							>Edit</button
 						>
-					{:else}
-						<button class="btn btn-warning btn-sm btn-disabled">{$t('adventures.remove')}</button>
-					{/if}
+						{#if category.name != 'general'}
+							<button on:click={removeCategory(category)} class="btn btn-warning btn-sm"
+								>{$t('adventures.remove')}</button
+							>
+						{:else}
+							<button class="btn btn-warning btn-sm btn-disabled">{$t('adventures.remove')}</button>
+						{/if}
+					</div>
 				</div>
+			{/each}
+			{#if categories.length === 0}
+				<p>{$t('categories.no_categories_found')}</p>
+			{/if}
+		{:else}
+			<div class="flex items-center justify-center">
+				<span class="loading loading-spinner loading-lg m-4"></span>
 			</div>
-		{/each}
-		{#if categories.length === 0}
-			<p>{$t('categories.no_categories_found')}</p>
 		{/if}
 
 		{#if category_to_edit}

@@ -215,7 +215,39 @@
     "start": "Commencer",
     "starting_airport": "Aéroport de départ",
     "to": "À",
-    "transportation_delete_confirm": "Etes-vous sûr de vouloir supprimer ce transport ? \nCette action ne peut pas être annulée."
+    "transportation_delete_confirm": "Etes-vous sûr de vouloir supprimer ce transport ? \nCette action ne peut pas être annulée.",
+    "show_map": "Afficher la carte",
+    "will_be_marked": "sera marqué comme visité une fois l’aventure sauvegardée.",
+    "cities_updated": "villes mises à jour",
+    "create_adventure": "Créer une aventure",
+    "no_adventures_to_recommendations": "Aucune aventure trouvée. \nAjoutez au moins une aventure pour obtenir des recommandations.",
+    "finding_recommendations": "Découvrir des trésors cachés pour votre prochaine aventure",
+    "attachment": "Pièce jointe",
+    "attachment_delete_success": "Pièce jointe supprimée avec succès !",
+    "attachment_name": "Nom de la pièce jointe",
+    "attachment_update_error": "Erreur lors de la mise à jour de la pièce jointe",
+    "attachment_update_success": "Pièce jointe mise à jour avec succès !",
+    "attachment_upload_error": "Erreur lors du téléchargement de la pièce jointe",
+    "attachment_upload_success": "Pièce jointe téléchargée avec succès !",
+    "attachments": "Pièces jointes",
+    "gpx_tip": "Téléchargez des fichiers GPX en pièces jointes pour les afficher sur la carte !",
+    "images": "Images",
+    "primary": "Primaire",
+    "upload": "Télécharger",
+    "view_attachment": "Voir la pièce jointe",
+    "of": "de",
+    "city": "Ville",
+    "delete_lodging": "Supprimer l'hébergement",
+    "display_name": "Nom d'affichage",
+    "location_details": "Détails de l'emplacement",
+    "lodging": "Hébergement",
+    "lodging_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet emplacement d'hébergement? \nCette action ne peut pas être annulée.",
+    "lodging_information": "Informations sur l'hébergement",
+    "price": "Prix",
+    "region": "Région",
+    "reservation_number": "Numéro de réservation",
+    "welcome_map_info": "Aventures publiques sur ce serveur",
+    "open_in_maps": "Ouvert dans les cartes"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -262,7 +294,8 @@
     "tag": "Étiqueter",
     "language_selection": "Langue",
     "support": "Soutien",
-    "calendar": "Calendrier"
+    "calendar": "Calendrier",
+    "admin_panel": "Panneau d'administration"
   },
   "auth": {
     "confirm_password": "Confirmez le mot de passe",
@@ -282,7 +315,12 @@
     "email_required": "L'e-mail est requis",
     "both_passwords_required": "Les deux mots de passe sont requis",
     "new_password": "Nouveau mot de passe",
-    "reset_failed": "Échec de la réinitialisation du mot de passe"
+    "reset_failed": "Échec de la réinitialisation du mot de passe",
+    "or_3rd_party": "Ou connectez-vous avec un service tiers",
+    "no_public_adventures": "Aucune aventure publique trouvée",
+    "no_public_collections": "Aucune collection publique trouvée",
+    "user_adventures": "Aventures utilisateur",
+    "user_collections": "Collections d'utilisateurs"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec des profils publics."
@@ -296,7 +334,20 @@
     "no_countries_found": "Aucun pays trouvé",
     "not_visited": "Non visité",
     "num_countries": "pays trouvés",
-    "partially_visited": "Partiellement visité"
+    "partially_visited": "Partiellement visité",
+    "all_visited": "Vous avez visité toutes les régions de",
+    "cities": "villes",
+    "failed_to_mark_visit": "Échec de la notation de la visite à",
+    "failed_to_remove_visit": "Échec de la suppression de la visite à",
+    "marked_visited": "marqué comme visité",
+    "no_cities_found": "Aucune ville trouvée",
+    "region_failed_visited": "Échec du marquage de la région comme visitée",
+    "region_stats": "Statistiques de la région",
+    "regions_in": "Régions dans",
+    "removed": "supprimé",
+    "view_cities": "Voir les villes",
+    "visit_remove_failed": "Échec de la suppression de la visite",
+    "visit_to": "Visite à"
   },
   "settings": {
     "account_settings": "Paramètres du compte utilisateur",
@@ -367,7 +418,25 @@
     "csrf_failed": "Échec de la récupération du jeton CSRF",
     "duplicate_email": "Cette adresse e-mail est déjà utilisée.",
     "email_taken": "Cette adresse e-mail est déjà utilisée.",
-    "username_taken": "Ce nom d'utilisateur est déjà utilisé."
+    "username_taken": "Ce nom d'utilisateur est déjà utilisé.",
+    "administration_settings": "Paramètres d'administration",
+    "documentation_link": "Lien vers la documentation",
+    "launch_account_connections": "Lancer les connexions au compte",
+    "launch_administration_panel": "Lancer le panneau d'administration",
+    "no_verified_email_warning": "Vous devez disposer d'une adresse e-mail vérifiée pour activer l'authentification à deux facteurs.",
+    "social_auth_desc": "Activez ou désactivez les fournisseurs d'authentification sociale et OIDC pour votre compte. \nCes connexions vous permettent de vous connecter avec des fournisseurs d'identité d'authentification auto-hébergés comme Authentik ou des fournisseurs tiers comme GitHub.",
+    "social_auth_desc_2": "Ces paramètres sont gérés sur le serveur AdventureLog et doivent être activés manuellement par l'administrateur.",
+    "social_oidc_auth": "Authentification sociale et OIDC",
+    "add_email": "Ajouter un e-mail",
+    "password_too_short": "Le mot de passe doit contenir au moins 6 caractères",
+    "disable_password": "Désactiver le mot de passe",
+    "password_disable": "Désactiver l'authentification du mot de passe",
+    "password_disable_desc": "La désactivation de l'authentification du mot de passe vous empêchera de vous connecter avec un mot de passe. \nVous devrez utiliser un fournisseur social ou OIDC pour vous connecter. Si votre fournisseur social est non lié, l'authentification du mot de passe sera automatiquement réactivé même si ce paramètre est désactivé.",
+    "password_disable_warning": "Actuellement, l'authentification du mot de passe est désactivée. \nLa connexion via un fournisseur social ou OIDC est requise.",
+    "password_disabled": "Authentification du mot de passe désactivé",
+    "password_disabled_error": "Erreur de désactivation de l'authentification du mot de passe. \nAssurez-vous qu'un fournisseur social ou OIDC est lié à votre compte.",
+    "password_enabled": "Authentification du mot de passe activé",
+    "password_enabled_error": "Erreur permettant l'authentification du mot de passe."
   },
   "checklist": {
     "add_item": "Ajouter un article",
@@ -438,7 +507,10 @@
     "transportation_added": "Transport ajouté avec succès !",
     "transportation_delete_error": "Erreur lors de la suppression du transport",
     "transportation_deleted": "Transport supprimé avec succès !",
-    "transportation_edit_success": "Transport modifié avec succès !"
+    "transportation_edit_success": "Transport modifié avec succès !",
+    "ending_airport_desc": "Entrez la fin du code aéroportuaire (par exemple, laxiste)",
+    "fetch_location_information": "Récupérer les informations de localisation",
+    "starting_airport_desc": "Entrez le code aéroport de démarrage (par exemple, JFK)"
   },
   "search": {
     "adventurelog_results": "Résultats du journal d'aventure",
@@ -454,17 +526,7 @@
     "show_visited_regions": "Afficher les régions visitées",
     "view_details": "Afficher les détails"
   },
-  "languages": {
-    "de": "Allemand",
-    "en": "Anglais",
-    "es": "Espagnol",
-    "fr": "Français",
-    "it": "italien",
-    "nl": "Néerlandais",
-    "sv": "suédois",
-    "zh": "Chinois",
-    "pl": "Polonais"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Aucun utilisateur partagé avec",
     "not_shared_with": "Non partagé avec",
@@ -481,7 +543,8 @@
     "member_since": "Membre depuis",
     "user_stats": "Statistiques des utilisateurs",
     "visited_countries": "Pays visités",
-    "visited_regions": "Régions visitées"
+    "visited_regions": "Régions visitées",
+    "visited_cities": "Villes visitées"
   },
   "categories": {
     "category_name": "Nom de la catégorie",
@@ -499,6 +562,69 @@
     "recent_adventures": "Aventures récentes",
     "total_adventures": "Aventures totales",
     "total_visited_regions": "Total des régions visitées",
-    "welcome_back": "Content de te revoir"
+    "welcome_back": "Content de te revoir",
+    "total_visited_cities": "Total des villes visitées"
+  },
+  "immich": {
+    "api_key": "Clé API Immich",
+    "api_note": "Remarque : il doit s'agir de l'URL du serveur API Immich, elle se termine donc probablement par /api, sauf si vous disposez d'une configuration personnalisée.",
+    "disable": "Désactiver",
+    "enable_immich": "Activer Immich",
+    "imageid_required": "L'identifiant de l'image est requis",
+    "immich": "Immich",
+    "immich_desc": "Intégrez votre compte Immich à AdventureLog pour vous permettre de rechercher dans votre bibliothèque de photos et d'importer des photos pour vos aventures.",
+    "immich_disabled": "Intégration Immich désactivée avec succès !",
+    "immich_enabled": "Intégration Immich activée avec succès !",
+    "immich_error": "Erreur lors de la mise à jour de l'intégration Immich",
+    "immich_integration": "Intégration Immich",
+    "immich_updated": "Paramètres Immich mis à jour avec succès !",
+    "integration_enabled": "Intégration activée",
+    "integration_fetch_error": "Erreur lors de la récupération des données de l'intégration Immich",
+    "integration_missing": "L'intégration Immich est absente du backend",
+    "load_more": "Charger plus",
+    "no_items_found": "Aucun article trouvé",
+    "query_required": "La requête est obligatoire",
+    "server_down": "Le serveur Immich est actuellement en panne ou inaccessible",
+    "server_url": "URL du serveur Immich",
+    "update_integration": "Intégration des mises à jour",
+    "documentation": "Documentation d'intégration Immich",
+    "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine."
+  },
+  "recomendations": {
+    "address": "Adresse",
+    "contact": "Contact",
+    "phone": "Téléphone",
+    "recommendation": "Recommandation",
+    "website": "Site web"
+  },
+  "lodging": {
+    "apartment": "Appartement",
+    "bnb": "Bed and petit-déjeuner",
+    "cabin": "Cabine",
+    "campground": "Camping",
+    "check_in": "Enregistrement",
+    "check_out": "Vérifier",
+    "date_and_time": "Date",
+    "edit": "Modifier",
+    "edit_lodging": "Modifier l'hébergement",
+    "error_editing_lodging": "Édition d'erreurs Hébergement",
+    "hostel": "Auberge",
+    "hotel": "Hôtel",
+    "house": "Maison",
+    "lodging_added": "L'hébergement a ajouté avec succès!",
+    "lodging_delete_error": "Erreur de suppression de l'hébergement",
+    "lodging_deleted": "L'hébergement est supprimé avec succès!",
+    "lodging_edit_success": "L'hébergement édité avec succès!",
+    "lodging_type": "Type d'hébergement",
+    "motel": "Motel",
+    "new_lodging": "Nouveau logement",
+    "other": "Autre",
+    "provide_start_date": "Veuillez fournir une date de début",
+    "reservation_number": "Numéro de réservation",
+    "resort": "Station balnéaire",
+    "start": "Commencer",
+    "type": "Taper",
+    "villa": "Villa",
+    "current_timezone": "Fuseau horaire actuel"
   }
 }

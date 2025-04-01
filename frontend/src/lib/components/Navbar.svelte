@@ -8,10 +8,54 @@
 	import Calendar from '~icons/mdi/calendar';
 	import AboutModal from './AboutModal.svelte';
 	import AccountMultiple from '~icons/mdi/account-multiple';
+	import MapMarker from '~icons/mdi/map-marker';
+	import FormatListBulletedSquare from '~icons/mdi/format-list-bulleted-square';
+	import Earth from '~icons/mdi/earth';
+	import Magnify from '~icons/mdi/magnify';
+	import Map from '~icons/mdi/map';
 	import Avatar from './Avatar.svelte';
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
 	import { themes } from '$lib';
+	import { onMount } from 'svelte';
+	let inputElement: HTMLInputElement | null = null;
+
+	// Event listener for focusing input
+	function handleKeydown(event: KeyboardEvent) {
+		// Ignore any keypresses in an input/textarea field, so we don't interfere with typing.
+		if (
+			event.key === '/' &&
+			!['INPUT', 'TEXTAREA'].includes((event.target as HTMLElement)?.tagName)
+		) {
+			event.preventDefault(); // Prevent browser's search shortcut
+			if (inputElement) {
+				inputElement.focus();
+			}
+		}
+	}
+
+	onMount(() => {
+		// Attach event listener on component mount
+		document.addEventListener('keydown', handleKeydown);
+
+		// Cleanup event listener on component destruction
+		return () => {
+			document.removeEventListener('keydown', handleKeydown);
+		};
+	});
+
+	let languages: { [key: string]: string } = {
+		en: 'English',
+		de: 'Deutsch',
+		es: 'Español',
+		fr: 'Français',
+		it: 'Italiano',
+		nl: 'Nederlands',
+		sv: 'Svenska',
+		zh: '中文',
+		pl: 'Polski',
+		ko: '한국어'
+	};
 
 	let query: string = '';
 
@@ -76,6 +120,7 @@
 			>
 				{#if data.user}
 					<li>
+						<MapMarker />
 						<button on:click={() => goto('/adventures')}>{$t('navbar.adventures')}</button>
 					</li>
 					<li>
@@ -108,59 +153,77 @@
 					</li>
 				{/if}
 
-				<form class="flex gap-2">
-					<label class="input input-bordered flex items-center gap-2">
-						<input type="text" bind:value={query} class="grow" placeholder={$t('navbar.search')} />
+				{#if data.user}
+					<form class="flex gap-2">
+						<label class="input input-bordered flex items-center gap-2">
+							<input type="text" bind:value={query} placeholder={$t('navbar.search')} />
 
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 16 16"
-							fill="currentColor"
-							class="h-4 w-4 opacity-70"
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 16 16"
+								fill="currentColor"
+								class="h-4 w-4 opacity-70"
+							>
+								<path
+									fill-rule="evenodd"
+									d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
+									clip-rule="evenodd"
+								/>
+							</svg>
+						</label>
+						<button on:click={searchGo} type="submit" class="btn btn-primary"
+							>{$t('navbar.search')}</button
 						>
-							<path
-								fill-rule="evenodd"
-								d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</label>
-					<button on:click={searchGo} type="submit" class="btn btn-primary"
-						>{$t('navbar.search')}</button
-					>
-				</form>
+					</form>
+				{/if}
 			</ul>
 		</div>
-		<a class="btn btn-ghost text-xl" href="/"
-			>AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-10" /></a
-		>
+		<a class="btn btn-ghost text-2xl font-bold tracking-normal" href="/">
+			AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-10" />
+		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
 		<ul class="menu menu-horizontal px-1 gap-2">
 			{#if data.user}
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/adventures')}
-						>{$t('navbar.adventures')}</button
+					<button
+						class="btn btn-neutral flex items-center gap-1"
+						on:click={() => goto('/adventures')}
+					>
+						<MapMarker class="w-5 h-5" />
+						<span>{$t('navbar.adventures')}</span>
+					</button>
+				</li>
+				<li>
+					<button
+						class="btn btn-neutral flex items-center gap-1"
+						on:click={() => goto('/collections')}
+					>
+						<FormatListBulletedSquare class="w-5 h-5" />
+						{$t('navbar.collections')}</button
 					>
 				</li>
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/collections')}
-						>{$t('navbar.collections')}</button
+					<button
+						class="btn btn-neutral flex items-center gap-1"
+						on:click={() => goto('/worldtravel')}
+					>
+						<Earth class="w-5 h-5" />
+						{$t('navbar.worldtravel')}
+					</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral flex items-center gap-1" on:click={() => goto('/map')}>
+						<Map class="w-5 h-5" />
+					</button>
+				</li>
+				<li>
+					<button class="btn btn-neutral flex items-center gap-1" on:click={() => goto('/calendar')}
+						><Calendar /></button
 					>
 				</li>
 				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/worldtravel')}
-						>{$t('navbar.worldtravel')}</button
-					>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/map')}>{$t('navbar.map')}</button>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/calendar')}><Calendar /></button>
-				</li>
-				<li>
-					<button class="btn btn-neutral" on:click={() => goto('/users')}
+					<button class="btn btn-neutral flex items-center gap-1" on:click={() => goto('/users')}
 						><AccountMultiple /></button
 					>
 				</li>
@@ -178,27 +241,22 @@
 				</li>
 			{/if}
 
-			<form class="flex gap-2">
-				<label class="input input-bordered flex items-center gap-2">
-					<input type="text" bind:value={query} class="grow" placeholder={$t('navbar.search')} />
-
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 16 16"
-						fill="currentColor"
-						class="h-4 w-4 opacity-70"
-					>
-						<path
-							fill-rule="evenodd"
-							d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z"
-							clip-rule="evenodd"
-						/>
-					</svg>
-				</label>
-				<button on:click={searchGo} type="submit" class="btn btn-neutral"
-					>{$t('navbar.search')}</button
-				>
-			</form>
+			{#if data.user}
+				<form class="flex gap-2">
+					<label class="input input-bordered flex items-center gap-2">
+						<input
+							type="text"
+							bind:value={query}
+							class="grow"
+							placeholder={$t('navbar.search')}
+							bind:this={inputElement}
+						/><kbd class="kbd">/</kbd>
+					</label>
+					<button on:click={searchGo} type="submit" class="btn btn-neutral flex items-center gap-1">
+						<Magnify class="w-5 h-5" />
+					</button>
+				</form>
+			{/if}
 		</ul>
 	</div>
 	<div class="navbar-end">
@@ -236,8 +294,8 @@
 						on:change={submitLocaleChange}
 						bind:value={$locale}
 					>
-						{#each $locales as loc}
-							<option value={loc} class="text-base-content">{$t(`languages.${loc}`)}</option>
+						{#each $locales as loc (loc)}
+							<option value={loc} class="text-base-content">{languages[loc]}</option>
 						{/each}
 					</select>
 					<input type="hidden" name="locale" value={$locale} />

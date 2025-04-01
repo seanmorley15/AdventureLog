@@ -188,7 +188,7 @@
 						<div>
 							<label for="content">{$t('notes.content')}</label><br />
 							{#if !isReadOnly}
-								<MarkdownEditor bind:text={newNote.content} editor_height={'h-32'} />
+								<MarkdownEditor bind:text={newNote.content} editor_height={'h-72'} />
 							{:else if note}
 								<p class="text-sm text-muted-foreground" style="white-space: pre-wrap;"></p>
 								<article

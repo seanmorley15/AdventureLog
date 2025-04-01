@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { User } from '$lib/types';
+import type { ImmichIntegration, User } from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async (event) => {
 	});
 	let user = (await res.json()) as User;
 
-	let emailFetch = await fetch(`${endpoint}/_allauth/browser/v1/account/email`, {
+	let emailFetch = await fetch(`${endpoint}/auth/browser/v1/account/email`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}
@@ -45,22 +45,48 @@ export const load: PageServerLoad = async (event) => {
 		return redirect(302, '/');
 	}
 
-	let mfaAuthenticatorFetch = await fetch(
-		`${endpoint}/_allauth/browser/v1/account/authenticators`,
-		{
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
+	let mfaAuthenticatorFetch = await fetch(`${endpoint}/auth/browser/v1/account/authenticators`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
 		}
-	);
+	});
 	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
 	let authenticators = (mfaAuthenticatorResponse.data.length > 0) as boolean;
+
+	let immichIntegration: ImmichIntegration | null = null;
+	let immichIntegrationsFetch = await fetch(`${endpoint}/api/integrations/immich/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (immichIntegrationsFetch.ok) {
+		immichIntegration = await immichIntegrationsFetch.json();
+	}
+
+	let socialProvidersFetch = await fetch(`${endpoint}/auth/social-providers`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	let socialProviders = await socialProvidersFetch.json();
+
+	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
+	let publicUrl = '';
+	if (!publicUrlFetch.ok) {
+		return redirect(302, '/');
+	} else {
+		let publicUrlJson = await publicUrlFetch.json();
+		publicUrl = publicUrlJson.PUBLIC_URL;
+	}
 
 	return {
 		props: {
 			user,
 			emails,
-			authenticators
+			authenticators,
+			immichIntegration,
+			publicUrl,
+			socialProviders
 		}
 	};
 };
@@ -86,7 +112,8 @@ export const actions: Actions = {
 
 			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
 				headers: {
-					Cookie: `sessionid=${sessionId}`
+					Cookie: `sessionid=${sessionId}`,
+					Referer: event.url.origin // Include Referer header
 				}
 			});
 
@@ -137,6 +164,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/auth/update-user/`, {
 				method: 'PATCH',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'X-CSRFToken': csrfToken
 				},
@@ -168,33 +196,59 @@ export const actions: Actions = {
 
 		const password1 = formData.get('password1') as string | null | undefined;
 		const password2 = formData.get('password2') as string | null | undefined;
-		const current_password = formData.get('current_password') as string | null | undefined;
+		let current_password = formData.get('current_password') as string | null | undefined;
 
 		if (password1 !== password2) {
 			return fail(400, { message: 'settings.password_does_not_match' });
 		}
+
 		if (!current_password) {
-			return fail(400, { message: 'settings.password_is_required' });
+			current_password = null;
+		}
+
+		if (password1 && password1?.length < 6) {
+			return fail(400, { message: 'settings.password_too_short' });
 		}
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${endpoint}/_allauth/browser/v1/account/password/change`, {
-			method: 'POST',
-			headers: {
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				current_password,
-				new_password: password1
-			})
-		});
-		if (!res.ok) {
-			return fail(res.status, { message: 'settings.error_change_password' });
+		if (current_password) {
+			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
+				method: 'POST',
+				headers: {
+					Referer: event.url.origin, // Include Referer header
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'X-CSRFToken': csrfToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					current_password,
+					new_password: password1
+				})
+			});
+			if (!res.ok) {
+				return fail(res.status, { message: 'settings.error_change_password' });
+			}
+			return { success: true };
+		} else {
+			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
+				method: 'POST',
+				headers: {
+					Referer: event.url.origin, // Include Referer header
+					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+					'X-CSRFToken': csrfToken,
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					new_password: password1
+				})
+			});
+			if (!res.ok) {
+				console.log('Error:', await res.json());
+				return fail(res.status, { message: 'settings.error_change_password' });
+			}
+			return { success: true };
 		}
-		return { success: true };
 	},
 	changeEmail: async (event) => {
 		if (!event.locals.user) {
@@ -213,6 +267,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/auth/change-email/`, {
 				method: 'POST',
 				headers: {
+					Referer: event.url.origin, // Include Referer header
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'Content-Type': 'application/json',
 					'X-CSRFToken': csrfToken

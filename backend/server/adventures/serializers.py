@@ -1,15 +1,16 @@
 from django.utils import timezone
 import os
-from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category
+from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Lodging
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
+from users.serializers import CustomUserDetailsSerializer
 
 
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure']
-        read_only_fields = ['id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -19,6 +20,26 @@ class AdventureImageSerializer(CustomModelSerializer):
             # remove any  ' from the url
             public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
+        return representation
+    
+class AttachmentSerializer(CustomModelSerializer):
+    extension = serializers.SerializerMethodField()
+    class Meta:
+        model = Attachment
+        fields = ['id', 'file', 'adventure', 'extension', 'name', 'user_id']
+        read_only_fields = ['id', 'user_id']
+
+    def get_extension(self, obj):
+        return obj.file.name.split('.')[-1]
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.file:
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+            #print(public_url)
+            # remove any  ' from the url
+            public_url = public_url.replace("'", "")
+            representation['file'] = f"{public_url}/media/{instance.file.name}"
         return representation
     
 class CategorySerializer(serializers.ModelSerializer):
@@ -57,17 +78,19 @@ class VisitSerializer(serializers.ModelSerializer):
 class AdventureSerializer(CustomModelSerializer):
     images = AdventureImageSerializer(many=True, read_only=True)
     visits = VisitSerializer(many=True, read_only=False, required=False)
+    attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
@@ -105,7 +128,11 @@ class AdventureSerializer(CustomModelSerializer):
             }
         )
         return category
-
+    
+    def get_user(self, obj):
+        user = obj.user_id
+        return CustomUserDetailsSerializer(user).data
+    
     def get_is_visited(self, obj):
         current_date = timezone.now().date()
         for visit in obj.visits.all():
@@ -116,7 +143,7 @@ class AdventureSerializer(CustomModelSerializer):
         return False
 
     def create(self, validated_data):
-        visits_data = validated_data.pop('visits', [])
+        visits_data = validated_data.pop('visits', None)
         category_data = validated_data.pop('category', None)
         print(category_data)
         adventure = Adventure.objects.create(**validated_data)
@@ -131,6 +158,7 @@ class AdventureSerializer(CustomModelSerializer):
         return adventure
 
     def update(self, instance, validated_data):
+        has_visits = 'visits' in validated_data
         visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
 
@@ -142,24 +170,25 @@ class AdventureSerializer(CustomModelSerializer):
             instance.category = category
         instance.save()
 
-        current_visits = instance.visits.all()
-        current_visit_ids = set(current_visits.values_list('id', flat=True))
+        if has_visits:
+            current_visits = instance.visits.all()
+            current_visit_ids = set(current_visits.values_list('id', flat=True))
 
-        updated_visit_ids = set()
-        for visit_data in visits_data:
-            visit_id = visit_data.get('id')
-            if visit_id and visit_id in current_visit_ids:
-                visit = current_visits.get(id=visit_id)
-                for attr, value in visit_data.items():
-                    setattr(visit, attr, value)
-                visit.save()
-                updated_visit_ids.add(visit_id)
-            else:
-                new_visit = Visit.objects.create(adventure=instance, **visit_data)
-                updated_visit_ids.add(new_visit.id)
+            updated_visit_ids = set()
+            for visit_data in visits_data:
+                visit_id = visit_data.get('id')
+                if visit_id and visit_id in current_visit_ids:
+                    visit = current_visits.get(id=visit_id)
+                    for attr, value in visit_data.items():
+                        setattr(visit, attr, value)
+                    visit.save()
+                    updated_visit_ids.add(visit_id)
+                else:
+                    new_visit = Visit.objects.create(adventure=instance, **visit_data)
+                    updated_visit_ids.add(new_visit.id)
 
-        visits_to_delete = current_visit_ids - updated_visit_ids
-        instance.visits.filter(id__in=visits_to_delete).delete()
+            visits_to_delete = current_visit_ids - updated_visit_ids
+            instance.visits.filter(id__in=visits_to_delete).delete()
 
         return instance
 
@@ -171,6 +200,17 @@ class TransportationSerializer(CustomModelSerializer):
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+
+class LodgingSerializer(CustomModelSerializer):
+
+    class Meta:
+        model = Lodging
+        fields = [
+            'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
+            'collection', 'created_at', 'updated_at', 'type'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
@@ -260,10 +300,11 @@ class CollectionSerializer(CustomModelSerializer):
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
+    lodging = LodgingSerializer(many=True, read_only=True, source='lodging_set')
 
     class Meta:
         model = Collection
-        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link']
+        fields = ['id', 'description', 'user_id', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
     def to_representation(self, instance):
@@ -274,4 +315,3 @@ class CollectionSerializer(CustomModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
-    

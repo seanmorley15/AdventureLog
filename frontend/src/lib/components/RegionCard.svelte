@@ -4,54 +4,47 @@
 	import type { Region, VisitedRegion } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
+	import { t } from 'svelte-i18n';
 
 	export let region: Region;
-	export let visited: boolean;
+	export let visited: boolean | undefined;
 
-	export let visit_id: number | undefined | null;
+	function goToCity() {
+		console.log(region);
+		goto(`/worldtravel/${region.id.split('-')[0]}/${region.id}`);
+	}
 
 	async function markVisited() {
-		let res = await fetch(`/worldtravel?/markVisited`, {
+		let res = await fetch(`/api/visitedregion/`, {
+			headers: { 'Content-Type': 'application/json' },
 			method: 'POST',
-			body: JSON.stringify({ regionId: region.id })
+			body: JSON.stringify({ region: region.id })
 		});
 		if (res.ok) {
-			// visited = true;
-			const result = await res.json();
-			const data = JSON.parse(result.data);
-			if (data[1] !== undefined) {
-				console.log('New adventure created with id:', data[3]);
-				let visit_id = data[3];
-				let region_id = data[5];
-				let user_id = data[4];
-
-				let newVisit: VisitedRegion = {
-					id: visit_id,
-					region: region_id,
-					user_id: user_id,
-					longitude: 0,
-					latitude: 0,
-					name: ''
-				};
-				addToast('success', `Visit to ${region.name} marked`);
-				dispatch('visit', newVisit);
-			}
+			visited = true;
+			let data = await res.json();
+			addToast(
+				'success',
+				`${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.marked_visited')}`
+			);
+			dispatch('visit', data);
 		} else {
-			console.error('Failed to mark region as visited');
-			addToast('error', `Failed to mark visit to ${region.name}`);
+			console.error($t('worldtravel.region_failed_visited'));
+			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
 		}
 	}
 	async function removeVisit() {
-		let res = await fetch(`/worldtravel?/removeVisited`, {
-			method: 'POST',
-			body: JSON.stringify({ visitId: visit_id })
+		let res = await fetch(`/api/visitedregion/${region.id}`, {
+			headers: { 'Content-Type': 'application/json' },
+			method: 'DELETE'
 		});
 		if (res.ok) {
 			visited = false;
-			addToast('info', `Visit to ${region.name} removed`);
-			dispatch('remove', null);
+			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
+			dispatch('remove', region);
 		} else {
-			console.error('Failed to remove visit');
+			console.error($t('worldtravel.visit_remove_failed'));
+			addToast('error', `${$t('worldtravel.failed_to_remove_visit')} ${region.name}`);
 		}
 	}
 </script>
@@ -61,14 +54,31 @@
 >
 	<div class="card-body">
 		<h2 class="card-title overflow-ellipsis">{region.name}</h2>
-		<p>{region.id}</p>
+		<div>
+			<div class="badge badge-primary">
+				<p>{region.country_name}</p>
+			</div>
+			<div class="badge badge-neutral-300">
+				<p>{region.num_cities} {$t('worldtravel.cities')}</p>
+			</div>
+			<div class="badge badge-neutral-300">
+				<p>{region.id}</p>
+			</div>
+		</div>
 		<div class="card-actions justify-end">
 			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
-			{#if !visited}
-				<button class="btn btn-primary" on:click={markVisited}>Mark Visited</button>
+			{#if !visited && visited !== undefined}
+				<button class="btn btn-primary" on:click={markVisited}
+					>{$t('adventures.mark_visited')}</button
+				>
 			{/if}
-			{#if visited}
-				<button class="btn btn-warning" on:click={removeVisit}>Remove</button>
+			{#if visited && visited !== undefined}
+				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
+			{/if}
+			{#if region.num_cities > 0}
+				<button class="btn btn-neutral-300" on:click={goToCity}
+					>{$t('worldtravel.view_cities')}</button
+				>
 			{/if}
 		</div>
 	</div>

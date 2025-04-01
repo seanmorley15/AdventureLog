@@ -69,11 +69,31 @@ export const actions: Actions = {
 			method: 'POST',
 			headers: {
 				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: formData
 		});
 		let data = await res.json();
+		return data;
+	},
+	attachment: async (event) => {
+		let formData = await event.request.formData();
+		let csrfToken = await fetchCSRFToken();
+		let sessionId = event.cookies.get('sessionid');
+		let res = await fetch(`${serverEndpoint}/api/attachments/`, {
+			method: 'POST',
+			headers: {
+				Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
+				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin // Include Referer header
+			},
+			body: formData
+		});
+		let data = await res.json();
+
+		console.log(res);
+		console.log(data);
 		return data;
 	}
 };

@@ -1,14 +1,12 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category
-from worldtravel.models import Country, Region, VisitedRegion
+from .models import Adventure, Checklist, ChecklistItem, Collection, Transportation, Note, AdventureImage, Visit, Category, Attachment, Lodging
+from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity 
 from allauth.account.decorators import secure_admin_login
 
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
-
-
 
 class AdventureAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_category', 'get_visit_count',  'user_id', 'is_public')
@@ -53,6 +51,16 @@ class RegionAdmin(admin.ModelAdmin):
     
     number_of_visits.short_description = 'Number of Visits'
 
+class CityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'region', 'country')
+    list_filter = ('region', 'region__country')
+    search_fields = ('name', 'region__name', 'region__country__name')
+
+    def country(self, obj):
+        return obj.region.country.name
+
+    country.short_description = 'Country'
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from users.models import CustomUser
@@ -63,7 +71,7 @@ class CustomUserAdmin(UserAdmin):
     readonly_fields = ('uuid',)
     search_fields = ('username',)
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('profile_pic', 'uuid', 'public_profile')}),
+        (None, {'fields': ('profile_pic', 'uuid', 'public_profile', 'disable_password')}),
     )
     def image_display(self, obj):
         if obj.profile_pic:
@@ -129,6 +137,10 @@ admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
 admin.site.register(AdventureImage, AdventureImageAdmin)
 admin.site.register(Category, CategoryAdmin)
+admin.site.register(City, CityAdmin)
+admin.site.register(VisitedCity)
+admin.site.register(Attachment)
+admin.site.register(Lodging)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

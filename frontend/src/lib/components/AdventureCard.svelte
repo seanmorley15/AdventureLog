@@ -60,11 +60,8 @@
 	}
 
 	async function deleteAdventure() {
-		let res = await fetch(`/adventures/${adventure.id}?/delete`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
+		let res = await fetch(`/api/adventures/${adventure.id}`, {
+			method: 'DELETE'
 		});
 		if (res.ok) {
 			addToast('info', $t('adventures.adventure_delete_success'));
@@ -191,7 +188,7 @@
 				<!-- action options dropdown -->
 
 				{#if type != 'link'}
-					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with.includes(user.uuid))}
+					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 						<div class="dropdown dropdown-end">
 							<div tabindex="0" role="button" class="btn btn-neutral-200">
 								<DotsHorizontal class="w-6 h-6" />

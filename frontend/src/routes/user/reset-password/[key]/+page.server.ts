@@ -29,19 +29,17 @@ export const actions: Actions = {
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 		const csrfToken = await fetchCSRFToken();
 
-		const response = await event.fetch(
-			`${serverEndpoint}/_allauth/browser/v1/auth/password/reset`,
-			{
-				headers: {
-					'Content-Type': 'application/json',
-					Cookie: `csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken
-				},
-				method: 'POST',
-				credentials: 'include',
-				body: JSON.stringify({ key: key, password: password })
-			}
-		);
+		const response = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/password/reset`, {
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: `csrftoken=${csrfToken}`,
+				'X-CSRFToken': csrfToken,
+				Referer: event.url.origin // Include Referer header
+			},
+			method: 'POST',
+			credentials: 'include',
+			body: JSON.stringify({ key: key, password: password })
+		});
 
 		if (response.status !== 401) {
 			const error_message = await response.json();

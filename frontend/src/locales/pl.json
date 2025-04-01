@@ -30,7 +30,8 @@
       "aqua": "Aqua",
       "northernLights": "Zorza Polarna"
     },
-    "calendar": "Kalendarz"
+    "calendar": "Kalendarz",
+    "admin_panel": "Panel administracyjny"
   },
   "about": {
     "about": "O aplikacji",
@@ -262,7 +263,39 @@
     "start": "Start",
     "starting_airport": "Początkowe lotnisko",
     "to": "Do",
-    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć."
+    "transportation_delete_confirm": "Czy na pewno chcesz usunąć ten transport? \nTej akcji nie można cofnąć.",
+    "show_map": "Pokaż mapę",
+    "will_be_marked": "zostanie oznaczona jako odwiedzona po zapisaniu przygody.",
+    "cities_updated": "miasta zaktualizowane",
+    "create_adventure": "Stwórz przygodę",
+    "no_adventures_to_recommendations": "Nie znaleziono żadnych przygód. \nDodaj co najmniej jedną przygodę, aby uzyskać rekomendacje.",
+    "finding_recommendations": "Odkrywanie ukrytych klejnotów na następną przygodę",
+    "attachment": "Załącznik",
+    "attachment_delete_success": "Załącznik został pomyślnie usunięty!",
+    "attachment_name": "Nazwa załącznika",
+    "attachment_update_error": "Błąd podczas aktualizacji załącznika",
+    "attachment_update_success": "Załącznik został pomyślnie zaktualizowany!",
+    "attachment_upload_error": "Błąd podczas przesyłania załącznika",
+    "attachment_upload_success": "Załącznik przesłany pomyślnie!",
+    "attachments": "Załączniki",
+    "gpx_tip": "Przesyłaj pliki GPX do załączników, aby wyświetlić je na mapie!",
+    "images": "Obrazy",
+    "primary": "Podstawowy",
+    "upload": "Wgrywać",
+    "view_attachment": "Zobacz załącznik",
+    "of": "z",
+    "city": "Miasto",
+    "delete_lodging": "Usunąć zakwaterowanie",
+    "display_name": "Nazwa wyświetlania",
+    "location_details": "Szczegóły lokalizacji",
+    "lodging": "Kwatera",
+    "lodging_delete_confirm": "Czy na pewno chcesz usunąć tę lokalizację zakwaterowania? \nTego działania nie można cofnąć.",
+    "lodging_information": "Informacje o zakwaterowaniu",
+    "price": "Cena",
+    "region": "Region",
+    "reservation_number": "Numer rezerwacji",
+    "welcome_map_info": "Publiczne przygody na tym serwerze",
+    "open_in_maps": "Otwarte w mapach"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -273,7 +306,20 @@
     "completely_visited": "Całkowicie odwiedzone",
     "all_subregions": "Wszystkie podregiony",
     "clear_search": "Wyczyść wyszukiwanie",
-    "no_countries_found": "Nie znaleziono krajów"
+    "no_countries_found": "Nie znaleziono krajów",
+    "all_visited": "Odwiedziłeś wszystkie regiony w",
+    "cities": "miasta",
+    "failed_to_mark_visit": "Nie udało się oznaczyć wizyty w",
+    "failed_to_remove_visit": "Nie udało się usunąć wizyty w",
+    "marked_visited": "oznaczone jako odwiedzone",
+    "no_cities_found": "Nie znaleziono żadnych miast",
+    "region_failed_visited": "Nie udało się oznaczyć regionu jako odwiedzony",
+    "region_stats": "Statystyki regionu",
+    "regions_in": "Regiony w",
+    "removed": "REMOVED",
+    "view_cities": "Zobacz Miasta",
+    "visit_remove_failed": "Nie udało się usunąć wizyty",
+    "visit_to": "Wizyta w"
   },
   "auth": {
     "username": "Nazwa użytkownika",
@@ -293,7 +339,12 @@
     "email_required": "Adres e-mail jest wymagany",
     "both_passwords_required": "Obydwa hasła są wymagane",
     "new_password": "Nowe hasło",
-    "reset_failed": "Nie udało się zresetować hasła"
+    "reset_failed": "Nie udało się zresetować hasła",
+    "or_3rd_party": "Lub zaloguj się za pomocą usługi strony trzeciej",
+    "no_public_adventures": "Nie znaleziono publicznych przygód",
+    "no_public_collections": "Nie znaleziono publicznych kolekcji",
+    "user_adventures": "Przygody użytkowników",
+    "user_collections": "Kolekcje użytkowników"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -367,7 +418,25 @@
     "csrf_failed": "Nie udało się pobrać tokena CSRF",
     "duplicate_email": "Ten adres e-mail jest już używany.",
     "email_taken": "Ten adres e-mail jest już używany.",
-    "username_taken": "Ta nazwa użytkownika jest już używana."
+    "username_taken": "Ta nazwa użytkownika jest już używana.",
+    "administration_settings": "Ustawienia administracyjne",
+    "documentation_link": "Link do dokumentacji",
+    "launch_account_connections": "Uruchom Połączenia kont",
+    "launch_administration_panel": "Uruchom Panel administracyjny",
+    "no_verified_email_warning": "Aby włączyć uwierzytelnianie dwuskładnikowe, musisz mieć zweryfikowany adres e-mail.",
+    "social_auth_desc": "Włącz lub wyłącz dostawców uwierzytelniania społecznościowego i OIDC dla swojego konta. \nPołączenia te umożliwiają logowanie się za pośrednictwem dostawców tożsamości uwierzytelniających, takich jak Authentik, lub dostawców zewnętrznych, takich jak GitHub.",
+    "social_auth_desc_2": "Ustawienia te są zarządzane na serwerze AdventureLog i muszą zostać włączone ręcznie przez administratora.",
+    "social_oidc_auth": "Uwierzytelnianie społecznościowe i OIDC",
+    "add_email": "Dodaj e-mail",
+    "password_too_short": "Hasło musi mieć co najmniej 6 znaków",
+    "disable_password": "Wyłącz hasło",
+    "password_disable": "Wyłącz uwierzytelnianie hasła",
+    "password_disable_desc": "Wyłączenie uwierzytelniania hasła uniemożliwia logowanie hasłem. \nAby się zalogować, będziesz musiał użyć dostawcy społeczności lub OIDC. Jeśli dostawca społecznościowy zostanie niezbędny, uwierzytelnianie hasła zostanie automatycznie ponowne odnowione, nawet jeśli to ustawienie zostanie wyłączone.",
+    "password_disable_warning": "Obecnie uwierzytelnianie hasła jest wyłączone. \nWymagane jest zalogowanie się za pośrednictwem dostawcy społeczności lub OIDC.",
+    "password_disabled": "Uwierzytelnianie hasła wyłączone",
+    "password_disabled_error": "Błąd wyłączający uwierzytelnianie hasła. \nUpewnij się, że dostawca społecznościowy lub OIDC jest powiązany z Twoim kontem.",
+    "password_enabled": "Włączone uwierzytelnianie hasła",
+    "password_enabled_error": "Błąd umożliwiający uwierzytelnianie hasła."
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -438,7 +507,10 @@
     "transportation_edit_success": "Transport edytowany pomyślnie!",
     "edit_transportation": "Edytuj transport",
     "start": "Początek",
-    "date_and_time": "Data i godzina"
+    "date_and_time": "Data i godzina",
+    "ending_airport_desc": "Wprowadź końcowe kod lotniska (np. LAX)",
+    "fetch_location_information": "Pobierać informacje o lokalizacji",
+    "starting_airport_desc": "Wprowadź początkowy kod lotniska (np. JFK)"
   },
   "search": {
     "adventurelog_results": "Wyniki AdventureLog",
@@ -466,22 +538,13 @@
     "set_public": "Aby umożliwić użytkownikom udostępnianie Tobie, musisz ustawić swój profil jako publiczny.",
     "go_to_settings": "Przejdź do ustawień"
   },
-  "languages": {
-    "en": "Angielski",
-    "de": "Niemiecki",
-    "es": "Hiszpański",
-    "fr": "Francuski",
-    "it": "Włoski",
-    "nl": "Holenderski",
-    "sv": "Szwedzki",
-    "zh": "Chiński",
-    "pl": "Polski"
-  },
+  "languages": {},
   "profile": {
     "member_since": "Użytkownik od",
     "user_stats": "Statystyki użytkownika",
     "visited_countries": "Odwiedzone kraje",
-    "visited_regions": "Odwiedzone regiony"
+    "visited_regions": "Odwiedzone regiony",
+    "visited_cities": "Odwiedzone miasta"
   },
   "categories": {
     "manage_categories": "Zarządzaj kategoriami",
@@ -499,6 +562,69 @@
     "recent_adventures": "Ostatnie przygody",
     "total_adventures": "Totalne przygody",
     "total_visited_regions": "Łączna liczba odwiedzonych regionów",
-    "welcome_back": "Witamy z powrotem"
+    "welcome_back": "Witamy z powrotem",
+    "total_visited_cities": "Łączna liczba odwiedzonych miast"
+  },
+  "immich": {
+    "api_key": "Klucz API Immicha",
+    "api_note": "Uwaga: musi to być adres URL serwera API Immich, więc prawdopodobnie kończy się na /api, chyba że masz niestandardową konfigurację.",
+    "disable": "Wyłączyć",
+    "enable_immich": "Włącz Immicha",
+    "immich": "Immich",
+    "immich_enabled": "Integracja z Immich została pomyślnie włączona!",
+    "immich_error": "Błąd podczas aktualizacji integracji Immich",
+    "immich_integration": "Integracja Immicha",
+    "immich_updated": "Ustawienia Immich zostały pomyślnie zaktualizowane!",
+    "integration_enabled": "Integracja włączona",
+    "integration_fetch_error": "Błąd podczas pobierania danych z integracji Immich",
+    "integration_missing": "W backendie brakuje integracji z Immich",
+    "load_more": "Załaduj więcej",
+    "no_items_found": "Nie znaleziono żadnych elementów",
+    "query_required": "Zapytanie jest wymagane",
+    "server_down": "Serwer Immich jest obecnie wyłączony lub nieosiągalny",
+    "server_url": "Adres URL serwera Immich",
+    "update_integration": "Zaktualizuj integrację",
+    "imageid_required": "Wymagany jest identyfikator obrazu",
+    "immich_desc": "Zintegruj swoje konto Immich z AdventureLog, aby móc przeszukiwać bibliotekę zdjęć i importować zdjęcia do swoich przygód.",
+    "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!",
+    "documentation": "Dokumentacja integracji Immicha",
+    "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny."
+  },
+  "recomendations": {
+    "address": "Adres",
+    "contact": "Kontakt",
+    "phone": "Telefon",
+    "recommendation": "Zalecenie",
+    "website": "Strona internetowa"
+  },
+  "lodging": {
+    "apartment": "Apartament",
+    "bnb": "Nocleg i śniadanie",
+    "cabin": "Kabina",
+    "campground": "Obozowisko",
+    "lodging_added": "Lodowanie dodane pomyślnie!",
+    "lodging_delete_error": "Usuwanie błędów",
+    "lodging_deleted": "Z powodzeniem usunięto!",
+    "lodging_edit_success": "Złożone zredagowane zredagowane!",
+    "lodging_type": "Typ składowania",
+    "motel": "Motel",
+    "start": "Start",
+    "type": "Typ",
+    "villa": "Willa",
+    "check_in": "Zameldować się",
+    "check_out": "Wymeldować się",
+    "date_and_time": "Data",
+    "edit": "Redagować",
+    "edit_lodging": "Edytuj zakwaterowanie",
+    "error_editing_lodging": "Edycja błędów",
+    "hostel": "Schronisko",
+    "hotel": "Hotel",
+    "house": "Dom",
+    "new_lodging": "Nowe zakwaterowanie",
+    "other": "Inny",
+    "provide_start_date": "Proszę podać datę rozpoczęcia",
+    "reservation_number": "Numer rezerwacji",
+    "resort": "Uciec",
+    "current_timezone": "Obecna strefa czasowa"
   }
 }

@@ -13,6 +13,8 @@ import os
 from dotenv import load_dotenv
 from os import getenv
 from pathlib import Path
+from urllib.parse import urlparse
+from publicsuffix2 import get_sld
 # Load environment variables from .env file
 load_dotenv()
 
@@ -42,6 +44,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    # "allauth_ui",
     'rest_framework',
     'rest_framework.authtoken',
     'allauth',
@@ -49,21 +52,29 @@ INSTALLED_APPS = (
     'allauth.mfa',
     'allauth.headless',
     'allauth.socialaccount',
-    # "widget_tweaks",
-    # "slippers",
+    'allauth.socialaccount.providers.github',
+    'allauth.socialaccount.providers.openid_connect',
     'drf_yasg',
     'corsheaders',
     'adventures',
     'worldtravel',
     'users',
+    'integrations',
     'django.contrib.gis',
+    # 'achievements', # Not done yet, will be added later in a future update
+    # 'widget_tweaks',
+    # 'slippers',
+
 )
 
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
+    'adventures.middleware.XSessionTokenMiddleware',
+    'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'adventures.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -119,10 +130,38 @@ USE_L10N = True
 
 USE_TZ = True
 
+unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
+
+SESSION_COOKIE_SAMESITE = 'Lax'
+
+SESSION_COOKIE_NAME = 'sessionid'
+
+SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+
+hostname = urlparse(FRONTEND_URL).hostname
+is_ip_address = hostname.replace('.', '').isdigit()
+
+# Check if the hostname is single-label (no dots)
+is_single_label = '.' not in hostname
+
+if is_ip_address or is_single_label:
+    # Do not set a domain for IP addresses or single-label hostnames
+    SESSION_COOKIE_DOMAIN = None
+else:
+    # Use publicsuffix2 to calculate the correct cookie domain
+    cookie_domain = get_sld(hostname)
+    if cookie_domain:
+        SESSION_COOKIE_DOMAIN = f".{cookie_domain}"
+    else:
+        # Fallback to the hostname if parsing fails
+        SESSION_COOKIE_DOMAIN = hostname
 
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
+
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -130,7 +169,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_ROOT = BASE_DIR / 'media'  # This path must match the NGINX root
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 STORAGES = {
@@ -142,6 +181,7 @@ STORAGES = {
     }
 }
 
+SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
 TEMPLATES = [
     {
@@ -164,9 +204,6 @@ TEMPLATES = [
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
-ALLAUTH_UI_THEME = "dark"
-SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
-
 AUTH_USER_MODEL = 'users.CustomUser'
 
 ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
@@ -175,7 +212,10 @@ ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 
 SESSION_SAVE_EVERY_REQUEST = True
 
-FRONTEND_URL = getenv('FRONTEND_URL', 'http://localhost:3000')
+# Set login redirect URL to the frontend
+LOGIN_REDIRECT_URL = FRONTEND_URL
+
+SOCIALACCOUNT_LOGIN_ON_GET = True
 
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",
@@ -186,6 +226,10 @@ HEADLESS_FRONTEND_URLS = {
     # with the third-party provider fails.
     "socialaccount_login_error": f"{FRONTEND_URL}/account/provider/callback",
 }
+
+AUTHENTICATION_BACKENDS = [
+    'users.backends.NoPasswordAuthBackend',
+]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
@@ -222,10 +266,16 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
 }
 
-SWAGGER_SETTINGS = {
-    'LOGIN_URL': 'login',
-    'LOGOUT_URL': 'logout',
-}
+if DEBUG:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+else:
+    REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] = (
+        'rest_framework.renderers.JSONRenderer',
+    )
+
 
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
@@ -258,5 +308,8 @@ LOGGING = {
         },
     },
 }
+
+# ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.4'
+COUNTRY_REGION_JSON_VERSION = 'v2.5'

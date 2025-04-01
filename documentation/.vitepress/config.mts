@@ -69,6 +69,7 @@ export default defineConfig({
             text: "Kubernetes and Kustomize 🌐",
             link: "/docs/install/kustomize",
           },
+          { text: "Unraid 🧡", link: "/docs/install/unraid" },
 
           {
             text: "With A Reverse Proxy",
@@ -87,6 +88,32 @@ export default defineConfig({
         text: "Configuration",
         collapsed: false,
         items: [
+          {
+            text: "Immich Integration",
+            link: "/docs/configuration/immich_integration",
+          },
+          {
+            text: "Social Auth and OIDC",
+            link: "/docs/configuration/social_auth",
+          },
+          {
+            text: "Authentication Providers",
+            collapsed: false,
+            items: [
+              {
+                text: "Authentik",
+                link: "/docs/configuration/social_auth/authentik",
+              },
+              {
+                text: "GitHub",
+                link: "/docs/configuration/social_auth/github",
+              },
+              {
+                text: "Open ID Connect",
+                link: "/docs/configuration/social_auth/oidc",
+              },
+            ],
+          },
           {
             text: "Update App",
             link: "/docs/configuration/updating",
@@ -132,6 +159,10 @@ export default defineConfig({
         collapsed: false,
         items: [
           {
+            text: "v0.8.0",
+            link: "/docs/changelogs/v0-8-0",
+          },
+          {
             text: "v0.7.1",
             link: "/docs/changelogs/v0-7-1",
           },
@@ -147,6 +178,8 @@ export default defineConfig({
       { icon: "github", link: "https://github.com/seanmorley15/AdventureLog" },
       { icon: "discord", link: "https://discord.gg/wRbQ9Egr8C" },
       { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
+      { icon: "x", link: "https://x.com/AdventureLogApp" },
+      { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
     ],
   },
 });

@@ -1,23 +1,32 @@
-class AppVersionMiddleware:
+from django.conf import settings
+from django.utils.deprecation import MiddlewareMixin
+import os
+
+class OverrideHostMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
-        # Process request (if needed)
-        response = self.get_response(request)
+        public_url = os.getenv('PUBLIC_URL', None)
+        if public_url:
+            # Extract host and scheme
+            scheme, host = public_url.split("://")
+            request.META['HTTP_HOST'] = host
+            request.META['wsgi.url_scheme'] = scheme
 
-        # Add custom header to response
-        # Replace with your app version
-        response['X-AdventureLog-Version'] = '1.0.0'
+            # Set X-Forwarded-Proto for Django
+            request.META['HTTP_X_FORWARDED_PROTO'] = scheme
 
-        return response
-
-# make a middlewra that prints all of the request cookies
-class PrintCookiesMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
-    def __call__(self, request):
-        print(request.COOKIES)
         response = self.get_response(request)
         return response
+
+class XSessionTokenMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        session_token = request.headers.get('X-Session-Token')
+        if session_token:
+            request.COOKIES[settings.SESSION_COOKIE_NAME] = session_token
+
+class DisableCSRFForSessionTokenMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        if 'X-Session-Token' in request.headers:
+            setattr(request, '_dont_enforce_csrf_checks', True)

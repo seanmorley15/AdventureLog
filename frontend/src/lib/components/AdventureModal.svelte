@@ -1,51 +1,91 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import type {
-		Adventure,
-		Category,
-		Collection,
-		OpenStreetMapPlace,
-		Point,
-		ReverseGeocode
-	} from '$lib/types';
-	import { onMount } from 'svelte';
-	import { enhance } from '$app/forms';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import type { Adventure, Attachment, Category, Collection } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
-
-	export let longitude: number | null = null;
-	export let latitude: number | null = null;
 	export let collection: Collection | null = null;
 
-	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
+	const dispatch = createEventDispatcher();
 
-	let query: string = '';
-	let places: OpenStreetMapPlace[] = [];
-	let images: { id: string; image: string }[] = [];
+	let images: { id: string; image: string; is_primary: boolean }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
 	let categories: Category[] = [];
 
+	const allowedFileTypes = [
+		'.pdf',
+		'.doc',
+		'.docx',
+		'.xls',
+		'.xlsx',
+		'.ppt',
+		'.pptx',
+		'.txt',
+		'.png',
+		'.jpg',
+		'.jpeg',
+		'.gif',
+		'.webp',
+		'.mp4',
+		'.mov',
+		'.avi',
+		'.mkv',
+		'.mp3',
+		'.wav',
+		'.flac',
+		'.ogg',
+		'.m4a',
+		'.wma',
+		'.aac',
+		'.opus',
+		'.zip',
+		'.rar',
+		'.7z',
+		'.tar',
+		'.gz',
+		'.bz2',
+		'.xz',
+		'.zst',
+		'.lz4',
+		'.lzma',
+		'.lzo',
+		'.z',
+		'.tar.gz',
+		'.tar.bz2',
+		'.tar.xz',
+		'.tar.zst',
+		'.tar.lz4',
+		'.tar.lzma',
+		'.tar.lzo',
+		'.tar.z',
+		'gpx',
+		'md',
+		'pdf'
+	];
+
+	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
+
+	let fileInput: HTMLInputElement;
+	let immichIntegration: boolean = false;
+
 	import ActivityComplete from './ActivityComplete.svelte';
-	import { appVersion } from '$lib/config';
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
+	import ImmichSelect from './ImmichSelect.svelte';
+	import Star from '~icons/mdi/star';
+	import Crown from '~icons/mdi/crown';
+	import AttachmentCard from './AttachmentCard.svelte';
+	import LocationDropdown from './LocationDropdown.svelte';
+	let modal: HTMLDialogElement;
 
 	let wikiError: string = '';
-
-	let noPlaces: boolean = false;
-
-	let is_custom_location: boolean = false;
-
-	let reverseGeocodePlace: ReverseGeocode | null = null;
 
 	let adventure: Adventure = {
 		id: '',
 		name: '',
-		type: 'visited',
 		visits: [],
 		link: null,
 		description: null,
@@ -64,7 +104,8 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+		attachments: []
 	};
 
 	export let adventureToEdit: Adventure | null = null;
@@ -72,7 +113,6 @@
 	adventure = {
 		id: adventureToEdit?.id || '',
 		name: adventureToEdit?.name || '',
-		type: adventureToEdit?.type || 'general',
 		link: adventureToEdit?.link || null,
 		description: adventureToEdit?.description || null,
 		activity_types: adventureToEdit?.activity_types || [],
@@ -92,50 +132,125 @@
 			display_name: '',
 			icon: '',
 			user_id: ''
-		}
+		},
+
+		attachments: adventureToEdit?.attachments || []
 	};
 
-	let markers: Point[] = [];
+	onMount(async () => {
+		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
+		modal.showModal();
+		let categoryFetch = await fetch('/api/categories/categories');
+		if (categoryFetch.ok) {
+			categories = await categoryFetch.json();
+		} else {
+			addToast('error', $t('adventures.category_fetch_error'));
+		}
+		// Check for Immich Integration
+		let res = await fetch('/api/integrations');
+		if (!res.ok) {
+			addToast('error', $t('immich.integration_fetch_error'));
+		} else {
+			let data = await res.json();
+			if (data.immich) {
+				immichIntegration = true;
+			}
+		}
+	});
 
 	let url: string = '';
 	let imageError: string = '';
 	let wikiImageError: string = '';
-
-	let old_display_name: string = '';
+	let triggerMarkVisted: boolean = false;
 
 	images = adventure.images || [];
-
-	if (longitude && latitude) {
-		adventure.latitude = latitude;
-		adventure.longitude = longitude;
-		reverseGeocode(true);
-	}
-
-	$: {
-		is_custom_location = adventure.location != reverseGeocodePlace?.display_name;
-	}
-
-	if (adventure.longitude && adventure.latitude) {
-		markers = [];
-		markers = [
-			{
-				lngLat: { lng: adventure.longitude, lat: adventure.latitude },
-				location: adventure.location || '',
-				name: adventure.name,
-				activity_type: ''
-			}
-		];
-	}
-
 	$: {
 		if (!adventure.rating) {
 			adventure.rating = NaN;
 		}
 	}
 
-	function clearMap() {
-		console.log('CLEAR');
-		markers = [];
+	function deleteAttachment(event: CustomEvent<string>) {
+		adventure.attachments = adventure.attachments.filter(
+			(attachment) => attachment.id !== event.detail
+		);
+	}
+
+	let attachmentName: string = '';
+	let attachmentToEdit: Attachment | null = null;
+
+	async function editAttachment() {
+		if (attachmentToEdit) {
+			let res = await fetch(`/api/attachments/${attachmentToEdit.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ name: attachmentToEdit.name })
+			});
+			if (res.ok) {
+				let newAttachment = (await res.json()) as Attachment;
+				adventure.attachments = adventure.attachments.map((attachment) => {
+					if (attachment.id === newAttachment.id) {
+						return newAttachment;
+					}
+					return attachment;
+				});
+				attachmentToEdit = null;
+				addToast('success', $t('adventures.attachment_update_success'));
+			} else {
+				addToast('error', $t('adventures.attachment_update_error'));
+			}
+		}
+	}
+
+	let selectedFile: File | null = null;
+
+	function handleFileChange(event: Event) {
+		const input = event.target as HTMLInputElement;
+		if (input.files && input.files.length) {
+			selectedFile = input.files[0];
+		}
+	}
+
+	async function uploadAttachment(event: Event) {
+		event.preventDefault();
+
+		if (!selectedFile) {
+			console.error('No files selected');
+			return;
+		}
+
+		const file = selectedFile;
+
+		const formData = new FormData();
+		formData.append('file', file);
+		formData.append('adventure', adventure.id);
+		formData.append('name', attachmentName);
+
+		try {
+			const res = await fetch('/adventures?/attachment', {
+				method: 'POST',
+				body: formData
+			});
+
+			if (res.ok) {
+				const newData = deserialize(await res.text()) as { data: Attachment };
+				adventure.attachments = [...adventure.attachments, newData.data];
+				addToast('success', $t('adventures.attachment_upload_success'));
+				attachmentName = '';
+			} else {
+				addToast('error', $t('adventures.attachment_upload_error'));
+			}
+		} catch (err) {
+			console.error(err);
+			addToast('error', $t('adventures.attachment_upload_error'));
+		} finally {
+			// Reset the file input for a new upload
+			if (fileInput) {
+				fileInput.value = '';
+			}
+		}
 	}
 
 	let imageSearch: string = adventure.name || '';
@@ -147,7 +262,6 @@
 		if (res.status === 204) {
 			images = images.filter((image) => image.id !== id);
 			adventure.images = images;
-			console.log(images);
 			addToast('success', $t('adventures.image_removed_success'));
 		} else {
 			addToast('error', $t('adventures.image_removed_error'));
@@ -161,47 +275,71 @@
 		close();
 	}
 
-	let previousCoords: { lat: number; lng: number } | null = null;
-
-	$: if (markers.length > 0) {
-		const newLat = Math.round(markers[0].lngLat.lat * 1e6) / 1e6;
-		const newLng = Math.round(markers[0].lngLat.lng * 1e6) / 1e6;
-
-		if (!previousCoords || previousCoords.lat !== newLat || previousCoords.lng !== newLng) {
-			adventure.latitude = newLat;
-			adventure.longitude = newLng;
-			previousCoords = { lat: newLat, lng: newLng };
-			reverseGeocode();
-		}
-
-		if (!adventure.name) {
-			adventure.name = markers[0].name;
+	async function makePrimaryImage(image_id: string) {
+		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
+			method: 'POST'
+		});
+		if (res.ok) {
+			images = images.map((image) => {
+				if (image.id === image_id) {
+					image.is_primary = true;
+				} else {
+					image.is_primary = false;
+				}
+				return image;
+			});
+			adventure.images = images;
+		} else {
+			console.error('Error in makePrimaryImage:', res);
 		}
 	}
 
-	async function fetchImage() {
-		let res = await fetch(url);
-		let data = await res.blob();
-		if (!data) {
-			imageError = $t('adventures.no_image_url');
-			return;
+	async function handleMultipleFiles(event: Event) {
+		const files = (event.target as HTMLInputElement).files;
+		if (files) {
+			for (const file of files) {
+				await uploadImage(file);
+			}
 		}
-		let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
+	}
+
+	async function uploadImage(file: File) {
 		let formData = new FormData();
 		formData.append('image', file);
 		formData.append('adventure', adventure.id);
-		let res2 = await fetch(`/adventures?/image`, {
+
+		let res = await fetch(`/adventures?/image`, {
 			method: 'POST',
 			body: formData
 		});
-		let data2 = await res2.json();
-		console.log(data2);
-		if (data2.type === 'success') {
-			images = [...images, data2];
+		if (res.ok) {
+			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
+			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+			images = [...images, newImage];
 			adventure.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
 		} else {
 			addToast('error', $t('adventures.image_upload_error'));
+		}
+	}
+
+	async function fetchImage() {
+		try {
+			let res = await fetch(url);
+			let data = await res.blob();
+			if (!data) {
+				imageError = $t('adventures.no_image_url');
+				return;
+			}
+			let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
+			let formData = new FormData();
+			formData.append('image', file);
+			formData.append('adventure', adventure.id);
+
+			await uploadImage(file);
+			url = '';
+		} catch (e) {
+			imageError = $t('adventures.image_fetch_failed');
 		}
 	}
 
@@ -217,6 +355,7 @@
 			let res = await fetch(imageUrl);
 			let blob = await res.blob();
 			let file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
+			wikiImageError = '';
 			let formData = new FormData();
 			formData.append('image', file);
 			formData.append('adventure', adventure.id);
@@ -226,9 +365,7 @@
 			});
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
-				console.log(newData);
-				let newImage = { id: newData.data.id, image: newData.data.image };
-				console.log(newImage);
+				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
 				images = [...images, newImage];
 				adventure.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
@@ -236,28 +373,6 @@
 				addToast('error', $t('adventures.image_upload_error'));
 				wikiImageError = $t('adventures.wiki_image_error');
 			}
-		}
-	}
-	async function geocode(e: Event | null) {
-		if (e) {
-			e.preventDefault();
-		}
-		if (!query) {
-			alert($t('adventures.no_location'));
-			return;
-		}
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
-		console.log(res);
-		let data = (await res.json()) as OpenStreetMapPlace[];
-		places = data;
-		if (data.length === 0) {
-			noPlaces = true;
-		} else {
-			noPlaces = false;
 		}
 	}
 
@@ -290,65 +405,6 @@
 		new_notes = '';
 	}
 
-	async function markVisited() {
-		console.log(reverseGeocodePlace);
-		if (reverseGeocodePlace) {
-			let res = await fetch(`/worldtravel?/markVisited`, {
-				method: 'POST',
-				body: JSON.stringify({ regionId: reverseGeocodePlace.id })
-			});
-			if (res.ok) {
-				reverseGeocodePlace.is_visited = true;
-				addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
-			} else {
-				addToast('error', `Failed to mark visit to ${reverseGeocodePlace.region}`);
-			}
-		}
-	}
-
-	async function reverseGeocode(force_update: boolean = false) {
-		let res = await fetch(
-			`/api/reverse-geocode/reverse_geocode/?lat=${adventure.latitude}&lon=${adventure.longitude}`
-		);
-		let data = await res.json();
-		if (data.error) {
-			console.log(data.error);
-			reverseGeocodePlace = null;
-			return;
-		}
-		reverseGeocodePlace = data;
-
-		console.log(reverseGeocodePlace);
-		console.log(is_custom_location);
-
-		if (
-			reverseGeocodePlace &&
-			reverseGeocodePlace.display_name &&
-			(!is_custom_location || force_update)
-		) {
-			old_display_name = reverseGeocodePlace.display_name;
-			adventure.location = reverseGeocodePlace.display_name;
-		}
-		console.log(data);
-	}
-
-	let fileInput: HTMLInputElement;
-
-	const dispatch = createEventDispatcher();
-	let modal: HTMLDialogElement;
-
-	onMount(async () => {
-		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		modal.showModal();
-		console.log('open');
-		let categoryFetch = await fetch('/api/categories/categories');
-		if (categoryFetch.ok) {
-			categories = await categoryFetch.json();
-		} else {
-			addToast('error', $t('adventures.category_fetch_error'));
-		}
-	});
-
 	function close() {
 		dispatch('close');
 	}
@@ -370,42 +426,11 @@
 		}
 	}
 
-	async function addMarker(e: CustomEvent<any>) {
-		markers = [];
-		markers = [
-			...markers,
-			{
-				lngLat: e.detail.lngLat,
-				name: '',
-				location: '',
-				activity_type: ''
-			}
-		];
-		console.log(markers);
-	}
-
-	function imageSubmit() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				if (result.data.id && result.data.image) {
-					adventure.images = [...adventure.images, result.data];
-					images = [...images, result.data];
-					addToast('success', $t('adventures.image_upload_success'));
-
-					fileInput.value = '';
-					console.log(adventure);
-				} else {
-					addToast('error', result.data.error || $t('adventures.image_upload_error'));
-				}
-			}
-		};
-	}
-
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		console.log(adventure);
+		triggerMarkVisted = true;
+
 		if (adventure.id === '') {
-			console.log(categories);
 			if (adventure.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
 					adventure.category = categories.find(
@@ -458,6 +483,7 @@
 				addToast('error', $t('adventures.adventure_update_error'));
 			}
 		}
+		imageSearch = adventure.name;
 	}
 </script>
 
@@ -607,135 +633,7 @@
 						</div>
 					</div>
 
-					<div class="collapse collapse-plus bg-base-200 mb-4">
-						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.location_information')}
-						</div>
-						<div class="collapse-content">
-							<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
-							<div>
-								<label for="latitude">{$t('adventures.location')}</label><br />
-								<div class="flex items-center">
-									<input
-										type="text"
-										id="location"
-										name="location"
-										bind:value={adventure.location}
-										class="input input-bordered w-full"
-									/>
-									{#if is_custom_location}
-										<button
-											class="btn btn-primary ml-2"
-											type="button"
-											on:click={() => (adventure.location = reverseGeocodePlace?.display_name)}
-											>{$t('adventures.set_to_pin')}</button
-										>
-									{/if}
-								</div>
-							</div>
-
-							<div>
-								<form on:submit={geocode} class="mt-2">
-									<input
-										type="text"
-										placeholder={$t('adventures.search_for_location')}
-										class="input input-bordered w-full max-w-xs mb-2"
-										id="search"
-										name="search"
-										bind:value={query}
-									/>
-									<button class="btn btn-neutral -mt-1" type="submit">{$t('navbar.search')}</button>
-									<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
-										>{$t('adventures.clear_map')}</button
-									>
-								</form>
-							</div>
-							{#if places.length > 0}
-								<div class="mt-4 max-w-full">
-									<h3 class="font-bold text-lg mb-4">{$t('adventures.search_results')}</h3>
-
-									<div class="flex flex-wrap">
-										{#each places as place}
-											<button
-												type="button"
-												class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
-												on:click={() => {
-													markers = [
-														{
-															lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-															location: place.display_name,
-															name: place.name,
-															activity_type: place.type
-														}
-													];
-												}}
-											>
-												{place.display_name}
-											</button>
-										{/each}
-									</div>
-								</div>
-							{:else if noPlaces}
-								<p class="text-error text-lg">{$t('adventures.no_results')}</p>
-							{/if}
-							<!-- </div> -->
-							<div>
-								<MapLibre
-									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
-									standardControls
-								>
-									<!-- MapEvents gives you access to map events even from other components inside the map,
-where you might not have access to the top-level `MapLibre` component. In this case
-it would also work to just use on:click on the MapLibre component itself. -->
-									<MapEvents on:click={addMarker} />
-
-									{#each markers as marker}
-										<DefaultMarker lngLat={marker.lngLat} />
-									{/each}
-								</MapLibre>
-								{#if reverseGeocodePlace}
-									<div class="mt-2">
-										<p>{reverseGeocodePlace.region}, {reverseGeocodePlace.country}</p>
-										<p>
-											{reverseGeocodePlace.is_visited
-												? $t('adventures.visited')
-												: $t('adventures.not_visited')}
-										</p>
-									</div>
-									{#if !reverseGeocodePlace.is_visited}
-										<div role="alert" class="alert alert-info mt-2">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												class="h-6 w-6 shrink-0 stroke-current"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-												></path>
-											</svg>
-											<span
-												>{$t('adventures.mark_region_as_visited', {
-													values: {
-														region: reverseGeocodePlace.region,
-														country: reverseGeocodePlace.country
-													}
-												})}</span
-											>
-											<button type="button" class="btn btn-neutral" on:click={markVisited}>
-												{$t('adventures.mark_visited')}
-											</button>
-										</div>
-									{/if}
-								{/if}
-							</div>
-						</div>
-					</div>
+					<LocationDropdown bind:item={adventure} bind:triggerMarkVisted {initialLatLng} />
 
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
@@ -754,7 +652,6 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							<ActivityComplete bind:activities={adventure.activity_types} />
 						</div>
 					</div>
-
 					<div class="collapse collapse-plus bg-base-200 mb-4">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
@@ -915,86 +812,189 @@ it would also work to just use on:click on the MapLibre component itself. -->
 				</form>
 			</div>
 		{:else}
-			<p>{$t('adventures.upload_images_here')}</p>
-			<!-- <p>{adventureToEdit.id}</p> -->
-			<div class="mb-2">
-				<label for="image">{$t('adventures.image')} </label><br />
-				<div class="flex">
-					<form
-						method="POST"
-						action="/adventures?/image"
-						use:enhance={imageSubmit}
-						enctype="multipart/form-data"
-					>
+			<div class="modal-action items-center">
+				<div class="collapse collapse-plus bg-base-200 mb-4">
+					<input type="checkbox" />
+					<div class="collapse-title text-xl font-medium">
+						{$t('adventures.attachments')} ({adventure.attachments?.length || 0})
+					</div>
+					<div class="collapse-content">
+						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{#each adventure.attachments as attachment}
+								<AttachmentCard
+									{attachment}
+									on:delete={deleteAttachment}
+									allowEdit
+									on:edit={(e) => (attachmentToEdit = e.detail)}
+								/>
+							{/each}
+						</div>
+						<div class="flex gap-2 m-4">
+							<input
+								type="file"
+								id="fileInput"
+								class="file-input file-input-bordered w-full max-w-xs"
+								accept={allowedFileTypes.join(',')}
+								on:change={handleFileChange}
+							/>
+
+							<input
+								type="text"
+								class="input input-bordered w-full"
+								placeholder={$t('adventures.attachment_name')}
+								bind:value={attachmentName}
+							/>
+							<button class="btn btn-neutral" on:click={uploadAttachment}>
+								{$t('adventures.upload')}
+							</button>
+						</div>
+
+						{#if attachmentToEdit}
+							<form
+								on:submit={(e) => {
+									e.preventDefault();
+									editAttachment();
+								}}
+							>
+								<div class="flex gap-2 m-4">
+									<input
+										type="text"
+										class="input input-bordered w-full"
+										placeholder={$t('adventures.attachment_name')}
+										bind:value={attachmentToEdit.name}
+									/>
+									<button type="submit" class="btn btn-neutral">{$t('transportation.edit')}</button>
+								</div>
+							</form>
+						{/if}
+					</div>
+				</div>
+			</div>
+			<div class="collapse collapse-plus bg-base-200 mb-4">
+				<input type="checkbox" checked />
+				<div class="collapse-title text-xl font-medium">
+					{$t('adventures.images')} ({adventure.images?.length || 0})
+				</div>
+				<div class="collapse-content">
+					<label for="image" class="block font-medium mb-2">
+						{$t('adventures.image')}
+					</label>
+					<form class="flex flex-col items-start gap-2">
 						<input
 							type="file"
 							name="image"
-							class="file-input file-input-bordered w-full max-w-xs"
+							class="file-input file-input-bordered w-full max-w-sm"
 							bind:this={fileInput}
 							accept="image/*"
 							id="image"
+							multiple
+							on:change={handleMultipleFiles}
 						/>
 						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
-						<button class="btn btn-neutral mt-2 mb-2" type="submit"
-							>{$t('adventures.upload_image')}</button
-						>
 					</form>
-				</div>
-				<div class="mt-2">
-					<label for="url">{$t('adventures.url')}</label><br />
-					<input
-						type="text"
-						id="url"
-						name="url"
-						bind:value={url}
-						class="input input-bordered w-full"
-					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchImage}
-						>{$t('adventures.fetch_image')}</button
-					>
-				</div>
-				<div class="mt-2">
-					<label for="name">{$t('adventures.wikipedia')}</label><br />
-					<input
-						type="text"
-						id="name"
-						name="name"
-						bind:value={imageSearch}
-						class="input input-bordered w-full"
-					/>
-					<button class="btn btn-neutral mt-2" type="button" on:click={fetchWikiImage}
-						>{$t('adventures.fetch_image')}</button
-					>
-				</div>
-				<div class="divider"></div>
-				{#if images.length > 0}
-					<h1 class="font-semibold text-xl">{$t('adventures.my_images')}</h1>
-				{:else}
-					<h1 class="font-semibold text-xl">{$t('adventures.no_images')}</h1>
-				{/if}
-				<div class="flex flex-wrap gap-2 mt-2">
-					{#each images as image}
-						<div class="relative h-32 w-32">
-							<button
-								type="button"
-								class="absolute top-0 left-0 btn btn-error btn-sm z-10"
-								on:click={() => removeImage(image.id)}
-							>
-								X
+
+					<div class="mb-4">
+						<label for="url" class="block font-medium mb-2">
+							{$t('adventures.url')}
+						</label>
+						<div class="flex gap-2">
+							<input
+								type="text"
+								id="url"
+								name="url"
+								bind:value={url}
+								class="input input-bordered flex-1"
+								placeholder="Enter image URL"
+							/>
+							<button class="btn btn-neutral" type="button" on:click={fetchImage}>
+								{$t('adventures.fetch_image')}
 							</button>
-							<img src={image.image} alt={image.id} class="w-full h-full object-cover" />
 						</div>
-					{/each}
+					</div>
+
+					<div class="mb-4">
+						<label for="name" class="block font-medium mb-2">
+							{$t('adventures.wikipedia')}
+						</label>
+						<div class="flex gap-2">
+							<input
+								type="text"
+								id="name"
+								name="name"
+								bind:value={imageSearch}
+								class="input input-bordered flex-1"
+								placeholder="Search Wikipedia for images"
+							/>
+							<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
+								{$t('adventures.fetch_image')}
+							</button>
+						</div>
+						{#if wikiImageError}
+							<p class="text-red-500">{$t('adventures.wiki_image_error')}</p>
+						{/if}
+					</div>
+
+					{#if immichIntegration}
+						<ImmichSelect
+							{adventure}
+							on:fetchImage={(e) => {
+								url = e.detail;
+								fetchImage();
+							}}
+						/>
+					{/if}
+
+					<div class="divider"></div>
+
+					{#if images.length > 0}
+						<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
+						<div class="flex flex-wrap gap-4">
+							{#each images as image}
+								<div class="relative h-32 w-32">
+									<button
+										type="button"
+										class="absolute top-1 right-1 btn btn-error btn-xs z-10"
+										on:click={() => removeImage(image.id)}
+									>
+										✕
+									</button>
+									{#if !image.is_primary}
+										<button
+											type="button"
+											class="absolute top-1 left-1 btn btn-success btn-xs z-10"
+											on:click={() => makePrimaryImage(image.id)}
+										>
+											<Star class="h-4 w-4" />
+										</button>
+									{:else}
+										<!-- crown icon -->
+
+										<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
+											<Crown class="h-4 w-4" />
+										</div>
+									{/if}
+									<img
+										src={image.image}
+										alt={image.id}
+										class="w-full h-full object-cover rounded-md shadow-md"
+									/>
+								</div>
+							{/each}
+						</div>
+					{:else}
+						<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
+					{/if}
 				</div>
 			</div>
 			<div class="mt-4">
-				<button type="button" class="btn btn-primary" on:click={saveAndClose}
-					>{$t('about.close')}</button
-				>
+				<button type="button" class="btn btn-primary w-full max-w-sm" on:click={saveAndClose}>
+					{$t('about.close')}
+				</button>
 			</div>
 		{/if}
+
 		{#if adventure.is_public && adventure.id}
-			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm">
+			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
 				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">

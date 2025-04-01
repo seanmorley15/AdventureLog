@@ -1,9 +1,11 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-
+// @ts-ignore
+import psl from 'psl';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
@@ -12,10 +14,17 @@ export const load: PageServerLoad = async (event) => {
 		const quote = getRandomQuote();
 		const background = getRandomBackground();
 
+		let socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
+		if (!socialProviderFetch.ok) {
+			return fail(500, { message: 'settings.social_providers_error' });
+		}
+		let socialProviders = await socialProviderFetch.json();
+
 		return {
 			props: {
 				quote,
-				background
+				background,
+				socialProviders
 			}
 		};
 	}
@@ -33,12 +42,13 @@ export const actions: Actions = {
 		const csrfToken = await fetchCSRFToken();
 
 		// Initial login attempt
-		const loginFetch = await event.fetch(`${serverEndpoint}/_allauth/browser/v1/auth/login`, {
+		const loginFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/login`, {
 			method: 'POST',
 			headers: {
 				'X-CSRFToken': csrfToken,
 				'Content-Type': 'application/json',
-				Cookie: `csrftoken=${csrfToken}`
+				Cookie: `csrftoken=${csrfToken}`,
+				Referer: event.url.origin // Include Referer header
 			},
 			body: JSON.stringify({ username, password }),
 			credentials: 'include'
@@ -59,13 +69,14 @@ export const actions: Actions = {
 				// Attempt MFA authentication
 				const sessionId = extractSessionId(loginFetch.headers.get('Set-Cookie'));
 				const mfaLoginFetch = await event.fetch(
-					`${serverEndpoint}/_allauth/browser/v1/auth/2fa/authenticate`,
+					`${serverEndpoint}/auth/browser/v1/auth/2fa/authenticate`,
 					{
 						method: 'POST',
 						headers: {
 							'X-CSRFToken': csrfToken,
 							'Content-Type': 'application/json',
-							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`
+							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
+							Referer: event.url.origin // Include Referer header
 						},
 						body: JSON.stringify({ code: totp }),
 						credentials: 'include'
@@ -102,12 +113,33 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 		const match = setCookieHeader.match(sessionIdRegex);
 		if (match) {
 			const [, sessionId, expiryString] = match;
+
+			// Get the proper cookie domain using psl
+			const hostname = event.url.hostname;
+			let cookieDomain;
+
+			// Check if hostname is an IP address
+			const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+			const isLocalhost = hostname === 'localhost';
+			const isSingleLabel = hostname.split('.').length === 1;
+
+			if (!isIPAddress && !isSingleLabel && !isLocalhost) {
+				const parsed = psl.parse(hostname);
+
+				if (parsed && parsed.domain) {
+					// Use the parsed domain (e.g., mydomain.com)
+					cookieDomain = `.${parsed.domain}`;
+				}
+			}
+			// Do not set a domain for IP addresses or invalid hostnames
+
 			event.cookies.set('sessionid', sessionId, {
 				path: '/',
 				httpOnly: true,
 				sameSite: 'lax',
-				secure: true,
-				expires: new Date(expiryString)
+				secure: event.url.protocol === 'https:',
+				expires: new Date(expiryString),
+				domain: cookieDomain // Set the domain dynamically or omit if undefined
 			});
 		}
 	}

@@ -1,3 +1,4 @@
+from os import getenv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -9,6 +10,10 @@ from django.conf import settings
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
+from allauth.socialaccount.models import SocialApp
+from adventures.serializers import AdventureSerializer, CollectionSerializer
+from adventures.models import Adventure, Collection
+from allauth.socialaccount.models import SocialAccount
 
 User = get_user_model()
 
@@ -64,6 +69,10 @@ class PublicUserListView(APIView):
         for user in users:
             user.email = None
         serializer = PublicUserSerializer(users, many=True)
+        # for every user, remove the field has_password
+        for user in serializer.data:
+            user.pop('has_password', None)
+            user.pop('disable_password', None)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 class PublicUserDetailView(APIView):
@@ -77,12 +86,29 @@ class PublicUserDetailView(APIView):
         },
         operation_description="Get public user information."
     )
-    def get(self, request, user_id):
-        user = get_object_or_404(User, uuid=user_id, public_profile=True)
+    def get(self, request, username):
+        if request.user.username == username:
+            user = get_object_or_404(User, username=username)
+        else:
+            user = get_object_or_404(User, username=username, public_profile=True)
+        serializer = PublicUserSerializer(user)
+        # for every user, remove the field has_password
+        serializer.data.pop('has_password', None)
+        
         # remove the email address from the response
         user.email = None
-        serializer = PublicUserSerializer(user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        
+        # Get the users adventures and collections to include in the response
+        adventures = Adventure.objects.filter(user_id=user, is_public=True)
+        collections = Collection.objects.filter(user_id=user, is_public=True)
+        adventure_serializer = AdventureSerializer(adventures, many=True)
+        collection_serializer = CollectionSerializer(collections, many=True)
+
+        return Response({
+            'user': serializer.data,
+            'adventures': adventure_serializer.data,
+            'collections': collection_serializer.data
+        }, status=status.HTTP_200_OK)
 
 class UserMetadataView(APIView):
     permission_classes = [IsAuthenticated]
@@ -121,3 +147,61 @@ class UpdateUserMetadataView(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class EnabledSocialProvidersView(APIView):
+    """
+    Get enabled social providers for social authentication. This is used to determine which buttons to show on the frontend. Also returns a URL for each to start the authentication flow.
+    """
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Enabled social providers'),
+            400: 'Bad Request'
+        },
+        operation_description="Get enabled social providers."
+    )
+    def get(self, request):
+        social_providers = SocialApp.objects.filter(sites=settings.SITE_ID)
+        providers = []
+        for provider in social_providers:
+            if provider.provider == 'openid_connect':
+                new_provider = f'oidc/{provider.client_id}'
+            else:
+                new_provider = provider.provider
+            providers.append({
+                'provider': provider.provider,
+                'url': f"{getenv('PUBLIC_URL')}/accounts/{new_provider}/login/",
+                'name': provider.name
+            })
+        return Response(providers, status=status.HTTP_200_OK)
+    
+
+class DisablePasswordAuthenticationView(APIView):
+    """
+    Disable password authentication for a user. This is used when a user signs up with a social provider.
+    """
+
+# Allows the user to set the disable_password field to True if they have a social account linked
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Password authentication disabled'),
+            400: 'Bad Request'
+        },
+        operation_description="Disable password authentication."
+    )
+    def post(self, request):
+        user = request.user
+        if SocialAccount.objects.filter(user=user).exists():
+            user.disable_password = True
+            user.save()
+            return Response({"detail": "Password authentication disabled."}, status=status.HTTP_200_OK)
+        return Response({"detail": "No social account linked."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request):
+        user = request.user
+        user.disable_password = False
+        user.save()
+        return Response({"detail": "Password authentication enabled."}, status=status.HTTP_200_OK)
+    

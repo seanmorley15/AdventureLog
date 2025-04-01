@@ -1,6 +1,8 @@
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import { redirect, type Actions } from '@sveltejs/kit';
-import { themes } from '$lib';
+// @ts-ignore
+import psl from 'psl';
+import { getRandomBackground, themes } from '$lib';
 import { fetchCSRFToken } from '$lib/index.server';
 import type { PageServerLoad } from './$types';
 
@@ -9,6 +11,13 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/dashboard');
+	} else {
+		const background = getRandomBackground();
+		return {
+			props: {
+				background
+			}
+		};
 	}
 }) satisfies PageServerLoad;
 
@@ -32,16 +41,43 @@ export const actions: Actions = {
 			return;
 		}
 
-		const res = await fetch(`${serverEndpoint}/_allauth/browser/v1/auth/session`, {
+		const res = await fetch(`${serverEndpoint}/auth/browser/v1/auth/session`, {
 			method: 'DELETE',
 			headers: {
 				'Content-Type': 'application/json',
-				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-				'X-CSRFToken': csrfToken
+				'X-CSRFToken': csrfToken, // Ensure CSRF token is in header
+				Referer: event.url.origin, // Include Referer header
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
 			},
 			credentials: 'include'
 		});
-		if (res.status == 401) {
+
+		// Get the proper cookie domain using psl
+		const hostname = event.url.hostname;
+		let cookieDomain;
+
+		// Check if hostname is an IP address
+		const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+		const isLocalhost = hostname === 'localhost';
+		const isSingleLabel = hostname.split('.').length === 1;
+
+		if (!isIPAddress && !isSingleLabel && !isLocalhost) {
+			const parsed = psl.parse(hostname);
+
+			if (parsed && parsed.domain) {
+				// Use the parsed domain (e.g., mydomain.com)
+				cookieDomain = `.${parsed.domain}`;
+			}
+		}
+
+		// Delete the session cookie
+		event.cookies.delete('sessionid', {
+			path: '/',
+			secure: event.url.protocol === 'https:',
+			domain: cookieDomain // Undefined for IP addresses, used for domain names
+		});
+
+		if (res.status === 401) {
 			return redirect(302, '/login');
 		} else {
 			return redirect(302, '/');

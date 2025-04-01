@@ -1,5 +1,9 @@
 # Troubleshooting: `Starting nginx: nginx failed!` in the Backend Container
 
+::: tip
+As of 1-10-2024, this should be resolved in the latest version of AdventureLog. If you are still experiencing this issue, please reach out to the AdventureLog community on Discord or GitHub for further assistance.
+:::
+
 The AdventureLog backend container uses a built-in Nginx container with a built-in nginx config that relies on the name `server` to be the service name of the backend container. If the Nginx service fails to start in the backend container, the whole backend service will keep restarting and fail to start.
 
 **The primary reason for this error is changing the backend service name `server` to something different**

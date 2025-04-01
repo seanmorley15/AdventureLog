@@ -1,6 +1,6 @@
 # Updating
 
-Updating AdventureLog when using docker can be quite easy. Run the folowing commands to pull the latest version and restart the containers. Make sure you backup your instance before updating just in case!
+Updating AdventureLog when using docker can be quite easy. Run the following commands to pull the latest version and restart the containers. Make sure you backup your instance before updating just in case!
 
 Note: Make sure you are in the same directory as your `docker-compose.yml` file.
 
@@ -20,5 +20,5 @@ docker exec -it <container> bash
 Once you are in the container run the following command to resync the region data.
 
 ```bash
-python manage.py download-countries
+python manage.py download-countries --force
 ```

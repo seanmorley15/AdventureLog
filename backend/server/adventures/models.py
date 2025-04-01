@@ -1,12 +1,22 @@
-from collections.abc import Collection
+from django.core.exceptions import ValidationError
+import os
 from typing import Iterable
 import uuid
 from django.db import models
-
+from django.utils.deconstruct import deconstructible
+from adventures.managers import AdventureManager
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
+
+def validate_file_extension(value):
+    import os
+    from django.core.exceptions import ValidationError
+    ext = os.path.splitext(value.name)[1]  # [0] returns path+filename
+    valid_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.png', '.jpg', '.jpeg', '.gif', '.webp', '.mp4', '.mov', '.avi', '.mkv', '.mp3', '.wav', '.flac', '.ogg', '.m4a', '.wma', '.aac', '.opus', '.zip', '.rar', '.7z', '.tar', '.gz', '.bz2', '.xz', '.zst', '.lz4', '.lzma', '.lzo', '.z', '.tar.gz', '.tar.bz2', '.tar.xz', '.tar.zst', '.tar.lz4', '.tar.lzma', '.tar.lzo', '.tar.z', 'gpx', 'md', 'pdf']
+    if not ext.lower() in valid_extensions:
+        raise ValidationError('Unsupported file extension.')
 
 ADVENTURE_TYPES = [
     ('general', 'General 🌍'),
@@ -30,6 +40,20 @@ ADVENTURE_TYPES = [
     ('festivals', 'Festivals 🎪'),
     ('spiritual_journeys', 'Spiritual Journeys 🧘‍♀️'),
     ('volunteer_work', 'Volunteer Work 🤝'),
+    ('other', 'Other')
+]
+
+LODGING_TYPES = [
+    ('hotel', 'Hotel'),
+    ('hostel', 'Hostel'),
+    ('resort', 'Resort'),
+    ('bnb', 'Bed & Breakfast'),
+    ('campground', 'Campground'),
+    ('cabin', 'Cabin'),
+    ('apartment', 'Apartment'),
+    ('house', 'House'),
+    ('villa', 'Villa'),
+    ('motel', 'Motel'),
     ('other', 'Other')
 ]
 
@@ -85,6 +109,8 @@ class Adventure(models.Model):
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    objects = AdventureManager()
 
     # DEPRECATED FIELDS - TO BE REMOVED IN FUTURE VERSIONS
     # Migrations performed in this version will remove these fields
@@ -257,15 +283,42 @@ class ChecklistItem(models.Model):
     def __str__(self):
         return self.name
 
+@deconstructible
+class PathAndRename:
+    def __init__(self, path):
+        self.path = path
+
+    def __call__(self, instance, filename):
+        ext = filename.split('.')[-1]
+        # Generate a new UUID for the filename
+        filename = f"{uuid.uuid4()}.{ext}"
+        return os.path.join(self.path, filename)
+
 class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user_id = models.ForeignKey(
         User, on_delete=models.CASCADE, default=default_user_id)
-    image = ResizedImageField(force_format="WEBP", quality=75, upload_to='images/')
+    image = ResizedImageField(
+        force_format="WEBP",
+        quality=75,
+        upload_to=PathAndRename('images/')  # Use the callable class here
+    )
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
+    is_primary = models.BooleanField(default=False)
 
     def __str__(self):
         return self.image.url
+    
+class Attachment(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    file = models.FileField(upload_to=PathAndRename('attachments/'),validators=[validate_file_extension])
+    adventure = models.ForeignKey(Adventure, related_name='attachments', on_delete=models.CASCADE)
+    name = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return self.file.url
 
 class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
@@ -287,3 +340,37 @@ class Category(models.Model):
     
     def __str__(self):
         return self.name + ' - ' + self.display_name + ' - ' + self.icon
+    
+class Lodging(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    user_id = models.ForeignKey(
+        User, on_delete=models.CASCADE, default=default_user_id)
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=100, choices=LODGING_TYPES, default='other')
+    description = models.TextField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=2083)
+    check_in = models.DateTimeField(blank=True, null=True)
+    check_out = models.DateTimeField(blank=True, null=True)
+    reservation_number = models.CharField(max_length=100, blank=True, null=True)
+    price = models.DecimalField(max_digits=9, decimal_places=2, blank=True, null=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    location = models.CharField(max_length=200, blank=True, null=True)
+    is_public = models.BooleanField(default=False)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        if self.date and self.end_date and self.date > self.end_date:
+            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+        
+        if self.collection:
+            if self.collection.is_public and not self.is_public:
+                raise ValidationError('Lodging associated with a public collection must be public. Collection: ' + self.collection.name + ' Loging: ' + self.name)
+            if self.user_id != self.collection.user_id:
+                raise ValidationError('Lodging must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Lodging owner: ' + self.user_id.username)
+
+    def __str__(self):
+        return self.name

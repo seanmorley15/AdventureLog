@@ -5,6 +5,7 @@ import type {
 	Background,
 	Checklist,
 	Collection,
+	Lodging,
 	Note,
 	Transportation,
 	User
@@ -125,6 +126,50 @@ export function groupTransportationsByDate(
 			const transportationDate = new Date(transportation.date).toISOString().split('T')[0];
 			if (transportation.end_date) {
 				const endDate = new Date(transportation.end_date).toISOString().split('T')[0];
+
+				// Loop through all days and include transportation if it falls within the range
+				for (let i = 0; i < numberOfDays; i++) {
+					const currentDate = new Date(startDate);
+					currentDate.setUTCDate(startDate.getUTCDate() + i);
+					const dateString = currentDate.toISOString().split('T')[0];
+
+					// Include the current day if it falls within the transportation date range
+					if (dateString >= transportationDate && dateString <= endDate) {
+						if (groupedTransportations[dateString]) {
+							groupedTransportations[dateString].push(transportation);
+						}
+					}
+				}
+			} else if (groupedTransportations[transportationDate]) {
+				// If there's no end date, add transportation to the start date only
+				groupedTransportations[transportationDate].push(transportation);
+			}
+		}
+	});
+
+	return groupedTransportations;
+}
+
+export function groupLodgingByDate(
+	transportations: Lodging[],
+	startDate: Date,
+	numberOfDays: number
+): Record<string, Lodging[]> {
+	const groupedTransportations: Record<string, Lodging[]> = {};
+
+	// Initialize all days in the range
+	for (let i = 0; i < numberOfDays; i++) {
+		const currentDate = new Date(startDate);
+		currentDate.setUTCDate(startDate.getUTCDate() + i);
+		const dateString = currentDate.toISOString().split('T')[0];
+		groupedTransportations[dateString] = [];
+	}
+
+	transportations.forEach((transportation) => {
+		if (transportation.check_in) {
+			const transportationDate = new Date(transportation.check_in).toISOString().split('T')[0];
+			if (transportation.check_out) {
+				const endDate = new Date(transportation.check_out).toISOString().split('T')[0];
 
 				// Loop through all days and include transportation if it falls within the range
 				for (let i = 0; i < numberOfDays; i++) {
@@ -279,6 +324,20 @@ export let ADVENTURE_TYPE_ICONS = {
 	other: '❓'
 };
 
+export let LODGING_TYPES_ICONS = {
+	hotel: '🏨',
+	hostel: '🛏️',
+	resort: '🏝️',
+	bnb: '🍳',
+	campground: '🏕️',
+	cabin: '🏚️',
+	apartment: '🏢',
+	house: '🏠',
+	villa: '🏡',
+	motel: '🚗🏨',
+	other: '❓'
+};
+
 export function getAdventureTypeLabel(type: string) {
 	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
 	if (type in ADVENTURE_TYPE_ICONS) {
@@ -296,7 +355,7 @@ export function getRandomBackground() {
 
 	const newYearsStart = new Date(today.getFullYear() - 1, 11, 31);
 	newYearsStart.setHours(0, 0, 0, 0);
-	const newYearsEnd = new Date(today.getFullYear(), 0, 7);
+	const newYearsEnd = new Date(today.getFullYear(), 0, 2);
 	newYearsEnd.setHours(23, 59, 59, 999);
 	if (today >= newYearsStart && today <= newYearsEnd) {
 		return {
@@ -347,3 +406,130 @@ export let themes = [
 	{ name: 'aestheticDark', label: 'Aesthetic Dark' },
 	{ name: 'northernLights', label: 'Northern Lights' }
 ];
+
+export function osmTagToEmoji(tag: string) {
+	switch (tag) {
+		case 'camp_site':
+			return '🏕️';
+		case 'slipway':
+			return '🛳️';
+		case 'playground':
+			return '🛝';
+		case 'viewpoint':
+			return '👀';
+		case 'cape':
+			return '🏞️';
+		case 'beach':
+			return '🏖️';
+		case 'park':
+			return '🌳';
+		case 'museum':
+			return '🏛️';
+		case 'theme_park':
+			return '🎢';
+		case 'nature_reserve':
+			return '🌲';
+		case 'memorial':
+			return '🕊️';
+		case 'monument':
+			return '🗿';
+		case 'wood':
+			return '🌲';
+		case 'zoo':
+			return '🦁';
+		case 'attraction':
+			return '🎡';
+		case 'ruins':
+			return '🏚️';
+		case 'bay':
+			return '🌊';
+		case 'hotel':
+			return '🏨';
+		case 'motel':
+			return '🏩';
+		case 'pub':
+			return '🍺';
+		case 'restaurant':
+			return '🍽️';
+		case 'cafe':
+			return '☕';
+		case 'bakery':
+			return '🥐';
+		case 'archaeological_site':
+			return '🏺';
+		case 'lighthouse':
+			return '🗼';
+		case 'tree':
+			return '🌳';
+		case 'cliff':
+			return '⛰️';
+		case 'water':
+			return '💧';
+		case 'fishing':
+			return '🎣';
+		case 'golf_course':
+			return '⛳';
+		case 'swimming_pool':
+			return '🏊';
+		case 'stadium':
+			return '🏟️';
+		case 'cave_entrance':
+			return '🕳️';
+		case 'anchor':
+			return '⚓';
+		case 'garden':
+			return '🌼';
+		case 'disc_golf_course':
+			return '🥏';
+		case 'natural':
+			return '🌿';
+		case 'ice_rink':
+			return '⛸️';
+		case 'horse_riding':
+			return '🐎';
+		case 'wreck':
+			return '🚢';
+		case 'water_park':
+			return '💦';
+		case 'picnic_site':
+			return '🧺';
+		case 'axe_throwing':
+			return '🪓';
+		case 'fort':
+			return '🏰';
+		case 'amusement_arcade':
+			return '🕹️';
+		case 'tepee':
+			return '🏕️';
+		case 'track':
+			return '🏃';
+		case 'trampoline_park':
+			return '🤸';
+		case 'dojo':
+			return '🥋';
+		case 'tree_stump':
+			return '🪵';
+		case 'peak':
+			return '🏔️';
+		case 'fitness_centre':
+			return '🏋️';
+		case 'artwork':
+			return '🎨';
+		case 'fast_food':
+			return '🍔';
+		case 'ice_cream':
+			return '🍦';
+		default:
+			return '📍'; // Default placeholder emoji for unknown tags
+	}
+}
+
+export function debounce(func: Function, timeout: number) {
+	let timer: number | NodeJS.Timeout;
+	return (...args: any) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => {
+			func(...args);
+		}, timeout);
+	};
+}

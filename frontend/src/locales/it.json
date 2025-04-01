@@ -215,7 +215,39 @@
     "start": "Inizio",
     "starting_airport": "Inizio aeroporto",
     "to": "A",
-    "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata."
+    "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata.",
+    "show_map": "Mostra mappa",
+    "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura.",
+    "cities_updated": "città aggiornate",
+    "create_adventure": "Crea Avventura",
+    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli.",
+    "finding_recommendations": "Alla scoperta di gemme nascoste per la tua prossima avventura",
+    "attachment": "Allegato",
+    "attachment_delete_success": "Allegato eliminato con successo!",
+    "attachment_name": "Nome dell'allegato",
+    "attachment_update_error": "Errore durante l'aggiornamento dell'allegato",
+    "attachment_update_success": "Allegato aggiornato con successo!",
+    "attachment_upload_error": "Errore durante il caricamento dell'allegato",
+    "attachment_upload_success": "Allegato caricato con successo!",
+    "attachments": "Allegati",
+    "gpx_tip": "Carica i file GPX negli allegati per visualizzarli sulla mappa!",
+    "images": "Immagini",
+    "primary": "Primario",
+    "upload": "Caricamento",
+    "view_attachment": "Visualizza allegato",
+    "of": "Di",
+    "city": "Città",
+    "delete_lodging": "Elimina alloggio",
+    "display_name": "Nome da visualizzare",
+    "location_details": "Dettagli della posizione",
+    "lodging": "Alloggio",
+    "lodging_delete_confirm": "Sei sicuro di voler eliminare questa posizione di alloggio? \nQuesta azione non può essere annullata.",
+    "lodging_information": "Informazioni di alloggio",
+    "price": "Prezzo",
+    "region": "Regione",
+    "welcome_map_info": "Avventure pubbliche su questo server",
+    "reservation_number": "Numero di prenotazione",
+    "open_in_maps": "Aperto in mappe"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -262,7 +294,8 @@
     "tag": "Etichetta",
     "language_selection": "Lingua",
     "support": "Supporto",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "admin_panel": "Pannello di amministrazione"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -282,7 +315,12 @@
     "email_required": "L'e-mail è obbligatoria",
     "both_passwords_required": "Sono necessarie entrambe le password",
     "new_password": "Nuova parola d'ordine",
-    "reset_failed": "Impossibile reimpostare la password"
+    "reset_failed": "Impossibile reimpostare la password",
+    "or_3rd_party": "Oppure accedi con un servizio di terze parti",
+    "no_public_adventures": "Nessuna avventura pubblica trovata",
+    "no_public_collections": "Nessuna collezione pubblica trovata",
+    "user_adventures": "Avventure utente",
+    "user_collections": "Collezioni utente"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -296,7 +334,20 @@
     "no_countries_found": "Nessun paese trovato",
     "not_visited": "Non visitato",
     "num_countries": "paesi trovati",
-    "partially_visited": "Parzialmente visitato"
+    "partially_visited": "Parzialmente visitato",
+    "all_visited": "Hai visitato tutte le regioni in",
+    "cities": "città",
+    "failed_to_mark_visit": "Impossibile contrassegnare la visita a",
+    "failed_to_remove_visit": "Impossibile rimuovere la visita a",
+    "marked_visited": "contrassegnato come visitato",
+    "no_cities_found": "Nessuna città trovata",
+    "region_failed_visited": "Impossibile contrassegnare la regione come visitata",
+    "region_stats": "Statistiche della regione",
+    "regions_in": "Regioni dentro",
+    "removed": "RIMOSSO",
+    "view_cities": "Visualizza città",
+    "visit_remove_failed": "Impossibile rimuovere la visita",
+    "visit_to": "Visita a"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",
@@ -367,7 +418,25 @@
     "csrf_failed": "Impossibile recuperare il token CSRF",
     "duplicate_email": "Questo indirizzo email è già in uso.",
     "email_taken": "Questo indirizzo email è già in uso.",
-    "username_taken": "Questo nome utente è già in uso."
+    "username_taken": "Questo nome utente è già in uso.",
+    "administration_settings": "Impostazioni di amministrazione",
+    "documentation_link": "Collegamento alla documentazione",
+    "launch_account_connections": "Avvia Connessioni account",
+    "launch_administration_panel": "Avvia il pannello di amministrazione",
+    "no_verified_email_warning": "È necessario disporre di un indirizzo e-mail verificato per abilitare l'autenticazione a due fattori.",
+    "social_auth_desc": "Abilita o disabilita i provider di autenticazione social e OIDC per il tuo account. \nQueste connessioni ti consentono di accedere con provider di identità di autenticazione self-hosted come Authentik o provider di terze parti come GitHub.",
+    "social_auth_desc_2": "Queste impostazioni sono gestite nel server AdventureLog e devono essere abilitate manualmente dall'amministratore.",
+    "social_oidc_auth": "Autenticazione sociale e OIDC",
+    "add_email": "Aggiungi e-mail",
+    "password_too_short": "La password deve contenere almeno 6 caratteri",
+    "disable_password": "Disabilita la password",
+    "password_disable": "Disabilita l'autenticazione della password",
+    "password_disable_desc": "La disabilitazione dell'autenticazione della password ti impedirà di accedere con una password. \nDovrai utilizzare un provider di social o OIDC per accedere. Se il tuo fornitore social non fosse collegato, l'autenticazione password verrà riabilitata automaticamente anche se questa impostazione è disabilitata.",
+    "password_disable_warning": "Attualmente, l'autenticazione della password è disabilitata. \nÈ richiesto l'accesso tramite un fornitore sociale o OIDC.",
+    "password_disabled": "Autenticazione password disabilitata",
+    "password_disabled_error": "Errore di disabilitazione dell'autenticazione della password. \nAssicurati che un fornitore sociale o OIDC sia collegato al tuo account.",
+    "password_enabled": "Autenticazione password abilitata",
+    "password_enabled_error": "Errore che abilita l'autenticazione della password."
   },
   "checklist": {
     "add_item": "Aggiungi articolo",
@@ -438,7 +507,10 @@
     "transportation_delete_error": "Errore durante l'eliminazione del trasporto",
     "transportation_deleted": "Trasporto eliminato con successo!",
     "transportation_edit_success": "Trasporti modificati con successo!",
-    "type": "Tipo"
+    "type": "Tipo",
+    "ending_airport_desc": "Immettere il codice aeroportuale finale (ad es. LAX)",
+    "fetch_location_information": "Informazioni sulla posizione di recupero",
+    "starting_airport_desc": "Immettere il codice dell'aeroporto di partenza (ad es. JFK)"
   },
   "search": {
     "adventurelog_results": "Risultati di AdventureLog",
@@ -454,17 +526,7 @@
     "show_visited_regions": "Mostra regioni visitate",
     "view_details": "Visualizza dettagli"
   },
-  "languages": {
-    "de": "tedesco",
-    "en": "Inglese",
-    "es": "spagnolo",
-    "fr": "francese",
-    "it": "Italiano",
-    "nl": "Olandese",
-    "sv": "svedese",
-    "zh": "cinese",
-    "pl": "Polacco"
-  },
+  "languages": {},
   "share": {
     "no_users_shared": "Nessun utente condiviso con",
     "not_shared_with": "Non condiviso con",
@@ -481,7 +543,8 @@
     "member_since": "Membro da allora",
     "user_stats": "Statistiche utente",
     "visited_countries": "Paesi visitati",
-    "visited_regions": "Regioni visitate"
+    "visited_regions": "Regioni visitate",
+    "visited_cities": "Città visitate"
   },
   "categories": {
     "category_name": "Nome della categoria",
@@ -499,6 +562,69 @@
     "recent_adventures": "Avventure recenti",
     "total_adventures": "Avventure totali",
     "total_visited_regions": "Totale regioni visitate",
-    "welcome_back": "Bentornato"
+    "welcome_back": "Bentornato",
+    "total_visited_cities": "Totale città visitate"
+  },
+  "immich": {
+    "api_key": "Chiave API Immich",
+    "api_note": "Nota: questo deve essere l'URL del server API Immich, quindi probabilmente termina con /api a meno che tu non abbia una configurazione personalizzata.",
+    "disable": "Disabilita",
+    "enable_immich": "Abilita Immich",
+    "imageid_required": "L'ID immagine è obbligatorio",
+    "immich": "Immich",
+    "immich_desc": "Integra il tuo account Immich con AdventureLog per consentirti di cercare nella tua libreria di foto e importare foto per le tue avventure.",
+    "immich_disabled": "Integrazione Immich disabilitata con successo!",
+    "immich_enabled": "Integrazione Immich abilitata con successo!",
+    "immich_error": "Errore durante l'aggiornamento dell'integrazione Immich",
+    "immich_integration": "Integrazione di Immich",
+    "immich_updated": "Impostazioni Immich aggiornate con successo!",
+    "integration_enabled": "Integrazione abilitata",
+    "integration_fetch_error": "Errore durante il recupero dei dati dall'integrazione Immich",
+    "integration_missing": "L'integrazione Immich manca dal backend",
+    "load_more": "Carica altro",
+    "no_items_found": "Nessun articolo trovato",
+    "query_required": "La domanda è obbligatoria",
+    "server_down": "Il server Immich è attualmente inattivo o irraggiungibile",
+    "server_url": "URL del server Immich",
+    "update_integration": "Aggiorna integrazione",
+    "documentation": "Documentazione sull'integrazione di Immich",
+    "localhost_note": "Nota: molto probabilmente localhost non funzionerà a meno che tu non abbia configurato le reti docker di conseguenza. \nSi consiglia di utilizzare l'indirizzo IP del server o il nome del dominio."
+  },
+  "recomendations": {
+    "address": "Indirizzo",
+    "contact": "Contatto",
+    "phone": "Telefono",
+    "recommendation": "Raccomandazione",
+    "website": "Sito web"
+  },
+  "lodging": {
+    "apartment": "Appartamento",
+    "bnb": "Bed and Breakfast",
+    "cabin": "Cabina",
+    "campground": "Campeggio",
+    "check_in": "Check -in",
+    "check_out": "Guardare",
+    "date_and_time": "Data",
+    "edit": "Modificare",
+    "edit_lodging": "Modifica alloggio",
+    "error_editing_lodging": "Alloggio di modifica degli errori",
+    "hostel": "Ostello",
+    "hotel": "Hotel",
+    "house": "Casa",
+    "lodging_added": "Alloggio aggiunto con successo!",
+    "new_lodging": "Nuovo alloggio",
+    "other": "Altro",
+    "provide_start_date": "Si prega di fornire una data di inizio",
+    "reservation_number": "Numero di prenotazione",
+    "resort": "Ricorrere",
+    "start": "Inizio",
+    "type": "Tipo",
+    "villa": "Villa",
+    "lodging_delete_error": "Errore di eliminazione dell'alloggio",
+    "lodging_deleted": "Alloggio eliminato con successo!",
+    "lodging_edit_success": "Alloggio modificato con successo!",
+    "lodging_type": "Tipo di alloggio",
+    "motel": "Motel",
+    "current_timezone": "Fuso orario attuale"
   }
 }
