@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
 
@@ -179,6 +179,17 @@
 	let isShowingTransportationModal: boolean = false;
 	let isShowingChecklistModal: boolean = false;
 
+	function handleHashChange() {
+		const hash = window.location.hash.replace('#', '');
+		if (hash) {
+			currentView = hash
+		} else if (!collection.start_date) {
+			currentView = 'all';
+		} else {
+			currentView = 'itinerary';
+		}
+	}
+
 	onMount(() => {
 		if (data.props.adventure) {
 			collection = data.props.adventure;
@@ -209,11 +220,12 @@
 		if (collection.checklists) {
 			checklists = collection.checklists;
 		}
-		if (!collection.start_date) {
-			currentView = 'all';
-		} else {
-			currentView = 'itinerary';
-		}
+		window.addEventListener('hashchange', handleHashChange);
+		handleHashChange();
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('hashchange', handleHashChange);
 	});
 
 	function deleteAdventure(event: CustomEvent<string>) {
@@ -647,41 +659,35 @@
 				<!-- svelte-ignore a11y-missing-attribute -->
 				{#if collection.start_date}
 					<a
+						href="#itinerary"
 						role="tab"
 						class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-						tabindex="0"
-						on:click={() => (currentView = 'itinerary')}
-						on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
+						tabindex="0">Itinerary</a
 					>
 				{/if}
 				<a
+					href="#all"
 					role="tab"
 					class="tab {currentView === 'all' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'all')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'all')}>All Linked Items</a
+					tabindex="0">All Linked Items</a
 				>
 				<a
+					href="#calendar"
 					role="tab"
 					class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'calendar')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'calendar')}>Calendar</a
+					tabindex="0">Calendar</a
 				>
 				<a
+					href="#map"
 					role="tab"
 					class="tab {currentView === 'map' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'map')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
+					tabindex="0">Map</a
 				>
 				<a
+					href="#recommendations"
 					role="tab"
 					class="tab {currentView === 'recommendations' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'recommendations')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'recommendations')}
-					>Recommendations</a
+					tabindex="0">Recommendations</a
 				>
 			</div>
 		</div>
