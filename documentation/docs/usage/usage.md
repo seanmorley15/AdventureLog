@@ -10,7 +10,7 @@ Welcome to AdventureLog! This guide will help you get started with AdventureLog 
 - **Visit**: a visit is added to an adventure. It contains a date and notes about when the adventure was visited. If an adventure is visited multiple times, multiple visits can be added. If there are no visits on an adventure or the date of all visits is in the future, the adventure is considered planned. If the date of the visit is in the past, the adventure is considered completed.
 - **Category**: a category is a way to group adventures together. For example, you could have a category for parks, a category for museums, and a category for restaurants.
 - **Tag**: a tag is a way to add additional information to an adventure. For example, you could have a tag for the type of cuisine at a restaurant or the type of art at a museum. Multiple tags can be added to an adventure.
-- **Image**: an image is a photo that is added to an adventure. Images can be added to an adventure to provide a visual representation of the location or to capture a memory of the visit. These can be uploded from your device or with a service like [Immich](/docs/configuration/immich_integration) if the integration is enabled.
+- **Image**: an image is a photo that is added to an adventure. Images can be added to an adventure to provide a visual representation of the location or to capture a memory of the visit. These can be uploaded from your device or with a service like [Immich](/docs/configuration/immich_integration) if the integration is enabled.
 - **Attachment**: an attachment is a file that is added to an adventure. Attachments can be added to an adventure to provide additional information, such as a map of the location or a brochure from the visit.
 
 #### Collections
