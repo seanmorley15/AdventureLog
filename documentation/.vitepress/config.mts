@@ -80,6 +80,7 @@ export default defineConfig({
                 link: "/docs/install/nginx_proxy_manager",
               },
               { text: "Traefik", link: "/docs/install/traefik" },
+              { text: "Caddy", link: "/docs/install/caddy" },
             ],
           },
         ],
