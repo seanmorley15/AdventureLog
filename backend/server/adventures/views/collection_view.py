@@ -22,8 +22,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
 
-        valid_order_by = ['name', 'upated_at', 'start_date']
-        if order_by not in valid_order_by:
+        valid_order_by = ['name', 'updated_at', 'start_date']
             order_by = 'updated_at'
 
         if order_direction not in ['asc', 'desc']:
