@@ -4,8 +4,7 @@ When you encounter issues with the login and registration pages being unresponsi
 
 1. Check to make sure the backend container is running and accessible.
 
-   - Check the backend container logs to see if there are any errors or issues blocking the contianer from running.
-
+   - Check the backend container logs to see if there are any errors or issues blocking the container from running.
 2. Check the connection between the frontend and backend containers.
 
    - Attempt login with the browser console network tab open to see if there are any errors or issues with the connection between the frontend and backend containers. If there is a connection issue, the code will show an error like `Failed to load resource: net::ERR_CONNECTION_REFUSED`. If this is the case, check the `PUBLIC_SERVER_URL` in the frontend container and refer to the installation docs to ensure the correct URL is set.
