@@ -33,7 +33,7 @@ Here is a summary of the configuration options available in the `docker-compose.
 | ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
 | `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend.                                                                                                  | ```http://server:8000```    |
 | `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will access the app from.                                                                 | ```http://localhost:8015``` |
-| `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **kilobytes**.  | ```Infinity```              |
+| `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **bytes**.  | ```Infinity```              |
 
 ### Backend Container (server)
 
