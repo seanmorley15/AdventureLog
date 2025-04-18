@@ -27,3 +27,7 @@ Welcome to AdventureLog! This guide will help you get started with AdventureLog 
   - **Country**: a country is a geographical area that is recognized as an independent nation. You can add visits to countries to track where you have been.
   - **Region**: a region is a geographical area that is part of a country. You can add visits to regions to track where you have been within a country.
   - **City**: a city is a geographical area that is a populated urban center. You can add visits to cities to track where you have been within a region.
+
+## Tutorial Video
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/4Y2LvxG3xn4" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
