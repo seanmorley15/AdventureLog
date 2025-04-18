@@ -54,7 +54,8 @@
 		sv: 'Svenska',
 		zh: '中文',
 		pl: 'Polski',
-		ko: '한국어'
+		ko: '한국어',
+		no: "Norsk"
 	};
 
 	let query: string = '';

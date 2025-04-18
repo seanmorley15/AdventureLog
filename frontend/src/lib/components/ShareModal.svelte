@@ -62,7 +62,7 @@
 		if (modal) {
 			modal.showModal();
 		}
-		let res = await fetch(`/auth/users/`);
+		let res = await fetch(`/auth/users`);
 		if (res.ok) {
 			let data = await res.json();
 			allUsers = data;

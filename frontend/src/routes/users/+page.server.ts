@@ -9,7 +9,7 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	}
 
-	const res = await fetch(`${serverEndpoint}/auth/users/`, {
+	const res = await fetch(`${serverEndpoint}/auth/users`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}
