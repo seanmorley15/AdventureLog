@@ -1,4 +1,4 @@
-name: Test ₣ontend
+name: Test Frontend
 
 on:
   pull_request:
