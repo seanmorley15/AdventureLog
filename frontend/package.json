@@ -43,6 +43,7 @@
 		"dompurify": "^3.2.4",
 		"emoji-picker-element": "^1.26.0",
 		"gsap": "^3.12.7",
+		"luxon": "^3.6.1",
 		"marked": "^15.0.4",
 		"psl": "^1.15.0",
 		"qrcode": "^1.5.4",
