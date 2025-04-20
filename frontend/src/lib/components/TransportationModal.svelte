@@ -6,8 +6,14 @@
 	import { addToast } from '$lib/toasts';
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
-	// @ts-ignore
-	import { DateTime } from 'luxon';
+	import {
+		toLocalDatetime,
+		toUTCDatetime,
+		updateLocalDates,
+		updateUTCDates,
+		validateDateRange,
+		formatUTCDate
+	} from '$lib/dateUtils';
 
 	// Initialize with browser's timezone
 	let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -29,21 +35,6 @@
 	export let transportationToEdit: Transportation | null = null;
 
 	let constrainDates: boolean = false;
-
-	// Convert a UTC ISO date to a datetime-local value in the specified timezone
-	function toLocalDatetime(utcDate: string | null, timezone: string = selectedTimezone): string {
-		if (!utcDate) return '';
-		return DateTime.fromISO(utcDate, { zone: 'UTC' })
-			.setZone(timezone)
-			.toISO({ suppressSeconds: true, includeOffset: false })
-			.slice(0, 16);
-	}
-
-	// Convert a local datetime to UTC
-	function toUTCDatetime(localDate: string, timezone: string = selectedTimezone): string | null {
-		if (!localDate) return null;
-		return DateTime.fromISO(localDate, { zone: timezone }).toUTC().toISO();
-	}
 
 	// Initialize transportation object
 	let transportation: Transportation = {
@@ -88,24 +79,13 @@
 
 	// Update local display dates whenever timezone or UTC dates change
 	$: {
-		if (utcStartDate) {
-			localStartDate = toLocalDatetime(utcStartDate, selectedTimezone);
-		}
-		if (utcEndDate) {
-			localEndDate = toLocalDatetime(utcEndDate, selectedTimezone);
-		}
-	}
-
-	// Explicitly watch for timezone changes to update displayed dates
-	$: {
-		// This will trigger whenever selectedTimezone changes
-		selectedTimezone;
-		if (utcStartDate) {
-			localStartDate = toLocalDatetime(utcStartDate);
-		}
-		if (utcEndDate) {
-			localEndDate = toLocalDatetime(utcEndDate);
-		}
+		const updatedDates = updateLocalDates({
+			utcStartDate,
+			utcEndDate,
+			timezone: selectedTimezone
+		});
+		localStartDate = updatedDates.localStartDate;
+		localEndDate = updatedDates.localEndDate;
 	}
 
 	onMount(async () => {
@@ -117,13 +97,20 @@
 		// Initialize UTC dates from transportationToEdit if available
 		if (transportationToEdit?.date) {
 			utcStartDate = transportationToEdit.date;
-			localStartDate = toLocalDatetime(utcStartDate);
 		}
 
 		if (transportationToEdit?.end_date) {
 			utcEndDate = transportationToEdit.end_date;
-			localEndDate = toLocalDatetime(utcEndDate);
 		}
+
+		// Update local dates based on UTC dates
+		const updatedDates = updateLocalDates({
+			utcStartDate,
+			utcEndDate,
+			timezone: selectedTimezone
+		});
+		localStartDate = updatedDates.localStartDate;
+		localEndDate = updatedDates.localEndDate;
 	});
 
 	function close() {
@@ -137,12 +124,18 @@
 	}
 
 	// Update UTC dates when local dates change
-	function updateUTCDates() {
-		utcStartDate = localStartDate ? toUTCDatetime(localStartDate) : null;
-		utcEndDate = localEndDate ? toUTCDatetime(localEndDate) : null;
+	function handleLocalDateChange() {
+		const updated = updateUTCDates({
+			localStartDate,
+			localEndDate,
+			timezone: selectedTimezone
+		});
+		utcStartDate = updated.utcStartDate;
+		utcEndDate = updated.utcEndDate;
 	}
 
 	async function geocode(e: Event | null) {
+		// Geocoding logic unchanged
 		if (e) {
 			e.preventDefault();
 		}
@@ -226,7 +219,7 @@
 				Math.round(transportation.destination_longitude * 1e6) / 1e6;
 		}
 
-		// Validate dates
+		// Validate dates using utility function
 		if (localEndDate && !localStartDate) {
 			addToast('error', $t('adventures.start_date_required'));
 			return;
@@ -238,11 +231,9 @@
 			utcEndDate = utcStartDate;
 		}
 
-		if (
-			localStartDate &&
-			localEndDate &&
-			DateTime.fromISO(localStartDate).toMillis() > DateTime.fromISO(localEndDate).toMillis()
-		) {
+		// Validate date range
+		const validation = validateDateRange(localStartDate, localEndDate);
+		if (!validation.valid) {
 			addToast('error', $t('adventures.start_before_end_error'));
 			return;
 		}
@@ -272,9 +263,15 @@
 				// Update the UTC dates with the values from the server
 				utcStartDate = data.date;
 				utcEndDate = data.end_date;
-				// Update displayed dates
-				localStartDate = toLocalDatetime(utcStartDate);
-				localEndDate = toLocalDatetime(utcEndDate);
+
+				// Update displayed dates using utility function
+				const updatedDates = updateLocalDates({
+					utcStartDate,
+					utcEndDate,
+					timezone: selectedTimezone
+				});
+				localStartDate = updatedDates.localStartDate;
+				localEndDate = updatedDates.localEndDate;
 
 				addToast('success', $t('adventures.adventure_created'));
 				dispatch('save', transportation);
@@ -296,9 +293,15 @@
 				// Update the UTC dates with the values from the server
 				utcStartDate = data.date;
 				utcEndDate = data.end_date;
-				// Update displayed dates
-				localStartDate = toLocalDatetime(utcStartDate);
-				localEndDate = toLocalDatetime(utcEndDate);
+
+				// Update displayed dates using utility function
+				const updatedDates = updateLocalDates({
+					utcStartDate,
+					utcEndDate,
+					timezone: selectedTimezone
+				});
+				localStartDate = updatedDates.localStartDate;
+				localEndDate = updatedDates.localEndDate;
 
 				addToast('success', $t('adventures.adventure_updated'));
 				dispatch('save', transportation);
@@ -481,7 +484,7 @@
 									id="date"
 									name="date"
 									bind:value={localStartDate}
-									on:change={updateUTCDates}
+									on:change={handleLocalDateChange}
 									min={constrainDates ? fullStartDate : ''}
 									max={constrainDates ? fullEndDate : ''}
 									class="input input-bordered w-full max-w-xs mt-1"
@@ -502,7 +505,7 @@
 										min={constrainDates ? localStartDate : ''}
 										max={constrainDates ? fullEndDate : ''}
 										bind:value={localEndDate}
-										on:change={updateUTCDates}
+										on:change={handleLocalDateChange}
 										class="input input-bordered w-full max-w-xs mt-1"
 									/>
 								</div>
@@ -529,15 +532,14 @@
 						</div>
 						{#if utcStartDate}
 							<div class="text-sm mt-2">
-								UTC Time: {DateTime.fromISO(utcStartDate).toISO().slice(0, 16).replace('T', ' ')}
+								UTC Time: {formatUTCDate(utcStartDate)}
 								{#if utcEndDate && utcEndDate !== utcStartDate}
-									to {DateTime.fromISO(utcEndDate).toISO().slice(0, 16).replace('T', ' ')}
+									to {formatUTCDate(utcEndDate)}
 								{/if}
 							</div>
 						{/if}
 					</div>
 				</div>
-
 				<!-- Flight Information -->
 
 				<div class="collapse collapse-plus bg-base-200 mb-4">

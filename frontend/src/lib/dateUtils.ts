@@ -1,0 +1,114 @@
+// @ts-ignore
+import { DateTime } from 'luxon';
+
+/**
+ * Convert a UTC ISO date to a datetime-local value in the specified timezone
+ * @param utcDate - UTC date in ISO format or null
+ * @param timezone - Target timezone (defaults to browser timezone)
+ * @returns Formatted local datetime string for input fields (YYYY-MM-DDTHH:MM)
+ */
+export function toLocalDatetime(
+	utcDate: string | null,
+	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+): string {
+	if (!utcDate) return '';
+	return DateTime.fromISO(utcDate, { zone: 'UTC' })
+		.setZone(timezone)
+		.toISO({ suppressSeconds: true, includeOffset: false })
+		.slice(0, 16);
+}
+
+/**
+ * Convert a local datetime to UTC
+ * @param localDate - Local datetime string in ISO format
+ * @param timezone - Source timezone (defaults to browser timezone)
+ * @returns UTC datetime in ISO format or null
+ */
+export function toUTCDatetime(
+	localDate: string,
+	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+): string | null {
+	if (!localDate) return null;
+	return DateTime.fromISO(localDate, { zone: timezone }).toUTC().toISO();
+}
+
+/**
+ * Updates local datetime display values based on UTC values and timezone
+ * @param params Object containing UTC dates and timezone
+ * @returns Object with updated local datetime strings
+ */
+export function updateLocalDates({
+	utcStartDate,
+	utcEndDate,
+	timezone
+}: {
+	utcStartDate: string | null;
+	utcEndDate: string | null;
+	timezone: string;
+}) {
+	return {
+		localStartDate: toLocalDatetime(utcStartDate, timezone),
+		localEndDate: toLocalDatetime(utcEndDate, timezone)
+	};
+}
+
+/**
+ * Updates UTC datetime values based on local values and timezone
+ * @param params Object containing local dates and timezone
+ * @returns Object with updated UTC datetime strings
+ */
+export function updateUTCDates({
+	localStartDate,
+	localEndDate,
+	timezone
+}: {
+	localStartDate: string;
+	localEndDate: string;
+	timezone: string;
+}) {
+	return {
+		utcStartDate: toUTCDatetime(localStartDate, timezone),
+		utcEndDate: toUTCDatetime(localEndDate, timezone)
+	};
+}
+
+/**
+ * Validate date ranges
+ * @param startDate - Start date string
+ * @param endDate - End date string
+ * @returns Object with validation result and error message
+ */
+export function validateDateRange(
+	startDate: string,
+	endDate: string
+): { valid: boolean; error?: string } {
+	if (endDate && !startDate) {
+		return {
+			valid: false,
+			error: 'Start date is required when end date is provided'
+		};
+	}
+
+	if (
+		startDate &&
+		endDate &&
+		DateTime.fromISO(startDate).toMillis() > DateTime.fromISO(endDate).toMillis()
+	) {
+		return {
+			valid: false,
+			error: 'Start date must be before end date'
+		};
+	}
+
+	return { valid: true };
+}
+
+/**
+ * Format UTC date for display
+ * @param utcDate - UTC date in ISO format
+ * @returns Formatted date string without seconds (YYYY-MM-DD HH:MM)
+ */
+export function formatUTCDate(utcDate: string | null): string {
+	if (!utcDate) return '';
+	return DateTime.fromISO(utcDate).toISO().slice(0, 16).replace('T', ' ');
+}
