@@ -6,14 +6,7 @@
 	import { addToast } from '$lib/toasts';
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
-	import {
-		toLocalDatetime,
-		toUTCDatetime,
-		updateLocalDates,
-		updateUTCDates,
-		validateDateRange,
-		formatUTCDate
-	} from '$lib/dateUtils';
+	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
 
 	// Initialize with browser's timezone
 	let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -79,13 +72,14 @@
 
 	// Update local display dates whenever timezone or UTC dates change
 	$: {
-		const updatedDates = updateLocalDates({
-			utcStartDate,
-			utcEndDate,
+		localStartDate = updateLocalDate({
+			utcDate: utcStartDate,
 			timezone: selectedTimezone
-		});
-		localStartDate = updatedDates.localStartDate;
-		localEndDate = updatedDates.localEndDate;
+		}).localDate;
+		localEndDate = updateLocalDate({
+			utcDate: utcEndDate,
+			timezone: selectedTimezone
+		}).localDate;
 	}
 
 	onMount(async () => {
@@ -103,14 +97,14 @@
 			utcEndDate = transportationToEdit.end_date;
 		}
 
-		// Update local dates based on UTC dates
-		const updatedDates = updateLocalDates({
-			utcStartDate,
-			utcEndDate,
+		localStartDate = updateLocalDate({
+			utcDate: utcStartDate,
 			timezone: selectedTimezone
-		});
-		localStartDate = updatedDates.localStartDate;
-		localEndDate = updatedDates.localEndDate;
+		}).localDate;
+		localEndDate = updateLocalDate({
+			utcDate: utcEndDate,
+			timezone: selectedTimezone
+		}).localDate;
 	});
 
 	function close() {
@@ -125,13 +119,14 @@
 
 	// Update UTC dates when local dates change
 	function handleLocalDateChange() {
-		const updated = updateUTCDates({
-			localStartDate,
-			localEndDate,
+		utcStartDate = updateUTCDate({
+			localDate: localStartDate,
 			timezone: selectedTimezone
-		});
-		utcStartDate = updated.utcStartDate;
-		utcEndDate = updated.utcEndDate;
+		}).utcDate;
+		utcEndDate = updateUTCDate({
+			localDate: localEndDate,
+			timezone: selectedTimezone
+		}).utcDate;
 	}
 
 	async function geocode(e: Event | null) {
@@ -264,14 +259,14 @@
 				utcStartDate = data.date;
 				utcEndDate = data.end_date;
 
-				// Update displayed dates using utility function
-				const updatedDates = updateLocalDates({
-					utcStartDate,
-					utcEndDate,
+				localStartDate = updateLocalDate({
+					utcDate: utcStartDate,
 					timezone: selectedTimezone
-				});
-				localStartDate = updatedDates.localStartDate;
-				localEndDate = updatedDates.localEndDate;
+				}).localDate;
+				localEndDate = updateLocalDate({
+					utcDate: utcEndDate,
+					timezone: selectedTimezone
+				}).localDate;
 
 				addToast('success', $t('adventures.adventure_created'));
 				dispatch('save', transportation);
@@ -294,14 +289,14 @@
 				utcStartDate = data.date;
 				utcEndDate = data.end_date;
 
-				// Update displayed dates using utility function
-				const updatedDates = updateLocalDates({
-					utcStartDate,
-					utcEndDate,
+				localStartDate = updateLocalDate({
+					utcDate: utcStartDate,
 					timezone: selectedTimezone
-				});
-				localStartDate = updatedDates.localStartDate;
-				localEndDate = updatedDates.localEndDate;
+				}).localDate;
+				localEndDate = updateLocalDate({
+					utcDate: utcEndDate,
+					timezone: selectedTimezone
+				}).localDate;
 
 				addToast('success', $t('adventures.adventure_updated'));
 				dispatch('save', transportation);

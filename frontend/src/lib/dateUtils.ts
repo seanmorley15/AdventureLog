@@ -33,42 +33,30 @@ export function toUTCDatetime(
 }
 
 /**
- * Updates local datetime display values based on UTC values and timezone
- * @param params Object containing UTC dates and timezone
- * @returns Object with updated local datetime strings
+ * Updates local datetime values based on UTC date and timezone
+ * @param params Object containing UTC date and timezone
+ * @returns Object with updated local datetime string
  */
-export function updateLocalDates({
-	utcStartDate,
-	utcEndDate,
+export function updateLocalDate({
+	utcDate,
 	timezone
 }: {
-	utcStartDate: string | null;
-	utcEndDate: string | null;
+	utcDate: string | null;
 	timezone: string;
 }) {
 	return {
-		localStartDate: toLocalDatetime(utcStartDate, timezone),
-		localEndDate: toLocalDatetime(utcEndDate, timezone)
+		localDate: toLocalDatetime(utcDate, timezone)
 	};
 }
 
 /**
- * Updates UTC datetime values based on local values and timezone
- * @param params Object containing local dates and timezone
- * @returns Object with updated UTC datetime strings
+ * Updates UTC datetime values based on local datetime and timezone
+ * @param params Object containing local date and timezone
+ * @returns Object with updated UTC datetime string
  */
-export function updateUTCDates({
-	localStartDate,
-	localEndDate,
-	timezone
-}: {
-	localStartDate: string;
-	localEndDate: string;
-	timezone: string;
-}) {
+export function updateUTCDate({ localDate, timezone }: { localDate: string; timezone: string }) {
 	return {
-		utcStartDate: toUTCDatetime(localStartDate, timezone),
-		utcEndDate: toUTCDatetime(localEndDate, timezone)
+		utcDate: toUTCDatetime(localDate, timezone)
 	};
 }
 
