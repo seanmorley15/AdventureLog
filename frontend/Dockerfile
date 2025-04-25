@@ -1,5 +1,5 @@
 # Use this image as the platform to build the app
-FROM node:18-alpine AS external-website
+FROM node:22-alpine AS external-website
 
 # A small line inside the image to show who made it
 LABEL Developers="Sean Morley"
