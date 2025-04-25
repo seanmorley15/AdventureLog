@@ -180,8 +180,8 @@
 			</ul>
 		</div>
 		<a class="btn btn-ghost p-0 text-2xl font-bold tracking-normal" href="/">
-			AdventureLog
-			<img src="/favicon.png" alt="Map Logo" class="w-10 md:inline hidden" />
+			<span class="md:inline hidden">AdventureLog</span>
+			<img src="/favicon.png" alt="Map Logo" class="w-10" />
 		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
