@@ -119,12 +119,25 @@
 			dates = dates.concat(
 				lodging
 					.filter((i) => i.check_in)
-					.map((lodging) => ({
-						id: lodging.id,
-						start: lodging.check_in || '', // Ensure it's a string
-						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
-						title: lodging.name
-					}))
+					.map((lodging) => {
+						let end = lodging.check_out || lodging.check_in || ''; // Ensure it's a string
+						if (lodging.check_in && lodging.check_out) {
+							let checkInDate = new Date(lodging.check_in);
+							let checkOutDate = new Date(lodging.check_out);
+							if (checkInDate.toDateString() !== checkOutDate.toDateString()) {
+								checkOutDate.setDate(checkOutDate.getDate() - 1);
+								checkOutDate.setHours(23);
+								checkOutDate.setMinutes(59);
+								end = checkOutDate;
+							}
+						}
+						return {
+							id: lodging.id,
+							start: lodging.check_in || '', // Ensure it's a string
+							end: end,
+							title: lodging.name
+						};
+					})
 			);
 		}
 
@@ -1007,7 +1020,7 @@
 									lng: transportation.origin_longitude,
 									lat: transportation.origin_latitude
 								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200
 			bg-green-300 text-black focus:outline-6 focus:outline-black"
 							>
 								<span class="text-xl">
@@ -1027,7 +1040,7 @@
 									lng: transportation.destination_longitude,
 									lat: transportation.destination_latitude
 								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200
 			bg-red-300 text-black focus:outline-6 focus:outline-black"
 							>
 								<span class="text-xl">
@@ -1078,7 +1091,7 @@
 									lng: hotel.longitude,
 									lat: hotel.latitude
 								}}
-								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 
+								class="grid h-8 w-8 place-items-center rounded-full border border-gray-200
 								bg-yellow-300 text-black focus:outline-6 focus:outline-black"
 							>
 								<span class="text-xl">
