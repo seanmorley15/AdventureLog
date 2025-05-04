@@ -63,9 +63,9 @@ if [ $? -eq 137 ]; then
 fi
 
 # Run backend in dev mode
-python manage.py runserver &
+python manage.py runserver 2>&1 | tee -a /tmp/servers.log >> /tmp/backend.log 2&>1 &
 
 cd ../../frontend
 
 # Run frontend in dev mode
-npm run dev
+npm run dev 2>&1 | tee -a /tmp/servers.log >> /tmp/frontend.log 2&>1 &
