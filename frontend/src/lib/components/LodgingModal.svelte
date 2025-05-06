@@ -323,6 +323,7 @@
 									id="price"
 									name="price"
 									bind:value={lodging.price}
+									step="0.01"
 									class="input input-bordered w-full max-w-xs mt-1"
 								/>
 							</div>
