@@ -26,7 +26,7 @@ export default defineConfig({
   },
 
   transformPageData(pageData) {
-    if (pageData.relativePath === "/") {
+    if (pageData.relativePath === "index.md") {
       const jsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
