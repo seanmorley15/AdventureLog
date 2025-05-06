@@ -50,7 +50,7 @@ export default defineConfig({
         softwareVersion: "v0.9.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
-        screenshot: "https://adventurelog.app/adventurelog.png",
+        screenshot: "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
         downloadUrl: "https://github.com/seanmorley15/adventurelog",
         sameAs: ["https://github.com/seanmorley15/adventurelog"],
         keywords: [
