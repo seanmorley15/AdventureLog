@@ -244,6 +244,7 @@ export default defineConfig({
       { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
       { icon: "x", link: "https://x.com/AdventureLogApp" },
       { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
+      { icon: "instagram", link: "https://www.instagram.com/adventurelogapp" },
     ],
   },
 });
