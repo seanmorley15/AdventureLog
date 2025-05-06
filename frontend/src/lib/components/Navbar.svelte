@@ -121,7 +121,6 @@
 			>
 				{#if data.user}
 					<li>
-						<MapMarker />
 						<button on:click={() => goto('/adventures')}>{$t('navbar.adventures')}</button>
 					</li>
 					<li>
