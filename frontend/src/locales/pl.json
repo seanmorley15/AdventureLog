@@ -300,7 +300,11 @@
     "collection_no_start_end_date": "Dodanie daty rozpoczęcia i końca do kolekcji odblokuje funkcje planowania planu podróży na stronie kolekcji.",
     "date_itinerary": "Trasa daty",
     "no_ordered_items": "Dodaj przedmioty z datami do kolekcji, aby je zobaczyć tutaj.",
-    "ordered_itinerary": "Zamówiono trasę"
+    "ordered_itinerary": "Zamówiono trasę",
+    "additional_info": "Dodatkowe informacje",
+    "invalid_date_range": "Niepoprawny zakres dat",
+    "sunrise_sunset": "Wschód słońca",
+    "timezone": "Strefa czasowa"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

@@ -50,7 +50,7 @@
 
 <div class="form-control w-full max-w-xs relative" id="tz-selector">
 	<label class="label" for="timezone-display">
-		<span class="label-text">Timezone</span>
+		<span class="label-text">{$t('adventures.timezone')}</span>
 	</label>
 
 	<!-- Trigger -->

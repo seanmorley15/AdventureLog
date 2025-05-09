@@ -252,7 +252,11 @@
     "collection_no_start_end_date": "Durch das Hinzufügen eines Start- und Enddatums zur Sammlung werden Reiseroutenplanungsfunktionen auf der Sammlungsseite freigegeben.",
     "date_itinerary": "Datumstrecke",
     "no_ordered_items": "Fügen Sie der Sammlung Elemente mit Daten hinzu, um sie hier zu sehen.",
-    "ordered_itinerary": "Reiseroute bestellt"
+    "ordered_itinerary": "Reiseroute bestellt",
+    "additional_info": "Weitere Informationen",
+    "invalid_date_range": "Ungültiger Datumsbereich",
+    "sunrise_sunset": "Sonnenaufgang",
+    "timezone": "Zeitzone"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

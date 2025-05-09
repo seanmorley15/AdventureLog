@@ -300,7 +300,11 @@
     "collection_no_start_end_date": "Agregar una fecha de inicio y finalización a la colección desbloqueará las funciones de planificación del itinerario en la página de colección.",
     "date_itinerary": "Itinerario de fecha",
     "no_ordered_items": "Agregue elementos con fechas a la colección para verlos aquí.",
-    "ordered_itinerary": "Itinerario ordenado"
+    "ordered_itinerary": "Itinerario ordenado",
+    "additional_info": "información adicional",
+    "invalid_date_range": "Rango de fechas no válido",
+    "sunrise_sunset": "Amanecer",
+    "timezone": "Zona horaria"
   },
   "worldtravel": {
     "all": "Todo",

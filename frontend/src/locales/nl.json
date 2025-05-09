@@ -252,7 +252,11 @@
     "collection_no_start_end_date": "Als u een start- en einddatum aan de collectie toevoegt, ontgrendelt u de functies van de planning van de route ontgrendelen in de verzamelpagina.",
     "date_itinerary": "Datumroute",
     "no_ordered_items": "Voeg items toe met datums aan de collectie om ze hier te zien.",
-    "ordered_itinerary": "Besteld reisschema"
+    "ordered_itinerary": "Besteld reisschema",
+    "additional_info": "Aanvullende informatie",
+    "invalid_date_range": "Ongeldige datumbereik",
+    "sunrise_sunset": "Zonsopgang",
+    "timezone": "Tijdzone"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

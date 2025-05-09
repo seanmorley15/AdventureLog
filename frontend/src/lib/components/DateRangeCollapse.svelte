@@ -56,10 +56,19 @@
 		}).localDate;
 	});
 
-	if (collection && collection.start_date && collection.end_date) {
+	// Set the full date range for constraining purposes
+	$: if (collection && collection.start_date && collection.end_date) {
 		fullStartDate = `${collection.start_date}T00:00`;
 		fullEndDate = `${collection.end_date}T23:59`;
 	}
+
+	// Get constraint dates in the right format based on allDay setting
+	$: constraintStartDate = allDay
+		? fullStartDate
+			? fullStartDate.split('T')[0]
+			: ''
+		: fullStartDate;
+	$: constraintEndDate = allDay ? (fullEndDate ? fullEndDate.split('T')[0] : '') : fullEndDate;
 
 	// Update local display dates whenever timezone or UTC dates change
 	$: if (!isEditing) {
@@ -109,51 +118,69 @@
 			<TimezoneSelector bind:selectedTimezone />
 		</div>
 
-		<span class="label-text">{$t('adventures.all_day')}</span>
-		<input
-			type="checkbox"
-			class="toggle toggle-primary"
-			id="constrain_dates"
-			name="constrain_dates"
-			bind:checked={allDay}
-			on:change={() => {
-				// clear local dates when toggling all day
-				if (allDay) {
-					localStartDate = localStartDate.split('T')[0];
-					localEndDate = localEndDate.split('T')[0];
-				} else {
-					localStartDate = localStartDate + 'T00:00';
-					localEndDate = localEndDate + 'T23:59';
-				}
-				// Update UTC dates when toggling all day
-				utcStartDate = updateUTCDate({
-					localDate: localStartDate,
-					timezone: selectedTimezone,
-					allDay
-				}).utcDate;
-				utcEndDate = updateUTCDate({
-					localDate: localEndDate,
-					timezone: selectedTimezone,
-					allDay
-				}).utcDate;
-				// Update local dates when toggling all day
-				localStartDate = updateLocalDate({
-					utcDate: utcStartDate,
-					timezone: selectedTimezone
-				}).localDate;
-				localEndDate = updateLocalDate({
-					utcDate: utcEndDate,
-					timezone: selectedTimezone
-				}).localDate;
-			}}
-		/>
-		<!-- All Day Event Checkbox -->
+		<div class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4 shadow-sm">
+			<!-- Group Header -->
+			<h3 class="text-md font-semibold">{$t('navbar.settings')}</h3>
+
+			<!-- All Day Toggle -->
+			<div class="flex justify-between items-center">
+				<span class="text-sm">{$t('adventures.all_day')}</span>
+				<input
+					type="checkbox"
+					class="toggle toggle-primary"
+					id="all_day"
+					name="all_day"
+					bind:checked={allDay}
+					on:change={() => {
+						if (allDay) {
+							localStartDate = localStartDate.split('T')[0];
+							localEndDate = localEndDate.split('T')[0];
+						} else {
+							localStartDate = localStartDate + 'T00:00';
+							localEndDate = localEndDate + 'T23:59';
+						}
+						utcStartDate = updateUTCDate({
+							localDate: localStartDate,
+							timezone: selectedTimezone,
+							allDay
+						}).utcDate;
+						utcEndDate = updateUTCDate({
+							localDate: localEndDate,
+							timezone: selectedTimezone,
+							allDay
+						}).utcDate;
+						localStartDate = updateLocalDate({
+							utcDate: utcStartDate,
+							timezone: selectedTimezone
+						}).localDate;
+						localEndDate = updateLocalDate({
+							utcDate: utcEndDate,
+							timezone: selectedTimezone
+						}).localDate;
+					}}
+				/>
+			</div>
+
+			<!-- Constrain Dates Toggle -->
+			{#if collection?.start_date && collection?.end_date}
+				<div class="flex justify-between items-center">
+					<span class="text-sm">{$t('adventures.date_constrain')}</span>
+					<input
+						type="checkbox"
+						id="constrain_dates"
+						name="constrain_dates"
+						class="toggle toggle-primary"
+						on:change={() => (constrainDates = !constrainDates)}
+					/>
+				</div>
+			{/if}
+		</div>
 
 		<!-- Dates Input Section -->
 		<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 			<!-- Start Date -->
-			<div class="flex flex-col space-y-2">
-				<label for="date" class="font-medium">
+			<div class="space-y-2">
+				<label for="date" class="text-sm font-medium">
 					{$t('adventures.start_date')}
 				</label>
 
@@ -164,8 +191,8 @@
 						name="date"
 						bind:value={localStartDate}
 						on:change={handleLocalDateChange}
-						min={constrainDates ? fullStartDate : ''}
-						max={constrainDates ? fullEndDate : ''}
+						min={constrainDates ? constraintStartDate : ''}
+						max={constrainDates ? constraintEndDate : ''}
 						class="input input-bordered w-full"
 					/>
 				{:else}
@@ -175,30 +202,17 @@
 						name="date"
 						bind:value={localStartDate}
 						on:change={handleLocalDateChange}
-						min={constrainDates ? fullStartDate : ''}
-						max={constrainDates ? fullEndDate : ''}
+						min={constrainDates ? constraintStartDate : ''}
+						max={constrainDates ? constraintEndDate : ''}
 						class="input input-bordered w-full"
 					/>
-				{/if}
-
-				{#if collection && collection.start_date && collection.end_date}
-					<label class="flex items-center gap-2 mt-2">
-						<input
-							type="checkbox"
-							class="toggle toggle-primary"
-							id="constrain_dates"
-							name="constrain_dates"
-							on:change={() => (constrainDates = !constrainDates)}
-						/>
-						<span class="label-text">{$t('adventures.date_constrain')}</span>
-					</label>
 				{/if}
 			</div>
 
 			<!-- End Date -->
 			{#if localStartDate}
-				<div class="flex flex-col space-y-2">
-					<label for="end_date" class="font-medium">
+				<div class="space-y-2">
+					<label for="end_date" class="text-sm font-medium">
 						{$t('adventures.end_date')}
 					</label>
 
@@ -210,7 +224,7 @@
 							bind:value={localEndDate}
 							on:change={handleLocalDateChange}
 							min={constrainDates ? localStartDate : ''}
-							max={constrainDates ? fullEndDate : ''}
+							max={constrainDates ? constraintEndDate : ''}
 							class="input input-bordered w-full"
 						/>
 					{:else}
@@ -221,21 +235,26 @@
 							bind:value={localEndDate}
 							on:change={handleLocalDateChange}
 							min={constrainDates ? localStartDate : ''}
-							max={constrainDates ? fullEndDate : ''}
+							max={constrainDates ? constraintEndDate : ''}
 							class="input input-bordered w-full"
 						/>
 					{/if}
 				</div>
 			{/if}
 
-			<!-- Notes -->
+			<!-- Notes (for adventures only) -->
 			{#if type === 'adventure'}
-				<div class="flex gap-2 mb-1">
-					<!-- textarea for notes -->
+				<div class="md:col-span-2">
+					<label for="note" class="text-sm font-medium block mb-1">
+						{$t('adventures.add_notes')}
+					</label>
 					<textarea
+						id="note"
+						name="note"
 						class="textarea textarea-bordered w-full"
 						placeholder={$t('adventures.add_notes')}
 						bind:value={note}
+						rows="4"
 					></textarea>
 				</div>
 			{/if}
@@ -269,7 +288,7 @@
 					>
 						<p class="text-sm text-base-content font-medium">
 							{#if isAllDay(visit.start_date)}
-								<span class="badge badge-outline mr-2">All Day</span>
+								<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
 								{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
 							{:else}
 								{new Date(visit.start_date).toLocaleString()} – {new Date(
