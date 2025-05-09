@@ -498,22 +498,32 @@
 													{adventure.category?.display_name + ' ' + adventure.category?.icon}
 												</p>
 												{#if adventure.visits.length > 0}
-													<p class="text-black text-sm">
+													<p>
 														{#each adventure.visits as visit}
-															{visit.start_date
-																? new Date(visit.start_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															{visit.end_date &&
-															visit.end_date !== '' &&
-															visit.end_date !== visit.start_date
-																? ' - ' +
-																	new Date(visit.end_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															<br />
+															<div
+																class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2"
+															>
+																<p class="text-sm text-base-content font-medium">
+																	{#if isAllDay(visit.start_date)}
+																		<span class="badge badge-outline mr-2">All Day</span>
+																		{visit.start_date.split('T')[0]} – {visit.end_date.split(
+																			'T'
+																		)[0]}
+																	{:else}
+																		{new Date(visit.start_date).toLocaleString()} – {new Date(
+																			visit.end_date
+																		).toLocaleString()}
+																	{/if}
+																</p>
+
+																<!-- If the selected timezone is not the current one show the timezone + the time converted there -->
+
+																{#if visit.notes}
+																	<p class="text-sm text-base-content opacity-70 italic">
+																		"{visit.notes}"
+																	</p>
+																{/if}
+															</div>
 														{/each}
 													</p>
 												{/if}
