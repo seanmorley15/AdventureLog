@@ -26,10 +26,22 @@ export function toLocalDatetime(
  */
 export function toUTCDatetime(
 	localDate: string,
-	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
+	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone,
+	allDay: boolean = false
 ): string | null {
 	if (!localDate) return null;
-	return DateTime.fromISO(localDate, { zone: timezone }).toUTC().toISO();
+
+	if (allDay) {
+		// Treat input as date-only, set UTC midnight manually
+		return DateTime.fromISO(localDate, { zone: 'UTC' })
+			.startOf('day')
+			.toISO({ suppressMilliseconds: true });
+	}
+
+	// Normal timezone conversion for datetime-local input
+	return DateTime.fromISO(localDate, { zone: timezone })
+		.toUTC()
+		.toISO({ suppressMilliseconds: true });
 }
 
 /**
@@ -54,9 +66,17 @@ export function updateLocalDate({
  * @param params Object containing local date and timezone
  * @returns Object with updated UTC datetime string
  */
-export function updateUTCDate({ localDate, timezone }: { localDate: string; timezone: string }) {
+export function updateUTCDate({
+	localDate,
+	timezone,
+	allDay = false
+}: {
+	localDate: string;
+	timezone: string;
+	allDay?: boolean;
+}) {
 	return {
-		utcDate: toUTCDatetime(localDate, timezone)
+		utcDate: toUTCDatetime(localDate, timezone, allDay)
 	};
 }
 

@@ -6,6 +6,7 @@
 
 	let dropdownOpen = false;
 	let searchQuery = '';
+	let searchInput: HTMLInputElement;
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
@@ -17,6 +18,23 @@
 		selectedTimezone = tz;
 		dropdownOpen = false;
 		searchQuery = '';
+	}
+
+	// Focus search input when dropdown opens
+	$: if (dropdownOpen && searchInput) {
+		// Use setTimeout to delay focus until after the element is rendered
+		setTimeout(() => searchInput.focus(), 0);
+	}
+
+	function handleKeydown(event: KeyboardEvent, tz?: string) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			if (tz) selectTimezone(tz);
+			else dropdownOpen = !dropdownOpen;
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			dropdownOpen = false;
+		}
 	}
 
 	// Close dropdown if clicked outside
@@ -31,16 +49,20 @@
 </script>
 
 <div class="form-control w-full max-w-xs relative" id="tz-selector">
-	<label class="label">
+	<label class="label" for="timezone-display">
 		<span class="label-text">Timezone</span>
 	</label>
 
 	<!-- Trigger -->
 	<div
+		id="timezone-display"
 		tabindex="0"
 		role="button"
+		aria-haspopup="listbox"
+		aria-expanded={dropdownOpen}
 		class="input input-bordered flex justify-between items-center cursor-pointer"
 		on:click={() => (dropdownOpen = !dropdownOpen)}
+		on:keydown={handleKeydown}
 	>
 		<span class="truncate">{selectedTimezone}</span>
 		<svg
@@ -49,6 +71,7 @@
 			fill="none"
 			viewBox="0 0 24 24"
 			stroke="currentColor"
+			aria-hidden="true"
 		>
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 		</svg>
@@ -58,6 +81,8 @@
 	{#if dropdownOpen}
 		<div
 			class="absolute mt-1 z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
+			role="listbox"
+			aria-labelledby="timezone-display"
 		>
 			<!-- Search -->
 			<div class="sticky top-0 bg-base-100 p-2 border-b">
@@ -66,7 +91,7 @@
 					placeholder="Search timezone"
 					class="input input-sm input-bordered w-full"
 					bind:value={searchQuery}
-					autofocus
+					bind:this={searchInput}
 				/>
 			</div>
 
@@ -75,12 +100,16 @@
 				<ul class="menu p-2 space-y-1">
 					{#each filteredTimezones as tz}
 						<li>
-							<a
-								class={`truncate ${tz === selectedTimezone ? 'active font-bold' : ''}`}
-								on:click|preventDefault={() => selectTimezone(tz)}
+							<button
+								type="button"
+								class={`w-full text-left truncate ${tz === selectedTimezone ? 'active font-bold' : ''}`}
+								on:click={() => selectTimezone(tz)}
+								on:keydown={(e) => handleKeydown(e, tz)}
+								role="option"
+								aria-selected={tz === selectedTimezone}
 							>
 								{tz}
-							</a>
+							</button>
 						</li>
 					{/each}
 				</ul>
