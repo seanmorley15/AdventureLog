@@ -71,11 +71,28 @@
 		{#if unlinked}
 			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 		{/if}
+		{#if note.content && note.content.length > 0}
+			<p class="line-clamp-6">
+				{note.content}
+			</p>
+		{/if}
 		{#if note.links && note.links.length > 0}
 			<p>
 				{note.links.length}
 				{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
 			</p>
+			<ul class="list-disc pl-6">
+				{#each note.links.slice(0, 3) as link}
+					<li>
+						<a class="link link-primary" href={link}>
+							{link.split('//')[1].split('/', 1)[0]}
+						</a>
+					</li>
+				{/each}
+				{#if note.links.length > 3}
+					<li>…</li>
+				{/if}
+			</ul>
 		{/if}
 		{#if note.date && note.date !== ''}
 			<div class="inline-flex items-center">

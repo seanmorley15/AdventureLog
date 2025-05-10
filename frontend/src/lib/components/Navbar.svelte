@@ -117,7 +117,7 @@
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<ul
 				tabindex="0"
-				class="menu dropdown-content mt-3 z-[1] p-2 shadow bg-neutral text-neutral-content rounded-box gap-2 w-96"
+				class="menu dropdown-content mt-3 z-[1] p-2 shadow bg-neutral text-base text-neutral-content rounded-box gap-2 w-96"
 			>
 				{#if data.user}
 					<li>
