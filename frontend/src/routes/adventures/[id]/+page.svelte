@@ -484,7 +484,7 @@
 								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
+									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full md:w-10/12 rounded-lg"
 									standardControls
 									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
 									zoom={adventure.longitude ? 12 : 1}
