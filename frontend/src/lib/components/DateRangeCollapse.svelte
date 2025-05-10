@@ -64,11 +64,15 @@
 
 	// Get constraint dates in the right format based on allDay setting
 	$: constraintStartDate = allDay
-		? fullStartDate
+		? fullStartDate && fullStartDate.includes('T')
 			? fullStartDate.split('T')[0]
 			: ''
-		: fullStartDate;
-	$: constraintEndDate = allDay ? (fullEndDate ? fullEndDate.split('T')[0] : '') : fullEndDate;
+		: fullStartDate || '';
+	$: constraintEndDate = allDay
+		? fullEndDate && fullEndDate.includes('T')
+			? fullEndDate.split('T')[0]
+			: ''
+		: fullEndDate || '';
 
 	// Update local display dates whenever timezone or UTC dates change
 	$: if (!isEditing) {
