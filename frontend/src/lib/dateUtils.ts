@@ -12,9 +12,15 @@ export function toLocalDatetime(
 	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): string {
 	if (!utcDate) return '';
-	const isoString = DateTime.fromISO(utcDate, { zone: 'UTC' })
-		.setZone(timezone)
-		.toISO({ suppressSeconds: true, includeOffset: false });
+
+	const dt = DateTime.fromISO(utcDate, { zone: 'UTC' });
+	if (!dt.isValid) return '';
+
+	const isoString = dt.setZone(timezone).toISO({
+		suppressSeconds: true,
+		includeOffset: false
+	});
+
 	return isoString ? isoString.slice(0, 16) : '';
 }
 
