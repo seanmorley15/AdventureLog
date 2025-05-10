@@ -118,7 +118,9 @@ export function validateDateRange(
  */
 export function formatUTCDate(utcDate: string | null): string {
 	if (!utcDate) return '';
-	return DateTime.fromISO(utcDate).toISO().slice(0, 16).replace('T', ' ');
+	const dateTime = DateTime.fromISO(utcDate);
+	if (!dateTime.isValid) return '';
+	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
 }
 
 export const VALID_TIMEZONES = [
