@@ -112,15 +112,15 @@
 	<div class="collapse-title text-xl font-semibold">
 		{$t('adventures.date_information')}
 	</div>
-	<div class="collapse-content space-y-6">
+	<div class="collapse-content">
 		<!-- Timezone Selector -->
-		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-			<TimezoneSelector bind:selectedTimezone />
-		</div>
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"></div>
 
-		<div class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4 shadow-sm">
+		<div class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4 shadow-sm mb-4">
 			<!-- Group Header -->
 			<h3 class="text-md font-semibold">{$t('navbar.settings')}</h3>
+
+			<TimezoneSelector bind:selectedTimezone />
 
 			<!-- All Day Toggle -->
 			<div class="flex justify-between items-center">
@@ -260,7 +260,7 @@
 			{/if}
 			{#if type === 'adventure'}
 				<button
-					class="btn btn-primary"
+					class="btn btn-primary mb-2"
 					type="button"
 					on:click={() => {
 						const newVisit = {
@@ -311,7 +311,7 @@
 		{/if}
 
 		{#if type === 'adventure'}
-			<div class="border-t border-neutral pt-4">
+			<div class="border-t border-neutral pt-4 mb-2">
 				<h3 class="text-xl font-semibold">
 					{$t('adventures.visits')}
 				</h3>
