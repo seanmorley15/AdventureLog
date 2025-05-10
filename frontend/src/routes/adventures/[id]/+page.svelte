@@ -459,7 +459,7 @@
 								{/if}
 								{#if adventure.longitude && adventure.latitude}
 									<div>
-										{$t('adventures.open_in_maps')}:
+										<p class="mb-1">{$t('adventures.open_in_maps')}:</p>
 										<div class="flex flex-wrap gap-2">
 											<a
 												class="btn btn-neutral text-base btn-sm max-w-32"
