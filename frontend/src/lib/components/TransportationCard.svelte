@@ -18,6 +18,23 @@
 	}
 	const dispatch = createEventDispatcher();
 
+	function formatDateInTimezone(utcDate: string, timezone?: string): string {
+		if (!utcDate) return '';
+		try {
+			return new Intl.DateTimeFormat(undefined, {
+				timeZone: timezone,
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: true
+			}).format(new Date(utcDate));
+		} catch {
+			return new Date(utcDate).toLocaleString();
+		}
+	}
+
 	export let transportation: Transportation;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
@@ -136,7 +153,12 @@
 			{#if transportation.date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>{new Date(transportation.date).toLocaleString()}</p>
+					<p>
+						{formatDateInTimezone(transportation.date, transportation.start_timezone ?? undefined)}
+						{#if transportation.start_timezone}
+							<span class="text-xs opacity-60 ml-1">({transportation.start_timezone})</span>
+						{/if}
+					</p>
 				</div>
 			{/if}
 		</div>
@@ -154,7 +176,15 @@
 			{#if transportation.end_date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
-					<p>{new Date(transportation.end_date).toLocaleString()}</p>
+					<p>
+						{formatDateInTimezone(
+							transportation.end_date,
+							transportation.end_timezone || undefined
+						)}
+						{#if transportation.end_timezone}
+							<span class="text-xs opacity-60 ml-1">({transportation.end_timezone})</span>
+						{/if}
+					</p>
 				</div>
 			{/if}
 		</div>

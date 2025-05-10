@@ -10,8 +10,8 @@
 	export let type: 'adventure' | 'transportation' | 'lodging' = 'adventure';
 
 	// Initialize with browser's timezone
-	let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	let selectedEndTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	export let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	export let selectedEndTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	let allDay: boolean = false;
 
@@ -25,10 +25,19 @@
 		start_date: string;
 		end_date: string;
 		notes: string;
-		start_timezone?: string;
-		end_timezone?: string;
+		timezone: string | null;
 	};
-	export let visits: Visit[] | null = null;
+
+	type TransportationVisit = {
+		id: string;
+		start_date: string;
+		end_date: string;
+		notes: string;
+		start_timezone: string;
+		end_timezone: string;
+	};
+
+	export let visits: (Visit | TransportationVisit)[] | null = null;
 
 	// Local display values
 	let localStartDate: string = '';
@@ -52,12 +61,35 @@
 			utcDate: utcEndDate,
 			timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone
 		}).localDate;
+
+		if (!selectedStartTimezone) {
+			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		}
+		if (!selectedEndTimezone) {
+			selectedEndTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		}
 	});
 
 	// Set the full date range for constraining purposes
 	$: if (collection && collection.start_date && collection.end_date) {
 		fullStartDate = `${collection.start_date}T00:00`;
 		fullEndDate = `${collection.end_date}T23:59`;
+	}
+
+	function formatDateInTimezone(utcDate: string, timezone: string): string {
+		try {
+			return new Intl.DateTimeFormat(undefined, {
+				timeZone: timezone,
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: true
+			}).format(new Date(utcDate));
+		} catch {
+			return new Date(utcDate).toLocaleString(); // fallback
+		}
 	}
 
 	// Get constraint dates in the right format based on allDay setting
@@ -108,22 +140,27 @@
 		}).utcDate;
 	}
 
-	// Create a visit object with appropriate timezone information
-	function createVisitObject() {
-		const newVisit: Visit = {
-			id: crypto.randomUUID(),
-			start_date: utcStartDate ?? '',
-			end_date: utcEndDate ?? utcStartDate ?? '',
-			notes: note ?? ''
-		};
-
-		// For transportation, add timezone information
+	function createVisitObject(): Visit | TransportationVisit {
 		if (type === 'transportation') {
-			newVisit.start_timezone = selectedStartTimezone;
-			newVisit.end_timezone = selectedEndTimezone;
+			const transportVisit: TransportationVisit = {
+				id: crypto.randomUUID(),
+				start_date: utcStartDate ?? '',
+				end_date: utcEndDate ?? utcStartDate ?? '',
+				notes: note ?? '',
+				start_timezone: selectedStartTimezone,
+				end_timezone: selectedEndTimezone
+			};
+			return transportVisit;
+		} else {
+			const regularVisit: Visit = {
+				id: crypto.randomUUID(),
+				start_date: utcStartDate ?? '',
+				end_date: utcEndDate ?? utcStartDate ?? '',
+				notes: note ?? '',
+				timezone: selectedStartTimezone
+			};
+			return regularVisit;
 		}
-
-		return newVisit;
 	}
 </script>
 
@@ -369,15 +406,31 @@
 								{#if isAllDay(visit.start_date)}
 									<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
 									{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+								{:else if 'start_timezone' in visit}
+									{formatDateInTimezone(visit.start_date, visit.start_timezone)} – {formatDateInTimezone(
+										visit.end_date,
+										visit.end_timezone
+									)}
+								{:else if visit.timezone}
+									{formatDateInTimezone(visit.start_date, visit.timezone)} – {formatDateInTimezone(
+										visit.end_date,
+										visit.timezone
+									)}
 								{:else}
 									{new Date(visit.start_date).toLocaleString()} – {new Date(
 										visit.end_date
 									).toLocaleString()}
+									<!-- showe timezones badge -->
+								{/if}
+								{#if 'timezone' in visit && visit.timezone}
+									<span class="badge badge-outline ml-2">{visit.timezone}</span>
 								{/if}
 							</p>
 
+							<!--  -->
+
 							<!-- Display timezone information for transportation visits -->
-							{#if visit.start_timezone && visit.end_timezone && visit.start_timezone !== visit.end_timezone}
+							{#if 'start_timezone' in visit && 'end_timezone' in visit && visit.start_timezone !== visit.end_timezone}
 								<p class="text-xs text-base-content">
 									{visit.start_timezone} → {visit.end_timezone}
 								</p>
@@ -399,8 +452,14 @@
 										allDay = isAllDayEvent;
 
 										// Set timezone information if available
-										if (visit.start_timezone) selectedStartTimezone = visit.start_timezone;
-										if (visit.end_timezone) selectedEndTimezone = visit.end_timezone;
+										if ('start_timezone' in visit) {
+											// TransportationVisit
+											selectedStartTimezone = visit.start_timezone;
+											selectedEndTimezone = visit.end_timezone;
+										} else if (visit.timezone) {
+											// Visit
+											selectedStartTimezone = visit.timezone;
+										}
 
 										if (isAllDayEvent) {
 											localStartDate = visit.start_date.split('T')[0];
@@ -414,7 +473,8 @@
 
 											localEndDate = updateLocalDate({
 												utcDate: visit.end_date,
-												timezone: visit.end_timezone || selectedStartTimezone
+												timezone:
+													'end_timezone' in visit ? visit.end_timezone : selectedStartTimezone
 											}).localDate;
 										}
 

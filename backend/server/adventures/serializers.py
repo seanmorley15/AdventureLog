@@ -72,7 +72,7 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'notes']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes']
         read_only_fields = ['id']
                                    
 class AdventureSerializer(CustomModelSerializer):
@@ -201,7 +201,7 @@ class TransportationSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude', 'start_timezone', 'end_timezone'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
@@ -212,7 +212,7 @@ class LodgingSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
             'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at', 'type'
+            'collection', 'created_at', 'updated_at', 'type', 'timezone'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 

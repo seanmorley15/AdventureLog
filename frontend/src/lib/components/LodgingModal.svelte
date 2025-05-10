@@ -56,7 +56,8 @@
 			is_public: lodgingToEdit?.is_public || false,
 			collection: lodgingToEdit?.collection || collection.id,
 			created_at: lodgingToEdit?.created_at || '',
-			updated_at: lodgingToEdit?.updated_at || ''
+			updated_at: lodgingToEdit?.updated_at || '',
+			timezone: lodgingToEdit?.timezone || ''
 		};
 	}
 
@@ -303,6 +304,7 @@
 					type="lodging"
 					bind:utcStartDate={lodging.check_in}
 					bind:utcEndDate={lodging.check_out}
+					bind:selectedStartTimezone={lodging.timezone}
 				/>
 
 				<!-- Location Information -->

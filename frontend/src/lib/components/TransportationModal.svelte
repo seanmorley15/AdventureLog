@@ -36,7 +36,9 @@
 		origin_latitude: transportationToEdit?.origin_latitude || NaN,
 		origin_longitude: transportationToEdit?.origin_longitude || NaN,
 		destination_latitude: transportationToEdit?.destination_latitude || NaN,
-		destination_longitude: transportationToEdit?.destination_longitude || NaN
+		destination_longitude: transportationToEdit?.destination_longitude || NaN,
+		start_timezone: transportationToEdit?.start_timezone || '',
+		end_timezone: transportationToEdit?.end_timezone || ''
 	};
 
 	let starting_airport: string = '';
@@ -343,6 +345,9 @@
 					type="transportation"
 					bind:utcStartDate={transportation.date}
 					bind:utcEndDate={transportation.end_date}
+					bind:selectedStartTimezone={transportation.start_timezone}
+					bind:selectedEndTimezone={transportation.end_timezone}
+					{collection}
 				/>
 
 				<!-- Flight Information -->

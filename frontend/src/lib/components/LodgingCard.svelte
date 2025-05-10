@@ -18,6 +18,23 @@
 		}
 	}
 
+	function formatDateInTimezone(utcDate: string, timezone?: string): string {
+		if (!utcDate) return '';
+		try {
+			return new Intl.DateTimeFormat(undefined, {
+				timeZone: timezone,
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: true
+			}).format(new Date(utcDate));
+		} catch {
+			return new Date(utcDate).toLocaleString();
+		}
+	}
+
 	export let lodging: Lodging;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
@@ -119,21 +136,9 @@
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.dates')}:</span>
 					<p>
-						{new Date(lodging.check_in).toLocaleString(undefined, {
-							month: 'short',
-							day: 'numeric',
-							year: 'numeric',
-							hour: 'numeric',
-							minute: 'numeric'
-						})}
-						-
-						{new Date(lodging.check_out).toLocaleString(undefined, {
-							month: 'short',
-							day: 'numeric',
-							year: 'numeric',
-							hour: 'numeric',
-							minute: 'numeric'
-						})}
+						{formatDateInTimezone(lodging.check_in ?? '', lodging.timezone ?? undefined)} –
+						{formatDateInTimezone(lodging.check_out ?? '', lodging.timezone ?? undefined)}
+						<span class="text-xs opacity-60 ml-1">({lodging.timezone})</span>
 					</p>
 				</div>
 			{/if}
