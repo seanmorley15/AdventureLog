@@ -390,54 +390,6 @@
 		}
 	}
 
-	let new_start_date: string = '';
-	let new_end_date: string = '';
-	let new_notes: string = '';
-
-	// Function to add a new visit.
-	function addNewVisit() {
-		// If an end date isn’t provided, assume it’s the same as start.
-		if (new_start_date && !new_end_date) {
-			new_end_date = new_start_date;
-		}
-		if (new_start_date > new_end_date) {
-			addToast('error', $t('adventures.start_before_end_error'));
-			return;
-		}
-		if (new_end_date && !new_start_date) {
-			addToast('error', $t('adventures.no_start_date'));
-			return;
-		}
-		// Convert input to UTC if not already.
-		if (new_start_date && !new_start_date.includes('Z')) {
-			new_start_date = new Date(new_start_date).toISOString();
-		}
-		if (new_end_date && !new_end_date.includes('Z')) {
-			new_end_date = new Date(new_end_date).toISOString();
-		}
-
-		// If the visit is all day, force the times to midnight.
-		if (allDay) {
-			new_start_date = new_start_date.split('T')[0] + 'T00:00:00.000Z';
-			new_end_date = new_end_date.split('T')[0] + 'T00:00:00.000Z';
-		}
-
-		adventure.visits = [
-			...adventure.visits,
-			{
-				start_date: new_start_date,
-				end_date: new_end_date,
-				notes: new_notes,
-				id: '' // or generate an id as needed
-			}
-		];
-
-		// Clear the input fields.
-		new_start_date = '';
-		new_end_date = '';
-		new_notes = '';
-	}
-
 	function close() {
 		dispatch('close');
 	}

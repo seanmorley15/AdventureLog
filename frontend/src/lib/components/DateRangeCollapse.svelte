@@ -10,7 +10,8 @@
 	export let type: 'adventure' | 'transportation' | 'lodging' = 'adventure';
 
 	// Initialize with browser's timezone
-	let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	let selectedEndTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	let allDay: boolean = false;
 
@@ -18,15 +19,14 @@
 	export let utcStartDate: string | null = null;
 	export let utcEndDate: string | null = null;
 
-	console.log('UTC Start Date:', utcStartDate);
-	console.log('UTC End Date:', utcEndDate);
-
 	export let note: string | null = null;
 	type Visit = {
 		id: string;
 		start_date: string;
 		end_date: string;
 		notes: string;
+		start_timezone?: string;
+		end_timezone?: string;
 	};
 	export let visits: Visit[] | null = null;
 
@@ -42,17 +42,15 @@
 	let isEditing = false; // Disable reactivity when editing
 
 	onMount(async () => {
-		console.log('Selected timezone:', selectedTimezone);
-		console.log('UTC Start Date:', utcStartDate);
-		console.log('UTC End Date:', utcEndDate);
-		// Initialize UTC dates from transportationToEdit if available
+		// Initialize UTC dates
 		localStartDate = updateLocalDate({
 			utcDate: utcStartDate,
-			timezone: selectedTimezone
+			timezone: selectedStartTimezone
 		}).localDate;
+
 		localEndDate = updateLocalDate({
 			utcDate: utcEndDate,
-			timezone: selectedTimezone
+			timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone
 		}).localDate;
 	});
 
@@ -82,12 +80,12 @@
 		} else {
 			const start = updateLocalDate({
 				utcDate: utcStartDate,
-				timezone: selectedTimezone
+				timezone: selectedStartTimezone
 			}).localDate;
 
 			const end = updateLocalDate({
 				utcDate: utcEndDate,
-				timezone: selectedTimezone
+				timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone
 			}).localDate;
 
 			localStartDate = start;
@@ -99,15 +97,33 @@
 	function handleLocalDateChange() {
 		utcStartDate = updateUTCDate({
 			localDate: localStartDate,
-			timezone: selectedTimezone,
+			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
 
 		utcEndDate = updateUTCDate({
 			localDate: localEndDate,
-			timezone: selectedTimezone,
+			timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone,
 			allDay
 		}).utcDate;
+	}
+
+	// Create a visit object with appropriate timezone information
+	function createVisitObject() {
+		const newVisit: Visit = {
+			id: crypto.randomUUID(),
+			start_date: utcStartDate ?? '',
+			end_date: utcEndDate ?? utcStartDate ?? '',
+			notes: note ?? ''
+		};
+
+		// For transportation, add timezone information
+		if (type === 'transportation') {
+			newVisit.start_timezone = selectedStartTimezone;
+			newVisit.end_timezone = selectedEndTimezone;
+		}
+
+		return newVisit;
 	}
 </script>
 
@@ -117,14 +133,32 @@
 		{$t('adventures.date_information')}
 	</div>
 	<div class="collapse-content">
-		<!-- Timezone Selector -->
-		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"></div>
-
+		<!-- Timezone Selector Section -->
 		<div class="rounded-xl border border-base-300 bg-base-100 p-4 space-y-4 shadow-sm mb-4">
 			<!-- Group Header -->
 			<h3 class="text-md font-semibold">{$t('navbar.settings')}</h3>
 
-			<TimezoneSelector bind:selectedTimezone />
+			{#if type === 'transportation'}
+				<!-- Dual timezone selectors for transportation -->
+				<div class="space-y-4">
+					<div>
+						<label class="text-sm font-medium block mb-1">
+							{$t('adventures.departure_timezone')}
+						</label>
+						<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
+					</div>
+
+					<div>
+						<label class="text-sm font-medium block mb-1">
+							{$t('adventures.arrival_timezone')}
+						</label>
+						<TimezoneSelector bind:selectedTimezone={selectedEndTimezone} />
+					</div>
+				</div>
+			{:else}
+				<!-- Single timezone selector for other types -->
+				<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
+			{/if}
 
 			<!-- All Day Toggle -->
 			<div class="flex justify-between items-center">
@@ -145,21 +179,21 @@
 						}
 						utcStartDate = updateUTCDate({
 							localDate: localStartDate,
-							timezone: selectedTimezone,
+							timezone: selectedStartTimezone,
 							allDay
 						}).utcDate;
 						utcEndDate = updateUTCDate({
 							localDate: localEndDate,
-							timezone: selectedTimezone,
+							timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone,
 							allDay
 						}).utcDate;
 						localStartDate = updateLocalDate({
 							utcDate: utcStartDate,
-							timezone: selectedTimezone
+							timezone: selectedStartTimezone
 						}).localDate;
 						localEndDate = updateLocalDate({
 							utcDate: utcEndDate,
-							timezone: selectedTimezone
+							timezone: type === 'transportation' ? selectedEndTimezone : selectedStartTimezone
 						}).localDate;
 					}}
 				/>
@@ -185,7 +219,9 @@
 			<!-- Start Date -->
 			<div class="space-y-2">
 				<label for="date" class="text-sm font-medium">
-					{$t('adventures.start_date')}
+					{type === 'transportation'
+						? $t('adventures.departure_date')
+						: $t('adventures.start_date')}
 				</label>
 
 				{#if allDay}
@@ -217,7 +253,7 @@
 			{#if localStartDate}
 				<div class="space-y-2">
 					<label for="end_date" class="text-sm font-medium">
-						{$t('adventures.end_date')}
+						{type === 'transportation' ? $t('adventures.arrival_date') : $t('adventures.end_date')}
 					</label>
 
 					{#if allDay}
@@ -267,12 +303,7 @@
 					class="btn btn-primary mb-2"
 					type="button"
 					on:click={() => {
-						const newVisit = {
-							id: crypto.randomUUID(),
-							start_date: utcStartDate ?? '',
-							end_date: utcEndDate ?? utcStartDate ?? '',
-							notes: note ?? ''
-						};
+						const newVisit = createVisitObject();
 
 						// Ensure reactivity by assigning a *new* array
 						if (visits) {
@@ -345,7 +376,12 @@
 								{/if}
 							</p>
 
-							<!-- If the selected timezone is not the current one show the timezone + the time converted there -->
+							<!-- Display timezone information for transportation visits -->
+							{#if visit.start_timezone && visit.end_timezone && visit.start_timezone !== visit.end_timezone}
+								<p class="text-xs text-base-content">
+									{visit.start_timezone} → {visit.end_timezone}
+								</p>
+							{/if}
 
 							{#if visit.notes}
 								<p class="text-sm text-base-content opacity-70 italic">
@@ -362,24 +398,24 @@
 										const isAllDayEvent = isAllDay(visit.start_date);
 										allDay = isAllDayEvent;
 
+										// Set timezone information if available
+										if (visit.start_timezone) selectedStartTimezone = visit.start_timezone;
+										if (visit.end_timezone) selectedEndTimezone = visit.end_timezone;
+
 										if (isAllDayEvent) {
 											localStartDate = visit.start_date.split('T')[0];
 											localEndDate = visit.end_date.split('T')[0];
 										} else {
-											const startDate = new Date(visit.start_date);
-											const endDate = new Date(visit.end_date);
+											// Update with timezone awareness
+											localStartDate = updateLocalDate({
+												utcDate: visit.start_date,
+												timezone: selectedStartTimezone
+											}).localDate;
 
-											localStartDate = `${startDate.getFullYear()}-${String(
-												startDate.getMonth() + 1
-											).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}T${String(
-												startDate.getHours()
-											).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
-
-											localEndDate = `${endDate.getFullYear()}-${String(
-												endDate.getMonth() + 1
-											).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(
-												endDate.getHours()
-											).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+											localEndDate = updateLocalDate({
+												utcDate: visit.end_date,
+												timezone: visit.end_timezone || selectedStartTimezone
+											}).localDate;
 										}
 
 										// remove it from visits
@@ -391,7 +427,6 @@
 										constrainDates = true;
 										utcStartDate = visit.start_date;
 										utcEndDate = visit.end_date;
-										type = 'adventure';
 
 										setTimeout(() => {
 											isEditing = false;

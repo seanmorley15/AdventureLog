@@ -3,10 +3,12 @@
 	import { onMount } from 'svelte';
 
 	export let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	// Generate a unique ID for this component instance
+	const instanceId = `tz-selector-${crypto.randomUUID().substring(0, 8)}`;
 
 	let dropdownOpen = false;
 	let searchQuery = '';
-	let searchInput: HTMLInputElement;
+	let searchInput: HTMLInputElement | null = null;
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
@@ -20,10 +22,12 @@
 		searchQuery = '';
 	}
 
-	// Focus search input when dropdown opens
+	// Focus search input when dropdown opens - with proper null check
 	$: if (dropdownOpen && searchInput) {
 		// Use setTimeout to delay focus until after the element is rendered
-		setTimeout(() => searchInput.focus(), 0);
+		setTimeout(() => {
+			if (searchInput) searchInput.focus();
+		}, 0);
 	}
 
 	function handleKeydown(event: KeyboardEvent, tz?: string) {
@@ -40,7 +44,7 @@
 	// Close dropdown if clicked outside
 	onMount(() => {
 		const handleClickOutside = (e: MouseEvent) => {
-			const dropdown = document.getElementById('tz-selector');
+			const dropdown = document.getElementById(instanceId);
 			if (dropdown && !dropdown.contains(e.target as Node)) dropdownOpen = false;
 		};
 		document.addEventListener('click', handleClickOutside);
@@ -48,14 +52,14 @@
 	});
 </script>
 
-<div class="form-control w-full max-w-xs relative" id="tz-selector">
-	<label class="label" for="timezone-display">
+<div class="form-control w-full max-w-xs relative" id={instanceId}>
+	<label class="label" for={`timezone-display-${instanceId}`}>
 		<span class="label-text">{$t('adventures.timezone')}</span>
 	</label>
 
 	<!-- Trigger -->
 	<div
-		id="timezone-display"
+		id={`timezone-display-${instanceId}`}
 		tabindex="0"
 		role="button"
 		aria-haspopup="listbox"
@@ -82,7 +86,7 @@
 		<div
 			class="absolute mt-1 z-10 bg-base-100 shadow-lg rounded-box w-full max-h-60 overflow-y-auto"
 			role="listbox"
-			aria-labelledby="timezone-display"
+			aria-labelledby={`timezone-display-${instanceId}`}
 		>
 			<!-- Search -->
 			<div class="sticky top-0 bg-base-100 p-2 border-b">
