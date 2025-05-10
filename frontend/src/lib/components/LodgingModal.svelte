@@ -5,6 +5,7 @@
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import type { Collection, Lodging } from '$lib/types';
 	import LocationDropdown from './LocationDropdown.svelte';
+	import DateRangeCollapse from './DateRangeCollapse.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -12,21 +13,9 @@
 	export let lodgingToEdit: Lodging | null = null;
 
 	let modal: HTMLDialogElement;
-	let constrainDates: boolean = false;
 	let lodging: Lodging = { ...initializeLodging(lodgingToEdit) };
 	let fullStartDate: string = '';
 	let fullEndDate: string = '';
-
-	// Format date as local datetime
-	// Convert an ISO date to a datetime-local value in local time.
-	function toLocalDatetime(value: string | null): string {
-		if (!value) return '';
-		const date = new Date(value);
-		// Adjust the time by subtracting the timezone offset.
-		date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-		// Return format YYYY-MM-DDTHH:mm
-		return date.toISOString().slice(0, 16);
-	}
 
 	type LodgingType = {
 		value: string;
@@ -47,27 +36,28 @@
 		{ value: 'other', label: 'Other' }
 	];
 
-	// Initialize hotel with values from hotelToEdit or default values
-	function initializeLodging(hotelToEdit: Lodging | null): Lodging {
+	// Initialize hotel with values from lodgingToEdit or default values
+	function initializeLodging(lodgingToEdit: Lodging | null): Lodging {
 		return {
-			id: hotelToEdit?.id || '',
-			user_id: hotelToEdit?.user_id || '',
-			name: hotelToEdit?.name || '',
-			type: hotelToEdit?.type || 'other',
-			description: hotelToEdit?.description || '',
-			rating: hotelToEdit?.rating || NaN,
-			link: hotelToEdit?.link || '',
-			check_in: hotelToEdit?.check_in ? toLocalDatetime(hotelToEdit.check_in) : null,
-			check_out: hotelToEdit?.check_out ? toLocalDatetime(hotelToEdit.check_out) : null,
-			reservation_number: hotelToEdit?.reservation_number || '',
-			price: hotelToEdit?.price || null,
-			latitude: hotelToEdit?.latitude || null,
-			longitude: hotelToEdit?.longitude || null,
-			location: hotelToEdit?.location || '',
-			is_public: hotelToEdit?.is_public || false,
-			collection: hotelToEdit?.collection || collection.id,
-			created_at: hotelToEdit?.created_at || '',
-			updated_at: hotelToEdit?.updated_at || ''
+			id: lodgingToEdit?.id || '',
+			user_id: lodgingToEdit?.user_id || '',
+			name: lodgingToEdit?.name || '',
+			type: lodgingToEdit?.type || 'other',
+			description: lodgingToEdit?.description || '',
+			rating: lodgingToEdit?.rating || NaN,
+			link: lodgingToEdit?.link || '',
+			check_in: lodgingToEdit?.check_in || null,
+			check_out: lodgingToEdit?.check_out || null,
+			reservation_number: lodgingToEdit?.reservation_number || '',
+			price: lodgingToEdit?.price || null,
+			latitude: lodgingToEdit?.latitude || null,
+			longitude: lodgingToEdit?.longitude || null,
+			location: lodgingToEdit?.location || '',
+			is_public: lodgingToEdit?.is_public || false,
+			collection: lodgingToEdit?.collection || collection.id,
+			created_at: lodgingToEdit?.created_at || '',
+			updated_at: lodgingToEdit?.updated_at || '',
+			timezone: lodgingToEdit?.timezone || ''
 		};
 	}
 
@@ -103,27 +93,6 @@
 	// Handle form submission (save hotel)
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-
-		if (lodging.check_in && !lodging.check_out) {
-			const checkInDate = new Date(lodging.check_in);
-			checkInDate.setDate(checkInDate.getDate() + 1);
-			lodging.check_out = checkInDate.toISOString();
-		}
-
-		if (lodging.check_in && lodging.check_out && lodging.check_in > lodging.check_out) {
-			addToast('error', $t('adventures.start_before_end_error'));
-			return;
-		}
-
-		// Only convert to UTC if the time is still in local format.
-		if (lodging.check_in && !lodging.check_in.includes('Z')) {
-			// new Date(lodging.check_in) interprets the input as local time.
-			lodging.check_in = new Date(lodging.check_in).toISOString();
-		}
-		if (lodging.check_out && !lodging.check_out.includes('Z')) {
-			lodging.check_out = new Date(lodging.check_out).toISOString();
-		}
-		console.log(lodging.check_in, lodging.check_out);
 
 		// Create or update lodging...
 		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
@@ -323,6 +292,7 @@
 									id="price"
 									name="price"
 									bind:value={lodging.price}
+									step="0.01"
 									class="input input-bordered w-full max-w-xs mt-1"
 								/>
 							</div>
@@ -330,85 +300,12 @@
 					</div>
 				</div>
 
-				<div class="collapse collapse-plus bg-base-200 mb-4">
-					<input type="checkbox" checked />
-					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.date_information')}
-					</div>
-					<div class="collapse-content">
-						<!-- Check In -->
-						<div>
-							<label for="date">
-								{$t('lodging.check_in')}
-							</label>
-
-							{#if collection && collection.start_date && collection.end_date}<label
-									class="label cursor-pointer flex items-start space-x-2"
-								>
-									<span class="label-text">{$t('adventures.date_constrain')}</span>
-									<input
-										type="checkbox"
-										class="toggle toggle-primary"
-										id="constrain_dates"
-										name="constrain_dates"
-										on:change={() => (constrainDates = !constrainDates)}
-									/></label
-								>
-							{/if}
-							<div>
-								<input
-									type="datetime-local"
-									id="date"
-									name="date"
-									bind:value={lodging.check_in}
-									min={constrainDates ? fullStartDate : ''}
-									max={constrainDates ? fullEndDate : ''}
-									class="input input-bordered w-full max-w-xs mt-1"
-								/>
-							</div>
-						</div>
-						<!-- End Date -->
-						<div>
-							<label for="end_date">
-								{$t('lodging.check_out')}
-							</label>
-							<div>
-								<input
-									type="datetime-local"
-									id="end_date"
-									name="end_date"
-									min={constrainDates ? lodging.check_in : ''}
-									max={constrainDates ? fullEndDate : ''}
-									bind:value={lodging.check_out}
-									class="input input-bordered w-full max-w-xs mt-1"
-								/>
-							</div>
-						</div>
-						<div role="alert" class="alert shadow-lg bg-neutral mt-4">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								class="stroke-info h-6 w-6 shrink-0"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-								></path>
-							</svg>
-							<span>
-								{$t('lodging.current_timezone')}:
-								{(() => {
-									const tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-									const [continent, city] = tz.split('/');
-									return `${continent} (${city.replace('_', ' ')})`;
-								})()}
-							</span>
-						</div>
-					</div>
-				</div>
+				<DateRangeCollapse
+					type="lodging"
+					bind:utcStartDate={lodging.check_in}
+					bind:utcEndDate={lodging.check_out}
+					bind:selectedStartTimezone={lodging.timezone}
+				/>
 
 				<!-- Location Information -->
 				<LocationDropdown bind:item={lodging} />
