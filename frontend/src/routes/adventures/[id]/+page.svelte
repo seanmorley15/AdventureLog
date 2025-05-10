@@ -458,12 +458,29 @@
 									</div>
 								{/if}
 								{#if adventure.longitude && adventure.latitude}
-									<a
-										class="btn btn-neutral btn-sm max-w-32"
-										href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-										target="_blank"
-										rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
-									>
+									<div>
+										{$t('adventures.open_in_maps')}:
+										<div class="flex flex-wrap gap-2">
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Apple</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.google.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Google</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://www.openstreetmap.org/?mlat=${adventure.latitude}&mlon=${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">OSM</a
+											>
+										</div>
+									</div>
 								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
