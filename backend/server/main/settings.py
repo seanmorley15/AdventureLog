@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = getenv('DEBUG', 'True') == 'True'
+DEBUG = getenv('DEBUG', 'true').lower() == 'true'
 
 # ALLOWED_HOSTS = [
 #     'localhost',
@@ -201,7 +201,7 @@ TEMPLATES = [
 
 # Authentication settings
 
-DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
+DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -242,9 +242,9 @@ if getenv('EMAIL_BACKEND', 'console') == 'console':
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = getenv('EMAIL_HOST')
-    EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'true').lower() == 'true'
     EMAIL_PORT = getenv('EMAIL_PORT', 587)
-    EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'False') == 'True'
+    EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'false').lower() == 'true'
     EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
