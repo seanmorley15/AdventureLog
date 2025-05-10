@@ -74,8 +74,6 @@ export const actions: Actions = {
 		} else {
 			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
 
-			console.log('setCookieHeader:', setCookieHeader);
-
 			if (setCookieHeader) {
 				// Regular expression to match sessionid cookie and its expiry
 				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;

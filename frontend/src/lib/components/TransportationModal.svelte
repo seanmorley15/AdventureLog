@@ -10,27 +10,19 @@
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import { appVersion } from '$lib/config';
 	import { DefaultMarker, MapLibre } from 'svelte-maplibre';
+	import DateRangeCollapse from './DateRangeCollapse.svelte';
 
 	export let collection: Collection;
 	export let transportationToEdit: Transportation | null = null;
 
-	let constrainDates: boolean = false;
-
-	function toLocalDatetime(value: string | null): string {
-		if (!value) return '';
-		const date = new Date(value);
-		return date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
-	}
-
+	// Initialize transportation object
 	let transportation: Transportation = {
 		id: transportationToEdit?.id || '',
 		type: transportationToEdit?.type || '',
 		name: transportationToEdit?.name || '',
 		description: transportationToEdit?.description || '',
-		date: transportationToEdit?.date ? toLocalDatetime(transportationToEdit.date) : null,
-		end_date: transportationToEdit?.end_date
-			? toLocalDatetime(transportationToEdit.end_date)
-			: null,
+		date: transportationToEdit?.date || null,
+		end_date: transportationToEdit?.end_date || null,
 		rating: transportationToEdit?.rating || 0,
 		link: transportationToEdit?.link || '',
 		flight_number: transportationToEdit?.flight_number || '',
@@ -47,24 +39,14 @@
 		destination_longitude: transportationToEdit?.destination_longitude || NaN
 	};
 
-	let fullStartDate: string = '';
-	let fullEndDate: string = '';
-
 	let starting_airport: string = '';
 	let ending_airport: string = '';
-
-	if (collection.start_date && collection.end_date) {
-		fullStartDate = `${collection.start_date}T00:00`;
-		fullEndDate = `${collection.end_date}T23:59`;
-	}
 
 	$: {
 		if (!transportation.rating) {
 			transportation.rating = NaN;
 		}
 	}
-
-	console.log(transportation);
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -84,6 +66,7 @@
 	}
 
 	async function geocode(e: Event | null) {
+		// Geocoding logic unchanged
 		if (e) {
 			e.preventDefault();
 		}
@@ -167,39 +150,27 @@
 				Math.round(transportation.destination_longitude * 1e6) / 1e6;
 		}
 
-		if (transportation.end_date && !transportation.date) {
-			transportation.date = null;
-			transportation.end_date = null;
-		}
-
-		if (transportation.date && !transportation.end_date) {
-			transportation.end_date = transportation.date;
-		}
-
-		if (
-			transportation.date &&
-			transportation.end_date &&
-			transportation.date > transportation.end_date
-		) {
-			addToast('error', $t('adventures.start_before_end_error'));
-			return;
-		}
+		// Use the stored UTC dates for submission
+		const submissionData = {
+			...transportation
+		};
 
 		if (transportation.type != 'plane') {
-			transportation.flight_number = '';
+			submissionData.flight_number = '';
 		}
 
-		if (transportation.id === '') {
+		if (submissionData.id === '') {
 			let res = await fetch('/api/transportations', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(transportation)
+				body: JSON.stringify(submissionData)
 			});
 			let data = await res.json();
 			if (data.id) {
 				transportation = data as Transportation;
+
 				addToast('success', $t('adventures.adventure_created'));
 				dispatch('save', transportation);
 			} else {
@@ -212,11 +183,12 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(transportation)
+				body: JSON.stringify(submissionData)
 			});
 			let data = await res.json();
 			if (data.id) {
 				transportation = data as Transportation;
+
 				addToast('success', $t('adventures.adventure_updated'));
 				dispatch('save', transportation);
 			} else {
@@ -366,67 +338,14 @@
 						</div>
 					</div>
 				</div>
-				<div class="collapse collapse-plus bg-base-200 mb-4">
-					<input type="checkbox" checked />
-					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.date_information')}
-					</div>
-					<div class="collapse-content">
-						<!-- Start Date -->
-						<div>
-							<label for="date">
-								{$t('adventures.start_date')}
-							</label>
 
-							{#if collection && collection.start_date && collection.end_date}<label
-									class="label cursor-pointer flex items-start space-x-2"
-								>
-									<span class="label-text">{$t('adventures.date_constrain')}</span>
-									<input
-										type="checkbox"
-										class="toggle toggle-primary"
-										id="constrain_dates"
-										name="constrain_dates"
-										on:change={() => (constrainDates = !constrainDates)}
-									/></label
-								>
-							{/if}
-							<div>
-								<input
-									type="datetime-local"
-									id="date"
-									name="date"
-									bind:value={transportation.date}
-									min={constrainDates ? fullStartDate : ''}
-									max={constrainDates ? fullEndDate : ''}
-									class="input input-bordered w-full max-w-xs mt-1"
-								/>
-							</div>
-						</div>
-						<!-- End Date -->
-						{#if transportation.date}
-							<div>
-								<label for="end_date">
-									{$t('adventures.end_date')}
-								</label>
-								<div>
-									<input
-										type="datetime-local"
-										id="end_date"
-										name="end_date"
-										min={constrainDates ? transportation.date : ''}
-										max={constrainDates ? fullEndDate : ''}
-										bind:value={transportation.end_date}
-										class="input input-bordered w-full max-w-xs mt-1"
-									/>
-								</div>
-							</div>
-						{/if}
-					</div>
-				</div>
+				<DateRangeCollapse
+					type="transportation"
+					bind:utcStartDate={transportation.date}
+					bind:utcEndDate={transportation.end_date}
+				/>
 
 				<!-- Flight Information -->
-
 				<div class="collapse collapse-plus bg-base-200 mb-4">
 					<input type="checkbox" checked />
 					<div class="collapse-title text-xl font-medium">
@@ -549,11 +468,6 @@
 								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 								standardControls
 							>
-								<!-- MapEvents gives you access to map events even from other components inside the map,
-where you might not have access to the top-level `MapLibre` component. In this case
-it would also work to just use on:click on the MapLibre component itself. -->
-								<!-- @ts-ignore -->
-
 								{#if transportation.origin_latitude && transportation.origin_longitude}
 									<DefaultMarker
 										lngLat={[transportation.origin_longitude, transportation.origin_latitude]}
@@ -568,7 +482,6 @@ it would also work to just use on:click on the MapLibre component itself. -->
 									/>
 								{/if}
 							</MapLibre>
-							<!-- button to clear to and from location -->
 						</div>
 						{#if transportation.from_location || transportation.to_location}
 							<button

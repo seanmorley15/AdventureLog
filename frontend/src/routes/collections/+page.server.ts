@@ -208,7 +208,7 @@ export const actions: Actions = {
 		const order_direction = formData.get('order_direction') as string;
 		const order_by = formData.get('order_by') as string;
 
-		console.log(order_direction, order_by);
+		// console.log(order_direction, order_by);
 
 		let adventures: Adventure[] = [];
 
@@ -242,7 +242,7 @@ export const actions: Actions = {
 			previous = res.previous;
 			count = res.count;
 			adventures = [...adventures, ...visited];
-			console.log(next, previous, count);
+			// console.log(next, previous, count);
 		}
 
 		return {

@@ -6,6 +6,20 @@
 	import { t } from 'svelte-i18n';
 	export let collection: Collection | null = null;
 
+	let fullStartDate: string = '';
+	let fullEndDate: string = '';
+	let fullStartDateOnly: string = '';
+	let fullEndDateOnly: string = '';
+	let allDay: boolean = true;
+
+	// Set full start and end dates from collection
+	if (collection && collection.start_date && collection.end_date) {
+		fullStartDate = `${collection.start_date}T00:00`;
+		fullEndDate = `${collection.end_date}T23:59`;
+		fullStartDateOnly = collection.start_date;
+		fullEndDateOnly = collection.end_date;
+	}
+
 	const dispatch = createEventDispatcher();
 
 	let images: { id: string; image: string; is_primary: boolean }[] = [];
@@ -60,9 +74,8 @@
 		'.tar.lzma',
 		'.tar.lzo',
 		'.tar.z',
-		'gpx',
-		'md',
-		'pdf'
+		'.gpx',
+		'.md'
 	];
 
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
@@ -72,13 +85,14 @@
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
-	import { findFirstValue } from '$lib';
+	import { findFirstValue, isAllDay } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import ImmichSelect from './ImmichSelect.svelte';
 	import Star from '~icons/mdi/star';
 	import Crown from '~icons/mdi/crown';
 	import AttachmentCard from './AttachmentCard.svelte';
 	import LocationDropdown from './LocationDropdown.svelte';
+	import DateRangeCollapse from './DateRangeCollapse.svelte';
 	let modal: HTMLDialogElement;
 
 	let wikiError: string = '';
@@ -379,7 +393,10 @@
 	let new_start_date: string = '';
 	let new_end_date: string = '';
 	let new_notes: string = '';
+
+	// Function to add a new visit.
 	function addNewVisit() {
+		// If an end date isn’t provided, assume it’s the same as start.
 		if (new_start_date && !new_end_date) {
 			new_end_date = new_start_date;
 		}
@@ -391,15 +408,31 @@
 			addToast('error', $t('adventures.no_start_date'));
 			return;
 		}
+		// Convert input to UTC if not already.
+		if (new_start_date && !new_start_date.includes('Z')) {
+			new_start_date = new Date(new_start_date).toISOString();
+		}
+		if (new_end_date && !new_end_date.includes('Z')) {
+			new_end_date = new Date(new_end_date).toISOString();
+		}
+
+		// If the visit is all day, force the times to midnight.
+		if (allDay) {
+			new_start_date = new_start_date.split('T')[0] + 'T00:00:00.000Z';
+			new_end_date = new_end_date.split('T')[0] + 'T00:00:00.000Z';
+		}
+
 		adventure.visits = [
 			...adventure.visits,
 			{
 				start_date: new_start_date,
 				end_date: new_end_date,
 				notes: new_notes,
-				id: ''
+				id: '' // or generate an id as needed
 			}
 		];
+
+		// Clear the input fields.
 		new_start_date = '';
 		new_end_date = '';
 		new_notes = '';
@@ -430,6 +463,13 @@
 		event.preventDefault();
 		triggerMarkVisted = true;
 
+		// if category icon is empty, set it to the default icon
+		if (adventure.category?.icon == '' || adventure.category?.icon == null) {
+			if (adventure.category) {
+				adventure.category.icon = '🌍';
+			}
+		}
+
 		if (adventure.id === '') {
 			if (adventure.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
@@ -446,6 +486,7 @@
 					};
 				}
 			}
+
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {
@@ -652,138 +693,8 @@
 							<ActivityComplete bind:activities={adventure.activity_types} />
 						</div>
 					</div>
-					<div class="collapse collapse-plus bg-base-200 mb-4">
-						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.visits')} ({adventure.visits.length})
-						</div>
-						<div class="collapse-content">
-							<label class="label cursor-pointer flex items-start space-x-2">
-								{#if adventure.collection && collection && collection.start_date && collection.end_date}
-									<span class="label-text">{$t('adventures.date_constrain')}</span>
-									<input
-										type="checkbox"
-										class="toggle toggle-primary"
-										id="constrain_dates"
-										name="constrain_dates"
-										on:change={() => (constrainDates = !constrainDates)}
-									/>
-								{/if}
-							</label>
-							<div class="flex gap-2 mb-1">
-								{#if !constrainDates}
-									<input
-										type="date"
-										class="input input-bordered w-full"
-										placeholder="Start Date"
-										bind:value={new_start_date}
-										on:keydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addNewVisit();
-											}
-										}}
-									/>
-									<input
-										type="date"
-										class="input input-bordered w-full"
-										placeholder={$t('adventures.end_date')}
-										bind:value={new_end_date}
-										on:keydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addNewVisit();
-											}
-										}}
-									/>
-								{:else}
-									<input
-										type="date"
-										class="input input-bordered w-full"
-										placeholder={$t('adventures.start_date')}
-										min={collection?.start_date}
-										max={collection?.end_date}
-										bind:value={new_start_date}
-										on:keydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addNewVisit();
-											}
-										}}
-									/>
-									<input
-										type="date"
-										class="input input-bordered w-full"
-										placeholder={$t('adventures.end_date')}
-										bind:value={new_end_date}
-										min={collection?.start_date}
-										max={collection?.end_date}
-										on:keydown={(e) => {
-											if (e.key === 'Enter') {
-												e.preventDefault();
-												addNewVisit();
-											}
-										}}
-									/>
-								{/if}
-							</div>
-							<div class="flex gap-2 mb-1">
-								<!-- textarea for notes -->
-								<textarea
-									class="textarea textarea-bordered w-full"
-									placeholder={$t('adventures.add_notes')}
-									bind:value={new_notes}
-									on:keydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											addNewVisit();
-										}
-									}}
-								></textarea>
-							</div>
 
-							<div class="flex gap-2">
-								<button type="button" class="btn btn-neutral" on:click={addNewVisit}
-									>{$t('adventures.add')}</button
-								>
-							</div>
-
-							{#if adventure.visits.length > 0}
-								<h2 class=" font-bold text-xl mt-2">{$t('adventures.my_visits')}</h2>
-								{#each adventure.visits as visit}
-									<div class="flex flex-col gap-2">
-										<div class="flex gap-2">
-											<p>
-												{new Date(visit.start_date).toLocaleDateString(undefined, {
-													timeZone: 'UTC'
-												})}
-											</p>
-											{#if visit.end_date && visit.end_date !== visit.start_date}
-												<p>
-													{new Date(visit.end_date).toLocaleDateString(undefined, {
-														timeZone: 'UTC'
-													})}
-												</p>
-											{/if}
-
-											<div>
-												<button
-													type="button"
-													class="btn btn-sm btn-error"
-													on:click={() => {
-														adventure.visits = adventure.visits.filter((v) => v !== visit);
-													}}
-												>
-													{$t('adventures.remove')}
-												</button>
-											</div>
-										</div>
-										<p class="whitespace-pre-wrap -mt-2 mb-2">{visit.notes}</p>
-									</div>
-								{/each}
-							{/if}
-						</div>
-					</div>
+					<DateRangeCollapse type="adventure" {collection} bind:visits={adventure.visits} />
 
 					<div>
 						<div class="mt-4">
@@ -805,8 +716,10 @@
 									<span>{$t('adventures.warning')}: {warningMessage}</span>
 								</div>
 							{/if}
-							<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
-							<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
+							<div class="flex flex-row gap-2">
+								<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
+								<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
+							</div>
 						</div>
 					</div>
 				</form>

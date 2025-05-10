@@ -3,7 +3,6 @@ from allauth.socialaccount.models import SocialAccount
 
 class NoPasswordAuthBackend(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
-        print("NoPasswordAuthBackend")
         # First, attempt normal authentication
         user = super().authenticate(request, username=username, password=password, **kwargs)
         if user is None:

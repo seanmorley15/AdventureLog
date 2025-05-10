@@ -54,7 +54,8 @@
 		sv: 'Svenska',
 		zh: '中文',
 		pl: 'Polski',
-		ko: '한국어'
+		ko: '한국어',
+		no: "Norsk"
 	};
 
 	let query: string = '';
@@ -120,7 +121,6 @@
 			>
 				{#if data.user}
 					<li>
-						<MapMarker />
 						<button on:click={() => goto('/adventures')}>{$t('navbar.adventures')}</button>
 					</li>
 					<li>
@@ -178,8 +178,9 @@
 				{/if}
 			</ul>
 		</div>
-		<a class="btn btn-ghost text-2xl font-bold tracking-normal" href="/">
-			AdventureLog <img src="/favicon.png" alt="Map Logo" class="w-10" />
+		<a class="btn btn-ghost p-0 text-2xl font-bold tracking-normal" href="/">
+			<span class="md:inline hidden">AdventureLog</span>
+			<img src="/favicon.png" alt="Map Logo" class="w-10" />
 		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
@@ -264,7 +265,7 @@
 			<Avatar user={data.user} />
 		{/if}
 		<div class="dropdown dropdown-bottom dropdown-end">
-			<div tabindex="0" role="button" class="btn m-1 ml-4">
+			<div tabindex="0" role="button" class="btn m-1 p-2">
 				<DotsHorizontal class="w-6 h-6" />
 			</div>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->

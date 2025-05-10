@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
 
@@ -133,8 +133,69 @@
 	}
 
 	let currentView: string = 'itinerary';
+	let currentItineraryView: string = 'date';
 
 	let adventures: Adventure[] = [];
+
+	// Add this after your existing MapLibre markers
+
+	// Add this after your existing MapLibre markers
+
+	// Create line data from orderedItems
+	$: lineData = createLineData(orderedItems);
+
+	// Function to create GeoJSON line data from ordered items
+	function createLineData(
+		items: Array<{
+			item: Adventure | Transportation | Lodging | Note | Checklist;
+			start: string;
+			end: string;
+		}>
+	) {
+		if (items.length < 2) return null;
+
+		const coordinates: [number, number][] = [];
+
+		// Extract coordinates from each item
+		for (const orderItem of items) {
+			const item = orderItem.item;
+
+			if (
+				'origin_longitude' in item &&
+				'origin_latitude' in item &&
+				'destination_longitude' in item &&
+				'destination_latitude' in item &&
+				item.origin_longitude &&
+				item.origin_latitude &&
+				item.destination_longitude &&
+				item.destination_latitude
+			) {
+				// For Transportation, add both origin and destination points
+				coordinates.push([item.origin_longitude, item.origin_latitude]);
+				coordinates.push([item.destination_longitude, item.destination_latitude]);
+			} else if ('longitude' in item && 'latitude' in item && item.longitude && item.latitude) {
+				// Handle Adventure and Lodging types
+				coordinates.push([item.longitude, item.latitude]);
+			}
+		}
+
+		// Only create line data if we have at least 2 coordinates
+		if (coordinates.length >= 2) {
+			return {
+				type: 'Feature' as const,
+				properties: {
+					name: 'Itinerary Path',
+					description: 'Path connecting chronological items'
+				},
+				geometry: {
+					type: 'LineString' as const,
+					coordinates: coordinates
+				}
+			};
+		}
+
+		return null;
+	}
 
 	let numVisited: number = 0;
 	let numAdventures: number = 0;
@@ -169,6 +230,63 @@
 		}
 	}
 
+	let orderedItems: Array<{
+		item: Adventure | Transportation | Lodging;
+		type: 'adventure' | 'transportation' | 'lodging';
+		start: string; // ISO date string
+		end: string; // ISO date string
+	}> = [];
+
+	$: {
+		// Reset ordered items
+		orderedItems = [];
+
+		// Add Adventures (using visit dates)
+		adventures.forEach((adventure) => {
+			adventure.visits.forEach((visit) => {
+				orderedItems.push({
+					item: adventure,
+					start: visit.start_date,
+					end: visit.end_date,
+					type: 'adventure'
+				});
+			});
+		});
+
+		// Add Transportation
+		transportations.forEach((transport) => {
+			if (transport.date) {
+				// Only add if date exists
+				orderedItems.push({
+					item: transport,
+					start: transport.date,
+					end: transport.end_date || transport.date, // Use end_date if available, otherwise use date,
+					type: 'transportation'
+				});
+			}
+		});
+
+		// Add Lodging
+		lodging.forEach((lodging) => {
+			if (lodging.check_in) {
+				// Only add if check_in exists
+				orderedItems.push({
+					item: lodging,
+					start: lodging.check_in,
+					end: lodging.check_out || lodging.check_in, // Use check_out if available, otherwise use check_in,
+					type: 'lodging'
+				});
+			}
+		});
+
+		// Sort all items chronologically by start date
+		orderedItems.sort((a, b) => {
+			const dateA = new Date(a.start).getTime();
+			const dateB = new Date(b.start).getTime();
+			return dateA - dateB;
+		});
+	}
+
 	$: {
 		numAdventures = adventures.length;
 		numVisited = adventures.filter((adventure) => adventure.is_visited).length;
@@ -179,6 +297,17 @@
 	let isShowingTransportationModal: boolean = false;
 	let isShowingChecklistModal: boolean = false;
 
+	function handleHashChange() {
+		const hash = window.location.hash.replace('#', '');
+		if (hash) {
+			currentView = hash
+		} else if (!collection.start_date) {
+			currentView = 'all';
+		} else {
+			currentView = 'itinerary';
+		}
+	}
+
 	onMount(() => {
 		if (data.props.adventure) {
 			collection = data.props.adventure;
@@ -186,6 +315,7 @@
 		} else {
 			notFound = true;
 		}
+
 		if (collection.start_date && collection.end_date) {
 			numberOfDays =
 				Math.floor(
@@ -209,11 +339,12 @@
 		if (collection.checklists) {
 			checklists = collection.checklists;
 		}
-		if (!collection.start_date) {
-			currentView = 'all';
-		} else {
-			currentView = 'itinerary';
-		}
+		window.addEventListener('hashchange', handleHashChange);
+		handleHashChange();
+	});
+
+	onDestroy(() => {
+		window.removeEventListener('hashchange', handleHashChange);
 	});
 
 	function deleteAdventure(event: CustomEvent<string>) {
@@ -647,41 +778,35 @@
 				<!-- svelte-ignore a11y-missing-attribute -->
 				{#if collection.start_date}
 					<a
+						href="#itinerary"
 						role="tab"
 						class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-						tabindex="0"
-						on:click={() => (currentView = 'itinerary')}
-						on:keydown={(e) => e.key === 'Enter' && (currentView = 'itinerary')}>Itinerary</a
+						tabindex="0">Itinerary</a
 					>
 				{/if}
 				<a
+					href="#all"
 					role="tab"
 					class="tab {currentView === 'all' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'all')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'all')}>All Linked Items</a
+					tabindex="0">All Linked Items</a
 				>
 				<a
+					href="#calendar"
 					role="tab"
 					class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'calendar')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'calendar')}>Calendar</a
+					tabindex="0">Calendar</a
 				>
 				<a
+					href="#map"
 					role="tab"
 					class="tab {currentView === 'map' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'map')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'map')}>Map</a
+					tabindex="0">Map</a
 				>
 				<a
+					href="#recommendations"
 					role="tab"
 					class="tab {currentView === 'recommendations' ? 'tab-active' : ''}"
-					tabindex="0"
-					on:click={() => (currentView = 'recommendations')}
-					on:keydown={(e) => e.key === 'Enter' && (currentView = 'recommendations')}
-					>Recommendations</a
+					tabindex="0">Recommendations</a
 				>
 			</div>
 		</div>
@@ -806,133 +931,270 @@
 								})}</span
 							>
 						</p>
+						<div class="join mt-2">
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="options"
+								aria-label={$t('adventures.date_itinerary')}
+								checked={currentItineraryView == 'date'}
+								on:change={() => (currentItineraryView = 'date')}
+							/>
+							<input
+								class="join-item btn btn-neutral"
+								type="radio"
+								name="options"
+								aria-label={$t('adventures.ordered_itinerary')}
+								checked={currentItineraryView == 'ordered'}
+								on:change={() => (currentItineraryView = 'ordered')}
+							/>
+						</div>
 					</div>
 				</div>
 			</div>
 
-			<div class="container mx-auto px-4">
-				{#each Array(numberOfDays) as _, i}
-					{@const startDate = new Date(collection.start_date)}
-					{@const tempDate = new Date(startDate.getTime())}
-					{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
-					{@const dateString = adjustedDate.toISOString().split('T')[0]}
+			{#if currentItineraryView == 'date'}
+				<div class="container mx-auto px-4">
+					{#each Array(numberOfDays) as _, i}
+						{@const startDate = new Date(collection.start_date)}
+						{@const tempDate = new Date(startDate.getTime())}
+						{@const adjustedDate = new Date(tempDate.setUTCDate(tempDate.getUTCDate() + i))}
+						{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
-					{@const dayAdventures =
-						groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays)[
-							dateString
-						] || []}
-					{@const dayTransportations =
-						groupTransportationsByDate(
-							transportations,
-							new Date(collection.start_date),
-							numberOfDays
-						)[dateString] || []}
-					{@const dayLodging =
-						groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
-							dateString
-						] || []}
-					{@const dayNotes =
-						groupNotesByDate(notes, new Date(collection.start_date), numberOfDays)[dateString] ||
-						[]}
-					{@const dayChecklists =
-						groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays)[
-							dateString
-						] || []}
+						{@const dayAdventures =
+							groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayTransportations =
+							groupTransportationsByDate(
+								transportations,
+								new Date(collection.start_date),
+								numberOfDays + 1
+							)[dateString] || []}
+						{@const dayLodging =
+							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayNotes =
+							groupNotesByDate(notes, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
+						{@const dayChecklists =
+							groupChecklistsByDate(checklists, new Date(collection.start_date), numberOfDays + 1)[
+								dateString
+							] || []}
 
-					<div class="card bg-base-100 shadow-xl my-8">
-						<div class="card-body bg-base-200">
-							<h2 class="card-title text-3xl justify-center g">
-								{$t('adventures.day')}
-								{i + 1}
-								<div class="badge badge-lg">
-									{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+						<div class="card bg-base-100 shadow-xl my-8">
+							<div class="card-body bg-base-200">
+								<h2 class="card-title text-3xl justify-center g">
+									{$t('adventures.day')}
+									{i + 1}
+									<div class="badge badge-lg">
+										{adjustedDate.toLocaleDateString(undefined, { timeZone: 'UTC' })}
+									</div>
+								</h2>
+
+								<div class="divider"></div>
+
+								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+									{#if dayAdventures.length > 0}
+										{#each dayAdventures as adventure}
+											<AdventureCard
+												user={data.user}
+												on:edit={editAdventure}
+												on:delete={deleteAdventure}
+												{adventure}
+												{collection}
+											/>
+										{/each}
+									{/if}
+									{#if dayTransportations.length > 0}
+										{#each dayTransportations as transportation}
+											<TransportationCard
+												{transportation}
+												user={data?.user}
+												on:delete={(event) => {
+													transportations = transportations.filter((t) => t.id != event.detail);
+												}}
+												on:edit={(event) => {
+													transportationToEdit = event.detail;
+													isShowingTransportationModal = true;
+												}}
+												{collection}
+											/>
+										{/each}
+									{/if}
+									{#if dayNotes.length > 0}
+										{#each dayNotes as note}
+											<NoteCard
+												{note}
+												user={data.user || null}
+												on:edit={(event) => {
+													noteToEdit = event.detail;
+													isNoteModalOpen = true;
+												}}
+												on:delete={(event) => {
+													notes = notes.filter((n) => n.id != event.detail);
+												}}
+												{collection}
+											/>
+										{/each}
+									{/if}
+									{#if dayLodging.length > 0}
+										{#each dayLodging as hotel}
+											<LodgingCard
+												lodging={hotel}
+												user={data?.user}
+												on:delete={(event) => {
+													lodging = lodging.filter((t) => t.id != event.detail);
+												}}
+												on:edit={editLodging}
+												{collection}
+											/>
+										{/each}
+									{/if}
+									{#if dayChecklists.length > 0}
+										{#each dayChecklists as checklist}
+											<ChecklistCard
+												{checklist}
+												user={data.user || null}
+												on:delete={(event) => {
+													notes = notes.filter((n) => n.id != event.detail);
+												}}
+												on:edit={(event) => {
+													checklistToEdit = event.detail;
+													isShowingChecklistModal = true;
+												}}
+												{collection}
+											/>
+										{/each}
+									{/if}
 								</div>
-							</h2>
 
-							<div class="divider"></div>
-
-							<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-								{#if dayAdventures.length > 0}
-									{#each dayAdventures as adventure}
-										<AdventureCard
-											user={data.user}
-											on:edit={editAdventure}
-											on:delete={deleteAdventure}
-											{adventure}
-											{collection}
-										/>
-									{/each}
-								{/if}
-								{#if dayTransportations.length > 0}
-									{#each dayTransportations as transportation}
-										<TransportationCard
-											{transportation}
-											{collection}
-											user={data?.user}
-											on:delete={(event) => {
-												transportations = transportations.filter((t) => t.id != event.detail);
-											}}
-											on:edit={(event) => {
-												transportationToEdit = event.detail;
-												isShowingTransportationModal = true;
-											}}
-										/>
-									{/each}
-								{/if}
-								{#if dayNotes.length > 0}
-									{#each dayNotes as note}
-										<NoteCard
-											{note}
-											{collection}
-											user={data.user || null}
-											on:edit={(event) => {
-												noteToEdit = event.detail;
-												isNoteModalOpen = true;
-											}}
-											on:delete={(event) => {
-												notes = notes.filter((n) => n.id != event.detail);
-											}}
-										/>
-									{/each}
-								{/if}
-								{#if dayLodging.length > 0}
-									{#each dayLodging as hotel}
-										<LodgingCard
-											lodging={hotel}
-											{collection}
-											user={data?.user}
-											on:delete={(event) => {
-												lodging = lodging.filter((t) => t.id != event.detail);
-											}}
-											on:edit={editLodging}
-										/>
-									{/each}
-								{/if}
-								{#if dayChecklists.length > 0}
-									{#each dayChecklists as checklist}
-										<ChecklistCard
-											{checklist}
-											{collection}
-											user={data.user || null}
-											on:delete={(event) => {
-												notes = notes.filter((n) => n.id != event.detail);
-											}}
-											on:edit={(event) => {
-												checklistToEdit = event.detail;
-												isShowingChecklistModal = true;
-											}}
-										/>
-									{/each}
+								{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
+									<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
 								{/if}
 							</div>
-
-							{#if dayAdventures.length == 0 && dayTransportations.length == 0 && dayNotes.length == 0 && dayChecklists.length == 0 && dayLodging.length == 0}
-								<p class="text-center text-lg mt-2 italic">{$t('adventures.nothing_planned')}</p>
+						</div>
+					{/each}
+				</div>
+			{:else}
+				<div class="container mx-auto px-4 py-8">
+					<div class="flex flex-col items-center">
+						<div class="w-full max-w-4xl relative">
+							<!-- Vertical timeline line that spans the entire height -->
+							{#if orderedItems.length > 0}
+								<div class="absolute left-8 top-0 bottom-0 w-1 bg-primary"></div>
+							{/if}
+							<ul class="relative">
+								{#each orderedItems as orderedItem, index}
+									<li class="relative pl-20 mb-8">
+										<!-- Timeline Icon -->
+										<div
+											class="absolute left-0 top-0 flex items-center justify-center w-16 h-16 bg-base-200 rounded-full border-2 border-primary"
+										>
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'category' in orderedItem.item && orderedItem.item.category && 'icon' in orderedItem.item.category}
+												<span class="text-2xl">{orderedItem.item.category.icon}</span>
+											{:else if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
+												<span class="text-2xl">{getTransportationEmoji(orderedItem.item.type)}</span
+												>
+											{:else if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
+												<span class="text-2xl">{getLodgingIcon(orderedItem.item.type)}</span>
+											{/if}
+										</div>
+										<!-- Card Content -->
+										<div class="bg-base-200 p-6 rounded-lg shadow-lg">
+											<div class="flex justify-between items-center mb-4">
+												<span class="badge badge-lg">{$t(`adventures.${orderedItem.type}`)}</span>
+												<div class="text-sm opacity-80 text-right">
+													{new Date(orderedItem.start).toLocaleDateString(undefined, {
+														month: 'short',
+														day: 'numeric'
+													})}
+													{#if orderedItem.start !== orderedItem.end}
+														<div>
+															{new Date(orderedItem.start).toLocaleTimeString(undefined, {
+																hour: '2-digit',
+																minute: '2-digit'
+															})}
+															-
+															{new Date(orderedItem.end).toLocaleTimeString(undefined, {
+																hour: '2-digit',
+																minute: '2-digit'
+															})}
+														</div>
+														<div>
+															<!-- Duration -->
+															{Math.round(
+																(new Date(orderedItem.end).getTime() -
+																	new Date(orderedItem.start).getTime()) /
+																	1000 /
+																	60 /
+																	60
+															)}h
+															{Math.round(
+																((new Date(orderedItem.end).getTime() -
+																	new Date(orderedItem.start).getTime()) /
+																	1000 /
+																	60 /
+																	60 -
+																	Math.floor(
+																		(new Date(orderedItem.end).getTime() -
+																			new Date(orderedItem.start).getTime()) /
+																			1000 /
+																			60 /
+																			60
+																	)) *
+																	60
+															)}m
+														</div>
+													{:else}
+														<p>{$t('adventures.all_day')} ⏱️</p>
+													{/if}
+												</div>
+											</div>
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
+												<AdventureCard
+													user={data.user}
+													on:edit={editAdventure}
+													on:delete={deleteAdventure}
+													adventure={orderedItem.item}
+													{collection}
+												/>
+											{:else if orderedItem.type === 'transportation' && orderedItem.item && 'origin_latitude' in orderedItem.item}
+												<TransportationCard
+													transportation={orderedItem.item}
+													user={data?.user}
+													on:delete={(event) => {
+														transportations = transportations.filter((t) => t.id != event.detail);
+													}}
+													on:edit={editTransportation}
+													{collection}
+												/>
+											{:else if orderedItem.type === 'lodging' && orderedItem.item && 'reservation_number' in orderedItem.item}
+												<LodgingCard
+													lodging={orderedItem.item}
+													user={data?.user}
+													on:delete={(event) => {
+														lodging = lodging.filter((t) => t.id != event.detail);
+													}}
+													on:edit={editLodging}
+													{collection}
+												/>
+											{/if}
+										</div>
+									</li>
+								{/each}
+							</ul>
+							{#if orderedItems.length === 0}
+								<div class="alert alert-info">
+									<p class="text-center text-lg">{$t('adventures.no_ordered_items')}</p>
+								</div>
 							{/if}
 						</div>
 					</div>
-				{/each}
-			</div>
+				</div>
+			{/if}
 		{/if}
 	{/if}
 
@@ -999,6 +1261,19 @@
 							</Marker>
 						{/if}
 					{/each}
+					{#if lineData}
+						<GeoJSON data={lineData}>
+							<LineLayer
+								layout={{ 'line-cap': 'round', 'line-join': 'round' }}
+								paint={{
+									'line-width': 4,
+									'line-color': '#0088CC', // Blue line to distinguish from transportation lines
+									'line-opacity': 0.8,
+									'line-dasharray': [2, 1] // Dashed line to differentiate from direct transportation lines
+								}}
+							/>
+						</GeoJSON>
+					{/if}
 					{#each transportations as transportation}
 						{#if transportation.origin_latitude && transportation.origin_longitude && transportation.destination_latitude && transportation.destination_longitude}
 							<!-- Origin Marker -->
@@ -1040,34 +1315,6 @@
 									</p>
 								</Popup>
 							</Marker>
-
-							<!-- Line connecting origin and destination -->
-							<GeoJSON
-								data={{
-									type: 'Feature',
-									properties: {
-										name: transportation.name,
-										type: transportation.type
-									},
-									geometry: {
-										type: 'LineString',
-										coordinates: [
-											[transportation.origin_longitude, transportation.origin_latitude],
-											[transportation.destination_longitude, transportation.destination_latitude]
-										]
-									}
-								}}
-							>
-								<LineLayer
-									layout={{ 'line-cap': 'round', 'line-join': 'round' }}
-									paint={{
-										'line-width': 3,
-										'line-color': '#898989', // customize your line color here
-										'line-opacity': 0.8
-										// 'line-dasharray': [5, 2]
-									}}
-								/>
-							</GeoJSON>
 						{/if}
 					{/each}
 
@@ -1233,13 +1480,16 @@
 										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									{#if recomendation.address}
+									{#if recomendation.address && (recomendation.address.housenumber || recomendation.address.street || recomendation.address.city || recomendation.address.state || recomendation.address.postcode)}
 										<p class="text-md">
 											<strong>{$t('recomendations.address')}:</strong>
-											{recomendation.address.housenumber}
-											{recomendation.address.street}, {recomendation.address.city}, {recomendation
-												.address.state}
-											{recomendation.address.postcode}
+											{#if recomendation.address.housenumber}{recomendation.address
+													.housenumber}{/if}
+											{#if recomendation.address.street}
+												{recomendation.address.street}{/if}
+											{#if recomendation.address.city}, {recomendation.address.city}{/if}
+											{#if recomendation.address.state}, {recomendation.address.state}{/if}
+											{#if recomendation.address.postcode}, {recomendation.address.postcode}{/if}
 										</p>
 									{/if}
 									{#if recomendation.contact}

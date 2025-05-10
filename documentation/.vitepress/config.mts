@@ -80,7 +80,18 @@ export default defineConfig({
                 link: "/docs/install/nginx_proxy_manager",
               },
               { text: "Traefik", link: "/docs/install/traefik" },
+              { text: "Caddy", link: "/docs/install/caddy" },
             ],
+          },
+        ],
+      },
+      {
+        text: "Usage",
+        collapsed: false,
+        items: [
+          {
+            text: "How to use AdventureLog",
+            link: "/docs/usage/usage",
           },
         ],
       },
@@ -133,6 +144,10 @@ export default defineConfig({
           {
             text: "No Images Displaying",
             link: "/docs/troubleshooting/no_images",
+          },
+          {
+            text: "Login and Registration Unresponsive",
+            link: "/docs/troubleshooting/login_unresponsive",
           },
           {
             text: "Failed to Start Nginx",

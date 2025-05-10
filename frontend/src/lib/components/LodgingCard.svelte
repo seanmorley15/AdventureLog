@@ -96,20 +96,15 @@
 >
 	<div class="card-body space-y-4">
 		<!-- Title and Type -->
-		<div class="flex items-center justify-between">
-			<h2 class="card-title text-lg font-semibold truncate">{lodging.name}</h2>
-			<div class="flex items-center gap-2">
-				<div class="badge badge-secondary">
-					{$t(`lodging.${lodging.type}`) + ' ' + getLodgingIcon(lodging.type)}
-				</div>
-				<!-- {#if hotel.type == 'plane' && hotel.flight_number}
-					<div class="badge badge-neutral-200">{hotel.flight_number}</div>
-				{/if} -->
+		<h2 class="text-2xl font-semibold">{lodging.name}</h2>
+		<div>
+			<div class="badge badge-secondary">
+				{$t(`lodging.${lodging.type}`) + ' ' + getLodgingIcon(lodging.type)}
 			</div>
+			{#if unlinked}
+				<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+			{/if}
 		</div>
-		{#if unlinked}
-			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-		{/if}
 
 		<!-- Location -->
 		<div class="space-y-2">
@@ -124,7 +119,7 @@
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.dates')}:</span>
 					<p>
-						{new Date(lodging.check_in).toLocaleString('en-US', {
+						{new Date(lodging.check_in).toLocaleString(undefined, {
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',
@@ -132,7 +127,7 @@
 							minute: 'numeric'
 						})}
 						-
-						{new Date(lodging.check_out).toLocaleString('en-US', {
+						{new Date(lodging.check_out).toLocaleString(undefined, {
 							month: 'short',
 							day: 'numeric',
 							year: 'numeric',
