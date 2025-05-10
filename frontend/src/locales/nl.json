@@ -256,7 +256,8 @@
     "additional_info": "Aanvullende informatie",
     "invalid_date_range": "Ongeldige datumbereik",
     "sunrise_sunset": "Zonsopgang",
-    "timezone": "Tijdzone"
+    "timezone": "Tijdzone",
+    "no_visits": "Geen bezoeken"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -258,119 +258,6 @@
 					></textarea>
 				</div>
 			{/if}
-		</div>
-
-		<!-- Validation Message -->
-		{#if !validateDateRange(localStartDate, localEndDate).valid}
-			<div role="alert" class="alert alert-error">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					class="h-6 w-6 shrink-0 stroke-current"
-					fill="none"
-					viewBox="0 0 24 24"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-					/>
-				</svg>
-				<span>{$t('adventures.invalid_date_range')}</span>
-			</div>
-		{/if}
-
-		{#if visits && visits.length > 0}
-			<div class="space-y-4">
-				{#each visits as visit}
-					<div
-						class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2"
-					>
-						<p class="text-sm text-base-content font-medium">
-							{#if isAllDay(visit.start_date)}
-								<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
-								{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
-							{:else}
-								{new Date(visit.start_date).toLocaleString()} – {new Date(
-									visit.end_date
-								).toLocaleString()}
-							{/if}
-						</p>
-
-						<!-- If the selected timezone is not the current one show the timezone + the time converted there -->
-
-						{#if visit.notes}
-							<p class="text-sm text-base-content opacity-70 italic">
-								"{visit.notes}"
-							</p>
-						{/if}
-
-						<div class="flex gap-2 mt-2">
-							<button
-								class="btn btn-error btn-sm"
-								type="button"
-								on:click={() => {
-									if (visits) {
-										visits = visits.filter((v) => v.id !== visit.id);
-									}
-								}}
-							>
-								{$t('adventures.remove')}
-							</button>
-
-							<button
-								class="btn btn-primary btn-sm"
-								type="button"
-								on:click={() => {
-									isEditing = true;
-									const isAllDayEvent = isAllDay(visit.start_date);
-									allDay = isAllDayEvent;
-
-									if (isAllDayEvent) {
-										localStartDate = visit.start_date.split('T')[0];
-										localEndDate = visit.end_date.split('T')[0];
-									} else {
-										const startDate = new Date(visit.start_date);
-										const endDate = new Date(visit.end_date);
-
-										localStartDate = `${startDate.getFullYear()}-${String(
-											startDate.getMonth() + 1
-										).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}T${String(
-											startDate.getHours()
-										).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
-
-										localEndDate = `${endDate.getFullYear()}-${String(
-											endDate.getMonth() + 1
-										).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(
-											endDate.getHours()
-										).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
-									}
-
-									// remove it from visits
-									if (visits) {
-										visits = visits.filter((v) => v.id !== visit.id);
-									}
-
-									note = visit.notes;
-									constrainDates = true;
-									utcStartDate = visit.start_date;
-									utcEndDate = visit.end_date;
-									type = 'adventure';
-
-									setTimeout(() => {
-										isEditing = false;
-									}, 0);
-								}}
-							>
-								{$t('lodging.edit')}
-							</button>
-						</div>
-					</div>
-				{/each}
-			</div>
-		{/if}
-		<div class="flex gap-2 mb-1">
-			<!-- add button -->
 			{#if type === 'adventure'}
 				<button
 					class="btn btn-primary"
@@ -402,5 +289,129 @@
 				</button>
 			{/if}
 		</div>
+
+		<!-- Validation Message -->
+		{#if !validateDateRange(localStartDate, localEndDate).valid}
+			<div role="alert" class="alert alert-error">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					class="h-6 w-6 shrink-0 stroke-current"
+					fill="none"
+					viewBox="0 0 24 24"
+				>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				<span>{$t('adventures.invalid_date_range')}</span>
+			</div>
+		{/if}
+
+		{#if type === 'adventure'}
+			<div class="border-t border-neutral pt-4">
+				<h3 class="text-xl font-semibold">
+					{$t('adventures.visits')}
+				</h3>
+
+				<!-- Visits List -->
+				{#if visits && visits.length === 0}
+					<p class="text-sm text-base-content opacity-70">
+						{$t('adventures.no_visits')}
+					</p>
+				{/if}
+			</div>
+
+			{#if visits && visits.length > 0}
+				<div class="space-y-4">
+					{#each visits as visit}
+						<div
+							class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2"
+						>
+							<p class="text-sm text-base-content font-medium">
+								{#if isAllDay(visit.start_date)}
+									<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
+									{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+								{:else}
+									{new Date(visit.start_date).toLocaleString()} – {new Date(
+										visit.end_date
+									).toLocaleString()}
+								{/if}
+							</p>
+
+							<!-- If the selected timezone is not the current one show the timezone + the time converted there -->
+
+							{#if visit.notes}
+								<p class="text-sm text-base-content opacity-70 italic">
+									"{visit.notes}"
+								</p>
+							{/if}
+
+							<div class="flex gap-2 mt-2">
+								<button
+									class="btn btn-primary btn-sm"
+									type="button"
+									on:click={() => {
+										isEditing = true;
+										const isAllDayEvent = isAllDay(visit.start_date);
+										allDay = isAllDayEvent;
+
+										if (isAllDayEvent) {
+											localStartDate = visit.start_date.split('T')[0];
+											localEndDate = visit.end_date.split('T')[0];
+										} else {
+											const startDate = new Date(visit.start_date);
+											const endDate = new Date(visit.end_date);
+
+											localStartDate = `${startDate.getFullYear()}-${String(
+												startDate.getMonth() + 1
+											).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}T${String(
+												startDate.getHours()
+											).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+
+											localEndDate = `${endDate.getFullYear()}-${String(
+												endDate.getMonth() + 1
+											).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}T${String(
+												endDate.getHours()
+											).padStart(2, '0')}:${String(endDate.getMinutes()).padStart(2, '0')}`;
+										}
+
+										// remove it from visits
+										if (visits) {
+											visits = visits.filter((v) => v.id !== visit.id);
+										}
+
+										note = visit.notes;
+										constrainDates = true;
+										utcStartDate = visit.start_date;
+										utcEndDate = visit.end_date;
+										type = 'adventure';
+
+										setTimeout(() => {
+											isEditing = false;
+										}, 0);
+									}}
+								>
+									{$t('lodging.edit')}
+								</button>
+								<button
+									class="btn btn-error btn-sm"
+									type="button"
+									on:click={() => {
+										if (visits) {
+											visits = visits.filter((v) => v.id !== visit.id);
+										}
+									}}
+								>
+									{$t('adventures.remove')}
+								</button>
+							</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
 	</div>
 </div>

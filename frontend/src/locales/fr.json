@@ -256,7 +256,8 @@
     "additional_info": "Informations Complémentaires",
     "invalid_date_range": "Plage de dates non valide",
     "sunrise_sunset": "Lever du soleil",
-    "timezone": "Fuseau horaire"
+    "timezone": "Fuseau horaire",
+    "no_visits": "Pas de visites"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

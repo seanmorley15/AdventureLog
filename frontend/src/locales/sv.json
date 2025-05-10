@@ -256,7 +256,8 @@
     "additional_info": "Ytterligare information",
     "invalid_date_range": "Ogiltigt datumintervall",
     "sunrise_sunset": "Soluppgång",
-    "timezone": "Tidszon"
+    "timezone": "Tidszon",
+    "no_visits": "Inga besök"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

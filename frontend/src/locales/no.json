@@ -304,7 +304,8 @@
     "no_ordered_items": "Legg til varer med datoer i samlingen for å se dem her.",
     "ordered_itinerary": "Bestilt reiserute",
     "sunrise_sunset": "Soloppgang",
-    "timezone": "Tidssone"
+    "timezone": "Tidssone",
+    "no_visits": "Ingen besøk"
   },
   "worldtravel": {
     "country_list": "Liste over land",

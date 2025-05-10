@@ -64,6 +64,7 @@
 		"collection_link_success": "Adventure linked to collection successfully!",
 		"invalid_date_range": "Invalid date range",
 		"timezone": "Timezone",
+		"no_visits": "No visits",
 		"no_image_found": "No image found",
 		"collection_link_error": "Error linking adventure to collection",
 		"adventure_delete_confirm": "Are you sure you want to delete this adventure? This action cannot be undone.",

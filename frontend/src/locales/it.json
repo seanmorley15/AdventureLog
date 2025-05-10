@@ -256,7 +256,8 @@
     "additional_info": "Ulteriori informazioni",
     "invalid_date_range": "Intervallo di date non valido",
     "sunrise_sunset": "Alba",
-    "timezone": "Fuso orario"
+    "timezone": "Fuso orario",
+    "no_visits": "Nessuna visita"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

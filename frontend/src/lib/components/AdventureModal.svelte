@@ -463,6 +463,13 @@
 		event.preventDefault();
 		triggerMarkVisted = true;
 
+		// if category icon is empty, set it to the default icon
+		if (adventure.category?.icon == '' || adventure.category?.icon == null) {
+			if (adventure.category) {
+				adventure.category.icon = '🌍';
+			}
+		}
+
 		if (adventure.id === '') {
 			if (adventure.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
@@ -479,6 +486,7 @@
 					};
 				}
 			}
+
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {
@@ -708,8 +716,10 @@
 									<span>{$t('adventures.warning')}: {warningMessage}</span>
 								</div>
 							{/if}
-							<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
-							<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
+							<div class="flex flex-row gap-2">
+								<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
+								<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
+							</div>
 						</div>
 					</div>
 				</form>

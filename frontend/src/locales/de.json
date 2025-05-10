@@ -256,7 +256,8 @@
     "additional_info": "Weitere Informationen",
     "invalid_date_range": "Ungültiger Datumsbereich",
     "sunrise_sunset": "Sonnenaufgang",
-    "timezone": "Zeitzone"
+    "timezone": "Zeitzone",
+    "no_visits": "Keine Besuche"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

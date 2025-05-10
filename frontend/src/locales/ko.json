@@ -256,7 +256,8 @@
     "additional_info": "추가 정보",
     "invalid_date_range": "잘못된 날짜 범위",
     "sunrise_sunset": "해돋이",
-    "timezone": "시간대"
+    "timezone": "시간대",
+    "no_visits": "방문 없음"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

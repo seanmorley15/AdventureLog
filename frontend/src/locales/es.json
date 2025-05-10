@@ -304,7 +304,8 @@
     "additional_info": "información adicional",
     "invalid_date_range": "Rango de fechas no válido",
     "sunrise_sunset": "Amanecer",
-    "timezone": "Zona horaria"
+    "timezone": "Zona horaria",
+    "no_visits": "No hay visitas"
   },
   "worldtravel": {
     "all": "Todo",
