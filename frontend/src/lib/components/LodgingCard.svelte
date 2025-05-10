@@ -138,7 +138,9 @@
 					<p>
 						{formatDateInTimezone(lodging.check_in ?? '', lodging.timezone ?? undefined)} –
 						{formatDateInTimezone(lodging.check_out ?? '', lodging.timezone ?? undefined)}
-						<span class="text-xs opacity-60 ml-1">({lodging.timezone})</span>
+						{#if lodging.timezone}
+							<span class="text-xs opacity-60 ml-1">({lodging.timezone})</span>
+						{/if}
 					</p>
 				</div>
 			{/if}
