@@ -4,7 +4,8 @@
 
 	export let selectedTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	// Generate a unique ID for this component instance
-	const instanceId = `tz-selector-${crypto.randomUUID().substring(0, 8)}`;
+	const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+	const instanceId = `tz-selector-${uniqueId}`;
 
 	let dropdownOpen = false;
 	let searchQuery = '';

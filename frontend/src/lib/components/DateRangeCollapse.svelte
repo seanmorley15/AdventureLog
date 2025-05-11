@@ -141,9 +141,12 @@
 	}
 
 	function createVisitObject(): Visit | TransportationVisit {
+		// Generate a unique ID using built-in methods
+		const uniqueId = Date.now().toString(36) + Math.random().toString(36).substring(2);
+
 		if (type === 'transportation') {
 			const transportVisit: TransportationVisit = {
-				id: crypto.randomUUID(),
+				id: uniqueId,
 				start_date: utcStartDate ?? '',
 				end_date: utcEndDate ?? utcStartDate ?? '',
 				notes: note ?? '',
@@ -153,7 +156,7 @@
 			return transportVisit;
 		} else {
 			const regularVisit: Visit = {
-				id: crypto.randomUUID(),
+				id: uniqueId,
 				start_date: utcStartDate ?? '',
 				end_date: utcEndDate ?? utcStartDate ?? '',
 				notes: note ?? '',
