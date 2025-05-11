@@ -87,7 +87,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
+	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
 >
 	<CardCarousel {adventures} />
 	<div class="card-body">
@@ -137,7 +137,7 @@
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<ul
 						tabindex="0"
-						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
 					>
 						{#if type != 'link' && type != 'viewonly'}
 							<button
