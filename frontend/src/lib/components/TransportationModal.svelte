@@ -41,6 +41,13 @@
 		end_timezone: transportationToEdit?.end_timezone || ''
 	};
 
+	let startTimezone: string | undefined = transportation.start_timezone ?? undefined;
+	let endTimezone: string | undefined = transportation.end_timezone ?? undefined;
+
+	// Later, you should manually sync these back to `transportation` if needed
+	$: transportation.start_timezone = startTimezone ?? '';
+	$: transportation.end_timezone = endTimezone ?? '';
+
 	let starting_airport: string = '';
 	let ending_airport: string = '';
 
@@ -345,8 +352,8 @@
 					type="transportation"
 					bind:utcStartDate={transportation.date}
 					bind:utcEndDate={transportation.end_date}
-					bind:selectedStartTimezone={transportation.start_timezone}
-					bind:selectedEndTimezone={transportation.end_timezone}
+					bind:selectedStartTimezone={startTimezone}
+					bind:selectedEndTimezone={endTimezone}
 					{collection}
 				/>
 

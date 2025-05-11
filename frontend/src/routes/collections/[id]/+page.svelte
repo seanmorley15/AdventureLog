@@ -300,7 +300,7 @@
 	function handleHashChange() {
 		const hash = window.location.hash.replace('#', '');
 		if (hash) {
-			currentView = hash
+			currentView = hash;
 		} else if (!collection.start_date) {
 			currentView = 'all';
 		} else {
@@ -308,7 +308,7 @@
 		}
 	}
 
-	function changeHash(event) {
+	function changeHash(event: any) {
 		window.location.hash = '#' + event.target.value;
 	}
 
@@ -776,7 +776,8 @@
 	{/if}
 
 	{#if collection.id}
-		<select class="select select-bordered border-primary md:hidden w-full"
+		<select
+			class="select select-bordered border-primary md:hidden w-full"
 			value={currentView}
 			on:change={changeHash}
 		>

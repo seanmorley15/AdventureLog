@@ -208,8 +208,8 @@
 					bind:checked={allDay}
 					on:change={() => {
 						if (allDay) {
-							localStartDate = localStartDate.split('T')[0];
-							localEndDate = localEndDate.split('T')[0];
+							localStartDate = localStartDate ? localStartDate.split('T')[0] : '';
+							localEndDate = localEndDate ? localEndDate.split('T')[0] : '';
 						} else {
 							localStartDate = localStartDate + 'T00:00';
 							localEndDate = localEndDate + 'T23:59';
@@ -405,7 +405,9 @@
 							<p class="text-sm text-base-content font-medium">
 								{#if isAllDay(visit.start_date)}
 									<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
-									{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+									{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+										? visit.end_date.split('T')[0]
+										: ''}
 								{:else if 'start_timezone' in visit}
 									{formatDateInTimezone(visit.start_date, visit.start_timezone)} – {formatDateInTimezone(
 										visit.end_date,
