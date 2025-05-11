@@ -1,3 +1,5 @@
+import { VALID_TIMEZONES } from './dateUtils';
+
 export type User = {
 	pk: number;
 	username: string;
@@ -30,6 +32,7 @@ export type Adventure = {
 		id: string;
 		start_date: string;
 		end_date: string;
+		timezone: string | null;
 		notes: string;
 	}[];
 	collection?: string | null;
@@ -42,6 +45,15 @@ export type Adventure = {
 	category: Category | null;
 	attachments: Attachment[];
 	user?: User | null;
+};
+
+export type AdditionalAdventure = Adventure & {
+	sun_times: {
+		date: string;
+		visit_id: string;
+		sunrise: string;
+		sunset: string;
+	}[];
 };
 
 export type Country = {
@@ -151,6 +163,8 @@ export type Transportation = {
 	link: string | null;
 	date: string | null; // ISO 8601 date string
 	end_date: string | null; // ISO 8601 date string
+	start_timezone: string | null;
+	end_timezone: string | null;
 	flight_number: string | null;
 	from_location: string | null;
 	to_location: string | null;
@@ -279,6 +293,7 @@ export type Lodging = {
 	link: string | null;
 	check_in: string | null; // ISO 8601 date string
 	check_out: string | null; // ISO 8601 date string
+	timezone: string | null;
 	reservation_number: string | null;
 	price: number | null;
 	latitude: number | null;

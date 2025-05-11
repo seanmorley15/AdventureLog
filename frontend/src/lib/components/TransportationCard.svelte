@@ -7,8 +7,33 @@
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
+	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
 
+	function getTransportationIcon(type: string) {
+		if (type in TRANSPORTATION_TYPES_ICONS) {
+			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
+		} else {
+			return '🚗';
+		}
+	}
 	const dispatch = createEventDispatcher();
+
+	function formatDateInTimezone(utcDate: string, timezone?: string): string {
+		if (!utcDate) return '';
+		try {
+			return new Intl.DateTimeFormat(undefined, {
+				timeZone: timezone,
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				hour: '2-digit',
+				minute: '2-digit',
+				hour12: true
+			}).format(new Date(utcDate));
+		} catch {
+			return new Date(utcDate).toLocaleString();
+		}
+	}
 
 	export let transportation: Transportation;
 	export let user: User | null = null;
@@ -102,20 +127,20 @@
 >
 	<div class="card-body space-y-4">
 		<!-- Title and Type -->
-		<div class="flex items-center justify-between">
-			<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
-			<div class="flex items-center gap-2">
-				<div class="badge badge-secondary">
-					{$t(`transportation.modes.${transportation.type}`)}
-				</div>
-				{#if transportation.type == 'plane' && transportation.flight_number}
-					<div class="badge badge-neutral-200">{transportation.flight_number}</div>
-				{/if}
+		<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
+		<div>
+			<div class="badge badge-secondary">
+				{$t(`transportation.modes.${transportation.type}`) +
+					' ' +
+					getTransportationIcon(transportation.type)}
 			</div>
+			{#if transportation.type == 'plane' && transportation.flight_number}
+				<div class="badge badge-neutral-200">{transportation.flight_number}</div>
+			{/if}
+			{#if unlinked}
+				<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+			{/if}
 		</div>
-		{#if unlinked}
-			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-		{/if}
 
 		<!-- Locations -->
 		<div class="space-y-2">
@@ -128,7 +153,12 @@
 			{#if transportation.date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>{new Date(transportation.date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+					<p>
+						{formatDateInTimezone(transportation.date, transportation.start_timezone ?? undefined)}
+						{#if transportation.start_timezone}
+							<span class="text-xs opacity-60 ml-1">({transportation.start_timezone})</span>
+						{/if}
+					</p>
 				</div>
 			{/if}
 		</div>
@@ -146,7 +176,15 @@
 			{#if transportation.end_date}
 				<div class="flex items-center gap-2">
 					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
-					<p>{new Date(transportation.end_date).toLocaleString(undefined, { timeZone: 'UTC' })}</p>
+					<p>
+						{formatDateInTimezone(
+							transportation.end_date,
+							transportation.end_timezone || undefined
+						)}
+						{#if transportation.end_timezone}
+							<span class="text-xs opacity-60 ml-1">({transportation.end_timezone})</span>
+						{/if}
+					</p>
 				</div>
 			{/if}
 		</div>

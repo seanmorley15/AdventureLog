@@ -1,0 +1,64 @@
+name: Test Backend
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'backend/server/**'
+      - '.github/workflows/backend-test.yml'
+  push:
+    paths:
+      - 'backend/server/**'
+      - '.github/workflows/backend-test.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: set up python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: install dependencies
+        run: |
+          sudo apt update -q
+          sudo apt install -y -q \
+            python3-gdal
+
+      - name: start database
+        run: |
+          docker compose -f .github/.docker-compose-database.yml up -d
+
+      - name: install python libreries
+        working-directory: backend/server
+        run: |
+          pip install -r requirements.txt
+
+      - name: run server
+        working-directory: backend/server
+        env:
+          PGHOST: "127.0.0.1"
+          PGDATABASE: "database"
+          PGUSER: "adventure"
+          PGPASSWORD: "changeme123"
+          SECRET_KEY: "changeme123"
+          DJANGO_ADMIN_USERNAME: "admin"
+          DJANGO_ADMIN_PASSWORD: "admin"
+          DJANGO_ADMIN_EMAIL: "admin@example.com"
+          PUBLIC_URL: "http://localhost:8000"
+          CSRF_TRUSTED_ORIGINS: "http://localhost:5173,http://localhost:8000"
+          DEBUG: "True"
+          FRONTEND_URL: "http://localhost:5173"
+        run: |
+          python manage.py migrate
+          python manage.py runserver &
+
+      - name: wait for backend to boot
+        run: >
+          curl -fisS --retry 60 --retry-delay 1 --retry-all-errors
+          http://localhost:8000/

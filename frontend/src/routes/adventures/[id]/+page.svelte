@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure } from '$lib/types';
+	import type { AdditionalAdventure, Adventure } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -10,8 +10,11 @@
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import toGeoJSON from '@mapbox/togeojson';
+	// @ts-ignore
+	import { DateTime } from 'luxon';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
+	import WeatherSunset from '~icons/mdi/weather-sunset';
 
 	let geojson: any;
 
@@ -75,7 +78,7 @@
 	export let data: PageData;
 	console.log(data);
 
-	let adventure: Adventure;
+	let adventure: AdditionalAdventure;
 
 	let currentSlide = 0;
 
@@ -91,6 +94,7 @@
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
+	import { isAllDay } from '$lib';
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -111,7 +115,7 @@
 		await getGpxFiles();
 	});
 
-	async function saveEdit(event: CustomEvent<Adventure>) {
+	async function saveEdit(event: CustomEvent<AdditionalAdventure>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
 		geojson = null;
@@ -410,23 +414,41 @@
 										</p>
 										<!-- show each visit start and end date as well as notes -->
 										{#each adventure.visits as visit}
-											<div class="grid gap-2">
-												<p class="text-sm text-muted-foreground">
-													{visit.start_date
-														? new Date(visit.start_date).toLocaleDateString(undefined, {
-																timeZone: 'UTC'
-															})
-														: ''}
-													{visit.end_date &&
-													visit.end_date !== '' &&
-													visit.end_date !== visit.start_date
-														? ' - ' +
-															new Date(visit.end_date).toLocaleDateString(undefined, {
-																timeZone: 'UTC'
-															})
-														: ''}
-												</p>
-												<p class="text-sm text-muted-foreground -mt-2 mb-2">{visit.notes}</p>
+											<div
+												class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2 mb-1"
+											>
+												{#if isAllDay(visit.start_date)}
+													<p class="text-sm text-base-content font-medium">
+														<span class="badge badge-outline mr-2">All Day</span>
+														{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+													</p>
+												{:else}
+													<p class="text-sm text-base-content font-medium">
+														{#if visit.timezone}
+															<!-- Use visit.timezone -->
+															🕓 <strong>{visit.timezone}</strong><br />
+															{DateTime.fromISO(visit.start_date, { zone: 'utc' })
+																.setZone(visit.timezone)
+																.toLocaleString(DateTime.DATETIME_MED)} –
+															{DateTime.fromISO(visit.end_date, { zone: 'utc' })
+																.setZone(visit.timezone)
+																.toLocaleString(DateTime.DATETIME_MED)}
+														{:else}
+															<!-- Fallback to local browser time -->
+															🕓 <strong>Local Time</strong><br />
+															{DateTime.fromISO(visit.start_date).toLocaleString(
+																DateTime.DATETIME_MED
+															)} –
+															{DateTime.fromISO(visit.end_date).toLocaleString(
+																DateTime.DATETIME_MED
+															)}
+														{/if}
+													</p>
+												{/if}
+
+												{#if visit.notes}
+													<p class="text-sm text-base-content opacity-70 italic">"{visit.notes}"</p>
+												{/if}
 											</div>
 										{/each}
 									</div>
@@ -445,15 +467,34 @@
 										</div>
 									</div>
 								{/if}
-								<a
-									class="btn btn-neutral btn-sm max-w-32"
-									href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-									target="_blank"
-									rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
-								>
+								{#if adventure.longitude && adventure.latitude}
+									<div>
+										<p class="mb-1">{$t('adventures.open_in_maps')}:</p>
+										<div class="flex flex-wrap gap-2">
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Apple</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.google.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Google</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://www.openstreetmap.org/?mlat=${adventure.latitude}&mlon=${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">OSM</a
+											>
+										</div>
+									</div>
+								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
+									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full md:w-10/12 rounded-lg"
 									standardControls
 									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
 									zoom={adventure.longitude ? 12 : 1}
@@ -484,22 +525,48 @@
 													{adventure.category?.display_name + ' ' + adventure.category?.icon}
 												</p>
 												{#if adventure.visits.length > 0}
-													<p class="text-black text-sm">
+													<p>
 														{#each adventure.visits as visit}
-															{visit.start_date
-																? new Date(visit.start_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															{visit.end_date &&
-															visit.end_date !== '' &&
-															visit.end_date !== visit.start_date
-																? ' - ' +
-																	new Date(visit.end_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															<br />
+															<div
+																class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2"
+															>
+																<p class="text-sm text-base-content font-medium">
+																	{#if isAllDay(visit.start_date)}
+																		<span class="badge badge-outline mr-2">All Day</span>
+																		{visit.start_date.split('T')[0]} – {visit.end_date.split(
+																			'T'
+																		)[0]}
+																	{:else}
+																		<span>
+																			<strong>Local:</strong>
+																			{DateTime.fromISO(visit.start_date).toLocaleString(
+																				DateTime.DATETIME_MED
+																			)} –
+																			{DateTime.fromISO(visit.end_date).toLocaleString(
+																				DateTime.DATETIME_MED
+																			)}
+																		</span>
+																	{/if}
+																</p>
+
+																{#if !isAllDay(visit.start_date) && visit.timezone}
+																	<p class="text-sm text-base-content opacity-80">
+																		<strong>{visit.timezone}:</strong>
+																		{DateTime.fromISO(visit.start_date, { zone: 'utc' })
+																			.setZone(visit.timezone)
+																			.toLocaleString(DateTime.DATETIME_MED)} –
+																		{DateTime.fromISO(visit.end_date, { zone: 'utc' })
+																			.setZone(visit.timezone)
+																			.toLocaleString(DateTime.DATETIME_MED)}
+																	</p>
+																{/if}
+
+																{#if visit.notes}
+																	<p class="text-sm text-base-content opacity-70 italic">
+																		"{visit.notes}"
+																	</p>
+																{/if}
+															</div>
 														{/each}
 													</p>
 												{/if}
@@ -509,60 +576,108 @@
 								</MapLibre>
 							{/if}
 						</div>
-						{#if adventure.attachments && adventure.attachments.length > 0}
-							<div>
-								<!-- attachments -->
-								<h2 class="text-2xl font-bold mt-4">
-									{$t('adventures.attachments')}
-									<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
-										<button class="btn btn-sm btn-circle btn-neutral">
-											<LightbulbOn class="w-6 h-6" />
-										</button>
-									</div>
-								</h2>
 
-								<div class="grid gap-4 mt-4">
-									{#if adventure.attachments && adventure.attachments.length > 0}
-										<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-											{#each adventure.attachments as attachment}
-												<AttachmentCard {attachment} />
-											{/each}
+						<!-- Additional Info Display Section -->
+
+						<div>
+							{#if adventure.sun_times && adventure.sun_times.length > 0}
+								<h2 class="text-2xl font-bold mt-4 mb-4">{$t('adventures.additional_info')}</h2>
+								{#if adventure.sun_times && adventure.sun_times.length > 0}
+									<div class="collapse collapse-plus bg-base-200 mb-2 overflow-visible">
+										<input type="checkbox" />
+										<div class="collapse-title text-xl font-medium">
+											<span>
+												{$t('adventures.sunrise_sunset')}
+												<WeatherSunset class="w-6 h-6 inline-block ml-2 -mt-1" />
+											</span>
 										</div>
-									{/if}
-								</div>
-							</div>
-						{/if}
-						{#if adventure.images && adventure.images.length > 0}
-							<div>
-								<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
-								<div class="grid gap-4 mt-4">
-									{#if adventure.images && adventure.images.length > 0}
-										<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-											{#each adventure.images as image}
-												<div class="relative">
-													<!-- svelte-ignore a11y-no-static-element-interactions -->
-													<!-- svelte-ignore a11y-missing-attribute -->
-													<!-- svelte-ignore a11y-missing-content -->
-													<!-- svelte-ignore a11y-click-events-have-key-events -->
-													<div
-														class="w-full h-48 bg-cover bg-center rounded-lg"
-														style="background-image: url({image.image})"
-														on:click={() => (image_url = image.image)}
-													></div>
-													{#if image.is_primary}
-														<div
-															class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
-														>
-															{$t('adventures.primary')}
+
+										<div class="collapse-content">
+											<div class="grid gap-4 mt-4">
+												<!-- Sunrise and Sunset times -->
+												{#each adventure.sun_times as sun_time}
+													<div class="grid md:grid-cols-3 gap-4">
+														<div>
+															<p class="text-sm text-muted-foreground">Date</p>
+															<p class="text-base font-medium">
+																{new Date(sun_time.date).toLocaleDateString()}
+															</p>
 														</div>
-													{/if}
-												</div>
-											{/each}
+														<div>
+															<p class="text-sm text-muted-foreground">Sunrise</p>
+															<p class="text-base font-medium">
+																{sun_time.sunrise}
+															</p>
+														</div>
+														<div>
+															<p class="text-sm text-muted-foreground">Sunset</p>
+															<p class="text-base font-medium">
+																{sun_time.sunset}
+															</p>
+														</div>
+													</div>
+												{/each}
+											</div>
 										</div>
-									{/if}
+									</div>
+								{/if}
+							{/if}
+
+							{#if adventure.attachments && adventure.attachments.length > 0}
+								<div>
+									<!-- attachments -->
+									<h2 class="text-2xl font-bold mt-4">
+										{$t('adventures.attachments')}
+										<div class="tooltip z-10" data-tip={$t('adventures.gpx_tip')}>
+											<button class="btn btn-sm btn-circle btn-neutral">
+												<LightbulbOn class="w-6 h-6" />
+											</button>
+										</div>
+									</h2>
+
+									<div class="grid gap-4 mt-4">
+										{#if adventure.attachments && adventure.attachments.length > 0}
+											<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+												{#each adventure.attachments as attachment}
+													<AttachmentCard {attachment} />
+												{/each}
+											</div>
+										{/if}
+									</div>
 								</div>
-							</div>
-						{/if}
+							{/if}
+							{#if adventure.images && adventure.images.length > 0}
+								<div>
+									<h2 class="text-2xl font-bold mt-4">{$t('adventures.images')}</h2>
+									<div class="grid gap-4 mt-4">
+										{#if adventure.images && adventure.images.length > 0}
+											<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+												{#each adventure.images as image}
+													<div class="relative">
+														<!-- svelte-ignore a11y-no-static-element-interactions -->
+														<!-- svelte-ignore a11y-missing-attribute -->
+														<!-- svelte-ignore a11y-missing-content -->
+														<!-- svelte-ignore a11y-click-events-have-key-events -->
+														<div
+															class="w-full h-48 bg-cover bg-center rounded-lg"
+															style="background-image: url({image.image})"
+															on:click={() => (image_url = image.image)}
+														></div>
+														{#if image.is_primary}
+															<div
+																class="absolute top-0 right-0 bg-primary text-white px-2 py-1 rounded-bl-lg"
+															>
+																{$t('adventures.primary')}
+															</div>
+														{/if}
+													</div>
+												{/each}
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>
