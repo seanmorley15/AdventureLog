@@ -305,7 +305,9 @@
     "invalid_date_range": "无效的日期范围",
     "sunrise_sunset": "日出",
     "timezone": "时区",
-    "no_visits": "没有访问"
+    "no_visits": "没有访问",
+    "arrival_timezone": "到达时区",
+    "departure_timezone": "离开时区"
   },
   "auth": {
     "forgot_password": "忘记密码？",

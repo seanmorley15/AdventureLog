@@ -257,7 +257,9 @@
     "invalid_date_range": "Plage de dates non valide",
     "sunrise_sunset": "Lever du soleil",
     "timezone": "Fuseau horaire",
-    "no_visits": "Pas de visites"
+    "no_visits": "Pas de visites",
+    "arrival_timezone": "Fuseau horaire d'arrivée",
+    "departure_timezone": "Fuseau horaire de départ"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

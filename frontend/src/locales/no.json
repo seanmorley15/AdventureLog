@@ -305,7 +305,9 @@
     "ordered_itinerary": "Bestilt reiserute",
     "sunrise_sunset": "Soloppgang",
     "timezone": "Tidssone",
-    "no_visits": "Ingen besøk"
+    "no_visits": "Ingen besøk",
+    "arrival_timezone": "Ankomst tidssone",
+    "departure_timezone": "Avgangstidssone"
   },
   "worldtravel": {
     "country_list": "Liste over land",

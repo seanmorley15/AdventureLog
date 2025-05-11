@@ -305,7 +305,9 @@
     "invalid_date_range": "Niepoprawny zakres dat",
     "sunrise_sunset": "Wschód słońca",
     "timezone": "Strefa czasowa",
-    "no_visits": "Brak wizyt"
+    "no_visits": "Brak wizyt",
+    "arrival_timezone": "Strefa czasowa przyjazdu",
+    "departure_timezone": "Strefa czasowa odlotu"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

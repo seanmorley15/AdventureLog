@@ -305,7 +305,9 @@
     "invalid_date_range": "Rango de fechas no válido",
     "sunrise_sunset": "Amanecer",
     "timezone": "Zona horaria",
-    "no_visits": "No hay visitas"
+    "no_visits": "No hay visitas",
+    "arrival_timezone": "Zona horaria de llegada",
+    "departure_timezone": "Zona horaria de salida"
   },
   "worldtravel": {
     "all": "Todo",
