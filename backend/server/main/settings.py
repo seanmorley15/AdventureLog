@@ -71,6 +71,7 @@ MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'adventures.middleware.XSessionTokenMiddleware',
     'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
+    'adventures.middleware.DisableCSRFForMobileLoginSignup',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -30,3 +30,18 @@ class DisableCSRFForSessionTokenMiddleware(MiddlewareMixin):
     def process_request(self, request):
         if 'X-Session-Token' in request.headers:
             setattr(request, '_dont_enforce_csrf_checks', True)
+
+class DisableCSRFForMobileLoginSignup(MiddlewareMixin):
+    def process_request(self, request):
+        is_mobile = request.headers.get('X-Is-Mobile', '').lower() == 'true'
+        is_login_or_signup = request.path in ['/auth/browser/v1/auth/login', '/auth/browser/v1/auth/signup']
+        print(f"Request path: {request.path}")
+        print(f"Is mobile: {is_mobile}")
+        print(f"Is login/signup: {is_login_or_signup}")
+        print(f"Request headers: {request.headers}")
+
+        if is_mobile and is_login_or_signup:
+            print("✅ Disabling CSRF for mobile login/signup")
+            setattr(request, '_dont_enforce_csrf_checks', True)
+        else:
+            print("🔒 CSRF not disabled for this request")
