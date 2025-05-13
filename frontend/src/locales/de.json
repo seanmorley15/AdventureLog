@@ -259,7 +259,9 @@
     "timezone": "Zeitzone",
     "no_visits": "Keine Besuche",
     "arrival_timezone": "Ankunftszeitzone",
-    "departure_timezone": "Abfahrtszeit"
+    "departure_timezone": "Abfahrtszeit",
+    "arrival_date": "Ankunftsdatum",
+    "departure_date": "Abflugdatum"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

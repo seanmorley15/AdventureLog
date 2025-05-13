@@ -307,7 +307,9 @@
     "timezone": "Zona horaria",
     "no_visits": "No hay visitas",
     "arrival_timezone": "Zona horaria de llegada",
-    "departure_timezone": "Zona horaria de salida"
+    "departure_timezone": "Zona horaria de salida",
+    "arrival_date": "Fecha de llegada",
+    "departure_date": "Fecha de salida"
   },
   "worldtravel": {
     "all": "Todo",

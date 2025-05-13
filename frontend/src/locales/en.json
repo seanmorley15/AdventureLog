@@ -67,6 +67,8 @@
 		"no_visits": "No visits",
 		"departure_timezone": "Departure Timezone",
 		"arrival_timezone": "Arrival Timezone",
+		"departure_date": "Departure Date",
+		"arrival_date": "Arrival Date",
 		"no_image_found": "No image found",
 		"collection_link_error": "Error linking adventure to collection",
 		"adventure_delete_confirm": "Are you sure you want to delete this adventure? This action cannot be undone.",

@@ -259,7 +259,9 @@
     "timezone": "시간대",
     "no_visits": "방문 없음",
     "arrival_timezone": "도착 시간대",
-    "departure_timezone": "출발 시간대"
+    "departure_timezone": "출발 시간대",
+    "arrival_date": "도착 날짜",
+    "departure_date": "출발 날짜"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

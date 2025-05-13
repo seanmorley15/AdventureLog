@@ -259,7 +259,9 @@
     "timezone": "Tidszon",
     "no_visits": "Inga besök",
     "arrival_timezone": "Ankomsttidszon",
-    "departure_timezone": "Avgångstidszon"
+    "departure_timezone": "Avgångstidszon",
+    "arrival_date": "Ankomstdatum",
+    "departure_date": "Avgångsdatum"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

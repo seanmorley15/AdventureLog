@@ -307,7 +307,9 @@
     "timezone": "Strefa czasowa",
     "no_visits": "Brak wizyt",
     "arrival_timezone": "Strefa czasowa przyjazdu",
-    "departure_timezone": "Strefa czasowa odlotu"
+    "departure_timezone": "Strefa czasowa odlotu",
+    "arrival_date": "Data przyjazdu",
+    "departure_date": "Data wyjazdu"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
