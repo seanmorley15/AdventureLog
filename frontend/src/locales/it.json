@@ -259,7 +259,9 @@
     "timezone": "Fuso orario",
     "no_visits": "Nessuna visita",
     "arrival_timezone": "Fuso orario di arrivo",
-    "departure_timezone": "Fuso orario di partenza"
+    "departure_timezone": "Fuso orario di partenza",
+    "arrival_date": "Data di arrivo",
+    "departure_date": "Data di partenza"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

@@ -182,6 +182,7 @@
 				<!-- Dual timezone selectors for transportation -->
 				<div class="space-y-4">
 					<div>
+						<!-- svelte-ignore a11y-label-has-associated-control -->
 						<label class="text-sm font-medium block mb-1">
 							{$t('adventures.departure_timezone')}
 						</label>
@@ -189,6 +190,7 @@
 					</div>
 
 					<div>
+						<!-- svelte-ignore a11y-label-has-associated-control -->
 						<label class="text-sm font-medium block mb-1">
 							{$t('adventures.arrival_timezone')}
 						</label>
@@ -366,8 +368,8 @@
 		</div>
 
 		<!-- Validation Message -->
-		{#if !validateDateRange(localStartDate, localEndDate).valid}
-			<div role="alert" class="alert alert-error">
+		{#if !validateDateRange(utcStartDate ?? '', utcEndDate ?? '').valid}
+			<div role="alert" class="alert alert-error mt-2">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
 					class="h-6 w-6 shrink-0 stroke-current"

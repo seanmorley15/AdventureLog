@@ -307,7 +307,9 @@
     "timezone": "Tidssone",
     "no_visits": "Ingen besøk",
     "arrival_timezone": "Ankomst tidssone",
-    "departure_timezone": "Avgangstidssone"
+    "departure_timezone": "Avgangstidssone",
+    "arrival_date": "Ankomstdato",
+    "departure_date": "Avgangsdato"
   },
   "worldtravel": {
     "country_list": "Liste over land",

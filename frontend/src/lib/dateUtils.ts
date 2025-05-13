@@ -87,10 +87,10 @@ export function updateUTCDate({
 }
 
 /**
- * Validate date ranges
- * @param startDate - Start date string
- * @param endDate - End date string
- * @returns Object with validation result and error message
+ * Validate date ranges using UTC comparison
+ * @param startDate - Start date string in UTC (ISO format)
+ * @param endDate - End date string in UTC (ISO format)
+ * @returns Object with validation result and optional error message
  */
 export function validateDateRange(
 	startDate: string,
@@ -106,11 +106,12 @@ export function validateDateRange(
 	if (
 		startDate &&
 		endDate &&
-		DateTime.fromISO(startDate).toMillis() > DateTime.fromISO(endDate).toMillis()
+		DateTime.fromISO(startDate, { zone: 'utc' }).toMillis() >
+			DateTime.fromISO(endDate, { zone: 'utc' }).toMillis()
 	) {
 		return {
 			valid: false,
-			error: 'Start date must be before end date'
+			error: 'Start date must be before end date (based on UTC)'
 		};
 	}
 

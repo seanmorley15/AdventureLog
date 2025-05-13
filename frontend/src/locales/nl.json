@@ -259,7 +259,9 @@
     "timezone": "Tijdzone",
     "no_visits": "Geen bezoeken",
     "arrival_timezone": "Aankomsttijdzone",
-    "departure_timezone": "Vertrektijdzone"
+    "departure_timezone": "Vertrektijdzone",
+    "arrival_date": "Aankomstdatum",
+    "departure_date": "Vertrekdatum"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
