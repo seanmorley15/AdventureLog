@@ -607,7 +607,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if !collection?.id}
+							{#if !adventure?.collection}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">
