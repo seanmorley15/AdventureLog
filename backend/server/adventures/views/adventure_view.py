@@ -10,7 +10,6 @@ from adventures.models import Adventure, Category, Transportation, Lodging
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import AdventureSerializer, TransportationSerializer, LodgingSerializer
 from adventures.utils import pagination
-from django.contrib.auth.models import AnonymousUser
 import requests
 
 class AdventureViewSet(viewsets.ModelViewSet):
