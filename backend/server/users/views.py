@@ -165,7 +165,7 @@ class EnabledSocialProvidersView(APIView):
         providers = []
         for provider in social_providers:
             if provider.provider == 'openid_connect':
-                new_provider = f'oidc/{provider.client_id}'
+                new_provider = f'oidc/{provider.provider_id}'
             else:
                 new_provider = provider.provider
             providers.append({
