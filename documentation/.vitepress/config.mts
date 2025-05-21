@@ -15,6 +15,14 @@ export default defineConfig({
         "data-website-id": "a7552764-5a1d-4fe7-80c2-5331e1a53cb6",
       },
     ],
+
+    [
+      "link",
+      {
+        rel: "me",
+        href: "https://mastodon.social/@adventurelog",
+      },
+    ],
   ],
   ignoreDeadLinks: "localhostLinks",
   title: "AdventureLog",
