@@ -217,7 +217,7 @@
 							{#if adventure.visits.length > 0}
 								<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
 									🎯 {adventure.visits.length}
-									{adventure.visits.length === 1 ? 'Visit' : 'Visits'}
+									{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
 								</div>
 							{/if}
 						</div>
@@ -274,7 +274,7 @@
 			<div class="lg:col-span-2 space-y-6 sm:space-y-8">
 				<!-- Author Info Card -->
 				{#if adventure.user}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<div class="flex items-center gap-4">
 								{#if adventure.user.profile_pic}
@@ -312,9 +312,11 @@
 											{adventure.user.last_name || ''}
 										{/if}
 									</div>
-									<div class="flex items-center gap-2 text-sm opacity-70">
+									<div class="flex items-center gap-2 text-sm opacity-70 mt-1">
 										<div class="badge badge-sm">
-											{adventure.is_public ? '🌍 Public' : '🔒 Private'}
+											{adventure.is_public
+												? `🌍 ${$t('adventures.public')}`
+												: `🔒 ${$t('adventures.private')}`}
 										</div>
 										{#if data.props.collection}
 											<div class="badge badge-sm badge-outline">
@@ -332,9 +334,9 @@
 
 				<!-- Description Card -->
 				{#if adventure.description}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">📝 Description</h2>
+							<h2 class="card-title text-2xl mb-4">📝 {$t('adventures.description')}</h2>
 							<article class="prose max-w-none">
 								{@html DOMPurify.sanitize(renderMarkdown(adventure.description))}
 							</article>
@@ -344,9 +346,9 @@
 
 				<!-- Visits Timeline -->
 				{#if adventure.visits.length > 0}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title text-2xl mb-6">🎯 Visit History</h2>
+							<h2 class="card-title text-2xl mb-6">🎯 {$t('adventures.visits')}</h2>
 							<div class="space-y-4">
 								{#each adventure.visits as visit, index}
 									<div class="flex gap-4">
@@ -369,18 +371,18 @@
 													{:else}
 														<div class="space-y-2">
 															<div class="flex items-center gap-2">
-																<span class="badge badge-primary">🕓 Timed</span>
+																<span class="badge badge-primary">🕓 {$t('adventures.timed')}</span>
 																{#if visit.timezone}
 																	<span class="badge badge-outline">{visit.timezone}</span>
 																{/if}
 															</div>
 															<div class="text-sm">
 																{#if visit.timezone}
-																	<strong>Start:</strong>
+																	<strong>{$t('adventures.start')}:</strong>
 																	{DateTime.fromISO(visit.start_date, { zone: 'utc' })
 																		.setZone(visit.timezone)
 																		.toLocaleString(DateTime.DATETIME_MED)}<br />
-																	<strong>End:</strong>
+																	<strong>{$t('adventures.end')}:</strong>
 																	{DateTime.fromISO(visit.end_date, { zone: 'utc' })
 																		.setZone(visit.timezone)
 																		.toLocaleString(DateTime.DATETIME_MED)}
@@ -398,7 +400,7 @@
 														</div>
 													{/if}
 													{#if visit.notes}
-														<div class="mt-3 p-3 bg-base-100 rounded-lg">
+														<div class="mt-3 p-3 bg-base-200 rounded-lg">
 															<p class="text-sm italic">"{visit.notes}"</p>
 														</div>
 													{/if}
@@ -414,9 +416,9 @@
 
 				<!-- Map Section -->
 				{#if (adventure.longitude && adventure.latitude) || geojson}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">🗺️ Location & Route</h2>
+							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.location')}</h2>
 
 							{#if adventure.longitude && adventure.latitude}
 								<!-- Compact Coordinates Card -->
@@ -425,20 +427,23 @@
 								>
 									<div class="card-body p-4">
 										<div class="flex items-center justify-between mb-3">
-											<h3 class="text-lg font-bold flex items-center gap-2">🎯 Coordinates</h3>
-											<div class="badge badge-primary badge-sm">GPS</div>
+											<h3 class="text-lg font-bold flex items-center gap-2">
+												🎯 {$t('adventures.coordinates')}
+											</h3>
 										</div>
 
 										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div class="text-center p-2 bg-base-100/70 rounded border border-primary/10">
-												<div class="text-xs text-primary/70 uppercase tracking-wide">Latitude</div>
+											<div class="text-center p-2 bg-base-200/70 rounded border border-primary/10">
+												<div class="text-xs text-primary/70 uppercase tracking-wide">
+													{$t('adventures.latitude')}
+												</div>
 												<div class="text-lg font-bold text-primary">{adventure.latitude}°</div>
 											</div>
 											<div
-												class="text-center p-2 bg-base-100/70 rounded border border-secondary/10"
+												class="text-center p-2 bg-base-200/70 rounded border border-secondary/10"
 											>
 												<div class="text-xs text-secondary/70 uppercase tracking-wide">
-													Longitude
+													{$t('adventures.longitude')}
 												</div>
 												<div class="text-lg font-bold text-secondary">{adventure.longitude}°</div>
 											</div>
@@ -452,13 +457,15 @@
 														class="btn btn-xs btn-outline hover:btn-info"
 														on:click={() => {
 															if (adventure.country && adventure.region) {
-																goto(`/worldtravel/${adventure.country}/${adventure.region}`);
+																goto(
+																	`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`
+																);
 															} else if (adventure.country) {
-																goto(`/worldtravel/${adventure.country}`);
+																goto(`/worldtravel/${adventure.country.country_code}`);
 															}
 														}}
 													>
-														🏙️ {adventure.city}
+														🏙️ {adventure.city.name}
 													</button>
 												{/if}
 												{#if adventure.region}
@@ -466,21 +473,23 @@
 														class="btn btn-xs btn-outline hover:btn-warning"
 														on:click={() => {
 															if (adventure.country && adventure.region) {
-																goto(`/worldtravel/${adventure.country}/${adventure.region}`);
+																goto(
+																	`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`
+																);
 															} else if (adventure.country) {
-																goto(`/worldtravel/${adventure.country}`);
+																goto(`/worldtravel/${adventure.country.country_code}`);
 															}
 														}}
 													>
-														🗺️ {adventure.region}
+														🗺️ {adventure.region.name}
 													</button>
 												{/if}
 												{#if adventure.country}
 													<button
 														class="btn btn-xs btn-outline hover:btn-success"
-														on:click={() => goto(`/worldtravel/${adventure.country}`)}
+														on:click={() => goto(`/worldtravel/${adventure.country?.country_code}`)}
 													>
-														🌎 {adventure.country}
+														🌎 {adventure.country.name}
 													</button>
 												{/if}
 											</div>
@@ -523,7 +532,7 @@
 														`${adventure.latitude}, ${adventure.longitude}`
 													)}
 											>
-												📋 Copy Coords
+												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
@@ -532,7 +541,7 @@
 														`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
 													)}
 											>
-												🔗 Copy Link
+												🔗 {$t('adventures.copy_link')}
 											</button>
 										</div>
 									</div>
@@ -568,9 +577,8 @@
 													</p>
 													{#if adventure.visits.length > 0}
 														<div class="text-xs text-black">
-															{adventure.visits.length} visit{adventure.visits.length !== 1
-																? 's'
-																: ''}
+															{adventure.visits.length}
+															{$t('adventures.visit')}{adventure.visits.length !== 1 ? 's' : ''}
 														</div>
 													{/if}
 												</div>
@@ -587,13 +595,13 @@
 			<!-- Right Column - Sidebar -->
 			<div class="space-y-4 sm:space-y-6">
 				<!-- Quick Info Card -->
-				<div class="card bg-base-100 shadow-xl">
+				<div class="card bg-base-200 shadow-xl">
 					<div class="card-body">
-						<h3 class="card-title text-lg mb-4">ℹ️ Quick Info</h3>
+						<h3 class="card-title text-lg mb-4">ℹ️ {$t('adventures.basic_information')}</h3>
 						<div class="space-y-3">
 							{#if adventure.activity_types && adventure.activity_types?.length > 0}
 								<div>
-									<div class="text-sm opacity-70 mb-1">Activities</div>
+									<div class="text-sm opacity-70 mb-1">{$t('adventures.tags')}</div>
 									<div class="flex flex-wrap gap-1">
 										{#each adventure.activity_types as activity}
 											<span class="badge badge-sm badge-outline">{activity}</span>
@@ -603,7 +611,7 @@
 							{/if}
 							{#if adventure.link}
 								<div>
-									<div class="text-sm opacity-70 mb-1">External Link</div>
+									<div class="text-sm opacity-70 mb-1">{$t('adventures.link')}</div>
 									<a
 										href={adventure.link}
 										class="link link-primary text-sm break-all"
@@ -621,10 +629,10 @@
 
 				<!-- Sunrise/Sunset -->
 				{#if adventure.sun_times && adventure.sun_times.length > 0}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">
-								🌅 Sun Times
+								🌅 {$t('adventures.sun_times')}
 								<WeatherSunset class="w-5 h-5" />
 							</h3>
 							<div class="space-y-3">
@@ -634,7 +642,7 @@
 											{new Date(sun_time.date).toLocaleDateString()}
 										</div>
 										<div class="text-xs opacity-70">
-											Sunrise: {sun_time.sunrise} • Sunset: {sun_time.sunset}
+											{$t('adventures.sunrise')}: {sun_time.sunrise} • {$t('adventures.sunset')}: {sun_time.sunset}
 										</div>
 									</div>
 								{/each}
@@ -645,10 +653,10 @@
 
 				<!-- Attachments -->
 				{#if adventure.attachments && adventure.attachments.length > 0}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">
-								📎 Attachments
+								📎 {$t('adventures.attachments')}
 								<div class="tooltip" data-tip={$t('adventures.gpx_tip')}>
 									<LightbulbOn class="w-4 h-4 opacity-60" />
 								</div>
@@ -664,9 +672,9 @@
 
 				<!-- Additional Images -->
 				{#if adventure.images && adventure.images.length > 1}
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h3 class="card-title text-lg mb-4">🖼️ Gallery</h3>
+							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 								{#each adventure.images as image}
 									<div class="relative group">
@@ -680,7 +688,7 @@
 										></div>
 										{#if image.is_primary}
 											<div class="absolute top-1 right-1">
-												<span class="badge badge-primary badge-xs">Primary</span>
+												<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
 											</div>
 										{/if}
 									</div>

@@ -4,6 +4,7 @@ from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, 
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
+from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -82,7 +83,9 @@ class AdventureSerializer(CustomModelSerializer):
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
-    country = serializers.SerializerMethodField()
+    country = CountrySerializer(read_only=True)
+    region = RegionSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = Adventure
@@ -105,9 +108,6 @@ class AdventureSerializer(CustomModelSerializer):
             category_data['name'] = name
         return category_data
     
-    def get_country(self, obj):
-        return obj.country.country_code if obj.country else None
-
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
         

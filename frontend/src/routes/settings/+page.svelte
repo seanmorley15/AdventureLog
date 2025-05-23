@@ -34,12 +34,12 @@
 	let isMFAModalOpen: boolean = false;
 
 	const sections = [
-		{ id: 'profile', icon: '👤', label: 'Profile' },
-		{ id: 'security', icon: '🔒', label: 'Security' },
-		{ id: 'emails', icon: '📧', label: 'Emails' },
-		{ id: 'integrations', icon: '🔗', label: 'Integrations' },
-		{ id: 'admin', icon: '⚙️', label: 'Admin' },
-		{ id: 'advanced', icon: '🛠️', label: 'Advanced' }
+		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
+		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
+		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
+		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
+		{ id: 'admin', icon: '⚙️', label: () => $t('settings.admin') },
+		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
 	];
 
 	onMount(async () => {
@@ -263,11 +263,10 @@
 			<div class="flex items-center justify-between">
 				<div>
 					<h1
-						class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+						class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-1"
 					>
 						{$t('settings.settings_page')}
 					</h1>
-					<p class="text-base-content/70 mt-2">Manage your account preferences and integrations</p>
 				</div>
 			</div>
 		</div>
@@ -278,7 +277,9 @@
 			<!-- Sidebar Navigation -->
 			<div class="lg:w-1/4">
 				<div class="bg-base-100 rounded-2xl shadow-xl p-6 sticky top-8">
-					<h3 class="font-semibold text-lg mb-4 text-base-content/80">Settings Menu</h3>
+					<h3 class="font-semibold text-lg mb-4 text-base-content/80">
+						{$t('settings.settings_menu')}
+					</h3>
 					<ul class="menu menu-vertical w-full space-y-1">
 						{#each sections as section}
 							<li>
@@ -290,7 +291,7 @@
 									on:click={() => (activeSection = section.id)}
 								>
 									<span class="text-xl">{section.icon}</span>
-									<span class="font-medium">{section.label}</span>
+									<span class="font-medium">{section.label()}</span>
 								</button>
 							</li>
 						{/each}
@@ -309,9 +310,9 @@
 									<span class="text-2xl">👤</span>
 								</div>
 								<div>
-									<h2 class="text-2xl font-bold">Profile Information</h2>
+									<h2 class="text-2xl font-bold">{$t('settings.profile_info')}</h2>
 									<p class="text-base-content/70">
-										Update your personal details and profile picture
+										{$t('settings.profile_info_desc')}
 									</p>
 								</div>
 							</div>
@@ -325,6 +326,7 @@
 							>
 								<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 									<div class="form-control">
+										<!-- svelte-ignore a11y-label-has-associated-control -->
 										<label class="label">
 											<span class="label-text font-medium">{$t('auth.username')}</span>
 										</label>
@@ -333,11 +335,12 @@
 											bind:value={user.username}
 											name="username"
 											class="input input-bordered input-primary focus:input-primary"
-											placeholder="Enter your username"
+											placeholder={$t('settings.enter_username')}
 										/>
 									</div>
 
 									<div class="form-control">
+										<!-- svelte-ignore a11y-label-has-associated-control -->
 										<label class="label">
 											<span class="label-text font-medium">{$t('auth.first_name')}</span>
 										</label>
@@ -346,11 +349,12 @@
 											bind:value={user.first_name}
 											name="first_name"
 											class="input input-bordered input-primary focus:input-primary"
-											placeholder="Enter your first name"
+											placeholder={$t('settings.enter_first_name')}
 										/>
 									</div>
 
 									<div class="form-control">
+										<!-- svelte-ignore a11y-label-has-associated-control -->
 										<label class="label">
 											<span class="label-text font-medium">{$t('auth.last_name')}</span>
 										</label>
@@ -359,11 +363,12 @@
 											bind:value={user.last_name}
 											name="last_name"
 											class="input input-bordered input-primary focus:input-primary"
-											placeholder="Enter your last name"
+											placeholder={$t('settings.enter_last_name')}
 										/>
 									</div>
 
 									<div class="form-control">
+										<!-- svelte-ignore a11y-label-has-associated-control -->
 										<label class="label">
 											<span class="label-text font-medium">{$t('auth.profile_picture')}</span>
 										</label>
@@ -387,7 +392,7 @@
 										<div>
 											<span class="label-text font-medium">{$t('auth.public_profile')}</span>
 											<p class="text-sm text-base-content/60">
-												Make your profile visible to other users
+												{$t('settings.public_profile_desc')}
 											</p>
 										</div>
 									</label>
@@ -411,9 +416,9 @@
 										<span class="text-2xl">🔐</span>
 									</div>
 									<div>
-										<h2 class="text-2xl font-bold">Change Password</h2>
+										<h2 class="text-2xl font-bold">{$t('settings.change_password')}</h2>
 										<p class="text-base-content/70">
-											Update your account password for better security
+											{$t('settings.pass_change_desc')}
 										</p>
 									</div>
 								</div>
@@ -421,6 +426,7 @@
 								<form method="post" action="?/changePassword" use:enhance class="space-y-6">
 									{#if user.has_password}
 										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
 												<span class="label-text font-medium">{$t('settings.current_password')}</span
 												>
@@ -429,13 +435,14 @@
 												type="password"
 												name="current_password"
 												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter current password"
+												placeholder={$t('settings.enter_current_password')}
 											/>
 										</div>
 									{/if}
 
 									<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
 												<span class="label-text font-medium">{$t('settings.new_password')}</span>
 											</label>
@@ -443,11 +450,12 @@
 												type="password"
 												name="password1"
 												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter new password"
+												placeholder={$t('settings.enter_new_password')}
 											/>
 										</div>
 
 										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
 												<span class="label-text font-medium"
 													>{$t('settings.confirm_new_password')}</span
@@ -457,7 +465,7 @@
 												type="password"
 												name="password2"
 												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Confirm new password"
+												placeholder={$t('settings.confirm_new_password')}
 											/>
 										</div>
 									</div>
@@ -499,9 +507,9 @@
 										<span class="text-2xl">🛡️</span>
 									</div>
 									<div>
-										<h2 class="text-2xl font-bold">Two-Factor Authentication</h2>
+										<h2 class="text-2xl font-bold">{$t('settings.mfa_page_title')}</h2>
 										<p class="text-base-content/70">
-											Add an extra layer of security to your account
+											{$t('settings.mfa_desc')}
 										</p>
 									</div>
 								</div>
@@ -514,15 +522,15 @@
 												: 'badge-error'} gap-2"
 										>
 											{#if data.props.authenticators}
-												✅ Enabled
+												✅ {$t('settings.enabled')}
 											{:else}
-												❌ Disabled
+												❌ {$t('settings.disabled')}
 											{/if}
 										</div>
 										<span class="font-medium">
 											{data.props.authenticators
-												? 'MFA is currently enabled'
-												: 'MFA is not enabled'}
+												? $t('settings.mfa_is_enabled')
+												: $t('settings.mfa_not_enabled')}
 										</span>
 									</div>
 
@@ -530,17 +538,19 @@
 										{#if !emails.some((e) => e.verified)}
 											<div
 												class="tooltip tooltip-warning"
-												data-tip="You need a verified email first"
+												data-tip={$t('settings.no_verified_email_warning')}
 											>
-												<button class="btn btn-disabled">Enable MFA</button>
+												<button class="btn btn-disabled">{$t('settings.enable_mfa')}</button>
 											</div>
 										{:else}
 											<button class="btn btn-primary" on:click={() => (isMFAModalOpen = true)}>
-												Enable MFA
+												{$t('settings.enable_mfa')}
 											</button>
 										{/if}
 									{:else}
-										<button class="btn btn-warning" on:click={disableMfa}> Disable MFA </button>
+										<button class="btn btn-warning" on:click={disableMfa}>
+											{$t('settings.disable_mfa')}
+										</button>
 									{/if}
 								</div>
 
@@ -572,9 +582,9 @@
 											<span class="text-2xl">🔗</span>
 										</div>
 										<div>
-											<h2 class="text-2xl font-bold">Social Authentication</h2>
+											<h2 class="text-2xl font-bold">{$t('settings.social_auth')}</h2>
 											<p class="text-base-content/70">
-												Manage social login options and password settings
+												{$t('settings.social_auth_desc_1')}
 											</p>
 										</div>
 									</div>
@@ -583,18 +593,20 @@
 										<div class="p-4 bg-base-200 rounded-xl">
 											<div class="flex items-center justify-between">
 												<div>
-													<h3 class="font-semibold">Password Authentication</h3>
+													<h3 class="font-semibold">{$t('settings.password_auth')}</h3>
 													<p class="text-sm text-base-content/70">
 														{user.disable_password
-															? 'Password login is disabled'
-															: 'Password login is enabled'}
+															? $t('settings.password_login_disabled')
+															: $t('settings.password_login_enabled')}
 													</p>
 												</div>
 												<div class="flex items-center gap-4">
 													<div
 														class="badge {user.disable_password ? 'badge-error' : 'badge-success'}"
 													>
-														{user.disable_password ? 'Disabled' : 'Enabled'}
+														{user.disable_password
+															? $t('settings.disabled')
+															: $t('settings.enabled')}
 													</div>
 													<input
 														type="checkbox"
@@ -645,9 +657,9 @@
 									<span class="text-2xl">📧</span>
 								</div>
 								<div>
-									<h2 class="text-2xl font-bold">Email Management</h2>
+									<h2 class="text-2xl font-bold">{$t('settings.email_management')}</h2>
 									<p class="text-base-content/70">
-										Manage your email addresses and verification status
+										{$t('settings.email_management_desc')}
 									</p>
 								</div>
 							</div>
@@ -662,12 +674,16 @@
 													<span class="font-medium">{email.email}</span>
 													<div class="flex gap-2">
 														{#if email.verified}
-															<div class="badge badge-success gap-1">✅ Verified</div>
+															<div class="badge badge-success gap-1">
+																✅ {$t('settings.verified')}
+															</div>
 														{:else}
 															<div class="badge badge-error gap-1">❌ Not Verified</div>
 														{/if}
 														{#if email.primary}
-															<div class="badge badge-primary gap-1">⭐ Primary</div>
+															<div class="badge badge-primary gap-1">
+																⭐ {$t('settings.primary')}
+															</div>
 														{/if}
 													</div>
 												</div>
@@ -677,7 +693,7 @@
 															class="btn btn-sm btn-secondary"
 															on:click={() => verifyEmail(email)}
 														>
-															Verify
+															{$t('settings.verify')}
 														</button>
 													{/if}
 													{#if !email.primary && email.verified}
@@ -685,14 +701,14 @@
 															class="btn btn-sm btn-primary"
 															on:click={() => primaryEmail(email)}
 														>
-															Make Primary
+															{$t('settings.make_primary')}
 														</button>
 													{/if}
 													<button
 														class="btn btn-sm btn-warning"
 														on:click={() => removeEmail(email)}
 													>
-														Remove
+														{$t('adventures.remove')}
 													</button>
 												</div>
 											</div>
@@ -707,21 +723,24 @@
 							{/if}
 
 							<!-- Add New Email -->
-							<div class="divider">Add New Email</div>
+							<div class="divider">{$t('settings.add_new_email')}</div>
 							<form class="space-y-4" on:submit|preventDefault={addEmail}>
 								<div class="form-control">
+									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label class="label">
-										<span class="label-text font-medium">New Email Address</span>
+										<span class="label-text font-medium"
+											>{$t('settings.add_new_email_address')}</span
+										>
 									</label>
 									<input
 										type="email"
 										bind:value={new_email}
 										class="input input-bordered input-primary focus:input-primary"
-										placeholder="Enter new email address"
+										placeholder={$t('settings.enter_new_email')}
 										required
 									/>
 								</div>
-								<button class="btn btn-primary w-full"> ➕ Add Email </button>
+								<button class="btn btn-primary w-full"> ➕ {$t('settings.add_email')} </button>
 							</form>
 						</div>
 					{/if}
@@ -734,9 +753,9 @@
 									<span class="text-2xl">🔗</span>
 								</div>
 								<div>
-									<h2 class="text-2xl font-bold">Integrations</h2>
+									<h2 class="text-2xl font-bold">{$t('settings.integrations')}</h2>
 									<p class="text-base-content/70">
-										Connect external services to enhance your experience
+										{$t('settings.integrations_desc')}
 									</p>
 								</div>
 							</div>
@@ -746,15 +765,15 @@
 								<div class="flex items-center gap-4 mb-4">
 									<img src={ImmichLogo} alt="Immich" class="w-8 h-8" />
 									<div>
-										<h3 class="text-xl font-bold">Immich Integration</h3>
+										<h3 class="text-xl font-bold">{$t('immich.immich_integration')}</h3>
 										<p class="text-sm text-base-content/70">
-											Connect your Immich photo management server
+											{$t('immich.immich_integration_desc')}
 										</p>
 									</div>
 									{#if immichIntegration}
-										<div class="badge badge-success ml-auto">Connected</div>
+										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
 									{:else}
-										<div class="badge badge-error ml-auto">Disconnected</div>
+										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
 									{/if}
 								</div>
 
@@ -766,10 +785,10 @@
 												if (immichIntegration) newImmichIntegration = immichIntegration;
 											}}
 										>
-											✏️ Edit
+											✏️ {$t('lodging.edit')}
 										</button>
 										<button class="btn btn-error" on:click={disableImmichIntegration}>
-											❌ Disable
+											❌ {$t('immich.disable')}
 										</button>
 									</div>
 								{/if}
@@ -777,8 +796,9 @@
 								{#if !immichIntegration || newImmichIntegration.id}
 									<div class="space-y-4">
 										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">Server URL</span>
+												<span class="label-text font-medium">{$t('immich.server_url')}</span>
 											</label>
 											<input
 												type="url"
@@ -801,30 +821,33 @@
 										</div>
 
 										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">API Key</span>
+												<span class="label-text font-medium">{$t('immich.api_key')}</span>
 											</label>
 											<input
 												type="password"
 												bind:value={newImmichIntegration.api_key}
 												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your Immich API key"
+												placeholder={$t('immich.api_key_placeholder')}
 											/>
 										</div>
 
 										<button on:click={enableImmichIntegration} class="btn btn-primary w-full">
-											{!immichIntegration?.id ? '🔗 Enable Integration' : '💾 Update Integration'}
+											{!immichIntegration?.id
+												? `🔗 ${$t('immich.enable_integration')}`
+												: `💾 ${$t('immich.update_integration')}`}
 										</button>
 									</div>
 								{/if}
 
 								<div class="mt-4 p-4 bg-info/10 rounded-lg">
-									<p class="text-sm text-info-content">
-										📖 Need help setting this up? Check out the
+									<p class="text-sm">
+										📖 {$t('immich.need_help')}
 										<a
 											class="link link-primary"
 											href="https://adventurelog.app/docs/configuration/immich_integration.html"
-											target="_blank">documentation</a
+											target="_blank">{$t('navbar.documentation')}</a
 										>
 									</p>
 								</div>
@@ -840,8 +863,8 @@
 									<span class="text-2xl">⚙️</span>
 								</div>
 								<div>
-									<h2 class="text-2xl font-bold">Administration</h2>
-									<p class="text-base-content/70">Administrative tools and settings</p>
+									<h2 class="text-2xl font-bold">{$t('settings.administration')}</h2>
+									<p class="text-base-content/70">{$t('settings.administration_desc')}</p>
 								</div>
 							</div>
 
@@ -851,12 +874,12 @@
 								>
 									<div class="card-body text-center">
 										<div class="text-4xl mb-4">🛠️</div>
-										<h3 class="card-title justify-center">Admin Panel</h3>
+										<h3 class="card-title justify-center">{$t('navbar.admin_panel')}</h3>
 										<p class="text-sm text-base-content/70 mb-4">
-											Access the full administration interface
+											{$t('settings.admin_panel_desc')}
 										</p>
 										<a class="btn btn-primary" href={`${public_url}/admin/`} target="_blank">
-											Launch Admin Panel
+											{$t('settings.launch_administration_panel')}
 										</a>
 									</div>
 								</div>
@@ -866,12 +889,12 @@
 								>
 									<div class="card-body text-center">
 										<div class="text-4xl mb-4">📍</div>
-										<h3 class="card-title justify-center">Region Updates</h3>
+										<h3 class="card-title justify-center">{$t('settings.region_updates')}</h3>
 										<p class="text-sm text-base-content/70 mb-4">
-											Update visited regions and cities
+											{$t('settings.region_updates_desc')}
 										</p>
 										<button class="btn btn-info" on:click={checkVisitedRegions}>
-											Update Regions
+											{$t('adventures.update_visited_regions')}
 										</button>
 									</div>
 								</div>
@@ -880,9 +903,9 @@
 					{:else if activeSection === 'admin' && !user.is_staff}
 						<div class="bg-base-100 rounded-2xl shadow-xl p-8 text-center">
 							<div class="text-6xl mb-4">🔒</div>
-							<h2 class="text-2xl font-bold mb-2">Access Restricted</h2>
+							<h2 class="text-2xl font-bold mb-2">{$t('settings.access_restricted')}</h2>
 							<p class="text-base-content/70">
-								Administrative features are only available to staff members.
+								{$t('settings.access_restricted_desc')}
 							</p>
 						</div>
 					{/if}
@@ -897,15 +920,17 @@
 										<span class="text-2xl">🛠️</span>
 									</div>
 									<div>
-										<h2 class="text-2xl font-bold">Advanced Settings</h2>
-										<p class="text-base-content/70">Advanced configuration and development tools</p>
+										<h2 class="text-2xl font-bold">{$t('settings.advanced_settings')}</h2>
+										<p class="text-base-content/70">
+											{$t('settings.advanced_settings_desc')}
+										</p>
 									</div>
 								</div>
 
 								<div class="space-y-6">
 									<!-- Social Auth Configuration -->
 									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">Social Authentication Setup</h3>
+										<h3 class="text-lg font-semibold mb-4">{$t('settings.social_auth_setup')}</h3>
 										<p class="text-base-content/70 mb-4">{$t('settings.social_auth_desc')}</p>
 
 										<div class="alert alert-info">
@@ -935,22 +960,22 @@
 
 									<!-- Debug Information -->
 									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">Debug Information</h3>
+										<h3 class="text-lg font-semibold mb-4">{$t('settings.debug_information')}</h3>
 										<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-mono">
 											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">User UUID:</span>
+												<span class="text-base-content/60">UUID:</span>
 												<br />
 												<span class="text-primary font-semibold">{user.uuid}</span>
 											</div>
 											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">Staff Status:</span>
+												<span class="text-base-content/60">{$t('settings.staff_status')}:</span>
 												<br />
 												<span class="badge {user.is_staff ? 'badge-success' : 'badge-error'}">
-													{user.is_staff ? 'Staff User' : 'Regular User'}
+													{user.is_staff ? $t('settings.staff_user') : $t('settings.regular_user')}
 												</span>
 											</div>
 											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">App Version:</span>
+												<span class="text-base-content/60">{$t('settings.app_version')}:</span>
 												<br />
 												<span class="text-secondary font-semibold">{appTitle} {appVersion}</span>
 											</div>
@@ -958,7 +983,7 @@
 												<span class="text-base-content/60">Profile Type:</span>
 												<br />
 												<span class="badge {user.public_profile ? 'badge-info' : 'badge-ghost'}">
-													{user.public_profile ? 'Public' : 'Private'}
+													{user.public_profile ? $t('adventures.public') : $t('adventures.private')}
 												</span>
 											</div>
 										</div>
@@ -966,10 +991,10 @@
 
 									<!-- Quick Actions -->
 									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">Quick Actions</h3>
+										<h3 class="text-lg font-semibold mb-4">{$t('settings.quick_actions')}</h3>
 										<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 											<button class="btn btn-outline btn-info" on:click={checkVisitedRegions}>
-												📍 Update Visited Regions
+												📍 {$t('adventures.update_visited_regions')}
 											</button>
 											{#if user.is_staff}
 												<a
@@ -977,7 +1002,7 @@
 													href={`${public_url}/admin/`}
 													target="_blank"
 												>
-													⚙️ Open Admin Panel
+													⚙️ {$t('settings.launch_administration_panel')}
 												</a>
 											{/if}
 										</div>
@@ -986,14 +1011,14 @@
 									<!-- Developer message and thanks -->
 									<div class="p-6 bg-base-200 rounded-xl">
 										<div class="text-center space-y-3">
-											<h4 class="font-medium">About AdventureLog</h4>
+											<h4 class="font-medium">{$t('about.about')} AdventureLog</h4>
 											<p>
-												AdventureLog is open-source software released under the GPL-3.0 License.
+												{$t('about.license')}
 											</p>
 											<p class="text-sm text-base-content/70">
 												© {copyrightYear}
 												<a href="https://seanmorley.com" target="_blank" class="link">Sean Morley</a
-												>. All rights reserved.
+												>. {$t('settings.all_rights_reserved')}
 											</p>
 											<div class="flex justify-center gap-3 mt-2">
 												<a
@@ -1001,14 +1026,14 @@
 													target="_blank"
 													class="link link-primary text-sm"
 												>
-													GitHub Repository
+													GitHub
 												</a>
 												<a
 													href="https://github.com/seanmorley15/AdventureLog/blob/main/LICENSE"
 													target="_blank"
 													class="link link-secondary text-sm"
 												>
-													License Information
+													{$t('settings.license')}
 												</a>
 											</div>
 										</div>
