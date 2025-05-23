@@ -55,7 +55,7 @@
 	}
 
 	$: if (triggerMarkVisted && willBeMarkedVisited) {
-		displaySuccessToast(); // since the server will trigger the geocode automatically, we just need to show the toast and let the server handle the rest. It's kinda a placebo effect...
+		displaySuccessToast(); // since the server will trigger the geocode automatically, we just need to show the toast and let the server handle the rest. It's kinda a placebo effect
 		triggerMarkVisted = false;
 	}
 

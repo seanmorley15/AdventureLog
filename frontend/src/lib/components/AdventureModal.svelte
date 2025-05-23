@@ -177,6 +177,8 @@
 	let wikiImageError: string = '';
 	let triggerMarkVisted: boolean = false;
 
+	let isLoading: boolean = false;
+
 	images = adventure.images || [];
 	$: {
 		if (!adventure.rating) {
@@ -414,6 +416,7 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		triggerMarkVisted = true;
+		isLoading = true;
 
 		// if category icon is empty, set it to the default icon
 		if (adventure.category?.icon == '' || adventure.category?.icon == null) {
@@ -477,6 +480,7 @@
 			}
 		}
 		imageSearch = adventure.name;
+		isLoading = false;
 	}
 </script>
 
@@ -669,7 +673,14 @@
 								</div>
 							{/if}
 							<div class="flex flex-row gap-2">
-								<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
+								{#if !isLoading}
+									<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button
+									>
+								{:else}
+									<button type="button" class="btn btn-primary"
+										><span class="loading loading-spinner loading-md"></span></button
+									>
+								{/if}
 								<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
 							</div>
 						</div>

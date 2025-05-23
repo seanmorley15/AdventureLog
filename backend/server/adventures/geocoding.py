@@ -1,4 +1,6 @@
 import requests
+import time
+import socket
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 
 def extractIsoCode(user, data):
@@ -56,16 +58,38 @@ def extractIsoCode(user, data):
             return {"region_id": iso_code, "region": region.name, "country": region.country.name, "country_id": region.country.country_code, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited, 'location_name': location_name}
         return {"error": "No region found"}
 
+def is_host_resolvable(hostname: str) -> bool:
+    try:
+        socket.gethostbyname(hostname)
+        return True
+    except socket.error:
+        return False  # silently fail
+
 def reverse_geocode(lat, lon, user):
-    """
-    Reverse geocode the given latitude and longitude using Nominatim API.
-    Returns a dictionary containing the region name, country name, and ISO code if found.
-    """
     url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
     headers = {'User-Agent': 'AdventureLog Server'}
-    response = requests.get(url, headers=headers)
+    connect_timeout = 1  # instead of 0.3
+    read_timeout = 5     # instead of 2
+
+
+    if not is_host_resolvable("nominatim.openstreetmap.org"):
+        return {"error": "DNS resolution failed"}
+
+    start = time.time()
     try:
+        response = requests.get(url, headers=headers, timeout=(connect_timeout, read_timeout))
+        response.raise_for_status()
         data = response.json()
-    except requests.exceptions.JSONDecodeError:
+        elapsed = time.time() - start
+        return extractIsoCode(user, data)
+
+    except requests.exceptions.ConnectionError as e:
+        return {"error": "Could not connect to geocoding service"}
+    except requests.exceptions.Timeout as e:
+        return {"error": "Geocoding service timed out"}
+    except requests.exceptions.HTTPError as e:
+        return {"error": f"HTTP error from geocoding service: {e}"}
+    except requests.exceptions.JSONDecodeError as e:
         return {"error": "Invalid response from geocoding service"}
-    return extractIsoCode(user, data)
+    except Exception as e:
+        return {"error": f"Unexpected geocoding error: {str(e)}"}

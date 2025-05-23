@@ -167,7 +167,6 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             instance.category = category
-        instance.save()
 
         if has_visits:
             current_visits = instance.visits.all()
