@@ -33,6 +33,66 @@ export default defineConfig({
     hostname: "https://adventurelog.app",
   },
 
+  transformPageData(pageData) {
+    if (pageData.relativePath === "index.md") {
+      const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "AdventureLog",
+        url: "https://adventurelog.app",
+        applicationCategory: "TravelApplication",
+        operatingSystem: "Web, Docker, Linux",
+        description:
+          "AdventureLog is a self-hosted platform for tracking and planning travel experiences. Built for modern explorers, it offers trip planning, journaling, tracking and location mapping in one privacy-respecting package.",
+        creator: {
+          "@type": "Person",
+          name: "Sean Morley",
+          url: "https://seanmorley.com",
+        },
+        offers: {
+          "@type": "Offer",
+          price: "0.00",
+          priceCurrency: "USD",
+          description: "Open-source version available for self-hosting.",
+        },
+        softwareVersion: "v0.9.0",
+        license:
+          "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
+        screenshot: "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
+        downloadUrl: "https://github.com/seanmorley15/adventurelog",
+        sameAs: ["https://github.com/seanmorley15/adventurelog"],
+        keywords: [
+          "self-hosted travel log",
+          "open source trip planner",
+          "travel journaling app",
+          "docker travel diary",
+          "map-based travel tracker",
+          "privacy-focused travel app",
+          "adventure log software",
+          "travel experience tracker",
+          "self-hosted travel app",
+          "open source travel software",
+          "trip planning tool",
+          "travel itinerary manager",
+          "location-based travel app",
+          "travel experience sharing",
+          "travel log application",
+        ],
+      };
+
+      return {
+        frontmatter: {
+          ...pageData.frontmatter,
+          head: [
+            ["script", { type: "application/ld+json" }, JSON.stringify(jsonLd)],
+          ],
+        },
+      };
+    }
+
+    return {};
+  },
+
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [
@@ -207,6 +267,7 @@ export default defineConfig({
       { icon: "buymeacoffee", link: "https://buymeacoffee.com/seanmorley15" },
       { icon: "x", link: "https://x.com/AdventureLogApp" },
       { icon: "mastodon", link: "https://mastodon.social/@adventurelog" },
+      { icon: "instagram", link: "https://www.instagram.com/adventurelogapp" },
     ],
   },
 });
