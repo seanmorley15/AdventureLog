@@ -579,7 +579,6 @@ class Adventure(models.Model):
 
         if self.latitude and self.longitude:
             reverse_geocode_result = reverse_geocode(self.latitude, self.longitude, self.user_id)
-            print(reverse_geocode_result)
             if 'region_id' in reverse_geocode_result:
                 region = Region.objects.filter(id=reverse_geocode_result['region_id']).first()
                 if region:
