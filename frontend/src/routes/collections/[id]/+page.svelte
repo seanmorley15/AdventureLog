@@ -300,12 +300,16 @@
 	function handleHashChange() {
 		const hash = window.location.hash.replace('#', '');
 		if (hash) {
-			currentView = hash
+			currentView = hash;
 		} else if (!collection.start_date) {
 			currentView = 'all';
 		} else {
 			currentView = 'itinerary';
 		}
+	}
+
+	function changeHash(event: any) {
+		window.location.hash = '#' + event.target.value;
 	}
 
 	onMount(() => {
@@ -772,7 +776,18 @@
 	{/if}
 
 	{#if collection.id}
-		<div class="flex justify-center mx-auto">
+		<select
+			class="select select-bordered border-primary md:hidden w-full"
+			value={currentView}
+			on:change={changeHash}
+		>
+			<option value="itinerary">📅 Itinerary</option>
+			<option value="all">🗒️ All Linked Items</option>
+			<option value="calendar">🗓️ Calendar</option>
+			<option value="map">🗺️ Map</option>
+			<option value="recommendations">👍️ Recommendations</option>
+		</select>
+		<div class="md:flex justify-center mx-auto hidden">
 			<!-- svelte-ignore a11y-missing-attribute -->
 			<div role="tablist" class="tabs tabs-boxed tabs-lg max-w-full">
 				<!-- svelte-ignore a11y-missing-attribute -->

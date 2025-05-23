@@ -300,7 +300,16 @@
     "collection_no_start_end_date": "在集合页面中添加开始日期和结束日期将在“收集”页面中解锁行程计划功能。",
     "date_itinerary": "日期行程",
     "no_ordered_items": "将带有日期的项目添加到集合中，以便在此处查看它们。",
-    "ordered_itinerary": "订购了行程"
+    "ordered_itinerary": "订购了行程",
+    "additional_info": "附加信息",
+    "invalid_date_range": "无效的日期范围",
+    "sunrise_sunset": "日出",
+    "timezone": "时区",
+    "no_visits": "没有访问",
+    "arrival_timezone": "到达时区",
+    "departure_timezone": "离开时区",
+    "arrival_date": "到达日期",
+    "departure_date": "出发日期"
   },
   "auth": {
     "forgot_password": "忘记密码？",

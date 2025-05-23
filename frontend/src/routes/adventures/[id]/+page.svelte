@@ -10,6 +10,8 @@
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import toGeoJSON from '@mapbox/togeojson';
+	// @ts-ignore
+	import { DateTime } from 'luxon';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
@@ -412,33 +414,41 @@
 										</p>
 										<!-- show each visit start and end date as well as notes -->
 										{#each adventure.visits as visit}
-											<div class="flex flex-col gap-2">
-												<div class="flex gap-2 items-center">
-													<p>
-														{#if isAllDay(visit.start_date)}
-															<!-- For all-day events, show just the date -->
-															{new Date(visit.start_date).toLocaleDateString(undefined, {
-																timeZone: 'UTC'
-															})}
+											<div
+												class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2 mb-1"
+											>
+												{#if isAllDay(visit.start_date)}
+													<p class="text-sm text-base-content font-medium">
+														<span class="badge badge-outline mr-2">All Day</span>
+														{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+													</p>
+												{:else}
+													<p class="text-sm text-base-content font-medium">
+														{#if visit.timezone}
+															<!-- Use visit.timezone -->
+															🕓 <strong>{visit.timezone}</strong><br />
+															{DateTime.fromISO(visit.start_date, { zone: 'utc' })
+																.setZone(visit.timezone)
+																.toLocaleString(DateTime.DATETIME_MED)} –
+															{DateTime.fromISO(visit.end_date, { zone: 'utc' })
+																.setZone(visit.timezone)
+																.toLocaleString(DateTime.DATETIME_MED)}
 														{:else}
-															<!-- For timed events, show date and time -->
-															{new Date(visit.start_date).toLocaleDateString()} ({new Date(
-																visit.start_date
-															).toLocaleTimeString()})
+															<!-- Fallback to local browser time -->
+															🕓 <strong>Local Time</strong><br />
+															{DateTime.fromISO(visit.start_date).toLocaleString(
+																DateTime.DATETIME_MED
+															)} –
+															{DateTime.fromISO(visit.end_date).toLocaleString(
+																DateTime.DATETIME_MED
+															)}
 														{/if}
 													</p>
-													{#if visit.end_date && visit.end_date !== visit.start_date}
-														<p>
-															- {new Date(visit.end_date).toLocaleDateString(undefined, {
-																timeZone: 'UTC'
-															})}
-															{#if !isAllDay(visit.end_date)}
-																({new Date(visit.end_date).toLocaleTimeString()})
-															{/if}
-														</p>
-													{/if}
-												</div>
-												<p class="whitespace-pre-wrap -mt-2 mb-2">{visit.notes}</p>
+												{/if}
+
+												{#if visit.notes}
+													<p class="text-sm text-base-content opacity-70 italic">"{visit.notes}"</p>
+												{/if}
 											</div>
 										{/each}
 									</div>
@@ -458,16 +468,33 @@
 									</div>
 								{/if}
 								{#if adventure.longitude && adventure.latitude}
-									<a
-										class="btn btn-neutral btn-sm max-w-32"
-										href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-										target="_blank"
-										rel="noopener noreferrer">{$t('adventures.open_in_maps')}</a
-									>
+									<div>
+										<p class="mb-1">{$t('adventures.open_in_maps')}:</p>
+										<div class="flex flex-wrap gap-2">
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Apple</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://maps.google.com/?q=${adventure.latitude},${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">Google</a
+											>
+											<a
+												class="btn btn-neutral text-base btn-sm max-w-32"
+												href={`https://www.openstreetmap.org/?mlat=${adventure.latitude}&mlon=${adventure.longitude}`}
+												target="_blank"
+												rel="noopener noreferrer">OSM</a
+											>
+										</div>
+									</div>
 								{/if}
 								<MapLibre
 									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
-									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
+									class="flex items-center self-center justify-center aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full md:w-10/12 rounded-lg"
 									standardControls
 									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
 									zoom={adventure.longitude ? 12 : 1}
@@ -498,22 +525,48 @@
 													{adventure.category?.display_name + ' ' + adventure.category?.icon}
 												</p>
 												{#if adventure.visits.length > 0}
-													<p class="text-black text-sm">
+													<p>
 														{#each adventure.visits as visit}
-															{visit.start_date
-																? new Date(visit.start_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															{visit.end_date &&
-															visit.end_date !== '' &&
-															visit.end_date !== visit.start_date
-																? ' - ' +
-																	new Date(visit.end_date).toLocaleDateString(undefined, {
-																		timeZone: 'UTC'
-																	})
-																: ''}
-															<br />
+															<div
+																class="p-4 border border-neutral rounded-lg bg-base-100 shadow-sm flex flex-col gap-2"
+															>
+																<p class="text-sm text-base-content font-medium">
+																	{#if isAllDay(visit.start_date)}
+																		<span class="badge badge-outline mr-2">All Day</span>
+																		{visit.start_date.split('T')[0]} – {visit.end_date.split(
+																			'T'
+																		)[0]}
+																	{:else}
+																		<span>
+																			<strong>Local:</strong>
+																			{DateTime.fromISO(visit.start_date).toLocaleString(
+																				DateTime.DATETIME_MED
+																			)} –
+																			{DateTime.fromISO(visit.end_date).toLocaleString(
+																				DateTime.DATETIME_MED
+																			)}
+																		</span>
+																	{/if}
+																</p>
+
+																{#if !isAllDay(visit.start_date) && visit.timezone}
+																	<p class="text-sm text-base-content opacity-80">
+																		<strong>{visit.timezone}:</strong>
+																		{DateTime.fromISO(visit.start_date, { zone: 'utc' })
+																			.setZone(visit.timezone)
+																			.toLocaleString(DateTime.DATETIME_MED)} –
+																		{DateTime.fromISO(visit.end_date, { zone: 'utc' })
+																			.setZone(visit.timezone)
+																			.toLocaleString(DateTime.DATETIME_MED)}
+																	</p>
+																{/if}
+
+																{#if visit.notes}
+																	<p class="text-sm text-base-content opacity-70 italic">
+																		"{visit.notes}"
+																	</p>
+																{/if}
+															</div>
 														{/each}
 													</p>
 												{/if}

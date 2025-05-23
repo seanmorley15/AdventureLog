@@ -5,6 +5,12 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
+	import { marked } from 'marked'; // Import the markdown parser
+
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
+
 	import Launch from '~icons/mdi/launch';
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
@@ -71,11 +77,30 @@
 		{#if unlinked}
 			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 		{/if}
+		{#if note.content && note.content.length > 0}
+			<article
+					class="prose overflow-auto max-h-72 max-w-full p-4 border border-neutral bg-base-100 rounded-lg mb-4 mt-4"
+			>
+					{@html renderMarkdown(note.content || '')}
+			</article>
+		{/if}
 		{#if note.links && note.links.length > 0}
 			<p>
 				{note.links.length}
 				{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
 			</p>
+			<ul class="list-disc pl-6">
+				{#each note.links.slice(0, 3) as link}
+					<li>
+						<a class="link link-primary" href={link}>
+							{link.split('//')[1].split('/', 1)[0]}
+						</a>
+					</li>
+				{/each}
+				{#if note.links.length > 3}
+					<li>…</li>
+				{/if}
+			</ul>
 		{/if}
 		{#if note.date && note.date !== ''}
 			<div class="inline-flex items-center">

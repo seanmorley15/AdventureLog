@@ -60,20 +60,22 @@ class AdventureViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
 
+        # Actions that allow public access (include 'retrieve' and your custom action)
+        public_allowed_actions = {'retrieve', 'additional_info'}
+
         if not user.is_authenticated:
-            # Unauthenticated users can only access public adventures for retrieval
-            if self.action == 'retrieve':
+            if self.action in public_allowed_actions:
                 return Adventure.objects.retrieve_adventures(user, include_public=True).order_by('-updated_at')
             return Adventure.objects.none()
 
-        # Authenticated users: Handle retrieval separately
-        include_public = self.action == 'retrieve'
+        include_public = self.action in public_allowed_actions
         return Adventure.objects.retrieve_adventures(
             user,
             include_public=include_public,
             include_owned=True,
             include_shared=True
         ).order_by('-updated_at')
+
 
     def perform_update(self, serializer):
         adventure = serializer.save()
@@ -175,11 +177,15 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def additional_info(self, request, pk=None):
         adventure = self.get_object()
 
-        # Permission check: owner or shared collection member
-        if adventure.user_id != request.user:
-            if not (adventure.collection and adventure.collection.shared_with.filter(id=request.user.id).exists()):
-                return Response({"error": "User does not have permission to access this adventure"},
-                                status=status.HTTP_403_FORBIDDEN)
+        user = request.user
+
+        # Allow if public
+        if not adventure.is_public:
+            # Only allow owner or shared collection members
+            if not user.is_authenticated or adventure.user_id != user:
+                if not (adventure.collection and adventure.collection.shared_with.filter(uuid=user.uuid).exists()):
+                    return Response({"error": "User does not have permission to access this adventure"},
+                                    status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(adventure)
         response_data = serializer.data
@@ -202,7 +208,6 @@ class AdventureViewSet(viewsets.ModelViewSet):
                             "sunrise": results.get('sunrise'),
                             "sunset": results.get('sunset')
                         })
-                
 
         response_data['sun_times'] = sun_times
         return Response(response_data)

@@ -72,7 +72,7 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'notes']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes']
         read_only_fields = ['id']
                                    
 class AdventureSerializer(CustomModelSerializer):
@@ -82,13 +82,14 @@ class AdventureSerializer(CustomModelSerializer):
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
 
@@ -103,6 +104,9 @@ class AdventureSerializer(CustomModelSerializer):
                 return existing_category
             category_data['name'] = name
         return category_data
+    
+    def get_country(self, obj):
+        return obj.country.country_code if obj.country else None
 
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
@@ -134,15 +138,7 @@ class AdventureSerializer(CustomModelSerializer):
         return CustomUserDetailsSerializer(user).data
     
     def get_is_visited(self, obj):
-        current_date = timezone.now().date()
-        for visit in obj.visits.all():
-            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
-            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
-            if start_date and end_date and (start_date <= current_date):
-                return True
-            elif start_date and not end_date and (start_date <= current_date):
-                return True
-        return False
+        return obj.is_visited_status()
 
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', None)
@@ -155,7 +151,8 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             adventure.category = category
-            adventure.save()
+            
+        adventure.save()
 
         return adventure
 
@@ -192,6 +189,9 @@ class AdventureSerializer(CustomModelSerializer):
             visits_to_delete = current_visit_ids - updated_visit_ids
             instance.visits.filter(id__in=visits_to_delete).delete()
 
+        # call save on the adventure to update the updated_at field and trigger any geocoding
+        instance.save()
+
         return instance
 
 class TransportationSerializer(CustomModelSerializer):
@@ -201,7 +201,7 @@ class TransportationSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude', 'start_timezone', 'end_timezone'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 
@@ -212,7 +212,7 @@ class LodgingSerializer(CustomModelSerializer):
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
             'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at', 'type'
+            'collection', 'created_at', 'updated_at', 'type', 'timezone'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
 

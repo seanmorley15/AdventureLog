@@ -71,6 +71,7 @@ MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'adventures.middleware.XSessionTokenMiddleware',
     'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
+    'adventures.middleware.DisableCSRFForMobileLoginSignup',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -312,4 +313,4 @@ LOGGING = {
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.5'
+COUNTRY_REGION_JSON_VERSION = 'v2.6'

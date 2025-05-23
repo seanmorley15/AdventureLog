@@ -252,7 +252,16 @@
     "collection_no_start_end_date": "L'aggiunta di una data di inizio e fine alla collezione sbloccherà le funzionalità di pianificazione dell'itinerario nella pagina della collezione.",
     "date_itinerary": "Data dell'itinerario",
     "no_ordered_items": "Aggiungi elementi con date alla collezione per vederli qui.",
-    "ordered_itinerary": "Itinerario ordinato"
+    "ordered_itinerary": "Itinerario ordinato",
+    "additional_info": "Ulteriori informazioni",
+    "invalid_date_range": "Intervallo di date non valido",
+    "sunrise_sunset": "Alba",
+    "timezone": "Fuso orario",
+    "no_visits": "Nessuna visita",
+    "arrival_timezone": "Fuso orario di arrivo",
+    "departure_timezone": "Fuso orario di partenza",
+    "arrival_date": "Data di arrivo",
+    "departure_date": "Data di partenza"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

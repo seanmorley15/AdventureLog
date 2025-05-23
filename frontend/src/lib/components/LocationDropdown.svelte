@@ -55,7 +55,7 @@
 	}
 
 	$: if (triggerMarkVisted && willBeMarkedVisited) {
-		markVisited();
+		displaySuccessToast(); // since the server will trigger the geocode automatically, we just need to show the toast and let the server handle the rest. It's kinda a placebo effect...
 		triggerMarkVisted = false;
 	}
 
@@ -98,6 +98,17 @@
 					willBeMarkedVisited = true;
 					break; // Exit the loop since we've determined the result
 				}
+			}
+		}
+	}
+
+	function displaySuccessToast() {
+		if (reverseGeocodePlace) {
+			if (reverseGeocodePlace.region) {
+				addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
+			}
+			if (reverseGeocodePlace.city) {
+				addToast('success', `Visit to ${reverseGeocodePlace.city} marked`);
 			}
 		}
 	}

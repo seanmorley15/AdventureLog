@@ -252,7 +252,16 @@
     "collection_no_start_end_date": "컬렉션에 시작 및 종료 날짜를 추가하면 컬렉션 페이지에서 여정 계획 기능이 잠금 해제됩니다.",
     "date_itinerary": "날짜 일정",
     "no_ordered_items": "컬렉션에 날짜가있는 항목을 추가하여 여기에서 확인하십시오.",
-    "ordered_itinerary": "주문한 여정"
+    "ordered_itinerary": "주문한 여정",
+    "additional_info": "추가 정보",
+    "invalid_date_range": "잘못된 날짜 범위",
+    "sunrise_sunset": "해돋이",
+    "timezone": "시간대",
+    "no_visits": "방문 없음",
+    "arrival_timezone": "도착 시간대",
+    "departure_timezone": "출발 시간대",
+    "arrival_date": "도착 날짜",
+    "departure_date": "출발 날짜"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

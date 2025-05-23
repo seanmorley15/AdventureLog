@@ -20,6 +20,8 @@
 	import { onMount } from 'svelte';
 	let inputElement: HTMLInputElement | null = null;
 
+	let theme = '';
+
 	// Event listener for focusing input
 	function handleKeydown(event: KeyboardEvent) {
 		// Ignore any keypresses in an input/textarea field, so we don't interfere with typing.
@@ -37,6 +39,8 @@
 	onMount(() => {
 		// Attach event listener on component mount
 		document.addEventListener('keydown', handleKeydown);
+
+		theme = document.documentElement.getAttribute('data-theme');
 
 		// Cleanup event listener on component destruction
 		return () => {
@@ -69,9 +73,14 @@
 		locale.set(newLocale);
 		window.location.reload();
 	};
+	const submitThemeChange = (event: Event) => {
+		const theme = event.target.value;
+		const themeForm = event.target.parentNode;
+		themeForm.action = `/?/setTheme&theme=${theme}`;
+		themeForm.submit();
+	};
 	const submitUpdateTheme: SubmitFunction = ({ action }) => {
 		const theme = action.searchParams.get('theme');
-		console.log('theme', theme);
 		if (theme) {
 			document.documentElement.setAttribute('data-theme', theme);
 		}
@@ -117,11 +126,10 @@
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<ul
 				tabindex="0"
-				class="menu dropdown-content mt-3 z-[1] p-2 shadow bg-neutral text-neutral-content rounded-box gap-2 w-96"
+				class="menu dropdown-content mt-3 z-[1] p-2 shadow bg-neutral text-base text-neutral-content rounded-box gap-2 w-96"
 			>
 				{#if data.user}
 					<li>
-						<MapMarker />
 						<button on:click={() => goto('/adventures')}>{$t('navbar.adventures')}</button>
 					</li>
 					<li>
@@ -180,7 +188,7 @@
 			</ul>
 		</div>
 		<a class="btn btn-ghost p-0 text-2xl font-bold tracking-normal" href="/">
-			<span class="md:inline hidden">AdventureLog</span>
+			<span class="sm:inline hidden">AdventureLog</span>
 			<img src="/favicon.png" alt="Map Logo" class="w-10" />
 		</a>
 	</div>
@@ -304,13 +312,15 @@
 				</form>
 				<p class="font-bold m-4 text-lg text-center">{$t('navbar.theme_selection')}</p>
 				<form method="POST" use:enhance={submitUpdateTheme}>
-					{#each themes as theme}
-						<li>
-							<button formaction="/?/setTheme&theme={theme.name}"
-								>{$t(`navbar.themes.${theme.name}`)}
-							</button>
-						</li>
-					{/each}
+					<select
+						class="select select-bordered w-full max-w-xs bg-base-100 text-base-content"
+						bind:value={theme}
+						on:change={submitThemeChange}
+					>
+						{#each themes as theme}
+							<option value={theme.name} class="text-base-content">{$t(`navbar.themes.${theme.name}`)}</option>
+						{/each}
+					</select>
 				</form>
 			</ul>
 		</div>
