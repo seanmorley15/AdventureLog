@@ -7,6 +7,7 @@ from adventures.models import Adventure
 from adventures.serializers import AdventureSerializer
 import requests
 from adventures.geocoding import reverse_geocode
+from adventures.geocoding import extractIsoCode
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -49,7 +50,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                     data = response.json()
                 except requests.exceptions.JSONDecodeError:
                     return Response({"error": "Invalid response from geocoding service"}, status=400)
-                extracted_region = self.extractIsoCode(data)
+                extracted_region = extractIsoCode(self.request.user,data)
                 if 'error' not in extracted_region:
                     region = Region.objects.filter(id=extracted_region['region_id']).first()
                     visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
