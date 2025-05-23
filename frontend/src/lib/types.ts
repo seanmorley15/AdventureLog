@@ -45,6 +45,9 @@ export type Adventure = {
 	category: Category | null;
 	attachments: Attachment[];
 	user?: User | null;
+	city?: string | null;
+	region?: string | null;
+	country?: string | null;
 };
 
 export type AdditionalAdventure = Adventure & {

@@ -138,15 +138,7 @@ class AdventureSerializer(CustomModelSerializer):
         return CustomUserDetailsSerializer(user).data
     
     def get_is_visited(self, obj):
-        current_date = timezone.now().date()
-        for visit in obj.visits.all():
-            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
-            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
-            if start_date and end_date and (start_date <= current_date):
-                return True
-            elif start_date and not end_date and (start_date <= current_date):
-                return True
-        return False
+        return obj.is_visited_status()
 
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', None)
@@ -159,7 +151,8 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             adventure.category = category
-            adventure.save()
+            
+        adventure.save()
 
         return adventure
 
@@ -195,6 +188,9 @@ class AdventureSerializer(CustomModelSerializer):
 
             visits_to_delete = current_visit_ids - updated_visit_ids
             instance.visits.filter(id__in=visits_to_delete).delete()
+
+        # call save on the adventure to update the updated_at field and trigger any geocoding
+        instance.save()
 
         return instance
 

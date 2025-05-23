@@ -9,8 +9,9 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
-from worldtravel.models import City, Country, Region
+from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
 from adventures.geocoding import reverse_geocode
+from django.utils import timezone
 
 def validate_file_extension(value):
     import os
@@ -549,6 +550,17 @@ class Adventure(models.Model):
     # end_date = models.DateField(blank=True, null=True)
     # type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
 
+    def is_visited_status(self):
+        current_date = timezone.now().date()
+        for visit in self.visits.all():
+            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
+            if start_date and end_date and (start_date <= current_date):
+                return True
+            elif start_date and not end_date and (start_date <= current_date):
+                return True
+        return False
+
     def clean(self):
         if self.collection:
             if self.collection.is_public and not self.is_public:
@@ -578,15 +590,26 @@ class Adventure(models.Model):
             self.category = category
 
         if self.latitude and self.longitude:
+            is_visited = self.is_visited_status()
             reverse_geocode_result = reverse_geocode(self.latitude, self.longitude, self.user_id)
             if 'region_id' in reverse_geocode_result:
                 region = Region.objects.filter(id=reverse_geocode_result['region_id']).first()
                 if region:
                     self.region = region
+                    if is_visited:
+                        visited_region, created = VisitedRegion.objects.get_or_create(
+                            user_id=self.user_id,
+                            region=region
+                        )
             if 'city_id' in reverse_geocode_result:
                 city = City.objects.filter(id=reverse_geocode_result['city_id']).first()
                 if city:
                     self.city = city
+                    if is_visited:
+                        visited_city, created = VisitedCity.objects.get_or_create(
+                            user_id=self.user_id,
+                            city=city
+                        )
             if 'country_id' in reverse_geocode_result:
                 country = Country.objects.filter(country_code=reverse_geocode_result['country_id']).first()
                 if country:
