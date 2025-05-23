@@ -12,6 +12,7 @@ class AdventureAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_category', 'get_visit_count',  'user_id', 'is_public')
     list_filter = ( 'user_id', 'is_public')
     search_fields = ('name',)
+    readonly_fields = ('city', 'region', 'country')
 
     def get_category(self, obj):
         if obj.category and obj.category.display_name and obj.category.icon:
