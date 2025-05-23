@@ -82,6 +82,7 @@ class AdventureSerializer(CustomModelSerializer):
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    country = serializers.SerializerMethodField()
 
     class Meta:
         model = Adventure
@@ -103,6 +104,9 @@ class AdventureSerializer(CustomModelSerializer):
                 return existing_category
             category_data['name'] = name
         return category_data
+    
+    def get_country(self, obj):
+        return obj.country.country_code if obj.country else None
 
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
