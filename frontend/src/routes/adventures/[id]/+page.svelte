@@ -365,7 +365,9 @@
 														<div class="flex items-center gap-2 mb-2">
 															<span class="badge badge-primary">All Day</span>
 															<span class="font-semibold">
-																{visit.start_date.split('T')[0]} – {visit.end_date.split('T')[0]}
+																{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+																	? visit.end_date.split('T')[0]
+																	: ''}
 															</span>
 														</div>
 													{:else}
