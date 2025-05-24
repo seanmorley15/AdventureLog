@@ -453,7 +453,7 @@
 
 	let recomendationsData: any;
 	let loadingRecomendations: boolean = false;
-	let recomendationsRange: number = 1600;
+	let recomendationsRange: number = 1000;
 	let recomendationType: string = 'tourism';
 	let recomendationTags: { name: string; display_name: string }[] = [];
 	let selectedRecomendationTag: string = '';
@@ -475,7 +475,7 @@
 		selectedRecomendationTag = '';
 		loadingRecomendations = true;
 		let res = await fetch(
-			`/api/overpass/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
+			`/api/recommendations/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
 		);
 		if (!res.ok) {
 			console.log('Error fetching recommendations');
@@ -1388,19 +1388,18 @@
 				<div class="mt-4">
 					<input
 						type="range"
-						min="1600"
-						max="80467"
+						min="1000"
+						max="50000"
 						class="range"
-						step="1600"
+						step="1000"
 						bind:value={recomendationsRange}
 					/>
 					<div class="flex w-full justify-between px-2">
-						<span class="text-lg"
-							>{Math.round(recomendationsRange / 1600)} mile ({(
-								(recomendationsRange / 1600) *
-								1.6
-							).toFixed(1)} km)</span
-						>
+						<span class="text-lg">
+							{(recomendationsRange / 1609.344).toFixed(1)} miles ({(
+								recomendationsRange / 1000
+							).toFixed(1)} km)
+						</span>
 					</div>
 					<div class="join flex items-center justify-center mt-4">
 						<input
@@ -1494,38 +1493,19 @@
 									<h2 class="card-title text-xl font-bold">
 										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
+									{#if recomendation.address}
+										<p class="text-sm">{recomendation.address}</p>
+									{/if}
+									<!-- badge with recomendation.distance_km also show in miles -->
+									{#if recomendation.distance_km}
+										<p class="text-sm">
+											{$t('adventures.distance')}: {recomendation.distance_km.toFixed(1)} km ({(
+												recomendation.distance_km / 1.609344
+											).toFixed(1)} miles)
+										</p>
+									{/if}
+									<p class="text-sm"></p>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									{#if recomendation.address && (recomendation.address.housenumber || recomendation.address.street || recomendation.address.city || recomendation.address.state || recomendation.address.postcode)}
-										<p class="text-md">
-											<strong>{$t('recomendations.address')}:</strong>
-											{#if recomendation.address.housenumber}{recomendation.address
-													.housenumber}{/if}
-											{#if recomendation.address.street}
-												{recomendation.address.street}{/if}
-											{#if recomendation.address.city}, {recomendation.address.city}{/if}
-											{#if recomendation.address.state}, {recomendation.address.state}{/if}
-											{#if recomendation.address.postcode}, {recomendation.address.postcode}{/if}
-										</p>
-									{/if}
-									{#if recomendation.contact}
-										<p class="text-md">
-											<strong>{$t('recomendations.contact')}:</strong>
-											{#if recomendation.contact.phone}
-												{$t('recomendations.phone')}: {recomendation.contact.phone}
-											{/if}
-											{#if recomendation.contact.email}
-												{$t('auth.email')}: {recomendation.contact.email}
-											{/if}
-											{#if recomendation.contact.website}
-												{$t('recomendations.website')}:
-												<a
-													href={recomendation.contact.website}
-													target="_blank"
-													rel="noopener noreferrer">{recomendation.contact.website}</a
-												>
-											{/if}
-										</p>
-									{/if}
 									<button
 										class="btn btn-primary"
 										on:click={() => recomendationToAdventure(recomendation)}

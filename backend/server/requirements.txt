@@ -22,3 +22,4 @@ ijson==3.3.0
 tqdm==4.67.1
 overpy==0.7
 publicsuffix2==2.20191221
+geopy==2.4.1
