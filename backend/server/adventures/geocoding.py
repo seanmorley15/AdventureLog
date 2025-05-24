@@ -84,12 +84,17 @@ def reverse_geocode(lat, lon, user):
         return extractIsoCode(user, data)
 
     except requests.exceptions.ConnectionError as e:
-        return {"error": "Could not connect to geocoding service"}
+        log_error(f"ConnectionError in reverse_geocode: {e}")
+        return {"error": "An internal error occurred while processing the request"}
     except requests.exceptions.Timeout as e:
-        return {"error": "Geocoding service timed out"}
+        log_error(f"Timeout in reverse_geocode: {e}")
+        return {"error": "An internal error occurred while processing the request"}
     except requests.exceptions.HTTPError as e:
-        return {"error": f"HTTP error from geocoding service: {e}"}
+        log_error(f"HTTPError in reverse_geocode: {e}")
+        return {"error": "An internal error occurred while processing the request"}
     except requests.exceptions.JSONDecodeError as e:
-        return {"error": "Invalid response from geocoding service"}
+        log_error(f"JSONDecodeError in reverse_geocode: {e}")
+        return {"error": "An internal error occurred while processing the request"}
     except Exception as e:
-        return {"error": f"Unexpected geocoding error: {str(e)}"}
+        log_error(f"Unexpected error in reverse_geocode: {e}")
+       return {"error": "An internal error occurred while processing the request"}
