@@ -27,6 +27,32 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         if 'error' in data:
             return Response({"error": "An internal error occurred while processing the request"}, status=400)
         return Response(data)
+    
+    @action(detail=False, methods=['get'])
+    def search(self, request):
+        query = request.query_params.get('query', '')
+        if not query:
+            return Response({"error": "Query parameter is required"}, status=400)
+        url = f"https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2"
+        headers = {'User-Agent': 'AdventureLog Server'}
+        response = requests.get(url, headers=headers)
+        try:
+            data = response.json()
+            parsed_results = []
+            for item in data:
+                parsed_results.append({
+                    "lat": item.get("lat"),
+                    "lon": item.get("lon"),
+                    "category": item.get("category"),
+                    "type": item.get("type"),
+                    "importance": item.get("importance"),
+                    "addresstype": item.get("addresstype"),
+                    "name": item.get("name"),
+                    "display_name": item.get("display_name"),
+                })
+        except requests.exceptions.JSONDecodeError:
+            return Response({"error": "Invalid response from geocoding service"}, status=400)
+        return Response(parsed_results)
 
     @action(detail=False, methods=['post'])
     def mark_visited_region(self, request):
