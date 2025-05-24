@@ -45,6 +45,9 @@ export type Adventure = {
 	category: Category | null;
 	attachments: Attachment[];
 	user?: User | null;
+	city?: City | null;
+	region?: Region | null;
+	country?: Country | null;
 };
 
 export type AdditionalAdventure = Adventure & {
@@ -136,21 +139,15 @@ export type Collection = {
 	link?: string | null;
 };
 
-export type OpenStreetMapPlace = {
-	place_id: number;
-	licence: string;
-	osm_type: string;
-	osm_id: number;
-	lat: string;
-	lon: string;
-	category: string;
-	type: string;
-	place_rank: number;
-	importance: number;
-	addresstype: string;
-	name: string;
-	display_name: string;
-	boundingbox: string[];
+export type GeocodeSearchResult = {
+	lat?: string;
+	lon?: string;
+	category?: string;
+	type?: string;
+	importance?: number;
+	addresstype?: string;
+	name?: string;
+	display_name?: string;
 };
 
 export type Transportation = {

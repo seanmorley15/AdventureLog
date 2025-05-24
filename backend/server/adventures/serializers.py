@@ -4,6 +4,7 @@ from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, 
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
+from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -82,13 +83,16 @@ class AdventureSerializer(CustomModelSerializer):
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    country = CountrySerializer(read_only=True)
+    region = RegionSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
 
@@ -103,7 +107,7 @@ class AdventureSerializer(CustomModelSerializer):
                 return existing_category
             category_data['name'] = name
         return category_data
-
+    
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
         
@@ -134,15 +138,7 @@ class AdventureSerializer(CustomModelSerializer):
         return CustomUserDetailsSerializer(user).data
     
     def get_is_visited(self, obj):
-        current_date = timezone.now().date()
-        for visit in obj.visits.all():
-            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
-            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
-            if start_date and end_date and (start_date <= current_date):
-                return True
-            elif start_date and not end_date and (start_date <= current_date):
-                return True
-        return False
+        return obj.is_visited_status()
 
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', None)
@@ -155,7 +151,8 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             adventure.category = category
-            adventure.save()
+            
+        adventure.save()
 
         return adventure
 
@@ -170,7 +167,6 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             instance.category = category
-        instance.save()
 
         if has_visits:
             current_visits = instance.visits.all()
@@ -191,6 +187,9 @@ class AdventureSerializer(CustomModelSerializer):
 
             visits_to_delete = current_visit_ids - updated_visit_ids
             instance.visits.filter(id__in=visits_to_delete).delete()
+
+        # call save on the adventure to update the updated_at field and trigger any geocoding
+        instance.save()
 
         return instance
 

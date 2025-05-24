@@ -8,10 +8,25 @@ from allauth.account.decorators import secure_admin_login
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
 
+@admin.action(description="Trigger geocoding")
+def trigger_geocoding(modeladmin, request, queryset):
+    count = 0
+    for adventure in queryset:
+        try:
+            adventure.save()  # Triggers geocoding logic in your model
+            count += 1
+        except Exception as e:
+            modeladmin.message_user(request, f"Error geocoding {adventure}: {e}", level='error')
+    modeladmin.message_user(request, f"Geocoding triggered for {count} adventures.", level='success')
+    
+
+
 class AdventureAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_category', 'get_visit_count',  'user_id', 'is_public')
     list_filter = ( 'user_id', 'is_public')
     search_fields = ('name',)
+    readonly_fields = ('city', 'region', 'country')
+    actions = [trigger_geocoding]
 
     def get_category(self, obj):
         if obj.category and obj.category.display_name and obj.category.icon:

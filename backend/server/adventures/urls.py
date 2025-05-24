@@ -15,11 +15,10 @@ router.register(r'images', AdventureImageViewSet, basename='images')
 router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
-router.register(r'overpass', OverpassViewSet, basename='overpass')
 router.register(r'search', GlobalSearchView, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
 router.register(r'lodging', LodgingViewSet, basename='lodging')
-
+router.register(r'recommendations', RecommendationsViewSet, basename='recommendations')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix

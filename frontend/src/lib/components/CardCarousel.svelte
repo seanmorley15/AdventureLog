@@ -97,12 +97,12 @@
 	{:else}
 		<!-- add a figure with a gradient instead -  -->
 		<div class="w-full h-48 bg-gradient-to-r from-success via-base to-primary relative">
-			<!-- subtle button bottom left text -->
+			<!-- subtle button bottom left text
 			<div
 				class="absolute bottom-0 left-0 px-2 py-1 text-md font-medium bg-neutral rounded-tr-lg shadow-md"
 			>
 				{$t('adventures.no_image_found')}
-			</div>
+			</div> -->
 		</div>
 	{/if}
 </figure>

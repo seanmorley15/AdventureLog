@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
-	import type { Adventure, Lodging, OpenStreetMapPlace, Point, ReverseGeocode } from '$lib/types';
+	import type { Adventure, Lodging, GeocodeSearchResult, Point, ReverseGeocode } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
@@ -19,7 +19,7 @@
 	let willBeMarkedVisited: boolean = false;
 	let previousCoords: { lat: number; lng: number } | null = null;
 	let old_display_name: string = '';
-	let places: OpenStreetMapPlace[] = [];
+	let places: GeocodeSearchResult[] = [];
 	let noPlaces: boolean = false;
 
 	onMount(() => {
@@ -55,7 +55,7 @@
 	}
 
 	$: if (triggerMarkVisted && willBeMarkedVisited) {
-		markVisited();
+		displaySuccessToast(); // since the server will trigger the geocode automatically, we just need to show the toast and let the server handle the rest. It's kinda a placebo effect
 		triggerMarkVisted = false;
 	}
 
@@ -98,6 +98,17 @@
 					willBeMarkedVisited = true;
 					break; // Exit the loop since we've determined the result
 				}
+			}
+		}
+	}
+
+	function displaySuccessToast() {
+		if (reverseGeocodePlace) {
+			if (reverseGeocodePlace.region) {
+				addToast('success', `Visit to ${reverseGeocodePlace.region} marked`);
+			}
+			if (reverseGeocodePlace.city) {
+				addToast('success', `Visit to ${reverseGeocodePlace.city} marked`);
 			}
 		}
 	}
@@ -156,13 +167,9 @@
 			alert($t('adventures.no_location'));
 			return;
 		}
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
+		let res = await fetch(`/api/reverse-geocode/search/?query=${query}`);
 		console.log(res);
-		let data = (await res.json()) as OpenStreetMapPlace[];
+		let data = (await res.json()) as GeocodeSearchResult[];
 		places = data;
 		if (data.length === 0) {
 			noPlaces = true;
@@ -265,16 +272,18 @@
 								markers = [
 									{
 										lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-										location: place.display_name,
-										name: place.name,
-										activity_type: place.type
+										location: place.display_name ?? '',
+										name: place.name ?? '',
+										activity_type: place.type ?? ''
 									}
 								];
 
-								item.name = place.name;
+								item.name = place.name ?? '';
 							}}
 						>
-							{place.display_name}
+							<span>{place.name}</span>
+							<br />
+							<small class="text-xs text-neutral-300">{place.display_name}</small>
 						</button>
 					{/each}
 				</div>

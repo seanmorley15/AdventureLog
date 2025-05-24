@@ -81,7 +81,7 @@
 		}
 
 		const fetchLocation = async (query: string) => {
-			let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			let res = await fetch(`/api/reverse-geocode/search/?query=${query}`, {
 				headers: {
 					'User-Agent': `AdventureLog / ${appVersion} `
 				}
