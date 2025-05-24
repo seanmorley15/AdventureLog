@@ -8,6 +8,8 @@ from adventures.serializers import AdventureSerializer
 import requests
 from adventures.geocoding import reverse_geocode
 from adventures.geocoding import extractIsoCode
+from django.conf import settings
+from adventures.geocoding import search_google, search_osm
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -33,26 +35,15 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         query = request.query_params.get('query', '')
         if not query:
             return Response({"error": "Query parameter is required"}, status=400)
-        url = f"https://nominatim.openstreetmap.org/search?q={query}&format=jsonv2"
-        headers = {'User-Agent': 'AdventureLog Server'}
-        response = requests.get(url, headers=headers)
+
         try:
-            data = response.json()
-            parsed_results = []
-            for item in data:
-                parsed_results.append({
-                    "lat": item.get("lat"),
-                    "lon": item.get("lon"),
-                    "category": item.get("category"),
-                    "type": item.get("type"),
-                    "importance": item.get("importance"),
-                    "addresstype": item.get("addresstype"),
-                    "name": item.get("name"),
-                    "display_name": item.get("display_name"),
-                })
-        except requests.exceptions.JSONDecodeError:
-            return Response({"error": "Invalid response from geocoding service"}, status=400)
-        return Response(parsed_results)
+            if getattr(settings, 'GOOGLE_MAPS_API_KEY', None):
+                results = search_google(query)
+            else:
+                results = search_osm(query)
+            return Response(results)
+        except Exception as e:
+            return Response({"error": str(e)}, status=500)
 
     @action(detail=False, methods=['post'])
     def mark_visited_region(self, request):

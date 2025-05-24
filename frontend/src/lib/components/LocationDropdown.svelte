@@ -272,16 +272,18 @@
 								markers = [
 									{
 										lngLat: { lng: Number(place.lon), lat: Number(place.lat) },
-										location: place.display_name,
-										name: place.name,
-										activity_type: place.type
+										location: place.display_name ?? '',
+										name: place.name ?? '',
+										activity_type: place.type ?? ''
 									}
 								];
 
-								item.name = place.name;
+								item.name = place.name ?? '';
 							}}
 						>
-							{place.display_name}
+							<span>{place.name}</span>
+							<br />
+							<small class="text-xs text-neutral-300">{place.display_name}</small>
 						</button>
 					{/each}
 				</div>
