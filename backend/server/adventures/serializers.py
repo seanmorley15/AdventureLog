@@ -10,7 +10,7 @@ from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySer
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id', 'external_url']
         read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):

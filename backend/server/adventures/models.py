@@ -771,13 +771,24 @@ class AdventureImage(models.Model):
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
-        upload_to=PathAndRename('images/')  # Use the callable class here
+        upload_to=PathAndRename('images/'),
+        blank=True,
+        null=True,
     )
+    external_url = models.URLField(blank=True, null=True, max_length=2083)
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
     is_primary = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.image.url
+        if self.image:
+            return self.image.url
+        return self.external_url
+    
+    def clean(self):
+        if self.image and self.external_url:
+            raise ValidationError("Only one of 'image' or 'external_url' can be set, not both.")
+        if not self.image and not self.external_url:
+            raise ValidationError("Either 'image' or 'external_url' must be set.")
     
 class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)

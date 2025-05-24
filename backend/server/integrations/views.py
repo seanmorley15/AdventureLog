@@ -19,7 +19,11 @@ class IntegrationView(viewsets.ViewSet):
 
         return Response(
             {
-                'immich': immich_integrations.exists()
+                'immich': {
+                    'enabled': immich_integrations.exists(),
+                    'copy_file': False,
+                    'server_url': immich_integrations.first().server_url if immich_integrations.exists() else None,
+                }
             },
             status=status.HTTP_200_OK
         )

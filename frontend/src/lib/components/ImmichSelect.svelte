@@ -13,6 +13,7 @@
 	let loading = false;
 
 	export let adventure: Adventure | null = null;
+	export let copyFile: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -191,13 +192,27 @@
 					on:click={() => {
 						let currentDomain = window.location.origin;
 						let fullUrl = `${currentDomain}/immich/${image.id}`;
-						dispatch('fetchImage', fullUrl);
+						if (copyFile) {
+							dispatch('copy', {
+								url: fullUrl,
+								name: image.fileName
+							});
+						} else {
+							dispatch('select', {
+								url: fullUrl,
+								name: image.fileName,
+								id: image.id
+							});
+						}
 					}}
 				>
 					{$t('adventures.upload_image')}
 				</button>
 			</div>
 		{/each}
+		{#if !copyFile}
+			<p>Note: the image will not be stored in AdventureLog, it will be served from Immich.</p>
+		{/if}
 		{#if immichNextURL}
 			<button class="btn btn-neutral" on:click={loadMoreImmich}>{$t('immich.load_more')}</button>
 		{/if}

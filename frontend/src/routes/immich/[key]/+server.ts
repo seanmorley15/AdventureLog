@@ -3,6 +3,8 @@ import type { RequestHandler } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
+// Needed because the /api redirect only gives json and not the image
+
 export const GET: RequestHandler = async (event) => {
 	try {
 		const key = event.params.key;

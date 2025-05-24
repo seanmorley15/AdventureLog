@@ -82,6 +82,8 @@
 
 	let fileInput: HTMLInputElement;
 	let immichIntegration: boolean = false;
+	let immichIntegrationCopyFile: boolean = false;
+	let immichServerURL: string = '';
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
@@ -166,8 +168,10 @@
 			addToast('error', $t('immich.integration_fetch_error'));
 		} else {
 			let data = await res.json();
-			if (data.immich) {
+			if (data.immich && data.immich.enabled) {
 				immichIntegration = true;
+				immichIntegrationCopyFile = data.immich.copy_file;
+				immichServerURL = data.immich.server_url;
 			}
 		}
 	});
@@ -356,6 +360,22 @@
 			url = '';
 		} catch (e) {
 			imageError = $t('adventures.image_fetch_failed');
+		}
+	}
+
+	async function selectImmichImage(image: { url: string; name: string; id: string }) {
+		let res = await fetch('/api/images', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				adventure: adventure.id,
+				external_url: immichServerURL + `/assets/${image.id}/thumbnail?size=preview`
+			})
+		});
+		if (res.ok) {
+			addToast('success', $t('adventures.image_upload_success'));
 		}
 	}
 
@@ -813,9 +833,13 @@
 					{#if immichIntegration}
 						<ImmichSelect
 							{adventure}
-							on:fetchImage={(e) => {
-								url = e.detail;
+							copyFile={immichIntegrationCopyFile}
+							on:copy={(e) => {
+								url = e.detail.url;
 								fetchImage();
+							}}
+							on:select={(e) => {
+								selectImmichImage(e.detail);
 							}}
 						/>
 					{/if}
