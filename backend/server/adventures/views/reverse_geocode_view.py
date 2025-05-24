@@ -25,7 +25,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             return Response({"error": "Invalid latitude or longitude"}, status=400)
         data = reverse_geocode(lat, lon, self.request.user)
         if 'error' in data:
-            return Response(data, status=400)
+            return Response({"error": "An internal error occurred while processing the request"}, status=400)
         return Response(data)
 
     @action(detail=False, methods=['post'])
