@@ -42,8 +42,8 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             else:
                 results = search_osm(query)
             return Response(results)
-        except Exception as e:
-            return Response({"error": str(e)}, status=500)
+        except Exception:
+            return Response({"error": "An internal error occurred while processing the request"}, status=500)
 
     @action(detail=False, methods=['post'])
     def mark_visited_region(self, request):
