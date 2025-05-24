@@ -1466,15 +1466,6 @@
 											<p class="font-semibold text-black text-md">
 												{`${recomendation.tag} ${osmTagToEmoji(recomendation.tag)}`}
 											</p>
-
-											<button
-												class="btn btn-neutral btn-wide btn-sm mt-4"
-												on:click={() =>
-													window.open(
-														`https://www.openstreetmap.org/node/${recomendation.id}`,
-														'_blank'
-													)}>{$t('map.view_details')}</button
-											>
 											<button
 												class="btn btn-neutral btn-wide btn-sm mt-4"
 												on:click={() => recomendationToAdventure(recomendation)}
