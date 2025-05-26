@@ -1,7 +1,5 @@
 import { defineConfig } from "vitepress";
 
-const inProd = process.env.NODE_ENV === "production";
-
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   head: [
@@ -58,7 +56,8 @@ export default defineConfig({
         softwareVersion: "v0.9.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
-        screenshot: "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
+        screenshot:
+          "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
         downloadUrl: "https://github.com/seanmorley15/adventurelog",
         sameAs: ["https://github.com/seanmorley15/adventurelog"],
         keywords: [
@@ -170,6 +169,10 @@ export default defineConfig({
           {
             text: "Immich Integration",
             link: "/docs/configuration/immich_integration",
+          },
+          {
+            text: "Google Maps Integration",
+            link: "/docs/configuration/google_maps_integration",
           },
           {
             text: "Social Auth and OIDC",

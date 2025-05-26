@@ -42,6 +42,7 @@ services:
       - CSRF_TRUSTED_ORIGINS=http://localhost:8016,http://localhost:8015 # Comma separated list of trusted origins for CSRF
       - DEBUG=False
       - FRONTEND_URL=http://localhost:8015 # Used for email generation. This should be the url of the frontend
+      # - GOOGLE_MAPS_API_KEY=your_google_maps_api_key # OPTIONAL, read more at https://adventurelog.app/docs/configuration/google_maps_integration.html
     ports:
       - "8016:80"
     depends_on:
