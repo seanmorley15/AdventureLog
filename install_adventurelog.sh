@@ -484,7 +484,6 @@ wait_for_services() {
     
     local max_attempts=30
     local attempt=1
-    
     while [ $attempt -le $max_attempts ]; do
         if curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_ORIGIN" | grep -q "200\|404\|302"; then
             log_success "Frontend is responding"

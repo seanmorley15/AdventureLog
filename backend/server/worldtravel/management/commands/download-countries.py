@@ -307,41 +307,69 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('All data imported successfully'))
 
     def _process_batches(self, countries_to_create, regions_to_create, cities_to_create,
-                        countries_to_update, regions_to_update, cities_to_update, batch_size):
-        """Process all pending batches in a single transaction"""
+                     countries_to_update, regions_to_update, cities_to_update, batch_size):
+        """Process all pending batches in a single transaction, safely"""
         with transaction.atomic():
-            # Create new records
+            # 1. Create new countries
             if countries_to_create:
                 self.stdout.write(f'    Creating {len(countries_to_create)} countries in batches of {batch_size}...')
                 for i in range(0, len(countries_to_create), batch_size):
                     batch = countries_to_create[i:i + batch_size]
                     Country.objects.bulk_create(batch, ignore_conflicts=True)
 
+            # 2. Re-fetch the now-saved countries from the DB
+            saved_country_map = {
+                c.country_code: c for c in Country.objects.filter(
+                    country_code__in=[c.country_code for c in countries_to_create]
+                )
+            }
+
+            # 3. Rebind Region.country to actual saved Country objects
+            for region in regions_to_create:
+                if isinstance(region.country, Country):
+                    region.country = saved_country_map.get(region.country.country_code)
+
+            # 4. Create new regions
             if regions_to_create:
                 self.stdout.write(f'    Creating {len(regions_to_create)} regions in batches of {batch_size}...')
                 for i in range(0, len(regions_to_create), batch_size):
                     batch = regions_to_create[i:i + batch_size]
                     Region.objects.bulk_create(batch, ignore_conflicts=True)
 
+            # 5. Re-fetch the now-saved regions from the DB
+            saved_region_map = {
+                r.id: r for r in Region.objects.filter(
+                    id__in=[r.id for r in regions_to_create]
+                )
+            }
+
+            # 6. Rebind City.region to actual saved Region objects
+            for city in cities_to_create:
+                if isinstance(city.region, Region):
+                    city.region = saved_region_map.get(city.region.id)
+
+            # 7. Create new cities
             if cities_to_create:
                 self.stdout.write(f'    Creating {len(cities_to_create)} cities in batches of {batch_size}...')
                 for i in range(0, len(cities_to_create), batch_size):
                     batch = cities_to_create[i:i + batch_size]
                     City.objects.bulk_create(batch, ignore_conflicts=True)
 
-            # Update existing records
+            # 8. Update existing countries
             if countries_to_update:
                 self.stdout.write(f'    Updating {len(countries_to_update)} countries in batches of {batch_size}...')
                 for i in range(0, len(countries_to_update), batch_size):
                     batch = countries_to_update[i:i + batch_size]
                     Country.objects.bulk_update(batch, ['name', 'subregion', 'capital', 'longitude', 'latitude'])
 
+            # 9. Update existing regions
             if regions_to_update:
                 self.stdout.write(f'    Updating {len(regions_to_update)} regions in batches of {batch_size}...')
                 for i in range(0, len(regions_to_update), batch_size):
                     batch = regions_to_update[i:i + batch_size]
                     Region.objects.bulk_update(batch, ['name', 'country', 'longitude', 'latitude'])
 
+            # 10. Update existing cities
             if cities_to_update:
                 self.stdout.write(f'    Updating {len(cities_to_update)} cities in batches of {batch_size}...')
                 for i in range(0, len(cities_to_update), batch_size):
