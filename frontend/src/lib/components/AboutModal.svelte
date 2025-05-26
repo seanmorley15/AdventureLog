@@ -7,10 +7,18 @@
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
 
-	onMount(() => {
+	let integrations: Record<string, boolean> | null = null;
+
+	onMount(async () => {
 		modal = document.getElementById('about_modal') as HTMLDialogElement;
 		if (modal) {
 			modal.showModal();
+		}
+		const response = await fetch('/api/integrations');
+		if (response.ok) {
+			integrations = await response.json();
+		} else {
+			integrations = null;
 		}
 	});
 
@@ -90,18 +98,38 @@
 			<h3 class="text-lg font-semibold text-gray-800 dark:text-white">
 				{$t('about.oss_attributions')}
 			</h3>
-			<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-				{$t('about.nominatim_1')}
-				<a
-					href="https://operations.osmfoundation.org/policies/nominatim/"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-primary hover:underline"
-				>
-					OpenStreetMap
-				</a>
-				. {$t('about.nominatim_2')}
-			</p>
+			{#if integrations && integrations?.google_maps}
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+					{$t('about.nominatim_1')}
+					<a
+						href="https://developers.google.com/maps/terms"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-primary hover:underline"
+					>
+						Google Maps
+					</a>
+					.
+				</p>
+			{:else if integrations && !integrations?.google_maps}
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+					{$t('about.nominatim_1')}
+					<a
+						href="https://operations.osmfoundation.org/policies/nominatim/"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="text-primary hover:underline"
+					>
+						OpenStreetMap
+					</a>
+					. {$t('about.nominatim_2')}
+				</p>
+			{:else}
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
+					{$t('about.generic_attributions')}
+				</p>
+			{/if}
+
 			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{$t('about.other_attributions')}</p>
 		</div>
 

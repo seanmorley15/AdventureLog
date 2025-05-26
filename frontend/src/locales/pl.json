@@ -42,7 +42,8 @@
     "nominatim_1": "Wyszukiwanie lokalizacji i geokodowanie zapewnia",
     "nominatim_2": "Ich dane są licencjonowane na licencji ODbL.",
     "other_attributions": "Dodatkowe atrybucje można znaleźć w pliku README.",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "generic_attributions": "Zaloguj się do Adventurelog, aby wyświetlić atrybucje dla włączonych integracji i usług."
   },
   "home": {
     "hero_1": "Odkryj najbardziej ekscytujące podróże na świecie",
@@ -315,7 +316,8 @@
     "sun_times": "Czasy słońca",
     "sunrise": "Wschód słońca",
     "sunset": "Zachód słońca",
-    "timed": "Czas"
+    "timed": "Czas",
+    "distance": "Dystans"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

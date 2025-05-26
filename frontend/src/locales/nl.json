@@ -8,7 +8,8 @@
     "nominatim_2": "Hun gegevens zijn in licentie gegeven onder de ODbL-licentie.",
     "oss_attributions": "Open source gebruik",
     "other_attributions": "Aanvullende vermeldingen zijn te vinden in het README-bestand.",
-    "source_code": "Broncode"
+    "source_code": "Broncode",
+    "generic_attributions": "Log in op AdventUrelog om attributies te bekijken voor ingeschakelde integraties en services."
   },
   "adventures": {
     "activities": {
@@ -267,7 +268,8 @@
     "sun_times": "Zonnetijden",
     "sunrise": "Zonsopgang",
     "sunset": "Zonsondergang",
-    "timed": "Getimed"
+    "timed": "Getimed",
+    "distance": "Afstand"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

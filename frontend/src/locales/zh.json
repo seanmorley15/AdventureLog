@@ -42,7 +42,8 @@
     "oss_attributions": "开源声明",
     "other_attributions": "其他声明可以在 README 文件中找到。",
     "source_code": "源代码",
-    "close": "关闭"
+    "close": "关闭",
+    "generic_attributions": "登录到AdventureLog以查看启用集成和服务的归因。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -315,7 +316,8 @@
     "sun_times": "阳光时代",
     "sunrise": "日出",
     "sunset": "日落",
-    "timed": "时间"
+    "timed": "时间",
+    "distance": "距离"
   },
   "auth": {
     "forgot_password": "忘记密码？",

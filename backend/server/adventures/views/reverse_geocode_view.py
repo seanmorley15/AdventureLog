@@ -46,7 +46,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             return Response({"error": "An internal error occurred while processing the request"}, status=500)
 
     @action(detail=False, methods=['post'])
-    def mark_visited_region(self, request):
+    def mark_visited_region(self, _):
         # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
         new_region_count = 0
         new_regions = {}
@@ -60,14 +60,13 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                 lon = adventure.longitude
                 if not lat or not lon:
                     continue
-                url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
-                headers = {'User-Agent': 'AdventureLog Server'}
-                response = requests.get(url, headers=headers)
-                try:
-                    data = response.json()
-                except requests.exceptions.JSONDecodeError:
-                    return Response({"error": "Invalid response from geocoding service"}, status=400)
-                extracted_region = extractIsoCode(self.request.user,data)
+                
+                # Use the existing reverse_geocode function which handles both Google and OSM
+                data = reverse_geocode(lat, lon, self.request.user)
+                if 'error' in data:
+                    continue
+                    
+                extracted_region = extractIsoCode(self.request.user, data)
                 if 'error' not in extracted_region:
                     region = Region.objects.filter(id=extracted_region['region_id']).first()
                     visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()

@@ -42,7 +42,8 @@
     "nominatim_1": "Stedsøk og geokoding leveres av",
     "nominatim_2": "Deres data er lisensiert under ODbL-lisensen.",
     "other_attributions": "Ytterligere attribusjoner finnes i README-filen.",
-    "close": "Lukk"
+    "close": "Lukk",
+    "generic_attributions": "Logg inn på Adventurelog for å se attribusjoner for aktiverte integrasjoner og tjenester."
   },
   "home": {
     "hero_1": "Oppdag verdens mest spennende eventyr",
@@ -315,7 +316,8 @@
     "sun_times": "Soltider",
     "sunrise": "Soloppgang",
     "sunset": "Solnedgang",
-    "timed": "Tidsbestemt"
+    "timed": "Tidsbestemt",
+    "distance": "Avstand"
   },
   "worldtravel": {
     "country_list": "Liste over land",

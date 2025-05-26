@@ -166,7 +166,6 @@ def is_host_resolvable(hostname: str) -> bool:
 
 def reverse_geocode(lat, lon, user):
     if getattr(settings, 'GOOGLE_MAPS_API_KEY', None):
-        print("Using Google Maps API for reverse geocoding")
         return reverse_geocode_google(lat, lon, user)
     return reverse_geocode_osm(lat, lon, user)
 

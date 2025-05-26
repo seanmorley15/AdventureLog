@@ -61,6 +61,7 @@ class Command(BaseCommand):
             return
         elif os.path.getsize(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('countries+regions+states.json is empty'))
+            return
         elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
             self.stdout.write(self.style.WARNING('Some region data is missing. Re-importing all data.'))
         else:

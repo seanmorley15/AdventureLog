@@ -42,6 +42,7 @@
 		"nominatim_1": "Location Search and Geocoding is provided by",
 		"nominatim_2": "Their data is liscensed under the ODbL license.",
 		"other_attributions": "Additional attributions can be found in the README file.",
+		"generic_attributions": "Login to AdventureLog to view attributions for enabled integrations and services.",
 		"close": "Close"
 	},
 	"home": {

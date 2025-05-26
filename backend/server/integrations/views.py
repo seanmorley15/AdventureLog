@@ -1,13 +1,13 @@
 import os
 from rest_framework.response import Response
 from rest_framework import viewsets, status
-
 from .serializers import ImmichIntegrationSerializer
 from .models import ImmichIntegration
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.pagination import PageNumberPagination
+from django.conf import settings
 
 class IntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -16,14 +16,15 @@ class IntegrationView(viewsets.ViewSet):
         RESTful GET method for listing all integrations.
         """
         immich_integrations = ImmichIntegration.objects.filter(user=request.user)
+        google_map_integration = settings.GOOGLE_MAPS_API_KEY is not ''
 
         return Response(
             {
-                'immich': immich_integrations.exists()
+                'immich': immich_integrations.exists(),
+                'google_maps': google_map_integration
             },
             status=status.HTTP_200_OK
         )
-
 
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 25

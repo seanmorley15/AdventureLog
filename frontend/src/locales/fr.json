@@ -8,7 +8,8 @@
     "nominatim_2": "Leurs données sont sous licence ODbL.",
     "oss_attributions": "Attributions Open Source",
     "other_attributions": "Des attributions supplémentaires peuvent être trouvées dans le fichier README.",
-    "source_code": "Code source"
+    "source_code": "Code source",
+    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés."
   },
   "adventures": {
     "activities": {
@@ -267,7 +268,8 @@
     "sun_times": "Temps du soleil",
     "sunrise": "Lever du soleil",
     "sunset": "Coucher de soleil",
-    "timed": "Chronométré"
+    "timed": "Chronométré",
+    "distance": "Distance"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
