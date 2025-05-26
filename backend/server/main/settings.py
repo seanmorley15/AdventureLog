@@ -102,21 +102,29 @@ ROOT_URLCONF = 'main.urls'
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 
+# Using legacy PG environment variables for compatibility with existing setups
+
+def env(*keys, default=None):
+    """Return the first non-empty environment variable from a list of keys."""
+    for key in keys:
+        value = os.getenv(key)
+        if value:
+            return value
+    return default
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': getenv('PGDATABASE') or getenv('POSTGRES_DB'),
-        'USER': getenv('PGUSER') or getenv('POSTGRES_USER'),
-        'PASSWORD': getenv('PGPASSWORD') or getenv('POSTGRES_PASSWORD'),
-        'HOST': getenv('PGHOST'),
-        'PORT': getenv('PGPORT', 5432),
+        'NAME': env('PGDATABASE', 'POSTGRES_DB'),
+        'USER': env('PGUSER', 'POSTGRES_USER'),
+        'PASSWORD': env('PGPASSWORD', 'POSTGRES_PASSWORD'),
+        'HOST': env('PGHOST', default='localhost'),
+        'PORT': env('PGPORT', default='5432'),
         'OPTIONS': {
             'sslmode': 'prefer',  # Prefer SSL, but allow non-SSL connections
         },
     }
 }
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
