@@ -16,7 +16,7 @@ class IntegrationView(viewsets.ViewSet):
         RESTful GET method for listing all integrations.
         """
         immich_integrations = ImmichIntegration.objects.filter(user=request.user)
-        google_map_integration = settings.GOOGLE_MAPS_API_KEY is not ''
+        google_map_integration = settings.GOOGLE_MAPS_API_KEY != ''
 
         return Response(
             {
