@@ -105,9 +105,9 @@ ROOT_URLCONF = 'main.urls'
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': getenv('PGDATABASE'),
-        'USER': getenv('PGUSER'),
-        'PASSWORD': getenv('PGPASSWORD'),
+        'NAME': getenv('PGDATABASE') or getenv('POSTGRES_DB'),
+        'USER': getenv('PGUSER') or getenv('POSTGRES_USER'),
+        'PASSWORD': getenv('PGPASSWORD') or getenv('POSTGRES_PASSWORD'),
         'HOST': getenv('PGHOST'),
         'PORT': getenv('PGPORT', 5432),
         'OPTIONS': {
