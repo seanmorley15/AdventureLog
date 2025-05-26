@@ -1,13 +1,9 @@
 services:
   web:
-    #build: ./frontend/
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
-    environment:
-      - PUBLIC_SERVER_URL=http://server:8000 # Should be the service name of the backend with port 8000, even if you change the port in the backend service
-      - ORIGIN=http://localhost:8015
-      - BODY_SIZE_LIMIT=Infinity
+    env_file: .env
     ports:
       - "8015:3000"
     depends_on:
@@ -17,32 +13,15 @@ services:
     image: postgis/postgis:15-3.3
     container_name: adventurelog-db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: database
-      POSTGRES_USER: adventure
-      POSTGRES_PASSWORD: changeme123
+    env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    #build: ./backend/
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
-    environment:
-      - PGHOST=db
-      - PGDATABASE=database
-      - PGUSER=adventure
-      - PGPASSWORD=changeme123
-      - SECRET_KEY=changeme123
-      - DJANGO_ADMIN_USERNAME=admin
-      - DJANGO_ADMIN_PASSWORD=admin
-      - DJANGO_ADMIN_EMAIL=admin@example.com
-      - PUBLIC_URL=http://localhost:8016 # Match the outward port, used for the creation of image urls
-      - CSRF_TRUSTED_ORIGINS=http://localhost:8016,http://localhost:8015 # Comma separated list of trusted origins for CSRF
-      - DEBUG=False
-      - FRONTEND_URL=http://localhost:8015 # Used for email generation. This should be the url of the frontend
-      # - GOOGLE_MAPS_API_KEY=your_google_maps_api_key # OPTIONAL, read more at https://adventurelog.app/docs/configuration/google_maps_integration.html
+    env_file: .env
     ports:
       - "8016:80"
     depends_on:
