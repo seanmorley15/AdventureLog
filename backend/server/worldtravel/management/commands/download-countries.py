@@ -43,7 +43,7 @@ class Command(BaseCommand):
 
     def handle(self, **options):
         force = options['force']
-        batch_size = 1000  # Larger batch size for better efficiency
+        batch_size = 500  # Larger batch size for better efficiency
         countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
         
         if not os.path.exists(countries_json_path) or force:
