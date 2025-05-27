@@ -23,6 +23,7 @@ readonly YELLOW='\033[1;33m'
 readonly BLUE='\033[0;34m'
 readonly PURPLE='\033[0;35m'
 readonly CYAN='\033[0;36m'
+readonly MAGENTA='\033[0;35m'
 readonly BOLD='\033[1m'
 readonly NC='\033[0m' # No Color
 
@@ -54,9 +55,9 @@ print_banner() {
     cat << 'EOF'
 ╔══════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
-║    🌍  A D V E N T U R E L O G   I N S T A L L E R                  ║
+║    🌍  A D V E N T U R E L O G   I N S T A L L E R                   ║
 ║                                                                      ║
-║    The Ultimate Self-Hosted Adventure Tracking Platform             ║
+║                The Ultimate Travel Companion                         ║
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 EOF
@@ -205,6 +206,19 @@ create_directory() {
         log_error "Failed to change to directory: $INSTALL_DIR"
         exit 1
     }
+}
+
+# Check for AdventureLog running as a docker container
+check_running_container() {
+    if docker ps -a --filter "name=adventurelog" --format '{{.Names}}' | grep -q "adventurelog"; then
+        log_error "AdventureLog is already running as a Docker container (including stopped or restarting states)."
+        echo ""
+        echo "Running this installer further can break existing installs."
+        echo "Please stop and remove the existing AdventureLog container manually before proceeding."
+        echo "  • To stop: docker compose down --remove-orphans"
+        echo "Installation aborted to prevent data loss."
+        exit 1
+    fi
 }
 
 download_files() {
@@ -480,21 +494,47 @@ start_services() {
 }
 
 wait_for_services() {
-    log_info "Waiting for services to be ready..."
+    log_info "Waiting for services to be ready... (up to 90 seconds, first startup may take longer)"
     
-    local max_attempts=30
+    local max_attempts=45  # 45 attempts * 2 seconds = 90 seconds total
     local attempt=1
+    local frontend_ready=false
+    local backend_ready=false
+    
     while [ $attempt -le $max_attempts ]; do
-        if curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_ORIGIN" | grep -q "200\|404\|302"; then
-            log_success "Frontend is responding"
+        # Check frontend
+        if [ "$frontend_ready" = false ]; then
+            if curl -s -o /dev/null -w "%{http_code}" "$FRONTEND_ORIGIN" | grep -q "200\|404\|302"; then
+                log_success "Frontend is responding"
+                frontend_ready=true
+            fi
+        fi
+        
+        # Check backend
+        if [ "$backend_ready" = false ]; then
+            if curl -s -o /dev/null -w "%{http_code}" "$BACKEND_URL" | grep -q "200\|404\|302"; then
+                log_success "Backend is responding"
+                backend_ready=true
+            fi
+        fi
+        
+        # If both are ready, break the loop
+        if [ "$frontend_ready" = true ] && [ "$backend_ready" = true ]; then
             break
         fi
         
+        # Check if we've reached max attempts
         if [ $attempt -eq $max_attempts ]; then
-            log_warning "Frontend may still be starting up (this is normal for first run)"
+            if [ "$frontend_ready" = false ]; then
+                log_warning "Frontend may still be starting up (this is normal for first run)"
+            fi
+            if [ "$backend_ready" = false ]; then
+                log_warning "Backend may still be starting up (this is normal for first run)"
+            fi
             break
         fi
         
+        # Wait and increment counter
         printf "."
         sleep 2
         ((attempt++))
@@ -509,50 +549,54 @@ wait_for_services() {
 print_success_message() {
     local ip_address
     ip_address=$(hostname -I 2>/dev/null | cut -d' ' -f1 || echo "localhost")
-    
+
     echo ""
     cat << 'EOF'
-╔══════════════════════════════════════════════════════════════════════╗
-║                                                                      ║
-║    🎉  A D V E N T U R E L O G   I N S T A L L E D  !              ║
-║                                                                      ║
-╚══════════════════════════════════════════════════════════════════════╝
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║     🚀  A D V E N T U R E L O G   I S   R E A D Y   F O R   L A U N C H!   ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
 EOF
     echo ""
-    
-    log_success "Installation completed successfully!"
+
+    log_success "🎉 Installation completed successfully!"
     echo ""
-    
-    echo -e "${BOLD}📍 Access Points:${NC}"
-    echo -e "   🌐 Frontend:  ${CYAN}$FRONTEND_ORIGIN${NC}"
-    echo -e "   🔧 Backend:   ${CYAN}$BACKEND_URL${NC}"
-    
-    if [[ "$FRONTEND_ORIGIN" == *"localhost"* ]]; then
-        echo -e "   🏠 Local IP:  ${CYAN}http://$ip_address:8015${NC}"
-    fi
-    
+
+    echo -e "${BOLD}🌐 Access Points:${NC}"
+    echo -e "   🖥️  Frontend:   ${CYAN}$FRONTEND_ORIGIN${NC}"
+    echo -e "   ⚙️  Backend:    ${CYAN}$BACKEND_URL${NC}"
+
     echo ""
     echo -e "${BOLD}🔐 Admin Credentials:${NC}"
-    echo -e "   Username: ${GREEN}admin${NC}"
-    echo -e "   Password: ${GREEN}$ADMIN_PASSWORD${NC}"
-    
+    echo -e "   👤 Username:  ${GREEN}admin${NC}"
+    echo -e "   🔑 Password:  ${GREEN}$ADMIN_PASSWORD${NC}"
+
     echo ""
     echo -e "${BOLD}📁 Important Locations:${NC}"
-    echo -e "   Config:     ${YELLOW}$(pwd)/.env${NC}"
-    echo -e "   Data:       ${YELLOW}adventurelog_media Docker volume${NC}"
-    echo -e "   Logs:       ${YELLOW}docker compose logs -f${NC}"
-    
+    echo -e "   🛠️  Config:     ${YELLOW}$(pwd)/.env${NC}"
+    echo -e "   📦 Media Vol:  ${YELLOW}adventurelog_media${NC}"
+    echo -e "   📜 Logs:       ${YELLOW}docker compose logs -f${NC}"
+
     echo ""
-    echo -e "${BOLD}🛠️  Management Commands:${NC}"
-    echo -e "   Stop:       ${CYAN}docker compose down${NC}"
-    echo -e "   Start:      ${CYAN}docker compose up -d${NC}"
-    echo -e "   Update:     ${CYAN}docker compose pull && docker compose up -d${NC}"
-    echo -e "   Logs:       ${CYAN}docker compose logs -f${NC}"
-    
+    echo -e "${BOLD}🧰 Management Commands:${NC}"
+    echo -e "   ⛔ Stop:       ${CYAN}docker compose down${NC}"
+    echo -e "   ▶️  Start:      ${CYAN}docker compose up -d${NC}"
+    echo -e "   🔄 Update:     ${CYAN}docker compose pull && docker compose up -d${NC}"
+    echo -e "   📖 Logs:       ${CYAN}docker compose logs -f${NC}"
+
     echo ""
-    log_info "Save your admin password in a secure location!"
+    log_info "💾 Save your admin password in a secure location!"
     echo ""
+
+    # Optional donation link
+    echo -e "${BOLD}❤️ Enjoying AdventureLog?${NC}"
+    echo -e "   Support future development: ${MAGENTA}https://buymeacoffee.com/seanmorley15${NC}"
+    echo ""
+
+    echo -e "${BOLD}🌍 Adventure awaits — your journey starts now with AdventureLog!${NC}"
 }
+
 
 print_failure_message() {
     echo ""
@@ -592,6 +636,7 @@ main() {
     print_header
     check_dependencies
     check_docker_status
+    check_running_container
     create_directory
     download_files
     prompt_configuration
