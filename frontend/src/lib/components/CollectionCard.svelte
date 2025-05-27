@@ -54,11 +54,8 @@
 	export let collection: Collection;
 
 	async function deleteCollection() {
-		let res = await fetch(`/collections/${collection.id}?/delete`, {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/x-www-form-urlencoded'
-			}
+		let res = await fetch(`/api/collections/${collection.id}`, {
+			method: 'DELETE'
 		});
 		if (res.ok) {
 			addToast('info', $t('adventures.delete_collection_success'));
