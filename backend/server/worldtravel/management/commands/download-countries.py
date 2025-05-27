@@ -101,12 +101,15 @@ class Command(BaseCommand):
 
     def _process_countries_pass(self, json_path, batch_size):
         """First pass: Process only countries"""
+        self.stdout.write('  Loading existing countries...')
         existing_countries = {c.country_code: c for c in Country.objects.all()}
-        processed_country_codes = set()
+        self.stdout.write(f'  Found {len(existing_countries)} existing countries')
         
+        processed_country_codes = set()
         countries_to_create = []
         countries_to_update = []
         country_count = 0
+        batches_processed = 0
         
         with open(json_path, 'rb') as f:
             parser = ijson.items(f, 'item')
@@ -146,6 +149,8 @@ class Command(BaseCommand):
 
                 # Process in batches to limit memory usage
                 if len(countries_to_create) >= batch_size or len(countries_to_update) >= batch_size:
+                    batches_processed += 1
+                    self.stdout.write(f'  Saving batch {batches_processed} ({len(countries_to_create)} new, {len(countries_to_update)} updated)')
                     self._flush_countries_batch(countries_to_create, countries_to_update, batch_size)
                     countries_to_create.clear()
                     countries_to_update.clear()
@@ -156,20 +161,25 @@ class Command(BaseCommand):
 
             # Process remaining countries
             if countries_to_create or countries_to_update:
+                batches_processed += 1
+                self.stdout.write(f'  Saving final batch ({len(countries_to_create)} new, {len(countries_to_update)} updated)')
                 self._flush_countries_batch(countries_to_create, countries_to_update, batch_size)
 
-        self.stdout.write(f'  Completed processing {country_count} countries')
+        self.stdout.write(self.style.SUCCESS(f'  ✓ Completed: {country_count} countries processed in {batches_processed} batches'))
         return processed_country_codes
 
     def _process_regions_pass(self, json_path, batch_size):
         """Second pass: Process only regions"""
+        self.stdout.write('  Loading countries and existing regions...')
         existing_regions = {r.id: r for r in Region.objects.all()}
         countries_dict = {c.country_code: c for c in Country.objects.all()}
-        processed_region_ids = set()
+        self.stdout.write(f'  Found {len(existing_regions)} existing regions, {len(countries_dict)} countries')
         
+        processed_region_ids = set()
         regions_to_create = []
         regions_to_update = []
         region_count = 0
+        batches_processed = 0
         
         with open(json_path, 'rb') as f:
             parser = ijson.items(f, 'item')
@@ -211,6 +221,8 @@ class Command(BaseCommand):
 
                         # Process in batches
                         if len(regions_to_create) >= batch_size or len(regions_to_update) >= batch_size:
+                            batches_processed += 1
+                            self.stdout.write(f'  Saving batch {batches_processed} ({len(regions_to_create)} new, {len(regions_to_update)} updated)')
                             self._flush_regions_batch(regions_to_create, regions_to_update, batch_size)
                             regions_to_create.clear()
                             regions_to_update.clear()
@@ -235,25 +247,30 @@ class Command(BaseCommand):
                             )
                             regions_to_create.append(region_obj)
 
-                if region_count % 1000 == 0 and region_count > 0:
+                if region_count % 2000 == 0 and region_count > 0:
                     self.stdout.write(f'  Processed {region_count} regions...')
 
             # Process remaining regions
             if regions_to_create or regions_to_update:
+                batches_processed += 1
+                self.stdout.write(f'  Saving final batch ({len(regions_to_create)} new, {len(regions_to_update)} updated)')
                 self._flush_regions_batch(regions_to_create, regions_to_update, batch_size)
 
-        self.stdout.write(f'  Completed processing {region_count} regions')
+        self.stdout.write(self.style.SUCCESS(f'  ✓ Completed: {region_count} regions processed in {batches_processed} batches'))
         return processed_region_ids
 
     def _process_cities_pass(self, json_path, batch_size):
         """Third pass: Process only cities"""
+        self.stdout.write('  Loading regions and existing cities...')
         existing_cities = {c.id: c for c in City.objects.all()}
         regions_dict = {r.id: r for r in Region.objects.all()}
-        processed_city_ids = set()
+        self.stdout.write(f'  Found {len(existing_cities)} existing cities, {len(regions_dict)} regions')
         
+        processed_city_ids = set()
         cities_to_create = []
         cities_to_update = []
         city_count = 0
+        batches_processed = 0
         
         with open(json_path, 'rb') as f:
             parser = ijson.items(f, 'item')
@@ -301,19 +318,23 @@ class Command(BaseCommand):
 
                                 # Process in batches
                                 if len(cities_to_create) >= batch_size or len(cities_to_update) >= batch_size:
+                                    batches_processed += 1
+                                    self.stdout.write(f'  Saving batch {batches_processed} ({len(cities_to_create)} new, {len(cities_to_update)} updated)')
                                     self._flush_cities_batch(cities_to_create, cities_to_update, batch_size)
                                     cities_to_create.clear()
                                     cities_to_update.clear()
                                     gc.collect()
 
-                if city_count % 5000 == 0 and city_count > 0:
+                if city_count % 10000 == 0 and city_count > 0:
                     self.stdout.write(f'  Processed {city_count} cities...')
 
             # Process remaining cities
             if cities_to_create or cities_to_update:
+                batches_processed += 1
+                self.stdout.write(f'  Saving final batch ({len(cities_to_create)} new, {len(cities_to_update)} updated)')
                 self._flush_cities_batch(cities_to_create, cities_to_update, batch_size)
 
-        self.stdout.write(f'  Completed processing {city_count} cities')
+        self.stdout.write(self.style.SUCCESS(f'  ✓ Completed: {city_count} cities processed in {batches_processed} batches'))
         return processed_city_ids
 
     def _flush_countries_batch(self, countries_to_create, countries_to_update, batch_size):
