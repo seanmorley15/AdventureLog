@@ -54,6 +54,9 @@ export const actions: Actions = {
 			credentials: 'include'
 		});
 
+		console.log('[LOGIN] Login response status:', loginFetch.status);
+		console.log('[LOGIN] Login response headers:', Array.from(loginFetch.headers.entries()));
+
 		if (loginFetch.status === 200) {
 			// Login successful without MFA
 			handleSuccessfulLogin(event, loginFetch);
@@ -108,11 +111,16 @@ export const actions: Actions = {
 
 function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
 	const setCookieHeader = response.headers.get('Set-Cookie');
+	console.log('[LOGIN] Set-Cookie header from backend:', setCookieHeader);
+
 	if (setCookieHeader) {
 		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
 		const match = setCookieHeader.match(sessionIdRegex);
 		if (match) {
 			const [, sessionId, expiryString] = match;
+
+			console.log('[LOGIN] Parsed session ID:', sessionId);
+			console.log('[LOGIN] Parsed expiry string:', expiryString);
 
 			// Get the proper cookie domain using psl
 			const hostname = event.url.hostname;
@@ -123,25 +131,41 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 			const isLocalhost = hostname === 'localhost';
 			const isSingleLabel = hostname.split('.').length === 1;
 
+			console.log('[LOGIN] Hostname info:', {
+				hostname,
+				isIPAddress,
+				isLocalhost,
+				isSingleLabel
+			});
+
 			if (!isIPAddress && !isSingleLabel && !isLocalhost) {
 				const parsed = psl.parse(hostname);
-
 				if (parsed && parsed.domain) {
-					// Use the parsed domain (e.g., mydomain.com)
 					cookieDomain = `.${parsed.domain}`;
+					console.log('[LOGIN] Using parsed cookie domain:', cookieDomain);
 				}
+			} else {
+				console.log('[LOGIN] No domain will be set for cookie.');
 			}
-			// Do not set a domain for IP addresses or invalid hostnames
 
-			event.cookies.set('sessionid', sessionId, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: event.url.protocol === 'https:',
-				expires: new Date(expiryString),
-				domain: cookieDomain // Set the domain dynamically or omit if undefined
-			});
+			try {
+				event.cookies.set('sessionid', sessionId, {
+					path: '/',
+					httpOnly: true,
+					sameSite: 'lax',
+					secure: event.url.protocol === 'https:',
+					expires: new Date(expiryString),
+					...(cookieDomain && { domain: cookieDomain }) // only include if defined
+				});
+				console.log('[LOGIN] Cookie set successfully.');
+			} catch (e) {
+				console.error('[LOGIN] Failed to set cookie:', e);
+			}
+		} else {
+			console.warn('[LOGIN] Failed to parse session ID and expiry from Set-Cookie header.');
 		}
+	} else {
+		console.warn('[LOGIN] No Set-Cookie header received from backend.');
 	}
 }
 
