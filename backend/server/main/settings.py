@@ -237,8 +237,8 @@ HEADLESS_FRONTEND_URLS = {
 }
 
 AUTHENTICATION_BACKENDS = [
-    'allauth.account.auth_backends.AuthenticationBackend',
     'users.backends.NoPasswordAuthBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
