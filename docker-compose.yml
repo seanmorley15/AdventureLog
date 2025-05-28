@@ -5,7 +5,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "8015:3000"
+      - "${FRONTEND_PORT:-8015}:3000"
     depends_on:
       - server
 
@@ -23,7 +23,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "8016:80"
+      - "${BACKEND_PORT:-8016}:80"
     depends_on:
       - db
     volumes:

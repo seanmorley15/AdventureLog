@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # =============================================================================
-# AdventureLog Ultimate Installer (Fixed)
+# AdventureLog Ultimate Installer (Fixed with Dynamic Port Handling)
 # =============================================================================
 
 APP_NAME="AdventureLog"
@@ -15,6 +15,8 @@ declare -g FRONTEND_ORIGIN=""
 declare -g BACKEND_URL=""
 declare -g ADMIN_PASSWORD=""
 declare -g DB_PASSWORD=""
+declare -g FRONTEND_PORT=""
+declare -g BACKEND_PORT=""
 
 # Color codes for beautiful output
 readonly RED='\033[0;31m'
@@ -53,7 +55,7 @@ log_header() {
 
 print_banner() {
     cat << 'EOF'
-╔══════════════════════════════════════════════════════════════════════╗
+╔══════════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
 ║         🌍  A D V E N T U R E L O G   I N S T A L L E R              ║
 ║                                                                      ║
@@ -124,6 +126,53 @@ validate_url() {
         return 0
     else
         return 1
+    fi
+}
+
+extract_port_from_url() {
+    local url="$1"
+    local default_port="$2"
+    
+    # Extract port from URL using regex
+    if [[ $url =~ :([0-9]+) ]]; then
+        echo "${BASH_REMATCH[1]}"
+    else
+        # Use default port based on protocol
+        if [[ $url =~ ^https:// ]]; then
+            echo "443"
+        elif [[ $url =~ ^http:// ]]; then
+            echo "${default_port:-80}"
+        else
+            echo "$default_port"
+        fi
+    fi
+}
+
+check_port_availability() {
+    local port="$1"
+    local service_name="$2"
+    
+    # Check if port is in use
+    if command -v netstat &>/dev/null; then
+        if netstat -ln 2>/dev/null | grep -q ":$port "; then
+            log_warning "Port $port is already in use"
+            echo ""
+            read -r -p "Do you want to continue anyway? The $service_name service may fail to start. [y/N]: " confirm
+            if [[ ! $confirm =~ ^[Yy]$ ]]; then
+                echo "Installation cancelled."
+                exit 0
+            fi
+        fi
+    elif command -v ss &>/dev/null; then
+        if ss -ln 2>/dev/null | grep -q ":$port "; then
+            log_warning "Port $port is already in use"
+            echo ""
+            read -r -p "Do you want to continue anyway? The $service_name service may fail to start. [y/N]: " confirm
+            if [[ ! $confirm =~ ^[Yy]$ ]]; then
+                echo "Installation cancelled."
+                exit 0
+            fi
+        fi
     fi
 }
 
@@ -245,6 +294,8 @@ prompt_configuration() {
     echo "Configure the URLs where AdventureLog will be accessible."
     echo "Press Enter to use the default values shown in brackets."
     echo ""
+    echo "⚠️  Note: The installer will automatically configure Docker ports based on your URLs"
+    echo ""
     
     # Frontend URL
     local default_frontend="http://localhost:8015"
@@ -253,12 +304,13 @@ prompt_configuration() {
         FRONTEND_ORIGIN=${input_frontend:-$default_frontend}
         
         if validate_url "$FRONTEND_ORIGIN"; then
+            FRONTEND_PORT=$(extract_port_from_url "$FRONTEND_ORIGIN" "8015")
             break
         else
             log_error "Invalid URL format. Please enter a valid URL (e.g., http://localhost:8015)"
         fi
     done
-    log_success "Frontend URL: $FRONTEND_ORIGIN"
+    log_success "Frontend URL: $FRONTEND_ORIGIN (Port: $FRONTEND_PORT)"
     
     # Backend URL
     local default_backend="http://localhost:8016"
@@ -267,14 +319,77 @@ prompt_configuration() {
         BACKEND_URL=${input_backend:-$default_backend}
         
         if validate_url "$BACKEND_URL"; then
+            BACKEND_PORT=$(extract_port_from_url "$BACKEND_URL" "8016")
             break
         else
             log_error "Invalid URL format. Please enter a valid URL (e.g., http://localhost:8016)"
         fi
     done
-    log_success "Backend URL: $BACKEND_URL"
+    log_success "Backend URL: $BACKEND_URL (Port: $BACKEND_PORT)"
+    
+    # Check port availability
+    check_port_availability "$FRONTEND_PORT" "frontend"
+    check_port_availability "$BACKEND_PORT" "backend"
     
     echo ""
+}
+
+update_docker_compose_ports() {
+    log_info "Updating Docker Compose configuration for custom ports..."
+    
+    # Create backup of original docker-compose.yml
+    cp docker-compose.yml docker-compose.yml.backup
+    
+    # Update the ports in docker-compose.yml
+    if command -v perl &>/dev/null; then
+        # Use perl for more reliable regex replacement
+        perl -pi -e "s/\"8015:3000\"/\"$FRONTEND_PORT:3000\"/" docker-compose.yml
+        perl -pi -e "s/\"8016:80\"/\"$BACKEND_PORT:80\"/" docker-compose.yml
+        log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
+    elif command -v sed &>/dev/null; then
+        # Fallback to sed
+        sed -i.bak "s/\"8015:3000\"/\"$FRONTEND_PORT:3000\"/" docker-compose.yml
+        sed -i.bak "s/\"8016:80\"/\"$BACKEND_PORT:80\"/" docker-compose.yml
+        log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
+    else
+        # Manual replacement as last resort
+        log_warning "No sed or perl available, using manual approach..."
+        
+        # Create new docker-compose.yml with updated ports
+        local temp_file="docker-compose.yml.temp"
+        
+        while IFS= read -r line || [[ -n "$line" ]]; do
+            case "$line" in
+                *"\"8015:3000\"*)
+                    echo "$line" | sed "s/8015/$FRONTEND_PORT/"
+                    ;;
+                *"\"8016:80\"*)
+                    echo "$line" | sed "s/8016/$BACKEND_PORT/"
+                    ;;
+                *)
+                    echo "$line"
+                    ;;
+            esac
+        done < docker-compose.yml > "$temp_file"
+        
+        if mv "$temp_file" docker-compose.yml; then
+            log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
+        else
+            log_error "Failed to update docker-compose.yml"
+            mv docker-compose.yml.backup docker-compose.yml
+            exit 1
+        fi
+    fi
+    
+    # Verify the changes were applied
+    if grep -q "\"$FRONTEND_PORT:3000\"" docker-compose.yml && grep -q "\"$BACKEND_PORT:80\"" docker-compose.yml; then
+        log_success "Port configuration verified in docker-compose.yml"
+    else
+        log_error "Failed to verify port configuration in docker-compose.yml"
+        log_info "Restoring original docker-compose.yml"
+        mv docker-compose.yml.backup docker-compose.yml
+        exit 1
+    fi
 }
 
 configure_environment_fallback() {
@@ -589,6 +704,14 @@ EOF
     log_info "💾 Save your admin password in a secure location!"
     echo ""
 
+    # Show port information if custom ports were used
+    if [[ "$FRONTEND_PORT" != "8015" ]] || [[ "$BACKEND_PORT" != "8016" ]]; then
+        echo -e "${BOLD}🔧 Custom Port Configuration:${NC}"
+        echo -e "   🖥️  Frontend Port: ${YELLOW}$FRONTEND_PORT${NC}"
+        echo -e "   ⚙️  Backend Port:  ${YELLOW}$BACKEND_PORT${NC}"
+        echo ""
+    fi
+
     # Optional donation link
     echo -e "${BOLD}❤️ Enjoying AdventureLog?${NC}"
     echo -e "   Support future development: ${MAGENTA}https://buymeacoffee.com/seanmorley15${NC}"
@@ -597,16 +720,17 @@ EOF
     echo -e "${BOLD}🌍 Adventure awaits — your journey starts now with AdventureLog!${NC}"
 }
 
-
 print_failure_message() {
     echo ""
     log_error "Installation failed!"
     echo ""
     echo "Troubleshooting steps:"
     echo "1. Check Docker is running: docker info"
-    echo "2. Check available ports: netstat -an | grep :801[56]"
-    echo "3. View logs: docker compose logs"
-    echo "4. Check .env configuration: cat .env"
+    echo "2. Check available ports: netstat -an | grep :$FRONTEND_PORT"
+    echo "3. Check available ports: netstat -an | grep :$BACKEND_PORT"
+    echo "4. View logs: docker compose logs"
+    echo "5. Check .env configuration: cat .env"
+    echo "6. Check docker-compose.yml ports: grep -A5 ports docker-compose.yml"
     echo ""
     echo "For support, visit: https://github.com/seanmorley15/AdventureLog"
 }
@@ -617,6 +741,11 @@ cleanup_on_failure() {
     if [ -f ".env.backup" ]; then
         mv .env.backup .env
         log_info "Restored original .env file"
+    fi
+    
+    if [ -f "docker-compose.yml.backup" ]; then
+        mv docker-compose.yml.backup docker-compose.yml
+        log_info "Restored original docker-compose.yml file"
     fi
     
     if command -v docker &>/dev/null; then
@@ -640,13 +769,15 @@ main() {
     create_directory
     download_files
     prompt_configuration
+    update_docker_compose_ports
     configure_environment
     start_services
     wait_for_services
     print_success_message
     
-    # Clean up backup file on success
+    # Clean up backup files on success
     rm -f .env.backup
+    rm -f docker-compose.yml.backup
 }
 
 # Script entry point
