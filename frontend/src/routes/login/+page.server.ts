@@ -54,8 +54,8 @@ export const actions: Actions = {
 			credentials: 'include'
 		});
 
-		console.log('[LOGIN] Login response status:', loginFetch.status);
-		console.log('[LOGIN] Login response headers:', Array.from(loginFetch.headers.entries()));
+		// console.log('[LOGIN] Login response status:', loginFetch.status);
+		// console.log('[LOGIN] Login response headers:', Array.from(loginFetch.headers.entries()));
 
 		if (loginFetch.status === 200) {
 			// Login successful without MFA
@@ -123,10 +123,10 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 		}
 	}
 
-	console.log('[LOGIN] All Set-Cookie headers:', setCookieHeaders);
+	// console.log('[LOGIN] All Set-Cookie headers:', setCookieHeaders);
 
 	const sessionCookie = setCookieHeaders.find((cookie) => cookie.startsWith('sessionid=')) || '';
-	console.log('[LOGIN] Session cookie:', sessionCookie);
+	// console.log('[LOGIN] Session cookie:', sessionCookie);
 
 	if (!sessionCookie) {
 		console.warn('[LOGIN] No sessionid cookie found.');
@@ -144,8 +144,8 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 	const sessionId = sessionIdMatch[1];
 	const expires = expiresMatch ? new Date(expiresMatch[1]) : undefined;
 
-	console.log('[LOGIN] Extracted session ID:', sessionId);
-	if (expires) console.log('[LOGIN] Extracted expires:', expires);
+	// console.log('[LOGIN] Extracted session ID:', sessionId);
+	// if (expires) console.log('[LOGIN] Extracted expires:', expires);
 
 	// Determine cookie domain
 	const hostname = event.url.hostname;
@@ -160,7 +160,7 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 			cookieDomain = `.${parsed.domain}`;
 		}
 	}
-	console.log('[LOGIN] Setting cookie domain:', cookieDomain);
+	// console.log('[LOGIN] Setting cookie domain:', cookieDomain);
 
 	const cookieOptions = {
 		path: '/',
@@ -171,10 +171,10 @@ function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, respo
 		...(cookieDomain && { domain: cookieDomain })
 	};
 
-	console.log('[LOGIN] Cookie options:', cookieOptions);
+	// console.log('[LOGIN] Cookie options:', cookieOptions);
 
 	event.cookies.set('sessionid', sessionId, cookieOptions);
-	console.log('[LOGIN] Cookie set successfully.');
+	// console.log('[LOGIN] Cookie set successfully.');
 }
 
 function extractSessionId(setCookieHeader: string | null) {
