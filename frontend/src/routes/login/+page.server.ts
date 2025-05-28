@@ -110,63 +110,71 @@ export const actions: Actions = {
 };
 
 function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
-	const setCookieHeader = response.headers.get('Set-Cookie');
-	console.log('[LOGIN] Set-Cookie header from backend:', setCookieHeader);
+	// Get all Set-Cookie headers
+	let setCookieHeaders: string[] = [];
 
-	if (setCookieHeader) {
-		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
-		const match = setCookieHeader.match(sessionIdRegex);
-		if (match) {
-			const [, sessionId, expiryString] = match;
-
-			console.log('[LOGIN] Parsed session ID:', sessionId);
-			console.log('[LOGIN] Parsed expiry string:', expiryString);
-
-			// Get the proper cookie domain using psl
-			const hostname = event.url.hostname;
-			let cookieDomain;
-
-			// Check if hostname is an IP address
-			const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
-			const isLocalhost = hostname === 'localhost';
-			const isSingleLabel = hostname.split('.').length === 1;
-
-			console.log('[LOGIN] Hostname info:', {
-				hostname,
-				isIPAddress,
-				isLocalhost,
-				isSingleLabel
-			});
-
-			if (!isIPAddress && !isSingleLabel && !isLocalhost) {
-				const parsed = psl.parse(hostname);
-				if (parsed && parsed.domain) {
-					cookieDomain = `.${parsed.domain}`;
-					console.log('[LOGIN] Using parsed cookie domain:', cookieDomain);
-				}
-			} else {
-				console.log('[LOGIN] No domain will be set for cookie.');
-			}
-
-			try {
-				event.cookies.set('sessionid', sessionId, {
-					path: '/',
-					httpOnly: true,
-					sameSite: 'lax',
-					secure: event.url.protocol === 'https:',
-					expires: new Date(expiryString),
-					...(cookieDomain && { domain: cookieDomain }) // only include if defined
-				});
-				console.log('[LOGIN] Cookie set successfully.');
-			} catch (e) {
-				console.error('[LOGIN] Failed to set cookie:', e);
-			}
-		} else {
-			console.warn('[LOGIN] Failed to parse session ID and expiry from Set-Cookie header.');
-		}
+	if ('getSetCookie' in response.headers && typeof response.headers.getSetCookie === 'function') {
+		setCookieHeaders = response.headers.getSetCookie();
 	} else {
-		console.warn('[LOGIN] No Set-Cookie header received from backend.');
+		const raw = response.headers.get('Set-Cookie');
+		if (raw) {
+			// Safely split on commas only if a new cookie starts (e.g., key=value)
+			setCookieHeaders = raw.split(/,\s*(?=\w+=)/);
+		}
 	}
+
+	console.log('[LOGIN] All Set-Cookie headers:', setCookieHeaders);
+
+	const sessionCookie = setCookieHeaders.find((cookie) => cookie.startsWith('sessionid=')) || '';
+	console.log('[LOGIN] Session cookie:', sessionCookie);
+
+	if (!sessionCookie) {
+		console.warn('[LOGIN] No sessionid cookie found.');
+		return;
+	}
+
+	const sessionIdMatch = sessionCookie.match(/sessionid=([^;]+)/);
+	const expiresMatch = sessionCookie.match(/expires=([^;]+)/i);
+
+	if (!sessionIdMatch) {
+		console.warn('[LOGIN] Could not extract session ID from cookie.');
+		return;
+	}
+
+	const sessionId = sessionIdMatch[1];
+	const expires = expiresMatch ? new Date(expiresMatch[1]) : undefined;
+
+	console.log('[LOGIN] Extracted session ID:', sessionId);
+	if (expires) console.log('[LOGIN] Extracted expires:', expires);
+
+	// Determine cookie domain
+	const hostname = event.url.hostname;
+	const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+	const isLocalhost = hostname === 'localhost';
+	const isSingleLabel = hostname.split('.').length === 1;
+
+	let cookieDomain: string | undefined;
+	if (!isIPAddress && !isLocalhost && !isSingleLabel) {
+		const parsed = psl.parse(hostname);
+		if (parsed && parsed.domain) {
+			cookieDomain = `.${parsed.domain}`;
+		}
+	}
+	console.log('[LOGIN] Setting cookie domain:', cookieDomain);
+
+	const cookieOptions = {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'lax' as const,
+		secure: event.url.protocol === 'https:',
+		...(expires && { expires }),
+		...(cookieDomain && { domain: cookieDomain })
+	};
+
+	console.log('[LOGIN] Cookie options:', cookieOptions);
+
+	event.cookies.set('sessionid', sessionId, cookieOptions);
+	console.log('[LOGIN] Cookie set successfully.');
 }
 
 function extractSessionId(setCookieHeader: string | null) {
