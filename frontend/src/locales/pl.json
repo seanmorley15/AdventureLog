@@ -317,7 +317,9 @@
     "sunrise": "Wschód słońca",
     "sunset": "Zachód słońca",
     "timed": "Czas",
-    "distance": "Dystans"
+    "distance": "Dystans",
+    "all_linked_items": "Wszystkie połączone elementy",
+    "itinerary": "Trasa"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -672,7 +674,12 @@
     "contact": "Kontakt",
     "phone": "Telefon",
     "recommendation": "Zalecenie",
-    "website": "Strona internetowa"
+    "website": "Strona internetowa",
+    "recommendations": "Zalecenia",
+    "adventure_recommendations": "Zalecenia przygodowe",
+    "food": "Żywność",
+    "miles": "Mil",
+    "tourism": "Turystyka"
   },
   "lodging": {
     "apartment": "Apartament",

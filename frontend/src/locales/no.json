@@ -317,7 +317,9 @@
     "sunrise": "Soloppgang",
     "sunset": "Solnedgang",
     "timed": "Tidsbestemt",
-    "distance": "Avstand"
+    "distance": "Avstand",
+    "all_linked_items": "Alle koblede varer",
+    "itinerary": "Reiserute"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -702,6 +704,11 @@
     "phone": "Telefon",
     "contact": "Kontakt",
     "website": "Nettsted",
-    "recommendation": "Anbefaling"
+    "recommendation": "Anbefaling",
+    "recommendations": "Anbefalinger",
+    "adventure_recommendations": "Eventyranbefalinger",
+    "food": "Mat",
+    "miles": "Miles",
+    "tourism": "Turisme"
   }
 }

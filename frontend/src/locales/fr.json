@@ -269,7 +269,9 @@
     "sunrise": "Lever du soleil",
     "sunset": "Coucher de soleil",
     "timed": "Chronométré",
-    "distance": "Distance"
+    "distance": "Distance",
+    "all_linked_items": "Tous les éléments liés",
+    "itinerary": "Itinéraire"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -672,7 +674,12 @@
     "contact": "Contact",
     "phone": "Téléphone",
     "recommendation": "Recommandation",
-    "website": "Site web"
+    "website": "Site web",
+    "recommendations": "Recommandations",
+    "adventure_recommendations": "Recommandations d'aventure",
+    "food": "Nourriture",
+    "miles": "Kilomètres",
+    "tourism": "Tourisme"
   },
   "lodging": {
     "apartment": "Appartement",

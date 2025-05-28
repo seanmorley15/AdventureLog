@@ -269,7 +269,9 @@
     "sunrise": "Zonsopgang",
     "sunset": "Zonsondergang",
     "timed": "Getimed",
-    "distance": "Afstand"
+    "distance": "Afstand",
+    "all_linked_items": "Alle gekoppelde items",
+    "itinerary": "Routebeschrijving"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -672,7 +674,12 @@
     "contact": "Contact",
     "phone": "Telefoon",
     "recommendation": "Aanbeveling",
-    "website": "Website"
+    "website": "Website",
+    "recommendations": "Aanbevelingen",
+    "adventure_recommendations": "Avontuuraanbevelingen",
+    "food": "Voedsel",
+    "miles": "Kilometers",
+    "tourism": "Toerisme"
   },
   "lodging": {
     "apartment": "Appartement",

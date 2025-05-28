@@ -317,7 +317,9 @@
     "sunrise": "日出",
     "sunset": "日落",
     "timed": "时间",
-    "distance": "距离"
+    "distance": "距离",
+    "all_linked_items": "所有链接的项目",
+    "itinerary": "行程"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -672,7 +674,12 @@
     "contact": "联系方式",
     "phone": "电话",
     "recommendation": "推荐",
-    "website": "网站"
+    "website": "网站",
+    "recommendations": "建议",
+    "adventure_recommendations": "冒险建议",
+    "food": "食物",
+    "miles": "英里",
+    "tourism": "旅游"
   },
   "lodging": {
     "campground": "露营地",

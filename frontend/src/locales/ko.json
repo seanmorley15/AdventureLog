@@ -269,7 +269,9 @@
     "sunrise": "해돋이",
     "sunset": "일몰",
     "timed": "시간이 정해졌습니다",
-    "distance": "거리"
+    "distance": "거리",
+    "all_linked_items": "모든 링크 된 항목",
+    "itinerary": "여정"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",
@@ -454,7 +456,12 @@
     "contact": "연락처",
     "phone": "핸드폰",
     "recommendation": "추천",
-    "website": "웹사이트"
+    "website": "웹사이트",
+    "recommendations": "권장 사항",
+    "adventure_recommendations": "모험 추천",
+    "food": "음식",
+    "miles": "마일",
+    "tourism": "관광 여행"
   },
   "search": {
     "adventurelog_results": "Adventurelog 결과",

@@ -269,7 +269,9 @@
     "sunrise": "Alba",
     "sunset": "Tramonto",
     "timed": "A tempo",
-    "distance": "Distanza"
+    "distance": "Distanza",
+    "all_linked_items": "Tutti gli elementi collegati",
+    "itinerary": "Itinerario"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -672,7 +674,12 @@
     "contact": "Contatto",
     "phone": "Telefono",
     "recommendation": "Raccomandazione",
-    "website": "Sito web"
+    "website": "Sito web",
+    "recommendations": "Raccomandazioni",
+    "adventure_recommendations": "Consigli di avventura",
+    "food": "Cibo",
+    "miles": "Miglia",
+    "tourism": "Turismo"
   },
   "lodging": {
     "apartment": "Appartamento",

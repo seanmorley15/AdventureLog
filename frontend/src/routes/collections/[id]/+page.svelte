@@ -781,11 +781,11 @@
 			value={currentView}
 			on:change={changeHash}
 		>
-			<option value="itinerary">📅 Itinerary</option>
-			<option value="all">🗒️ All Linked Items</option>
-			<option value="calendar">🗓️ Calendar</option>
-			<option value="map">🗺️ Map</option>
-			<option value="recommendations">👍️ Recommendations</option>
+			<option value="itinerary">📅 {$t('adventures.itinerary')}</option>
+			<option value="all">🗒️ {$t('adventures.all_linked_items')}</option>
+			<option value="calendar">🗓️ {$t('navbar.calendar')}</option>
+			<option value="map">🗺️ {$t('navbar.map')}</option>
+			<option value="recommendations">👍️ {$t('recomendations.recommendations')}</option>
 		</select>
 		<div class="md:flex justify-center mx-auto hidden">
 			<!-- svelte-ignore a11y-missing-attribute -->
@@ -796,32 +796,32 @@
 						href="#itinerary"
 						role="tab"
 						class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-						tabindex="0">Itinerary</a
+						tabindex="0">{$t('adventures.itinerary')}</a
 					>
 				{/if}
 				<a
 					href="#all"
 					role="tab"
 					class="tab {currentView === 'all' ? 'tab-active' : ''}"
-					tabindex="0">All Linked Items</a
+					tabindex="0">{$t('adventures.all_linked_items')}</a
 				>
 				<a
 					href="#calendar"
 					role="tab"
 					class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
-					tabindex="0">Calendar</a
+					tabindex="0">{$t('navbar.calendar')}</a
 				>
 				<a
 					href="#map"
 					role="tab"
 					class="tab {currentView === 'map' ? 'tab-active' : ''}"
-					tabindex="0">Map</a
+					tabindex="0">{$t('navbar.map')}</a
 				>
 				<a
 					href="#recommendations"
 					role="tab"
 					class="tab {currentView === 'recommendations' ? 'tab-active' : ''}"
-					tabindex="0">Recommendations</a
+					tabindex="0">{$t('recomendations.recommendations')}</a
 				>
 			</div>
 		</div>
@@ -1372,7 +1372,9 @@
 	{#if currentView == 'recommendations' && data.user}
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
-				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>
+				<h2 class="card-title text-3xl justify-center mb-4">
+					{$t('recomendations.adventure_recommendations')}
+				</h2>
 				{#each adventures as adventure}
 					{#if adventure.longitude && adventure.latitude}
 						<button on:click={() => getRecomendations(adventure)} class="btn btn-neutral"
@@ -1396,7 +1398,7 @@
 					/>
 					<div class="flex w-full justify-between px-2">
 						<span class="text-lg">
-							{(recomendationsRange / 1609.344).toFixed(1)} miles ({(
+							{(recomendationsRange / 1609.344).toFixed(1)} mi ({(
 								recomendationsRange / 1000
 							).toFixed(1)} km)
 						</span>
@@ -1406,7 +1408,7 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Tourism"
+							aria-label={$t('recomendations.tourism')}
 							checked={recomendationType == 'tourism'}
 							on:click={() => (recomendationType = 'tourism')}
 						/>
@@ -1414,7 +1416,7 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Food"
+							aria-label={$t('recomendations.food')}
 							checked={recomendationType == 'food'}
 							on:click={() => (recomendationType = 'food')}
 						/>
@@ -1422,7 +1424,7 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Lodging"
+							aria-label={$t('adventures.lodging')}
 							checked={recomendationType == 'lodging'}
 							on:click={() => (recomendationType = 'lodging')}
 						/>

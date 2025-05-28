@@ -269,7 +269,9 @@
     "sunrise": "Soluppgång",
     "sunset": "Solnedgång",
     "timed": "Tidsinställd",
-    "distance": "Avstånd"
+    "distance": "Avstånd",
+    "all_linked_items": "Alla länkade objekt",
+    "itinerary": "Resväg"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -672,7 +674,12 @@
     "contact": "Kontakta",
     "phone": "Telefon",
     "recommendation": "Rekommendation",
-    "website": "Webbplats"
+    "website": "Webbplats",
+    "recommendations": "Rekommendationer",
+    "adventure_recommendations": "Äventyrsrekommendationer",
+    "food": "Mat",
+    "miles": "Miles",
+    "tourism": "Turism"
   },
   "lodging": {
     "apartment": "Lägenhet",

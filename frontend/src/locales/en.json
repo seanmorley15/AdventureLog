@@ -270,6 +270,8 @@
 		"download_calendar": "Download Calendar",
 		"all_day": "All Day",
 		"ordered_itinerary": "Ordered Itinerary",
+		"itinerary": "Itinerary",
+		"all_linked_items": "All Linked Items",
 		"date_itinerary": "Date Itinerary",
 		"no_ordered_items": "Add items with dates to the collection to see them here.",
 		"date_information": "Date Information",
@@ -702,6 +704,11 @@
 		"phone": "Phone",
 		"contact": "Contact",
 		"website": "Website",
-		"recommendation": "Recommendation"
+		"recommendation": "Recommendation",
+		"recommendations": "Recommendations",
+		"adventure_recommendations": "Adventure Recommendations",
+		"miles": "Miles",
+		"food": "Food",
+		"tourism": "Tourism"
 	}
 }
