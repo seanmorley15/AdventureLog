@@ -237,7 +237,9 @@ HEADLESS_FRONTEND_URLS = {
 }
 
 AUTHENTICATION_BACKENDS = [
+    'allauth.account.auth_backends.AuthenticationBackend',
     'users.backends.NoPasswordAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
