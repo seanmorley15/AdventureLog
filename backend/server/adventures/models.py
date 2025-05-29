@@ -5,6 +5,7 @@ import uuid
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from adventures.managers import AdventureManager
+import threading
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
@@ -12,6 +13,42 @@ from django_resized import ResizedImageField
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
 from adventures.geocoding import reverse_geocode
 from django.utils import timezone
+
+def background_geocode_and_assign(adventure_id: str):
+    try:
+        adventure = Adventure.objects.get(id=adventure_id)
+        if not (adventure.latitude and adventure.longitude):
+            return
+        
+        from adventures.geocoding import reverse_geocode  # or wherever you defined it
+        is_visited = adventure.is_visited_status()
+        result = reverse_geocode(adventure.latitude, adventure.longitude, adventure.user_id)
+
+        if 'region_id' in result:
+            region = Region.objects.filter(id=result['region_id']).first()
+            if region:
+                adventure.region = region
+                if is_visited:
+                    VisitedRegion.objects.get_or_create(user_id=adventure.user_id, region=region)
+
+        if 'city_id' in result:
+            city = City.objects.filter(id=result['city_id']).first()
+            if city:
+                adventure.city = city
+                if is_visited:
+                    VisitedCity.objects.get_or_create(user_id=adventure.user_id, city=city)
+
+        if 'country_id' in result:
+            country = Country.objects.filter(country_code=result['country_id']).first()
+            if country:
+                adventure.country = country
+
+        # Save updated location info
+        adventure.save(update_fields=["region", "city", "country"])
+
+    except Exception as e:
+        # Optional: log or print the error
+        print(f"[Adventure Geocode Thread] Error processing {adventure_id}: {e}")
 
 def validate_file_extension(value):
     import os
@@ -571,51 +608,25 @@ class Adventure(models.Model):
             if self.user_id != self.category.user_id:
                 raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
             
-    def save(self, force_insert: bool = False, force_update: bool = False, using: str | None = None, update_fields: Iterable[str] | None = None) -> None:
-        """
-        Saves the current instance. If the instance is being inserted for the first time, it will be created in the database.
-        If it already exists, it will be updated.
-        """
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
         if not self.category:
-            category, created = Category.objects.get_or_create(
-            user_id=self.user_id,
-            name='general',
-            defaults={
-                'display_name': 'General',
-                'icon': '🌍'
-            }
-        )
+            category, _ = Category.objects.get_or_create(
+                user_id=self.user_id,
+                name='general',
+                defaults={'display_name': 'General', 'icon': '🌍'}
+            )
             self.category = category
 
+        # First save the adventure quickly
+        result = super().save(force_insert, force_update, using, update_fields)
+
+        # Then fire off a thread to geocode + update region/city/country
         if self.latitude and self.longitude:
-            is_visited = self.is_visited_status()
-            reverse_geocode_result = reverse_geocode(self.latitude, self.longitude, self.user_id)
-            if 'region_id' in reverse_geocode_result:
-                region = Region.objects.filter(id=reverse_geocode_result['region_id']).first()
-                if region:
-                    self.region = region
-                    if is_visited:
-                        visited_region, created = VisitedRegion.objects.get_or_create(
-                            user_id=self.user_id,
-                            region=region
-                        )
-            if 'city_id' in reverse_geocode_result:
-                city = City.objects.filter(id=reverse_geocode_result['city_id']).first()
-                if city:
-                    self.city = city
-                    if is_visited:
-                        visited_city, created = VisitedCity.objects.get_or_create(
-                            user_id=self.user_id,
-                            city=city
-                        )
-            if 'country_id' in reverse_geocode_result:
-                country = Country.objects.filter(country_code=reverse_geocode_result['country_id']).first()
-                if country:
-                    self.country = country
-            
-        return super().save(force_insert, force_update, using, update_fields)
+            threading.Thread(target=background_geocode_and_assign, args=(str(self.id),)).start()
+
+        return result
 
     def __str__(self):
         return self.name
