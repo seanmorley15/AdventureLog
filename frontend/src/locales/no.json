@@ -319,7 +319,9 @@
     "timed": "Tidsbestemt",
     "distance": "Avstand",
     "all_linked_items": "Alle koblede varer",
-    "itinerary": "Reiserute"
+    "itinerary": "Reiserute",
+    "joined": "Ble med",
+    "view_profile": "Vis profil"
   },
   "worldtravel": {
     "country_list": "Liste over land",

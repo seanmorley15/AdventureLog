@@ -89,47 +89,73 @@
 </script>
 
 <dialog id="my_modal_1" class="modal">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">{$t('adventures.share')} {collection.name}</h3>
-		<p class="py-1">{$t('share.share_desc')}</p>
-		<div class="divider"></div>
-		<h3 class="font-bold text-md">{$t('share.shared_with')}</h3>
-		<ul>
-			{#each sharedWithUsers as user}
-				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-					<UserCard
-						{user}
-						shared_with={collection.shared_with}
-						sharing={true}
-						on:share={(event) => share(event.detail)}
-						on:unshare={(event) => unshare(event.detail)}
-					/>
+	<div
+		class="modal-box w-11/12 max-w-5xl p-6 space-y-6"
+		role="dialog"
+		tabindex="0"
+		on:keydown={handleKeydown}
+	>
+		<!-- Title -->
+		<div class="space-y-1">
+			<h3 class="text-2xl font-bold">
+				{$t('adventures.share')}
+				{collection.name}
+			</h3>
+			<p class="text-base-content/70">{$t('share.share_desc')}</p>
+		</div>
+
+		<!-- Shared With Section -->
+		<div>
+			<h4 class="text-lg font-semibold mb-2">{$t('share.shared_with')}</h4>
+			{#if sharedWithUsers.length > 0}
+				<div
+					class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-80 overflow-y-auto pr-2"
+				>
+					{#each sharedWithUsers as user}
+						<UserCard
+							{user}
+							shared_with={collection.shared_with}
+							sharing={true}
+							on:share={(event) => share(event.detail)}
+							on:unshare={(event) => unshare(event.detail)}
+						/>
+					{/each}
 				</div>
-			{/each}
-			{#if sharedWithUsers.length === 0}
-				<p class="text-neutral-content">{$t('share.no_users_shared')}</p>
+			{:else}
+				<p class="text-neutral-content italic">{$t('share.no_users_shared')}</p>
 			{/if}
-		</ul>
+		</div>
+
 		<div class="divider"></div>
-		<h3 class="font-bold text-md">{$t('share.not_shared_with')}</h3>
-		<ul>
-			{#each notSharedWithUsers as user}
-				<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-					<UserCard
-						{user}
-						shared_with={collection.shared_with}
-						sharing={true}
-						on:share={(event) => share(event.detail)}
-						on:unshare={(event) => unshare(event.detail)}
-					/>
+
+		<!-- Not Shared With Section -->
+		<div>
+			<h4 class="text-lg font-semibold mb-2">{$t('share.not_shared_with')}</h4>
+			{#if notSharedWithUsers.length > 0}
+				<div
+					class="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 max-h-80 overflow-y-auto pr-2"
+				>
+					{#each notSharedWithUsers as user}
+						<UserCard
+							{user}
+							shared_with={collection.shared_with}
+							sharing={true}
+							on:share={(event) => share(event.detail)}
+							on:unshare={(event) => unshare(event.detail)}
+						/>
+					{/each}
 				</div>
-			{/each}
-			{#if notSharedWithUsers.length === 0}
-				<p class="text-neutral-content">{$t('share.no_users_shared')}</p>
+			{:else}
+				<p class="text-neutral-content italic">{$t('share.no_users_shared')}</p>
 			{/if}
-		</ul>
-		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>
+		</div>
+
+		<!-- Action -->
+		<div class="pt-4 border-t border-base-300 flex justify-end">
+			<button class="btn btn-primary" on:click={close}>
+				{$t('about.close')}
+			</button>
+		</div>
 	</div>
 </dialog>

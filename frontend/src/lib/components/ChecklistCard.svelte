@@ -62,43 +62,53 @@
 		on:confirm={deleteChecklist}
 	/>
 {/if}
-
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<div class="card-body">
-		<div class="flex justify-between">
-			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
-				{checklist.name}
-			</h2>
+	<div class="card-body p-6 space-y-4">
+		<!-- Header -->
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+			<h2 class="text-xl font-bold break-words">{checklist.name}</h2>
+			<div class="flex flex-wrap gap-2">
+				<div class="badge badge-primary">{$t('adventures.checklist')}</div>
+				{#if unlinked}
+					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+				{/if}
+			</div>
 		</div>
-		<div class="badge badge-primary">{$t('adventures.checklist')}</div>
+
+		<!-- Checklist Stats -->
 		{#if checklist.items.length > 0}
-			<p>
+			<p class="text-sm">
 				{checklist.items.length}
 				{checklist.items.length > 1 ? $t('checklist.items') : $t('checklist.item')}
 			</p>
 		{/if}
-		{#if unlinked}
-			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-		{/if}
+
+		<!-- Date -->
 		{#if checklist.date && checklist.date !== ''}
-			<div class="inline-flex items-center">
-				<Calendar class="w-5 h-5 mr-1" />
+			<div class="inline-flex items-center gap-2 text-sm">
+				<Calendar class="w-5 h-5 text-primary" />
 				<p>{new Date(checklist.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
 			</div>
 		{/if}
-		<div class="card-actions justify-end">
-			<button class="btn btn-neutral-200 mb-2" on:click={editChecklist}>
-				<Launch class="w-6 h-6" />{$t('notes.open')}
+
+		<!-- Actions -->
+		<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
+			<button class="btn btn-neutral btn-sm flex items-center gap-1" on:click={editChecklist}>
+				<Launch class="w-5 h-5" />
+				{$t('notes.open')}
 			</button>
-			{#if checklist.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
+			{#if checklist.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Checklist"
-					class="btn btn-warning"
-					on:click={() => (isWarningModalOpen = true)}><TrashCan class="w-6 h-6" /></button
+					class="btn btn-secondary btn-sm flex items-center gap-1"
+					on:click={() => (isWarningModalOpen = true)}
 				>
+					<TrashCan class="w-5 h-5" />
+					{$t('adventures.delete')}
+				</button>
 			{/if}
 		</div>
 	</div>

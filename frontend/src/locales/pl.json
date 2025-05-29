@@ -319,7 +319,9 @@
     "timed": "Czas",
     "distance": "Dystans",
     "all_linked_items": "Wszystkie połączone elementy",
-    "itinerary": "Trasa"
+    "itinerary": "Trasa",
+    "joined": "Dołączył",
+    "view_profile": "Zobacz profil"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

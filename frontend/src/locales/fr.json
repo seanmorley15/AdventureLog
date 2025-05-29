@@ -271,7 +271,9 @@
     "timed": "Chronométré",
     "distance": "Distance",
     "all_linked_items": "Tous les éléments liés",
-    "itinerary": "Itinéraire"
+    "itinerary": "Itinéraire",
+    "joined": "Joint",
+    "view_profile": "Afficher le profil"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

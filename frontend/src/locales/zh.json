@@ -319,7 +319,9 @@
     "timed": "时间",
     "distance": "距离",
     "all_linked_items": "所有链接的项目",
-    "itinerary": "行程"
+    "itinerary": "行程",
+    "joined": "加入",
+    "view_profile": "查看个人资料"
   },
   "auth": {
     "forgot_password": "忘记密码？",

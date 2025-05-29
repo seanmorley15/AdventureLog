@@ -7,6 +7,7 @@
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import { LODGING_TYPES_ICONS } from '$lib';
+	import { formatDateInTimezone } from '$lib/dateUtils';
 
 	const dispatch = createEventDispatcher();
 
@@ -17,24 +18,6 @@
 			return '🏨';
 		}
 	}
-
-	function formatDateInTimezone(utcDate: string, timezone?: string): string {
-		if (!utcDate) return '';
-		try {
-			return new Intl.DateTimeFormat(undefined, {
-				timeZone: timezone,
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: true
-			}).format(new Date(utcDate));
-		} catch {
-			return new Date(utcDate).toLocaleString();
-		}
-	}
-
 	export let lodging: Lodging;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
@@ -109,64 +92,71 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<div class="card-body space-y-4">
-		<!-- Title and Type -->
-		<h2 class="text-2xl font-semibold">{lodging.name}</h2>
-		<div>
-			<div class="badge badge-secondary">
-				{$t(`lodging.${lodging.type}`) + ' ' + getLodgingIcon(lodging.type)}
+	<div class="card-body p-6 space-y-4">
+		<!-- Header -->
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+			<h2 class="text-xl font-bold truncate">{lodging.name}</h2>
+			<div class="flex flex-wrap gap-2">
+				<div class="badge badge-secondary">
+					{$t(`lodging.${lodging.type}`)}
+					{getLodgingIcon(lodging.type)}
+				</div>
+				{#if unlinked}
+					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+				{/if}
 			</div>
-			{#if unlinked}
-				<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-			{/if}
 		</div>
 
-		<!-- Location -->
+		<!-- Location Info -->
 		<div class="space-y-2">
 			{#if lodging.location}
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.location')}:</span>
-					<p>{lodging.location}</p>
+					<span class="text-sm font-medium">{$t('adventures.location')}:</span>
+					<p class="text-sm break-words">{lodging.location}</p>
 				</div>
 			{/if}
 
 			{#if lodging.check_in && lodging.check_out}
 				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.dates')}:</span>
-					<p>
-						{formatDateInTimezone(lodging.check_in ?? '', lodging.timezone ?? undefined)} –
-						{formatDateInTimezone(lodging.check_out ?? '', lodging.timezone ?? undefined)}
+					<span class="text-sm font-medium">{$t('adventures.dates')}:</span>
+					<p class="text-sm">
+						{formatDateInTimezone(lodging.check_in, lodging.timezone)} –
+						{formatDateInTimezone(lodging.check_out, lodging.timezone)}
 						{#if lodging.timezone}
-							<span class="text-xs opacity-60 ml-1">({lodging.timezone})</span>
+							<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
 						{/if}
 					</p>
 				</div>
 			{/if}
-			{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
+		</div>
+
+		<!-- Reservation Info -->
+		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+			<div class="space-y-2">
 				{#if lodging.reservation_number}
 					<div class="flex items-center gap-2">
-						<span class="font-medium text-sm">{$t('adventures.reservation_number')}:</span>
-						<p>{lodging.reservation_number}</p>
+						<span class="text-sm font-medium">{$t('adventures.reservation_number')}:</span>
+						<p class="text-sm break-all">{lodging.reservation_number}</p>
 					</div>
 				{/if}
 				{#if lodging.price}
 					<div class="flex items-center gap-2">
-						<span class="font-medium text-sm">{$t('adventures.price')}:</span>
-						<p>{lodging.price}</p>
+						<span class="text-sm font-medium">{$t('adventures.price')}:</span>
+						<p class="text-sm">{lodging.price}</p>
 					</div>
 				{/if}
-			{/if}
-		</div>
+			</div>
+		{/if}
 
 		<!-- Actions -->
-		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
-			<div class="card-actions justify-end">
+		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+			<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
 				<button
-					class="btn btn-primary btn-sm flex items-center gap-1"
+					class="btn btn-neutral btn-sm flex items-center gap-1"
 					on:click={editTransportation}
-					title="Edit"
+					title={$t('transportation.edit')}
 				>
 					<FileDocumentEdit class="w-5 h-5" />
 					<span>{$t('transportation.edit')}</span>
@@ -174,7 +164,7 @@
 				<button
 					on:click={() => (isWarningModalOpen = true)}
 					class="btn btn-secondary btn-sm flex items-center gap-1"
-					title="Delete"
+					title={$t('adventures.delete')}
 				>
 					<TrashCanOutline class="w-5 h-5" />
 					<span>{$t('adventures.delete')}</span>

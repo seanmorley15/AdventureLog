@@ -271,7 +271,9 @@
     "timed": "시간이 정해졌습니다",
     "distance": "거리",
     "all_linked_items": "모든 링크 된 항목",
-    "itinerary": "여정"
+    "itinerary": "여정",
+    "joined": "가입",
+    "view_profile": "프로필을 봅니다"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",

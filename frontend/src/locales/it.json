@@ -271,7 +271,9 @@
     "timed": "A tempo",
     "distance": "Distanza",
     "all_linked_items": "Tutti gli elementi collegati",
-    "itinerary": "Itinerario"
+    "itinerary": "Itinerario",
+    "joined": "Partecipato",
+    "view_profile": "Visualizza il profilo"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

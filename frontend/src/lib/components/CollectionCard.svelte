@@ -84,99 +84,156 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
+	class="card w-full max-w-md bg-base-300 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<CardCarousel {adventures} />
-	<div class="card-body">
-		<div class="flex justify-between">
-			<button
-				on:click={() => goto(`/collections/${collection.id}`)}
-				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline"
-			>
-				{collection.name}
-			</button>
-		</div>
-		<div class="inline-flex gap-2 mb-2">
-			<div class="badge badge-secondary">
+	<!-- Image Carousel -->
+	<div class="relative overflow-hidden rounded-t-2xl">
+		<CardCarousel {adventures} />
+
+		<!-- Badge Overlay -->
+		<div class="absolute top-4 left-4 flex flex-col gap-2">
+			<div class="badge badge-sm badge-secondary shadow-lg">
 				{collection.is_public ? $t('adventures.public') : $t('adventures.private')}
 			</div>
 			{#if collection.is_archived}
-				<div class="badge badge-warning">{$t('adventures.archived')}</div>
+				<div class="badge badge-sm badge-warning shadow-lg">
+					{$t('adventures.archived')}
+				</div>
 			{/if}
 		</div>
-		<p>{collection.adventures.length} {$t('navbar.adventures')}</p>
-		{#if collection.start_date && collection.end_date}
-			<p>
-				{$t('adventures.dates')}: {new Date(collection.start_date).toLocaleDateString(undefined, {
-					timeZone: 'UTC'
-				})} -
-				{new Date(collection.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
-			</p>
-			<!-- display the duration in days -->
-			<p>
-				{$t('adventures.duration')}: {Math.floor(
-					(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
-						(1000 * 60 * 60 * 24)
-				) + 1}{' '}
-				days
-			</p>{/if}
+	</div>
 
-		<div class="card-actions justify-end">
+	<!-- Content -->
+	<div class="card-body p-6 space-y-4">
+		<!-- Title -->
+		<div class="space-y-3">
+			<button
+				on:click={() => goto(`/collections/${collection.id}`)}
+				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline"
+			>
+				{collection.name}
+			</button>
+
+			<!-- Adventure Count -->
+			<p class="text-sm text-base-content/70">
+				{collection.adventures.length}
+				{$t('navbar.adventures')}
+			</p>
+
+			<!-- Date Range -->
+			{#if collection.start_date && collection.end_date}
+				<p class="text-sm font-medium">
+					{$t('adventures.dates')}:
+					{new Date(collection.start_date).toLocaleDateString(undefined, { timeZone: 'UTC' })} –
+					{new Date(collection.end_date).toLocaleDateString(undefined, { timeZone: 'UTC' })}
+				</p>
+				<p class="text-sm text-base-content/60">
+					{$t('adventures.duration')}: {Math.floor(
+						(new Date(collection.end_date).getTime() - new Date(collection.start_date).getTime()) /
+							(1000 * 60 * 60 * 24)
+					) + 1} days
+				</p>
+			{/if}
+		</div>
+
+		<!-- Actions -->
+		<div class="pt-4 border-t border-base-300">
 			{#if type == 'link'}
-				<button class="btn btn-primary" on:click={() => dispatch('link', collection.id)}>
-					<Plus class="w-5 h-5 mr-1" />
+				<button class="btn btn-primary btn-block" on:click={() => dispatch('link', collection.id)}>
+					<Plus class="w-4 h-4" />
+					{$t('adventures.add_to_collection')}
 				</button>
 			{:else}
-				<div class="dropdown dropdown-end">
-					<div tabindex="0" role="button" class="btn btn-neutral-200">
-						<DotsHorizontal class="w-6 h-6" />
-					</div>
-					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<ul
-						tabindex="0"
-						class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
+				<div class="flex justify-between items-center">
+					<button
+						class="btn btn-neutral btn-sm flex-1 mr-2"
+						on:click={() => goto(`/collections/${collection.id}`)}
 					>
-						{#if type != 'link' && type != 'viewonly'}
-							<button
-								class="btn btn-neutral mb-2"
-								on:click={() => goto(`/collections/${collection.id}`)}
-								><Launch class="w-5 h-5 mr-1" />{$t('adventures.open_details')}</button
-							>
-							{#if !collection.is_archived}
-								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-									<FileDocumentEdit class="w-6 h-6" />{$t('adventures.edit_collection')}
-								</button>
-								<button class="btn btn-neutral mb-2" on:click={() => (isShareModalOpen = true)}>
-									<ShareVariant class="w-6 h-6" />{$t('adventures.share')}
-								</button>
+						<Launch class="w-4 h-4" />
+						{$t('adventures.open_details')}
+					</button>
+					<div class="dropdown dropdown-end">
+						<button type="button" class="btn btn-square btn-sm btn-base-300">
+							<DotsHorizontal class="w-5 h-5" />
+						</button>
+						<ul
+							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+						>
+							{#if type != 'viewonly'}
+								<li>
+									<button class="flex items-center gap-2" on:click={editAdventure}>
+										<FileDocumentEdit class="w-4 h-4" />
+										{$t('adventures.edit_collection')}
+									</button>
+								</li>
+								<li>
+									<button
+										class="flex items-center gap-2"
+										on:click={() => (isShareModalOpen = true)}
+									>
+										<ShareVariant class="w-4 h-4" />
+										{$t('adventures.share')}
+									</button>
+								</li>
+								{#if collection.is_archived}
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => archiveCollection(false)}
+										>
+											<ArchiveArrowUp class="w-4 h-4" />
+											{$t('adventures.unarchive')}
+										</button>
+									</li>
+								{:else}
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => archiveCollection(true)}
+										>
+											<ArchiveArrowDown class="w-4 h-4" />
+											{$t('adventures.archive')}
+										</button>
+									</li>
+								{/if}
+								<div class="divider my-1"></div>
+								<li>
+									<button
+										id="delete_collection"
+										data-umami-event="Delete Collection"
+										class="text-error flex items-center gap-2"
+										on:click={() => (isWarningModalOpen = true)}
+									>
+										<TrashCan class="w-4 h-4" />
+										{$t('adventures.delete')}
+									</button>
+								</li>
 							{/if}
-							{#if collection.is_archived}
-								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(false)}>
-									<ArchiveArrowUp class="w-6 h-6 mr-1" />{$t('adventures.unarchive')}
-								</button>
-							{:else}
-								<button class="btn btn-neutral mb-2" on:click={() => archiveCollection(true)}>
-									<ArchiveArrowDown class="w-6 h-6 mr" />{$t('adventures.archive')}
-								</button>
+							{#if type == 'viewonly'}
+								<li>
+									<button
+										class="flex items-center gap-2"
+										on:click={() => goto(`/collections/${collection.id}`)}
+									>
+										<Launch class="w-4 h-4" />
+										{$t('adventures.open_details')}
+									</button>
+								</li>
 							{/if}
-							<button
-								id="delete_adventure"
-								data-umami-event="Delete Adventure"
-								class="btn btn-warning"
-								on:click={() => (isWarningModalOpen = true)}
-								><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
-							>
-						{/if}
-						{#if type == 'viewonly'}
-							<button
-								class="btn btn-neutral mb-2"
-								on:click={() => goto(`/collections/${collection.id}`)}
-								><Launch class="w-5 h-5 mr-1" />{$t('adventures.open_details')}</button
-							>
-						{/if}
-					</ul>
+						</ul>
+					</div>
 				</div>
 			{/if}
 		</div>
 	</div>
 </div>
+
+<style>
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+</style>

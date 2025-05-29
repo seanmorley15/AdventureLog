@@ -271,7 +271,9 @@
     "timed": "Getimed",
     "distance": "Afstand",
     "all_linked_items": "Alle gekoppelde items",
-    "itinerary": "Routebeschrijving"
+    "itinerary": "Routebeschrijving",
+    "joined": "Samengevoegd",
+    "view_profile": "Bekijk profiel"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

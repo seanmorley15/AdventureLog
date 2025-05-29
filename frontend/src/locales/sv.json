@@ -271,7 +271,9 @@
     "timed": "Tidsinställd",
     "distance": "Avstånd",
     "all_linked_items": "Alla länkade objekt",
-    "itinerary": "Resväg"
+    "itinerary": "Resväg",
+    "joined": "Gick med i",
+    "view_profile": "Visa profil"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

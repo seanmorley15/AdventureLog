@@ -50,36 +50,47 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group overflow-hidden"
 >
-	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{region.name}</h2>
-		<div>
-			<div class="badge badge-primary">
-				<p>{region.country_name}</p>
+	<div class="card-body p-6 space-y-4">
+		<!-- Header -->
+		<h2 class="text-xl font-bold truncate">{region.name}</h2>
+
+		<!-- Metadata Badges -->
+		<div class="flex flex-wrap gap-2">
+			<div class="badge badge-primary">{region.country_name}</div>
+			<div class="badge badge-neutral">
+				{region.num_cities}
+				{$t('worldtravel.cities')}
 			</div>
-			<div class="badge badge-neutral-300">
-				<p>{region.num_cities} {$t('worldtravel.cities')}</p>
-			</div>
-			<div class="badge badge-neutral-300">
-				<p>{region.id}</p>
-			</div>
+			<div class="badge badge-neutral-300">ID: {region.id}</div>
 		</div>
-		<div class="card-actions justify-end">
-			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
-			{#if !visited && visited !== undefined}
-				<button class="btn btn-primary" on:click={markVisited}
-					>{$t('adventures.mark_visited')}</button
-				>
+
+		<!-- Actions -->
+		<div class="pt-4 border-t border-base-300 flex flex-wrap gap-2 justify-end">
+			{#if visited === false}
+				<button class="btn btn-primary btn-sm" on:click={markVisited}>
+					{$t('adventures.mark_visited')}
+				</button>
 			{/if}
-			{#if visited && visited !== undefined}
-				<button class="btn btn-warning" on:click={removeVisit}>{$t('adventures.remove')}</button>
+			{#if visited === true}
+				<button class="btn btn-warning btn-sm" on:click={removeVisit}>
+					{$t('adventures.remove')}
+				</button>
 			{/if}
 			{#if region.num_cities > 0}
-				<button class="btn btn-neutral-300" on:click={goToCity}
-					>{$t('worldtravel.view_cities')}</button
-				>
+				<button class="btn btn-neutral btn-sm" on:click={goToCity}>
+					{$t('worldtravel.view_cities')}
+				</button>
 			{/if}
 		</div>
 	</div>
 </div>
+
+<style>
+	.truncate {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+</style>

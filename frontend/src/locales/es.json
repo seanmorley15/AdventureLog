@@ -319,7 +319,9 @@
     "timed": "Cronometrado",
     "distance": "Distancia",
     "all_linked_items": "Todos los artículos vinculados",
-    "itinerary": "Itinerario"
+    "itinerary": "Itinerario",
+    "joined": "Unido",
+    "view_profile": "Ver perfil"
   },
   "worldtravel": {
     "all": "Todo",

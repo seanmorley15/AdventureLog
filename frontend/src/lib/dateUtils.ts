@@ -118,6 +118,23 @@ export function validateDateRange(
 	return { valid: true };
 }
 
+export function formatDateInTimezone(utcDate: string, timezone: string | null): string {
+	if (!utcDate) return '';
+	try {
+		return new Intl.DateTimeFormat(undefined, {
+			timeZone: timezone || undefined,
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: true
+		}).format(new Date(utcDate));
+	} catch {
+		return new Date(utcDate).toLocaleString();
+	}
+}
+
 /**
  * Format UTC date for display
  * @param utcDate - UTC date in ISO format
