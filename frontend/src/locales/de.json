@@ -271,7 +271,9 @@
     "timed": "Zeitlich abgestimmt",
     "distance": "Distanz",
     "all_linked_items": "Alle verknüpften Elemente",
-    "itinerary": "Route"
+    "itinerary": "Route",
+    "joined": "Verbunden",
+    "view_profile": "Profil anzeigen"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
