@@ -55,7 +55,7 @@ log_header() {
 
 print_banner() {
     cat << 'EOF'
-╔══════════════════════════════════════════════════════════════════════╗
+╔══════════════════════════════════════════════════════════════════════════╗
 ║                                                                      ║
 ║         🌍  A D V E N T U R E L O G   I N S T A L L E R              ║
 ║                                                                      ║
@@ -334,64 +334,6 @@ prompt_configuration() {
     echo ""
 }
 
-update_docker_compose_ports() {
-    log_info "Updating Docker Compose configuration for custom ports..."
-    
-    # Create backup of original docker-compose.yml
-    cp docker-compose.yml docker-compose.yml.backup
-    
-    # Update the ports in docker-compose.yml
-    if command -v perl &>/dev/null; then
-        # Use perl for more reliable regex replacement
-        perl -pi -e "s/\"8015:3000\"/\"$FRONTEND_PORT:3000\"/" docker-compose.yml
-        perl -pi -e "s/\"8016:80\"/\"$BACKEND_PORT:80\"/" docker-compose.yml
-        log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
-    elif command -v sed &>/dev/null; then
-        # Fallback to sed
-        sed -i.bak "s/\"8015:3000\"/\"$FRONTEND_PORT:3000\"/" docker-compose.yml
-        sed -i.bak "s/\"8016:80\"/\"$BACKEND_PORT:80\"/" docker-compose.yml
-        log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
-    else
-        # Manual replacement as last resort
-        log_warning "No sed or perl available, using manual approach..."
-        
-        # Create new docker-compose.yml with updated ports
-        local temp_file="docker-compose.yml.temp"
-        
-        while IFS= read -r line || [[ -n "$line" ]]; do
-            case "$line" in
-                *"\"8015:3000\"*)
-                    echo "$line" | sed "s/8015/$FRONTEND_PORT/"
-                    ;;
-                *"\"8016:80\"*)
-                    echo "$line" | sed "s/8016/$BACKEND_PORT/"
-                    ;;
-                *)
-                    echo "$line"
-                    ;;
-            esac
-        done < docker-compose.yml > "$temp_file"
-        
-        if mv "$temp_file" docker-compose.yml; then
-            log_success "Updated docker-compose.yml with custom ports (Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT)"
-        else
-            log_error "Failed to update docker-compose.yml"
-            mv docker-compose.yml.backup docker-compose.yml
-            exit 1
-        fi
-    fi
-    
-    # Verify the changes were applied
-    if grep -q "\"$FRONTEND_PORT:3000\"" docker-compose.yml && grep -q "\"$BACKEND_PORT:80\"" docker-compose.yml; then
-        log_success "Port configuration verified in docker-compose.yml"
-    else
-        log_error "Failed to verify port configuration in docker-compose.yml"
-        log_info "Restoring original docker-compose.yml"
-        mv docker-compose.yml.backup docker-compose.yml
-        exit 1
-    fi
-}
-
 configure_environment_fallback() {
     log_info "Using simple configuration approach..."
     
@@ -409,12 +351,23 @@ configure_environment_fallback() {
         log_info "Using perl for configuration..."
         # Fix: Update BOTH password variables for database consistency
         perl -pi -e "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$DB_PASSWORD/" .env
-        perl -pi -e "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$DB_PASSWORD/" .env
+        perl -pi -e "s/^DATABASE_PASSWORD=.*/DATABASE_PASSWORD=$DB_PASSWORD/" .env
         perl -pi -e "s/^DJANGO_ADMIN_PASSWORD=.*/DJANGO_ADMIN_PASSWORD=$ADMIN_PASSWORD/" .env
         perl -pi -e "s|^ORIGIN=.*|ORIGIN=$FRONTEND_ORIGIN|" .env
         perl -pi -e "s|^PUBLIC_URL=.*|PUBLIC_URL=$BACKEND_URL|" .env
         perl -pi -e "s|^CSRF_TRUSTED_ORIGINS=.*|CSRF_TRUSTED_ORIGINS=$FRONTEND_ORIGIN,$BACKEND_URL|" .env
         perl -pi -e "s|^FRONTEND_URL=.*|FRONTEND_URL=$FRONTEND_ORIGIN|" .env
+        # Add port configuration
+        perl -pi -e "s/^FRONTEND_PORT=.*/FRONTEND_PORT=$FRONTEND_PORT/" .env
+        perl -pi -e "s/^BACKEND_PORT=.*/BACKEND_PORT=$BACKEND_PORT/" .env
+        
+        # Add port variables if they don't exist
+        if ! grep -q "^FRONTEND_PORT=" .env; then
+            echo "FRONTEND_PORT=$FRONTEND_PORT" >> .env
+        fi
+        if ! grep -q "^BACKEND_PORT=" .env; then
+            echo "BACKEND_PORT=$BACKEND_PORT" >> .env
+        fi
         
         if grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env; then
             log_success "Configuration completed successfully"
@@ -429,7 +382,7 @@ configure_environment_fallback() {
 POSTGRES_DB=adventurelog
 POSTGRES_USER=adventurelog
 POSTGRES_PASSWORD=$DB_PASSWORD
-POSTGRES_PASSWORD=$DB_PASSWORD
+DATABASE_PASSWORD=$DB_PASSWORD
 
 # Django Configuration
 DJANGO_ADMIN_USERNAME=admin
@@ -442,9 +395,12 @@ PUBLIC_URL=$BACKEND_URL
 FRONTEND_URL=$FRONTEND_ORIGIN
 CSRF_TRUSTED_ORIGINS=$FRONTEND_ORIGIN,$BACKEND_URL
 
+# Port Configuration
+FRONTEND_PORT=$FRONTEND_PORT
+BACKEND_PORT=$BACKEND_PORT
+
 # Additional Settings
 DEBUG=False
-ALLOWED_HOSTS=*
 EOF
     
     log_success "Created minimal .env configuration"
@@ -516,8 +472,8 @@ configure_environment() {
                 echo "POSTGRES_PASSWORD=$DB_PASSWORD"
                 ((updated_lines++))
                 ;;
-            POSTGRES_PASSWORD=*)
-                echo "POSTGRES_PASSWORD=$DB_PASSWORD"
+            DATABASE_PASSWORD=*)
+                echo "DATABASE_PASSWORD=$DB_PASSWORD"
                 ((updated_lines++))
                 ;;
             DJANGO_ADMIN_PASSWORD=*)
@@ -540,11 +496,29 @@ configure_environment() {
                 echo "FRONTEND_URL=$FRONTEND_ORIGIN"
                 ((updated_lines++))
                 ;;
+            FRONTEND_PORT=*)
+                echo "FRONTEND_PORT=$FRONTEND_PORT"
+                ((updated_lines++))
+                ;;
+            BACKEND_PORT=*)
+                echo "BACKEND_PORT=$BACKEND_PORT"
+                ((updated_lines++))
+                ;;
             *)
                 echo "$line"
                 ;;
         esac
     done < .env > "$temp_file"
+    
+    # Add port variables if they weren't found in the original file
+    if ! grep -q "^FRONTEND_PORT=" "$temp_file"; then
+        echo "FRONTEND_PORT=$FRONTEND_PORT" >> "$temp_file"
+        ((updated_lines++))
+    fi
+    if ! grep -q "^BACKEND_PORT=" "$temp_file"; then
+        echo "BACKEND_PORT=$BACKEND_PORT" >> "$temp_file"
+        ((updated_lines++))
+    fi
     
     log_info "Processed $processed_lines lines, updated $updated_lines configuration values"
     
@@ -556,7 +530,7 @@ configure_environment() {
     
     # Replace the original .env with the configured one
     if mv "$temp_file" .env; then
-        log_success "Environment configured with secure passwords"
+        log_success "Environment configured with secure passwords and port settings"
     else
         log_error "Failed to replace .env file"
         log_info "Restoring backup and exiting"
@@ -566,16 +540,45 @@ configure_environment() {
     fi
     
     # Verify critical configuration was applied
-    if grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env && grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env; then
-        log_success "Configuration verification passed - both database password variables set"
+    if grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env && (grep -q "DATABASE_PASSWORD=$DB_PASSWORD" .env || grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env); then
+        log_success "Configuration verification passed - database password variables set"
     else
         log_error "Configuration verification failed - database passwords not properly configured"
         log_info "Showing database-related lines in .env for debugging:"
-        grep -E "(POSTGRES_PASSWORD|POSTGRES_PASSWORD)" .env | while read -r line; do
+        grep -E "(POSTGRES_PASSWORD|DATABASE_PASSWORD)" .env | while read -r line; do
             echo "  $line"
         done
         mv .env.backup .env
         exit 1
+    fi
+    
+    # Verify port configuration
+    if grep -q "FRONTEND_PORT=$FRONTEND_PORT" .env && grep -q "BACKEND_PORT=$BACKEND_PORT" .env; then
+        log_success "Port configuration verified - frontend: $FRONTEND_PORT, backend: $BACKEND_PORT"
+    else
+        log_warning "Port configuration may not be complete - check .env file manually"
+    fi
+}
+
+update_docker_compose_ports() {
+    log_info "Updating Docker Compose port configuration..."
+    
+    # Create backup of docker-compose.yml
+    cp docker-compose.yml docker-compose.yml.backup
+    
+    # Update ports in docker-compose.yml using sed
+    if command -v sed &>/dev/null; then
+        # For frontend service port mapping
+        sed -i.tmp "s/\"[0-9]*:3000\"/\"$FRONTEND_PORT:3000\"/g" docker-compose.yml
+        # For backend service port mapping  
+        sed -i.tmp "s/\"[0-9]*:8000\"/\"$BACKEND_PORT:8000\"/g" docker-compose.yml
+        
+        # Clean up temporary files created by sed -i
+        rm -f docker-compose.yml.tmp
+        
+        log_success "Docker Compose ports updated - Frontend: $FRONTEND_PORT, Backend: $BACKEND_PORT"
+    else
+        log_warning "sed command not available - Docker Compose ports may need manual configuration"
     fi
 }
 
@@ -704,16 +707,14 @@ EOF
     log_info "💾 Save your admin password in a secure location!"
     echo ""
 
-    # Show port information if custom ports were used
-    if [[ "$FRONTEND_PORT" != "8015" ]] || [[ "$BACKEND_PORT" != "8016" ]]; then
-        echo -e "${BOLD}🔧 Custom Port Configuration:${NC}"
-        echo -e "   🖥️  Frontend Port: ${YELLOW}$FRONTEND_PORT${NC}"
-        echo -e "   ⚙️  Backend Port:  ${YELLOW}$BACKEND_PORT${NC}"
-        echo ""
-    fi
+    # Show port information
+    echo -e "${BOLD}🔧 Port Configuration:${NC}"
+    echo -e "   🖥️  Frontend Port: ${YELLOW}$FRONTEND_PORT${NC}"
+    echo -e "   ⚙️  Backend Port:  ${YELLOW}$BACKEND_PORT${NC}"
+    echo ""
 
     # Optional donation link
-    echo -e "${BOLD}❤️ Enjoying AdventureLog?${NC}"
+    echo -e "${BOLD}❤️  Enjoying AdventureLog?${NC}"
     echo -e "   Support future development: ${MAGENTA}https://buymeacoffee.com/seanmorley15${NC}"
     echo ""
 
@@ -769,8 +770,8 @@ main() {
     create_directory
     download_files
     prompt_configuration
-    update_docker_compose_ports
     configure_environment
+    update_docker_compose_ports
     start_services
     wait_for_services
     print_success_message

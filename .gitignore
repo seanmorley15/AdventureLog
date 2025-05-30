@@ -2,3 +2,4 @@
 .venv/
 .vscode/settings.json
 .pnpm-store/
+.env
