@@ -44,7 +44,10 @@ def background_geocode_and_assign(adventure_id: str):
                 adventure.country = country
 
         # Save updated location info
-        adventure.save(update_fields=["region", "city", "country"])
+        # Save updated location info, skip geocode threading
+        adventure.save(update_fields=["region", "city", "country"], _skip_geocode=True)
+
+        # print(f"[Adventure Geocode Thread] Successfully processed {adventure_id}: {adventure.name} - {adventure.latitude}, {adventure.longitude}")
 
     except Exception as e:
         # Optional: log or print the error
@@ -608,9 +611,10 @@ class Adventure(models.Model):
             if self.user_id != self.category.user_id:
                 raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
             
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
+
         if not self.category:
             category, _ = Category.objects.get_or_create(
                 user_id=self.user_id,
@@ -619,14 +623,19 @@ class Adventure(models.Model):
             )
             self.category = category
 
-        # First save the adventure quickly
         result = super().save(force_insert, force_update, using, update_fields)
 
-        # Then fire off a thread to geocode + update region/city/country
+        # ⛔ Skip threading if called from geocode background thread
+        if _skip_geocode:
+            return result
+
         if self.latitude and self.longitude:
-            threading.Thread(target=background_geocode_and_assign, args=(str(self.id),)).start()
+            thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
+            thread.daemon = True  # Allows the thread to exit when the main program ends
+            thread.start()
 
         return result
+
 
     def __str__(self):
         return self.name
