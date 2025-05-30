@@ -170,6 +170,7 @@ export type Transportation = {
 	destination_latitude: number | null;
 	destination_longitude: number | null;
 	is_public: boolean;
+	distance: number | null; // in kilometers
 	collection: Collection | null | string;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string

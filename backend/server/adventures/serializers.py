@@ -5,6 +5,7 @@ from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
+from geopy.distance import geodesic
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -194,15 +195,31 @@ class AdventureSerializer(CustomModelSerializer):
         return instance
 
 class TransportationSerializer(CustomModelSerializer):
+    distance = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude', 'start_timezone', 'end_timezone'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
+            'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
+            'start_timezone', 'end_timezone', 'distance'  # ✅ Add distance here
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'distance']
+
+    def get_distance(self, obj):
+        if (
+            obj.origin_latitude and obj.origin_longitude and
+            obj.destination_latitude and obj.destination_longitude
+        ):
+            try:
+                origin = (float(obj.origin_latitude), float(obj.origin_longitude))
+                destination = (float(obj.destination_latitude), float(obj.destination_longitude))
+                return round(geodesic(origin, destination).km, 2)
+            except ValueError:
+                return None
+        return None
 
 class LodgingSerializer(CustomModelSerializer):
 
