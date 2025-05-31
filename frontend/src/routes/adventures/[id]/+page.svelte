@@ -224,17 +224,59 @@
 
 						<!-- Image Navigation -->
 						{#if adventure.images.length > 1}
-							<div class="flex justify-center gap-2">
-								{#each adventure.images as _, i}
+							<div class="w-full max-w-md mx-auto">
+								<!-- Navigation arrows and current position indicator -->
+								<div class="flex items-center justify-center gap-4 mb-3">
 									<button
-										on:click={() => goToSlide(i)}
-										class="btn btn-circle btn-sm transition-all duration-200"
-										class:btn-primary={i === currentSlide}
-										class:btn-outline={i !== currentSlide}
+										on:click={() =>
+											goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
+										class="btn btn-circle btn-sm btn-primary"
+										aria-label="Previous image"
 									>
-										{i + 1}
+										❮
 									</button>
-								{/each}
+
+									<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+										{currentSlide + 1} / {adventure.images.length}
+									</div>
+
+									<button
+										on:click={() =>
+											goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
+										class="btn btn-circle btn-sm btn-primary"
+										aria-label="Next image"
+									>
+										❯
+									</button>
+								</div>
+
+								<!-- Scrollable dot navigation for many images -->
+								{#if adventure.images.length <= 12}
+									<!-- Show all dots for 12 or fewer images -->
+									<div class="flex justify-center gap-2 flex-wrap">
+										{#each adventure.images as _, i}
+											<button
+												on:click={() => goToSlide(i)}
+												class="btn btn-circle btn-xs transition-all duration-200"
+												class:btn-primary={i === currentSlide}
+												class:btn-outline={i !== currentSlide}
+												class:opacity-50={i !== currentSlide}
+											>
+												{i + 1}
+											</button>
+										{/each}
+									</div>
+								{:else}
+									<!-- Scrollable navigation for many images -->
+									<div class="relative">
+										<div
+											class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
+										></div>
+										<div
+											class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
+										></div>
+									</div>
+								{/if}
 							</div>
 						{/if}
 					</div>
