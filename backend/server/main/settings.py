@@ -147,6 +147,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_NAME = 'sessionid'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+CSRF_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+
 
 hostname = urlparse(FRONTEND_URL).hostname
 is_ip_address = hostname.replace('.', '').isdigit()
