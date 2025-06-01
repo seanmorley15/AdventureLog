@@ -59,7 +59,7 @@
 		zh: '中文',
 		pl: 'Polski',
 		ko: '한국어',
-		no: "Norsk"
+		no: 'Norsk'
 	};
 
 	let query: string = '';
@@ -107,7 +107,7 @@
 
 <div class="navbar bg-base-100">
 	<div class="navbar-start">
-		<div class="dropdown">
+		<div class="dropdown z-50">
 			<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -318,7 +318,9 @@
 						on:change={submitThemeChange}
 					>
 						{#each themes as theme}
-							<option value={theme.name} class="text-base-content">{$t(`navbar.themes.${theme.name}`)}</option>
+							<option value={theme.name} class="text-base-content"
+								>{$t(`navbar.themes.${theme.name}`)}</option
+							>
 						{/each}
 					</select>
 				</form>
