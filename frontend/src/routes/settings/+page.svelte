@@ -28,7 +28,8 @@
 	let newImmichIntegration: ImmichIntegration = {
 		server_url: '',
 		api_key: '',
-		id: ''
+		id: '',
+		copy_locally: true
 	};
 
 	let isMFAModalOpen: boolean = false;
@@ -831,6 +832,26 @@
 												class="input input-bordered input-primary focus:input-primary"
 												placeholder={$t('immich.api_key_placeholder')}
 											/>
+										</div>
+
+										<!-- Toggle for copy_locally -->
+										<div class="form-control">
+											<label class="label cursor-pointer justify-start gap-4">
+												<input
+													type="checkbox"
+													bind:checked={newImmichIntegration.copy_locally}
+													class="toggle toggle-primary"
+												/>
+												<div>
+													<span class="label-text font-medium">
+														{$t('immich.copy_locally') || 'Copy Locally'}
+													</span>
+													<p class="text-sm text-base-content/70">
+														{$t('immich.copy_locally_desc') ||
+															'If enabled, files will be copied locally.'}
+													</p>
+												</div>
+											</label>
 										</div>
 
 										<button on:click={enableImmichIntegration} class="btn btn-primary w-full">

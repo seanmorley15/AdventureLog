@@ -27,6 +27,7 @@ export type Adventure = {
 		id: string;
 		image: string;
 		is_primary: boolean;
+		immich_id: string | null;
 	}[];
 	visits: {
 		id: string;
@@ -242,6 +243,7 @@ export type ImmichIntegration = {
 	id: string;
 	server_url: string;
 	api_key: string;
+	copy_locally: boolean;
 };
 
 export type ImmichAlbum = {

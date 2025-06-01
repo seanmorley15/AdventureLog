@@ -22,7 +22,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	let images: { id: string; image: string; is_primary: boolean }[] = [];
+	let images: { id: string; image: string; is_primary: boolean; immich_id: string | null }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
@@ -82,6 +82,7 @@
 
 	let fileInput: HTMLInputElement;
 	let immichIntegration: boolean = false;
+	let copyImmichLocally: boolean = false;
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
@@ -161,13 +162,19 @@
 			addToast('error', $t('adventures.category_fetch_error'));
 		}
 		// Check for Immich Integration
-		let res = await fetch('/api/integrations');
-		if (!res.ok) {
+		let res = await fetch('/api/integrations/immich/');
+		// If the response is not ok, we assume Immich integration is not available
+		if (!res.ok && res.status !== 404) {
 			addToast('error', $t('immich.integration_fetch_error'));
 		} else {
 			let data = await res.json();
-			if (data.immich) {
+			if (data.error) {
+				immichIntegration = false;
+			} else if (data.id) {
 				immichIntegration = true;
+				copyImmichLocally = data.copy_locally || false;
+			} else {
+				immichIntegration = false;
 			}
 		}
 	});
@@ -330,7 +337,12 @@
 		});
 		if (res.ok) {
 			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+			let newImage = {
+				id: newData.data.id,
+				image: newData.data.image,
+				is_primary: false,
+				immich_id: null
+			};
 			images = [...images, newImage];
 			adventure.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
@@ -381,7 +393,12 @@
 			});
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
-				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+				let newImage = {
+					id: newData.data.id,
+					image: newData.data.image,
+					is_primary: false,
+					immich_id: null
+				};
 				images = [...images, newImage];
 				adventure.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
@@ -816,6 +833,18 @@
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
+							}}
+							{copyImmichLocally}
+							on:remoteImmichSaved={(e) => {
+								const newImage = {
+									id: e.detail.id,
+									image: e.detail.image,
+									is_primary: e.detail.is_primary,
+									immich_id: e.detail.immich_id
+								};
+								images = [...images, newImage];
+								adventure.images = images;
+								addToast('success', $t('adventures.image_upload_success'));
 							}}
 						/>
 					{/if}

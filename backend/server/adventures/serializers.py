@@ -11,17 +11,17 @@ from geopy.distance import geodesic
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id', 'immich_id']
         read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+        public_url = public_url.replace("'", "")
         if instance.image:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            #print(public_url)
-            # remove any  ' from the url
-            public_url = public_url.replace("'", "")
             representation['image'] = f"{public_url}/media/{instance.image.name}"
+        if instance.immich_id:
+            representation['image'] = f"{public_url}/api/integrations/immich/get/{instance.immich_id}"
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):

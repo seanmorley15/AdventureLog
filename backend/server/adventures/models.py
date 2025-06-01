@@ -786,18 +786,44 @@ class PathAndRename:
 
 class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user_id = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user_id)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user_id)
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
-        upload_to=PathAndRename('images/')  # Use the callable class here
+        upload_to=PathAndRename('images/'),
+        blank=True,
+        null=True,
     )
+    immich_id = models.CharField(max_length=200, null=True, blank=True)
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
     is_primary = models.BooleanField(default=False)
 
+    def clean(self):
+        from django.core.exceptions import ValidationError
+        
+        # Normalize empty values to None
+        has_image = bool(self.image and str(self.image).strip())
+        has_immich_id = bool(self.immich_id and str(self.immich_id).strip())
+        
+        # Exactly one must be provided
+        if has_image and has_immich_id:
+            raise ValidationError("Cannot have both image file and Immich ID. Please provide only one.")
+        
+        if not has_image and not has_immich_id:
+            raise ValidationError("Must provide either an image file or an Immich ID.")
+
+    def save(self, *args, **kwargs):
+        # Clean empty strings to None for proper database storage
+        if not self.image:
+            self.image = None
+        if not self.immich_id or not str(self.immich_id).strip():
+            self.immich_id = None
+            
+        self.full_clean()  # This calls clean() method
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.image.url
+        return self.image.url if self.image else f"Immich ID: {self.immich_id or 'No image'}"
     
 class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)

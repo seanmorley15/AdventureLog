@@ -699,7 +699,10 @@
 		"localhost_note": "Note: localhost will most likely not work unless you have setup docker networks accordingly. It is recommended to use the IP address of the server or the domain name.",
 		"documentation": "Immich Integration Documentation",
 		"api_key_placeholder": "Enter your Immich API key",
-		"need_help": "Need help setting this up? Check out the"
+		"need_help": "Need help setting this up? Check out the",
+		"copy_locally": "Copy Images Locally",
+		"copy_locally_desc": "Copy images to the server for offline access. Uses more disk space.",
+		"error_saving_image": "Error saving image"
 	},
 	"recomendations": {
 		"address": "Address",
