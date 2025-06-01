@@ -16,7 +16,9 @@ class NoPasswordAuthBackend(ModelBackend):
             has_social_accounts = SocialAccount.objects.filter(user=allauth_user).exists()
             if has_social_accounts and getattr(allauth_user, 'disable_password', False):
                 return None
-            return allauth_user
+            if self.user_can_authenticate(allauth_user):
+                return allauth_user
+            return None
         
         # Fallback to regular username/password authentication
         if username is None or password is None:
