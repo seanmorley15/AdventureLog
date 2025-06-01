@@ -119,7 +119,7 @@ DATABASES = {
         'USER': env('PGUSER', 'POSTGRES_USER'),
         'PASSWORD': env('PGPASSWORD', 'POSTGRES_PASSWORD'),
         'HOST': env('PGHOST', default='localhost'),
-        'PORT': env('PGPORT', default='5432'),
+        'PORT': int(env('PGPORT', default='5432')),
         'OPTIONS': {
             'sslmode': 'prefer',  # Prefer SSL, but allow non-SSL connections
         },
