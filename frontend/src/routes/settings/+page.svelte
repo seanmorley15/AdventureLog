@@ -9,6 +9,7 @@
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import { appTitle, appVersion, copyrightYear } from '$lib/config.js';
 	import ImmichLogo from '$lib/assets/immich.svg';
+	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
 
 	export let data;
 	console.log(data);
@@ -23,6 +24,7 @@
 	let new_email: string = '';
 	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
+	let googleMapsEnabled = data.props.googleMapsEnabled;
 	let activeSection: string = 'profile';
 
 	let newImmichIntegration: ImmichIntegration = {
@@ -762,11 +764,11 @@
 							</div>
 
 							<!-- Immich Integration -->
-							<div class="p-6 bg-base-200 rounded-xl">
+							<div class="p-6 bg-base-200 rounded-xl mb-4">
 								<div class="flex items-center gap-4 mb-4">
 									<img src={ImmichLogo} alt="Immich" class="w-8 h-8" />
 									<div>
-										<h3 class="text-xl font-bold">{$t('immich.immich_integration')}</h3>
+										<h3 class="text-xl font-bold">Immich</h3>
 										<p class="text-sm text-base-content/70">
 											{$t('immich.immich_integration_desc')}
 										</p>
@@ -868,6 +870,34 @@
 										<a
 											class="link link-primary"
 											href="https://adventurelog.app/docs/configuration/immich_integration.html"
+											target="_blank">{$t('navbar.documentation')}</a
+										>
+									</p>
+								</div>
+							</div>
+
+							<!-- Google maps integration - displayt only if its connected -->
+							<div class="p-6 bg-base-200 rounded-xl">
+								<div class="flex items-center gap-4 mb-4">
+									<img src={GoogleMapsLogo} alt="Google Maps" class="w-8 h-8" />
+									<div>
+										<h3 class="text-xl font-bold">Google Maps</h3>
+										<p class="text-sm text-base-content/70">
+											{$t('google_maps.google_maps_integration_desc')}
+										</p>
+									</div>
+									{#if googleMapsEnabled}
+										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
+									{:else}
+										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
+									{/if}
+								</div>
+								<div class="mt-4 p-4 bg-info/10 rounded-lg">
+									<p class="text-sm">
+										📖 {$t('immich.need_help')}
+										<a
+											class="link link-primary"
+											href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
 											target="_blank">{$t('navbar.documentation')}</a
 										>
 									</p>

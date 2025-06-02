@@ -704,6 +704,9 @@
 		"copy_locally_desc": "Copy images to the server for offline access. Uses more disk space.",
 		"error_saving_image": "Error saving image"
 	},
+	"google_maps": {
+		"google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations."
+	},
 	"recomendations": {
 		"address": "Address",
 		"phone": "Phone",
