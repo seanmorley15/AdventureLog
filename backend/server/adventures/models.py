@@ -11,7 +11,7 @@ from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
-from adventures.geocoding import reverse_geocode
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 def background_geocode_and_assign(adventure_id: str):
@@ -799,18 +799,24 @@ class AdventureImage(models.Model):
     is_primary = models.BooleanField(default=False)
 
     def clean(self):
-        from django.core.exceptions import ValidationError
-        
-        # Normalize empty values to None
+
+        # One of image or immich_id must be set, but not both
         has_image = bool(self.image and str(self.image).strip())
         has_immich_id = bool(self.immich_id and str(self.immich_id).strip())
-        
-        # Exactly one must be provided
+
         if has_image and has_immich_id:
             raise ValidationError("Cannot have both image file and Immich ID. Please provide only one.")
-        
         if not has_image and not has_immich_id:
             raise ValidationError("Must provide either an image file or an Immich ID.")
+
+        # Enforce: immich_id may only be used by a single user
+        if has_immich_id:
+            # Check if this immich_id is already used by a *different* user
+            from adventures.models import AdventureImage
+            conflict = AdventureImage.objects.filter(immich_id=self.immich_id).exclude(user_id=self.user_id)
+
+            if conflict.exists():
+                raise ValidationError("This Immich ID is already used by another user.")
 
     def save(self, *args, **kwargs):
         # Clean empty strings to None for proper database storage

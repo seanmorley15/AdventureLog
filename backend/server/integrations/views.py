@@ -8,6 +8,8 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.pagination import PageNumberPagination
 from django.conf import settings
+from adventures.models import AdventureImage
+from django.http import HttpResponse
 
 class IntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -41,6 +43,15 @@ class ImmichIntegrationView(viewsets.ViewSet):
             - None if the integration exists.
             - A Response with an error message if the integration is missing.
         """
+        if not request.user.is_authenticated:
+            return Response(
+                {
+                    'message': 'You need to be authenticated to use this feature.',
+                    'error': True,
+                    'code': 'immich.authentication_required'
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         user_integrations = ImmichIntegration.objects.filter(user=request.user)
         if not user_integrations.exists():
             return Response(
@@ -120,43 +131,6 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
     
-    @action(detail=False, methods=['get'], url_path='get/(?P<imageid>[^/.]+)')
-    def get(self, request, imageid=None):
-        """
-        RESTful GET method for retrieving a specific Immich image by ID.
-        """
-        # Check for integration before proceeding
-        integration = self.check_integration(request)
-        if isinstance(integration, Response):
-            return integration
-
-        if not imageid:
-            return Response(
-                {
-                    'message': 'Image ID is required.',
-                    'error': True,
-                    'code': 'immich.imageid_required'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
-        try:
-            immich_fetch = requests.get(f'{integration.server_url}/assets/{imageid}/thumbnail?size=preview', headers={
-                'x-api-key': integration.api_key
-            })
-            # should return the image file
-            from django.http import HttpResponse
-            return HttpResponse(immich_fetch.content, content_type='image/jpeg', status=status.HTTP_200_OK)
-        except requests.exceptions.ConnectionError:
-            return Response(
-                {
-                    'message': 'The Immich server is currently down or unreachable.',
-                    'error': True,
-                    'code': 'immich.server_down'
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
         
     @action(detail=False, methods=['get'])
     def albums(self, request):
@@ -188,7 +162,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
             res,
             status=status.HTTP_200_OK
         )
-
+    
     @action(detail=False, methods=['get'], url_path='albums/(?P<albumid>[^/.]+)')
     def album(self, request, albumid=None):
         """
@@ -242,6 +216,78 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     'code': 'immich.no_assets_found'
                 },
                 status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=False, methods=['get'], url_path='get/(?P<imageid>[^/.]+)', permission_classes=[])
+    def get(self, request, imageid=None):
+        """
+        RESTful GET method for retrieving a specific Immich image by ID.
+        Allows access to images for public adventures even if the user doesn't have Immich integration.
+        """
+        if not imageid:
+            return Response(
+                {
+                    'message': 'Image ID is required.',
+                    'error': True,
+                    'code': 'immich.imageid_required'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if the image ID is associated with a public adventure
+        
+        public_image = AdventureImage.objects.filter(
+            immich_id=imageid,
+            adventure__is_public=True
+        ).first()
+        
+        # If it's a public adventure image, use any available integration
+        if public_image:
+            integration = ImmichIntegration.objects.filter(
+                user_id=public_image.adventure.user_id
+            ).first()
+            if not integration:
+                return Response(
+                    {
+                        'message': 'No Immich integration available for public access.',
+                        'error': True,
+                        'code': 'immich.no_integration'
+                    },
+                    status=status.HTTP_503_SERVICE_UNAVAILABLE
+                )
+        else:
+            # Not a public image, check user's integration
+            integration = self.check_integration(request)
+            if isinstance(integration, Response):
+                return integration
+        
+        # Proceed with fetching the image
+        try:
+            immich_fetch = requests.get(
+                f'{integration.server_url}/assets/{imageid}/thumbnail?size=preview', 
+                headers={'x-api-key': integration.api_key},
+                timeout=5  # Add timeout to prevent hanging
+            )
+            response = HttpResponse(immich_fetch.content, content_type='image/jpeg', status=status.HTTP_200_OK)
+            response['Cache-Control'] = 'public, max-age=86400, stale-while-revalidate=3600'
+            return response
+        except requests.exceptions.ConnectionError:
+            return Response(
+                {
+                    'message': 'The Immich server is currently down or unreachable.',
+                    'error': True,
+                    'code': 'immich.server_down'
+                },
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        except requests.exceptions.Timeout:
+            return Response(
+                {
+                    'message': 'The Immich server request timed out.',
+                    'error': True,
+                    'code': 'immich.server_timeout'
+                },
+                status=status.HTTP_504_GATEWAY_TIMEOUT
             )
 
 class ImmichIntegrationViewSet(viewsets.ModelViewSet):
