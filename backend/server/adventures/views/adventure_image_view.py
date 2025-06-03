@@ -9,8 +9,6 @@ from adventures.serializers import AdventureImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
-import tempfile
-import os
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureImageSerializer
@@ -121,14 +119,14 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
                 
-            except requests.exceptions.RequestException as e:
+            except requests.exceptions.RequestException:
                 return Response({
-                    "error": f"Failed to fetch image from Immich server: {str(e)}",
+                    "error": f"Failed to fetch image from Immich server",
                     "code": "immich_fetch_failed"
                 }, status=status.HTTP_502_BAD_GATEWAY)
-            except Exception as e:
+            except Exception:
                 return Response({
-                    "error": f"Unexpected error processing Immich image: {str(e)}",
+                    "error": f"Unexpected error processing Immich image",
                     "code": "immich_processing_error"
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
