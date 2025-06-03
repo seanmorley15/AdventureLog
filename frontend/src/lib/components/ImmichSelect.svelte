@@ -31,11 +31,21 @@
 	}
 
 	$: {
-		if (currentAlbum) {
+		if (searchCategory === 'album' && currentAlbum) {
 			immichImages = [];
 			fetchAlbumAssets(currentAlbum);
 		} else if (searchCategory === 'date' && selectedDate) {
+			// Clear album selection when switching to date mode
+			if (currentAlbum) {
+				currentAlbum = '';
+			}
 			searchImmich();
+		} else if (searchCategory === 'search') {
+			// Clear album selection when switching to search mode
+			if (currentAlbum) {
+				currentAlbum = '';
+			}
+			// Search will be triggered by the form submission or debounced search
 		}
 	}
 
