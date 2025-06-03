@@ -77,7 +77,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
         integration = self.check_integration(request)
         if isinstance(integration, Response):
             return integration
-        
+                
         query = request.query_params.get('query', '')
         date = request.query_params.get('date', '')
 
@@ -90,12 +90,30 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+                
         arguments = {}
         if query:
             arguments['query'] = query
         if date:
-            arguments['takenBefore'] = date
+            # Create date range for the entire selected day
+            from datetime import datetime, timedelta
+            try:
+                # Parse the date and create start/end of day
+                selected_date = datetime.strptime(date, '%Y-%m-%d')
+                start_of_day = selected_date.strftime('%Y-%m-%d')
+                end_of_day = (selected_date + timedelta(days=1)).strftime('%Y-%m-%d')
+                
+                arguments['takenAfter'] = start_of_day
+                arguments['takenBefore'] = end_of_day
+            except ValueError:
+                return Response(
+                    {
+                        'message': 'Invalid date format. Use YYYY-MM-DD.',
+                        'error': True,
+                        'code': 'immich.invalid_date_format'
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
         try:
@@ -115,7 +133,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
-        
+                
         if 'assets' in res and 'items' in res['assets']:
             paginator = self.pagination_class()
             # for each item in the items, we need to add the image url to the item so we can display it in the frontend
@@ -134,7 +152,6 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_404_NOT_FOUND
             )
-    
         
     @action(detail=False, methods=['get'])
     def albums(self, request):
