@@ -16,18 +16,26 @@ class AdventureImageSerializer(CustomModelSerializer):
         read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-        public_url = public_url.replace("'", "")
-        if instance.image:
-            representation['image'] = f"{public_url}/media/{instance.image.name}"
+        # If immich_id is set, check for user integration once
+        integration = None
         if instance.immich_id:
             integration = ImmichIntegration.objects.filter(user=instance.user_id).first()
+            if not integration:
+                return None  # Skip if Immich image but no integration
 
-            if integration:
-                representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
-            else:
-                representation['image'] = None
+        # Base representation
+        representation = super().to_representation(instance)
+
+        # Prepare public URL once
+        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+
+        if instance.immich_id:
+            # Use Immich integration URL
+            representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
+        elif instance.image:
+            # Use local image URL
+            representation['image'] = f"{public_url}/media/{instance.image.name}"
+
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):
@@ -84,7 +92,7 @@ class VisitSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
                                    
 class AdventureSerializer(CustomModelSerializer):
-    images = AdventureImageSerializer(many=True, read_only=True)
+    images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
@@ -102,6 +110,11 @@ class AdventureSerializer(CustomModelSerializer):
             'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
+
+    def get_images(self, obj):
+        serializer = AdventureImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
