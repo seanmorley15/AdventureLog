@@ -10,6 +10,7 @@ from rest_framework.pagination import PageNumberPagination
 from django.conf import settings
 from adventures.models import AdventureImage
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 
 class IntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -36,11 +37,12 @@ class StandardResultsSetPagination(PageNumberPagination):
 class ImmichIntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = StandardResultsSetPagination
+    
     def check_integration(self, request):
         """
         Checks if the user has an active Immich integration.
         Returns:
-            - None if the integration exists.
+            - The integration object if it exists.
             - A Response with an error message if the integration is missing.
         """
         if not request.user.is_authenticated:
@@ -52,6 +54,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
+
         user_integrations = ImmichIntegration.objects.filter(user=request.user)
         if not user_integrations.exists():
             return Response(
@@ -62,7 +65,8 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
-        return ImmichIntegration.objects.first()
+
+        return user_integrations.first()
 
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request):
@@ -118,7 +122,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
             public_url = public_url.replace("'", "")
             for item in res['assets']['items']:
-                item['image_url'] = f'{public_url}/api/integrations/immich/get/{item["id"]}'
+                item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
             result_page = paginator.paginate_queryset(res['assets']['items'], request)
             return paginator.get_paginated_response(result_page)
         else:
@@ -170,6 +174,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
         """
         # Check for integration before proceeding
         integration = self.check_integration(request)
+        print(integration.user)
         if isinstance(integration, Response):
             return integration
 
@@ -205,7 +210,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
             public_url = public_url.replace("'", "")
             for item in res['assets']:
-                item['image_url'] = f'{public_url}/api/integrations/immich/get/{item["id"]}'
+                item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
             result_page = paginator.paginate_queryset(res['assets'], request)
             return paginator.get_paginated_response(result_page)
         else:
@@ -218,77 +223,93 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-    @action(detail=False, methods=['get'], url_path='get/(?P<imageid>[^/.]+)', permission_classes=[])
-    def get(self, request, imageid=None):
+    @action(
+    detail=False,
+    methods=['get'],
+    url_path='(?P<integration_id>[^/.]+)/get/(?P<imageid>[^/.]+)',
+    permission_classes=[]
+    )
+    def get_by_integration(self, request, integration_id=None, imageid=None):
         """
-        RESTful GET method for retrieving a specific Immich image by ID.
-        Allows access to images for public adventures even if the user doesn't have Immich integration.
+        GET an Immich image using the integration and asset ID.
+        - Public adventures: accessible by anyone
+        - Private adventures: accessible only to the owner
+        - No AdventureImage: owner can still view via integration
         """
-        if not imageid:
-            return Response(
-                {
-                    'message': 'Image ID is required.',
+        if not imageid or not integration_id:
+            return Response({
+                'message': 'Image ID and Integration ID are required.',
+                'error': True,
+                'code': 'immich.missing_params'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Lookup integration and user
+        integration = get_object_or_404(ImmichIntegration, id=integration_id)
+        owner_id = integration.user_id
+
+        # Try to find the image entry
+        image_entry = (
+        AdventureImage.objects
+            .filter(immich_id=imageid, user_id=owner_id)
+            .select_related('adventure')
+            .order_by('-adventure__is_public')  # True (1) first, False (0) last
+            .first()
+        )
+
+        # Access control
+        if image_entry:
+            if image_entry.adventure.is_public:
+                is_authorized = True
+            elif request.user.is_authenticated and request.user.id == owner_id:
+                is_authorized = True
+            else:
+                return Response({
+                    'message': 'This image belongs to a private adventure and you are not authorized.',
                     'error': True,
-                    'code': 'immich.imageid_required'
-                },
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if the image ID is associated with a public adventure
-        
-        public_image = AdventureImage.objects.filter(
-            immich_id=imageid,
-            adventure__is_public=True
-        ).first()
-        
-        # If it's a public adventure image, use any available integration
-        if public_image:
-            integration = ImmichIntegration.objects.filter(
-                user_id=public_image.adventure.user_id
-            ).first()
-            if not integration:
-                return Response(
-                    {
-                        'message': 'No Immich integration available for public access.',
-                        'error': True,
-                        'code': 'immich.no_integration'
-                    },
-                    status=status.HTTP_503_SERVICE_UNAVAILABLE
-                )
+                    'code': 'immich.permission_denied'
+                }, status=status.HTTP_403_FORBIDDEN)
         else:
-            # Not a public image, check user's integration
-            integration = self.check_integration(request)
-            if isinstance(integration, Response):
-                return integration
-        
-        # Proceed with fetching the image
+            # No AdventureImage exists; allow only the integration owner
+            if not request.user.is_authenticated or request.user.id != owner_id:
+                return Response({
+                    'message': 'Image is not linked to any adventure and you are not the owner.',
+                    'error': True,
+                    'code': 'immich.not_found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            is_authorized = True  # Integration owner fallback
+
+        # Fetch from Immich
         try:
-            immich_fetch = requests.get(
-                f'{integration.server_url}/assets/{imageid}/thumbnail?size=preview', 
+            immich_response = requests.get(
+                f'{integration.server_url}/assets/{imageid}/thumbnail?size=preview',
                 headers={'x-api-key': integration.api_key},
-                timeout=5  # Add timeout to prevent hanging
+                timeout=5
             )
-            response = HttpResponse(immich_fetch.content, content_type='image/jpeg', status=status.HTTP_200_OK)
+            content_type = immich_response.headers.get('Content-Type', 'image/jpeg')
+            if not content_type.startswith('image/'):
+                return Response({
+                    'message': 'Invalid content type returned from Immich.',
+                    'error': True,
+                    'code': 'immich.invalid_content'
+                }, status=status.HTTP_502_BAD_GATEWAY)
+
+            response = HttpResponse(immich_response.content, content_type=content_type, status=200)
             response['Cache-Control'] = 'public, max-age=86400, stale-while-revalidate=3600'
             return response
+
         except requests.exceptions.ConnectionError:
-            return Response(
-                {
-                    'message': 'The Immich server is currently down or unreachable.',
-                    'error': True,
-                    'code': 'immich.server_down'
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
+            return Response({
+                'message': 'The Immich server is unreachable.',
+                'error': True,
+                'code': 'immich.server_down'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
         except requests.exceptions.Timeout:
-            return Response(
-                {
-                    'message': 'The Immich server request timed out.',
-                    'error': True,
-                    'code': 'immich.server_timeout'
-                },
-                status=status.HTTP_504_GATEWAY_TIMEOUT
-            )
+            return Response({
+                'message': 'The Immich server request timed out.',
+                'error': True,
+                'code': 'immich.timeout'
+            }, status=status.HTTP_504_GATEWAY_TIMEOUT)
 
 class ImmichIntegrationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]

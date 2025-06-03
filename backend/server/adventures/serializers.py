@@ -6,6 +6,7 @@ from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
+from integrations.models import ImmichIntegration
 
 
 class AdventureImageSerializer(CustomModelSerializer):
@@ -21,7 +22,12 @@ class AdventureImageSerializer(CustomModelSerializer):
         if instance.image:
             representation['image'] = f"{public_url}/media/{instance.image.name}"
         if instance.immich_id:
-            representation['image'] = f"{public_url}/api/integrations/immich/get/{instance.immich_id}"
+            integration = ImmichIntegration.objects.filter(user=instance.user_id).first()
+
+            if integration:
+                representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
+            else:
+                representation['image'] = None
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):

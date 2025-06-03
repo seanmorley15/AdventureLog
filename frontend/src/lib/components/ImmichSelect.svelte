@@ -209,7 +209,7 @@
 			<div class="flex flex-col items-center gap-2" class:blur-sm={loading}>
 				<!-- svelte-ignore a11y-img-redundant-alt -->
 				<img
-					src={`/immich/${image.id}`}
+					src={`${image.image_url}`}
 					alt="Image from Immich"
 					class="h-24 w-24 object-cover rounded-md"
 				/>
