@@ -232,9 +232,12 @@ class ImmichIntegrationView(viewsets.ViewSet):
     def get_by_integration(self, request, integration_id=None, imageid=None):
         """
         GET an Immich image using the integration and asset ID.
-        - Public adventures: accessible by anyone
-        - Private adventures: accessible only to the owner
-        - No AdventureImage: owner can still view via integration
+        Access levels (in order of priority):
+        1. Public adventures: accessible by anyone
+        2. Private adventures in public collections: accessible by anyone
+        3. Private adventures in private collections shared with user: accessible by shared users
+        4. Private adventures: accessible only to the owner
+        5. No AdventureImage: owner can still view via integration
         """
         if not imageid or not integration_id:
             return Response({
@@ -247,22 +250,45 @@ class ImmichIntegrationView(viewsets.ViewSet):
         integration = get_object_or_404(ImmichIntegration, id=integration_id)
         owner_id = integration.user_id
 
-        # Try to find the image entry
+        # Try to find the image entry with collection and sharing information
         image_entry = (
-        AdventureImage.objects
+            AdventureImage.objects
             .filter(immich_id=imageid, user_id=owner_id)
-            .select_related('adventure')
-            .order_by('-adventure__is_public')  # True (1) first, False (0) last
+            .select_related('adventure', 'adventure__collection')
+            .prefetch_related('adventure__collection__shared_with')
+            .order_by(
+                '-adventure__is_public',  # Public adventures first
+                '-adventure__collection__is_public'  # Then public collections
+            )
             .first()
         )
 
         # Access control
         if image_entry:
-            if image_entry.adventure.is_public:
+            adventure = image_entry.adventure
+            collection = adventure.collection
+            
+            # Determine access level
+            is_authorized = False
+            
+            # Level 1: Public adventure (highest priority)
+            if adventure.is_public:
                 is_authorized = True
+                
+            # Level 2: Private adventure in public collection
+            elif collection and collection.is_public:
+                is_authorized = True
+                
+            # Level 3: Owner access
             elif request.user.is_authenticated and request.user.id == owner_id:
                 is_authorized = True
-            else:
+                
+            # Level 4: Shared collection access
+            elif (request.user.is_authenticated and collection and 
+                collection.shared_with.filter(id=request.user.id).exists()):
+                is_authorized = True
+            
+            if not is_authorized:
                 return Response({
                     'message': 'This image belongs to a private adventure and you are not authorized.',
                     'error': True,
@@ -276,7 +302,6 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     'error': True,
                     'code': 'immich.not_found'
                 }, status=status.HTTP_404_NOT_FOUND)
-            is_authorized = True  # Integration owner fallback
 
         # Fetch from Immich
         try:
