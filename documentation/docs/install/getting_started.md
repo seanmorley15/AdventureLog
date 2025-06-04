@@ -13,3 +13,4 @@ AdventureLog can be installed in a variety of ways. The following are the most c
 - [Nginx Proxy Manager](nginx_proxy_manager.md) 🛡
 - [Traefik](traefik.md) 🚀
 - [Caddy](caddy.md) 🔒
+- [HAProxy](haproxy.md)
