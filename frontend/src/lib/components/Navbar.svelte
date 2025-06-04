@@ -40,6 +40,7 @@
 		// Attach event listener on component mount
 		document.addEventListener('keydown', handleKeydown);
 
+		// @ts-ignore
 		theme = document.documentElement.getAttribute('data-theme');
 
 		// Cleanup event listener on component destruction
@@ -74,7 +75,9 @@
 		window.location.reload();
 	};
 	const submitThemeChange = (event: Event) => {
+		// @ts-ignore
 		const theme = event.target.value;
+		// @ts-ignore
 		const themeForm = event.target.parentNode;
 		themeForm.action = `/?/setTheme&theme=${theme}`;
 		themeForm.submit();
