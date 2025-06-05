@@ -782,6 +782,12 @@ main() {
 }
 
 # Script entry point
-if [[ "${BASH_SOURCE[0]:-}" == "$0" ]] || [ -p /dev/stdin ]; then
+# Allow interactive install even when piped
+if [[ -t 1 ]]; then
+    # stdout is a terminal → likely interactive
+    exec < /dev/tty  # reconnect stdin to terminal for user input
     main "$@"
+else
+    echo "Error: This script needs an interactive terminal." >&2
+    exit 1
 fi
