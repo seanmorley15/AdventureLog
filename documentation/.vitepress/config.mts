@@ -129,6 +129,7 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: "Getting Started", link: "/docs/install/getting_started" },
+          { text: "Quick Start Script ⏲️", link: "/docs/install/quick_start" },
           { text: "Docker 🐋", link: "/docs/install/docker" },
           { text: "Proxmox LXC 🐧", link: "/docs/install/proxmox_lxc" },
           { text: "Synology NAS ☁️", link: "/docs/install/synology_nas" },
