@@ -43,4 +43,4 @@ docker compose down -v
 rm -rf adventurelog
 ```
 
-Need more control? Explore other [install options](install.md).
+Need more control? Explore other [install options](getting_started.md) like Docker, Proxmox, Synology NAS, and more.
