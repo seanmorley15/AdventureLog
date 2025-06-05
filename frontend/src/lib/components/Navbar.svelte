@@ -297,7 +297,7 @@
 				>
 				<button
 					class="btn btn-sm mt-2"
-					on:click={() => (window.location.href = 'https://buymeacoffee.com/seanmorley15')}
+					on:click={() => (window.location.href = 'https://seanmorley.com/sponsor')}
 					>{$t('navbar.support')} 💖</button
 				>
 				<p class="font-bold m-4 text-lg text-center">{$t('navbar.language_selection')}</p>
