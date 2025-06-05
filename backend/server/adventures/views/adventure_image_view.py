@@ -108,6 +108,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 # Modify request data to use the downloaded image instead of immich_id
                 request_data = request.data.copy()
                 request_data.pop('immich_id', None)  # Remove immich_id
+                request_data['image'] = image_file  # Add the image file
                 
                 # Create the serializer with the modified data
                 serializer = self.get_serializer(data=request_data)

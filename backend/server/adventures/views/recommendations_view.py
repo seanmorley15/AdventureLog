@@ -59,8 +59,8 @@ class RecommendationsViewSet(viewsets.ViewSet):
                 float(request.query_params.get('lat')),
                 float(request.query_params.get('lon'))
             )
-        except:
-            pass
+        except(ValueError, TypeError):
+            origin = None
 
         for node in nodes:
             if node.get('type') not in ['node', 'way', 'relation']:

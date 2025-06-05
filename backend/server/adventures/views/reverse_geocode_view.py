@@ -46,7 +46,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             return Response({"error": "An internal error occurred while processing the request"}, status=500)
 
     @action(detail=False, methods=['post'])
-    def mark_visited_region(self, _):
+    def mark_visited_region(self, request):
         # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
         new_region_count = 0
         new_regions = {}
@@ -60,15 +60,15 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                 lon = adventure.longitude
                 if not lat or not lon:
                     continue
-                
+
                 # Use the existing reverse_geocode function which handles both Google and OSM
                 data = reverse_geocode(lat, lon, self.request.user)
                 if 'error' in data:
                     continue
-                    
-                extracted_region = extractIsoCode(self.request.user, data)
-                if 'error' not in extracted_region:
-                    region = Region.objects.filter(id=extracted_region['region_id']).first()
+
+                # data already contains region_id and city_id
+                if 'region_id' in data and data['region_id'] is not None:
+                    region = Region.objects.filter(id=data['region_id']).first()
                     visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
                     if not visited_region:
                         visited_region = VisitedRegion(region=region, user_id=self.request.user)
@@ -76,12 +76,12 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                         new_region_count += 1
                         new_regions[region.id] = region.name
 
-                    if extracted_region['city_id'] is not None:
-                        city = City.objects.filter(id=extracted_region['city_id']).first()
-                        visited_city = VisitedCity.objects.filter(city=city, user_id=self.request.user).first()
-                        if not visited_city:
-                            visited_city = VisitedCity(city=city, user_id=self.request.user)
-                            visited_city.save()
-                            new_city_count += 1
-                            new_cities[city.id] = city.name
+                if 'city_id' in data and data['city_id'] is not None:
+                    city = City.objects.filter(id=data['city_id']).first()
+                    visited_city = VisitedCity.objects.filter(city=city, user_id=self.request.user).first()
+                    if not visited_city:
+                        visited_city = VisitedCity(city=city, user_id=self.request.user)
+                        visited_city.save()
+                        new_city_count += 1
+                        new_cities[city.id] = city.name
         return Response({"new_regions": new_region_count, "regions": new_regions, "new_cities": new_city_count, "cities": new_cities})
