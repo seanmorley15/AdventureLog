@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'django.contrib.gis',
+    'cities',
     # 'achievements', # Not done yet, will be added later in a future update
     # 'widget_tweaks',
     # 'slippers',
@@ -172,6 +173,7 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # This path must match the NGINX root
 STATICFILES_DIRS = [BASE_DIR / 'static']
+CITIES_DATA_DIR = MEDIA_ROOT / 'cities_data'
 
 STORAGES = {
     "staticfiles": {
@@ -314,3 +316,11 @@ LOGGING = {
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.5'
+
+# English, Spanish, French, German, Italian, Chinese, Dutch, Swedish
+CITIES_LOCALES = ['en', 'es', 'fr', 'de', 'it', 'zh', 'nl', 'sv', 'LANGUAGES']
+CITIES_POSTAL_CODES = []
+CITIES_PLUGINS = [
+    # Reduce memory usage when importing large datasets (e.g. "allCountries.zip")
+    'cities.plugin.reset_queries.Plugin',
+]

@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.gis.db import models as gis_models
-
+from cities.models import Country as CityCountry, City as CityCity, Region as CityRegion
 
 User = get_user_model()
 
@@ -18,13 +18,31 @@ class Country(models.Model):
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     insert_id = models.UUIDField(unique=False, blank=True, null=True)
-
+    translations = models.JSONField(default=dict, blank=True)
+    
     class Meta:
         verbose_name = "Country"
         verbose_name_plural = "Countries"
 
     def __str__(self):
         return self.name
+    
+    def get_translations(self, languages: list[str])->bool:
+        # get the translations for the country
+        translations = self.translations
+        try:
+            # get the preferred alt names for the country
+            alt_names = CityCountry.objects.get(code=self.country_code).alt_names.filter(language_code__in=languages, is_preferred=True)
+            for alt_name in alt_names:
+                translations[alt_name.language_code] = alt_name.name
+            
+            if self.translations != translations:
+                self.translations = translations
+                return True
+            return False
+        except CityCountry.DoesNotExist:
+            print(f"Country {self.name} ({self.country_code}) not found in cities.models.Country")
+            return False
 
 class Region(models.Model):
     id = models.CharField(primary_key=True)

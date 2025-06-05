@@ -25,5 +25,16 @@
     "backend/server/backend/lib/python3.12/site-packages/django/contrib/sites/locale",
     "backend/server/backend/lib/python3.12/site-packages/rest_framework/templates/rest_framework/docs/langs"
   ],
-  "i18n-ally.keystyle": "nested"
+  "i18n-ally.keystyle": "nested",
+  "sqltools.connections": [
+    {
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 5432,
+      "driver": "PostgreSQL",
+      "name": "default",
+      "database": "adventurelog",
+      "username": "admin"
+    }
+  ]
 }
