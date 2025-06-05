@@ -12,6 +12,8 @@ from adventures.models import AdventureImage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
+logger = logging.getLogger(__name__)
+
 class IntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     def list(self, request):
@@ -420,9 +422,11 @@ class ImmichIntegrationViewSet(viewsets.ModelViewSet):
             except requests.exceptions.SSLError:
                 return False, original_server_url, "SSL certificate error - check server certificate"
             except requests.exceptions.RequestException as e:
-                return False, original_server_url, f"Connection failed: {str(e)}"
+                logger.error(f"RequestException during Immich connection validation: {str(e)}")
+                return False, original_server_url, "Connection failed due to a network error."
             except Exception as e:
-                return False, original_server_url, f"Unexpected error: {str(e)}"
+                logger.error(f"Unexpected error during Immich connection validation: {str(e)}")
+                return False, original_server_url, "An unexpected error occurred while validating the connection."
         
         # If we get here, none of the endpoints worked
         return False, original_server_url, "Immich server endpoint not found - check server URL"
