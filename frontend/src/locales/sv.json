@@ -669,7 +669,15 @@
     "api_key_placeholder": "Ange din immich API -nyckel",
     "enable_integration": "Aktivera integration",
     "immich_integration_desc": "Anslut din immich fotohanteringsserver",
-    "need_help": "Behöver du hjälp med att ställa in detta? \nKolla in"
+    "need_help": "Behöver du hjälp med att ställa in detta? \nKolla in",
+    "connection_error": "Fel som ansluter till Imchich Server",
+    "copy_locally": "Kopiera bilder lokalt",
+    "copy_locally_desc": "Kopiera bilder till servern för offlineåtkomst. \nAnvänder mer diskutrymme.",
+    "error_saving_image": "Felbesparande bild",
+    "integration_already_exists": "En immich integration finns redan. \nDu kan bara ha en integration åt gången.",
+    "integration_not_found": "Imkik integration hittades inte. \nSkapa en ny integration.",
+    "network_error": "Nätverksfel vid anslutning till den immich servern. \nKontrollera din anslutning och försök igen.",
+    "validation_error": "Ett fel inträffade vid validering av den immich integrationen. \nKontrollera din server -URL- och API -nyckel."
   },
   "recomendations": {
     "address": "Adress",
@@ -712,5 +720,8 @@
     "edit": "Redigera",
     "edit_lodging": "Redigera logi",
     "current_timezone": "Nuvarande tidszon"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet."
   }
 }

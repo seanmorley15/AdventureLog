@@ -702,7 +702,12 @@
 		"need_help": "Need help setting this up? Check out the",
 		"copy_locally": "Copy Images Locally",
 		"copy_locally_desc": "Copy images to the server for offline access. Uses more disk space.",
-		"error_saving_image": "Error saving image"
+		"error_saving_image": "Error saving image",
+		"connection_error": "Error connecting to Immich server",
+		"integration_already_exists": "An Immich integration already exists. You can only have one integration at a time.",
+		"integration_not_found": "Immich integration not found. Please create a new integration.",
+		"validation_error": "An error occurred while validating the Immich integration. Please check your server URL and API key.",
+		"network_error": "Network error while connecting to the Immich server. Please check your connection and try again."
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations."

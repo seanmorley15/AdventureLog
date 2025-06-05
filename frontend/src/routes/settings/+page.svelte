@@ -187,37 +187,57 @@
 		}
 	}
 
-	async function enableImmichIntegration() {
-		if (!immichIntegration?.id) {
-			let res = await fetch('/api/integrations/immich/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(newImmichIntegration)
-			});
-			let data = await res.json();
-			if (res.ok) {
-				addToast('success', $t('immich.immich_enabled'));
-				immichIntegration = data;
-			} else {
-				addToast('error', $t('immich.immich_error'));
-			}
+	function handleImmichError(data: {
+		code: string;
+		details: any;
+		message: any;
+		error: any;
+		server_url: any[];
+		api_key: any[];
+	}) {
+		if (data.code === 'immich.connection_failed') {
+			return `${$t('immich.connection_error')}: ${data.details || data.message}`;
+		} else if (data.code === 'immich.integration_exists') {
+			return $t('immich.integration_already_exists');
+		} else if (data.code === 'immich.integration_not_found') {
+			return $t('immich.integration_not_found');
+		} else if (data.error && data.message) {
+			return data.message;
 		} else {
-			let res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
+			// Handle validation errors
+			const errors = [];
+			if (data.server_url) errors.push(`Server URL: ${data.server_url.join(', ')}`);
+			if (data.api_key) errors.push(`API Key: ${data.api_key.join(', ')}`);
+			return errors.length > 0
+				? `${$t('immich.validation_error')}: ${errors.join('; ')}`
+				: $t('immich.immich_error');
+		}
+	}
+
+	async function enableImmichIntegration() {
+		const isUpdate = !!immichIntegration?.id;
+		const url = isUpdate
+			? `/api/integrations/immich/${immichIntegration?.id ?? ''}/`
+			: '/api/integrations/immich/';
+		const method = isUpdate ? 'PUT' : 'POST';
+
+		try {
+			const res = await fetch(url, {
+				method,
+				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(newImmichIntegration)
 			});
-			let data = await res.json();
+
+			const data = await res.json();
+
 			if (res.ok) {
-				addToast('success', $t('immich.immich_updated'));
+				addToast('success', $t(isUpdate ? 'immich.immich_updated' : 'immich.immich_enabled'));
 				immichIntegration = data;
 			} else {
-				addToast('error', $t('immich.immich_error'));
+				addToast('error', handleImmichError(data));
 			}
+		} catch (error) {
+			addToast('error', $t('immich.network_error'));
 		}
 	}
 

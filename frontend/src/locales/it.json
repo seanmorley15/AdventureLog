@@ -669,7 +669,15 @@
     "api_key_placeholder": "Inserisci la tua chiave API immich",
     "enable_integration": "Abilita l'integrazione",
     "immich_integration_desc": "Collega il tuo server di gestione delle foto immich",
-    "need_help": "Hai bisogno di aiuto per impostare questo? \nDai un'occhiata al"
+    "need_help": "Hai bisogno di aiuto per impostare questo? \nDai un'occhiata al",
+    "connection_error": "Errore che si collega al server immich",
+    "copy_locally": "Copia immagini localmente",
+    "error_saving_image": "Errore salvare l'immagine",
+    "integration_already_exists": "Esiste già un'integrazione immich. \nPuoi avere solo un'integrazione alla volta.",
+    "integration_not_found": "Integrazione immich non trovata. \nSi prega di creare una nuova integrazione.",
+    "network_error": "Errore di rete durante la connessione al server immich. \nControlla la tua connessione e riprova.",
+    "validation_error": "Si è verificato un errore durante la convalida dell'integrazione immich. \nControlla l'URL e la chiave API del server.",
+    "copy_locally_desc": "Copia le immagini sul server per l'accesso offline. \nUtilizza più spazio su disco."
   },
   "recomendations": {
     "address": "Indirizzo",
@@ -712,5 +720,8 @@
     "lodging_type": "Tipo di alloggio",
     "motel": "Motel",
     "current_timezone": "Fuso orario attuale"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità."
   }
 }

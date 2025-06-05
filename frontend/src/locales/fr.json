@@ -669,7 +669,15 @@
     "api_key_placeholder": "Entrez votre clé API Immich",
     "enable_integration": "Activer l'intégration",
     "immich_integration_desc": "Connectez votre serveur de gestion de photos Immich",
-    "need_help": "Besoin d'aide pour la configurer? \nDécouvrez le"
+    "need_help": "Besoin d'aide pour la configurer? \nDécouvrez le",
+    "connection_error": "Erreur de connexion à Immich Server",
+    "copy_locally": "Copier les images localement",
+    "copy_locally_desc": "Copiez des images sur le serveur pour un accès hors ligne. \nUtilise plus d'espace disque.",
+    "error_saving_image": "Image d'enregistrement d'erreur",
+    "integration_already_exists": "Une intégration Immich existe déjà. \nVous ne pouvez avoir qu'une seule intégration à la fois.",
+    "integration_not_found": "L'intégration d'immich n'est pas trouvée. \nVeuillez créer une nouvelle intégration.",
+    "network_error": "Erreur réseau lors de la connexion au serveur Immich. \nVeuillez vérifier votre connexion et réessayer.",
+    "validation_error": "Une erreur s'est produite lors de la validation de l'intégration d'Immich. \nVeuillez vérifier l'URL et la clé API de votre serveur."
   },
   "recomendations": {
     "address": "Adresse",
@@ -712,5 +720,8 @@
     "type": "Type",
     "villa": "Villa",
     "current_timezone": "Fuseau horaire actuel"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Connectez votre compte Google Maps pour obtenir des résultats de recherche et recommandations de recherche de haute qualité."
   }
 }

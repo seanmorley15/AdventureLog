@@ -361,11 +361,76 @@ class ImmichIntegrationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return ImmichIntegration.objects.filter(user=self.request.user)
 
+    def _validate_immich_connection(self, server_url, api_key):
+        """
+        Validate connection to Immich server before saving integration.
+        Returns tuple: (is_valid, corrected_server_url, error_message)
+        """
+        if not server_url or not api_key:
+            return False, server_url, "Server URL and API key are required"
+        
+        # Ensure server_url has proper format
+        if not server_url.startswith(('http://', 'https://')):
+            server_url = f"https://{server_url}"
+        
+        # Remove trailing slash if present
+        original_server_url = server_url.rstrip('/')
+        
+        # Try both with and without /api prefix
+        test_configs = [
+            (original_server_url, f"{original_server_url}/users/me"),
+            (f"{original_server_url}/api", f"{original_server_url}/api/users/me")
+        ]
+        
+        headers = {
+            'X-API-Key': api_key,
+            'Content-Type': 'application/json'
+        }
+        
+        for corrected_url, test_endpoint in test_configs:
+            try:
+                response = requests.get(
+                    test_endpoint, 
+                    headers=headers, 
+                    timeout=10,  # 10 second timeout
+                    verify=True  # SSL verification
+                )
+                
+                if response.status_code == 200:
+                    try:
+                        json_response = response.json()
+                        # Validate expected Immich user response structure
+                        required_fields = ['id', 'email', 'name', 'isAdmin', 'createdAt']
+                        if all(field in json_response for field in required_fields):
+                            return True, corrected_url, None
+                        else:
+                            continue  # Try next endpoint
+                    except (ValueError, KeyError):
+                        continue  # Try next endpoint
+                elif response.status_code == 401:
+                    return False, original_server_url, "Invalid API key or unauthorized access"
+                elif response.status_code == 403:
+                    return False, original_server_url, "Access forbidden - check API key permissions"
+                # Continue to next endpoint for 404 errors
+                    
+            except requests.exceptions.ConnectTimeout:
+                return False, original_server_url, "Connection timeout - server may be unreachable"
+            except requests.exceptions.ConnectionError:
+                return False, original_server_url, "Cannot connect to server - check URL and network connectivity"
+            except requests.exceptions.SSLError:
+                return False, original_server_url, "SSL certificate error - check server certificate"
+            except requests.exceptions.RequestException as e:
+                return False, original_server_url, f"Connection failed: {str(e)}"
+            except Exception as e:
+                return False, original_server_url, f"Unexpected error: {str(e)}"
+        
+        # If we get here, none of the endpoints worked
+        return False, original_server_url, "Immich server endpoint not found - check server URL"
+
     def create(self, request):
         """
         RESTful POST method for creating a new Immich integration.
         """
-
         # Check if the user already has an integration
         user_integrations = ImmichIntegration.objects.filter(user=request.user)
         if user_integrations.exists():
@@ -380,11 +445,76 @@ class ImmichIntegrationViewSet(viewsets.ModelViewSet):
 
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            # Validate Immich server connection before saving
+            server_url = serializer.validated_data.get('server_url')
+            api_key = serializer.validated_data.get('api_key')
+            
+            is_valid, corrected_server_url, error_message = self._validate_immich_connection(server_url, api_key)
+            
+            if not is_valid:
+                return Response(
+                    {
+                        'message': f'Cannot connect to Immich server: {error_message}',
+                        'error': True,
+                        'code': 'immich.connection_failed',
+                        'details': error_message
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # If validation passes, save the integration with the corrected URL
+            serializer.save(user=request.user, server_url=corrected_server_url)
             return Response(
                 serializer.data,
                 status=status.HTTP_201_CREATED
             )
+        
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    def update(self, request, pk=None):
+        """
+        RESTful PUT method for updating an existing Immich integration.
+        """
+        integration = ImmichIntegration.objects.filter(user=request.user, id=pk).first()
+        if not integration:
+            return Response(
+                {
+                    'message': 'Integration not found.',
+                    'error': True,
+                    'code': 'immich.integration_not_found'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = self.serializer_class(integration, data=request.data, partial=True)
+        if serializer.is_valid():
+            # Validate Immich server connection before updating
+            server_url = serializer.validated_data.get('server_url', integration.server_url)
+            api_key = serializer.validated_data.get('api_key', integration.api_key)
+            
+            is_valid, corrected_server_url, error_message = self._validate_immich_connection(server_url, api_key)
+            
+            if not is_valid:
+                return Response(
+                    {
+                        'message': f'Cannot connect to Immich server: {error_message}',
+                        'error': True,
+                        'code': 'immich.connection_failed',
+                        'details': error_message
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # If validation passes, save the integration with the corrected URL
+            serializer.save(server_url=corrected_server_url)
+            return Response(
+                serializer.data,
+                status=status.HTTP_200_OK
+            )
+        
         return Response(
             serializer.errors,
             status=status.HTTP_400_BAD_REQUEST
@@ -411,10 +541,9 @@ class ImmichIntegrationViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_200_OK
         )
-    
+
     def list(self, request, *args, **kwargs):
         # If the user has an integration, we only want to return that integration
-
         user_integrations = ImmichIntegration.objects.filter(user=request.user)
         if user_integrations.exists():
             integration = user_integrations.first()

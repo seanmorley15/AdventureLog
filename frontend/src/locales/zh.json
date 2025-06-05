@@ -669,7 +669,15 @@
     "api_key_placeholder": "输入您的Immich API密钥",
     "enable_integration": "启用集成",
     "immich_integration_desc": "连接您的Immich照片管理服务器",
-    "need_help": "需要帮助设置吗？\n查看"
+    "need_help": "需要帮助设置吗？\n查看",
+    "connection_error": "连接到Immich服务器的错误",
+    "copy_locally": "在本地复制图像",
+    "copy_locally_desc": "将图像复制到服务器以进行离线访问。\n使用更多的磁盘空间。",
+    "error_saving_image": "保存错误的图像",
+    "integration_already_exists": "Immich整合已经存在。\n您一次只能进行一个集成。",
+    "integration_not_found": "没有找到Immich整合。\n请创建一个新的集成。",
+    "network_error": "连接到Immich服务器时的网络错误。\n请检查您的连接，然后重试。",
+    "validation_error": "在验证IMMICH集成时发生了错误。\n请检查您的服务器URL和API键。"
   },
   "recomendations": {
     "address": "地址",
@@ -712,5 +720,8 @@
     "reservation_number": "预订号",
     "resort": "度假村",
     "current_timezone": "当前时区"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。"
   }
 }

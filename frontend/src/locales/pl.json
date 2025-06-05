@@ -669,7 +669,15 @@
     "api_key_placeholder": "Wprowadź swój klucz API IMMICH",
     "enable_integration": "Włącz integrację",
     "immich_integration_desc": "Połącz swój serwer zarządzania zdjęciami Immich",
-    "need_help": "Potrzebujesz pomocy w konfiguracji? \nSprawdź"
+    "need_help": "Potrzebujesz pomocy w konfiguracji? \nSprawdź",
+    "connection_error": "Błąd łączący się z serwerem Immich",
+    "copy_locally": "Kopiuj obrazy lokalnie",
+    "copy_locally_desc": "Skopiuj obrazy na serwer, aby uzyskać dostęp offline. \nWykorzystuje więcej miejsca na dysku.",
+    "error_saving_image": "Obraz zapisujący błąd",
+    "integration_already_exists": "Immichu jest już integracja i immich. \nMożesz mieć tylko jedną integrację na raz.",
+    "integration_not_found": "Nie znaleziono integracji imich. \nUtwórz nową integrację.",
+    "network_error": "Błąd sieci podczas łączenia się z serwerem IMMICH. \nSprawdź połączenie i spróbuj ponownie.",
+    "validation_error": "Wystąpił błąd podczas walidacji integracji immicha. \nSprawdź swój adres URL serwera i klawisz API."
   },
   "recomendations": {
     "address": "Adres",
@@ -712,5 +720,8 @@
     "reservation_number": "Numer rezerwacji",
     "resort": "Uciec",
     "current_timezone": "Obecna strefa czasowa"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji."
   }
 }

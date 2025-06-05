@@ -669,7 +669,15 @@
     "api_key_placeholder": "Voer uw Immich API -sleutel in",
     "enable_integration": "Integratie inschakelen",
     "immich_integration_desc": "Verbind uw Immich Photo Management Server",
-    "need_help": "Hulp nodig bij het opzetten van dit? \nBekijk de"
+    "need_help": "Hulp nodig bij het opzetten van dit? \nBekijk de",
+    "connection_error": "Error verbinding maken met Immich Server",
+    "copy_locally": "Kopieer afbeeldingen lokaal",
+    "copy_locally_desc": "Kopieer afbeeldingen naar de server voor offline toegang. \nGebruikt meer schijfruimte.",
+    "error_saving_image": "Foutopslagafbeelding",
+    "integration_already_exists": "Er bestaat al een Immich -integratie. \nU kunt maar één integratie tegelijk hebben.",
+    "integration_not_found": "Immich -integratie niet gevonden. \nMaak een nieuwe integratie.",
+    "network_error": "Netwerkfout terwijl u verbinding maakt met de Immich -server. \nControleer uw verbinding en probeer het opnieuw.",
+    "validation_error": "Er is een fout opgetreden bij het valideren van de Immich -integratie. \nControleer uw server -URL en API -toets."
   },
   "recomendations": {
     "address": "Adres",
@@ -712,5 +720,8 @@
     "type": "Type",
     "villa": "Villa",
     "current_timezone": "Huidige tijdzone"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen."
   }
 }

@@ -699,7 +699,15 @@
     "api_key_placeholder": "Skriv inn Immich API -tasten",
     "enable_integration": "Aktiver integrasjon",
     "immich_integration_desc": "Koble til Immich Photo Management Server",
-    "need_help": "Trenger du hjelp til å sette opp dette? \nSjekk ut"
+    "need_help": "Trenger du hjelp til å sette opp dette? \nSjekk ut",
+    "connection_error": "Feil tilkobling til Immich Server",
+    "copy_locally": "Kopier bilder lokalt",
+    "copy_locally_desc": "Kopier bilder til serveren for offline tilgang. \nBruker mer diskplass.",
+    "error_saving_image": "Feil å lagre bilde",
+    "integration_already_exists": "En Immich -integrasjon eksisterer allerede. \nDu kan bare ha en integrasjon om gangen.",
+    "integration_not_found": "Immich -integrasjon ikke funnet. \nOpprett en ny integrasjon.",
+    "network_error": "Nettverksfeil mens du kobler til Immich -serveren. \nVennligst sjekk tilkoblingen din og prøv igjen.",
+    "validation_error": "Det oppstod en feil under validering av Immich -integrasjonen. \nVennligst sjekk server -URL -en og API -tasten."
   },
   "recomendations": {
     "address": "Adresse",
@@ -712,5 +720,8 @@
     "food": "Mat",
     "miles": "Miles",
     "tourism": "Turisme"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Koble til Google Maps-kontoen din for å få søkeresultater og anbefalinger av høy kvalitet."
   }
 }
