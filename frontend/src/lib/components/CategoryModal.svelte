@@ -186,7 +186,7 @@
 								<button
 									type="button"
 									on:click={() => startEdit(category)}
-									class="btn btn-xs btn-outline"
+									class="btn btn-xs btn-neutral"
 								>
 									{$t('lodging.edit')}
 								</button>
@@ -194,7 +194,7 @@
 									<button
 										type="button"
 										on:click={() => removeCategory(category)}
-										class="btn btn-xs btn-error btn-outline"
+										class="btn btn-xs btn-error"
 									>
 										{$t('adventures.remove')}
 									</button>
