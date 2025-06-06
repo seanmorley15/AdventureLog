@@ -156,7 +156,7 @@ Join thousands of travelers sharing tips, contributing code, and building the fu
 
 ### 🚀 **Open Source Freedom**
 
-GPL licensed, fully transparent, and built for the community. By travelers, for travelers.
+GPL 3.0 licensed, fully transparent, and built for the community. By travelers, for travelers.
 
 </div>
 

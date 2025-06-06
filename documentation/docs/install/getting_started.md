@@ -7,7 +7,7 @@ AdventureLog can be installed in a variety of ways, depending on your platform o
 ::: tip Quick Start Script
 **The fastest way to get started:**  
 [Install AdventureLog with a single command →](quick_start.md)  
-Perfect for most users. Zero guesswork. Maximum adventure. 🚀
+Perfect for and Docker beginners.
 :::
 
 ## 🐳 Popular Installation Methods

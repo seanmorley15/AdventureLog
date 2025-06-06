@@ -29,9 +29,8 @@ The script automatically:
 1. Verifies Docker is installed and running
 2. Downloads `docker-compose.yml` and `.env`
 3. Prompts you for domain and port settings
-4. Launches AdventureLog
-5. Waits for services to start
-6. Prints success info with next steps
+4. Waits for services to start
+5. Prints success info with next steps
 
 ## 🧼 Uninstall
 

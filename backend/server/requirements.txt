@@ -10,7 +10,7 @@ Pillow
 whitenoise
 django-resized
 django-geojson
-setuptools
+setuptools<81
 gunicorn==23.0.0
 qrcode==8.0
 slippers==0.6.2
