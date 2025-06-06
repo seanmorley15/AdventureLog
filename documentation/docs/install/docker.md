@@ -1,7 +1,8 @@
 # Docker 🐋
 
 Docker is the preferred way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
-**Note**: This guide mainly focuses on installation with a linux based host machine, but the steps are similar for other operating systems.
+
+> **Note**: This guide mainly focuses on installation with a Linux-based host machine, but the steps are similar for other operating systems.
 
 ## Prerequisites
 
@@ -9,7 +10,16 @@ Docker is the preferred way to run AdventureLog on your local machine. It is a l
 
 ## Getting Started
 
-Get the `docker-compose.yml` file from the AdventureLog repository. You can download it from [here](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml) or run this command to download it directly to your machine:
+Get the `docker-compose.yml` and `.env.example` files from the AdventureLog repository. You can download them here:
+
+- [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml)
+- [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
+
+```bash
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
+cp .env.example .env
+```
 
 ::: tip
 
@@ -17,46 +27,56 @@ If running on an ARM based machine, you will need to use a different PostGIS Ima
 
 :::
 
-```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
-```
-
 ## Configuration
 
-Here is a summary of the configuration options available in the `docker-compose.yml` file:
+The `.env` file contains all the configuration settings for your AdventureLog instance. Here’s a breakdown of each section:
 
-<!-- make a table with column name, is required, other -->
+### 🌐 Frontend (web)
 
-### Frontend Container (web)
+| Name                | Required  | Description                                                                                                   | Default Value           |
+| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `PUBLIC_SERVER_URL` | Yes       | Used by the frontend SSR server to connect to the backend. Should match the internal container name and port. | `http://server:8000`    |
+| `ORIGIN`            | Sometimes | Needed only if not using HTTPS. Set it to the domain or IP you'll use to access the frontend.                 | `http://localhost:8015` |
+| `BODY_SIZE_LIMIT`   | Yes       | Maximum upload size in bytes.                                                                                 | `Infinity`              |
+| `FRONTEND_PORT`     | Yes       | Port that the frontend will run on inside Docker.                                                             | `8015`                  |
 
-| Name                | Required  | Description                                                                                                                                                   | Default Value               |
-| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `PUBLIC_SERVER_URL` | Yes       | What the frontend SSR server uses to connect to the backend.                                                                                                  | ```http://server:8000```    |
-| `ORIGIN`            | Sometimes | Not needed if using HTTPS. If not, set it to the domain of what you will access the app from.                                                                 | ```http://localhost:8015``` |
-| `BODY_SIZE_LIMIT`   | Yes       | Used to set the maximum upload size to the server. Should be changed to prevent someone from uploading too much! Custom values must be set in **bytes**.  | ```Infinity```              |
+### 🐘 PostgreSQL Database
 
-### Backend Container (server)
+| Name                | Required | Description           | Default Value |
+| ------------------- | -------- | --------------------- | ------------- |
+| `PGHOST`            | Yes      | Internal DB hostname. | `db`          |
+| `POSTGRES_DB`       | Yes      | DB name.              | `database`    |
+| `POSTGRES_USER`     | Yes      | DB user.              | `adventure`   |
+| `POSTGRES_PASSWORD` | Yes      | DB password.          | `changeme123` |
 
-| Name                    | Required | Description                                                                                                                                   | Default Value               |
-| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| `PGHOST`                | Yes      | Database host.                                                                                                                                | ```db```                    |
-| `PGDATABASE`            | Yes      | Database.                                                                                                                                     | ```database```              |
-| `PGUSER`                | Yes      | Database user.                                                                                                                                | ```adventure```             |
-| `PGPASSWORD`            | Yes      | Database password.                                                                                                                            | ```changeme123```           |
-| `PGPORT`                | No       | Database port.                                                                                                                                | ```5432```                  |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default username.                                                                                                                             | ```admin```                 |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default password, change after initial login.                                                                                                 | ```admin```                 |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default user's email.                                                                                                                         | ```admin@example.com```     |
-| `PUBLIC_URL`            | Yes      | This needs to match the outward port of the server and be accessible from where the app is used. It is used for the creation of image urls.   | ```http://localhost:8016``` |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Need to be changed to the origins where you use your backend server and frontend. These values are comma separated.                           | ```http://localhost:8016``` |
-| `FRONTEND_URL`          | Yes      | This is the publicly accessible url to the **frontend** container. This link should be accessible for all users. Used for email generation.   | ```http://localhost:8015``` |
+### 🔒 Backend (server)
+
+| Name                    | Required | Description                                                                        | Default Value                                 |
+| ----------------------- | -------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
+| `SECRET_KEY`            | Yes      | Django secret key. Change this in production!                                      | `changeme123`                                 |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default Django admin username.                                                     | `admin`                                       |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default Django admin password.                                                     | `admin`                                       |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default admin email.                                                               | `admin@example.com`                           |
+| `PUBLIC_URL`            | Yes      | Publicly accessible URL of the **backend**. Used for generating image URLs.        | `http://localhost:8016`                       |
+| `CSRF_TRUSTED_ORIGINS`  | Yes      | Comma-separated list of frontend/backend URLs that are allowed to submit requests. | `http://localhost:8016,http://localhost:8015` |
+| `FRONTEND_URL`          | Yes      | URL to the **frontend**, used for email generation.                                | `http://localhost:8015`                       |
+| `BACKEND_PORT`          | Yes      | Port that the backend will run on inside Docker.                                   | `8016`                                        |
+| `DEBUG`                 | No       | Should be `False` in production.                                                   | `False`                                       |
+
+## Optional Configuration
+
+- [Disable Registration](../configuration/disable_registration.md)
+- [Google Maps](../configuration/google_maps_integration.md)
+- [Email Configuration](../configuration/email.md)
+- [Immich Integration](../configuration/immich_integration.md)
+- [Umami Analytics](../configuration/analytics.md)
 
 ## Running the Containers
 
-To start the containers, run the following command:
+Once you've configured `.env`, you can start AdventureLog with:
 
 ```bash
 docker compose up -d
 ```
 
-Enjoy AdventureLog! 🎉
+Enjoy using AdventureLog! 🎉
