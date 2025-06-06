@@ -142,7 +142,13 @@
 				{#if country.latitude && country.longitude}
 					<Marker
 						lngLat={[country.longitude, country.latitude]}
-						class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 bg-green-200 text-black focus:outline-6 focus:outline-black"
+						class={`grid px-2 py-1 place-items-center rounded-full border border-gray-200 ${
+							country.num_visits === 0
+								? 'bg-red-200'
+								: country.num_visits === country.num_regions
+									? 'bg-green-200'
+									: 'bg-blue-200'
+						} text-black focus:outline-6 focus:outline-black`}
 						on:click={() => goto(`/worldtravel/${country.country_code}`)}
 					>
 						<span class="text-xs">
