@@ -630,7 +630,9 @@
     "manage_categories": "Kategorien verwalten",
     "no_categories_found": "Keine Kategorien gefunden.",
     "select_category": "Kategorie wählen",
-    "update_after_refresh": "Die Abenteuerkarten werden aktualisiert, sobald Sie die Seite aktualisieren."
+    "update_after_refresh": "Die Abenteuerkarten werden aktualisiert, sobald Sie die Seite aktualisieren.",
+    "add_category": "Kategorie hinzufügen",
+    "add_new_category": "Neue Kategorie hinzufügen"
   },
   "dashboard": {
     "add_some": "Warum nicht gleich Ihr nächstes Abenteuer planen? Sie können ein neues Abenteuer hinzufügen, indem Sie auf den Button unten klicken.",

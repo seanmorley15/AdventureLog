@@ -307,7 +307,9 @@
     "manage_categories": "카테고리 관리",
     "no_categories_found": "카테고리가 없습니다.",
     "select_category": "카테고리 선택",
-    "update_after_refresh": "페이지를 새로고침해야 모험 카드가 업데이트됩니다."
+    "update_after_refresh": "페이지를 새로고침해야 모험 카드가 업데이트됩니다.",
+    "add_category": "카테고리 추가",
+    "add_new_category": "새 카테고리를 추가하십시오"
   },
   "checklist": {
     "add_item": "항목 추가",

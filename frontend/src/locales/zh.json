@@ -630,7 +630,9 @@
     "manage_categories": "管理类别",
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
-    "update_after_refresh": "刷新页面后，冒险卡将更新。"
+    "update_after_refresh": "刷新页面后，冒险卡将更新。",
+    "add_category": "添加类别",
+    "add_new_category": "添加新类别"
   },
   "dashboard": {
     "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",

@@ -20,13 +20,6 @@
 	import { onMount } from 'svelte';
 	let inputElement: HTMLInputElement | null = null;
 
-	let isScrolled = false;
-
-	// Handle scroll effect
-	function handleScroll() {
-		isScrolled = window.scrollY > 10;
-	}
-
 	let theme = '';
 
 	// Event listener for focusing input
@@ -44,13 +37,15 @@
 	}
 
 	onMount(() => {
+		// Attach event listener on component mount
 		document.addEventListener('keydown', handleKeydown);
-		window.addEventListener('scroll', handleScroll);
-		theme = document.documentElement.getAttribute('data-theme') || '';
 
+		// @ts-ignore
+		theme = document.documentElement.getAttribute('data-theme');
+
+		// Cleanup event listener on component destruction
 		return () => {
 			document.removeEventListener('keydown', handleKeydown);
-			window.removeEventListener('scroll', handleScroll);
 		};
 	});
 
@@ -113,11 +108,7 @@
 	<AboutModal on:close={() => (isAboutModalOpen = false)} />
 {/if}
 
-<nav
-	class="navbar sticky top-0 z-50 transition-all duration-300 {isScrolled
-		? 'bg-base-100/80 backdrop-blur-lg shadow-lg border-b border-base-300/50'
-		: 'bg-base-100'}"
->
+<div class="navbar bg-base-100">
 	<div class="navbar-start">
 		<div class="dropdown z-50">
 			<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
@@ -199,19 +190,9 @@
 				{/if}
 			</ul>
 		</div>
-		<a href="/" class="btn btn-ghost hover:bg-transparent group">
-			<div class="flex items-center space-x-3">
-				<div class="relative">
-					<img
-						src="/favicon.png"
-						alt="AdventureLog"
-						class="w-10 h-10 transition-transform duration-300 group-hover:scale-110"
-					/>
-					<div
-						class="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-					></div>
-				</div>
-			</div>
+		<a class="btn btn-ghost p-0 text-2xl font-bold tracking-normal" href="/">
+			<span class="sm:inline hidden">AdventureLog</span>
+			<img src="/favicon.png" alt="Map Logo" class="w-10" />
 		</a>
 	</div>
 	<div class="navbar-center hidden lg:flex">
@@ -274,26 +255,19 @@
 			{/if}
 
 			{#if data.user}
-				<form class="hidden md:flex relative group" on:submit={searchGo}>
-					<div class="relative">
+				<form class="flex gap-2">
+					<label class="input input-bordered flex items-center gap-2">
 						<input
 							type="text"
 							bind:value={query}
-							bind:this={inputElement}
+							class="grow"
 							placeholder={$t('navbar.search')}
-							class="input input-bordered bg-neutral border-base-300 focus:border-primary focus:bg-base-100 transition-all duration-300 pr-20 w-64 group-focus-within:w-72"
-						/>
-						<div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center space-x-2">
-							<kbd class="kbd kbd-sm opacity-60">/ </kbd>
-							<button
-								type="submit"
-								class="btn btn-sm btn-circle btn-ghost hover:btn-primary transition-all duration-200"
-								aria-label="Search"
-							>
-								<Magnify class="w-4 h-4 text-neutral-300" />
-							</button>
-						</div>
-					</div>
+							bind:this={inputElement}
+						/><kbd class="kbd">/</kbd>
+					</label>
+					<button on:click={searchGo} type="submit" class="btn btn-neutral flex items-center gap-1">
+						<Magnify class="w-5 h-5" />
+					</button>
 				</form>
 			{/if}
 		</ul>
@@ -356,4 +330,4 @@
 			</ul>
 		</div>
 	</div>
-</nav>
+</div>

@@ -660,7 +660,9 @@
     "icon": "Ikon",
     "update_after_refresh": "Eventyrkortene vil oppdateres når du oppdaterer siden.",
     "select_category": "Velg kategori",
-    "category_name": "Kategorinavn"
+    "category_name": "Kategorinavn",
+    "add_category": "Legg til kategori",
+    "add_new_category": "Legg til ny kategori"
   },
   "dashboard": {
     "welcome_back": "Velkommen tilbake",

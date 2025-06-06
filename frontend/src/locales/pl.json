@@ -630,7 +630,9 @@
     "icon": "Ikona",
     "update_after_refresh": "Karty podróży zostaną zaktualizowane po odświeżeniu strony.",
     "select_category": "Wybierz kategorię",
-    "category_name": "Nazwa kategorii"
+    "category_name": "Nazwa kategorii",
+    "add_category": "Dodaj kategorię",
+    "add_new_category": "Dodaj nową kategorię"
   },
   "dashboard": {
     "add_some": "Dlaczego nie zacząć planować kolejnej przygody? \nMożesz dodać nową przygodę, klikając przycisk poniżej.",

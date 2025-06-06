@@ -1,149 +1,353 @@
 <script lang="ts">
 	import type { Category } from '$lib/types';
-	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-	import { onMount } from 'svelte';
-	let modal: HTMLDialogElement;
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
+
+	const dispatch = createEventDispatcher();
+	let modal: HTMLDialogElement;
 
 	export let categories: Category[] = [];
 
-	let category_to_edit: Category | null = null;
-
-	let is_changed: boolean = false;
-
-	let has_loaded: boolean = false;
+	let categoryToEdit: Category | null = null;
+	let newCategory = { display_name: '', icon: '' };
+	let showAddForm = false;
+	let isChanged = false;
+	let hasLoaded = false;
+	let warningMessage: string | null = null;
+	let showEmojiPickerAdd = false;
+	let showEmojiPickerEdit = false;
 
 	onMount(async () => {
-		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		if (modal) {
-			modal.showModal();
-		}
-		let category_fetch = await fetch('/api/categories/categories');
-		categories = await category_fetch.json();
-		has_loaded = true;
-		// remove the general category if it exists
-		// categories = categories.filter((c) => c.name !== 'general');
+		await import('emoji-picker-element');
+		modal = document.querySelector('#category-modal') as HTMLDialogElement;
+		modal.showModal();
+		await loadCategories();
 	});
 
-	async function saveCategory() {
-		if (category_to_edit) {
-			let edit_fetch = await fetch(`/api/categories/${category_to_edit.id}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(category_to_edit)
-			});
-			if (edit_fetch.ok) {
-				category_to_edit = null;
-				let the_category = (await edit_fetch.json()) as Category;
-				categories = categories.map((c) => {
-					if (c.id === the_category.id) {
-						return the_category;
-					}
-					return c;
-				});
-				is_changed = true;
+	async function loadCategories() {
+		try {
+			const res = await fetch('/api/categories/categories');
+			if (res.ok) {
+				categories = await res.json();
 			}
+		} catch (err) {
+			console.error('Failed to load categories:', err);
+		} finally {
+			hasLoaded = true;
 		}
 	}
 
-	function close() {
+	function closeModal() {
 		dispatch('close');
+		modal.close();
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
-			dispatch('close');
+			closeModal();
 		}
 	}
 
-	function removeCategory(category: Category) {
-		return async () => {
-			let response = await fetch(`/api/categories/${category.id}`, {
+	function handleEmojiSelectAdd(event: CustomEvent) {
+		newCategory.icon = event.detail.unicode;
+		showEmojiPickerAdd = false;
+	}
+
+	function handleEmojiSelectEdit(event: CustomEvent) {
+		if (categoryToEdit) {
+			categoryToEdit.icon = event.detail.unicode;
+		}
+		showEmojiPickerEdit = false;
+	}
+
+	async function createCategory(event: Event) {
+		event.preventDefault();
+
+		const nameTrimmed = newCategory.display_name.trim();
+		if (!nameTrimmed) {
+			warningMessage = $t('categories.name_required');
+			return;
+		}
+		warningMessage = null;
+
+		const payload = {
+			display_name: nameTrimmed,
+			name: nameTrimmed
+				.toLowerCase()
+				.replace(/\s+/g, '_')
+				.replace(/[^a-z0-9_]/g, ''),
+			icon: newCategory.icon.trim() || '🌍'
+		};
+
+		try {
+			const res = await fetch('/api/categories', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(payload)
+			});
+			if (res.ok) {
+				const created = await res.json();
+				categories = [...categories, created];
+				isChanged = true;
+				newCategory = { display_name: '', icon: '' };
+				showAddForm = false;
+				showEmojiPickerAdd = false;
+			}
+		} catch (err) {
+			console.error('Failed to create category:', err);
+		}
+	}
+
+	async function saveCategory(event: Event) {
+		event.preventDefault();
+		if (!categoryToEdit) return;
+
+		const nameTrimmed = categoryToEdit.display_name.trim();
+		if (!nameTrimmed) {
+			warningMessage = $t('categories.name_required');
+			return;
+		}
+		warningMessage = null;
+
+		try {
+			const res = await fetch(`/api/categories/${categoryToEdit.id}`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ ...categoryToEdit, display_name: nameTrimmed })
+			});
+			if (res.ok) {
+				const updated = await res.json();
+				categories = categories.map((c) => (c.id === updated.id ? updated : c));
+				categoryToEdit = null;
+				isChanged = true;
+				showEmojiPickerEdit = false;
+			}
+		} catch (err) {
+			console.error('Failed to save category:', err);
+		}
+	}
+
+	function startEdit(category: Category) {
+		categoryToEdit = { ...category };
+		showAddForm = false;
+		showEmojiPickerAdd = false;
+		showEmojiPickerEdit = false;
+	}
+
+	function cancelEdit() {
+		categoryToEdit = null;
+		showEmojiPickerEdit = false;
+	}
+
+	async function removeCategory(category: Category) {
+		if (category.name === 'general') return;
+
+		try {
+			const res = await fetch(`/api/categories/${category.id}`, {
 				method: 'DELETE'
 			});
-			if (response.ok) {
+			if (res.ok) {
 				categories = categories.filter((c) => c.id !== category.id);
-				is_changed = true;
+				isChanged = true;
 			}
-		};
+		} catch (err) {
+			console.error('Failed to delete category:', err);
+		}
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal">
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<div class="modal-box" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-lg">{$t('categories.manage_categories')}</h3>
+<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
+<dialog id="category-modal" class="modal" on:keydown={handleKeydown}>
+	<div class="modal-box max-w-2xl">
+		<!-- Header -->
+		<div class="flex items-center justify-between mb-6">
+			<h2 class="text-xl font-bold">{$t('categories.manage_categories')}</h2>
+			<button
+				type="button"
+				on:click={closeModal}
+				class="btn btn-sm btn-circle btn-ghost"
+				aria-label="Close"
+			>
+				✕
+			</button>
+		</div>
 
-		{#if has_loaded}
-			{#each categories as category}
-				<div class="flex justify-between items-center mt-2">
-					<span>{category.display_name} {category.icon}</span>
-					<div class="flex space-x-2">
-						<button on:click={() => (category_to_edit = category)} class="btn btn-primary btn-sm"
-							>Edit</button
-						>
-						{#if category.name != 'general'}
-							<button on:click={removeCategory(category)} class="btn btn-warning btn-sm"
-								>{$t('adventures.remove')}</button
-							>
-						{:else}
-							<button class="btn btn-warning btn-sm btn-disabled">{$t('adventures.remove')}</button>
-						{/if}
-					</div>
+		<!-- Category List -->
+		{#if hasLoaded}
+			{#if categories.length > 0}
+				<div class="space-y-2 mb-6">
+					{#each categories as category (category.id)}
+						<div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+							<div class="flex items-center gap-3">
+								<span class="text-lg">{category.icon || '🌍'}</span>
+								<span class="font-medium">{category.display_name}</span>
+							</div>
+							<div class="flex gap-2">
+								<button
+									type="button"
+									on:click={() => startEdit(category)}
+									class="btn btn-xs btn-outline"
+								>
+									{$t('lodging.edit')}
+								</button>
+								{#if category.name !== 'general'}
+									<button
+										type="button"
+										on:click={() => removeCategory(category)}
+										class="btn btn-xs btn-error btn-outline"
+									>
+										{$t('adventures.remove')}
+									</button>
+								{/if}
+							</div>
+						</div>
+					{/each}
 				</div>
-			{/each}
-			{#if categories.length === 0}
-				<p>{$t('categories.no_categories_found')}</p>
+			{:else}
+				<div class="text-center py-8 text-base-content/60">
+					{$t('categories.no_categories_found')}
+				</div>
 			{/if}
 		{:else}
-			<div class="flex items-center justify-center">
-				<span class="loading loading-spinner loading-lg m-4"></span>
+			<div class="text-center py-8">
+				<span class="loading loading-spinner loading-md"></span>
 			</div>
 		{/if}
 
-		{#if category_to_edit}
-			<h2 class="text-center text-xl font-semibold mt-2 mb-2">{$t('categories.edit_category')}</h2>
-			<div class="flex flex-row space-x-2 form-control">
-				<input
-					type="text"
-					placeholder={$t('adventures.name')}
-					bind:value={category_to_edit.display_name}
-					class="input input-bordered w-full max-w-xs"
-				/>
+		<!-- Edit Category Form -->
+		{#if categoryToEdit}
+			<div class="bg-base-100 border border-base-300 rounded-lg p-4 mb-4">
+				<h3 class="font-medium mb-4">{$t('categories.edit_category')}</h3>
+				<form on:submit={saveCategory} class="space-y-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div>
+							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<label class="label">
+								<span class="label-text">{$t('categories.category_name')}</span>
+							</label>
+							<input
+								type="text"
+								class="input input-bordered w-full"
+								bind:value={categoryToEdit.display_name}
+								required
+							/>
+						</div>
+						<div>
+							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<label class="label">
+								<span class="label-text">{$t('categories.icon')}</span>
+							</label>
+							<div class="flex gap-2">
+								<input
+									type="text"
+									class="input input-bordered flex-1"
+									bind:value={categoryToEdit.icon}
+								/>
+								<button
+									type="button"
+									on:click={() => (showEmojiPickerEdit = !showEmojiPickerEdit)}
+									class="btn btn-square btn-outline"
+								>
+									😀
+								</button>
+							</div>
+						</div>
+					</div>
 
-				<input
-					type="text"
-					placeholder={$t('categories.icon')}
-					bind:value={category_to_edit.icon}
-					class="input input-bordered w-full max-w-xs"
-				/>
+					{#if showEmojiPickerEdit}
+						<div class="p-2 border rounded-lg bg-base-100">
+							<emoji-picker on:emoji-click={handleEmojiSelectEdit}></emoji-picker>
+						</div>
+					{/if}
+
+					<div class="flex justify-end gap-2">
+						<button type="button" class="btn btn-ghost" on:click={cancelEdit}>
+							{$t('adventures.cancel')}
+						</button>
+						<button type="submit" class="btn btn-primary"> {$t('notes.save')} </button>
+					</div>
+				</form>
 			</div>
-			<button class="btn btn-primary" on:click={saveCategory}>{$t('notes.save')}</button>
 		{/if}
 
-		<button class="btn btn-primary mt-4" on:click={close}>{$t('about.close')}</button>
+		<!-- Add Category Section -->
+		<div class="collapse collapse-plus bg-base-200 mb-4">
+			<input type="checkbox" bind:checked={showAddForm} />
+			<div class="collapse-title font-medium">{$t('categories.add_new_category')}</div>
+			{#if showAddForm}
+				<div class="collapse-content">
+					<form on:submit={createCategory} class="space-y-4">
+						<div>
+							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<label class="label">
+								<span class="label-text">{$t('categories.category_name')}</span>
+							</label>
+							<input
+								type="text"
+								class="input input-bordered w-full"
+								bind:value={newCategory.display_name}
+								required
+							/>
+						</div>
 
-		{#if is_changed}
-			<div role="alert" class="alert alert-info mt-6">
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					fill="none"
-					viewBox="0 0 24 24"
-					class="h-6 w-6 shrink-0 stroke-current"
-				>
-					<path
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-					></path>
-				</svg>
+						<div>
+							<!-- svelte-ignore a11y-label-has-associated-control -->
+							<label class="label">
+								<span class="label-text">{$t('categories.icon')}</span>
+							</label>
+							<div class="flex gap-2">
+								<input
+									type="text"
+									class="input input-bordered flex-1"
+									bind:value={newCategory.icon}
+									placeholder="🌍"
+								/>
+								<button
+									type="button"
+									on:click={() => (showEmojiPickerAdd = !showEmojiPickerAdd)}
+									class="btn btn-square btn-outline"
+								>
+									😀
+								</button>
+							</div>
+							{#if showEmojiPickerAdd}
+								<div class="mt-2 p-2 border rounded-lg bg-base-100">
+									<emoji-picker on:emoji-click={handleEmojiSelectAdd}></emoji-picker>
+								</div>
+							{/if}
+						</div>
+
+						<button type="submit" class="btn btn-primary w-full">
+							{$t('collection.create')}
+						</button>
+					</form>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Messages -->
+		{#if warningMessage}
+			<div class="alert alert-warning mb-4">
+				<span>{warningMessage}</span>
+			</div>
+		{/if}
+
+		{#if isChanged}
+			<div class="alert alert-success mb-4">
 				<span>{$t('categories.update_after_refresh')}</span>
 			</div>
 		{/if}
+
+		<!-- Footer -->
+		<div class="flex justify-end">
+			<button type="button" class="btn" on:click={closeModal}> {$t('about.close')} </button>
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.modal-box {
+		max-height: 90vh;
+		overflow-y: auto;
+	}
+</style>

@@ -630,7 +630,9 @@
     "manage_categories": "Hantera kategorier",
     "no_categories_found": "Inga kategorier hittades.",
     "select_category": "Välj Kategori",
-    "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan."
+    "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan.",
+    "add_category": "Lägg till kategori",
+    "add_new_category": "Lägg till en ny kategori"
   },
   "dashboard": {
     "add_some": "Varför inte börja planera ditt nästa äventyr? \nDu kan lägga till ett nytt äventyr genom att klicka på knappen nedan.",

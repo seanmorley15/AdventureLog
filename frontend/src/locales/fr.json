@@ -630,7 +630,9 @@
     "manage_categories": "Gérer les catégories",
     "no_categories_found": "Aucune catégorie trouvée.",
     "select_category": "Sélectionnez une catégorie",
-    "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page."
+    "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page.",
+    "add_category": "Ajouter une catégorie",
+    "add_new_category": "Ajouter une nouvelle catégorie"
   },
   "dashboard": {
     "add_some": "Pourquoi ne pas commencer à planifier votre prochaine aventure ? \nVous pouvez ajouter une nouvelle aventure en cliquant sur le bouton ci-dessous.",

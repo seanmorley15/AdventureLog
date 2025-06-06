@@ -630,7 +630,9 @@
     "manage_categories": "Beheer categorieën",
     "no_categories_found": "Geen categorieën gevonden.",
     "select_category": "Selecteer een categorie",
-    "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt."
+    "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt.",
+    "add_category": "Categorie toevoegen",
+    "add_new_category": "Voeg een nieuwe categorie toe"
   },
   "dashboard": {
     "add_some": "Waarom begint u niet met het plannen van uw volgende avontuur? \nJe kunt een nieuw avontuur toevoegen door op de onderstaande knop te klikken.",

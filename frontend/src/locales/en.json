@@ -660,7 +660,9 @@
 		"icon": "Icon",
 		"update_after_refresh": "The adventure cards will be updated once you refresh the page.",
 		"select_category": "Select Category",
-		"category_name": "Category Name"
+		"category_name": "Category Name",
+		"add_category": "Add Category",
+		"add_new_category": "Add New Category"
 	},
 	"dashboard": {
 		"welcome_back": "Welcome back",
