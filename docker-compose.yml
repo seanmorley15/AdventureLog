@@ -1,7 +1,7 @@
 services:
   web:
     #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:beta
+    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
     env_file: .env
@@ -20,7 +20,7 @@ services:
 
   server:
     #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:beta
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: .env

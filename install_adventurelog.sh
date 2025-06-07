@@ -2,13 +2,16 @@
 set -euo pipefail
 
 # =============================================================================
-# AdventureLog Ultimate Installer (Fixed with Dynamic Port Handling)
+# AdventureLog Installer Script
+# (c) 2023-2025 Sean Morley <https://seanmorley.com>
+# https://adventurelog.app
+# License: GPL-3.0
 # =============================================================================
 
 APP_NAME="AdventureLog"
 INSTALL_DIR="./adventurelog"
-COMPOSE_FILE_URL="https://raw.githubusercontent.com/seanmorley15/AdventureLog/development/docker-compose.yml"
-ENV_FILE_URL="https://raw.githubusercontent.com/seanmorley15/AdventureLog/development/.env.example"
+COMPOSE_FILE_URL="https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml"
+ENV_FILE_URL="https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example"
 
 # Global configuration variables
 declare -g FRONTEND_ORIGIN=""

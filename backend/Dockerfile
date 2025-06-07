@@ -3,11 +3,11 @@ FROM python:3.13-slim
 
 # Metadata labels for the AdventureLog image
 LABEL maintainer="Sean Morley" \
-      version="v0.9.0" \
+      version="v0.10.0" \
       description="AdventureLog — the ultimate self-hosted travel companion." \
       org.opencontainers.image.title="AdventureLog" \
       org.opencontainers.image.description="AdventureLog is a self-hosted travel companion that helps you plan, track, and share your adventures." \
-      org.opencontainers.image.version="v0.9.0" \
+      org.opencontainers.image.version="v0.10.0" \
       org.opencontainers.image.authors="Sean Morley" \
       org.opencontainers.image.url="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/banner.png" \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \

@@ -53,7 +53,7 @@ export default defineConfig({
           priceCurrency: "USD",
           description: "Open-source version available for self-hosting.",
         },
-        softwareVersion: "v0.9.0",
+        softwareVersion: "v0.10.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
         screenshot:
@@ -192,6 +192,10 @@ export default defineConfig({
                 link: "/docs/configuration/social_auth/github",
               },
               {
+                text: "Authelia",
+                link: "https://www.authelia.com/integration/openid-connect/adventure-log/",
+              },
+              {
                 text: "Open ID Connect",
                 link: "/docs/configuration/social_auth/oidc",
               },
@@ -245,6 +249,10 @@ export default defineConfig({
         text: "Changelogs",
         collapsed: false,
         items: [
+          {
+            text: "v0.10.0",
+            link: "/docs/changelogs/v0-10-0",
+          },
           {
             text: "v0.9.0",
             link: "/docs/changelogs/v0-9-0",
