@@ -271,6 +271,7 @@ class ChecklistItemSerializer(CustomModelSerializer):
   
 class ChecklistSerializer(CustomModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
+    
     class Meta:
         model = Checklist
         fields = [
@@ -281,8 +282,16 @@ class ChecklistSerializer(CustomModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('checklistitem_set')
         checklist = Checklist.objects.create(**validated_data)
+        
         for item_data in items_data:
-            ChecklistItem.objects.create(checklist=checklist, **item_data)
+            # Remove user_id from item_data to avoid constraint issues
+            item_data.pop('user_id', None)
+            # Set user_id from the parent checklist
+            ChecklistItem.objects.create(
+                checklist=checklist, 
+                user_id=checklist.user_id,
+                **item_data
+            )
         return checklist
     
     def update(self, instance, validated_data):
@@ -300,6 +309,9 @@ class ChecklistSerializer(CustomModelSerializer):
         # Update or create items
         updated_item_ids = set()
         for item_data in items_data:
+            # Remove user_id from item_data to avoid constraint issues
+            item_data.pop('user_id', None)
+            
             item_id = item_data.get('id')
             if item_id:
                 if item_id in current_item_ids:
@@ -310,10 +322,18 @@ class ChecklistSerializer(CustomModelSerializer):
                     updated_item_ids.add(item_id)
                 else:
                     # If ID is provided but doesn't exist, create new item
-                    ChecklistItem.objects.create(checklist=instance, **item_data)
+                    ChecklistItem.objects.create(
+                        checklist=instance, 
+                        user_id=instance.user_id,
+                        **item_data
+                    )
             else:
                 # If no ID is provided, create new item
-                ChecklistItem.objects.create(checklist=instance, **item_data)
+                ChecklistItem.objects.create(
+                    checklist=instance, 
+                    user_id=instance.user_id,
+                    **item_data
+                )
         
         # Delete items that are not in the updated data
         items_to_delete = current_item_ids - updated_item_ids
@@ -329,7 +349,6 @@ class ChecklistSerializer(CustomModelSerializer):
             raise serializers.ValidationError(
                 'Checklists associated with a public collection must be public.'
             )
-
         return data
 
 class CollectionSerializer(CustomModelSerializer):
