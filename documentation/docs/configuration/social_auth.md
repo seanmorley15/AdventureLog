@@ -9,6 +9,7 @@ The steps for each service varies so please refer to the specific service's docu
 - [Authentik](social_auth/authentik.md) (self-hosted)
 - [GitHub](social_auth/github.md)
 - [Open ID Connect](social_auth/oidc.md)
+- [Authelia](https://www.authelia.com/integration/openid-connect/adventure-log/)
 
 ## Linking Existing Accounts
 

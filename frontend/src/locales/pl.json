@@ -42,7 +42,8 @@
     "nominatim_1": "Wyszukiwanie lokalizacji i geokodowanie zapewnia",
     "nominatim_2": "Ich dane są licencjonowane na licencji ODbL.",
     "other_attributions": "Dodatkowe atrybucje można znaleźć w pliku README.",
-    "close": "Zamknij"
+    "close": "Zamknij",
+    "generic_attributions": "Zaloguj się do Adventurelog, aby wyświetlić atrybucje dla włączonych integracji i usług."
   },
   "home": {
     "hero_1": "Odkryj najbardziej ekscytujące podróże na świecie",
@@ -309,7 +310,18 @@
     "arrival_timezone": "Strefa czasowa przyjazdu",
     "departure_timezone": "Strefa czasowa odlotu",
     "arrival_date": "Data przyjazdu",
-    "departure_date": "Data wyjazdu"
+    "departure_date": "Data wyjazdu",
+    "coordinates": "Współrzędne",
+    "copy_coordinates": "Kopiuj współrzędne",
+    "sun_times": "Czasy słońca",
+    "sunrise": "Wschód słońca",
+    "sunset": "Zachód słońca",
+    "timed": "Czas",
+    "distance": "Dystans",
+    "all_linked_items": "Wszystkie połączone elementy",
+    "itinerary": "Trasa",
+    "joined": "Dołączył",
+    "view_profile": "Zobacz profil"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -450,7 +462,58 @@
     "password_disabled": "Uwierzytelnianie hasła wyłączone",
     "password_disabled_error": "Błąd wyłączający uwierzytelnianie hasła. \nUpewnij się, że dostawca społecznościowy lub OIDC jest powiązany z Twoim kontem.",
     "password_enabled": "Włączone uwierzytelnianie hasła",
-    "password_enabled_error": "Błąd umożliwiający uwierzytelnianie hasła."
+    "password_enabled_error": "Błąd umożliwiający uwierzytelnianie hasła.",
+    "access_restricted": "Dostęp do ograniczenia",
+    "access_restricted_desc": "Funkcje jadminarne są dostępne tylko dla pracowników.",
+    "add_new_email": "Dodaj nowy e -mail",
+    "add_new_email_address": "Dodaj nowy adres e -mail",
+    "admin": "Admin",
+    "admin_panel_desc": "Uzyskaj dostęp do pełnego interfejsu administracyjnego",
+    "administration": "Administracja",
+    "administration_desc": "Narzędzia administracyjne i ustawienia",
+    "advanced": "Zaawansowany",
+    "advanced_settings": "Zaawansowane ustawienia",
+    "advanced_settings_desc": "Zaawansowane narzędzia konfiguracyjne i programistyczne",
+    "all_rights_reserved": "Wszelkie prawa zastrzeżone.",
+    "app_version": "Wersja aplikacji",
+    "confirm_new_password_desc": "Potwierdź nowe hasło",
+    "connected": "Połączony",
+    "debug_information": "Informacje o debugowaniu",
+    "disabled": "Wyłączony",
+    "disconnected": "Bezładny",
+    "email_management": "Zarządzanie e -mail",
+    "email_management_desc": "Zarządzaj adresami e -mail i statusem weryfikacji",
+    "emails": "E -maile",
+    "enabled": "Włączony",
+    "enter_current_password": "Wprowadź bieżące hasło",
+    "enter_first_name": "Wprowadź swoje imię",
+    "enter_last_name": "Wprowadź swoje nazwisko",
+    "enter_new_email": "Wprowadź nowy adres e -mail",
+    "enter_new_password": "Wprowadź nowe hasło",
+    "enter_username": "Wprowadź swoją nazwę użytkownika",
+    "integrations": "Integracje",
+    "integrations_desc": "Połącz usługi zewnętrzne, aby ulepszyć swoje wrażenia",
+    "license": "Licencja",
+    "mfa_desc": "Dodaj dodatkową warstwę bezpieczeństwa na swoje konto",
+    "mfa_is_enabled": "MFA jest włączona",
+    "pass_change_desc": "Zaktualizuj hasło konta, aby uzyskać lepsze bezpieczeństwo",
+    "password_auth": "Uwierzytelnianie hasła",
+    "password_login_disabled": "Wyłączanie logowania hasła",
+    "password_login_enabled": "Włączone logowanie hasła",
+    "profile_info": "Informacje o profilu",
+    "profile_info_desc": "Zaktualizuj swoje dane osobowe i zdjęcie profilowe",
+    "public_profile_desc": "Spraw, aby Twój profil był widoczny dla innych użytkowników",
+    "quick_actions": "Szybkie działania",
+    "region_updates": "Aktualizacje regionu",
+    "region_updates_desc": "Aktualizacja odwiedzonych regionów i miast",
+    "regular_user": "Zwykły użytkownik",
+    "security": "Bezpieczeństwo",
+    "settings_menu": "Menu Ustawienia",
+    "social_auth": "Uwierzytelnianie społeczne",
+    "social_auth_desc_1": "Zarządzaj opcjami logowania społecznościowego i ustawieniami haseł",
+    "social_auth_setup": "Konfiguracja uwierzytelniania społecznego",
+    "staff_status": "Status personelu",
+    "staff_user": "Użytkownik personelu"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -567,7 +630,9 @@
     "icon": "Ikona",
     "update_after_refresh": "Karty podróży zostaną zaktualizowane po odświeżeniu strony.",
     "select_category": "Wybierz kategorię",
-    "category_name": "Nazwa kategorii"
+    "category_name": "Nazwa kategorii",
+    "add_category": "Dodaj kategorię",
+    "add_new_category": "Dodaj nową kategorię"
   },
   "dashboard": {
     "add_some": "Dlaczego nie zacząć planować kolejnej przygody? \nMożesz dodać nową przygodę, klikając przycisk poniżej.",
@@ -602,14 +667,31 @@
     "immich_desc": "Zintegruj swoje konto Immich z AdventureLog, aby móc przeszukiwać bibliotekę zdjęć i importować zdjęcia do swoich przygód.",
     "immich_disabled": "Integracja z Immich została pomyślnie wyłączona!",
     "documentation": "Dokumentacja integracji Immicha",
-    "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny."
+    "localhost_note": "Uwaga: localhost najprawdopodobniej nie będzie działać, jeśli nie skonfigurujesz odpowiednio sieci dokerów. \nZalecane jest użycie adresu IP serwera lub nazwy domeny.",
+    "api_key_placeholder": "Wprowadź swój klucz API IMMICH",
+    "enable_integration": "Włącz integrację",
+    "immich_integration_desc": "Połącz swój serwer zarządzania zdjęciami Immich",
+    "need_help": "Potrzebujesz pomocy w konfiguracji? \nSprawdź",
+    "connection_error": "Błąd łączący się z serwerem Immich",
+    "copy_locally": "Kopiuj obrazy lokalnie",
+    "copy_locally_desc": "Skopiuj obrazy na serwer, aby uzyskać dostęp offline. \nWykorzystuje więcej miejsca na dysku.",
+    "error_saving_image": "Obraz zapisujący błąd",
+    "integration_already_exists": "Immichu jest już integracja i immich. \nMożesz mieć tylko jedną integrację na raz.",
+    "integration_not_found": "Nie znaleziono integracji imich. \nUtwórz nową integrację.",
+    "network_error": "Błąd sieci podczas łączenia się z serwerem IMMICH. \nSprawdź połączenie i spróbuj ponownie.",
+    "validation_error": "Wystąpił błąd podczas walidacji integracji immicha. \nSprawdź swój adres URL serwera i klawisz API."
   },
   "recomendations": {
     "address": "Adres",
     "contact": "Kontakt",
     "phone": "Telefon",
     "recommendation": "Zalecenie",
-    "website": "Strona internetowa"
+    "website": "Strona internetowa",
+    "recommendations": "Zalecenia",
+    "adventure_recommendations": "Zalecenia przygodowe",
+    "food": "Żywność",
+    "miles": "Mil",
+    "tourism": "Turystyka"
   },
   "lodging": {
     "apartment": "Apartament",
@@ -640,5 +722,8 @@
     "reservation_number": "Numer rezerwacji",
     "resort": "Uciec",
     "current_timezone": "Obecna strefa czasowa"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji."
   }
 }

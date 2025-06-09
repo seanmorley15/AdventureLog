@@ -5,6 +5,12 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
+	import { marked } from 'marked'; // Import the markdown parser
+
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
+
 	import Launch from '~icons/mdi/launch';
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
@@ -59,61 +65,75 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md overflow-hidden bg-neutral text-neutral-content shadow-xl"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<div class="card-body">
-		<div class="flex justify-between">
-			<h2 class="text-2xl font-semibold -mt-2 break-words text-wrap">
-				{note.name}
-			</h2>
-		</div>
-		<div class="badge badge-primary">{$t('adventures.note')}</div>
-		{#if unlinked}
-			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-		{/if}
-		{#if note.content && note.content.length > 0}
-			<p class="line-clamp-6">
-				{note.content}
-			</p>
-		{/if}
-		{#if note.links && note.links.length > 0}
-			<p>
-				{note.links.length}
-				{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
-			</p>
-			<ul class="list-disc pl-6">
-				{#each note.links.slice(0, 3) as link}
-					<li>
-						<a class="link link-primary" href={link}>
-							{link.split('//')[1].split('/', 1)[0]}
-						</a>
-					</li>
-				{/each}
-				{#if note.links.length > 3}
-					<li>…</li>
+	<div class="card-body p-6 space-y-4">
+		<!-- Header -->
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+			<h2 class="text-xl font-bold break-words">{note.name}</h2>
+			<div class="flex flex-wrap gap-2">
+				<div class="badge badge-primary">{$t('adventures.note')}</div>
+				{#if unlinked}
+					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 				{/if}
-			</ul>
+			</div>
+		</div>
+
+		<!-- Note Content -->
+		{#if note.content && note.content?.length > 0}
+			<article
+				class="prose overflow-auto max-h-72 max-w-full p-4 border border-base-300 bg-base-100 rounded-lg"
+			>
+				{@html renderMarkdown(note.content || '')}
+			</article>
 		{/if}
+
+		<!-- Links -->
+		{#if note.links && note.links?.length > 0}
+			<div class="space-y-1">
+				<p class="text-sm font-medium">
+					{note.links.length}
+					{note.links.length > 1 ? $t('adventures.links') : $t('adventures.link')}
+				</p>
+				<ul class="list-disc pl-5 text-sm">
+					{#each note.links.slice(0, 3) as link}
+						<li>
+							<a class="link link-primary" href={link} target="_blank" rel="noopener noreferrer">
+								{link.split('//')[1]?.split('/', 1)[0]}
+							</a>
+						</li>
+					{/each}
+					{#if note.links.length > 3}
+						<li>…</li>
+					{/if}
+				</ul>
+			</div>
+		{/if}
+
+		<!-- Date -->
 		{#if note.date && note.date !== ''}
-			<div class="inline-flex items-center">
-				<Calendar class="w-5 h-5 mr-1" />
+			<div class="inline-flex items-center gap-2 text-sm">
+				<Calendar class="w-5 h-5 text-primary" />
 				<p>{new Date(note.date).toLocaleDateString(undefined, { timeZone: 'UTC' })}</p>
 			</div>
 		{/if}
-		<div class="card-actions justify-end">
-			<!-- <button class="btn btn-neutral mb-2" on:click={() => goto(`/notes/${note.id}`)}
-				><Launch class="w-6 h-6" />Open Details</button
-			> -->
-			<button class="btn btn-neutral-200 mb-2" on:click={editNote}>
-				<Launch class="w-6 h-6" />{$t('notes.open')}
+
+		<!-- Actions -->
+		<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
+			<button class="btn btn-neutral btn-sm flex items-center gap-1" on:click={editNote}>
+				<Launch class="w-5 h-5" />
+				{$t('notes.open')}
 			</button>
-			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
+			{#if note.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Adventure"
-					class="btn btn-warning"
-					on:click={() => (isWarningModalOpen = true)}><TrashCan class="w-6 h-6" /></button
+					class="btn btn-secondary btn-sm flex items-center gap-1"
+					on:click={() => (isWarningModalOpen = true)}
 				>
+					<TrashCan class="w-5 h-5" />
+					{$t('adventures.delete')}
+				</button>
 			{/if}
 		</div>
 	</div>

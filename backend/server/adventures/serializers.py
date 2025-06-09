@@ -4,22 +4,38 @@ from .models import Adventure, AdventureImage, ChecklistItem, Collection, Note, 
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
+from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
+from geopy.distance import geodesic
+from integrations.models import ImmichIntegration
 
 
 class AdventureImageSerializer(CustomModelSerializer):
     class Meta:
         model = AdventureImage
-        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id']
+        fields = ['id', 'image', 'adventure', 'is_primary', 'user_id', 'immich_id']
         read_only_fields = ['id', 'user_id']
 
     def to_representation(self, instance):
+        # If immich_id is set, check for user integration once
+        integration = None
+        if instance.immich_id:
+            integration = ImmichIntegration.objects.filter(user=instance.user_id).first()
+            if not integration:
+                return None  # Skip if Immich image but no integration
+
+        # Base representation
         representation = super().to_representation(instance)
-        if instance.image:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            #print(public_url)
-            # remove any  ' from the url
-            public_url = public_url.replace("'", "")
+
+        # Prepare public URL once
+        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+
+        if instance.immich_id:
+            # Use Immich integration URL
+            representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
+        elif instance.image:
+            # Use local image URL
             representation['image'] = f"{public_url}/media/{instance.image.name}"
+
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):
@@ -76,21 +92,29 @@ class VisitSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
                                    
 class AdventureSerializer(CustomModelSerializer):
-    images = AdventureImageSerializer(many=True, read_only=True)
+    images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
     user = serializers.SerializerMethodField()
+    country = CountrySerializer(read_only=True)
+    region = RegionSerializer(read_only=True)
+    city = CitySerializer(read_only=True)
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
+
+    def get_images(self, obj):
+        serializer = AdventureImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
@@ -103,7 +127,7 @@ class AdventureSerializer(CustomModelSerializer):
                 return existing_category
             category_data['name'] = name
         return category_data
-
+    
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
         
@@ -134,15 +158,7 @@ class AdventureSerializer(CustomModelSerializer):
         return CustomUserDetailsSerializer(user).data
     
     def get_is_visited(self, obj):
-        current_date = timezone.now().date()
-        for visit in obj.visits.all():
-            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
-            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
-            if start_date and end_date and (start_date <= current_date):
-                return True
-            elif start_date and not end_date and (start_date <= current_date):
-                return True
-        return False
+        return obj.is_visited_status()
 
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', None)
@@ -155,7 +171,8 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             adventure.category = category
-            adventure.save()
+            
+        adventure.save()
 
         return adventure
 
@@ -170,7 +187,6 @@ class AdventureSerializer(CustomModelSerializer):
         if category_data:
             category = self.get_or_create_category(category_data)
             instance.category = category
-        instance.save()
 
         if has_visits:
             current_visits = instance.visits.all()
@@ -192,18 +208,37 @@ class AdventureSerializer(CustomModelSerializer):
             visits_to_delete = current_visit_ids - updated_visit_ids
             instance.visits.filter(id__in=visits_to_delete).delete()
 
+        # call save on the adventure to update the updated_at field and trigger any geocoding
+        instance.save()
+
         return instance
 
 class TransportationSerializer(CustomModelSerializer):
+    distance = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
         fields = [
             'id', 'user_id', 'type', 'name', 'description', 'rating', 
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date', 'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude', 'start_timezone', 'end_timezone'
+            'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
+            'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
+            'start_timezone', 'end_timezone', 'distance'  # ✅ Add distance here
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'distance']
+
+    def get_distance(self, obj):
+        if (
+            obj.origin_latitude and obj.origin_longitude and
+            obj.destination_latitude and obj.destination_longitude
+        ):
+            try:
+                origin = (float(obj.origin_latitude), float(obj.origin_longitude))
+                destination = (float(obj.destination_latitude), float(obj.destination_longitude))
+                return round(geodesic(origin, destination).km, 2)
+            except ValueError:
+                return None
+        return None
 
 class LodgingSerializer(CustomModelSerializer):
 
@@ -236,6 +271,7 @@ class ChecklistItemSerializer(CustomModelSerializer):
   
 class ChecklistSerializer(CustomModelSerializer):
     items = ChecklistItemSerializer(many=True, source='checklistitem_set')
+    
     class Meta:
         model = Checklist
         fields = [
@@ -246,8 +282,16 @@ class ChecklistSerializer(CustomModelSerializer):
     def create(self, validated_data):
         items_data = validated_data.pop('checklistitem_set')
         checklist = Checklist.objects.create(**validated_data)
+        
         for item_data in items_data:
-            ChecklistItem.objects.create(checklist=checklist, **item_data)
+            # Remove user_id from item_data to avoid constraint issues
+            item_data.pop('user_id', None)
+            # Set user_id from the parent checklist
+            ChecklistItem.objects.create(
+                checklist=checklist, 
+                user_id=checklist.user_id,
+                **item_data
+            )
         return checklist
     
     def update(self, instance, validated_data):
@@ -265,6 +309,9 @@ class ChecklistSerializer(CustomModelSerializer):
         # Update or create items
         updated_item_ids = set()
         for item_data in items_data:
+            # Remove user_id from item_data to avoid constraint issues
+            item_data.pop('user_id', None)
+            
             item_id = item_data.get('id')
             if item_id:
                 if item_id in current_item_ids:
@@ -275,10 +322,18 @@ class ChecklistSerializer(CustomModelSerializer):
                     updated_item_ids.add(item_id)
                 else:
                     # If ID is provided but doesn't exist, create new item
-                    ChecklistItem.objects.create(checklist=instance, **item_data)
+                    ChecklistItem.objects.create(
+                        checklist=instance, 
+                        user_id=instance.user_id,
+                        **item_data
+                    )
             else:
                 # If no ID is provided, create new item
-                ChecklistItem.objects.create(checklist=instance, **item_data)
+                ChecklistItem.objects.create(
+                    checklist=instance, 
+                    user_id=instance.user_id,
+                    **item_data
+                )
         
         # Delete items that are not in the updated data
         items_to_delete = current_item_ids - updated_item_ids
@@ -294,7 +349,6 @@ class ChecklistSerializer(CustomModelSerializer):
             raise serializers.ValidationError(
                 'Checklists associated with a public collection must be public.'
             )
-
         return data
 
 class CollectionSerializer(CustomModelSerializer):

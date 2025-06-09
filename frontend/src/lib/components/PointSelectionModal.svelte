@@ -1,6 +1,6 @@
 <script lang="ts">
 	// @ts-nocheck
-	import type { Adventure, OpenStreetMapPlace, Point } from '$lib/types';
+	import type { Adventure, GeocodeSearchResult, Point } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -50,7 +50,7 @@
 		}
 	}
 
-	let places: OpenStreetMapPlace[] = [];
+	let places: GeocodeSearchResult[] = [];
 
 	async function geocode(e: Event | null) {
 		if (e) {
@@ -60,13 +60,9 @@
 			alert('Please enter a location');
 			return;
 		}
-		let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
-			headers: {
-				'User-Agent': `AdventureLog / ${appVersion} `
-			}
-		});
+		let res = await fetch(`/api/reverse-geocode/search/?query=${query}`);
 		console.log(res);
-		let data = (await res.json()) as OpenStreetMapPlace[];
+		let data = (await res.json()) as GeocodeSearchResult[];
 		places = data;
 	}
 

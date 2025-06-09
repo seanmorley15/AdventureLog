@@ -173,8 +173,8 @@
 					class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 {visitedRegions.some(
 						(visitedRegion) => visitedRegion.region === region.id
 					)
-						? 'bg-red-300'
-						: 'bg-blue-300'} text-black focus:outline-6 focus:outline-black"
+						? 'bg-green-200'
+						: 'bg-red-200'} text-black focus:outline-6 focus:outline-black"
 					on:click={togleVisited(region)}
 				>
 					<span class="text-xs">

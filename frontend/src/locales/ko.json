@@ -8,7 +8,8 @@
     "nominatim_2": "데이터는 ODbL 라이선스가 적용됩니다.",
     "oss_attributions": "오픈 소스 속성",
     "other_attributions": "추가 속성은 README 파일에서 찾을 수 있습니다.",
-    "source_code": "소스 코드"
+    "source_code": "소스 코드",
+    "generic_attributions": "Adventurelog에 로그인하여 활성화 된 통합 및 서비스에 대한 속성을보십시오."
   },
   "adventures": {
     "actions": "행동",
@@ -261,7 +262,18 @@
     "arrival_timezone": "도착 시간대",
     "departure_timezone": "출발 시간대",
     "arrival_date": "도착 날짜",
-    "departure_date": "출발 날짜"
+    "departure_date": "출발 날짜",
+    "coordinates": "좌표",
+    "copy_coordinates": "좌표를 복사하십시오",
+    "sun_times": "태양 시간",
+    "sunrise": "해돋이",
+    "sunset": "일몰",
+    "timed": "시간이 정해졌습니다",
+    "distance": "거리",
+    "all_linked_items": "모든 링크 된 항목",
+    "itinerary": "여정",
+    "joined": "가입",
+    "view_profile": "프로필을 봅니다"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",
@@ -295,7 +307,9 @@
     "manage_categories": "카테고리 관리",
     "no_categories_found": "카테고리가 없습니다.",
     "select_category": "카테고리 선택",
-    "update_after_refresh": "페이지를 새로고침해야 모험 카드가 업데이트됩니다."
+    "update_after_refresh": "페이지를 새로고침해야 모험 카드가 업데이트됩니다.",
+    "add_category": "카테고리 추가",
+    "add_new_category": "새 카테고리를 추가하십시오"
   },
   "checklist": {
     "add_item": "항목 추가",
@@ -371,7 +385,19 @@
     "query_required": "쿼리가 필요합니다",
     "server_down": "현재 Immich 서버가 다운되었거나 도달할 수 없습니다",
     "server_url": "Immich 서버 URL",
-    "update_integration": "통합 업데이트"
+    "update_integration": "통합 업데이트",
+    "api_key_placeholder": "Immich API 키를 입력하십시오",
+    "enable_integration": "통합을 활성화합니다",
+    "immich_integration_desc": "Immich Photo Management Server를 연결하십시오",
+    "need_help": "이것을 설정하는 데 도움이 필요하십니까? \n확인하십시오",
+    "connection_error": "Immich 서버에 연결하는 오류",
+    "copy_locally": "로컬에서 이미지를 복사하십시오",
+    "copy_locally_desc": "오프라인 액세스를 위해 이미지를 서버에 복사하십시오. \n더 많은 디스크 공간을 사용합니다.",
+    "error_saving_image": "오류 저장 이미지",
+    "integration_already_exists": "면역 통합이 이미 존재합니다. \n한 번에 하나만 통합 할 수 있습니다.",
+    "integration_not_found": "Immich 통합을 찾을 수 없습니다. \n새로운 통합을 작성하십시오.",
+    "network_error": "Immich 서버에 연결하는 동안 네트워크 오류. \n연결을 확인하고 다시 시도하십시오.",
+    "validation_error": "면역 통합을 검증하는 동안 오류가 발생했습니다. \n서버 URL 및 API 키를 확인하십시오."
   },
   "map": {
     "add_adventure": "새로운 모험 추가",
@@ -442,7 +468,12 @@
     "contact": "연락처",
     "phone": "핸드폰",
     "recommendation": "추천",
-    "website": "웹사이트"
+    "website": "웹사이트",
+    "recommendations": "권장 사항",
+    "adventure_recommendations": "모험 추천",
+    "food": "음식",
+    "miles": "마일",
+    "tourism": "관광 여행"
   },
   "search": {
     "adventurelog_results": "Adventurelog 결과",
@@ -536,7 +567,58 @@
     "password_disabled": "비밀번호 인증 비활성화",
     "password_disabled_error": "비밀번호 인증 오류. \n소셜 또는 OIDC 제공 업체가 귀하의 계정에 연결되어 있는지 확인하십시오.",
     "password_enabled": "비밀번호 인증 활성화",
-    "password_enabled_error": "비밀번호 인증을 활성화하는 오류."
+    "password_enabled_error": "비밀번호 인증을 활성화하는 오류.",
+    "access_restricted": "액세스 제한",
+    "access_restricted_desc": "Yadministrative 기능은 직원에게만 사용할 수 있습니다.",
+    "add_new_email": "새 이메일을 추가하십시오",
+    "add_new_email_address": "새 이메일 주소를 추가하십시오",
+    "admin": "관리자",
+    "admin_panel_desc": "전체 관리 인터페이스에 액세스하십시오",
+    "administration": "관리",
+    "administration_desc": "관리 도구 및 설정",
+    "advanced": "고급의",
+    "advanced_settings": "고급 설정",
+    "advanced_settings_desc": "고급 구성 및 개발 도구",
+    "all_rights_reserved": "모든 권리 보유.",
+    "app_version": "앱 버전",
+    "confirm_new_password_desc": "새 비밀번호를 확인하십시오",
+    "connected": "연결",
+    "debug_information": "디버그 정보",
+    "disabled": "장애가 있는",
+    "disconnected": "연결이 끊어졌습니다",
+    "email_management": "이메일 관리",
+    "email_management_desc": "이메일 주소 및 확인 상태를 관리하십시오",
+    "emails": "이메일",
+    "enabled": "활성화",
+    "enter_current_password": "현재 비밀번호를 입력하십시오",
+    "enter_first_name": "이름을 입력하십시오",
+    "enter_last_name": "성을 입력하십시오",
+    "enter_new_email": "새 이메일 주소를 입력하십시오",
+    "enter_new_password": "새 비밀번호를 입력하십시오",
+    "enter_username": "사용자 이름을 입력하십시오",
+    "integrations": "통합",
+    "integrations_desc": "경험을 향상시키기 위해 외부 서비스를 연결하십시오",
+    "license": "특허",
+    "mfa_desc": "계정에 추가 보안 계층을 추가하십시오",
+    "mfa_is_enabled": "MFA가 활성화되었습니다",
+    "pass_change_desc": "더 나은 보안을 위해 계정 비밀번호를 업데이트하십시오",
+    "password_auth": "비밀번호 인증",
+    "password_login_disabled": "암호 로그인이 비활성화되었습니다",
+    "password_login_enabled": "암호 로그인이 활성화되었습니다",
+    "profile_info": "프로필 정보",
+    "profile_info_desc": "개인 정보 및 프로필 사진을 업데이트하십시오",
+    "public_profile_desc": "프로필을 다른 사용자에게 보이게하십시오",
+    "quick_actions": "빠른 행동",
+    "region_updates": "지역 업데이트",
+    "region_updates_desc": "업데이트 방문 지역 및 도시",
+    "regular_user": "일반 사용자",
+    "security": "보안",
+    "settings_menu": "설정 메뉴",
+    "social_auth": "사회적 인증",
+    "social_auth_desc_1": "소셜 로그인 옵션 및 비밀번호 설정을 관리합니다",
+    "social_auth_setup": "소셜 인증 설정",
+    "staff_status": "직원 상태",
+    "staff_user": "직원 사용자"
   },
   "share": {
     "go_to_settings": "설정으로 이동",
@@ -639,5 +721,8 @@
     "type": "유형",
     "villa": "별장",
     "check_out": "체크 아웃"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오."
   }
 }

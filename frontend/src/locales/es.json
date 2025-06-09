@@ -42,7 +42,8 @@
     "nominatim_1": "La búsqueda de ubicaciones y geocodificación es proporcionada por",
     "nominatim_2": "Sus datos están licenciados bajo la licencia ODbL.",
     "other_attributions": "Atribuciones adicionales se pueden encontrar en el archivo README.",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "generic_attributions": "Inicie sesión en AdventurElog para ver las atribuciones para integraciones y servicios habilitados."
   },
   "home": {
     "hero_1": "Descubre las Aventuras Más Emocionantes del Mundo",
@@ -309,7 +310,18 @@
     "arrival_timezone": "Zona horaria de llegada",
     "departure_timezone": "Zona horaria de salida",
     "arrival_date": "Fecha de llegada",
-    "departure_date": "Fecha de salida"
+    "departure_date": "Fecha de salida",
+    "coordinates": "Coordenadas",
+    "copy_coordinates": "Coordenadas de copia",
+    "sun_times": "Sol Times",
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer",
+    "timed": "Cronometrado",
+    "distance": "Distancia",
+    "all_linked_items": "Todos los artículos vinculados",
+    "itinerary": "Itinerario",
+    "joined": "Unido",
+    "view_profile": "Ver perfil"
   },
   "worldtravel": {
     "all": "Todo",
@@ -450,7 +462,58 @@
     "password_disabled": "Autenticación de contraseña deshabilitada",
     "password_disabled_error": "Error a deshabilitar la autenticación de contraseña. \nAsegúrese de que un proveedor social o OIDC esté vinculado a su cuenta.",
     "password_enabled": "Autenticación de contraseña habilitada",
-    "password_enabled_error": "Error al habilitar la autenticación de contraseña."
+    "password_enabled_error": "Error al habilitar la autenticación de contraseña.",
+    "admin": "Administración",
+    "advanced": "Avanzado",
+    "confirm_new_password_desc": "Confirmar nueva contraseña",
+    "disabled": "Desactivado",
+    "emails": "Correos electrónicos",
+    "enabled": "Activado",
+    "enter_current_password": "Ingrese la contraseña actual",
+    "enter_first_name": "Ingrese su primer nombre",
+    "enter_last_name": "Ingrese su apellido",
+    "enter_new_password": "Ingrese una nueva contraseña",
+    "enter_username": "Ingrese su nombre de usuario",
+    "integrations": "Integración",
+    "mfa_desc": "Agregue una capa adicional de seguridad a su cuenta",
+    "mfa_is_enabled": "MFA está habilitado",
+    "pass_change_desc": "Actualice la contraseña de su cuenta para una mejor seguridad",
+    "password_auth": "Autenticación de contraseña",
+    "password_login_disabled": "Inicio de sesión de contraseña Deshabilitado",
+    "password_login_enabled": "Inicio de sesión de contraseña habilitado",
+    "profile_info": "Información de perfil",
+    "profile_info_desc": "Actualice sus datos personales y su foto de perfil",
+    "public_profile_desc": "Haga que su perfil sea visible para otros usuarios",
+    "security": "Seguridad",
+    "settings_menu": "Menú Configuración",
+    "social_auth": "Autenticación social",
+    "social_auth_desc_1": "Administrar opciones de inicio de sesión sociales y configuración de contraseña",
+    "add_new_email": "Agregar nuevo correo electrónico",
+    "add_new_email_address": "Agregar nueva dirección de correo electrónico",
+    "email_management": "Administración de correo electrónico",
+    "email_management_desc": "Administre sus direcciones de correo electrónico y estado de verificación",
+    "enter_new_email": "Ingrese una nueva dirección de correo electrónico",
+    "access_restricted": "Acceso restringido",
+    "access_restricted_desc": "Las características de YAdMinistratrating solo están disponibles para los miembros del personal.",
+    "admin_panel_desc": "Acceder a la interfaz de administración completa",
+    "administration": "Administración",
+    "administration_desc": "Herramientas y configuraciones administrativas",
+    "advanced_settings": "Configuración avanzada",
+    "advanced_settings_desc": "Herramientas avanzadas de configuración y desarrollo",
+    "app_version": "Versión de la aplicación",
+    "connected": "Conectado",
+    "debug_information": "Información de depuración",
+    "disconnected": "Desconectado",
+    "integrations_desc": "Conecte los servicios externos para mejorar su experiencia",
+    "quick_actions": "Acciones rápidas",
+    "region_updates": "Actualizaciones de región",
+    "region_updates_desc": "Actualizar regiones y ciudades visitadas",
+    "regular_user": "Usuario regular",
+    "social_auth_setup": "Configuración de autenticación social",
+    "staff_status": "Estado del personal",
+    "staff_user": "Usuario de personal",
+    "license": "Licencia",
+    "all_rights_reserved": "Reservados todos los derechos."
   },
   "checklist": {
     "add_item": "Agregar artículo",
@@ -567,7 +630,9 @@
     "manage_categories": "Administrar categorías",
     "no_categories_found": "No se encontraron categorías.",
     "select_category": "Seleccionar categoría",
-    "update_after_refresh": "Las tarjetas de aventuras se actualizarán una vez que actualices la página."
+    "update_after_refresh": "Las tarjetas de aventuras se actualizarán una vez que actualices la página.",
+    "add_category": "Agregar categoría",
+    "add_new_category": "Agregar nueva categoría"
   },
   "dashboard": {
     "add_some": "¿Por qué no empezar a planificar tu próxima aventura? \nPuedes agregar una nueva aventura haciendo clic en el botón de abajo.",
@@ -602,14 +667,31 @@
     "update_integration": "Integración de actualización",
     "immich_integration": "Integración Immich",
     "documentation": "Documentación de integración de Immich",
-    "localhost_note": "Nota: lo más probable es que localhost no funcione a menos que haya configurado las redes acoplables en consecuencia. \nSe recomienda utilizar la dirección IP del servidor o el nombre de dominio."
+    "localhost_note": "Nota: lo más probable es que localhost no funcione a menos que haya configurado las redes acoplables en consecuencia. \nSe recomienda utilizar la dirección IP del servidor o el nombre de dominio.",
+    "api_key_placeholder": "Ingrese su clave de API IMICH",
+    "enable_integration": "Habilitar la integración",
+    "immich_integration_desc": "Conecte su servidor de administración de fotos de Immich",
+    "need_help": "¿Necesita ayuda para configurar esto? \nMira el",
+    "connection_error": "Error conectarse al servidor Immich",
+    "copy_locally": "Copiar imágenes localmente",
+    "copy_locally_desc": "Copie imágenes al servidor para obtener acceso fuera de línea. \nUtiliza más espacio en disco.",
+    "error_saving_image": "Imagen de ahorro de errores",
+    "integration_already_exists": "Ya existe una integración IMICH. \nSolo puedes tener una integración a la vez.",
+    "integration_not_found": "Integración IMACH no encontrada. \nPor favor cree una nueva integración.",
+    "network_error": "Error de red mientras se conecta al servidor Immich. \nVerifique su conexión y vuelva a intentarlo.",
+    "validation_error": "Se produjo un error al validar la integración de Immich. \nVerifique la URL y la tecla API de su servidor."
   },
   "recomendations": {
     "address": "DIRECCIÓN",
     "contact": "Contacto",
     "phone": "Teléfono",
     "recommendation": "Recomendación",
-    "website": "Sitio web"
+    "website": "Sitio web",
+    "recommendations": "Recomendaciones",
+    "adventure_recommendations": "Recomendaciones de aventura",
+    "food": "Alimento",
+    "miles": "Millas",
+    "tourism": "Turismo"
   },
   "lodging": {
     "apartment": "Departamento",
@@ -640,5 +722,8 @@
     "villa": "Villa",
     "edit_lodging": "Editar alojamiento",
     "current_timezone": "Zona horaria"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad."
   }
 }

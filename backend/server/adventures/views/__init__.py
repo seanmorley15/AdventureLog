@@ -7,10 +7,10 @@ from .collection_view import *
 from .generate_description_view import *
 from .ics_calendar_view import *
 from .note_view import *
-from .overpass_view import *
 from .reverse_geocode_view import *
 from .stats_view import *
 from .transportation_view import *
 from .global_search_view import *
 from .attachment_view import *
 from .lodging_view import *
+from .recommendations_view import *

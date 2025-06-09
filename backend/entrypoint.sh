@@ -1,9 +1,31 @@
 #!/bin/bash
 
 # Function to check PostgreSQL availability
-check_postgres() {
-  PGPASSWORD=$PGPASSWORD psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -c '\q' >/dev/null 2>&1
+# Helper to get the first non-empty environment variable
+get_env() {
+  for var in "$@"; do
+    value="${!var}"
+    if [ -n "$value" ]; then
+      echo "$value"
+      return
+    fi
+  done
 }
+
+check_postgres() {
+  local db_host
+  local db_user
+  local db_name
+  local db_pass
+
+  db_host=$(get_env PGHOST)
+  db_user=$(get_env PGUSER POSTGRES_USER)
+  db_name=$(get_env PGDATABASE POSTGRES_DB)
+  db_pass=$(get_env PGPASSWORD POSTGRES_PASSWORD)
+
+  PGPASSWORD="$db_pass" psql -h "$db_host" -U "$db_user" -d "$db_name" -c '\q' >/dev/null 2>&1
+}
+
 
 # Wait for PostgreSQL to become available
 until check_postgres; do

@@ -16,8 +16,24 @@ export const GET: RequestHandler = async (event) => {
 			});
 		}
 
-		// Proxy the request to the backend
-		const res = await fetch(`${endpoint}/api/integrations/immich/get/${key}`, {
+		let integrationFetch = await fetch(`${endpoint}/api/integrations/immich`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				Cookie: `sessionid=${sessionid}`
+			}
+		});
+		if (!integrationFetch.ok) {
+			return new Response(JSON.stringify({ error: 'Failed to fetch integration data' }), {
+				status: integrationFetch.status,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		}
+		const integrationData = await integrationFetch.json();
+		const integrationId = integrationData.id;
+
+		// Proxy the request to the backend{
+		const res = await fetch(`${endpoint}/api/integrations/immich/${integrationId}/get/${key}`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

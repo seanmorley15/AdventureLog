@@ -410,7 +410,9 @@
 							<p class="text-sm text-base-content font-medium">
 								{#if isAllDay(visit.start_date)}
 									<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
-									{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+									{visit.start_date && typeof visit.start_date === 'string'
+										? visit.start_date.split('T')[0]
+										: ''} – {visit.end_date && typeof visit.end_date === 'string'
 										? visit.end_date.split('T')[0]
 										: ''}
 								{:else if 'start_timezone' in visit}

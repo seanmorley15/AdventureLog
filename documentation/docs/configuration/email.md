@@ -6,7 +6,7 @@ To change the email backend, you can set the following variable in your docker-c
 
 ```yaml
 environment:
-  - EMAIL_BACKEND='console'
+  - EMAIL_BACKEND=console
 ```
 
 ## With SMTP

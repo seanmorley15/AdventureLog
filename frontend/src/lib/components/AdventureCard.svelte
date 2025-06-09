@@ -18,6 +18,10 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	import CardCarousel from './CardCarousel.svelte';
 	import { t } from 'svelte-i18n';
+	import Star from '~icons/mdi/star';
+	import StarOutline from '~icons/mdi/star-outline';
+	import Eye from '~icons/mdi/eye';
+	import EyeOff from '~icons/mdi/eye-off';
 
 	export let type: string | null = null;
 	export let user: User | null;
@@ -28,15 +32,18 @@
 	let isWarningModalOpen: boolean = false;
 
 	export let adventure: Adventure;
-	let activityTypes: string[] = [];
-	// makes it reactivty to changes so it updates automatically
+	let displayActivityTypes: string[] = [];
+	let remainingCount = 0;
+
+	// Process activity types for display
 	$: {
 		if (adventure.activity_types) {
-			activityTypes = adventure.activity_types;
-			if (activityTypes.length > 3) {
-				activityTypes = activityTypes.slice(0, 3);
-				let remaining = adventure.activity_types.length - 3;
-				activityTypes.push('+' + remaining);
+			if (adventure.activity_types.length <= 3) {
+				displayActivityTypes = adventure.activity_types;
+				remainingCount = 0;
+			} else {
+				displayActivityTypes = adventure.activity_types.slice(0, 3);
+				remainingCount = adventure.activity_types.length - 3;
 			}
 		}
 	}
@@ -47,16 +54,26 @@
 	$: {
 		if (collection && collection?.start_date && collection.end_date) {
 			unlinked = adventure.visits.every((visit) => {
-				// Check if visit dates exist
-				if (!visit.start_date || !visit.end_date) return true; // Consider "unlinked" for incomplete visit data
-
-				// Check if collection dates are completely outside this visit's range
+				if (!visit.start_date || !visit.end_date) return true;
 				const isBeforeVisit = collection.end_date && collection.end_date < visit.start_date;
 				const isAfterVisit = collection.start_date && collection.start_date > visit.end_date;
-
 				return isBeforeVisit || isAfterVisit;
 			});
 		}
+	}
+
+	// Helper functions for display
+	function formatVisitCount() {
+		const count = adventure.visits.length;
+		return count > 1 ? `${count} ${$t('adventures.visits')}` : `${count} ${$t('adventures.visit')}`;
+	}
+
+	function renderStars(rating: number) {
+		const stars = [];
+		for (let i = 1; i <= 5; i++) {
+			stars.push(i <= rating);
+		}
+		return stars;
 	}
 
 	async function deleteAdventure() {
@@ -131,119 +148,181 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
+	class="card w-full max-w-md bg-base-300 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<CardCarousel adventures={[adventure]} />
+	<!-- Image Section with Overlay -->
+	<div class="relative overflow-hidden rounded-t-2xl">
+		<CardCarousel adventures={[adventure]} />
 
-	<div class="card-body">
-		<div class="flex justify-between">
+		<!-- Status Overlay -->
+		<div class="absolute top-4 left-4 flex flex-col gap-2">
+			<div
+				class="badge badge-sm {adventure.is_visited ? 'badge-success' : 'badge-warning'} shadow-lg"
+			>
+				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
+			</div>
+			{#if unlinked}
+				<div class="badge badge-sm badge-error shadow-lg">{$t('adventures.out_of_range')}</div>
+			{/if}
+		</div>
+
+		<!-- Privacy Indicator -->
+		<div class="absolute top-4 right-4">
+			<div
+				class="tooltip tooltip-left"
+				data-tip={adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
+			>
+				<div
+					class="btn btn-circle btn-sm btn-ghost bg-black/20 backdrop-blur-sm border-0 text-white"
+				>
+					{#if adventure.is_public}
+						<Eye class="w-4 h-4" />
+					{:else}
+						<EyeOff class="w-4 h-4" />
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<!-- Category Badge -->
+		{#if adventure.category}
+			<div class="absolute bottom-4 left-4">
+				<div class="badge badge-primary shadow-lg font-medium">
+					{adventure.category.display_name}
+					{adventure.category.icon}
+				</div>
+			</div>
+		{/if}
+	</div>
+
+	<!-- Content Section -->
+	<div class="card-body p-6 space-y-4">
+		<!-- Header Section -->
+		<div class="space-y-3">
 			<button
 				on:click={() => goto(`/adventures/${adventure.id}`)}
-				class="text-2xl font-semibold -mt-2 break-words text-wrap hover:underline text-left"
+				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline"
 			>
 				{adventure.name}
 			</button>
-		</div>
-		<div>
-			<div class="badge badge-primary">
-				{adventure.category?.display_name + ' ' + adventure.category?.icon}
-			</div>
-			<div class="badge badge-success">
-				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
-			</div>
-			<div class="badge badge-secondary">
-				{adventure.is_public ? $t('adventures.public') : $t('adventures.private')}
-			</div>
-		</div>
-		{#if unlinked}
-			<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-		{/if}
-		{#if adventure.location && adventure.location !== ''}
-			<div class="inline-flex items-center">
-				<MapMarker class="w-5 h-5 mr-1" />
-				<p class="ml-.5">{adventure.location}</p>
-			</div>
-		{/if}
-		{#if adventure.visits.length > 0}
-			<!-- visited badge -->
-			<div class="flex items-center">
-				<Calendar class="w-5 h-5 mr-1" />
-				<p class="ml-.5">
-					{adventure.visits.length}
-					{adventure.visits.length > 1 ? $t('adventures.visits') : $t('adventures.visit')}
-				</p>
-			</div>
-		{/if}
-		{#if adventure.activity_types && adventure.activity_types.length > 0}
-			<ul class="flex flex-wrap">
-				{#each activityTypes as activity}
-					<div class="badge badge-primary mr-1 text-md font-semibold pb-2 pt-1 mb-1">
-						{activity}
+
+			<!-- Location -->
+			{#if adventure.location}
+				<div class="flex items-center gap-2 text-base-content/70">
+					<MapMarker class="w-4 h-4 text-primary" />
+					<span class="text-sm font-medium truncate">{adventure.location}</span>
+				</div>
+			{/if}
+
+			<!-- Rating -->
+			{#if adventure.rating}
+				<div class="flex items-center gap-2">
+					<div class="flex">
+						{#each renderStars(adventure.rating) as filled}
+							{#if filled}
+								<Star class="w-4 h-4 text-warning fill-current" />
+							{:else}
+								<StarOutline class="w-4 h-4 text-base-content/30" />
+							{/if}
+						{/each}
 					</div>
-				{/each}
-			</ul>
+					<span class="text-sm text-base-content/60">({adventure.rating}/5)</span>
+				</div>
+			{/if}
+		</div>
+
+		<!-- Stats Section -->
+		{#if adventure.visits.length > 0}
+			<div class="flex items-center gap-2 p-3 bg-base-200 rounded-lg">
+				<Calendar class="w-4 h-4 text-primary" />
+				<span class="text-sm font-medium">{formatVisitCount()}</span>
+			</div>
 		{/if}
+
+		<!-- Actions Section -->
 		{#if !readOnly}
-			<div class="card-actions justify-end mt-2">
-				<!-- action options dropdown -->
-
+			<div class="pt-4 border-t border-base-300">
 				{#if type != 'link'}
-					{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
-						<div class="dropdown dropdown-end">
-							<div tabindex="0" role="button" class="btn btn-neutral-200">
-								<DotsHorizontal class="w-6 h-6" />
-							</div>
-							<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-							<ul
-								tabindex="0"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow"
-							>
-								<button
-									class="btn btn-neutral mb-2"
-									on:click={() => goto(`/adventures/${adventure.id}`)}
-									><Launch class="w-6 h-6" />{$t('adventures.open_details')}</button
-								>
-								<button class="btn btn-neutral mb-2" on:click={editAdventure}>
-									<FileDocumentEdit class="w-6 h-6" />
-									{$t('adventures.edit_adventure')}
-								</button>
-
-								<!-- remove from collection -->
-								{#if adventure.collection && user?.uuid == adventure.user_id}
-									<button class="btn btn-neutral mb-2" on:click={removeFromCollection}
-										><LinkVariantRemove class="w-6 h-6" />{$t(
-											'adventures.remove_from_collection'
-										)}</button
-									>
-								{/if}
-								{#if !adventure.collection}
-									<button
-										class="btn btn-neutral mb-2"
-										on:click={() => (isCollectionModalOpen = true)}
-										><Plus class="w-6 h-6" />{$t('adventures.add_to_collection')}</button
-									>
-								{/if}
-								<button
-									id="delete_adventure"
-									data-umami-event="Delete Adventure"
-									class="btn btn-warning"
-									on:click={() => (isWarningModalOpen = true)}
-									><TrashCan class="w-6 h-6" />{$t('adventures.delete')}</button
-								>
-							</ul>
-						</div>
-					{:else}
+					<div class="flex justify-between items-center">
 						<button
-							class="btn btn-neutral-200 mb-2"
+							class="btn btn-neutral btn-sm flex-1 mr-2"
 							on:click={() => goto(`/adventures/${adventure.id}`)}
-							><Launch class="w-6 h-6" /></button
 						>
-					{/if}
-				{/if}
-				{#if type == 'link'}
-					<button class="btn btn-primary" on:click={link}><Link class="w-6 h-6" /></button>
+							<Launch class="w-4 h-4" />
+							View Details
+						</button>
+
+						{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+							<div class="dropdown dropdown-end">
+								<div tabindex="0" role="button" class="btn btn-square btn-sm btn-base-300">
+									<DotsHorizontal class="w-5 h-5" />
+								</div>
+								<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+								<ul
+									tabindex="0"
+									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-56 p-2 shadow-xl border border-base-300"
+								>
+									<li>
+										<button on:click={editAdventure} class="flex items-center gap-2">
+											<FileDocumentEdit class="w-4 h-4" />
+											{$t('adventures.edit_adventure')}
+										</button>
+									</li>
+
+									{#if adventure.collection && user?.uuid == adventure.user_id}
+										<li>
+											<button on:click={removeFromCollection} class="flex items-center gap-2">
+												<LinkVariantRemove class="w-4 h-4" />
+												{$t('adventures.remove_from_collection')}
+											</button>
+										</li>
+									{/if}
+
+									{#if !adventure.collection}
+										<li>
+											<button
+												on:click={() => (isCollectionModalOpen = true)}
+												class="flex items-center gap-2"
+											>
+												<Plus class="w-4 h-4" />
+												{$t('adventures.add_to_collection')}
+											</button>
+										</li>
+									{/if}
+
+									<div class="divider my-1"></div>
+									<li>
+										<button
+											id="delete_adventure"
+											data-umami-event="Delete Adventure"
+											class="text-error flex items-center gap-2"
+											on:click={() => (isWarningModalOpen = true)}
+										>
+											<TrashCan class="w-4 h-4" />
+											{$t('adventures.delete')}
+										</button>
+									</li>
+								</ul>
+							</div>
+						{/if}
+					</div>
+				{:else}
+					<button class="btn btn-primary btn-block" on:click={link}>
+						<Link class="w-4 h-4" />
+						Link Adventure
+					</button>
 				{/if}
 			</div>
 		{/if}
 	</div>
 </div>
+
+<style>
+	.line-clamp-2 {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+	}
+</style>

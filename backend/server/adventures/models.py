@@ -5,10 +5,53 @@ import uuid
 from django.db import models
 from django.utils.deconstruct import deconstructible
 from adventures.managers import AdventureManager
+import threading
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django.forms import ValidationError
 from django_resized import ResizedImageField
+from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+def background_geocode_and_assign(adventure_id: str):
+    try:
+        adventure = Adventure.objects.get(id=adventure_id)
+        if not (adventure.latitude and adventure.longitude):
+            return
+        
+        from adventures.geocoding import reverse_geocode  # or wherever you defined it
+        is_visited = adventure.is_visited_status()
+        result = reverse_geocode(adventure.latitude, adventure.longitude, adventure.user_id)
+
+        if 'region_id' in result:
+            region = Region.objects.filter(id=result['region_id']).first()
+            if region:
+                adventure.region = region
+                if is_visited:
+                    VisitedRegion.objects.get_or_create(user_id=adventure.user_id, region=region)
+
+        if 'city_id' in result:
+            city = City.objects.filter(id=result['city_id']).first()
+            if city:
+                adventure.city = city
+                if is_visited:
+                    VisitedCity.objects.get_or_create(user_id=adventure.user_id, city=city)
+
+        if 'country_id' in result:
+            country = Country.objects.filter(country_code=result['country_id']).first()
+            if country:
+                adventure.country = country
+
+        # Save updated location info
+        # Save updated location info, skip geocode threading
+        adventure.save(update_fields=["region", "city", "country"], _skip_geocode=True)
+
+        # print(f"[Adventure Geocode Thread] Successfully processed {adventure_id}: {adventure.name} - {adventure.latitude}, {adventure.longitude}")
+
+    except Exception as e:
+        # Optional: log or print the error
+        print(f"[Adventure Geocode Thread] Error processing {adventure_id}: {e}")
 
 def validate_file_extension(value):
     import os
@@ -525,9 +568,16 @@ class Adventure(models.Model):
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
     is_public = models.BooleanField(default=False)
+
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
+
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -540,6 +590,17 @@ class Adventure(models.Model):
     # end_date = models.DateField(blank=True, null=True)
     # type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
 
+    def is_visited_status(self):
+        current_date = timezone.now().date()
+        for visit in self.visits.all():
+            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
+            if start_date and end_date and (start_date <= current_date):
+                return True
+            elif start_date and not end_date and (start_date <= current_date):
+                return True
+        return False
+
     def clean(self):
         if self.collection:
             if self.collection.is_public and not self.is_public:
@@ -550,25 +611,31 @@ class Adventure(models.Model):
             if self.user_id != self.category.user_id:
                 raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
             
-    def save(self, force_insert: bool = False, force_update: bool = False, using: str | None = None, update_fields: Iterable[str] | None = None) -> None:
-        """
-        Saves the current instance. If the instance is being inserted for the first time, it will be created in the database.
-        If it already exists, it will be updated.
-        """
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
+
         if not self.category:
-            category, created = Category.objects.get_or_create(
-            user_id=self.user_id,
-            name='general',
-            defaults={
-                'display_name': 'General',
-                'icon': '🌍'
-            }
-        )
+            category, _ = Category.objects.get_or_create(
+                user_id=self.user_id,
+                name='general',
+                defaults={'display_name': 'General', 'icon': '🌍'}
+            )
             self.category = category
-            
-        return super().save(force_insert, force_update, using, update_fields)
+
+        result = super().save(force_insert, force_update, using, update_fields)
+
+        # ⛔ Skip threading if called from geocode background thread
+        if _skip_geocode:
+            return result
+
+        if self.latitude and self.longitude:
+            thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
+            thread.daemon = True  # Allows the thread to exit when the main program ends
+            thread.start()
+
+        return result
+
 
     def __str__(self):
         return self.name
@@ -719,18 +786,41 @@ class PathAndRename:
 
 class AdventureImage(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user_id = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user_id)
+    user_id = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user_id)
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
-        upload_to=PathAndRename('images/')  # Use the callable class here
+        upload_to=PathAndRename('images/'),
+        blank=True,
+        null=True,
     )
+    immich_id = models.CharField(max_length=200, null=True, blank=True)
     adventure = models.ForeignKey(Adventure, related_name='images', on_delete=models.CASCADE)
     is_primary = models.BooleanField(default=False)
 
+    def clean(self):
+
+        # One of image or immich_id must be set, but not both
+        has_image = bool(self.image and str(self.image).strip())
+        has_immich_id = bool(self.immich_id and str(self.immich_id).strip())
+
+        if has_image and has_immich_id:
+            raise ValidationError("Cannot have both image file and Immich ID. Please provide only one.")
+        if not has_image and not has_immich_id:
+            raise ValidationError("Must provide either an image file or an Immich ID.")
+        
+    def save(self, *args, **kwargs):
+        # Clean empty strings to None for proper database storage
+        if not self.image:
+            self.image = None
+        if not self.immich_id or not str(self.immich_id).strip():
+            self.immich_id = None
+            
+        self.full_clean()  # This calls clean() method
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.image.url
+        return self.image.url if self.image else f"Immich ID: {self.immich_id or 'No image'}"
     
 class Attachment(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)

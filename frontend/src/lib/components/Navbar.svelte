@@ -40,6 +40,7 @@
 		// Attach event listener on component mount
 		document.addEventListener('keydown', handleKeydown);
 
+		// @ts-ignore
 		theme = document.documentElement.getAttribute('data-theme');
 
 		// Cleanup event listener on component destruction
@@ -59,7 +60,7 @@
 		zh: '中文',
 		pl: 'Polski',
 		ko: '한국어',
-		no: "Norsk"
+		no: 'Norsk'
 	};
 
 	let query: string = '';
@@ -74,7 +75,9 @@
 		window.location.reload();
 	};
 	const submitThemeChange = (event: Event) => {
+		// @ts-ignore
 		const theme = event.target.value;
+		// @ts-ignore
 		const themeForm = event.target.parentNode;
 		themeForm.action = `/?/setTheme&theme=${theme}`;
 		themeForm.submit();
@@ -107,7 +110,7 @@
 
 <div class="navbar bg-base-100">
 	<div class="navbar-start">
-		<div class="dropdown">
+		<div class="dropdown z-50">
 			<div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"
@@ -294,7 +297,7 @@
 				>
 				<button
 					class="btn btn-sm mt-2"
-					on:click={() => (window.location.href = 'https://buymeacoffee.com/seanmorley15')}
+					on:click={() => (window.location.href = 'https://seanmorley.com/sponsor')}
 					>{$t('navbar.support')} 💖</button
 				>
 				<p class="font-bold m-4 text-lg text-center">{$t('navbar.language_selection')}</p>
@@ -318,7 +321,9 @@
 						on:change={submitThemeChange}
 					>
 						{#each themes as theme}
-							<option value={theme.name} class="text-base-content">{$t(`navbar.themes.${theme.name}`)}</option>
+							<option value={theme.name} class="text-base-content"
+								>{$t(`navbar.themes.${theme.name}`)}</option
+							>
 						{/each}
 					</select>
 				</form>

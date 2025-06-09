@@ -8,6 +8,7 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import { formatDateInTimezone } from '$lib/dateUtils';
 
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
@@ -18,26 +19,11 @@
 	}
 	const dispatch = createEventDispatcher();
 
-	function formatDateInTimezone(utcDate: string, timezone?: string): string {
-		if (!utcDate) return '';
-		try {
-			return new Intl.DateTimeFormat(undefined, {
-				timeZone: timezone,
-				year: 'numeric',
-				month: 'short',
-				day: 'numeric',
-				hour: '2-digit',
-				minute: '2-digit',
-				hour12: true
-			}).format(new Date(utcDate));
-		} catch {
-			return new Date(utcDate).toLocaleString();
-		}
-	}
-
 	export let transportation: Transportation;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
+
+	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
 
 	let isWarningModalOpen: boolean = false;
 
@@ -123,87 +109,94 @@
 {/if}
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
-	<div class="card-body space-y-4">
-		<!-- Title and Type -->
-		<h2 class="card-title text-lg font-semibold truncate">{transportation.name}</h2>
-		<div>
-			<div class="badge badge-secondary">
-				{$t(`transportation.modes.${transportation.type}`) +
-					' ' +
-					getTransportationIcon(transportation.type)}
+	<div class="card-body p-6 space-y-6">
+		<!-- Header -->
+		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+			<h2 class="text-xl font-bold truncate">{transportation.name}</h2>
+			<div class="flex flex-wrap gap-2">
+				<div class="badge badge-secondary">
+					{$t(`transportation.modes.${transportation.type}`)}
+					{getTransportationIcon(transportation.type)}
+				</div>
+				{#if transportation.type === 'plane' && transportation.flight_number}
+					<div class="badge badge-neutral">{transportation.flight_number}</div>
+				{/if}
+				{#if unlinked}
+					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
+				{/if}
 			</div>
-			{#if transportation.type == 'plane' && transportation.flight_number}
-				<div class="badge badge-neutral-200">{transportation.flight_number}</div>
-			{/if}
-			{#if unlinked}
-				<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
-			{/if}
 		</div>
 
-		<!-- Locations -->
-		<div class="space-y-2">
+		<!-- Route Info -->
+		<div class="space-y-3">
 			{#if transportation.from_location}
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.from')}:</span>
-					<p class="break-words">{transportation.from_location}</p>
+				<div class="flex gap-2 text-sm">
+					<span class="font-medium whitespace-nowrap">{$t('adventures.from')}:</span>
+					<span class="break-words">{transportation.from_location}</span>
 				</div>
 			{/if}
-			{#if transportation.date}
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.start')}:</span>
-					<p>
-						{formatDateInTimezone(transportation.date, transportation.start_timezone ?? undefined)}
-						{#if transportation.start_timezone}
-							<span class="text-xs opacity-60 ml-1">({transportation.start_timezone})</span>
-						{/if}
-					</p>
+
+			{#if transportation.to_location}
+				<div class="flex gap-2 text-sm">
+					<span class="font-medium whitespace-nowrap">{$t('adventures.to')}:</span>
+					<span class="break-words">{transportation.to_location}</span>
+				</div>
+			{/if}
+
+			{#if transportation.distance && !isNaN(+transportation.distance)}
+				<div class="flex gap-2 text-sm">
+					<span class="font-medium whitespace-nowrap">{$t('adventures.distance')}:</span>
+					<span>
+						{(+transportation.distance).toFixed(1)} km / {toMiles(transportation.distance)} mi
+					</span>
 				</div>
 			{/if}
 		</div>
 
-		<!-- Dates -->
-		<div class="space-y-2">
-			{#if transportation.to_location}
-				<!-- <ArrowDownThick class="w-4 h-4" /> -->
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.to')}:</span>
-
-					<p class="break-words">{transportation.to_location}</p>
+		<!-- Time Info -->
+		<div class="space-y-3">
+			{#if transportation.date}
+				<div class="flex gap-2 text-sm">
+					<span class="font-medium whitespace-nowrap">{$t('adventures.start')}:</span>
+					<span>
+						{formatDateInTimezone(transportation.date, transportation.start_timezone)}
+						{#if transportation.start_timezone}
+							<span class="ml-1 text-xs opacity-60">({transportation.start_timezone})</span>
+						{/if}
+					</span>
 				</div>
 			{/if}
+
 			{#if transportation.end_date}
-				<div class="flex items-center gap-2">
-					<span class="font-medium text-sm">{$t('adventures.end')}:</span>
-					<p>
-						{formatDateInTimezone(
-							transportation.end_date,
-							transportation.end_timezone || undefined
-						)}
+				<div class="flex gap-2 text-sm">
+					<span class="font-medium whitespace-nowrap">{$t('adventures.end')}:</span>
+					<span>
+						{formatDateInTimezone(transportation.end_date, transportation.end_timezone)}
 						{#if transportation.end_timezone}
-							<span class="text-xs opacity-60 ml-1">({transportation.end_timezone})</span>
+							<span class="ml-1 text-xs opacity-60">({transportation.end_timezone})</span>
 						{/if}
-					</p>
+					</span>
 				</div>
 			{/if}
 		</div>
 
 		<!-- Actions -->
-		{#if transportation.user_id == user?.uuid || (collection && user && collection.shared_with && collection.shared_with.includes(user.uuid))}
-			<div class="card-actions justify-end">
+		{#if transportation.user_id === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+			<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
 				<button
-					class="btn btn-primary btn-sm flex items-center gap-1"
+					class="btn btn-neutral btn-sm flex items-center gap-1"
 					on:click={editTransportation}
-					title="Edit"
+					title={$t('transportation.edit')}
 				>
 					<FileDocumentEdit class="w-5 h-5" />
 					<span>{$t('transportation.edit')}</span>
 				</button>
 				<button
-					on:click={() => (isWarningModalOpen = true)}
 					class="btn btn-secondary btn-sm flex items-center gap-1"
-					title="Delete"
+					on:click={() => (isWarningModalOpen = true)}
+					title={$t('adventures.delete')}
 				>
 					<TrashCanOutline class="w-5 h-5" />
 					<span>{$t('adventures.delete')}</span>

@@ -8,7 +8,8 @@
     "nominatim_2": "I loro dati sono concessi in licenza con la licenza ODbL.",
     "oss_attributions": "Attribuzioni Open Source",
     "other_attributions": "Ulteriori attribuzioni possono essere trovate nel file README.",
-    "source_code": "Codice sorgente"
+    "source_code": "Codice sorgente",
+    "generic_attributions": "Accedi a AdventureLog per visualizzare le attribuzioni per integrazioni e servizi abilitati."
   },
   "adventures": {
     "activities": {
@@ -261,7 +262,18 @@
     "arrival_timezone": "Fuso orario di arrivo",
     "departure_timezone": "Fuso orario di partenza",
     "arrival_date": "Data di arrivo",
-    "departure_date": "Data di partenza"
+    "departure_date": "Data di partenza",
+    "coordinates": "Coordinate",
+    "copy_coordinates": "Copia coordinate",
+    "sun_times": "Sun Times",
+    "sunrise": "Alba",
+    "sunset": "Tramonto",
+    "timed": "A tempo",
+    "distance": "Distanza",
+    "all_linked_items": "Tutti gli elementi collegati",
+    "itinerary": "Itinerario",
+    "joined": "Partecipato",
+    "view_profile": "Visualizza il profilo"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -450,7 +462,58 @@
     "password_disabled": "Autenticazione password disabilitata",
     "password_disabled_error": "Errore di disabilitazione dell'autenticazione della password. \nAssicurati che un fornitore sociale o OIDC sia collegato al tuo account.",
     "password_enabled": "Autenticazione password abilitata",
-    "password_enabled_error": "Errore che abilita l'autenticazione della password."
+    "password_enabled_error": "Errore che abilita l'autenticazione della password.",
+    "access_restricted": "Accesso limitato",
+    "access_restricted_desc": "Le funzionalità YAdministrative sono disponibili solo per i membri del personale.",
+    "add_new_email": "Aggiungi nuova e -mail",
+    "add_new_email_address": "Aggiungi nuovo indirizzo email",
+    "admin": "Amministratore",
+    "admin_panel_desc": "Accedi all'interfaccia di amministrazione completa",
+    "administration": "Amministrazione",
+    "administration_desc": "Strumenti e impostazioni amministrative",
+    "advanced": "Avanzato",
+    "advanced_settings": "Impostazioni avanzate",
+    "advanced_settings_desc": "Strumenti avanzati di configurazione e sviluppo",
+    "all_rights_reserved": "Tutti i diritti riservati.",
+    "app_version": "Versione app",
+    "confirm_new_password_desc": "Conferma nuova password",
+    "connected": "Collegato",
+    "debug_information": "Informazioni sul debug",
+    "disabled": "Disabile",
+    "disconnected": "Disconnesso",
+    "email_management": "Gestione e -mail",
+    "email_management_desc": "Gestisci i tuoi indirizzi e -mail e lo stato di verifica",
+    "emails": "E -mail",
+    "enabled": "Abilitato",
+    "enter_current_password": "Immettere la password corrente",
+    "enter_first_name": "Inserisci il tuo nome",
+    "enter_last_name": "Inserisci il tuo cognome",
+    "enter_new_email": "Inserisci un nuovo indirizzo email",
+    "enter_new_password": "Immettere nuova password",
+    "enter_username": "Inserisci il tuo nome utente",
+    "integrations": "Integrazioni",
+    "integrations_desc": "Collega i servizi esterni per migliorare la tua esperienza",
+    "license": "Licenza",
+    "mfa_desc": "Aggiungi un ulteriore livello di sicurezza al tuo account",
+    "mfa_is_enabled": "MFA è abilitato",
+    "pass_change_desc": "Aggiorna la password del tuo account per una migliore sicurezza",
+    "password_login_disabled": "Accesso della password disabilitata",
+    "password_login_enabled": "Accesso alla password abilitata",
+    "profile_info": "Informazioni sul profilo",
+    "profile_info_desc": "Aggiorna i tuoi dettagli personali e l'immagine del profilo",
+    "public_profile_desc": "Rendi il tuo profilo visibile ad altri utenti",
+    "quick_actions": "Azioni rapide",
+    "region_updates": "Aggiornamenti della regione",
+    "region_updates_desc": "Aggiorna le regioni e le città visitate",
+    "regular_user": "Utente normale",
+    "security": "Sicurezza",
+    "settings_menu": "Menu Impostazioni",
+    "social_auth": "Autenticazione sociale",
+    "social_auth_desc_1": "Gestisci le opzioni di accesso social e le impostazioni della password",
+    "social_auth_setup": "Setup di autenticazione sociale",
+    "staff_status": "Stato del personale",
+    "staff_user": "Utente del personale",
+    "password_auth": "Autenticazione della password"
   },
   "checklist": {
     "add_item": "Aggiungi elemento",
@@ -567,7 +630,9 @@
     "manage_categories": "Gestisci categorie",
     "no_categories_found": "Nessuna categoria trovata.",
     "select_category": "Seleziona Categoria",
-    "update_after_refresh": "Le carte avventura verranno aggiornate una volta aggiornata la pagina."
+    "update_after_refresh": "Le carte avventura verranno aggiornate una volta aggiornata la pagina.",
+    "add_category": "Aggiungi categoria",
+    "add_new_category": "Aggiungi nuova categoria"
   },
   "dashboard": {
     "add_some": "Perché non iniziare a pianificare la tua prossima avventura? \nPuoi aggiungere una nuova avventura facendo clic sul pulsante in basso.",
@@ -602,14 +667,31 @@
     "server_url": "URL del server Immich",
     "update_integration": "Aggiorna integrazione",
     "documentation": "Documentazione sull'integrazione di Immich",
-    "localhost_note": "Nota: molto probabilmente localhost non funzionerà a meno che tu non abbia configurato le reti docker di conseguenza. \nSi consiglia di utilizzare l'indirizzo IP del server o il nome del dominio."
+    "localhost_note": "Nota: molto probabilmente localhost non funzionerà a meno che tu non abbia configurato le reti docker di conseguenza. \nSi consiglia di utilizzare l'indirizzo IP del server o il nome del dominio.",
+    "api_key_placeholder": "Inserisci la tua chiave API immich",
+    "enable_integration": "Abilita l'integrazione",
+    "immich_integration_desc": "Collega il tuo server di gestione delle foto immich",
+    "need_help": "Hai bisogno di aiuto per impostare questo? \nDai un'occhiata al",
+    "connection_error": "Errore che si collega al server immich",
+    "copy_locally": "Copia immagini localmente",
+    "error_saving_image": "Errore salvare l'immagine",
+    "integration_already_exists": "Esiste già un'integrazione immich. \nPuoi avere solo un'integrazione alla volta.",
+    "integration_not_found": "Integrazione immich non trovata. \nSi prega di creare una nuova integrazione.",
+    "network_error": "Errore di rete durante la connessione al server immich. \nControlla la tua connessione e riprova.",
+    "validation_error": "Si è verificato un errore durante la convalida dell'integrazione immich. \nControlla l'URL e la chiave API del server.",
+    "copy_locally_desc": "Copia le immagini sul server per l'accesso offline. \nUtilizza più spazio su disco."
   },
   "recomendations": {
     "address": "Indirizzo",
     "contact": "Contatto",
     "phone": "Telefono",
     "recommendation": "Raccomandazione",
-    "website": "Sito web"
+    "website": "Sito web",
+    "recommendations": "Raccomandazioni",
+    "adventure_recommendations": "Consigli di avventura",
+    "food": "Cibo",
+    "miles": "Miglia",
+    "tourism": "Turismo"
   },
   "lodging": {
     "apartment": "Appartamento",
@@ -640,5 +722,8 @@
     "lodging_type": "Tipo di alloggio",
     "motel": "Motel",
     "current_timezone": "Fuso orario attuale"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità."
   }
 }

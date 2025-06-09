@@ -42,7 +42,8 @@
     "oss_attributions": "开源声明",
     "other_attributions": "其他声明可以在 README 文件中找到。",
     "source_code": "源代码",
-    "close": "关闭"
+    "close": "关闭",
+    "generic_attributions": "登录到AdventureLog以查看启用集成和服务的归因。"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -309,7 +310,18 @@
     "arrival_timezone": "到达时区",
     "departure_timezone": "离开时区",
     "arrival_date": "到达日期",
-    "departure_date": "出发日期"
+    "departure_date": "出发日期",
+    "coordinates": "坐标",
+    "copy_coordinates": "复制坐标",
+    "sun_times": "阳光时代",
+    "sunrise": "日出",
+    "sunset": "日落",
+    "timed": "时间",
+    "distance": "距离",
+    "all_linked_items": "所有链接的项目",
+    "itinerary": "行程",
+    "joined": "加入",
+    "view_profile": "查看个人资料"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -450,7 +462,58 @@
     "password_disabled": "密码身份验证禁用",
     "password_disabled_error": "错误禁用密码身份验证。\n确保将社交或OIDC提供商链接到您的帐户。",
     "password_enabled": "启用密码身份验证",
-    "password_enabled_error": "启用密码身份验证的错误。"
+    "password_enabled_error": "启用密码身份验证的错误。",
+    "access_restricted": "访问受限制",
+    "access_restricted_desc": "Yadministrative功能仅适用于工作人员。",
+    "add_new_email": "添加新电子邮件",
+    "add_new_email_address": "添加新的电子邮件地址",
+    "admin": "行政",
+    "admin_panel_desc": "访问完整的管理接口",
+    "administration": "行政",
+    "administration_desc": "管理工具和设置",
+    "advanced": "先进的",
+    "advanced_settings": "高级设置",
+    "advanced_settings_desc": "高级配置和开发工具",
+    "all_rights_reserved": "版权所有。",
+    "app_version": "应用版本",
+    "confirm_new_password_desc": "确认新密码",
+    "connected": "连接",
+    "debug_information": "调试信息",
+    "disabled": "禁用",
+    "disconnected": "断开连接",
+    "email_management": "电子邮件管理",
+    "email_management_desc": "管理您的电子邮件地址和验证状态",
+    "emails": "电子邮件",
+    "enabled": "启用",
+    "enter_current_password": "输入当前密码",
+    "enter_first_name": "输入您的名字",
+    "enter_last_name": "输入您的姓氏",
+    "enter_new_email": "输入新的电子邮件地址",
+    "enter_new_password": "输入新密码",
+    "enter_username": "输入您的用户名",
+    "integrations": "集成",
+    "integrations_desc": "连接外部服务以增强您的体验",
+    "license": "执照",
+    "mfa_desc": "在您的帐户中添加额外的安全性",
+    "mfa_is_enabled": "MFA已启用",
+    "pass_change_desc": "更新您的帐户密码以获得更好的安全性",
+    "password_auth": "密码身份验证",
+    "password_login_disabled": "密码登录禁用",
+    "password_login_enabled": "启用密码登录",
+    "profile_info": "个人资料信息",
+    "profile_info_desc": "更新您的个人详细信息和个人资料图片",
+    "public_profile_desc": "让其他用户可以看到您的个人资料",
+    "regular_user": "常规用户",
+    "security": "安全",
+    "settings_menu": "设置菜单",
+    "social_auth": "社会身份验证",
+    "social_auth_desc_1": "管理社交登录选项和密码设置",
+    "social_auth_setup": "社会身份验证设置",
+    "staff_status": "员工身份",
+    "staff_user": "员工用户",
+    "quick_actions": "快速动作",
+    "region_updates": "区域更新",
+    "region_updates_desc": "更新访问了地区和城市"
   },
   "checklist": {
     "add_item": "添加项目",
@@ -567,7 +630,9 @@
     "manage_categories": "管理类别",
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
-    "update_after_refresh": "刷新页面后，冒险卡将更新。"
+    "update_after_refresh": "刷新页面后，冒险卡将更新。",
+    "add_category": "添加类别",
+    "add_new_category": "添加新类别"
   },
   "dashboard": {
     "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",
@@ -602,14 +667,31 @@
     "server_url": "Immich 服务器网址",
     "update_integration": "更新集成",
     "documentation": "Immich 集成文档",
-    "localhost_note": "注意：除非您相应地设置了 docker 网络，否则 localhost 很可能无法工作。\n建议使用服务器的IP地址或域名。"
+    "localhost_note": "注意：除非您相应地设置了 docker 网络，否则 localhost 很可能无法工作。\n建议使用服务器的IP地址或域名。",
+    "api_key_placeholder": "输入您的Immich API密钥",
+    "enable_integration": "启用集成",
+    "immich_integration_desc": "连接您的Immich照片管理服务器",
+    "need_help": "需要帮助设置吗？\n查看",
+    "connection_error": "连接到Immich服务器的错误",
+    "copy_locally": "在本地复制图像",
+    "copy_locally_desc": "将图像复制到服务器以进行离线访问。\n使用更多的磁盘空间。",
+    "error_saving_image": "保存错误的图像",
+    "integration_already_exists": "Immich整合已经存在。\n您一次只能进行一个集成。",
+    "integration_not_found": "没有找到Immich整合。\n请创建一个新的集成。",
+    "network_error": "连接到Immich服务器时的网络错误。\n请检查您的连接，然后重试。",
+    "validation_error": "在验证IMMICH集成时发生了错误。\n请检查您的服务器URL和API键。"
   },
   "recomendations": {
     "address": "地址",
     "contact": "联系方式",
     "phone": "电话",
     "recommendation": "推荐",
-    "website": "网站"
+    "website": "网站",
+    "recommendations": "建议",
+    "adventure_recommendations": "冒险建议",
+    "food": "食物",
+    "miles": "英里",
+    "tourism": "旅游"
   },
   "lodging": {
     "campground": "露营地",
@@ -640,5 +722,8 @@
     "reservation_number": "预订号",
     "resort": "度假村",
     "current_timezone": "当前时区"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。"
   }
 }

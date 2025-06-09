@@ -8,7 +8,8 @@
     "nominatim_2": "Leurs données sont sous licence ODbL.",
     "oss_attributions": "Attributions Open Source",
     "other_attributions": "Des attributions supplémentaires peuvent être trouvées dans le fichier README.",
-    "source_code": "Code source"
+    "source_code": "Code source",
+    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés."
   },
   "adventures": {
     "activities": {
@@ -261,7 +262,18 @@
     "arrival_timezone": "Fuseau horaire d'arrivée",
     "departure_timezone": "Fuseau horaire de départ",
     "arrival_date": "Date d'arrivée",
-    "departure_date": "Date de départ"
+    "departure_date": "Date de départ",
+    "coordinates": "Coordonnées",
+    "copy_coordinates": "Coordonnées de copie",
+    "sun_times": "Temps du soleil",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher de soleil",
+    "timed": "Chronométré",
+    "distance": "Distance",
+    "all_linked_items": "Tous les éléments liés",
+    "itinerary": "Itinéraire",
+    "joined": "Joint",
+    "view_profile": "Afficher le profil"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -450,7 +462,58 @@
     "password_disabled": "Authentification par mot de passe désactivée",
     "password_disabled_error": "Erreur de désactivation de l'authentification par mot de passe. \nAssurez-vous qu'un fournisseur social ou OIDC est lié à votre compte.",
     "password_enabled": "Authentification par mot de passe activée",
-    "password_enabled_error": "Erreur permettant l'authentification par mot de passe."
+    "password_enabled_error": "Erreur permettant l'authentification par mot de passe.",
+    "admin_panel_desc": "Accéder à l'interface d'administration complète",
+    "administration": "Administration",
+    "advanced_settings": "Paramètres avancés",
+    "app_version": "Version de l'application",
+    "confirm_new_password_desc": "Confirmer un nouveau mot de passe",
+    "connected": "Connecté",
+    "email_management_desc": "Gérez vos adresses e-mail et votre statut de vérification",
+    "emails": "E-mails",
+    "enabled": "Activé",
+    "enter_current_password": "Entrez le mot de passe actuel",
+    "enter_first_name": "Entrez votre prénom",
+    "enter_new_email": "Entrez la nouvelle adresse e-mail",
+    "enter_new_password": "Entrez un nouveau mot de passe",
+    "enter_username": "Entrez votre nom d'utilisateur",
+    "integrations": "Intégrations",
+    "integrations_desc": "Connectez les services externes pour améliorer votre expérience",
+    "license": "Licence",
+    "mfa_desc": "Ajoutez une couche supplémentaire de sécurité à votre compte",
+    "mfa_is_enabled": "MFA est activé",
+    "pass_change_desc": "Mettez à jour le mot de passe de votre compte pour une meilleure sécurité",
+    "password_auth": "Authentification du mot de passe",
+    "password_login_disabled": "Login de mot de passe désactivé",
+    "password_login_enabled": "Connexion du mot de passe activé",
+    "profile_info": "Informations sur le profil",
+    "profile_info_desc": "Mettez à jour vos coordonnées personnelles et votre photo de profil",
+    "public_profile_desc": "Rendre votre profil visible pour les autres utilisateurs",
+    "quick_actions": "Actions rapides",
+    "region_updates": "Mises à jour de la région",
+    "region_updates_desc": "Mettre à jour les régions et les villes visitées",
+    "regular_user": "Utilisateur régulier",
+    "security": "Sécurité",
+    "settings_menu": "Menu des paramètres",
+    "social_auth": "Authentification sociale",
+    "social_auth_desc_1": "Gérer les options de connexion sociales et les paramètres de mot de passe",
+    "social_auth_setup": "Configuration d'authentification sociale",
+    "staff_status": "Statut du personnel",
+    "staff_user": "Utilisateur du personnel",
+    "access_restricted": "Accès restreint",
+    "access_restricted_desc": "Les fonctionnalités yadministratives ne sont disponibles que pour les membres du personnel.",
+    "add_new_email": "Ajouter un nouvel e-mail",
+    "add_new_email_address": "Ajouter une nouvelle adresse e-mail",
+    "admin": "Administrer",
+    "administration_desc": "Outils et paramètres administratifs",
+    "advanced": "Avancé",
+    "advanced_settings_desc": "Outils avancés de configuration et de développement",
+    "all_rights_reserved": "Tous droits réservés.",
+    "debug_information": "Débogage des informations",
+    "disabled": "Désactivé",
+    "disconnected": "Déconnecté",
+    "email_management": "Gestion des e-mails",
+    "enter_last_name": "Entrez votre nom de famille"
   },
   "checklist": {
     "add_item": "Ajouter un élément",
@@ -567,7 +630,9 @@
     "manage_categories": "Gérer les catégories",
     "no_categories_found": "Aucune catégorie trouvée.",
     "select_category": "Sélectionnez une catégorie",
-    "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page."
+    "update_after_refresh": "Les cartes d'aventure seront mises à jour une fois que vous aurez actualisé la page.",
+    "add_category": "Ajouter une catégorie",
+    "add_new_category": "Ajouter une nouvelle catégorie"
   },
   "dashboard": {
     "add_some": "Pourquoi ne pas commencer à planifier votre prochaine aventure ? \nVous pouvez ajouter une nouvelle aventure en cliquant sur le bouton ci-dessous.",
@@ -602,14 +667,31 @@
     "server_url": "URL du serveur Immich",
     "update_integration": "Intégration des mises à jour",
     "documentation": "Documentation de l'intégration Immich",
-    "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine."
+    "localhost_note": "Remarque : localhost ne fonctionnera probablement pas à moins que vous n'ayez configuré les réseaux Docker en conséquence. \nIl est recommandé d'utiliser l'adresse IP du serveur ou le nom de domaine.",
+    "api_key_placeholder": "Entrez votre clé API Immich",
+    "enable_integration": "Activer l'intégration",
+    "immich_integration_desc": "Connectez votre serveur de gestion de photos Immich",
+    "need_help": "Besoin d'aide pour la configurer? \nDécouvrez le",
+    "connection_error": "Erreur de connexion à Immich Server",
+    "copy_locally": "Copier les images localement",
+    "copy_locally_desc": "Copiez des images sur le serveur pour un accès hors ligne. \nUtilise plus d'espace disque.",
+    "error_saving_image": "Image d'enregistrement d'erreur",
+    "integration_already_exists": "Une intégration Immich existe déjà. \nVous ne pouvez avoir qu'une seule intégration à la fois.",
+    "integration_not_found": "L'intégration d'immich n'est pas trouvée. \nVeuillez créer une nouvelle intégration.",
+    "network_error": "Erreur réseau lors de la connexion au serveur Immich. \nVeuillez vérifier votre connexion et réessayer.",
+    "validation_error": "Une erreur s'est produite lors de la validation de l'intégration d'Immich. \nVeuillez vérifier l'URL et la clé API de votre serveur."
   },
   "recomendations": {
     "address": "Adresse",
     "contact": "Contact",
     "phone": "Téléphone",
     "recommendation": "Recommandation",
-    "website": "Site web"
+    "website": "Site web",
+    "recommendations": "Recommandations",
+    "adventure_recommendations": "Recommandations d'aventure",
+    "food": "Nourriture",
+    "miles": "Kilomètres",
+    "tourism": "Tourisme"
   },
   "lodging": {
     "apartment": "Appartement",
@@ -640,5 +722,8 @@
     "type": "Type",
     "villa": "Villa",
     "current_timezone": "Fuseau horaire actuel"
+  },
+  "google_maps": {
+    "google_maps_integration_desc": "Connectez votre compte Google Maps pour obtenir des résultats de recherche et recommandations de recherche de haute qualité."
   }
 }

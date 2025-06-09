@@ -22,7 +22,7 @@
 
 	const dispatch = createEventDispatcher();
 
-	let images: { id: string; image: string; is_primary: boolean }[] = [];
+	let images: { id: string; image: string; is_primary: boolean; immich_id: string | null }[] = [];
 	let warningMessage: string = '';
 	let constrainDates: boolean = false;
 
@@ -82,6 +82,7 @@
 
 	let fileInput: HTMLInputElement;
 	let immichIntegration: boolean = false;
+	let copyImmichLocally: boolean = false;
 
 	import ActivityComplete from './ActivityComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
@@ -161,13 +162,19 @@
 			addToast('error', $t('adventures.category_fetch_error'));
 		}
 		// Check for Immich Integration
-		let res = await fetch('/api/integrations');
-		if (!res.ok) {
+		let res = await fetch('/api/integrations/immich/');
+		// If the response is not ok, we assume Immich integration is not available
+		if (!res.ok && res.status !== 404) {
 			addToast('error', $t('immich.integration_fetch_error'));
 		} else {
 			let data = await res.json();
-			if (data.immich) {
+			if (data.error) {
+				immichIntegration = false;
+			} else if (data.id) {
 				immichIntegration = true;
+				copyImmichLocally = data.copy_locally || false;
+			} else {
+				immichIntegration = false;
 			}
 		}
 	});
@@ -176,6 +183,8 @@
 	let imageError: string = '';
 	let wikiImageError: string = '';
 	let triggerMarkVisted: boolean = false;
+
+	let isLoading: boolean = false;
 
 	images = adventure.images || [];
 	$: {
@@ -328,7 +337,12 @@
 		});
 		if (res.ok) {
 			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+			let newImage = {
+				id: newData.data.id,
+				image: newData.data.image,
+				is_primary: false,
+				immich_id: null
+			};
 			images = [...images, newImage];
 			adventure.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
@@ -379,7 +393,12 @@
 			});
 			if (res2.ok) {
 				let newData = deserialize(await res2.text()) as { data: { id: string; image: string } };
-				let newImage = { id: newData.data.id, image: newData.data.image, is_primary: false };
+				let newImage = {
+					id: newData.data.id,
+					image: newData.data.image,
+					is_primary: false,
+					immich_id: null
+				};
 				images = [...images, newImage];
 				adventure.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
@@ -414,6 +433,7 @@
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
 		triggerMarkVisted = true;
+		isLoading = true;
 
 		// if category icon is empty, set it to the default icon
 		if (adventure.category?.icon == '' || adventure.category?.icon == null) {
@@ -477,6 +497,7 @@
 			}
 		}
 		imageSearch = adventure.name;
+		isLoading = false;
 	}
 </script>
 
@@ -669,7 +690,14 @@
 								</div>
 							{/if}
 							<div class="flex flex-row gap-2">
-								<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button>
+								{#if !isLoading}
+									<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button
+									>
+								{:else}
+									<button type="button" class="btn btn-primary"
+										><span class="loading loading-spinner loading-md"></span></button
+									>
+								{/if}
 								<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
 							</div>
 						</div>
@@ -712,6 +740,23 @@
 							<button class="btn btn-neutral" on:click={uploadAttachment}>
 								{$t('adventures.upload')}
 							</button>
+						</div>
+
+						<div role="alert" class="alert bg-neutral">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								fill="none"
+								viewBox="0 0 24 24"
+								class="stroke-info h-6 w-6 shrink-0"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+								></path>
+							</svg>
+							<span>{$t('adventures.gpx_tip')}</span>
 						</div>
 
 						{#if attachmentToEdit}
@@ -805,6 +850,18 @@
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
+							}}
+							{copyImmichLocally}
+							on:remoteImmichSaved={(e) => {
+								const newImage = {
+									id: e.detail.id,
+									image: e.detail.image,
+									is_primary: e.detail.is_primary,
+									immich_id: e.detail.immich_id
+								};
+								images = [...images, newImage];
+								adventure.images = images;
+								addToast('success', $t('adventures.image_upload_success'));
 							}}
 						/>
 					{/if}
