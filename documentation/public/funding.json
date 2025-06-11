@@ -1,0 +1,68 @@
+{
+  "version": "v1.0.0",
+  "entity": {
+    "type": "individual",
+    "role": "owner",
+    "name": "Sean Morley",
+    "email": "contact@seanmorley.com",
+    "phone": "",
+    "description": "AdventureLog is a free, open-source platform for logging, planning, and tracking travel. It’s fully self-hostable, privacy-focused, and designed around interactive mapping. I'm the lead developer and long-term maintainer.",
+    "webpageUrl": {
+      "url": "https://adventurelog.app",
+      "wellKnown": ""
+    }
+  },
+  "projects": [
+    {
+      "guid": "adventurelog",
+      "name": "AdventureLog",
+      "description": "A privacy-first travel platform for journaling, tracking, and planning trips. Self-hosted and FOSS, with trip logs, itineraries, maps, GPX support, and media uploads.",
+      "webpageUrl": {
+        "url": "https://adventurelog.app"
+      },
+      "repositoryUrl": {
+        "url": "https://github.com/seanmorley15/adventurelog"
+      },
+      "licenses": ["spdx:GPL-3.0"],
+      "tags": ["travel", "tracker", "planner", "mapping", "trip-planning", "selfhosting", "privacy", "django"]
+    }
+  ],
+  "funding": {
+    "channels": [
+      {
+        "guid": "github-sponsors",
+        "type": "payment-provider",
+        "address": "https://github.com/sponsors/seanmorley15",
+        "description": "Monthly or one-time sponsorship via GitHub Sponsors"
+      },
+      {
+        "guid": "buy-me-a-coffee",
+        "type": "payment-provider",
+        "address": "https://www.buymeacoffee.com/seanmorley15",
+        "description": "Quick one-off support — buy the dev a coffee ☕"
+      }
+    ],
+    "plans": [
+      {
+        "guid": "any-amount",
+        "status": "active",
+        "name": "Any Amount",
+        "description": "Support AdventureLog at any level",
+        "amount": 0,
+        "currency": "USD",
+        "frequency": "one-time",
+        "channels": ["github-sponsors", "buy-me-a-coffee"]
+      },
+      {
+        "guid": "monthly-10",
+        "status": "active",
+        "name": "Monthly Support - $10",
+        "description": "Helps fund ongoing development, maintenance, and new features",
+        "amount": 10,
+        "currency": "USD",
+        "frequency": "monthly",
+        "channels": ["github-sponsors", "buy-me-a-coffee"]
+      }
+    ]
+  }
+}
