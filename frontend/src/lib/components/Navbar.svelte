@@ -60,7 +60,8 @@
 		zh: '中文',
 		pl: 'Polski',
 		ko: '한국어',
-		no: 'Norsk'
+		no: 'Norsk',
+		ru: 'Русский'
 	};
 
 	let query: string = '';
