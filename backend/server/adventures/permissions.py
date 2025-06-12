@@ -2,78 +2,99 @@ from rest_framework import permissions
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
-    Custom permission to only allow owners of an object to edit it.
+    Owners can edit, others have read-only access.
     """
-
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed to any request,
-        # so we'll always allow GET, HEAD or OPTIONS requests.
         if request.method in permissions.SAFE_METHODS:
             return True
-
-        # Write permissions are only allowed to the owner of the object.
+        # obj.user_id is FK to User, compare with request.user
         return obj.user_id == request.user
 
 
 class IsPublicReadOnly(permissions.BasePermission):
     """
-    Custom permission to only allow read-only access to public objects,
-    and write access to the owner of the object.
+    Read-only if public or owner, write only for owner.
     """
-
     def has_object_permission(self, request, view, obj):
-        # Read permissions are allowed if the object is public
         if request.method in permissions.SAFE_METHODS:
             return obj.is_public or obj.user_id == request.user
-
-        # Write permissions are only allowed to the owner of the object
         return obj.user_id == request.user
-    
+
+
 class CollectionShared(permissions.BasePermission):
     """
-    Custom permission to only allow read-only access to public objects,
-    and write access to the owner of the object.
+    Allow full access if user is in shared_with of collection(s) or owner,
+    read-only if public or shared_with,
+    write only if owner or shared_with.
     """
-
     def has_object_permission(self, request, view, obj):
+        user = request.user
+        if not user or not user.is_authenticated:
+            # Anonymous: only read public
+            return request.method in permissions.SAFE_METHODS and obj.is_public
 
-        # Read permissions are allowed if the object is shared with the user
-        if obj.shared_with and obj.shared_with.filter(id=request.user.id).exists():
-            return True
-        
-        # Write permissions are allowed if the object is shared with the user
-        if request.method not in permissions.SAFE_METHODS and obj.shared_with.filter(id=request.user.id).exists():
-            return True
+        # Check if user is in shared_with of any collections related to the obj
+        # If obj is a Collection itself:
+        if hasattr(obj, 'shared_with'):
+            if obj.shared_with.filter(id=user.id).exists():
+                return True
 
-        # Read permissions are allowed if the object is public
+        # If obj is an Adventure (has collections M2M)
+        if hasattr(obj, 'collections'):
+            # Check if user is in shared_with of any related collection
+            shared_collections = obj.collections.filter(shared_with=user)
+            if shared_collections.exists():
+                return True
+
+        # Read permission if public or owner
         if request.method in permissions.SAFE_METHODS:
-            return obj.is_public or obj.user_id == request.user
+            return obj.is_public or obj.user_id == user
 
-        # Write permissions are only allowed to the owner of the object
-        return obj.user_id == request.user
+        # Write permission only if owner or shared user via collections
+        if obj.user_id == user:
+            return True
+
+        if hasattr(obj, 'collections'):
+            if obj.collections.filter(shared_with=user).exists():
+                return True
+
+        # Default deny
+        return False
+
 
 class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
-    Custom permission to allow:
-    - Full access for shared users
-    - Full access for owners
-    - Read-only access for others on safe methods
+    Full access for owners and users shared via collections,
+    read-only for others if public.
     """
-
     def has_object_permission(self, request, view, obj):
-        
-        # Allow GET only for a public object
-        if request.method in permissions.SAFE_METHODS and obj.is_public:
-            return True
-        # Check if the object has a collection
-        if hasattr(obj, 'collection') and obj.collection:
-            # Allow all actions for shared users
-            if request.user in obj.collection.shared_with.all():
-                return True
+        user = request.user
+        if not user or not user.is_authenticated:
+            return request.method in permissions.SAFE_METHODS and obj.is_public
 
-        # Always allow GET, HEAD, or OPTIONS requests (safe methods)
+        # If safe method (read), allow if:
         if request.method in permissions.SAFE_METHODS:
+            if obj.is_public:
+                return True
+            if obj.user_id == user:
+                return True
+            # If user in shared_with of any collection related to obj
+            if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
+                return True
+            if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
+                return True
+            if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
+                return True
+            return False
+
+        # For write methods, allow if owner or shared user
+        if obj.user_id == user:
+            return True
+        if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
+            return True
+        if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
+            return True
+        if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
             return True
 
-        # Allow all actions for the owner
-        return obj.user_id == request.user
+        return False

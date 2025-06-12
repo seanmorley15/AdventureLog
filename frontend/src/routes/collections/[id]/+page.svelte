@@ -362,12 +362,21 @@
 		} else {
 			let adventure = event.detail;
 
+			// add the collection id to the adventure collections array
+			if (!adventure.collections) {
+				adventure.collections = [collection.id];
+			} else {
+				if (!adventure.collections.includes(collection.id)) {
+					adventure.collections.push(collection.id);
+				}
+			}
+
 			let res = await fetch(`/api/adventures/${adventure.id}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ collection: collection.id.toString() })
+				body: JSON.stringify({ collections: adventure.collections })
 			});
 
 			if (res.ok) {
@@ -550,6 +559,7 @@
 		on:close={() => {
 			isShowingLinkModal = false;
 		}}
+		collectionId={collection.id}
 		on:add={addAdventure}
 	/>
 {/if}

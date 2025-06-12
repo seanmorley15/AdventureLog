@@ -12,21 +12,31 @@
 	let isLoading: boolean = true;
 
 	export let user: User | null;
+	export let collectionId: string;
 
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		if (modal) {
 			modal.showModal();
 		}
-		let res = await fetch(`/api/adventures/all/?include_collections=false`, {
+		let res = await fetch(`/api/adventures/all/?include_collections=true`, {
 			method: 'GET'
 		});
 
 		const newAdventures = await res.json();
 
-		if (res.ok && adventures) {
+		// Filter out adventures that are already linked to the collections
+		// basically for each adventure, check if collections array contains the id of the current collection
+		if (collectionId) {
+			adventures = newAdventures.filter((adventure: Adventure) => {
+				// adventure.collections is an array of ids, collectionId is a single id
+				return !(adventure.collections ?? []).includes(collectionId);
+			});
+		} else {
 			adventures = newAdventures;
 		}
+
+		// No need to reassign adventures to newAdventures here, keep the filtered result
 		isLoading = false;
 	});
 

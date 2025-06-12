@@ -9,6 +9,8 @@
 
 	let collections: Collection[] = [];
 
+	export let linkedCollectionList: string[] | null = null;
+
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		if (modal) {
@@ -30,8 +32,12 @@
 		dispatch('close');
 	}
 
-	function link(event: CustomEvent<number>) {
+	function link(event: CustomEvent<string>) {
 		dispatch('link', event.detail);
+	}
+
+	function unlink(event: CustomEvent<string>) {
+		dispatch('unlink', event.detail);
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
@@ -46,9 +52,15 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div class="modal-box w-11/12 max-w-5xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h1 class="text-center font-bold text-4xl mb-6">{$t('adventures.my_collections')}</h1>
-		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
+		<div class="flex flex-wrap gap-4 mr-4 justify-center content-center mb-4">
 			{#each collections as collection}
-				<CollectionCard {collection} type="link" on:link={link} />
+				<CollectionCard
+					{collection}
+					type="link"
+					on:link={link}
+					bind:linkedCollectionList
+					on:unlink={unlink}
+				/>
 			{/each}
 			{#if collections.length === 0}
 				<p class="text-center text-lg">{$t('adventures.no_collections_found')}</p>

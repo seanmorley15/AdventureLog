@@ -360,11 +360,17 @@
 												? `🌍 ${$t('adventures.public')}`
 												: `🔒 ${$t('adventures.private')}`}
 										</div>
-										{#if data.props.collection}
+										<!-- {#if data.props.collection}
 											<div class="badge badge-sm badge-outline">
 												📚 <a href="/collections/{data.props.collection.id}" class="link"
 													>{data.props.collection.name}</a
 												>
+											</div>
+										{/if} -->
+										{#if adventure.collections && adventure.collections.length > 0}
+											<div class="badge badge-sm badge-outline">
+												📚
+												<p>{adventure.collections.length} {$t('navbar.collections')}</p>
 											</div>
 										{/if}
 									</div>
