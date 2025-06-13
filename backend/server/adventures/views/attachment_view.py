@@ -26,10 +26,16 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
         
         if adventure.user_id != request.user:
-            # Check if the adventure has a collection
-            if adventure.collection:
-                # Check if the user is in the collection's shared_with list
-                if not adventure.collection.shared_with.filter(id=request.user.id).exists():
+            # Check if the adventure has any collections
+            if adventure.collections.exists():
+                # Check if the user is in the shared_with list of any of the adventure's collections
+                user_has_access = False
+                for collection in adventure.collections.all():
+                    if collection.shared_with.filter(id=request.user.id).exists():
+                        user_has_access = True
+                        break
+                
+                if not user_has_access:
                     return Response({"error": "User does not have permission to access this adventure"}, status=status.HTTP_403_FORBIDDEN)
             else:
                 return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
@@ -37,4 +43,14 @@ class AttachmentViewSet(viewsets.ModelViewSet):
         return super().create(request, *args, **kwargs)
     
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        adventure_id = self.request.data.get('adventure')
+        adventure = Adventure.objects.get(id=adventure_id)
+        
+        # If the adventure belongs to collections, set the owner to the collection owner
+        if adventure.collections.exists():
+            # Get the first collection's owner (assuming all collections have the same owner)
+            collection = adventure.collections.first()
+            serializer.save(user_id=collection.user_id)
+        else:
+            # Otherwise, set the owner to the request user
+            serializer.save(user_id=self.request.user)

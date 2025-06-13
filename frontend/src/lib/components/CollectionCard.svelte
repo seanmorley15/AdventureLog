@@ -14,6 +14,7 @@
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
+	import Minus from '~icons/mdi/minus';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
@@ -23,6 +24,7 @@
 	const dispatch = createEventDispatcher();
 
 	export let type: String | undefined | null;
+	export let linkedCollectionList: string[] | null = null;
 	let isShareModalOpen: boolean = false;
 
 	function editAdventure() {
@@ -138,10 +140,25 @@
 		<!-- Actions -->
 		<div class="pt-4 border-t border-base-300">
 			{#if type == 'link'}
-				<button class="btn btn-primary btn-block" on:click={() => dispatch('link', collection.id)}>
-					<Plus class="w-4 h-4" />
-					{$t('adventures.add_to_collection')}
-				</button>
+				{#if linkedCollectionList && linkedCollectionList
+						.map(String)
+						.includes(String(collection.id))}
+					<button
+						class="btn btn-error btn-block"
+						on:click={() => dispatch('unlink', collection.id)}
+					>
+						<Minus class="w-4 h-4" />
+						{$t('adventures.remove_from_collection')}
+					</button>
+				{:else}
+					<button
+						class="btn btn-primary btn-block"
+						on:click={() => dispatch('link', collection.id)}
+					>
+						<Plus class="w-4 h-4" />
+						{$t('adventures.add_to_collection')}
+					</button>
+				{/if}
 			{:else}
 				<div class="flex justify-between items-center">
 					<button

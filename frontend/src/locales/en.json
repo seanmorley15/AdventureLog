@@ -523,7 +523,8 @@
 		"collection_edit_success": "Collection edited successfully!",
 		"error_editing_collection": "Error editing collection",
 		"edit_collection": "Edit Collection",
-		"public_collection": "Public Collection"
+		"public_collection": "Public Collection",
+		"manage_collections": "Manage Collections"
 	},
 	"notes": {
 		"note_deleted": "Note deleted successfully!",
