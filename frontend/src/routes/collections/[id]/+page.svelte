@@ -5,6 +5,7 @@
 	import { marked } from 'marked'; // Import the markdown parser
 
 	import { t } from 'svelte-i18n';
+	import Lost from '$lib/assets/undraw_lost.svg';
 
 	// @ts-ignore
 	import Calendar from '@event-calendar/core';
@@ -320,6 +321,10 @@
 			notFound = true;
 		}
 
+		if (!collection) {
+			return;
+		}
+
 		if (collection.start_date && collection.end_date) {
 			numberOfDays =
 				Math.floor(
@@ -327,7 +332,7 @@
 						(1000 * 60 * 60 * 24)
 				) + 1;
 
-			// Update `options.evdateents` when `collection.start_date` changes
+			// Update `options.events` when `collection.start_date` changes
 			// @ts-ignore
 			options = { ...options, date: collection.start_date };
 		}
@@ -641,7 +646,7 @@
 		<span class="loading loading-spinner w-24 h-24"></span>
 	</div>
 {/if}
-{#if collection}
+{#if collection && collection.id}
 	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
@@ -1537,6 +1542,19 @@
 			</div>
 		</div>
 	{/if}
+{:else}
+	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
+		<div class="hero-content text-center">
+			<div class="max-w-md">
+				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+					{$t('adventures.homepage')}
+				</button>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <svelte:head>

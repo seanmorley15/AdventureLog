@@ -273,7 +273,8 @@
     "all_linked_items": "모든 링크 된 항목",
     "itinerary": "여정",
     "joined": "가입",
-    "view_profile": "프로필을 봅니다"
+    "view_profile": "프로필을 봅니다",
+    "share_collection": "이 컬렉션을 공유하십시오!"
   },
   "auth": {
     "both_passwords_required": "두 암호 모두 필요합니다",
@@ -336,7 +337,8 @@
     "error_creating_collection": "컬렉션 생성 오류",
     "error_editing_collection": "컬렉션 편집 오류",
     "new_collection": "새로운 컬렉션",
-    "public_collection": "공개 컬렉션"
+    "public_collection": "공개 컬렉션",
+    "manage_collections": "컬렉션을 관리합니다"
   },
   "dashboard": {
     "add_some": "다음 모험을 계획해 보는게 어떨까요? 아래 버튼을 클릭하여 새로운 모험을 추가할 수 있습니다.",
@@ -618,7 +620,8 @@
     "social_auth_desc_1": "소셜 로그인 옵션 및 비밀번호 설정을 관리합니다",
     "social_auth_setup": "소셜 인증 설정",
     "staff_status": "직원 상태",
-    "staff_user": "직원 사용자"
+    "staff_user": "직원 사용자",
+    "email_verified_error_desc": "귀하의 이메일을 확인할 수 없습니다. \n다시 시도하십시오."
   },
   "share": {
     "go_to_settings": "설정으로 이동",

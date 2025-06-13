@@ -273,7 +273,8 @@
     "all_linked_items": "Tous les éléments liés",
     "itinerary": "Itinéraire",
     "joined": "Joint",
-    "view_profile": "Afficher le profil"
+    "view_profile": "Afficher le profil",
+    "share_collection": "Partagez cette collection!"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -513,7 +514,8 @@
     "disabled": "Désactivé",
     "disconnected": "Déconnecté",
     "email_management": "Gestion des e-mails",
-    "enter_last_name": "Entrez votre nom de famille"
+    "enter_last_name": "Entrez votre nom de famille",
+    "email_verified_error_desc": "Votre e-mail n'a pas pu être vérifié. \nVeuillez réessayer."
   },
   "checklist": {
     "add_item": "Ajouter un élément",
@@ -540,7 +542,8 @@
     "error_creating_collection": "Erreur lors de la création de la collection",
     "error_editing_collection": "Erreur lors de la modification de la collection",
     "new_collection": "Nouvelle collection",
-    "public_collection": "Collection publique"
+    "public_collection": "Collection publique",
+    "manage_collections": "Gérer les collections"
   },
   "notes": {
     "add_a_link": "Ajouter un lien",

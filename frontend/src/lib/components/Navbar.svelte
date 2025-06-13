@@ -277,7 +277,7 @@
 		{#if data.user}
 			<Avatar user={data.user} />
 		{/if}
-		<div class="dropdown dropdown-bottom dropdown-end">
+		<div class="dropdown dropdown-bottom dropdown-end z-[999]">
 			<div tabindex="0" role="button" class="btn m-1 p-2">
 				<DotsHorizontal class="w-6 h-6" />
 			</div>

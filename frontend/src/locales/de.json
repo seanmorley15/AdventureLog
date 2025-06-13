@@ -273,7 +273,8 @@
     "all_linked_items": "Alle verknüpften Elemente",
     "itinerary": "Route",
     "joined": "Verbunden",
-    "view_profile": "Profil anzeigen"
+    "view_profile": "Profil anzeigen",
+    "share_collection": "Teilen Sie diese Sammlung!"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -513,7 +514,8 @@
     "social_auth_setup": "Social Authentication Setup",
     "staff_status": "Personalstatus",
     "staff_user": "Personalbenutzer",
-    "profile_info_desc": "Aktualisieren Sie Ihre persönlichen Daten und Ihr Profilbild"
+    "profile_info_desc": "Aktualisieren Sie Ihre persönlichen Daten und Ihr Profilbild",
+    "email_verified_error_desc": "Ihre E -Mail konnte nicht überprüft werden. \nBitte versuchen Sie es erneut."
   },
   "checklist": {
     "add_item": "Eintrag hinzufügen",
@@ -540,7 +542,8 @@
     "error_creating_collection": "Fehler beim Erstellen der Sammlung",
     "error_editing_collection": "Fehler beim Bearbeiten der Sammlung",
     "new_collection": "Neue Sammlung",
-    "public_collection": "Öffentliche Sammlung"
+    "public_collection": "Öffentliche Sammlung",
+    "manage_collections": "Sammlungen verwalten"
   },
   "notes": {
     "add_a_link": "Fügen Sie einen Link hinzu",

@@ -273,7 +273,8 @@
     "all_linked_items": "Alle gekoppelde items",
     "itinerary": "Routebeschrijving",
     "joined": "Samengevoegd",
-    "view_profile": "Bekijk profiel"
+    "view_profile": "Bekijk profiel",
+    "share_collection": "Deel deze collectie!"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -513,7 +514,8 @@
     "social_auth_setup": "Sociale authenticatie -opstelling",
     "staff_status": "Status",
     "staff_user": "Personeelsgebruiker",
-    "connected": "Aangesloten"
+    "connected": "Aangesloten",
+    "email_verified_error_desc": "Uw e -mail kan niet worden geverifieerd. \nProbeer het opnieuw."
   },
   "checklist": {
     "add_item": "Artikel toevoegen",
@@ -540,7 +542,8 @@
     "error_creating_collection": "Fout bij aanmaken collectie",
     "error_editing_collection": "Fout bij het bewerken van de collectie",
     "new_collection": "Nieuwe collectie",
-    "public_collection": "Openbare collectie"
+    "public_collection": "Openbare collectie",
+    "manage_collections": "Beheer collecties"
   },
   "notes": {
     "add_a_link": "Voeg een link toe",

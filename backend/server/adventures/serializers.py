@@ -209,8 +209,6 @@ class AdventureSerializer(CustomModelSerializer):
         category_data = validated_data.pop('category', None)
 
         collections_data = validated_data.pop('collections', None)
-        collections_add = validated_data.pop('collections_add', [])
-        collections_remove = validated_data.pop('collections_remove', [])
 
         # Update regular fields
         for attr, value in validated_data.items():

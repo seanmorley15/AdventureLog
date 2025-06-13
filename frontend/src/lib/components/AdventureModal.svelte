@@ -112,7 +112,6 @@
 		location: null,
 		images: [],
 		user_id: null,
-		collection: collection?.id || null,
 		category: {
 			id: '',
 			name: '',
@@ -138,7 +137,6 @@
 		location: adventureToEdit?.location || null,
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
-		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || [],
 		is_visited: adventureToEdit?.is_visited || false,
 		category: adventureToEdit?.category || {
@@ -628,7 +626,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if !adventure?.collection}
+							{#if adventure.collections && adventure.collections.length == 0}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">

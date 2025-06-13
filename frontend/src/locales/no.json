@@ -321,7 +321,8 @@
     "all_linked_items": "Alle koblede varer",
     "itinerary": "Reiserute",
     "joined": "Ble med",
-    "view_profile": "Vis profil"
+    "view_profile": "Vis profil",
+    "share_collection": "Del denne samlingen!"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -513,7 +514,8 @@
     "social_auth_desc_1": "Administrer sosiale påloggingsalternativer og passordinnstillinger",
     "social_auth_setup": "Sosial autentiseringsoppsett",
     "staff_status": "Personalstatus",
-    "staff_user": "Personalbruker"
+    "staff_user": "Personalbruker",
+    "email_verified_error_desc": "E -posten din kunne ikke bekreftes. \nVennligst prøv igjen."
   },
   "collection": {
     "collection_created": "Samling opprettet!",
@@ -523,7 +525,8 @@
     "collection_edit_success": "Samling redigert!",
     "error_editing_collection": "Feil ved redigering av samling",
     "edit_collection": "Rediger samling",
-    "public_collection": "Offentlig samling"
+    "public_collection": "Offentlig samling",
+    "manage_collections": "Administrer samlinger"
   },
   "notes": {
     "note_deleted": "Notat slettet!",

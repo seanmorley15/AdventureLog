@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/stores';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import CollectionLink from '$lib/components/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/CollectionModal.svelte';
@@ -9,82 +9,128 @@
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
+	import Filter from '~icons/mdi/filter-variant';
+	import Sort from '~icons/mdi/sort';
+	import Archive from '~icons/mdi/archive';
+	import Share from '~icons/mdi/share-variant';
+	import CollectionIcon from '~icons/mdi/folder-multiple';
 
 	export let data: any;
-	console.log(data);
+	console.log('Collections page data:', data);
 
 	let collections: Collection[] = data.props.adventures || [];
+	let sharedCollections: Collection[] = data.props.sharedCollections || [];
+	let archivedCollections: Collection[] = data.props.archivedCollections || [];
 
 	let newType: string = '';
-
 	let resultsPerPage: number = 25;
 	let isShowingCollectionModal: boolean = false;
+	let activeView: 'owned' | 'shared' | 'archived' = 'owned';
 
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
 	let count = data.props.count || 0;
 	let totalPages = Math.ceil(count / resultsPerPage);
-	let currentPage: number = 1;
+	let currentPage: number = data.props.currentPage || 1;
+	let orderBy = data.props.order_by || 'updated_at';
+	let orderDirection = data.props.order_direction || 'asc';
 
+	let sidebarOpen = false;
+	let collectionToEdit: Collection | null = null;
+
+	$: currentCollections =
+		activeView === 'owned'
+			? collections
+			: activeView === 'shared'
+				? sharedCollections
+				: activeView === 'archived'
+					? archivedCollections
+					: [];
+
+	$: currentCount =
+		activeView === 'owned'
+			? collections.length
+			: activeView === 'shared'
+				? sharedCollections.length
+				: activeView === 'archived'
+					? archivedCollections.length
+					: 0;
+
+	// Optionally, keep count in sync with collections only for owned view
 	$: {
-		if (count != collections.length) {
+		if (activeView === 'owned' && count !== collections.length) {
 			count = collections.length;
 		}
 	}
 
-	function handleChangePage() {
-		return async ({ result }: any) => {
-			if (result.type === 'success') {
-				console.log(result.data);
-				collections = result.data.body.adventures as Collection[];
-				next = result.data.body.next;
-				previous = result.data.body.previous;
-				count = result.data.body.count;
-				currentPage = result.data.body.page;
-				totalPages = Math.ceil(count / resultsPerPage);
-			}
-		};
+	// Reactive statements to update collections based on props
+	$: {
+		if (data.props.adventures) {
+			collections = data.props.adventures;
+		}
+		if (data.props.archivedCollections) {
+			archivedCollections = data.props.archivedCollections;
+		}
 	}
 
-	function handleSubmit() {
-		return async ({ result, update }: any) => {
-			// First, call the update function with reset: false
-			update({ reset: false });
+	function goToPage(pageNum: number) {
+		const url = new URL($page.url);
+		url.searchParams.set('page', pageNum.toString());
+		goto(url.toString(), { invalidateAll: true, replaceState: true });
+	}
 
-			// Then, handle the result
-			if (result.type === 'success') {
-				if (result.data) {
-					// console.log(result.data);
-					collections = result.data.adventures as Collection[];
-					next = result.data.next;
-					previous = result.data.previous;
-					count = result.data.count;
-					totalPages = Math.ceil(count / resultsPerPage);
-					currentPage = 1;
-
-					console.log(next);
-				}
-			}
-		};
+	function updateSort(by: string, direction: string) {
+		const url = new URL($page.url);
+		url.searchParams.set('order_by', by);
+		url.searchParams.set('order_direction', direction);
+		url.searchParams.set('page', '1'); // Reset to first page when sorting changes
+		goto(url.toString(), { invalidateAll: true, replaceState: true });
 	}
 
 	function deleteCollection(event: CustomEvent<string>) {
-		collections = collections.filter((collection) => collection.id !== event.detail);
+		const collectionId = event.detail;
+		collections = collections.filter((collection) => collection.id !== collectionId);
+		sharedCollections = sharedCollections.filter((collection) => collection.id !== collectionId);
+		archivedCollections = archivedCollections.filter(
+			(collection) => collection.id !== collectionId
+		);
 	}
 
-	// function sort({ attribute, order }: { attribute: string; order: string }) {
-	// 	currentSort.attribute = attribute;
-	// 	currentSort.order = order;
-	// 	if (attribute === 'name') {
-	// 		if (order === 'asc') {
-	// 			collections = collections.sort((a, b) => b.name.localeCompare(a.name));
-	// 		} else {
-	// 			collections = collections.sort((a, b) => a.name.localeCompare(b.name));
-	// 		}
-	// 	}
-	// }
+	function archiveCollection(event: CustomEvent<string>) {
+		const collectionId = event.detail;
+		// Find the collection in owned collections
+		const collectionToArchive = collections.find((collection) => collection.id === collectionId);
 
-	let collectionToEdit: Collection | null = null;
+		if (collectionToArchive) {
+			// Remove from owned collections
+			collections = collections.filter((collection) => collection.id !== collectionId);
+			// Add to archived collections
+			archivedCollections = [...archivedCollections, { ...collectionToArchive, is_archived: true }];
+
+			// Automatically switch to archived tab to show the archived item
+			activeView = 'archived';
+		}
+	}
+
+	function unarchiveCollection(event: CustomEvent<string>) {
+		const collectionId = event.detail;
+		// Find the collection in archived collections
+		const collectionToUnarchive = archivedCollections.find(
+			(collection) => collection.id === collectionId
+		);
+
+		if (collectionToUnarchive) {
+			// Remove from archived collections
+			archivedCollections = archivedCollections.filter(
+				(collection) => collection.id !== collectionId
+			);
+			// Add to owned collections
+			collections = [...collections, { ...collectionToUnarchive, is_archived: false }];
+
+			// Automatically switch to owned tab to show the unarchived item
+			activeView = 'owned';
+		}
+	}
 
 	function saveOrCreate(event: CustomEvent<Collection>) {
 		if (collections.find((collection) => collection.id === event.detail.id)) {
@@ -115,12 +161,19 @@
 		isShowingCollectionModal = false;
 	}
 
-	let sidebarOpen = false;
-
 	function toggleSidebar() {
 		sidebarOpen = !sidebarOpen;
 	}
+
+	function switchView(view: 'owned' | 'shared' | 'archived') {
+		activeView = view;
+	}
 </script>
+
+<svelte:head>
+	<title>Collections</title>
+	<meta name="description" content="View your adventure collections." />
+</svelte:head>
 
 {#if isShowingCollectionModal}
 	<CollectionModal
@@ -130,156 +183,300 @@
 		on:save={saveOrCreate}
 	/>
 {/if}
-<div class="fixed bottom-4 right-4 z-[999]">
-	<div class="flex flex-row items-center justify-center gap-4">
-		<div class="dropdown dropdown-top dropdown-end">
-			<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
-				<Plus class="w-8 h-8" />
+
+<div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
+	<div class="drawer lg:drawer-open">
+		<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
+
+		<div class="drawer-content">
+			<!-- Header Section -->
+			<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
+				<div class="container mx-auto px-6 py-4">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-4">
+							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+								<Filter class="w-5 h-5" />
+							</button>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-xl">
+									<CollectionIcon class="w-8 h-8 text-primary" />
+								</div>
+								<div>
+									<h1
+										class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+									>
+										{$t(`adventures.my_collections`)}
+									</h1>
+									<p class="text-sm text-base-content/60">
+										{currentCount}
+										{activeView === 'owned'
+											? 'collections'
+											: activeView === 'shared'
+												? 'shared collections'
+												: 'archived collections'}
+									</p>
+								</div>
+							</div>
+						</div>
+
+						<!-- View Toggle -->
+						<div class="tabs tabs-boxed bg-base-200">
+							<button
+								class="tab gap-2 {activeView === 'owned' ? 'tab-active' : ''}"
+								on:click={() => switchView('owned')}
+							>
+								<CollectionIcon class="w-4 h-4" />
+								<span class="hidden sm:inline">My Collections</span>
+								<div
+									class="badge badge-sm {activeView === 'owned' ? 'badge-primary' : 'badge-ghost'}"
+								>
+									{collections.length}
+								</div>
+							</button>
+							<button
+								class="tab gap-2 {activeView === 'shared' ? 'tab-active' : ''}"
+								on:click={() => switchView('shared')}
+							>
+								<Share class="w-4 h-4" />
+								<span class="hidden sm:inline">Shared</span>
+								<div
+									class="badge badge-sm {activeView === 'shared' ? 'badge-primary' : 'badge-ghost'}"
+								>
+									{sharedCollections.length}
+								</div>
+							</button>
+							<button
+								class="tab gap-2 {activeView === 'archived' ? 'tab-active' : ''}"
+								on:click={() => switchView('archived')}
+							>
+								<Archive class="w-4 h-4" />
+								<span class="hidden sm:inline">Archived</span>
+								<div
+									class="badge badge-sm {activeView === 'archived'
+										? 'badge-primary'
+										: 'badge-ghost'}"
+								>
+									{archivedCollections.length}
+								</div>
+							</button>
+						</div>
+					</div>
+				</div>
 			</div>
-			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-			<ul
-				tabindex="0"
-				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
-			>
-				<p class="text-center font-bold text-lg">{$t(`adventures.create_new`)}</p>
-				<button
-					class="btn btn-primary"
-					on:click={() => {
-						collectionToEdit = null;
-						isShowingCollectionModal = true;
-						newType = 'visited';
-					}}
-				>
-					{$t(`adventures.collection`)}</button
-				>
-			</ul>
-		</div>
-	</div>
-</div>
 
-<div class="drawer lg:drawer-open">
-	<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
-	<div class="drawer-content">
-		<!-- Page content -->
-		<h1 class="text-center font-bold text-4xl mb-6">{$t(`adventures.my_collections`)}</h1>
-		<p class="text-center">{count} {$t(`adventures.count_txt`)}</p>
-		{#if collections.length === 0}
-			<NotFound error={undefined} />
-		{/if}
-		<div class="p-4">
-			<button
-				class="btn btn-primary drawer-button lg:hidden mb-4 fixed bottom-0 left-0 ml-2 z-[999]"
-				on:click={toggleSidebar}
-			>
-				{sidebarOpen ? $t(`adventures.close_filters`) : $t(`adventures.open_filters`)}
-			</button>
-
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each collections as collection}
-					<CollectionCard
-						type=""
-						{collection}
-						on:delete={deleteCollection}
-						on:edit={editCollection}
-						adventures={collection.adventures}
-					/>
-				{/each}
-			</div>
-
-			<div class="join flex items-center justify-center mt-4">
-				{#if next || previous}
-					<div class="join">
-						{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-							<form action="?/changePage" method="POST" use:enhance={handleChangePage}>
-								<input type="hidden" name="page" value={page} />
-								<input type="hidden" name="next" value={next} />
-								<input type="hidden" name="previous" value={previous} />
-								{#if currentPage != page}
-									<button class="join-item btn btn-lg">{page}</button>
-								{:else}
-									<button class="join-item btn btn-lg btn-active">{page}</button>
-								{/if}
-							</form>
+			<!-- Main Content -->
+			<div class="container mx-auto px-6 py-8">
+				{#if currentCollections.length === 0}
+					<div class="flex flex-col items-center justify-center py-16">
+						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
+							{#if activeView === 'owned'}
+								<CollectionIcon class="w-16 h-16 text-base-content/30" />
+							{:else if activeView === 'shared'}
+								<Share class="w-16 h-16 text-base-content/30" />
+							{:else}
+								<Archive class="w-16 h-16 text-base-content/30" />
+							{/if}
+						</div>
+						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
+							{activeView === 'owned'
+								? 'No collections yet'
+								: activeView === 'shared'
+									? 'No shared collections'
+									: 'No archived collections'}
+						</h3>
+						<p class="text-base-content/50 text-center max-w-md">
+							{activeView === 'owned'
+								? 'Create your first collection to organize your adventures and memories.'
+								: activeView === 'shared'
+									? 'Collections shared with you will appear here.'
+									: 'Archived collections will appear here.'}
+						</p>
+						{#if activeView === 'owned'}
+							<button
+								class="btn btn-primary btn-wide mt-6 gap-2"
+								on:click={() => {
+									collectionToEdit = null;
+									isShowingCollectionModal = true;
+									newType = 'visited';
+								}}
+							>
+								<Plus class="w-5 h-5" />
+								Create Collection
+							</button>
+						{/if}
+					</div>
+				{:else}
+					<!-- Collections Grid -->
+					<div
+						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+					>
+						{#each currentCollections as collection}
+							<CollectionCard
+								type=""
+								{collection}
+								on:delete={deleteCollection}
+								on:edit={editCollection}
+								on:archive={archiveCollection}
+								on:unarchive={unarchiveCollection}
+								user={data.user}
+							/>
 						{/each}
 					</div>
+
+					<!-- Pagination -->
+					{#if activeView === 'owned' && (next || previous)}
+						<div class="flex justify-center mt-12">
+							<div class="join bg-base-100 shadow-lg rounded-2xl p-2">
+								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
+									<button
+										class="join-item btn btn-sm {currentPage === page
+											? 'btn-primary'
+											: 'btn-ghost'}"
+										on:click={() => goToPage(page)}
+									>
+										{page}
+									</button>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				{/if}
 			</div>
 		</div>
-	</div>
-	<div class="drawer-side">
-		<label for="my-drawer" class="drawer-overlay"></label>
-		<ul class="menu p-4 w-80 h-full bg-base-200 text-base-content rounded-lg">
-			<!-- Sidebar content here -->
-			<div class="form-control">
-				<form action="?/get" method="post" use:enhance={handleSubmit}>
-					<h3 class="text-center font-semibold text-lg mb-4">{$t(`adventures.sort`)}</h3>
-					<p class="text-lg font-semibold mb-2">{$t(`adventures.order_direction`)}</p>
-					<div class="join">
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="order_direction"
-							id="asc"
-							value="asc"
-							aria-label={$t(`adventures.ascending`)}
-							checked
-						/>
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="order_direction"
-							id="desc"
-							value="desc"
-							aria-label={$t(`adventures.descending`)}
-						/>
-					</div>
-					<p class="text-lg font-semibold mt-2 mb-2">{$t('adventures.order_by')}</p>
-					<div class="join">
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="order_by"
-							id="upated_at"
-							value="upated_at"
-							aria-label={$t('adventures.updated')}
-							checked
-						/>
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="order_by"
-							id="start_date"
-							value="start_date"
-							aria-label={$t('adventures.start_date')}
-						/>
-						<input
-							class="join-item btn btn-neutral"
-							type="radio"
-							name="order_by"
-							id="name"
-							value="name"
-							aria-label={$t('adventures.name')}
-						/>
-					</div>
-					<br />
 
-					<button type="submit" class="btn btn-success btn-primary mt-4"
-						>{$t(`adventures.sort`)}</button
-					>
-				</form>
-				<div class="divider"></div>
-				<button
-					type="submit"
-					class="btn btn-neutral btn-primary mt-4"
-					on:click={() => goto('/collections/archived')}
-					>{$t(`adventures.archived_collections`)}</button
-				>
+		<!-- Sidebar -->
+		<div class="drawer-side z-50">
+			<label for="my-drawer" class="drawer-overlay"></label>
+			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
+				<div class="p-6">
+					<!-- Sidebar Header -->
+					<div class="flex items-center gap-3 mb-8">
+						<div class="p-2 bg-primary/10 rounded-lg">
+							<Sort class="w-6 h-6 text-primary" />
+						</div>
+						<h2 class="text-xl font-bold">Filters & Sort</h2>
+					</div>
+
+					<!-- Sort Form - Updated to use URL navigation -->
+					<div class="card bg-base-200/50 p-4">
+						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+							<Sort class="w-5 h-5" />
+							{$t(`adventures.sort`)}
+						</h3>
+
+						<div class="space-y-4">
+							<div>
+								<label class="label">
+									<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
+								</label>
+								<div class="join w-full">
+									<button
+										class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
+											? 'btn-active'
+											: ''}"
+										on:click={() => updateSort(orderBy, 'asc')}
+									>
+										{$t(`adventures.ascending`)}
+									</button>
+									<button
+										class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
+											? 'btn-active'
+											: ''}"
+										on:click={() => updateSort(orderBy, 'desc')}
+									>
+										{$t(`adventures.descending`)}
+									</button>
+								</div>
+							</div>
+
+							<div>
+								<label class="label">
+									<span class="label-text font-medium">{$t('adventures.order_by')}</span>
+								</label>
+								<div class="space-y-2">
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="order_by_radio"
+											class="radio radio-primary radio-sm"
+											checked={orderBy === 'updated_at'}
+											on:change={() => updateSort('updated_at', orderDirection)}
+										/>
+										<span class="label-text">{$t('adventures.updated')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="order_by_radio"
+											class="radio radio-primary radio-sm"
+											checked={orderBy === 'start_date'}
+											on:change={() => updateSort('start_date', orderDirection)}
+										/>
+										<span class="label-text">{$t('adventures.start_date')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="order_by_radio"
+											class="radio radio-primary radio-sm"
+											checked={orderBy === 'name'}
+											on:change={() => updateSort('name', orderDirection)}
+										/>
+										<span class="label-text">{$t('adventures.name')}</span>
+									</label>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Quick Actions -->
+					<div class="space-y-3 mt-6">
+						<button
+							type="button"
+							class="btn btn-outline w-full gap-2"
+							on:click={() => switchView('archived')}
+						>
+							<Archive class="w-4 h-4" />
+							{$t(`adventures.archived_collections`)}
+						</button>
+					</div>
+				</div>
 			</div>
-		</ul>
+		</div>
 	</div>
-</div>
 
-<svelte:head>
-	<title>Collections</title>
-	<meta name="description" content="View your adventure collections." />
-</svelte:head>
+	<!-- Floating Action Button -->
+	{#if activeView === 'owned'}
+		<div class="fixed bottom-6 right-6 z-50">
+			<div class="dropdown dropdown-top dropdown-end">
+				<div
+					tabindex="0"
+					role="button"
+					class="btn btn-primary btn-circle w-16 h-16 shadow-2xl hover:shadow-primary/25 transition-all duration-200"
+				>
+					<Plus class="w-8 h-8" />
+				</div>
+				<ul
+					tabindex="0"
+					class="dropdown-content z-[1] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
+				>
+					<div class="text-center mb-4">
+						<h3 class="font-bold text-lg">{$t(`adventures.create_new`)}</h3>
+						<p class="text-sm text-base-content/60">Choose what to create</p>
+					</div>
+					<button
+						class="btn btn-primary gap-2 w-full"
+						on:click={() => {
+							collectionToEdit = null;
+							isShowingCollectionModal = true;
+							newType = 'visited';
+						}}
+					>
+						<CollectionIcon class="w-5 h-5" />
+						{$t(`adventures.collection`)}
+					</button>
+				</ul>
+			</div>
+		</div>
+	{/if}
+</div>

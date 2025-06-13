@@ -321,7 +321,8 @@
     "all_linked_items": "所有链接的项目",
     "itinerary": "行程",
     "joined": "加入",
-    "view_profile": "查看个人资料"
+    "view_profile": "查看个人资料",
+    "share_collection": "分享这个收藏！"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -513,7 +514,8 @@
     "staff_user": "员工用户",
     "quick_actions": "快速动作",
     "region_updates": "区域更新",
-    "region_updates_desc": "更新访问了地区和城市"
+    "region_updates_desc": "更新访问了地区和城市",
+    "email_verified_error_desc": "无法验证您的电子邮件。\n请重试。"
   },
   "checklist": {
     "add_item": "添加项目",
@@ -540,7 +542,8 @@
     "error_creating_collection": "创建合集时出错",
     "error_editing_collection": "编辑合集时出错",
     "new_collection": "新建合集",
-    "public_collection": "公开合集"
+    "public_collection": "公开合集",
+    "manage_collections": "管理收藏"
   },
   "notes": {
     "add_a_link": "添加链接",

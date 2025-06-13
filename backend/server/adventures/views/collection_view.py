@@ -55,7 +55,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        queryset = Collection.objects.filter(user_id=request.user.id)
+        queryset = Collection.objects.filter(user_id=request.user.id, is_archived=False)
         queryset = self.apply_sorting(queryset)
         collections = self.paginate_and_respond(queryset, request)
         return collections
@@ -225,7 +225,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Collection.objects.filter(
             (Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
         ).distinct()
-
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it

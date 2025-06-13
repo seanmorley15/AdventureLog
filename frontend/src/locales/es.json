@@ -321,7 +321,8 @@
     "all_linked_items": "Todos los artículos vinculados",
     "itinerary": "Itinerario",
     "joined": "Unido",
-    "view_profile": "Ver perfil"
+    "view_profile": "Ver perfil",
+    "share_collection": "¡Comparte esta colección!"
   },
   "worldtravel": {
     "all": "Todo",
@@ -413,7 +414,6 @@
     "email_set_primary": "¡El correo electrónico se configuró como principal correctamente!",
     "email_set_primary_error": "Error al configurar el correo electrónico como principal",
     "make_primary": "Hacer primario",
-    "no_email_set": "No hay correo electrónico configurado",
     "not_verified": "No verificado",
     "primary": "Principal",
     "verified": "Verificado",
@@ -433,7 +433,6 @@
     "reset_session_error": "Por favor cierre sesión y vuelva a iniciarla para actualizar su sesión e inténtelo nuevamente.",
     "authenticator_code": "Código de autenticación",
     "email_verified": "¡Correo electrónico verificado exitosamente!",
-    "email_verified_error_desc": "Su correo electrónico no pudo ser verificado. \nPor favor, inténtalo de nuevo.",
     "email_verified_error": "Error al verificar el correo electrónico",
     "email_verified_success": "Su correo electrónico ha sido verificado. \nAhora puedes iniciar sesión.",
     "invalid_code": "Código MFA no válido",
@@ -513,7 +512,10 @@
     "staff_status": "Estado del personal",
     "staff_user": "Usuario de personal",
     "license": "Licencia",
-    "all_rights_reserved": "Reservados todos los derechos."
+    "all_rights_reserved": "Reservados todos los derechos.",
+    "email_verified_erorr_desc": "Su correo electrónico no pudo ser verificado. \nPor favor intente de nuevo.",
+    "email_verified_error_desc": "Su correo electrónico no pudo ser verificado. \nPor favor intente de nuevo.",
+    "no_emai_set": "Sin conjunto de correo electrónico"
   },
   "checklist": {
     "add_item": "Añadir elemento",
@@ -540,7 +542,8 @@
     "error_creating_collection": "Error al crear la colección",
     "error_editing_collection": "Error al editar la colección",
     "new_collection": "Nueva colección",
-    "public_collection": "Colección pública"
+    "public_collection": "Colección pública",
+    "manage_collections": "Gestionar colecciones"
   },
   "notes": {
     "add_a_link": "Agregar un enlace",

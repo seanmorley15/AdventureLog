@@ -25,7 +25,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<ul
 		tabindex="0"
-		class="dropdown-content z-[1] text-neutral-200 menu p-2 shadow bg-neutral mt-2 rounded-box w-52"
+		class="dropdown-content z-[999] text-neutral-200 menu p-2 shadow bg-neutral mt-2 rounded-box w-52"
 	>
 		<!-- svelte-ignore a11y-missing-attribute -->
 		<!-- svelte-ignore a11y-missing-attribute -->

@@ -273,7 +273,8 @@
     "all_linked_items": "Alla länkade objekt",
     "itinerary": "Resväg",
     "joined": "Gick med i",
-    "view_profile": "Visa profil"
+    "view_profile": "Visa profil",
+    "share_collection": "Dela denna samling!"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -513,7 +514,8 @@
     "social_auth_desc_1": "Hantera sociala inloggningsalternativ och lösenordsinställningar",
     "social_auth_setup": "Social autentiseringsinställning",
     "staff_status": "Personalstatus",
-    "staff_user": "Personalanvändare"
+    "staff_user": "Personalanvändare",
+    "email_verified_error_desc": "Ditt e -postmeddelande kunde inte verifieras. \nFörsök igen."
   },
   "checklist": {
     "add_item": "Lägg till objekt",
@@ -540,7 +542,8 @@
     "error_creating_collection": "Det gick inte att skapa samlingen",
     "error_editing_collection": "Ett fel uppstod vid redigering av samling",
     "new_collection": "Ny samling",
-    "public_collection": "Offentlig samling"
+    "public_collection": "Offentlig samling",
+    "manage_collections": "Hantera samlingar"
   },
   "notes": {
     "add_a_link": "Lägg till en länk",

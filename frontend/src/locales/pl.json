@@ -321,7 +321,8 @@
     "all_linked_items": "Wszystkie połączone elementy",
     "itinerary": "Trasa",
     "joined": "Dołączył",
-    "view_profile": "Zobacz profil"
+    "view_profile": "Zobacz profil",
+    "share_collection": "Udostępnij tę kolekcję!"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -513,7 +514,8 @@
     "social_auth_desc_1": "Zarządzaj opcjami logowania społecznościowego i ustawieniami haseł",
     "social_auth_setup": "Konfiguracja uwierzytelniania społecznego",
     "staff_status": "Status personelu",
-    "staff_user": "Użytkownik personelu"
+    "staff_user": "Użytkownik personelu",
+    "email_verified_error_desc": "Twój e -mail nie można zweryfikować. \nSpróbuj ponownie."
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -523,7 +525,8 @@
     "collection_edit_success": "Kolekcja została pomyślnie edytowana!",
     "error_editing_collection": "Błąd podczas edytowania kolekcji",
     "edit_collection": "Edytuj kolekcję",
-    "public_collection": "Kolekcja publiczna"
+    "public_collection": "Kolekcja publiczna",
+    "manage_collections": "Zarządzaj kolekcjami"
   },
   "notes": {
     "note_deleted": "Notatka została pomyślnie usunięta!",
