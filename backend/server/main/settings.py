@@ -168,6 +168,8 @@ else:
         # Fallback to the hostname if parsing fails
         SESSION_COOKIE_DOMAIN = hostname
 
+# Allow user to set their own SESSION_COOKIE_DOMAIN
+SESSION_COOKIE_DOMAIN = env('SESSION_COOKIE_DOMAIN', default=SESSION_COOKIE_DOMAIN)
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.7/howto/static-files/
