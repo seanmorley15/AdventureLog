@@ -13,7 +13,17 @@
     "settings": "设置",
     "shared_with_me": "与我分享",
     "theme_selection": "主题选择",
-    "themes": {},
+    "themes": {
+      "aestheticDark": "美学黑暗",
+      "aestheticLight": "美学之光",
+      "aqua": "水",
+      "dark": "黑暗的",
+      "dim": "暗淡",
+      "forest": "森林",
+      "light": "光",
+      "night": "夜晚",
+      "northernLights": "北极光"
+    },
     "users": "用户",
     "worldtravel": "环球旅行",
     "my_tags": "我的标签",
@@ -47,7 +57,11 @@
     "go_to": "前往冒险日志",
     "hero_1": "探索世界上最惊险的冒险",
     "hero_2": "使用 AdventureLog 发现并计划您的下一次冒险。\n探索令人惊叹的目的地、创建定制行程并随时随地保持联系。",
-    "key_features": "主要特点"
+    "key_features": "主要特点",
+    "explore_world": "探索世界",
+    "latest_travel_experiences": "您的最新旅行经历",
+    "of_world": "世界",
+    "start_your_journey": "开始您的旅程"
   },
   "adventures": {
     "collection_remove_success": "成功从合集中移除冒险！",
@@ -94,7 +108,6 @@
     "date_constrain": "限制在合集日期内",
     "rating": "评分",
     "my_images": "我的图片",
-    "show_region_labels": "显示区域标签",
     "no_images": "没有图片",
     "share_adventure": "分享此冒险！",
     "copy_link": "复制链接",
@@ -271,7 +284,11 @@
     "itinerary": "行程",
     "joined": "加入",
     "view_profile": "查看个人资料",
-    "share_collection": "分享这个收藏！"
+    "share_collection": "分享这个收藏！",
+    "filters_and_sort": "过滤器",
+    "filters_and_stats": "过滤器",
+    "no_adventures_message": "开始记录您的冒险经历，并计划新的冒险。\n每个旅程都有一个值得讲述的故事。",
+    "travel_progress": "旅行进度"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -315,7 +332,36 @@
     "removed": "已删除",
     "view_cities": "查看城市",
     "visit_remove_failed": "删除访问失败",
-    "visit_to": "参观"
+    "visit_to": "参观",
+    "all_regions": "所有地区",
+    "available_to_explore": "可供探索",
+    "cities_in": "城市",
+    "clear_all": "清除全部",
+    "clear_all_filters": "清除所有过滤器",
+    "clear_filters": "清除过滤器",
+    "complete": "完全的",
+    "countries": "国家",
+    "country_completed": "国家完成",
+    "filter_by": "过滤",
+    "filter_by_region": "按区域过滤",
+    "hide_map": "隐藏地图",
+    "hide_map_labels": "隐藏地图标签",
+    "interactive_map": "交互式地图",
+    "no_countries_found_desc": "尝试调整搜索词或过滤器，以找到所需的国家。",
+    "no_country_data_available": "没有国家数据可用",
+    "no_country_data_available_desc": "请检查文档以获取更新区域数据。",
+    "no_regions_found": "找不到地区",
+    "of": "的",
+    "partial": "部分的",
+    "progress": "进步",
+    "progress_and_stats": "进步",
+    "region_completed": "区域完成",
+    "remaining": "其余的",
+    "total_regions": "总区域",
+    "show_map": "显示地图",
+    "show_map_labels": "显示地图标签",
+    "total_cities": "总城市",
+    "total_countries": "总国家"
   },
   "users": {
     "no_users_found": "未找到已公开个人资料的用户。"
@@ -453,7 +499,14 @@
     "error_editing_collection": "编辑合集时出错",
     "new_collection": "新建合集",
     "public_collection": "公开合集",
-    "manage_collections": "管理收藏"
+    "manage_collections": "管理收藏",
+    "archived_appear_here": "存档的收藏将出现在这里。",
+    "create_first": "创建您的第一个集合来组织您的冒险和回忆。",
+    "make_sure_public": "确保您的个人资料是公开的，以便其他人可以与您分享。",
+    "no_archived_collections": "没有存档的收藏。",
+    "no_collections_yet": "还没有收藏",
+    "no_shared_collections": "没有共享的收藏。",
+    "shared_collections": "共享收藏"
   },
   "notes": {
     "add_a_link": "添加链接",
@@ -505,7 +558,15 @@
     "clear_marker": "清除标记",
     "map_options": "地图选项",
     "show_visited_regions": "显示访问过的地区",
-    "view_details": "查看详情"
+    "view_details": "查看详情",
+    "adventure_stats": "冒险统计",
+    "adventures_shown": "展示的冒险",
+    "completion": "完成",
+    "display_options": "显示选项",
+    "map_controls": "地图控件",
+    "marker_placed_on_map": "放置在地图上的标记",
+    "place_marker_desc": "单击地图以放置标记，或在没有位置的情况下添加冒险。",
+    "regions": "地区"
   },
   "languages": {},
   "share": {
@@ -525,7 +586,15 @@
     "user_stats": "用户统计",
     "visited_countries": "访问过的国家",
     "visited_regions": "访问过的地区",
-    "visited_cities": "访问过的城市"
+    "visited_cities": "访问过的城市",
+    "discovered": "发现",
+    "explored": "探索",
+    "no_shared_adventures": "该用户尚未分享任何公共冒险。",
+    "no_shared_collections": "该用户尚未共享任何公共收藏。",
+    "planned_trips": "计划的旅行",
+    "public_adventure_experiences": "公共冒险经验",
+    "travel_statistics": "旅行统计",
+    "your_journey_at_a_glance": "您一眼的冒险之旅"
   },
   "categories": {
     "category_name": "类别名称",
@@ -535,7 +604,8 @@
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
     "update_after_refresh": "刷新页面后，冒险卡将更新。",
-    "add_new_category": "添加新类别"
+    "add_new_category": "添加新类别",
+    "name_required": "需要类别名称"
   },
   "dashboard": {
     "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",
@@ -545,7 +615,12 @@
     "total_adventures": "冒险总数",
     "total_visited_regions": "已访问地区数量",
     "welcome_back": "欢迎回来",
-    "total_visited_cities": "已访问城市数量"
+    "total_visited_cities": "已访问城市数量",
+    "document_some_adventures": "开始记录您的旅行并构建您的个人冒险地图！",
+    "view_all": "查看全部",
+    "welcome_text_1": "你去过",
+    "welcome_text_2": "到目前为止的冒险",
+    "welcome_text_3": "继续探索和记录您的旅行！"
   },
   "immich": {
     "api_key": "Immich API 密钥",

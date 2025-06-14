@@ -197,13 +197,14 @@
 									<Compass class="w-8 h-8 text-primary" />
 								</div>
 								<div>
-									<h1
-										class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-									>
+									<h1 class="text-3xl font-bold bg-clip-text text-primary">
 										{$t('navbar.my_adventures')}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{count} adventures • {getVisitedCount()} visited • {getPlannedCount()} planned
+										{count}
+										{$t('navbar.adventures')} • {getVisitedCount()}
+										{$t('adventures.visited')} • {getPlannedCount()}
+										{$t('adventures.planned')}
 									</p>
 								</div>
 							</div>
@@ -216,14 +217,14 @@
 									<div class="stat-figure text-primary">
 										<Eye class="w-5 h-5" />
 									</div>
-									<div class="stat-title text-xs">Visited</div>
+									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg">{getVisitedCount()}</div>
 								</div>
 								<div class="stat py-2 px-4">
 									<div class="stat-figure text-secondary">
 										<Calendar class="w-5 h-5" />
 									</div>
-									<div class="stat-title text-xs">Planned</div>
+									<div class="stat-title text-xs">{$t('adventures.planned')}</div>
 									<div class="stat-value text-lg">{getPlannedCount()}</div>
 								</div>
 							</div>
@@ -239,10 +240,11 @@
 						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
 							<Compass class="w-16 h-16 text-base-content/30" />
 						</div>
-						<h3 class="text-xl font-semibold text-base-content/70 mb-2">No adventures yet</h3>
+						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
+							{$t('adventures.no_adventures_found')}
+						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
-							Start documenting your adventures and planning new ones. Every journey has a story
-							worth telling.
+							{$t('adventures.no_adventures_message')}
 						</p>
 						<button
 							class="btn btn-primary btn-wide mt-6 gap-2"
@@ -252,7 +254,7 @@
 							}}
 						>
 							<Plus class="w-5 h-5" />
-							Create Adventure
+							{$t('adventures.create_adventure')}
 						</button>
 					</div>
 				{:else}
@@ -301,7 +303,7 @@
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Filter class="w-6 h-6 text-primary" />
 						</div>
-						<h2 class="text-xl font-bold">Filters & Sort</h2>
+						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
 					<!-- Filters Form -->
@@ -332,6 +334,7 @@
 
 							<div class="space-y-4">
 								<div>
+									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label class="label">
 										<span class="label-text font-medium">{$t('adventures.order_direction')}</span>
 									</label>
@@ -358,6 +361,7 @@
 								</div>
 
 								<div>
+									<!-- svelte-ignore a11y-label-has-associated-control -->
 									<label class="label">
 										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 									</label>
@@ -491,12 +495,10 @@
 				<Plus class="w-8 h-8" />
 			</div>
 			<ul
-				tabindex="0"
 				class="dropdown-content z-[40] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
 			>
 				<div class="text-center mb-4">
 					<h3 class="font-bold text-lg">{$t('adventures.create_new')}</h3>
-					<p class="text-sm text-base-content/60">Document your journey</p>
 				</div>
 				<button
 					class="btn btn-primary gap-2 w-full"

@@ -175,8 +175,8 @@
 		{#if stats}
 			<div class="content-section mb-16">
 				<div class="text-center mb-8">
-					<h2 class="text-3xl font-bold mb-2">Travel Statistics</h2>
-					<p class="text-base-content/60">Your adventure journey at a glance</p>
+					<h2 class="text-3xl font-bold mb-2">{$t('profile.travel_statistics')}</h2>
+					<p class="text-base-content/60">{$t('profile.your_journey_at_a_glance')}</p>
 				</div>
 
 				<!-- Primary Stats Grid -->
@@ -215,7 +215,7 @@
 										{$t('navbar.collections')}
 									</div>
 									<div class="text-4xl font-bold text-secondary">{stats.trips_count}</div>
-									<div class="text-secondary/60 mt-2">Curated trips</div>
+									<div class="text-secondary/60 mt-2">{$t('profile.planned_trips')}</div>
 								</div>
 								<div class="p-4 bg-secondary/20 rounded-2xl">
 									<CollectionIcon class="w-8 h-8 text-secondary" />
@@ -237,7 +237,7 @@
 									<div class="text-4xl font-bold text-success">{stats.visited_country_count}</div>
 									<div class="text-success/60 mt-2">
 										<div class="flex items-center justify-between mb-1">
-											<span>{worldExplorationPercentage}% of world</span>
+											<span>{worldExplorationPercentage}% {$t('home.of_world')}</span>
 											<span class="text-xs"
 												>{stats.visited_country_count}/{stats.total_countries}</span
 											>
@@ -272,7 +272,7 @@
 									<div class="text-3xl font-bold text-info">{stats.visited_region_count}</div>
 									<div class="text-info/60 mt-2">
 										<div class="flex items-center justify-between mb-1">
-											<span>{regionExplorationPercentage}% explored</span>
+											<span>{regionExplorationPercentage}% {$t('profile.explored')}</span>
 											<span class="text-xs">{stats.visited_region_count}/{stats.total_regions}</span
 											>
 										</div>
@@ -303,7 +303,7 @@
 									<div class="text-3xl font-bold text-warning">{stats.visited_city_count}</div>
 									<div class="text-warning/60 mt-2">
 										<div class="flex items-center justify-between mb-1">
-											<span>{cityExplorationPercentage}% discovered</span>
+											<span>{cityExplorationPercentage}% {$t('profile.discovered')}</span>
 											<span class="text-xs">{stats.visited_city_count}/{stats.total_cities}</span>
 										</div>
 										<progress
@@ -332,13 +332,13 @@
 					</div>
 					<div>
 						<h2 class="text-3xl font-bold">{$t('auth.user_adventures')}</h2>
-						<p class="text-base-content/60">Public adventure experiences</p>
+						<p class="text-base-content/60">{$t('profile.public_adventure_experiences')}</p>
 					</div>
 				</div>
 				{#if adventures && adventures.length > 0}
 					<div class="badge badge-primary badge-lg">
 						{adventures.length}
-						{adventures.length === 1 ? 'Adventure' : 'Adventures'}
+						{adventures.length === 1 ? $t('adventures.adventure') : $t('navbar.adventures')}
 					</div>
 				{/if}
 			</div>
@@ -352,7 +352,7 @@
 						<h3 class="text-xl font-bold text-base-content/70 mb-2">
 							{$t('auth.no_public_adventures')}
 						</h3>
-						<p class="text-base-content/50">This user hasn't shared any public adventures yet.</p>
+						<p class="text-base-content/50">{$t('profile.no_shared_adventures')}</p>
 					</div>
 				</div>
 			{:else}
@@ -375,13 +375,13 @@
 					</div>
 					<div>
 						<h2 class="text-3xl font-bold">{$t('auth.user_collections')}</h2>
-						<p class="text-base-content/60">Curated travel collections</p>
+						<p class="text-base-content/60">{$t('profile.planned_trips')}</p>
 					</div>
 				</div>
 				{#if collections && collections.length > 0}
 					<div class="badge badge-secondary badge-lg">
 						{collections.length}
-						{collections.length === 1 ? 'Collection' : 'Collections'}
+						{collections.length === 1 ? $t('adventures.collection') : $t('navbar.collections')}
 					</div>
 				{/if}
 			</div>
@@ -395,7 +395,7 @@
 						<h3 class="text-xl font-bold text-base-content/70 mb-2">
 							{$t('auth.no_public_collections')}
 						</h3>
-						<p class="text-base-content/50">This user hasn't shared any public collections yet.</p>
+						<p class="text-base-content/50">{$t('profile.no_shared_collections')}</p>
 					</div>
 				</div>
 			{:else}

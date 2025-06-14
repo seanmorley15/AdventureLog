@@ -201,18 +201,16 @@
 									<CollectionIcon class="w-8 h-8 text-primary" />
 								</div>
 								<div>
-									<h1
-										class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-									>
+									<h1 class="text-3xl font-bold bg-clip-text text-primary">
 										{$t(`adventures.my_collections`)}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{currentCount}
 										{activeView === 'owned'
-											? 'collections'
+											? $t('navbar.collections')
 											: activeView === 'shared'
-												? 'shared collections'
-												: 'archived collections'}
+												? $t('collection.shared_collections')
+												: $t('adventures.archived_collections')}
 									</p>
 								</div>
 							</div>
@@ -225,7 +223,7 @@
 								on:click={() => switchView('owned')}
 							>
 								<CollectionIcon class="w-4 h-4" />
-								<span class="hidden sm:inline">My Collections</span>
+								<span class="hidden sm:inline">{$t('adventures.my_collections')}</span>
 								<div
 									class="badge badge-sm {activeView === 'owned' ? 'badge-primary' : 'badge-ghost'}"
 								>
@@ -237,7 +235,7 @@
 								on:click={() => switchView('shared')}
 							>
 								<Share class="w-4 h-4" />
-								<span class="hidden sm:inline">Shared</span>
+								<span class="hidden sm:inline">{$t('share.shared')}</span>
 								<div
 									class="badge badge-sm {activeView === 'shared' ? 'badge-primary' : 'badge-ghost'}"
 								>
@@ -249,7 +247,7 @@
 								on:click={() => switchView('archived')}
 							>
 								<Archive class="w-4 h-4" />
-								<span class="hidden sm:inline">Archived</span>
+								<span class="hidden sm:inline">{$t('adventures.archived')}</span>
 								<div
 									class="badge badge-sm {activeView === 'archived'
 										? 'badge-primary'
@@ -278,17 +276,17 @@
 						</div>
 						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
 							{activeView === 'owned'
-								? 'No collections yet'
+								? $t('collection.no_collections_yet')
 								: activeView === 'shared'
-									? 'No shared collections.'
-									: 'No archived collections'}
+									? $t('collection.no_shared_collections')
+									: $t('collection.no_archived_collections')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{activeView === 'owned'
-								? 'Create your first collection to organize your adventures and memories.'
+								? $t('collection.create_first')
 								: activeView === 'shared'
-									? 'Make sure your profile is public so others can share with you.'
-									: 'Archived collections will appear here.'}
+									? $t('collection.make_sure_public')
+									: $t('collection.archived_appear_here')}
 						</p>
 						{#if activeView === 'owned'}
 							<button
@@ -300,7 +298,7 @@
 								}}
 							>
 								<Plus class="w-5 h-5" />
-								Create Collection
+								{$t('collection.create')}
 							</button>
 						{/if}
 					</div>
@@ -353,7 +351,7 @@
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Sort class="w-6 h-6 text-primary" />
 						</div>
-						<h2 class="text-xl font-bold">Filters & Sort</h2>
+						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
 					<!-- Sort Form - Updated to use URL navigation -->
@@ -365,6 +363,7 @@
 
 						<div class="space-y-4">
 							<div>
+								<!-- svelte-ignore a11y-label-has-associated-control -->
 								<label class="label">
 									<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
 								</label>
@@ -389,6 +388,7 @@
 							</div>
 
 							<div>
+								<!-- svelte-ignore a11y-label-has-associated-control -->
 								<label class="label">
 									<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 								</label>
@@ -427,18 +427,6 @@
 							</div>
 						</div>
 					</div>
-
-					<!-- Quick Actions -->
-					<!-- <div class="space-y-3 mt-6">
-						<button
-							type="button"
-							class="btn btn-outline w-full gap-2"
-							on:click={() => switchView('archived')}
-						>
-							<Archive class="w-4 h-4" />
-							{$t(`adventures.archived_collections`)}
-						</button>
-					</div> -->
 				</div>
 			</div>
 		</div>
@@ -456,12 +444,10 @@
 					<Plus class="w-8 h-8" />
 				</div>
 				<ul
-					tabindex="0"
 					class="dropdown-content z-[1] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
 				>
 					<div class="text-center mb-4">
 						<h3 class="font-bold text-lg">{$t(`adventures.create_new`)}</h3>
-						<p class="text-sm text-base-content/60">Choose what to create</p>
 					</div>
 					<button
 						class="btn btn-primary gap-2 w-full"

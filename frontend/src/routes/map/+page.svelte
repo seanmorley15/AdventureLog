@@ -122,13 +122,14 @@
 									<MapIcon class="w-8 h-8 text-primary" />
 								</div>
 								<div>
-									<h1
-										class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-									>
+									<h1 class="text-3xl font-bold bg-clip-text text-primary">
 										{$t('map.adventure_map')}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredAdventures.length} of {totalAdventures} adventures shown
+										{filteredAdventures.length}
+										{$t('worldtravel.of')}
+										{totalAdventures}
+										{$t('map.adventures_shown')}
 									</p>
 								</div>
 							</div>
@@ -138,11 +139,11 @@
 						<div class="hidden md:flex items-center gap-2">
 							<div class="stats stats-horizontal bg-base-100 shadow-lg">
 								<div class="stat py-2 px-4">
-									<div class="stat-title text-xs">Visited</div>
+									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedAdventures}</div>
 								</div>
 								<div class="stat py-2 px-4">
-									<div class="stat-title text-xs">Planned</div>
+									<div class="stat-title text-xs">{$t('adventures.planned')}</div>
 									<div class="stat-value text-lg text-info">{plannedAdventures}</div>
 								</div>
 							</div>
@@ -190,7 +191,7 @@
 								{#if adventure.latitude && adventure.longitude}
 									<Marker
 										lngLat={[adventure.longitude, adventure.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer transition-transform hover:scale-110 {adventure.is_visited
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer  hover:scale-110 {adventure.is_visited
 											? 'bg-red-300 hover:bg-red-400'
 											: 'bg-blue-300 hover:bg-blue-400'} text-black focus:outline-6 focus:outline-black"
 										on:click={togglePopup}
@@ -318,43 +319,42 @@
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Filter class="w-6 h-6 text-primary" />
 						</div>
-						<h2 class="text-xl font-bold">Map Controls</h2>
+						<h2 class="text-xl font-bold">{$t('map.map_controls')}</h2>
 					</div>
 
 					<!-- Adventure Statistics -->
 					<div class="card bg-base-200/50 p-4 mb-6">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<MapIcon class="w-5 h-5" />
-							Adventure Stats
+							{$t('map.adventure_stats')}
 						</h3>
 
 						<div class="space-y-4">
 							<div class="stat p-0">
-								<div class="stat-title text-sm">Total Adventures</div>
+								<div class="stat-title text-sm">{$t('dashboard.total_adventures')}</div>
 								<div class="stat-value text-2xl">{totalAdventures}</div>
-								<div class="stat-desc">Across all locations</div>
 							</div>
 
 							<div class="grid grid-cols-2 gap-4">
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Visited</div>
+									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedAdventures}</div>
 								</div>
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Planned</div>
+									<div class="stat-title text-xs">{$t('adventures.planned')}</div>
 									<div class="stat-value text-lg text-info">{plannedAdventures}</div>
 								</div>
 							</div>
 
 							<div class="stat p-0">
-								<div class="stat-title text-xs">Regions</div>
+								<div class="stat-title text-xs">{$t('map.regions')}</div>
 								<div class="stat-value text-lg text-accent">{totalRegions}</div>
 							</div>
 
 							<!-- Progress Bar -->
 							<div class="space-y-2">
 								<div class="flex justify-between text-sm">
-									<span>Completion</span>
+									<span>{$t('map.completion')}</span>
 									<span>{Math.round((visitedAdventures / totalAdventures) * 100)}%</span>
 								</div>
 								<progress
@@ -370,7 +370,7 @@
 					<div class="card bg-base-200/50 p-4 mb-6">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Eye class="w-5 h-5" />
-							Display Options
+							{$t('map.display_options')}
 						</h3>
 
 						<div class="space-y-3">
@@ -423,7 +423,7 @@
 							<div class="space-y-3">
 								<div class="alert alert-info">
 									<Pin class="w-4 h-4" />
-									<span class="text-sm">Marker placed on map</span>
+									<span class="text-sm">{$t('map.marker_placed_on_map')}</span>
 								</div>
 								<button type="button" class="btn btn-primary w-full gap-2" on:click={newAdventure}>
 									<Plus class="w-4 h-4" />
@@ -437,7 +437,7 @@
 						{:else}
 							<div class="space-y-3">
 								<p class="text-sm text-base-content/60">
-									Click on the map to place a marker, or add an adventure without location.
+									{$t('map.place_marker_desc')}
 								</p>
 								<button
 									type="button"

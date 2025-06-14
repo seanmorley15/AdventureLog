@@ -178,7 +178,6 @@
     "no_location_found": "Ingen plats hittades",
     "note_delete_confirm": "Är du säker på att du vill ta bort den här anteckningen? \nDenna åtgärd kan inte ångras.",
     "out_of_range": "Inte inom resplanens datumintervall",
-    "show_region_labels": "Visa regionetiketter",
     "start": "Start",
     "starting_airport": "Startar flygplats",
     "to": "Till",
@@ -233,7 +232,11 @@
     "itinerary": "Resväg",
     "joined": "Gick med i",
     "view_profile": "Visa profil",
-    "share_collection": "Dela denna samling!"
+    "share_collection": "Dela denna samling!",
+    "filters_and_sort": "Filter",
+    "filters_and_stats": "Filter",
+    "no_adventures_message": "Börja dokumentera dina äventyr och planera nya. \nVarje resa har en historia som är värd att berätta.",
+    "travel_progress": "Reseframsteg"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -247,7 +250,11 @@
     "go_to": "Gå till AdventureLog",
     "hero_1": "Upptäck världens mest spännande äventyr",
     "hero_2": "Upptäck och planera ditt nästa äventyr med AdventureLog. \nUtforska hisnande destinationer, skapa anpassade resplaner och håll kontakten när du är på språng.",
-    "key_features": "Viktiga funktioner"
+    "key_features": "Viktiga funktioner",
+    "explore_world": "Utforska världen",
+    "latest_travel_experiences": "Dina senaste reseupplevelser",
+    "of_world": "av världen",
+    "start_your_journey": "Börja din resa"
   },
   "navbar": {
     "about": "Om AdventureLog",
@@ -263,7 +270,17 @@
     "settings": "Inställningar",
     "shared_with_me": "Delade med mig",
     "theme_selection": "Tema",
-    "themes": {},
+    "themes": {
+      "aestheticDark": "Estetisk mörk",
+      "aestheticLight": "Estetisk ljus",
+      "aqua": "Vatten",
+      "dark": "Mörk",
+      "dim": "Dämpa",
+      "forest": "Skog",
+      "light": "Ljus",
+      "night": "Natt",
+      "northernLights": "Norrsken"
+    },
     "users": "Användare",
     "worldtravel": "Världsresor",
     "my_tags": "Mina taggar",
@@ -293,7 +310,36 @@
     "removed": "tas bort",
     "view_cities": "Visa städer",
     "visit_remove_failed": "Det gick inte att ta bort besöket",
-    "visit_to": "Besök till"
+    "visit_to": "Besök till",
+    "all_regions": "Alla regioner",
+    "available_to_explore": "Finns att utforska",
+    "cities_in": "Städer i",
+    "clear_all": "Rensar alla",
+    "clear_all_filters": "Rensa alla filter",
+    "clear_filters": "Tydliga filter",
+    "complete": "Komplett",
+    "countries": "länder",
+    "country_completed": "Landets slutfört",
+    "filter_by": "Filtrera förbi",
+    "filter_by_region": "Filtrera efter region",
+    "hide_map": "Dölj karta",
+    "hide_map_labels": "Dölj kartetiketter",
+    "interactive_map": "Interaktiv karta",
+    "no_countries_found_desc": "Försök att justera dina söktermer eller filter för att hitta de länder du letar efter.",
+    "no_country_data_available": "Inga landsdata tillgängliga",
+    "no_country_data_available_desc": "Kontrollera dokumentationen för att uppdatera regiondata.",
+    "no_regions_found": "Inga regioner hittades",
+    "of": "av",
+    "partial": "Partiell",
+    "progress": "Framsteg",
+    "progress_and_stats": "Framsteg",
+    "region_completed": "Region slutförd",
+    "remaining": "Återstående",
+    "show_map": "Showkarta",
+    "show_map_labels": "Visa kartetiketter",
+    "total_cities": "Totala städer",
+    "total_countries": "Totala länder",
+    "total_regions": "Totala regioner"
   },
   "auth": {
     "confirm_password": "Bekräfta lösenord",
@@ -453,7 +499,14 @@
     "error_editing_collection": "Ett fel uppstod vid redigering av samling",
     "new_collection": "Ny samling",
     "public_collection": "Offentlig samling",
-    "manage_collections": "Hantera samlingar"
+    "manage_collections": "Hantera samlingar",
+    "archived_appear_here": "Arkiverade samlingar kommer att visas här.",
+    "create_first": "Skapa din första samling för att organisera dina äventyr och minnen.",
+    "make_sure_public": "Se till att din profil är offentlig så att andra kan dela med dig.",
+    "no_archived_collections": "Inga arkiverade samlingar.",
+    "no_collections_yet": "Inga samlingar än",
+    "no_shared_collections": "Inga delade samlingar.",
+    "shared_collections": "Delade samlingar"
   },
   "notes": {
     "add_a_link": "Lägg till en länk",
@@ -505,7 +558,15 @@
     "clear_marker": "Rensa markör",
     "map_options": "Kartalternativ",
     "show_visited_regions": "Visa besökta regioner",
-    "view_details": "Visa detaljer"
+    "view_details": "Visa detaljer",
+    "adventure_stats": "Äventyrsstatistik",
+    "adventures_shown": "Äventyr visas",
+    "completion": "Komplettering",
+    "display_options": "Visningsalternativ",
+    "map_controls": "Kartkontroller",
+    "marker_placed_on_map": "Markör placerad på kartan",
+    "place_marker_desc": "Klicka på kartan för att placera en markör, eller lägg till ett äventyr utan plats.",
+    "regions": "Regioner"
   },
   "languages": {},
   "share": {
@@ -525,7 +586,15 @@
     "user_stats": "Användarstatistik",
     "visited_countries": "Besökta länder",
     "visited_regions": "Besökta regioner",
-    "visited_cities": "Besökte städer"
+    "visited_cities": "Besökte städer",
+    "discovered": "upptäckt",
+    "explored": "utforskad",
+    "no_shared_adventures": "Den här användaren har inte delat några offentliga äventyr än.",
+    "no_shared_collections": "Den här användaren har inte delat några offentliga samlingar än.",
+    "planned_trips": "Planerade resor",
+    "public_adventure_experiences": "Allmänt äventyrsupplevelser",
+    "travel_statistics": "Resestatistik",
+    "your_journey_at_a_glance": "Din äventyrsresa med en överblick"
   },
   "categories": {
     "category_name": "Kategorinamn",
@@ -535,7 +604,8 @@
     "no_categories_found": "Inga kategorier hittades.",
     "select_category": "Välj Kategori",
     "update_after_refresh": "Äventyrskorten kommer att uppdateras när du uppdaterar sidan.",
-    "add_new_category": "Lägg till en ny kategori"
+    "add_new_category": "Lägg till en ny kategori",
+    "name_required": "Kategorinamn krävs"
   },
   "dashboard": {
     "add_some": "Varför inte börja planera ditt nästa äventyr? \nDu kan lägga till ett nytt äventyr genom att klicka på knappen nedan.",
@@ -545,7 +615,12 @@
     "total_adventures": "Totala äventyr",
     "total_visited_regions": "Totalt antal besökta regioner",
     "welcome_back": "Välkommen tillbaka",
-    "total_visited_cities": "Totalt antal besökta städer"
+    "total_visited_cities": "Totalt antal besökta städer",
+    "document_some_adventures": "Börja dokumentera dina resor och bygga din personliga äventyrskarta!",
+    "view_all": "Se alla",
+    "welcome_text_1": "Du har varit på",
+    "welcome_text_2": "Äventyr hittills",
+    "welcome_text_3": "Fortsätt utforska och dokumentera dina resor!"
   },
   "immich": {
     "api_key": "Immich API-nyckel",

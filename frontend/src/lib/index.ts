@@ -450,6 +450,7 @@ export function findFirstValue(obj: any): any {
 export let themes = [
 	{ name: 'light', label: 'Light' },
 	{ name: 'dark', label: 'Dark' },
+	{ name: 'dim', label: 'Dim' },
 	{ name: 'night', label: 'Night' },
 	{ name: 'forest', label: 'Forest' },
 	{ name: 'aqua', label: 'Aqua' },
@@ -594,7 +595,8 @@ export function getIsDarkMode() {
 			theme === 'night' ||
 			theme === 'aestheticDark' ||
 			theme === 'northernLights' ||
-			theme === 'forest';
+			theme === 'forest' ||
+			theme === 'dim';
 		return isDark;
 	}
 

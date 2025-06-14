@@ -25,5 +25,16 @@
     "backend/server/backend/lib/python3.12/site-packages/django/contrib/sites/locale",
     "backend/server/backend/lib/python3.12/site-packages/rest_framework/templates/rest_framework/docs/langs"
   ],
-  "i18n-ally.keystyle": "nested"
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.keysInUse": [
+    "navbar.themes.dim",
+    "navbar.themes.northernLights",
+    "navbar.themes.aqua",
+    "navbar.themes.aestheticDark",
+    "navbar.themes.aestheticLight",
+    "navbar.themes.forest",
+    "navbar.themes.night",
+    "navbar.themes.dark",
+    "navbar.themes.light"
+  ]
 }

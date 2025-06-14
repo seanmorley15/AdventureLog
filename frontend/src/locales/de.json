@@ -178,7 +178,6 @@
     "no_location_found": "Keinen Standort gefunden",
     "note_delete_confirm": "Sind Sie sicher, dass Sie diese Notiz löschen möchten? \nDies kann nicht rückgängig gemacht werden!",
     "out_of_range": "Außerhalb des geplanten Reisezeitraums",
-    "show_region_labels": "Regionsbeschriftungen anzeigen",
     "start": "Start",
     "starting_airport": "Startflughafen",
     "to": "Nach",
@@ -233,7 +232,11 @@
     "itinerary": "Route",
     "joined": "Verbunden",
     "view_profile": "Profil anzeigen",
-    "share_collection": "Teilen Sie diese Sammlung!"
+    "share_collection": "Teilen Sie diese Sammlung!",
+    "filters_and_sort": "Filter",
+    "filters_and_stats": "Filter",
+    "no_adventures_message": "Dokumentieren Sie Ihre Abenteuer und planen Sie neue. \nJede Reise hat eine Geschichte, die es wert ist, erzählt zu werden.",
+    "travel_progress": "Reisefortschritt"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -247,7 +250,11 @@
     "hero_1": "Entdecken Sie die aufregendsten Abenteuer der Welt",
     "hero_2": "Entdecken und planen Sie Ihr nächstes Abenteuer mit AdventureLog. Erkunden Sie atemberaubende Reiseziele, erstellen Sie individuelle Reisepläne und bleiben Sie unterwegs stets verbunden.",
     "key_features": "Hauptmerkmale",
-    "feature_2_desc": "Erstellen Sie mühelos individuelle Reisepläne und erhalten Sie eine detaillierte Tagesübersicht Ihrer Reise."
+    "feature_2_desc": "Erstellen Sie mühelos individuelle Reisepläne und erhalten Sie eine detaillierte Tagesübersicht Ihrer Reise.",
+    "explore_world": "Welt erkunden",
+    "latest_travel_experiences": "Ihre neuesten Reiseerlebnisse",
+    "of_world": "der Welt",
+    "start_your_journey": "Beginnen Sie Ihre Reise"
   },
   "navbar": {
     "about": "Über AdventureLog",
@@ -263,7 +270,17 @@
     "settings": "Einstellungen",
     "shared_with_me": "Mit mir geteilt",
     "theme_selection": "Design",
-    "themes": {},
+    "themes": {
+      "aestheticDark": "Ästhetische Dunkelheit",
+      "aestheticLight": "Ästhetisches Licht",
+      "aqua": "Aqua",
+      "dark": "Dunkel",
+      "dim": "Düster",
+      "forest": "Wald",
+      "light": "Licht",
+      "night": "Nacht",
+      "northernLights": "Nordlicht"
+    },
     "users": "Benutzer",
     "worldtravel": "Weltreisen",
     "my_tags": "Meine Schlagworte",
@@ -318,7 +335,36 @@
     "removed": "entfernt",
     "view_cities": "Städte anzeigen",
     "visit_remove_failed": "Der Besuch konnte nicht entfernt werden",
-    "visit_to": "Besuch von"
+    "visit_to": "Besuch von",
+    "all_regions": "Alle Regionen",
+    "available_to_explore": "Verfügbar zum Erkunden",
+    "cities_in": "Städte in",
+    "clear_all": "Alle klar",
+    "clear_all_filters": "Alle Filter löschen",
+    "clear_filters": "Klare Filter",
+    "complete": "Vollständig",
+    "countries": "Länder",
+    "country_completed": "Land abgeschlossen",
+    "filter_by": "Filter von",
+    "filter_by_region": "Filter nach Region",
+    "hide_map": "Karte verbergen",
+    "hide_map_labels": "Kartenbezeichnungen ausblenden",
+    "interactive_map": "Interaktive Karte",
+    "no_countries_found_desc": "Stellen Sie Ihre Suchbegriffe oder -filter an, um die Länder zu finden, nach denen Sie suchen.",
+    "no_country_data_available": "Keine Länderdaten verfügbar",
+    "no_country_data_available_desc": "Bitte überprüfen Sie die Dokumentation zur Aktualisierung der Region Daten.",
+    "no_regions_found": "Keine Regionen gefunden",
+    "of": "von",
+    "partial": "Teilweise",
+    "progress": "Fortschritt",
+    "progress_and_stats": "Fortschritt",
+    "region_completed": "Region abgeschlossen",
+    "remaining": "Übrig",
+    "show_map": "Karte anzeigen",
+    "show_map_labels": "Kartenbezeichnungen anzeigen",
+    "total_cities": "Gesamtstädte",
+    "total_countries": "Gesamtländer",
+    "total_regions": "Gesamtregionen"
   },
   "settings": {
     "account_settings": "Benutzerkonto",
@@ -453,7 +499,14 @@
     "error_editing_collection": "Fehler beim Bearbeiten der Sammlung",
     "new_collection": "Neue Sammlung",
     "public_collection": "Öffentliche Sammlung",
-    "manage_collections": "Sammlungen verwalten"
+    "manage_collections": "Sammlungen verwalten",
+    "archived_appear_here": "Archivierte Sammlungen werden hier erscheinen.",
+    "create_first": "Erstellen Sie Ihre erste Sammlung, um Ihre Abenteuer und Erinnerungen zu organisieren.",
+    "make_sure_public": "Stellen Sie sicher, dass Ihr Profil öffentlich ist, damit andere mit Ihnen teilen können.",
+    "no_archived_collections": "Keine archivierten Sammlungen.",
+    "no_collections_yet": "Noch keine Sammlungen",
+    "no_shared_collections": "Keine gemeinsamen Sammlungen.",
+    "shared_collections": "Gemeinsame Sammlungen"
   },
   "notes": {
     "add_a_link": "Fügen Sie einen Link hinzu",
@@ -505,7 +558,15 @@
     "clear_marker": "Markierung löschen",
     "map_options": "Kartenoptionen",
     "show_visited_regions": "Besuchte Regionen anzeigen",
-    "view_details": "Details anzeigen"
+    "view_details": "Details anzeigen",
+    "adventure_stats": "Abenteuerstatistiken",
+    "adventures_shown": "Abenteuer gezeigt",
+    "completion": "Fertigstellung",
+    "display_options": "Anzeigenoptionen",
+    "map_controls": "Kartensteuerungen",
+    "marker_placed_on_map": "Marker auf der Karte platziert",
+    "place_marker_desc": "Klicken Sie auf die Karte, um einen Marker zu platzieren, oder fügen Sie ein Abenteuer ohne Ort hinzu.",
+    "regions": "Regionen"
   },
   "languages": {},
   "share": {
@@ -525,7 +586,15 @@
     "user_stats": "Benutzerstatistiken",
     "visited_countries": "Besuchte Länder",
     "visited_regions": "Besuchte Regionen",
-    "visited_cities": "Besuchte Städte"
+    "visited_cities": "Besuchte Städte",
+    "discovered": "entdeckt",
+    "explored": "erkundet",
+    "no_shared_adventures": "Dieser Benutzer hat noch keine öffentlichen Abenteuer geteilt.",
+    "no_shared_collections": "Dieser Benutzer hat noch keine öffentlichen Sammlungen geteilt.",
+    "planned_trips": "Geplante Reisen",
+    "public_adventure_experiences": "Öffentliche Abenteuererlebnisse",
+    "travel_statistics": "Reisestatistik",
+    "your_journey_at_a_glance": "Ihre Abenteuerreise auf einen Blick"
   },
   "categories": {
     "category_name": "Kategoriename",
@@ -535,7 +604,8 @@
     "no_categories_found": "Keine Kategorien gefunden.",
     "select_category": "Kategorie wählen",
     "update_after_refresh": "Die Abenteuerkarten werden aktualisiert, sobald Sie die Seite aktualisieren.",
-    "add_new_category": "Neue Kategorie hinzufügen"
+    "add_new_category": "Neue Kategorie hinzufügen",
+    "name_required": "Der Kategorienname ist erforderlich"
   },
   "dashboard": {
     "add_some": "Warum nicht gleich Ihr nächstes Abenteuer planen? Sie können ein neues Abenteuer hinzufügen, indem Sie auf den Button unten klicken.",
@@ -545,7 +615,12 @@
     "total_adventures": "Abenteuer insgesamt",
     "total_visited_regions": "Insgesamt besuchte Regionen",
     "welcome_back": "Willkommen zurück",
-    "total_visited_cities": "Insgesamt besuchte Städte"
+    "total_visited_cities": "Insgesamt besuchte Städte",
+    "document_some_adventures": "Dokumentieren Sie Ihre Reisen und bauen Sie Ihre persönliche Abenteuerkarte auf!",
+    "view_all": "Alle anzeigen",
+    "welcome_text_1": "Du warst dran",
+    "welcome_text_2": "Abenteuer bisher",
+    "welcome_text_3": "Erkunden und dokumentieren Sie Ihre Reisen!"
   },
   "immich": {
     "api_key": "Immich-API-Schlüssel",

@@ -177,7 +177,6 @@
     "no_location_found": "Geen locatie gevonden",
     "note_delete_confirm": "Weet u zeker dat u deze notitie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "out_of_range": "Niet binnen het datumbereik van het reisplan",
-    "show_region_labels": "Toon regiolabels",
     "start": "Begin",
     "starting_airport": "Luchthaven van vertrek",
     "to": "Naar",
@@ -233,7 +232,11 @@
     "itinerary": "Routebeschrijving",
     "joined": "Samengevoegd",
     "view_profile": "Bekijk profiel",
-    "share_collection": "Deel deze collectie!"
+    "share_collection": "Deel deze collectie!",
+    "filters_and_sort": "Filters",
+    "filters_and_stats": "Filters",
+    "no_adventures_message": "Begin met het documenteren van uw avonturen en het plannen van nieuwe. \nElke reis heeft een verhaal dat het vertellen waard is.",
+    "travel_progress": "Reisvoortgang"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -247,7 +250,11 @@
     "go_to": "Ga naar AdventureLog",
     "hero_2": "Ontdek en plan je volgende avontuur met AdventureLog. \nOntdek adembenemende bestemmingen, maak aangepaste reisroutes en blijf onderweg verbonden.",
     "hero_1": "ontdek 's werelds meest opwindende avonturen",
-    "key_features": "Belangrijkste kenmerken"
+    "key_features": "Belangrijkste kenmerken",
+    "explore_world": "Verken de wereld",
+    "latest_travel_experiences": "Uw nieuwste reiservaringen",
+    "of_world": "van de wereld",
+    "start_your_journey": "Begin uw reis"
   },
   "navbar": {
     "about": "Over AdventureLog",
@@ -263,7 +270,17 @@
     "settings": "Instellingen",
     "shared_with_me": "Gedeeld met mij",
     "theme_selection": "Thema selectie",
-    "themes": {},
+    "themes": {
+      "aestheticDark": "Esthetisch donker",
+      "aestheticLight": "Esthetisch licht",
+      "aqua": "Aqua",
+      "dark": "Donker",
+      "dim": "Vaag",
+      "forest": "Woud",
+      "light": "Licht",
+      "night": "Nacht",
+      "northernLights": "Noorderlicht"
+    },
     "users": "Gebruikers",
     "worldtravel": "Wereldreizen",
     "my_tags": "Mijn labels",
@@ -318,7 +335,36 @@
     "removed": "verwijderd",
     "view_cities": "Steden bekijken",
     "visit_remove_failed": "Kan bezoek niet verwijderen",
-    "visit_to": "Bezoek aan"
+    "visit_to": "Bezoek aan",
+    "all_regions": "Alle regio's",
+    "available_to_explore": "Beschikbaar om te verkennen",
+    "cities_in": "Steden in",
+    "clear_all": "Duidelijk alles duidelijk",
+    "clear_all_filters": "Wis alle filters",
+    "clear_filters": "Duidelijke filters duiden",
+    "complete": "Compleet",
+    "countries": "landen",
+    "country_completed": "Voltooid land",
+    "filter_by": "Filteren door",
+    "filter_by_region": "Filter per regio",
+    "hide_map": "Verberg kaart",
+    "hide_map_labels": "Verberg kaartenlabels",
+    "interactive_map": "Interactieve kaart",
+    "no_countries_found_desc": "Probeer uw zoektermen of filters aan te passen om de landen te vinden die u zoekt.",
+    "no_country_data_available": "Geen landengegevens beschikbaar",
+    "no_country_data_available_desc": "Controleer de documentatie voor het bijwerken van regiogegevens.",
+    "no_regions_found": "Geen regio's gevonden",
+    "of": "van",
+    "partial": "Gedeeltelijk",
+    "progress": "Voortgang",
+    "progress_and_stats": "Voortgang",
+    "region_completed": "Regio voltooid",
+    "remaining": "Overig",
+    "show_map": "Toon kaart",
+    "show_map_labels": "Toon kaartlabels",
+    "total_cities": "Totale steden",
+    "total_countries": "Totale landen",
+    "total_regions": "Totaal aantal regio's"
   },
   "settings": {
     "account_settings": "Gebruikersaccount instellingen",
@@ -453,7 +499,14 @@
     "error_editing_collection": "Fout bij het bewerken van de collectie",
     "new_collection": "Nieuwe collectie",
     "public_collection": "Openbare collectie",
-    "manage_collections": "Beheer collecties"
+    "manage_collections": "Beheer collecties",
+    "archived_appear_here": "Gearchiveerde collecties zullen hier verschijnen.",
+    "create_first": "Maak je eerste collectie om je avonturen en herinneringen te organiseren.",
+    "make_sure_public": "Zorg ervoor dat uw profiel openbaar is, zodat anderen met u kunnen delen.",
+    "no_archived_collections": "Geen gearchiveerde collecties.",
+    "no_collections_yet": "Nog geen collecties",
+    "no_shared_collections": "Geen gedeelde collecties.",
+    "shared_collections": "Gedeelde collecties"
   },
   "notes": {
     "add_a_link": "Voeg een link toe",
@@ -505,7 +558,15 @@
     "clear_marker": "Verwijder markeerpunt",
     "map_options": "Kaartopties",
     "show_visited_regions": "Toon bezochte regio's",
-    "view_details": "Details bekijken"
+    "view_details": "Details bekijken",
+    "adventure_stats": "Avontuurstatistieken",
+    "adventures_shown": "Avonturen getoond",
+    "completion": "Voltooiing",
+    "display_options": "Display -opties",
+    "map_controls": "Kaartbesturing",
+    "marker_placed_on_map": "Marker geplaatst op kaart",
+    "place_marker_desc": "Klik op de kaart om een ​​marker te plaatsen of voeg een avontuur toe zonder locatie.",
+    "regions": "Gebieden"
   },
   "languages": {},
   "share": {
@@ -525,7 +586,15 @@
     "user_stats": "Gebruikersstatistieken",
     "visited_countries": "Bezochte landen",
     "visited_regions": "Bezochte regio's",
-    "visited_cities": "Steden bezocht"
+    "visited_cities": "Steden bezocht",
+    "discovered": "ontdekt",
+    "explored": "onderzocht",
+    "no_shared_adventures": "Deze gebruiker heeft nog geen openbare avonturen gedeeld.",
+    "no_shared_collections": "Deze gebruiker heeft nog geen openbare collecties gedeeld.",
+    "planned_trips": "Geplande reizen",
+    "public_adventure_experiences": "Publieke avontuurlijke ervaringen",
+    "travel_statistics": "Reisstatistieken",
+    "your_journey_at_a_glance": "Je avontuurlijke reis in één oogopslag"
   },
   "categories": {
     "category_name": "Categorienaam",
@@ -535,7 +604,8 @@
     "no_categories_found": "Geen categorieën gevonden.",
     "select_category": "Selecteer een categorie",
     "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt.",
-    "add_new_category": "Voeg een nieuwe categorie toe"
+    "add_new_category": "Voeg een nieuwe categorie toe",
+    "name_required": "Categorienaam is vereist"
   },
   "dashboard": {
     "add_some": "Waarom begint u niet met het plannen van uw volgende avontuur? \nJe kunt een nieuw avontuur toevoegen door op de onderstaande knop te klikken.",
@@ -545,7 +615,12 @@
     "total_adventures": "Totale avonturen",
     "total_visited_regions": "Totaal bezochte regio's",
     "welcome_back": "Welkom terug",
-    "total_visited_cities": "Totaal bezochte steden"
+    "total_visited_cities": "Totaal bezochte steden",
+    "document_some_adventures": "Begin met het documenteren van uw reizen en bouw uw persoonlijke avontuurlijke kaart!",
+    "view_all": "Bekijk alles",
+    "welcome_text_1": "Je bent op",
+    "welcome_text_2": "Avonturen tot nu toe",
+    "welcome_text_3": "Blijf je reizen verkennen en documenteren!"
   },
   "immich": {
     "api_key": "Immich API-sleutel",

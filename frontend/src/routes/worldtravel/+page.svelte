@@ -108,13 +108,14 @@
 									<Globe class="w-8 h-8 text-primary" />
 								</div>
 								<div>
-									<h1
-										class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-									>
+									<h1 class="text-3xl font-bold text-primary bg-clip-text">
 										{$t('worldtravel.country_list')}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredCountries.length} of {totalCountries} countries
+										{filteredCountries.length}
+										{$t('worldtravel.of')}
+										{totalCountries}
+										{$t('worldtravel.countries')}
 									</p>
 								</div>
 							</div>
@@ -124,11 +125,11 @@
 						<div class="hidden md:flex items-center gap-2">
 							<div class="stats stats-horizontal bg-base-100 shadow-lg">
 								<div class="stat py-2 px-4">
-									<div class="stat-title text-xs">Visited</div>
+									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedCountries}</div>
 								</div>
 								<div class="stat py-2 px-4">
-									<div class="stat-title text-xs">Remaining</div>
+									<div class="stat-title text-xs">{$t('worldtravel.remaining')}</div>
 									<div class="stat-value text-lg text-error">{notVisitedCountries}</div>
 								</div>
 							</div>
@@ -164,45 +165,47 @@
 						>
 							{#if showMap}
 								<Map class="w-4 h-4" />
-								<span class="hidden sm:inline">Hide Map</span>
+								<span class="hidden sm:inline">{$t('worldtravel.hide_map')}</span>
 							{:else}
 								<Map class="w-4 h-4" />
-								<span class="hidden sm:inline">Show Map</span>
+								<span class="hidden sm:inline">{$t('worldtravel.show_map')}</span>
 							{/if}
 						</button>
 					</div>
 
 					<!-- Filter Chips -->
 					<div class="mt-4 flex flex-wrap items-center gap-2">
-						<span class="text-sm font-medium text-base-content/60">Filter by:</span>
+						<span class="text-sm font-medium text-base-content/60"
+							>{$t('worldtravel.filter_by')}:</span
+						>
 						<div class="tabs tabs-boxed bg-base-200">
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
 								on:click={() => (filterOption = 'all')}
 							>
 								<Globe class="w-3 h-3" />
-								All
+								{$t('adventures.all')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'complete' ? 'tab-active' : ''}"
 								on:click={() => (filterOption = 'complete')}
 							>
 								<Check class="w-3 h-3" />
-								Complete
+								{$t('worldtravel.complete')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'partial' ? 'tab-active' : ''}"
 								on:click={() => (filterOption = 'partial')}
 							>
 								<Progress class="w-3 h-3" />
-								Partial
+								{$t('worldtravel.partial')}
 							</button>
 							<button
 								class="tab tab-sm gap-2 {filterOption === 'not' ? 'tab-active' : ''}"
 								on:click={() => (filterOption = 'not')}
 							>
 								<Cancel class="w-3 h-3" />
-								Not Visited
+								{$t('adventures.not_visited')}
 							</button>
 						</div>
 
@@ -218,7 +221,7 @@
 						{#if searchQuery || filterOption !== 'all' || subRegionOption}
 							<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
 								<Clear class="w-3 h-3" />
-								Clear All
+								{$t('worldtravel.clear_all')}
 							</button>
 						{/if}
 					</div>
@@ -272,19 +275,19 @@
 							{$t('worldtravel.no_countries_found')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md mb-6">
-							Try adjusting your search terms or filters to find the countries you're looking for.
+							{$t('worldtravel.no_countries_found_desc')}
 						</p>
 						<button class="btn btn-primary gap-2" on:click={clearFilters}>
 							<Clear class="w-4 h-4" />
-							Clear Filters
+							{$t('worldtravel.clear_filters')}
 						</button>
 
 						{#if allCountries.length === 0}
 							<div class="mt-8 text-center">
 								<div class="alert alert-warning max-w-md">
 									<div>
-										<h4 class="font-bold">No country data available</h4>
-										<p class="text-sm">Please check the documentation for updating region data.</p>
+										<h4 class="font-bold">{$t('worldtravel.no_country_data_available')}</h4>
+										<p class="text-sm">{$t('worldtravel.no_country_data_available_desc')}</p>
 									</div>
 								</div>
 								<a
@@ -300,7 +303,7 @@
 				{:else}
 					<!-- Countries Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
 						{#each filteredCountries as country}
 							<CountryCard {country} />
@@ -320,41 +323,41 @@
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Filter class="w-6 h-6 text-primary" />
 						</div>
-						<h2 class="text-xl font-bold">Filters & Stats</h2>
+						<h2 class="text-xl font-bold">{$t('adventures.filters_and_stats')}</h2>
 					</div>
 
 					<!-- Travel Statistics -->
 					<div class="card bg-base-200/50 p-4 mb-6">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Globe class="w-5 h-5" />
-							Travel Progress
+							{$t('adventures.travel_progress')}
 						</h3>
 
 						<div class="space-y-4">
 							<div class="stat p-0">
-								<div class="stat-title text-sm">Total Countries</div>
+								<div class="stat-title text-sm">{$t('worldtravel.total_countries')}</div>
 								<div class="stat-value text-2xl">{totalCountries}</div>
-								<div class="stat-desc">Available to explore</div>
+								<div class="stat-desc">{$t('worldtravel.available_to_explore')}</div>
 							</div>
 
 							<div class="grid grid-cols-2 gap-4">
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Visited</div>
+									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedCountries}</div>
 								</div>
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Remaining</div>
+									<div class="stat-title text-xs">{$t('worldtravel.remaining')}</div>
 									<div class="stat-value text-lg text-error">{notVisitedCountries}</div>
 								</div>
 							</div>
 
 							<div class="grid grid-cols-2 gap-4">
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Complete</div>
+									<div class="stat-title text-xs">{$t('worldtravel.complete')}</div>
 									<div class="stat-value text-sm text-success">{completeCountries}</div>
 								</div>
 								<div class="stat p-0">
-									<div class="stat-title text-xs">Partial</div>
+									<div class="stat-title text-xs">{$t('worldtravel.partial')}</div>
 									<div class="stat-value text-sm text-warning">{partialCountries}</div>
 								</div>
 							</div>
@@ -362,7 +365,7 @@
 							<!-- Progress Bar -->
 							<div class="space-y-2">
 								<div class="flex justify-between text-sm">
-									<span>Progress</span>
+									<span>{$t('worldtravel.progress')}</span>
 									<span>{Math.round((visitedCountries / totalCountries) * 100)}%</span>
 								</div>
 								<progress
@@ -378,7 +381,7 @@
 					<div class="card bg-base-200/50 p-4">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Pin class="w-5 h-5" />
-							Filter by Region
+							{$t('worldtravel.filter_by_region')}
 						</h3>
 
 						<div class="space-y-2">
@@ -390,7 +393,7 @@
 									checked={subRegionOption === ''}
 									on:change={() => (subRegionOption = '')}
 								/>
-								<span class="label-text">All Regions</span>
+								<span class="label-text">{$t('worldtravel.all_regions')}</span>
 							</label>
 
 							{#each worldSubregions as subregion}
@@ -413,16 +416,16 @@
 						<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
 							{#if showMap}
 								<Map class="w-4 h-4" />
-								Hide Map
+								{$t('worldtravel.hide_map')}
 							{:else}
 								<Map class="w-4 h-4" />
-								Show Map
+								{$t('worldtravel.show_map')}
 							{/if}
 						</button>
 
 						<button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
 							<Clear class="w-4 h-4" />
-							Clear All Filters
+							{$t('worldtravel.clear_all_filters')}
 						</button>
 					</div>
 				</div>

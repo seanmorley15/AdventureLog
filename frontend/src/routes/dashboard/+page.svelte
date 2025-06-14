@@ -37,28 +37,26 @@
 			<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
 				<div>
 					<div class="flex items-center gap-4 mb-4">
-						<div class="avatar placeholder">
+						<!-- <div class="avatar placeholder">
 							<div class="bg-primary text-primary-content rounded-full w-16 h-16">
 								<span class="text-xl font-bold">
 									{user?.first_name?.charAt(0) || user?.username?.charAt(0) || 'A'}
 								</span>
 							</div>
-						</div>
+						</div> -->
 						<div>
-							<h1
-								class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
-							>
+							<h1 class="text-4xl lg:text-5xl font-bold bg-clip-text text-primary">
 								{$t('dashboard.welcome_back')}, {user?.first_name
 									? `${user.first_name}`
 									: user?.username}!
 							</h1>
 							<p class="text-lg text-base-content/60 mt-2">
 								{#if stats.adventure_count > 0}
-									You've been on <span class="font-semibold text-primary"
-										>{stats.adventure_count}</span
-									> adventures so far
+									{$t('dashboard.welcome_text_1')}
+									<span class="font-semibold text-primary">{stats.adventure_count}</span>
+									{$t('dashboard.welcome_text_2')}
 								{:else}
-									Ready to start your adventure journey?
+									{$t('dashboard.welcome_text_3')}
 								{/if}
 							</p>
 						</div>
@@ -76,14 +74,16 @@
 					</a>
 					<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
 						<FlagCheckeredVariantIcon class="w-5 h-5" />
-						Explore World
+						{$t('home.explore_world')}
 					</a>
 				</div>
 			</div>
 		</div>
 
 		<!-- Stats Grid -->
-		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+		<div
+			class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8 mb-12"
+		>
 			<!-- Countries Visited -->
 			<div
 				class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 shadow-xl border border-primary/20 hover:shadow-2xl transition-all duration-300"
@@ -99,7 +99,7 @@
 							</div>
 							<div class="stat-desc text-primary/60 mt-2">
 								<div class="flex items-center justify-between">
-									<span class="font-medium">{completionPercentage}% of world</span>
+									<span class="font-medium">{completionPercentage}% {$t('home.of_world')}</span>
 								</div>
 								<progress
 									class="progress progress-primary w-full mt-1"
@@ -128,12 +128,6 @@
 							<div class="stat-value text-3xl font-bold text-success">
 								{stats.visited_region_count}
 							</div>
-							<div class="stat-desc text-success/60 mt-2">
-								<div class="flex items-center gap-1">
-									<MapMarkerStarOutline class="w-4 h-4" />
-									Unique regions
-								</div>
-							</div>
 						</div>
 						<div class="p-4 bg-success/20 rounded-2xl">
 							<MapMarkerStarOutline class="w-8 h-8 text-success" />
@@ -153,12 +147,6 @@
 								{$t('dashboard.total_visited_cities')}
 							</div>
 							<div class="stat-value text-3xl font-bold text-info">{stats.visited_city_count}</div>
-							<div class="stat-desc text-info/60 mt-2">
-								<div class="flex items-center gap-1">
-									<CityVariantOutline class="w-4 h-4" />
-									Urban adventures
-								</div>
-							</div>
 						</div>
 						<div class="p-4 bg-info/20 rounded-2xl">
 							<CityVariantOutline class="w-8 h-8 text-info" />
@@ -178,11 +166,11 @@
 						</div>
 						<div>
 							<h2 class="text-3xl font-bold">{$t('dashboard.recent_adventures')}</h2>
-							<p class="text-base-content/60">Your latest travel experiences</p>
+							<p class="text-base-content/60">{$t('home.latest_travel_experiences')}</p>
 						</div>
 					</div>
 					<a href="/adventures" class="btn btn-ghost gap-2">
-						View All
+						{$t('dashboard.view_all')}
 						<span class="badge badge-primary">{stats.adventure_count}</span>
 					</a>
 				</div>
@@ -215,8 +203,7 @@
 						{$t('dashboard.no_recent_adventures')}
 					</h2>
 					<p class="text-lg text-base-content/60 mb-8 max-w-md mx-auto leading-relaxed">
-						{$t('dashboard.add_some')} Start documenting your travels and build your personal adventure
-						map!
+						{$t('dashboard.document_some_adventures')}
 					</p>
 
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
@@ -229,43 +216,8 @@
 						</a>
 						<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
 							<FlagCheckeredVariantIcon class="w-5 h-5" />
-							Explore World Map
+							{$t('home.explore_world')}
 						</a>
-					</div>
-
-					<!-- Inspiration Cards -->
-					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto">
-						<div class="card bg-base-100/50 shadow-lg">
-							<div class="card-body p-6 text-center">
-								<div class="p-3 bg-primary/10 rounded-xl w-fit mx-auto mb-4">
-									<Airplane class="w-6 h-6 text-primary" />
-								</div>
-								<h3 class="font-semibold text-primary">Plan Adventures</h3>
-								<p class="text-sm text-base-content/60 mt-2">
-									Create and organize your travel plans
-								</p>
-							</div>
-						</div>
-
-						<div class="card bg-base-100/50 shadow-lg">
-							<div class="card-body p-6 text-center">
-								<div class="p-3 bg-secondary/10 rounded-xl w-fit mx-auto mb-4">
-									<FlagCheckeredVariantIcon class="w-6 h-6 text-secondary" />
-								</div>
-								<h3 class="font-semibold text-secondary">Track Countries</h3>
-								<p class="text-sm text-base-content/60 mt-2">Mark visited countries and regions</p>
-							</div>
-						</div>
-
-						<div class="card bg-base-100/50 shadow-lg">
-							<div class="card-body p-6 text-center">
-								<div class="p-3 bg-success/10 rounded-xl w-fit mx-auto mb-4">
-									<MapMarkerStarOutline class="w-6 h-6 text-success" />
-								</div>
-								<h3 class="font-semibold text-success">Share Memories</h3>
-								<p class="text-sm text-base-content/60 mt-2">Document and share your experiences</p>
-							</div>
-						</div>
 					</div>
 				</div>
 			</div>

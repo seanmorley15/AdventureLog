@@ -165,7 +165,6 @@
     "share": "공유",
     "share_adventure": "이 모험을 공유하세요!",
     "show": "보기",
-    "show_region_labels": "지역 레이블 표시",
     "sort": "정렬",
     "sources": "출처",
     "start": "시작",
@@ -233,7 +232,11 @@
     "itinerary": "여정",
     "joined": "가입",
     "view_profile": "프로필을 봅니다",
-    "share_collection": "이 컬렉션을 공유하십시오!"
+    "share_collection": "이 컬렉션을 공유하십시오!",
+    "filters_and_sort": "필터",
+    "filters_and_stats": "필터",
+    "no_adventures_message": "모험을 문서화하고 새로운 모험을 계획하십시오. \n모든 여정에는 말할 가치가있는 이야기가 있습니다.",
+    "travel_progress": "여행 진행"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -265,7 +268,8 @@
     "no_categories_found": "카테고리가 없습니다.",
     "select_category": "카테고리 선택",
     "update_after_refresh": "페이지를 새로고침해야 모험 카드가 업데이트됩니다.",
-    "add_new_category": "새 카테고리를 추가하십시오"
+    "add_new_category": "새 카테고리를 추가하십시오",
+    "name_required": "카테고리 이름이 필요합니다"
   },
   "checklist": {
     "checklist_delete_error": "체크리스트 삭제 오류",
@@ -287,7 +291,14 @@
     "error_editing_collection": "컬렉션 편집 오류",
     "new_collection": "새로운 컬렉션",
     "public_collection": "공개 컬렉션",
-    "manage_collections": "컬렉션을 관리합니다"
+    "manage_collections": "컬렉션을 관리합니다",
+    "archived_appear_here": "보관 된 컬렉션이 여기에 나타납니다.",
+    "create_first": "모험과 추억을 조직하기 위해 첫 번째 컬렉션을 만드십시오.",
+    "make_sure_public": "다른 사람들이 귀하와 공유 할 수 있도록 프로필이 공개되어 있는지 확인하십시오.",
+    "no_archived_collections": "보관 된 컬렉션이 없습니다.",
+    "no_collections_yet": "아직 컬렉션이 없습니다",
+    "no_shared_collections": "공유 컬렉션이 없습니다.",
+    "shared_collections": "공유 컬렉션"
   },
   "dashboard": {
     "add_some": "다음 모험을 계획해 보는게 어떨까요? 아래 버튼을 클릭하여 새로운 모험을 추가할 수 있습니다.",
@@ -297,7 +308,12 @@
     "total_adventures": "모든 모험",
     "total_visited_cities": "방문한 모든 도시",
     "total_visited_regions": "방문한 모든 지역",
-    "welcome_back": "다시 오신 것을 환영합니다"
+    "welcome_back": "다시 오신 것을 환영합니다",
+    "document_some_adventures": "여행을 문서화하고 개인 모험지도를 구축하십시오!",
+    "view_all": "모두보기",
+    "welcome_text_1": "당신은있었습니다",
+    "welcome_text_2": "지금까지 모험",
+    "welcome_text_3": "여행을 계속 탐색하고 문서화하십시오!"
   },
   "home": {
     "desc_1": "쉽고 편리하게 발견하고, 계획하고, 탐험하세요",
@@ -311,7 +327,11 @@
     "go_to": "Adventurelog로 이동",
     "hero_1": "세상에서 가장 짜릿한 모험을 발견하세요",
     "hero_2": "Adventurelog로 다음 모험을 발견하고 계획해 보세요. 환상적인 여행지를 탐색하고, 나만의 일정을 만드세요. 어디서든 접속할 수 있습니다.",
-    "key_features": "주요 기능"
+    "key_features": "주요 기능",
+    "explore_world": "세상을 탐험하십시오",
+    "latest_travel_experiences": "최신 여행 경험",
+    "of_world": "세계의",
+    "start_your_journey": "여행을 시작하십시오"
   },
   "immich": {
     "api_key": "Immich API 키",
@@ -346,7 +366,15 @@
     "clear_marker": "마커 초기화",
     "map_options": "지도 옵션",
     "show_visited_regions": "방문한 지역 보기",
-    "view_details": "상세 보기"
+    "view_details": "상세 보기",
+    "adventure_stats": "모험 통계",
+    "adventures_shown": "모험 쇼",
+    "completion": "완성",
+    "display_options": "디스플레이 옵션",
+    "map_controls": "맵 컨트롤",
+    "marker_placed_on_map": "마커가지도에 배치되었습니다",
+    "place_marker_desc": "지도를 클릭하여 마커를 배치하거나 위치없이 모험을 추가하십시오.",
+    "regions": "지역"
   },
   "navbar": {
     "about": "Adventurelog 소개",
@@ -367,7 +395,17 @@
     "support": "지원",
     "tag": "태그",
     "theme_selection": "테마 선택",
-    "themes": {},
+    "themes": {
+      "aestheticDark": "미적 어둠",
+      "aestheticLight": "미적 빛",
+      "aqua": "아쿠아",
+      "dark": "어두운",
+      "dim": "어둑한",
+      "forest": "숲",
+      "light": "빛",
+      "night": "밤",
+      "northernLights": "북극광"
+    },
     "users": "사용자",
     "worldtravel": "세계 여행",
     "admin_panel": "관리자 패널"
@@ -391,7 +429,15 @@
     "user_stats": "사용자 통계",
     "visited_cities": "방문한 도시",
     "visited_countries": "방문한 국가",
-    "visited_regions": "방문한 지역"
+    "visited_regions": "방문한 지역",
+    "discovered": "발견",
+    "explored": "탐험",
+    "no_shared_adventures": "이 사용자는 아직 공개 모험을 공유하지 않았습니다.",
+    "no_shared_collections": "이 사용자는 아직 공개 컬렉션을 공유하지 않았습니다.",
+    "planned_trips": "계획된 여행",
+    "public_adventure_experiences": "공개 모험 경험",
+    "your_journey_at_a_glance": "당신의 모험 여행",
+    "travel_statistics": "여행 통계"
   },
   "recomendations": {
     "recommendation": "추천",
@@ -577,7 +623,36 @@
     "removed": "제거됨",
     "view_cities": "도시 보기",
     "visit_remove_failed": "방문 표시 제거 실패",
-    "visit_to": "방문함"
+    "visit_to": "방문함",
+    "all_regions": "모든 지역",
+    "available_to_explore": "탐색 할 수 있습니다",
+    "cities_in": "도시",
+    "clear_all": "모든 것을 지우십시오",
+    "clear_all_filters": "모든 필터를 지우십시오",
+    "clear_filters": "클리어 필터",
+    "complete": "완벽한",
+    "countries": "국가",
+    "country_completed": "국가 완료",
+    "filter_by": "필터",
+    "filter_by_region": "지역별 필터",
+    "hide_map": "지도를 숨 깁니다",
+    "hide_map_labels": "지도 레이블을 숨 깁니다",
+    "interactive_map": "대화식지도",
+    "no_countries_found_desc": "원하는 국가를 찾으려면 검색어 또는 필터를 조정해보십시오.",
+    "no_country_data_available": "국가 데이터를 사용할 수 없습니다",
+    "no_country_data_available_desc": "지역 데이터 업데이트는 문서를 확인하십시오.",
+    "no_regions_found": "발견되지 않았습니다",
+    "of": "~의",
+    "partial": "부분적",
+    "progress": "진전",
+    "progress_and_stats": "진전",
+    "region_completed": "지역 완료",
+    "remaining": "남아 있습니다",
+    "show_map": "지도 표시",
+    "show_map_labels": "지도 레이블 표시",
+    "total_cities": "총 도시",
+    "total_countries": "총 국가",
+    "total_regions": "총 지역"
   },
   "lodging": {
     "apartment": "아파트",

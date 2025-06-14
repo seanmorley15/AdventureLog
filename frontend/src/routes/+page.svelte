@@ -78,61 +78,21 @@
 			<div class="grid lg:grid-cols-2 gap-12 items-center">
 				<!-- Left Content -->
 				<div class="space-y-8 {isVisible ? 'animate-fade-in-up' : 'opacity-0'}">
-					{#if data.user}
-						{#if data.user.first_name && data.user.first_name !== null}
-							<div class="space-y-4">
-								<div
-									class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
-								>
-									<LightningIcon class="w-4 h-4" />
-									<span class="text-sm font-medium">Welcome back!</span>
-								</div>
-								<h1 class="text-5xl lg:text-7xl font-black leading-tight">
-									<span
-										class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
-									>
-										{data.user.first_name.charAt(0).toUpperCase() + data.user.first_name.slice(1)},
-									</span>
-									<br />
-									<span class="text-base-content/90">
-										{$t('home.hero_1')}
-									</span>
-								</h1>
-							</div>
-						{:else}
-							<div class="space-y-4">
-								<div
-									class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
-								>
-									<LightningIcon class="w-4 h-4" />
-									<span class="text-sm font-medium">Ready to explore?</span>
-								</div>
-								<h1 class="text-5xl lg:text-7xl font-black leading-tight">
-									<span
-										class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
-									>
-										{$t('home.hero_1')}
-									</span>
-								</h1>
-							</div>
-						{/if}
-					{:else}
-						<div class="space-y-4">
-							<div
-								class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
-							>
-								<LightningIcon class="w-4 h-4" />
-								<span class="text-sm font-medium">Start your journey</span>
-							</div>
-							<h1 class="text-5xl lg:text-7xl font-black leading-tight">
-								<span
-									class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
-								>
-									{$t('home.hero_1')}
-								</span>
-							</h1>
+					<div class="space-y-4">
+						<div
+							class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
+						>
+							<LightningIcon class="w-4 h-4" />
+							<span class="text-sm font-medium">{$t('home.start_your_journey')}</span>
 						</div>
-					{/if}
+						<h1 class="text-5xl lg:text-7xl font-black leading-tight">
+							<span
+								class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+							>
+								{$t('home.hero_1')}
+							</span>
+						</h1>
+					</div>
 
 					<p class="text-xl lg:text-2xl text-base-content/70 leading-relaxed font-light max-w-2xl">
 						{$t('home.hero_2')}
@@ -165,21 +125,6 @@
 							</button>
 						{/if}
 					</div>
-
-					<!-- Stats -->
-					<!-- <div class="grid grid-cols-3 gap-6 pt-8 border-t border-base-300">
-						{#each stats as stat}
-							<div class="text-center">
-								<div class="flex justify-center mb-2">
-									<div class="p-2 bg-primary/10 rounded-lg">
-										<svelte:component this={stat.icon} class="w-5 h-5 text-primary" />
-									</div>
-								</div>
-								<div class="text-2xl font-bold text-base-content">{stat.value}</div>
-								<div class="text-sm text-base-content/60">{stat.label}</div>
-							</div>
-						{/each}
-					</div> -->
 				</div>
 
 				<!-- Right Content - Hero Image -->
@@ -230,7 +175,7 @@
 			<!-- Section Header -->
 			<div class="text-center mb-16 space-y-4">
 				<div
-					class="inline-flex items-center gap-2 px-4 py-2 bg-neutral/10 text-neutral rounded-full border border-neutral/20"
+					class="inline-flex items-center gap-2 px-4 py-2 bg-neutral text-neutral-300 rounded-full border border-neutral"
 				>
 					<StarIcon class="w-4 h-4" />
 					<span class="text-sm font-medium">{$t('home.key_features')}</span>
@@ -279,58 +224,11 @@
 							alt="World map with pins"
 							class="rounded-2xl shadow-2xl object-cover w-full"
 						/>
-
-						<!-- Floating Elements -->
-						<div class="absolute top-4 right-4 bg-base-100 p-3 rounded-xl shadow-lg animate-float">
-							<div class="flex items-center gap-2">
-								<CheckIcon class="w-4 h-4 text-success" />
-								<span class="text-sm font-medium">25 Countries</span>
-							</div>
-						</div>
-
-						<div
-							class="absolute bottom-4 left-4 bg-base-100 p-3 rounded-xl shadow-lg animate-float-delayed"
-						>
-							<div class="flex items-center gap-2">
-								<TrophyIcon class="w-4 h-4 text-warning" />
-								<span class="text-sm font-medium">Explorer Level</span>
-							</div>
-						</div>
 					</div>
 				</div>
 			</div>
 		</div>
 	</section>
-
-	<!-- Call to Action Section -->
-	{#if !data.user}
-		<section class="py-24 bg-gradient-to-r from-primary to-secondary">
-			<div class="container mx-auto px-6 text-center">
-				<div class="max-w-3xl mx-auto space-y-8">
-					<h2 class="text-4xl lg:text-5xl font-bold text-white">Ready to Start Your Adventure?</h2>
-					<p class="text-xl text-white/90 leading-relaxed">
-						Join thousands of travelers already using AdventureLog to document their journeys and
-						discover new destinations.
-					</p>
-					<div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-						<button
-							on:click={() => goto('/signup')}
-							class="btn btn-lg bg-white text-primary hover:bg-white/90 gap-3 shadow-lg group"
-						>
-							Get Started
-							<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-						</button>
-						<button
-							on:click={() => goto('/login')}
-							class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-primary gap-3"
-						>
-							Sign In
-						</button>
-					</div>
-				</div>
-			</div>
-		</section>
-	{/if}
 </div>
 
 <svelte:head>

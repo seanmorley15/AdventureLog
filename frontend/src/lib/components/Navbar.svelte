@@ -263,7 +263,7 @@
 
 		<!-- Settings Dropdown -->
 		<div class="dropdown dropdown-bottom dropdown-end z-[999]">
-			<div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
+			<div tabindex="0" role="button" class="btn btn-neutral-300 btn-sm btn-square">
 				<DotsHorizontal class="w-5 h-5" />
 			</div>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->

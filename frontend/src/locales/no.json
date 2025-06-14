@@ -21,7 +21,17 @@
     "calendar": "Kalender",
     "theme_selection": "Tema-valg",
     "admin_panel": "Admin Panel",
-    "themes": {}
+    "themes": {
+      "aestheticDark": "Estetisk mørke",
+      "aestheticLight": "Estetisk lys",
+      "aqua": "Aqua",
+      "dark": "Mørk",
+      "dim": "Svak",
+      "forest": "Skog",
+      "light": "Lys",
+      "night": "Natt",
+      "northernLights": "Nordlys"
+    }
   },
   "about": {
     "about": "Om",
@@ -47,7 +57,11 @@
     "feature_2": "Reiseplanlegging",
     "feature_2_desc": "Lag enkelt tilpassede reiseplaner og få en dag-for-dag oversikt over turen din.",
     "feature_3": "Reisekart",
-    "feature_3_desc": "Se reisene dine over hele verden med et interaktivt kart og utforsk nye destinasjoner."
+    "feature_3_desc": "Se reisene dine over hele verden med et interaktivt kart og utforsk nye destinasjoner.",
+    "explore_world": "Utforsk verden",
+    "latest_travel_experiences": "Dine siste reiseopplevelser",
+    "of_world": "av verden",
+    "start_your_journey": "Start reisen"
   },
   "adventures": {
     "collection_remove_success": "Eventyret ble fjernet fra samlingen!",
@@ -94,7 +108,6 @@
     "date_constrain": "Begrens til samlingsdatoer",
     "rating": "Vurdering",
     "my_images": "Mine bilder",
-    "show_region_labels": "Vis regionetiketter",
     "no_images": "Ingen bilder",
     "share_adventure": "Del dette eventyret!",
     "copy_link": "Kopier lenke",
@@ -271,7 +284,11 @@
     "itinerary": "Reiserute",
     "joined": "Ble med",
     "view_profile": "Vis profil",
-    "share_collection": "Del denne samlingen!"
+    "share_collection": "Del denne samlingen!",
+    "filters_and_sort": "Filtre",
+    "filters_and_stats": "Filtre",
+    "no_adventures_message": "Begynn å dokumentere eventyrene dine og planlegge nye. \nHver reise har en historie som er verdt å fortelle.",
+    "travel_progress": "Reisefremgang"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -293,7 +310,36 @@
     "failed_to_remove_visit": "Kunne ikke fjerne besøk i",
     "marked_visited": "markert som besøkt",
     "regions_in": "Regioner i",
-    "cities": "byer"
+    "cities": "byer",
+    "all_regions": "Alle regioner",
+    "available_to_explore": "Tilgjengelig for å utforske",
+    "cities_in": "Byer i",
+    "clear_all": "Fjern alle",
+    "clear_all_filters": "Fjern alle filtre",
+    "clear_filters": "Klare filtre",
+    "complete": "Fullstendig",
+    "countries": "land",
+    "country_completed": "Land fullført",
+    "filter_by": "Filter av",
+    "filter_by_region": "Filter etter region",
+    "hide_map": "Skjul kart",
+    "hide_map_labels": "Skjul kartetiketter",
+    "interactive_map": "Interaktivt kart",
+    "no_countries_found_desc": "Prøv å justere søkeordene eller filtrene dine for å finne landene du leter etter.",
+    "no_country_data_available": "Ingen landsdata tilgjengelig",
+    "no_country_data_available_desc": "Vennligst sjekk dokumentasjonen for oppdatering av regiondata.",
+    "no_regions_found": "Ingen regioner funnet",
+    "of": "av",
+    "partial": "Delvis",
+    "progress": "Framgang",
+    "progress_and_stats": "Framgang",
+    "region_completed": "Region fullført",
+    "remaining": "Gjenværende",
+    "show_map": "Vis kart",
+    "show_map_labels": "Vis kartetiketter",
+    "total_cities": "Totalt byer",
+    "total_countries": "Totalt land",
+    "total_regions": "Totale regioner"
   },
   "auth": {
     "username": "Brukernavn",
@@ -441,7 +487,14 @@
     "collection_edit_success": "Samling redigert!",
     "error_editing_collection": "Feil ved redigering av samling",
     "public_collection": "Offentlig samling",
-    "manage_collections": "Administrer samlinger"
+    "manage_collections": "Administrer samlinger",
+    "archived_appear_here": "Arkiverte samlinger vises her.",
+    "create_first": "Lag din første samling for å organisere eventyrene og minnene dine.",
+    "make_sure_public": "Forsikre deg om at profilen din er offentlig, slik at andre kan dele med deg.",
+    "no_archived_collections": "Ingen arkiverte samlinger.",
+    "no_collections_yet": "Ingen samlinger ennå",
+    "no_shared_collections": "Ingen delte samlinger.",
+    "shared_collections": "Delte samlinger"
   },
   "notes": {
     "note_deleted": "Notat slettet!",
@@ -522,7 +575,15 @@
     "show_visited_regions": "Vis besøkte regioner",
     "add_adventure_at_marker": "Legg til nytt eventyr ved markøren",
     "clear_marker": "Fjern markør",
-    "add_adventure": "Legg til nytt eventyr"
+    "add_adventure": "Legg til nytt eventyr",
+    "adventure_stats": "Eventyrstatistikk",
+    "adventures_shown": "Eventyr vist",
+    "completion": "Fullføring",
+    "display_options": "Vis alternativer",
+    "map_controls": "Kartkontroller",
+    "marker_placed_on_map": "Markør plassert på kart",
+    "place_marker_desc": "Klikk på kartet for å plassere en markør, eller legg til et eventyr uten beliggenhet.",
+    "regions": "Regioner"
   },
   "share": {
     "shared": "Delt",
@@ -542,7 +603,15 @@
     "user_stats": "Brukerstatistikk",
     "visited_countries": "Besøkte land",
     "visited_regions": "Besøkte regioner",
-    "visited_cities": "Besøkte byer"
+    "visited_cities": "Besøkte byer",
+    "discovered": "oppdaget",
+    "explored": "utforsket",
+    "no_shared_adventures": "Denne brukeren har ikke delt noen offentlige eventyr ennå.",
+    "no_shared_collections": "Denne brukeren har ikke delt noen offentlige samlinger ennå.",
+    "planned_trips": "Planlagte turer",
+    "public_adventure_experiences": "Offentlige eventyropplevelser",
+    "travel_statistics": "Reisestatistikk",
+    "your_journey_at_a_glance": "Din eventyrreise på et øyeblikk"
   },
   "categories": {
     "manage_categories": "Administrer kategorier",
@@ -552,7 +621,8 @@
     "update_after_refresh": "Eventyrkortene vil oppdateres når du oppdaterer siden.",
     "select_category": "Velg kategori",
     "category_name": "Kategorinavn",
-    "add_new_category": "Legg til ny kategori"
+    "add_new_category": "Legg til ny kategori",
+    "name_required": "Kategorinavnet er påkrevd"
   },
   "dashboard": {
     "welcome_back": "Velkommen tilbake",
@@ -562,7 +632,12 @@
     "total_visited_cities": "Totalt antall besøkte byer",
     "recent_adventures": "Nylige eventyr",
     "no_recent_adventures": "Ingen nylige eventyr?",
-    "add_some": "Hvorfor ikke begynne å planlegge ditt neste eventyr? Du kan legge til et nytt eventyr ved å klikke på knappen nedenfor."
+    "add_some": "Hvorfor ikke begynne å planlegge ditt neste eventyr? Du kan legge til et nytt eventyr ved å klikke på knappen nedenfor.",
+    "document_some_adventures": "Begynn å dokumentere dine reiser og bygg ditt personlige eventyrkart!",
+    "view_all": "Se alle",
+    "welcome_text_1": "Du har vært på",
+    "welcome_text_2": "Eventyr så langt",
+    "welcome_text_3": "Fortsett å utforske og dokumentere dine reiser!"
   },
   "immich": {
     "immich": "Immich",
