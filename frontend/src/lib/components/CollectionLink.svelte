@@ -60,6 +60,7 @@
 					on:link={link}
 					bind:linkedCollectionList
 					on:unlink={unlink}
+					user={null}
 				/>
 			{/each}
 			{#if collections.length === 0}

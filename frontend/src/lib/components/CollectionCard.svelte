@@ -44,10 +44,11 @@
 		if (res.ok) {
 			if (is_archived) {
 				addToast('info', $t('adventures.archived_collection_message'));
+				dispatch('archive', collection.id);
 			} else {
 				addToast('info', $t('adventures.unarchived_collection_message'));
+				dispatch('unarchive', collection.id);
 			}
-			dispatch('delete', collection.id);
 		} else {
 			console.log('Error archiving collection');
 		}

@@ -37,25 +37,34 @@
 
 <div class="collapse collapse-plus mb-4">
 	<input type="checkbox" />
+
 	<div class="collapse-title text-xl bg-base-300 font-medium">
 		{$t('adventures.category_filter')}
 	</div>
+
 	<div class="collapse-content bg-base-300">
-		<button class="btn btn-wide btn-neutral-300" on:click={clearTypes}
-			>{$t(`adventures.clear`)}</button
-		>
-		{#each adventure_types as type}
-			<li>
-				<label class="cursor-pointer">
-					<input
-						type="checkbox"
-						value={type.name}
-						on:change={() => toggleSelect(type.name)}
-						checked={types.indexOf(type.name) > -1}
-					/>
-					<span>{type.display_name + ' ' + type.icon + ` (${type.num_adventures})`}</span>
-				</label>
-			</li>
-		{/each}
+		<button class="btn btn-sm btn-neutral-300 w-full mb-2" on:click={clearTypes}>
+			{$t('adventures.clear')}
+		</button>
+
+		<ul>
+			{#each adventure_types as type}
+				<li class="mb-1">
+					<label class="cursor-pointer flex items-center gap-2">
+						<input
+							type="checkbox"
+							class="checkbox"
+							value={type.name}
+							on:change={() => toggleSelect(type.name)}
+							checked={types.indexOf(type.name) > -1}
+						/>
+						<span>
+							{type.display_name}
+							{type.icon} ({type.num_adventures})
+						</span>
+					</label>
+				</li>
+			{/each}
+		</ul>
 	</div>
 </div>

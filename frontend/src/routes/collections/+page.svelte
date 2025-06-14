@@ -63,28 +63,32 @@
 		}
 	}
 
-	// Reactive statements to update collections based on props
-	$: {
+	async function goToPage(pageNum: number) {
+		const url = new URL($page.url);
+		url.searchParams.set('page', pageNum.toString());
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;
 		}
 		if (data.props.archivedCollections) {
 			archivedCollections = data.props.archivedCollections;
 		}
+		currentPage = pageNum;
 	}
 
-	function goToPage(pageNum: number) {
-		const url = new URL($page.url);
-		url.searchParams.set('page', pageNum.toString());
-		goto(url.toString(), { invalidateAll: true, replaceState: true });
-	}
-
-	function updateSort(by: string, direction: string) {
+	async function updateSort(by: string, direction: string) {
 		const url = new URL($page.url);
 		url.searchParams.set('order_by', by);
 		url.searchParams.set('order_direction', direction);
 		url.searchParams.set('page', '1'); // Reset to first page when sorting changes
-		goto(url.toString(), { invalidateAll: true, replaceState: true });
+		currentPage = 1;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			collections = data.props.adventures;
+		}
+		if (data.props.archivedCollections) {
+			archivedCollections = data.props.archivedCollections;
+		}
 	}
 
 	function deleteCollection(event: CustomEvent<string>) {
@@ -98,6 +102,7 @@
 
 	function archiveCollection(event: CustomEvent<string>) {
 		const collectionId = event.detail;
+		console.log('Archiving collection with ID:', collectionId);
 		// Find the collection in owned collections
 		const collectionToArchive = collections.find((collection) => collection.id === collectionId);
 
@@ -106,9 +111,6 @@
 			collections = collections.filter((collection) => collection.id !== collectionId);
 			// Add to archived collections
 			archivedCollections = [...archivedCollections, { ...collectionToArchive, is_archived: true }];
-
-			// Automatically switch to archived tab to show the archived item
-			activeView = 'archived';
 		}
 	}
 
@@ -126,9 +128,6 @@
 			);
 			// Add to owned collections
 			collections = [...collections, { ...collectionToUnarchive, is_archived: false }];
-
-			// Automatically switch to owned tab to show the unarchived item
-			activeView = 'owned';
 		}
 	}
 
