@@ -245,7 +245,7 @@
 													: country.num_visits === country.num_regions
 														? 'bg-green-200'
 														: 'bg-blue-200'
-											} text-black focus:outline-6 focus:outline-black hover:scale-110 transition-transform cursor-pointer`}
+											} text-black focus:outline-6 focus:outline-black cursor-pointer`}
 											on:click={() => goto(`/worldtravel/${country.country_code}`)}
 										>
 											<span class="text-xs font-medium">
