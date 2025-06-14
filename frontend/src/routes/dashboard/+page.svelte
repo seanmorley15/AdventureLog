@@ -5,124 +5,270 @@
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
 
-	// Initial animation for page load
-	onMount(() => {
-		// Stat animations with quicker duration
-		gsap.from('.stat', {
-			opacity: 0,
-			y: 50,
-			duration: 0.6, // Quicker animation duration
-			stagger: 0.1, // Faster staggering between elements
-			ease: 'power2.out' // Slightly sharper easing for quicker feel
-		});
-
-		gsap.from('.stat-title', {
-			opacity: 0,
-			x: -50, // Smaller movement for quicker animation
-			duration: 0.6, // Quicker animation duration
-			stagger: 0.1, // Faster staggering
-			ease: 'power2.out' // Slightly sharper easing for quicker feel
-		});
-
-		// Stat values with faster reveal and snappier effect
-		gsap.from('.stat-value', {
-			opacity: 0,
-			scale: 0.8, // Slightly less scaling for a snappier effect
-			duration: 1, // Shorter duration
-			stagger: 0.2, // Faster staggering
-			ease: 'elastic.out(0.75, 0.5)', // Slightly snappier bounce
-			delay: 0 // Faster delay for quicker sequencing
-		});
-
-		// Adventure card animations with quicker reveal
-		gsap.from('.adventure-card', {
-			opacity: 0,
-			y: 50, // Less movement for snappier feel
-			duration: 0.8, // Quicker duration
-			stagger: 0.1, // Faster staggering
-			ease: 'power2.out',
-			delay: 0 // Shorter delay for quicker appearance
-		});
-	});
-	export let data: PageData;
-
+	// Icons
 	import FlagCheckeredVariantIcon from '~icons/mdi/flag-checkered-variant';
 	import Airplane from '~icons/mdi/airplane';
 	import CityVariantOutline from '~icons/mdi/city-variant-outline';
 	import MapMarkerStarOutline from '~icons/mdi/map-marker-star-outline';
+	import TrendingUp from '~icons/mdi/trending-up';
+	import CalendarClock from '~icons/mdi/calendar-clock';
+	import Plus from '~icons/mdi/plus';
+
+	export let data: PageData;
 
 	const user = data.user;
 	const recentAdventures = data.props.adventures;
 	const stats = data.props.stats;
+
+	// Calculate completion percentage
+	$: completionPercentage =
+		stats.visited_country_count > 0 ? Math.round((stats.visited_country_count / 195) * 100) : 0; // Assuming ~195 countries worldwide
 </script>
-
-<div class="container mx-auto p-4">
-	<!-- Welcome Message -->
-	<div class="mb-8">
-		<h1 class="text-4xl font-extrabold">
-			{$t('dashboard.welcome_back')}, {user?.first_name ? `${user.first_name}` : user?.username}!
-		</h1>
-	</div>
-
-	<!-- Stats -->
-	<div class="stats shadow mb-8 w-full bg-neutral">
-		<div class="stat">
-			<div class="stat-figure text-secondary">
-				<Airplane class="w-10 h-10 inline-block" />
-			</div>
-			<div class="stat-title text-neutral-content">{$t('dashboard.total_adventures')}</div>
-			<div class="stat-value text-secondary">{stats.adventure_count}</div>
-		</div>
-		<div class="stat">
-			<div class="stat-figure text-primary">
-				<FlagCheckeredVariantIcon class="w-10 h-10 inline-block" />
-			</div>
-			<div class="stat-title text-neutral-content">{$t('dashboard.countries_visited')}</div>
-			<div class="stat-value text-primary">{stats.visited_country_count}</div>
-		</div>
-		<div class="stat">
-			<div class="stat-figure text-success">
-				<MapMarkerStarOutline class="w-10 h-10 inline-block" />
-			</div>
-			<div class="stat-title text-neutral-content">{$t('dashboard.total_visited_regions')}</div>
-			<div class="stat-value text-success">{stats.visited_region_count}</div>
-		</div>
-		<div class="stat">
-			<div class="stat-figure text-info">
-				<CityVariantOutline class="w-10 h-10 inline-block" />
-			</div>
-			<div class="stat-title text-neutral-content">{$t('dashboard.total_visited_cities')}</div>
-			<div class="stat-value text-info">{stats.visited_city_count}</div>
-		</div>
-	</div>
-
-	<!-- Recent Adventures -->
-	{#if recentAdventures.length > 0}
-		<h2 class="text-3xl font-semibold mb-4">{$t('dashboard.recent_adventures')}</h2>
-		<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-			{#each recentAdventures as adventure}
-				<div class="adventure-card">
-					<AdventureCard {adventure} user={data.user} readOnly />
-				</div>
-			{/each}
-		</div>
-	{/if}
-
-	<!-- Inspiration if there are no recent adventures -->
-	{#if recentAdventures.length === 0}
-		<div
-			class="inspiration flex flex-col items-center justify-center bg-neutral shadow p-8 mb-8 rounded-lg text-neutral-content"
-		>
-			<h2 class="text-3xl font-semibold mb-4">{$t('dashboard.no_recent_adventures')}</h2>
-			<p class="text-lg text-center">
-				{$t('dashboard.add_some')}
-			</p>
-			<a href="/adventures" class="btn btn-primary mt-4">{$t('map.add_adventure')}</a>
-		</div>
-	{/if}
-</div>
 
 <svelte:head>
 	<title>Dashboard | AdventureLog</title>
 	<meta name="description" content="Home dashboard for AdventureLog." />
 </svelte:head>
+
+<div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
+	<div class="container mx-auto px-6 py-8">
+		<!-- Welcome Section -->
+		<div class="welcome-section mb-12">
+			<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+				<div>
+					<div class="flex items-center gap-4 mb-4">
+						<div class="avatar placeholder">
+							<div class="bg-primary text-primary-content rounded-full w-16 h-16">
+								<span class="text-xl font-bold">
+									{user?.first_name?.charAt(0) || user?.username?.charAt(0) || 'A'}
+								</span>
+							</div>
+						</div>
+						<div>
+							<h1
+								class="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+							>
+								{$t('dashboard.welcome_back')}, {user?.first_name
+									? `${user.first_name}`
+									: user?.username}!
+							</h1>
+							<p class="text-lg text-base-content/60 mt-2">
+								{#if stats.adventure_count > 0}
+									You've been on <span class="font-semibold text-primary"
+										>{stats.adventure_count}</span
+									> adventures so far
+								{:else}
+									Ready to start your adventure journey?
+								{/if}
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Quick Action -->
+				<div class="flex flex-col sm:flex-row gap-3">
+					<a
+						href="/adventures"
+						class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+					>
+						<Plus class="w-5 h-5" />
+						{$t('map.add_adventure')}
+					</a>
+					<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
+						<FlagCheckeredVariantIcon class="w-5 h-5" />
+						Explore World
+					</a>
+				</div>
+			</div>
+		</div>
+
+		<!-- Stats Grid -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+			<!-- Countries Visited -->
+			<div
+				class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 shadow-xl border border-primary/20 hover:shadow-2xl transition-all duration-300"
+			>
+				<div class="card-body p-6">
+					<div class="flex items-center justify-between">
+						<div class="flex-1">
+							<div class="stat-title text-primary/70 font-medium">
+								{$t('dashboard.countries_visited')}
+							</div>
+							<div class="stat-value text-3xl font-bold text-primary">
+								{stats.visited_country_count}
+							</div>
+							<div class="stat-desc text-primary/60 mt-2">
+								<div class="flex items-center justify-between">
+									<span class="font-medium">{completionPercentage}% of world</span>
+								</div>
+								<progress
+									class="progress progress-primary w-full mt-1"
+									value={stats.visited_country_count}
+									max="195"
+								></progress>
+							</div>
+						</div>
+						<div class="p-4 bg-primary/20 rounded-2xl">
+							<FlagCheckeredVariantIcon class="w-8 h-8 text-primary" />
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Regions Visited -->
+			<div
+				class="stat-card card bg-gradient-to-br from-success/10 to-success/5 shadow-xl border border-success/20 hover:shadow-2xl transition-all duration-300"
+			>
+				<div class="card-body p-6">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="stat-title text-success/70 font-medium">
+								{$t('dashboard.total_visited_regions')}
+							</div>
+							<div class="stat-value text-3xl font-bold text-success">
+								{stats.visited_region_count}
+							</div>
+							<div class="stat-desc text-success/60 mt-2">
+								<div class="flex items-center gap-1">
+									<MapMarkerStarOutline class="w-4 h-4" />
+									Unique regions
+								</div>
+							</div>
+						</div>
+						<div class="p-4 bg-success/20 rounded-2xl">
+							<MapMarkerStarOutline class="w-8 h-8 text-success" />
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Cities Visited -->
+			<div
+				class="stat-card card bg-gradient-to-br from-info/10 to-info/5 shadow-xl border border-info/20 hover:shadow-2xl transition-all duration-300"
+			>
+				<div class="card-body p-6">
+					<div class="flex items-center justify-between">
+						<div>
+							<div class="stat-title text-info/70 font-medium">
+								{$t('dashboard.total_visited_cities')}
+							</div>
+							<div class="stat-value text-3xl font-bold text-info">{stats.visited_city_count}</div>
+							<div class="stat-desc text-info/60 mt-2">
+								<div class="flex items-center gap-1">
+									<CityVariantOutline class="w-4 h-4" />
+									Urban adventures
+								</div>
+							</div>
+						</div>
+						<div class="p-4 bg-info/20 rounded-2xl">
+							<CityVariantOutline class="w-8 h-8 text-info" />
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Recent Adventures Section -->
+		{#if recentAdventures.length > 0}
+			<div class="mb-8">
+				<div class="flex items-center justify-between mb-6">
+					<div class="flex items-center gap-3">
+						<div class="p-2 bg-primary/10 rounded-xl">
+							<CalendarClock class="w-6 h-6 text-primary" />
+						</div>
+						<div>
+							<h2 class="text-3xl font-bold">{$t('dashboard.recent_adventures')}</h2>
+							<p class="text-base-content/60">Your latest travel experiences</p>
+						</div>
+					</div>
+					<a href="/adventures" class="btn btn-ghost gap-2">
+						View All
+						<span class="badge badge-primary">{stats.adventure_count}</span>
+					</a>
+				</div>
+
+				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+					{#each recentAdventures as adventure}
+						<div class="adventure-card">
+							<AdventureCard {adventure} user={data.user} readOnly />
+						</div>
+					{/each}
+				</div>
+			</div>
+		{/if}
+
+		<!-- Empty State / Inspiration -->
+		{#if recentAdventures.length === 0}
+			<div
+				class="empty-state card bg-gradient-to-br from-base-100 to-base-200 shadow-2xl border border-base-300"
+			>
+				<div class="card-body p-12 text-center">
+					<div class="flex justify-center mb-6">
+						<div class="p-6 bg-primary/10 rounded-3xl">
+							<Airplane class="w-16 h-16 text-primary" />
+						</div>
+					</div>
+
+					<h2
+						class="text-3xl font-bold mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+					>
+						{$t('dashboard.no_recent_adventures')}
+					</h2>
+					<p class="text-lg text-base-content/60 mb-8 max-w-md mx-auto leading-relaxed">
+						{$t('dashboard.add_some')} Start documenting your travels and build your personal adventure
+						map!
+					</p>
+
+					<div class="flex flex-col sm:flex-row gap-4 justify-center">
+						<a
+							href="/adventures"
+							class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+						>
+							<Plus class="w-5 h-5" />
+							{$t('map.add_adventure')}
+						</a>
+						<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
+							<FlagCheckeredVariantIcon class="w-5 h-5" />
+							Explore World Map
+						</a>
+					</div>
+
+					<!-- Inspiration Cards -->
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto">
+						<div class="card bg-base-100/50 shadow-lg">
+							<div class="card-body p-6 text-center">
+								<div class="p-3 bg-primary/10 rounded-xl w-fit mx-auto mb-4">
+									<Airplane class="w-6 h-6 text-primary" />
+								</div>
+								<h3 class="font-semibold text-primary">Plan Adventures</h3>
+								<p class="text-sm text-base-content/60 mt-2">
+									Create and organize your travel plans
+								</p>
+							</div>
+						</div>
+
+						<div class="card bg-base-100/50 shadow-lg">
+							<div class="card-body p-6 text-center">
+								<div class="p-3 bg-secondary/10 rounded-xl w-fit mx-auto mb-4">
+									<FlagCheckeredVariantIcon class="w-6 h-6 text-secondary" />
+								</div>
+								<h3 class="font-semibold text-secondary">Track Countries</h3>
+								<p class="text-sm text-base-content/60 mt-2">Mark visited countries and regions</p>
+							</div>
+						</div>
+
+						<div class="card bg-base-100/50 shadow-lg">
+							<div class="card-body p-6 text-center">
+								<div class="p-3 bg-success/10 rounded-xl w-fit mx-auto mb-4">
+									<MapMarkerStarOutline class="w-6 h-6 text-success" />
+								</div>
+								<h3 class="font-semibold text-success">Share Memories</h3>
+								<p class="text-sm text-base-content/60 mt-2">Document and share your experiences</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
+	</div>
+</div>

@@ -185,7 +185,7 @@
 
 		<div class="drawer-content">
 			<!-- Header Section -->
-			<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
+			<div class="sticky top-0 z-30 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
@@ -292,7 +292,7 @@
 		</div>
 
 		<!-- Sidebar -->
-		<div class="drawer-side z-50">
+		<div class="drawer-side z-30">
 			<label for="my-drawer" class="drawer-overlay"></label>
 			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
 				<div class="p-6">
@@ -481,7 +481,7 @@
 	</div>
 
 	<!-- Floating Action Button -->
-	<div class="fixed bottom-6 right-6 z-50">
+	<div class="fixed bottom-6 right-6 z-40">
 		<div class="dropdown dropdown-top dropdown-end">
 			<div
 				tabindex="0"
@@ -492,7 +492,7 @@
 			</div>
 			<ul
 				tabindex="0"
-				class="dropdown-content z-[1] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
+				class="dropdown-content z-[40] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
 			>
 				<div class="text-center mb-4">
 					<h3 class="font-bold text-lg">{$t('adventures.create_new')}</h3>

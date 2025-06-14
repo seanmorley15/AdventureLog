@@ -10,7 +10,6 @@
 	let fullEndDate: string = '';
 	let fullStartDateOnly: string = '';
 	let fullEndDateOnly: string = '';
-	let allDay: boolean = true;
 
 	// Set full start and end dates from collection
 	if (collection && collection.start_date && collection.end_date) {
@@ -626,7 +625,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if adventure.collections && adventure.collections.length == 0}
+							{#if !adventureToEdit || (adventureToEdit.collections && adventureToEdit.collections.length === 0)}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">

@@ -1,123 +1,337 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
+	import { onMount } from 'svelte';
 
 	import MapWithPins from '$lib/assets/MapWithPins.webp';
 	import type { Background } from '$lib/types.js';
 
+	// Icons
+	import MapIcon from '~icons/mdi/map-outline';
+	import CameraIcon from '~icons/mdi/camera-outline';
+	import CalendarIcon from '~icons/mdi/calendar-outline';
+	import TrophyIcon from '~icons/mdi/trophy-outline';
+	import ChevronRight from '~icons/mdi/chevron-right';
+	import PlayIcon from '~icons/mdi/play';
+	import CheckIcon from '~icons/mdi/check-circle';
+	import StarIcon from '~icons/mdi/star';
+	import GlobeIcon from '~icons/mdi/earth';
+	import LightningIcon from '~icons/mdi/lightning-bolt';
+
 	export let data;
 
 	let background: Background = data.props?.background ?? { url: '' };
+	let isVisible = false;
+
+	onMount(() => {
+		setTimeout(() => (isVisible = true), 100);
+	});
+
+	const features = [
+		{
+			icon: MapIcon,
+			title: $t('home.feature_1'),
+			description: $t('home.feature_1_desc'),
+			color: 'text-blue-500',
+			bgColor: 'bg-blue-50 dark:bg-blue-900/20'
+		},
+		{
+			icon: CameraIcon,
+			title: $t('home.feature_2'),
+			description: $t('home.feature_2_desc'),
+			color: 'text-green-500',
+			bgColor: 'bg-green-50 dark:bg-green-900/20'
+		},
+		{
+			icon: TrophyIcon,
+			title: $t('home.feature_3'),
+			description: $t('home.feature_3_desc'),
+			color: 'text-yellow-500',
+			bgColor: 'bg-yellow-50 dark:bg-yellow-900/20'
+		}
+	];
+
+	const stats = [
+		{ label: 'Countries Tracked', value: '195+', icon: GlobeIcon },
+		{ label: 'Adventures Logged', value: '10K+', icon: CalendarIcon },
+		{ label: 'Active Travelers', value: '5K+', icon: StarIcon }
+	];
 </script>
 
-<!-- Hero Section -->
-<section class="flex items-center justify-center w-full py-20 bg-gray-50 dark:bg-gray-800">
-	<div class="container mx-auto px-4 flex flex-col-reverse md:flex-row items-center gap-8">
-		<!-- Text Content -->
-		<div class="w-full md:w-1/2 space-y-6">
-			{#if data.user}
-				{#if data.user.first_name && data.user.first_name !== null}
-					<h1
-						class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-					>
-						{data.user.first_name.charAt(0).toUpperCase() + data.user.first_name.slice(1)}, {$t(
-							'home.hero_1'
-						)}
-					</h1>
-				{:else}
-					<h1
-						class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-					>
-						{$t('home.hero_1')}
-					</h1>
-				{/if}
-			{:else}
-				<h1
-					class="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-				>
-					{$t('home.hero_1')}
-				</h1>
-			{/if}
-			<p class="text-xl text-gray-600 dark:text-gray-300 max-w-xl">
-				{$t('home.hero_2')}
-			</p>
-			<div class="flex flex-col sm:flex-row gap-4">
-				{#if data.user}
-					<button on:click={() => goto('/adventures')} class="btn btn-primary">
-						{$t('home.go_to')}
-					</button>
-				{:else}
-					<button on:click={() => goto('/login')} class="btn btn-primary">
-						{$t('auth.login')}
-					</button>
-					<button on:click={() => goto('/signup')} class="btn btn-secondary">
-						{$t('auth.signup')}
-					</button>
-				{/if}
-			</div>
+<div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
+	<!-- Hero Section -->
+	<section class="relative min-h-screen flex items-center justify-center overflow-hidden">
+		<!-- Background Pattern -->
+		<div class="absolute inset-0 opacity-5">
+			<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
+			<svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+				<defs>
+					<pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+						<path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" stroke-width="0.5" />
+					</pattern>
+				</defs>
+				<rect width="100" height="100" fill="url(#grid)" />
+			</svg>
 		</div>
-		<!-- Image -->
-		<div class="w-full md:w-1/2">
-			<img
-				src={background.url}
-				alt={background.location}
-				class="rounded-lg shadow-lg object-cover w-full h-full"
-			/>
-		</div>
-	</div>
-</section>
 
-<!-- Features Section -->
-<section id="features" class="py-16 bg-white dark:bg-gray-900">
-	<div class="container mx-auto px-4">
-		<div class="text-center mb-12">
-			<div class="inline-block text-neutral-content bg-neutral px-4 py-2 rounded-full">
-				{$t('home.key_features')}
+		<div class="container mx-auto px-6 py-20 relative z-10">
+			<div class="grid lg:grid-cols-2 gap-12 items-center">
+				<!-- Left Content -->
+				<div class="space-y-8 {isVisible ? 'animate-fade-in-up' : 'opacity-0'}">
+					{#if data.user}
+						{#if data.user.first_name && data.user.first_name !== null}
+							<div class="space-y-4">
+								<div
+									class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
+								>
+									<LightningIcon class="w-4 h-4" />
+									<span class="text-sm font-medium">Welcome back!</span>
+								</div>
+								<h1 class="text-5xl lg:text-7xl font-black leading-tight">
+									<span
+										class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+									>
+										{data.user.first_name.charAt(0).toUpperCase() + data.user.first_name.slice(1)},
+									</span>
+									<br />
+									<span class="text-base-content/90">
+										{$t('home.hero_1')}
+									</span>
+								</h1>
+							</div>
+						{:else}
+							<div class="space-y-4">
+								<div
+									class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
+								>
+									<LightningIcon class="w-4 h-4" />
+									<span class="text-sm font-medium">Ready to explore?</span>
+								</div>
+								<h1 class="text-5xl lg:text-7xl font-black leading-tight">
+									<span
+										class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+									>
+										{$t('home.hero_1')}
+									</span>
+								</h1>
+							</div>
+						{/if}
+					{:else}
+						<div class="space-y-4">
+							<div
+								class="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 text-primary rounded-full border border-primary/20"
+							>
+								<LightningIcon class="w-4 h-4" />
+								<span class="text-sm font-medium">Start your journey</span>
+							</div>
+							<h1 class="text-5xl lg:text-7xl font-black leading-tight">
+								<span
+									class="bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent"
+								>
+									{$t('home.hero_1')}
+								</span>
+							</h1>
+						</div>
+					{/if}
+
+					<p class="text-xl lg:text-2xl text-base-content/70 leading-relaxed font-light max-w-2xl">
+						{$t('home.hero_2')}
+					</p>
+
+					<!-- CTA Buttons -->
+					<div class="flex flex-col sm:flex-row gap-4 pt-4">
+						{#if data.user}
+							<button
+								on:click={() => goto('/adventures')}
+								class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 group"
+							>
+								<PlayIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
+								{$t('home.go_to')}
+								<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+							</button>
+						{:else}
+							<button
+								on:click={() => goto('/login')}
+								class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 group"
+							>
+								{$t('auth.login')}
+								<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+							</button>
+							<button
+								on:click={() => goto('/signup')}
+								class="btn btn-outline btn-lg gap-3 hover:shadow-lg transition-all duration-300"
+							>
+								{$t('auth.signup')}
+							</button>
+						{/if}
+					</div>
+
+					<!-- Stats -->
+					<div class="grid grid-cols-3 gap-6 pt-8 border-t border-base-300">
+						{#each stats as stat}
+							<div class="text-center">
+								<div class="flex justify-center mb-2">
+									<div class="p-2 bg-primary/10 rounded-lg">
+										<svelte:component this={stat.icon} class="w-5 h-5 text-primary" />
+									</div>
+								</div>
+								<div class="text-2xl font-bold text-base-content">{stat.value}</div>
+								<div class="text-sm text-base-content/60">{stat.label}</div>
+							</div>
+						{/each}
+					</div>
+				</div>
+
+				<!-- Right Content - Hero Image -->
+				<div class="relative {isVisible ? 'animate-fade-in-right' : 'opacity-0'}">
+					<div class="relative">
+						<!-- Decorative Elements -->
+						<div class="absolute -top-4 -left-4 w-24 h-24 bg-primary/10 rounded-2xl rotate-6"></div>
+						<div
+							class="absolute -bottom-4 -right-4 w-32 h-32 bg-secondary/10 rounded-2xl -rotate-6"
+						></div>
+
+						<!-- Main Image -->
+						<div class="relative bg-base-100 p-4 rounded-3xl shadow-2xl">
+							<img
+								src={background.url}
+								alt={background.location}
+								class="rounded-2xl object-cover w-full h-[500px] shadow-lg"
+							/>
+
+							<!-- Floating Badge -->
+							<div
+								class="absolute top-8 left-8 bg-base-100/90 backdrop-blur-sm px-4 py-2 rounded-full shadow-lg border"
+							>
+								<div class="flex items-center gap-2">
+									<div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+									<span class="text-sm font-medium"
+										>{background.location || 'Adventure Awaits'}</span
+									>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
-			<h2
-				class="mt-4 text-3xl md:text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-			>
-				{$t('home.desc_1')}
-			</h2>
-			<p class="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg">
-				{$t('home.desc_2')}
-			</p>
 		</div>
-		<div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-			<!-- Image for Features -->
-			<div class="order-1 md:order-2">
-				<img
-					src={MapWithPins}
-					alt="World map with pins"
-					class="rounded-lg shadow-lg object-cover"
-				/>
-			</div>
-			<!-- Feature List -->
-			<div class="order-2 md:order-1">
-				<ul class="space-y-6">
-					<li class="space-y-2">
-						<h3 class="text-xl font-semibold dark:text-gray-300">{$t('home.feature_1')}</h3>
-						<p class="text-gray-600 dark:text-gray-400">
-							{$t('home.feature_1_desc')}
-						</p>
-					</li>
-					<li class="space-y-2">
-						<h3 class="text-xl font-semibold dark:text-gray-300">{$t('home.feature_2')}</h3>
-						<p class="text-gray-600 dark:text-gray-400">
-							{$t('home.feature_2_desc')}
-						</p>
-					</li>
-					<li class="space-y-2">
-						<h3 class="text-xl font-semibold dark:text-gray-300">{$t('home.feature_3')}</h3>
-						<p class="text-gray-600 dark:text-gray-400">
-							{$t('home.feature_3_desc')}
-						</p>
-					</li>
-				</ul>
+
+		<!-- Scroll Indicator -->
+		<div class="absolute bottom-8 left-1/2 -translate-x-1/2 animate-bounce">
+			<div class="w-6 h-10 border-2 border-base-content/30 rounded-full flex justify-center">
+				<div class="w-1 h-3 bg-base-content/30 rounded-full mt-2 animate-pulse"></div>
 			</div>
 		</div>
-	</div>
-</section>
+	</section>
+
+	<!-- Features Section -->
+	<section id="features" class="py-24 bg-base-100">
+		<div class="container mx-auto px-6">
+			<!-- Section Header -->
+			<div class="text-center mb-16 space-y-4">
+				<div
+					class="inline-flex items-center gap-2 px-4 py-2 bg-neutral/10 text-neutral rounded-full border border-neutral/20"
+				>
+					<StarIcon class="w-4 h-4" />
+					<span class="text-sm font-medium">{$t('home.key_features')}</span>
+				</div>
+				<h2 class="text-4xl lg:text-5xl font-bold">
+					<span class="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+						{$t('home.desc_1')}
+					</span>
+				</h2>
+				<p class="text-xl text-base-content/70 max-w-3xl mx-auto leading-relaxed">
+					{$t('home.desc_2')}
+				</p>
+			</div>
+
+			<div class="grid lg:grid-cols-2 gap-16 items-center">
+				<!-- Features List -->
+				<div class="space-y-8">
+					{#each features as feature, index}
+						<div
+							class="group hover:bg-base-200/50 p-6 rounded-2xl transition-all duration-300 hover:shadow-lg"
+						>
+							<div class="flex items-start gap-4">
+								<div class="flex-shrink-0 p-3 {feature.bgColor} rounded-xl">
+									<svelte:component this={feature.icon} class="w-6 h-6 {feature.color}" />
+								</div>
+								<div class="space-y-2">
+									<h3
+										class="text-xl font-bold text-base-content group-hover:text-primary transition-colors"
+									>
+										{feature.title}
+									</h3>
+									<p class="text-base-content/70 leading-relaxed">
+										{feature.description}
+									</p>
+								</div>
+							</div>
+						</div>
+					{/each}
+				</div>
+
+				<!-- Feature Image -->
+				<div class="relative">
+					<div class="relative bg-gradient-to-br from-primary/5 to-secondary/5 p-8 rounded-3xl">
+						<img
+							src={MapWithPins}
+							alt="World map with pins"
+							class="rounded-2xl shadow-2xl object-cover w-full"
+						/>
+
+						<!-- Floating Elements -->
+						<div class="absolute top-4 right-4 bg-base-100 p-3 rounded-xl shadow-lg animate-float">
+							<div class="flex items-center gap-2">
+								<CheckIcon class="w-4 h-4 text-success" />
+								<span class="text-sm font-medium">25 Countries</span>
+							</div>
+						</div>
+
+						<div
+							class="absolute bottom-4 left-4 bg-base-100 p-3 rounded-xl shadow-lg animate-float-delayed"
+						>
+							<div class="flex items-center gap-2">
+								<TrophyIcon class="w-4 h-4 text-warning" />
+								<span class="text-sm font-medium">Explorer Level</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Call to Action Section -->
+	{#if !data.user}
+		<section class="py-24 bg-gradient-to-r from-primary to-secondary">
+			<div class="container mx-auto px-6 text-center">
+				<div class="max-w-3xl mx-auto space-y-8">
+					<h2 class="text-4xl lg:text-5xl font-bold text-white">Ready to Start Your Adventure?</h2>
+					<p class="text-xl text-white/90 leading-relaxed">
+						Join thousands of travelers already using AdventureLog to document their journeys and
+						discover new destinations.
+					</p>
+					<div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+						<button
+							on:click={() => goto('/signup')}
+							class="btn btn-lg bg-white text-primary hover:bg-white/90 gap-3 shadow-lg group"
+						>
+							Get Started Free
+							<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+						</button>
+						<button
+							on:click={() => goto('/login')}
+							class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-primary gap-3"
+						>
+							Sign In
+						</button>
+					</div>
+				</div>
+			</div>
+		</section>
+	{/if}
+</div>
 
 <svelte:head>
 	<title>Home | AdventureLog</title>
@@ -126,3 +340,63 @@
 		content="AdventureLog is a platform to log your adventures and plan your travel."
 	/>
 </svelte:head>
+
+<style>
+	@keyframes fade-in-up {
+		from {
+			opacity: 0;
+			transform: translateY(30px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes fade-in-right {
+		from {
+			opacity: 0;
+			transform: translateX(30px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
+	}
+
+	@keyframes float {
+		0%,
+		100% {
+			transform: translateY(0px);
+		}
+		50% {
+			transform: translateY(-10px);
+		}
+	}
+
+	@keyframes float-delayed {
+		0%,
+		100% {
+			transform: translateY(0px);
+		}
+		50% {
+			transform: translateY(-8px);
+		}
+	}
+
+	.animate-fade-in-up {
+		animation: fade-in-up 0.8s ease-out;
+	}
+
+	.animate-fade-in-right {
+		animation: fade-in-right 0.8s ease-out 0.2s both;
+	}
+
+	.animate-float {
+		animation: float 3s ease-in-out infinite;
+	}
+
+	.animate-float-delayed {
+		animation: float-delayed 3s ease-in-out infinite 1.5s;
+	}
+</style>
