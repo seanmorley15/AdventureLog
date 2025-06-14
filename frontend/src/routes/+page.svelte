@@ -51,11 +51,11 @@
 		}
 	];
 
-	const stats = [
-		{ label: 'Countries Tracked', value: '195+', icon: GlobeIcon },
-		{ label: 'Adventures Logged', value: '10K+', icon: CalendarIcon },
-		{ label: 'Active Travelers', value: '5K+', icon: StarIcon }
-	];
+	// const stats = [
+	// 	{ label: 'Countries Tracked', value: '195+', icon: GlobeIcon },
+	// 	{ label: 'Adventures Logged', value: '10K+', icon: CalendarIcon },
+	// 	{ label: 'Active Travelers', value: '5K+', icon: StarIcon }
+	// ];
 </script>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
@@ -167,7 +167,7 @@
 					</div>
 
 					<!-- Stats -->
-					<div class="grid grid-cols-3 gap-6 pt-8 border-t border-base-300">
+					<!-- <div class="grid grid-cols-3 gap-6 pt-8 border-t border-base-300">
 						{#each stats as stat}
 							<div class="text-center">
 								<div class="flex justify-center mb-2">
@@ -179,7 +179,7 @@
 								<div class="text-sm text-base-content/60">{stat.label}</div>
 							</div>
 						{/each}
-					</div>
+					</div> -->
 				</div>
 
 				<!-- Right Content - Hero Image -->
@@ -317,7 +317,7 @@
 							on:click={() => goto('/signup')}
 							class="btn btn-lg bg-white text-primary hover:bg-white/90 gap-3 shadow-lg group"
 						>
-							Get Started Free
+							Get Started
 							<ChevronRight class="w-4 h-4 group-hover:translate-x-1 transition-transform" />
 						</button>
 						<button

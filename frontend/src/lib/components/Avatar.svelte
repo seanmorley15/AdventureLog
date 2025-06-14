@@ -5,7 +5,6 @@
 	// Icons
 	import Account from '~icons/mdi/account';
 	import MapMarker from '~icons/mdi/map-marker';
-	import Share from '~icons/mdi/share-variant';
 	import Shield from '~icons/mdi/shield-account';
 	import Settings from '~icons/mdi/cog';
 	import Logout from '~icons/mdi/logout';
@@ -35,12 +34,6 @@
 			path: '/adventures',
 			icon: MapMarker,
 			label: 'navbar.my_adventures',
-			section: 'main'
-		},
-		{
-			path: '/shared',
-			icon: Share,
-			label: 'navbar.shared_with_me',
 			section: 'main'
 		},
 		{

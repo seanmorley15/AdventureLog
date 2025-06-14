@@ -48,15 +48,25 @@
 
 	// Achievement levels
 	$: achievementLevel =
-		(stats?.adventure_count ?? 0) >= 50
-			? 'Explorer Master'
-			: (stats?.adventure_count ?? 0) >= 25
-				? 'Seasoned Traveler'
-				: (stats?.adventure_count ?? 0) >= 10
-					? 'Adventure Seeker'
-					: (stats?.adventure_count ?? 0) >= 5
-						? 'Journey Starter'
-						: 'Travel Enthusiast';
+		(stats?.adventure_count ?? 0) >= 100
+			? 'Legendary Explorer'
+			: (stats?.adventure_count ?? 0) >= 75
+				? 'World Wanderer'
+				: (stats?.adventure_count ?? 0) >= 50
+					? 'Explorer Master'
+					: (stats?.adventure_count ?? 0) >= 35
+						? 'Globetrotter'
+						: (stats?.adventure_count ?? 0) >= 25
+							? 'Seasoned Traveler'
+							: (stats?.adventure_count ?? 0) >= 15
+								? 'Adventure Seeker'
+								: (stats?.adventure_count ?? 0) >= 10
+									? 'Trailblazer'
+									: (stats?.adventure_count ?? 0) >= 5
+										? 'Journey Starter'
+										: (stats?.adventure_count ?? 0) >= 1
+											? 'Travel Enthusiast'
+											: 'New Explorer';
 
 	$: achievementColor =
 		(stats?.adventure_count ?? 0) >= 50
@@ -155,14 +165,6 @@
 							<span class={`text-lg ${achievementColor}`}>{achievementLevel}</span>
 						</div>
 					{/if}
-
-					<!-- Quick Actions -->
-					<div class="flex gap-3 mt-6">
-						<button class="btn btn-primary gap-2">
-							<Share class="w-4 h-4" />
-							Share Profile
-						</button>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -400,7 +402,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each collections as collection}
 						<div class="collection-card">
-							<CollectionCard {collection} type={''} user={data.user} />
+							<CollectionCard {collection} type={''} user={null} />
 						</div>
 					{/each}
 				</div>

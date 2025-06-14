@@ -277,7 +277,7 @@
 							on:click={() => goto(`/adventures/${adventure.id}`)}
 						>
 							<Launch class="w-4 h-4" />
-							View Details
+							{$t('adventures.open_details')}
 						</button>
 
 						{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}

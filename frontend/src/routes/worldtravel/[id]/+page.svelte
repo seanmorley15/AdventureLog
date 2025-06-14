@@ -208,20 +208,6 @@
 								</button>
 							{/if}
 						</div>
-
-						<!-- Map Toggle -->
-						<button
-							class="btn btn-outline gap-2 {showGeo ? 'btn-active' : ''}"
-							on:click={() => (showGeo = !showGeo)}
-						>
-							{#if showGeo}
-								<Map class="w-4 h-4" />
-								<span class="hidden sm:inline">Hide Labels</span>
-							{:else}
-								<Map class="w-4 h-4" />
-								<span class="hidden sm:inline">Show Labels</span>
-							{/if}
-						</button>
 					</div>
 
 					<!-- Filter Chips -->
@@ -262,53 +248,55 @@
 			</div>
 
 			<!-- Map Section -->
-			<div class="container mx-auto px-6 py-4">
-				<div class="card bg-base-100 shadow-xl">
-					<div class="card-body p-4">
-						<div class="flex items-center justify-between mb-4">
-							<div class="flex items-center gap-2">
-								<Map class="w-5 h-5 text-primary" />
-								<h2 class="text-lg font-semibold">Interactive Map</h2>
-							</div>
-							<div class="flex items-center gap-2 text-sm text-base-content/60">
-								<div class="flex items-center gap-1">
-									<div class="w-3 h-3 bg-green-200 rounded-full border"></div>
-									<span>Visited</span>
+			{#if regions.some((region) => region.latitude && region.longitude)}
+				<div class="container mx-auto px-6 py-4">
+					<div class="card bg-base-100 shadow-xl">
+						<div class="card-body p-4">
+							<div class="flex items-center justify-between mb-4">
+								<div class="flex items-center gap-2">
+									<Map class="w-5 h-5 text-primary" />
+									<h2 class="text-lg font-semibold">Interactive Map</h2>
 								</div>
-								<div class="flex items-center gap-1">
-									<div class="w-3 h-3 bg-red-200 rounded-full border"></div>
-									<span>Not Visited</span>
+								<div class="flex items-center gap-2 text-sm text-base-content/60">
+									<div class="flex items-center gap-1">
+										<div class="w-3 h-3 bg-green-200 rounded-full border"></div>
+										<span>Visited</span>
+									</div>
+									<div class="flex items-center gap-1">
+										<div class="w-3 h-3 bg-red-200 rounded-full border"></div>
+										<span>Not Visited</span>
+									</div>
 								</div>
 							</div>
+							<MapLibre
+								style={getBasemapUrl()}
+								class="aspect-[16/10] w-full rounded-lg"
+								standardControls
+								center={[regions[0]?.longitude || 0, regions[0]?.latitude || 0]}
+								zoom={6}
+							>
+								{#each regions as region}
+									{#if region.latitude && region.longitude && showGeo}
+										<Marker
+											lngLat={[region.longitude, region.latitude]}
+											class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 {visitedRegions.some(
+												(visitedRegion) => visitedRegion.region === region.id
+											)
+												? 'bg-green-200'
+												: 'bg-red-200'} text-black focus:outline-6 focus:outline-black"
+											on:click={togleVisited(region)}
+										>
+											<span class="text-xs">
+												{region.name}
+											</span>
+										</Marker>
+									{/if}
+								{/each}
+							</MapLibre>
 						</div>
-						<MapLibre
-							style={getBasemapUrl()}
-							class="aspect-[16/10] w-full rounded-lg"
-							standardControls
-							center={[regions[0]?.longitude || 0, regions[0]?.latitude || 0]}
-							zoom={6}
-						>
-							{#each regions as region}
-								{#if region.latitude && region.longitude && showGeo}
-									<Marker
-										lngLat={[region.longitude, region.latitude]}
-										class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 {visitedRegions.some(
-											(visitedRegion) => visitedRegion.region === region.id
-										)
-											? 'bg-green-200'
-											: 'bg-red-200'} text-black focus:outline-6 focus:outline-black"
-										on:click={togleVisited(region)}
-									>
-										<span class="text-xs">
-											{region.name}
-										</span>
-									</Marker>
-								{/if}
-							{/each}
-						</MapLibre>
 					</div>
 				</div>
-			</div>
+			{/if}
 
 			<!-- Main Content -->
 			<div class="container mx-auto px-6 py-8">
@@ -329,7 +317,7 @@
 				{:else}
 					<!-- Regions Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
 					>
 						{#each filteredRegions as region}
 							<RegionCard
@@ -432,22 +420,24 @@
 					</div> -->
 
 					<!-- Quick Actions -->
-					<div class="space-y-3">
-						<button class="btn btn-outline w-full gap-2" on:click={() => (showGeo = !showGeo)}>
-							{#if showGeo}
-								<Map class="w-4 h-4" />
-								Hide Map Labels
-							{:else}
-								<Map class="w-4 h-4" />
-								Show Map Labels
-							{/if}
-						</button>
+					{#if regions.some((region) => region.latitude && region.longitude)}
+						<div class="space-y-3">
+							<button class="btn btn-outline w-full gap-2" on:click={() => (showGeo = !showGeo)}>
+								{#if showGeo}
+									<Map class="w-4 h-4" />
+									Hide Map Labels
+								{:else}
+									<Map class="w-4 h-4" />
+									Show Map Labels
+								{/if}
+							</button>
 
-						<!-- <button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
+							<!-- <button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
 							<Clear class="w-4 h-4" />
 							Clear All Filters
 						</button> -->
-					</div>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
