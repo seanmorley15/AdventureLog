@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getBasemapUrl } from '$lib';
 	import CityCard from '$lib/components/CityCard.svelte';
 	import { addToast } from '$lib/toasts';
 	import type { City } from '$lib/types';
@@ -102,7 +103,7 @@
 		<!-- checkbox to toggle marker -->
 
 		<MapLibre
-			style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+			style={getBasemapUrl()}
 			class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 			standardControls
 			center={allCities[0] && allCities[0].longitude !== null && allCities[0].latitude !== null

@@ -584,3 +584,32 @@ export function debounce(func: Function, timeout: number) {
 		}, timeout);
 	};
 }
+
+export function getIsDarkMode() {
+	const theme = document.documentElement.getAttribute('data-theme');
+
+	if (theme) {
+		const isDark =
+			theme === 'dark' ||
+			theme === 'night' ||
+			theme === 'aestheticDark' ||
+			theme === 'northernLights' ||
+			theme === 'forest';
+		return isDark;
+	}
+
+	// Fallback to browser preference if no theme cookie is set
+	if (typeof window !== 'undefined' && window.matchMedia) {
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		return prefersDark;
+	}
+
+	return false;
+}
+
+export function getBasemapUrl() {
+	if (getIsDarkMode()) {
+		return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+	}
+	return 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+}

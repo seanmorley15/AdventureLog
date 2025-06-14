@@ -5,6 +5,7 @@
 	import type { Adventure, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
+	import { getBasemapUrl } from '$lib';
 	export let data;
 
 	let createModalOpen: boolean = false;
@@ -117,7 +118,7 @@
 {/if}
 
 <MapLibre
-	style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+	style={getBasemapUrl()}
 	class="mx-auto aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-10/12 rounded-lg"
 	standardControls
 >

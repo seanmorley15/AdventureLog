@@ -19,7 +19,7 @@
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
-	import { isAllDay } from '$lib';
+	import { getBasemapUrl, isAllDay } from '$lib';
 
 	let geojson: any;
 
@@ -600,7 +600,7 @@
 
 							<div class="rounded-lg overflow-hidden shadow-lg">
 								<MapLibre
-									style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+									style={getBasemapUrl()}
 									class="w-full h-96"
 									standardControls
 									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}

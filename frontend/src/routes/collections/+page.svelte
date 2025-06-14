@@ -280,14 +280,14 @@
 							{activeView === 'owned'
 								? 'No collections yet'
 								: activeView === 'shared'
-									? 'No shared collections'
+									? 'No shared collections.'
 									: 'No archived collections'}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{activeView === 'owned'
 								? 'Create your first collection to organize your adventures and memories.'
 								: activeView === 'shared'
-									? 'Collections shared with you will appear here.'
+									? 'Make sure your profile is public so others can share with you.'
 									: 'Archived collections will appear here.'}
 						</p>
 						{#if activeView === 'owned'}
@@ -429,7 +429,7 @@
 					</div>
 
 					<!-- Quick Actions -->
-					<div class="space-y-3 mt-6">
+					<!-- <div class="space-y-3 mt-6">
 						<button
 							type="button"
 							class="btn btn-outline w-full gap-2"
@@ -438,7 +438,7 @@
 							<Archive class="w-4 h-4" />
 							{$t(`adventures.archived_collections`)}
 						</button>
-					</div>
+					</div> -->
 				</div>
 			</div>
 		</div>

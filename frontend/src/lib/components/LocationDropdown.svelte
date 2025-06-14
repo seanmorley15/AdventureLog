@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getBasemapUrl } from '$lib';
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
 	import type { Adventure, Lodging, GeocodeSearchResult, Point, ReverseGeocode } from '$lib/types';
@@ -298,7 +299,7 @@
 		<!-- </div> -->
 		<div>
 			<MapLibre
-				style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+				style={getBasemapUrl()}
 				class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 				standardControls
 				zoom={item.latitude && item.longitude ? 12 : 1}

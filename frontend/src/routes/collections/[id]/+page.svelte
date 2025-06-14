@@ -30,7 +30,8 @@
 		groupChecklistsByDate,
 		osmTagToEmoji,
 		groupLodgingByDate,
-		LODGING_TYPES_ICONS
+		LODGING_TYPES_ICONS,
+		getBasemapUrl
 	} from '$lib';
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -1233,7 +1234,7 @@
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
 				<MapLibre
-					style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+					style={getBasemapUrl()}
 					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
 					standardControls
 				>
@@ -1459,7 +1460,7 @@
 
 				{#if recomendationsData}
 					<MapLibre
-						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+						style={getBasemapUrl()}
 						class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max
 						-h-full w-full rounded-lg"
 						standardControls

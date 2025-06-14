@@ -16,6 +16,7 @@
 	import Check from '~icons/mdi/check-circle';
 	import Progress from '~icons/mdi/progress-check';
 	import Cancel from '~icons/mdi/cancel';
+	import { getBasemapUrl } from '$lib';
 
 	export let data: PageData;
 	console.log(data);
@@ -230,7 +231,7 @@
 					<div class="card bg-base-100 shadow-xl">
 						<div class="card-body p-4">
 							<MapLibre
-								style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+								style={getBasemapUrl()}
 								class="aspect-[16/10] w-full rounded-lg"
 								standardControls
 								zoom={2}

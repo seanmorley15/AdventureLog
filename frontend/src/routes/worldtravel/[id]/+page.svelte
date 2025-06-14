@@ -19,6 +19,7 @@
 	import Trophy from '~icons/mdi/trophy';
 	import Target from '~icons/mdi/target';
 	import Flag from '~icons/mdi/flag';
+	import { getBasemapUrl } from '$lib';
 
 	export let data: PageData;
 
@@ -281,7 +282,7 @@
 							</div>
 						</div>
 						<MapLibre
-							style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+							style={getBasemapUrl()}
 							class="aspect-[16/10] w-full rounded-lg"
 							standardControls
 							center={[regions[0]?.longitude || 0, regions[0]?.latitude || 0]}
