@@ -16,15 +16,26 @@
 		if (modal) {
 			modal.showModal();
 		}
+
 		let res = await fetch(`/api/collections/all/`, {
 			method: 'GET'
 		});
 
 		let result = await res.json();
-		collections = result as Collection[];
 
 		if (result.type === 'success' && result.data) {
 			collections = result.data.adventures as Collection[];
+		} else {
+			collections = result as Collection[];
+		}
+
+		// Move linked collections to the front
+		if (linkedCollectionList) {
+			collections.sort((a, b) => {
+				const aLinked = linkedCollectionList?.includes(a.id);
+				const bLinked = linkedCollectionList?.includes(b.id);
+				return aLinked === bLinked ? 0 : aLinked ? -1 : 1;
+			});
 		}
 	});
 
