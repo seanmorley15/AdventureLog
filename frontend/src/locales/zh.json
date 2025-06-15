@@ -161,7 +161,6 @@
     "archived_collection_message": "成功归档合集！",
     "unarchived_collection_message": "成功取消归档合集！",
     "delete_collection_success": "成功删除合集！",
-    "delete_collection_warning": "你确定要删除此合集吗？这将同时删除所有链接的冒险。此操作无法撤销。",
     "cancel": "取消",
     "delete_collection": "删除合集",
     "delete_adventure": "删除冒险",
@@ -288,7 +287,15 @@
     "filters_and_sort": "过滤器",
     "filters_and_stats": "过滤器",
     "no_adventures_message": "开始记录您的冒险经历，并计划新的冒险。\n每个旅程都有一个值得讲述的故事。",
-    "travel_progress": "旅行进度"
+    "travel_progress": "旅行进度",
+    "adventures_available": "冒险可用",
+    "all_adventures_already_linked": "所有冒险已经链接到此集合。",
+    "collections_linked": "链接的集合",
+    "create_collection_first": "首先创建一个集合来组织您的冒险和回忆。",
+    "delete_collection_warning": "您确定要删除此系列吗？\n该动作不能撤消。",
+    "done": "完毕",
+    "loading_adventures": "加载冒险...",
+    "name_location": "名称，位置"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -507,7 +514,10 @@
     "no_archived_collections": "没有存档的收藏。",
     "no_collections_yet": "还没有收藏",
     "no_shared_collections": "没有共享的收藏。",
-    "shared_collections": "共享收藏"
+    "shared_collections": "共享收藏",
+    "available": "可用的",
+    "linked": "链接",
+    "try_different_search": "尝试其他搜索或过滤器。"
   },
   "notes": {
     "add_a_link": "添加链接",

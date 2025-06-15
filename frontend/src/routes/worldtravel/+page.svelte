@@ -123,7 +123,7 @@
 
 						<!-- Quick Stats -->
 						<div class="hidden md:flex items-center gap-2">
-							<div class="stats stats-horizontal bg-base-100 shadow-lg">
+							<div class="stats stats-horizontal bg-base-200/50 border border-base-300/50">
 								<div class="stat py-2 px-4">
 									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedCountries}</div>

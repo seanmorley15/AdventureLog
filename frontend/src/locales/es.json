@@ -109,7 +109,6 @@
     "archived_collection_message": "¡Colección archivada exitosamente!",
     "delete_collection": "Eliminar colección",
     "delete_collection_success": "¡Colección eliminada exitosamente!",
-    "delete_collection_warning": "¿Estás seguro de que deseas eliminar esta colección? \nEsto también eliminará todas las aventuras vinculadas. \nEsta acción no se puede deshacer.",
     "unarchived_collection_message": "¡Colección desarchivada exitosamente!",
     "archive": "Archivo",
     "archived": "Archivado",
@@ -288,7 +287,15 @@
     "filters_and_sort": "Filtros",
     "no_adventures_message": "Comience a documentar sus aventuras y planificar nuevas. \nCada viaje tiene una historia que vale la pena contar.",
     "filters_and_stats": "Filtros",
-    "travel_progress": "Progreso del viaje"
+    "travel_progress": "Progreso del viaje",
+    "adventures_available": "Aventuras disponibles",
+    "all_adventures_already_linked": "Todas las aventuras ya están vinculadas a esta colección.",
+    "collections_linked": "Colecciones vinculadas",
+    "create_collection_first": "Cree una colección primero para organizar sus aventuras y recuerdos.",
+    "delete_collection_warning": "¿Estás seguro de que quieres eliminar esta colección? \nEsta acción no se puede deshacer.",
+    "done": "Hecho",
+    "loading_adventures": "Cargando aventuras ...",
+    "name_location": "Nombre, ubicación"
   },
   "worldtravel": {
     "all": "Todo",
@@ -507,7 +514,10 @@
     "no_archived_collections": "No hay colecciones archivadas.",
     "no_collections_yet": "Todavía no hay colecciones",
     "no_shared_collections": "No hay colecciones compartidas.",
-    "shared_collections": "Colecciones compartidas"
+    "shared_collections": "Colecciones compartidas",
+    "available": "Disponible",
+    "linked": "Vinculado",
+    "try_different_search": "Pruebe una búsqueda o filtro diferente."
   },
   "notes": {
     "add_a_link": "Agregar un enlace",

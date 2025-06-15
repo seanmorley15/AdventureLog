@@ -34,7 +34,6 @@
     "delete": "Eliminare",
     "delete_collection": "Elimina collezione",
     "delete_collection_success": "Collezione eliminata con successo!",
-    "delete_collection_warning": "Sei sicuro di voler eliminare questa collezione? \nCiò eliminerà anche tutte le avventure collegate. \nQuesta azione non può essere annullata.",
     "descending": "Discendente",
     "edit_adventure": "Modifica Avventura",
     "edit_collection": "Modifica collezione",
@@ -236,7 +235,15 @@
     "filters_and_sort": "Filtri",
     "filters_and_stats": "Filtri",
     "no_adventures_message": "Inizia a documentare le tue avventure e pianificarne di nuove. \nOgni viaggio ha una storia che vale la pena raccontare.",
-    "travel_progress": "Progresso di viaggio"
+    "travel_progress": "Progresso di viaggio",
+    "adventures_available": "Avventure disponibili",
+    "all_adventures_already_linked": "Tutte le avventure sono già legate a questa collezione.",
+    "collections_linked": "Collezioni collegate",
+    "create_collection_first": "Crea prima una collezione per organizzare le tue avventure e i tuoi ricordi.",
+    "delete_collection_warning": "Sei sicuro di voler eliminare questa collezione? \nQuesta azione non può essere annullata.",
+    "done": "Fatto",
+    "loading_adventures": "Caricamento di avventure ...",
+    "name_location": "Nome, posizione"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -507,7 +514,10 @@
     "no_archived_collections": "Nessuna collezione archiviata.",
     "no_collections_yet": "Nessuna collezione ancora",
     "no_shared_collections": "Nessuna collezione condivisa.",
-    "shared_collections": "Collezioni condivise"
+    "shared_collections": "Collezioni condivise",
+    "available": "Disponibile",
+    "linked": "Collegato",
+    "try_different_search": "Prova una ricerca o un filtro diverso."
   },
   "notes": {
     "add_a_link": "Aggiungi un collegamento",

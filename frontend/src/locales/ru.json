@@ -177,7 +177,6 @@
     "archived_collection_message": "Коллекция успешно архивирована!",
     "unarchived_collection_message": "Коллекция успешно разархивирована!",
     "delete_collection_success": "Коллекция успешно удалена!",
-    "delete_collection_warning": "Вы уверены, что хотите удалить эту коллекцию? Это также удалит все связанные приключения. Это действие нельзя отменить.",
     "cancel": "Отмена",
     "delete_collection": "Удалить коллекцию",
     "delete_adventure": "Удалить приключение",
@@ -288,7 +287,15 @@
     "filters_and_sort": "Фильтры",
     "filters_and_stats": "Фильтры",
     "no_adventures_message": "Начните документировать ваши приключения и планировать новые. \nУ каждого путешествия есть история, которую стоит рассказать.",
-    "travel_progress": "Прогресс путешествий"
+    "travel_progress": "Прогресс путешествий",
+    "adventures_available": "Приключения доступны",
+    "all_adventures_already_linked": "Все приключения уже связаны с этой коллекцией.",
+    "collections_linked": "Коллекции связаны",
+    "create_collection_first": "Сначала создайте коллекцию, чтобы организовать ваши приключения и воспоминания.",
+    "delete_collection_warning": "Вы уверены, что хотите удалить эту коллекцию? \nЭто действие не может быть отменено.",
+    "done": "Сделанный",
+    "loading_adventures": "Загрузка приключений ...",
+    "name_location": "имя, местоположение"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -495,7 +502,10 @@
     "no_archived_collections": "Нет архивированных коллекций.",
     "no_collections_yet": "Пока нет коллекций",
     "no_shared_collections": "Нет общих коллекций.",
-    "shared_collections": "Общие коллекции"
+    "shared_collections": "Общие коллекции",
+    "available": "Доступный",
+    "linked": "Связанный",
+    "try_different_search": "Попробуйте другой поиск или фильтр."
   },
   "notes": {
     "note_deleted": "Заметка успешно удалена!",

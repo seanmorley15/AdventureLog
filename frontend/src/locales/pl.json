@@ -150,7 +150,6 @@
     "archived_collection_message": "Kolekcja została pomyślnie zarchiwizowana!",
     "unarchived_collection_message": "Kolekcja została pomyślnie przywrócona z archiwum!",
     "delete_collection_success": "Kolekcja została pomyślnie usunięta!",
-    "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? Spowoduje to również usunięcie wszystkich powiązanych podróży. Ta akcja jest nieodwracalna.",
     "cancel": "Anuluj",
     "delete_collection": "Usuń kolekcję",
     "delete_adventure": "Usuń wyprawę",
@@ -288,7 +287,15 @@
     "filters_and_sort": "Filtry",
     "filters_and_stats": "Filtry",
     "no_adventures_message": "Zacznij dokumentować swoje przygody i planować nowe. \nKażda podróż ma historię, którą warto opowiedzieć.",
-    "travel_progress": "Postęp podróży"
+    "travel_progress": "Postęp podróży",
+    "adventures_available": "Dostępne przygody",
+    "all_adventures_already_linked": "Wszystkie przygody są już powiązane z tą kolekcją.",
+    "collections_linked": "Połączone kolekcje",
+    "create_collection_first": "Utwórz kolekcję najpierw, aby zorganizować swoje przygody i wspomnienia.",
+    "done": "Zrobione",
+    "loading_adventures": "Ładowanie przygód ...",
+    "name_location": "Nazwa, lokalizacja",
+    "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? \nTego działania nie można cofnąć."
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -477,7 +484,8 @@
     "social_auth_desc_1": "Zarządzaj opcjami logowania społecznościowego i ustawieniami haseł",
     "social_auth_setup": "Konfiguracja uwierzytelniania społecznego",
     "staff_status": "Status personelu",
-    "staff_user": "Użytkownik personelu"
+    "staff_user": "Użytkownik personelu",
+    "invalid_credentials": "Nieprawidłowe poświadczenia"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -494,7 +502,10 @@
     "no_archived_collections": "Brak zarchiwizowanych kolekcji.",
     "no_collections_yet": "Brak kolekcji",
     "no_shared_collections": "Brak wspólnych kolekcji.",
-    "shared_collections": "Wspólne kolekcje"
+    "shared_collections": "Wspólne kolekcje",
+    "available": "Dostępny",
+    "linked": "Połączony",
+    "try_different_search": "Wypróbuj inne wyszukiwanie lub filtr."
   },
   "notes": {
     "note_deleted": "Notatka została pomyślnie usunięta!",

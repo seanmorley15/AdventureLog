@@ -42,7 +42,6 @@
     "delete_adventure": "Abenteuer löschen",
     "delete_collection": "Sammlung löschen",
     "delete_collection_success": "Sammlung erfolgreich gelöscht!",
-    "delete_collection_warning": "Sind Sie sicher, dass Sie diese Sammlung löschen möchten? \nDadurch werden auch alle verknüpften Abenteuer gelöscht. \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "descending": "Absteigend",
     "duration": "Dauer",
     "edit_collection": "Sammlung bearbeiten",
@@ -236,7 +235,15 @@
     "filters_and_sort": "Filter",
     "filters_and_stats": "Filter",
     "no_adventures_message": "Dokumentieren Sie Ihre Abenteuer und planen Sie neue. \nJede Reise hat eine Geschichte, die es wert ist, erzählt zu werden.",
-    "travel_progress": "Reisefortschritt"
+    "travel_progress": "Reisefortschritt",
+    "adventures_available": "Abenteuer verfügbar",
+    "all_adventures_already_linked": "Alle Abenteuer sind bereits mit dieser Sammlung verknüpft.",
+    "collections_linked": "Kollektionen verknüpft",
+    "create_collection_first": "Erstellen Sie zuerst eine Sammlung, um Ihre Abenteuer und Erinnerungen zu organisieren.",
+    "delete_collection_warning": "Sind Sie sicher, dass Sie diese Sammlung löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "done": "Erledigt",
+    "loading_adventures": "Ladeabenteuer ...",
+    "name_location": "Name, Ort"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -507,7 +514,10 @@
     "no_archived_collections": "Keine archivierten Sammlungen.",
     "no_collections_yet": "Noch keine Sammlungen",
     "no_shared_collections": "Keine gemeinsamen Sammlungen.",
-    "shared_collections": "Gemeinsame Sammlungen"
+    "shared_collections": "Gemeinsame Sammlungen",
+    "available": "Verfügbar",
+    "linked": "Verknüpft",
+    "try_different_search": "Versuchen Sie eine andere Suche oder Filter."
   },
   "notes": {
     "add_a_link": "Fügen Sie einen Link hinzu",

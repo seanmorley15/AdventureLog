@@ -82,6 +82,8 @@
 		url.searchParams.set('order_direction', direction);
 		url.searchParams.set('page', '1'); // Reset to first page when sorting changes
 		currentPage = 1;
+		orderBy = by;
+		orderDirection = direction;
 		await goto(url.toString(), { invalidateAll: true, replaceState: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;

@@ -39,7 +39,6 @@
     "delete_adventure": "Ta bort äventyr",
     "delete_collection": "Ta bort samling",
     "delete_collection_success": "Samlingen har raderats!",
-    "delete_collection_warning": "Är du säker på att du vill ta bort den här samlingen? \nDetta tar också bort alla länkade äventyr. \nDenna åtgärd kan inte ångras.",
     "descending": "Fallande",
     "duration": "Varaktighet",
     "edit_adventure": "Redigera äventyr",
@@ -236,7 +235,15 @@
     "filters_and_sort": "Filter",
     "filters_and_stats": "Filter",
     "no_adventures_message": "Börja dokumentera dina äventyr och planera nya. \nVarje resa har en historia som är värd att berätta.",
-    "travel_progress": "Reseframsteg"
+    "travel_progress": "Reseframsteg",
+    "adventures_available": "Äventyr tillgängliga",
+    "all_adventures_already_linked": "Alla äventyr är redan kopplade till denna samling.",
+    "collections_linked": "Samlingar kopplade",
+    "create_collection_first": "Skapa en samling först för att organisera dina äventyr och minnen.",
+    "delete_collection_warning": "Är du säker på att du vill ta bort den här samlingen? \nDenna åtgärd kan inte ångras.",
+    "done": "Gjort",
+    "loading_adventures": "Laddar äventyr ...",
+    "name_location": "namn, plats"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -507,7 +514,10 @@
     "no_archived_collections": "Inga arkiverade samlingar.",
     "no_collections_yet": "Inga samlingar än",
     "no_shared_collections": "Inga delade samlingar.",
-    "shared_collections": "Delade samlingar"
+    "shared_collections": "Delade samlingar",
+    "available": "Tillgänglig",
+    "linked": "I samband med",
+    "try_different_search": "Prova en annan sökning eller filter."
   },
   "notes": {
     "add_a_link": "Lägg till en länk",

@@ -78,7 +78,6 @@
     "delete_checklist": "체크리스트 삭제",
     "delete_collection": "컬렉션 삭제",
     "delete_collection_success": "컬렉션이 성공적으로 삭제되었습니다!",
-    "delete_collection_warning": "이 컬렉션을 삭제 하시겠습니까? 링크된 모든 모험을 삭제합니다. 이 행동은 취소할 수 없습니다.",
     "delete_note": "노트 삭제",
     "delete_transportation": "교통수단 삭제",
     "descending": "내림차순",
@@ -236,7 +235,15 @@
     "filters_and_sort": "필터",
     "filters_and_stats": "필터",
     "no_adventures_message": "모험을 문서화하고 새로운 모험을 계획하십시오. \n모든 여정에는 말할 가치가있는 이야기가 있습니다.",
-    "travel_progress": "여행 진행"
+    "travel_progress": "여행 진행",
+    "adventures_available": "이용 가능",
+    "all_adventures_already_linked": "모든 모험은 이미이 컬렉션과 연결되어 있습니다.",
+    "collections_linked": "컬렉션 링크",
+    "create_collection_first": "먼저 모험과 추억을 조직하기 위해 먼저 컬렉션을 만드십시오.",
+    "delete_collection_warning": "이 컬렉션을 삭제 하시겠습니까? \n이 조치는 취소 할 수 없습니다.",
+    "done": "완료",
+    "loading_adventures": "적재 모험 ...",
+    "name_location": "이름, 위치"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -298,7 +305,10 @@
     "no_archived_collections": "보관 된 컬렉션이 없습니다.",
     "no_collections_yet": "아직 컬렉션이 없습니다",
     "no_shared_collections": "공유 컬렉션이 없습니다.",
-    "shared_collections": "공유 컬렉션"
+    "shared_collections": "공유 컬렉션",
+    "available": "사용 가능",
+    "linked": "연결되어 있습니다",
+    "try_different_search": "다른 검색 또는 필터를 사용해보십시오."
   },
   "dashboard": {
     "add_some": "다음 모험을 계획해 보는게 어떨까요? 아래 버튼을 클릭하여 새로운 모험을 추가할 수 있습니다.",

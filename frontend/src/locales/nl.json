@@ -36,7 +36,6 @@
     "delete": "Verwijderen",
     "delete_collection": "Collectie verwijderen",
     "delete_collection_success": "Collectie succesvol verwijderd!",
-    "delete_collection_warning": "Weet u zeker dat u deze collectie wilt verwijderen? \nHiermee worden ook alle gekoppelde avonturen verwijderd. \nDeze actie kan niet ongedaan worden gemaakt.",
     "descending": "Aflopend",
     "edit_adventure": "Avontuur bewerken",
     "edit_collection": "Collectie bewerken",
@@ -236,7 +235,15 @@
     "filters_and_sort": "Filters",
     "filters_and_stats": "Filters",
     "no_adventures_message": "Begin met het documenteren van uw avonturen en het plannen van nieuwe. \nElke reis heeft een verhaal dat het vertellen waard is.",
-    "travel_progress": "Reisvoortgang"
+    "travel_progress": "Reisvoortgang",
+    "adventures_available": "Avonturen beschikbaar",
+    "all_adventures_already_linked": "Alle avonturen zijn al gekoppeld aan deze collectie.",
+    "collections_linked": "Collecties gekoppeld",
+    "create_collection_first": "Maak eerst een collectie om je avonturen en herinneringen te organiseren.",
+    "delete_collection_warning": "Weet u zeker dat u deze collectie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "done": "Klaar",
+    "loading_adventures": "Adventuren laden ...",
+    "name_location": "naam, locatie"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -507,7 +514,10 @@
     "no_archived_collections": "Geen gearchiveerde collecties.",
     "no_collections_yet": "Nog geen collecties",
     "no_shared_collections": "Geen gedeelde collecties.",
-    "shared_collections": "Gedeelde collecties"
+    "shared_collections": "Gedeelde collecties",
+    "available": "Beschikbaar",
+    "linked": "Gekoppeld",
+    "try_different_search": "Probeer een ander zoek of filter."
   },
   "notes": {
     "add_a_link": "Voeg een link toe",
