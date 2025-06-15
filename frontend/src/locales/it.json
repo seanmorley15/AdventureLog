@@ -477,7 +477,8 @@
     "social_auth_setup": "Setup di autenticazione sociale",
     "staff_status": "Stato del personale",
     "staff_user": "Utente del personale",
-    "password_auth": "Autenticazione della password"
+    "password_auth": "Autenticazione della password",
+    "invalid_credentials": "Credenziali non valide"
   },
   "checklist": {
     "checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",

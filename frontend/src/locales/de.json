@@ -477,7 +477,8 @@
     "social_auth_setup": "Social Authentication Setup",
     "staff_status": "Personalstatus",
     "staff_user": "Personalbenutzer",
-    "profile_info_desc": "Aktualisieren Sie Ihre persönlichen Daten und Ihr Profilbild"
+    "profile_info_desc": "Aktualisieren Sie Ihre persönlichen Daten und Ihr Profilbild",
+    "invalid_credentials": "Ungültige Anmeldeinformationen"
   },
   "checklist": {
     "checklist_delete_error": "Fehler beim Löschen der Checkliste",

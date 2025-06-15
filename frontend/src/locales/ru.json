@@ -477,7 +477,8 @@
     "enter_current_password": "Введите текущий пароль",
     "enter_new_password": "Введите новый пароль",
     "connected": "Подключено",
-    "disconnected": "Отключено"
+    "disconnected": "Отключено",
+    "invalid_credentials": "Неверные полномочия"
   },
   "collection": {
     "collection_created": "Коллекция успешно создана!",

@@ -477,7 +477,8 @@
     "disabled": "Désactivé",
     "disconnected": "Déconnecté",
     "email_management": "Gestion des e-mails",
-    "enter_last_name": "Entrez votre nom de famille"
+    "enter_last_name": "Entrez votre nom de famille",
+    "invalid_credentials": "Des références non valides"
   },
   "checklist": {
     "checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",

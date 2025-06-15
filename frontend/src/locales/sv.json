@@ -477,7 +477,8 @@
     "social_auth_desc_1": "Hantera sociala inloggningsalternativ och lösenordsinställningar",
     "social_auth_setup": "Social autentiseringsinställning",
     "staff_status": "Personalstatus",
-    "staff_user": "Personalanvändare"
+    "staff_user": "Personalanvändare",
+    "invalid_credentials": "Ogiltiga referenser"
   },
   "checklist": {
     "checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",

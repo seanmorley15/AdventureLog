@@ -477,7 +477,8 @@
     "social_auth_setup": "Sociale authenticatie -opstelling",
     "staff_status": "Status",
     "staff_user": "Personeelsgebruiker",
-    "connected": "Aangesloten"
+    "connected": "Aangesloten",
+    "invalid_credentials": "Ongeldige referenties"
   },
   "checklist": {
     "checklist_delete_error": "Fout bij het verwijderen van de controlelijst",

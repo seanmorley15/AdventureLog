@@ -477,7 +477,8 @@
     "license": "Licencia",
     "all_rights_reserved": "Reservados todos los derechos.",
     "email_verified_erorr_desc": "Su correo electrónico no pudo ser verificado. \nPor favor intente de nuevo.",
-    "no_emai_set": "Sin conjunto de correo electrónico"
+    "no_emai_set": "Sin conjunto de correo electrónico",
+    "invalid_credentials": "Credenciales no válidas"
   },
   "checklist": {
     "checklist_delete_error": "Error al eliminar la lista de tareas",

@@ -477,7 +477,8 @@
     "staff_user": "员工用户",
     "quick_actions": "快速动作",
     "region_updates": "区域更新",
-    "region_updates_desc": "更新访问了地区和城市"
+    "region_updates_desc": "更新访问了地区和城市",
+    "invalid_credentials": "无效的凭据"
   },
   "checklist": {
     "checklist_delete_error": "删除清单时出错",

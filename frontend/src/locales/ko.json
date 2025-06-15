@@ -562,7 +562,8 @@
     "social_auth_desc_1": "소셜 로그인 옵션 및 비밀번호 설정을 관리합니다",
     "social_auth_setup": "소셜 인증 설정",
     "staff_status": "직원 상태",
-    "staff_user": "직원 사용자"
+    "staff_user": "직원 사용자",
+    "invalid_credentials": "잘못된 자격 증명"
   },
   "share": {
     "go_to_settings": "설정으로 이동",

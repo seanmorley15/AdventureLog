@@ -477,7 +477,8 @@
     "social_auth_desc_1": "Administrer sosiale påloggingsalternativer og passordinnstillinger",
     "social_auth_setup": "Sosial autentiseringsoppsett",
     "staff_status": "Personalstatus",
-    "staff_user": "Personalbruker"
+    "staff_user": "Personalbruker",
+    "invalid_credentials": "Ugyldig legitimasjon"
   },
   "collection": {
     "collection_created": "Samling opprettet!",
