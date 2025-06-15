@@ -27,8 +27,6 @@ export const load = (async (event) => {
 		// Build API URL with parameters
 		let apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}`;
 
-		console.log('Fetching collections from:', apiUrl);
-
 		let initialFetch = await fetch(apiUrl, {
 			headers: {
 				Cookie: `sessionid=${sessionId}`
