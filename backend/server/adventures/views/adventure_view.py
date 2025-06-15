@@ -187,7 +187,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         include_collections = request.query_params.get('include_collections', 'false') == 'true'
         
         # Build queryset with collection filtering
-        base_filter = Q(is_public=True) | Q(user_id=request.user.id)
+        base_filter = Q(user_id=request.user.id)
         
         if include_collections:
             queryset = Adventure.objects.filter(base_filter)
