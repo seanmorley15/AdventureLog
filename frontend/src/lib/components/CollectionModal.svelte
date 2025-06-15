@@ -219,6 +219,28 @@
 						{$t('about.close')}
 					</button>
 				</div>
+
+				{#if collection.is_public && collection.id}
+					<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
+						<p class=" font-semibold">{$t('adventures.share_collection')}</p>
+						<div class="flex items-center justify-between">
+							<p class="text-card-foreground font-mono">
+								{window.location.origin}/collections/{collection.id}
+							</p>
+							<button
+								type="button"
+								on:click={() => {
+									navigator.clipboard.writeText(
+										`${window.location.origin}/collections/${collection.id}`
+									);
+								}}
+								class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
+							>
+								{$t('adventures.copy_link')}
+							</button>
+						</div>
+					</div>
+				{/if}
 			</form>
 		</div>
 	</div>

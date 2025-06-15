@@ -285,9 +285,7 @@
 		<div class="container mx-auto px-6 py-8">
 			<div class="flex items-center justify-between">
 				<div>
-					<h1
-						class="text-4xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent pb-1"
-					>
+					<h1 class="text-4xl font-bold bg-clip-text text-primary pb-1">
 						{$t('settings.settings_page')}
 					</h1>
 				</div>

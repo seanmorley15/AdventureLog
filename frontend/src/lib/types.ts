@@ -36,7 +36,7 @@ export type Adventure = {
 		timezone: string | null;
 		notes: string;
 	}[];
-	collection?: string | null;
+	collections?: string[] | null;
 	latitude: number | null;
 	longitude: number | null;
 	is_public: boolean;

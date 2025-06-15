@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from adventures.models import Collection, Adventure, Transportation, Note
+from adventures.models import Collection, Adventure, Transportation, Note, Checklist
 from adventures.permissions import CollectionShared
 from adventures.serializers import CollectionSerializer
 from users.models import CustomUser as User
@@ -55,7 +55,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        queryset = Collection.objects.filter(user_id=request.user.id)
+        queryset = Collection.objects.filter(user_id=request.user.id, is_archived=False)
         queryset = self.apply_sorting(queryset)
         collections = self.paginate_and_respond(queryset, request)
         return collections
@@ -106,23 +106,40 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if 'is_public' in serializer.validated_data:
             new_public_status = serializer.validated_data['is_public']
             
-            # if is_publuc has changed and the user is not the owner of the collection return an error
+            # if is_public has changed and the user is not the owner of the collection return an error
             if new_public_status != instance.is_public and instance.user_id != request.user:
                 print(f"User {request.user.id} does not own the collection {instance.id} that is owned by {instance.user_id}")
                 return Response({"error": "User does not own the collection"}, status=400)
 
-            # Update associated adventures to match the collection's is_public status
-            Adventure.objects.filter(collection=instance).update(is_public=new_public_status)
+            # Get all adventures in this collection
+            adventures_in_collection = Adventure.objects.filter(collections=instance)
+            
+            if new_public_status:
+                # If collection becomes public, make all adventures public
+                adventures_in_collection.update(is_public=True)
+            else:
+                # If collection becomes private, check each adventure
+                # Only set an adventure to private if ALL of its collections are private
+                # Collect adventures that do NOT belong to any other public collection (excluding the current one)
+                adventure_ids_to_set_private = []
 
-            # do the same for transportations
+                for adventure in adventures_in_collection:
+                    has_public_collection = adventure.collections.filter(is_public=True).exclude(id=instance.id).exists()
+                    if not has_public_collection:
+                        adventure_ids_to_set_private.append(adventure.id)
+
+                # Bulk update those adventures
+                Adventure.objects.filter(id__in=adventure_ids_to_set_private).update(is_public=False)
+
+            # Update transportations, notes, and checklists related to this collection
+            # These still use direct ForeignKey relationships
             Transportation.objects.filter(collection=instance).update(is_public=new_public_status)
-
-            # do the same for notes
             Note.objects.filter(collection=instance).update(is_public=new_public_status)
+            Checklist.objects.filter(collection=instance).update(is_public=new_public_status)
 
             # Log the action (optional)
             action = "public" if new_public_status else "private"
-            print(f"Collection {instance.id} and its adventures were set to {action}")
+            print(f"Collection {instance.id} and its related objects were set to {action}")
 
         self.perform_update(serializer)
 
@@ -208,7 +225,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
         return Collection.objects.filter(
             (Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
         ).distinct()
-
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it

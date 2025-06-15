@@ -20,22 +20,10 @@ export const load = (async (event) => {
 		};
 	} else {
 		let adventure = (await request.json()) as AdditionalAdventure;
-		let collection: Collection | null = null;
-
-		if (adventure.collection) {
-			let res2 = await fetch(`${endpoint}/api/collections/${adventure.collection}/`, {
-				headers: {
-					Cookie: `sessionid=${event.cookies.get('sessionid')}`
-				},
-				credentials: 'include'
-			});
-			collection = await res2.json();
-		}
 
 		return {
 			props: {
-				adventure,
-				collection
+				adventure
 			}
 		};
 	}

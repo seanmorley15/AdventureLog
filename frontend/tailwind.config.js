@@ -14,6 +14,7 @@ export default {
 			'forest',
 			'aqua',
 			'emerald',
+			'dim',
 			{
 				aestheticDark: {
 					primary: '#3e5747',

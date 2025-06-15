@@ -88,38 +88,61 @@
 		}
 	}
 
-	async function removeFromCollection() {
+	async function linkCollection(event: CustomEvent<string>) {
+		let collectionId = event.detail;
+		// Create a copy to avoid modifying the original directly
+		const updatedCollections = adventure.collections ? [...adventure.collections] : [];
+
+		// Add the new collection if not already present
+		if (!updatedCollections.some((c) => String(c) === String(collectionId))) {
+			updatedCollections.push(collectionId);
+		}
+
 		let res = await fetch(`/api/adventures/${adventure.id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ collection: null })
+			body: JSON.stringify({ collections: updatedCollections })
 		});
+
 		if (res.ok) {
-			addToast('info', `${$t('adventures.collection_remove_success')}`);
-			dispatch('delete', adventure.id);
+			// Only update the adventure.collections after server confirms success
+			adventure.collections = updatedCollections;
+			addToast('info', `${$t('adventures.collection_link_success')}`);
 		} else {
-			addToast('error', `${$t('adventures.collection_remove_error')}`);
+			addToast('error', `${$t('adventures.collection_link_error')}`);
 		}
 	}
 
-	async function linkCollection(event: CustomEvent<number>) {
+	async function removeFromCollection(event: CustomEvent<string>) {
 		let collectionId = event.detail;
-		let res = await fetch(`/api/adventures/${adventure.id}`, {
-			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ collection: collectionId })
-		});
-		if (res.ok) {
-			console.log('Adventure linked to collection');
-			addToast('info', `${$t('adventures.collection_link_success')}`);
-			isCollectionModalOpen = false;
-			dispatch('delete', adventure.id);
-		} else {
-			addToast('error', `${$t('adventures.collection_link_error')}`);
+		if (!collectionId) {
+			addToast('error', `${$t('adventures.collection_remove_error')}`);
+			return;
+		}
+
+		// Create a copy to avoid modifying the original directly
+		if (adventure.collections) {
+			const updatedCollections = adventure.collections.filter(
+				(c) => String(c) !== String(collectionId)
+			);
+
+			let res = await fetch(`/api/adventures/${adventure.id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ collections: updatedCollections })
+			});
+
+			if (res.ok) {
+				// Only update adventure.collections after server confirms success
+				adventure.collections = updatedCollections;
+				addToast('info', `${$t('adventures.collection_remove_success')}`);
+			} else {
+				addToast('error', `${$t('adventures.collection_remove_error')}`);
+			}
 		}
 	}
 
@@ -133,7 +156,12 @@
 </script>
 
 {#if isCollectionModalOpen}
-	<CollectionLink on:link={linkCollection} on:close={() => (isCollectionModalOpen = false)} />
+	<CollectionLink
+		on:link={(e) => linkCollection(e)}
+		on:unlink={(e) => removeFromCollection(e)}
+		on:close={() => (isCollectionModalOpen = false)}
+		linkedCollectionList={adventure.collections}
+	/>
 {/if}
 
 {#if isWarningModalOpen}
@@ -249,7 +277,7 @@
 							on:click={() => goto(`/adventures/${adventure.id}`)}
 						>
 							<Launch class="w-4 h-4" />
-							View Details
+							{$t('adventures.open_details')}
 						</button>
 
 						{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
@@ -269,23 +297,14 @@
 										</button>
 									</li>
 
-									{#if adventure.collection && user?.uuid == adventure.user_id}
-										<li>
-											<button on:click={removeFromCollection} class="flex items-center gap-2">
-												<LinkVariantRemove class="w-4 h-4" />
-												{$t('adventures.remove_from_collection')}
-											</button>
-										</li>
-									{/if}
-
-									{#if !adventure.collection}
+									{#if user?.uuid == adventure.user_id}
 										<li>
 											<button
 												on:click={() => (isCollectionModalOpen = true)}
 												class="flex items-center gap-2"
 											>
 												<Plus class="w-4 h-4" />
-												{$t('adventures.add_to_collection')}
+												{$t('collection.manage_collections')}
 											</button>
 										</li>
 									{/if}

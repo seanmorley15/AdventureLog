@@ -101,12 +101,17 @@ class AdventureSerializer(CustomModelSerializer):
     country = CountrySerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     city = CitySerializer(read_only=True)
+    collections = serializers.PrimaryKeyRelatedField(
+        many=True, 
+        queryset=Collection.objects.all(), 
+        required=False
+    )
 
     class Meta:
         model = Adventure
         fields = [
             'id', 'user_id', 'name', 'description', 'rating', 'activity_types', 'location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
+            'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
             'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user_id', 'is_visited', 'user']
@@ -115,6 +120,19 @@ class AdventureSerializer(CustomModelSerializer):
         serializer = AdventureImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
+
+    def validate_collections(self, collections):
+        """Validate that collections belong to the same user"""
+        if not collections:
+            return collections
+            
+        user = self.context['request'].user
+        for collection in collections:
+            if collection.user_id != user:
+                raise serializers.ValidationError(
+                    f"Collection '{collection.name}' does not belong to the current user."
+                )
+        return collections
 
     def validate_category(self, category_data):
         if isinstance(category_data, Category):
@@ -137,7 +155,7 @@ class AdventureSerializer(CustomModelSerializer):
         if isinstance(category_data, dict):
             name = category_data.get('name', '').lower()
             display_name = category_data.get('display_name', name)
-            icon = category_data.get('icon', '�')
+            icon = category_data.get('icon', '🌍')
         else:
             name = category_data.name.lower()
             display_name = category_data.display_name
@@ -163,14 +181,23 @@ class AdventureSerializer(CustomModelSerializer):
     def create(self, validated_data):
         visits_data = validated_data.pop('visits', None)
         category_data = validated_data.pop('category', None)
+        collections_data = validated_data.pop('collections', [])
+        
         print(category_data)
         adventure = Adventure.objects.create(**validated_data)
+        
+        # Handle visits
         for visit_data in visits_data:
             Visit.objects.create(adventure=adventure, **visit_data)
 
+        # Handle category
         if category_data:
             category = self.get_or_create_category(category_data)
             adventure.category = category
+        
+        # Handle collections - set after adventure is saved
+        if collections_data:
+            adventure.collections.set(collections_data)
             
         adventure.save()
 
@@ -181,13 +208,25 @@ class AdventureSerializer(CustomModelSerializer):
         visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
 
+        collections_data = validated_data.pop('collections', None)
+
+        # Update regular fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        if category_data:
+        # Handle category - ONLY allow the adventure owner to change categories
+        user = self.context['request'].user
+        if category_data and instance.user_id == user:
+            # Only the owner can set categories
             category = self.get_or_create_category(category_data)
             instance.category = category
+        # If not the owner, ignore category changes
 
+        # Handle collections - only update if collections were provided
+        if collections_data is not None:
+            instance.collections.set(collections_data)
+
+        # Handle visits
         if has_visits:
             current_visits = instance.visits.all()
             current_visit_ids = set(current_visits.values_list('id', flat=True))
@@ -352,7 +391,7 @@ class ChecklistSerializer(CustomModelSerializer):
         return data
 
 class CollectionSerializer(CustomModelSerializer):
-    adventures = AdventureSerializer(many=True, read_only=True, source='adventure_set')
+    adventures = AdventureSerializer(many=True, read_only=True)
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
