@@ -172,12 +172,18 @@
 		}
 		let res = await fetch(`/api/reverse-geocode/search/?query=${query}`);
 		console.log(res);
-		let data = (await res.json()) as GeocodeSearchResult[];
-		places = data;
-		if (data.length === 0) {
+		let data = (await res.json()) as GeocodeSearchResult[] | { error: string };
+
+		if ('error' in data) {
+			places = [];
 			noPlaces = true;
 		} else {
-			noPlaces = false;
+			places = data;
+			if (data.length === 0) {
+				noPlaces = true;
+			} else {
+				noPlaces = false;
+			}
 		}
 	}
 

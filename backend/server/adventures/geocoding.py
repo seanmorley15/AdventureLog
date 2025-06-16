@@ -6,47 +6,60 @@ from django.conf import settings
 
 # -----------------
 # SEARCHING
-# -----------------
 def search_google(query):
-    api_key = settings.GOOGLE_MAPS_API_KEY
-    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-    params = {'query': query, 'key': api_key}
-    response = requests.get(url, params=params)
-    data = response.json()
+    try:
+        api_key = settings.GOOGLE_MAPS_API_KEY
+        if not api_key:
+            return {"error": "Missing Google Maps API key"}
 
-    results = []
-    for r in data.get("results", []):
-        location = r.get("geometry", {}).get("location", {})
-        types = r.get("types", [])
-        
-        # First type is often most specific (e.g., 'restaurant', 'locality')
-        primary_type = types[0] if types else None
-        category = _extract_google_category(types)
-        addresstype = _infer_addresstype(primary_type)
-        
-        importance = None
-        if r.get("user_ratings_total") and r.get("rating"):
-            # Simple importance heuristic based on popularity and quality
-            importance = round(float(r["rating"]) * r["user_ratings_total"] / 100, 2)
+        url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+        params = {'query': query, 'key': api_key}
+        response = requests.get(url, params=params, timeout=(2, 5))
+        response.raise_for_status()
 
-        results.append({
-            "lat": location.get("lat"),
-            "lon": location.get("lng"),
-            "name": r.get("name"),
-            "display_name": r.get("formatted_address"),
-            "type": primary_type,
-            "category": category,
-            "importance": importance,
-            "addresstype": addresstype,
-            "powered_by": "google",
-        })
+        data = response.json()
+        if data.get("status") != "OK":
+            return {
+                "error": f"Google Maps API error: {data.get('status')}",
+                "message": data.get("error_message", "")
+            }
 
-    # order by importance if available
-    if results and any("importance" in r for r in results):
-        results.sort(key=lambda x: x.get("importance", 0), reverse=True)
+        results = []
+        for place in data.get("results", []):
+            location = place.get("geometry", {}).get("location", {})
+            types = place.get("types", [])
+            primary_type = types[0] if types else None
+            category = _extract_google_category(types)
+            addresstype = _infer_addresstype(primary_type)
 
-    return results
+            importance = None
+            rating = place.get("rating")
+            ratings_total = place.get("user_ratings_total")
+            if rating is not None and ratings_total:
+                importance = round(float(rating) * ratings_total / 100, 2)
 
+            results.append({
+                "lat": location.get("lat"),
+                "lon": location.get("lng"),
+                "name": place.get("name"),
+                "display_name": place.get("formatted_address"),
+                "type": primary_type,
+                "category": category,
+                "importance": importance,
+                "addresstype": addresstype,
+                "powered_by": "google",
+            })
+
+        if results:
+            results.sort(key=lambda r: r["importance"] if r["importance"] is not None else 0, reverse=True)
+
+        return results or {"error": "No results found"}
+
+    except requests.exceptions.RequestException as e:
+        return {"error": "Network error while contacting Google Maps", "details": str(e)}
+
+    except Exception as e:
+        return {"error": "Unexpected error during Google search", "details": str(e)}
 
 def _extract_google_category(types):
     # Basic category inference based on common place types
