@@ -33,12 +33,12 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 
 ### 🌐 Frontend (web)
 
-| Name                | Required  | Description                                                                                                   | Default Value           |
-| ------------------- | --------- | ------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `PUBLIC_SERVER_URL` | Yes       | Used by the frontend SSR server to connect to the backend. Should match the internal container name and port. | `http://server:8000`    |
-| `ORIGIN`            | Sometimes | Needed only if not using HTTPS. Set it to the domain or IP you'll use to access the frontend.                 | `http://localhost:8015` |
-| `BODY_SIZE_LIMIT`   | Yes       | Maximum upload size in bytes.                                                                                 | `Infinity`              |
-| `FRONTEND_PORT`     | Yes       | Port that the frontend will run on inside Docker.                                                             | `8015`                  |
+| Name                | Required  | Description                                                                                                                        | Default Value           |
+| ------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
+| `PUBLIC_SERVER_URL` | Yes       | Used by the frontend SSR server to connect to the backend. Almost every user user will **never have to change this from default**! | `http://server:8000`    |
+| `ORIGIN`            | Sometimes | Needed only if not using HTTPS. Set it to the domain or IP you'll use to access the frontend.                                      | `http://localhost:8015` |
+| `BODY_SIZE_LIMIT`   | Yes       | Maximum upload size in bytes.                                                                                                      | `Infinity`              |
+| `FRONTEND_PORT`     | Yes       | Port that the frontend will run on inside Docker.                                                                                  | `8015`                  |
 
 ### 🐘 PostgreSQL Database
 

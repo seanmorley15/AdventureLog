@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { getBasemapUrl } from '$lib';
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
 	import type { Adventure, Lodging, GeocodeSearchResult, Point, ReverseGeocode } from '$lib/types';
@@ -171,12 +172,18 @@
 		}
 		let res = await fetch(`/api/reverse-geocode/search/?query=${query}`);
 		console.log(res);
-		let data = (await res.json()) as GeocodeSearchResult[];
-		places = data;
-		if (data.length === 0) {
+		let data = (await res.json()) as GeocodeSearchResult[] | { error: string };
+
+		if ('error' in data) {
+			places = [];
 			noPlaces = true;
 		} else {
-			noPlaces = false;
+			places = data;
+			if (data.length === 0) {
+				noPlaces = true;
+			} else {
+				noPlaces = false;
+			}
 		}
 	}
 
@@ -298,7 +305,7 @@
 		<!-- </div> -->
 		<div>
 			<MapLibre
-				style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+				style={getBasemapUrl()}
 				class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 				standardControls
 				zoom={item.latitude && item.longitude ? 12 : 1}

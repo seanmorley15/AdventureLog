@@ -129,12 +129,9 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name', 'display_name')
         
 class CollectionAdmin(admin.ModelAdmin):
-    def adventure_count(self, obj):
-        return obj.adventure_set.count()
+   
 
-    adventure_count.short_description = 'Adventure Count'
-
-    list_display = ('name', 'user_id', 'adventure_count', 'is_public')
+    list_display = ('name', 'user_id', 'is_public')
 
 admin.site.register(CustomUser, CustomUserAdmin)
 

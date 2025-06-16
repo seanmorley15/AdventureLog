@@ -51,10 +51,16 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
         
         if adventure.user_id != request.user:
-            # Check if the adventure has a collection
-            if adventure.collection:
-                # Check if the user is in the collection's shared_with list
-                if not adventure.collection.shared_with.filter(id=request.user.id).exists():
+            # Check if the adventure has any collections
+            if adventure.collections.exists():
+                # Check if the user is in the shared_with list of any of the adventure's collections
+                user_has_access = False
+                for collection in adventure.collections.all():
+                    if collection.shared_with.filter(id=request.user.id).exists():
+                        user_has_access = True
+                        break
+                
+                if not user_has_access:
                     return Response({"error": "User does not have permission to access this adventure"}, status=status.HTTP_403_FORBIDDEN)
             else:
                 return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
@@ -189,7 +195,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         queryset = AdventureImage.objects.filter(
             Q(adventure__id=adventure_uuid) & (
                 Q(adventure__user_id=request.user) |  # User owns the adventure
-                Q(adventure__collection__shared_with=request.user)  # User has shared access via collection
+                Q(adventure__collections__shared_with=request.user)  # User has shared access via collection
             )
         ).distinct()
         
@@ -200,7 +206,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         # Updated to include images from adventures the user owns OR has shared access to
         return AdventureImage.objects.filter(
             Q(adventure__user_id=self.request.user) |  # User owns the adventure
-            Q(adventure__collection__shared_with=self.request.user)  # User has shared access via collection
+            Q(adventure__collections__shared_with=self.request.user)  # User has shared access via collection
         ).distinct()
 
     def perform_create(self, serializer):
