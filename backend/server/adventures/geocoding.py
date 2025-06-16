@@ -12,21 +12,33 @@ def search_google(query):
         if not api_key:
             return {"error": "Missing Google Maps API key"}
 
-        url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-        params = {'query': query, 'key': api_key}
-        response = requests.get(url, params=params, timeout=(2, 5))
+        # Updated to use the new Places API (New) endpoint
+        url = "https://places.googleapis.com/v1/places:searchText"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'places.displayName.text,places.formattedAddress,places.location,places.types,places.rating,places.userRatingCount'
+        }
+        
+        payload = {
+            "textQuery": query,
+            "maxResultCount": 20  # Adjust as needed
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=(2, 5))
         response.raise_for_status()
 
         data = response.json()
-        if data.get("status") != "OK":
-            return {
-                "error": f"Google Maps API error: {data.get('status')}",
-                "message": data.get("error_message", "")
-            }
+        
+        # Check if we have places in the response
+        places = data.get("places", [])
+        if not places:
+            return {"error": "No results found"}
 
         results = []
-        for place in data.get("results", []):
-            location = place.get("geometry", {}).get("location", {})
+        for place in places:
+            location = place.get("location", {})
             types = place.get("types", [])
             primary_type = types[0] if types else None
             category = _extract_google_category(types)
@@ -34,15 +46,19 @@ def search_google(query):
 
             importance = None
             rating = place.get("rating")
-            ratings_total = place.get("user_ratings_total")
+            ratings_total = place.get("userRatingCount")
             if rating is not None and ratings_total:
                 importance = round(float(rating) * ratings_total / 100, 2)
 
+            # Extract display name from the new API structure
+            display_name_obj = place.get("displayName", {})
+            name = display_name_obj.get("text") if display_name_obj else None
+
             results.append({
-                "lat": location.get("lat"),
-                "lon": location.get("lng"),
-                "name": place.get("name"),
-                "display_name": place.get("formatted_address"),
+                "lat": location.get("latitude"),
+                "lon": location.get("longitude"),
+                "name": name,
+                "display_name": place.get("formattedAddress"),
                 "type": primary_type,
                 "category": category,
                 "importance": importance,
@@ -53,7 +69,7 @@ def search_google(query):
         if results:
             results.sort(key=lambda r: r["importance"] if r["importance"] is not None else 0, reverse=True)
 
-        return results or {"error": "No results found"}
+        return results
 
     except requests.exceptions.RequestException as e:
         return {"error": "Network error while contacting Google Maps", "details": str(e)}
@@ -170,6 +186,7 @@ def extractIsoCode(user, data):
         if region:
             return {"region_id": iso_code, "region": region.name, "country": region.country.name, "country_id": region.country.country_code, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited, 'location_name': location_name}
         return {"error": "No region found"}
+
 def is_host_resolvable(hostname: str) -> bool:
     try:
         socket.gethostbyname(hostname)
@@ -201,6 +218,9 @@ def reverse_geocode_osm(lat, lon, user):
 
 def reverse_geocode_google(lat, lon, user):
     api_key = settings.GOOGLE_MAPS_API_KEY
+    
+    # Updated to use the new Geocoding API endpoint (this one is still supported)
+    # The Geocoding API is separate from Places API and still uses the old format
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"latlng": f"{lat},{lon}", "key": api_key}
 
