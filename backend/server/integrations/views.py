@@ -270,23 +270,20 @@ class ImmichIntegrationView(viewsets.ViewSet):
         integration = get_object_or_404(ImmichIntegration, id=integration_id)
         owner_id = integration.user_id
 
-        # Try to find the image entry with collection and sharing information
+        # Try to find the image entry with collections and sharing information
         image_entry = (
             AdventureImage.objects
             .filter(immich_id=imageid, user_id=owner_id)
-            .select_related('adventure', 'adventure__collection')
-            .prefetch_related('adventure__collection__shared_with')
-            .order_by(
-                '-adventure__is_public',  # Public adventures first
-                '-adventure__collection__is_public'  # Then public collections
-            )
+            .select_related('adventure')
+            .prefetch_related('adventure__collections', 'adventure__collections__shared_with')
+            .order_by('-adventure__is_public')  # Public adventures first
             .first()
         )
 
         # Access control
         if image_entry:
             adventure = image_entry.adventure
-            collection = adventure.collection
+            collections = adventure.collections.all()
             
             # Determine access level
             is_authorized = False
@@ -295,17 +292,18 @@ class ImmichIntegrationView(viewsets.ViewSet):
             if adventure.is_public:
                 is_authorized = True
                 
-            # Level 2: Private adventure in public collection
-            elif collection and collection.is_public:
+            # Level 2: Private adventure in any public collection
+            elif any(collection.is_public for collection in collections):
                 is_authorized = True
                 
             # Level 3: Owner access
             elif request.user.is_authenticated and request.user.id == owner_id:
                 is_authorized = True
                 
-            # Level 4: Shared collection access
-            elif (request.user.is_authenticated and collection and 
-                collection.shared_with.filter(id=request.user.id).exists()):
+            # Level 4: Shared collection access - check if user has access to any collection
+            elif (request.user.is_authenticated and 
+                any(collection.shared_with.filter(id=request.user.id).exists() 
+                    for collection in collections)):
                 is_authorized = True
             
             if not is_authorized:
