@@ -14,3 +14,4 @@ from .global_search_view import *
 from .attachment_view import *
 from .lodging_view import *
 from .recommendations_view import *
+from .import_export_view import *

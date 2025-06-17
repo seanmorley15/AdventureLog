@@ -18,7 +18,8 @@ router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-cale
 router.register(r'search', GlobalSearchView, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
 router.register(r'lodging', LodgingViewSet, basename='lodging')
-router.register(r'recommendations', RecommendationsViewSet, basename='recommendations')
+router.register(r'recommendations', RecommendationsViewSet, basename='recommendations'),
+router.register(r'backup', BackupViewSet, basename='backup')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix
