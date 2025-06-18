@@ -41,6 +41,7 @@
 	import { goto } from '$app/navigation';
 	import LodgingModal from '$lib/components/LodgingModal.svelte';
 	import LodgingCard from '$lib/components/LodgingCard.svelte';
+	import CollectionAllView from '$lib/components/CollectionAllView.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -651,7 +652,7 @@
 	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
-				<div class="dropdown dropdown-top dropdown-end">
+				<div class="dropdown dropdown-top dropdown-end z-[999]">
 					<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
 						<Plus class="w-8 h-8" />
 					</div>
@@ -844,100 +845,39 @@
 	{/if}
 
 	{#if currentView == 'all'}
-		{#if adventures.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
-
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each adventures as adventure}
-					<AdventureCard
-						user={data.user}
-						on:edit={editAdventure}
-						on:delete={deleteAdventure}
-						{adventure}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if transportations.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each transportations as transportation}
-					<TransportationCard
-						{transportation}
-						user={data?.user}
-						on:delete={(event) => {
-							transportations = transportations.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editTransportation}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if lodging.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.lodging')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each lodging as hotel}
-					<LodgingCard
-						lodging={hotel}
-						user={data?.user}
-						on:delete={(event) => {
-							lodging = lodging.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editLodging}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if notes.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each notes as note}
-					<NoteCard
-						{note}
-						user={data.user || null}
-						on:edit={(event) => {
-							noteToEdit = event.detail;
-							isNoteModalOpen = true;
-						}}
-						on:delete={(event) => {
-							notes = notes.filter((n) => n.id != event.detail);
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if checklists.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each checklists as checklist}
-					<ChecklistCard
-						{checklist}
-						user={data.user || null}
-						on:delete={(event) => {
-							checklists = checklists.filter((n) => n.id != event.detail);
-						}}
-						on:edit={(event) => {
-							checklistToEdit = event.detail;
-							isShowingChecklistModal = true;
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- if none found -->
-		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
-			<NotFound error={undefined} />
-		{/if}
+		<CollectionAllView
+			{adventures}
+			{transportations}
+			{lodging}
+			{notes}
+			{checklists}
+			user={data.user}
+			{collection}
+			on:editAdventure={editAdventure}
+			on:deleteAdventure={deleteAdventure}
+			on:editTransportation={editTransportation}
+			on:deleteTransportation={(event) => {
+				transportations = transportations.filter((t) => t.id != event.detail);
+			}}
+			on:editLodging={editLodging}
+			on:deleteLodging={(event) => {
+				lodging = lodging.filter((t) => t.id != event.detail);
+			}}
+			on:editNote={(event) => {
+				noteToEdit = event.detail;
+				isNoteModalOpen = true;
+			}}
+			on:deleteNote={(event) => {
+				notes = notes.filter((n) => n.id != event.detail);
+			}}
+			on:editChecklist={(event) => {
+				checklistToEdit = event.detail;
+				isShowingChecklistModal = true;
+			}}
+			on:deleteChecklist={(event) => {
+				checklists = checklists.filter((n) => n.id != event.detail);
+			}}
+		/>
 	{/if}
 
 	{#if collection.start_date && collection.end_date}

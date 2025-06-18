@@ -295,7 +295,8 @@
     "delete_collection_warning": "Вы уверены, что хотите удалить эту коллекцию? \nЭто действие не может быть отменено.",
     "done": "Сделанный",
     "loading_adventures": "Загрузка приключений ...",
-    "name_location": "имя, местоположение"
+    "name_location": "имя, местоположение",
+    "collection_contents": "Содержание коллекции"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -346,7 +347,12 @@
     "show_map_labels": "Показать этикетки карты",
     "total_cities": "Общие города",
     "total_countries": "Всего стран",
-    "total_regions": "Общие регионы"
+    "total_regions": "Общие регионы",
+    "newest_first": "Новейший первый",
+    "oldest_first": "Сначала старейший",
+    "unvisited_first": "Не заселяется первым",
+    "visited_first": "Посетил первым",
+    "total_items": "Общие предметы"
   },
   "auth": {
     "username": "Имя пользователя",

@@ -295,7 +295,8 @@
     "delete_collection_warning": "¿Estás seguro de que quieres eliminar esta colección? \nEsta acción no se puede deshacer.",
     "done": "Hecho",
     "loading_adventures": "Cargando aventuras ...",
-    "name_location": "Nombre, ubicación"
+    "name_location": "Nombre, ubicación",
+    "collection_contents": "Contenido de la colección"
   },
   "worldtravel": {
     "all": "Todo",
@@ -346,7 +347,12 @@
     "show_map_labels": "Mostrar etiquetas de mapa",
     "total_regions": "Total de regiones",
     "region_completed": "Región completada",
-    "total_cities": "Ciudades totales"
+    "total_cities": "Ciudades totales",
+    "newest_first": "El primero primero",
+    "oldest_first": "El más antiguo primero",
+    "unvisited_first": "Primero no visitado",
+    "visited_first": "Visitado primero",
+    "total_items": "Total de artículos"
   },
   "auth": {
     "forgot_password": "¿Has olvidado tu contraseña?",

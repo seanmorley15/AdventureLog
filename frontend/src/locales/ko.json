@@ -243,7 +243,8 @@
     "delete_collection_warning": "이 컬렉션을 삭제 하시겠습니까? \n이 조치는 취소 할 수 없습니다.",
     "done": "완료",
     "loading_adventures": "적재 모험 ...",
-    "name_location": "이름, 위치"
+    "name_location": "이름, 위치",
+    "collection_contents": "수집 내용"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -663,7 +664,12 @@
     "show_map_labels": "지도 레이블 표시",
     "total_cities": "총 도시",
     "total_countries": "총 국가",
-    "total_regions": "총 지역"
+    "total_regions": "총 지역",
+    "newest_first": "최신 첫 번째",
+    "oldest_first": "가장 오래된 첫 번째",
+    "unvisited_first": "먼저 방문하지 않습니다",
+    "visited_first": "먼저 방문했습니다",
+    "total_items": "총 항목"
   },
   "lodging": {
     "apartment": "아파트",

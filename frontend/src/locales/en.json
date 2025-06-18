@@ -220,6 +220,7 @@
 		"no_adventures_to_recommendations": "No adventures found. Add at least one adventure to get recommendations.",
 		"display_name": "Display Name",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
+		"collection_contents": "Collection Contents",
 		"no_adventures_found": "No adventures found",
 		"no_adventures_message": "Start documenting your adventures and planning new ones. Every journey has a story worth telling.",
 		"mark_visited": "Mark Visited",
@@ -337,6 +338,7 @@
 		"filter_by_region": "Filter by Region",
 		"all_regions": "All Regions",
 		"clear_all_filters": "Clear All Filters",
+		"total_items": "Total Items",
 		"filter_by": "Filter by",
 		"interactive_map": "Interactive Map",
 		"no_regions_found": "No regions found",
@@ -346,7 +348,11 @@
 		"show_map_labels": "Show Map Labels",
 		"hide_map_labels": "Hide Map Labels",
 		"total_cities": "Total Cities",
-		"region_completed": "Region completed"
+		"region_completed": "Region completed",
+		"newest_first": "Newest First",
+		"oldest_first": "Oldest First",
+		"visited_first": "Visited First",
+		"unvisited_first": "Unvisited First"
 	},
 	"auth": {
 		"username": "Username",

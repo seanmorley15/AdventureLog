@@ -243,7 +243,8 @@
     "delete_collection_warning": "Sei sicuro di voler eliminare questa collezione? \nQuesta azione non può essere annullata.",
     "done": "Fatto",
     "loading_adventures": "Caricamento di avventure ...",
-    "name_location": "Nome, posizione"
+    "name_location": "Nome, posizione",
+    "collection_contents": "Contenuto di raccolta"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -371,7 +372,12 @@
     "show_map_labels": "Mostra etichette mappe",
     "total_cities": "Città totali",
     "total_countries": "Paesi totali",
-    "total_regions": "Regioni totali"
+    "total_regions": "Regioni totali",
+    "newest_first": "Primo il più recente",
+    "oldest_first": "Prima più antico",
+    "unvisited_first": "Non visitato per primo",
+    "visited_first": "Visitato per primo",
+    "total_items": "Articoli totali"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",

@@ -243,7 +243,8 @@
     "delete_collection_warning": "Sind Sie sicher, dass Sie diese Sammlung löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "done": "Erledigt",
     "loading_adventures": "Ladeabenteuer ...",
-    "name_location": "Name, Ort"
+    "name_location": "Name, Ort",
+    "collection_contents": "Sammelinhalt"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -371,7 +372,12 @@
     "show_map_labels": "Kartenbezeichnungen anzeigen",
     "total_cities": "Gesamtstädte",
     "total_countries": "Gesamtländer",
-    "total_regions": "Gesamtregionen"
+    "total_regions": "Gesamtregionen",
+    "newest_first": "Neuester zuerst",
+    "oldest_first": "Älteste zuerst",
+    "unvisited_first": "Zuerst nicht besucht",
+    "visited_first": "Zuerst besucht",
+    "total_items": "Gesamtartikel"
   },
   "settings": {
     "account_settings": "Benutzerkonto",
