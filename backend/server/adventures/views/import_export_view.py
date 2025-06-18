@@ -18,7 +18,7 @@ from adventures.models import (
     Adventure, Collection, Transportation, Note, Checklist, ChecklistItem,
     AdventureImage, Attachment, Category, Lodging, Visit
 )
-from worldtravel.models import VisitedCity, VisitedRegion, City, Region
+from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 
 User = get_user_model()
 
@@ -280,6 +280,10 @@ class BackupViewSet(viewsets.ViewSet):
         """
         if 'file' not in request.FILES:
             return Response({'error': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if 'confirm' not in request.data or request.data['confirm'] != 'yes':
+            return Response({'error': 'Confirmation required to proceed with import'}, 
+                          status=status.HTTP_400_BAD_REQUEST)
         
         backup_file = request.FILES['file']
         user = request.user
@@ -411,7 +415,29 @@ class BackupViewSet(viewsets.ViewSet):
         
         # Import Adventures
         for adv_data in backup_data.get('adventures', []):
-            adventure = Adventure.objects.create(
+
+            city = None
+            if adv_data.get('city'):
+                try:
+                    city = City.objects.get(id=adv_data['city'])
+                except City.DoesNotExist:
+                    city = None
+
+            region = None
+            if adv_data.get('region'):
+                try:
+                    region = Region.objects.get(id=adv_data['region'])
+                except Region.DoesNotExist:
+                    region = None
+
+            country = None
+            if adv_data.get('country'):
+                try:
+                    country = Country.objects.get(id=adv_data['country'])
+                except Country.DoesNotExist:
+                    country = None
+
+            adventure = Adventure(
                 user_id=user,
                 name=adv_data['name'],
                 location=adv_data.get('location'),
@@ -422,11 +448,12 @@ class BackupViewSet(viewsets.ViewSet):
                 is_public=adv_data.get('is_public', False),
                 longitude=adv_data.get('longitude'),
                 latitude=adv_data.get('latitude'),
-                city_id=adv_data.get('city'),
-                region_id=adv_data.get('region'),
-                country_id=adv_data.get('country'),
+                city=city,
+                region=region,
+                country=country,
                 category=category_map.get(adv_data.get('category_name'))
             )
+            adventure.save(_skip_geocode=True)  # Skip geocoding for now
             
             # Add to collections using export_ids
             for collection_export_id in adv_data.get('collection_export_ids', []):
@@ -445,21 +472,30 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Import images
             for img_data in adv_data.get('images', []):
-                filename = img_data.get('filename')
-                if filename:
-                    try:
-                        img_content = zip_file.read(f'images/{filename}')
-                        img_file = ContentFile(img_content, name=filename)
-                        AdventureImage.objects.create(
-                            user_id=user,
-                            adventure=adventure,
-                            image=img_file,
-                            immich_id=img_data.get('immich_id'),
-                            is_primary=img_data.get('is_primary', False)
-                        )
-                        summary['images'] += 1
-                    except KeyError:
-                        pass
+                immich_id = img_data.get('immich_id')
+                if immich_id:
+                    AdventureImage.objects.create(
+                        user_id=user,
+                        adventure=adventure,
+                        immich_id=immich_id,
+                        is_primary=img_data.get('is_primary', False)
+                    )
+                    summary['images'] += 1
+                else:
+                    filename = img_data.get('filename')
+                    if filename:
+                        try:
+                            img_content = zip_file.read(f'images/{filename}')
+                            img_file = ContentFile(img_content, name=filename)
+                            AdventureImage.objects.create(
+                                user_id=user,
+                                adventure=adventure,
+                                image=img_file,
+                                is_primary=img_data.get('is_primary', False)
+                            )
+                            summary['images'] += 1
+                        except KeyError:
+                            pass
             
             # Import attachments
             for att_data in adv_data.get('attachments', []):
