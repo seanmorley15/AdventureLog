@@ -177,13 +177,61 @@
 			dates = dates.concat(
 				lodging
 					.filter((i) => i.check_in)
-					.map((lodging) => ({
-						id: lodging.id,
-						start: lodging.check_in || '', // Ensure it's a string
-						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
-						title: lodging.name,
-						backgroundColor: '#f59e0b'
-					}))
+					.map((lodging) => {
+						const checkIn = lodging.check_in;
+						const checkOut = lodging.check_out || lodging.check_in;
+						if (!checkIn) return null;
+
+						const isAlldayLodging: boolean = isAllDay(checkIn as string);
+
+						let startDate: string;
+						let endDate: string;
+
+						if (isAlldayLodging) {
+							// For all-day, use date part only, no timezone conversion
+							startDate = (checkIn as string).split('T')[0];
+
+							const endDateObj = new Date(checkOut as string);
+							endDateObj.setDate(endDateObj.getDate());
+							endDate = endDateObj.toISOString().split('T')[0];
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: `${getLodgingIcon(lodging.type)} ${lodging.name}`,
+								backgroundColor: '#f59e0b'
+							};
+						} else {
+							// Only use timezone if not all-day
+							const lodgingTimezone = lodging.timezone || userTimezone;
+							const checkInDateTime = new Date(checkIn as string);
+							const checkOutDateTime = new Date(checkOut as string);
+
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkInDateTime);
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkOutDateTime);
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: lodging.name,
+								backgroundColor: '#f59e0b'
+							};
+						}
+					})
+					.filter((item) => item !== null)
 			);
 		}
 
@@ -994,7 +1042,7 @@
 								numberOfDays + 1
 							)[dateString] || []}
 						{@const dayLodging =
-							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
+							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
 								dateString
 							] || []}
 						{@const dayNotes =
