@@ -295,7 +295,8 @@
     "delete_collection_warning": "Er du sikker på at du vil slette denne samlingen? \nDenne handlingen kan ikke angres.",
     "done": "Ferdig",
     "loading_adventures": "Laster opp eventyr ...",
-    "name_location": "Navn, plassering"
+    "name_location": "Navn, plassering",
+    "collection_contents": "Samlingsinnhold"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -346,7 +347,12 @@
     "show_map_labels": "Vis kartetiketter",
     "total_cities": "Totalt byer",
     "total_countries": "Totalt land",
-    "total_regions": "Totale regioner"
+    "total_regions": "Totale regioner",
+    "newest_first": "Nyeste først",
+    "oldest_first": "Eldste først",
+    "unvisited_first": "Uvisitert først",
+    "visited_first": "Besøkte først",
+    "total_items": "Totalt gjenstander"
   },
   "auth": {
     "username": "Brukernavn",

@@ -295,7 +295,8 @@
     "done": "Zrobione",
     "loading_adventures": "Ładowanie przygód ...",
     "name_location": "Nazwa, lokalizacja",
-    "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? \nTego działania nie można cofnąć."
+    "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? \nTego działania nie można cofnąć.",
+    "collection_contents": "Zawartość kolekcji"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -346,7 +347,12 @@
     "total_countries": "Kraje ogółem",
     "total_regions": "Regiony ogółem",
     "all_regions": "Wszystkie regiony",
-    "cities_in": "Miasta w"
+    "cities_in": "Miasta w",
+    "newest_first": "Najnowszy pierwszy",
+    "oldest_first": "Najstarszy pierwszy",
+    "unvisited_first": "Najpierw niewidziane",
+    "visited_first": "Odwiedziłem pierwszy",
+    "total_items": "Całkowite przedmioty"
   },
   "auth": {
     "username": "Nazwa użytkownika",
