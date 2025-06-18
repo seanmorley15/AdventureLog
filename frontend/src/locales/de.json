@@ -691,5 +691,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten."
+  },
+  "calendar": {
+    "all_categories": "Alle Kategorien",
+    "all_day_event": "Ganztägige Veranstaltung",
+    "calendar_overview": "Kalenderübersicht",
+    "categories": "Kategorien",
+    "day": "Tag",
+    "events_scheduled": "Veranstaltungen geplant",
+    "filter_by_category": "Filter nach Kategorie",
+    "filtered_results": "Gefilterte Ergebnisse",
+    "month": "Monat",
+    "today": "Heute",
+    "total_events": "Gesamtereignisse",
+    "week": "Woche"
   }
 }

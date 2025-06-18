@@ -691,5 +691,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen."
+  },
+  "calendar": {
+    "all_categories": "Alle categorieën",
+    "all_day_event": "De hele dag evenement",
+    "calendar_overview": "Kalenderoverzicht",
+    "categories": "Categorieën",
+    "day": "Dag",
+    "events_scheduled": "geplande evenementen",
+    "filter_by_category": "Filter per categorie",
+    "filtered_results": "Gefilterde resultaten",
+    "month": "Maand",
+    "today": "Vandaag",
+    "total_events": "Totale gebeurtenissen",
+    "week": "Week"
   }
 }

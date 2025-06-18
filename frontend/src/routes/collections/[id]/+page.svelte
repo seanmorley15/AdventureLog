@@ -17,11 +17,12 @@
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import { DefaultMarker, MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
+	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
+
+	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	import {
 		groupAdventuresByDate,
@@ -31,8 +32,11 @@
 		osmTagToEmoji,
 		groupLodgingByDate,
 		LODGING_TYPES_ICONS,
-		getBasemapUrl
+		getBasemapUrl,
+		isAllDay
 	} from '$lib';
+	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
@@ -60,19 +64,6 @@
 
 	let collection: Collection;
 
-	// add christmas and new years
-	// dates = Array.from({ length: 25 }, (_, i) => {
-	// 	const date = new Date();
-	// 	date.setMonth(11);
-	// 	date.setDate(i + 1);
-	// 	return {
-	// 		id: i.toString(),
-	// 		start: date.toISOString(),
-	// 		end: date.toISOString(),
-	// 		title: '🎄'
-	// 	};
-	// });
-
 	let dates: Array<{
 		id: string;
 		start: string;
@@ -93,16 +84,79 @@
 		dates = [];
 
 		if (adventures) {
-			dates = dates.concat(
-				adventures.flatMap((adventure) =>
-					adventure.visits.map((visit) => ({
-						id: adventure.id,
-						start: visit.start_date || '', // Ensure it's a string
-						end: visit.end_date || visit.start_date || '', // Ensure it's a string
-						title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
-					}))
-				)
-			);
+			adventures.forEach((adventure) => {
+				adventure.visits.forEach((visit) => {
+					if (visit.start_date) {
+						let startDate = visit.start_date;
+						let endDate = visit.end_date || visit.start_date;
+						const targetTimezone = visit.timezone || userTimezone;
+						const allDay = isAllDay(visit.start_date);
+
+						// Handle timezone conversion for non-all-day events
+						if (!allDay) {
+							// Convert UTC dates to target timezone
+							const startDateTime = new Date(visit.start_date);
+							const endDateTime = new Date(visit.end_date || visit.start_date);
+
+							// Format for calendar (ISO string in target timezone)
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(startDateTime)
+								.replace(' ', 'T');
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(endDateTime)
+								.replace(' ', 'T');
+						} else {
+							// For all-day events, use just the date part
+							startDate = visit.start_date.split('T')[0];
+
+							// For all-day events, add one day to end date to make it inclusive
+							const endDateObj = new Date(visit.end_date || visit.start_date);
+							endDateObj.setDate(endDateObj.getDate() + 1);
+							endDate = endDateObj.toISOString().split('T')[0];
+						}
+
+						// Create detailed title with timezone info
+						let detailedTitle = adventure.name;
+						if (adventure.category?.icon) {
+							detailedTitle = `${adventure.category.icon} ${detailedTitle}`;
+						}
+
+						// Add time info to title for non-all-day events
+						if (!allDay) {
+							const startTime = formatDateInTimezone(visit.start_date, targetTimezone);
+							detailedTitle += ` (${startTime.split(' ').slice(-2).join(' ')})`;
+							if (targetTimezone !== userTimezone) {
+								detailedTitle += ` ${targetTimezone}`;
+							}
+						}
+
+						dates.push({
+							id: adventure.id,
+							start: startDate,
+							end: endDate,
+							title: detailedTitle,
+							backgroundColor: '#3b82f6'
+						});
+					}
+				});
+			});
 		}
 
 		if (transportations) {
@@ -113,7 +167,8 @@
 						id: transportation.id,
 						start: transportation.date || '', // Ensure it's a string
 						end: transportation.end_date || transportation.date || '', // Ensure it's a string
-						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : ''),
+						backgroundColor: '#10b981'
 					}))
 			);
 		}
@@ -126,7 +181,8 @@
 						id: lodging.id,
 						start: lodging.check_in || '', // Ensure it's a string
 						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
-						title: lodging.name
+						title: lodging.name,
+						backgroundColor: '#f59e0b'
 					}))
 			);
 		}
@@ -140,11 +196,6 @@
 
 	let adventures: Adventure[] = [];
 
-	// Add this after your existing MapLibre markers
-
-	// Add this after your existing MapLibre markers
-
-	// Create line data from orderedItems
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items

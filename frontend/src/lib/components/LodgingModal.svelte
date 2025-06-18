@@ -22,19 +22,7 @@
 		label: string;
 	};
 
-	const LODGING_TYPES: LodgingType[] = [
-		{ value: 'hotel', label: 'Hotel' },
-		{ value: 'hostel', label: 'Hostel' },
-		{ value: 'resort', label: 'Resort' },
-		{ value: 'bnb', label: 'Bed & Breakfast' },
-		{ value: 'campground', label: 'Campground' },
-		{ value: 'cabin', label: 'Cabin' },
-		{ value: 'apartment', label: 'Apartment' },
-		{ value: 'house', label: 'House' },
-		{ value: 'villa', label: 'Villa' },
-		{ value: 'motel', label: 'Motel' },
-		{ value: 'other', label: 'Other' }
-	];
+	let lodgingTimezone: string | undefined = lodging.timezone ?? undefined;
 
 	// Initialize hotel with values from lodgingToEdit or default values
 	function initializeLodging(lodgingToEdit: Lodging | null): Lodging {
@@ -304,7 +292,8 @@
 					type="lodging"
 					bind:utcStartDate={lodging.check_in}
 					bind:utcEndDate={lodging.check_out}
-					bind:selectedStartTimezone={lodging.timezone}
+					bind:selectedStartTimezone={lodgingTimezone}
+					{collection}
 				/>
 
 				<!-- Location Information -->

@@ -691,5 +691,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Koble til Google Maps-kontoen din for å få søkeresultater og anbefalinger av høy kvalitet."
+  },
+  "calendar": {
+    "all_categories": "Alle kategorier",
+    "all_day_event": "Hele dagens arrangement",
+    "calendar_overview": "Kalenderoversikt",
+    "categories": "Kategorier",
+    "day": "Dag",
+    "events_scheduled": "hendelser planlagt",
+    "filter_by_category": "Filter etter kategori",
+    "filtered_results": "Filtrerte resultater",
+    "month": "Måned",
+    "today": "I dag",
+    "total_events": "Total hendelser",
+    "week": "Uke"
   }
 }

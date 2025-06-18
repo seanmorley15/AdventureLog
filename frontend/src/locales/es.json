@@ -691,5 +691,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad."
+  },
+  "calendar": {
+    "all_categories": "Todas las categorías",
+    "all_day_event": "Evento todo el día",
+    "calendar_overview": "Descripción general del calendario",
+    "categories": "Categorías",
+    "day": "Día",
+    "events_scheduled": "Eventos programados",
+    "filter_by_category": "Filtrar por categoría",
+    "filtered_results": "Resultados filtrados",
+    "month": "Mes",
+    "today": "Hoy",
+    "total_events": "Total de eventos",
+    "week": "Semana"
   }
 }
