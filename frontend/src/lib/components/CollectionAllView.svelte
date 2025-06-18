@@ -29,7 +29,6 @@
 	import LodgingCard from './LodgingCard.svelte';
 	import NoteCard from './NoteCard.svelte';
 	import ChecklistCard from './ChecklistCard.svelte';
-	import NotFound from './NotFound.svelte';
 
 	// Props
 	export let adventures: Adventure[] = [];
@@ -363,55 +362,61 @@
 		<span class="text-sm font-medium text-base-content/60">
 			{$t('adventures.show')}:
 		</span>
-		<div class="tabs tabs-boxed bg-base-200 overflow-x-auto">
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'all')}
-			>
-				<Adventures class="w-3 h-3" />
-				{$t('adventures.all')}
-			</button>
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'adventures'
-					? 'tab-active'
-					: ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'adventures')}
-			>
-				<Adventures class="w-3 h-3" />
-				{$t('navbar.adventures')}
-			</button>
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'transportation'
-					? 'tab-active'
-					: ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'transportation')}
-			>
-				<TransportationIcon class="w-3 h-3" />
-				{$t('adventures.transportations')}
-			</button>
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'lodging' ? 'tab-active' : ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'lodging')}
-			>
-				<Hotel class="w-3 h-3" />
-				{$t('adventures.lodging')}
-			</button>
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'notes' ? 'tab-active' : ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'notes')}
-			>
-				<NoteIcon class="w-3 h-3" />
-				{$t('adventures.notes')}
-			</button>
-			<button
-				class="tab tab-sm gap-2 {filterOption === 'checklists'
-					? 'tab-active'
-					: ''} whitespace-nowrap"
-				on:click={() => (filterOption = 'checklists')}
-			>
-				<ChecklistIcon class="w-3 h-3" />
-				{$t('adventures.checklists')}
-			</button>
+
+		<!-- Scrollable container on mobile -->
+		<div class="w-full overflow-x-auto">
+			<div class="tabs tabs-boxed bg-base-200 flex-nowrap flex sm:flex-wrap w-max sm:w-auto">
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'all')}
+				>
+					<Adventures class="w-3 h-3" />
+					{$t('adventures.all')}
+				</button>
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'adventures'
+						? 'tab-active'
+						: ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'adventures')}
+				>
+					<Adventures class="w-3 h-3" />
+					{$t('navbar.adventures')}
+				</button>
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'transportation'
+						? 'tab-active'
+						: ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'transportation')}
+				>
+					<TransportationIcon class="w-3 h-3" />
+					{$t('adventures.transportations')}
+				</button>
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'lodging'
+						? 'tab-active'
+						: ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'lodging')}
+				>
+					<Hotel class="w-3 h-3" />
+					{$t('adventures.lodging')}
+				</button>
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'notes' ? 'tab-active' : ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'notes')}
+				>
+					<NoteIcon class="w-3 h-3" />
+					{$t('adventures.notes')}
+				</button>
+				<button
+					class="tab tab-sm gap-2 {filterOption === 'checklists'
+						? 'tab-active'
+						: ''} whitespace-nowrap"
+					on:click={() => (filterOption = 'checklists')}
+				>
+					<ChecklistIcon class="w-3 h-3" />
+					{$t('adventures.checklists')}
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -536,32 +541,10 @@
 	<div class="hero min-h-96">
 		<div class="hero-content text-center">
 			<div class="max-w-md">
-				<div class="mb-8">
-					{#if searchQuery || filterOption !== 'all'}
-						<div class="p-8 bg-base-200/30 rounded-full inline-block">
-							<Search class="w-16 h-16 text-base-content/30" />
-						</div>
-					{:else}
-						<div class="p-8 bg-base-200/30 rounded-full inline-block">
-							<Adventures class="w-16 h-16 text-base-content/30" />
-						</div>
-					{/if}
-				</div>
-
-				{#if searchQuery || filterOption !== 'all'}
-					<h1 class="text-3xl font-bold text-base-content/70 mb-4">
-						{$t('immich.no_items_found')}
-					</h1>
-					<p class="text-base-content/50 mb-6">
-						{$t('collection.try_different_search')}
-					</p>
-					<button class="btn btn-primary gap-2" on:click={clearAllFilters}>
-						<Clear class="w-4 h-4" />
-						{$t('worldtravel.clear_filters')}
-					</button>
-				{:else}
-					<NotFound error={undefined} />
-				{/if}
+				<Clear class="w-16 h-16 text-base-content/30 mb-4" />
+				<h1 class="text-3xl font-bold text-base-content/70">
+					{$t('immich.no_items_found')}
+				</h1>
 			</div>
 		</div>
 	</div>
