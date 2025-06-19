@@ -150,7 +150,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.uuid == adventure.user_id}
+	{#if data.user && data.user.uuid == adventure.user}
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
 				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"

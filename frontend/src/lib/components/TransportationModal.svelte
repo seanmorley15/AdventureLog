@@ -29,7 +29,7 @@
 		flight_number: transportationToEdit?.flight_number || '',
 		from_location: transportationToEdit?.from_location || '',
 		to_location: transportationToEdit?.to_location || '',
-		user_id: transportationToEdit?.user_id || '',
+		user: transportationToEdit?.user || '',
 		is_public: transportationToEdit?.is_public || false,
 		collection: transportationToEdit?.collection || collection.id,
 		created_at: transportationToEdit?.created_at || '',

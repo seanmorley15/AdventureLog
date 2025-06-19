@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from django.core.files.base import ContentFile
-from adventures.models import Adventure, AdventureImage
+from adventures.models import Location, LocationImage
 from adventures.serializers import AdventureImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
@@ -26,7 +26,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         instance = self.get_object()
         adventure = instance.adventure
-        if adventure.user_id != request.user:
+        if adventure.user != request.user:
             return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         # Check if the image is already the primary image
@@ -34,7 +34,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Set the current primary image to false
-        AdventureImage.objects.filter(adventure=adventure, is_primary=True).update(is_primary=False)
+        LocationImage.objects.filter(adventure=adventure, is_primary=True).update(is_primary=False)
 
         # Set the new image to true
         instance.is_primary = True
@@ -46,11 +46,11 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         adventure_id = request.data.get('adventure')
         try:
-            adventure = Adventure.objects.get(id=adventure_id)
-        except Adventure.DoesNotExist:
+            adventure = Location.objects.get(id=adventure_id)
+        except Location.DoesNotExist:
             return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if adventure.user_id != request.user:
+        if adventure.user != request.user:
             # Check if the adventure has any collections
             if adventure.collections.exists():
                 # Check if the user is in the shared_with list of any of the adventure's collections
@@ -66,7 +66,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         # Handle Immich ID for shared users by downloading the image
-        if (request.user != adventure.user_id and 
+        if (request.user != adventure.user and 
             'immich_id' in request.data and 
             request.data.get('immich_id')):
             
@@ -74,7 +74,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             
             # Get the shared user's Immich integration
             try:
-                user_integration = ImmichIntegration.objects.get(user_id=request.user)
+                user_integration = ImmichIntegration.objects.get(user=request.user)
             except ImmichIntegration.DoesNotExist:
                 return Response({
                     "error": "No Immich integration found for your account. Please set up Immich integration first.",
@@ -122,7 +122,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 
                 # Save with the downloaded image
                 adventure = serializer.validated_data['adventure']
-                serializer.save(user_id=adventure.user_id, image=image_file)
+                serializer.save(user=adventure.user, image=image_file)
                 
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
                 
@@ -145,11 +145,11 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         adventure_id = request.data.get('adventure')
         try:
-            adventure = Adventure.objects.get(id=adventure_id)
-        except Adventure.DoesNotExist:
+            adventure = Location.objects.get(id=adventure_id)
+        except Location.DoesNotExist:
             return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if adventure.user_id != request.user:
+        if adventure.user != request.user:
             return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().update(request, *args, **kwargs)
@@ -165,7 +165,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         instance = self.get_object()
         adventure = instance.adventure
-        if adventure.user_id != request.user:
+        if adventure.user != request.user:
             return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().destroy(request, *args, **kwargs)
@@ -176,7 +176,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         
         instance = self.get_object()
         adventure = instance.adventure
-        if adventure.user_id != request.user:
+        if adventure.user != request.user:
             return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().partial_update(request, *args, **kwargs)
@@ -192,9 +192,9 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Invalid adventure ID"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Updated queryset to include images from adventures the user owns OR has shared access to
-        queryset = AdventureImage.objects.filter(
+        queryset = LocationImage.objects.filter(
             Q(adventure__id=adventure_uuid) & (
-                Q(adventure__user_id=request.user) |  # User owns the adventure
+                Q(adventure__user=request.user) |  # User owns the adventure
                 Q(adventure__collections__shared_with=request.user)  # User has shared access via collection
             )
         ).distinct()
@@ -204,12 +204,12 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Updated to include images from adventures the user owns OR has shared access to
-        return AdventureImage.objects.filter(
-            Q(adventure__user_id=self.request.user) |  # User owns the adventure
+        return LocationImage.objects.filter(
+            Q(adventure__user=self.request.user) |  # User owns the adventure
             Q(adventure__collections__shared_with=self.request.user)  # User has shared access via collection
         ).distinct()
 
     def perform_create(self, serializer):
         # Always set the image owner to the adventure owner, not the current user
         adventure = serializer.validated_data['adventure']
-        serializer.save(user_id=adventure.user_id)
+        serializer.save(user=adventure.user)

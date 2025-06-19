@@ -156,7 +156,7 @@
 		</div>
 
 		<!-- Reservation Info -->
-		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+		{#if lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 			<div class="space-y-2">
 				{#if lodging.reservation_number}
 					<div class="flex items-center gap-2">
@@ -174,7 +174,7 @@
 		{/if}
 
 		<!-- Actions -->
-		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+		{#if lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 			<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
 				<button
 					class="btn btn-neutral btn-sm flex items-center gap-1"

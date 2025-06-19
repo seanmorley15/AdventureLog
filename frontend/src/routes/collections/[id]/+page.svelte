@@ -498,7 +498,7 @@
 	function recomendationToAdventure(recomendation: any) {
 		adventureToEdit = {
 			id: '',
-			user_id: null,
+			user: null,
 			name: recomendation.name,
 			latitude: recomendation.latitude,
 			longitude: recomendation.longitude,
@@ -513,7 +513,7 @@
 				icon: osmTagToEmoji(recomendation.tag),
 				id: '',
 				name: recomendation.tag,
-				user_id: ''
+				user: ''
 			},
 			attachments: []
 		};
@@ -748,7 +748,7 @@
 	</div>
 {/if}
 {#if collection && collection.id}
-	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
+	{#if data.user && data.user.uuid && (data.user.uuid == collection.user || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
 				<div class="dropdown dropdown-top dropdown-end z-[999]">
@@ -760,7 +760,7 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						{#if collection.user_id === data.user.uuid}
+						{#if collection.user === data.user.uuid}
 							<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 							<button
 								class="btn btn-primary"

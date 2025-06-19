@@ -8,7 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
 
-from adventures.models import Adventure, Category, Transportation, Lodging
+from adventures.models import Location, Category, Transportation, Lodging
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import AdventureSerializer, TransportationSerializer, LodgingSerializer
 from adventures.utils import pagination
@@ -35,13 +35,13 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:
-                return Adventure.objects.retrieve_adventures(
+                return Location.objects.retrieve_adventures(
                     user, include_public=True
                 ).order_by('-updated_at')
-            return Adventure.objects.none()
+            return Location.objects.none()
 
         include_public = self.action in public_allowed_actions
-        return Adventure.objects.retrieve_adventures(
+        return Location.objects.retrieve_adventures(
             user,
             include_public=include_public,
             include_owned=True,
@@ -116,7 +116,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
             # Use the current user as owner since ManyToMany allows multiple collection owners
             user_to_assign = self.request.user
 
-        serializer.save(user_id=user_to_assign)
+        serializer.save(user=user_to_assign)
 
     def perform_update(self, serializer):
         """Update adventure."""
@@ -153,12 +153,12 @@ class AdventureViewSet(viewsets.ModelViewSet):
         # Handle 'all' types
         if 'all' in types:
             types = Category.objects.filter(
-                user_id=request.user
+                user=request.user
             ).values_list('name', flat=True)
         else:
             # Validate provided types
             if not types or not all(
-                Category.objects.filter(user_id=request.user, name=type_name).exists() 
+                Category.objects.filter(user=request.user, name=type_name).exists() 
                 for type_name in types
             ):
                 return Response(
@@ -167,9 +167,9 @@ class AdventureViewSet(viewsets.ModelViewSet):
                 )
 
         # Build base queryset
-        queryset = Adventure.objects.filter(
-            category__in=Category.objects.filter(name__in=types, user_id=request.user),
-            user_id=request.user.id
+        queryset = Location.objects.filter(
+            category__in=Category.objects.filter(name__in=types, user=request.user),
+            user=request.user.id
         )
 
         # Apply visit status filtering
@@ -187,12 +187,12 @@ class AdventureViewSet(viewsets.ModelViewSet):
         include_collections = request.query_params.get('include_collections', 'false') == 'true'
         
         # Build queryset with collection filtering
-        base_filter = Q(user_id=request.user.id)
+        base_filter = Q(user=request.user.id)
         
         if include_collections:
-            queryset = Adventure.objects.filter(base_filter)
+            queryset = Location.objects.filter(base_filter)
         else:
-            queryset = Adventure.objects.filter(base_filter, collections__isnull=True)
+            queryset = Location.objects.filter(base_filter, collections__isnull=True)
 
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
@@ -225,7 +225,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
     def _validate_collection_permissions(self, collections):
         """Validate user has permission to use all provided collections. Only the owner or shared users can use collections."""
         for collection in collections:
-            if not (collection.user_id == self.request.user or 
+            if not (collection.user == self.request.user or 
                    collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
                 raise PermissionDenied(
                     f"You do not have permission to use collection '{collection.name}'."
@@ -235,7 +235,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         """Validate permissions for collection updates (add/remove)."""
         # Check permissions for new collections being added
         for collection in new_collections:
-            if (collection.user_id != self.request.user and 
+            if (collection.user != self.request.user and 
                 not collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
                 raise PermissionDenied(
                     f"You do not have permission to use collection '{collection.name}'."
@@ -247,7 +247,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
         collections_to_remove = current_collections - new_collections_set
 
         for collection in collections_to_remove:
-            if (collection.user_id != self.request.user and 
+            if (collection.user != self.request.user and 
                 not collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
                 raise PermissionDenied(
                     f"You cannot remove the adventure from collection '{collection.name}' "
@@ -284,7 +284,7 @@ class AdventureViewSet(viewsets.ModelViewSet):
             return True
 
         # Check ownership
-        if user.is_authenticated and adventure.user_id == user:
+        if user.is_authenticated and adventure.user == user:
             return True
 
         # Check shared collection access

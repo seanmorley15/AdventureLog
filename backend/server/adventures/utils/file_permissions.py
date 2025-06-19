@@ -1,4 +1,4 @@
-from adventures.models import AdventureImage, Attachment
+from adventures.models import LocationImage, Attachment
 
 protected_paths = ['images/', 'attachments/']
 
@@ -10,10 +10,10 @@ def checkFilePermission(fileId, user, mediaType):
             # Construct the full relative path to match the database field
             image_path = f"images/{fileId}"
             # Fetch the AdventureImage object
-            adventure = AdventureImage.objects.get(image=image_path).adventure
+            adventure = LocationImage.objects.get(image=image_path).location
             if adventure.is_public:
                 return True
-            elif adventure.user_id == user:
+            elif adventure.user == user:
                 return True
             elif adventure.collections.exists():
                 # Check if the user is in any collection's shared_with list
@@ -23,7 +23,7 @@ def checkFilePermission(fileId, user, mediaType):
                 return False
             else:
                 return False
-        except AdventureImage.DoesNotExist:
+        except LocationImage.DoesNotExist:
             return False
     elif mediaType == 'attachments/':
         try:
@@ -31,10 +31,10 @@ def checkFilePermission(fileId, user, mediaType):
             attachment_path = f"attachments/{fileId}"
             # Fetch the Attachment object
             attachment = Attachment.objects.get(file=attachment_path)
-            adventure = attachment.adventure
+            adventure = attachment.location
             if adventure.is_public:
                 return True
-            elif adventure.user_id == user:
+            elif adventure.user == user:
                 return True
             elif adventure.collections.exists():
                 # Check if the user is in any collection's shared_with list

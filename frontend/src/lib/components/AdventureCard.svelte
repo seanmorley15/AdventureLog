@@ -280,7 +280,7 @@
 							{$t('adventures.open_details')}
 						</button>
 
-						{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+						{#if adventure.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 							<div class="dropdown dropdown-end">
 								<div tabindex="0" role="button" class="btn btn-square btn-sm btn-base-300">
 									<DotsHorizontal class="w-5 h-5" />
@@ -297,7 +297,7 @@
 										</button>
 									</li>
 
-									{#if user?.uuid == adventure.user_id}
+									{#if user?.uuid == adventure.user}
 										<li>
 											<button
 												on:click={() => (isCollectionModalOpen = true)}

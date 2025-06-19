@@ -110,13 +110,13 @@
 		longitude: NaN,
 		location: null,
 		images: [],
-		user_id: null,
+		user: null,
 		category: {
 			id: '',
 			name: '',
 			display_name: '',
 			icon: '',
-			user_id: ''
+			user: ''
 		},
 		attachments: []
 	};
@@ -135,7 +135,7 @@
 		longitude: adventureToEdit?.longitude || NaN,
 		location: adventureToEdit?.location || null,
 		images: adventureToEdit?.images || [],
-		user_id: adventureToEdit?.user_id || null,
+		user: adventureToEdit?.user || null,
 		visits: adventureToEdit?.visits || [],
 		is_visited: adventureToEdit?.is_visited || false,
 		category: adventureToEdit?.category || {
@@ -143,7 +143,7 @@
 			name: '',
 			display_name: '',
 			icon: '',
-			user_id: ''
+			user: ''
 		},
 
 		attachments: adventureToEdit?.attachments || []
@@ -245,7 +245,7 @@
 
 		const formData = new FormData();
 		formData.append('file', file);
-		formData.append('adventure', adventure.id);
+		formData.append('location', adventure.id);
 		formData.append('name', attachmentName);
 
 		try {
@@ -451,7 +451,7 @@
 						name: 'general',
 						display_name: 'General',
 						icon: '🌍',
-						user_id: ''
+						user: ''
 					};
 				}
 			}

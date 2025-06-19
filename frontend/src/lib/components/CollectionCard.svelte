@@ -170,7 +170,7 @@
 						<Launch class="w-4 h-4" />
 						{$t('adventures.open_details')}
 					</button>
-					{#if user && user.uuid == collection.user_id}
+					{#if user && user.uuid == collection.user}
 						<div class="dropdown dropdown-end">
 							<button type="button" class="btn btn-square btn-sm btn-base-300">
 								<DotsHorizontal class="w-5 h-5" />

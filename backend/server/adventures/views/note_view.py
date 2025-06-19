@@ -24,7 +24,7 @@ class NoteViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
         queryset = Note.objects.filter(
-            Q(user_id=request.user.id)
+            Q(user=request.user.id)
         )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -41,12 +41,12 @@ class NoteViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Note.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(is_public=True) | Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Note.objects.filter(
-                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
@@ -65,11 +65,11 @@ class NoteViewSet(viewsets.ModelViewSet):
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
-            if new_collection.user_id != user or instance.user_id != user:
+            if new_collection.user != user or instance.user != user:
                 raise PermissionDenied("You do not have permission to use this collection.")
         elif new_collection is None:
             # Handle the case where the user is trying to set the collection to None
-            if instance.collection is not None and instance.collection.user_id != user:
+            if instance.collection is not None and instance.collection.user != user:
                 raise PermissionDenied("You cannot remove the collection as you are not the owner.")
         
         # Perform the update
@@ -94,11 +94,11 @@ class NoteViewSet(viewsets.ModelViewSet):
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
-            if new_collection.user_id != user or instance.user_id != user:
+            if new_collection.user != user or instance.user != user:
                 raise PermissionDenied("You do not have permission to use this collection.")
         elif new_collection is None:
             # Handle the case where the user is trying to set the collection to None
-            if instance.collection is not None and instance.collection.user_id != user:
+            if instance.collection is not None and instance.collection.user != user:
                 raise PermissionDenied("You cannot remove the collection as you are not the owner.")
         
         # Perform the update
@@ -119,12 +119,12 @@ class NoteViewSet(viewsets.ModelViewSet):
         if collection:
             user = self.request.user
             # Check if the user is the owner or is in the shared_with list
-            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
+            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
             # if collection the owner of the adventure is the owner of the collection
-            serializer.save(user_id=collection.user_id)
+            serializer.save(user=collection.user)
             return
 
         # Save the adventure with the current user as the owner
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)

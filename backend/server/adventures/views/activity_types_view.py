@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from adventures.models import Adventure
+from adventures.models import Location
 
 class ActivityTypesView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -18,7 +18,7 @@ class ActivityTypesView(viewsets.ViewSet):
         Returns:
             Response: A response containing a list of distinct activity types.
         """
-        types = Adventure.objects.filter(user_id=request.user.id).values_list('activity_types', flat=True).distinct()
+        types = Location.objects.filter(user=request.user.id).values_list('activity_types', flat=True).distinct()
 
         allTypes = []
 

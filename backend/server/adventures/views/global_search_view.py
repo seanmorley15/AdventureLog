@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery
-from adventures.models import Adventure, Collection
+from adventures.models import Location, Collection
 from adventures.serializers import AdventureSerializer, CollectionSerializer
 from worldtravel.models import Country, Region, City, VisitedCity, VisitedRegion
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer, VisitedCitySerializer, VisitedRegionSerializer
@@ -31,14 +31,14 @@ class GlobalSearchView(viewsets.ViewSet):
         }
 
         # Adventures: Full-Text Search
-        adventures = Adventure.objects.annotate(
+        adventures = Location.objects.annotate(
             search=SearchVector('name', 'description', 'location')
-        ).filter(search=SearchQuery(search_term), user_id=request.user)
+        ).filter(search=SearchQuery(search_term), user=request.user)
         results["adventures"] = AdventureSerializer(adventures, many=True).data
 
         # Collections: Partial Match Search
         collections = Collection.objects.filter(
-            Q(name__icontains=search_term) & Q(user_id=request.user)
+            Q(name__icontains=search_term) & Q(user=request.user)
         )
         results["collections"] = CollectionSerializer(collections, many=True).data
 
@@ -64,10 +64,10 @@ class GlobalSearchView(viewsets.ViewSet):
         results["cities"] = CitySerializer(cities, many=True).data
 
         # Visited Regions and Cities
-        visited_regions = VisitedRegion.objects.filter(user_id=request.user)
+        visited_regions = VisitedRegion.objects.filter(user=request.user)
         results["visited_regions"] = VisitedRegionSerializer(visited_regions, many=True).data
 
-        visited_cities = VisitedCity.objects.filter(user_id=request.user)
+        visited_cities = VisitedCity.objects.filter(user=request.user)
         results["visited_cities"] = VisitedCitySerializer(visited_cities, many=True).data
 
         return Response(results)

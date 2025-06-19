@@ -4,7 +4,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from icalendar import Calendar, Event, vText, vCalAddress
 from datetime import datetime, timedelta
-from adventures.models import Adventure
+from adventures.models import Location
 from adventures.serializers import AdventureSerializer
 
 class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
@@ -12,11 +12,10 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def generate(self, request):
-        adventures = Adventure.objects.filter(user_id=request.user)
+        adventures = Location.objects.filter(user=request.user)
         serializer = AdventureSerializer(adventures, many=True)
         user = request.user
         name = f"{user.first_name} {user.last_name}"
-        print(serializer.data)
         
         cal = Calendar()
         cal.add('prodid', '-//My Adventure Calendar//example.com//')

@@ -16,7 +16,7 @@ export type User = {
 
 export type Adventure = {
 	id: string;
-	user_id: string | null;
+	user: string | null;
 	name: string;
 	location?: string | null;
 	activity_types?: string[] | null;
@@ -96,7 +96,7 @@ export type City = {
 export type VisitedRegion = {
 	id: number;
 	region: string;
-	user_id: string;
+	user: string;
 	longitude: number;
 	latitude: number;
 	name: string;
@@ -105,7 +105,7 @@ export type VisitedRegion = {
 export type VisitedCity = {
 	id: number;
 	city: string;
-	user_id: string;
+	user: string;
 	longitude: number;
 	latitude: number;
 	name: string;
@@ -123,7 +123,7 @@ export type Point = {
 
 export type Collection = {
 	id: string;
-	user_id: string;
+	user: string;
 	name: string;
 	description: string;
 	is_public: boolean;
@@ -153,7 +153,7 @@ export type GeocodeSearchResult = {
 
 export type Transportation = {
 	id: string;
-	user_id: string;
+	user: string;
 	type: string;
 	name: string;
 	description: string | null;
@@ -179,7 +179,7 @@ export type Transportation = {
 
 export type Note = {
 	id: string;
-	user_id: string;
+	user: string;
 	name: string;
 	content: string | null;
 	links: string[] | null;
@@ -192,7 +192,7 @@ export type Note = {
 
 export type Checklist = {
 	id: string;
-	user_id: string;
+	user: string;
 	name: string;
 	items: ChecklistItem[];
 	date: string | null; // ISO 8601 date string
@@ -204,7 +204,7 @@ export type Checklist = {
 
 export type ChecklistItem = {
 	id: string;
-	user_id: string;
+	user: string;
 	name: string;
 	is_checked: boolean;
 	checklist: number;
@@ -235,7 +235,7 @@ export type Category = {
 	name: string;
 	display_name: string;
 	icon: string;
-	user_id: string;
+	user: string;
 	num_adventures?: number | null;
 };
 
@@ -279,13 +279,13 @@ export type Attachment = {
 	file: string;
 	adventure: string;
 	extension: string;
-	user_id: string;
+	user: string;
 	name: string;
 };
 
 export type Lodging = {
 	id: string;
-	user_id: string;
+	user: string;
 	name: string;
 	type: string;
 	description: string | null;

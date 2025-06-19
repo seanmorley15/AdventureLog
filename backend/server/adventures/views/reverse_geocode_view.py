@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
-from adventures.models import Adventure
+from adventures.models import Location
 from adventures.serializers import AdventureSerializer
 import requests
 from adventures.geocoding import reverse_geocode
@@ -52,7 +52,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         new_regions = {}
         new_city_count = 0
         new_cities = {}
-        adventures = Adventure.objects.filter(user_id=self.request.user)
+        adventures = Location.objects.filter(user=self.request.user)
         serializer = AdventureSerializer(adventures, many=True)
         for adventure, serialized_adventure in zip(adventures, serializer.data):
             if serialized_adventure['is_visited'] == True:
@@ -69,18 +69,18 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
                 # data already contains region_id and city_id
                 if 'region_id' in data and data['region_id'] is not None:
                     region = Region.objects.filter(id=data['region_id']).first()
-                    visited_region = VisitedRegion.objects.filter(region=region, user_id=self.request.user).first()
+                    visited_region = VisitedRegion.objects.filter(region=region, user=self.request.user).first()
                     if not visited_region:
-                        visited_region = VisitedRegion(region=region, user_id=self.request.user)
+                        visited_region = VisitedRegion(region=region, user=self.request.user)
                         visited_region.save()
                         new_region_count += 1
                         new_regions[region.id] = region.name
 
                 if 'city_id' in data and data['city_id'] is not None:
                     city = City.objects.filter(id=data['city_id']).first()
-                    visited_city = VisitedCity.objects.filter(city=city, user_id=self.request.user).first()
+                    visited_city = VisitedCity.objects.filter(city=city, user=self.request.user).first()
                     if not visited_city:
-                        visited_city = VisitedCity(city=city, user_id=self.request.user)
+                        visited_city = VisitedCity(city=city, user=self.request.user)
                         visited_city.save()
                         new_city_count += 1
                         new_cities[city.id] = city.name

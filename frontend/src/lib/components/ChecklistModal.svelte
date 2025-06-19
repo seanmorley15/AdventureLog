@@ -19,7 +19,7 @@
 	let warning: string | null = '';
 
 	let isReadOnly =
-		!(checklist && user?.uuid == checklist?.user_id) &&
+		!(checklist && user?.uuid == checklist?.user) &&
 		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
 		!!checklist;
 	let newStatus: boolean = false;
@@ -40,7 +40,7 @@
 				name: newItem,
 				is_checked: newStatus,
 				id: '',
-				user_id: '',
+				user: '',
 				checklist: 0,
 				created_at: '',
 				updated_at: ''

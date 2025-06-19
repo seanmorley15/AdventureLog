@@ -10,7 +10,7 @@
 		display_name: '',
 		icon: '',
 		id: '',
-		user_id: '',
+		user: '',
 		num_adventures: 0
 	};
 
