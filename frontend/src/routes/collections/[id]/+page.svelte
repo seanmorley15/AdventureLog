@@ -1042,7 +1042,7 @@
 								numberOfDays + 1
 							)[dateString] || []}
 						{@const dayLodging =
-							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays)[
+							groupLodgingByDate(lodging, new Date(collection.start_date), numberOfDays + 1)[
 								dateString
 							] || []}
 						{@const dayNotes =

@@ -1,5 +1,8 @@
 import inspirationalQuotes from './json/quotes.json';
 import randomBackgrounds from './json/backgrounds.json';
+
+// @ts-ignore
+import { DateTime } from 'luxon';
 import type {
 	Adventure,
 	Background,
@@ -144,13 +147,6 @@ function getLocalDateString(date: Date): string {
 	return `${year}-${month}-${day}`;
 }
 
-// Helper to check if a given date string represents midnight (all-day)
-// Improved isAllDay function to handle different ISO date formats
-export function isAllDay(dateStr: string): boolean {
-	// Check for various midnight formats in UTC
-	return dateStr.endsWith('T00:00:00Z') || dateStr.endsWith('T00:00:00.000Z');
-}
-
 export function groupTransportationsByDate(
 	transportations: Transportation[],
 	startDate: Date,
@@ -158,82 +154,127 @@ export function groupTransportationsByDate(
 ): Record<string, Transportation[]> {
 	const groupedTransportations: Record<string, Transportation[]> = {};
 
-	// Initialize all days in the range
+	// Initialize days
 	for (let i = 0; i < numberOfDays; i++) {
-		const currentDate = new Date(startDate);
-		currentDate.setDate(startDate.getDate() + i);
-		const dateString = getLocalDateString(currentDate);
+		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
 		groupedTransportations[dateString] = [];
 	}
 
 	transportations.forEach((transportation) => {
 		if (transportation.date) {
-			const transportationDate = getLocalDateString(new Date(transportation.date));
-			if (transportation.end_date) {
-				const endDate = new Date(transportation.end_date).toISOString().split('T')[0];
+			// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
+			const startHasZeros = transportation.date.includes('T00:00:00');
+			const endHasZeros = transportation.end_date
+				? transportation.end_date.includes('T00:00:00')
+				: true;
+			const isTranspoAllDay = startHasZeros && endHasZeros;
 
-				// Loop through all days and include transportation if it falls within the range
-				for (let i = 0; i < numberOfDays; i++) {
-					const currentDate = new Date(startDate);
-					currentDate.setDate(startDate.getDate() + i);
-					const dateString = getLocalDateString(currentDate);
+			let startDT: DateTime;
+			let endDT: DateTime;
 
-					// Include the current day if it falls within the transportation date range
-					if (dateString >= transportationDate && dateString <= endDate) {
-						if (groupedTransportations[dateString]) {
-							groupedTransportations[dateString].push(transportation);
-						}
-					}
+			if (isTranspoAllDay) {
+				// For all-day events, extract just the date part and ignore timezone
+				const dateOnly = transportation.date.split('T')[0]; // Get 'YYYY-MM-DD'
+				startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
+
+				endDT = transportation.end_date
+					? DateTime.fromISO(transportation.end_date.split('T')[0])
+					: startDT;
+			} else {
+				// For timed events, use timezone conversion
+				startDT = DateTime.fromISO(transportation.date, {
+					zone: transportation.start_timezone ?? 'UTC'
+				});
+
+				endDT = transportation.end_date
+					? DateTime.fromISO(transportation.end_date, {
+							zone: transportation.end_timezone ?? transportation.start_timezone ?? 'UTC'
+						})
+					: startDT;
+			}
+
+			const startDateStr = startDT.toISODate();
+			const endDateStr = endDT.toISODate();
+
+			// Loop through all days in range
+			for (let i = 0; i < numberOfDays; i++) {
+				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+				const currentDateStr = currentDate.toISODate();
+
+				if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
+					groupedTransportations[currentDateStr]?.push(transportation);
 				}
-			} else if (groupedTransportations[transportationDate]) {
-				// If there's no end date, add transportation to the start date only
-				groupedTransportations[transportationDate].push(transportation);
 			}
 		}
 	});
 
 	return groupedTransportations;
 }
-
 export function groupLodgingByDate(
-	transportations: Lodging[],
+	lodging: Lodging[],
 	startDate: Date,
 	numberOfDays: number
 ): Record<string, Lodging[]> {
-	const groupedTransportations: Record<string, Lodging[]> = {};
+	const groupedLodging: Record<string, Lodging[]> = {};
 
-	// Initialize all days in the range using local dates
-	for (let i = 0; i < numberOfDays; i++) {
-		const currentDate = new Date(startDate);
-		currentDate.setDate(startDate.getDate() + i);
-		const dateString = getLocalDateString(currentDate);
-		groupedTransportations[dateString] = [];
+	// Initialize days (excluding last day for lodging)
+	// If trip is 7/1 to 7/4 (4 days), show lodging only on 7/1, 7/2, 7/3
+	const lodgingDays = numberOfDays - 1;
+
+	for (let i = 0; i < lodgingDays; i++) {
+		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
+		groupedLodging[dateString] = [];
 	}
 
-	transportations.forEach((transportation) => {
-		if (transportation.check_in) {
-			// Use local date string conversion
-			const transportationDate = getLocalDateString(new Date(transportation.check_in));
-			if (transportation.check_out) {
-				const endDate = getLocalDateString(new Date(transportation.check_out));
+	lodging.forEach((hotel) => {
+		if (hotel.check_in) {
+			// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
+			const startHasZeros = hotel.check_in.includes('T00:00:00');
+			const endHasZeros = hotel.check_out ? hotel.check_out.includes('T00:00:00') : true;
+			const isAllDay = startHasZeros && endHasZeros;
 
-				// Loop through all days and include transportation if it falls within the transportation date range
-				for (let i = 0; i < numberOfDays; i++) {
-					const currentDate = new Date(startDate);
-					currentDate.setDate(startDate.getDate() + i);
-					const dateString = getLocalDateString(currentDate);
+			let startDT: DateTime;
+			let endDT: DateTime;
 
-					if (dateString >= transportationDate && dateString <= endDate) {
-						groupedTransportations[dateString].push(transportation);
-					}
+			if (isAllDay) {
+				// For all-day events, extract just the date part and ignore timezone
+				const dateOnly = hotel.check_in.split('T')[0]; // Get 'YYYY-MM-DD'
+				startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
+
+				endDT = hotel.check_out ? DateTime.fromISO(hotel.check_out.split('T')[0]) : startDT;
+			} else {
+				// For timed events, use timezone conversion
+				startDT = DateTime.fromISO(hotel.check_in, {
+					zone: hotel.timezone ?? 'UTC'
+				});
+
+				endDT = hotel.check_out
+					? DateTime.fromISO(hotel.check_out, {
+							zone: hotel.timezone ?? 'UTC'
+						})
+					: startDT;
+			}
+
+			const startDateStr = startDT.toISODate();
+			const endDateStr = endDT.toISODate();
+
+			// Loop through lodging days only (excluding last day)
+			for (let i = 0; i < lodgingDays; i++) {
+				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+				const currentDateStr = currentDate.toISODate();
+
+				// Show lodging on days where check-in occurs through the day before check-out
+				// For lodging, we typically want to show it on the nights you're staying
+				if (currentDateStr >= startDateStr && currentDateStr < endDateStr) {
+					groupedLodging[currentDateStr]?.push(hotel);
 				}
-			} else if (groupedTransportations[transportationDate]) {
-				groupedTransportations[transportationDate].push(transportation);
 			}
 		}
 	});
 
-	return groupedTransportations;
+	return groupedLodging;
 }
 
 export function groupNotesByDate(
@@ -290,6 +331,13 @@ export function groupChecklistsByDate(
 	});
 
 	return groupedChecklists;
+}
+
+// Helper to check if a given date string represents midnight (all-day)
+// Improved isAllDay function to handle different ISO date formats
+export function isAllDay(dateStr: string): boolean {
+	// Check for various midnight formats in UTC
+	return dateStr.endsWith('T00:00:00Z') || dateStr.endsWith('T00:00:00.000Z');
 }
 
 export function continentCodeToString(code: string) {

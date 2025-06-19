@@ -8,7 +8,8 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
-	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import { isAllDay } from '$lib';
 
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
@@ -161,9 +162,13 @@
 				<div class="flex gap-2 text-sm">
 					<span class="font-medium whitespace-nowrap">{$t('adventures.start')}:</span>
 					<span>
-						{formatDateInTimezone(transportation.date, transportation.start_timezone)}
-						{#if transportation.start_timezone}
-							<span class="ml-1 text-xs opacity-60">({transportation.start_timezone})</span>
+						{#if isAllDay(transportation.date) && (!transportation.end_date || isAllDay(transportation.end_date))}
+							{formatAllDayDate(transportation.date)}
+						{:else}
+							{formatDateInTimezone(transportation.date, transportation.start_timezone)}
+							{#if transportation.start_timezone}
+								<span class="ml-1 text-xs opacity-60">({transportation.start_timezone})</span>
+							{/if}
 						{/if}
 					</span>
 				</div>
@@ -173,9 +178,13 @@
 				<div class="flex gap-2 text-sm">
 					<span class="font-medium whitespace-nowrap">{$t('adventures.end')}:</span>
 					<span>
-						{formatDateInTimezone(transportation.end_date, transportation.end_timezone)}
-						{#if transportation.end_timezone}
-							<span class="ml-1 text-xs opacity-60">({transportation.end_timezone})</span>
+						{#if isAllDay(transportation.end_date) && (!transportation.date || isAllDay(transportation.date))}
+							{formatAllDayDate(transportation.end_date)}
+						{:else}
+							{formatDateInTimezone(transportation.end_date, transportation.end_timezone)}
+							{#if transportation.end_timezone}
+								<span class="ml-1 text-xs opacity-60">({transportation.end_timezone})</span>
+							{/if}
 						{/if}
 					</span>
 				</div>

@@ -6,6 +6,7 @@
 	import type { Collection, Lodging } from '$lib/types';
 	import LocationDropdown from './LocationDropdown.svelte';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
+	import { isAllDay } from '$lib';
 
 	const dispatch = createEventDispatcher();
 
@@ -81,6 +82,24 @@
 	// Handle form submission (save hotel)
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		lodging.timezone = lodgingTimezone || null;
+
+		// Auto-set end date if missing but start date exists
+		if (lodging.check_in && !lodging.check_out) {
+			const startDate = new Date(lodging.check_in);
+			const nextDay = new Date(startDate);
+			nextDay.setDate(nextDay.getDate() + 1);
+
+			if (isAllDay(lodging.check_in)) {
+				// For all-day, set to next day at 00:00:00
+				lodging.check_out = nextDay.toISOString().split('T')[0] + 'T00:00:00';
+			} else {
+				// For timed events, set to next day at 9:00 AM
+				nextDay.setHours(9, 0, 0, 0);
+				lodging.check_out = nextDay.toISOString();
+			}
+		}
 
 		// Create or update lodging...
 		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;

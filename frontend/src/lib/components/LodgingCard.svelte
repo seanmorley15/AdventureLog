@@ -120,23 +120,39 @@
 				</div>
 			{/if}
 
-			{#if lodging.check_in && lodging.check_out}
-				<div class="flex items-center gap-2">
-					<span class="text-sm font-medium">{$t('adventures.dates')}:</span>
-					<p class="text-sm">
-						{#if isAllDay(lodging.check_in)}
-							{formatAllDayDate(lodging.check_in)} –
-							{formatAllDayDate(lodging.check_out)}
-						{:else}
-							{formatDateInTimezone(lodging.check_in, lodging.timezone)} –
-							{formatDateInTimezone(lodging.check_out, lodging.timezone)}
-							{#if lodging.timezone}
-								<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
+			<div class="space-y-3">
+				{#if lodging.check_in}
+					<div class="flex gap-2 text-sm">
+						<span class="font-medium whitespace-nowrap">{$t('adventures.check_in')}:</span>
+						<span>
+							{#if isAllDay(lodging.check_in)}
+								{formatAllDayDate(lodging.check_in)}
+							{:else}
+								{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+								{#if lodging.timezone}
+									<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
+								{/if}
 							{/if}
-						{/if}
-					</p>
-				</div>
-			{/if}
+						</span>
+					</div>
+				{/if}
+
+				{#if lodging.check_out}
+					<div class="flex gap-2 text-sm">
+						<span class="font-medium whitespace-nowrap">{$t('adventures.check_out')}:</span>
+						<span>
+							{#if isAllDay(lodging.check_out)}
+								{formatAllDayDate(lodging.check_out)}
+							{:else}
+								{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+								{#if lodging.timezone}
+									<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
+								{/if}
+							{/if}
+						</span>
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Reservation Info -->
