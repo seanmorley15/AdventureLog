@@ -51,6 +51,11 @@
 	let isEditing = false; // Disable reactivity when editing
 
 	onMount(async () => {
+		// Auto-detect all-day for transportation and lodging types
+		if ((type === 'transportation' || type === 'lodging') && utcStartDate) {
+			allDay = isAllDay(utcStartDate);
+		}
+
 		// Initialize UTC dates
 		localStartDate = updateLocalDate({
 			utcDate: utcStartDate,
