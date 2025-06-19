@@ -12,8 +12,6 @@
 	import Search from '~icons/mdi/magnify';
 	import Clear from '~icons/mdi/close';
 	import Link from '~icons/mdi/link-variant';
-	import Filter from '~icons/mdi/filter-variant';
-	import Calendar from '~icons/mdi/calendar';
 	import Check from '~icons/mdi/check-circle';
 	import Cancel from '~icons/mdi/cancel';
 	import Public from '~icons/mdi/earth';

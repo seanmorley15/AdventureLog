@@ -88,6 +88,7 @@
 		lodging.timezone = lodgingTimezone || null;
 
 		// Auto-set end date if missing but start date exists
+		//  If check_out is not set, we will set it to the next day at 9:00 AM in the lodging's timezone if it is a timed event. If it is an all-day event, we will set it to the next day at UTC 00:00:00.
 		if (lodging.check_in && !lodging.check_out) {
 			if (isAllDay(lodging.check_in)) {
 				// For all-day, just add one day and keep at UTC 00:00:00
