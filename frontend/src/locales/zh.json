@@ -296,7 +296,9 @@
     "done": "完毕",
     "loading_adventures": "加载冒险...",
     "name_location": "名称，位置",
-    "collection_contents": "收集内容"
+    "collection_contents": "收集内容",
+    "check_in": "报到",
+    "check_out": "查看"
   },
   "auth": {
     "forgot_password": "忘记密码？",

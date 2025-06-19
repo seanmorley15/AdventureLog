@@ -263,7 +263,9 @@
 				<label for="date" class="text-sm font-medium">
 					{type === 'transportation'
 						? $t('adventures.departure_date')
-						: $t('adventures.start_date')}
+						: type === 'lodging'
+							? $t('adventures.check_in')
+							: $t('adventures.start_date')}
 				</label>
 
 				{#if allDay}
@@ -295,7 +297,11 @@
 			{#if localStartDate}
 				<div class="space-y-2">
 					<label for="end_date" class="text-sm font-medium">
-						{type === 'transportation' ? $t('adventures.arrival_date') : $t('adventures.end_date')}
+						{type === 'transportation'
+							? $t('adventures.arrival_date')
+							: type === 'lodging'
+								? $t('adventures.check_out')
+								: $t('adventures.end_date')}
 					</label>
 
 					{#if allDay}

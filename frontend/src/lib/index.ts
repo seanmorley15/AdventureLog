@@ -70,66 +70,57 @@ export function groupAdventuresByDate(
 ): Record<string, Adventure[]> {
 	const groupedAdventures: Record<string, Adventure[]> = {};
 
-	// Initialize all days in the range
+	// Initialize all days in the range using DateTime
 	for (let i = 0; i < numberOfDays; i++) {
-		const currentDate = new Date(startDate);
-		currentDate.setDate(startDate.getDate() + i);
-		const dateString = getLocalDateString(currentDate);
+		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
 		groupedAdventures[dateString] = [];
 	}
 
 	adventures.forEach((adventure) => {
 		adventure.visits.forEach((visit) => {
 			if (visit.start_date) {
-				// Check if this is an all-day event (both start and end at midnight)
-				const isAllDayEvent =
-					isAllDay(visit.start_date) && (visit.end_date ? isAllDay(visit.end_date) : false);
+				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
+				const startHasZeros = visit.start_date.includes('T00:00:00');
+				const endHasZeros = visit.end_date ? visit.end_date.includes('T00:00:00') : true;
+				const isAllDayEvent = startHasZeros && endHasZeros;
 
-				// For all-day events, we need to handle dates differently
-				if (isAllDayEvent && visit.end_date) {
-					// Extract just the date parts without time
-					const startDateStr = visit.start_date.split('T')[0];
-					const endDateStr = visit.end_date.split('T')[0];
+				let startDT: DateTime;
+				let endDT: DateTime;
 
-					// Loop through all days in the range
-					for (let i = 0; i < numberOfDays; i++) {
-						const currentDate = new Date(startDate);
-						currentDate.setDate(startDate.getDate() + i);
-						const currentDateStr = getLocalDateString(currentDate);
+				if (isAllDayEvent) {
+					// For all-day events, extract just the date part and ignore timezone
+					const dateOnly = visit.start_date.split('T')[0]; // Get 'YYYY-MM-DD'
+					startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
 
-						// Include the current day if it falls within the adventure date range
-						if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-							if (groupedAdventures[currentDateStr]) {
-								groupedAdventures[currentDateStr].push(adventure);
-							}
-						}
-					}
+					endDT = visit.end_date
+						? DateTime.fromISO(visit.end_date.split('T')[0])
+						: startDT;
 				} else {
-					// Handle regular events with time components
-					const adventureStartDate = new Date(visit.start_date);
-					const adventureDateStr = getLocalDateString(adventureStartDate);
+					// For timed events, use timezone conversion
+					startDT = DateTime.fromISO(visit.start_date, {
+						zone: visit.timezone ?? 'UTC'
+					});
 
-					if (visit.end_date) {
-						const adventureEndDate = new Date(visit.end_date);
-						const endDateStr = getLocalDateString(adventureEndDate);
+					endDT = visit.end_date
+						? DateTime.fromISO(visit.end_date, {
+								zone: visit.timezone ?? 'UTC'
+							})
+						: startDT;
+				}
 
-						// Loop through all days and include adventure if it falls within the range
-						for (let i = 0; i < numberOfDays; i++) {
-							const currentDate = new Date(startDate);
-							currentDate.setDate(startDate.getDate() + i);
-							const dateString = getLocalDateString(currentDate);
+				const startDateStr = startDT.toISODate();
+				const endDateStr = endDT.toISODate();
 
-							// Include the current day if it falls within the adventure date range
-							if (dateString >= adventureDateStr && dateString <= endDateStr) {
-								if (groupedAdventures[dateString]) {
-									groupedAdventures[dateString].push(adventure);
-								}
-							}
-						}
-					} else {
-						// If there's no end date, add adventure to the start date only
-						if (groupedAdventures[adventureDateStr]) {
-							groupedAdventures[adventureDateStr].push(adventure);
+				// Loop through all days in range
+				for (let i = 0; i < numberOfDays; i++) {
+					const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
+					const currentDateStr = currentDate.toISODate();
+
+					// Include the current day if it falls within the adventure date range
+					if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
+						if (groupedAdventures[currentDateStr]) {
+							groupedAdventures[currentDateStr].push(adventure);
 						}
 					}
 				}

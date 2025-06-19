@@ -98,6 +98,8 @@
 		"latitude": "Latitude",
 		"visit": "Visit",
 		"timed": "Timed",
+		"check_in": "Check In",
+		"check_out": "Check Out",
 		"coordinates": "Coordinates",
 		"copy_coordinates": "Copy Coordinates",
 		"visits": "Visits",

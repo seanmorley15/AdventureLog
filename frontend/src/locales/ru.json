@@ -296,7 +296,9 @@
     "done": "Сделанный",
     "loading_adventures": "Загрузка приключений ...",
     "name_location": "имя, местоположение",
-    "collection_contents": "Содержание коллекции"
+    "collection_contents": "Содержание коллекции",
+    "check_in": "Регистрироваться",
+    "check_out": "Проверить"
   },
   "worldtravel": {
     "country_list": "Список стран",

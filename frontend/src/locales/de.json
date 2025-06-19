@@ -244,7 +244,9 @@
     "done": "Erledigt",
     "loading_adventures": "Ladeabenteuer ...",
     "name_location": "Name, Ort",
-    "collection_contents": "Sammelinhalt"
+    "collection_contents": "Sammelinhalt",
+    "check_in": "Einchecken",
+    "check_out": "Kasse"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

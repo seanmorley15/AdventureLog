@@ -244,7 +244,9 @@
     "done": "완료",
     "loading_adventures": "적재 모험 ...",
     "name_location": "이름, 위치",
-    "collection_contents": "수집 내용"
+    "collection_contents": "수집 내용",
+    "check_in": "체크인",
+    "check_out": "체크 아웃"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",

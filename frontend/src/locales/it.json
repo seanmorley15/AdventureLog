@@ -244,7 +244,9 @@
     "done": "Fatto",
     "loading_adventures": "Caricamento di avventure ...",
     "name_location": "Nome, posizione",
-    "collection_contents": "Contenuto di raccolta"
+    "collection_contents": "Contenuto di raccolta",
+    "check_in": "Check -in",
+    "check_out": "Guardare"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

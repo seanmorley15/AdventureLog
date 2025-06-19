@@ -7,6 +7,8 @@
 	import LocationDropdown from './LocationDropdown.svelte';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
 	import { isAllDay } from '$lib';
+	// @ts-ignore
+	import { DateTime } from 'luxon';
 
 	const dispatch = createEventDispatcher();
 
@@ -85,19 +87,21 @@
 
 		lodging.timezone = lodgingTimezone || null;
 
+		console.log(lodgingTimezone);
+
 		// Auto-set end date if missing but start date exists
 		if (lodging.check_in && !lodging.check_out) {
-			const startDate = new Date(lodging.check_in);
-			const nextDay = new Date(startDate);
-			nextDay.setDate(nextDay.getDate() + 1);
-
 			if (isAllDay(lodging.check_in)) {
-				// For all-day, set to next day at 00:00:00
-				lodging.check_out = nextDay.toISOString().split('T')[0] + 'T00:00:00';
+				// For all-day, just add one day and keep at UTC 00:00:00
+				const start = DateTime.fromISO(lodging.check_in, { zone: 'utc' });
+				const nextDay = start.plus({ days: 1 });
+				lodging.check_out = nextDay.toISO();
 			} else {
-				// For timed events, set to next day at 9:00 AM
-				nextDay.setHours(9, 0, 0, 0);
-				lodging.check_out = nextDay.toISOString();
+				// For timed events, set to next day at 9:00 AM in lodging's timezone, then convert to UTC
+				const start = DateTime.fromISO(lodging.check_in, { zone: lodging.timezone || 'utc' });
+				const nextDay = start.plus({ days: 1 });
+				const end = nextDay.set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
+				lodging.check_out = end.toUTC().toISO();
 			}
 		}
 

@@ -296,7 +296,9 @@
     "loading_adventures": "Ładowanie przygód ...",
     "name_location": "Nazwa, lokalizacja",
     "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? \nTego działania nie można cofnąć.",
-    "collection_contents": "Zawartość kolekcji"
+    "collection_contents": "Zawartość kolekcji",
+    "check_in": "Zameldować się",
+    "check_out": "Wymeldować się"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

@@ -244,7 +244,9 @@
     "done": "Gjort",
     "loading_adventures": "Laddar äventyr ...",
     "name_location": "namn, plats",
-    "collection_contents": "Insamlingsinnehåll"
+    "collection_contents": "Insamlingsinnehåll",
+    "check_in": "Checka in",
+    "check_out": "Checka ut"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

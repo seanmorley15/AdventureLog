@@ -296,7 +296,9 @@
     "done": "Ferdig",
     "loading_adventures": "Laster opp eventyr ...",
     "name_location": "Navn, plassering",
-    "collection_contents": "Samlingsinnhold"
+    "collection_contents": "Samlingsinnhold",
+    "check_in": "Sjekk inn",
+    "check_out": "Sjekk ut"
   },
   "worldtravel": {
     "country_list": "Liste over land",

@@ -244,7 +244,9 @@
     "done": "Klaar",
     "loading_adventures": "Adventuren laden ...",
     "name_location": "naam, locatie",
-    "collection_contents": "Verzamelingsinhoud"
+    "collection_contents": "Verzamelingsinhoud",
+    "check_in": "Inchecken",
+    "check_out": "Uitchecken"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -296,7 +296,9 @@
     "done": "Hecho",
     "loading_adventures": "Cargando aventuras ...",
     "name_location": "Nombre, ubicación",
-    "collection_contents": "Contenido de la colección"
+    "collection_contents": "Contenido de la colección",
+    "check_in": "Registrarse",
+    "check_out": "Verificar"
   },
   "worldtravel": {
     "all": "Todo",
