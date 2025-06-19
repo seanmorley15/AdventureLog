@@ -296,7 +296,9 @@
     "loading_adventures": "Ładowanie przygód ...",
     "name_location": "Nazwa, lokalizacja",
     "delete_collection_warning": "Czy na pewno chcesz usunąć tę kolekcję? \nTego działania nie można cofnąć.",
-    "collection_contents": "Zawartość kolekcji"
+    "collection_contents": "Zawartość kolekcji",
+    "check_in": "Zameldować się",
+    "check_out": "Wymeldować się"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -691,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji."
+  },
+  "calendar": {
+    "all_categories": "Wszystkie kategorie",
+    "all_day_event": "Wydarzenie przez cały dzień",
+    "calendar_overview": "Przegląd kalendarza",
+    "categories": "Kategorie",
+    "day": "Dzień",
+    "events_scheduled": "Zaplanowane wydarzenia",
+    "filter_by_category": "Filtr według kategorii",
+    "filtered_results": "Przefiltrowane wyniki",
+    "month": "Miesiąc",
+    "today": "Dzisiaj",
+    "total_events": "Całkowite zdarzenia",
+    "week": "Tydzień"
   }
 }

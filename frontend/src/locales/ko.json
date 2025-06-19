@@ -244,7 +244,9 @@
     "done": "완료",
     "loading_adventures": "적재 모험 ...",
     "name_location": "이름, 위치",
-    "collection_contents": "수집 내용"
+    "collection_contents": "수집 내용",
+    "check_in": "체크인",
+    "check_out": "체크 아웃"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -690,5 +692,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오."
+  },
+  "calendar": {
+    "all_categories": "모든 카테고리",
+    "all_day_event": "하루 종일 이벤트",
+    "calendar_overview": "캘린더 개요",
+    "categories": "카테고리",
+    "day": "낮",
+    "events_scheduled": "예약 된 이벤트",
+    "filter_by_category": "카테고리 별 필터",
+    "filtered_results": "필터링 된 결과",
+    "month": "월",
+    "today": "오늘",
+    "total_events": "총 이벤트",
+    "week": "주"
   }
 }

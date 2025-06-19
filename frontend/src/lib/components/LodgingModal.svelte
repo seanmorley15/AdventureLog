@@ -6,6 +6,9 @@
 	import type { Collection, Lodging } from '$lib/types';
 	import LocationDropdown from './LocationDropdown.svelte';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
+	import { isAllDay } from '$lib';
+	// @ts-ignore
+	import { DateTime } from 'luxon';
 
 	const dispatch = createEventDispatcher();
 
@@ -22,19 +25,7 @@
 		label: string;
 	};
 
-	const LODGING_TYPES: LodgingType[] = [
-		{ value: 'hotel', label: 'Hotel' },
-		{ value: 'hostel', label: 'Hostel' },
-		{ value: 'resort', label: 'Resort' },
-		{ value: 'bnb', label: 'Bed & Breakfast' },
-		{ value: 'campground', label: 'Campground' },
-		{ value: 'cabin', label: 'Cabin' },
-		{ value: 'apartment', label: 'Apartment' },
-		{ value: 'house', label: 'House' },
-		{ value: 'villa', label: 'Villa' },
-		{ value: 'motel', label: 'Motel' },
-		{ value: 'other', label: 'Other' }
-	];
+	let lodgingTimezone: string | undefined = lodging.timezone ?? undefined;
 
 	// Initialize hotel with values from lodgingToEdit or default values
 	function initializeLodging(lodgingToEdit: Lodging | null): Lodging {
@@ -93,6 +84,25 @@
 	// Handle form submission (save hotel)
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+
+		lodging.timezone = lodgingTimezone || null;
+
+		// Auto-set end date if missing but start date exists
+		//  If check_out is not set, we will set it to the next day at 9:00 AM in the lodging's timezone if it is a timed event. If it is an all-day event, we will set it to the next day at UTC 00:00:00.
+		if (lodging.check_in && !lodging.check_out) {
+			if (isAllDay(lodging.check_in)) {
+				// For all-day, just add one day and keep at UTC 00:00:00
+				const start = DateTime.fromISO(lodging.check_in, { zone: 'utc' });
+				const nextDay = start.plus({ days: 1 });
+				lodging.check_out = nextDay.toISO();
+			} else {
+				// For timed events, set to next day at 9:00 AM in lodging's timezone, then convert to UTC
+				const start = DateTime.fromISO(lodging.check_in, { zone: lodging.timezone || 'utc' });
+				const nextDay = start.plus({ days: 1 });
+				const end = nextDay.set({ hour: 9, minute: 0, second: 0, millisecond: 0 });
+				lodging.check_out = end.toUTC().toISO();
+			}
+		}
 
 		// Create or update lodging...
 		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
@@ -304,7 +314,8 @@
 					type="lodging"
 					bind:utcStartDate={lodging.check_in}
 					bind:utcEndDate={lodging.check_out}
-					bind:selectedStartTimezone={lodging.timezone}
+					bind:selectedStartTimezone={lodgingTimezone}
+					{collection}
 				/>
 
 				<!-- Location Information -->

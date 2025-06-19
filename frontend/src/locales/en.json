@@ -98,6 +98,8 @@
 		"latitude": "Latitude",
 		"visit": "Visit",
 		"timed": "Timed",
+		"check_in": "Check In",
+		"check_out": "Check Out",
 		"coordinates": "Coordinates",
 		"copy_coordinates": "Copy Coordinates",
 		"visits": "Visits",
@@ -691,5 +693,19 @@
 		"adventure_recommendations": "Adventure Recommendations",
 		"food": "Food",
 		"tourism": "Tourism"
+	},
+	"calendar": {
+		"today": "Today",
+		"month": "Month",
+		"week": "Week",
+		"day": "Day",
+		"events_scheduled": "events scheduled",
+		"total_events": "Total Events",
+		"all_categories": "All Categories",
+		"calendar_overview": "Calendar Overview",
+		"categories": "Categories",
+		"filtered_results": "Filtered Results",
+		"filter_by_category": "Filter by Category",
+		"all_day_event": "All Day Event"
 	}
 }

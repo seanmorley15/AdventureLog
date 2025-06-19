@@ -296,7 +296,9 @@
     "done": "Сделанный",
     "loading_adventures": "Загрузка приключений ...",
     "name_location": "имя, местоположение",
-    "collection_contents": "Содержание коллекции"
+    "collection_contents": "Содержание коллекции",
+    "check_in": "Регистрироваться",
+    "check_out": "Проверить"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -691,5 +693,19 @@
     "adventure_recommendations": "Рекомендации приключений",
     "food": "Еда",
     "tourism": "Туризм"
+  },
+  "calendar": {
+    "all_categories": "Все категории",
+    "all_day_event": "Событие на весь день",
+    "calendar_overview": "Обзор календаря",
+    "categories": "Категории",
+    "day": "День",
+    "events_scheduled": "События запланированы",
+    "filter_by_category": "Фильтр по категории",
+    "filtered_results": "Отфильтрованные результаты",
+    "month": "Месяц",
+    "today": "Сегодня",
+    "total_events": "Общее количество событий",
+    "week": "Неделя"
   }
 }
