@@ -87,8 +87,6 @@
 
 		lodging.timezone = lodgingTimezone || null;
 
-		console.log(lodgingTimezone);
-
 		// Auto-set end date if missing but start date exists
 		if (lodging.check_in && !lodging.check_out) {
 			if (isAllDay(lodging.check_in)) {

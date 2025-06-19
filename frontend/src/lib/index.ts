@@ -81,8 +81,8 @@ export function groupAdventuresByDate(
 		adventure.visits.forEach((visit) => {
 			if (visit.start_date) {
 				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
-				const startHasZeros = visit.start_date.includes('T00:00:00');
-				const endHasZeros = visit.end_date ? visit.end_date.includes('T00:00:00') : true;
+				const startHasZeros = isAllDay(visit.start_date);
+				const endHasZeros = visit.end_date ? isAllDay(visit.end_date) : true;
 				const isAllDayEvent = startHasZeros && endHasZeros;
 
 				let startDT: DateTime;
@@ -93,9 +93,7 @@ export function groupAdventuresByDate(
 					const dateOnly = visit.start_date.split('T')[0]; // Get 'YYYY-MM-DD'
 					startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
 
-					endDT = visit.end_date
-						? DateTime.fromISO(visit.end_date.split('T')[0])
-						: startDT;
+					endDT = visit.end_date ? DateTime.fromISO(visit.end_date.split('T')[0]) : startDT;
 				} else {
 					// For timed events, use timezone conversion
 					startDT = DateTime.fromISO(visit.start_date, {
