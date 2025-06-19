@@ -18,8 +18,13 @@
 	import ClockIcon from '~icons/mdi/clock';
 	import SearchIcon from '~icons/mdi/magnify';
 	import ClearIcon from '~icons/mdi/close';
+	import { marked } from 'marked'; // Import the markdown parser
 
 	export let data: PageData;
+
+	const renderMarkdown = (markdown: string) => {
+		return marked(markdown);
+	};
 
 	let adventures = data.props.adventures;
 	let allDates = data.props.dates;
@@ -402,9 +407,11 @@
 					<div class="card bg-base-200/50 border border-base-300/30">
 						<div class="card-body p-4">
 							<div class="font-semibold text-lg mb-3">{$t('adventures.description')}</div>
-							<p class="text-base-content/80 leading-relaxed">
-								{selectedEvent.extendedProps.description}
-							</p>
+							<article
+								class="prose overflow-auto h-full max-w-full p-4 border border-base-300 rounded-lg mb-4 mt-4"
+							>
+								{@html renderMarkdown(selectedEvent.extendedProps.description || '')}
+							</article>
 						</div>
 					</div>
 				{/if}
