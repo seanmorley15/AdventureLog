@@ -408,6 +408,15 @@
 						</div>
 					</div>
 				{/if}
+
+				{#if selectedEvent.extendedProps.adventureId}
+					<a
+						href={`/adventures/${selectedEvent.extendedProps.adventureId}`}
+						class="btn btn-neutral btn-block mt-4"
+					>
+						{$t('map.view_details')}
+					</a>
+				{/if}
 			</div>
 
 			<div class="modal-action mt-8">

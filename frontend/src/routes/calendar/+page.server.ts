@@ -34,6 +34,7 @@ export const load = (async (event) => {
 			formattedEnd: string;
 			location?: string;
 			description?: string;
+			adventureId?: string;
 		};
 	}> = [];
 
@@ -119,7 +120,8 @@ export const load = (async (event) => {
 							? formatAllDayDate(visit.end_date || visit.start_date)
 							: formatDateInTimezone(visit.end_date || visit.start_date, targetTimezone),
 						location: adventure.location || '',
-						description: adventure.description || ''
+						description: adventure.description || '',
+						adventureId: adventure.id
 					}
 				});
 			}
