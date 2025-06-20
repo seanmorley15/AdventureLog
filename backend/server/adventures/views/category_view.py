@@ -6,15 +6,13 @@ from adventures.models import Category, Location
 from adventures.serializers import CategorySerializer
 
 class CategoryViewSet(viewsets.ModelViewSet):
-    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         return Category.objects.filter(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
-    def categories(self, request):
+    def list(self, request, *args, **kwargs):
         """
         Retrieve a list of distinct categories for adventures associated with the current user.
         """

@@ -150,7 +150,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.uuid == adventure.user}
+	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
 				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
@@ -649,11 +649,11 @@
 					<div class="card-body">
 						<h3 class="card-title text-lg mb-4">ℹ️ {$t('adventures.basic_information')}</h3>
 						<div class="space-y-3">
-							{#if adventure.activity_types && adventure.activity_types?.length > 0}
+							{#if adventure.tags && adventure.tags?.length > 0}
 								<div>
 									<div class="text-sm opacity-70 mb-1">{$t('adventures.tags')}</div>
 									<div class="flex flex-wrap gap-1">
-										{#each adventure.activity_types as activity}
+										{#each adventure.tags as activity}
 											<span class="badge badge-sm badge-outline">{activity}</span>
 										{/each}
 									</div>

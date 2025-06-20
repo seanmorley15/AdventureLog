@@ -103,7 +103,7 @@
 		visits: [],
 		link: null,
 		description: null,
-		activity_types: [],
+		tags: [],
 		rating: NaN,
 		is_public: false,
 		latitude: NaN,
@@ -128,7 +128,7 @@
 		name: adventureToEdit?.name || '',
 		link: adventureToEdit?.link || null,
 		description: adventureToEdit?.description || null,
-		activity_types: adventureToEdit?.activity_types || [],
+		tags: adventureToEdit?.tags || [],
 		rating: adventureToEdit?.rating || NaN,
 		is_public: adventureToEdit?.is_public || false,
 		latitude: adventureToEdit?.latitude || NaN,
@@ -152,7 +152,7 @@
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
-		let categoryFetch = await fetch('/api/categories/categories');
+		let categoryFetch = await fetch('/api/categories');
 		if (categoryFetch.ok) {
 			categories = await categoryFetch.json();
 		} else {
@@ -461,7 +461,7 @@
 				adventure.collections = [collection.id];
 			}
 
-			let res = await fetch('/api/adventures', {
+			let res = await fetch('/api/locations', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -480,7 +480,7 @@
 				addToast('error', $t('adventures.adventure_create_error'));
 			}
 		} else {
-			let res = await fetch(`/api/adventures/${adventure.id}`, {
+			let res = await fetch(`/api/locations/${adventure.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -654,18 +654,18 @@
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.tags')} ({adventure.activity_types?.length || 0})
+							{$t('adventures.tags')} ({adventure.tags?.length || 0})
 						</div>
 						<div class="collapse-content">
 							<input
 								type="text"
-								id="activity_types"
-								name="activity_types"
+								id="tags"
+								name="tags"
 								hidden
-								bind:value={adventure.activity_types}
+								bind:value={adventure.tags}
 								class="input input-bordered w-full"
 							/>
-							<ActivityComplete bind:activities={adventure.activity_types} />
+							<ActivityComplete bind:activities={adventure.tags} />
 						</div>
 					</div>
 

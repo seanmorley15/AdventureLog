@@ -29,7 +29,7 @@ export const load = (async (event) => {
 		const is_visited = event.url.searchParams.get('is_visited') || 'all';
 
 		let initialFetch = await event.fetch(
-			`${serverEndpoint}/api/adventures/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`,
+			`${serverEndpoint}/api/locations/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`,
 			{
 				headers: {
 					Cookie: `sessionid=${event.cookies.get('sessionid')}`

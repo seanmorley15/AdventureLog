@@ -39,7 +39,7 @@ class CollectionShared(permissions.BasePermission):
             if obj.shared_with.filter(id=user.id).exists():
                 return True
 
-        # If obj is an Adventure (has collections M2M)
+        # If obj is a Location (has collections M2M)
         if hasattr(obj, 'collections'):
             # Check if user is in shared_with of any related collection
             shared_collections = obj.collections.filter(shared_with=user)

@@ -5,13 +5,13 @@ from rest_framework.response import Response
 from django.db.models import Q
 from django.core.files.base import ContentFile
 from adventures.models import Location, LocationImage
-from adventures.serializers import AdventureImageSerializer
+from adventures.serializers import LocationImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
-    serializer_class = AdventureImageSerializer
+    serializer_class = LocationImageSerializer
     permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
@@ -20,21 +20,21 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def toggle_primary(self, request, *args, **kwargs):
-        # Makes the image the primary image for the adventure, if there is already a primary image linked to the adventure, it is set to false and the new image is set to true. make sure that the permission is set to the owner of the adventure
+        # Makes the image the primary image for the location, if there is already a primary image linked to the location, it is set to false and the new image is set to true. make sure that the permission is set to the owner of the location
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        adventure = instance.adventure
-        if adventure.user != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        location = instance.location
+        if location.user != request.user:
+            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
         
         # Check if the image is already the primary image
         if instance.is_primary:
             return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Set the current primary image to false
-        LocationImage.objects.filter(adventure=adventure, is_primary=True).update(is_primary=False)
+        LocationImage.objects.filter(location=location, is_primary=True).update(is_primary=False)
 
         # Set the new image to true
         instance.is_primary = True
@@ -44,29 +44,29 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        adventure_id = request.data.get('adventure')
+        location_id = request.data.get('location')
         try:
-            adventure = Location.objects.get(id=adventure_id)
+            location = Location.objects.get(id=location_id)
         except Location.DoesNotExist:
-            return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "location not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if adventure.user != request.user:
-            # Check if the adventure has any collections
-            if adventure.collections.exists():
-                # Check if the user is in the shared_with list of any of the adventure's collections
+        if location.user != request.user:
+            # Check if the location has any collections
+            if location.collections.exists():
+                # Check if the user is in the shared_with list of any of the location's collections
                 user_has_access = False
-                for collection in adventure.collections.all():
+                for collection in location.collections.all():
                     if collection.shared_with.filter(id=request.user.id).exists():
                         user_has_access = True
                         break
                 
                 if not user_has_access:
-                    return Response({"error": "User does not have permission to access this adventure"}, status=status.HTTP_403_FORBIDDEN)
+                    return Response({"error": "User does not have permission to access this location"}, status=status.HTTP_403_FORBIDDEN)
             else:
-                return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+                return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
         
         # Handle Immich ID for shared users by downloading the image
-        if (request.user != adventure.user and 
+        if (request.user != location.user and 
             'immich_id' in request.data and 
             request.data.get('immich_id')):
             
@@ -121,8 +121,8 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 serializer.is_valid(raise_exception=True)
                 
                 # Save with the downloaded image
-                adventure = serializer.validated_data['adventure']
-                serializer.save(user=adventure.user, image=image_file)
+                location = serializer.validated_data['location']
+                serializer.save(user=location.user, image=image_file)
                 
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
                 
@@ -143,30 +143,28 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        adventure_id = request.data.get('adventure')
+        location_id = request.data.get('location')
         try:
-            adventure = Location.objects.get(id=adventure_id)
+            location = Location.objects.get(id=location_id)
         except Location.DoesNotExist:
-            return Response({"error": "Adventure not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"error": "location not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if adventure.user != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        if location.user != request.user:
+            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().update(request, *args, **kwargs)
     
     def perform_destroy(self, instance):
-        print("perform_destroy")
         return super().perform_destroy(instance)
 
     def destroy(self, request, *args, **kwargs):
-        print("destroy")
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        adventure = instance.adventure
-        if adventure.user != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        location = instance.location
+        if location.user != request.user:
+            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().destroy(request, *args, **kwargs)
     
@@ -175,27 +173,27 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        adventure = instance.adventure
-        if adventure.user != request.user:
-            return Response({"error": "User does not own this adventure"}, status=status.HTTP_403_FORBIDDEN)
+        location = instance.location
+        if location.user != request.user:
+            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().partial_update(request, *args, **kwargs)
     
-    @action(detail=False, methods=['GET'], url_path='(?P<adventure_id>[0-9a-f-]+)')
-    def adventure_images(self, request, adventure_id=None, *args, **kwargs):
+    @action(detail=False, methods=['GET'], url_path='(?P<location_id>[0-9a-f-]+)')
+    def location_images(self, request, location_id=None, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         try:
-            adventure_uuid = uuid.UUID(adventure_id)
+            location_uuid = uuid.UUID(location_id)
         except ValueError:
-            return Response({"error": "Invalid adventure ID"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"error": "Invalid location ID"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Updated queryset to include images from adventures the user owns OR has shared access to
+        # Updated queryset to include images from locations the user owns OR has shared access to
         queryset = LocationImage.objects.filter(
-            Q(adventure__id=adventure_uuid) & (
-                Q(adventure__user=request.user) |  # User owns the adventure
-                Q(adventure__collections__shared_with=request.user)  # User has shared access via collection
+            Q(location__id=location_uuid) & (
+                Q(location__user=request.user) |  # User owns the location
+                Q(location__collections__shared_with=request.user)  # User has shared access via collection
             )
         ).distinct()
         
@@ -203,13 +201,13 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     def get_queryset(self):
-        # Updated to include images from adventures the user owns OR has shared access to
+        # Updated to include images from locations the user owns OR has shared access to
         return LocationImage.objects.filter(
-            Q(adventure__user=self.request.user) |  # User owns the adventure
-            Q(adventure__collections__shared_with=self.request.user)  # User has shared access via collection
+            Q(location__user=self.request.user) |  # User owns the location
+            Q(location__collections__shared_with=self.request.user)  # User has shared access via collection
         ).distinct()
 
     def perform_create(self, serializer):
-        # Always set the image owner to the adventure owner, not the current user
-        adventure = serializer.validated_data['adventure']
-        serializer.save(user=adventure.user)
+        # Always set the image owner to the location owner, not the current user
+        location = serializer.validated_data['location']
+        serializer.save(user=location.user)

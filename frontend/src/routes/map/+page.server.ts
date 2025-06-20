@@ -9,7 +9,7 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	} else {
 		let sessionId = event.cookies.get('sessionid');
-		let visitedFetch = await fetch(`${endpoint}/api/adventures/all/?include_collections=true`, {
+		let visitedFetch = await fetch(`${endpoint}/api/locations/all/?include_collections=true`, {
 			headers: {
 				Cookie: `sessionid=${sessionId}`
 			}

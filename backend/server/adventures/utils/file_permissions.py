@@ -10,14 +10,14 @@ def checkFilePermission(fileId, user, mediaType):
             # Construct the full relative path to match the database field
             image_path = f"images/{fileId}"
             # Fetch the AdventureImage object
-            adventure = LocationImage.objects.get(image=image_path).location
-            if adventure.is_public:
+            location = LocationImage.objects.get(image=image_path).location
+            if location.is_public:
                 return True
-            elif adventure.user == user:
+            elif location.user == user:
                 return True
-            elif adventure.collections.exists():
+            elif location.collections.exists():
                 # Check if the user is in any collection's shared_with list
-                for collection in adventure.collections.all():
+                for collection in location.collections.all():
                     if collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False
@@ -31,14 +31,14 @@ def checkFilePermission(fileId, user, mediaType):
             attachment_path = f"attachments/{fileId}"
             # Fetch the Attachment object
             attachment = Attachment.objects.get(file=attachment_path)
-            adventure = attachment.location
-            if adventure.is_public:
+            location = attachment.location
+            if location.is_public:
                 return True
-            elif adventure.user == user:
+            elif location.user == user:
                 return True
-            elif adventure.collections.exists():
+            elif location.collections.exists():
                 # Check if the user is in any collection's shared_with list
-                for collection in adventure.collections.all():
+                for collection in location.collections.all():
                     if collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False

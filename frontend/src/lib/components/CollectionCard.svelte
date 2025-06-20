@@ -91,7 +91,7 @@
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={collection.adventures} />
+		<CardCarousel adventures={collection.locations} />
 
 		<!-- Badge Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -119,7 +119,7 @@
 
 			<!-- Adventure Count -->
 			<p class="text-sm text-base-content/70">
-				{collection.adventures.length}
+				{collection.locations.length}
 				{$t('navbar.adventures')}
 			</p>
 

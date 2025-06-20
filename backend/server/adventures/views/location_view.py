@@ -10,16 +10,16 @@ import requests
 
 from adventures.models import Location, Category, Transportation, Lodging
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import AdventureSerializer, TransportationSerializer, LodgingSerializer
+from adventures.serializers import LocationSerializer, TransportationSerializer, LodgingSerializer
 from adventures.utils import pagination
 
 
-class AdventureViewSet(viewsets.ModelViewSet):
+class LocationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing Adventure objects with support for filtering, sorting,
     and sharing functionality.
     """
-    serializer_class = AdventureSerializer
+    serializer_class = LocationSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
     pagination_class = pagination.StandardResultsSetPagination
 
@@ -35,13 +35,13 @@ class AdventureViewSet(viewsets.ModelViewSet):
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:
-                return Location.objects.retrieve_adventures(
+                return Location.objects.retrieve_locations(
                     user, include_public=True
                 ).order_by('-updated_at')
             return Location.objects.none()
 
         include_public = self.action in public_allowed_actions
-        return Location.objects.retrieve_adventures(
+        return Location.objects.retrieve_locations(
             user,
             include_public=include_public,
             include_owned=True,

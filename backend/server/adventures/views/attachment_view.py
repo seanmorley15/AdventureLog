@@ -11,10 +11,6 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return Attachment.objects.filter(user=self.request.user)
-
-    @action(detail=True, methods=['post'])
-    def attachment_delete(self, request, *args, **kwargs):
-        return self.destroy(request, *args, **kwargs)
     
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

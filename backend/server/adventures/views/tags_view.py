@@ -18,7 +18,7 @@ class ActivityTypesView(viewsets.ViewSet):
         Returns:
             Response: A response containing a list of distinct activity types.
         """
-        types = Location.objects.filter(user=request.user.id).values_list('activity_types', flat=True).distinct()
+        types = Location.objects.filter(user=request.user).values_list('tags', flat=True).distinct()
 
         allTypes = []
 

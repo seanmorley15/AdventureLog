@@ -11,7 +11,7 @@
 		icon: '',
 		id: '',
 		user: '',
-		num_adventures: 0
+		num_locations: 0
 	};
 
 	let isOpen: boolean = false;
@@ -44,7 +44,7 @@
 	let dropdownRef: HTMLDivElement;
 
 	onMount(() => {
-		categories = categories.sort((a, b) => (b.num_adventures || 0) - (a.num_adventures || 0));
+		categories = categories.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0));
 		const handleClickOutside = (event: MouseEvent) => {
 			if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
 				isOpen = false;
@@ -105,7 +105,7 @@
 				<!-- Sort the categories dynamically before rendering -->
 				{#each categories
 					.slice()
-					.sort((a, b) => (b.num_adventures || 0) - (a.num_adventures || 0)) as category}
+					.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0)) as category}
 					<button
 						type="button"
 						class="btn btn-neutral flex items-center space-x-2"
@@ -113,7 +113,7 @@
 						role="option"
 						aria-selected={selected_category && selected_category.id === category.id}
 					>
-						<span>{category.display_name} {category.icon} ({category.num_adventures})</span>
+						<span>{category.display_name} {category.icon} ({category.num_locations})</span>
 					</button>
 				{/each}
 			</div>

@@ -11,17 +11,17 @@ admin.site.login = secure_admin_login(admin.site.login)
 @admin.action(description="Trigger geocoding")
 def trigger_geocoding(modeladmin, request, queryset):
     count = 0
-    for adventure in queryset:
+    for location in queryset:
         try:
-            adventure.save()  # Triggers geocoding logic in your model
+            location.save()  # Triggers geocoding logic in your model
             count += 1
         except Exception as e:
-            modeladmin.message_user(request, f"Error geocoding {adventure}: {e}", level='error')
-    modeladmin.message_user(request, f"Geocoding triggered for {count} adventures.", level='success')
+            modeladmin.message_user(request, f"Error geocoding {location}: {e}", level='error')
+    modeladmin.message_user(request, f"Geocoding triggered for {count} locations.", level='success')
     
 
 
-class AdventureAdmin(admin.ModelAdmin):
+class LocationAdmin(admin.ModelAdmin):
     list_display = ('name', 'get_category', 'get_visit_count',  'user', 'is_public')
     list_filter = ( 'user', 'is_public')
     search_fields = ('name',)
@@ -96,7 +96,7 @@ class CustomUserAdmin(UserAdmin):
         else:
             return
         
-class AdventureImageAdmin(admin.ModelAdmin):
+class LocationImageAdmin(admin.ModelAdmin):
     list_display = ('user', 'image_display')
 
     def image_display(self, obj):
@@ -137,7 +137,7 @@ admin.site.register(CustomUser, CustomUserAdmin)
 
 
 
-admin.site.register(Location, AdventureAdmin)
+admin.site.register(Location, LocationAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Visit, VisitAdmin)
 admin.site.register(Country, CountryAdmin)
@@ -147,7 +147,7 @@ admin.site.register(Transportation)
 admin.site.register(Note)
 admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
-admin.site.register(LocationImage, AdventureImageAdmin)
+admin.site.register(LocationImage, LocationImageAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(VisitedCity)

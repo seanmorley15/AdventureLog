@@ -6,32 +6,22 @@ from adventures.models import Checklist
 from adventures.serializers import ChecklistSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from rest_framework.permissions import IsAuthenticated
 
 class ChecklistViewSet(viewsets.ModelViewSet):
-    queryset = Checklist.objects.all()
     serializer_class = ChecklistSerializer
-    permission_classes = [IsOwnerOrSharedWithFullAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrSharedWithFullAccess]
     filterset_fields = ['is_public', 'collection']
 
-    # return error message if user is not authenticated on the root endpoint
     def list(self, request, *args, **kwargs):
-        # Prevent listing all adventures
-        return Response({"detail": "Listing all checklists is not allowed."},
-                        status=status.HTTP_403_FORBIDDEN)
-    
-    @action(detail=False, methods=['get'])
-    def all(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
         queryset = Checklist.objects.filter(
-            Q(user=request.user.id)
+            Q(user=request.user)
         )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
 
     def get_queryset(self):
-        # if the user is not authenticated return only public transportations for  retrieve action
+        # if the user is not authenticated return only public checklists for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
                 return Checklist.objects.filter(is_public=True).distinct().order_by('-updated_at')
@@ -41,12 +31,12 @@ class ChecklistViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             # For individual adventure retrieval, include public adventures
             return Checklist.objects.filter(
-                Q(is_public=True) | Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(is_public=True) | Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
         else:
             # For other actions, include user's own adventures and shared adventures
             return Checklist.objects.filter(
-                Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):

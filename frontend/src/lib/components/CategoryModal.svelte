@@ -26,7 +26,7 @@
 
 	async function loadCategories() {
 		try {
-			const res = await fetch('/api/categories/categories');
+			const res = await fetch('/api/categories');
 			if (res.ok) {
 				categories = await res.json();
 			}

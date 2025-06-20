@@ -69,7 +69,7 @@
 			modal.showModal();
 		}
 
-		let res = await fetch(`/api/adventures/all/?include_collections=true`, {
+		let res = await fetch(`/api/locations/all/?include_collections=true`, {
 			method: 'GET'
 		});
 

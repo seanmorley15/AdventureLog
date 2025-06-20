@@ -5,7 +5,7 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
-	let request = await fetch(`${endpoint}/api/adventures/${id.id}/additional-info/`, {
+	let request = await fetch(`${endpoint}/api/locations/${id.id}/additional-info/`, {
 		headers: {
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
 		},
@@ -51,7 +51,7 @@ export const actions: Actions = {
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${serverEndpoint}/api/adventures/${event.params.id}`, {
+		let res = await fetch(`${serverEndpoint}/api/locations/${event.params.id}`, {
 			method: 'DELETE',
 			headers: {
 				Referer: event.url.origin, // Include Referer header

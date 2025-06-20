@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery
 from adventures.models import Location, Collection
-from adventures.serializers import AdventureSerializer, CollectionSerializer
+from adventures.serializers import LocationSerializer, CollectionSerializer
 from worldtravel.models import Country, Region, City, VisitedCity, VisitedRegion
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer, VisitedCitySerializer, VisitedRegionSerializer
 from users.models import CustomUser as User
@@ -34,7 +34,7 @@ class GlobalSearchView(viewsets.ViewSet):
         adventures = Location.objects.annotate(
             search=SearchVector('name', 'description', 'location')
         ).filter(search=SearchQuery(search_term), user=request.user)
-        results["adventures"] = AdventureSerializer(adventures, many=True).data
+        results["adventures"] = LocationSerializer(adventures, many=True).data
 
         # Collections: Partial Match Search
         collections = Collection.objects.filter(

@@ -48,8 +48,6 @@ def background_geocode_and_assign(location_id: str):
         # Save updated location info, skip geocode threading
         location.save(update_fields=["region", "city", "country"], _skip_geocode=True)
 
-        # print(f"[Adventure Geocode Thread] Successfully processed {adventure_id}: {adventure.name} - {adventure.latitude}, {adventure.longitude}")
-
     except Exception as e:
         # Optional: log or print the error
         print(f"[Location Geocode Thread] Error processing {location_id}: {e}")
@@ -144,7 +142,7 @@ class Location(models.Model):
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True, null=True)
-    activity_types = ArrayField(models.CharField(
+    tags = ArrayField(models.CharField(
         max_length=100), blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
@@ -159,7 +157,7 @@ class Location(models.Model):
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
 
     # Changed from ForeignKey to ManyToManyField
-    collections = models.ManyToManyField('Collection', blank=True, related_name='adventures')
+    collections = models.ManyToManyField('Collection', blank=True, related_name='locations')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -256,13 +254,13 @@ class Collection(models.Model):
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
 
-    # if connected adventures are private and collection is public, raise an error
+    # if connected locations are private and collection is public, raise an error
     def clean(self):
         if self.is_public and self.pk:  # Only check if the instance has a primary key
-            # Updated to use the new related_name 'adventures'
-            for adventure in self.adventures.all():
-                if not adventure.is_public:
-                    raise ValidationError(f'Public collections cannot be associated with private locations. Collection: {self.name} Adventure: {adventure.name}')
+            # Updated to use the new related_name 'locations'
+            for location in self.locations.all():
+                if not location.is_public:
+                    raise ValidationError(f'Public collections cannot be associated with private locations. Collection: {self.name} Location: {location.name}')
 
     def __str__(self):
         return self.name

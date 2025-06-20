@@ -417,7 +417,7 @@
 	onMount(() => {
 		if (data.props.adventure) {
 			collection = data.props.adventure;
-			adventures = collection.adventures as Adventure[];
+			adventures = collection.locations as Adventure[];
 		} else {
 			notFound = true;
 		}
@@ -477,7 +477,7 @@
 				}
 			}
 
-			let res = await fetch(`/api/adventures/${adventure.id}/`, {
+			let res = await fetch(`/api/locations/${adventure.id}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'

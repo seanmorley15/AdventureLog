@@ -4,7 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 from adventures.models import Location
-from adventures.serializers import AdventureSerializer
+from adventures.serializers import LocationSerializer
 import requests
 from adventures.geocoding import reverse_geocode
 from adventures.geocoding import extractIsoCode
@@ -53,7 +53,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
         new_city_count = 0
         new_cities = {}
         adventures = Location.objects.filter(user=self.request.user)
-        serializer = AdventureSerializer(adventures, many=True)
+        serializer = LocationSerializer(adventures, many=True)
         for adventure, serialized_adventure in zip(adventures, serializer.data):
             if serialized_adventure['is_visited'] == True:
                 lat = adventure.latitude

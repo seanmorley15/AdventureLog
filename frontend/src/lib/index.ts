@@ -35,8 +35,8 @@ export function checkLink(link: string) {
 }
 
 export async function exportData() {
-	let res = await fetch('/api/adventures/all');
-	let adventures = (await res.json()) as Adventure[];
+	let res = await fetch('/api/locations/all');
+	let adventures = (await res.json()) as Location[];
 
 	res = await fetch('/api/collections/all');
 	let collections = (await res.json()) as Collection[];
@@ -78,7 +78,7 @@ export function groupAdventuresByDate(
 	}
 
 	adventures.forEach((adventure) => {
-		adventure.visits.forEach((visit) => {
+		adventure.visits.forEach((visit: { start_date: string; end_date: string; timezone: any }) => {
 			if (visit.start_date) {
 				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
 				const startHasZeros = isAllDay(visit.start_date);

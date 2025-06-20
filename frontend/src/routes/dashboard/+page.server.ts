@@ -11,7 +11,7 @@ export const load = (async (event) => {
 	} else {
 		let adventures: Adventure[] = [];
 
-		let initialFetch = await event.fetch(`${serverEndpoint}/api/adventures/`, {
+		let initialFetch = await event.fetch(`${serverEndpoint}/api/locations/`, {
 			headers: {
 				Cookie: `sessionid=${event.cookies.get('sessionid')}`
 			},

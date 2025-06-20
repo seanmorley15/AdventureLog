@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import Q
 
 class LocationManager(models.Manager):
-    def retrieve_adventures(self, user, include_owned=False, include_shared=False, include_public=False):
+    def retrieve_locations(self, user, include_owned=False, include_shared=False, include_public=False):
         query = Q()
 
         if include_owned:

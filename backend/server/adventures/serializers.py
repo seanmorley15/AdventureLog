@@ -9,7 +9,7 @@ from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 
 
-class AdventureImageSerializer(CustomModelSerializer):
+class LocationImageSerializer(CustomModelSerializer):
     class Meta:
         model = LocationImage
         fields = ['id', 'image', 'location', 'is_primary', 'user', 'immich_id']
@@ -59,11 +59,11 @@ class AttachmentSerializer(CustomModelSerializer):
         return representation
     
 class CategorySerializer(serializers.ModelSerializer):
-    num_adventures = serializers.SerializerMethodField()
+    num_locations = serializers.SerializerMethodField()
     class Meta:
         model = Category
-        fields = ['id', 'name', 'display_name', 'icon', 'num_adventures']
-        read_only_fields = ['id', 'num_adventures']
+        fields = ['id', 'name', 'display_name', 'icon', 'num_locations']
+        read_only_fields = ['id', 'num_locations']
 
     def validate_name(self, value):
         return value.lower()
@@ -81,7 +81,7 @@ class CategorySerializer(serializers.ModelSerializer):
         instance.save()
         return instance
     
-    def get_num_adventures(self, obj):
+    def get_num_locations(self, obj):
         return Location.objects.filter(category=obj, user=obj.user).count()
     
 class VisitSerializer(serializers.ModelSerializer):
@@ -91,13 +91,12 @@ class VisitSerializer(serializers.ModelSerializer):
         fields = ['id', 'start_date', 'end_date', 'timezone', 'notes']
         read_only_fields = ['id']
                                    
-class AdventureSerializer(CustomModelSerializer):
+class LocationSerializer(CustomModelSerializer):
     images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
-    user = serializers.SerializerMethodField()
     country = CountrySerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     city = CitySerializer(read_only=True)
@@ -110,14 +109,20 @@ class AdventureSerializer(CustomModelSerializer):
     class Meta:
         model = Location
         fields = [
-            'id', 'name', 'description', 'rating', 'activity_types', 'location', 
+            'id', 'name', 'description', 'rating', 'tags', 'location', 
             'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
             'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
 
+    # Makes it so the whole user object is returned in the serializer instead of just the user uuid
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['user'] = CustomUserDetailsSerializer(instance.user, context=self.context).data
+        return representation
+
     def get_images(self, obj):
-        serializer = AdventureImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = LocationImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
@@ -171,10 +176,6 @@ class AdventureSerializer(CustomModelSerializer):
         )
         return category
     
-    def get_user(self, obj):
-        user = obj.user
-        return CustomUserDetailsSerializer(user).data
-    
     def get_is_visited(self, obj):
         return obj.is_visited_status()
 
@@ -184,24 +185,24 @@ class AdventureSerializer(CustomModelSerializer):
         collections_data = validated_data.pop('collections', [])
         
         print(category_data)
-        adventure = Location.objects.create(**validated_data)
+        location = Location.objects.create(**validated_data)
         
         # Handle visits
         for visit_data in visits_data:
-            Visit.objects.create(location=adventure, **visit_data)
+            Visit.objects.create(location=location, **visit_data)
 
         # Handle category
         if category_data:
             category = self.get_or_create_category(category_data)
-            adventure.category = category
+            location.category = category
         
-        # Handle collections - set after adventure is saved
+        # Handle collections - set after location is saved
         if collections_data:
-            adventure.collections.set(collections_data)
+            location.collections.set(collections_data)
             
-        adventure.save()
+        location.save()
 
-        return adventure
+        return location
 
     def update(self, instance, validated_data):
         has_visits = 'visits' in validated_data
@@ -214,7 +215,7 @@ class AdventureSerializer(CustomModelSerializer):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
 
-        # Handle category - ONLY allow the adventure owner to change categories
+        # Handle category - ONLY allow the location owner to change categories
         user = self.context['request'].user
         if category_data and instance.user == user:
             # Only the owner can set categories
@@ -247,7 +248,7 @@ class AdventureSerializer(CustomModelSerializer):
             visits_to_delete = current_visit_ids - updated_visit_ids
             instance.visits.filter(id__in=visits_to_delete).delete()
 
-        # call save on the adventure to update the updated_at field and trigger any geocoding
+        # call save on the location to update the updated_at field and trigger any geocoding
         instance.save()
 
         return instance
@@ -391,7 +392,7 @@ class ChecklistSerializer(CustomModelSerializer):
         return data
 
 class CollectionSerializer(CustomModelSerializer):
-    adventures = AdventureSerializer(many=True, read_only=True)
+    locations = LocationSerializer(many=True, read_only=True)
     transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
     notes = NoteSerializer(many=True, read_only=True, source='note_set')
     checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
@@ -399,7 +400,7 @@ class CollectionSerializer(CustomModelSerializer):
 
     class Meta:
         model = Collection
-        fields = ['id', 'description', 'user', 'name', 'is_public', 'adventures', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
+        fields = ['id', 'description', 'user', 'name', 'is_public', 'locations', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
 
     def to_representation(self, instance):

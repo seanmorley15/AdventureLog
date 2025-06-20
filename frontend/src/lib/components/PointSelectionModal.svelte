@@ -83,7 +83,7 @@
 			adventure.name = markers[0].name;
 		}
 		if (adventure.type == 'visited' || adventure.type == 'planned') {
-			adventure.activity_types = [...adventure.activity_types, markers[0].activity_type];
+			adventure.tags = [...adventure.tags, markers[0].activity_type];
 		}
 		dispatch('submit', adventure);
 		close();

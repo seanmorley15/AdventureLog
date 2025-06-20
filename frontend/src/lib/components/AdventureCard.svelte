@@ -37,13 +37,13 @@
 
 	// Process activity types for display
 	$: {
-		if (adventure.activity_types) {
-			if (adventure.activity_types.length <= 3) {
-				displayActivityTypes = adventure.activity_types;
+		if (adventure.tags) {
+			if (adventure.tags.length <= 3) {
+				displayActivityTypes = adventure.tags;
 				remainingCount = 0;
 			} else {
-				displayActivityTypes = adventure.activity_types.slice(0, 3);
-				remainingCount = adventure.activity_types.length - 3;
+				displayActivityTypes = adventure.tags.slice(0, 3);
+				remainingCount = adventure.tags.length - 3;
 			}
 		}
 	}
@@ -77,7 +77,7 @@
 	}
 
 	async function deleteAdventure() {
-		let res = await fetch(`/api/adventures/${adventure.id}`, {
+		let res = await fetch(`/api/locations/${adventure.id}`, {
 			method: 'DELETE'
 		});
 		if (res.ok) {
@@ -98,7 +98,7 @@
 			updatedCollections.push(collectionId);
 		}
 
-		let res = await fetch(`/api/adventures/${adventure.id}`, {
+		let res = await fetch(`/api/locations/${adventure.id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -128,7 +128,7 @@
 				(c) => String(c) !== String(collectionId)
 			);
 
-			let res = await fetch(`/api/adventures/${adventure.id}`, {
+			let res = await fetch(`/api/locations/${adventure.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -280,7 +280,7 @@
 							{$t('adventures.open_details')}
 						</button>
 
-						{#if adventure.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+						{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid))}
 							<div class="dropdown dropdown-end">
 								<div tabindex="0" role="button" class="btn btn-square btn-sm btn-base-300">
 									<DotsHorizontal class="w-5 h-5" />
@@ -297,7 +297,7 @@
 										</button>
 									</li>
 
-									{#if user?.uuid == adventure.user}
+									{#if user?.uuid == adventure.user?.uuid}
 										<li>
 											<button
 												on:click={() => (isCollectionModalOpen = true)}

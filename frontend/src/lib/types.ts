@@ -16,10 +16,9 @@ export type User = {
 
 export type Adventure = {
 	id: string;
-	user: string | null;
 	name: string;
 	location?: string | null;
-	activity_types?: string[] | null;
+	tags?: string[] | null;
 	description?: string | null;
 	rating?: number | null;
 	link?: string | null;
@@ -45,7 +44,7 @@ export type Adventure = {
 	is_visited?: boolean;
 	category: Category | null;
 	attachments: Attachment[];
-	user?: User | null;
+	user: User | null;
 	city?: City | null;
 	region?: Region | null;
 	country?: Country | null;
@@ -127,7 +126,7 @@ export type Collection = {
 	name: string;
 	description: string;
 	is_public: boolean;
-	adventures: Adventure[];
+	locations: Adventure[];
 	created_at?: string | null;
 	start_date: string | null;
 	end_date: string | null;
@@ -236,7 +235,7 @@ export type Category = {
 	display_name: string;
 	icon: string;
 	user: string;
-	num_adventures?: number | null;
+	num_locations?: number | null;
 };
 
 export type ImmichIntegration = {
