@@ -5,13 +5,7 @@ permissions:
 
 on:
   pull_request:
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-test.yml"
   push:
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-test.yml"
 
 jobs:
   build:
