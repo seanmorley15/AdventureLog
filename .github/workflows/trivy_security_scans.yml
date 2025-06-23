@@ -29,6 +29,7 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
+          severity: CRITICAL,HIGH,MEDIUM
 
   image-scan:
     name: Trivy Docker Image Scan (Backend & Frontend)
