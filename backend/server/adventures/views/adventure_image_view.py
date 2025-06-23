@@ -9,6 +9,7 @@ from adventures.serializers import AdventureImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
+import os
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = AdventureImageSerializer
@@ -155,7 +156,6 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
     
     def perform_destroy(self, instance):
-        print("perform_destroy")
         return super().perform_destroy(instance)
 
     def destroy(self, request, *args, **kwargs):
