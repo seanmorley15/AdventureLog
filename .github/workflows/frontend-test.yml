@@ -15,6 +15,7 @@ on:
 
 jobs:
   build:
+    name: Build and Test Frontend
     runs-on: ubuntu-latest
 
     steps:

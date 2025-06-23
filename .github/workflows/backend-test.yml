@@ -15,6 +15,7 @@ on:
 
 jobs:
   build:
+    name: Build and Test Backend
     runs-on: ubuntu-latest
 
     steps:
