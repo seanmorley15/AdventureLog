@@ -1,36 +1,46 @@
-# Use an official Python image as a base
-FROM python:3.11-slim
+# ---------------------
+# Stage 1: Data builder
+# ---------------------
+FROM docker.io/python:3.11-slim AS builder
 
-# Set the working directory
+ARG GIT_SHA=unknown
+ARG BUILD_DATE=unknown
+
+# Set workdir and environment
 WORKDIR /app
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # Install required Python packages
 RUN pip install --no-cache-dir requests osm2geojson
 
-# Copy the script into the container
+# Copy and run data generation script
 COPY main.py /app/main.py
-
-# Run the script to generate the data folder and GeoJSON files (this runs inside the container)
 RUN python -u /app/main.py
 
-# Install Nginx
-RUN apt update && apt install -y nginx && rm -rf /var/lib/apt/lists/*
+# ------------------------
+# Stage 2: Final Nginx-only
+# ------------------------
+FROM docker.io/nginx:alpine
 
-# Copy the entire generated data folder to the Nginx serving directory
-RUN mkdir -p /var/www/html/data && cp -r /app/data/* /var/www/html/data/
+ARG GIT_SHA=unknown
+ARG BUILD_DATE=unknown
 
-# Copy Nginx configuration
+# Optional metadata
+LABEL org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.created="${BUILD_DATE}"
+
+# Create destination directory
+RUN mkdir -p /var/www/html/data
+
+# Copy generated data and static files
+COPY --from=builder /app/data /var/www/html/data
+COPY index.html /usr/share/nginx/html/index.html
 COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy the index.html file to the Nginx serving directory
-COPY index.html /usr/share/nginx/html/index.html
-
-# Expose port 80 for Nginx
-EXPOSE 80
-
-# Copy the entrypoint script into the container
+# Add entrypoint
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
-# Set the entrypoint script as the default command
+EXPOSE 80
 ENTRYPOINT ["/app/entrypoint.sh"]

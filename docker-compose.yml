@@ -1,36 +1,128 @@
+name: adventurelog
+
+# Common DB variables used by both backend and db
+x-env-common: &env-common
+  POSTGRES_DB: adventurelog # If you change this, it needs to also be changed in the backend
+  POSTGRES_USER: adventurelog # If you change this, it needs to also be changed in the backend
+  POSTGRES_PASSWORD: changeme123 # If you change this, it needs to also be changed in the backend
+
+# Environment variables for the backend service
+x-env-backend: &env-backend
+  # Database Configuration
+  PGHOST: db # Supposed to match the host of the postgis database
+  <<: *env-common
+  # AdventureLog base configuration
+  SECRET_KEY: changeme123 # Replace with the actual secret key
+  DJANGO_ADMIN_USERNAME: admin # Replace with the actual admin username
+  DJANGO_ADMIN_PASSWORD: admin # Replace with the actual admin password
+  DJANGO_ADMIN_EMAIL: admin@example.com # Replace with the actual admin email
+  BACKEND_PORT: 8016 # Don't forget to update CSRF_TRUSTED_ORIGINS and PUBLIC_URL in backend, and PUBLIC_SERVER_URL in frontend if you make changes to this.
+  PUBLIC_URL: http://localhost:8016 # Replace with your domain where the backend is accessible publicly, used for the creation of image URLs
+  CSRF_TRUSTED_ORIGINS: http://localhost:8016,http://localhost:8015 # Replace with your domain, if applicable
+  FRONTEND_URL: http://localhost:8015 # Replace with your domain where the frontend is accessible, used for email generation.
+
+  # Optional integrations (commented out by default)
+  # DISABLE_REGISTRATION: False
+  # DISABLE_REGISTRATION_MESSAGE: Registration is disabled for this instance of AdventureLog.
+  # EMAIL_BACKEND: email
+  # EMAIL_HOST: smtp.mail.com
+  # EMAIL_USE_TLS: False
+  # EMAIL_PORT: 587
+  # EMAIL_USE_SSL: True
+  # EMAIL_HOST_USER: user
+  # EMAIL_HOST_PASSWORD: password
+  # DEFAULT_FROM_EMAIL: ${COMPOSE_PROJECT_NAME@example.com
+  # GOOGLE_MAPS_API_KEY: your_google_maps_api_key
+  # PUBLIC_UMAMI_SRC: https://cloud.umami.is/script.js # If you are using the hosted version of Umami
+  # PUBLIC_UMAMI_WEBSITE_ID: 
+
+  # Extra configuration
+  DEBUG: false # Use to enable debugging
+
+# Environment variables for the frontend service
+x-env-frontend: &env-frontend
+  FRONTEND_PORT: 8015 # Don't forget to update CSRF_TRUSTED_ORIGINS in backend and FRONTEND_URL in backend and ORIGIN in frontend if you make changes to this.
+  PUBLIC_SERVER_URL: http://backend:8000 # PLEASE DON'T CHANGE :) - Should be the service name of the backend with port 8000, even if you change the port in the backend service. Only change if you are using a custom more complex setup.
+  ORIGIN: http://localhost:8015
+  BODY_SIZE_LIMIT: Infinity
+
 services:
-  web:
-    #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
-    container_name: adventurelog-frontend
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "${FRONTEND_PORT:-8015}:3000"
-    depends_on:
-      - server
-
   db:
-    image: postgis/postgis:16-3.5
-    container_name: adventurelog-db
+    image: docker.io/postgis/postgis:16-3.5
     restart: unless-stopped
-    env_file: .env
+    #env_file: .env # Disabled for security reasons, as all containers have access to these env vars.
+    environment: # Anything defined here (including the env-backend) overrides what's in the env_file.
+      <<: *env-common
     volumes:
-      - postgres_data:/var/lib/postgresql/data/
+      - data:/var/lib/postgresql/data/
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
 
-  server:
-    #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
-    container_name: adventurelog-backend
+  frontend:
+    #build: ./frontend/
+    image: localhost/adventurelog-frontend:testing
     restart: unless-stopped
-    env_file: .env
+    # env_file: .env # Disabled for security reasons, as all containers have access to these env vars.
+    environment: # Anything defined here (including the env-backend) overrides what's in the env_file.
+      <<: *env-frontend
     ports:
-      - "${BACKEND_PORT:-8016}:80"
+      - "8015:3000"
+    networks:
+      - default
     depends_on:
-      - db
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "/nodejs/bin/node", "-e", "require('net').connect(3000).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    # labels:
+      # Traefik example: Refer to https://doc.traefik.io/traefik/user-guides/docker-compose/basic-example/ for help on deploying Traefik.
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
+      # - "traefik.http.routers.adventurelogweb.rule=Host(`yourdomain.com`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))" # Replace with your domain
+      # - "traefik.http.routers.adventurelogweb.tls=true"
+      # - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt"
+
+
+  backend:
+    #build: ./backend/
+    image: localhost/adventurelog-backend:testing
+    restart: unless-stopped
+    # env_file: .env # Disabled for security reasons, as all containers have access to these env vars.
+    environment: # Anything defined here (including the env-backend) overrides what's in the env_file.
+      <<: *env-backend
+    networks:
+      - default
+    ports:
+      - "8016:80"
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
-      - adventurelog_media:/code/media/
+      - media:/code/media/
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      start_period: 20s
+      retries: 5
+    # labels:
+      # Traefik example: Refer to https://doc.traefik.io/traefik/user-guides/docker-compose/basic-example/ for help on deploying Traefik.
+      # - "traefik.enable=true"
+      # - "traefik.http.routers.adventurelogserver.entrypoints=websecure"
+      # - "traefik.http.routers.adventurelogserver.rule=Host(`yourdomain.com`) && (PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))" # Replace with your domain
+      # - "traefik.http.routers.adventurelogserver.tls=true"
+      # - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt"
 
 volumes:
-  postgres_data:
-  adventurelog_media:
+  data:
+  media:

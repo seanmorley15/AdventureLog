@@ -43,10 +43,10 @@ jobs:
         working-directory: backend/server
         env:
           PGHOST: "127.0.0.1"
-          PGDATABASE: "database"
-          PGUSER: "adventure"
-          PGPASSWORD: "changeme123"
-          SECRET_KEY: "changeme123"
+          POSTGRES_DB: "adventurelog"
+          POSTGRES_USER: "adventurelog"
+          POSTGRES_PASSWORD: "changeme123"
+          SECRET_KEY: "secretkey"
           DJANGO_ADMIN_USERNAME: "admin"
           DJANGO_ADMIN_PASSWORD: "admin"
           DJANGO_ADMIN_EMAIL: "admin@example.com"

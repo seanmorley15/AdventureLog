@@ -1,0 +1,7 @@
+.env.example
+.devcontainer
+.github
+server/build_files.sh
+.gitignore
+Dockerfile
+.dockerignore

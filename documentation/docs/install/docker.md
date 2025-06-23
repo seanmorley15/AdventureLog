@@ -45,8 +45,8 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 | Name                | Required | Description           | Default Value |
 | ------------------- | -------- | --------------------- | ------------- |
 | `PGHOST`            | Yes      | Internal DB hostname. | `db`          |
-| `POSTGRES_DB`       | Yes      | DB name.              | `database`    |
-| `POSTGRES_USER`     | Yes      | DB user.              | `adventure`   |
+| `POSTGRES_DB`       | Yes      | DB name.              | `adventurelog`    |
+| `POSTGRES_USER`     | Yes      | DB user.              | `adventurelog`   |
 | `POSTGRES_PASSWORD` | Yes      | DB password.          | `changeme123` |
 
 ### 🔒 Backend (server)
