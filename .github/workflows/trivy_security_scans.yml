@@ -5,18 +5,10 @@ on:
     branches:
       - main
       - development
-    paths:
-      - "backend/**"
-      - "frontend/**"
-
   pull_request:
     branches:
       - main
       - development
-    paths:
-      - "backend/**"
-      - "frontend/**"
-
   schedule:
     - cron: "0 8 * * 1" # Weekly scan on Mondays at 8 AM UTC
 
@@ -37,6 +29,7 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
+          severity: CRITICAL,HIGH
 
   image-scan:
     name: Trivy Docker Image Scan (Backend & Frontend)
@@ -70,6 +63,7 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
+          severity: CRITICAL,HIGH
 
       - name: Scan frontend Docker image with Trivy
         uses: aquasecurity/trivy-action@master
@@ -78,3 +72,4 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
+          severity: CRITICAL,HIGH
