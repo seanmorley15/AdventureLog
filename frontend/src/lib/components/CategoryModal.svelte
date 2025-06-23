@@ -334,7 +334,7 @@
 
 		{#if isChanged}
 			<div class="alert alert-success mb-4">
-				<span>{$t('categories.update_after_refresh')}</span>
+				<span>{$t('categories.location_update_after_refresh')}</span>
 			</div>
 		{/if}
 

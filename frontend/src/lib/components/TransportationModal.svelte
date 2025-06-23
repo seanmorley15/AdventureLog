@@ -182,11 +182,11 @@
 			if (data.id) {
 				transportation = data as Transportation;
 
-				addToast('success', $t('adventures.adventure_created'));
+				addToast('success', $t('adventures.location_created'));
 				dispatch('save', transportation);
 			} else {
 				console.error(data);
-				addToast('error', $t('adventures.adventure_create_error'));
+				addToast('error', $t('adventures.location_create_error'));
 			}
 		} else {
 			let res = await fetch(`/api/transportations/${transportation.id}`, {
@@ -200,10 +200,10 @@
 			if (data.id) {
 				transportation = data as Transportation;
 
-				addToast('success', $t('adventures.adventure_updated'));
+				addToast('success', $t('adventures.location_updated'));
 				dispatch('save', transportation);
 			} else {
-				addToast('error', $t('adventures.adventure_update_error'));
+				addToast('error', $t('adventures.location_update_error'));
 			}
 		}
 	}

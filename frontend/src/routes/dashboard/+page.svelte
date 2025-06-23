@@ -70,7 +70,7 @@
 						class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
 					>
 						<Plus class="w-5 h-5" />
-						{$t('map.add_adventure')}
+						{$t('map.add_location')}
 					</a>
 					<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
 						<FlagCheckeredVariantIcon class="w-5 h-5" />
@@ -212,7 +212,7 @@
 							class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
 						>
 							<Plus class="w-5 h-5" />
-							{$t('map.add_adventure')}
+							{$t('map.add_location')}
 						</a>
 						<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
 							<FlagCheckeredVariantIcon class="w-5 h-5" />

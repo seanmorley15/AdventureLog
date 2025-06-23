@@ -64,12 +64,7 @@
     "start_your_journey": "开始您的旅程"
   },
   "adventures": {
-    "collection_remove_success": "成功从合集中移除冒险！",
-    "collection_remove_error": "从合集中移除冒险时出错",
-    "collection_link_success": "成功将冒险链接到合集！",
     "no_image_found": "未找到图片",
-    "collection_link_error": "链接冒险到合集时出错",
-    "adventure_delete_confirm": "您确定要删除此冒险吗？此操作无法撤销。",
     "checklist_delete_confirm": "您确定要删除此检查清单吗？此操作无法撤销。",
     "note_delete_confirm": "您确定要删除此笔记吗？此操作无法撤销。",
     "transportation_delete_confirm": "您确定要删除此交通工具吗？此操作无法撤销。",
@@ -83,8 +78,6 @@
     "remove_from_collection": "从合集中移除",
     "add_to_collection": "添加到合集",
     "delete": "删除",
-    "not_found": "未找到冒险",
-    "not_found_desc": "未找到你要查找的冒险。请尝试其他冒险或稍后再试。",
     "homepage": "主页",
     "collection": "合集",
     "longitude": "经度",
@@ -109,7 +102,6 @@
     "rating": "评分",
     "my_images": "我的图片",
     "no_images": "没有图片",
-    "share_adventure": "分享此冒险！",
     "copy_link": "复制链接",
     "image": "图片",
     "upload_image": "上传图片",
@@ -130,12 +122,10 @@
     "clear_map": "清除地图",
     "search_results": "搜索结果",
     "no_results": "未找到结果",
-    "wiki_desc": "从与冒险名称匹配的维基百科文章中提取摘录。",
     "attachments": "附件",
     "attachment": "附件",
     "images": "图片",
     "generate_desc": "生成描述",
-    "public_adventure": "公开冒险",
     "location_information": "位置信息",
     "link": "链接",
     "links": "链接",
@@ -156,15 +146,12 @@
     "edit_collection": "编辑合集",
     "unarchive": "取消归档",
     "archive": "归档",
-    "no_collections_found": "未找到可添加此冒险的合集。",
     "not_visited": "未访问",
     "archived_collection_message": "成功归档合集！",
     "unarchived_collection_message": "成功取消归档合集！",
     "delete_collection_success": "成功删除合集！",
     "cancel": "取消",
     "delete_collection": "删除合集",
-    "delete_adventure": "删除冒险",
-    "adventure_delete_success": "成功删除冒险！",
     "visited": "已访问",
     "planned": "计划中",
     "duration": "持续时间",
@@ -182,17 +169,10 @@
     "image_fetch_failed": "获取图片失败",
     "no_location": "请输入位置",
     "no_description_found": "未找到描述",
-    "adventure_created": "冒险已创建",
-    "adventure_create_error": "创建冒险失败",
     "lodging": "住宿",
-    "create_adventure": "创建冒险",
-    "adventure_updated": "冒险已更新",
-    "adventure_update_error": "更新冒险失败",
     "set_to_pin": "设置为图钉",
     "category_fetch_error": "获取类别时出错",
-    "new_adventure": "新冒险",
     "basic_information": "基本信息",
-    "no_adventures_to_recommendations": "未找到冒险。添加至少一个冒险以获得推荐。",
     "display_name": "显示名称",
     "adventure_not_found": "没找到任何冒险。使用右下角的加号按钮添加一些，或尝试更改筛选条件！",
     "no_adventures_found": "未找到冒险",
@@ -232,7 +212,6 @@
     "no_location_found": "未找到位置",
     "from": "从",
     "to": "到",
-    "will_be_marked": "将在冒险保存后标记为已访问。",
     "start": "开始",
     "end": "结束",
     "emoji_picker": "表情符号选择器",
@@ -298,7 +277,31 @@
     "name_location": "名称，位置",
     "collection_contents": "收集内容",
     "check_in": "报到",
-    "check_out": "查看"
+    "check_out": "查看",
+    "collection_link_location_error": "链接位置到集合的错误",
+    "collection_link_location_success": "成功链接到收集的位置！",
+    "collection_locations": "包括收集位置",
+    "collection_remove_location_error": "从集合中删除位置的错误",
+    "collection_remove_location_success": "成功从收藏中删除的位置！",
+    "create_location": "创建位置",
+    "delete_location": "删除位置",
+    "edit_location": "编辑位置",
+    "location_create_error": "无法创建位置",
+    "location_created": "创建的位置",
+    "location_delete_confirm": "您确定要删除此位置吗？\n该动作不能撤消。",
+    "location_delete_success": "位置成功删除了！",
+    "location_not_found": "找不到位置",
+    "location_not_found_desc": "找不到您寻找的位置。\n请尝试其他位置或稍后再检查。",
+    "location_update_error": "无法更新位置",
+    "location_updated": "位置更新",
+    "new_location": "新位置",
+    "no_collections_to_add_location": "没有发现将此位置添加到。",
+    "no_locations_to_recommendations": "找不到位置。\n添加至少一个位置以获取建议。",
+    "public_location": "公共位置",
+    "share_location": "分享这个位置！",
+    "visit_calendar": "访问日历",
+    "wiki_location_desc": "从Wikipedia文章中提取摘录，符合该位置的名称。",
+    "will_be_marked_location": "保存位置后，将被标记为访问。"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -317,10 +320,10 @@
     "public_tooltip": "通过公开个人资料，用户可以与您共享合集，并在用户页面查看您的资料。",
     "new_password": "新密码（6个字符以上）",
     "or_3rd_party": "或使用第三方服务登录",
-    "no_public_adventures": "未找到公开冒险",
     "no_public_collections": "未找到公开合集",
-    "user_adventures": "用户冒险",
-    "user_collections": "用户合集"
+    "user_collections": "用户合集",
+    "no_public_locations": "找不到公共场所",
+    "user_locations": "用户位置"
   },
   "worldtravel": {
     "all": "全部",
@@ -579,13 +582,16 @@
     "show_visited_regions": "显示访问过的地区",
     "view_details": "查看详情",
     "adventure_stats": "冒险统计",
-    "adventures_shown": "展示的冒险",
     "completion": "完成",
     "display_options": "显示选项",
     "map_controls": "地图控件",
     "marker_placed_on_map": "放置在地图上的标记",
-    "place_marker_desc": "单击地图以放置标记，或在没有位置的情况下添加冒险。",
-    "regions": "地区"
+    "regions": "地区",
+    "add_location": "添加新位置",
+    "add_location_at_marker": "在标记处添加新位置",
+    "location_map": "位置图",
+    "locations_shown": "显示的位置",
+    "place_marker_desc_location": "单击地图以放置标记。"
   },
   "languages": {},
   "share": {
@@ -611,9 +617,9 @@
     "no_shared_adventures": "该用户尚未分享任何公共冒险。",
     "no_shared_collections": "该用户尚未共享任何公共收藏。",
     "planned_trips": "计划的旅行",
-    "public_adventure_experiences": "公共冒险经验",
     "travel_statistics": "旅行统计",
-    "your_journey_at_a_glance": "您一眼的冒险之旅"
+    "your_journey_at_a_glance": "您一眼的冒险之旅",
+    "public_location_experiences": "公共位置经验"
   },
   "categories": {
     "category_name": "类别名称",
@@ -622,9 +628,9 @@
     "manage_categories": "管理类别",
     "no_categories_found": "未找到类别。",
     "select_category": "选择类别",
-    "update_after_refresh": "刷新页面后，冒险卡将更新。",
     "add_new_category": "添加新类别",
-    "name_required": "需要类别名称"
+    "name_required": "需要类别名称",
+    "location_update_after_refresh": "刷新页面后，将更新位置卡。"
   },
   "dashboard": {
     "add_some": "为什么不开始计划你的下一次冒险呢？\n您可以通过单击下面的按钮添加新的冒险。",
@@ -670,9 +676,9 @@
   "recomendations": {
     "recommendation": "推荐",
     "recommendations": "建议",
-    "adventure_recommendations": "冒险建议",
     "food": "食物",
-    "tourism": "旅游"
+    "tourism": "旅游",
+    "location_recommendations": "位置建议"
   },
   "lodging": {
     "campground": "露营地",
@@ -695,17 +701,19 @@
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。"
   },
   "calendar": {
-    "all_categories": "所有类别",
     "all_day_event": "全天活动",
     "calendar_overview": "日历概述",
-    "categories": "类别",
     "day": "天",
     "events_scheduled": "预定事件",
-    "filter_by_category": "按类别过滤",
     "filtered_results": "过滤结果",
     "month": "月",
     "today": "今天",
     "total_events": "总事件",
     "week": "星期"
+  },
+  "locations": {
+    "location": "地点",
+    "locations": "位置",
+    "my_locations": "我的位置"
   }
 }

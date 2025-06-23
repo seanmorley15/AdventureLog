@@ -3,10 +3,10 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
-	import type { Adventure } from '$lib/types';
+	import type { Location } from '$lib/types';
 
 	export let image: string;
-	export let adventure: Adventure | null = null;
+	export let adventure: Location | null = null;
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;

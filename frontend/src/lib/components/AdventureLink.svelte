@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, User } from '$lib/types';
+	import type { Location, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
@@ -17,8 +17,8 @@
 	import Public from '~icons/mdi/earth';
 	import Private from '~icons/mdi/lock';
 
-	let adventures: Adventure[] = [];
-	let filteredAdventures: Adventure[] = [];
+	let adventures: Location[] = [];
+	let filteredAdventures: Location[] = [];
 	let searchQuery: string = '';
 	let filterOption: string = 'all';
 	let isLoading: boolean = true;
@@ -77,7 +77,7 @@
 
 		// Filter out adventures that are already linked to the collections
 		if (collectionId) {
-			adventures = newAdventures.filter((adventure: Adventure) => {
+			adventures = newAdventures.filter((adventure: Location) => {
 				return !(adventure.collections ?? []).includes(collectionId);
 			});
 		} else {
@@ -91,7 +91,7 @@
 		dispatch('close');
 	}
 
-	function add(event: CustomEvent<Adventure>) {
+	function add(event: CustomEvent<Location>) {
 		adventures = adventures.filter((a) => a.id !== event.detail.id);
 		dispatch('add', event.detail);
 	}
@@ -134,7 +134,7 @@
 							{filteredAdventures.length}
 							{$t('worldtravel.of')}
 							{totalAdventures}
-							{$t('navbar.adventures')}
+							{$t('locations.locations')}
 						</p>
 					</div>
 				</div>

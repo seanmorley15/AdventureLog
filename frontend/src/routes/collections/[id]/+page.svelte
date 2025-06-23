@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
+	import type { Location, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
@@ -25,7 +25,7 @@
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	import {
-		groupAdventuresByDate,
+		groupLocationsByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
 		groupChecklistsByDate,
@@ -242,14 +242,14 @@
 	let currentView: string = 'itinerary';
 	let currentItineraryView: string = 'date';
 
-	let adventures: Adventure[] = [];
+	let adventures: Location[] = [];
 
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items
 	function createLineData(
 		items: Array<{
-			item: Adventure | Transportation | Lodging | Note | Checklist;
+			item: Location | Transportation | Lodging | Note | Checklist;
 			start: string;
 			end: string;
 		}>
@@ -333,7 +333,7 @@
 	}
 
 	let orderedItems: Array<{
-		item: Adventure | Transportation | Lodging;
+		item: Location | Transportation | Lodging;
 		type: 'adventure' | 'transportation' | 'lodging';
 		start: string; // ISO date string
 		end: string; // ISO date string
@@ -417,7 +417,7 @@
 	onMount(() => {
 		if (data.props.adventure) {
 			collection = data.props.adventure;
-			adventures = collection.locations as Adventure[];
+			adventures = collection.locations as Location[];
 		} else {
 			notFound = true;
 		}
@@ -461,7 +461,7 @@
 		adventures = adventures.filter((a) => a.id !== event.detail);
 	}
 
-	async function addAdventure(event: CustomEvent<Adventure>) {
+	async function addAdventure(event: CustomEvent<Location>) {
 		console.log(event.detail);
 		if (adventures.find((a) => a.id === event.detail.id)) {
 			return;
@@ -520,7 +520,7 @@
 		isAdventureModalOpen = true;
 	}
 
-	let adventureToEdit: Adventure | null = null;
+	let adventureToEdit: Location | null = null;
 	let transportationToEdit: Transportation | null = null;
 	let isShowingLodgingModal: boolean = false;
 	let lodgingToEdit: Lodging | null = null;
@@ -531,7 +531,7 @@
 
 	let newType: string;
 
-	function editAdventure(event: CustomEvent<Adventure>) {
+	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
 		isAdventureModalOpen = true;
 	}
@@ -546,7 +546,7 @@
 		isShowingLodgingModal = true;
 	}
 
-	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
+	function saveOrCreateAdventure(event: CustomEvent<Location>) {
 		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
 			adventures = adventures.map((adventure) => {
 				if (adventure.id === event.detail.id) {
@@ -585,7 +585,7 @@
 		console.log(filteredRecomendations);
 		console.log(selectedRecomendationTag);
 	}
-	async function getRecomendations(adventure: Adventure) {
+	async function getRecomendations(adventure: Location) {
 		recomendationsData = null;
 		selectedRecomendationTag = '';
 		loadingRecomendations = true;
@@ -768,7 +768,7 @@
 									isShowingLinkModal = true;
 								}}
 							>
-								{$t('adventures.adventure')}</button
+								{$t('locations.location')}</button
 							>
 						{/if}
 						<p class="text-center font-bold text-lg">{$t('adventures.add_new')}</p>
@@ -779,7 +779,7 @@
 								adventureToEdit = null;
 							}}
 						>
-							{$t('adventures.adventure')}</button
+							{$t('locations.location')}</button
 						>
 
 						<button
@@ -1032,7 +1032,7 @@
 						{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
 						{@const dayAdventures =
-							groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
+							groupLocationsByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
 								dateString
 							] || []}
 						{@const dayTransportations =
@@ -1418,7 +1418,7 @@
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">
-					{$t('adventures.adventure_calendar')}
+					{$t('adventures.visit_calendar')}
 				</h2>
 				<Calendar {plugins} {options} />
 			</div>
@@ -1428,7 +1428,7 @@
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">
-					{$t('recomendations.adventure_recommendations')}
+					{$t('recomendations.location_recommendations')}
 				</h2>
 				{#each adventures as adventure}
 					{#if adventure.longitude && adventure.latitude}
@@ -1439,7 +1439,7 @@
 				{/each}
 				{#if adventures.length == 0}
 					<div class="alert alert-info">
-						<p class="text-center text-lg">{$t('adventures.no_adventures_to_recommendations')}</p>
+						<p class="text-center text-lg">{$t('adventures.no_locations_to_recommendations')}</p>
 					</div>
 				{/if}
 				<div class="mt-4">
@@ -1526,7 +1526,7 @@
 											<button
 												class="btn btn-neutral btn-wide btn-sm mt-4"
 												on:click={() => recomendationToAdventure(recomendation)}
-												>{$t('adventures.create_adventure')}</button
+												>{$t('adventures.create_location')}</button
 											>
 										</Popup>
 									{/if}
@@ -1558,7 +1558,7 @@
 										class="btn btn-primary"
 										on:click={() => recomendationToAdventure(recomendation)}
 									>
-										{$t('adventures.create_adventure')}
+										{$t('adventures.create_location')}
 									</button>
 								</div>
 							</div>
@@ -1587,8 +1587,8 @@
 		<div class="hero-content text-center">
 			<div class="max-w-md">
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
 				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>

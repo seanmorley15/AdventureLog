@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AdditionalAdventure } from '$lib/types';
+	import type { AdditionalLocation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -77,7 +77,7 @@
 	export let data: PageData;
 	console.log(data);
 
-	let adventure: AdditionalAdventure;
+	let adventure: AdditionalLocation;
 	let currentSlide = 0;
 
 	function goToSlide(index: number) {
@@ -106,7 +106,7 @@
 		await getGpxFiles();
 	});
 
-	async function saveEdit(event: CustomEvent<AdditionalAdventure>) {
+	async function saveEdit(event: CustomEvent<AdditionalLocation>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
 		geojson = null;
@@ -119,8 +119,8 @@
 		<div class="hero-content text-center">
 			<div class="max-w-md">
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
 				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>

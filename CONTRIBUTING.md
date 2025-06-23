@@ -6,7 +6,9 @@ We’re excited to have you contribute to AdventureLog! To ensure that this comm
 
 1. **Open an Issue First**: Discuss any changes or features you plan to implement by opening an issue. This helps to clarify your idea and ensures there’s a shared understanding.
 2. **Document Changes**: If your changes impact the user interface, add new environment variables, or introduce new container configurations, make sure to update the documentation accordingly. The documentation is located in the `documentation` folder.
-3. **Pull Request**: Submit a pull request with your changes. Make sure to reference the issue you opened in the description.
+3. **Pull Request**: Submit a pull request with your changes directed towards the `development` branch. Make sure to reference the issue you opened in the description. After your pull request is submitted, it will be reviewed by the maintainers.
+4. **Review Process**: The maintainers will review your pull request. They may suggest changes or improvements. Please be open to feedback and ready to make adjustments as needed.
+5. **Merge**: Once your pull request is approved, it will be merged into the `development` branch. This branch is where all new features and changes are integrated before being released to the main branch.
 
 ## Code of Conduct
 

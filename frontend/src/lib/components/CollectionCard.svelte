@@ -9,7 +9,7 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
-	import type { Adventure, Collection, User } from '$lib/types';
+	import type { Location, Collection, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 
@@ -120,7 +120,7 @@
 			<!-- Adventure Count -->
 			<p class="text-sm text-base-content/70">
 				{collection.locations.length}
-				{$t('navbar.adventures')}
+				{$t('locations.locations')}
 			</p>
 
 			<!-- Date Range -->

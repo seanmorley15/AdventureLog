@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Adventure, Attachment, Category, Collection } from '$lib/types';
+	import type { Location, Attachment, Category, Collection } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
@@ -97,7 +97,7 @@
 
 	let wikiError: string = '';
 
-	let adventure: Adventure = {
+	let adventure: Location = {
 		id: '',
 		name: '',
 		visits: [],
@@ -121,7 +121,7 @@
 		attachments: []
 	};
 
-	export let adventureToEdit: Adventure | null = null;
+	export let adventureToEdit: Location | null = null;
 
 	adventure = {
 		id: adventureToEdit?.id || '',
@@ -470,14 +470,14 @@
 			});
 			let data = await res.json();
 			if (data.id) {
-				adventure = data as Adventure;
+				adventure = data as Location;
 				isDetails = false;
 				warningMessage = '';
-				addToast('success', $t('adventures.adventure_created'));
+				addToast('success', $t('adventures.location_created'));
 			} else {
 				warningMessage = findFirstValue(data) as string;
 				console.error(data);
-				addToast('error', $t('adventures.adventure_create_error'));
+				addToast('error', $t('adventures.location_create_error'));
 			}
 		} else {
 			let res = await fetch(`/api/locations/${adventure.id}`, {
@@ -489,13 +489,13 @@
 			});
 			let data = await res.json();
 			if (data.id) {
-				adventure = data as Adventure;
+				adventure = data as Location;
 				isDetails = false;
 				warningMessage = '';
-				addToast('success', $t('adventures.adventure_updated'));
+				addToast('success', $t('adventures.location_updated'));
 			} else {
 				warningMessage = Object.values(data)[0] as string;
-				addToast('error', $t('adventures.adventure_update_error'));
+				addToast('error', $t('adventures.location_update_error'));
 			}
 		}
 		imageSearch = adventure.name;
@@ -509,7 +509,7 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-2xl">
-			{adventureToEdit ? $t('adventures.edit_adventure') : $t('adventures.new_adventure')}
+			{adventureToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
 		</h3>
 		{#if adventure.id === '' || isDetails}
 			<div class="modal-action items-center">
@@ -622,7 +622,7 @@
 								<label for="description">{$t('adventures.description')}</label><br />
 								<MarkdownEditor bind:text={adventure.description} />
 								<div class="mt-2">
-									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_desc')}>
+									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_location_desc')}>
 										<button type="button" class="btn btn-neutral mt-2" on:click={generateDesc}
 											>{$t('adventures.generate_desc')}</button
 										>
@@ -634,7 +634,7 @@
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">
-											<span class="label-text">{$t('adventures.public_adventure')}</span>
+											<span class="label-text">{$t('adventures.public_location')}</span>
 											<input
 												type="checkbox"
 												class="toggle toggle-primary"
@@ -919,7 +919,7 @@
 
 		{#if adventure.is_public && adventure.id}
 			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
-				<p class=" font-semibold">{$t('adventures.share_adventure')}</p>
+				<p class=" font-semibold">{$t('adventures.share_location')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">
 						{window.location.origin}/adventures/{adventure.id}

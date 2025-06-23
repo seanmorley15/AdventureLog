@@ -2,12 +2,12 @@
 	import { getBasemapUrl } from '$lib';
 	import { appVersion } from '$lib/config';
 	import { addToast } from '$lib/toasts';
-	import type { Adventure, Lodging, GeocodeSearchResult, Point, ReverseGeocode } from '$lib/types';
+	import type { Location, Lodging, GeocodeSearchResult, Point, ReverseGeocode } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { DefaultMarker, MapEvents, MapLibre } from 'svelte-maplibre';
 
-	export let item: Adventure | Lodging;
+	export let item: Location | Lodging;
 	export let triggerMarkVisted: boolean = false;
 
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
@@ -366,7 +366,7 @@ it would also work to just use on:click on the MapLibre component itself. -->
 							{reverseGeocodePlace.city
 								? reverseGeocodePlace.city + ', '
 								: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
-							{$t('adventures.will_be_marked')}
+							{$t('adventures.will_be_marked_location')}
 						</span>
 					</div>
 				{/if}

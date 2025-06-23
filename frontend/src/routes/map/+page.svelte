@@ -2,7 +2,7 @@
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import type { Adventure, VisitedRegion } from '$lib/types.js';
+	import type { Location, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	import { getBasemapUrl } from '$lib';
@@ -17,7 +17,7 @@
 	import Pin from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import Category from '~icons/mdi/shape';
-	import Location from '~icons/mdi/crosshairs-gps';
+	import LocationIcon from '~icons/mdi/crosshairs-gps';
 
 	export let data;
 
@@ -28,7 +28,7 @@
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
-	let adventures: Adventure[] = data.props.adventures;
+	let adventures: Location[] = data.props.adventures;
 
 	let filteredAdventures = adventures;
 
@@ -123,13 +123,13 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('map.adventure_map')}
+										{$t('map.location_map')}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{filteredAdventures.length}
 										{$t('worldtravel.of')}
 										{totalAdventures}
-										{$t('map.adventures_shown')}
+										{$t('map.locations_shown')}
 									</p>
 								</div>
 							</div>
@@ -157,7 +157,7 @@
 							{#if newMarker}
 								<button type="button" class="btn btn-primary btn-sm gap-2" on:click={newAdventure}>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure_at_marker')}
+									{$t('map.add_location_at_marker')}
 								</button>
 								<button type="button" class="btn btn-ghost btn-sm gap-2" on:click={clearMarker}>
 									<Clear class="w-4 h-4" />
@@ -170,7 +170,7 @@
 									on:click={() => (createModalOpen = true)}
 								>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure')}
+									{$t('map.add_location')}
 								</button>
 							{/if}
 						</div>
@@ -262,7 +262,7 @@
 																	target="_blank"
 																	rel="noopener noreferrer"
 																>
-																	<Location class="w-4 h-4" />
+																	<LocationIcon class="w-4 h-4" />
 																	{$t('adventures.open_in_maps')}
 																</a>
 															{/if}
@@ -293,7 +293,7 @@
 										lngLat={[region.longitude, region.latitude]}
 										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer transition-transform hover:scale-110"
 									>
-										<Location class="w-5 h-5 text-green-700" />
+										<LocationIcon class="w-5 h-5 text-green-700" />
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="space-y-2">
 												<div class="text-lg text-black font-bold">{region.name}</div>
@@ -405,7 +405,7 @@
 									class="checkbox checkbox-accent checkbox-sm"
 								/>
 								<span class="label-text flex items-center gap-2">
-									<Location class="w-4 h-4" />
+									<LocationIcon class="w-4 h-4" />
 									{$t('map.show_visited_regions')} ({totalRegions})
 								</span>
 							</label>
@@ -427,7 +427,7 @@
 								</div>
 								<button type="button" class="btn btn-primary w-full gap-2" on:click={newAdventure}>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure_at_marker')}
+									{$t('map.add_location_at_marker')}
 								</button>
 								<button type="button" class="btn btn-ghost w-full gap-2" on:click={clearMarker}>
 									<Clear class="w-4 h-4" />
@@ -437,7 +437,7 @@
 						{:else}
 							<div class="space-y-3">
 								<p class="text-sm text-base-content/60">
-									{$t('map.place_marker_desc')}
+									{$t('map.place_marker_desc_location')}
 								</p>
 								<button
 									type="button"
@@ -445,7 +445,7 @@
 									on:click={() => (createModalOpen = true)}
 								>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure')}
+									{$t('map.add_location')}
 								</button>
 							</div>
 						{/if}

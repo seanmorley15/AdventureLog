@@ -33,7 +33,7 @@
 		{
 			path: '/adventures',
 			icon: MapMarker,
-			label: 'navbar.my_adventures',
+			label: 'locations.my_locations',
 			section: 'main'
 		},
 		{

@@ -2,7 +2,7 @@
 	export let data;
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
-	import type { Adventure, Collection, User } from '$lib/types.js';
+	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
@@ -31,7 +31,7 @@
 	} | null;
 
 	const user: User = data.user;
-	const adventures: Adventure[] = data.adventures;
+	const adventures: Location[] = data.adventures;
 	const collections: Collection[] = data.collections;
 	stats = data.stats || null;
 
@@ -189,7 +189,7 @@
 							<div class="flex items-center justify-between">
 								<div>
 									<div class="text-primary/70 font-medium text-sm uppercase tracking-wide">
-										{$t('navbar.adventures')}
+										{$t('locations.locations')}
 									</div>
 									<div class="text-4xl font-bold text-primary">{stats.adventure_count}</div>
 									<div class="text-primary/60 mt-2 flex items-center gap-1">
@@ -331,14 +331,14 @@
 						<Airplane class="w-6 h-6 text-primary" />
 					</div>
 					<div>
-						<h2 class="text-3xl font-bold">{$t('auth.user_adventures')}</h2>
-						<p class="text-base-content/60">{$t('profile.public_adventure_experiences')}</p>
+						<h2 class="text-3xl font-bold">{$t('auth.user_locations')}</h2>
+						<p class="text-base-content/60">{$t('profile.public_location_experiences')}</p>
 					</div>
 				</div>
 				{#if adventures && adventures.length > 0}
 					<div class="badge badge-primary badge-lg">
 						{adventures.length}
-						{adventures.length === 1 ? $t('adventures.adventure') : $t('navbar.adventures')}
+						{adventures.length === 1 ? $t('locations.location') : $t('locations.locations')}
 					</div>
 				{/if}
 			</div>
@@ -350,7 +350,7 @@
 							<Airplane class="w-16 h-16 text-base-content/30" />
 						</div>
 						<h3 class="text-xl font-bold text-base-content/70 mb-2">
-							{$t('auth.no_public_adventures')}
+							{$t('auth.no_public_locations')}
 						</h3>
 						<p class="text-base-content/50">{$t('profile.no_shared_adventures')}</p>
 					</div>

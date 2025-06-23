@@ -14,7 +14,7 @@ export type User = {
 	disable_password: boolean;
 };
 
-export type Adventure = {
+export type Location = {
 	id: string;
 	name: string;
 	location?: string | null;
@@ -50,7 +50,7 @@ export type Adventure = {
 	country?: Country | null;
 };
 
-export type AdditionalAdventure = Adventure & {
+export type AdditionalLocation = Location & {
 	sun_times: {
 		date: string;
 		visit_id: string;
@@ -126,7 +126,7 @@ export type Collection = {
 	name: string;
 	description: string;
 	is_public: boolean;
-	locations: Adventure[];
+	locations: Location[];
 	created_at?: string | null;
 	start_date: string | null;
 	end_date: string | null;

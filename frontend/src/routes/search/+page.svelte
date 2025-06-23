@@ -9,7 +9,7 @@
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import type {
-		Adventure,
+		Location,
 		Collection,
 		User,
 		Country,
@@ -27,7 +27,7 @@
 	$: query = $page.url.searchParams.get('query') ?? '';
 
 	// Assign updated results from data, so when data changes, the displayed items update:
-	$: adventures = data.adventures as Adventure[];
+	$: adventures = data.adventures as Location[];
 	$: collections = data.collections as Collection[];
 	$: users = data.users as User[];
 	$: countries = data.countries as Country[];

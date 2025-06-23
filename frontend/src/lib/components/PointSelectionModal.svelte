@@ -1,6 +1,6 @@
 <script lang="ts">
 	// @ts-nocheck
-	import type { Adventure, GeocodeSearchResult, Point } from '$lib/types';
+	import type { Location, GeocodeSearchResult, Point } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -13,7 +13,7 @@
 	let markers: Point[] = [];
 
 	export let query: string | null = null;
-	export let adventure: Adventure;
+	export let adventure: Location;
 
 	if (query) {
 		geocode();

@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Adventure } from '$lib/types';
+import type { Location } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken } from '$lib/index.server';
@@ -13,7 +13,7 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	} else {
 		let count = 0;
-		let adventures: Adventure[] = [];
+		let adventures: Location[] = [];
 
 		let typeString = event.url.searchParams.get('types');
 
@@ -45,7 +45,7 @@ export const load = (async (event) => {
 			return redirect(302, '/login');
 		} else {
 			let res = await initialFetch.json();
-			let visited = res.results as Adventure[];
+			let visited = res.results as Location[];
 
 			count = res.count;
 			adventures = [...adventures, ...visited];

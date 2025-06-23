@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { AdditionalAdventure, Adventure, Collection } from '$lib/types';
+import type { AdditionalLocation, Location, Collection } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -19,7 +19,7 @@ export const load = (async (event) => {
 			}
 		};
 	} else {
-		let adventure = (await request.json()) as AdditionalAdventure;
+		let adventure = (await request.json()) as AdditionalLocation;
 
 		return {
 			props: {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Adventure, Collection, User } from '$lib/types';
+	import type { Location, Collection, User } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -31,7 +31,7 @@
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
 
-	export let adventure: Adventure;
+	export let adventure: Location;
 	let displayActivityTypes: string[] = [];
 	let remainingCount = 0;
 
@@ -81,7 +81,7 @@
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('info', $t('adventures.adventure_delete_success'));
+			addToast('info', $t('adventures.location_delete_success'));
 			dispatch('delete', adventure.id);
 		} else {
 			console.log('Error deleting adventure');
@@ -109,16 +109,16 @@
 		if (res.ok) {
 			// Only update the adventure.collections after server confirms success
 			adventure.collections = updatedCollections;
-			addToast('info', `${$t('adventures.collection_link_success')}`);
+			addToast('info', `${$t('adventures.collection_link_location_success')}`);
 		} else {
-			addToast('error', `${$t('adventures.collection_link_error')}`);
+			addToast('error', `${$t('adventures.collection_link_location_error')}`);
 		}
 	}
 
 	async function removeFromCollection(event: CustomEvent<string>) {
 		let collectionId = event.detail;
 		if (!collectionId) {
-			addToast('error', `${$t('adventures.collection_remove_error')}`);
+			addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			return;
 		}
 
@@ -139,9 +139,9 @@
 			if (res.ok) {
 				// Only update adventure.collections after server confirms success
 				adventure.collections = updatedCollections;
-				addToast('info', `${$t('adventures.collection_remove_success')}`);
+				addToast('info', `${$t('adventures.collection_remove_location_success')}`);
 			} else {
-				addToast('error', `${$t('adventures.collection_remove_error')}`);
+				addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			}
 		}
 	}
@@ -166,9 +166,9 @@
 
 {#if isWarningModalOpen}
 	<DeleteWarning
-		title={$t('adventures.delete_adventure')}
+		title={$t('adventures.delete_location')}
 		button_text="Delete"
-		description={$t('adventures.adventure_delete_confirm')}
+		description={$t('adventures.location_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteAdventure}
@@ -293,7 +293,7 @@
 									<li>
 										<button on:click={editAdventure} class="flex items-center gap-2">
 											<FileDocumentEdit class="w-4 h-4" />
-											{$t('adventures.edit_adventure')}
+											{$t('adventures.edit_location')}
 										</button>
 									</li>
 

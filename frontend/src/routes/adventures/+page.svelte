@@ -7,7 +7,7 @@
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure, Category } from '$lib/types';
+	import type { Location, Category } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -23,7 +23,7 @@
 
 	export let data: any;
 
-	let adventures: Adventure[] = data.props.adventures || [];
+	let adventures: Location[] = data.props.adventures || [];
 
 	let currentSort = {
 		order_by: '',
@@ -41,7 +41,7 @@
 
 	let is_category_modal_open: boolean = false;
 	let typeString: string = '';
-	let adventureToEdit: Adventure | null = null;
+	let adventureToEdit: Location | null = null;
 	let isAdventureModalOpen: boolean = false;
 	let sidebarOpen = false;
 
@@ -130,7 +130,7 @@
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function saveOrCreate(event: CustomEvent<Adventure>) {
+	function saveOrCreate(event: CustomEvent<Location>) {
 		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
 			adventures = adventures.map((adventure) => {
 				if (adventure.id === event.detail.id) {
@@ -144,7 +144,7 @@
 		isAdventureModalOpen = false;
 	}
 
-	function editAdventure(event: CustomEvent<Adventure>) {
+	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
 		isAdventureModalOpen = true;
 	}
@@ -163,7 +163,7 @@
 </script>
 
 <svelte:head>
-	<title>{$t('navbar.adventures')}</title>
+	<title>{$t('locations.locations')}</title>
 	<meta name="description" content="View your completed and planned adventures." />
 </svelte:head>
 
@@ -198,11 +198,11 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('navbar.my_adventures')}
+										{$t('locations.my_locations')}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{count}
-										{$t('navbar.adventures')} • {getVisitedCount()}
+										{$t('locations.locations')} • {getVisitedCount()}
 										{$t('adventures.visited')} • {getPlannedCount()}
 										{$t('adventures.planned')}
 									</p>
@@ -254,7 +254,7 @@
 							}}
 						>
 							<Plus class="w-5 h-5" />
-							{$t('adventures.create_adventure')}
+							{$t('adventures.create_location')}
 						</button>
 					</div>
 				{:else}
@@ -470,7 +470,7 @@
 									class="checkbox checkbox-primary"
 									checked={currentSort.includeCollections}
 								/>
-								<span class="label-text">{$t('adventures.collection_adventures')}</span>
+								<span class="label-text">{$t('adventures.collection_locations')}</span>
 							</label>
 						</div>
 
@@ -508,7 +508,7 @@
 					}}
 				>
 					<Compass class="w-5 h-5" />
-					{$t('adventures.adventure')}
+					{$t('locations.location')}
 				</button>
 			</ul>
 		</div>

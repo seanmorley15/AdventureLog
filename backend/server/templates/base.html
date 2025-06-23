@@ -2,111 +2,191 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="AdventureLog Server" />
+    <meta name="description" content="AdventureLog API Server" />
     <meta name="author" content="Sean Morley" />
-
     <title>AdventureLog API Server</title>
 
-    <!-- Latest compiled and minified CSS -->
+    <!-- Bootstrap 5 CSS -->
     <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
+    />
+    <!-- Bootstrap Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
     />
 
-    <!-- Optional theme -->
-    <link
-      rel="stylesheet"
-      href="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css"
-    />
-
-    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!--[if lt IE 9]>
-      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <style>
+      body {
+        background-color: #f9f9fb;
+        color: #222;
+        font-family: "Segoe UI", sans-serif;
+      }
+      .navbar {
+        background-color: #2c3e50;
+      }
+      .navbar-brand,
+      .nav-link {
+        color: #ecf0f1 !important;
+      }
+      .hero {
+        padding: 4rem 1rem;
+        background: linear-gradient(135deg, #2980b9, #6dd5fa);
+        color: white;
+        text-align: center;
+        border-radius: 0 0 1rem 1rem;
+      }
+      .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+      .hero p {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .api-response {
+        margin-top: 1rem;
+        font-family: monospace;
+        background-color: #eef2f7;
+        padding: 1rem;
+        border-radius: 0.5rem;
+      }
+      footer {
+        text-align: center;
+        padding: 2rem 0;
+        font-size: 0.9rem;
+        color: #888;
+      }
+    </style>
   </head>
-
-  <body role="document">
-    <div class="navbar navbar-inverse" role="navigation">
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <div class="navbar-header">
-          <button
-            type="button"
-            class="navbar-toggle collapsed"
-            data-toggle="collapse"
-            data-target=".navbar-collapse"
-          >
-            <span class="sr-only">Toggle navigation</span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </button>
-          <a class="navbar-brand" href="/">AdventureLog API Server</a>
-        </div>
-        <div class="collapse navbar-collapse">
-          <ul class="nav navbar-nav">
-            <li class="active"><a href="/">Server Home</a></li>
-            <li>
-              <a target="_blank" href="http://adventurelog.app"
-                >Documentation</a
-              >
-            </li>
-
-            <li>
+        <a class="navbar-brand" href="/">AdventureLog API</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+            <li class="nav-item">
               <a
+                class="nav-link"
+                href="http://adventurelog.app"
                 target="_blank"
-                href="https://github.com/seanmorley15/AdventureLog"
-                >Source Code</a
               >
+                Documentation
+              </a>
             </li>
-            <li><a href="/docs">API Docs</a></li>
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                href="https://github.com/seanmorley15/AdventureLog"
+                target="_blank"
+              >
+                Source Code
+              </a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/docs">API Docs</a>
+            </li>
           </ul>
         </div>
-        <!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="hero">
+      <div class="container">
+        <h1><i class="bi bi-map"></i> AdventureLog API</h1>
+        <p>
+          The backend powering your travels — flexible, powerful, and open
+          source.
+        </p>
+        <a href="/docs" class="btn btn-light btn-lg shadow-sm"
+          ><i class="bi bi-book"></i> Explore API Docs</a
+        >
       </div>
     </div>
 
-    <div class="container theme-showcase" role="main">
-      {% block content %}{% endblock %}
+    <!-- Main Content -->
+    <div class="container my-5">
+      {% block content %}
+      <div class="text-center">
+        <h2>Try a Sample Request</h2>
+        <p>Use the form below to test an API POST request.</p>
+        <form
+          class="ajax-post d-flex flex-column align-items-center"
+          action="/api/test"
+          method="post"
+          style="max-width: 500px; margin: auto"
+        >
+          <input
+            type="text"
+            name="example"
+            placeholder="Enter example data"
+            class="form-control mb-3"
+            required
+          />
+          <button type="submit" class="btn btn-primary">
+            <i class="bi bi-send"></i> Send Request
+          </button>
+        </form>
+        <div class="api-response"></div>
+      </div>
+      {% endblock %}
     </div>
-    <!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    <script type="text/javascript">
-      var error_response = function (data) {
+
+    <footer class="text-center text-muted py-4">
+      Open source with ❤️ by
+      <a href="https://seanmorley.com" target="_blank">Sean Morley</a> • View on
+      <a href="https://github.com/seanmorley15/AdventureLog" target="_blank"
+        >GitHub</a
+      >
+      •
+      <a href="https://adventurelog.app" target="_blank">adventurelog.app</a>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- jQuery (optional, used here for legacy script) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+      const error_response = (data) => {
         $(".api-response").html(
-          "API Response: " +
-            data.status +
-            " " +
-            data.statusText +
-            "<br/>Content: " +
-            data.responseText
+          `<strong>API Response:</strong> ${data.status} ${data.statusText}<br/><strong>Content:</strong> ${data.responseText}`
         );
       };
-      var susccess_response = function (data) {
+      const susccess_response = (data) => {
         $(".api-response").html(
-          "API Response: OK<br/>Content: " + JSON.stringify(data)
+          `<strong>API Response:</strong> OK<br/><strong>Content:</strong> ${JSON.stringify(
+            data,
+            null,
+            2
+          )}`
         );
       };
 
-      $().ready(function () {
+      $(document).ready(() => {
         $("form.ajax-post button[type=submit]").click(function () {
-          var form = $("form.ajax-post");
+          const form = $("form.ajax-post");
           $.post(form.attr("action"), form.serialize())
-            .fail(function (data) {
-              error_response(data);
-            })
-            .done(function (data) {
-              susccess_response(data);
-            });
+            .fail(error_response)
+            .done(susccess_response);
           return false;
         });
       });
     </script>
+
     {% block script %}{% endblock %}
   </body>
 </html>

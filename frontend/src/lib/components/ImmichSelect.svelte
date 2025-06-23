@@ -2,7 +2,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import ImmichLogo from '$lib/assets/immich.svg';
-	import type { Adventure, ImmichAlbum } from '$lib/types';
+	import type { Location, ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
 
 	let immichImages: any[] = [];
@@ -12,7 +12,7 @@
 	let immichNextURL: string = '';
 	let loading = false;
 
-	export let adventure: Adventure | null = null;
+	export let adventure: Location | null = null;
 	export let copyImmichLocally: boolean = false;
 
 	const dispatch = createEventDispatcher();
@@ -21,7 +21,7 @@
 	let currentAlbum: string = '';
 
 	let selectedDate: string =
-		(adventure as Adventure | null)?.visits
+		(adventure as Location | null)?.visits
 			.map((v) => new Date(v.end_date || v.start_date))
 			.sort((a, b) => +b - +a)[0]
 			?.toISOString()
