@@ -9,11 +9,12 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
-	import type { Adventure, Collection } from '$lib/types';
+	import type { Adventure, Collection, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
+	import Minus from '~icons/mdi/minus';
 	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from './DeleteWarning.svelte';
@@ -23,6 +24,8 @@
 	const dispatch = createEventDispatcher();
 
 	export let type: String | undefined | null;
+	export let linkedCollectionList: string[] | null = null;
+	export let user: User | null;
 	let isShareModalOpen: boolean = false;
 
 	function editAdventure() {
@@ -41,10 +44,11 @@
 		if (res.ok) {
 			if (is_archived) {
 				addToast('info', $t('adventures.archived_collection_message'));
+				dispatch('archive', collection.id);
 			} else {
 				addToast('info', $t('adventures.unarchived_collection_message'));
+				dispatch('unarchive', collection.id);
 			}
-			dispatch('delete', collection.id);
 		} else {
 			console.log('Error archiving collection');
 		}
@@ -138,10 +142,25 @@
 		<!-- Actions -->
 		<div class="pt-4 border-t border-base-300">
 			{#if type == 'link'}
-				<button class="btn btn-primary btn-block" on:click={() => dispatch('link', collection.id)}>
-					<Plus class="w-4 h-4" />
-					{$t('adventures.add_to_collection')}
-				</button>
+				{#if linkedCollectionList && linkedCollectionList
+						.map(String)
+						.includes(String(collection.id))}
+					<button
+						class="btn btn-error btn-block"
+						on:click={() => dispatch('unlink', collection.id)}
+					>
+						<Minus class="w-4 h-4" />
+						{$t('adventures.remove_from_collection')}
+					</button>
+				{:else}
+					<button
+						class="btn btn-primary btn-block"
+						on:click={() => dispatch('link', collection.id)}
+					>
+						<Plus class="w-4 h-4" />
+						{$t('adventures.add_to_collection')}
+					</button>
+				{/if}
 			{:else}
 				<div class="flex justify-between items-center">
 					<button
@@ -151,76 +170,78 @@
 						<Launch class="w-4 h-4" />
 						{$t('adventures.open_details')}
 					</button>
-					<div class="dropdown dropdown-end">
-						<button type="button" class="btn btn-square btn-sm btn-base-300">
-							<DotsHorizontal class="w-5 h-5" />
-						</button>
-						<ul
-							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
-						>
-							{#if type != 'viewonly'}
-								<li>
-									<button class="flex items-center gap-2" on:click={editAdventure}>
-										<FileDocumentEdit class="w-4 h-4" />
-										{$t('adventures.edit_collection')}
-									</button>
-								</li>
-								<li>
-									<button
-										class="flex items-center gap-2"
-										on:click={() => (isShareModalOpen = true)}
-									>
-										<ShareVariant class="w-4 h-4" />
-										{$t('adventures.share')}
-									</button>
-								</li>
-								{#if collection.is_archived}
+					{#if user && user.uuid == collection.user_id}
+						<div class="dropdown dropdown-end">
+							<button type="button" class="btn btn-square btn-sm btn-base-300">
+								<DotsHorizontal class="w-5 h-5" />
+							</button>
+							<ul
+								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+							>
+								{#if type != 'viewonly'}
 									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={() => archiveCollection(false)}
-										>
-											<ArchiveArrowUp class="w-4 h-4" />
-											{$t('adventures.unarchive')}
+										<button class="flex items-center gap-2" on:click={editAdventure}>
+											<FileDocumentEdit class="w-4 h-4" />
+											{$t('adventures.edit_collection')}
 										</button>
 									</li>
-								{:else}
 									<li>
 										<button
 											class="flex items-center gap-2"
-											on:click={() => archiveCollection(true)}
+											on:click={() => (isShareModalOpen = true)}
 										>
-											<ArchiveArrowDown class="w-4 h-4" />
-											{$t('adventures.archive')}
+											<ShareVariant class="w-4 h-4" />
+											{$t('adventures.share')}
+										</button>
+									</li>
+									{#if collection.is_archived}
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => archiveCollection(false)}
+											>
+												<ArchiveArrowUp class="w-4 h-4" />
+												{$t('adventures.unarchive')}
+											</button>
+										</li>
+									{:else}
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => archiveCollection(true)}
+											>
+												<ArchiveArrowDown class="w-4 h-4" />
+												{$t('adventures.archive')}
+											</button>
+										</li>
+									{/if}
+									<div class="divider my-1"></div>
+									<li>
+										<button
+											id="delete_collection"
+											data-umami-event="Delete Collection"
+											class="text-error flex items-center gap-2"
+											on:click={() => (isWarningModalOpen = true)}
+										>
+											<TrashCan class="w-4 h-4" />
+											{$t('adventures.delete')}
 										</button>
 									</li>
 								{/if}
-								<div class="divider my-1"></div>
-								<li>
-									<button
-										id="delete_collection"
-										data-umami-event="Delete Collection"
-										class="text-error flex items-center gap-2"
-										on:click={() => (isWarningModalOpen = true)}
-									>
-										<TrashCan class="w-4 h-4" />
-										{$t('adventures.delete')}
-									</button>
-								</li>
-							{/if}
-							{#if type == 'viewonly'}
-								<li>
-									<button
-										class="flex items-center gap-2"
-										on:click={() => goto(`/collections/${collection.id}`)}
-									>
-										<Launch class="w-4 h-4" />
-										{$t('adventures.open_details')}
-									</button>
-								</li>
-							{/if}
-						</ul>
-					</div>
+								{#if type == 'viewonly'}
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => goto(`/collections/${collection.id}`)}
+										>
+											<Launch class="w-4 h-4" />
+											{$t('adventures.open_details')}
+										</button>
+									</li>
+								{/if}
+							</ul>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>

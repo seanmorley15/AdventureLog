@@ -147,6 +147,25 @@ export function formatUTCDate(utcDate: string | null): string {
 	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
 }
 
+/**
+ * Format all-day date for display without timezone conversion
+ * @param dateString - Date string in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+ * @returns Formatted date string (e.g., "Jun 1, 2025")
+ */
+export function formatAllDayDate(dateString: string): string {
+	if (!dateString) return '';
+
+	// Extract just the date part and add midday time to avoid timezone issues
+	const datePart = dateString.split('T')[0];
+	const dateWithMidday = `${datePart}T12:00:00`;
+
+	return new Intl.DateTimeFormat('en-US', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric'
+	}).format(new Date(dateWithMidday));
+}
+
 export const VALID_TIMEZONES = [
 	'Africa/Abidjan',
 	'Africa/Accra',

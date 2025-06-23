@@ -17,28 +17,32 @@ class RecommendationsViewSet(viewsets.ViewSet):
         adventures = []
 
         for place in places:
-            location = place.get('geometry', {}).get('location', {})
+            location = place.get('location', {})
             types = place.get('types', [])
-            formatted_address = place.get("vicinity") or place.get("formatted_address") or place.get("name")
+            
+            # Updated for new API response structure
+            formatted_address = place.get("formattedAddress") or place.get("shortFormattedAddress")
+            display_name = place.get("displayName", {})
+            name = display_name.get("text") if isinstance(display_name, dict) else display_name
 
-            lat = location.get('lat')
-            lon = location.get('lng')
+            lat = location.get('latitude')
+            lon = location.get('longitude')
 
-            if not place.get("name") or not lat or not lon:
+            if not name or not lat or not lon:
                 continue
 
             distance_km = geodesic(origin, (lat, lon)).km
 
             adventure = {
-                "id": place.get('place_id'),
+                "id": place.get('id'),
                 "type": 'place',
-                "name": place.get('name', ''),
-                "description": place.get('business_status', None),
+                "name": name,
+                "description": place.get('businessStatus', None),
                 "latitude": lat,
                 "longitude": lon,
                 "address": formatted_address,
                 "tag": types[0] if types else None,
-                "distance_km": round(distance_km, 2),  # Optional: include in response
+                "distance_km": round(distance_km, 2),
             }
 
             adventures.append(adventure)
@@ -171,7 +175,59 @@ class RecommendationsViewSet(viewsets.ViewSet):
         adventures = self.parse_overpass_response(data, request)
         return Response(adventures)
 
-
+    def query_google_nearby(self, lat, lon, radius, category, request):
+        """Query Google Places API (New) for nearby places"""
+        api_key = settings.GOOGLE_MAPS_API_KEY
+        
+        # Updated to use new Places API endpoint
+        url = "https://places.googleapis.com/v1/places:searchNearby"
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'places.displayName.text,places.formattedAddress,places.location,places.types,places.rating,places.userRatingCount,places.businessStatus,places.id'
+        }
+        
+        # Map categories to place types for the new API
+        type_mapping = {
+            'lodging': 'lodging',
+            'food': 'restaurant',
+            'tourism': 'tourist_attraction',
+        }
+        
+        payload = {
+            "includedTypes": [type_mapping[category]],
+            "maxResultCount": 20,
+            "locationRestriction": {
+                "circle": {
+                    "center": {
+                        "latitude": float(lat),
+                        "longitude": float(lon)
+                    },
+                    "radius": float(radius)
+                }
+            }
+        }
+        
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+            
+            places = data.get('places', [])
+            origin = (float(lat), float(lon))
+            adventures = self.parse_google_places(places, origin)
+            
+            return Response(adventures)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Google Places API error: {e}")
+            # Fallback to Overpass API
+            return self.query_overpass(lat, lon, radius, category, request)
+        except Exception as e:
+            print(f"Unexpected error with Google Places API: {e}")
+            # Fallback to Overpass API
+            return self.query_overpass(lat, lon, radius, category, request)
 
     @action(detail=False, methods=['get'])
     def query(self, request):
@@ -198,35 +254,5 @@ class RecommendationsViewSet(viewsets.ViewSet):
         if not api_key:
             return self.query_overpass(lat, lon, radius, category, request)
 
-        base_url = "https://maps.googleapis.com/maps/api/place/nearbysearch/json"
-        params = {
-            'location': f"{lat},{lon}",
-            'radius': radius,
-            'type': valid_categories[category],
-            'key': api_key
-        }
-
-        all_places = []
-        page_token = None
-
-        try:
-            for _ in range(3):  # Max 3 pages
-                if page_token:
-                    params['pagetoken'] = page_token
-                    time.sleep(2.5)
-
-                response = requests.get(base_url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                all_places.extend(data.get('results', []))
-                page_token = data.get('next_page_token')
-                if not page_token:
-                    break
-
-            origin = (float(lat), float(lon))
-            adventures = self.parse_google_places(all_places, origin)
-            return Response(adventures)
-
-        except Exception as e:
-            print("Google Places API failed, falling back to Overpass:", e)
-            return self.query_overpass(lat, lon, radius, category, request)
+        # Use the new Google Places API
+        return self.query_google_nearby(lat, lon, radius, category, request)

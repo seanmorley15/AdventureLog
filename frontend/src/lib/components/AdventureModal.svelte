@@ -10,7 +10,6 @@
 	let fullEndDate: string = '';
 	let fullStartDateOnly: string = '';
 	let fullEndDateOnly: string = '';
-	let allDay: boolean = true;
 
 	// Set full start and end dates from collection
 	if (collection && collection.start_date && collection.end_date) {
@@ -112,7 +111,6 @@
 		location: null,
 		images: [],
 		user_id: null,
-		collection: collection?.id || null,
 		category: {
 			id: '',
 			name: '',
@@ -138,7 +136,6 @@
 		location: adventureToEdit?.location || null,
 		images: adventureToEdit?.images || [],
 		user_id: adventureToEdit?.user_id || null,
-		collection: adventureToEdit?.collection || collection?.id || null,
 		visits: adventureToEdit?.visits || [],
 		is_visited: adventureToEdit?.is_visited || false,
 		category: adventureToEdit?.category || {
@@ -459,6 +456,11 @@
 				}
 			}
 
+			// add this collection to the adventure
+			if (collection && collection.id) {
+				adventure.collections = [collection.id];
+			}
+
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {
@@ -628,7 +630,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if !adventure?.collection}
+							{#if !adventureToEdit || (adventureToEdit.collections && adventureToEdit.collections.length === 0)}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">

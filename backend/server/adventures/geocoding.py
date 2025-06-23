@@ -6,47 +6,76 @@ from django.conf import settings
 
 # -----------------
 # SEARCHING
-# -----------------
 def search_google(query):
-    api_key = settings.GOOGLE_MAPS_API_KEY
-    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
-    params = {'query': query, 'key': api_key}
-    response = requests.get(url, params=params)
-    data = response.json()
+    try:
+        api_key = settings.GOOGLE_MAPS_API_KEY
+        if not api_key:
+            return {"error": "Missing Google Maps API key"}
 
-    results = []
-    for r in data.get("results", []):
-        location = r.get("geometry", {}).get("location", {})
-        types = r.get("types", [])
+        # Updated to use the new Places API (New) endpoint
+        url = "https://places.googleapis.com/v1/places:searchText"
         
-        # First type is often most specific (e.g., 'restaurant', 'locality')
-        primary_type = types[0] if types else None
-        category = _extract_google_category(types)
-        addresstype = _infer_addresstype(primary_type)
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': api_key,
+            'X-Goog-FieldMask': 'places.displayName.text,places.formattedAddress,places.location,places.types,places.rating,places.userRatingCount'
+        }
         
-        importance = None
-        if r.get("user_ratings_total") and r.get("rating"):
-            # Simple importance heuristic based on popularity and quality
-            importance = round(float(r["rating"]) * r["user_ratings_total"] / 100, 2)
+        payload = {
+            "textQuery": query,
+            "maxResultCount": 20  # Adjust as needed
+        }
+        
+        response = requests.post(url, json=payload, headers=headers, timeout=(2, 5))
+        response.raise_for_status()
 
-        results.append({
-            "lat": location.get("lat"),
-            "lon": location.get("lng"),
-            "name": r.get("name"),
-            "display_name": r.get("formatted_address"),
-            "type": primary_type,
-            "category": category,
-            "importance": importance,
-            "addresstype": addresstype,
-            "powered_by": "google",
-        })
+        data = response.json()
+        
+        # Check if we have places in the response
+        places = data.get("places", [])
+        if not places:
+            return {"error": "No results found"}
 
-    # order by importance if available
-    if results and any("importance" in r for r in results):
-        results.sort(key=lambda x: x.get("importance", 0), reverse=True)
+        results = []
+        for place in places:
+            location = place.get("location", {})
+            types = place.get("types", [])
+            primary_type = types[0] if types else None
+            category = _extract_google_category(types)
+            addresstype = _infer_addresstype(primary_type)
 
-    return results
+            importance = None
+            rating = place.get("rating")
+            ratings_total = place.get("userRatingCount")
+            if rating is not None and ratings_total:
+                importance = round(float(rating) * ratings_total / 100, 2)
 
+            # Extract display name from the new API structure
+            display_name_obj = place.get("displayName", {})
+            name = display_name_obj.get("text") if display_name_obj else None
+
+            results.append({
+                "lat": location.get("latitude"),
+                "lon": location.get("longitude"),
+                "name": name,
+                "display_name": place.get("formattedAddress"),
+                "type": primary_type,
+                "category": category,
+                "importance": importance,
+                "addresstype": addresstype,
+                "powered_by": "google",
+            })
+
+        if results:
+            results.sort(key=lambda r: r["importance"] if r["importance"] is not None else 0, reverse=True)
+
+        return results
+
+    except requests.exceptions.RequestException as e:
+        return {"error": "Network error while contacting Google Maps", "details": str(e)}
+
+    except Exception as e:
+        return {"error": "Unexpected error during Google search", "details": str(e)}
 
 def _extract_google_category(types):
     # Basic category inference based on common place types
@@ -157,6 +186,7 @@ def extractIsoCode(user, data):
         if region:
             return {"region_id": iso_code, "region": region.name, "country": region.country.name, "country_id": region.country.country_code, "region_visited": region_visited, "display_name": display_name, "city": city.name if city else None, "city_id": city.id if city else None, "city_visited": city_visited, 'location_name': location_name}
         return {"error": "No region found"}
+
 def is_host_resolvable(hostname: str) -> bool:
     try:
         socket.gethostbyname(hostname)
@@ -188,6 +218,9 @@ def reverse_geocode_osm(lat, lon, user):
 
 def reverse_geocode_google(lat, lon, user):
     api_key = settings.GOOGLE_MAPS_API_KEY
+    
+    # Updated to use the new Geocoding API endpoint (this one is still supported)
+    # The Geocoding API is separate from Places API and still uses the old format
     url = "https://maps.googleapis.com/maps/api/geocode/json"
     params = {"latlng": f"{lat},{lon}", "key": api_key}
 

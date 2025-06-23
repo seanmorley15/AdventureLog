@@ -140,7 +140,7 @@ Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software de
 
 ## 💎 Acknowledgements
 
-- Logo Design by [nordtechtiger](https://github.com/nordtechtiger)
+- Logo Design by [nordtektiger](https://github.com/nordtektiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 
 ### Top Supporters 💖

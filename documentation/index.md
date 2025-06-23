@@ -104,6 +104,16 @@ Explore and manage the countries you’ve visited or plan to visit with an organ
 
 :::
 
+::: details 📆 **Open Source Daily**
+
+> “Your travel memories are your personal treasures—don’t let them be held hostage by closed platforms, hidden fees, or privacy risks. AdventureLog represents a new era of travel tracking: open, private, comprehensive, and truly yours. Whether you’re a casual traveler, digital nomad, family vacation planner, or anyone who values their adventures, AdventureLog offers a compelling alternative that puts you back in control.”
+>
+> — _Open Source Daily_
+
+[Article Link](https://opensourcedaily.blog/adventurelog-private-open-source-travel-tracking-trip-planning/)
+
+:::
+
 ## 🏗️ Built With Excellence
 
 <div class="tech-stack">

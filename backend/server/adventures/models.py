@@ -15,6 +15,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 def background_geocode_and_assign(adventure_id: str):
+    print(f"[Adventure Geocode Thread] Starting geocode for adventure {adventure_id}")
     try:
         adventure = Adventure.objects.get(id=adventure_id)
         if not (adventure.latitude and adventure.longitude):
@@ -576,19 +577,13 @@ class Adventure(models.Model):
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
 
-    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, blank=True, null=True)
+    # Changed from ForeignKey to ManyToManyField
+    collections = models.ManyToManyField('Collection', blank=True, related_name='adventures')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     objects = AdventureManager()
-
-    # DEPRECATED FIELDS - TO BE REMOVED IN FUTURE VERSIONS
-    # Migrations performed in this version will remove these fields
-    # image = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='images/')
-    # date = models.DateField(blank=True, null=True)
-    # end_date = models.DateField(blank=True, null=True)
-    # type = models.CharField(max_length=100, choices=ADVENTURE_TYPES, default='general')
 
     def is_visited_status(self):
         current_date = timezone.now().date()
@@ -601,17 +596,33 @@ class Adventure(models.Model):
                 return True
         return False
 
-    def clean(self):
-        if self.collection:
-            if self.collection.is_public and not self.is_public:
-                raise ValidationError('Adventures associated with a public collection must be public. Collection: ' + self.trip.name + ' Adventure: ' + self.name)
-            if self.user_id != self.collection.user_id:
-                raise ValidationError('Adventures must be associated with collections owned by the same user. Collection owner: ' + self.collection.user_id.username + ' Adventure owner: ' + self.user_id.username)
+    def clean(self, skip_shared_validation=False):
+        """
+        Validate model constraints.
+        skip_shared_validation: Skip validation when called by shared users
+        """
+        # Skip validation if this is a shared user update
+        if skip_shared_validation:
+            return
+            
+        # Check collections after the instance is saved (in save method or separate validation)
+        if self.pk:  # Only check if the instance has been saved
+            for collection in self.collections.all():
+                if collection.is_public and not self.is_public:
+                    raise ValidationError(f'Adventures associated with a public collection must be public. Collection: {collection.name} Adventure: {self.name}')
+                
+                # Only enforce same-user constraint for non-shared collections
+                if self.user_id != collection.user_id:
+                    # Check if this is a shared collection scenario
+                    # Allow if the adventure owner has access to the collection through sharing
+                    if not collection.shared_with.filter(uuid=self.user_id.uuid).exists():
+                        raise ValidationError(f'Adventures must be associated with collections owned by the same user or shared collections. Collection owner: {collection.user_id.username} Adventure owner: {self.user_id.username}')
+        
         if self.category:
             if self.user_id != self.category.user_id:
-                raise ValidationError('Adventures must be associated with categories owned by the same user. Category owner: ' + self.category.user_id.username + ' Adventure owner: ' + self.user_id.username)
+                raise ValidationError(f'Adventures must be associated with categories owned by the same user. Category owner: {self.category.user_id.username} Adventure owner: {self.user_id.username}')
             
-    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False):
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False, _skip_shared_validation=False):
         if force_insert and force_update:
             raise ValueError("Cannot force both insert and updating in model saving.")
 
@@ -625,6 +636,15 @@ class Adventure(models.Model):
 
         result = super().save(force_insert, force_update, using, update_fields)
 
+        # Validate collections after saving (since M2M relationships require saved instance)
+        if self.pk:
+            try:
+                self.clean(skip_shared_validation=_skip_shared_validation)
+            except ValidationError as e:
+                # If validation fails, you might want to handle this differently
+                # For now, we'll re-raise the error
+                raise e
+
         # ⛔ Skip threading if called from geocode background thread
         if _skip_geocode:
             return result
@@ -635,7 +655,6 @@ class Adventure(models.Model):
             thread.start()
 
         return result
-
 
     def __str__(self):
         return self.name
@@ -656,13 +675,13 @@ class Collection(models.Model):
     shared_with = models.ManyToManyField(User, related_name='shared_with', blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
 
-
     # if connected adventures are private and collection is public, raise an error
     def clean(self):
         if self.is_public and self.pk:  # Only check if the instance has a primary key
-            for adventure in self.adventure_set.all():
+            # Updated to use the new related_name 'adventures'
+            for adventure in self.adventures.all():
                 if not adventure.is_public:
-                    raise ValidationError('Public collections cannot be associated with private adventures. Collection: ' + self.name + ' Adventure: ' + adventure.name)
+                    raise ValidationError(f'Public collections cannot be associated with private adventures. Collection: {self.name} Adventure: {adventure.name}')
 
     def __str__(self):
         return self.name
