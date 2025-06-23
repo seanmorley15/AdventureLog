@@ -50,5 +50,8 @@
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
+	},
+	"overrides": {
+		"esbuild": "^0.25.0"
 	}
 }
