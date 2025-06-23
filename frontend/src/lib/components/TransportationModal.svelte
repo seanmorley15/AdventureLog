@@ -11,6 +11,7 @@
 	import { appVersion } from '$lib/config';
 	import { DefaultMarker, MapLibre } from 'svelte-maplibre';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
+	import { getBasemapUrl } from '$lib';
 
 	export let collection: Collection;
 	export let transportationToEdit: Transportation | null = null;
@@ -38,7 +39,8 @@
 		destination_latitude: transportationToEdit?.destination_latitude || NaN,
 		destination_longitude: transportationToEdit?.destination_longitude || NaN,
 		start_timezone: transportationToEdit?.start_timezone || '',
-		end_timezone: transportationToEdit?.end_timezone || ''
+		end_timezone: transportationToEdit?.end_timezone || '',
+		distance: null
 	};
 
 	let startTimezone: string | undefined = transportation.start_timezone ?? undefined;
@@ -81,7 +83,7 @@
 		}
 
 		const fetchLocation = async (query: string) => {
-			let res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=jsonv2`, {
+			let res = await fetch(`/api/reverse-geocode/search/?query=${query}`, {
 				headers: {
 					'User-Agent': `AdventureLog / ${appVersion} `
 				}
@@ -476,7 +478,7 @@
 						{/if}
 						<div class="mt-4">
 							<MapLibre
-								style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+								style={getBasemapUrl()}
 								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
 								standardControls
 							>

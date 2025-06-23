@@ -51,6 +51,11 @@
 	let isEditing = false; // Disable reactivity when editing
 
 	onMount(async () => {
+		// Auto-detect all-day for transportation and lodging types
+		if ((type === 'transportation' || type === 'lodging') && utcStartDate) {
+			allDay = isAllDay(utcStartDate);
+		}
+
 		// Initialize UTC dates
 		localStartDate = updateLocalDate({
 			utcDate: utcStartDate,
@@ -263,7 +268,9 @@
 				<label for="date" class="text-sm font-medium">
 					{type === 'transportation'
 						? $t('adventures.departure_date')
-						: $t('adventures.start_date')}
+						: type === 'lodging'
+							? $t('adventures.check_in')
+							: $t('adventures.start_date')}
 				</label>
 
 				{#if allDay}
@@ -295,7 +302,11 @@
 			{#if localStartDate}
 				<div class="space-y-2">
 					<label for="end_date" class="text-sm font-medium">
-						{type === 'transportation' ? $t('adventures.arrival_date') : $t('adventures.end_date')}
+						{type === 'transportation'
+							? $t('adventures.arrival_date')
+							: type === 'lodging'
+								? $t('adventures.check_out')
+								: $t('adventures.end_date')}
 					</label>
 
 					{#if allDay}
@@ -410,7 +421,9 @@
 							<p class="text-sm text-base-content font-medium">
 								{#if isAllDay(visit.start_date)}
 									<span class="badge badge-outline mr-2">{$t('adventures.all_day')}</span>
-									{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+									{visit.start_date && typeof visit.start_date === 'string'
+										? visit.start_date.split('T')[0]
+										: ''} – {visit.end_date && typeof visit.end_date === 'string'
 										? visit.end_date.split('T')[0]
 										: ''}
 								{:else if 'start_timezone' in visit}

@@ -13,6 +13,7 @@
 	let loading = false;
 
 	export let adventure: Adventure | null = null;
+	export let copyImmichLocally: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -30,11 +31,21 @@
 	}
 
 	$: {
-		if (currentAlbum) {
+		if (searchCategory === 'album' && currentAlbum) {
 			immichImages = [];
 			fetchAlbumAssets(currentAlbum);
 		} else if (searchCategory === 'date' && selectedDate) {
+			// Clear album selection when switching to date mode
+			if (currentAlbum) {
+				currentAlbum = '';
+			}
 			searchImmich();
+		} else if (searchCategory === 'search') {
+			// Clear album selection when switching to search mode
+			if (currentAlbum) {
+				currentAlbum = '';
+			}
+			// Search will be triggered by the form submission or debounced search
 		}
 	}
 
@@ -43,6 +54,36 @@
 		const url = new URL(immichNextURL);
 		immichNextURL = url.pathname + url.search;
 		return fetchAssets(immichNextURL, true);
+	}
+
+	async function saveImmichRemoteUrl(imageId: string) {
+		if (!adventure) {
+			console.error('No adventure provided to save the image URL');
+			return;
+		}
+		let res = await fetch('/api/images', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				immich_id: imageId,
+				adventure: adventure.id
+			})
+		});
+		if (res.ok) {
+			let data = await res.json();
+			if (!data.image) {
+				console.error('No image data returned from the server');
+				immichError = $t('immich.error_saving_image');
+				return;
+			}
+			dispatch('remoteImmichSaved', data);
+		} else {
+			let errorData = await res.json();
+			console.error('Error saving image URL:', errorData);
+			immichError = $t(errorData.message || 'immich.error_saving_image');
+		}
 	}
 
 	async function fetchAssets(url: string, usingNext = false) {
@@ -178,7 +219,7 @@
 			<div class="flex flex-col items-center gap-2" class:blur-sm={loading}>
 				<!-- svelte-ignore a11y-img-redundant-alt -->
 				<img
-					src={`/immich/${image.id}`}
+					src={`${image.image_url}`}
 					alt="Image from Immich"
 					class="h-24 w-24 object-cover rounded-md"
 				/>
@@ -191,7 +232,11 @@
 					on:click={() => {
 						let currentDomain = window.location.origin;
 						let fullUrl = `${currentDomain}/immich/${image.id}`;
-						dispatch('fetchImage', fullUrl);
+						if (copyImmichLocally) {
+							dispatch('fetchImage', fullUrl);
+						} else {
+							saveImmichRemoteUrl(image.id);
+						}
 					}}
 				>
 					{$t('adventures.upload_image')}

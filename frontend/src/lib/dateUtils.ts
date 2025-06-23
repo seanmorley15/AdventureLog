@@ -118,6 +118,23 @@ export function validateDateRange(
 	return { valid: true };
 }
 
+export function formatDateInTimezone(utcDate: string, timezone: string | null): string {
+	if (!utcDate) return '';
+	try {
+		return new Intl.DateTimeFormat(undefined, {
+			timeZone: timezone || undefined,
+			year: 'numeric',
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: true
+		}).format(new Date(utcDate));
+	} catch {
+		return new Date(utcDate).toLocaleString();
+	}
+}
+
 /**
  * Format UTC date for display
  * @param utcDate - UTC date in ISO format
@@ -128,6 +145,25 @@ export function formatUTCDate(utcDate: string | null): string {
 	const dateTime = DateTime.fromISO(utcDate);
 	if (!dateTime.isValid) return '';
 	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
+}
+
+/**
+ * Format all-day date for display without timezone conversion
+ * @param dateString - Date string in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+ * @returns Formatted date string (e.g., "Jun 1, 2025")
+ */
+export function formatAllDayDate(dateString: string): string {
+	if (!dateString) return '';
+
+	// Extract just the date part and add midday time to avoid timezone issues
+	const datePart = dateString.split('T')[0];
+	const dateWithMidday = `${datePart}T12:00:00`;
+
+	return new Intl.DateTimeFormat('en-US', {
+		year: 'numeric',
+		month: 'short',
+		day: 'numeric'
+	}).format(new Date(dateWithMidday));
 }
 
 export const VALID_TIMEZONES = [

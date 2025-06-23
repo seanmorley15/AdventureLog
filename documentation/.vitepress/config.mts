@@ -1,7 +1,5 @@
 import { defineConfig } from "vitepress";
 
-const inProd = process.env.NODE_ENV === "production";
-
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   head: [
@@ -55,10 +53,11 @@ export default defineConfig({
           priceCurrency: "USD",
           description: "Open-source version available for self-hosting.",
         },
-        softwareVersion: "v0.9.0",
+        softwareVersion: "v0.10.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
-        screenshot: "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
+        screenshot:
+          "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png",
         downloadUrl: "https://github.com/seanmorley15/adventurelog",
         sameAs: ["https://github.com/seanmorley15/adventurelog"],
         keywords: [
@@ -130,6 +129,7 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: "Getting Started", link: "/docs/install/getting_started" },
+          { text: "Quick Start Script ⏲️", link: "/docs/install/quick_start" },
           { text: "Docker 🐋", link: "/docs/install/docker" },
           { text: "Proxmox LXC 🐧", link: "/docs/install/proxmox_lxc" },
           { text: "Synology NAS ☁️", link: "/docs/install/synology_nas" },
@@ -172,6 +172,10 @@ export default defineConfig({
             link: "/docs/configuration/immich_integration",
           },
           {
+            text: "Google Maps Integration",
+            link: "/docs/configuration/google_maps_integration",
+          },
+          {
             text: "Social Auth and OIDC",
             link: "/docs/configuration/social_auth",
           },
@@ -186,6 +190,10 @@ export default defineConfig({
               {
                 text: "GitHub",
                 link: "/docs/configuration/social_auth/github",
+              },
+              {
+                text: "Authelia",
+                link: "https://www.authelia.com/integration/openid-connect/adventure-log/",
               },
               {
                 text: "Open ID Connect",
@@ -241,6 +249,10 @@ export default defineConfig({
         text: "Changelogs",
         collapsed: false,
         items: [
+          {
+            text: "v0.10.0",
+            link: "/docs/changelogs/v0-10-0",
+          },
           {
             text: "v0.9.0",
             link: "/docs/changelogs/v0-9-0",

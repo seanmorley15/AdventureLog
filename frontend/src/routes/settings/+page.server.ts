@@ -70,6 +70,17 @@ export const load: PageServerLoad = async (event) => {
 	});
 	let socialProviders = await socialProvidersFetch.json();
 
+	let integrationsFetch = await fetch(`${endpoint}/api/integrations/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (!integrationsFetch.ok) {
+		return redirect(302, '/');
+	}
+	let integrations = await integrationsFetch.json();
+	let googleMapsEnabled = integrations.google_maps as boolean;
+
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
 	if (!publicUrlFetch.ok) {
@@ -86,7 +97,8 @@ export const load: PageServerLoad = async (event) => {
 			authenticators,
 			immichIntegration,
 			publicUrl,
-			socialProviders
+			socialProviders,
+			googleMapsEnabled
 		}
 	};
 };

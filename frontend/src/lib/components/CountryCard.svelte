@@ -5,6 +5,7 @@
 	import { t } from 'svelte-i18n';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';
+	import Launch from '~icons/mdi/launch';
 
 	export let country: Country;
 
@@ -14,24 +15,31 @@
 </script>
 
 <div
-	class="card w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-md xl:max-w-md bg-neutral text-neutral-content shadow-xl overflow-hidden"
+	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group overflow-hidden"
 >
+	<!-- Flag Image -->
 	<figure>
-		<!-- svelte-ignore a11y-img-redundant-alt -->
-		<img src={country.flag_url} alt="No image available" class="w-full h-48 object-cover" />
+		<img src={country.flag_url} alt={`Flag of ${country.name}`} class="w-full h-48 object-cover" />
 	</figure>
-	<div class="card-body">
-		<h2 class="card-title overflow-ellipsis">{country.name}</h2>
+
+	<!-- Content -->
+	<div class="card-body p-6 space-y-4">
+		<!-- Title -->
+		<h2 class="text-xl font-bold truncate">{country.name}</h2>
+
+		<!-- Info Badges -->
 		<div class="flex flex-wrap gap-2">
 			{#if country.subregion}
 				<div class="badge badge-primary">{country.subregion}</div>
 			{/if}
 			{#if country.capital}
-				<div class="badge badge-secondary">
-					<MapMarkerStar class="-ml-1 mr-1" />{country.capital}
+				<div class="badge badge-secondary inline-flex items-center gap-1">
+					<MapMarkerStar class="w-4 h-4" />
+					{country.capital}
 				</div>
 			{/if}
-			{#if country.num_visits > 0 && country.num_visits != country.num_regions}
+
+			{#if country.num_visits > 0 && country.num_visits !== country.num_regions}
 				<div class="badge badge-accent">
 					Visited {country.num_visits} Region{country.num_visits > 1 ? 's' : ''}
 				</div>
@@ -42,9 +50,20 @@
 			{/if}
 		</div>
 
-		<div class="card-actions justify-end">
-			<!-- <button class="btn btn-info" on:click={moreInfo}>More Info</button> -->
-			<button class="btn btn-primary" on:click={nav}>{$t('notes.open')}</button>
+		<!-- Actions -->
+		<div class="pt-4 border-t border-base-300 flex justify-end">
+			<button class="btn btn-primary btn-sm flex items-center gap-1" on:click={nav}>
+				<Launch class="w-4 h-4" />
+				{$t('notes.open')}
+			</button>
 		</div>
 	</div>
 </div>
+
+<style>
+	.truncate {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+</style>

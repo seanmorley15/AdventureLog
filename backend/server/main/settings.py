@@ -27,7 +27,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 SECRET_KEY = getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = getenv('DEBUG', 'True') == 'True'
+DEBUG = getenv('DEBUG', 'true').lower() == 'true'
 
 # ALLOWED_HOSTS = [
 #     'localhost',
@@ -102,21 +102,29 @@ ROOT_URLCONF = 'main.urls'
 # Database
 # https://docs.djangoproject.com/en/1.7/ref/settings/#databases
 
+# Using legacy PG environment variables for compatibility with existing setups
+
+def env(*keys, default=None):
+    """Return the first non-empty environment variable from a list of keys."""
+    for key in keys:
+        value = os.getenv(key)
+        if value:
+            return value
+    return default
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': getenv('PGDATABASE'),
-        'USER': getenv('PGUSER'),
-        'PASSWORD': getenv('PGPASSWORD'),
-        'HOST': getenv('PGHOST'),
-        'PORT': getenv('PGPORT', 5432),
+        'NAME': env('PGDATABASE', 'POSTGRES_DB'),
+        'USER': env('PGUSER', 'POSTGRES_USER'),
+        'PASSWORD': env('PGPASSWORD', 'POSTGRES_PASSWORD'),
+        'HOST': env('PGHOST', default='localhost'),
+        'PORT': int(env('PGPORT', default='5432')),
         'OPTIONS': {
             'sslmode': 'prefer',  # Prefer SSL, but allow non-SSL connections
         },
     }
 }
-
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -139,6 +147,8 @@ SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_COOKIE_NAME = 'sessionid'
 
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+CSRF_COOKIE_SECURE = FRONTEND_URL.startswith('https')
+
 
 hostname = urlparse(FRONTEND_URL).hostname
 is_ip_address = hostname.replace('.', '').isdigit()
@@ -202,7 +212,7 @@ TEMPLATES = [
 
 # Authentication settings
 
-DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'False') == 'True'
+DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -230,6 +240,8 @@ HEADLESS_FRONTEND_URLS = {
 
 AUTHENTICATION_BACKENDS = [
     'users.backends.NoPasswordAuthBackend',
+    # 'allauth.account.auth_backends.AuthenticationBackend',
+    # 'django.contrib.auth.backends.ModelBackend',
 ]
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -243,9 +255,9 @@ if getenv('EMAIL_BACKEND', 'console') == 'console':
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = getenv('EMAIL_HOST')
-    EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_USE_TLS = getenv('EMAIL_USE_TLS', 'true').lower() == 'true'
     EMAIL_PORT = getenv('EMAIL_PORT', 587)
-    EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'False') == 'True'
+    EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'false').lower() == 'true'
     EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
@@ -313,4 +325,6 @@ LOGGING = {
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.5'
+COUNTRY_REGION_JSON_VERSION = 'v2.6'
+
+GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')

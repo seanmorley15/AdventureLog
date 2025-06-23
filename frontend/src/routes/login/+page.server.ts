@@ -54,6 +54,9 @@ export const actions: Actions = {
 			credentials: 'include'
 		});
 
+		// console.log('[LOGIN] Login response status:', loginFetch.status);
+		// console.log('[LOGIN] Login response headers:', Array.from(loginFetch.headers.entries()));
+
 		if (loginFetch.status === 200) {
 			// Login successful without MFA
 			handleSuccessfulLogin(event, loginFetch);
@@ -107,42 +110,71 @@ export const actions: Actions = {
 };
 
 function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
-	const setCookieHeader = response.headers.get('Set-Cookie');
-	if (setCookieHeader) {
-		const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
-		const match = setCookieHeader.match(sessionIdRegex);
-		if (match) {
-			const [, sessionId, expiryString] = match;
+	// Get all Set-Cookie headers
+	let setCookieHeaders: string[] = [];
 
-			// Get the proper cookie domain using psl
-			const hostname = event.url.hostname;
-			let cookieDomain;
-
-			// Check if hostname is an IP address
-			const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
-			const isLocalhost = hostname === 'localhost';
-			const isSingleLabel = hostname.split('.').length === 1;
-
-			if (!isIPAddress && !isSingleLabel && !isLocalhost) {
-				const parsed = psl.parse(hostname);
-
-				if (parsed && parsed.domain) {
-					// Use the parsed domain (e.g., mydomain.com)
-					cookieDomain = `.${parsed.domain}`;
-				}
-			}
-			// Do not set a domain for IP addresses or invalid hostnames
-
-			event.cookies.set('sessionid', sessionId, {
-				path: '/',
-				httpOnly: true,
-				sameSite: 'lax',
-				secure: event.url.protocol === 'https:',
-				expires: new Date(expiryString),
-				domain: cookieDomain // Set the domain dynamically or omit if undefined
-			});
+	if ('getSetCookie' in response.headers && typeof response.headers.getSetCookie === 'function') {
+		setCookieHeaders = response.headers.getSetCookie();
+	} else {
+		const raw = response.headers.get('Set-Cookie');
+		if (raw) {
+			// Safely split on commas only if a new cookie starts (e.g., key=value)
+			setCookieHeaders = raw.split(/,\s*(?=\w+=)/);
 		}
 	}
+
+	// console.log('[LOGIN] All Set-Cookie headers:', setCookieHeaders);
+
+	const sessionCookie = setCookieHeaders.find((cookie) => cookie.startsWith('sessionid=')) || '';
+	// console.log('[LOGIN] Session cookie:', sessionCookie);
+
+	if (!sessionCookie) {
+		console.warn('[LOGIN] No sessionid cookie found.');
+		return;
+	}
+
+	const sessionIdMatch = sessionCookie.match(/sessionid=([^;]+)/);
+	const expiresMatch = sessionCookie.match(/expires=([^;]+)/i);
+
+	if (!sessionIdMatch) {
+		console.warn('[LOGIN] Could not extract session ID from cookie.');
+		return;
+	}
+
+	const sessionId = sessionIdMatch[1];
+	const expires = expiresMatch ? new Date(expiresMatch[1]) : undefined;
+
+	// console.log('[LOGIN] Extracted session ID:', sessionId);
+	// if (expires) console.log('[LOGIN] Extracted expires:', expires);
+
+	// Determine cookie domain
+	const hostname = event.url.hostname;
+	const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+	const isLocalhost = hostname === 'localhost';
+	const isSingleLabel = hostname.split('.').length === 1;
+
+	let cookieDomain: string | undefined;
+	if (!isIPAddress && !isLocalhost && !isSingleLabel) {
+		const parsed = psl.parse(hostname);
+		if (parsed && parsed.domain) {
+			cookieDomain = `.${parsed.domain}`;
+		}
+	}
+	// console.log('[LOGIN] Setting cookie domain:', cookieDomain);
+
+	const cookieOptions = {
+		path: '/',
+		httpOnly: true,
+		sameSite: 'lax' as const,
+		secure: event.url.protocol === 'https:',
+		...(expires && { expires }),
+		...(cookieDomain && { domain: cookieDomain })
+	};
+
+	// console.log('[LOGIN] Cookie options:', cookieOptions);
+
+	event.cookies.set('sessionid', sessionId, cookieOptions);
+	// console.log('[LOGIN] Cookie set successfully.');
 }
 
 function extractSessionId(setCookieHeader: string | null) {

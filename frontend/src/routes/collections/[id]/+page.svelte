@@ -5,6 +5,7 @@
 	import { marked } from 'marked'; // Import the markdown parser
 
 	import { t } from 'svelte-i18n';
+	import Lost from '$lib/assets/undraw_lost.svg';
 
 	// @ts-ignore
 	import Calendar from '@event-calendar/core';
@@ -16,11 +17,12 @@
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import { DefaultMarker, MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
+	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
+
+	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	import {
 		groupAdventuresByDate,
@@ -29,8 +31,12 @@
 		groupChecklistsByDate,
 		osmTagToEmoji,
 		groupLodgingByDate,
-		LODGING_TYPES_ICONS
+		LODGING_TYPES_ICONS,
+		getBasemapUrl,
+		isAllDay
 	} from '$lib';
+	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
@@ -39,6 +45,7 @@
 	import { goto } from '$app/navigation';
 	import LodgingModal from '$lib/components/LodgingModal.svelte';
 	import LodgingCard from '$lib/components/LodgingCard.svelte';
+	import CollectionAllView from '$lib/components/CollectionAllView.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -56,19 +63,6 @@
 	}
 
 	let collection: Collection;
-
-	// add christmas and new years
-	// dates = Array.from({ length: 25 }, (_, i) => {
-	// 	const date = new Date();
-	// 	date.setMonth(11);
-	// 	date.setDate(i + 1);
-	// 	return {
-	// 		id: i.toString(),
-	// 		start: date.toISOString(),
-	// 		end: date.toISOString(),
-	// 		title: '🎄'
-	// 	};
-	// });
 
 	let dates: Array<{
 		id: string;
@@ -90,16 +84,79 @@
 		dates = [];
 
 		if (adventures) {
-			dates = dates.concat(
-				adventures.flatMap((adventure) =>
-					adventure.visits.map((visit) => ({
-						id: adventure.id,
-						start: visit.start_date || '', // Ensure it's a string
-						end: visit.end_date || visit.start_date || '', // Ensure it's a string
-						title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
-					}))
-				)
-			);
+			adventures.forEach((adventure) => {
+				adventure.visits.forEach((visit) => {
+					if (visit.start_date) {
+						let startDate = visit.start_date;
+						let endDate = visit.end_date || visit.start_date;
+						const targetTimezone = visit.timezone || userTimezone;
+						const allDay = isAllDay(visit.start_date);
+
+						// Handle timezone conversion for non-all-day events
+						if (!allDay) {
+							// Convert UTC dates to target timezone
+							const startDateTime = new Date(visit.start_date);
+							const endDateTime = new Date(visit.end_date || visit.start_date);
+
+							// Format for calendar (ISO string in target timezone)
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(startDateTime)
+								.replace(' ', 'T');
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(endDateTime)
+								.replace(' ', 'T');
+						} else {
+							// For all-day events, use just the date part
+							startDate = visit.start_date.split('T')[0];
+
+							// For all-day events, add one day to end date to make it inclusive
+							const endDateObj = new Date(visit.end_date || visit.start_date);
+							endDateObj.setDate(endDateObj.getDate() + 1);
+							endDate = endDateObj.toISOString().split('T')[0];
+						}
+
+						// Create detailed title with timezone info
+						let detailedTitle = adventure.name;
+						if (adventure.category?.icon) {
+							detailedTitle = `${adventure.category.icon} ${detailedTitle}`;
+						}
+
+						// Add time info to title for non-all-day events
+						if (!allDay) {
+							const startTime = formatDateInTimezone(visit.start_date, targetTimezone);
+							detailedTitle += ` (${startTime.split(' ').slice(-2).join(' ')})`;
+							if (targetTimezone !== userTimezone) {
+								detailedTitle += ` ${targetTimezone}`;
+							}
+						}
+
+						dates.push({
+							id: adventure.id,
+							start: startDate,
+							end: endDate,
+							title: detailedTitle,
+							backgroundColor: '#3b82f6'
+						});
+					}
+				});
+			});
 		}
 
 		if (transportations) {
@@ -110,7 +167,8 @@
 						id: transportation.id,
 						start: transportation.date || '', // Ensure it's a string
 						end: transportation.end_date || transportation.date || '', // Ensure it's a string
-						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : ''),
+						backgroundColor: '#10b981'
 					}))
 			);
 		}
@@ -119,12 +177,61 @@
 			dates = dates.concat(
 				lodging
 					.filter((i) => i.check_in)
-					.map((lodging) => ({
-						id: lodging.id,
-						start: lodging.check_in || '', // Ensure it's a string
-						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
-						title: lodging.name
-					}))
+					.map((lodging) => {
+						const checkIn = lodging.check_in;
+						const checkOut = lodging.check_out || lodging.check_in;
+						if (!checkIn) return null;
+
+						const isAlldayLodging: boolean = isAllDay(checkIn as string);
+
+						let startDate: string;
+						let endDate: string;
+
+						if (isAlldayLodging) {
+							// For all-day, use date part only, no timezone conversion
+							startDate = (checkIn as string).split('T')[0];
+
+							const endDateObj = new Date(checkOut as string);
+							endDateObj.setDate(endDateObj.getDate());
+							endDate = endDateObj.toISOString().split('T')[0];
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: `${getLodgingIcon(lodging.type)} ${lodging.name}`,
+								backgroundColor: '#f59e0b'
+							};
+						} else {
+							// Only use timezone if not all-day
+							const lodgingTimezone = lodging.timezone || userTimezone;
+							const checkInDateTime = new Date(checkIn as string);
+							const checkOutDateTime = new Date(checkOut as string);
+
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkInDateTime);
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkOutDateTime);
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: lodging.name,
+								backgroundColor: '#f59e0b'
+							};
+						}
+					})
+					.filter((item) => item !== null)
 			);
 		}
 
@@ -137,11 +244,6 @@
 
 	let adventures: Adventure[] = [];
 
-	// Add this after your existing MapLibre markers
-
-	// Add this after your existing MapLibre markers
-
-	// Create line data from orderedItems
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items
@@ -320,6 +422,10 @@
 			notFound = true;
 		}
 
+		if (!collection) {
+			return;
+		}
+
 		if (collection.start_date && collection.end_date) {
 			numberOfDays =
 				Math.floor(
@@ -327,7 +433,7 @@
 						(1000 * 60 * 60 * 24)
 				) + 1;
 
-			// Update `options.evdateents` when `collection.start_date` changes
+			// Update `options.events` when `collection.start_date` changes
 			// @ts-ignore
 			options = { ...options, date: collection.start_date };
 		}
@@ -362,12 +468,21 @@
 		} else {
 			let adventure = event.detail;
 
+			// add the collection id to the adventure collections array
+			if (!adventure.collections) {
+				adventure.collections = [collection.id];
+			} else {
+				if (!adventure.collections.includes(collection.id)) {
+					adventure.collections.push(collection.id);
+				}
+			}
+
 			let res = await fetch(`/api/adventures/${adventure.id}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({ collection: collection.id.toString() })
+				body: JSON.stringify({ collections: adventure.collections })
 			});
 
 			if (res.ok) {
@@ -453,7 +568,7 @@
 
 	let recomendationsData: any;
 	let loadingRecomendations: boolean = false;
-	let recomendationsRange: number = 1600;
+	let recomendationsRange: number = 1000;
 	let recomendationType: string = 'tourism';
 	let recomendationTags: { name: string; display_name: string }[] = [];
 	let selectedRecomendationTag: string = '';
@@ -475,7 +590,7 @@
 		selectedRecomendationTag = '';
 		loadingRecomendations = true;
 		let res = await fetch(
-			`/api/overpass/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
+			`/api/recommendations/query/?lat=${adventure.latitude}&lon=${adventure.longitude}&radius=${recomendationsRange}&category=${recomendationType}`
 		);
 		if (!res.ok) {
 			console.log('Error fetching recommendations');
@@ -550,6 +665,7 @@
 		on:close={() => {
 			isShowingLinkModal = false;
 		}}
+		collectionId={collection.id}
 		on:add={addAdventure}
 	/>
 {/if}
@@ -631,11 +747,11 @@
 		<span class="loading loading-spinner w-24 h-24"></span>
 	</div>
 {/if}
-{#if collection}
+{#if collection && collection.id}
 	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
-				<div class="dropdown dropdown-top dropdown-end">
+				<div class="dropdown dropdown-top dropdown-end z-[999]">
 					<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
 						<Plus class="w-8 h-8" />
 					</div>
@@ -781,11 +897,11 @@
 			value={currentView}
 			on:change={changeHash}
 		>
-			<option value="itinerary">📅 Itinerary</option>
-			<option value="all">🗒️ All Linked Items</option>
-			<option value="calendar">🗓️ Calendar</option>
-			<option value="map">🗺️ Map</option>
-			<option value="recommendations">👍️ Recommendations</option>
+			<option value="itinerary">📅 {$t('adventures.itinerary')}</option>
+			<option value="all">🗒️ {$t('adventures.all_linked_items')}</option>
+			<option value="calendar">🗓️ {$t('navbar.calendar')}</option>
+			<option value="map">🗺️ {$t('navbar.map')}</option>
+			<option value="recommendations">👍️ {$t('recomendations.recommendations')}</option>
 		</select>
 		<div class="md:flex justify-center mx-auto hidden">
 			<!-- svelte-ignore a11y-missing-attribute -->
@@ -796,132 +912,71 @@
 						href="#itinerary"
 						role="tab"
 						class="tab {currentView === 'itinerary' ? 'tab-active' : ''}"
-						tabindex="0">Itinerary</a
+						tabindex="0">{$t('adventures.itinerary')}</a
 					>
 				{/if}
 				<a
 					href="#all"
 					role="tab"
 					class="tab {currentView === 'all' ? 'tab-active' : ''}"
-					tabindex="0">All Linked Items</a
+					tabindex="0">{$t('adventures.all_linked_items')}</a
 				>
 				<a
 					href="#calendar"
 					role="tab"
 					class="tab {currentView === 'calendar' ? 'tab-active' : ''}"
-					tabindex="0">Calendar</a
+					tabindex="0">{$t('navbar.calendar')}</a
 				>
 				<a
 					href="#map"
 					role="tab"
 					class="tab {currentView === 'map' ? 'tab-active' : ''}"
-					tabindex="0">Map</a
+					tabindex="0">{$t('navbar.map')}</a
 				>
 				<a
 					href="#recommendations"
 					role="tab"
 					class="tab {currentView === 'recommendations' ? 'tab-active' : ''}"
-					tabindex="0">Recommendations</a
+					tabindex="0">{$t('recomendations.recommendations')}</a
 				>
 			</div>
 		</div>
 	{/if}
 
 	{#if currentView == 'all'}
-		{#if adventures.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
-
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each adventures as adventure}
-					<AdventureCard
-						user={data.user}
-						on:edit={editAdventure}
-						on:delete={deleteAdventure}
-						{adventure}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if transportations.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each transportations as transportation}
-					<TransportationCard
-						{transportation}
-						user={data?.user}
-						on:delete={(event) => {
-							transportations = transportations.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editTransportation}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if lodging.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.lodging')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each lodging as hotel}
-					<LodgingCard
-						lodging={hotel}
-						user={data?.user}
-						on:delete={(event) => {
-							lodging = lodging.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editLodging}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if notes.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each notes as note}
-					<NoteCard
-						{note}
-						user={data.user || null}
-						on:edit={(event) => {
-							noteToEdit = event.detail;
-							isNoteModalOpen = true;
-						}}
-						on:delete={(event) => {
-							notes = notes.filter((n) => n.id != event.detail);
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if checklists.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each checklists as checklist}
-					<ChecklistCard
-						{checklist}
-						user={data.user || null}
-						on:delete={(event) => {
-							checklists = checklists.filter((n) => n.id != event.detail);
-						}}
-						on:edit={(event) => {
-							checklistToEdit = event.detail;
-							isShowingChecklistModal = true;
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- if none found -->
-		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
-			<NotFound error={undefined} />
-		{/if}
+		<CollectionAllView
+			{adventures}
+			{transportations}
+			{lodging}
+			{notes}
+			{checklists}
+			user={data.user}
+			{collection}
+			on:editAdventure={editAdventure}
+			on:deleteAdventure={deleteAdventure}
+			on:editTransportation={editTransportation}
+			on:deleteTransportation={(event) => {
+				transportations = transportations.filter((t) => t.id != event.detail);
+			}}
+			on:editLodging={editLodging}
+			on:deleteLodging={(event) => {
+				lodging = lodging.filter((t) => t.id != event.detail);
+			}}
+			on:editNote={(event) => {
+				noteToEdit = event.detail;
+				isNoteModalOpen = true;
+			}}
+			on:deleteNote={(event) => {
+				notes = notes.filter((n) => n.id != event.detail);
+			}}
+			on:editChecklist={(event) => {
+				checklistToEdit = event.detail;
+				isShowingChecklistModal = true;
+			}}
+			on:deleteChecklist={(event) => {
+				checklists = checklists.filter((n) => n.id != event.detail);
+			}}
+		/>
 	{/if}
 
 	{#if collection.start_date && collection.end_date}
@@ -1218,7 +1273,7 @@
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
 				<MapLibre
-					style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+					style={getBasemapUrl()}
 					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
 					standardControls
 				>
@@ -1372,7 +1427,9 @@
 	{#if currentView == 'recommendations' && data.user}
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
-				<h2 class="card-title text-3xl justify-center mb-4">Adventure Recommendations</h2>
+				<h2 class="card-title text-3xl justify-center mb-4">
+					{$t('recomendations.adventure_recommendations')}
+				</h2>
 				{#each adventures as adventure}
 					{#if adventure.longitude && adventure.latitude}
 						<button on:click={() => getRecomendations(adventure)} class="btn btn-neutral"
@@ -1388,26 +1445,25 @@
 				<div class="mt-4">
 					<input
 						type="range"
-						min="1600"
-						max="80467"
+						min="1000"
+						max="50000"
 						class="range"
-						step="1600"
+						step="1000"
 						bind:value={recomendationsRange}
 					/>
 					<div class="flex w-full justify-between px-2">
-						<span class="text-lg"
-							>{Math.round(recomendationsRange / 1600)} mile ({(
-								(recomendationsRange / 1600) *
-								1.6
-							).toFixed(1)} km)</span
-						>
+						<span class="text-lg">
+							{(recomendationsRange / 1609.344).toFixed(1)} mi ({(
+								recomendationsRange / 1000
+							).toFixed(1)} km)
+						</span>
 					</div>
 					<div class="join flex items-center justify-center mt-4">
 						<input
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Tourism"
+							aria-label={$t('recomendations.tourism')}
 							checked={recomendationType == 'tourism'}
 							on:click={() => (recomendationType = 'tourism')}
 						/>
@@ -1415,7 +1471,7 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Food"
+							aria-label={$t('recomendations.food')}
 							checked={recomendationType == 'food'}
 							on:click={() => (recomendationType = 'food')}
 						/>
@@ -1423,7 +1479,7 @@
 							class="join-item btn btn-neutral"
 							type="radio"
 							name="options"
-							aria-label="Lodging"
+							aria-label={$t('adventures.lodging')}
 							checked={recomendationType == 'lodging'}
 							on:click={() => (recomendationType = 'lodging')}
 						/>
@@ -1443,7 +1499,7 @@
 
 				{#if recomendationsData}
 					<MapLibre
-						style="https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json"
+						style={getBasemapUrl()}
 						class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max
 						-h-full w-full rounded-lg"
 						standardControls
@@ -1467,15 +1523,6 @@
 											<p class="font-semibold text-black text-md">
 												{`${recomendation.tag} ${osmTagToEmoji(recomendation.tag)}`}
 											</p>
-
-											<button
-												class="btn btn-neutral btn-wide btn-sm mt-4"
-												on:click={() =>
-													window.open(
-														`https://www.openstreetmap.org/node/${recomendation.id}`,
-														'_blank'
-													)}>{$t('map.view_details')}</button
-											>
 											<button
 												class="btn btn-neutral btn-wide btn-sm mt-4"
 												on:click={() => recomendationToAdventure(recomendation)}
@@ -1494,38 +1541,19 @@
 									<h2 class="card-title text-xl font-bold">
 										{recomendation.name || $t('recomendations.recommendation')}
 									</h2>
+									{#if recomendation.address}
+										<p class="text-sm">{recomendation.address}</p>
+									{/if}
+									<!-- badge with recomendation.distance_km also show in miles -->
+									{#if recomendation.distance_km}
+										<p class="text-sm">
+											{$t('adventures.distance')}: {recomendation.distance_km.toFixed(1)} km ({(
+												recomendation.distance_km / 1.609344
+											).toFixed(1)} miles)
+										</p>
+									{/if}
+									<p class="text-sm"></p>
 									<div class="badge badge-primary">{recomendation.tag}</div>
-									{#if recomendation.address && (recomendation.address.housenumber || recomendation.address.street || recomendation.address.city || recomendation.address.state || recomendation.address.postcode)}
-										<p class="text-md">
-											<strong>{$t('recomendations.address')}:</strong>
-											{#if recomendation.address.housenumber}{recomendation.address
-													.housenumber}{/if}
-											{#if recomendation.address.street}
-												{recomendation.address.street}{/if}
-											{#if recomendation.address.city}, {recomendation.address.city}{/if}
-											{#if recomendation.address.state}, {recomendation.address.state}{/if}
-											{#if recomendation.address.postcode}, {recomendation.address.postcode}{/if}
-										</p>
-									{/if}
-									{#if recomendation.contact}
-										<p class="text-md">
-											<strong>{$t('recomendations.contact')}:</strong>
-											{#if recomendation.contact.phone}
-												{$t('recomendations.phone')}: {recomendation.contact.phone}
-											{/if}
-											{#if recomendation.contact.email}
-												{$t('auth.email')}: {recomendation.contact.email}
-											{/if}
-											{#if recomendation.contact.website}
-												{$t('recomendations.website')}:
-												<a
-													href={recomendation.contact.website}
-													target="_blank"
-													rel="noopener noreferrer">{recomendation.contact.website}</a
-												>
-											{/if}
-										</p>
-									{/if}
 									<button
 										class="btn btn-primary"
 										on:click={() => recomendationToAdventure(recomendation)}
@@ -1554,6 +1582,19 @@
 			</div>
 		</div>
 	{/if}
+{:else}
+	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
+		<div class="hero-content text-center">
+			<div class="max-w-md">
+				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
+					{$t('adventures.homepage')}
+				</button>
+			</div>
+		</div>
+	</div>
 {/if}
 
 <svelte:head>
