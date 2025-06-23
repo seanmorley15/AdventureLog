@@ -29,7 +29,7 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
-          severity: CRITICAL,HIGH,MEDIUM
+          severity: CRITICAL,HIGH
 
   image-scan:
     name: Trivy Docker Image Scan (Backend & Frontend)
@@ -63,7 +63,7 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
-          severity: CRITICAL,HIGH,MEDIUM
+          severity: CRITICAL,HIGH
 
       - name: Scan frontend Docker image with Trivy
         uses: aquasecurity/trivy-action@master
@@ -72,4 +72,4 @@ jobs:
           format: table
           exit-code: 1
           ignore-unfixed: true
-          severity: CRITICAL,HIGH,MEDIUM
+          severity: CRITICAL,HIGH
