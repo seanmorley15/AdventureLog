@@ -5,17 +5,13 @@ permissions:
 
 on:
   pull_request:
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-test.yml"
   push:
-    paths:
-      - "frontend/**"
-      - ".github/workflows/frontend-test.yml"
 
 jobs:
   build:
+    name: Build and Test Frontend
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
