@@ -6,38 +6,37 @@ permissions:
 on:
   pull_request:
     paths:
-      - 'backend/server/**'
-      - '.github/workflows/backend-test.yml'
+      - "backend/server/**"
+      - ".github/workflows/backend-test.yml"
   push:
     paths:
-      - 'backend/server/**'
-      - '.github/workflows/backend-test.yml'
+      - "backend/server/**"
+      - ".github/workflows/backend-test.yml"
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - name: set up python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
       - name: install dependencies
         run: |
           sudo apt update -q
-          sudo apt install -y -q \
-            python3-gdal
+          sudo apt install -y -q python3-gdal
 
       - name: start database
         run: |
           docker compose -f .github/.docker-compose-database.yml up -d
 
-      - name: install python libreries
+      - name: install python libraries
         working-directory: backend/server
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
       - name: run server
         working-directory: backend/server
