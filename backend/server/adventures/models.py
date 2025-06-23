@@ -660,6 +660,9 @@ class Adventure(models.Model):
         # Delete all associated AdventureImages first to trigger their filesystem cleanup
         for image in self.images.all():
             image.delete()
+        # Delete all associated Attachment files first to trigger their filesystem cleanup
+        for attachment in self.attachments.all():
+            attachment.delete()
         super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -860,6 +863,11 @@ class Attachment(models.Model):
     file = models.FileField(upload_to=PathAndRename('attachments/'),validators=[validate_file_extension])
     adventure = models.ForeignKey(Adventure, related_name='attachments', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True, blank=True)
+
+    def delete(self, *args, **kwargs):
+        if self.file and os.path.isfile(self.file.path):
+            os.remove(self.file.path)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.file.url
