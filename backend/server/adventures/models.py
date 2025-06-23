@@ -656,6 +656,12 @@ class Adventure(models.Model):
 
         return result
 
+    def delete(self, *args, **kwargs):
+        # Delete all associated AdventureImages first to trigger their filesystem cleanup
+        for image in self.images.all():
+            image.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -837,6 +843,12 @@ class AdventureImage(models.Model):
             
         self.full_clean()  # This calls clean() method
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        # Remove file from disk when deleting AdventureImage
+        if self.image and os.path.isfile(self.image.path):
+            os.remove(self.image.path)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.image.url if self.image else f"Immich ID: {self.immich_id or 'No image'}"

@@ -156,10 +156,6 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
         return super().update(request, *args, **kwargs)
     
     def perform_destroy(self, instance):
-        print("perform_destroy")
-        if instance.image:
-            if os.path.isfile(instance.image.path):
-                os.remove(instance.image.path)
         return super().perform_destroy(instance)
 
     def destroy(self, request, *args, **kwargs):
