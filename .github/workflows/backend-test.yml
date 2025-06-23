@@ -4,19 +4,8 @@ permissions:
   contents: read
 
 on:
-  push:
-    branches:
-      - main
-      - development
-    paths:
-      - "backend/**"
-
   pull_request:
-    branches:
-      - main
-      - development
-    paths:
-      - "backend/**"
+  push:
 
 jobs:
   build:

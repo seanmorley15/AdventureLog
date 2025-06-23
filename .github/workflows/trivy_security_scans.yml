@@ -5,18 +5,10 @@ on:
     branches:
       - main
       - development
-    paths:
-      - "backend/**"
-      - "frontend/**"
-
   pull_request:
     branches:
       - main
       - development
-    paths:
-      - "backend/**"
-      - "frontend/**"
-
   schedule:
     - cron: "0 8 * * 1" # Weekly scan on Mondays at 8 AM UTC
 
