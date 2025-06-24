@@ -295,6 +295,8 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGIN
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
+CORS_ALLOW_CREDENTIALS = True
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGGING = {

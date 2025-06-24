@@ -45,7 +45,9 @@
 			const promises = gpxfiles.map(async (gpxfile) => {
 				try {
 					const gpxFileName = gpxfile.split('/').pop();
-					const res = await fetch('/gpx/' + gpxFileName);
+					const res = await fetch(gpxfile, {
+						credentials: 'include'
+					});
 
 					if (!res.ok) {
 						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
