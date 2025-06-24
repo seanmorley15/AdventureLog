@@ -235,6 +235,15 @@ class Location(models.Model):
 
         return result
 
+    def delete(self, *args, **kwargs):
+        # Delete all associated AdventureImages first to trigger their filesystem cleanup
+        for image in self.images.all():
+            image.delete()
+        # Delete all associated Attachment files first to trigger their filesystem cleanup
+        for attachment in self.attachments.all():
+            attachment.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -417,6 +426,12 @@ class LocationImage(models.Model):
         self.full_clean()  # This calls clean() method
         super().save(*args, **kwargs)
 
+    def delete(self, *args, **kwargs):
+        # Remove file from disk when deleting AdventureImage
+        if self.image and os.path.isfile(self.image.path):
+            os.remove(self.image.path)
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.image.url if self.image else f"Immich ID: {self.immich_id or 'No image'}"
     
@@ -427,6 +442,11 @@ class Attachment(models.Model):
     file = models.FileField(upload_to=PathAndRename('attachments/'),validators=[validate_file_extension])
     location = models.ForeignKey(Location, related_name='attachments', on_delete=models.CASCADE)
     name = models.CharField(max_length=200, null=True, blank=True)
+
+    def delete(self, *args, **kwargs):
+        if self.file and os.path.isfile(self.file.path):
+            os.remove(self.file.path)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.file.url
