@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import AdventureCard from '$lib/components/LocationCard.svelte';
 	import RegionCard from '$lib/components/RegionCard.svelte';
 	import CityCard from '$lib/components/CityCard.svelte';
 	import CountryCard from '$lib/components/CountryCard.svelte';

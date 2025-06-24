@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import AdventureCard from '$lib/components/LocationCard.svelte';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -66,7 +66,7 @@
 				<!-- Quick Action -->
 				<div class="flex flex-col sm:flex-row gap-3">
 					<a
-						href="/adventures"
+						href="/locations"
 						class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
 					>
 						<Plus class="w-5 h-5" />
@@ -169,7 +169,7 @@
 							<p class="text-base-content/60">{$t('home.latest_travel_experiences')}</p>
 						</div>
 					</div>
-					<a href="/adventures" class="btn btn-ghost gap-2">
+					<a href="/locations" class="btn btn-ghost gap-2">
 						{$t('dashboard.view_all')}
 						<span class="badge badge-primary">{stats.adventure_count}</span>
 					</a>
@@ -208,7 +208,7 @@
 
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
 						<a
-							href="/adventures"
+							href="/locations"
 							class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
 						>
 							<Plus class="w-5 h-5" />

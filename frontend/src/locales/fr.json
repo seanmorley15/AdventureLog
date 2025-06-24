@@ -249,7 +249,8 @@
     "share_location": "Partagez cet emplacement!",
     "visit_calendar": "Visiter le calendrier",
     "wiki_location_desc": "Tire un extrait de l'article de Wikipedia correspondant au nom de l'emplacement.",
-    "will_be_marked_location": "sera marqué comme visité une fois l'emplacement enregistré."
+    "will_be_marked_location": "sera marqué comme visité une fois l'emplacement enregistré.",
+    "no_locations_found": "Aucun emplacement trouvé"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

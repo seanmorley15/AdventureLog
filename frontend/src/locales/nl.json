@@ -249,7 +249,8 @@
     "share_location": "Deel deze locatie!",
     "visit_calendar": "Bezoek de agenda",
     "wiki_location_desc": "Haalt fragment uit het Wikipedia -artikel dat overeenkomt met de naam van de locatie.",
-    "will_be_marked_location": "wordt gemarkeerd als bezocht zodra de locatie is opgeslagen."
+    "will_be_marked_location": "wordt gemarkeerd als bezocht zodra de locatie is opgeslagen.",
+    "no_locations_found": "Geen locaties gevonden"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

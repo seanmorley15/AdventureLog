@@ -301,7 +301,8 @@
     "share_location": "Udostępnij tę lokalizację!",
     "visit_calendar": "Odwiedź kalendarz",
     "wiki_location_desc": "Wyciąga fragment artykułu Wikipedii pasujący do nazwy lokalizacji.",
-    "will_be_marked_location": "zostanie oznaczone jako odwiedzone po zapisaniu lokalizacji."
+    "will_be_marked_location": "zostanie oznaczone jako odwiedzone po zapisaniu lokalizacji.",
+    "no_locations_found": "Nie znaleziono żadnych lokalizacji"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

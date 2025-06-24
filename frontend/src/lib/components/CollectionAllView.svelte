@@ -24,7 +24,7 @@
 	import Filter from '~icons/mdi/filter-variant';
 
 	// Component imports
-	import AdventureCard from './AdventureCard.svelte';
+	import AdventureCard from './LocationCard.svelte';
 	import TransportationCard from './TransportationCard.svelte';
 	import LodgingCard from './LodgingCard.svelte';
 	import NoteCard from './NoteCard.svelte';

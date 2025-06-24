@@ -228,7 +228,7 @@
 		<!-- Header Section -->
 		<div class="space-y-3">
 			<button
-				on:click={() => goto(`/adventures/${adventure.id}`)}
+				on:click={() => goto(`/locations/${adventure.id}`)}
 				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline"
 			>
 				{adventure.name}
@@ -274,7 +274,7 @@
 					<div class="flex justify-between items-center">
 						<button
 							class="btn btn-neutral btn-sm flex-1 mr-2"
-							on:click={() => goto(`/adventures/${adventure.id}`)}
+							on:click={() => goto(`/locations/${adventure.id}`)}
 						>
 							<Launch class="w-4 h-4" />
 							{$t('adventures.open_details')}

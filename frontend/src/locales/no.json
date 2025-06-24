@@ -301,7 +301,8 @@
     "share_location": "Del dette stedet!",
     "visit_calendar": "Besøk kalenderen",
     "wiki_location_desc": "Trekker utdrag fra Wikipedia -artikkelen som samsvarer med navnet på stedet.",
-    "will_be_marked_location": "vil bli merket som besøkt når stedet er lagret."
+    "will_be_marked_location": "vil bli merket som besøkt når stedet er lagret.",
+    "no_locations_found": "Ingen steder funnet"
   },
   "worldtravel": {
     "country_list": "Liste over land",

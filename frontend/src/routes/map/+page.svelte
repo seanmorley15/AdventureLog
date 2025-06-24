@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import AdventureModal from '$lib/components/LocationModal.svelte';
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import type { Location, VisitedRegion } from '$lib/types.js';
@@ -268,7 +268,7 @@
 															{/if}
 															<button
 																class="btn btn-primary btn-sm gap-2"
-																on:click={() => goto(`/adventures/${adventure.id}`)}
+																on:click={() => goto(`/locations/${adventure.id}`)}
 															>
 																<Eye class="w-4 h-4" />
 																{$t('map.view_details')}

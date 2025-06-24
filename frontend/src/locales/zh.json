@@ -301,7 +301,8 @@
     "share_location": "分享这个位置！",
     "visit_calendar": "访问日历",
     "wiki_location_desc": "从Wikipedia文章中提取摘录，符合该位置的名称。",
-    "will_be_marked_location": "保存位置后，将被标记为访问。"
+    "will_be_marked_location": "保存位置后，将被标记为访问。",
+    "no_locations_found": "找不到位置"
   },
   "auth": {
     "forgot_password": "忘记密码？",

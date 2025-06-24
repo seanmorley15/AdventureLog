@@ -249,7 +249,8 @@
     "share_location": "이 위치를 공유하십시오!",
     "visit_calendar": "캘린더를 방문하십시오",
     "wiki_location_desc": "위치 이름과 일치하는 Wikipedia 기사에서 발췌 한 내용을 가져옵니다.",
-    "will_be_marked_location": "위치가 저장되면 방문한대로 표시됩니다."
+    "will_be_marked_location": "위치가 저장되면 방문한대로 표시됩니다.",
+    "no_locations_found": "발견 된 위치는 없습니다"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",

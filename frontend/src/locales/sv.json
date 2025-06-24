@@ -249,7 +249,8 @@
     "share_location": "Dela den här platsen!",
     "visit_calendar": "Besök kalendern",
     "wiki_location_desc": "Drar utdrag från Wikipedia -artikeln som matchar namnet på platsen.",
-    "will_be_marked_location": "kommer att markeras som besöks när platsen har sparats."
+    "will_be_marked_location": "kommer att markeras som besöks när platsen har sparats.",
+    "no_locations_found": "Inga platser hittades"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

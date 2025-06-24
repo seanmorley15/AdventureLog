@@ -31,7 +31,7 @@
 			section: 'main'
 		},
 		{
-			path: '/adventures',
+			path: '/locations',
 			icon: MapMarker,
 			label: 'locations.my_locations',
 			section: 'main'

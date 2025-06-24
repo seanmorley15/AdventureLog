@@ -15,8 +15,8 @@
 	import DayGrid from '@event-calendar/day-grid';
 
 	import Plus from '~icons/mdi/plus';
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import AdventureLink from '$lib/components/AdventureLink.svelte';
+	import AdventureCard from '$lib/components/LocationCard.svelte';
+	import AdventureLink from '$lib/components/LocationLink.svelte';
 	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
@@ -39,7 +39,7 @@
 
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import AdventureModal from '$lib/components/LocationModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
@@ -1323,7 +1323,7 @@
 										{/if}
 										<button
 											class="btn btn-neutral btn-wide btn-sm mt-4"
-											on:click={() => goto(`/adventures/${adventure.id}`)}
+											on:click={() => goto(`/locations/${adventure.id}`)}
 											>{$t('map.view_details')}</button
 										>
 									</Popup>

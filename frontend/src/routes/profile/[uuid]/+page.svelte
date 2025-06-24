@@ -1,6 +1,6 @@
 <script lang="ts">
 	export let data;
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import AdventureCard from '$lib/components/LocationCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';

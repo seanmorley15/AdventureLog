@@ -226,6 +226,7 @@
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
 		"collection_contents": "Collection Contents",
 		"no_adventures_found": "No adventures found",
+		"no_locations_found": "No locations found",
 		"no_adventures_message": "Start documenting your adventures and planning new ones. Every journey has a story worth telling.",
 		"mark_visited": "Mark Visited",
 		"error_updating_regions": "Error updating regions",

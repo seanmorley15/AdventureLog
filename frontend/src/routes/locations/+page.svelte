@@ -2,8 +2,8 @@
 	import { enhance, deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import AdventureCard from '$lib/components/LocationCard.svelte';
+	import AdventureModal from '$lib/components/LocationModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
@@ -241,7 +241,7 @@
 							<Compass class="w-16 h-16 text-base-content/30" />
 						</div>
 						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-							{$t('adventures.no_adventures_found')}
+							{$t('adventures.no_locations_found')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{$t('adventures.no_adventures_message')}

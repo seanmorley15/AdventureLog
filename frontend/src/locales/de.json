@@ -249,7 +249,8 @@
     "share_location": "Teilen Sie diesen Ort!",
     "visit_calendar": "Besuchen Sie den Kalender",
     "wiki_location_desc": "Zieht Auszug aus dem Wikipedia -Artikel, der dem Namen des Standorts entspricht.",
-    "will_be_marked_location": "wird als besucht markiert, sobald der Standort gespeichert ist."
+    "will_be_marked_location": "wird als besucht markiert, sobald der Standort gespeichert ist.",
+    "no_locations_found": "Keine Standorte gefunden"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

@@ -4,7 +4,7 @@
 	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import AdventureCard from './AdventureCard.svelte';
+	import AdventureCard from './LocationCard.svelte';
 	let modal: HTMLDialogElement;
 
 	// Icons - following the worldtravel pattern
@@ -252,7 +252,7 @@
 						</div>
 						{#if searchQuery || filterOption !== 'all'}
 							<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-								{$t('adventures.no_adventures_found')}
+								{$t('adventures.no_locations_found')}
 							</h3>
 							<p class="text-base-content/50 text-center max-w-md mb-6">
 								{$t('collection.try_different_search')}

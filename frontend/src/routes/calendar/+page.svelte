@@ -26,7 +26,7 @@
 		return marked(markdown);
 	};
 
-	let adventures = data.props.adventures;
+	let locations = data.props.adventures;
 	let allDates = data.props.dates;
 	let filteredDates = [...allDates];
 
@@ -215,7 +215,7 @@
 								</div>
 								<div class="stat py-2 px-4">
 									<div class="stat-title text-xs">{$t('locations.locations')}</div>
-									<div class="stat-value text-lg text-secondary">{adventures.length}</div>
+									<div class="stat-value text-lg text-secondary">{locations.length}</div>
 								</div>
 							</div>
 						</div>
@@ -229,7 +229,7 @@
 							/>
 							<input
 								type="text"
-								placeholder="Search adventures or locations..."
+								placeholder={$t('adventures.search_for_location')}
 								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
 								bind:value={searchFilter}
 							/>
@@ -299,7 +299,7 @@
 							<div class="grid grid-cols-2 gap-4">
 								<div class="stat p-0">
 									<div class="stat-title text-xs">{$t('locations.locations')}</div>
-									<div class="stat-value text-lg text-primary">{adventures.length}</div>
+									<div class="stat-value text-lg text-primary">{locations.length}</div>
 								</div>
 							</div>
 
@@ -418,7 +418,7 @@
 
 				{#if selectedEvent.extendedProps.adventureId}
 					<a
-						href={`/adventures/${selectedEvent.extendedProps.adventureId}`}
+						href={`/locations/${selectedEvent.extendedProps.adventureId}`}
 						class="btn btn-neutral btn-block mt-4"
 					>
 						{$t('map.view_details')}

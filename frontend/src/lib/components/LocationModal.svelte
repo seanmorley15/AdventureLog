@@ -249,7 +249,7 @@
 		formData.append('name', attachmentName);
 
 		try {
-			const res = await fetch('/adventures?/attachment', {
+			const res = await fetch('/locations?/attachment', {
 				method: 'POST',
 				body: formData
 			});
@@ -326,9 +326,9 @@
 	async function uploadImage(file: File) {
 		let formData = new FormData();
 		formData.append('image', file);
-		formData.append('adventure', adventure.id);
+		formData.append('location', adventure.id);
 
-		let res = await fetch(`/adventures?/image`, {
+		let res = await fetch(`/locations?/image`, {
 			method: 'POST',
 			body: formData
 		});
@@ -383,8 +383,8 @@
 			wikiImageError = '';
 			let formData = new FormData();
 			formData.append('image', file);
-			formData.append('adventure', adventure.id);
-			let res2 = await fetch(`/adventures?/image`, {
+			formData.append('location', adventure.id);
+			let res2 = await fetch(`/locations?/image`, {
 				method: 'POST',
 				body: formData
 			});
@@ -922,12 +922,12 @@
 				<p class=" font-semibold">{$t('adventures.share_location')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">
-						{window.location.origin}/adventures/{adventure.id}
+						{window.location.origin}/locations/{adventure.id}
 					</p>
 					<button
 						type="button"
 						on:click={() => {
-							navigator.clipboard.writeText(`${window.location.origin}/adventures/${adventure.id}`);
+							navigator.clipboard.writeText(`${window.location.origin}/locations/${adventure.id}`);
 						}}
 						class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
 					>
