@@ -24,4 +24,4 @@ Perfect for Docker beginners.
 - [Nginx Proxy Manager](nginx_proxy_manager.md) — Easy reverse proxy config
 - [Traefik](traefik.md) — Dynamic reverse proxy with automation
 - [Caddy](caddy.md) — Automatic HTTPS with a clean config
-- [HAProxy](haproxy.md)
+- [HAProxy](haproxy.md) — High-performance reverse proxy with advanced control

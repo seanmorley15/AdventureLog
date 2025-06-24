@@ -149,6 +149,7 @@ export default defineConfig({
               },
               { text: "Traefik", link: "/docs/install/traefik" },
               { text: "Caddy", link: "/docs/install/caddy" },
+              { text: "HAProxy", link: "/docs/install/haproxy" },
             ],
           },
         ],
