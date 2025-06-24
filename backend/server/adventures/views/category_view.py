@@ -14,7 +14,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def list(self, request, *args, **kwargs):
         """
-        Retrieve a list of distinct categories for adventures associated with the current user.
+        Retrieve a list of distinct categories for locations associated with the current user.
         """
         categories = self.get_queryset().distinct()
         serializer = self.get_serializer(categories, many=True)
@@ -29,7 +29,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         if instance.name == 'general':
             return Response({"error": "Cannot delete the general category"}, status=400)
         
-        # set any adventures with this category to a default category called general before deleting the category, if general does not exist create it for the user
+        # set any locations with this category to a default category called general before deleting the category, if general does not exist create it for the user
         general_category = Category.objects.filter(user=request.user, name='general').first()
 
         if not general_category:

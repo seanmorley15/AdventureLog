@@ -572,7 +572,13 @@
   "search": {
     "adventurelog_results": "Wyniki AdventureLog",
     "public_adventures": "Publiczne podróże",
-    "online_results": "Wyniki online"
+    "online_results": "Wyniki online",
+    "cities": "Miasta",
+    "countries": "Kraje",
+    "found": "znaleziony",
+    "result": "Wynik",
+    "results": "Wyniki",
+    "try_searching_desc": "Spróbuj szukać przygód, kolekcji, krajów, regionów, miast lub użytkowników."
   },
   "map": {
     "view_details": "Zobacz szczegóły",

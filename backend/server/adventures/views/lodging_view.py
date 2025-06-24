@@ -25,11 +25,11 @@ class LodgingViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public adventures, user's own adventures and shared adventures
+            # For individual adventure retrieval, include public locations, user's own locations and shared locations
             return Lodging.objects.filter(
                 Q(is_public=True) | Q(user=user.id) | Q(collection__shared_with=user.id)
             ).distinct().order_by('-updated_at')
-        # For other actions, include user's own adventures and shared adventures
+        # For other actions, include user's own locations and shared locations
         return Lodging.objects.filter(
             Q(user=user.id) | Q(collection__shared_with=user.id)
         ).distinct().order_by('-updated_at')

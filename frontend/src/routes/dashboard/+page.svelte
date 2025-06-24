@@ -51,9 +51,9 @@
 									: user?.username}!
 							</h1>
 							<p class="text-lg text-base-content/60 mt-2">
-								{#if stats.adventure_count > 0}
+								{#if stats.location_count > 0}
 									{$t('dashboard.welcome_text_1')}
-									<span class="font-semibold text-primary">{stats.adventure_count}</span>
+									<span class="font-semibold text-primary">{stats.location_count}</span>
 									{$t('dashboard.welcome_text_2')}
 								{:else}
 									{$t('dashboard.welcome_text_3')}
@@ -171,7 +171,7 @@
 					</div>
 					<a href="/locations" class="btn btn-ghost gap-2">
 						{$t('dashboard.view_all')}
-						<span class="badge badge-primary">{stats.adventure_count}</span>
+						<span class="badge badge-primary">{stats.location_count}</span>
 					</a>
 				</div>
 

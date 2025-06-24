@@ -572,7 +572,13 @@
   "search": {
     "adventurelog_results": "AdventureLog 结果",
     "online_results": "在线结果",
-    "public_adventures": "已公开的冒险"
+    "public_adventures": "已公开的冒险",
+    "cities": "城市",
+    "countries": "国家",
+    "found": "成立",
+    "result": "结果",
+    "results": "结果",
+    "try_searching_desc": "尝试搜索冒险，收藏，国家，地区，城市或用户。"
   },
   "map": {
     "add_adventure": "添加新冒险",

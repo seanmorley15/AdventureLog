@@ -589,7 +589,13 @@
   "search": {
     "adventurelog_results": "Результаты AdventureLog",
     "public_adventures": "Публичные приключения",
-    "online_results": "Онлайн результаты"
+    "online_results": "Онлайн результаты",
+    "cities": "Города",
+    "countries": "Страны",
+    "found": "найденный",
+    "result": "Результат",
+    "results": "Результаты",
+    "try_searching_desc": "Попробуйте искать приключения, коллекции, страны, регионы, города или пользователей."
   },
   "map": {
     "view_details": "Подробности",

@@ -10,7 +10,7 @@ class ActivityTypesView(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def types(self, request):
         """
-        Retrieve a list of distinct activity types for adventures associated with the current user.
+        Retrieve a list of distinct activity types for locations associated with the current user.
 
         Args:
             request (HttpRequest): The HTTP request object.

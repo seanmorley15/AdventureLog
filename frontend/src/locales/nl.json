@@ -572,7 +572,13 @@
   "search": {
     "adventurelog_results": "AdventureLog resultaten",
     "online_results": "Online resultaten",
-    "public_adventures": "Openbare avonturen"
+    "public_adventures": "Openbare avonturen",
+    "cities": "Steden",
+    "countries": "Landen",
+    "found": "gevonden",
+    "result": "Resultaat",
+    "results": "Resultaat",
+    "try_searching_desc": "Probeer op zoek naar avonturen, collecties, landen, regio's, steden of gebruikers."
   },
   "map": {
     "add_adventure": "Voeg nieuw avontuur toe",

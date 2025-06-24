@@ -23,7 +23,7 @@
 		visited_country_count: number;
 		total_regions: number;
 		trips_count: number;
-		adventure_count: number;
+		location_count: number;
 		visited_region_count: number;
 		total_countries: number;
 		visited_city_count: number;
@@ -48,34 +48,34 @@
 
 	// Achievement levels
 	$: achievementLevel =
-		(stats?.adventure_count ?? 0) >= 100
+		(stats?.location_count ?? 0) >= 100
 			? 'Legendary Explorer'
-			: (stats?.adventure_count ?? 0) >= 75
+			: (stats?.location_count ?? 0) >= 75
 				? 'World Wanderer'
-				: (stats?.adventure_count ?? 0) >= 50
+				: (stats?.location_count ?? 0) >= 50
 					? 'Explorer Master'
-					: (stats?.adventure_count ?? 0) >= 35
+					: (stats?.location_count ?? 0) >= 35
 						? 'Globetrotter'
-						: (stats?.adventure_count ?? 0) >= 25
+						: (stats?.location_count ?? 0) >= 25
 							? 'Seasoned Traveler'
-							: (stats?.adventure_count ?? 0) >= 15
+							: (stats?.location_count ?? 0) >= 15
 								? 'Adventure Seeker'
-								: (stats?.adventure_count ?? 0) >= 10
+								: (stats?.location_count ?? 0) >= 10
 									? 'Trailblazer'
-									: (stats?.adventure_count ?? 0) >= 5
+									: (stats?.location_count ?? 0) >= 5
 										? 'Journey Starter'
-										: (stats?.adventure_count ?? 0) >= 1
+										: (stats?.location_count ?? 0) >= 1
 											? 'Travel Enthusiast'
 											: 'New Explorer';
 
 	$: achievementColor =
-		(stats?.adventure_count ?? 0) >= 50
+		(stats?.location_count ?? 0) >= 50
 			? 'text-warning'
-			: (stats?.adventure_count ?? 0) >= 25
+			: (stats?.location_count ?? 0) >= 25
 				? 'text-success'
-				: (stats?.adventure_count ?? 0) >= 10
+				: (stats?.location_count ?? 0) >= 10
 					? 'text-info'
-					: (stats?.adventure_count ?? 0) >= 5
+					: (stats?.location_count ?? 0) >= 5
 						? 'text-secondary'
 						: 'text-primary';
 </script>
@@ -159,7 +159,7 @@
 					{/if}
 
 					<!-- User rank achievement -->
-					{#if stats && stats.adventure_count > 0}
+					{#if stats && stats.location_count > 0}
 						<div class="flex items-center justify-center gap-2 text-base-content/70">
 							<Award class="w-5 h-5" />
 							<span class={`text-lg ${achievementColor}`}>{achievementLevel}</span>
@@ -191,7 +191,7 @@
 									<div class="text-primary/70 font-medium text-sm uppercase tracking-wide">
 										{$t('locations.locations')}
 									</div>
-									<div class="text-4xl font-bold text-primary">{stats.adventure_count}</div>
+									<div class="text-4xl font-bold text-primary">{stats.location_count}</div>
 									<div class="text-primary/60 mt-2 flex items-center gap-1">
 										<TrendingUp class="w-4 h-4" />
 										{achievementLevel}

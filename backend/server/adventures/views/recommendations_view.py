@@ -5,8 +5,6 @@ from rest_framework.response import Response
 from django.conf import settings
 import requests
 from geopy.distance import geodesic
-import time
-
 
 class RecommendationsViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -14,7 +12,7 @@ class RecommendationsViewSet(viewsets.ViewSet):
     HEADERS = {'User-Agent': 'AdventureLog Server'}
 
     def parse_google_places(self, places, origin):
-        adventures = []
+        locations = []
 
         for place in places:
             location = place.get('location', {})
@@ -45,16 +43,16 @@ class RecommendationsViewSet(viewsets.ViewSet):
                 "distance_km": round(distance_km, 2),
             }
 
-            adventures.append(adventure)
+            locations.append(adventure)
 
         # Sort by distance ascending
-        adventures.sort(key=lambda x: x["distance_km"])
+        locations.sort(key=lambda x: x["distance_km"])
 
-        return adventures
+        return locations
     
     def parse_overpass_response(self, data, request):
         nodes = data.get('elements', [])
-        adventures = []
+        locations = []
         all = request.query_params.get('all', False)
 
         origin = None
@@ -102,13 +100,13 @@ class RecommendationsViewSet(viewsets.ViewSet):
                 "powered_by": "osm"
             }
 
-            adventures.append(adventure)
+            locations.append(adventure)
 
         # Sort by distance if available
         if origin:
-            adventures.sort(key=lambda x: x.get("distance_km") or float("inf"))
+            locations.sort(key=lambda x: x.get("distance_km") or float("inf"))
 
-        return adventures
+        return locations
 
     
     def query_overpass(self, lat, lon, radius, category, request):
@@ -172,8 +170,8 @@ class RecommendationsViewSet(viewsets.ViewSet):
             print("Overpass API error:", e)
             return Response({"error": "Failed to retrieve data from Overpass API."}, status=500)
 
-        adventures = self.parse_overpass_response(data, request)
-        return Response(adventures)
+        locations = self.parse_overpass_response(data, request)
+        return Response(locations)
 
     def query_google_nearby(self, lat, lon, radius, category, request):
         """Query Google Places API (New) for nearby places"""
@@ -216,9 +214,9 @@ class RecommendationsViewSet(viewsets.ViewSet):
             
             places = data.get('places', [])
             origin = (float(lat), float(lon))
-            adventures = self.parse_google_places(places, origin)
+            locations = self.parse_google_places(places, origin)
             
-            return Response(adventures)
+            return Response(locations)
             
         except requests.exceptions.RequestException as e:
             print(f"Google Places API error: {e}")

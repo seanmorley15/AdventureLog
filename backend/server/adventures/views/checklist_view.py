@@ -29,12 +29,12 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
         
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public adventures
+            # For individual adventure retrieval, include public locations
             return Checklist.objects.filter(
                 Q(is_public=True) | Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
         else:
-            # For other actions, include user's own adventures and shared adventures
+            # For other actions, include user's own locations and shared locations
             return Checklist.objects.filter(
                 Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')

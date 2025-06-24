@@ -5,9 +5,7 @@ from rest_framework.response import Response
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 from adventures.models import Location
 from adventures.serializers import LocationSerializer
-import requests
 from adventures.geocoding import reverse_geocode
-from adventures.geocoding import extractIsoCode
 from django.conf import settings
 from adventures.geocoding import search_google, search_osm
 
@@ -47,14 +45,14 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def mark_visited_region(self, request):
-        # searches through all of the users adventures, if the serialized data is_visited, is true, runs reverse geocode on the adventures and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
+        # searches through all of the users locations, if the serialized data is_visited, is true, runs reverse geocode on the locations and if a region is found, marks it as visited. Use the extractIsoCode function to get the region
         new_region_count = 0
         new_regions = {}
         new_city_count = 0
         new_cities = {}
-        adventures = Location.objects.filter(user=self.request.user)
-        serializer = LocationSerializer(adventures, many=True)
-        for adventure, serialized_adventure in zip(adventures, serializer.data):
+        locations = Location.objects.filter(user=self.request.user)
+        serializer = LocationSerializer(locations, many=True)
+        for adventure, serialized_adventure in zip(locations, serializer.data):
             if serialized_adventure['is_visited'] == True:
                 lat = adventure.latitude
                 lon = adventure.longitude

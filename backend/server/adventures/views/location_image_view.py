@@ -9,7 +9,6 @@ from adventures.serializers import LocationImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
-import os
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
     serializer_class = LocationImageSerializer

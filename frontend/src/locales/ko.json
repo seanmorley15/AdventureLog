@@ -469,7 +469,13 @@
   "search": {
     "adventurelog_results": "Adventurelog 결과",
     "online_results": "온라인 결과",
-    "public_adventures": "공개 모험"
+    "public_adventures": "공개 모험",
+    "cities": "도시",
+    "countries": "국가",
+    "found": "설립하다",
+    "result": "결과",
+    "results": "결과",
+    "try_searching_desc": "모험, 컬렉션, 국가, 지역, 도시 또는 사용자를 검색하십시오."
   },
   "settings": {
     "about_this_background": "이 배경에 대해",

@@ -572,7 +572,13 @@
   "search": {
     "adventurelog_results": "AdventureLog-resultat",
     "online_results": "Online resultat",
-    "public_adventures": "Offentliga äventyr"
+    "public_adventures": "Offentliga äventyr",
+    "cities": "Städer",
+    "countries": "Länder",
+    "found": "funnna",
+    "result": "Resultat",
+    "results": "Resultat",
+    "try_searching_desc": "Försök att söka efter äventyr, samlingar, länder, regioner, städer eller användare."
   },
   "map": {
     "add_adventure": "Lägg till nytt äventyr",

@@ -589,7 +589,13 @@
   "search": {
     "adventurelog_results": "AdventureLog-resultater",
     "public_adventures": "Offentlige eventyr",
-    "online_results": "Nettresultater"
+    "online_results": "Nettresultater",
+    "cities": "Byer",
+    "countries": "Land",
+    "found": "funnet",
+    "result": "Resultat",
+    "results": "Resultater",
+    "try_searching_desc": "Prøv å søke etter eventyr, samlinger, land, regioner, byer eller brukere."
   },
   "map": {
     "view_details": "Vis detaljer",

@@ -15,7 +15,7 @@ class NoteViewSet(viewsets.ModelViewSet):
 
     # return error message if user is not authenticated on the root endpoint
     def list(self, request, *args, **kwargs):
-        # Prevent listing all adventures
+        # Prevent listing all locations
         return Response({"detail": "Listing all notes is not allowed."},
                         status=status.HTTP_403_FORBIDDEN)
     
@@ -39,12 +39,12 @@ class NoteViewSet(viewsets.ModelViewSet):
 
         
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public adventures
+            # For individual adventure retrieval, include public locations
             return Note.objects.filter(
                 Q(is_public=True) | Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
         else:
-            # For other actions, include user's own adventures and shared adventures
+            # For other actions, include user's own locations and shared locations
             return Note.objects.filter(
                 Q(user=self.request.user.id) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')

@@ -12,8 +12,8 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def generate(self, request):
-        adventures = Location.objects.filter(user=request.user)
-        serializer = LocationSerializer(adventures, many=True)
+        locations = Location.objects.filter(user=request.user)
+        serializer = LocationSerializer(locations, many=True)
         user = request.user
         name = f"{user.first_name} {user.last_name}"
         
@@ -21,9 +21,9 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
         cal.add('prodid', '-//My Adventure Calendar//example.com//')
         cal.add('version', '2.0')
 
-        for adventure in serializer.data:
-            if adventure['visits']:
-                for visit in adventure['visits']:
+        for location in serializer.data:
+            if location['visits']:
+                for visit in location['visits']:
                     # Skip if start_date is missing
                     if not visit.get('start_date'):
                         continue
@@ -41,7 +41,7 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
                     
                     # Create event
                     event = Event()
-                    event.add('summary', adventure['name'])
+                    event.add('summary', location['name'])
                     event.add('dtstart', start_date)
                     event.add('dtend', end_date)
                     event.add('dtstamp', datetime.now())
@@ -49,11 +49,11 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
                     event.add('class', 'PUBLIC')
                     event.add('created', datetime.now())
                     event.add('last-modified', datetime.now())
-                    event.add('description', adventure['description'])
-                    if adventure.get('location'):
-                        event.add('location', adventure['location'])
-                    if adventure.get('link'):
-                        event.add('url', adventure['link'])
+                    event.add('description', location['description'])
+                    if location.get('location'):
+                        event.add('location', location['location'])
+                    if location.get('link'):
+                        event.add('url', location['link'])
                     
                     organizer = vCalAddress(f'MAILTO:{user.email}')
                     organizer.params['cn'] = vText(name)

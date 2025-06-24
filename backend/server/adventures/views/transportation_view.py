@@ -1,12 +1,10 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
 from adventures.models import Transportation
 from adventures.serializers import TransportationSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from rest_framework.permissions import IsAuthenticated
 
 class TransportationViewSet(viewsets.ModelViewSet):
     queryset = Transportation.objects.all()
@@ -25,11 +23,11 @@ class TransportationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public adventures, user's own adventures and shared adventures
+            # For individual adventure retrieval, include public locations, user's own locations and shared locations
             return Transportation.objects.filter(
                 Q(is_public=True) | Q(user=user.id) | Q(collection__shared_with=user.id)
             ).distinct().order_by('-updated_at')
-        # For other actions, include user's own adventures and shared adventures
+        # For other actions, include user's own locations and shared locations
         return Transportation.objects.filter(
             Q(user=user.id) | Q(collection__shared_with=user.id)
         ).distinct().order_by('-updated_at')

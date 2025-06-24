@@ -572,7 +572,13 @@
   "search": {
     "adventurelog_results": "AdventureLog-Ergebnisse",
     "online_results": "Online-Ergebnisse",
-    "public_adventures": "Öffentliche Abenteuer"
+    "public_adventures": "Öffentliche Abenteuer",
+    "cities": "Städte",
+    "countries": "Länder",
+    "found": "gefunden",
+    "result": "Ergebnis",
+    "results": "Ergebnisse",
+    "try_searching_desc": "Versuchen Sie, nach Abenteuern, Sammlungen, Ländern, Regionen, Städten oder Nutzern zu suchen."
   },
   "map": {
     "add_adventure": "Neues Abenteuer hinzufügen",

@@ -7,10 +7,9 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
-
-from adventures.models import Location, Category, Transportation, Lodging
+from adventures.models import Location, Category
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer, TransportationSerializer, LodgingSerializer
+from adventures.serializers import LocationSerializer
 from adventures.utils import pagination
 
 
@@ -28,7 +27,7 @@ class LocationViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         """
         Returns queryset based on user authentication and action type.
-        Public actions allow unauthenticated access to public adventures.
+        Public actions allow unauthenticated access to public locations.
         """
         user = self.request.user
         public_allowed_actions = {'retrieve', 'additional_info'}
@@ -67,7 +66,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         # Apply sorting logic
         queryset = self._apply_ordering(queryset, order_by, order_direction)
 
-        # Filter adventures without collections if requested
+        # Filter locations without collections if requested
         if include_collections == 'false':
             queryset = queryset.filter(collections__isnull=True)
 
@@ -147,7 +146,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def filtered(self, request):
-        """Filter adventures by category types and visit status."""
+        """Filter locations by category types and visit status."""
         types = request.query_params.get('types', '').split(',')
         
         # Handle 'all' types
@@ -180,7 +179,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def all(self, request):
-        """Get all adventures (public and owned) with optional collection filtering."""
+        """Get all locations (public and owned) with optional collection filtering."""
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
 

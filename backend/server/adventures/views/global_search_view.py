@@ -20,7 +20,7 @@ class GlobalSearchView(viewsets.ViewSet):
 
         # Initialize empty results
         results = {
-            "adventures": [],
+            "locations": [],
             "collections": [],
             "users": [],
             "countries": [],
@@ -30,11 +30,11 @@ class GlobalSearchView(viewsets.ViewSet):
             "visited_cities": []
         }
 
-        # Adventures: Full-Text Search
-        adventures = Location.objects.annotate(
+        # Locations: Full-Text Search
+        locations = Location.objects.annotate(
             search=SearchVector('name', 'description', 'location')
         ).filter(search=SearchQuery(search_term), user=request.user)
-        results["adventures"] = LocationSerializer(adventures, many=True).data
+        results["locations"] = LocationSerializer(locations, many=True).data
 
         # Collections: Partial Match Search
         collections = Collection.objects.filter(

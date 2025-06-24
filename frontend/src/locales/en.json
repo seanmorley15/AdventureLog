@@ -589,7 +589,13 @@
 	"search": {
 		"adventurelog_results": "AdventureLog Results",
 		"public_adventures": "Public Adventures",
-		"online_results": "Online Results"
+		"online_results": "Online Results",
+		"result": "Result",
+		"results": "Results",
+		"found": "found",
+		"try_searching_desc": "Try searching for adventures, collections, countries, regions, cities, or users.",
+		"countries": "Countries",
+		"cities": "Cities"
 	},
 	"map": {
 		"view_details": "View Details",
