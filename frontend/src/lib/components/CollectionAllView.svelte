@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type {
-		Adventure,
+		Location,
 		Transportation,
 		Lodging,
 		Note,
@@ -24,14 +24,14 @@
 	import Filter from '~icons/mdi/filter-variant';
 
 	// Component imports
-	import AdventureCard from './AdventureCard.svelte';
+	import LocationCard from './LocationCard.svelte';
 	import TransportationCard from './TransportationCard.svelte';
 	import LodgingCard from './LodgingCard.svelte';
 	import NoteCard from './NoteCard.svelte';
 	import ChecklistCard from './ChecklistCard.svelte';
 
 	// Props
-	export let adventures: Adventure[] = [];
+	export let adventures: Location[] = [];
 	export let transportations: Transportation[] = [];
 	export let lodging: Lodging[] = [];
 	export let notes: Note[] = [];
@@ -45,7 +45,7 @@
 	let sortOption: string = 'name_asc';
 
 	// Filtered arrays
-	let filteredAdventures: Adventure[] = [];
+	let filteredAdventures: Location[] = [];
 	let filteredTransportations: Transportation[] = [];
 	let filteredLodging: Lodging[] = [];
 	let filteredNotes: Note[] = [];
@@ -256,7 +256,7 @@
 		<div class="hidden md:flex items-center gap-2">
 			<div class="stats stats-horizontal bg-base-200/50 border border-base-300/50">
 				<div class="stat py-2 px-3">
-					<div class="stat-title text-xs">{$t('navbar.adventures')}</div>
+					<div class="stat-title text-xs">{$t('locations.locations')}</div>
 					<div class="stat-value text-sm text-info">{adventures.length}</div>
 				</div>
 				<div class="stat py-2 px-3">
@@ -380,7 +380,7 @@
 					on:click={() => (filterOption = 'adventures')}
 				>
 					<Adventures class="w-3 h-3" />
-					{$t('navbar.adventures')}
+					{$t('locations.locations')}
 				</button>
 				<button
 					class="tab tab-sm gap-2 {filterOption === 'transportation'
@@ -432,7 +432,7 @@
 		</div>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mx-4">
 			{#each filteredAdventures as adventure}
-				<AdventureCard
+				<LocationCard
 					{user}
 					on:edit={handleEditAdventure}
 					on:delete={handleDeleteAdventure}

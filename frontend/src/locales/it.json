@@ -15,7 +15,6 @@
     "activities": {},
     "add_to_collection": "Aggiungi alla collezione",
     "adventure": "Avventura",
-    "adventure_delete_confirm": "Sei sicuro di voler eliminare questa avventura? \nQuesta azione non può essere annullata.",
     "archive": "Archivio",
     "archived": "Archiviato",
     "archived_collection_message": "Collezione archiviata con successo!",
@@ -25,9 +24,6 @@
     "category_filter": "Filtro categoria",
     "clear": "Rimuovere",
     "collection": "Collezione",
-    "collection_link_error": "Errore nel collegamento dell'avventura alla collezione",
-    "collection_remove_error": "Errore durante la rimozione dell'avventura dalla collezione",
-    "collection_remove_success": "Avventura rimossa con successo dalla collezione!",
     "count_txt": "risultati corrispondenti alla tua ricerca",
     "create_new": "Crea nuovo...",
     "date": "Data",
@@ -44,8 +40,6 @@
     "my_collections": "Le mie collezioni",
     "name": "Nome",
     "no_image_found": "Nessuna immagine trovata",
-    "not_found": "Avventura non trovata",
-    "not_found_desc": "L'avventura che stavi cercando non è stata trovata. \nProva un'avventura diversa o riprova più tardi.",
     "open_details": "Apri Dettagli",
     "open_filters": "Apri filtri",
     "order_by": "Ordina per",
@@ -62,11 +56,8 @@
     "updated": "Aggiornato",
     "visit": "Visita",
     "visits": "Visite",
-    "adventure_delete_success": "Avventura eliminata con successo!",
     "collection_adventures": "Includi avventure dalle raccolte",
-    "collection_link_success": "Avventura collegata alla collezione con successo!",
     "dates": "Date",
-    "delete_adventure": "Elimina avventura",
     "duration": "Durata",
     "image_removed_error": "Errore durante la rimozione dell'immagine",
     "image_removed_success": "Immagine rimossa con successo!",
@@ -80,10 +71,6 @@
     "activity_types": "Tipi di attività",
     "add": "Aggiungere",
     "add_notes": "Aggiungi note",
-    "adventure_create_error": "Impossibile creare l'avventura",
-    "adventure_created": "Avventura creata",
-    "adventure_update_error": "Impossibile aggiornare l'avventura",
-    "adventure_updated": "Avventura aggiornata",
     "basic_information": "Informazioni di base",
     "category": "Categoria",
     "clear_map": "Libera mappa",
@@ -99,23 +86,19 @@
     "location": "Posizione",
     "location_information": "Informazioni sulla posizione",
     "my_images": "Le mie immagini",
-    "new_adventure": "Nuova avventura",
     "no_description_found": "Nessuna descrizione trovata",
     "no_images": "Nessuna immagine",
     "no_location": "Inserisci una località",
     "no_results": "Nessun risultato trovato",
-    "public_adventure": "Avventura pubblica",
     "remove": "Rimuovere",
     "save_next": "Salva",
     "search_for_location": "Cerca una posizione",
     "search_results": "Risultati della ricerca",
     "see_adventures": "Vedi Avventure",
-    "share_adventure": "Condividi questa avventura!",
     "start_date": "Data di inizio",
     "upload_image": "Carica immagine",
     "url": "URL",
     "warning": "Avvertimento",
-    "wiki_desc": "Estrae un estratto dall'articolo di Wikipedia corrispondente al nome dell'avventura.",
     "wiki_image_error": "Errore durante il recupero dell'immagine da Wikipedia",
     "wikipedia": "Wikipedia",
     "adventure_not_found": "Non ci sono avventure da visualizzare. \nAggiungine alcuni utilizzando il pulsante più in basso a destra o prova a cambiare i filtri!",
@@ -124,7 +107,6 @@
     "mark_visited": "Segna come visitato",
     "my_adventures": "Le mie avventure",
     "no_adventures_found": "Nessuna avventura trovata",
-    "no_collections_found": "Nessuna collezione trovata a cui aggiungere questa avventura.",
     "no_linkable_adventures": "Non è stata trovata alcuna avventura che possa essere collegata a questa collezione.",
     "not_visited": "Non visitato",
     "regions_updated": "regioni aggiornate",
@@ -181,10 +163,7 @@
     "starting_airport": "Aeroporto di partenza",
     "to": "A",
     "transportation_delete_confirm": "Sei sicuro di voler eliminare questo trasporto? \nQuesta azione non può essere annullata.",
-    "will_be_marked": "verrà contrassegnato come visitato una volta salvata l'avventura.",
     "cities_updated": "città aggiornate",
-    "create_adventure": "Crea Avventura",
-    "no_adventures_to_recommendations": "Nessuna avventura trovata. \nAggiungi almeno un'avventura per ricevere consigli.",
     "finding_recommendations": "Alla scoperta di tesori nascosti per la tua prossima avventura",
     "attachment": "Allegato",
     "attachment_delete_success": "Allegato eliminato con successo!",
@@ -246,7 +225,32 @@
     "name_location": "Nome, posizione",
     "collection_contents": "Contenuto di raccolta",
     "check_in": "Check -in",
-    "check_out": "Guardare"
+    "check_out": "Guardare",
+    "collection_link_location_error": "Errore che collega la posizione alla raccolta",
+    "collection_link_location_success": "Posizione collegata alla raccolta con successo!",
+    "collection_locations": "Includi luoghi di raccolta",
+    "collection_remove_location_error": "Errore di rimozione della posizione dalla raccolta",
+    "collection_remove_location_success": "Posizione rimossa dalla raccolta con successo!",
+    "create_location": "Crea posizione",
+    "delete_location": "Elimina posizione",
+    "edit_location": "Modifica posizione",
+    "location_create_error": "Impossibile creare posizione",
+    "location_created": "Posizione creata",
+    "location_delete_confirm": "Sei sicuro di voler eliminare questa posizione? \nQuesta azione non può essere annullata.",
+    "location_delete_success": "Posizione eliminata con successo!",
+    "location_not_found": "Posizione non trovata",
+    "location_not_found_desc": "Non è stato possibile trovare la posizione che stavi cercando. \nProva una posizione diversa o ricontrolla più tardi.",
+    "location_update_error": "Impossibile aggiornare la posizione",
+    "location_updated": "Posizione aggiornata",
+    "new_location": "Nuova posizione",
+    "no_collections_to_add_location": "Nessuna collezione trovata per aggiungere questa posizione a.",
+    "no_locations_to_recommendations": "Nessuna posizione trovata. \nAggiungi almeno una posizione per ottenere consigli.",
+    "public_location": "Posizione pubblica",
+    "share_location": "Condividi questa posizione!",
+    "visit_calendar": "Visita il calendario",
+    "wiki_location_desc": "Estratto dall'articolo di Wikipedia che corrisponde al nome della posizione.",
+    "will_be_marked_location": "sarà contrassegnato come visitato una volta salvata la posizione.",
+    "no_locations_found": "Nessuna posizione trovata"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -317,10 +321,10 @@
     "public_tooltip": "Con un profilo pubblico, gli utenti possono condividere raccolte con te e visualizzare il tuo profilo nella pagina degli utenti.",
     "new_password": "Nuova password",
     "or_3rd_party": "Oppure accedi con un servizio di terze parti",
-    "no_public_adventures": "Nessuna avventura pubblica trovata",
     "no_public_collections": "Nessuna collezione pubblica trovata",
-    "user_adventures": "Avventure utente",
-    "user_collections": "Collezioni utente"
+    "user_collections": "Collezioni utente",
+    "no_public_locations": "Nessuna posizione pubblica trovata",
+    "user_locations": "Posizioni degli utenti"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -568,7 +572,13 @@
   "search": {
     "adventurelog_results": "Risultati di AdventureLog",
     "online_results": "Risultati in linea",
-    "public_adventures": "Avventure pubbliche"
+    "public_adventures": "Avventure pubbliche",
+    "cities": "Città",
+    "countries": "Paesi",
+    "found": "trovato",
+    "result": "Risultato",
+    "results": "Risultati",
+    "try_searching_desc": "Prova a cercare avventure, collezioni, paesi, regioni, città o utenti."
   },
   "map": {
     "add_adventure": "Aggiungi nuova avventura",
@@ -579,13 +589,16 @@
     "show_visited_regions": "Mostra regioni visitate",
     "view_details": "Visualizza dettagli",
     "adventure_stats": "Statistiche di avventura",
-    "adventures_shown": "Avventure mostrate",
     "completion": "Completamento",
     "display_options": "Opzioni di visualizzazione",
     "map_controls": "Controlli della mappa",
     "marker_placed_on_map": "Marcatore posizionato sulla mappa",
-    "place_marker_desc": "Fai clic sulla mappa per posizionare un indicatore o aggiungi un'avventura senza posizione.",
-    "regions": "Regioni"
+    "regions": "Regioni",
+    "add_location": "Aggiungi nuova posizione",
+    "add_location_at_marker": "Aggiungi nuova posizione al marcatore",
+    "location_map": "Mappa della posizione",
+    "locations_shown": "posizioni mostrate",
+    "place_marker_desc_location": "Fai clic sulla mappa per posizionare un indicatore."
   },
   "languages": {},
   "share": {
@@ -611,9 +624,9 @@
     "no_shared_adventures": "Questo utente non ha ancora condiviso avventure pubbliche.",
     "no_shared_collections": "Questo utente non ha ancora condiviso alcuna collezione pubblica.",
     "planned_trips": "Viaggi pianificati",
-    "public_adventure_experiences": "Esperienze di avventura pubblica",
     "travel_statistics": "Statistiche di viaggio",
-    "your_journey_at_a_glance": "Il tuo viaggio d'avventura a colpo d'occhio"
+    "your_journey_at_a_glance": "Il tuo viaggio d'avventura a colpo d'occhio",
+    "public_location_experiences": "Esperienze di posizione pubblica"
   },
   "categories": {
     "category_name": "Nome della categoria",
@@ -622,9 +635,9 @@
     "manage_categories": "Gestisci categorie",
     "no_categories_found": "Nessuna categoria trovata.",
     "select_category": "Seleziona Categoria",
-    "update_after_refresh": "Le carte avventura verranno aggiornate una volta aggiornata la pagina.",
     "add_new_category": "Aggiungi nuova categoria",
-    "name_required": "È richiesto il nome della categoria"
+    "name_required": "È richiesto il nome della categoria",
+    "location_update_after_refresh": "Le schede di posizione verranno aggiornate dopo aver aggiornato la pagina."
   },
   "dashboard": {
     "add_some": "Perché non iniziare a pianificare la tua prossima avventura? \nPuoi aggiungere una nuova avventura facendo clic sul pulsante in basso.",
@@ -670,9 +683,9 @@
   "recomendations": {
     "recommendation": "Raccomandazione",
     "recommendations": "Raccomandazioni",
-    "adventure_recommendations": "Consigli di avventura",
     "food": "Cibo",
-    "tourism": "Turismo"
+    "tourism": "Turismo",
+    "location_recommendations": "Raccomandazioni sulla posizione"
   },
   "lodging": {
     "apartment": "Appartamento",
@@ -695,17 +708,19 @@
     "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità."
   },
   "calendar": {
-    "all_categories": "Tutte le categorie",
     "all_day_event": "Evento per tutto il giorno",
     "calendar_overview": "Panoramica del calendario",
-    "categories": "Categorie",
     "day": "Giorno",
     "events_scheduled": "eventi programmati",
-    "filter_by_category": "Filtro per categoria",
     "filtered_results": "Risultati filtrati",
     "month": "Mese",
     "today": "Oggi",
     "total_events": "Eventi totali",
     "week": "Settimana"
+  },
+  "locations": {
+    "location": "Posizione",
+    "locations": "Luoghi",
+    "my_locations": "Le mie posizioni"
   }
 }

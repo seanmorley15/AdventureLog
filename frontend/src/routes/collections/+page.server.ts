@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Adventure, Collection } from '$lib/types';
+import type { Location, Collection } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken } from '$lib/index.server';
@@ -16,7 +16,7 @@ export const load = (async (event) => {
 		let next = null;
 		let previous = null;
 		let count = 0;
-		let collections: Adventure[] = [];
+		let collections: Location[] = [];
 		let sessionId = event.cookies.get('sessionid');
 
 		// Get sorting parameters from URL
@@ -38,7 +38,7 @@ export const load = (async (event) => {
 			return redirect(302, '/login');
 		} else {
 			let res = await initialFetch.json();
-			let visited = res.results as Adventure[];
+			let visited = res.results as Location[];
 			next = res.next;
 			previous = res.previous;
 			count = res.count;

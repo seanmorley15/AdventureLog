@@ -15,7 +15,6 @@
     "activities": {},
     "add_to_collection": "Toevoegen aan collectie",
     "adventure": "Avontuur",
-    "adventure_delete_confirm": "Weet je zeker dat je dit avontuur wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "archive": "Archiveer",
     "archived": "Gearchiveerd",
     "archived_collection_message": "Collectie succesvol gearchiveerd!",
@@ -26,10 +25,6 @@
     "clear": "Leegmaken",
     "collection": "Collectie",
     "collection_adventures": "Inclusief collectie-avonturen",
-    "collection_link_error": "Fout bij het koppelen van dit avontuur aan de collectie",
-    "collection_link_success": "Avontuur succesvol gekoppeld aan collectie!",
-    "collection_remove_error": "Fout bij verwijderen van dit avontuur uit de collectie",
-    "collection_remove_success": "Avontuur is succesvol uit de collectie verwijderd!",
     "count_txt": "resultaten die overeenkomen met uw zoekopdracht",
     "create_new": "Maak nieuw...",
     "date": "Datum",
@@ -46,8 +41,6 @@
     "my_collections": "Mijn collecties",
     "name": "Naam",
     "no_image_found": "Geen afbeelding gevonden",
-    "not_found": "Avontuur niet gevonden",
-    "not_found_desc": "Het avontuur waar je naar op zoek was, kon niet worden gevonden. \nProbeer een ander avontuur of kom later nog eens terug.",
     "open_details": "Details openen",
     "open_filters": "Filters openen",
     "order_by": "Sorteer op",
@@ -64,9 +57,7 @@
     "updated": "Gewijzigd",
     "visit": "Bezoek",
     "visits": "Bezoeken",
-    "adventure_delete_success": "Avontuur succesvol verwijderd!",
     "dates": "Datums",
-    "delete_adventure": "Avontuur verwijderen",
     "duration": "Duur",
     "image_removed_error": "Fout bij het verwijderen van de afbeelding",
     "image_removed_success": "Afbeelding succesvol verwijderd!",
@@ -81,10 +72,6 @@
     "activity_types": "Activiteitstypen",
     "add": "Toevoegen",
     "add_notes": "Voeg opmerkingen toe",
-    "adventure_create_error": "Kan geen avontuur aanmaken",
-    "adventure_created": "Avontuur aangemaakt",
-    "adventure_update_error": "Kan avontuur niet wijzigen",
-    "adventure_updated": "Avontuur gewijzigd",
     "basic_information": "Basisinformatie",
     "category": "Categorie",
     "clear_map": "Kaart leegmaken",
@@ -100,23 +87,19 @@
     "location": "Locatie",
     "location_information": "Informatie over de locatie",
     "my_images": "Mijn afbeeldingen",
-    "new_adventure": "Nieuw avontuur",
     "no_description_found": "Geen beschrijving gevonden",
     "no_images": "Geen afbeeldingen",
     "no_location": "Voer een locatie in",
     "no_results": "Geen resultaten gevonden",
-    "public_adventure": "Openbaar avontuur",
     "remove": "Verwijderen",
     "save_next": "Opslaan & Volgende",
     "search_for_location": "Zoek een locatie",
     "search_results": "Zoekresultaten",
     "see_adventures": "Zie Avonturen",
-    "share_adventure": "Deel dit avontuur!",
     "start_date": "Startdatum",
     "upload_image": "Afbeelding uploaden",
     "url": "URL",
     "warning": "Waarschuwing",
-    "wiki_desc": "Haalt een fragment uit een Wikipedia-artikel dat overeenkomt met de naam van het avontuur.",
     "wikipedia": "Wikipedia",
     "adventure_not_found": "Er zijn geen avonturen om weer te geven. \nVoeg er een paar toe via de plusknop rechtsonder of probeer de filters te wijzigen!",
     "all": "Alle",
@@ -124,7 +107,6 @@
     "mark_visited": "Markeer als bezocht",
     "my_adventures": "Mijn avonturen",
     "no_adventures_found": "Geen avonturen gevonden",
-    "no_collections_found": "Er zijn geen collecties gevonden waar dit avontuur aan kan worden toegevoegd.",
     "no_linkable_adventures": "Er zijn geen avonturen gevonden die aan deze collectie kunnen worden gekoppeld.",
     "not_visited": "Niet bezocht",
     "regions_updated": "regio's bijgewerkt",
@@ -181,10 +163,7 @@
     "to": "Naar",
     "transportation_delete_confirm": "Weet u zeker dat u dit transport wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "ending_airport": "Luchthaven van aankomst",
-    "will_be_marked": "wordt gemarkeerd als bezocht zodra het avontuur is opgeslagen.",
     "cities_updated": "steden bijgewerkt",
-    "create_adventure": "Creëer avontuur",
-    "no_adventures_to_recommendations": "Geen avonturen gevonden. \nVoeg ten minste één avontuur toe om aanbevelingen te krijgen.",
     "finding_recommendations": "Ontdek verborgen juweeltjes voor je volgende avontuur",
     "attachment": "Bijlage",
     "attachment_delete_success": "Bijlage succesvol verwijderd!",
@@ -246,7 +225,32 @@
     "name_location": "naam, locatie",
     "collection_contents": "Collectie-inhoud",
     "check_in": "Inchecken",
-    "check_out": "Uitchecken"
+    "check_out": "Uitchecken",
+    "collection_link_location_error": "Foutkoppelingslocatie naar verzameling",
+    "collection_link_location_success": "Locatie gekoppeld aan het succesvol verzamelen!",
+    "collection_locations": "Neem verzamellocaties op",
+    "collection_remove_location_error": "Fout het verwijderen van locatie uit het verzamelen",
+    "collection_remove_location_success": "Locatie verwijderd uit de collectie succesvol!",
+    "create_location": "Locatie maken",
+    "delete_location": "Verwijder locatie",
+    "edit_location": "Locatie bewerken",
+    "location_create_error": "Kan locatie niet maken",
+    "location_created": "Locatie gemaakt",
+    "location_delete_confirm": "Weet u zeker dat u deze locatie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
+    "location_delete_success": "Locatie verwijderd met succes!",
+    "location_not_found": "Locatie niet gevonden",
+    "location_not_found_desc": "De locatie waarnaar u op zoek was, kon niet worden gevonden. \nProbeer een andere locatie of kom later terug.",
+    "location_update_error": "De locatie niet bijwerken",
+    "location_updated": "Locatie bijgewerkt",
+    "new_location": "Nieuwe locatie",
+    "no_collections_to_add_location": "Geen collecties gevonden om deze locatie toe te voegen aan.",
+    "no_locations_to_recommendations": "Geen locaties gevonden. \nVoeg minstens één locatie toe om aanbevelingen te krijgen.",
+    "public_location": "Openbare locatie",
+    "share_location": "Deel deze locatie!",
+    "visit_calendar": "Bezoek de agenda",
+    "wiki_location_desc": "Haalt fragment uit het Wikipedia -artikel dat overeenkomt met de naam van de locatie.",
+    "will_be_marked_location": "wordt gemarkeerd als bezocht zodra de locatie is opgeslagen.",
+    "no_locations_found": "Geen locaties gevonden"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -317,10 +321,10 @@
     "public_tooltip": "Met een openbaar profiel kunnen gebruikers collecties met u delen en uw profiel bekijken op de gebruikerspagina.",
     "new_password": "Nieuw wachtwoord",
     "or_3rd_party": "Of log in met een service van derden",
-    "no_public_adventures": "Geen openbare avonturen gevonden",
     "no_public_collections": "Geen openbare collecties gevonden",
-    "user_adventures": "Gebruikersavonturen",
-    "user_collections": "Gebruikerscollecties"
+    "user_collections": "Gebruikerscollecties",
+    "no_public_locations": "Geen openbare locaties gevonden",
+    "user_locations": "Gebruikerslocaties"
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."
@@ -568,7 +572,13 @@
   "search": {
     "adventurelog_results": "AdventureLog resultaten",
     "online_results": "Online resultaten",
-    "public_adventures": "Openbare avonturen"
+    "public_adventures": "Openbare avonturen",
+    "cities": "Steden",
+    "countries": "Landen",
+    "found": "gevonden",
+    "result": "Resultaat",
+    "results": "Resultaat",
+    "try_searching_desc": "Probeer op zoek naar avonturen, collecties, landen, regio's, steden of gebruikers."
   },
   "map": {
     "add_adventure": "Voeg nieuw avontuur toe",
@@ -579,13 +589,16 @@
     "show_visited_regions": "Toon bezochte regio's",
     "view_details": "Details bekijken",
     "adventure_stats": "Avontuurstatistieken",
-    "adventures_shown": "Avonturen getoond",
     "completion": "Voltooiing",
     "display_options": "Displayopties",
     "map_controls": "Kaartbesturing",
     "marker_placed_on_map": "Marker geplaatst op kaart",
-    "place_marker_desc": "Klik op de kaart om een ​​marker te plaatsen of voeg een avontuur toe zonder locatie.",
-    "regions": "Gebieden"
+    "regions": "Gebieden",
+    "add_location": "Voeg een nieuwe locatie toe",
+    "add_location_at_marker": "Voeg een nieuwe locatie toe bij Marker",
+    "location_map": "Locatiekaart",
+    "locations_shown": "Getoonde locaties",
+    "place_marker_desc_location": "Klik op de kaart om een ​​marker te plaatsen."
   },
   "languages": {},
   "share": {
@@ -611,9 +624,9 @@
     "no_shared_adventures": "Deze gebruiker heeft nog geen openbare avonturen gedeeld.",
     "no_shared_collections": "Deze gebruiker heeft nog geen openbare collecties gedeeld.",
     "planned_trips": "Geplande reizen",
-    "public_adventure_experiences": "Publieke avontuurlijke ervaringen",
     "travel_statistics": "Reisstatistieken",
-    "your_journey_at_a_glance": "Je avontuurlijke reis in één oogopslag"
+    "your_journey_at_a_glance": "Je avontuurlijke reis in één oogopslag",
+    "public_location_experiences": "Openbare locatie -ervaringen"
   },
   "categories": {
     "category_name": "Categorienaam",
@@ -622,9 +635,9 @@
     "manage_categories": "Beheer categorieën",
     "no_categories_found": "Geen categorieën gevonden.",
     "select_category": "Selecteer een categorie",
-    "update_after_refresh": "De avonturenkaarten worden bijgewerkt zodra u de pagina vernieuwt.",
     "add_new_category": "Voeg een nieuwe categorie toe",
-    "name_required": "Categorienaam is vereist"
+    "name_required": "Categorienaam is vereist",
+    "location_update_after_refresh": "De locatiekaarten worden bijgewerkt zodra u de pagina vernieuwt."
   },
   "dashboard": {
     "add_some": "Waarom begint u niet met het plannen van uw volgende avontuur? \nJe kunt een nieuw avontuur toevoegen door op de onderstaande knop te klikken.",
@@ -670,9 +683,9 @@
   "recomendations": {
     "recommendation": "Aanbeveling",
     "recommendations": "Aanbevelingen",
-    "adventure_recommendations": "Avontuuraanbevelingen",
-    "food": "Eten",
-    "tourism": "Toerisme"
+    "food": "Voedsel",
+    "tourism": "Toerisme",
+    "location_recommendations": "Locatieaanbevelingen"
   },
   "lodging": {
     "apartment": "Appartement",
@@ -695,17 +708,19 @@
     "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen."
   },
   "calendar": {
-    "all_categories": "Alle categorieën",
-    "all_day_event": "Evenement dat de hele dag duurt",
+    "all_day_event": "De hele dag evenement",
     "calendar_overview": "Kalenderoverzicht",
-    "categories": "Categorieën",
     "day": "Dag",
     "events_scheduled": "geplande evenementen",
-    "filter_by_category": "Filter per categorie",
     "filtered_results": "Gefilterde resultaten",
     "month": "Maand",
     "today": "Vandaag",
     "total_events": "Totale gebeurtenissen",
     "week": "Week"
+  },
+  "locations": {
+    "location": "Locatie",
+    "locations": "Locaties",
+    "my_locations": "Mijn locaties"
   }
 }

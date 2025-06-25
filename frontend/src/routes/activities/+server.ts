@@ -8,7 +8,7 @@ export const POST: RequestHandler = async (event) => {
 	let allActivities: string[] = [];
 	let csrfToken = await fetchCSRFToken();
 	let sessionId = event.cookies.get('sessionid');
-	let res = await event.fetch(`${endpoint}/api/activity-types/types/`, {
+	let res = await event.fetch(`${endpoint}/api/tags/types/`, {
 		headers: {
 			'X-CSRFToken': csrfToken,
 			Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`

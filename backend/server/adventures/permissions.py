@@ -7,8 +7,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
             return True
-        # obj.user_id is FK to User, compare with request.user
-        return obj.user_id == request.user
+        # obj.user is FK to User, compare with request.user
+        return obj.user == request.user
 
 
 class IsPublicReadOnly(permissions.BasePermission):
@@ -17,8 +17,8 @@ class IsPublicReadOnly(permissions.BasePermission):
     """
     def has_object_permission(self, request, view, obj):
         if request.method in permissions.SAFE_METHODS:
-            return obj.is_public or obj.user_id == request.user
-        return obj.user_id == request.user
+            return obj.is_public or obj.user == request.user
+        return obj.user == request.user
 
 
 class CollectionShared(permissions.BasePermission):
@@ -39,7 +39,7 @@ class CollectionShared(permissions.BasePermission):
             if obj.shared_with.filter(id=user.id).exists():
                 return True
 
-        # If obj is an Adventure (has collections M2M)
+        # If obj is a Location (has collections M2M)
         if hasattr(obj, 'collections'):
             # Check if user is in shared_with of any related collection
             shared_collections = obj.collections.filter(shared_with=user)
@@ -48,10 +48,10 @@ class CollectionShared(permissions.BasePermission):
 
         # Read permission if public or owner
         if request.method in permissions.SAFE_METHODS:
-            return obj.is_public or obj.user_id == user
+            return obj.is_public or obj.user == user
 
         # Write permission only if owner or shared user via collections
-        if obj.user_id == user:
+        if obj.user == user:
             return True
 
         if hasattr(obj, 'collections'):
@@ -76,7 +76,7 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         if request.method in permissions.SAFE_METHODS:
             if obj.is_public:
                 return True
-            if obj.user_id == user:
+            if obj.user == user:
                 return True
             # If user in shared_with of any collection related to obj
             if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
@@ -88,7 +88,7 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
             return False
 
         # For write methods, allow if owner or shared user
-        if obj.user_id == user:
+        if obj.user == user:
             return True
         if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
             return True
