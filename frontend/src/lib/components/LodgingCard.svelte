@@ -8,6 +8,8 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	import { LODGING_TYPES_ICONS } from '$lib';
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { formatAllDayDate } from '$lib/dateUtils';
+	import { isAllDay } from '$lib';
 
 	const dispatch = createEventDispatcher();
 
@@ -96,8 +98,8 @@
 >
 	<div class="card-body p-6 space-y-4">
 		<!-- Header -->
-		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-			<h2 class="text-xl font-bold truncate">{lodging.name}</h2>
+		<div class="flex flex-col gap-3">
+			<h2 class="text-xl font-bold break-words">{lodging.name}</h2>
 			<div class="flex flex-wrap gap-2">
 				<div class="badge badge-secondary">
 					{$t(`lodging.${lodging.type}`)}
@@ -118,18 +120,39 @@
 				</div>
 			{/if}
 
-			{#if lodging.check_in && lodging.check_out}
-				<div class="flex items-center gap-2">
-					<span class="text-sm font-medium">{$t('adventures.dates')}:</span>
-					<p class="text-sm">
-						{formatDateInTimezone(lodging.check_in, lodging.timezone)} –
-						{formatDateInTimezone(lodging.check_out, lodging.timezone)}
-						{#if lodging.timezone}
-							<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
-						{/if}
-					</p>
-				</div>
-			{/if}
+			<div class="space-y-3">
+				{#if lodging.check_in}
+					<div class="flex gap-2 text-sm">
+						<span class="font-medium whitespace-nowrap">{$t('adventures.check_in')}:</span>
+						<span>
+							{#if isAllDay(lodging.check_in)}
+								{formatAllDayDate(lodging.check_in)}
+							{:else}
+								{formatDateInTimezone(lodging.check_in, lodging.timezone)}
+								{#if lodging.timezone}
+									<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
+								{/if}
+							{/if}
+						</span>
+					</div>
+				{/if}
+
+				{#if lodging.check_out}
+					<div class="flex gap-2 text-sm">
+						<span class="font-medium whitespace-nowrap">{$t('adventures.check_out')}:</span>
+						<span>
+							{#if isAllDay(lodging.check_out)}
+								{formatAllDayDate(lodging.check_out)}
+							{:else}
+								{formatDateInTimezone(lodging.check_out, lodging.timezone)}
+								{#if lodging.timezone}
+									<span class="ml-1 text-xs opacity-60">({lodging.timezone})</span>
+								{/if}
+							{/if}
+						</span>
+					</div>
+				{/if}
+			</div>
 		</div>
 
 		<!-- Reservation Info -->

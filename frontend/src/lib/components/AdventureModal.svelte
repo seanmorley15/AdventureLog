@@ -456,6 +456,11 @@
 				}
 			}
 
+			// add this collection to the adventure
+			if (collection && collection.id) {
+				adventure.collections = [collection.id];
+			}
+
 			let res = await fetch('/api/adventures', {
 				method: 'POST',
 				headers: {

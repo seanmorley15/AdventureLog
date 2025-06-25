@@ -243,7 +243,10 @@
     "delete_collection_warning": "Êtes-vous sûr de vouloir supprimer cette collection? \nCette action ne peut pas être annulée.",
     "done": "Fait",
     "loading_adventures": "Chargement des aventures ...",
-    "name_location": "nom, emplacement"
+    "name_location": "nom, emplacement",
+    "collection_contents": "Contenu de la collection",
+    "check_in": "Enregistrement",
+    "check_out": "Vérifier"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -371,7 +374,12 @@
     "show_map_labels": "Afficher les étiquettes de carte",
     "total_cities": "Total des villes",
     "total_countries": "Total des pays",
-    "total_regions": "Régions totales"
+    "total_regions": "Régions totales",
+    "newest_first": "Le plus récent premier",
+    "oldest_first": "Le plus ancien premier",
+    "unvisited_first": "Sans visité d'abord",
+    "visited_first": "Visité en premier",
+    "total_items": "Total des articles"
   },
   "settings": {
     "account_settings": "Paramètres du compte utilisateur",
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Connectez votre compte Google Maps pour obtenir des résultats de recherche et recommandations de recherche de haute qualité."
+  },
+  "calendar": {
+    "all_categories": "Toutes les catégories",
+    "all_day_event": "Événement toute la journée",
+    "calendar_overview": "Aperçu du calendrier",
+    "categories": "Catégories",
+    "day": "Jour",
+    "events_scheduled": "événements prévus",
+    "filter_by_category": "Filtre par catégorie",
+    "filtered_results": "Résultats filtrés",
+    "month": "Mois",
+    "today": "Aujourd'hui",
+    "total_events": "Événements totaux",
+    "week": "Semaine"
   }
 }

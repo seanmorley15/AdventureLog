@@ -243,7 +243,10 @@
     "delete_collection_warning": "Är du säker på att du vill ta bort den här samlingen? \nDenna åtgärd kan inte ångras.",
     "done": "Gjort",
     "loading_adventures": "Laddar äventyr ...",
-    "name_location": "namn, plats"
+    "name_location": "namn, plats",
+    "collection_contents": "Insamlingsinnehåll",
+    "check_in": "Checka in",
+    "check_out": "Checka ut"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -346,7 +349,12 @@
     "show_map_labels": "Visa kartetiketter",
     "total_cities": "Totala städer",
     "total_countries": "Totala länder",
-    "total_regions": "Totala regioner"
+    "total_regions": "Totala regioner",
+    "newest_first": "Nyaste första",
+    "oldest_first": "Äldsta först",
+    "unvisited_first": "Oöverträffad först",
+    "visited_first": "Besökt först",
+    "total_items": "Totala artiklar"
   },
   "auth": {
     "confirm_password": "Bekräfta lösenord",
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet."
+  },
+  "calendar": {
+    "all_categories": "Alla kategorier",
+    "all_day_event": "Hela dagen",
+    "calendar_overview": "Kalenderöversikt",
+    "categories": "Kategorier",
+    "day": "Dag",
+    "events_scheduled": "Händelser planerade",
+    "filter_by_category": "Filter efter kategori",
+    "filtered_results": "Filtrerade resultat",
+    "month": "Månad",
+    "today": "I dag",
+    "total_events": "Totala evenemang",
+    "week": "Vecka"
   }
 }

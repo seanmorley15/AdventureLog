@@ -243,7 +243,10 @@
     "delete_collection_warning": "Sei sicuro di voler eliminare questa collezione? \nQuesta azione non può essere annullata.",
     "done": "Fatto",
     "loading_adventures": "Caricamento di avventure ...",
-    "name_location": "Nome, posizione"
+    "name_location": "Nome, posizione",
+    "collection_contents": "Contenuto di raccolta",
+    "check_in": "Check -in",
+    "check_out": "Guardare"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -371,7 +374,12 @@
     "show_map_labels": "Mostra etichette mappe",
     "total_cities": "Città totali",
     "total_countries": "Paesi totali",
-    "total_regions": "Regioni totali"
+    "total_regions": "Regioni totali",
+    "newest_first": "Primo il più recente",
+    "oldest_first": "Prima più antico",
+    "unvisited_first": "Non visitato per primo",
+    "visited_first": "Visitato per primo",
+    "total_items": "Articoli totali"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità."
+  },
+  "calendar": {
+    "all_categories": "Tutte le categorie",
+    "all_day_event": "Evento per tutto il giorno",
+    "calendar_overview": "Panoramica del calendario",
+    "categories": "Categorie",
+    "day": "Giorno",
+    "events_scheduled": "eventi programmati",
+    "filter_by_category": "Filtro per categoria",
+    "filtered_results": "Risultati filtrati",
+    "month": "Mese",
+    "today": "Oggi",
+    "total_events": "Eventi totali",
+    "week": "Settimana"
   }
 }

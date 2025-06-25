@@ -243,7 +243,10 @@
     "delete_collection_warning": "이 컬렉션을 삭제 하시겠습니까? \n이 조치는 취소 할 수 없습니다.",
     "done": "완료",
     "loading_adventures": "적재 모험 ...",
-    "name_location": "이름, 위치"
+    "name_location": "이름, 위치",
+    "collection_contents": "수집 내용",
+    "check_in": "체크인",
+    "check_out": "체크 아웃"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -663,7 +666,12 @@
     "show_map_labels": "지도 레이블 표시",
     "total_cities": "총 도시",
     "total_countries": "총 국가",
-    "total_regions": "총 지역"
+    "total_regions": "총 지역",
+    "newest_first": "최신 첫 번째",
+    "oldest_first": "가장 오래된 첫 번째",
+    "unvisited_first": "먼저 방문하지 않습니다",
+    "visited_first": "먼저 방문했습니다",
+    "total_items": "총 항목"
   },
   "lodging": {
     "apartment": "아파트",
@@ -684,5 +692,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오."
+  },
+  "calendar": {
+    "all_categories": "모든 카테고리",
+    "all_day_event": "하루 종일 이벤트",
+    "calendar_overview": "캘린더 개요",
+    "categories": "카테고리",
+    "day": "낮",
+    "events_scheduled": "예약 된 이벤트",
+    "filter_by_category": "카테고리 별 필터",
+    "filtered_results": "필터링 된 결과",
+    "month": "월",
+    "today": "오늘",
+    "total_events": "총 이벤트",
+    "week": "주"
   }
 }

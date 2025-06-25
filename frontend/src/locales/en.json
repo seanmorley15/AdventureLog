@@ -98,6 +98,8 @@
 		"latitude": "Latitude",
 		"visit": "Visit",
 		"timed": "Timed",
+		"check_in": "Check In",
+		"check_out": "Check Out",
 		"coordinates": "Coordinates",
 		"copy_coordinates": "Copy Coordinates",
 		"visits": "Visits",
@@ -220,6 +222,7 @@
 		"no_adventures_to_recommendations": "No adventures found. Add at least one adventure to get recommendations.",
 		"display_name": "Display Name",
 		"adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
+		"collection_contents": "Collection Contents",
 		"no_adventures_found": "No adventures found",
 		"no_adventures_message": "Start documenting your adventures and planning new ones. Every journey has a story worth telling.",
 		"mark_visited": "Mark Visited",
@@ -337,6 +340,7 @@
 		"filter_by_region": "Filter by Region",
 		"all_regions": "All Regions",
 		"clear_all_filters": "Clear All Filters",
+		"total_items": "Total Items",
 		"filter_by": "Filter by",
 		"interactive_map": "Interactive Map",
 		"no_regions_found": "No regions found",
@@ -346,7 +350,11 @@
 		"show_map_labels": "Show Map Labels",
 		"hide_map_labels": "Hide Map Labels",
 		"total_cities": "Total Cities",
-		"region_completed": "Region completed"
+		"region_completed": "Region completed",
+		"newest_first": "Newest First",
+		"oldest_first": "Oldest First",
+		"visited_first": "Visited First",
+		"unvisited_first": "Unvisited First"
 	},
 	"auth": {
 		"username": "Username",
@@ -685,5 +693,19 @@
 		"adventure_recommendations": "Adventure Recommendations",
 		"food": "Food",
 		"tourism": "Tourism"
+	},
+	"calendar": {
+		"today": "Today",
+		"month": "Month",
+		"week": "Week",
+		"day": "Day",
+		"events_scheduled": "events scheduled",
+		"total_events": "Total Events",
+		"all_categories": "All Categories",
+		"calendar_overview": "Calendar Overview",
+		"categories": "Categories",
+		"filtered_results": "Filtered Results",
+		"filter_by_category": "Filter by Category",
+		"all_day_event": "All Day Event"
 	}
 }

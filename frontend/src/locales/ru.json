@@ -295,7 +295,10 @@
     "delete_collection_warning": "Вы уверены, что хотите удалить эту коллекцию? \nЭто действие не может быть отменено.",
     "done": "Сделанный",
     "loading_adventures": "Загрузка приключений ...",
-    "name_location": "имя, местоположение"
+    "name_location": "имя, местоположение",
+    "collection_contents": "Содержание коллекции",
+    "check_in": "Регистрироваться",
+    "check_out": "Проверить"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -346,7 +349,12 @@
     "show_map_labels": "Показать этикетки карты",
     "total_cities": "Общие города",
     "total_countries": "Всего стран",
-    "total_regions": "Общие регионы"
+    "total_regions": "Общие регионы",
+    "newest_first": "Новейший первый",
+    "oldest_first": "Сначала старейший",
+    "unvisited_first": "Не заселяется первым",
+    "visited_first": "Посетил первым",
+    "total_items": "Общие предметы"
   },
   "auth": {
     "username": "Имя пользователя",
@@ -685,5 +693,19 @@
     "adventure_recommendations": "Рекомендации приключений",
     "food": "Еда",
     "tourism": "Туризм"
+  },
+  "calendar": {
+    "all_categories": "Все категории",
+    "all_day_event": "Событие на весь день",
+    "calendar_overview": "Обзор календаря",
+    "categories": "Категории",
+    "day": "День",
+    "events_scheduled": "События запланированы",
+    "filter_by_category": "Фильтр по категории",
+    "filtered_results": "Отфильтрованные результаты",
+    "month": "Месяц",
+    "today": "Сегодня",
+    "total_events": "Общее количество событий",
+    "week": "Неделя"
   }
 }

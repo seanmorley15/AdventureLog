@@ -243,7 +243,10 @@
     "delete_collection_warning": "Weet u zeker dat u deze collectie wilt verwijderen? \nDeze actie kan niet ongedaan worden gemaakt.",
     "done": "Klaar",
     "loading_adventures": "Adventuren laden ...",
-    "name_location": "naam, locatie"
+    "name_location": "naam, locatie",
+    "collection_contents": "Verzamelingsinhoud",
+    "check_in": "Inchecken",
+    "check_out": "Uitchecken"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -371,7 +374,12 @@
     "show_map_labels": "Toon kaartlabels",
     "total_cities": "Totale steden",
     "total_countries": "Totale landen",
-    "total_regions": "Totaal aantal regio's"
+    "total_regions": "Totaal aantal regio's",
+    "newest_first": "Nieuwste eerste",
+    "oldest_first": "Oudste eerste",
+    "unvisited_first": "Eerst niet bezocht",
+    "visited_first": "Eerst bezocht",
+    "total_items": "Totale items"
   },
   "settings": {
     "account_settings": "Gebruikersaccount instellingen",
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen."
+  },
+  "calendar": {
+    "all_categories": "Alle categorieën",
+    "all_day_event": "De hele dag evenement",
+    "calendar_overview": "Kalenderoverzicht",
+    "categories": "Categorieën",
+    "day": "Dag",
+    "events_scheduled": "geplande evenementen",
+    "filter_by_category": "Filter per categorie",
+    "filtered_results": "Gefilterde resultaten",
+    "month": "Maand",
+    "today": "Vandaag",
+    "total_events": "Totale gebeurtenissen",
+    "week": "Week"
   }
 }

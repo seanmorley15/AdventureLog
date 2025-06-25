@@ -295,7 +295,10 @@
     "delete_collection_warning": "¿Estás seguro de que quieres eliminar esta colección? \nEsta acción no se puede deshacer.",
     "done": "Hecho",
     "loading_adventures": "Cargando aventuras ...",
-    "name_location": "Nombre, ubicación"
+    "name_location": "Nombre, ubicación",
+    "collection_contents": "Contenido de la colección",
+    "check_in": "Registrarse",
+    "check_out": "Verificar"
   },
   "worldtravel": {
     "all": "Todo",
@@ -346,7 +349,12 @@
     "show_map_labels": "Mostrar etiquetas de mapa",
     "total_regions": "Total de regiones",
     "region_completed": "Región completada",
-    "total_cities": "Ciudades totales"
+    "total_cities": "Ciudades totales",
+    "newest_first": "El primero primero",
+    "oldest_first": "El más antiguo primero",
+    "unvisited_first": "Primero no visitado",
+    "visited_first": "Visitado primero",
+    "total_items": "Total de artículos"
   },
   "auth": {
     "forgot_password": "¿Has olvidado tu contraseña?",
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad."
+  },
+  "calendar": {
+    "all_categories": "Todas las categorías",
+    "all_day_event": "Evento todo el día",
+    "calendar_overview": "Descripción general del calendario",
+    "categories": "Categorías",
+    "day": "Día",
+    "events_scheduled": "Eventos programados",
+    "filter_by_category": "Filtrar por categoría",
+    "filtered_results": "Resultados filtrados",
+    "month": "Mes",
+    "today": "Hoy",
+    "total_events": "Total de eventos",
+    "week": "Semana"
   }
 }

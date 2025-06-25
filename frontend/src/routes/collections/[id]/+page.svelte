@@ -17,11 +17,12 @@
 	import Plus from '~icons/mdi/plus';
 	import AdventureCard from '$lib/components/AdventureCard.svelte';
 	import AdventureLink from '$lib/components/AdventureLink.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import { DefaultMarker, MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
+	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
 	import NoteModal from '$lib/components/NoteModal.svelte';
+
+	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	import {
 		groupAdventuresByDate,
@@ -31,8 +32,11 @@
 		osmTagToEmoji,
 		groupLodgingByDate,
 		LODGING_TYPES_ICONS,
-		getBasemapUrl
+		getBasemapUrl,
+		isAllDay
 	} from '$lib';
+	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
+
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import AdventureModal from '$lib/components/AdventureModal.svelte';
@@ -41,6 +45,7 @@
 	import { goto } from '$app/navigation';
 	import LodgingModal from '$lib/components/LodgingModal.svelte';
 	import LodgingCard from '$lib/components/LodgingCard.svelte';
+	import CollectionAllView from '$lib/components/CollectionAllView.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -58,19 +63,6 @@
 	}
 
 	let collection: Collection;
-
-	// add christmas and new years
-	// dates = Array.from({ length: 25 }, (_, i) => {
-	// 	const date = new Date();
-	// 	date.setMonth(11);
-	// 	date.setDate(i + 1);
-	// 	return {
-	// 		id: i.toString(),
-	// 		start: date.toISOString(),
-	// 		end: date.toISOString(),
-	// 		title: '🎄'
-	// 	};
-	// });
 
 	let dates: Array<{
 		id: string;
@@ -92,16 +84,79 @@
 		dates = [];
 
 		if (adventures) {
-			dates = dates.concat(
-				adventures.flatMap((adventure) =>
-					adventure.visits.map((visit) => ({
-						id: adventure.id,
-						start: visit.start_date || '', // Ensure it's a string
-						end: visit.end_date || visit.start_date || '', // Ensure it's a string
-						title: adventure.name + (adventure.category?.icon ? ' ' + adventure.category.icon : '')
-					}))
-				)
-			);
+			adventures.forEach((adventure) => {
+				adventure.visits.forEach((visit) => {
+					if (visit.start_date) {
+						let startDate = visit.start_date;
+						let endDate = visit.end_date || visit.start_date;
+						const targetTimezone = visit.timezone || userTimezone;
+						const allDay = isAllDay(visit.start_date);
+
+						// Handle timezone conversion for non-all-day events
+						if (!allDay) {
+							// Convert UTC dates to target timezone
+							const startDateTime = new Date(visit.start_date);
+							const endDateTime = new Date(visit.end_date || visit.start_date);
+
+							// Format for calendar (ISO string in target timezone)
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(startDateTime)
+								.replace(' ', 'T');
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: targetTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit',
+								hour: '2-digit',
+								minute: '2-digit',
+								hourCycle: 'h23'
+							})
+								.format(endDateTime)
+								.replace(' ', 'T');
+						} else {
+							// For all-day events, use just the date part
+							startDate = visit.start_date.split('T')[0];
+
+							// For all-day events, add one day to end date to make it inclusive
+							const endDateObj = new Date(visit.end_date || visit.start_date);
+							endDateObj.setDate(endDateObj.getDate() + 1);
+							endDate = endDateObj.toISOString().split('T')[0];
+						}
+
+						// Create detailed title with timezone info
+						let detailedTitle = adventure.name;
+						if (adventure.category?.icon) {
+							detailedTitle = `${adventure.category.icon} ${detailedTitle}`;
+						}
+
+						// Add time info to title for non-all-day events
+						if (!allDay) {
+							const startTime = formatDateInTimezone(visit.start_date, targetTimezone);
+							detailedTitle += ` (${startTime.split(' ').slice(-2).join(' ')})`;
+							if (targetTimezone !== userTimezone) {
+								detailedTitle += ` ${targetTimezone}`;
+							}
+						}
+
+						dates.push({
+							id: adventure.id,
+							start: startDate,
+							end: endDate,
+							title: detailedTitle,
+							backgroundColor: '#3b82f6'
+						});
+					}
+				});
+			});
 		}
 
 		if (transportations) {
@@ -112,7 +167,8 @@
 						id: transportation.id,
 						start: transportation.date || '', // Ensure it's a string
 						end: transportation.end_date || transportation.date || '', // Ensure it's a string
-						title: transportation.name + (transportation.type ? ` (${transportation.type})` : '')
+						title: transportation.name + (transportation.type ? ` (${transportation.type})` : ''),
+						backgroundColor: '#10b981'
 					}))
 			);
 		}
@@ -121,12 +177,61 @@
 			dates = dates.concat(
 				lodging
 					.filter((i) => i.check_in)
-					.map((lodging) => ({
-						id: lodging.id,
-						start: lodging.check_in || '', // Ensure it's a string
-						end: lodging.check_out || lodging.check_in || '', // Ensure it's a string
-						title: lodging.name
-					}))
+					.map((lodging) => {
+						const checkIn = lodging.check_in;
+						const checkOut = lodging.check_out || lodging.check_in;
+						if (!checkIn) return null;
+
+						const isAlldayLodging: boolean = isAllDay(checkIn as string);
+
+						let startDate: string;
+						let endDate: string;
+
+						if (isAlldayLodging) {
+							// For all-day, use date part only, no timezone conversion
+							startDate = (checkIn as string).split('T')[0];
+
+							const endDateObj = new Date(checkOut as string);
+							endDateObj.setDate(endDateObj.getDate());
+							endDate = endDateObj.toISOString().split('T')[0];
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: `${getLodgingIcon(lodging.type)} ${lodging.name}`,
+								backgroundColor: '#f59e0b'
+							};
+						} else {
+							// Only use timezone if not all-day
+							const lodgingTimezone = lodging.timezone || userTimezone;
+							const checkInDateTime = new Date(checkIn as string);
+							const checkOutDateTime = new Date(checkOut as string);
+
+							startDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkInDateTime);
+
+							endDate = new Intl.DateTimeFormat('sv-SE', {
+								timeZone: lodgingTimezone,
+								year: 'numeric',
+								month: '2-digit',
+								day: '2-digit'
+							}).format(checkOutDateTime);
+
+							return {
+								id: lodging.id,
+								start: startDate,
+								end: endDate,
+								title: lodging.name,
+								backgroundColor: '#f59e0b'
+							};
+						}
+					})
+					.filter((item) => item !== null)
 			);
 		}
 
@@ -139,11 +244,6 @@
 
 	let adventures: Adventure[] = [];
 
-	// Add this after your existing MapLibre markers
-
-	// Add this after your existing MapLibre markers
-
-	// Create line data from orderedItems
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items
@@ -651,7 +751,7 @@
 	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
-				<div class="dropdown dropdown-top dropdown-end">
+				<div class="dropdown dropdown-top dropdown-end z-[999]">
 					<div tabindex="0" role="button" class="btn m-1 size-16 btn-primary">
 						<Plus class="w-8 h-8" />
 					</div>
@@ -844,100 +944,39 @@
 	{/if}
 
 	{#if currentView == 'all'}
-		{#if adventures.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-2">{$t('adventures.linked_adventures')}</h1>
-
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each adventures as adventure}
-					<AdventureCard
-						user={data.user}
-						on:edit={editAdventure}
-						on:delete={deleteAdventure}
-						{adventure}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if transportations.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.transportations')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each transportations as transportation}
-					<TransportationCard
-						{transportation}
-						user={data?.user}
-						on:delete={(event) => {
-							transportations = transportations.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editTransportation}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if lodging.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.lodging')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each lodging as hotel}
-					<LodgingCard
-						lodging={hotel}
-						user={data?.user}
-						on:delete={(event) => {
-							lodging = lodging.filter((t) => t.id != event.detail);
-						}}
-						on:edit={editLodging}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if notes.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.notes')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each notes as note}
-					<NoteCard
-						{note}
-						user={data.user || null}
-						on:edit={(event) => {
-							noteToEdit = event.detail;
-							isNoteModalOpen = true;
-						}}
-						on:delete={(event) => {
-							notes = notes.filter((n) => n.id != event.detail);
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		{#if checklists.length > 0}
-			<h1 class="text-center font-bold text-4xl mt-4 mb-4">{$t('adventures.checklists')}</h1>
-			<div class="flex flex-wrap gap-4 mr-4 justify-center content-center">
-				{#each checklists as checklist}
-					<ChecklistCard
-						{checklist}
-						user={data.user || null}
-						on:delete={(event) => {
-							checklists = checklists.filter((n) => n.id != event.detail);
-						}}
-						on:edit={(event) => {
-							checklistToEdit = event.detail;
-							isShowingChecklistModal = true;
-						}}
-						{collection}
-					/>
-				{/each}
-			</div>
-		{/if}
-
-		<!-- if none found -->
-		{#if adventures.length == 0 && transportations.length == 0 && notes.length == 0 && checklists.length == 0 && lodging.length == 0}
-			<NotFound error={undefined} />
-		{/if}
+		<CollectionAllView
+			{adventures}
+			{transportations}
+			{lodging}
+			{notes}
+			{checklists}
+			user={data.user}
+			{collection}
+			on:editAdventure={editAdventure}
+			on:deleteAdventure={deleteAdventure}
+			on:editTransportation={editTransportation}
+			on:deleteTransportation={(event) => {
+				transportations = transportations.filter((t) => t.id != event.detail);
+			}}
+			on:editLodging={editLodging}
+			on:deleteLodging={(event) => {
+				lodging = lodging.filter((t) => t.id != event.detail);
+			}}
+			on:editNote={(event) => {
+				noteToEdit = event.detail;
+				isNoteModalOpen = true;
+			}}
+			on:deleteNote={(event) => {
+				notes = notes.filter((n) => n.id != event.detail);
+			}}
+			on:editChecklist={(event) => {
+				checklistToEdit = event.detail;
+				isShowingChecklistModal = true;
+			}}
+			on:deleteChecklist={(event) => {
+				checklists = checklists.filter((n) => n.id != event.detail);
+			}}
+		/>
 	{/if}
 
 	{#if collection.start_date && collection.end_date}

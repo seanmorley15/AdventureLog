@@ -295,7 +295,10 @@
     "delete_collection_warning": "您确定要删除此系列吗？\n该动作不能撤消。",
     "done": "完毕",
     "loading_adventures": "加载冒险...",
-    "name_location": "名称，位置"
+    "name_location": "名称，位置",
+    "collection_contents": "收集内容",
+    "check_in": "报到",
+    "check_out": "查看"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -368,7 +371,12 @@
     "show_map": "显示地图",
     "show_map_labels": "显示地图标签",
     "total_cities": "总城市",
-    "total_countries": "总国家"
+    "total_countries": "总国家",
+    "newest_first": "最新的第一",
+    "oldest_first": "最古老的第一",
+    "unvisited_first": "首先未访问",
+    "visited_first": "首先访问",
+    "total_items": "总项目"
   },
   "users": {
     "no_users_found": "未找到已公开个人资料的用户。"
@@ -685,5 +693,19 @@
   },
   "google_maps": {
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。"
+  },
+  "calendar": {
+    "all_categories": "所有类别",
+    "all_day_event": "全天活动",
+    "calendar_overview": "日历概述",
+    "categories": "类别",
+    "day": "天",
+    "events_scheduled": "预定事件",
+    "filter_by_category": "按类别过滤",
+    "filtered_results": "过滤结果",
+    "month": "月",
+    "today": "今天",
+    "total_events": "总事件",
+    "week": "星期"
   }
 }
