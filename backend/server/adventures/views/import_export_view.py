@@ -320,7 +320,9 @@ class BackupViewSet(viewsets.ViewSet):
             return Response({'error': 'Invalid JSON in backup file'}, 
                           status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response({'error': f'Import failed: {str(e)}'}, 
+            import logging
+            logging.error("Import failed", exc_info=True)
+            return Response({'error': 'An internal error occurred during import'}, 
                           status=status.HTTP_400_BAD_REQUEST)
         finally:
             os.unlink(tmp_file_path)
