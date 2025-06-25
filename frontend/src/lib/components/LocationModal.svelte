@@ -23,7 +23,6 @@
 
 	let images: { id: string; image: string; is_primary: boolean; immich_id: string | null }[] = [];
 	let warningMessage: string = '';
-	let constrainDates: boolean = false;
 
 	let categories: Category[] = [];
 
@@ -97,7 +96,7 @@
 
 	let wikiError: string = '';
 
-	let adventure: Location = {
+	let location: Location = {
 		id: '',
 		name: '',
 		visits: [],
@@ -121,24 +120,24 @@
 		attachments: []
 	};
 
-	export let adventureToEdit: Location | null = null;
+	export let locationToEdit: Location | null = null;
 
-	adventure = {
-		id: adventureToEdit?.id || '',
-		name: adventureToEdit?.name || '',
-		link: adventureToEdit?.link || null,
-		description: adventureToEdit?.description || null,
-		tags: adventureToEdit?.tags || [],
-		rating: adventureToEdit?.rating || NaN,
-		is_public: adventureToEdit?.is_public || false,
-		latitude: adventureToEdit?.latitude || NaN,
-		longitude: adventureToEdit?.longitude || NaN,
-		location: adventureToEdit?.location || null,
-		images: adventureToEdit?.images || [],
-		user: adventureToEdit?.user || null,
-		visits: adventureToEdit?.visits || [],
-		is_visited: adventureToEdit?.is_visited || false,
-		category: adventureToEdit?.category || {
+	location = {
+		id: locationToEdit?.id || '',
+		name: locationToEdit?.name || '',
+		link: locationToEdit?.link || null,
+		description: locationToEdit?.description || null,
+		tags: locationToEdit?.tags || [],
+		rating: locationToEdit?.rating || NaN,
+		is_public: locationToEdit?.is_public || false,
+		latitude: locationToEdit?.latitude || NaN,
+		longitude: locationToEdit?.longitude || NaN,
+		location: locationToEdit?.location || null,
+		images: locationToEdit?.images || [],
+		user: locationToEdit?.user || null,
+		visits: locationToEdit?.visits || [],
+		is_visited: locationToEdit?.is_visited || false,
+		category: locationToEdit?.category || {
 			id: '',
 			name: '',
 			display_name: '',
@@ -146,7 +145,7 @@
 			user: ''
 		},
 
-		attachments: adventureToEdit?.attachments || []
+		attachments: locationToEdit?.attachments || []
 	};
 
 	onMount(async () => {
@@ -183,15 +182,15 @@
 
 	let isLoading: boolean = false;
 
-	images = adventure.images || [];
+	images = location.images || [];
 	$: {
-		if (!adventure.rating) {
-			adventure.rating = NaN;
+		if (!location.rating) {
+			location.rating = NaN;
 		}
 	}
 
 	function deleteAttachment(event: CustomEvent<string>) {
-		adventure.attachments = adventure.attachments.filter(
+		location.attachments = location.attachments.filter(
 			(attachment) => attachment.id !== event.detail
 		);
 	}
@@ -210,7 +209,7 @@
 			});
 			if (res.ok) {
 				let newAttachment = (await res.json()) as Attachment;
-				adventure.attachments = adventure.attachments.map((attachment) => {
+				location.attachments = location.attachments.map((attachment) => {
 					if (attachment.id === newAttachment.id) {
 						return newAttachment;
 					}
@@ -245,7 +244,7 @@
 
 		const formData = new FormData();
 		formData.append('file', file);
-		formData.append('location', adventure.id);
+		formData.append('location', location.id);
 		formData.append('name', attachmentName);
 
 		try {
@@ -256,7 +255,7 @@
 
 			if (res.ok) {
 				const newData = deserialize(await res.text()) as { data: Attachment };
-				adventure.attachments = [...adventure.attachments, newData.data];
+				location.attachments = [...location.attachments, newData.data];
 				addToast('success', $t('adventures.attachment_upload_success'));
 				attachmentName = '';
 			} else {
@@ -273,7 +272,7 @@
 		}
 	}
 
-	let imageSearch: string = adventure.name || '';
+	let imageSearch: string = location.name || '';
 
 	async function removeImage(id: string) {
 		let res = await fetch(`/api/images/${id}/image_delete`, {
@@ -281,7 +280,7 @@
 		});
 		if (res.status === 204) {
 			images = images.filter((image) => image.id !== id);
-			adventure.images = images;
+			location.images = images;
 			addToast('success', $t('adventures.image_removed_success'));
 		} else {
 			addToast('error', $t('adventures.image_removed_error'));
@@ -291,7 +290,7 @@
 	let isDetails: boolean = true;
 
 	function saveAndClose() {
-		dispatch('save', adventure);
+		dispatch('save', location);
 		close();
 	}
 
@@ -308,7 +307,7 @@
 				}
 				return image;
 			});
-			adventure.images = images;
+			location.images = images;
 		} else {
 			console.error('Error in makePrimaryImage:', res);
 		}
@@ -326,7 +325,7 @@
 	async function uploadImage(file: File) {
 		let formData = new FormData();
 		formData.append('image', file);
-		formData.append('location', adventure.id);
+		formData.append('location', location.id);
 
 		let res = await fetch(`/locations?/image`, {
 			method: 'POST',
@@ -341,7 +340,7 @@
 				immich_id: null
 			};
 			images = [...images, newImage];
-			adventure.images = images;
+			location.images = images;
 			addToast('success', $t('adventures.image_upload_success'));
 		} else {
 			addToast('error', $t('adventures.image_upload_error'));
@@ -359,7 +358,7 @@
 			let file = new File([data], 'image.jpg', { type: 'image/jpeg' });
 			let formData = new FormData();
 			formData.append('image', file);
-			formData.append('adventure', adventure.id);
+			formData.append('adventure', location.id);
 
 			await uploadImage(file);
 			url = '';
@@ -383,7 +382,7 @@
 			wikiImageError = '';
 			let formData = new FormData();
 			formData.append('image', file);
-			formData.append('location', adventure.id);
+			formData.append('location', location.id);
 			let res2 = await fetch(`/locations?/image`, {
 				method: 'POST',
 				body: formData
@@ -397,7 +396,7 @@
 					immich_id: null
 				};
 				images = [...images, newImage];
-				adventure.images = images;
+				location.images = images;
 				addToast('success', $t('adventures.image_upload_success'));
 			} else {
 				addToast('error', $t('adventures.image_upload_error'));
@@ -417,10 +416,10 @@
 	}
 
 	async function generateDesc() {
-		let res = await fetch(`/api/generate/desc/?name=${adventure.name}`);
+		let res = await fetch(`/api/generate/desc/?name=${location.name}`);
 		let data = await res.json();
 		if (data.extract?.length > 0) {
-			adventure.description = data.extract;
+			location.description = data.extract;
 			wikiError = '';
 		} else {
 			wikiError = $t('adventures.no_description_found');
@@ -433,20 +432,20 @@
 		isLoading = true;
 
 		// if category icon is empty, set it to the default icon
-		if (adventure.category?.icon == '' || adventure.category?.icon == null) {
-			if (adventure.category) {
-				adventure.category.icon = '🌍';
+		if (location.category?.icon == '' || location.category?.icon == null) {
+			if (location.category) {
+				location.category.icon = '🌍';
 			}
 		}
 
-		if (adventure.id === '') {
-			if (adventure.category?.display_name == '') {
+		if (location.id === '') {
+			if (location.category?.display_name == '') {
 				if (categories.some((category) => category.name === 'general')) {
-					adventure.category = categories.find(
+					location.category = categories.find(
 						(category) => category.name === 'general'
 					) as Category;
 				} else {
-					adventure.category = {
+					location.category = {
 						id: '',
 						name: 'general',
 						display_name: 'General',
@@ -458,7 +457,7 @@
 
 			// add this collection to the adventure
 			if (collection && collection.id) {
-				adventure.collections = [collection.id];
+				location.collections = [collection.id];
 			}
 
 			let res = await fetch('/api/locations', {
@@ -466,11 +465,11 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(adventure)
+				body: JSON.stringify(location)
 			});
 			let data = await res.json();
 			if (data.id) {
-				adventure = data as Location;
+				location = data as Location;
 				isDetails = false;
 				warningMessage = '';
 				addToast('success', $t('adventures.location_created'));
@@ -480,16 +479,16 @@
 				addToast('error', $t('adventures.location_create_error'));
 			}
 		} else {
-			let res = await fetch(`/api/locations/${adventure.id}`, {
+			let res = await fetch(`/api/locations/${location.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(adventure)
+				body: JSON.stringify(location)
 			});
 			let data = await res.json();
 			if (data.id) {
-				adventure = data as Location;
+				location = data as Location;
 				isDetails = false;
 				warningMessage = '';
 				addToast('success', $t('adventures.location_updated'));
@@ -498,7 +497,7 @@
 				addToast('error', $t('adventures.location_update_error'));
 			}
 		}
-		imageSearch = adventure.name;
+		imageSearch = location.name;
 		isLoading = false;
 	}
 </script>
@@ -509,9 +508,9 @@
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
 		<h3 class="font-bold text-2xl">
-			{adventureToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
+			{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
 		</h3>
-		{#if adventure.id === '' || isDetails}
+		{#if location.id === '' || isDetails}
 			<div class="modal-action items-center">
 				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
 					<!-- Grid layout for form fields -->
@@ -529,7 +528,7 @@
 									type="text"
 									id="name"
 									name="name"
-									bind:value={adventure.name}
+									bind:value={location.name}
 									class="input input-bordered w-full"
 									required
 								/>
@@ -539,7 +538,7 @@
 									>{$t('adventures.category')}<span class="text-red-500">*</span></label
 								><br />
 
-								<CategoryDropdown bind:categories bind:selected_category={adventure.category} />
+								<CategoryDropdown bind:categories bind:selected_category={location.category} />
 							</div>
 							<div>
 								<label for="rating">{$t('adventures.rating')}</label><br />
@@ -548,7 +547,7 @@
 									min="0"
 									max="5"
 									hidden
-									bind:value={adventure.rating}
+									bind:value={location.rating}
 									id="rating"
 									name="rating"
 									class="input input-bordered w-full max-w-xs mt-1"
@@ -558,48 +557,48 @@
 										type="radio"
 										name="rating-2"
 										class="rating-hidden"
-										checked={Number.isNaN(adventure.rating)}
+										checked={Number.isNaN(location.rating)}
 									/>
 									<input
 										type="radio"
 										name="rating-2"
 										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (adventure.rating = 1)}
-										checked={adventure.rating === 1}
+										on:click={() => (location.rating = 1)}
+										checked={location.rating === 1}
 									/>
 									<input
 										type="radio"
 										name="rating-2"
 										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (adventure.rating = 2)}
-										checked={adventure.rating === 2}
+										on:click={() => (location.rating = 2)}
+										checked={location.rating === 2}
 									/>
 									<input
 										type="radio"
 										name="rating-2"
 										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (adventure.rating = 3)}
-										checked={adventure.rating === 3}
+										on:click={() => (location.rating = 3)}
+										checked={location.rating === 3}
 									/>
 									<input
 										type="radio"
 										name="rating-2"
 										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (adventure.rating = 4)}
-										checked={adventure.rating === 4}
+										on:click={() => (location.rating = 4)}
+										checked={location.rating === 4}
 									/>
 									<input
 										type="radio"
 										name="rating-2"
 										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (adventure.rating = 5)}
-										checked={adventure.rating === 5}
+										on:click={() => (location.rating = 5)}
+										checked={location.rating === 5}
 									/>
-									{#if adventure.rating}
+									{#if location.rating}
 										<button
 											type="button"
 											class="btn btn-sm btn-error ml-2"
-											on:click={() => (adventure.rating = NaN)}
+											on:click={() => (location.rating = NaN)}
 										>
 											{$t('adventures.remove')}
 										</button>
@@ -613,14 +612,14 @@
 										type="text"
 										id="link"
 										name="link"
-										bind:value={adventure.link}
+										bind:value={location.link}
 										class="input input-bordered w-full"
 									/>
 								</div>
 							</div>
 							<div>
 								<label for="description">{$t('adventures.description')}</label><br />
-								<MarkdownEditor bind:text={adventure.description} />
+								<MarkdownEditor bind:text={location.description} />
 								<div class="mt-2">
 									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_location_desc')}>
 										<button type="button" class="btn btn-neutral mt-2" on:click={generateDesc}
@@ -630,7 +629,7 @@
 									<p class="text-red-500">{wikiError}</p>
 								</div>
 							</div>
-							{#if !adventureToEdit || (adventureToEdit.collections && adventureToEdit.collections.length === 0)}
+							{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
 								<div>
 									<div class="form-control flex items-start mt-1">
 										<label class="label cursor-pointer flex items-start space-x-2">
@@ -640,7 +639,7 @@
 												class="toggle toggle-primary"
 												id="is_public"
 												name="is_public"
-												bind:checked={adventure.is_public}
+												bind:checked={location.is_public}
 											/>
 										</label>
 									</div>
@@ -649,12 +648,12 @@
 						</div>
 					</div>
 
-					<LocationDropdown bind:item={adventure} bind:triggerMarkVisted {initialLatLng} />
+					<LocationDropdown bind:item={location} bind:triggerMarkVisted {initialLatLng} />
 
 					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
 						<input type="checkbox" />
 						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.tags')} ({adventure.tags?.length || 0})
+							{$t('adventures.tags')} ({location.tags?.length || 0})
 						</div>
 						<div class="collapse-content">
 							<input
@@ -662,14 +661,14 @@
 								id="tags"
 								name="tags"
 								hidden
-								bind:value={adventure.tags}
+								bind:value={location.tags}
 								class="input input-bordered w-full"
 							/>
-							<ActivityComplete bind:activities={adventure.tags} />
+							<ActivityComplete bind:activities={location.tags} />
 						</div>
 					</div>
 
-					<DateRangeCollapse type="adventure" {collection} bind:visits={adventure.visits} />
+					<DateRangeCollapse type="adventure" {collection} bind:visits={location.visits} />
 
 					<div>
 						<div class="mt-4">
@@ -711,11 +710,11 @@
 				<div class="collapse collapse-plus bg-base-200 mb-4">
 					<input type="checkbox" />
 					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.attachments')} ({adventure.attachments?.length || 0})
+						{$t('adventures.attachments')} ({location.attachments?.length || 0})
 					</div>
 					<div class="collapse-content">
 						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-							{#each adventure.attachments as attachment}
+							{#each location.attachments as attachment}
 								<AttachmentCard
 									{attachment}
 									on:delete={deleteAttachment}
@@ -785,7 +784,7 @@
 			<div class="collapse collapse-plus bg-base-200 mb-4">
 				<input type="checkbox" checked />
 				<div class="collapse-title text-xl font-medium">
-					{$t('adventures.images')} ({adventure.images?.length || 0})
+					{$t('adventures.images')} ({location.images?.length || 0})
 				</div>
 				<div class="collapse-content">
 					<label for="image" class="block font-medium mb-2">
@@ -802,7 +801,7 @@
 							multiple
 							on:change={handleMultipleFiles}
 						/>
-						<input type="hidden" name="adventure" value={adventure.id} id="adventure" />
+						<input type="hidden" name="adventure" value={location.id} id="adventure" />
 					</form>
 
 					<div class="mb-4">
@@ -848,7 +847,7 @@
 
 					{#if immichIntegration}
 						<ImmichSelect
-							{adventure}
+							adventure={location}
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
@@ -862,7 +861,7 @@
 									immich_id: e.detail.immich_id
 								};
 								images = [...images, newImage];
-								adventure.images = images;
+								location.images = images;
 								addToast('success', $t('adventures.image_upload_success'));
 							}}
 						/>
@@ -917,17 +916,17 @@
 			</div>
 		{/if}
 
-		{#if adventure.is_public && adventure.id}
+		{#if location.is_public && location.id}
 			<div class="bg-neutral p-4 mt-2 rounded-md shadow-sm text-neutral-content">
 				<p class=" font-semibold">{$t('adventures.share_location')}</p>
 				<div class="flex items-center justify-between">
 					<p class="text-card-foreground font-mono">
-						{window.location.origin}/locations/{adventure.id}
+						{window.location.origin}/locations/{location.id}
 					</p>
 					<button
 						type="button"
 						on:click={() => {
-							navigator.clipboard.writeText(`${window.location.origin}/locations/${adventure.id}`);
+							navigator.clipboard.writeText(`${window.location.origin}/locations/${location.id}`);
 						}}
 						class="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2"
 					>

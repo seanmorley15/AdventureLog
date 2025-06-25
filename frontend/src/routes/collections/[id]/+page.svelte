@@ -15,7 +15,7 @@
 	import DayGrid from '@event-calendar/day-grid';
 
 	import Plus from '~icons/mdi/plus';
-	import AdventureCard from '$lib/components/LocationCard.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
 	import AdventureLink from '$lib/components/LocationLink.svelte';
 	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
@@ -39,7 +39,7 @@
 
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import AdventureModal from '$lib/components/LocationModal.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
@@ -517,14 +517,14 @@
 			},
 			attachments: []
 		};
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
 	let adventureToEdit: Location | null = null;
 	let transportationToEdit: Transportation | null = null;
 	let isShowingLodgingModal: boolean = false;
 	let lodgingToEdit: Lodging | null = null;
-	let isAdventureModalOpen: boolean = false;
+	let isLocationModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
 	let checklistToEdit: Checklist | null;
@@ -533,7 +533,7 @@
 
 	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
 	function editTransportation(event: CustomEvent<Transportation>) {
@@ -557,7 +557,7 @@
 		} else {
 			adventures = [event.detail, ...adventures];
 		}
-		isAdventureModalOpen = false;
+		isLocationModalOpen = false;
 	}
 
 	let isPopupOpen = false;
@@ -688,10 +688,10 @@
 	/>
 {/if}
 
-{#if isAdventureModalOpen}
-	<AdventureModal
-		{adventureToEdit}
-		on:close={() => (isAdventureModalOpen = false)}
+{#if isLocationModalOpen}
+	<LocationModal
+		locationToEdit={adventureToEdit}
+		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreateAdventure}
 		{collection}
 	/>
@@ -775,7 +775,7 @@
 						<button
 							class="btn btn-primary"
 							on:click={() => {
-								isAdventureModalOpen = true;
+								isLocationModalOpen = true;
 								adventureToEdit = null;
 							}}
 						>
@@ -1069,7 +1069,7 @@
 								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{#if dayAdventures.length > 0}
 										{#each dayAdventures as adventure}
-											<AdventureCard
+											<LocationCard
 												user={data.user}
 												on:edit={editAdventure}
 												on:delete={deleteAdventure}
@@ -1224,7 +1224,7 @@
 												</div>
 											</div>
 											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
-												<AdventureCard
+												<LocationCard
 													user={data.user}
 													on:edit={editAdventure}
 													on:delete={deleteAdventure}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	export let data;
-	import AdventureCard from '$lib/components/LocationCard.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
 	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
@@ -359,7 +359,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each adventures as adventure}
 						<div class="adventure-card">
-							<AdventureCard {adventure} user={null} />
+							<LocationCard {adventure} user={null} />
 						</div>
 					{/each}
 				</div>

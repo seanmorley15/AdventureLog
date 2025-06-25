@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdventureModal from '$lib/components/LocationModal.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import type { Location, VisitedRegion } from '$lib/types.js';
@@ -457,7 +457,7 @@
 </div>
 
 {#if createModalOpen}
-	<AdventureModal
+	<LocationModal
 		on:close={() => (createModalOpen = false)}
 		on:save={createNewAdventure}
 		{initialLatLng}

@@ -2,8 +2,8 @@
 	import { enhance, deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import AdventureCard from '$lib/components/LocationCard.svelte';
-	import AdventureModal from '$lib/components/LocationModal.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
@@ -42,7 +42,7 @@
 	let is_category_modal_open: boolean = false;
 	let typeString: string = '';
 	let adventureToEdit: Location | null = null;
-	let isAdventureModalOpen: boolean = false;
+	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
 
 	// Reactive statements
@@ -141,12 +141,12 @@
 		} else {
 			adventures = [event.detail, ...adventures];
 		}
-		isAdventureModalOpen = false;
+		isLocationModalOpen = false;
 	}
 
 	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
 	function toggleSidebar() {
@@ -167,10 +167,10 @@
 	<meta name="description" content="View your completed and planned adventures." />
 </svelte:head>
 
-{#if isAdventureModalOpen}
-	<AdventureModal
-		{adventureToEdit}
-		on:close={() => (isAdventureModalOpen = false)}
+{#if isLocationModalOpen}
+	<LocationModal
+		locationToEdit={adventureToEdit}
+		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreate}
 	/>
 {/if}
@@ -250,7 +250,7 @@
 							class="btn btn-primary btn-wide mt-6 gap-2"
 							on:click={() => {
 								adventureToEdit = null;
-								isAdventureModalOpen = true;
+								isLocationModalOpen = true;
 							}}
 						>
 							<Plus class="w-5 h-5" />
@@ -263,7 +263,7 @@
 						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
 						{#each adventures as adventure}
-							<AdventureCard
+							<LocationCard
 								user={data.user}
 								{adventure}
 								on:delete={deleteAdventure}
@@ -503,7 +503,7 @@
 				<button
 					class="btn btn-primary gap-2 w-full"
 					on:click={() => {
-						isAdventureModalOpen = true;
+						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}
 				>

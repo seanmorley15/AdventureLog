@@ -4,7 +4,7 @@
 	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import AdventureCard from './LocationCard.svelte';
+	import LocationCard from './LocationCard.svelte';
 	let modal: HTMLDialogElement;
 
 	// Icons - following the worldtravel pattern
@@ -274,7 +274,7 @@
 					<!-- Adventures Grid -->
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4">
 						{#each filteredAdventures as adventure}
-							<AdventureCard {user} type="link" {adventure} on:link={add} />
+							<LocationCard {user} type="link" {adventure} on:link={add} />
 						{/each}
 					</div>
 				{/if}

@@ -24,7 +24,7 @@
 	import Filter from '~icons/mdi/filter-variant';
 
 	// Component imports
-	import AdventureCard from './LocationCard.svelte';
+	import LocationCard from './LocationCard.svelte';
 	import TransportationCard from './TransportationCard.svelte';
 	import LodgingCard from './LodgingCard.svelte';
 	import NoteCard from './NoteCard.svelte';
@@ -432,7 +432,7 @@
 		</div>
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mx-4">
 			{#each filteredAdventures as adventure}
-				<AdventureCard
+				<LocationCard
 					{user}
 					on:edit={handleEditAdventure}
 					on:delete={handleDeleteAdventure}

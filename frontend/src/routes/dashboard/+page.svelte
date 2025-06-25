@@ -1,5 +1,5 @@
 <script lang="ts">
-	import AdventureCard from '$lib/components/LocationCard.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
@@ -178,7 +178,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each recentAdventures as adventure}
 						<div class="adventure-card">
-							<AdventureCard {adventure} user={data.user} readOnly />
+							<LocationCard {adventure} user={data.user} readOnly />
 						</div>
 					{/each}
 				</div>
