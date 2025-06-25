@@ -13,6 +13,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated
 
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
@@ -23,6 +24,7 @@ from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 User = get_user_model()
 
 class BackupViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
     """
     Simple ViewSet for handling backup and import operations
     """

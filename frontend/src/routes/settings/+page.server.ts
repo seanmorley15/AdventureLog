@@ -262,7 +262,7 @@ export const actions: Actions = {
 			return { success: true };
 		}
 	},
-	changeEmail: async (event) => {
+	restoreData: async (event) => {
 		if (!event.locals.user) {
 			return redirect(302, '/');
 		}
@@ -270,28 +270,51 @@ export const actions: Actions = {
 		if (!sessionId) {
 			return redirect(302, '/');
 		}
-		const formData = await event.request.formData();
-		const new_email = formData.get('new_email') as string | null | undefined;
-		if (!new_email) {
-			return fail(400, { message: 'auth.email_required' });
-		} else {
+
+		try {
+			const formData = await event.request.formData();
+			const file = formData.get('file') as File | null | undefined;
+			const confirm = formData.get('confirm') as string | null | undefined;
+
+			if (!file || file.size === 0) {
+				return fail(400, { message: 'settings.no_file_selected' });
+			}
+
+			if (confirm !== 'yes') {
+				return fail(400, { message: 'settings.confirmation_required' });
+			}
+
 			let csrfToken = await fetchCSRFToken();
-			let res = await fetch(`${endpoint}/auth/change-email/`, {
+
+			// Create FormData for the API request
+			const apiFormData = new FormData();
+			apiFormData.append('file', file);
+			apiFormData.append('confirm', 'yes');
+
+			let res = await fetch(`${endpoint}/api/backup/import/`, {
 				method: 'POST',
 				headers: {
-					Referer: event.url.origin, // Include Referer header
+					Referer: event.url.origin,
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'Content-Type': 'application/json',
 					'X-CSRFToken': csrfToken
 				},
-				body: JSON.stringify({
-					new_email
-				})
+				body: apiFormData
 			});
+
 			if (!res.ok) {
-				return fail(res.status, await res.json());
+				const errorData = await res.json();
+				return fail(res.status, {
+					message: errorData.code
+						? `settings.restore_error_${errorData.code}`
+						: 'settings.generic_error',
+					details: errorData
+				});
 			}
+
 			return { success: true };
+		} catch (error) {
+			console.error('Restore error:', error);
+			return fail(500, { message: 'settings.generic_error' });
 		}
 	}
 };
