@@ -31,9 +31,9 @@
 			section: 'main'
 		},
 		{
-			path: '/adventures',
+			path: '/locations',
 			icon: MapMarker,
-			label: 'navbar.my_adventures',
+			label: 'locations.my_locations',
 			section: 'main'
 		},
 		{

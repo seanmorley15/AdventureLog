@@ -20,7 +20,7 @@
 	let constrainDates: boolean = false;
 
 	let isReadOnly =
-		!(note && user?.uuid == note?.user_id) &&
+		!(note && user?.uuid == note?.user) &&
 		!(user && collection && collection.shared_with && collection.shared_with.includes(user.uuid)) &&
 		!!note;
 

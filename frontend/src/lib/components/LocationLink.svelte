@@ -1,10 +1,10 @@
 <script lang="ts">
-	import type { Adventure, User } from '$lib/types';
+	import type { Location, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
-	import AdventureCard from './AdventureCard.svelte';
+	import LocationCard from './LocationCard.svelte';
 	let modal: HTMLDialogElement;
 
 	// Icons - following the worldtravel pattern
@@ -17,8 +17,8 @@
 	import Public from '~icons/mdi/earth';
 	import Private from '~icons/mdi/lock';
 
-	let adventures: Adventure[] = [];
-	let filteredAdventures: Adventure[] = [];
+	let adventures: Location[] = [];
+	let filteredAdventures: Location[] = [];
 	let searchQuery: string = '';
 	let filterOption: string = 'all';
 	let isLoading: boolean = true;
@@ -69,7 +69,7 @@
 			modal.showModal();
 		}
 
-		let res = await fetch(`/api/adventures/all/?include_collections=true`, {
+		let res = await fetch(`/api/locations/all/?include_collections=true`, {
 			method: 'GET'
 		});
 
@@ -77,7 +77,7 @@
 
 		// Filter out adventures that are already linked to the collections
 		if (collectionId) {
-			adventures = newAdventures.filter((adventure: Adventure) => {
+			adventures = newAdventures.filter((adventure: Location) => {
 				return !(adventure.collections ?? []).includes(collectionId);
 			});
 		} else {
@@ -91,7 +91,7 @@
 		dispatch('close');
 	}
 
-	function add(event: CustomEvent<Adventure>) {
+	function add(event: CustomEvent<Location>) {
 		adventures = adventures.filter((a) => a.id !== event.detail.id);
 		dispatch('add', event.detail);
 	}
@@ -134,7 +134,7 @@
 							{filteredAdventures.length}
 							{$t('worldtravel.of')}
 							{totalAdventures}
-							{$t('navbar.adventures')}
+							{$t('locations.locations')}
 						</p>
 					</div>
 				</div>
@@ -252,7 +252,7 @@
 						</div>
 						{#if searchQuery || filterOption !== 'all'}
 							<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-								{$t('adventures.no_adventures_found')}
+								{$t('adventures.no_locations_found')}
 							</h3>
 							<p class="text-base-content/50 text-center max-w-md mb-6">
 								{$t('collection.try_different_search')}
@@ -274,7 +274,7 @@
 					<!-- Adventures Grid -->
 					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4">
 						{#each filteredAdventures as adventure}
-							<AdventureCard {user} type="link" {adventure} on:link={add} />
+							<LocationCard {user} type="link" {adventure} on:link={add} />
 						{/each}
 					</div>
 				{/if}

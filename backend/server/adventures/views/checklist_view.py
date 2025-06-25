@@ -6,32 +6,22 @@ from adventures.models import Checklist
 from adventures.serializers import ChecklistSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from rest_framework.permissions import IsAuthenticated
 
 class ChecklistViewSet(viewsets.ModelViewSet):
-    queryset = Checklist.objects.all()
     serializer_class = ChecklistSerializer
-    permission_classes = [IsOwnerOrSharedWithFullAccess]
+    permission_classes = [IsAuthenticated, IsOwnerOrSharedWithFullAccess]
     filterset_fields = ['is_public', 'collection']
 
-    # return error message if user is not authenticated on the root endpoint
     def list(self, request, *args, **kwargs):
-        # Prevent listing all adventures
-        return Response({"detail": "Listing all checklists is not allowed."},
-                        status=status.HTTP_403_FORBIDDEN)
-    
-    @action(detail=False, methods=['get'])
-    def all(self, request):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=400)
         queryset = Checklist.objects.filter(
-            Q(user_id=request.user.id)
+            Q(user=request.user)
         )
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
-    
 
     def get_queryset(self):
-        # if the user is not authenticated return only public transportations for  retrieve action
+        # if the user is not authenticated return only public checklists for  retrieve action
         if not self.request.user.is_authenticated:
             if self.action == 'retrieve':
                 return Checklist.objects.filter(is_public=True).distinct().order_by('-updated_at')
@@ -39,14 +29,14 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
         
         if self.action == 'retrieve':
-            # For individual adventure retrieval, include public adventures
+            # For individual adventure retrieval, include public locations
             return Checklist.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(is_public=True) | Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
         else:
-            # For other actions, include user's own adventures and shared adventures
+            # For other actions, include user's own locations and shared locations
             return Checklist.objects.filter(
-                Q(user_id=self.request.user.id) | Q(collection__shared_with=self.request.user)
+                Q(user=self.request.user) | Q(collection__shared_with=self.request.user)
             ).distinct().order_by('-updated_at')
 
     def partial_update(self, request, *args, **kwargs):
@@ -65,11 +55,11 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
-            if new_collection.user_id != user or instance.user_id != user:
+            if new_collection.user != user or instance.user != user:
                 raise PermissionDenied("You do not have permission to use this collection.")
         elif new_collection is None:
             # Handle the case where the user is trying to set the collection to None
-            if instance.collection is not None and instance.collection.user_id != user:
+            if instance.collection is not None and instance.collection.user != user:
                 raise PermissionDenied("You cannot remove the collection as you are not the owner.")
         
         # Perform the update
@@ -94,11 +84,11 @@ class ChecklistViewSet(viewsets.ModelViewSet):
 
         if new_collection is not None and new_collection!=instance.collection:
             # Check if the user is the owner of the new collection
-            if new_collection.user_id != user or instance.user_id != user:
+            if new_collection.user != user or instance.user != user:
                 raise PermissionDenied("You do not have permission to use this collection.")
         elif new_collection is None:
             # Handle the case where the user is trying to set the collection to None
-            if instance.collection is not None and instance.collection.user_id != user:
+            if instance.collection is not None and instance.collection.user != user:
                 raise PermissionDenied("You cannot remove the collection as you are not the owner.")
         
         # Perform the update
@@ -119,12 +109,12 @@ class ChecklistViewSet(viewsets.ModelViewSet):
         if collection:
             user = self.request.user
             # Check if the user is the owner or is in the shared_with list
-            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
+            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
             # if collection the owner of the adventure is the owner of the collection
-            serializer.save(user_id=collection.user_id)
+            serializer.save(user=collection.user)
             return
 
         # Save the adventure with the current user as the owner
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)

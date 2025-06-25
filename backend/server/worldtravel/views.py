@@ -13,7 +13,7 @@ from django.contrib.gis.geos import Point
 from django.conf import settings
 from rest_framework.decorators import action
 from django.contrib.staticfiles import finders
-from adventures.models import Adventure
+from adventures.models import Location
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
@@ -28,7 +28,7 @@ def regions_by_country(request, country_code):
 @permission_classes([IsAuthenticated])
 def visits_by_country(request, country_code):
     country = get_object_or_404(Country, country_code=country_code)
-    visits = VisitedRegion.objects.filter(region__country=country, user_id=request.user.id)
+    visits = VisitedRegion.objects.filter(region__country=country, user=request.user.id)
 
     serializer = VisitedRegionSerializer(visits, many=True)
     return Response(serializer.data)
@@ -45,7 +45,7 @@ def cities_by_region(request, region_id):
 @permission_classes([IsAuthenticated])
 def visits_by_region(request, region_id):
     region = get_object_or_404(Region, id=region_id)
-    visits = VisitedCity.objects.filter(city__region=region, user_id=request.user.id)
+    visits = VisitedCity.objects.filter(city__region=region, user=request.user.id)
 
     serializer = VisitedCitySerializer(visits, many=True)
     return Response(serializer.data)
@@ -71,7 +71,7 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     # make a post action that will get all of the users adventures and check if the point is in any of the regions if so make a visited region object for that user if it does not already exist
     @action(detail=False, methods=['post'])
     def region_check_all_adventures(self, request):
-        adventures = Adventure.objects.filter(user_id=request.user.id, type='visited')
+        adventures = Location.objects.filter(user=request.user.id, type='visited')
         count = 0
         for adventure in adventures:
             if adventure.latitude is not None and adventure.longitude is not None:
@@ -79,8 +79,8 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
                     point = Point(float(adventure.longitude), float(adventure.latitude), srid=4326)
                     region = Region.objects.filter(geometry__contains=point).first()
                     if region:
-                        if not VisitedRegion.objects.filter(user_id=request.user.id, region=region).exists():
-                            VisitedRegion.objects.create(user_id=request.user, region=region)
+                        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
+                            VisitedRegion.objects.create(user=request.user, region=region)
                             count += 1
                 except Exception as e:
                     print(f"Error processing adventure {adventure.id}: {e}")
@@ -97,14 +97,14 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return VisitedRegion.objects.filter(user_id=self.request.user.id)
+        return VisitedRegion.objects.filter(user=self.request.user.id)
     
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        request.data['user_id'] = request.user
-        if VisitedRegion.objects.filter(user_id=request.user.id, region=request.data['region']).exists():
+        request.data['user'] = request.user
+        if VisitedRegion.objects.filter(user=request.user.id, region=request.data['region']).exists():
             return Response({"error": "Region already visited by user."}, status=400)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -115,7 +115,7 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
     def destroy(self, request, **kwargs):
         # delete by region id
         region = get_object_or_404(Region, id=kwargs['pk'])
-        visited_region = VisitedRegion.objects.filter(user_id=request.user.id, region=region)
+        visited_region = VisitedRegion.objects.filter(user=request.user.id, region=region)
         if visited_region.exists():
             visited_region.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
@@ -127,27 +127,27 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return VisitedCity.objects.filter(user_id=self.request.user.id)
+        return VisitedCity.objects.filter(user=self.request.user.id)
     
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)
 
     def create(self, request, *args, **kwargs):
-        request.data['user_id'] = request.user
+        request.data['user'] = request.user
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         # if the region is not visited, visit it
         region = serializer.validated_data['city'].region
-        if not VisitedRegion.objects.filter(user_id=request.user.id, region=region).exists():
-            VisitedRegion.objects.create(user_id=request.user, region=region)
+        if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
+            VisitedRegion.objects.create(user=request.user, region=region)
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def destroy(self, request, **kwargs):
         # delete by city id
         city = get_object_or_404(City, id=kwargs['pk'])
-        visited_city = VisitedCity.objects.filter(user_id=request.user.id, city=city)
+        visited_city = VisitedCity.objects.filter(user=request.user.id, city=city)
         if visited_city.exists():
             visited_city.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)

@@ -11,8 +11,8 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from .serializers import CustomUserDetailsSerializer as PublicUserSerializer
 from allauth.socialaccount.models import SocialApp
-from adventures.serializers import AdventureSerializer, CollectionSerializer
-from adventures.models import Adventure, Collection
+from adventures.serializers import LocationSerializer, CollectionSerializer
+from adventures.models import Location, Collection
 from allauth.socialaccount.models import SocialAccount
 
 User = get_user_model()
@@ -99,9 +99,9 @@ class PublicUserDetailView(APIView):
         user.email = None
         
         # Get the users adventures and collections to include in the response
-        adventures = Adventure.objects.filter(user_id=user, is_public=True)
-        collections = Collection.objects.filter(user_id=user, is_public=True)
-        adventure_serializer = AdventureSerializer(adventures, many=True)
+        adventures = Location.objects.filter(user=user, is_public=True)
+        collections = Collection.objects.filter(user=user, is_public=True)
+        adventure_serializer = LocationSerializer(adventures, many=True)
         collection_serializer = CollectionSerializer(collections, many=True)
 
         return Response({

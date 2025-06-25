@@ -1,4 +1,4 @@
-import type { Adventure } from '$lib/types';
+import type { Location } from '$lib/types';
 import type { PageServerLoad } from './$types';
 import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
 import { isAllDay } from '$lib';
@@ -8,12 +8,12 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	let sessionId = event.cookies.get('sessionid');
-	let visitedFetch = await fetch(`${endpoint}/api/adventures/all/?include_collections=true`, {
+	let visitedFetch = await fetch(`${endpoint}/api/locations/all/?include_collections=true`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
 		}
 	});
-	let adventures = (await visitedFetch.json()) as Adventure[];
+	let adventures = (await visitedFetch.json()) as Location[];
 
 	// Get user's local timezone as fallback
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;

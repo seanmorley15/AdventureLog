@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Collection } from '$lib/types';
+	import type { Location, Collection } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -172,7 +172,7 @@
 					</div>
 					{#if searchQuery}
 						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-							{$t('adventures.no_collections_found')}
+							{$t('adventures.no_collections_to_add_location')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md mb-6">
 							{$t('collection.try_different_search')}
@@ -183,7 +183,7 @@
 						</button>
 					{:else}
 						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-							{$t('adventures.no_collections_found')}
+							{$t('adventures.no_collections_to_add_location')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{$t('adventures.create_collection_first')}

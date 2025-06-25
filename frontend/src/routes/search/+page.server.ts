@@ -33,7 +33,7 @@ export const load = (async (event) => {
 	let data = await res.json();
 
 	return {
-		adventures: data.adventures,
+		locations: data.locations,
 		collections: data.collections,
 		users: data.users,
 		countries: data.countries,
