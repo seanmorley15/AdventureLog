@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Function to check PostgreSQL availability
 # Helper to get the first non-empty environment variable
@@ -13,22 +13,27 @@ get_env() {
 }
 
 check_postgres() {
+  if ! command -v psql > /dev/null 2>&1; then
+    >&2 echo "psql command not found — PostgreSQL client is not installed"
+    return 1
+  fi
+  
   local db_host
   local db_user
   local db_name
   local db_pass
 
-  db_host=$(get_env PGHOST)
-  db_user=$(get_env PGUSER POSTGRES_USER)
-  db_name=$(get_env PGDATABASE POSTGRES_DB)
-  db_pass=$(get_env PGPASSWORD POSTGRES_PASSWORD)
+  db_host="$(get_env PGHOST)"
+  db_user="$(get_env PGUSER POSTGRES_USER)"
+  db_name="$(get_env PGDATABASE POSTGRES_DB)"
+  db_pass="$(get_env PGPASSWORD POSTGRES_PASSWORD)"
 
   PGPASSWORD="$db_pass" psql -h "$db_host" -U "$db_user" -d "$db_name" -c '\q' >/dev/null 2>&1
 }
 
 
 # Wait for PostgreSQL to become available
-until check_postgres; do
+until check_postgres; do 
   >&2 echo "PostgreSQL is unavailable - sleeping"
   sleep 1
 done
@@ -73,8 +78,6 @@ else:
 EOF
 fi
 
-
-# Sync the countries and world travel regions
 # Sync the countries and world travel regions
 python manage.py download-countries
 if [ $? -eq 137 ]; then

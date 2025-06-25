@@ -1,0 +1,6 @@
+.env.example
+.prettierignore
+.prettierrc
+.gitignore
+Dockerfile
+.dockerignore
