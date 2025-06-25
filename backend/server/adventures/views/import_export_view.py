@@ -15,8 +15,8 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 
 from adventures.models import (
-    Adventure, Collection, Transportation, Note, Checklist, ChecklistItem,
-    AdventureImage, Attachment, Category, Lodging, Visit
+    Location, Collection, Transportation, Note, Checklist, ChecklistItem,
+    LocationImage, Attachment, Category, Lodging, Visit
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 
@@ -41,7 +41,7 @@ class BackupViewSet(viewsets.ViewSet):
             'user_email': user.email,
             'categories': [],
             'collections': [],
-            'adventures': [],
+            'locations': [],
             'transportation': [],
             'notes': [],
             'checklists': [],
@@ -87,32 +87,32 @@ class BackupViewSet(viewsets.ViewSet):
         # Create collection name to export_id mapping
         collection_name_to_id = {col.name: idx for idx, col in enumerate(user.collection_set.all())}
         
-        # Export Adventures with related data
-        for idx, adventure in enumerate(user.adventure_set.all()):
-            adventure_data = {
+        # Export locations with related data
+        for idx, location in enumerate(user.location_set.all()):
+            location_data = {
                 'export_id': idx,  # Add unique identifier for this export
-                'name': adventure.name,
-                'location': adventure.location,
-                'activity_types': adventure.activity_types,
-                'description': adventure.description,
-                'rating': adventure.rating,
-                'link': adventure.link,
-                'is_public': adventure.is_public,
-                'longitude': str(adventure.longitude) if adventure.longitude else None,
-                'latitude': str(adventure.latitude) if adventure.latitude else None,
-                'city': adventure.city_id,
-                'region': adventure.region_id,
-                'country': adventure.country_id,
-                'category_name': adventure.category.name if adventure.category else None,
-                'collection_export_ids': [collection_name_to_id[col_name] for col_name in adventure.collections.values_list('name', flat=True) if col_name in collection_name_to_id],
+                'name': location.name,
+                'location': location.location,
+                'tags': location.tags,
+                'description': location.description,
+                'rating': location.rating,
+                'link': location.link,
+                'is_public': location.is_public,
+                'longitude': str(location.longitude) if location.longitude else None,
+                'latitude': str(location.latitude) if location.latitude else None,
+                'city': location.city_id,
+                'region': location.region_id,
+                'country': location.country_id,
+                'category_name': location.category.name if location.category else None,
+                'collection_export_ids': [collection_name_to_id[col_name] for col_name in location.collections.values_list('name', flat=True) if col_name in collection_name_to_id],
                 'visits': [],
                 'images': [],
                 'attachments': []
             }
             
             # Add visits
-            for visit in adventure.visits.all():
-                adventure_data['visits'].append({
+            for visit in location.visits.all():
+                location_data['visits'].append({
                     'start_date': visit.start_date.isoformat() if visit.start_date else None,
                     'end_date': visit.end_date.isoformat() if visit.end_date else None,
                     'timezone': visit.timezone,
@@ -120,7 +120,7 @@ class BackupViewSet(viewsets.ViewSet):
                 })
             
             # Add images
-            for image in adventure.images.all():
+            for image in location.images.all():
                 image_data = {
                     'immich_id': image.immich_id,
                     'is_primary': image.is_primary,
@@ -128,19 +128,19 @@ class BackupViewSet(viewsets.ViewSet):
                 }
                 if image.image:
                     image_data['filename'] = image.image.name.split('/')[-1]
-                adventure_data['images'].append(image_data)
+                location_data['images'].append(image_data)
             
             # Add attachments
-            for attachment in adventure.attachments.all():
+            for attachment in location.attachments.all():
                 attachment_data = {
                     'name': attachment.name,
                     'filename': None
                 }
                 if attachment.file:
                     attachment_data['filename'] = attachment.file.name.split('/')[-1]
-                adventure_data['attachments'].append(attachment_data)
+                location_data['attachments'].append(attachment_data)
             
-            export_data['adventures'].append(adventure_data)
+            export_data['locations'].append(location_data)
         
         # Export Transportation
         for transport in user.transportation_set.all():
@@ -240,9 +240,9 @@ class BackupViewSet(viewsets.ViewSet):
                 # Add images and attachments
                 files_added = set()
                 
-                for adventure in user.adventure_set.all():
+                for location in user.location_set.all():
                     # Add images
-                    for image in adventure.images.all():
+                    for image in location.images.all():
                         if image.image and image.image.name not in files_added:
                             try:
                                 image_content = default_storage.open(image.image.name).read()
@@ -253,7 +253,7 @@ class BackupViewSet(viewsets.ViewSet):
                                 print(f"Error adding image {image.image.name}: {e}")
                     
                     # Add attachments
-                    for attachment in adventure.attachments.all():
+                    for attachment in location.attachments.all():
                         if attachment.file and attachment.file.name not in files_added:
                             try:
                                 file_content = default_storage.open(attachment.file.name).read()
@@ -273,7 +273,13 @@ class BackupViewSet(viewsets.ViewSet):
         os.unlink(tmp_file.name)
         return response
     
-    @action(detail=False, methods=['post'], parser_classes=[MultiPartParser])
+    @action(
+        detail=False,
+        methods=['post'],
+        parser_classes=[MultiPartParser],
+        url_path='import',  # changes the URL path to /import
+        url_name='import'   # changes the reverse name to 'import'
+    )
     def import_data(self, request):
         """
         Import data from a ZIP backup file
@@ -336,11 +342,11 @@ class BackupViewSet(viewsets.ViewSet):
         user.transportation_set.all().delete()
         user.lodging_set.all().delete()
         
-        # Delete adventure-related data
-        user.adventureimage_set.all().delete()
+        # Delete location-related data
+        user.locationimage_set.all().delete()
         user.attachment_set.all().delete()
-        # Visits are deleted via cascade when adventures are deleted
-        user.adventure_set.all().delete()
+        # Visits are deleted via cascade when locations are deleted
+        user.location_set.all().delete()
         
         # Delete collections and categories last
         user.collection_set.all().delete()
@@ -356,7 +362,7 @@ class BackupViewSet(viewsets.ViewSet):
         category_map = {}
         collection_map = {}  # Map export_id to actual collection object
         summary = {
-            'categories': 0, 'collections': 0, 'adventures': 0,
+            'categories': 0, 'collections': 0, 'locations': 0,
             'transportation': 0, 'notes': 0, 'checklists': 0,
             'checklist_items': 0, 'lodging': 0, 'images': 0, 'attachments': 0, 'visited_cities': 0, 'visited_regions': 0
         }
@@ -365,7 +371,7 @@ class BackupViewSet(viewsets.ViewSet):
         for city_data in backup_data.get('visited_cities', []):
             try:
                 city_obj = City.objects.get(id=city_data['city'])
-                VisitedCity.objects.create(user_id=user, city=city_obj)
+                VisitedCity.objects.create(user=user, city=city_obj)
                 summary['visited_cities'] += 1
             except City.DoesNotExist:
                 # If city does not exist, we can skip or log it
@@ -375,7 +381,7 @@ class BackupViewSet(viewsets.ViewSet):
         for region_data in backup_data.get('visited_regions', []):
             try:
                 region_obj = Region.objects.get(id=region_data['region'])
-                VisitedRegion.objects.create(user_id=user, region=region_obj)
+                VisitedRegion.objects.create(user=user, region=region_obj)
                 summary['visited_regions'] += 1
             except Region.DoesNotExist:
                 # If region does not exist, we can skip or log it
@@ -384,7 +390,7 @@ class BackupViewSet(viewsets.ViewSet):
         # Import Categories
         for cat_data in backup_data.get('categories', []):
             category = Category.objects.create(
-                user_id=user,
+                user=user,
                 name=cat_data['name'],
                 display_name=cat_data['display_name'],
                 icon=cat_data.get('icon', '🌍')
@@ -395,7 +401,7 @@ class BackupViewSet(viewsets.ViewSet):
         # Import Collections
         for col_data in backup_data.get('collections', []):
             collection = Collection.objects.create(
-                user_id=user,
+                user=user,
                 name=col_data['name'],
                 description=col_data.get('description', ''),
                 is_public=col_data.get('is_public', False),
@@ -415,8 +421,8 @@ class BackupViewSet(viewsets.ViewSet):
                 except User.DoesNotExist:
                     pass
         
-        # Import Adventures
-        for adv_data in backup_data.get('adventures', []):
+        # Import Locations
+        for adv_data in backup_data.get('locations', []):
 
             city = None
             if adv_data.get('city'):
@@ -439,11 +445,11 @@ class BackupViewSet(viewsets.ViewSet):
                 except Country.DoesNotExist:
                     country = None
 
-            adventure = Adventure(
-                user_id=user,
+            location = Location(
+                user=user,
                 name=adv_data['name'],
                 location=adv_data.get('location'),
-                activity_types=adv_data.get('activity_types', []),
+                tags=adv_data.get('tags', []),
                 description=adv_data.get('description'),
                 rating=adv_data.get('rating'),
                 link=adv_data.get('link'),
@@ -455,17 +461,17 @@ class BackupViewSet(viewsets.ViewSet):
                 country=country,
                 category=category_map.get(adv_data.get('category_name'))
             )
-            adventure.save(_skip_geocode=True)  # Skip geocoding for now
+            location.save(_skip_geocode=True)  # Skip geocoding for now
             
             # Add to collections using export_ids
             for collection_export_id in adv_data.get('collection_export_ids', []):
                 if collection_export_id in collection_map:
-                    adventure.collections.add(collection_map[collection_export_id])
+                    location.collections.add(collection_map[collection_export_id])
             
             # Import visits
             for visit_data in adv_data.get('visits', []):
                 Visit.objects.create(
-                    adventure=adventure,
+                    location=location,
                     start_date=visit_data.get('start_date'),
                     end_date=visit_data.get('end_date'),
                     timezone=visit_data.get('timezone'),
@@ -476,9 +482,9 @@ class BackupViewSet(viewsets.ViewSet):
             for img_data in adv_data.get('images', []):
                 immich_id = img_data.get('immich_id')
                 if immich_id:
-                    AdventureImage.objects.create(
-                        user_id=user,
-                        adventure=adventure,
+                    LocationImage.objects.create(
+                        user=user,
+                        location=location,
                         immich_id=immich_id,
                         is_primary=img_data.get('is_primary', False)
                     )
@@ -489,9 +495,9 @@ class BackupViewSet(viewsets.ViewSet):
                         try:
                             img_content = zip_file.read(f'images/{filename}')
                             img_file = ContentFile(img_content, name=filename)
-                            AdventureImage.objects.create(
-                                user_id=user,
-                                adventure=adventure,
+                            LocationImage.objects.create(
+                                user=user,
+                                location=location,
                                 image=img_file,
                                 is_primary=img_data.get('is_primary', False)
                             )
@@ -507,8 +513,8 @@ class BackupViewSet(viewsets.ViewSet):
                         att_content = zip_file.read(f'attachments/{filename}')
                         att_file = ContentFile(att_content, name=filename)
                         Attachment.objects.create(
-                            user_id=user,
-                            adventure=adventure,
+                            user=user,
+                            location=location,
                             file=att_file,
                             name=att_data.get('name')
                         )
@@ -516,7 +522,7 @@ class BackupViewSet(viewsets.ViewSet):
                     except KeyError:
                         pass
             
-            summary['adventures'] += 1
+            summary['locations'] += 1
         
         # Import Transportation
         for trans_data in backup_data.get('transportation', []):
@@ -525,7 +531,7 @@ class BackupViewSet(viewsets.ViewSet):
                 collection = collection_map.get(trans_data['collection_export_id'])
                 
             Transportation.objects.create(
-                user_id=user,
+                user=user,
                 type=trans_data['type'],
                 name=trans_data['name'],
                 description=trans_data.get('description'),
@@ -554,7 +560,7 @@ class BackupViewSet(viewsets.ViewSet):
                 collection = collection_map.get(note_data['collection_export_id'])
                 
             Note.objects.create(
-                user_id=user,
+                user=user,
                 name=note_data['name'],
                 content=note_data.get('content'),
                 links=note_data.get('links', []),
@@ -571,7 +577,7 @@ class BackupViewSet(viewsets.ViewSet):
                 collection = collection_map.get(check_data['collection_export_id'])
                 
             checklist = Checklist.objects.create(
-                user_id=user,
+                user=user,
                 name=check_data['name'],
                 date=check_data.get('date'),
                 is_public=check_data.get('is_public', False),
@@ -581,7 +587,7 @@ class BackupViewSet(viewsets.ViewSet):
             # Import checklist items
             for item_data in check_data.get('items', []):
                 ChecklistItem.objects.create(
-                    user_id=user,
+                    user=user,
                     checklist=checklist,
                     name=item_data['name'],
                     is_checked=item_data.get('is_checked', False)
@@ -597,7 +603,7 @@ class BackupViewSet(viewsets.ViewSet):
                 collection = collection_map.get(lodg_data['collection_export_id'])
                 
             Lodging.objects.create(
-                user_id=user,
+                user=user,
                 name=lodg_data['name'],
                 type=lodg_data.get('type', 'other'),
                 description=lodg_data.get('description'),
