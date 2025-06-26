@@ -9,7 +9,15 @@
     "oss_attributions": "Attributions Open Source",
     "other_attributions": "Des attributions supplémentaires peuvent être trouvées dans le fichier README.",
     "source_code": "Code source",
-    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés."
+    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés.",
+    "attributions": "Attributions",
+    "developer": "Promoteur",
+    "license_info": "Licence",
+    "sponsor": "Parrainer",
+    "thank_you": "Merci d'utiliser AdventureLog!",
+    "version": "Version",
+    "view_changelog": "Voir Changelog",
+    "view_license": "Afficher la licence"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Visiter le calendrier",
     "wiki_location_desc": "Tire un extrait de l'article de Wikipedia correspondant au nom de l'emplacement.",
     "will_be_marked_location": "sera marqué comme visité une fois l'emplacement enregistré.",
-    "no_locations_found": "Aucun emplacement trouvé"
+    "no_locations_found": "Aucun emplacement trouvé",
+    "image_modal_navigate": "Utilisez des touches flèches ou cliquez pour naviguer"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

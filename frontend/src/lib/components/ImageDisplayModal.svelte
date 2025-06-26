@@ -7,6 +7,7 @@
 
 	export let images: { image: string; adventure: Location | null }[] = [];
 	export let initialIndex: number = 0;
+	import { t } from 'svelte-i18n';
 
 	let currentIndex = initialIndex;
 	let currentImage = images[currentIndex]?.image || '';
@@ -113,7 +114,8 @@
 							</h1>
 							{#if images.length > 1}
 								<p class="text-sm text-base-content/60">
-									{currentIndex + 1} of {images.length} images
+									{currentIndex + 1} of {images.length}
+									{$t('adventures.images')}
 								</p>
 							{/if}
 						</div>
@@ -247,7 +249,9 @@
 					</div>
 					<div class="flex items-center gap-3">
 						{#if images.length > 1}
-							<div class="text-sm text-base-content/60">Use arrow keys or click to navigate</div>
+							<div class="text-sm text-base-content/60">
+								{$t('adventures.image_modal_navigate')}
+							</div>
 						{/if}
 						<button class="btn btn-primary gap-2" on:click={close}>
 							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -258,7 +262,7 @@
 									d="M6 18L18 6M6 6l12 12"
 								/>
 							</svg>
-							Close
+							{$t('about.close')}
 						</button>
 					</div>
 				</div>

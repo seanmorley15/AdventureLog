@@ -9,7 +9,15 @@
     "oss_attributions": "Open source gebruik",
     "other_attributions": "Aanvullende vermeldingen zijn te vinden in het README-bestand.",
     "source_code": "Broncode",
-    "generic_attributions": "Log in op AdventUrelog om attributies te bekijken voor ingeschakelde integraties en services."
+    "generic_attributions": "Log in op AdventUrelog om attributies te bekijken voor ingeschakelde integraties en services.",
+    "attributions": "Attributies",
+    "developer": "Ontwikkelaar",
+    "license_info": "Licentie",
+    "sponsor": "Sponsor",
+    "thank_you": "Bedankt voor het gebruik van AdventUrelog!",
+    "version": "Versie",
+    "view_changelog": "Bekijk Changelog",
+    "view_license": "Bekijk licentie"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Bezoek de agenda",
     "wiki_location_desc": "Haalt fragment uit het Wikipedia -artikel dat overeenkomt met de naam van de locatie.",
     "will_be_marked_location": "wordt gemarkeerd als bezocht zodra de locatie is opgeslagen.",
-    "no_locations_found": "Geen locaties gevonden"
+    "no_locations_found": "Geen locaties gevonden",
+    "image_modal_navigate": "Gebruik pijltoetsen of klik om te navigeren"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

@@ -81,13 +81,13 @@
 					/>
 
 					<!-- Overlay indicator for multiple images -->
-					{#if adventure_images.length > 1}
+					<!-- {#if adventure_images.length > 1}
 						<div
 							class="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-medium"
 						>
 							{currentSlide + 1} / {adventure_images.length}
 						</div>
-					{/if}
+					{/if} -->
 
 					<!-- Click to expand hint -->
 					<!-- <div
@@ -118,7 +118,7 @@
 						{#if currentSlide > 0}
 							<button
 								on:click|stopPropagation={() => changeSlide('prev')}
-								class="btn btn-circle btn-sm ml-2 pointer-events-auto bg-white/80 border-none hover:bg-white text-gray-800 shadow-lg"
+								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
 								aria-label="Previous image"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@
 						{#if currentSlide < adventure_images.length - 1}
 							<button
 								on:click|stopPropagation={() => changeSlide('next')}
-								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-white/80 border-none hover:bg-white text-gray-800 shadow-lg"
+								class="btn btn-circle btn-sm mr-2 pointer-events-auto bg-neutral border-none text-neutral-content shadow-lg"
 								aria-label="Next image"
 							>
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -155,7 +155,7 @@
 					</div>
 
 					<!-- Dot indicators at bottom -->
-					{#if adventure_images.length > 1}
+					<!-- {#if adventure_images.length > 1}
 						<div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
 							{#each adventure_images as _, index}
 								<button
@@ -168,7 +168,7 @@
 								/>
 							{/each}
 						</div>
-					{/if}
+					{/if} -->
 				{/if}
 			</div>
 		</div>

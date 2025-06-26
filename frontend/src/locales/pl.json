@@ -43,7 +43,15 @@
     "nominatim_2": "Ich dane są licencjonowane na licencji ODbL.",
     "other_attributions": "Dodatkowe atrybucje można znaleźć w pliku README.",
     "close": "Zamknij",
-    "generic_attributions": "Zaloguj się do Adventurelog, aby wyświetlić atrybucje dla włączonych integracji i usług."
+    "generic_attributions": "Zaloguj się do Adventurelog, aby wyświetlić atrybucje dla włączonych integracji i usług.",
+    "attributions": "Przypisania",
+    "developer": "Wywoływacz",
+    "license_info": "Licencja",
+    "sponsor": "Sponsor",
+    "thank_you": "Dziękujemy za korzystanie z Adventurelog!",
+    "version": "Wersja",
+    "view_changelog": "Zobacz Changelog",
+    "view_license": "Wyświetl licencję"
   },
   "home": {
     "hero_1": "Odkryj najbardziej ekscytujące podróże na świecie",
@@ -302,7 +310,8 @@
     "visit_calendar": "Odwiedź kalendarz",
     "wiki_location_desc": "Wyciąga fragment artykułu Wikipedii pasujący do nazwy lokalizacji.",
     "will_be_marked_location": "zostanie oznaczone jako odwiedzone po zapisaniu lokalizacji.",
-    "no_locations_found": "Nie znaleziono żadnych lokalizacji"
+    "no_locations_found": "Nie znaleziono żadnych lokalizacji",
+    "image_modal_navigate": "Użyj klawiszy strzałek lub kliknij, aby nawigować"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

@@ -43,7 +43,15 @@
     "nominatim_2": "Deres data er lisensiert under ODbL-lisensen.",
     "other_attributions": "Ytterligere attribusjoner finnes i README-filen.",
     "close": "Lukk",
-    "generic_attributions": "Logg inn på Adventurelog for å se attribusjoner for aktiverte integrasjoner og tjenester."
+    "generic_attributions": "Logg inn på Adventurelog for å se attribusjoner for aktiverte integrasjoner og tjenester.",
+    "attributions": "Attribusjoner",
+    "developer": "Utvikler",
+    "license_info": "Tillatelse",
+    "sponsor": "Sponsor",
+    "thank_you": "Takk for at du bruker Adventurelog!",
+    "version": "Versjon",
+    "view_changelog": "Se Changelog",
+    "view_license": "Vis lisens"
   },
   "home": {
     "hero_1": "Oppdag verdens mest spennende eventyr",
@@ -302,7 +310,8 @@
     "visit_calendar": "Besøk kalenderen",
     "wiki_location_desc": "Trekker utdrag fra Wikipedia -artikkelen som samsvarer med navnet på stedet.",
     "will_be_marked_location": "vil bli merket som besøkt når stedet er lagret.",
-    "no_locations_found": "Ingen steder funnet"
+    "no_locations_found": "Ingen steder funnet",
+    "image_modal_navigate": "Bruk piltastene eller klikk for å navigere"
   },
   "worldtravel": {
     "country_list": "Liste over land",

@@ -43,7 +43,15 @@
     "nominatim_2": "Sus datos están licenciados bajo la licencia ODbL.",
     "other_attributions": "Atribuciones adicionales se pueden encontrar en el archivo README.",
     "close": "Cerrar",
-    "generic_attributions": "Inicie sesión en AdventureLog para ver las atribuciones para integraciones y servicios habilitados."
+    "generic_attributions": "Inicie sesión en AdventureLog para ver las atribuciones para integraciones y servicios habilitados.",
+    "attributions": "Atribuciones",
+    "developer": "Revelador",
+    "license_info": "Licencia",
+    "sponsor": "Patrocinador",
+    "thank_you": "¡Gracias por usar Adventurelog!",
+    "version": "Versión",
+    "view_changelog": "Ver ChangeLog",
+    "view_license": "Ver licencia"
   },
   "home": {
     "hero_1": "Descubre las Aventuras Más Emocionantes del Mundo",
@@ -302,7 +310,8 @@
     "visit_calendar": "Visitar el calendario",
     "wiki_location_desc": "Extrae extracto del artículo de Wikipedia que coincide con el nombre de la ubicación.",
     "will_be_marked_location": "se marcará según lo visitado una vez que se guarde la ubicación.",
-    "no_locations_found": "No se encontraron ubicaciones"
+    "no_locations_found": "No se encontraron ubicaciones",
+    "image_modal_navigate": "Use teclas de flecha o haga clic para navegar"
   },
   "worldtravel": {
     "all": "Todo",

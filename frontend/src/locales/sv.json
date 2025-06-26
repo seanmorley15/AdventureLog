@@ -9,7 +9,15 @@
     "oss_attributions": "Tillskrivningar med öppen källkod",
     "other_attributions": "Ytterligare attributioner finns i README-filen.",
     "source_code": "Källkod",
-    "generic_attributions": "Logga in på AdventureLog för att visa attribut för aktiverade integrationer och tjänster."
+    "generic_attributions": "Logga in på AdventureLog för att visa attribut för aktiverade integrationer och tjänster.",
+    "attributions": "Tillskrivningar",
+    "developer": "Framkallare",
+    "license_info": "Licens",
+    "sponsor": "Sponsor",
+    "thank_you": "Tack för att du använder AdventureLog!",
+    "version": "Version",
+    "view_changelog": "Visa Changelog",
+    "view_license": "Visa licens"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Besök kalendern",
     "wiki_location_desc": "Drar utdrag från Wikipedia -artikeln som matchar namnet på platsen.",
     "will_be_marked_location": "kommer att markeras som besöks när platsen har sparats.",
-    "no_locations_found": "Inga platser hittades"
+    "no_locations_found": "Inga platser hittades",
+    "image_modal_navigate": "Använd pilnycklar eller klicka för att navigera"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
