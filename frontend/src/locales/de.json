@@ -9,7 +9,15 @@
     "oss_attributions": "Open Source Quellenangaben",
     "other_attributions": "Weitere Hinweise finden Sie in der README-Datei.",
     "source_code": "Quellcode",
-    "generic_attributions": "Melden Sie sich bei Adventurelog an, um Zuschreibungen für aktivierte Integrationen und Dienste anzuzeigen."
+    "generic_attributions": "Melden Sie sich bei Adventurelog an, um Zuschreibungen für aktivierte Integrationen und Dienste anzuzeigen.",
+    "attributions": "Zuschreibungen",
+    "developer": "Entwickler",
+    "license_info": "Lizenz",
+    "sponsor": "Sponsor",
+    "thank_you": "Vielen Dank, dass Sie Adventurelog verwendet haben!",
+    "version": "Version",
+    "view_changelog": "ChangeLog anzeigen",
+    "view_license": "Lizenz anzeigen"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Besuchen Sie den Kalender",
     "wiki_location_desc": "Zieht Auszug aus dem Wikipedia -Artikel, der dem Namen des Standorts entspricht.",
     "will_be_marked_location": "wird als besucht markiert, sobald der Standort gespeichert ist.",
-    "no_locations_found": "Keine Standorte gefunden"
+    "no_locations_found": "Keine Standorte gefunden",
+    "image_modal_navigate": "Verwenden Sie Pfeiltasten oder klicken Sie, um zu navigieren"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -497,7 +506,36 @@
     "staff_status": "Personalstatus",
     "staff_user": "Personalbenutzer",
     "profile_info_desc": "Aktualisieren Sie Ihre persönlichen Daten und Ihr Profilbild",
-    "invalid_credentials": "Ungültige Anmeldeinformationen"
+    "invalid_credentials": "Ungültige Anmeldeinformationen",
+    "backup_restore": "Backup",
+    "backup_restore_desc": "Speichern Sie Ihre Daten oder stellen Sie sie in einer früheren Sicherungsdatei wieder her.",
+    "complete_setup_to_enable": "Komplettes Setup, um MFA zu aktivieren",
+    "copy_all": "Alle kopieren",
+    "enter_6_digit_code": "Geben Sie einen 6 -stelligen Code ein",
+    "enter_code_from_app": "Geben Sie den Code aus der App ein",
+    "error_occurred": "Es ist ein Fehler aufgetreten",
+    "important": "Wichtig",
+    "manual_entry": "Manueller Eintritt",
+    "mfa_already_enabled": "MFA bereits aktiviert",
+    "mfa_required": "MFA erforderlich",
+    "scan_qr_code": "Scannen QR -Code",
+    "scan_with_authenticator_app": "Scannen Sie mit Authenticator App",
+    "secure_your_account": "Sichern Sie Ihr Konto",
+    "setup_required": "Setup erforderlich",
+    "verify_setup": "Überprüfen Sie das Setup",
+    "whats_included": "Was ist enthalten",
+    "backup_your_data": "Sichern Sie Ihre Daten",
+    "backup_your_data_desc": "Laden Sie eine vollständige Sicherung Ihrer Kontodaten, einschließlich Standorte, Sammlungen, Medien und Besuchen, herunter.",
+    "data_override_acknowledge": "Ich bestätige, dass dies alle meine vorhandenen Daten überschreibt",
+    "data_override_acknowledge_desc": "Diese Aktion ist irreversibel und ersetzt alle Standorte, Sammlungen und Besuche in Ihrem Konto.",
+    "data_override_warning": "Daten überschreiben Warnung",
+    "data_override_warning_desc": "Das Wiederherstellen von Daten ersetzt alle vorhandenen Daten (die in der Sicherung enthalten sind) in Ihrem Konto vollständig. \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "integrations_settings": "Integrationseinstellungen",
+    "media": "Medien",
+    "restore_data": "Daten wiederherstellen",
+    "restore_data_desc": "Laden Sie eine Sicherungsdatei hoch, um Ihre Daten wiederherzustellen.",
+    "select_backup_file": "Wählen Sie Sicherungsdatei",
+    "world_travel_visits": "Weltreisebesuche"
   },
   "checklist": {
     "checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -722,5 +760,6 @@
     "location": "Standort",
     "locations": "Standorte",
     "my_locations": "Meine Standorte"
-  }
+  },
+  "settings_download_backup": "Backup herunterladen"
 }

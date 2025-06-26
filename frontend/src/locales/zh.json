@@ -43,7 +43,15 @@
     "other_attributions": "其他声明可以在 README 文件中找到。",
     "source_code": "源代码",
     "close": "关闭",
-    "generic_attributions": "登录到AdventureLog以查看启用集成和服务的归因。"
+    "generic_attributions": "登录到AdventureLog以查看启用集成和服务的归因。",
+    "attributions": "归因",
+    "developer": "开发人员",
+    "license_info": "执照",
+    "sponsor": "赞助",
+    "thank_you": "感谢您使用冒险！",
+    "version": "版本",
+    "view_changelog": "查看ChangElog",
+    "view_license": "查看许可证"
   },
   "home": {
     "desc_1": "轻松发现、规划和探索",
@@ -302,7 +310,8 @@
     "visit_calendar": "访问日历",
     "wiki_location_desc": "从Wikipedia文章中提取摘录，符合该位置的名称。",
     "will_be_marked_location": "保存位置后，将被标记为访问。",
-    "no_locations_found": "找不到位置"
+    "no_locations_found": "找不到位置",
+    "image_modal_navigate": "使用箭头键或单击以导航"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -497,7 +506,36 @@
     "quick_actions": "快速动作",
     "region_updates": "区域更新",
     "region_updates_desc": "更新访问了地区和城市",
-    "invalid_credentials": "无效的凭据"
+    "invalid_credentials": "无效的凭据",
+    "backup_restore": "备份",
+    "backup_restore_desc": "保存数据或从以前的备份文件还原。",
+    "complete_setup_to_enable": "完整的设置以启用MFA",
+    "copy_all": "复制全部",
+    "enter_6_digit_code": "输入6位数代码",
+    "enter_code_from_app": "从应用程序输入代码",
+    "error_occurred": "发生了错误",
+    "important": "重要的",
+    "manual_entry": "手动输入",
+    "mfa_already_enabled": "MFA已经启用",
+    "mfa_required": "需要MFA",
+    "scan_qr_code": "扫描QR码",
+    "scan_with_authenticator_app": "使用身份验证器应用程序扫描",
+    "secure_your_account": "保护您的帐户",
+    "setup_required": "需要设置",
+    "verify_setup": "验证设置",
+    "whats_included": "包括什么",
+    "backup_your_data": "备份您的数据",
+    "backup_your_data_desc": "下载您的帐户数据的完整备份，包括位置，集合，媒体和访问。",
+    "data_override_acknowledge": "我承认这将覆盖我所有现有数据",
+    "data_override_acknowledge_desc": "此操作是不可逆转的，将取代您帐户中的所有位置，收集和访问。",
+    "data_override_warning": "数据覆盖警告",
+    "data_override_warning_desc": "还原数据将完全替换帐户中的所有现有数据（备份中包含在备份中）。\n该动作不能撤消。",
+    "integrations_settings": "集成设置",
+    "media": "媒体",
+    "restore_data": "还原数据",
+    "restore_data_desc": "上传备份文件以还原数据。",
+    "select_backup_file": "选择备份文件",
+    "world_travel_visits": "世界旅行访问"
   },
   "checklist": {
     "checklist_delete_error": "删除清单时出错",
@@ -722,5 +760,6 @@
     "location": "地点",
     "locations": "位置",
     "my_locations": "我的位置"
-  }
+  },
+  "settings_download_backup": "下载备份"
 }

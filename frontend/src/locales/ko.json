@@ -9,7 +9,15 @@
     "oss_attributions": "오픈 소스 속성",
     "other_attributions": "추가 속성은 README 파일에서 찾을 수 있습니다.",
     "source_code": "소스 코드",
-    "generic_attributions": "Adventurelog에 로그인하여 활성화 된 통합 및 서비스에 대한 속성을보십시오."
+    "generic_attributions": "Adventurelog에 로그인하여 활성화 된 통합 및 서비스에 대한 속성을보십시오.",
+    "attributions": "속성",
+    "developer": "개발자",
+    "license_info": "특허",
+    "sponsor": "스폰서",
+    "thank_you": "Adventurelog를 사용해 주셔서 감사합니다!",
+    "version": "버전",
+    "view_changelog": "changelog를 봅니다",
+    "view_license": "라이센스보기"
   },
   "adventures": {
     "actions": "행동",
@@ -250,7 +258,8 @@
     "visit_calendar": "캘린더를 방문하십시오",
     "wiki_location_desc": "위치 이름과 일치하는 Wikipedia 기사에서 발췌 한 내용을 가져옵니다.",
     "will_be_marked_location": "위치가 저장되면 방문한대로 표시됩니다.",
-    "no_locations_found": "발견 된 위치는 없습니다"
+    "no_locations_found": "발견 된 위치는 없습니다",
+    "image_modal_navigate": "화살표 키를 사용하거나 클릭하여 탐색하십시오"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -589,7 +598,36 @@
     "social_auth_setup": "소셜 인증 설정",
     "staff_status": "직원 상태",
     "staff_user": "직원 사용자",
-    "invalid_credentials": "잘못된 자격 증명"
+    "invalid_credentials": "잘못된 자격 증명",
+    "backup_restore": "지원",
+    "backup_restore_desc": "데이터를 저장하거나 이전 백업 파일에서 복원하십시오.",
+    "complete_setup_to_enable": "MFA를 활성화하기위한 완전한 설정",
+    "copy_all": "모두 복사하십시오",
+    "enter_6_digit_code": "6 자리 코드를 입력하십시오",
+    "enter_code_from_app": "앱에서 코드를 입력하십시오",
+    "error_occurred": "오류가 발생했습니다",
+    "important": "중요한",
+    "manual_entry": "수동 입력",
+    "mfa_already_enabled": "MFA는 이미 활성화되었습니다",
+    "mfa_required": "MFA가 필요합니다",
+    "scan_qr_code": "QR 코드를 스캔하십시오",
+    "scan_with_authenticator_app": "Authenticator 앱으로 스캔하십시오",
+    "secure_your_account": "계정을 확보하십시오",
+    "setup_required": "설정이 필요합니다",
+    "verify_setup": "설정을 확인하십시오",
+    "whats_included": "포함 된 내용",
+    "backup_your_data": "데이터를 백업하십시오",
+    "backup_your_data_desc": "위치, 컬렉션, 미디어 및 방문을 포함하여 계정 데이터의 전체 백업을 다운로드하십시오.",
+    "data_override_acknowledge": "나는 이것이 나의 모든 기존 데이터를 무시할 것임을 인정합니다.",
+    "data_override_acknowledge_desc": "이 조치는 돌이킬 수 없으며 계정의 모든 위치, 컬렉션 및 방문을 대체합니다.",
+    "data_override_warning": "데이터를 우선적으로 경고합니다",
+    "data_override_warning_desc": "데이터 복원은 계정의 모든 기존 데이터 (백업에 포함 된)를 완전히 대체합니다. \n이 조치는 취소 할 수 없습니다.",
+    "integrations_settings": "통합 설정",
+    "media": "메디아",
+    "restore_data": "데이터를 복원하십시오",
+    "restore_data_desc": "백업 파일을 업로드하여 데이터를 복원하십시오.",
+    "select_backup_file": "백업 파일을 선택하십시오",
+    "world_travel_visits": "세계 여행 방문"
   },
   "share": {
     "go_to_settings": "설정으로 이동",
@@ -721,5 +759,6 @@
     "location": "위치",
     "locations": "위치",
     "my_locations": "내 위치"
-  }
+  },
+  "settings_download_backup": "백업을 다운로드하십시오"
 }

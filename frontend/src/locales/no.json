@@ -43,7 +43,15 @@
     "nominatim_2": "Deres data er lisensiert under ODbL-lisensen.",
     "other_attributions": "Ytterligere attribusjoner finnes i README-filen.",
     "close": "Lukk",
-    "generic_attributions": "Logg inn på Adventurelog for å se attribusjoner for aktiverte integrasjoner og tjenester."
+    "generic_attributions": "Logg inn på Adventurelog for å se attribusjoner for aktiverte integrasjoner og tjenester.",
+    "attributions": "Attribusjoner",
+    "developer": "Utvikler",
+    "license_info": "Tillatelse",
+    "sponsor": "Sponsor",
+    "thank_you": "Takk for at du bruker Adventurelog!",
+    "version": "Versjon",
+    "view_changelog": "Se Changelog",
+    "view_license": "Vis lisens"
   },
   "home": {
     "hero_1": "Oppdag verdens mest spennende eventyr",
@@ -302,7 +310,8 @@
     "visit_calendar": "Besøk kalenderen",
     "wiki_location_desc": "Trekker utdrag fra Wikipedia -artikkelen som samsvarer med navnet på stedet.",
     "will_be_marked_location": "vil bli merket som besøkt når stedet er lagret.",
-    "no_locations_found": "Ingen steder funnet"
+    "no_locations_found": "Ingen steder funnet",
+    "image_modal_navigate": "Bruk piltastene eller klikk for å navigere"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -497,7 +506,36 @@
     "social_auth_setup": "Sosial autentiseringsoppsett",
     "staff_status": "Personalstatus",
     "staff_user": "Personalbruker",
-    "invalid_credentials": "Ugyldig legitimasjon"
+    "invalid_credentials": "Ugyldig legitimasjon",
+    "backup_restore": "Sikkerhetskopi",
+    "backup_restore_desc": "Lagre dataene dine eller gjenopprett dem fra en tidligere sikkerhetskopifil.",
+    "complete_setup_to_enable": "Komplett oppsett for å aktivere MFA",
+    "copy_all": "Kopier alle",
+    "enter_6_digit_code": "Skriv inn 6 -sifret kode",
+    "enter_code_from_app": "Skriv inn kode fra appen",
+    "error_occurred": "Det har oppstått en feil",
+    "important": "Viktig",
+    "manual_entry": "Manuell oppføring",
+    "mfa_already_enabled": "MFA er allerede aktivert",
+    "mfa_required": "MFA kreves",
+    "scan_qr_code": "Skann QR -kode",
+    "scan_with_authenticator_app": "Skann med Authenticator -appen",
+    "secure_your_account": "Sikre kontoen din",
+    "setup_required": "Oppsett kreves",
+    "verify_setup": "Bekreft oppsett",
+    "whats_included": "Hva som er inkludert",
+    "backup_your_data": "Sikkerhetskopiere dataene dine",
+    "backup_your_data_desc": "Last ned en komplett sikkerhetskopi av kontodataene dine, inkludert steder, samlinger, media og besøk.",
+    "data_override_acknowledge": "Jeg erkjenner at dette vil overstyre alle mine eksisterende data",
+    "data_override_acknowledge_desc": "Denne handlingen er irreversibel og vil erstatte alle steder, samlinger og besøk på kontoen din.",
+    "data_override_warning": "Data overstyrer advarsel",
+    "data_override_warning_desc": "Gjenoppretting av data vil erstatte alle eksisterende data fullstendig (som er inkludert i sikkerhetskopien) på kontoen din. \nDenne handlingen kan ikke angres.",
+    "integrations_settings": "Integrasjoner Innstillinger",
+    "media": "Media",
+    "restore_data": "Gjenopprett data",
+    "restore_data_desc": "Last opp en sikkerhetskopifil for å gjenopprette dataene dine.",
+    "select_backup_file": "Velg sikkerhetskopifil",
+    "world_travel_visits": "Verdens reisebesøk"
   },
   "collection": {
     "collection_created": "Samling opprettet!",
@@ -722,5 +760,6 @@
     "location": "Sted",
     "locations": "Lokasjoner",
     "my_locations": "Mine lokasjoner"
-  }
+  },
+  "settings_download_backup": "Last ned sikkerhetskopi"
 }

@@ -9,7 +9,15 @@
     "oss_attributions": "Tillskrivningar med öppen källkod",
     "other_attributions": "Ytterligare attributioner finns i README-filen.",
     "source_code": "Källkod",
-    "generic_attributions": "Logga in på AdventureLog för att visa attribut för aktiverade integrationer och tjänster."
+    "generic_attributions": "Logga in på AdventureLog för att visa attribut för aktiverade integrationer och tjänster.",
+    "attributions": "Tillskrivningar",
+    "developer": "Framkallare",
+    "license_info": "Licens",
+    "sponsor": "Sponsor",
+    "thank_you": "Tack för att du använder AdventureLog!",
+    "version": "Version",
+    "view_changelog": "Visa Changelog",
+    "view_license": "Visa licens"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Besök kalendern",
     "wiki_location_desc": "Drar utdrag från Wikipedia -artikeln som matchar namnet på platsen.",
     "will_be_marked_location": "kommer att markeras som besöks när platsen har sparats.",
-    "no_locations_found": "Inga platser hittades"
+    "no_locations_found": "Inga platser hittades",
+    "image_modal_navigate": "Använd pilnycklar eller klicka för att navigera"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -497,7 +506,36 @@
     "social_auth_setup": "Social autentiseringsinställning",
     "staff_status": "Personalstatus",
     "staff_user": "Personalanvändare",
-    "invalid_credentials": "Ogiltiga referenser"
+    "invalid_credentials": "Ogiltiga referenser",
+    "backup_restore": "Säkerhetskopiering",
+    "backup_restore_desc": "Spara dina data eller återställa dem från en tidigare säkerhetskopieringsfil.",
+    "complete_setup_to_enable": "Komplett installation för att aktivera MFA",
+    "copy_all": "Kopiera alla",
+    "enter_6_digit_code": "Ange 6 siffror",
+    "enter_code_from_app": "Ange kod från appen",
+    "error_occurred": "Ett fel har inträffat",
+    "important": "Viktig",
+    "manual_entry": "Manuell inträde",
+    "mfa_already_enabled": "MFA redan aktiverat",
+    "mfa_required": "MFA krävs",
+    "scan_qr_code": "Skanna QR -kod",
+    "scan_with_authenticator_app": "Skanna med autentisatorapp",
+    "secure_your_account": "Säkra ditt konto",
+    "setup_required": "Installation krävs",
+    "verify_setup": "Verifiera installationen",
+    "whats_included": "Vad ingår",
+    "backup_your_data": "Säkerhetskopiera dina data",
+    "backup_your_data_desc": "Ladda ner en fullständig säkerhetskopia av dina kontodata inklusive platser, samlingar, media och besök.",
+    "data_override_acknowledge": "Jag erkänner att detta kommer att åsidosätta alla mina befintliga uppgifter",
+    "data_override_acknowledge_desc": "Denna åtgärd är irreversibel och kommer att ersätta alla platser, samlingar och besök på ditt konto.",
+    "data_override_warning": "Data åsidosättande varning",
+    "data_override_warning_desc": "Återställa data kommer helt att ersätta alla befintliga data (som ingår i säkerhetskopian) i ditt konto. \nDenna åtgärd kan inte ångras.",
+    "integrations_settings": "Integrationsinställningar",
+    "media": "Media",
+    "restore_data": "Återställa data",
+    "restore_data_desc": "Ladda upp en säkerhetskopieringsfil för att återställa dina data.",
+    "select_backup_file": "Välj säkerhetskopieringsfil",
+    "world_travel_visits": "Världsresebesök"
   },
   "checklist": {
     "checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",
@@ -722,5 +760,6 @@
     "location": "Plats",
     "locations": "Plats",
     "my_locations": "Mina platser"
-  }
+  },
+  "settings_download_backup": "Ladda ner säkerhetskopiering"
 }

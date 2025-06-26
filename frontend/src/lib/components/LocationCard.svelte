@@ -273,7 +273,7 @@
 				{#if type != 'link'}
 					<div class="flex justify-between items-center">
 						<button
-							class="btn btn-neutral btn-sm flex-1 mr-2"
+							class="btn btn-base-300 btn-sm flex-1 mr-2"
 							on:click={() => goto(`/locations/${adventure.id}`)}
 						>
 							<Launch class="w-4 h-4" />

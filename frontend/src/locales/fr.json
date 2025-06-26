@@ -9,7 +9,15 @@
     "oss_attributions": "Attributions Open Source",
     "other_attributions": "Des attributions supplémentaires peuvent être trouvées dans le fichier README.",
     "source_code": "Code source",
-    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés."
+    "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés.",
+    "attributions": "Attributions",
+    "developer": "Promoteur",
+    "license_info": "Licence",
+    "sponsor": "Parrainer",
+    "thank_you": "Merci d'utiliser AdventureLog!",
+    "version": "Version",
+    "view_changelog": "Voir Changelog",
+    "view_license": "Afficher la licence"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Visiter le calendrier",
     "wiki_location_desc": "Tire un extrait de l'article de Wikipedia correspondant au nom de l'emplacement.",
     "will_be_marked_location": "sera marqué comme visité une fois l'emplacement enregistré.",
-    "no_locations_found": "Aucun emplacement trouvé"
+    "no_locations_found": "Aucun emplacement trouvé",
+    "image_modal_navigate": "Utilisez des touches flèches ou cliquez pour naviguer"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -497,7 +506,36 @@
     "disconnected": "Déconnecté",
     "email_management": "Gestion des e-mails",
     "enter_last_name": "Entrez votre nom de famille",
-    "invalid_credentials": "Des références non valides"
+    "invalid_credentials": "Des références non valides",
+    "backup_restore": "Sauvegarde",
+    "backup_restore_desc": "Enregistrez vos données ou restaurez-les à partir d'un fichier de sauvegarde précédent.",
+    "complete_setup_to_enable": "Configuration complète pour activer le MFA",
+    "copy_all": "Copier tout",
+    "enter_6_digit_code": "Entrez le code à 6 chiffres",
+    "enter_code_from_app": "Entrez le code à partir de l'application",
+    "error_occurred": "Une erreur s'est produite",
+    "important": "Important",
+    "manual_entry": "Entrée manuelle",
+    "mfa_already_enabled": "MFA déjà activé",
+    "mfa_required": "MFA requis",
+    "scan_qr_code": "Scanner le code QR",
+    "scan_with_authenticator_app": "Scanner avec l'application Authenticatrice",
+    "secure_your_account": "Sécuriser votre compte",
+    "setup_required": "Configuration requise",
+    "verify_setup": "Vérifiez la configuration",
+    "whats_included": "Ce qui est inclus",
+    "backup_your_data": "Sauvegardez vos données",
+    "backup_your_data_desc": "Téléchargez une sauvegarde complète des données de votre compte, y compris les emplacements, les collections, les médias et les visites.",
+    "data_override_acknowledge": "Je reconnais que cela remplacera toutes mes données existantes",
+    "data_override_acknowledge_desc": "Cette action est irréversible et remplacera tous les emplacements, collections et visites dans votre compte.",
+    "data_override_warning": "Avertissement de remplacement des données",
+    "data_override_warning_desc": "La restauration des données remplacera complètement toutes les données existantes (incluses dans la sauvegarde) dans votre compte. \nCette action ne peut pas être annulée.",
+    "integrations_settings": "Paramètres des intégrations",
+    "media": "Médias",
+    "restore_data": "Restaurer les données",
+    "restore_data_desc": "Téléchargez un fichier de sauvegarde pour restaurer vos données.",
+    "select_backup_file": "Sélectionnez le fichier de sauvegarde",
+    "world_travel_visits": "Visites de voyage dans le monde"
   },
   "checklist": {
     "checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",
@@ -722,5 +760,6 @@
     "location": "Emplacement",
     "locations": "Lieux",
     "my_locations": "Mes emplacements"
-  }
+  },
+  "settings_download_backup": "Télécharger la sauvegarde"
 }

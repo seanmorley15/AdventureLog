@@ -297,7 +297,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 is_authorized = True
                 
             # Level 3: Owner access
-            elif request.user.is_authenticated and request.user.id == owner_id:
+            elif request.user.is_authenticated and request.user == owner_id:
                 is_authorized = True
                 
             # Level 4: Shared collection access - check if user has access to any collection
@@ -314,7 +314,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 }, status=status.HTTP_403_FORBIDDEN)
         else:
             # No LocationImage exists; allow only the integration owner
-            if not request.user.is_authenticated or request.user.id != owner_id:
+            if not request.user.is_authenticated or request.user != owner_id:
                 return Response({
                     'message': 'Image is not linked to any location and you are not the owner.',
                     'error': True,

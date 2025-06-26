@@ -9,7 +9,15 @@
     "oss_attributions": "Attribuzioni Open Source",
     "other_attributions": "Ulteriori attribuzioni possono essere trovate nel file README.",
     "source_code": "Codice sorgente",
-    "generic_attributions": "Accedi a AdventureLog per visualizzare le attribuzioni per integrazioni e servizi abilitati."
+    "generic_attributions": "Accedi a AdventureLog per visualizzare le attribuzioni per integrazioni e servizi abilitati.",
+    "attributions": "Attribuzioni",
+    "developer": "Sviluppatore",
+    "license_info": "Licenza",
+    "sponsor": "Sponsor",
+    "thank_you": "Grazie per aver usato AdventureLog!",
+    "version": "Versione",
+    "view_changelog": "Visualizza Changelog",
+    "view_license": "Visualizza la licenza"
   },
   "adventures": {
     "activities": {},
@@ -250,7 +258,8 @@
     "visit_calendar": "Visita il calendario",
     "wiki_location_desc": "Estratto dall'articolo di Wikipedia che corrisponde al nome della posizione.",
     "will_be_marked_location": "sarà contrassegnato come visitato una volta salvata la posizione.",
-    "no_locations_found": "Nessuna posizione trovata"
+    "no_locations_found": "Nessuna posizione trovata",
+    "image_modal_navigate": "Usa i tasti freccia o fai clic per navigare"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -497,7 +506,36 @@
     "staff_status": "Stato del personale",
     "staff_user": "Utente del personale",
     "password_auth": "Autenticazione della password",
-    "invalid_credentials": "Credenziali non valide"
+    "invalid_credentials": "Credenziali non valide",
+    "backup_restore": "Backup",
+    "backup_restore_desc": "Salva i tuoi dati o ripristinarli da un precedente file di backup.",
+    "complete_setup_to_enable": "Setup completa per abilitare MFA",
+    "copy_all": "Copia tutto",
+    "enter_6_digit_code": "Immettere il codice a 6 cifre",
+    "enter_code_from_app": "Immettere il codice dall'app",
+    "error_occurred": "Si è verificato un errore",
+    "important": "Importante",
+    "manual_entry": "Ingresso manuale",
+    "mfa_already_enabled": "MFA già abilitato",
+    "mfa_required": "MFA richiesto",
+    "scan_qr_code": "Scansionare il codice QR",
+    "scan_with_authenticator_app": "Scansiona con l'app Authenticator",
+    "secure_your_account": "Proteggere il tuo account",
+    "setup_required": "Setup richiesto",
+    "verify_setup": "Verifica la configurazione",
+    "whats_included": "Cosa è incluso",
+    "backup_your_data": "Eseguire il backup dei tuoi dati",
+    "backup_your_data_desc": "Scarica un backup completo dei dati dell'account tra cui posizioni, raccolte, media e visite.",
+    "data_override_acknowledge": "Riconosco che questo sovrascriverà tutti i miei dati esistenti",
+    "data_override_acknowledge_desc": "Questa azione è irreversibile e sostituirà tutte le posizioni, le raccolte e le visite nel tuo account.",
+    "data_override_warning": "Avviso di sovraccarico dei dati",
+    "data_override_warning_desc": "Il ripristino dei dati sostituirà completamente tutti i dati esistenti (inclusi nel backup) nel tuo account. \nQuesta azione non può essere annullata.",
+    "integrations_settings": "Impostazioni integrazioni",
+    "media": "Media",
+    "restore_data": "Ripristina i dati",
+    "restore_data_desc": "Carica un file di backup per ripristinare i dati.",
+    "select_backup_file": "Seleziona il file di backup",
+    "world_travel_visits": "Visite di viaggio nel mondo"
   },
   "checklist": {
     "checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",
@@ -722,5 +760,6 @@
     "location": "Posizione",
     "locations": "Luoghi",
     "my_locations": "Le mie posizioni"
-  }
+  },
+  "settings_download_backup": "Scarica il backup"
 }

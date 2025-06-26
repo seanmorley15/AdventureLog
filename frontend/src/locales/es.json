@@ -43,7 +43,15 @@
     "nominatim_2": "Sus datos están licenciados bajo la licencia ODbL.",
     "other_attributions": "Atribuciones adicionales se pueden encontrar en el archivo README.",
     "close": "Cerrar",
-    "generic_attributions": "Inicie sesión en AdventureLog para ver las atribuciones para integraciones y servicios habilitados."
+    "generic_attributions": "Inicie sesión en AdventureLog para ver las atribuciones para integraciones y servicios habilitados.",
+    "attributions": "Atribuciones",
+    "developer": "Revelador",
+    "license_info": "Licencia",
+    "sponsor": "Patrocinador",
+    "thank_you": "¡Gracias por usar Adventurelog!",
+    "version": "Versión",
+    "view_changelog": "Ver ChangeLog",
+    "view_license": "Ver licencia"
   },
   "home": {
     "hero_1": "Descubre las Aventuras Más Emocionantes del Mundo",
@@ -302,7 +310,8 @@
     "visit_calendar": "Visitar el calendario",
     "wiki_location_desc": "Extrae extracto del artículo de Wikipedia que coincide con el nombre de la ubicación.",
     "will_be_marked_location": "se marcará según lo visitado una vez que se guarde la ubicación.",
-    "no_locations_found": "No se encontraron ubicaciones"
+    "no_locations_found": "No se encontraron ubicaciones",
+    "image_modal_navigate": "Use teclas de flecha o haga clic para navegar"
   },
   "worldtravel": {
     "all": "Todo",
@@ -497,7 +506,36 @@
     "all_rights_reserved": "Reservados todos los derechos.",
     "email_verified_erorr_desc": "Su correo electrónico no pudo ser verificado. \nPor favor intente de nuevo.",
     "no_emai_set": "Sin conjunto de correo electrónico",
-    "invalid_credentials": "Credenciales no válidas"
+    "invalid_credentials": "Credenciales no válidas",
+    "backup_restore": "Respaldo",
+    "backup_restore_desc": "Guardar sus datos o restaurarlo desde un archivo de copia de seguridad anterior.",
+    "complete_setup_to_enable": "Configuración completa para habilitar MFA",
+    "copy_all": "Copiar todo",
+    "enter_6_digit_code": "Ingrese el código de 6 dígitos",
+    "enter_code_from_app": "Ingrese el código desde la aplicación",
+    "error_occurred": "Se ha producido un error",
+    "important": "Importante",
+    "manual_entry": "Entrada manual",
+    "mfa_already_enabled": "MFA ya habilitado",
+    "mfa_required": "MFA requerido",
+    "scan_qr_code": "Escanear el código QR",
+    "scan_with_authenticator_app": "Escanear con la aplicación Authenticator",
+    "secure_your_account": "Asegure su cuenta",
+    "setup_required": "Configuración requerida",
+    "verify_setup": "Verificar la configuración",
+    "whats_included": "¿Qué está incluido?",
+    "backup_your_data": "Haga una copia de seguridad de sus datos",
+    "backup_your_data_desc": "Descargue una copia de seguridad completa de los datos de su cuenta, incluidas ubicaciones, colecciones, medios y visitas.",
+    "data_override_acknowledge": "Reconozco que esto anulará todos mis datos existentes.",
+    "data_override_acknowledge_desc": "Esta acción es irreversible y reemplazará todas las ubicaciones, colecciones y visitas en su cuenta.",
+    "data_override_warning": "Advertencia de anulación de datos",
+    "data_override_warning_desc": "La restauración de datos reemplazará completamente todos los datos existentes (que se incluyen en la copia de seguridad) en su cuenta. \nEsta acción no se puede deshacer.",
+    "integrations_settings": "Configuración de integraciones",
+    "media": "Medios de comunicación",
+    "restore_data": "Restaurar datos",
+    "restore_data_desc": "Cargue un archivo de copia de seguridad para restaurar sus datos.",
+    "select_backup_file": "Seleccione el archivo de copia de seguridad",
+    "world_travel_visits": "Visitas de viajes mundiales"
   },
   "checklist": {
     "checklist_delete_error": "Error al eliminar la lista de tareas",
@@ -722,5 +760,6 @@
     "location": "Ubicación",
     "locations": "Ubicación",
     "my_locations": "Mis ubicaciones"
-  }
+  },
+  "settings_download_backup": "Descargar copia de seguridad"
 }
