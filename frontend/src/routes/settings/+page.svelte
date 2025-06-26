@@ -1046,8 +1046,7 @@
 										class="space-y-4"
 									>
 										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
+											<label class="label" for="backup-file">
 												<span class="label-text font-medium"
 													>{$t('settings.select_backup_file')}</span
 												>
@@ -1055,6 +1054,7 @@
 											<input
 												type="file"
 												name="file"
+												id="backup-file"
 												class="file-input file-input-bordered file-input-primary w-full"
 												accept=".zip"
 												required
