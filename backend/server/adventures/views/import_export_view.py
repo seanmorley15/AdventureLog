@@ -14,6 +14,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from django.conf import settings
 
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
@@ -38,9 +39,10 @@ class BackupViewSet(viewsets.ViewSet):
         
         # Build export data structure
         export_data = {
-            'version': '1.0',
+            'version': settings.ADVENTURELOG_RELEASE_VERSION,
             'export_date': datetime.now().isoformat(),
             'user_email': user.email,
+            'user_username': user.username,
             'categories': [],
             'collections': [],
             'locations': [],
@@ -83,7 +85,7 @@ class BackupViewSet(viewsets.ViewSet):
                 'end_date': collection.end_date.isoformat() if collection.end_date else None,
                 'is_archived': collection.is_archived,
                 'link': collection.link,
-                'shared_with_emails': list(collection.shared_with.values_list('email', flat=True))
+                'shared_with_user_ids': [str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True)]
             })
         
         # Create collection name to export_id mapping
@@ -416,10 +418,11 @@ class BackupViewSet(viewsets.ViewSet):
             summary['collections'] += 1
             
             # Handle shared users
-            for email in col_data.get('shared_with_emails', []):
+            for uuid in col_data.get('shared_with_user_ids', []):
                 try:
-                    shared_user = User.objects.get(email=email)
-                    collection.shared_with.add(shared_user)
+                    shared_user = User.objects.get(uuid=uuid)
+                    if shared_user.public_profile:
+                        collection.shared_with.add(shared_user)
                 except User.DoesNotExist:
                     pass
         

@@ -88,7 +88,9 @@
 
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
-	let image_url: string | null = null;
+	let adventure_images: { image: string; adventure: AdditionalLocation | null }[] = [];
+	let modalInitialIndex: number = 0;
+	let isImageModalOpen: boolean = false;
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -113,6 +115,19 @@
 		isEditModalOpen = false;
 		geojson = null;
 		await getGpxFiles();
+	}
+
+	function closeImageModal() {
+		isImageModalOpen = false;
+	}
+
+	function openImageModal(imageIndex: number) {
+		adventure_images = adventure.images.map(img => ({
+			image: img.image,
+			adventure: adventure
+		}));
+		modalInitialIndex = imageIndex;
+		isImageModalOpen = true;
 	}
 </script>
 
@@ -139,8 +154,12 @@
 	/>
 {/if}
 
-{#if image_url}
-	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} {adventure} />
+{#if isImageModalOpen}
+	<ImageDisplayModal
+		images={adventure_images}
+		initialIndex={modalInitialIndex}
+		on:close={closeImageModal}
+	/>
 {/if}
 
 {#if !adventure && !notFound}
@@ -176,7 +195,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => (image_url = image.image)}
+							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${adventure.name}`}
 						>
 							<img src={image.image} class="w-full h-full object-cover" alt={adventure.name} />
@@ -728,13 +747,13 @@
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-								{#each adventure.images as image}
+								{#each adventure.images as image, index}
 									<div class="relative group">
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
-											on:click={() => (image_url = image.image)}
-											on:keydown={(e) => e.key === 'Enter' && (image_url = image.image)}
+											on:click={() => openImageModal(index)}
+											on:keydown={(e) => e.key === 'Enter' && openImageModal(index)}
 											role="button"
 											tabindex="0"
 										></div>

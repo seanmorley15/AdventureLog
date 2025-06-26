@@ -26,7 +26,6 @@
 	let googleMapsEnabled = data.props.googleMapsEnabled;
 	let activeSection: string = 'profile';
 	let acknowledgeRestoreOverride: boolean = false;
-	let fileInput: HTMLInputElement;
 
 	let newImmichIntegration: ImmichIntegration = {
 		server_url: '',
@@ -935,9 +934,9 @@
 								</div>
 								<div>
 									<div>
-										<h2 class="text-2xl font-bold">Backup & Restore</h2>
+										<h2 class="text-2xl font-bold">{$t('settings.backup_restore')}</h2>
 										<p class="text-base-content/70">
-											Save your data or restore it from a previous backup file.
+											{$t('settings.backup_restore_desc')}
 										</p>
 									</div>
 								</div>
@@ -945,7 +944,9 @@
 
 							<!-- Backup Coverage -->
 							<div class="bg-base-200 rounded-xl p-4 mb-6">
-								<h4 class="text-sm font-semibold mb-3 text-base-content/70">What's Included</h4>
+								<h4 class="text-sm font-semibold mb-3 text-base-content/70">
+									{$t('settings.whats_included')}
+								</h4>
 								<div class="grid grid-cols-2 gap-4 text-sm">
 									<!-- Backed Up -->
 									<div class="space-y-2">
@@ -1030,8 +1031,8 @@
 										<div>
 											<h4 class="font-bold">⚠️ Data Override Warning</h4>
 											<p class="text-sm">
-												Restoring data will completely replace all existing data in your account.
-												This action cannot be undone.
+												Restoring data will completely replace all existing data (that is included
+												in the backup) in your account. This action cannot be undone.
 											</p>
 										</div>
 									</div>
