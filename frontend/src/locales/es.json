@@ -523,7 +523,19 @@
     "secure_your_account": "Asegure su cuenta",
     "setup_required": "Configuración requerida",
     "verify_setup": "Verificar la configuración",
-    "whats_included": "¿Qué está incluido?"
+    "whats_included": "¿Qué está incluido?",
+    "backup_your_data": "Haga una copia de seguridad de sus datos",
+    "backup_your_data_desc": "Descargue una copia de seguridad completa de los datos de su cuenta, incluidas ubicaciones, colecciones, medios y visitas.",
+    "data_override_acknowledge": "Reconozco que esto anulará todos mis datos existentes.",
+    "data_override_acknowledge_desc": "Esta acción es irreversible y reemplazará todas las ubicaciones, colecciones y visitas en su cuenta.",
+    "data_override_warning": "Advertencia de anulación de datos",
+    "data_override_warning_desc": "La restauración de datos reemplazará completamente todos los datos existentes (que se incluyen en la copia de seguridad) en su cuenta. \nEsta acción no se puede deshacer.",
+    "integrations_settings": "Configuración de integraciones",
+    "media": "Medios de comunicación",
+    "restore_data": "Restaurar datos",
+    "restore_data_desc": "Cargue un archivo de copia de seguridad para restaurar sus datos.",
+    "select_backup_file": "Seleccione el archivo de copia de seguridad",
+    "world_travel_visits": "Visitas de viajes mundiales"
   },
   "checklist": {
     "checklist_delete_error": "Error al eliminar la lista de tareas",
@@ -748,5 +760,6 @@
     "location": "Ubicación",
     "locations": "Ubicación",
     "my_locations": "Mis ubicaciones"
-  }
+  },
+  "settings_download_backup": "Descargar copia de seguridad"
 }

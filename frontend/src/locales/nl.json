@@ -523,7 +523,19 @@
     "mfa_required": "MFA vereist",
     "scan_qr_code": "Scan QR -code",
     "scan_with_authenticator_app": "Scan met authenticator -app",
-    "secure_your_account": "Beveilig uw account"
+    "secure_your_account": "Beveilig uw account",
+    "backup_your_data": "Back -up van uw gegevens",
+    "backup_your_data_desc": "Download een volledige back -up van uw accountgegevens, inclusief locaties, collecties, media en bezoeken.",
+    "data_override_acknowledge": "Ik erken dat dit al mijn bestaande gegevens zal overschrijven",
+    "data_override_acknowledge_desc": "Deze actie is onomkeerbaar en vervangt alle locaties, collecties en bezoeken in uw account.",
+    "data_override_warning": "Gegevensoverschrijdende waarschuwing",
+    "data_override_warning_desc": "Het herstellen van gegevens zal alle bestaande gegevens (die in de back -up zijn opgenomen) in uw account volledig vervangen. \nDeze actie kan niet ongedaan worden gemaakt.",
+    "integrations_settings": "Instellingen integraties",
+    "media": "Media",
+    "restore_data": "Herstel gegevens",
+    "restore_data_desc": "Upload een back -upbestand om uw gegevens te herstellen.",
+    "select_backup_file": "Selecteer back -upbestand",
+    "world_travel_visits": "Wereldreizen bezoeken"
   },
   "checklist": {
     "checklist_delete_error": "Fout bij het verwijderen van de checklist",
@@ -748,5 +760,6 @@
     "location": "Locatie",
     "locations": "Locaties",
     "my_locations": "Mijn locaties"
-  }
+  },
+  "settings_download_backup": "Download back -up"
 }

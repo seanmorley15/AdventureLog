@@ -951,38 +951,38 @@
 									<!-- Backed Up -->
 									<div class="space-y-2">
 										<div class="flex items-center justify-between">
-											<span>📍 Locations</span>
+											<span>📍 {$t('locations.locations')}</span>
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>🚶 Visits</span>
+											<span>🚶 {$t('adventures.visits')}</span>
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>📚 Collections</span>
+											<span>📚 {$t('navbar.collections')}</span>
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>🖼️ Media</span>
+											<span>🖼️ {$t('settings.media')}</span>
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>🌍 World Travel Visits</span>
+											<span>🌍 {$t('settings.world_travel_visits')}</span>
 											<span>✅</span>
 										</div>
 									</div>
 									<!-- Not Backed Up -->
 									<div class="space-y-2">
 										<div class="flex items-center justify-between">
-											<span>⚙️ Settings</span>
+											<span>⚙️ {$t('navbar.settings')}</span>
 											<span>❌</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>👤 Profile</span>
+											<span>👤 {$t('navbar.profile')}</span>
 											<span>❌</span>
 										</div>
 										<div class="flex items-center justify-between">
-											<span>🔗 Integrations</span>
+											<span>🔗 {$t('settings.integrations_settings')}</span>
 											<span>❌</span>
 										</div>
 										<div class="flex items-center justify-between opacity-30">
@@ -996,21 +996,22 @@
 							<div class="space-y-6">
 								<!-- Backup Data -->
 								<div class="p-6 bg-base-200 rounded-xl">
-									<h3 class="text-lg font-semibold mb-4">📤 Backup Your Data</h3>
+									<h3 class="text-lg font-semibold mb-4">📤 {$t('settings.backup_your_data')}</h3>
 									<p class="text-base-content/70 mb-4">
-										Download a complete backup of your account data including locations,
-										collections, media, and visits.
+										{$t('settings.backup_your_data_desc')}
 									</p>
 									<div class="flex gap-4">
-										<a class="btn btn-primary" href="/api/backup/export"> 💾 Download Backup </a>
+										<a class="btn btn-primary" href="/api/backup/export">
+											💾 {$t('settings_download_backup')}
+										</a>
 									</div>
 								</div>
 
 								<!-- Restore Data -->
 								<div class="p-6 bg-base-200 rounded-xl">
-									<h3 class="text-lg font-semibold mb-4">📥 Restore Data</h3>
+									<h3 class="text-lg font-semibold mb-4">📥 {$t('settings.restore_data')}</h3>
 									<p class="text-base-content/70 mb-4">
-										Upload a backup file to restore your data.
+										{$t('settings.restore_data_desc')}
 									</p>
 
 									<!-- Warning Alert -->
@@ -1029,10 +1030,9 @@
 											/>
 										</svg>
 										<div>
-											<h4 class="font-bold">⚠️ Data Override Warning</h4>
+											<h4 class="font-bold">⚠️ {$t('settings.data_override_warning')}</h4>
 											<p class="text-sm">
-												Restoring data will completely replace all existing data (that is included
-												in the backup) in your account. This action cannot be undone.
+												{$t('settings.data_override_warning_desc')}
 											</p>
 										</div>
 									</div>
@@ -1048,7 +1048,9 @@
 										<div class="form-control">
 											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">Select backup file</span>
+												<span class="label-text font-medium"
+													>{$t('settings.select_backup_file')}</span
+												>
 											</label>
 											<input
 												type="file"
@@ -1057,9 +1059,6 @@
 												accept=".zip"
 												required
 											/>
-											<div class="label">
-												<span class="label-text-alt">Supported formats: .zip</span>
-											</div>
 										</div>
 
 										<!-- Acknowledgment Checkbox -->
@@ -1075,11 +1074,10 @@
 												/>
 												<div>
 													<span class="label-text font-medium text-warning"
-														>I acknowledge that this will override all my existing data</span
+														>{$t('settings.data_override_acknowledge')}</span
 													>
 													<p class="text-xs text-base-content/60 mt-1">
-														This action is irreversible and will replace all locations, collections,
-														and visits in your account.
+														{$t('settings.data_override_acknowledge_desc')}
 													</p>
 												</div>
 											</label>
@@ -1110,7 +1108,7 @@
 												class="btn btn-warning"
 												disabled={!acknowledgeRestoreOverride}
 											>
-												🚀 Restore Data
+												🚀 {$t('settings.restore_data')}
 											</button>
 										</div>
 									</form>

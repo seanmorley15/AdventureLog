@@ -523,7 +523,19 @@
     "secure_your_account": "Säkra ditt konto",
     "setup_required": "Installation krävs",
     "verify_setup": "Verifiera installationen",
-    "whats_included": "Vad ingår"
+    "whats_included": "Vad ingår",
+    "backup_your_data": "Säkerhetskopiera dina data",
+    "backup_your_data_desc": "Ladda ner en fullständig säkerhetskopia av dina kontodata inklusive platser, samlingar, media och besök.",
+    "data_override_acknowledge": "Jag erkänner att detta kommer att åsidosätta alla mina befintliga uppgifter",
+    "data_override_acknowledge_desc": "Denna åtgärd är irreversibel och kommer att ersätta alla platser, samlingar och besök på ditt konto.",
+    "data_override_warning": "Data åsidosättande varning",
+    "data_override_warning_desc": "Återställa data kommer helt att ersätta alla befintliga data (som ingår i säkerhetskopian) i ditt konto. \nDenna åtgärd kan inte ångras.",
+    "integrations_settings": "Integrationsinställningar",
+    "media": "Media",
+    "restore_data": "Återställa data",
+    "restore_data_desc": "Ladda upp en säkerhetskopieringsfil för att återställa dina data.",
+    "select_backup_file": "Välj säkerhetskopieringsfil",
+    "world_travel_visits": "Världsresebesök"
   },
   "checklist": {
     "checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",
@@ -748,5 +760,6 @@
     "location": "Plats",
     "locations": "Plats",
     "my_locations": "Mina platser"
-  }
+  },
+  "settings_download_backup": "Ladda ner säkerhetskopiering"
 }

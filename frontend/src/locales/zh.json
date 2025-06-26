@@ -523,7 +523,19 @@
     "secure_your_account": "保护您的帐户",
     "setup_required": "需要设置",
     "verify_setup": "验证设置",
-    "whats_included": "包括什么"
+    "whats_included": "包括什么",
+    "backup_your_data": "备份您的数据",
+    "backup_your_data_desc": "下载您的帐户数据的完整备份，包括位置，集合，媒体和访问。",
+    "data_override_acknowledge": "我承认这将覆盖我所有现有数据",
+    "data_override_acknowledge_desc": "此操作是不可逆转的，将取代您帐户中的所有位置，收集和访问。",
+    "data_override_warning": "数据覆盖警告",
+    "data_override_warning_desc": "还原数据将完全替换帐户中的所有现有数据（备份中包含在备份中）。\n该动作不能撤消。",
+    "integrations_settings": "集成设置",
+    "media": "媒体",
+    "restore_data": "还原数据",
+    "restore_data_desc": "上传备份文件以还原数据。",
+    "select_backup_file": "选择备份文件",
+    "world_travel_visits": "世界旅行访问"
   },
   "checklist": {
     "checklist_delete_error": "删除清单时出错",
@@ -748,5 +760,6 @@
     "location": "地点",
     "locations": "位置",
     "my_locations": "我的位置"
-  }
+  },
+  "settings_download_backup": "下载备份"
 }

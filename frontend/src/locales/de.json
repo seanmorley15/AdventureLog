@@ -523,7 +523,19 @@
     "secure_your_account": "Sichern Sie Ihr Konto",
     "setup_required": "Setup erforderlich",
     "verify_setup": "Überprüfen Sie das Setup",
-    "whats_included": "Was ist enthalten"
+    "whats_included": "Was ist enthalten",
+    "backup_your_data": "Sichern Sie Ihre Daten",
+    "backup_your_data_desc": "Laden Sie eine vollständige Sicherung Ihrer Kontodaten, einschließlich Standorte, Sammlungen, Medien und Besuchen, herunter.",
+    "data_override_acknowledge": "Ich bestätige, dass dies alle meine vorhandenen Daten überschreibt",
+    "data_override_acknowledge_desc": "Diese Aktion ist irreversibel und ersetzt alle Standorte, Sammlungen und Besuche in Ihrem Konto.",
+    "data_override_warning": "Daten überschreiben Warnung",
+    "data_override_warning_desc": "Das Wiederherstellen von Daten ersetzt alle vorhandenen Daten (die in der Sicherung enthalten sind) in Ihrem Konto vollständig. \nDiese Aktion kann nicht rückgängig gemacht werden.",
+    "integrations_settings": "Integrationseinstellungen",
+    "media": "Medien",
+    "restore_data": "Daten wiederherstellen",
+    "restore_data_desc": "Laden Sie eine Sicherungsdatei hoch, um Ihre Daten wiederherzustellen.",
+    "select_backup_file": "Wählen Sie Sicherungsdatei",
+    "world_travel_visits": "Weltreisebesuche"
   },
   "checklist": {
     "checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -748,5 +760,6 @@
     "location": "Standort",
     "locations": "Standorte",
     "my_locations": "Meine Standorte"
-  }
+  },
+  "settings_download_backup": "Backup herunterladen"
 }

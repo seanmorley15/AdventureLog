@@ -523,7 +523,19 @@
     "secure_your_account": "Sécuriser votre compte",
     "setup_required": "Configuration requise",
     "verify_setup": "Vérifiez la configuration",
-    "whats_included": "Ce qui est inclus"
+    "whats_included": "Ce qui est inclus",
+    "backup_your_data": "Sauvegardez vos données",
+    "backup_your_data_desc": "Téléchargez une sauvegarde complète des données de votre compte, y compris les emplacements, les collections, les médias et les visites.",
+    "data_override_acknowledge": "Je reconnais que cela remplacera toutes mes données existantes",
+    "data_override_acknowledge_desc": "Cette action est irréversible et remplacera tous les emplacements, collections et visites dans votre compte.",
+    "data_override_warning": "Avertissement de remplacement des données",
+    "data_override_warning_desc": "La restauration des données remplacera complètement toutes les données existantes (incluses dans la sauvegarde) dans votre compte. \nCette action ne peut pas être annulée.",
+    "integrations_settings": "Paramètres des intégrations",
+    "media": "Médias",
+    "restore_data": "Restaurer les données",
+    "restore_data_desc": "Téléchargez un fichier de sauvegarde pour restaurer vos données.",
+    "select_backup_file": "Sélectionnez le fichier de sauvegarde",
+    "world_travel_visits": "Visites de voyage dans le monde"
   },
   "checklist": {
     "checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",
@@ -748,5 +760,6 @@
     "location": "Emplacement",
     "locations": "Lieux",
     "my_locations": "Mes emplacements"
-  }
+  },
+  "settings_download_backup": "Télécharger la sauvegarde"
 }

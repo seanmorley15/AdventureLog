@@ -523,7 +523,19 @@
     "secure_your_account": "Zabezpiecz swoje konto",
     "setup_required": "Wymagana konfiguracja",
     "verify_setup": "Sprawdź konfigurację",
-    "whats_included": "Co jest uwzględnione"
+    "whats_included": "Co jest uwzględnione",
+    "backup_your_data": "Kopie wykonuj kopię zapasową danych",
+    "backup_your_data_desc": "Pobierz pełną kopię zapasową danych konta, w tym lokalizacji, kolekcji, mediów i wizyt.",
+    "data_override_acknowledge": "Przyjmuję do wiadomości, że zastąpi to wszystkie moje istniejące dane",
+    "data_override_acknowledge_desc": "Ta akcja jest nieodwracalna i zastąpi wszystkie lokalizacje, kolekcje i wizyty na Twoim koncie.",
+    "data_override_warning": "Zastąpienie danych ostrzeżenia",
+    "data_override_warning_desc": "Przywracanie danych całkowicie zastąpi wszystkie istniejące dane (które są zawarte w tworzeniu kopii zapasowej) na Twoim koncie. \nTego działania nie można cofnąć.",
+    "integrations_settings": "Ustawienia integracji",
+    "media": "Głoska bezdźwięczna",
+    "restore_data": "Przywróć dane",
+    "restore_data_desc": "Prześlij plik kopii zapasowej, aby przywrócić dane.",
+    "select_backup_file": "Wybierz plik kopii zapasowej",
+    "world_travel_visits": "Wizyty podróży na świecie"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -748,5 +760,6 @@
     "location": "Lokalizacja",
     "locations": "Lokalizacje",
     "my_locations": "Moje lokalizacje"
-  }
+  },
+  "settings_download_backup": "Pobierz kopię zapasową"
 }

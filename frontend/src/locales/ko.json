@@ -615,7 +615,19 @@
     "secure_your_account": "계정을 확보하십시오",
     "setup_required": "설정이 필요합니다",
     "verify_setup": "설정을 확인하십시오",
-    "whats_included": "포함 된 내용"
+    "whats_included": "포함 된 내용",
+    "backup_your_data": "데이터를 백업하십시오",
+    "backup_your_data_desc": "위치, 컬렉션, 미디어 및 방문을 포함하여 계정 데이터의 전체 백업을 다운로드하십시오.",
+    "data_override_acknowledge": "나는 이것이 나의 모든 기존 데이터를 무시할 것임을 인정합니다.",
+    "data_override_acknowledge_desc": "이 조치는 돌이킬 수 없으며 계정의 모든 위치, 컬렉션 및 방문을 대체합니다.",
+    "data_override_warning": "데이터를 우선적으로 경고합니다",
+    "data_override_warning_desc": "데이터 복원은 계정의 모든 기존 데이터 (백업에 포함 된)를 완전히 대체합니다. \n이 조치는 취소 할 수 없습니다.",
+    "integrations_settings": "통합 설정",
+    "media": "메디아",
+    "restore_data": "데이터를 복원하십시오",
+    "restore_data_desc": "백업 파일을 업로드하여 데이터를 복원하십시오.",
+    "select_backup_file": "백업 파일을 선택하십시오",
+    "world_travel_visits": "세계 여행 방문"
   },
   "share": {
     "go_to_settings": "설정으로 이동",
@@ -747,5 +759,6 @@
     "location": "위치",
     "locations": "위치",
     "my_locations": "내 위치"
-  }
+  },
+  "settings_download_backup": "백업을 다운로드하십시오"
 }

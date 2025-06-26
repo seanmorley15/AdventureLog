@@ -523,7 +523,19 @@
     "important": "Important",
     "error_occurred": "An error has occurred",
     "mfa_already_enabled": "MFA already enabled",
-    "complete_setup_to_enable": "Complete setup to enable MFA"
+    "complete_setup_to_enable": "Complete setup to enable MFA",
+    "world_travel_visits": "World Travel Visits",
+    "media": "Media",
+    "integrations_settings": "Integrations Settings",
+    "backup_your_data": "Backup Your Data",
+    "backup_your_data_desc": "Download a complete backup of your account data including locations, \t\t\t\t\t\t\t\t\t\tcollections, media, and visits.",
+    "restore_data": "Restore Data",
+    "restore_data_desc": "Upload a backup file to restore your data.",
+    "data_override_warning": "Data Override Warning",
+    "data_override_warning_desc": "Restoring data will completely replace all existing data (that is included \t\t\t\t\t\t\t\t\t\t\t\tin the backup) in your account. This action cannot be undone.",
+    "select_backup_file": "Select backup file",
+    "data_override_acknowledge": "I acknowledge that this will override all my existing data",
+    "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account."
   },
   "collection": {
     "collection_created": "Collection created successfully!",
@@ -748,5 +760,6 @@
     "location": "Location",
     "locations": "Locations",
     "my_locations": "My Locations"
-  }
+  },
+  "settings_download_backup": "Download Backup"
 }
