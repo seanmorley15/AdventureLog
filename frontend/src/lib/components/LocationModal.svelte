@@ -847,7 +847,7 @@
 
 					{#if immichIntegration}
 						<ImmichSelect
-							adventure={location}
+							{location}
 							on:fetchImage={(e) => {
 								url = e.detail;
 								fetchImage();
