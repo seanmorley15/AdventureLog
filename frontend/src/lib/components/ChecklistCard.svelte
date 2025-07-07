@@ -99,7 +99,7 @@
 				<Launch class="w-5 h-5" />
 				{$t('notes.open')}
 			</button>
-			{#if checklist.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+			{#if checklist.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 				<button
 					id="delete_adventure"
 					data-umami-event="Delete Checklist"

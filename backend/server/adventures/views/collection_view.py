@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from adventures.models import Collection, Adventure, Transportation, Note, Checklist
+from adventures.models import Collection, Location, Transportation, Note, Checklist
 from adventures.permissions import CollectionShared
 from adventures.serializers import CollectionSerializer
 from users.models import CustomUser as User
@@ -15,8 +15,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
 
-    # def get_queryset(self):
-    #     return Collection.objects.filter(Q(user_id=self.request.user.id) & Q(is_archived=False))
 
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
@@ -47,15 +45,13 @@ class CollectionViewSet(viewsets.ModelViewSet):
             if order_direction == 'asc':
                 ordering = '-updated_at'
 
-        #print(f"Ordering by: {ordering}")  # For debugging
-
         return queryset.order_by(ordering)
     
     def list(self, request, *args, **kwargs):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        queryset = Collection.objects.filter(user_id=request.user.id, is_archived=False)
+        queryset = Collection.objects.filter(user=request.user, is_archived=False)
         queryset = self.apply_sorting(queryset)
         collections = self.paginate_and_respond(queryset, request)
         return collections
@@ -66,7 +62,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=400)
        
         queryset = Collection.objects.filter(
-            Q(user_id=request.user.id)
+            Q(user=request.user)
         )
         
         queryset = self.apply_sorting(queryset)
@@ -80,7 +76,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=400)
        
         queryset = Collection.objects.filter(
-            Q(user_id=request.user.id) & Q(is_archived=True)
+            Q(user=request.user.id) & Q(is_archived=True)
         )
         
         queryset = self.apply_sorting(queryset)
@@ -88,7 +84,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
        
         return Response(serializer.data)
     
-    # this make the is_public field of the collection cascade to the adventures
+    # this make the is_public field of the collection cascade to the locations
     @transaction.atomic
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', False)
@@ -99,7 +95,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if 'collection' in serializer.validated_data:
             new_collection = serializer.validated_data['collection']
             # if the new collection is different from the old one and the user making the request is not the owner of the new collection return an error
-            if new_collection != instance.collection and new_collection.user_id != request.user:
+            if new_collection != instance.collection and new_collection.user != request.user:
                 return Response({"error": "User does not own the new collection"}, status=400)
 
         # Check if the 'is_public' field is present in the update data
@@ -107,29 +103,29 @@ class CollectionViewSet(viewsets.ModelViewSet):
             new_public_status = serializer.validated_data['is_public']
             
             # if is_public has changed and the user is not the owner of the collection return an error
-            if new_public_status != instance.is_public and instance.user_id != request.user:
-                print(f"User {request.user.id} does not own the collection {instance.id} that is owned by {instance.user_id}")
+            if new_public_status != instance.is_public and instance.user != request.user:
+                print(f"User {request.user.id} does not own the collection {instance.id} that is owned by {instance.user}")
                 return Response({"error": "User does not own the collection"}, status=400)
 
-            # Get all adventures in this collection
-            adventures_in_collection = Adventure.objects.filter(collections=instance)
+            # Get all locations in this collection
+            locations_in_collection = Location.objects.filter(collections=instance)
             
             if new_public_status:
-                # If collection becomes public, make all adventures public
-                adventures_in_collection.update(is_public=True)
+                # If collection becomes public, make all locations public
+                locations_in_collection.update(is_public=True)
             else:
-                # If collection becomes private, check each adventure
-                # Only set an adventure to private if ALL of its collections are private
-                # Collect adventures that do NOT belong to any other public collection (excluding the current one)
-                adventure_ids_to_set_private = []
+                # If collection becomes private, check each location
+                # Only set a location to private if ALL of its collections are private
+                # Collect locations that do NOT belong to any other public collection (excluding the current one)
+                location_ids_to_set_private = []
 
-                for adventure in adventures_in_collection:
-                    has_public_collection = adventure.collections.filter(is_public=True).exclude(id=instance.id).exists()
+                for location in locations_in_collection:
+                    has_public_collection = location.collections.filter(is_public=True).exclude(id=instance.id).exists()
                     if not has_public_collection:
-                        adventure_ids_to_set_private.append(adventure.id)
+                        location_ids_to_set_private.append(location.id)
 
-                # Bulk update those adventures
-                Adventure.objects.filter(id__in=adventure_ids_to_set_private).update(is_public=False)
+                # Bulk update those locations
+                Location.objects.filter(id__in=location_ids_to_set_private).update(is_public=False)
 
             # Update transportations, notes, and checklists related to this collection
             # These still use direct ForeignKey relationships
@@ -150,7 +146,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
     
-    # make an action to retreive all adventures that are shared with the user
+    # make an action to retreive all locations that are shared with the user
     @action(detail=False, methods=['get'])
     def shared(self, request):
         if not request.user.is_authenticated:
@@ -162,7 +158,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
-    # Adds a new user to the shared_with field of an adventure
+    # Adds a new user to the shared_with field of a location
     @action(detail=True, methods=['post'], url_path='share/(?P<uuid>[^/.]+)')
     def share(self, request, pk=None, uuid=None):
         collection = self.get_object()
@@ -177,7 +173,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "Cannot share with yourself"}, status=400)
         
         if collection.shared_with.filter(id=user.id).exists():
-            return Response({"error": "Adventure is already shared with this user"}, status=400)
+            return Response({"error": "Location is already shared with this user"}, status=400)
         
         collection.shared_with.add(user)
         collection.save()
@@ -207,28 +203,28 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.action == 'destroy':
-            return Collection.objects.filter(user_id=self.request.user.id)
+            return Collection.objects.filter(user=self.request.user.id)
         
         if self.action in ['update', 'partial_update']:
             return Collection.objects.filter(
-                Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)
+                Q(user=self.request.user.id) | Q(shared_with=self.request.user)
             ).distinct()
         
         if self.action == 'retrieve':
             if not self.request.user.is_authenticated:
                 return Collection.objects.filter(is_public=True)
             return Collection.objects.filter(
-                Q(is_public=True) | Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)
+                Q(is_public=True) | Q(user=self.request.user.id) | Q(shared_with=self.request.user)
             ).distinct()
         
         # For list action, include collections owned by the user or shared with the user, that are not archived
         return Collection.objects.filter(
-            (Q(user_id=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
+            (Q(user=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
         ).distinct()
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it
-        serializer.save(user_id=self.request.user)
+        serializer.save(user=self.request.user)
     
     def paginate_and_respond(self, queryset, request):
         paginator = self.pagination_class()

@@ -31,7 +31,7 @@
 	function initializeLodging(lodgingToEdit: Lodging | null): Lodging {
 		return {
 			id: lodgingToEdit?.id || '',
-			user_id: lodgingToEdit?.user_id || '',
+			user: lodgingToEdit?.user || '',
 			name: lodgingToEdit?.name || '',
 			type: lodgingToEdit?.type || 'other',
 			description: lodgingToEdit?.description || '',

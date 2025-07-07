@@ -1,6 +1,6 @@
-from .activity_types_view import *
-from .adventure_image_view import *
-from .adventure_view import *
+from .tags_view import *
+from .location_image_view import *
+from .location_view import *
 from .category_view import *
 from .checklist_view import *
 from .collection_view import *
@@ -14,3 +14,4 @@ from .global_search_view import *
 from .attachment_view import *
 from .lodging_view import *
 from .recommendations_view import *
+from .import_export_view import *

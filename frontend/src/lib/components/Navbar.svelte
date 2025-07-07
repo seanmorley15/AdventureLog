@@ -103,7 +103,7 @@
 
 	// Navigation items for better organization
 	const navigationItems = [
-		{ path: '/adventures', icon: MapMarker, label: 'navbar.adventures' },
+		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
 		{ path: '/collections', icon: FormatListBulletedSquare, label: 'navbar.collections' },
 		{ path: '/worldtravel', icon: Earth, label: 'navbar.worldtravel' },
 		{ path: '/map', icon: Map, label: 'navbar.map' },

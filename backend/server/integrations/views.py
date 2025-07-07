@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.pagination import PageNumberPagination
 from django.conf import settings
-from adventures.models import AdventureImage
+from adventures.models import LocationImage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 import logging
@@ -253,11 +253,11 @@ class ImmichIntegrationView(viewsets.ViewSet):
         """
         GET an Immich image using the integration and asset ID.
         Access levels (in order of priority):
-        1. Public adventures: accessible by anyone
-        2. Private adventures in public collections: accessible by anyone
-        3. Private adventures in private collections shared with user: accessible by shared users
-        4. Private adventures: accessible only to the owner
-        5. No AdventureImage: owner can still view via integration
+        1. Public locations: accessible by anyone
+        2. Private locations in public collections: accessible by anyone
+        3. Private locations in private collections shared with user: accessible by shared users
+        4. Private locations: accessible only to the owner
+        5. No LocationImage: owner can still view via integration
         """
         if not imageid or not integration_id:
             return Response({
@@ -268,36 +268,36 @@ class ImmichIntegrationView(viewsets.ViewSet):
 
         # Lookup integration and user
         integration = get_object_or_404(ImmichIntegration, id=integration_id)
-        owner_id = integration.user_id
+        owner_id = integration.user
 
         # Try to find the image entry with collections and sharing information
         image_entry = (
-            AdventureImage.objects
-            .filter(immich_id=imageid, user_id=owner_id)
-            .select_related('adventure')
-            .prefetch_related('adventure__collections', 'adventure__collections__shared_with')
-            .order_by('-adventure__is_public')  # Public adventures first
+            LocationImage.objects
+            .filter(immich_id=imageid, user=owner_id)
+            .select_related('location')
+            .prefetch_related('location__collections', 'location__collections__shared_with')
+            .order_by('-location__is_public')  # Public locations first
             .first()
         )
 
         # Access control
         if image_entry:
-            adventure = image_entry.adventure
-            collections = adventure.collections.all()
-            
+            location = image_entry.location
+            collections = location.collections.all()
+
             # Determine access level
             is_authorized = False
-            
-            # Level 1: Public adventure (highest priority)
-            if adventure.is_public:
+
+            # Level 1: Public location (highest priority)
+            if location.is_public:
                 is_authorized = True
-                
-            # Level 2: Private adventure in any public collection
+
+            # Level 2: Private location in any public collection
             elif any(collection.is_public for collection in collections):
                 is_authorized = True
                 
             # Level 3: Owner access
-            elif request.user.is_authenticated and request.user.id == owner_id:
+            elif request.user.is_authenticated and request.user == owner_id:
                 is_authorized = True
                 
             # Level 4: Shared collection access - check if user has access to any collection
@@ -308,15 +308,15 @@ class ImmichIntegrationView(viewsets.ViewSet):
             
             if not is_authorized:
                 return Response({
-                    'message': 'This image belongs to a private adventure and you are not authorized.',
+                    'message': 'This image belongs to a private location and you are not authorized.',
                     'error': True,
                     'code': 'immich.permission_denied'
                 }, status=status.HTTP_403_FORBIDDEN)
         else:
-            # No AdventureImage exists; allow only the integration owner
-            if not request.user.is_authenticated or request.user.id != owner_id:
+            # No LocationImage exists; allow only the integration owner
+            if not request.user.is_authenticated or request.user != owner_id:
                 return Response({
-                    'message': 'Image is not linked to any adventure and you are not the owner.',
+                    'message': 'Image is not linked to any location and you are not the owner.',
                     'error': True,
                     'code': 'immich.not_found'
                 }, status=status.HTTP_404_NOT_FOUND)

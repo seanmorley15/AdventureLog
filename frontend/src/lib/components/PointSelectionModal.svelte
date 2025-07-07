@@ -1,6 +1,6 @@
 <script lang="ts">
 	// @ts-nocheck
-	import type { Adventure, GeocodeSearchResult, Point } from '$lib/types';
+	import type { Location, GeocodeSearchResult, Point } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -13,7 +13,7 @@
 	let markers: Point[] = [];
 
 	export let query: string | null = null;
-	export let adventure: Adventure;
+	export let adventure: Location;
 
 	if (query) {
 		geocode();
@@ -83,7 +83,7 @@
 			adventure.name = markers[0].name;
 		}
 		if (adventure.type == 'visited' || adventure.type == 'planned') {
-			adventure.activity_types = [...adventure.activity_types, markers[0].activity_type];
+			adventure.tags = [...adventure.tags, markers[0].activity_type];
 		}
 		dispatch('submit', adventure);
 		close();

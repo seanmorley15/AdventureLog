@@ -25,7 +25,7 @@ class CountrySerializer(serializers.ModelSerializer):
         user = getattr(request, 'user', None)
         
         if user and user.is_authenticated:
-            return VisitedRegion.objects.filter(region__country=obj, user_id=user).count()
+            return VisitedRegion.objects.filter(region__country=obj, user=user).count()
         
         return 0
 
@@ -62,8 +62,8 @@ class VisitedRegionSerializer(CustomModelSerializer):
 
     class Meta:
         model = VisitedRegion
-        fields = ['id', 'user_id', 'region', 'longitude', 'latitude', 'name']
-        read_only_fields = ['user_id', 'id', 'longitude', 'latitude', 'name']
+        fields = ['id', 'user', 'region', 'longitude', 'latitude', 'name']
+        read_only_fields = ['user', 'id', 'longitude', 'latitude', 'name']
 
 class VisitedCitySerializer(CustomModelSerializer):
     longitude = serializers.DecimalField(source='city.longitude', max_digits=9, decimal_places=6, read_only=True)
@@ -72,5 +72,5 @@ class VisitedCitySerializer(CustomModelSerializer):
 
     class Meta:
         model = VisitedCity
-        fields = ['id', 'user_id', 'city', 'longitude', 'latitude', 'name']
-        read_only_fields = ['user_id', 'id', 'longitude', 'latitude', 'name']
+        fields = ['id', 'user', 'city', 'longitude', 'latitude', 'name']
+        read_only_fields = ['user', 'id', 'longitude', 'latitude', 'name']

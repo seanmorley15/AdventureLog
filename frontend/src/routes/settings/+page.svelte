@@ -20,12 +20,12 @@
 		emails = data.props.emails;
 	}
 
-	let new_password_disable_setting: boolean = false;
 	let new_email: string = '';
 	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 	let googleMapsEnabled = data.props.googleMapsEnabled;
 	let activeSection: string = 'profile';
+	let acknowledgeRestoreOverride: boolean = false;
 
 	let newImmichIntegration: ImmichIntegration = {
 		server_url: '',
@@ -41,6 +41,7 @@
 		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
 		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
 		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
+		{ id: 'import_export', icon: '📦', label: () => $t('settings.backup_restore') },
 		{ id: 'admin', icon: '⚙️', label: () => $t('settings.admin') },
 		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
 	];
@@ -919,6 +920,198 @@
 											target="_blank">{$t('navbar.documentation')}</a
 										>
 									</p>
+								</div>
+							</div>
+						</div>
+					{/if}
+
+					<!-- import export -->
+					{#if activeSection === 'import_export'}
+						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
+							<div class="flex items-center gap-4 mb-6">
+								<div class="p-3 bg-accent/10 rounded-xl">
+									<span class="text-2xl">📦</span>
+								</div>
+								<div>
+									<div>
+										<h2 class="text-2xl font-bold">{$t('settings.backup_restore')}</h2>
+										<p class="text-base-content/70">
+											{$t('settings.backup_restore_desc')}
+										</p>
+									</div>
+								</div>
+							</div>
+
+							<!-- Backup Coverage -->
+							<div class="bg-base-200 rounded-xl p-4 mb-6">
+								<h4 class="text-sm font-semibold mb-3 text-base-content/70">
+									{$t('settings.whats_included')}
+								</h4>
+								<div class="grid grid-cols-2 gap-4 text-sm">
+									<!-- Backed Up -->
+									<div class="space-y-2">
+										<div class="flex items-center justify-between">
+											<span>📍 {$t('locations.locations')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>🚶 {$t('adventures.visits')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>📚 {$t('navbar.collections')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>🖼️ {$t('settings.media')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>🌍 {$t('settings.world_travel_visits')}</span>
+											<span>✅</span>
+										</div>
+									</div>
+									<!-- Not Backed Up -->
+									<div class="space-y-2">
+										<div class="flex items-center justify-between">
+											<span>⚙️ {$t('navbar.settings')}</span>
+											<span>❌</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>👤 {$t('navbar.profile')}</span>
+											<span>❌</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>🔗 {$t('settings.integrations_settings')}</span>
+											<span>❌</span>
+										</div>
+										<div class="flex items-center justify-between opacity-30">
+											<span></span>
+											<span></span>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<div class="space-y-6">
+								<!-- Backup Data -->
+								<div class="p-6 bg-base-200 rounded-xl">
+									<h3 class="text-lg font-semibold mb-4">📤 {$t('settings.backup_your_data')}</h3>
+									<p class="text-base-content/70 mb-4">
+										{$t('settings.backup_your_data_desc')}
+									</p>
+									<div class="flex gap-4">
+										<a class="btn btn-primary" href="/api/backup/export">
+											💾 {$t('settings_download_backup')}
+										</a>
+									</div>
+								</div>
+
+								<!-- Restore Data -->
+								<div class="p-6 bg-base-200 rounded-xl">
+									<h3 class="text-lg font-semibold mb-4">📥 {$t('settings.restore_data')}</h3>
+									<p class="text-base-content/70 mb-4">
+										{$t('settings.restore_data_desc')}
+									</p>
+
+									<!-- Warning Alert -->
+									<div class="alert alert-warning mb-4">
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											class="stroke-current shrink-0 h-6 w-6"
+											fill="none"
+											viewBox="0 0 24 24"
+										>
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+											/>
+										</svg>
+										<div>
+											<h4 class="font-bold">⚠️ {$t('settings.data_override_warning')}</h4>
+											<p class="text-sm">
+												{$t('settings.data_override_warning_desc')}
+											</p>
+										</div>
+									</div>
+
+									<!-- File Upload Form -->
+									<form
+										method="post"
+										action="?/restoreData"
+										use:enhance
+										enctype="multipart/form-data"
+										class="space-y-4"
+									>
+										<div class="form-control">
+											<label class="label" for="backup-file">
+												<span class="label-text font-medium"
+													>{$t('settings.select_backup_file')}</span
+												>
+											</label>
+											<input
+												type="file"
+												name="file"
+												id="backup-file"
+												class="file-input file-input-bordered file-input-primary w-full"
+												accept=".zip"
+												required
+											/>
+										</div>
+
+										<!-- Acknowledgment Checkbox -->
+										<div class="form-control">
+											<label class="label cursor-pointer justify-start gap-4">
+												<input
+													type="checkbox"
+													name="confirm"
+													value="yes"
+													class="checkbox checkbox-warning"
+													required
+													bind:checked={acknowledgeRestoreOverride}
+												/>
+												<div>
+													<span class="label-text font-medium text-warning"
+														>{$t('settings.data_override_acknowledge')}</span
+													>
+													<p class="text-xs text-base-content/60 mt-1">
+														{$t('settings.data_override_acknowledge_desc')}
+													</p>
+												</div>
+											</label>
+										</div>
+
+										{#if $page.form?.message && $page.form?.message.includes('restore')}
+											<div class="alert alert-error">
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													class="stroke-current shrink-0 h-6 w-6"
+													fill="none"
+													viewBox="0 0 24 24"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														stroke-width="2"
+														d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+													/>
+												</svg>
+												<span>{$t($page.form?.message)}</span>
+											</div>
+										{/if}
+
+										<div class="flex gap-4">
+											<button
+												type="submit"
+												class="btn btn-warning"
+												disabled={!acknowledgeRestoreOverride}
+											>
+												🚀 {$t('settings.restore_data')}
+											</button>
+										</div>
+									</form>
 								</div>
 							</div>
 						</div>

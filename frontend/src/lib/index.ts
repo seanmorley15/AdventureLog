@@ -4,7 +4,7 @@ import randomBackgrounds from './json/backgrounds.json';
 // @ts-ignore
 import { DateTime } from 'luxon';
 import type {
-	Adventure,
+	Location,
 	Background,
 	Checklist,
 	Collection,
@@ -34,26 +34,6 @@ export function checkLink(link: string) {
 	}
 }
 
-export async function exportData() {
-	let res = await fetch('/api/adventures/all');
-	let adventures = (await res.json()) as Adventure[];
-
-	res = await fetch('/api/collections/all');
-	let collections = (await res.json()) as Collection[];
-
-	res = await fetch('/api/visitedregion');
-	let visitedRegions = await res.json();
-
-	const data = {
-		adventures,
-		collections,
-		visitedRegions
-	};
-
-	const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-	return URL.createObjectURL(blob);
-}
-
 export function isValidUrl(url: string) {
 	try {
 		new URL(url);
@@ -63,22 +43,22 @@ export function isValidUrl(url: string) {
 	}
 }
 
-export function groupAdventuresByDate(
-	adventures: Adventure[],
+export function groupLocationsByDate(
+	locations: Location[],
 	startDate: Date,
 	numberOfDays: number
-): Record<string, Adventure[]> {
-	const groupedAdventures: Record<string, Adventure[]> = {};
+): Record<string, Location[]> {
+	const groupedLocations: Record<string, Location[]> = {};
 
 	// Initialize all days in the range using DateTime
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
 		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
-		groupedAdventures[dateString] = [];
+		groupedLocations[dateString] = [];
 	}
 
-	adventures.forEach((adventure) => {
-		adventure.visits.forEach((visit) => {
+	locations.forEach((location) => {
+		location.visits.forEach((visit: { start_date: string; end_date: string; timezone: any }) => {
 			if (visit.start_date) {
 				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
 				const startHasZeros = isAllDay(visit.start_date);
@@ -115,10 +95,10 @@ export function groupAdventuresByDate(
 					const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
 					const currentDateStr = currentDate.toISODate();
 
-					// Include the current day if it falls within the adventure date range
+					// Include the current day if it falls within the location date range
 					if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-						if (groupedAdventures[currentDateStr]) {
-							groupedAdventures[currentDateStr].push(adventure);
+						if (groupedLocations[currentDateStr]) {
+							groupedLocations[currentDateStr].push(location);
 						}
 					}
 				}
@@ -126,7 +106,7 @@ export function groupAdventuresByDate(
 		});
 	});
 
-	return groupedAdventures;
+	return groupedLocations;
 }
 
 function getLocalDateString(date: Date): string {
@@ -425,15 +405,6 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	walking: '🚶',
 	other: '❓'
 };
-
-export function getAdventureTypeLabel(type: string) {
-	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
-	if (type in ADVENTURE_TYPE_ICONS) {
-		return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
-	} else {
-		return '❓';
-	}
-}
 
 export function getRandomBackground() {
 	const today = new Date();

@@ -1,8 +1,8 @@
 <script lang="ts">
 	export let data;
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
 	import CollectionCard from '$lib/components/CollectionCard.svelte';
-	import type { Adventure, Collection, User } from '$lib/types.js';
+	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
 	import { onMount } from 'svelte';
 	import { gsap } from 'gsap';
@@ -23,7 +23,7 @@
 		visited_country_count: number;
 		total_regions: number;
 		trips_count: number;
-		adventure_count: number;
+		location_count: number;
 		visited_region_count: number;
 		total_countries: number;
 		visited_city_count: number;
@@ -31,7 +31,7 @@
 	} | null;
 
 	const user: User = data.user;
-	const adventures: Adventure[] = data.adventures;
+	const adventures: Location[] = data.adventures;
 	const collections: Collection[] = data.collections;
 	stats = data.stats || null;
 
@@ -48,34 +48,34 @@
 
 	// Achievement levels
 	$: achievementLevel =
-		(stats?.adventure_count ?? 0) >= 100
+		(stats?.location_count ?? 0) >= 100
 			? 'Legendary Explorer'
-			: (stats?.adventure_count ?? 0) >= 75
+			: (stats?.location_count ?? 0) >= 75
 				? 'World Wanderer'
-				: (stats?.adventure_count ?? 0) >= 50
+				: (stats?.location_count ?? 0) >= 50
 					? 'Explorer Master'
-					: (stats?.adventure_count ?? 0) >= 35
+					: (stats?.location_count ?? 0) >= 35
 						? 'Globetrotter'
-						: (stats?.adventure_count ?? 0) >= 25
+						: (stats?.location_count ?? 0) >= 25
 							? 'Seasoned Traveler'
-							: (stats?.adventure_count ?? 0) >= 15
+							: (stats?.location_count ?? 0) >= 15
 								? 'Adventure Seeker'
-								: (stats?.adventure_count ?? 0) >= 10
+								: (stats?.location_count ?? 0) >= 10
 									? 'Trailblazer'
-									: (stats?.adventure_count ?? 0) >= 5
+									: (stats?.location_count ?? 0) >= 5
 										? 'Journey Starter'
-										: (stats?.adventure_count ?? 0) >= 1
+										: (stats?.location_count ?? 0) >= 1
 											? 'Travel Enthusiast'
 											: 'New Explorer';
 
 	$: achievementColor =
-		(stats?.adventure_count ?? 0) >= 50
+		(stats?.location_count ?? 0) >= 50
 			? 'text-warning'
-			: (stats?.adventure_count ?? 0) >= 25
+			: (stats?.location_count ?? 0) >= 25
 				? 'text-success'
-				: (stats?.adventure_count ?? 0) >= 10
+				: (stats?.location_count ?? 0) >= 10
 					? 'text-info'
-					: (stats?.adventure_count ?? 0) >= 5
+					: (stats?.location_count ?? 0) >= 5
 						? 'text-secondary'
 						: 'text-primary';
 </script>
@@ -159,7 +159,7 @@
 					{/if}
 
 					<!-- User rank achievement -->
-					{#if stats && stats.adventure_count > 0}
+					{#if stats && stats.location_count > 0}
 						<div class="flex items-center justify-center gap-2 text-base-content/70">
 							<Award class="w-5 h-5" />
 							<span class={`text-lg ${achievementColor}`}>{achievementLevel}</span>
@@ -189,9 +189,9 @@
 							<div class="flex items-center justify-between">
 								<div>
 									<div class="text-primary/70 font-medium text-sm uppercase tracking-wide">
-										{$t('navbar.adventures')}
+										{$t('locations.locations')}
 									</div>
-									<div class="text-4xl font-bold text-primary">{stats.adventure_count}</div>
+									<div class="text-4xl font-bold text-primary">{stats.location_count}</div>
 									<div class="text-primary/60 mt-2 flex items-center gap-1">
 										<TrendingUp class="w-4 h-4" />
 										{achievementLevel}
@@ -331,14 +331,14 @@
 						<Airplane class="w-6 h-6 text-primary" />
 					</div>
 					<div>
-						<h2 class="text-3xl font-bold">{$t('auth.user_adventures')}</h2>
-						<p class="text-base-content/60">{$t('profile.public_adventure_experiences')}</p>
+						<h2 class="text-3xl font-bold">{$t('auth.user_locations')}</h2>
+						<p class="text-base-content/60">{$t('profile.public_location_experiences')}</p>
 					</div>
 				</div>
 				{#if adventures && adventures.length > 0}
 					<div class="badge badge-primary badge-lg">
 						{adventures.length}
-						{adventures.length === 1 ? $t('adventures.adventure') : $t('navbar.adventures')}
+						{adventures.length === 1 ? $t('locations.location') : $t('locations.locations')}
 					</div>
 				{/if}
 			</div>
@@ -350,7 +350,7 @@
 							<Airplane class="w-16 h-16 text-base-content/30" />
 						</div>
 						<h3 class="text-xl font-bold text-base-content/70 mb-2">
-							{$t('auth.no_public_adventures')}
+							{$t('auth.no_public_locations')}
 						</h3>
 						<p class="text-base-content/50">{$t('profile.no_shared_adventures')}</p>
 					</div>
@@ -359,7 +359,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
 					{#each adventures as adventure}
 						<div class="adventure-card">
-							<AdventureCard {adventure} user={null} />
+							<LocationCard {adventure} user={null} />
 						</div>
 					{/each}
 				</div>

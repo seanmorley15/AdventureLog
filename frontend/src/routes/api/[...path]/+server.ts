@@ -85,7 +85,7 @@ async function handleRequest(
 			});
 		}
 
-		const responseData = await response.text();
+		const responseData = await response.arrayBuffer();
 		// Create a new Headers object without the 'set-cookie' header
 		const cleanHeaders = new Headers(response.headers);
 		cleanHeaders.delete('set-cookie');

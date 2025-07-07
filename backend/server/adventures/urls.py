@@ -3,11 +3,11 @@ from rest_framework.routers import DefaultRouter
 from adventures.views import *
 
 router = DefaultRouter()
-router.register(r'adventures', AdventureViewSet, basename='adventures')
+router.register(r'locations', LocationViewSet, basename='locations')
 router.register(r'collections', CollectionViewSet, basename='collections')
 router.register(r'stats', StatsViewSet, basename='stats')
 router.register(r'generate', GenerateDescription, basename='generate')
-router.register(r'activity-types', ActivityTypesView, basename='activity-types')
+router.register(r'tags', ActivityTypesView, basename='tags')
 router.register(r'transportations', TransportationViewSet, basename='transportations')
 router.register(r'notes', NoteViewSet, basename='notes')
 router.register(r'checklists', ChecklistViewSet, basename='checklists')
@@ -18,7 +18,8 @@ router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-cale
 router.register(r'search', GlobalSearchView, basename='search')
 router.register(r'attachments', AttachmentViewSet, basename='attachments')
 router.register(r'lodging', LodgingViewSet, basename='lodging')
-router.register(r'recommendations', RecommendationsViewSet, basename='recommendations')
+router.register(r'recommendations', RecommendationsViewSet, basename='recommendations'),
+router.register(r'backup', BackupViewSet, basename='backup')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix

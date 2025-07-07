@@ -295,6 +295,8 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGIN
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
+CORS_ALLOW_CREDENTIALS = True
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGGING = {
@@ -323,6 +325,9 @@ LOGGING = {
 }
 
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+
+# Major release version of AdventureLog, not including the patch version date.
+ADVENTURELOG_RELEASE_VERSION = 'v0.10.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.6'
