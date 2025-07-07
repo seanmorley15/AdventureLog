@@ -10,13 +10,21 @@ To do this, you will need to add 2 ACLs and 2 corresponding HAProxy backends in 
 Example :
 
 ```
-acl is_adventurelog hdr_sub(Host) -i adventurelog
-acl is_adventurelog_backend path_beg /media/ or /admin/
+listen http-s
+    bind :80
 
-use_backend adventurelog_media if is_adventurelog is_adventurelog_backend
-use_backend adventurelog if is_adventurelog
+    timeout connect 5s
+    timeout client 60s
 
-backend alog
+    mode http
+
+    acl is_adventurelog hdr_sub(Host) -i adventurelog
+    acl is_adventurelog_backend path_beg /media/ or /admin/
+
+    use_backend adventurelog_media if is_adventurelog is_adventurelog_backend
+    use_backend adventurelog if is_adventurelog
+
+backend adventurelog
     server adventurelog 192.168.1.100:3000 check
 backend adventurelog_backend
     server adventurelog_media 192.168.1.100:8000 check
