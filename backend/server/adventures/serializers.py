@@ -122,16 +122,6 @@ class AdventureSerializer(CustomModelSerializer):
         return [image for image in serializer.data if image is not None]
 
     def validate_collections(self, collections):
-        """Validate that collections belong to the same user"""
-        if not collections:
-            return collections
-            
-        user = self.context['request'].user
-        for collection in collections:
-            if collection.user_id != user:
-                raise serializers.ValidationError(
-                    f"Collection '{collection.name}' does not belong to the current user."
-                )
         return collections
 
     def validate_category(self, category_data):
