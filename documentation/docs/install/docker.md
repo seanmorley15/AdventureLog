@@ -10,15 +10,16 @@ Docker is the preferred way to run AdventureLog on your local machine. It is a l
 
 ## Getting Started
 
-Get the `docker-compose.yml` and `.env.example` files from the AdventureLog repository. You can download them here:
+Get the `docker-compose.yml` and `example.env` files from the AdventureLog repository. You can download them here:
 
 - [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml)
-- [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
+- [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/example.env)
 
 ```bash
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
-cp .env.example .env
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/example.env
+cp example.env. .env
+nano .env
 ```
 
 ::: tip
@@ -35,33 +36,28 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 
 | Name                | Required  | Description                                                                                                                        | Default Value           |
 | ------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------- |
-| `PUBLIC_SERVER_URL` | Yes       | Used by the frontend SSR server to connect to the backend. Almost every user user will **never have to change this from default**! | `http://server:8000`    |
-| `ORIGIN`            | Sometimes | Needed only if not using HTTPS. Set it to the domain or IP you'll use to access the frontend.                                      | `http://localhost:8015` |
+| `FRONTEND_URL`      | Yes       | Set it to the domain or IP you'll use to access the frontend.                                                                      | `http://localhost:8015` |
 | `BODY_SIZE_LIMIT`   | Yes       | Maximum upload size in bytes.                                                                                                      | `Infinity`              |
-| `FRONTEND_PORT`     | Yes       | Port that the frontend will run on inside Docker.                                                                                  | `8015`                  |
+| `FRONTEND_PORT`     | Yes       | Port that the frontend will run on in the internal network.                                                                        | `8015`                  |
 
 ### 🐘 PostgreSQL Database
 
 | Name                | Required | Description           | Default Value |
 | ------------------- | -------- | --------------------- | ------------- |
-| `PGHOST`            | Yes      | Internal DB hostname. | `db`          |
 | `POSTGRES_DB`       | Yes      | DB name.              | `database`    |
 | `POSTGRES_USER`     | Yes      | DB user.              | `adventure`   |
 | `POSTGRES_PASSWORD` | Yes      | DB password.          | `changeme123` |
 
 ### 🔒 Backend (server)
 
-| Name                    | Required | Description                                                                        | Default Value                                 |
-| ----------------------- | -------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
-| `SECRET_KEY`            | Yes      | Django secret key. Change this in production!                                      | `changeme123`                                 |
-| `DJANGO_ADMIN_USERNAME` | Yes      | Default Django admin username.                                                     | `admin`                                       |
-| `DJANGO_ADMIN_PASSWORD` | Yes      | Default Django admin password.                                                     | `admin`                                       |
-| `DJANGO_ADMIN_EMAIL`    | Yes      | Default admin email.                                                               | `admin@example.com`                           |
-| `PUBLIC_URL`            | Yes      | Publicly accessible URL of the **backend**. Used for generating image URLs.        | `http://localhost:8016`                       |
-| `CSRF_TRUSTED_ORIGINS`  | Yes      | Comma-separated list of frontend/backend URLs that are allowed to submit requests. | `http://localhost:8016,http://localhost:8015` |
-| `FRONTEND_URL`          | Yes      | URL to the **frontend**, used for email generation.                                | `http://localhost:8015`                       |
-| `BACKEND_PORT`          | Yes      | Port that the backend will run on inside Docker.                                   | `8016`                                        |
-| `DEBUG`                 | No       | Should be `False` in production.                                                   | `False`                                       |
+| Name                    | Required | Description                                                                                                            | Default Value                               |
+| ----------------------- | -------- | -----------------------------------------------------------------------------------------------------------------------|---------------------------------------------|
+| `SECRET_KEY`            | Yes      | Django secret key. Change this in production!                                                                          | `changeme123`                               |
+| `DJANGO_ADMIN_USERNAME` | Yes      | Default Django admin username.                                                                                         | `admin`                                     |
+| `DJANGO_ADMIN_PASSWORD` | Yes      | Default Django admin password.                                                                                         | `admin`                                     |
+| `DJANGO_ADMIN_EMAIL`    | Yes      | Default admin email.                                                                                                   | `admin@example.com`                         |
+| `BACKEND_URL`           | Yes      | Publicly accessible URL of the **backend**. Used for generating image URLs, the admin UI, and OIDC/Social Auth.        | `http://localhost:8016`                     |
+| `BACKEND_PORT`          | Yes      | Port that the backend will run on inside Docker.                                                                       | `8016`                                      |
 
 ## Optional Configuration
 
