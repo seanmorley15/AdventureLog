@@ -6,7 +6,7 @@ django-cors-headers==4.4.0
 coreapi==2.3.3
 python-dotenv==1.1.0
 psycopg2-binary==2.9.10
-pillow==11.2.1
+pillow==11.3.0
 whitenoise==6.9.0
 django-resized==1.0.3
 django-geojson==4.2.0
