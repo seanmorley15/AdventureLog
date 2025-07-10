@@ -4,14 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from django.core.files.base import ContentFile
-from adventures.models import Location, LocationImage
-from adventures.serializers import LocationImageSerializer
+from adventures.models import Location, ContentImage
+from adventures.serializers import ContentImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
 
 class AdventureImageViewSet(viewsets.ModelViewSet):
-    serializer_class = LocationImageSerializer
+    serializer_class = ContentImageSerializer
     permission_classes = [IsAuthenticated]
 
     @action(detail=True, methods=['post'])
@@ -34,7 +34,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Set the current primary image to false
-        LocationImage.objects.filter(location=location, is_primary=True).update(is_primary=False)
+        ContentImage.objects.filter(location=location, is_primary=True).update(is_primary=False)
 
         # Set the new image to true
         instance.is_primary = True
@@ -190,7 +190,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "Invalid location ID"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Updated queryset to include images from locations the user owns OR has shared access to
-        queryset = LocationImage.objects.filter(
+        queryset = ContentImage.objects.filter(
             Q(location__id=location_uuid) & (
                 Q(location__user=request.user) |  # User owns the location
                 Q(location__collections__shared_with=request.user)  # User has shared access via collection
@@ -202,7 +202,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         # Updated to include images from locations the user owns OR has shared access to
-        return LocationImage.objects.filter(
+        return ContentImage.objects.filter(
             Q(location__user=self.request.user) |  # User owns the location
             Q(location__collections__shared_with=self.request.user)  # User has shared access via collection
         ).distinct()

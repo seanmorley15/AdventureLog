@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Location, LocationImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Lodging
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -9,9 +9,9 @@ from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 
 
-class LocationImageSerializer(CustomModelSerializer):
+class ContentImageSerializer(CustomModelSerializer):
     class Meta:
-        model = LocationImage
+        model = ContentImage
         fields = ['id', 'image', 'location', 'is_primary', 'user', 'immich_id']
         read_only_fields = ['id', 'user']
 
@@ -41,7 +41,7 @@ class LocationImageSerializer(CustomModelSerializer):
 class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     class Meta:
-        model = Attachment
+        model = ContentAttachment
         fields = ['id', 'file', 'location', 'extension', 'name', 'user']
         read_only_fields = ['id', 'user']
 
@@ -122,7 +122,7 @@ class LocationSerializer(CustomModelSerializer):
         return representation
 
     def get_images(self, obj):
-        serializer = LocationImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 

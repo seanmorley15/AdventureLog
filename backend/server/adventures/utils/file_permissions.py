@@ -1,4 +1,4 @@
-from adventures.models import LocationImage, Attachment
+from adventures.models import ContentImage, ContentAttachment
 
 protected_paths = ['images/', 'attachments/']
 
@@ -9,40 +9,69 @@ def checkFilePermission(fileId, user, mediaType):
         try:
             # Construct the full relative path to match the database field
             image_path = f"images/{fileId}"
-            # Fetch the AdventureImage object
-            location = LocationImage.objects.get(image=image_path).location
-            if location.is_public:
+            # Fetch the ContentImage object
+            content_image = ContentImage.objects.get(image=image_path)
+            
+            # Get the content object (could be Location, Transportation, Note, etc.)
+            content_object = content_image.content_object
+            
+            # Check if content object is public
+            if hasattr(content_object, 'is_public') and content_object.is_public:
                 return True
-            elif location.user == user:
+            
+            # Check if user owns the content object
+            if hasattr(content_object, 'user') and content_object.user == user:
                 return True
-            elif location.collections.exists():
-                # Check if the user is in any collection's shared_with list
-                for collection in location.collections.all():
+            
+            # Check collection-based permissions
+            if hasattr(content_object, 'collections') and content_object.collections.exists():
+                # For objects with multiple collections (like Location)
+                for collection in content_object.collections.all():
                     if collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False
+            elif hasattr(content_object, 'collection') and content_object.collection:
+                # For objects with single collection (like Transportation, Note, etc.)
+                if content_object.collection.shared_with.filter(id=user.id).exists():
+                    return True
+                return False
             else:
                 return False
-        except LocationImage.DoesNotExist:
+                
+        except ContentImage.DoesNotExist:
             return False
     elif mediaType == 'attachments/':
         try:
             # Construct the full relative path to match the database field
             attachment_path = f"attachments/{fileId}"
-            # Fetch the Attachment object
-            attachment = Attachment.objects.get(file=attachment_path)
-            location = attachment.location
-            if location.is_public:
+            # Fetch the ContentAttachment object
+            content_attachment = ContentAttachment.objects.get(file=attachment_path)
+            
+            # Get the content object (could be Location, Transportation, Note, etc.)
+            content_object = content_attachment.content_object
+            
+            # Check if content object is public
+            if hasattr(content_object, 'is_public') and content_object.is_public:
                 return True
-            elif location.user == user:
+            
+            # Check if user owns the content object
+            if hasattr(content_object, 'user') and content_object.user == user:
                 return True
-            elif location.collections.exists():
-                # Check if the user is in any collection's shared_with list
-                for collection in location.collections.all():
+            
+            # Check collection-based permissions
+            if hasattr(content_object, 'collections') and content_object.collections.exists():
+                # For objects with multiple collections (like Location)
+                for collection in content_object.collections.all():
                     if collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False
+            elif hasattr(content_object, 'collection') and content_object.collection:
+                # For objects with single collection (like Transportation, Note, etc.)
+                if content_object.collection.shared_with.filter(id=user.id).exists():
+                    return True
+                return False
             else:
                 return False
-        except Attachment.DoesNotExist:
+                
+        except ContentAttachment.DoesNotExist:
             return False

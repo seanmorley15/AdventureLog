@@ -18,7 +18,7 @@ from django.conf import settings
 
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
-    LocationImage, Attachment, Category, Lodging, Visit
+    ContentImage, ContentAttachment, Category, Lodging, Visit
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 
@@ -347,7 +347,7 @@ class BackupViewSet(viewsets.ViewSet):
         user.lodging_set.all().delete()
         
         # Delete location-related data
-        user.locationimage_set.all().delete()
+        user.contentimage_set.all().delete()
         user.attachment_set.all().delete()
         # Visits are deleted via cascade when locations are deleted
         user.location_set.all().delete()
@@ -487,7 +487,7 @@ class BackupViewSet(viewsets.ViewSet):
             for img_data in adv_data.get('images', []):
                 immich_id = img_data.get('immich_id')
                 if immich_id:
-                    LocationImage.objects.create(
+                    ContentImage.objects.create(
                         user=user,
                         location=location,
                         immich_id=immich_id,
@@ -500,7 +500,7 @@ class BackupViewSet(viewsets.ViewSet):
                         try:
                             img_content = zip_file.read(f'images/{filename}')
                             img_file = ContentFile(img_content, name=filename)
-                            LocationImage.objects.create(
+                            ContentImage.objects.create(
                                 user=user,
                                 location=location,
                                 image=img_file,
@@ -517,7 +517,7 @@ class BackupViewSet(viewsets.ViewSet):
                     try:
                         att_content = zip_file.read(f'attachments/{filename}')
                         att_file = ContentFile(att_content, name=filename)
-                        Attachment.objects.create(
+                        ContentAttachment.objects.create(
                             user=user,
                             location=location,
                             file=att_file,

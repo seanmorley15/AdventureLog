@@ -8,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 import requests
 from rest_framework.pagination import PageNumberPagination
 from django.conf import settings
-from adventures.models import LocationImage
+from adventures.models import ContentImage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 import logging
@@ -257,7 +257,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
         2. Private locations in public collections: accessible by anyone
         3. Private locations in private collections shared with user: accessible by shared users
         4. Private locations: accessible only to the owner
-        5. No LocationImage: owner can still view via integration
+        5. No ContentImage: owner can still view via integration
         """
         if not imageid or not integration_id:
             return Response({
@@ -272,7 +272,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
 
         # Try to find the image entry with collections and sharing information
         image_entry = (
-            LocationImage.objects
+            ContentImage.objects
             .filter(immich_id=imageid, user=owner_id)
             .select_related('location')
             .prefetch_related('location__collections', 'location__collections__shared_with')
@@ -313,7 +313,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     'code': 'immich.permission_denied'
                 }, status=status.HTTP_403_FORBIDDEN)
         else:
-            # No LocationImage exists; allow only the integration owner
+            # No ContentImage exists; allow only the integration owner
             if not request.user.is_authenticated or request.user != owner_id:
                 return Response({
                     'message': 'Image is not linked to any location and you are not the owner.',

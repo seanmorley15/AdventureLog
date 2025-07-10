@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from adventures.models import Location, Attachment
+from adventures.models import Location, ContentAttachment
 from adventures.serializers import AttachmentSerializer
 
 class AttachmentViewSet(viewsets.ModelViewSet):
@@ -10,7 +10,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return Attachment.objects.filter(user=self.request.user)
+        return ContentAttachment.objects.filter(user=self.request.user)
     
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:

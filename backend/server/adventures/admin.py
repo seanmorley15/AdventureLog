@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, LocationImage, Visit, Category, Attachment, Lodging
+from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging
 from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity 
 from allauth.account.decorators import secure_admin_login
 
@@ -96,7 +96,7 @@ class CustomUserAdmin(UserAdmin):
         else:
             return
         
-class LocationImageAdmin(admin.ModelAdmin):
+class ContentImageImageAdmin(admin.ModelAdmin):
     list_display = ('user', 'image_display')
 
     def image_display(self, obj):
@@ -147,11 +147,11 @@ admin.site.register(Transportation)
 admin.site.register(Note)
 admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
-admin.site.register(LocationImage, LocationImageAdmin)
+admin.site.register(ContentImage, ContentImageImageAdmin)
 admin.site.register(Category, CategoryAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(VisitedCity)
-admin.site.register(Attachment)
+admin.site.register(ContentAttachment)
 admin.site.register(Lodging)
 
 admin.site.site_header = 'AdventureLog Admin'
