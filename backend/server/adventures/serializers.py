@@ -128,7 +128,7 @@ class AdventureSerializer(CustomModelSerializer):
             
         user = self.context['request'].user
         for collection in collections:
-            if collection.user_id != user:
+            if collection.user_id != user and not collection.shared_with.filter(id=user.id).exists():
                 raise serializers.ValidationError(
                     f"Collection '{collection.name}' does not belong to the current user."
                 )
