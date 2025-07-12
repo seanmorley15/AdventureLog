@@ -172,6 +172,7 @@
 		locationToEdit={adventureToEdit}
 		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreate}
+		user={data.user}
 	/>
 {/if}
 

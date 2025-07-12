@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Location, Attachment, Category, Collection } from '$lib/types';
+	import type { Location, Attachment, Category, Collection, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { deserialize } from '$app/forms';
 	import { t } from 'svelte-i18n';
 	export let collection: Collection | null = null;
+	export let user: User | null = null;
 
 	let fullStartDate: string = '';
 	let fullEndDate: string = '';
@@ -92,6 +93,7 @@
 	import AttachmentCard from './AttachmentCard.svelte';
 	import LocationDropdown from './LocationDropdown.svelte';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
+	import UserCard from './UserCard.svelte';
 	let modal: HTMLDialogElement;
 
 	let wikiError: string = '';
@@ -325,7 +327,8 @@
 	async function uploadImage(file: File) {
 		let formData = new FormData();
 		formData.append('image', file);
-		formData.append('location', location.id);
+		formData.append('object_id', location.id);
+		formData.append('content_type', 'location');
 
 		let res = await fetch(`/locations?/image`, {
 			method: 'POST',
@@ -537,8 +540,21 @@
 								<label for="link"
 									>{$t('adventures.category')}<span class="text-red-500">*</span></label
 								><br />
-
-								<CategoryDropdown bind:categories bind:selected_category={location.category} />
+								{#if (user && user.uuid == location.user?.uuid) || !locationToEdit}
+									<CategoryDropdown bind:categories bind:selected_category={location.category} />
+								{:else}
+									<!-- read only view of category info name and icon -->
+									<div
+										class="flex items-center space-x-3 p-3 bg-base-100 border border-base-300 rounded-lg"
+									>
+										{#if location.category?.icon}
+											<span class="text-2xl flex-shrink-0">{location.category.icon}</span>
+										{/if}
+										<span class="text-base font-medium text-base-content">
+											{location.category?.display_name || location.category?.name}
+										</span>
+									</div>
+								{/if}
 							</div>
 							<div>
 								<label for="rating">{$t('adventures.rating')}</label><br />

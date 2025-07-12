@@ -122,7 +122,7 @@
 	}
 
 	function openImageModal(imageIndex: number) {
-		adventure_images = adventure.images.map(img => ({
+		adventure_images = adventure.images.map((img) => ({
 			image: img.image,
 			adventure: adventure
 		}));
@@ -151,6 +151,7 @@
 		locationToEdit={adventure}
 		on:close={() => (isEditModalOpen = false)}
 		on:save={saveEdit}
+		user={data.user}
 	/>
 {/if}
 

@@ -68,7 +68,8 @@
 			},
 			body: JSON.stringify({
 				immich_id: imageId,
-				location: location.id
+				object_id: location.id,
+				content_type: 'location'
 			})
 		});
 		if (res.ok) {

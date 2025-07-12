@@ -62,6 +62,16 @@
 		}
 	}
 
+	// Creator avatar helpers
+	$: creatorInitials =
+		adventure.user?.first_name && adventure.user?.last_name
+			? `${adventure.user.first_name[0]}${adventure.user.last_name[0]}`
+			: adventure.user?.first_name?.[0] || adventure.user?.username?.[0] || '?';
+
+	$: creatorDisplayName = adventure.user?.first_name
+		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
+		: adventure.user?.username || 'Unknown User';
+
 	// Helper functions for display
 	function formatVisitCount() {
 		const count = adventure.visits.length;
@@ -221,6 +231,31 @@
 				</div>
 			</div>
 		{/if}
+
+		<!-- Creator Avatar -->
+		{#if adventure.user}
+			<div class="absolute bottom-4 right-4">
+				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
+					<div class="avatar">
+						<div class="w-8 h-8 rounded-full ring-2 ring-white/50 shadow-lg">
+							{#if adventure.user.profile_pic}
+								<img
+									src={adventure.user.profile_pic}
+									alt={creatorDisplayName}
+									class="rounded-full object-cover"
+								/>
+							{:else}
+								<div
+									class="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-content font-semibold text-xs shadow-lg"
+								>
+									{creatorInitials.toUpperCase()}
+								</div>
+							{/if}
+						</div>
+					</div>
+				</div>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Content Section -->
@@ -280,7 +315,7 @@
 							{$t('adventures.open_details')}
 						</button>
 
-						{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid))}
+						{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid)) || (collection && user && collection.user == user.uuid)}
 							<div class="dropdown dropdown-end">
 								<div tabindex="0" role="button" class="btn btn-square btn-sm btn-base-300">
 									<DotsHorizontal class="w-5 h-5" />
@@ -307,20 +342,34 @@
 												{$t('collection.manage_collections')}
 											</button>
 										</li>
+									{:else if collection && user && collection.user == user.uuid}
+										<li>
+											<button
+												on:click={() =>
+													removeFromCollection(
+														new CustomEvent('unlink', { detail: collection.id })
+													)}
+												class="flex items-center gap-2"
+											>
+												<LinkVariantRemove class="w-4 h-4" />
+												{$t('adventures.remove_from_collection')}
+											</button>
+										</li>
 									{/if}
-
-									<div class="divider my-1"></div>
-									<li>
-										<button
-											id="delete_adventure"
-											data-umami-event="Delete Adventure"
-											class="text-error flex items-center gap-2"
-											on:click={() => (isWarningModalOpen = true)}
-										>
-											<TrashCan class="w-4 h-4" />
-											{$t('adventures.delete')}
-										</button>
-									</li>
+									{#if user.uuid == adventure.user?.uuid}
+										<div class="divider my-1"></div>
+										<li>
+											<button
+												id="delete_adventure"
+												data-umami-event="Delete Adventure"
+												class="text-error flex items-center gap-2"
+												on:click={() => (isWarningModalOpen = true)}
+											>
+												<TrashCan class="w-4 h-4" />
+												{$t('adventures.delete')}
+											</button>
+										</li>
+									{/if}
 								</ul>
 							</div>
 						{/if}

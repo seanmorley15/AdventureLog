@@ -461,6 +461,7 @@
 		on:close={() => (createModalOpen = false)}
 		on:save={createNewAdventure}
 		{initialLatLng}
+		user={data.user}
 	/>
 {/if}
 

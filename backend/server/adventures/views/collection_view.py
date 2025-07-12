@@ -183,9 +183,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def unshare(self, request, pk=None, uuid=None):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
+        
         collection = self.get_object()
+        
         if not uuid:
             return Response({"error": "User UUID is required"}, status=400)
+        
         try:
             user = User.objects.get(uuid=uuid, public_profile=True)
         except User.DoesNotExist:
@@ -197,9 +200,25 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if not collection.shared_with.filter(id=user.id).exists():
             return Response({"error": "Collection is not shared with this user"}, status=400)
         
+        # Remove user from shared_with
         collection.shared_with.remove(user)
+        
+        # Handle locations owned by the unshared user that are in this collection
+        # These locations should be removed from the collection since they lose access
+        locations_to_remove = collection.locations.filter(user=user)
+        removed_count = locations_to_remove.count()
+        
+        if locations_to_remove.exists():
+            # Remove these locations from the collection
+            collection.locations.remove(*locations_to_remove)
+        
         collection.save()
-        return Response({"success": f"Unshared with {user.username}"})
+        
+        success_message = f"Unshared with {user.username}"
+        if removed_count > 0:
+            success_message += f" and removed {removed_count} location(s) they owned from the collection"
+        
+        return Response({"success": success_message})
 
     def get_queryset(self):
         if self.action == 'destroy':

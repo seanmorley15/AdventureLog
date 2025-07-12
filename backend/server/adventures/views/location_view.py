@@ -141,6 +141,16 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         self.perform_update(serializer)
         return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Only allow the owner to delete a location."""
+        instance = self.get_object()
+        
+        # Check if the user is the owner
+        if instance.user != request.user:
+            raise PermissionDenied("Only the owner can delete this location.")
+        
+        return super().destroy(request, *args, **kwargs)
 
     # ==================== CUSTOM ACTIONS ====================
 
@@ -221,37 +231,50 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     # ==================== HELPER METHODS ====================
 
-    def _validate_collection_permissions(self, collections):
-        """Validate user has permission to use all provided collections. Only the owner or shared users can use collections."""
-        for collection in collections:
-            if not (collection.user == self.request.user or 
-                   collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
-                raise PermissionDenied(
-                    f"You do not have permission to use collection '{collection.name}'."
-                )
-
     def _validate_collection_update_permissions(self, instance, new_collections):
-        """Validate permissions for collection updates (add/remove)."""
-        # Check permissions for new collections being added
-        for collection in new_collections:
-            if (collection.user != self.request.user and 
-                not collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
-                raise PermissionDenied(
-                    f"You do not have permission to use collection '{collection.name}'."
-                )
-
-        # Check permissions for collections being removed
+        """Validate collection permissions for updates, allowing collection owners to unlink locations."""
         current_collections = set(instance.collections.all())
         new_collections_set = set(new_collections)
+        
+        # Collections being added
+        collections_to_add = new_collections_set - current_collections
+        
+        # Collections being removed
         collections_to_remove = current_collections - new_collections_set
-
+        
+        # Validate permissions for collections being added
+        for collection in collections_to_add:
+            # Standard validation for adding collections
+            if collection.user != self.request.user:
+                # Check if user has shared access to the collection
+                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
+                    raise PermissionDenied(
+                        f"You don't have permission to add location to collection '{collection.name}'"
+                    )
+        
+        # For collections being removed, allow if:
+        # 1. User owns the location, OR
+        # 2. User owns the collection (even if they don't own the location)
         for collection in collections_to_remove:
-            if (collection.user != self.request.user and 
-                not collection.shared_with.filter(uuid=self.request.user.uuid).exists()):
-                raise PermissionDenied(
-                    f"You cannot remove the adventure from collection '{collection.name}' "
-                    f"as you don't have permission."
-                )
+            user_owns_location = instance.user == self.request.user
+            user_owns_collection = collection.user == self.request.user
+            
+            if not (user_owns_location or user_owns_collection):
+                # Check if user has shared access to the collection
+                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
+                    raise PermissionDenied(
+                        f"You don't have permission to remove location from collection '{collection.name}'"
+                    )
+
+    def _validate_collection_permissions(self, collections):
+        """Validate permissions for all collections (used in create)."""
+        for collection in collections:
+            if collection.user != self.request.user:
+                # Check if user has shared access to the collection
+                if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
+                    raise PermissionDenied(
+                        f"You don't have permission to add location to collection '{collection.name}'"
+                    )
 
     def _apply_visit_filtering(self, queryset, request):
         """Apply visit status filtering to queryset."""
@@ -289,7 +312,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         # Check shared collection access
         if user.is_authenticated:
             for collection in adventure.collections.all():
-                if collection.shared_with.filter(uuid=user.uuid).exists():
+                if collection.shared_with.filter(uuid=user.uuid).exists() or collection.user == user:
                     return True
 
         return False

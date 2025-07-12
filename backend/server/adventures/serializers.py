@@ -12,7 +12,7 @@ from integrations.models import ImmichIntegration
 class ContentImageSerializer(CustomModelSerializer):
     class Meta:
         model = ContentImage
-        fields = ['id', 'image', 'location', 'is_primary', 'user', 'immich_id']
+        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
         read_only_fields = ['id', 'user']
 
     def to_representation(self, instance):
@@ -42,7 +42,7 @@ class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     class Meta:
         model = ContentAttachment
-        fields = ['id', 'file', 'location', 'extension', 'name', 'user']
+        fields = ['id', 'file', 'extension', 'name', 'user']
         read_only_fields = ['id', 'user']
 
     def get_extension(self, obj):
@@ -127,16 +127,28 @@ class LocationSerializer(CustomModelSerializer):
         return [image for image in serializer.data if image is not None]
 
     def validate_collections(self, collections):
-        """Validate that collections belong to the same user"""
+        """Validate that collections are compatible with the location being created/updated"""
         if not collections:
             return collections
             
         user = self.context['request'].user
+        
+        # Get the location being updated (if this is an update operation)
+        location_owner = getattr(self.instance, 'user', None) if self.instance else user
+        
         for collection in collections:
+            # Check if user has permission to use this collection
             if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
                 raise serializers.ValidationError(
                     f"Collection '{collection.name}' does not belong to the current user."
                 )
+            
+            # Check if the location owner is compatible with the collection
+            if collection.user != location_owner and not collection.shared_with.filter(id=location_owner.id).exists():
+                raise serializers.ValidationError(
+                    f"Location owned by '{location_owner.username}' cannot be added to collection '{collection.name}' owned by '{collection.user.username}' unless the location owner has shared access to the collection."
+                )
+        
         return collections
 
     def validate_category(self, category_data):

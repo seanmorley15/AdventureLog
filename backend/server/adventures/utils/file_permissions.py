@@ -27,12 +27,12 @@ def checkFilePermission(fileId, user, mediaType):
             if hasattr(content_object, 'collections') and content_object.collections.exists():
                 # For objects with multiple collections (like Location)
                 for collection in content_object.collections.all():
-                    if collection.shared_with.filter(id=user.id).exists():
+                    if collection.user == user or collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False
             elif hasattr(content_object, 'collection') and content_object.collection:
                 # For objects with single collection (like Transportation, Note, etc.)
-                if content_object.collection.shared_with.filter(id=user.id).exists():
+                if content_object.collection.user == user or content_object.collection.shared_with.filter(id=user.id).exists():
                     return True
                 return False
             else:
@@ -62,12 +62,12 @@ def checkFilePermission(fileId, user, mediaType):
             if hasattr(content_object, 'collections') and content_object.collections.exists():
                 # For objects with multiple collections (like Location)
                 for collection in content_object.collections.all():
-                    if collection.shared_with.filter(id=user.id).exists():
+                    if collection.user == user or collection.shared_with.filter(id=user.id).exists():
                         return True
                 return False
             elif hasattr(content_object, 'collection') and content_object.collection:
                 # For objects with single collection (like Transportation, Note, etc.)
-                if content_object.collection.shared_with.filter(id=user.id).exists():
+                if content_object.collection.user == user or content_object.collection.shared_with.filter(id=user.id).exists():
                     return True
                 return False
             else:

@@ -81,7 +81,12 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
             # If user in shared_with of any collection related to obj
             if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
                 return True
+            # **FIX: Check if user OWNS any collection that contains this object**
+            if hasattr(obj, 'collections') and obj.collections.filter(user=user).exists():
+                return True
             if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
+                return True
+            if hasattr(obj, 'collection') and obj.collection and obj.collection.user == user:
                 return True
             if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
                 return True
@@ -92,7 +97,12 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
             return True
         if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
             return True
+        # **FIX: Allow write access if user owns any collection containing this object**
+        if hasattr(obj, 'collections') and obj.collections.filter(user=user).exists():
+            return True
         if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
+            return True
+        if hasattr(obj, 'collection') and obj.collection and obj.collection.user == user:
             return True
         if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
             return True

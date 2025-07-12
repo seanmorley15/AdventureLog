@@ -694,6 +694,7 @@
 		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreateAdventure}
 		{collection}
+		user={data.user}
 	/>
 {/if}
 
@@ -760,7 +761,7 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						{#if collection.user === data.user.uuid}
+						{#if collection.user === data.user.uuid || (collection.shared_with && collection.shared_with.includes(data.user.uuid))}
 							<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 							<button
 								class="btn btn-primary"

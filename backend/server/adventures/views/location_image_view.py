@@ -4,13 +4,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Q
 from django.core.files.base import ContentFile
-from adventures.models import Location, ContentImage
+from django.contrib.contenttypes.models import ContentType
+from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
 from adventures.serializers import ContentImageSerializer
 from integrations.models import ImmichIntegration
 import uuid
 import requests
 
-class AdventureImageViewSet(viewsets.ModelViewSet):
+class ContentImageViewSet(viewsets.ModelViewSet):
     serializer_class = ContentImageSerializer
     permission_classes = [IsAuthenticated]
 
@@ -20,23 +21,28 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'])
     def toggle_primary(self, request, *args, **kwargs):
-        # Makes the image the primary image for the location, if there is already a primary image linked to the location, it is set to false and the new image is set to true. make sure that the permission is set to the owner of the location
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        location = instance.location
-        if location.user != request.user:
-            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
+        content_object = instance.content_object
+        
+        # Check ownership based on content type
+        if hasattr(content_object, 'user') and content_object.user != request.user:
+            return Response({"error": "User does not own this content"}, status=status.HTTP_403_FORBIDDEN)
         
         # Check if the image is already the primary image
         if instance.is_primary:
             return Response({"error": "Image is already the primary image"}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Set the current primary image to false
-        ContentImage.objects.filter(location=location, is_primary=True).update(is_primary=False)
+        # Set other images of the same content object to not primary
+        ContentImage.objects.filter(
+            content_type=instance.content_type,
+            object_id=instance.object_id,
+            is_primary=True
+        ).update(is_primary=False)
 
-        # Set the new image to true
+        # Set the new image to primary
         instance.is_primary = True
         instance.save()
         return Response({"success": "Image set as primary image"})
@@ -44,29 +50,67 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        location_id = request.data.get('location')
-        try:
-            location = Location.objects.get(id=location_id)
-        except Location.DoesNotExist:
-            return Response({"error": "location not found"}, status=status.HTTP_404_NOT_FOUND)
         
-        if location.user != request.user:
-            # Check if the location has any collections
-            if location.collections.exists():
-                # Check if the user is in the shared_with list of any of the location's collections
-                user_has_access = False
-                for collection in location.collections.all():
-                    if collection.shared_with.filter(id=request.user.id).exists():
-                        user_has_access = True
-                        break
-                
-                if not user_has_access:
-                    return Response({"error": "User does not have permission to access this location"}, status=status.HTTP_403_FORBIDDEN)
-            else:
-                return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
+        # Get content type and object ID from request
+        content_type_name = request.data.get('content_type')
+        object_id = request.data.get('object_id')
+        
+        if not content_type_name or not object_id:
+            return Response({
+                "error": "content_type and object_id are required"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Map content type names to model classes
+        content_type_map = {
+            'location': Location,
+            'transportation': Transportation,
+            'note': Note,
+            'lodging': Lodging,
+            'visit': Visit,
+        }
+        
+        if content_type_name not in content_type_map:
+            return Response({
+                "error": f"Invalid content_type. Must be one of: {', '.join(content_type_map.keys())}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get the content type and object
+        try:
+            content_type = ContentType.objects.get_for_model(content_type_map[content_type_name])
+            content_object = content_type_map[content_type_name].objects.get(id=object_id)
+        except (ValueError, content_type_map[content_type_name].DoesNotExist):
+            return Response({
+                "error": f"{content_type_name} not found"
+            }, status=status.HTTP_404_NOT_FOUND)
+        
+        # Check permissions based on content type
+        if hasattr(content_object, 'user'):
+            if content_object.user != request.user:
+                # For Location, check if user has shared access
+                if content_type_name == 'location':
+                    if content_object.collections.exists():
+                        user_has_access = False
+                        for collection in content_object.collections.all():
+                            if collection.shared_with.filter(id=request.user.id).exists() or collection.user == request.user:
+                                user_has_access = True
+                                break
+                        
+                        if not user_has_access:
+                            return Response({
+                                "error": "User does not have permission to access this content"
+                            }, status=status.HTTP_403_FORBIDDEN)
+                    else:
+                        return Response({
+                            "error": "User does not own this content"
+                        }, status=status.HTTP_403_FORBIDDEN)
+                else:
+                    return Response({
+                        "error": "User does not own this content"
+                    }, status=status.HTTP_403_FORBIDDEN)
         
         # Handle Immich ID for shared users by downloading the image
-        if (request.user != location.user and 
+        if (hasattr(content_object, 'user') and 
+            request.user != content_object.user and 
             'immich_id' in request.data and 
             request.data.get('immich_id')):
             
@@ -91,8 +135,8 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 immich_response.raise_for_status()
                 
                 # Create a temporary file with the downloaded content
-                content_type = immich_response.headers.get('Content-Type', 'image/jpeg')
-                if not content_type.startswith('image/'):
+                content_type_header = immich_response.headers.get('Content-Type', 'image/jpeg')
+                if not content_type_header.startswith('image/'):
                     return Response({
                         "error": "Invalid content type returned from Immich server.",
                         "code": "invalid_content_type"
@@ -105,7 +149,7 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                     'image/webp': '.webp',
                     'image/gif': '.gif'
                 }
-                file_ext = ext_map.get(content_type, '.jpg')
+                file_ext = ext_map.get(content_type_header, '.jpg')
                 filename = f"immich_{immich_id}{file_ext}"
                 
                 # Create a Django ContentFile from the downloaded image
@@ -115,14 +159,20 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                 request_data = request.data.copy()
                 request_data.pop('immich_id', None)  # Remove immich_id
                 request_data['image'] = image_file  # Add the image file
+                request_data['content_type'] = content_type.id
+                request_data['object_id'] = object_id
                 
                 # Create the serializer with the modified data
                 serializer = self.get_serializer(data=request_data)
                 serializer.is_valid(raise_exception=True)
                 
                 # Save with the downloaded image
-                location = serializer.validated_data['location']
-                serializer.save(user=location.user, image=image_file)
+                serializer.save(
+                    user=content_object.user if hasattr(content_object, 'user') else request.user,
+                    image=image_file,
+                    content_type=content_type,
+                    object_id=object_id
+                )
                 
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
                 
@@ -137,34 +187,47 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
                     "code": "immich_processing_error"
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
-        return super().create(request, *args, **kwargs)
+        # Add content type and object ID to request data
+        request_data = request.data.copy()
+        request_data['content_type'] = content_type.id
+        request_data['object_id'] = object_id
+        
+        # Create serializer with modified data
+        serializer = self.get_serializer(data=request_data)
+        serializer.is_valid(raise_exception=True)
+        
+        # Save the image
+        serializer.save(
+            user=content_object.user if hasattr(content_object, 'user') else request.user,
+            content_type=content_type,
+            object_id=object_id
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     def update(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        location_id = request.data.get('location')
-        try:
-            location = Location.objects.get(id=location_id)
-        except Location.DoesNotExist:
-            return Response({"error": "location not found"}, status=status.HTTP_404_NOT_FOUND)
+        instance = self.get_object()
+        content_object = instance.content_object
         
-        if location.user != request.user:
-            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
+        # Check ownership
+        if hasattr(content_object, 'user') and content_object.user != request.user:
+            return Response({"error": "User does not own this content"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().update(request, *args, **kwargs)
     
-    def perform_destroy(self, instance):
-        return super().perform_destroy(instance)
-
     def destroy(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        location = instance.location
-        if location.user != request.user:
-            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
+        content_object = instance.content_object
+        
+        # Check ownership
+        if hasattr(content_object, 'user') and content_object.user != request.user:
+            return Response({"error": "User does not own this content"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().destroy(request, *args, **kwargs)
     
@@ -173,41 +236,33 @@ class AdventureImageViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         
         instance = self.get_object()
-        location = instance.location
-        if location.user != request.user:
-            return Response({"error": "User does not own this location"}, status=status.HTTP_403_FORBIDDEN)
+        content_object = instance.content_object
+        
+        # Check ownership
+        if hasattr(content_object, 'user') and content_object.user != request.user:
+            return Response({"error": "User does not own this content"}, status=status.HTTP_403_FORBIDDEN)
         
         return super().partial_update(request, *args, **kwargs)
     
-    @action(detail=False, methods=['GET'], url_path='(?P<location_id>[0-9a-f-]+)')
-    def location_images(self, request, location_id=None, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
-        
-        try:
-            location_uuid = uuid.UUID(location_id)
-        except ValueError:
-            return Response({"error": "Invalid location ID"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Updated queryset to include images from locations the user owns OR has shared access to
-        queryset = ContentImage.objects.filter(
-            Q(location__id=location_uuid) & (
-                Q(location__user=request.user) |  # User owns the location
-                Q(location__collections__shared_with=request.user)  # User has shared access via collection
-            )
-        ).distinct()
-        
-        serializer = self.get_serializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+
 
     def get_queryset(self):
-        # Updated to include images from locations the user owns OR has shared access to
-        return ContentImage.objects.filter(
-            Q(location__user=self.request.user) |  # User owns the location
-            Q(location__collections__shared_with=self.request.user)  # User has shared access via collection
+        """Get all images the user has access to"""
+        if not self.request.user.is_authenticated:
+            return ContentImage.objects.none()
+        
+        # Get content type for Location to handle shared access
+        location_content_type = ContentType.objects.get_for_model(Location)
+        
+        # Build queryset with proper permissions
+        queryset = ContentImage.objects.filter(
+            Q(content_object__user=self.request.user) |  # User owns the content
+            Q(content_type=location_content_type, content_object__collections__shared_with=self.request.user)  # Shared locations
         ).distinct()
+        
+        return queryset
 
     def perform_create(self, serializer):
-        # Always set the image owner to the location owner, not the current user
-        location = serializer.validated_data['location']
-        serializer.save(user=location.user)
+        # The content_type and object_id are already set in the create method
+        # Just ensure the user is set correctly
+        pass

@@ -12,19 +12,23 @@
 	import Search from '~icons/mdi/magnify';
 	import Clear from '~icons/mdi/close';
 	import Link from '~icons/mdi/link-variant';
+	import Share from '~icons/mdi/share-variant';
 
 	let collections: Collection[] = [];
+	let sharedCollections: Collection[] = [];
+	let allCollections: Collection[] = [];
 	let filteredCollections: Collection[] = [];
 	let searchQuery: string = '';
+	let loading = true;
 
 	export let linkedCollectionList: string[] | null = null;
 
 	// Search functionality following worldtravel pattern
 	$: {
 		if (searchQuery === '') {
-			filteredCollections = collections;
+			filteredCollections = allCollections;
 		} else {
-			filteredCollections = collections.filter((collection) =>
+			filteredCollections = allCollections.filter((collection) =>
 				collection.name.toLowerCase().includes(searchQuery.toLowerCase())
 			);
 		}
@@ -36,28 +40,57 @@
 			modal.showModal();
 		}
 
-		let res = await fetch(`/api/collections/all/`, {
-			method: 'GET'
-		});
+		try {
+			// Fetch both own collections and shared collections
+			const [ownRes, sharedRes] = await Promise.all([
+				fetch(`/api/collections/all/`, { method: 'GET' }),
+				fetch(`/api/collections/shared`, { method: 'GET' })
+			]);
 
-		let result = await res.json();
+			const ownResult = await ownRes.json();
+			const sharedResult = await sharedRes.json();
 
-		if (result.type === 'success' && result.data) {
-			collections = result.data.adventures as Collection[];
-		} else {
-			collections = result as Collection[];
+			// Process own collections
+			if (ownResult.type === 'success' && ownResult.data) {
+				collections = ownResult.data.adventures as Collection[];
+			} else {
+				collections = ownResult as Collection[];
+			}
+
+			// Process shared collections
+			if (sharedResult.type === 'success' && sharedResult.data) {
+				sharedCollections = sharedResult.data.adventures as Collection[];
+			} else {
+				sharedCollections = sharedResult as Collection[];
+			}
+
+			// Don't combine collections - keep them separate
+			allCollections = collections;
+
+			// Move linked collections to the front for each collection type
+			if (linkedCollectionList) {
+				collections.sort((a, b) => {
+					const aLinked = linkedCollectionList?.includes(a.id);
+					const bLinked = linkedCollectionList?.includes(b.id);
+					return aLinked === bLinked ? 0 : aLinked ? -1 : 1;
+				});
+
+				sharedCollections.sort((a, b) => {
+					const aLinked = linkedCollectionList?.includes(a.id);
+					const bLinked = linkedCollectionList?.includes(b.id);
+					return aLinked === bLinked ? 0 : aLinked ? -1 : 1;
+				});
+			}
+		} catch (error) {
+			console.error('Error fetching collections:', error);
+			// Fallback to empty arrays
+			collections = [];
+			sharedCollections = [];
+			allCollections = [];
+			filteredCollections = [];
+		} finally {
+			loading = false;
 		}
-
-		// Move linked collections to the front
-		if (linkedCollectionList) {
-			collections.sort((a, b) => {
-				const aLinked = linkedCollectionList?.includes(a.id);
-				const bLinked = linkedCollectionList?.includes(b.id);
-				return aLinked === bLinked ? 0 : aLinked ? -1 : 1;
-			});
-		}
-
-		filteredCollections = collections;
 	});
 
 	function close() {
@@ -80,7 +113,23 @@
 
 	// Statistics following worldtravel pattern
 	$: linkedCount = linkedCollectionList ? linkedCollectionList.length : 0;
-	$: totalCollections = collections.length;
+	$: totalCollections = collections.length + sharedCollections.length;
+	$: ownCollectionsCount = collections.length;
+	$: sharedCollectionsCount = sharedCollections.length;
+
+	// Filtered collections for display
+	$: filteredOwnCollections =
+		searchQuery === ''
+			? collections
+			: collections.filter((collection) =>
+					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
+				);
+	$: filteredSharedCollections =
+		searchQuery === ''
+			? sharedCollections
+			: sharedCollections.filter((collection) =>
+					collection.name.toLowerCase().includes(searchQuery.toLowerCase())
+				);
 </script>
 
 <dialog id="my_modal_1" class="modal backdrop-blur-sm">
@@ -106,7 +155,7 @@
 							{$t('adventures.my_collections')}
 						</h1>
 						<p class="text-sm text-base-content/60">
-							{filteredCollections.length}
+							{filteredOwnCollections.length + filteredSharedCollections.length}
 							{$t('worldtravel.of')}
 							{totalCollections}
 							{$t('navbar.collections')}
@@ -122,8 +171,15 @@
 							<div class="stat-value text-lg text-success">{linkedCount}</div>
 						</div>
 						<div class="stat py-2 px-4">
-							<div class="stat-title text-xs">{$t('collection.available')}</div>
-							<div class="stat-value text-lg text-info">{totalCollections}</div>
+							<div class="stat-title text-xs">{$t('navbar.collections')}</div>
+							<div class="stat-value text-lg text-info">{ownCollectionsCount}</div>
+						</div>
+						<div class="stat py-2 px-4">
+							<div class="stat-title text-xs flex items-center gap-1">
+								<Share class="w-3 h-3" />
+								{$t('collection.shared')}
+							</div>
+							<div class="stat-value text-lg text-warning">{sharedCollectionsCount}</div>
 						</div>
 					</div>
 				</div>
@@ -164,8 +220,13 @@
 		</div>
 
 		<!-- Main Content -->
-		<div class="px-2">
-			{#if filteredCollections.length === 0}
+		<div class="px-6">
+			{#if loading}
+				<div class="flex flex-col items-center justify-center py-16">
+					<div class="loading loading-spinner loading-lg text-primary mb-4"></div>
+					<p class="text-base-content/60">{$t('loading.collections')}</p>
+				</div>
+			{:else if filteredOwnCollections.length === 0 && filteredSharedCollections.length === 0}
 				<div class="flex flex-col items-center justify-center py-16">
 					<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
 						<Collections class="w-16 h-16 text-base-content/30" />
@@ -192,17 +253,69 @@
 				</div>
 			{:else}
 				<!-- Collections Grid -->
-				<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 p-4">
-					{#each filteredCollections as collection}
-						<CollectionCard
-							{collection}
-							type="link"
-							on:link={link}
-							bind:linkedCollectionList
-							on:unlink={unlink}
-							user={null}
-						/>
-					{/each}
+				<div class="space-y-8">
+					<!-- Own Collections Section -->
+					{#if filteredOwnCollections.length > 0}
+						<div>
+							<div class="flex items-center gap-2 mb-4">
+								<Collections class="w-5 h-5 text-primary" />
+								<h2 class="text-lg font-semibold text-base-content">
+									{$t('collection.my_collections')}
+								</h2>
+								<div class="badge badge-primary badge-sm">
+									{filteredOwnCollections.length}
+								</div>
+							</div>
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+								{#each filteredOwnCollections as collection}
+									<CollectionCard
+										{collection}
+										type="link"
+										on:link={link}
+										bind:linkedCollectionList
+										on:unlink={unlink}
+										user={null}
+									/>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<!-- Shared Collections Section -->
+					{#if filteredSharedCollections.length > 0}
+						<div>
+							<div class="flex items-center gap-2 mb-4">
+								<Share class="w-5 h-5 text-warning" />
+								<h2 class="text-lg font-semibold text-base-content">
+									{$t('collection.shared_with_me')}
+								</h2>
+								<div class="badge badge-warning badge-sm">
+									{filteredSharedCollections.length}
+								</div>
+							</div>
+							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+								{#each filteredSharedCollections as collection}
+									<div class="relative">
+										<CollectionCard
+											{collection}
+											type="link"
+											on:link={link}
+											bind:linkedCollectionList
+											on:unlink={unlink}
+											user={null}
+										/>
+										<!-- Shared badge overlay -->
+										<div class="absolute -top-2 -right-2 z-10">
+											<div class="badge badge-warning badge-sm gap-1 shadow-lg">
+												<Share class="w-3 h-3" />
+												{$t('collection.shared')}
+											</div>
+										</div>
+									</div>
+								{/each}
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
