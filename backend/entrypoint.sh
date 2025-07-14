@@ -16,12 +16,14 @@ check_postgres() {
   local db_host
   local db_user
   local db_name
-  local db_pass
+  #local db_pass
 
   db_host=$(get_env PGHOST)
   db_user=$(get_env PGUSER POSTGRES_USER)
   db_name=$(get_env PGDATABASE POSTGRES_DB)
-  db_pass=$(get_env PGPASSWORD POSTGRES_PASSWORD)
+  #db_pass=$(get_env PGPASSWORD POSTGRES_PASSWORD)
+  db_pass=$(< /run/secrets/POSTGRES_PASSWORD)
+  # NOTE: password should be handled with more care
 
   PGPASSWORD="$db_pass" psql -h "$db_host" -U "$db_user" -d "$db_name" -c '\q' >/dev/null 2>&1
 }
@@ -42,7 +44,8 @@ done
 python manage.py migrate
 
 # Create superuser if environment variables are set and there are no users present at all.
-if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -n "$DJANGO_ADMIN_PASSWORD" ] && [ -n "$DJANGO_ADMIN_EMAIL" ]; then
+# NOTE: unsure if this checks if a password actually exists
+if [ -n "$DJANGO_ADMIN_USERNAME" ] && [ -f /run/secrets/DJANGO-ADMIN-PASSWORD ] && [ -n "$DJANGO_ADMIN_EMAIL" ]; then
   echo "Creating superuser..."
   python manage.py shell << EOF
 from django.contrib.auth import get_user_model
@@ -56,7 +59,7 @@ if not User.objects.filter(username='$DJANGO_ADMIN_USERNAME').exists():
     superuser = User.objects.create_superuser(
         username='$DJANGO_ADMIN_USERNAME',
         email='$DJANGO_ADMIN_EMAIL',
-        password='$DJANGO_ADMIN_PASSWORD'
+        password='$(cat /run/secrets/DJANGO-ADMIN-PASSWORD)'
     )
     print("Superuser created successfully.")
 
