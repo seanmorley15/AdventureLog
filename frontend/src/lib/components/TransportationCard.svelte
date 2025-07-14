@@ -118,7 +118,11 @@
 >
 	<!-- Image Section with Overlay -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={[transportation]} />
+		<CardCarousel
+			images={transportation.images}
+			icon={getTransportationIcon(transportation.type)}
+			name={transportation.name}
+		/>
 
 		<!-- Privacy Indicator -->
 		<div class="absolute top-4 right-4">

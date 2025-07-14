@@ -190,7 +190,7 @@
 >
 	<!-- Image Section with Overlay -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={[adventure]} />
+		<CardCarousel images={adventure.images} icon={adventure.category?.icon} name={adventure.name} />
 
 		<!-- Status Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">

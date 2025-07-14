@@ -1224,7 +1224,7 @@
 													{/if}
 												</div>
 											</div>
-											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'visits' in orderedItem.item}
 												<LocationCard
 													user={data.user}
 													on:edit={editAdventure}
@@ -1293,7 +1293,11 @@
 								{#if isPopupOpen}
 									<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
 										{#if adventure.images && adventure.images.length > 0}
-											<CardCarousel adventures={[adventure]} />
+											<CardCarousel
+												images={adventure.images}
+												name={adventure.name}
+												icon={adventure?.category?.icon}
+											/>
 										{/if}
 										<div class="text-lg text-black font-bold">{adventure.name}</div>
 										<p class="font-semibold text-black text-md">

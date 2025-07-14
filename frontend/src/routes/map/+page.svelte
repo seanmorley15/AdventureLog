@@ -208,7 +208,11 @@
 												<div class="min-w-64 max-w-sm">
 													{#if adventure.images && adventure.images.length > 0}
 														<div class="mb-3">
-															<CardCarousel adventures={[adventure]} />
+															<CardCarousel
+																images={adventure.images}
+																name={adventure.name}
+																icon={adventure?.category?.icon}
+															/>
 														</div>
 													{/if}
 													<div class="space-y-2">

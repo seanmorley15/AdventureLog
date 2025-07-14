@@ -91,7 +91,11 @@
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={collection.locations} />
+		<CardCarousel
+			images={collection.locations.flatMap((location) => location.images)}
+			name={collection.name}
+			icon="📚"
+		/>
 
 		<!-- Badge Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">

@@ -99,7 +99,7 @@
 >
 	<!-- Image Section with Overlay -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={[lodging]} />
+		<CardCarousel images={lodging.images} icon={getLodgingIcon(lodging.type)} name={lodging.name} />
 
 		<!-- Category Badge -->
 		{#if lodging.type}
