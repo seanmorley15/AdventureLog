@@ -233,7 +233,7 @@
 		{/if}
 
 		<!-- Creator Avatar -->
-		{#if adventure.user}
+		{#if adventure.user && collection}
 			<div class="absolute bottom-4 right-4">
 				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
 					<div class="avatar">
