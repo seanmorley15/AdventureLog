@@ -24,7 +24,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = getenv('SECRET_KEY')
+with open('/run/secret/DJANGO-ADMIN-PASSWORD') as fp:
+  v = fp.read()
+SECRET_KEY = v.decode('base64')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = getenv('DEBUG', 'true').lower() == 'true'
@@ -112,12 +114,16 @@ def env(*keys, default=None):
             return value
     return default
 
+with open('/run/secrets/POSTGRES_PASSWORD') as fp:
+  v = fp.read()
+POSTGRES_PASSWORD = v.decode('base64')
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'NAME': env('PGDATABASE', 'POSTGRES_DB'),
         'USER': env('PGUSER', 'POSTGRES_USER'),
-        'PASSWORD': env('PGPASSWORD', 'POSTGRES_PASSWORD'),
+        'PASSWORD': POSTGRES_PASSWORD,
         'HOST': env('PGHOST', default='localhost'),
         'PORT': int(env('PGPORT', default='5432')),
         'OPTIONS': {
@@ -125,6 +131,8 @@ DATABASES = {
         },
     }
 }
+
+POSTGRES_PASSWORD = ""
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
@@ -259,7 +267,7 @@ else:
     EMAIL_PORT = getenv('EMAIL_PORT', 587)
     EMAIL_USE_SSL = getenv('EMAIL_USE_SSL', 'false').lower() == 'true'
     EMAIL_HOST_USER = getenv('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = getenv('EMAIL_HOST_PASSWORD')
+    EMAIL_HOST_PASSWORD = '$(< /run/secrets/EMAIL-HOST-PASSWORD)'
     DEFAULT_FROM_EMAIL = getenv('DEFAULT_FROM_EMAIL')
 
 # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -327,4 +335,6 @@ LOGGING = {
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.6'
 
-GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
+with open('/run/secrets/GMAPS_API_KEY') as fp:
+  v = fp.read()
+GOOGLE_MAPS_API_KEY = v.decode('base64')

@@ -4,7 +4,10 @@ services:
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - PUBLIC_SERVER_URL=http://server:8000 # PLEASE DON'T CHANGE :) - Should be the service name of the backend with port 8000, even if you change the port in the backend service. Only change if you are using a custom more complex setup.
+      - ORIGIN=${FRONTENT_URL:-http://localhost:8015}
+      - BODY_SIZE_LIMIT=${BODY_SIZE_LIMIT:-Infinity}
     ports:
       - "${FRONTEND_PORT:-8015}:3000"
     depends_on:
@@ -14,7 +17,13 @@ services:
     image: postgis/postgis:16-3.5
     container_name: adventurelog-db
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB:-database}
+      - POSTGRES_USER=${POSTGRES_USER:-adventure}
+      #- POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+      - POSTGRES_PASSWORD_FILE=/run/secrets/POSTGRES_PASSWORD
+    secrets:
+      - POSTGRES_PASSWORD
     volumes:
       - postgres_data:/var/lib/postgresql/data/
 
@@ -23,13 +32,54 @@ services:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
-    env_file: .env
+    environment:
+      - PGHOST=db
+      - POSTGRES_DB=${POSTGRES_DB:-database}
+      - POSTGRES_USER=${POSTGRES_USER:-adventure}
+      #- POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme123}
+      - SECRET_KEY=${SECRET_KEY:-changeme123}
+      - DJANGO_ADMIN_USERNAME=${DJANGO_ADMIN_USERNAME:-admin}
+      #- DJANGO_ADMIN_PASSWORD=${DJANGO_ADMIN_PASSWORD:-admin}
+      - DJANGO_ADMIN_EMAIL=${DJANGO_ADMIN_EMAIL:-admin@example.com}
+      - PUBLIC_URL=${BACKEND_URL:-http://localhost:8016}
+      - CSRF_TRUSTED_ORIGINS=${FRONTEND_URL:-http://localhost:8015},${BACKEND_URL:-http://localhost:8016}
+      - DEBUG=False
+      - FRONTEND_URL=${FRONTEND_URL:-http://localhost:8015} # Used for email generation. This should be the url of the frontend
+      - BACKEND_PORT=${BACKEND_PORT:-8016}
+      - DISABLE_REGISTRATION=${DISABLE_REGISTRATION:-False}
+      - DISABLE_REGISTRATION_MESSAGE=${DISABLE_REGISTRATION_MESSAGE}
+      - EMAIL_BACKEND=${EMAIL_BACKEND:-console}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USE_TLS=${EMAIL_USE_TLS}
+      - EMAIL_PORT=${EMAIL_PORT}
+      - EMAIL_USE_SSL=${EMAIL_USE_SSL}
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      #- EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+      #- GOOGLE_MAPS_API_KEY=${GOOGLE_MAPS_API_KEY}
+      - PUBLIC_UMAMI_SRC=${PUBLIC_UMAMI_SRC}
+      - PUBLIC_UMAMI_WEBSITE_ID=${PUBLIC_UMAMI_WEBSITE_ID}
+    secrets:
+      - DJANGO-ADMIN-PASSWORD
+      - POSTGRES_PASSWORD
+      - EMAIL-HOST-PASSWORD
+      - GMAPS-API-KEY
     ports:
       - "${BACKEND_PORT:-8016}:80"
     depends_on:
       - db
     volumes:
       - adventurelog_media:/code/media/
+
+secrets:
+  GMAPS-API-KEY:
+    file: gmaps-api-key.txt
+  EMAIL-HOST-PASSWORD:
+    file: email-host-password.txt
+  DJANGO-ADMIN-PASSWORD:
+    file: django-admin-password.txt
+  POSTGRES_PASSWORD:
+    file: postgres-password.txt
 
 volumes:
   postgres_data:
