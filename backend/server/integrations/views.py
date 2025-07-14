@@ -255,7 +255,7 @@ class ImmichIntegrationView(viewsets.ViewSet):
         Access levels (in order of priority):
         1. Public locations: accessible by anyone
         2. Private locations in public collections: accessible by anyone
-        3. Private locations in private collections shared with user: accessible by shared users
+        3. Private locations in private collections shared with user: accessible by shared users, and the collection owner
         4. Private locations: accessible only to the owner
         5. No ContentImage: owner can still view via integration
         """
@@ -333,10 +333,11 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     elif request.user.is_authenticated and request.user == owner_id:
                         is_authorized = True
                         
-                    # Level 4: Shared collection access
+                    # Level 4: Shared collection access or collection owner access
                     elif (request.user.is_authenticated and 
-                        any(collection.shared_with.filter(id=request.user.id).exists() 
-                            for collection in collections)):
+                        (any(collection.shared_with.filter(id=request.user.id).exists() 
+                            for collection in collections) or
+                         any(collection.user == request.user for collection in collections))):
                         is_authorized = True
                 else:
                     # Location without collections - owner access only

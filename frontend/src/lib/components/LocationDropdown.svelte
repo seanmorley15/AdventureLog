@@ -224,59 +224,152 @@
 	}
 </script>
 
-<div class="collapse collapse-plus bg-base-200 mb-4">
+<!-- Location Information Section -->
+<div
+	class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+>
 	<input type="checkbox" />
-	<div class="collapse-title text-xl font-medium">
-		{$t('adventures.location_information')}
+	<div class="collapse-title text-xl font-semibold bg-gradient-to-r from-accent/10 to-accent/5">
+		<div class="flex items-center gap-3">
+			<div class="p-2 bg-accent/10 rounded-lg">
+				<svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+					/>
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+					/>
+				</svg>
+			</div>
+			{$t('adventures.location_information')}
+		</div>
 	</div>
-	<div class="collapse-content">
-		<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"> -->
-		<div>
-			<label for="latitude">{$t('adventures.location')}</label><br />
-			<div class="flex items-center">
+	<div class="collapse-content bg-base-100/50 p-6 space-y-6">
+		<!-- Location Name Input -->
+		<div class="form-control">
+			<label class="label">
+				<span class="label-text font-medium">{$t('adventures.location')}</span>
+			</label>
+			<div class="flex items-center gap-3">
 				<input
 					type="text"
 					id="location"
 					name="location"
 					bind:value={item.location}
-					class="input input-bordered w-full"
+					class="input input-bordered flex-1 bg-base-100/80 focus:bg-base-100"
+					placeholder={$t('adventures.enter_location_name')}
 				/>
 				{#if is_custom_location}
 					<button
-						class="btn btn-primary ml-2"
+						class="btn btn-primary gap-2"
 						type="button"
 						on:click={() => (item.location = reverseGeocodePlace?.display_name)}
-						>{$t('adventures.set_to_pin')}</button
 					>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+							/>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+							/>
+						</svg>
+						{$t('adventures.set_to_pin')}
+					</button>
 				{/if}
 			</div>
 		</div>
 
-		<div>
-			<form on:submit={geocode} class="mt-2">
-				<input
-					type="text"
-					placeholder={$t('adventures.search_for_location')}
-					class="input input-bordered w-full max-w-xs mb-2"
-					id="search"
-					name="search"
-					bind:value={query}
-				/>
-				<button class="btn btn-neutral -mt-1" type="submit">{$t('navbar.search')}</button>
-				<button class="btn btn-neutral -mt-1" type="button" on:click={clearMap}
-					>{$t('adventures.clear_map')}</button
-				>
+		<!-- Location Search -->
+		<div class="form-control">
+			<label class="label">
+				<span class="label-text font-medium">{$t('adventures.search_location')}</span>
+			</label>
+			<form on:submit={geocode} class="flex flex-col sm:flex-row gap-3">
+				<div class="relative flex-1">
+					<svg
+						class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+						/>
+					</svg>
+					<input
+						type="text"
+						placeholder={$t('adventures.search_for_location')}
+						class="input input-bordered w-full pl-10 bg-base-100/80 focus:bg-base-100"
+						id="search"
+						name="search"
+						bind:value={query}
+					/>
+				</div>
+				<div class="flex gap-2">
+					<button class="btn btn-neutral gap-2" type="submit">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+							/>
+						</svg>
+						{$t('navbar.search')}
+					</button>
+					<button class="btn btn-neutral btn-outline gap-2" type="button" on:click={clearMap}>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+							/>
+						</svg>
+						{$t('adventures.clear_map')}
+					</button>
+				</div>
 			</form>
 		</div>
-		{#if places.length > 0}
-			<div class="mt-4 max-w-full">
-				<h3 class="font-bold text-lg mb-4">{$t('adventures.search_results')}</h3>
 
-				<div class="flex flex-wrap">
+		<!-- Search Results -->
+		{#if places.length > 0}
+			<div class="form-control">
+				<label class="label">
+					<span class="label-text font-medium flex items-center gap-2">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						{$t('adventures.search_results')}
+					</span>
+				</label>
+				<div
+					class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 bg-base-100/80 border border-base-300 rounded-xl max-h-60 overflow-y-auto"
+				>
 					{#each places as place}
 						<button
 							type="button"
-							class="btn btn-neutral mb-2 mr-2 max-w-full break-words whitespace-normal text-left"
+							class="btn btn-ghost btn-sm h-auto min-h-0 p-3 justify-start text-left hover:bg-base-200"
 							on:click={() => {
 								markers = [
 									{
@@ -292,85 +385,232 @@
 								}
 							}}
 						>
-							<span>{place.name}</span>
-							<br />
-							<small class="text-xs text-neutral-300">{place.display_name}</small>
+							<div class="flex flex-col items-start w-full">
+								<span class="font-medium text-sm">{place.name}</span>
+								<small class="text-xs text-base-content/60 truncate w-full"
+									>{place.display_name}</small
+								>
+							</div>
 						</button>
 					{/each}
 				</div>
 			</div>
 		{:else if noPlaces}
-			<p class="text-error text-lg">{$t('adventures.no_results')}</p>
+			<div class="alert alert-error">
+				<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+					/>
+				</svg>
+				<span>{$t('adventures.no_results')}</span>
+			</div>
 		{/if}
-		<!-- </div> -->
-		<div>
-			<MapLibre
-				style={getBasemapUrl()}
-				class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
-				standardControls
-				zoom={item.latitude && item.longitude ? 12 : 1}
-				center={{ lng: item.longitude || 0, lat: item.latitude || 0 }}
-			>
-				<!-- MapEvents gives you access to map events even from other components inside the map,
-where you might not have access to the top-level `MapLibre` component. In this case
-it would also work to just use on:click on the MapLibre component itself. -->
-				<MapEvents on:click={addMarker} />
 
-				{#each markers as marker}
-					<DefaultMarker lngLat={marker.lngLat} />
-				{/each}
-			</MapLibre>
-			{#if reverseGeocodePlace}
-				<div class="mt-2 p-4 bg-neutral rounded-lg shadow-md">
-					<h3 class="text-lg font-bold mb-2">{$t('adventures.location_details')}</h3>
-					<p class="mb-1">
-						<span class="font-semibold">{$t('adventures.display_name')}:</span>
-						{reverseGeocodePlace.city
-							? reverseGeocodePlace.city + ', '
-							: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
-					</p>
-					<p class="mb-1">
-						<span class="font-semibold">{$t('adventures.region')}:</span>
-						{reverseGeocodePlace.region}
-						{reverseGeocodePlace.region_visited ? '✅' : '❌'}
-					</p>
-					{#if reverseGeocodePlace.city}
-						<p class="mb-1">
-							<span class="font-semibold">{$t('adventures.city')}:</span>
-							{reverseGeocodePlace.city}
-							{reverseGeocodePlace.city_visited ? '✅' : '❌'}
-						</p>
-					{/if}
-				</div>
-				{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && !willBeMarkedVisited)}
-					<button type="button" class="btn btn-primary mt-2" on:click={markVisited}>
-						{$t('adventures.mark_visited')}
-					</button>
-				{/if}
-				{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited && reverseGeocodePlace.city_id)}
-					<div role="alert" class="alert alert-info mt-2 flex items-center">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							fill="none"
-							viewBox="0 0 24 24"
-							class="h-6 w-6 shrink-0 stroke-current mr-2"
-						>
+		<!-- Map Container -->
+		<div class="form-control">
+			<label class="label">
+				<span class="label-text font-medium flex items-center gap-2">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+						/>
+					</svg>
+					{$t('adventures.interactive_map')}
+				</span>
+			</label>
+			<div class="bg-base-100/80 border border-base-300 rounded-xl p-4">
+				<MapLibre
+					style={getBasemapUrl()}
+					class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg border border-base-300"
+					standardControls
+					zoom={item.latitude && item.longitude ? 12 : 1}
+					center={{ lng: item.longitude || 0, lat: item.latitude || 0 }}
+				>
+					<MapEvents on:click={addMarker} />
+					{#each markers as marker}
+						<DefaultMarker lngLat={marker.lngLat} />
+					{/each}
+				</MapLibre>
+			</div>
+		</div>
+
+		<!-- Location Details -->
+		{#if reverseGeocodePlace}
+			<div class="bg-gradient-to-r from-info/10 to-info/5 border border-info/20 rounded-xl p-6">
+				<h3 class="text-lg font-bold flex items-center gap-2 mb-4">
+					<div class="p-2 bg-info/10 rounded-lg">
+						<svg class="w-5 h-5 text-info" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								stroke-width="2"
 								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-							></path>
+							/>
 						</svg>
-						<span>
+					</div>
+					{$t('adventures.location_details')}
+				</h3>
+
+				<div class="space-y-3">
+					<div class="flex items-center gap-3 p-3 bg-base-100/50 rounded-lg">
+						<svg
+							class="w-4 h-4 text-base-content/60"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"
+							/>
+						</svg>
+						<span class="font-medium text-sm">{$t('adventures.display_name')}:</span>
+						<span class="text-sm">
 							{reverseGeocodePlace.city
 								? reverseGeocodePlace.city + ', '
 								: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
-							{$t('adventures.will_be_marked_location')}
 						</span>
 					</div>
+
+					<div class="flex items-center gap-3 p-3 bg-base-100/50 rounded-lg">
+						<svg
+							class="w-4 h-4 text-base-content/60"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+							/>
+						</svg>
+						<span class="font-medium text-sm">{$t('adventures.region')}:</span>
+						<span class="text-sm">{reverseGeocodePlace.region}</span>
+						<div class="ml-auto">
+							{#if reverseGeocodePlace.region_visited}
+								<div class="badge badge-success badge-sm gap-1">
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M5 13l4 4L19 7"
+										/>
+									</svg>
+									{$t('adventures.visited')}
+								</div>
+							{:else}
+								<div class="badge badge-error badge-sm gap-1">
+									<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M6 18L18 6M6 6l12 12"
+										/>
+									</svg>
+									{$t('adventures.not_visited')}
+								</div>
+							{/if}
+						</div>
+					</div>
+
+					{#if reverseGeocodePlace.city}
+						<div class="flex items-center gap-3 p-3 bg-base-100/50 rounded-lg">
+							<svg
+								class="w-4 h-4 text-base-content/60"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+								/>
+							</svg>
+							<span class="font-medium text-sm">{$t('adventures.city')}:</span>
+							<span class="text-sm">{reverseGeocodePlace.city}</span>
+							<div class="ml-auto">
+								{#if reverseGeocodePlace.city_visited}
+									<div class="badge badge-success badge-sm gap-1">
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M5 13l4 4L19 7"
+											/>
+										</svg>
+										{$t('adventures.visited')}
+									</div>
+								{:else}
+									<div class="badge badge-error badge-sm gap-1">
+										<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M6 18L18 6M6 6l12 12"
+											/>
+										</svg>
+										{$t('adventures.not_visited')}
+									</div>
+								{/if}
+							</div>
+						</div>
+					{/if}
+				</div>
+
+				<!-- Mark Visited Button -->
+				{#if !reverseGeocodePlace.region_visited || (!reverseGeocodePlace.city_visited && !willBeMarkedVisited)}
+					<button type="button" class="btn btn-primary gap-2 mt-4" on:click={markVisited}>
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M5 13l4 4L19 7"
+							/>
+						</svg>
+						{$t('adventures.mark_visited')}
+					</button>
 				{/if}
-			{/if}
-		</div>
+
+				<!-- Will be marked visited alert -->
+				{#if (willBeMarkedVisited && !reverseGeocodePlace.region_visited && reverseGeocodePlace.region_id) || (!reverseGeocodePlace.city_visited && willBeMarkedVisited && reverseGeocodePlace.city_id)}
+					<div class="alert alert-info mt-4">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<div>
+							<h4 class="font-bold">{$t('adventures.location_will_be_marked')}</h4>
+							<div class="text-sm">
+								{reverseGeocodePlace.city
+									? reverseGeocodePlace.city + ', '
+									: ''}{reverseGeocodePlace.region}, {reverseGeocodePlace.country}
+								{$t('adventures.will_be_marked_location')}
+							</div>
+						</div>
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>

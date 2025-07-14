@@ -2,6 +2,7 @@
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import ImmichLogo from '$lib/assets/immich.svg';
+	import Upload from '~icons/mdi/upload';
 	import type { Location, ImmichAlbum } from '$lib/types';
 	import { debounce } from '$lib';
 
@@ -148,104 +149,145 @@
 	}
 </script>
 
-<div class="mb-4">
-	<label for="immich" class="block font-medium mb-2">
-		{$t('immich.immich')}
-		<img src={ImmichLogo} alt="Immich Logo" class="h-6 w-6 inline-block -mt-1" />
-	</label>
-	<div class="mt-4">
-		<div class="join">
-			<input
-				on:click={() => (currentAlbum = '')}
-				type="radio"
-				class="join-item btn"
-				bind:group={searchCategory}
-				value="search"
-				aria-label="Search"
-			/>
-			<input
-				type="radio"
-				class="join-item btn"
-				bind:group={searchCategory}
-				value="date"
-				aria-label="Show by date"
-			/>
-			<input
-				type="radio"
-				class="join-item btn"
-				bind:group={searchCategory}
-				value="album"
-				aria-label="Select Album"
-			/>
-		</div>
-		<div>
-			{#if searchCategory === 'search'}
-				<form on:submit|preventDefault={searchImmich}>
-					<input
-						type="text"
-						placeholder="Type here"
-						bind:value={immichSearchValue}
-						class="input input-bordered w-full max-w-xs"
-					/>
-					<button type="submit" class="btn btn-neutral mt-2">Search</button>
-				</form>
-			{:else if searchCategory === 'date'}
+<div class="space-y-4">
+	<!-- Header -->
+	<div class="flex items-center gap-2 mb-4">
+		<h4 class="font-medium text-lg">
+			{$t('immich.immich')}
+		</h4>
+		<img src={ImmichLogo} alt="Immich Logo" class="h-6 w-6" />
+	</div>
+
+	<!-- Search Category Tabs -->
+	<div class="tabs tabs-boxed w-fit">
+		<button
+			class="tab"
+			class:tab-active={searchCategory === 'search'}
+			on:click={() => {
+				searchCategory = 'search';
+				currentAlbum = '';
+			}}
+		>
+			{$t('immich.search')}
+		</button>
+		<button
+			class="tab"
+			class:tab-active={searchCategory === 'date'}
+			on:click={() => (searchCategory = 'date')}
+		>
+			{$t('immich.by_date')}
+		</button>
+		<button
+			class="tab"
+			class:tab-active={searchCategory === 'album'}
+			on:click={() => (searchCategory = 'album')}
+		>
+			{$t('immich.by_album')}
+		</button>
+	</div>
+
+	<!-- Search Controls -->
+	<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+		{#if searchCategory === 'search'}
+			<form on:submit|preventDefault={searchImmich} class="flex gap-2">
 				<input
-					type="date"
-					bind:value={selectedDate}
-					class="input input-bordered w-full max-w-xs mt-2"
+					type="text"
+					placeholder={$t('immich.search_placeholder')}
+					bind:value={immichSearchValue}
+					class="input input-bordered flex-1"
 				/>
-			{:else if searchCategory === 'album'}
-				<select class="select select-bordered w-full max-w-xs mt-2" bind:value={currentAlbum}>
-					<option value="" disabled selected>Select an Album</option>
+				<button type="submit" class="btn btn-primary">
+					{$t('immich.search')}
+				</button>
+			</form>
+		{:else if searchCategory === 'date'}
+			<div class="flex items-center gap-2">
+				<label class="label">
+					<span class="label-text">{$t('immich.select_date')}</span>
+				</label>
+				<input type="date" bind:value={selectedDate} class="input input-bordered w-full max-w-xs" />
+			</div>
+		{:else if searchCategory === 'album'}
+			<div class="flex items-center gap-2">
+				<label class="label">
+					<span class="label-text">{$t('immich.select_album')}</span>
+				</label>
+				<select class="select select-bordered w-full max-w-xs" bind:value={currentAlbum}>
+					<option value="" disabled selected>{$t('immich.select_album_placeholder')}</option>
 					{#each albums as album}
 						<option value={album.id}>{album.albumName}</option>
 					{/each}
 				</select>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</div>
 
-	<p class="text-red-500">{immichError}</p>
-	<div class="flex flex-wrap gap-4 mr-4 mt-2">
+	<!-- Error Message -->
+	{#if immichError}
+		<div class="alert alert-error">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="stroke-current shrink-0 h-6 w-6"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+				/>
+			</svg>
+			<span class="text-sm">{immichError}</span>
+		</div>
+	{/if}
+
+	<!-- Images Grid -->
+	<div class="relative">
+		<!-- Loading Overlay -->
 		{#if loading}
 			<div
-				class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[100] w-24 h-24"
+				class="absolute inset-0 bg-base-200/50 backdrop-blur-sm z-10 flex items-center justify-center rounded-lg"
 			>
-				<span class="loading loading-spinner w-24 h-24"></span>
+				<span class="loading loading-spinner loading-lg"></span>
 			</div>
 		{/if}
 
-		{#each immichImages as image}
-			<div class="flex flex-col items-center gap-2" class:blur-sm={loading}>
-				<!-- svelte-ignore a11y-img-redundant-alt -->
-				<img
-					src={`${image.image_url}`}
-					alt="Image from Immich"
-					class="h-24 w-24 object-cover rounded-md"
-				/>
-				<h4>
-					{image.fileCreatedAt?.split('T')[0] || 'Unknown'}
-				</h4>
-				<button
-					type="button"
-					class="btn btn-sm btn-primary"
-					on:click={() => {
-						let currentDomain = window.location.origin;
-						let fullUrl = `${currentDomain}/immich/${image.id}`;
-						if (copyImmichLocally) {
-							dispatch('fetchImage', fullUrl);
-						} else {
-							saveImmichRemoteUrl(image.id);
-						}
-					}}
-				>
-					{$t('adventures.upload_image')}
+		<!-- Images Grid -->
+		<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4" class:opacity-50={loading}>
+			{#each immichImages as image}
+				<div class="card bg-base-100 shadow-sm hover:shadow-md transition-shadow">
+					<figure class="aspect-square">
+						<img src={image.image_url} alt="Image from Immich" class="w-full h-full object-cover" />
+					</figure>
+					<div class="card-body p-2">
+						<button
+							type="button"
+							class="btn btn-primary btn-sm max-w-full"
+							on:click={() => {
+								let currentDomain = window.location.origin;
+								let fullUrl = `${currentDomain}/immich/${image.id}`;
+								if (copyImmichLocally) {
+									dispatch('fetchImage', fullUrl);
+								} else {
+									saveImmichRemoteUrl(image.id);
+								}
+							}}
+						>
+							<Upload class="w-4 h-4" />
+						</button>
+					</div>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Load More Button -->
+		{#if immichNextURL}
+			<div class="flex justify-center mt-6">
+				<button class="btn btn-outline btn-wide" on:click={loadMoreImmich}>
+					{$t('immich.load_more')}
 				</button>
 			</div>
-		{/each}
-		{#if immichNextURL}
-			<button class="btn btn-neutral" on:click={loadMoreImmich}>{$t('immich.load_more')}</button>
 		{/if}
 	</div>
 </div>

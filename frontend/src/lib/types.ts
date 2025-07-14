@@ -14,6 +14,13 @@ export type User = {
 	disable_password: boolean;
 };
 
+export type ContentImage = {
+	id: string;
+	image: string;
+	is_primary: boolean;
+	immich_id: string | null;
+};
+
 export type Location = {
 	id: string;
 	name: string;
@@ -22,12 +29,7 @@ export type Location = {
 	description?: string | null;
 	rating?: number | null;
 	link?: string | null;
-	images: {
-		id: string;
-		image: string;
-		is_primary: boolean;
-		immich_id: string | null;
-	}[];
+	images: ContentImage[];
 	visits: {
 		id: string;
 		start_date: string;
@@ -174,6 +176,7 @@ export type Transportation = {
 	collection: Collection | null | string;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
+	images: ContentImage[]; // Array of images associated with the transportation
 };
 
 export type Note = {
@@ -302,4 +305,5 @@ export type Lodging = {
 	collection: string | null;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
+	images: ContentImage[]; // Array of images associated with the lodging
 };

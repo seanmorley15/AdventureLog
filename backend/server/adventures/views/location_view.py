@@ -263,7 +263,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                 # Check if user has shared access to the collection
                 if not collection.shared_with.filter(uuid=self.request.user.uuid).exists():
                     raise PermissionDenied(
-                        f"You don't have permission to remove location from collection '{collection.name}'"
+                        f"You don't have permission to remove this location from one of the collections it's linked to.'"
                     )
 
     def _validate_collection_permissions(self, collections):

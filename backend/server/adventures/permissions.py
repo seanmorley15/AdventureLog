@@ -64,47 +64,138 @@ class CollectionShared(permissions.BasePermission):
 
 class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
     """
-    Full access for owners and users shared via collections,
-    read-only for others if public.
+    Permission class that provides access control based on ownership and sharing.
+    
+    Access Rules:
+    - Object owners have full access (read/write)
+    - Users shared via collections have full access (read/write)
+    - Collection owners have full access to objects in their collections
+    - Users with direct sharing have full access
+    - Anonymous users get read-only access to public objects
+    - Authenticated users get read-only access to public objects
+    
+    Supports multiple sharing patterns:
+    - obj.collections (many-to-many collections)
+    - obj.collection (single collection foreign key)
+    - obj.shared_with (direct sharing many-to-many)
+    - obj.is_public (public access flag)
     """
+    
     def has_object_permission(self, request, view, obj):
+        """
+        Check if the user has permission to access the object.
+        
+        Args:
+            request: The HTTP request
+            view: The view being accessed
+            obj: The object being accessed
+            
+        Returns:
+            bool: True if access is granted, False otherwise
+        """
         user = request.user
+        is_safe_method = request.method in permissions.SAFE_METHODS
+        
+        # Anonymous users only get read access to public objects
         if not user or not user.is_authenticated:
-            return request.method in permissions.SAFE_METHODS and obj.is_public
-
-        # If safe method (read), allow if:
-        if request.method in permissions.SAFE_METHODS:
-            if obj.is_public:
-                return True
-            if obj.user == user:
-                return True
-            # If user in shared_with of any collection related to obj
-            if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
-                return True
-            # **FIX: Check if user OWNS any collection that contains this object**
-            if hasattr(obj, 'collections') and obj.collections.filter(user=user).exists():
-                return True
-            if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
-                return True
-            if hasattr(obj, 'collection') and obj.collection and obj.collection.user == user:
-                return True
-            if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
-                return True
-            return False
-
-        # For write methods, allow if owner or shared user
-        if obj.user == user:
+            return is_safe_method and getattr(obj, 'is_public', False)
+        
+        # Owner always has full access
+        if self._is_owner(obj, user):
             return True
-        if hasattr(obj, 'collections') and obj.collections.filter(shared_with=user).exists():
+        
+        # Check collection-based access (both ownership and sharing)
+        if self._has_collection_access(obj, user):
             return True
-        # **FIX: Allow write access if user owns any collection containing this object**
-        if hasattr(obj, 'collections') and obj.collections.filter(user=user).exists():
+        
+        # Check direct sharing
+        if self._has_direct_sharing_access(obj, user):
             return True
-        if hasattr(obj, 'collection') and obj.collection and obj.collection.shared_with.filter(id=user.id).exists():
+        
+        # For safe methods, check if object is public
+        if is_safe_method and getattr(obj, 'is_public', False):
             return True
-        if hasattr(obj, 'collection') and obj.collection and obj.collection.user == user:
-            return True
-        if hasattr(obj, 'shared_with') and obj.shared_with.filter(id=user.id).exists():
-            return True
-
+        
         return False
+    
+    def _is_owner(self, obj, user):
+        """
+        Check if the user is the owner of the object.
+        
+        Args:
+            obj: The object to check
+            user: The user to check ownership for
+            
+        Returns:
+            bool: True if user owns the object
+        """
+        return hasattr(obj, 'user') and obj.user == user
+    
+    def _has_collection_access(self, obj, user):
+        """
+        Check if user has access via collections (either as owner or shared user).
+        
+        Handles both many-to-many collections and single collection foreign keys.
+        
+        Args:
+            obj: The object to check
+            user: The user to check access for
+            
+        Returns:
+            bool: True if user has collection-based access
+        """
+        # Check many-to-many collections (obj.collections)
+        if hasattr(obj, 'collections'):
+            collections = obj.collections.all()
+            if collections.exists():
+                # User is shared with any collection containing this object
+                if collections.filter(shared_with=user).exists():
+                    return True
+                # User owns any collection containing this object
+                if collections.filter(user=user).exists():
+                    return True
+        
+        # Check single collection foreign key (obj.collection)
+        if hasattr(obj, 'collection') and obj.collection:
+            collection = obj.collection
+            # User is shared with the collection
+            if hasattr(collection, 'shared_with') and collection.shared_with.filter(id=user.id).exists():
+                return True
+            # User owns the collection
+            if hasattr(collection, 'user') and collection.user == user:
+                return True
+        
+        return False
+    
+    def _has_direct_sharing_access(self, obj, user):
+        """
+        Check if user has direct sharing access to the object.
+        
+        Args:
+            obj: The object to check
+            user: The user to check access for
+            
+        Returns:
+            bool: True if user has direct sharing access
+        """
+        return (hasattr(obj, 'shared_with') and 
+                obj.shared_with.filter(id=user.id).exists())
+    
+    def has_permission(self, request, view):
+        """
+        Check if the user has permission to access the view.
+        
+        This is called before has_object_permission and provides a way to
+        deny access at the view level (e.g., for unauthenticated users).
+        
+        Args:
+            request: The HTTP request
+            view: The view being accessed
+            
+        Returns:
+            bool: True if access is granted at the view level
+        """
+        # Allow authenticated users and anonymous users for safe methods
+        # Individual object permissions are handled in has_object_permission
+        return (request.user and request.user.is_authenticated) or \
+               request.method in permissions.SAFE_METHODS

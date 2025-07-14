@@ -10,6 +10,10 @@
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
 	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
 	import { isAllDay } from '$lib';
+	import CardCarousel from './CardCarousel.svelte';
+
+	import Eye from '~icons/mdi/eye';
+	import EyeOff from '~icons/mdi/eye-off';
 
 	function getTransportationIcon(type: string) {
 		if (type in TRANSPORTATION_TYPES_ICONS) {
@@ -112,6 +116,39 @@
 <div
 	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
+	<!-- Image Section with Overlay -->
+	<div class="relative overflow-hidden rounded-t-2xl">
+		<CardCarousel adventures={[transportation]} />
+
+		<!-- Privacy Indicator -->
+		<div class="absolute top-4 right-4">
+			<div
+				class="tooltip tooltip-left"
+				data-tip={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
+			>
+				<div
+					class="btn btn-circle btn-sm btn-ghost bg-black/20 backdrop-blur-sm border-0 text-white"
+				>
+					{#if transportation.is_public}
+						<Eye class="w-4 h-4" />
+					{:else}
+						<EyeOff class="w-4 h-4" />
+					{/if}
+				</div>
+			</div>
+		</div>
+
+		<!-- Category Badge -->
+		{#if transportation.type}
+			<div class="absolute bottom-4 left-4">
+				<div class="badge badge-primary shadow-lg font-medium">
+					{$t(`transportation.modes.${transportation.type}`)}
+					{getTransportationIcon(transportation.type)}
+				</div>
+			</div>
+		{/if}
+	</div>
+
 	<div class="card-body p-6 space-y-6">
 		<!-- Header -->
 		<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">

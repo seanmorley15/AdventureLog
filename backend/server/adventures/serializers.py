@@ -128,6 +128,7 @@ class LocationSerializer(CustomModelSerializer):
 
     def validate_collections(self, collections):
         """Validate that collections are compatible with the location being created/updated"""
+        
         if not collections:
             return collections
             
@@ -136,17 +137,54 @@ class LocationSerializer(CustomModelSerializer):
         # Get the location being updated (if this is an update operation)
         location_owner = getattr(self.instance, 'user', None) if self.instance else user
         
-        for collection in collections:
+        # For updates, we need to check if collections are being added or removed
+        current_collections = set(self.instance.collections.all()) if self.instance else set()
+        new_collections_set = set(collections)
+        
+        collections_to_add = new_collections_set - current_collections
+        collections_to_remove = current_collections - new_collections_set
+        
+        # Validate collections being added
+        for collection in collections_to_add:
+            
             # Check if user has permission to use this collection
-            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
+            user_has_shared_access = collection.shared_with.filter(id=user.id).exists()
+            
+            if collection.user != user and not user_has_shared_access:
                 raise serializers.ValidationError(
-                    f"Collection '{collection.name}' does not belong to the current user."
+                    f"The requested collection does not belong to the current user."
                 )
             
-            # Check if the location owner is compatible with the collection
-            if collection.user != location_owner and not collection.shared_with.filter(id=location_owner.id).exists():
+            # Check location owner compatibility - both directions
+            if collection.user != location_owner:
+                
+                # If user owns the collection but not the location, location owner must have shared access
+                if collection.user == user:
+                    location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
+                    
+                    if not location_owner_has_shared_access:
+                        raise serializers.ValidationError(
+                            f"Locations must be associated with collections owned by the same user or shared collections. Collection owner: {collection.user.username} Location owner: {location_owner.username if location_owner else 'None'}"
+                        )
+                
+                # If using someone else's collection, location owner must have shared access
+                else:
+                    location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
+                    
+                    if not location_owner_has_shared_access:
+                        raise serializers.ValidationError(
+                            "Location cannot be added to collection unless the location owner has shared access to the collection."
+                        )
+        
+        # Validate collections being removed - allow if user owns the collection OR owns the location
+        for collection in collections_to_remove:
+            user_owns_collection = collection.user == user
+            user_owns_location = location_owner == user if location_owner else False
+            user_has_shared_access = collection.shared_with.filter(id=user.id).exists()
+            
+            if not (user_owns_collection or user_owns_location or user_has_shared_access):
                 raise serializers.ValidationError(
-                    f"Location owned by '{location_owner.username}' cannot be added to collection '{collection.name}' owned by '{collection.user.username}' unless the location owner has shared access to the collection."
+                    "You don't have permission to remove this location from one of the collections it's linked to."
                 )
         
         return collections
@@ -267,6 +305,7 @@ class LocationSerializer(CustomModelSerializer):
 
 class TransportationSerializer(CustomModelSerializer):
     distance = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
@@ -275,9 +314,14 @@ class TransportationSerializer(CustomModelSerializer):
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
             'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
-            'start_timezone', 'end_timezone', 'distance'
+            'start_timezone', 'end_timezone', 'distance', 'images'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance']
+
+    def get_images(self, obj):
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
     def get_distance(self, obj):
         if (
@@ -293,15 +337,21 @@ class TransportationSerializer(CustomModelSerializer):
         return None
 
 class LodgingSerializer(CustomModelSerializer):
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Lodging
         fields = [
             'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
-            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at', 'type', 'timezone'
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public',
+            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def get_images(self, obj):
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
 class NoteSerializer(CustomModelSerializer):
 

@@ -1,5 +1,7 @@
 from adventures.models import ContentImage, ContentAttachment
 
+from adventures.models import Visit
+
 protected_paths = ['images/', 'attachments/']
 
 def checkFilePermission(fileId, user, mediaType):
@@ -14,7 +16,14 @@ def checkFilePermission(fileId, user, mediaType):
             
             # Get the content object (could be Location, Transportation, Note, etc.)
             content_object = content_image.content_object
-            
+
+            # handle differently when content_object is a Visit, get the location instead
+            if isinstance(content_object, Visit):
+                # check visit.location
+                if content_object.location:
+                    # continue with the location check
+                    content_object = content_object.location
+
             # Check if content object is public
             if hasattr(content_object, 'is_public') and content_object.is_public:
                 return True

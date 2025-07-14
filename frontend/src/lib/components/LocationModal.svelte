@@ -506,172 +506,371 @@
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<dialog id="my_modal_1" class="modal">
+<dialog id="my_modal_1" class="modal backdrop-blur-sm">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-2xl">
-			{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
-		</h3>
+	<div
+		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		role="dialog"
+		on:keydown={handleKeydown}
+		tabindex="0"
+	>
+		<!-- Header Section - Following adventurelog pattern -->
+		<div
+			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+		>
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="p-2 bg-primary/10 rounded-xl">
+						<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+							/>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+							/>
+						</svg>
+					</div>
+					<div>
+						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+							{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
+						</h1>
+						<p class="text-sm text-base-content/60">
+							{locationToEdit
+								? $t('adventures.update_location_details')
+								: $t('adventures.create_new_location')}
+						</p>
+					</div>
+				</div>
+
+				<!-- Close Button -->
+				{#if !location.id}
+					<button class="btn btn-ghost btn-square" on:click={close}>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				{:else}
+					<button class="btn btn-ghost btn-square" on:click={saveAndClose}>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				{/if}
+			</div>
+		</div>
+
 		{#if location.id === '' || isDetails}
-			<div class="modal-action items-center">
+			<!-- Main Content -->
+			<div class="px-2">
 				<form method="post" style="width: 100%;" on:submit={handleSubmit}>
-					<!-- Grid layout for form fields -->
-					<!-- <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3"> -->
-					<div class="collapse collapse-plus bg-base-200 mb-4">
+					<!-- Basic Information Section -->
+					<div
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+					>
 						<input type="checkbox" checked />
-						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.basic_information')}
-						</div>
-						<div class="collapse-content">
-							<div>
-								<label for="name">{$t('adventures.name')}<span class="text-red-500">*</span></label
-								><br />
-								<input
-									type="text"
-									id="name"
-									name="name"
-									bind:value={location.name}
-									class="input input-bordered w-full"
-									required
-								/>
-							</div>
-							<div>
-								<label for="link"
-									>{$t('adventures.category')}<span class="text-red-500">*</span></label
-								><br />
-								{#if (user && user.uuid == location.user?.uuid) || !locationToEdit}
-									<CategoryDropdown bind:categories bind:selected_category={location.category} />
-								{:else}
-									<!-- read only view of category info name and icon -->
-									<div
-										class="flex items-center space-x-3 p-3 bg-base-100 border border-base-300 rounded-lg"
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-lg">
+									<svg
+										class="w-5 h-5 text-primary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
 									>
-										{#if location.category?.icon}
-											<span class="text-2xl flex-shrink-0">{location.category.icon}</span>
-										{/if}
-										<span class="text-base font-medium text-base-content">
-											{location.category?.display_name || location.category?.name}
-										</span>
-									</div>
-								{/if}
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+										/>
+									</svg>
+								</div>
+								{$t('adventures.basic_information')}
 							</div>
-							<div>
-								<label for="rating">{$t('adventures.rating')}</label><br />
-								<input
-									type="number"
-									min="0"
-									max="5"
-									hidden
-									bind:value={location.rating}
-									id="rating"
-									name="rating"
-									class="input input-bordered w-full max-w-xs mt-1"
-								/>
-								<div class="rating -ml-3 mt-1">
-									<input
-										type="radio"
-										name="rating-2"
-										class="rating-hidden"
-										checked={Number.isNaN(location.rating)}
-									/>
-									<input
-										type="radio"
-										name="rating-2"
-										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (location.rating = 1)}
-										checked={location.rating === 1}
-									/>
-									<input
-										type="radio"
-										name="rating-2"
-										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (location.rating = 2)}
-										checked={location.rating === 2}
-									/>
-									<input
-										type="radio"
-										name="rating-2"
-										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (location.rating = 3)}
-										checked={location.rating === 3}
-									/>
-									<input
-										type="radio"
-										name="rating-2"
-										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (location.rating = 4)}
-										checked={location.rating === 4}
-									/>
-									<input
-										type="radio"
-										name="rating-2"
-										class="mask mask-star-2 bg-orange-400"
-										on:click={() => (location.rating = 5)}
-										checked={location.rating === 5}
-									/>
-									{#if location.rating}
-										<button
-											type="button"
-											class="btn btn-sm btn-error ml-2"
-											on:click={() => (location.rating = NaN)}
+						</div>
+						<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-3">
+							<!-- Dual Column Layout for Large Screens -->
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+								<!-- Left Column -->
+								<div class="space-y-4">
+									<!-- Name Field -->
+									<div class="form-control">
+										<label class="label" for="name">
+											<span class="label-text font-medium"
+												>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
+											>
+										</label>
+										<input
+											type="text"
+											id="name"
+											name="name"
+											bind:value={location.name}
+											class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+											placeholder={$t('adventures.enter_location_name')}
+											required
+										/>
+									</div>
+
+									<!-- Category Field -->
+									<div class="form-control">
+										<label class="label" for="category">
+											<span class="label-text font-medium"
+												>{$t('adventures.category')}<span class="text-error ml-1">*</span></span
+											>
+										</label>
+										{#if (user && user.uuid == location.user?.uuid) || !locationToEdit}
+											<CategoryDropdown
+												bind:categories
+												bind:selected_category={location.category}
+											/>
+										{:else}
+											<div
+												class="flex items-center gap-3 p-4 bg-base-100/80 border border-base-300 rounded-xl"
+											>
+												{#if location.category?.icon}
+													<span class="text-2xl flex-shrink-0">{location.category.icon}</span>
+												{/if}
+												<span class="text-base font-medium text-base-content">
+													{location.category?.display_name || location.category?.name}
+												</span>
+											</div>
+										{/if}
+									</div>
+
+									<!-- Rating Field -->
+									<div class="form-control">
+										<label class="label" for="rating">
+											<span class="label-text font-medium">{$t('adventures.rating')}</span>
+										</label>
+										<input
+											type="number"
+											min="0"
+											max="5"
+											hidden
+											bind:value={location.rating}
+											id="rating"
+											name="rating"
+											class="input input-bordered w-full max-w-xs"
+										/>
+										<div
+											class="flex items-center gap-4 p-4 bg-base-100/80 border border-base-300 rounded-xl"
 										>
-											{$t('adventures.remove')}
-										</button>
+											<div class="rating">
+												<input
+													type="radio"
+													name="rating-2"
+													class="rating-hidden"
+													checked={Number.isNaN(location.rating)}
+												/>
+												<input
+													type="radio"
+													name="rating-2"
+													class="mask mask-star-2 bg-warning"
+													on:click={() => (location.rating = 1)}
+													checked={location.rating === 1}
+												/>
+												<input
+													type="radio"
+													name="rating-2"
+													class="mask mask-star-2 bg-warning"
+													on:click={() => (location.rating = 2)}
+													checked={location.rating === 2}
+												/>
+												<input
+													type="radio"
+													name="rating-2"
+													class="mask mask-star-2 bg-warning"
+													on:click={() => (location.rating = 3)}
+													checked={location.rating === 3}
+												/>
+												<input
+													type="radio"
+													name="rating-2"
+													class="mask mask-star-2 bg-warning"
+													on:click={() => (location.rating = 4)}
+													checked={location.rating === 4}
+												/>
+												<input
+													type="radio"
+													name="rating-2"
+													class="mask mask-star-2 bg-warning"
+													on:click={() => (location.rating = 5)}
+													checked={location.rating === 5}
+												/>
+											</div>
+											{#if location.rating}
+												<button
+													type="button"
+													class="btn btn-sm btn-error btn-outline gap-2"
+													on:click={() => (location.rating = NaN)}
+												>
+													<svg
+														class="w-4 h-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+														/>
+													</svg>
+													{$t('adventures.remove')}
+												</button>
+											{/if}
+										</div>
+									</div>
+
+									<!-- Public Toggle -->
+									{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
+										<div class="form-control">
+											<label class="label cursor-pointer justify-start gap-4" for="is_public">
+												<input
+													type="checkbox"
+													class="toggle toggle-primary"
+													id="is_public"
+													name="is_public"
+													bind:checked={location.is_public}
+												/>
+												<div>
+													<span class="label-text font-medium"
+														>{$t('adventures.public_location')}</span
+													>
+													<p class="text-sm text-base-content/60">
+														{$t('adventures.public_location_desc')}
+													</p>
+												</div>
+											</label>
+										</div>
 									{/if}
 								</div>
-							</div>
-							<div>
-								<div>
-									<label for="link">{$t('adventures.link')}</label><br />
-									<input
-										type="text"
-										id="link"
-										name="link"
-										bind:value={location.link}
-										class="input input-bordered w-full"
-									/>
-								</div>
-							</div>
-							<div>
-								<label for="description">{$t('adventures.description')}</label><br />
-								<MarkdownEditor bind:text={location.description} />
-								<div class="mt-2">
-									<div class="tooltip tooltip-right" data-tip={$t('adventures.wiki_location_desc')}>
-										<button type="button" class="btn btn-neutral mt-2" on:click={generateDesc}
-											>{$t('adventures.generate_desc')}</button
-										>
-									</div>
-									<p class="text-red-500">{wikiError}</p>
-								</div>
-							</div>
-							{#if !locationToEdit || (locationToEdit.collections && locationToEdit.collections.length === 0)}
-								<div>
-									<div class="form-control flex items-start mt-1">
-										<label class="label cursor-pointer flex items-start space-x-2">
-											<span class="label-text">{$t('adventures.public_location')}</span>
-											<input
-												type="checkbox"
-												class="toggle toggle-primary"
-												id="is_public"
-												name="is_public"
-												bind:checked={location.is_public}
-											/>
+
+								<!-- Right Column -->
+								<div class="space-y-4">
+									<!-- Link Field -->
+									<div class="form-control">
+										<label class="label" for="link">
+											<span class="label-text font-medium">{$t('adventures.link')}</span>
 										</label>
+										<input
+											type="url"
+											id="link"
+											name="link"
+											bind:value={location.link}
+											class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+											placeholder="https://example.com"
+										/>
+									</div>
+
+									<!-- Description Field -->
+									<div class="form-control">
+										<label class="label" for="description">
+											<span class="label-text font-medium">{$t('adventures.description')}</span>
+										</label>
+										<div class="bg-base-100/80 border border-base-300 rounded-xl p-4">
+											<MarkdownEditor bind:text={location.description} />
+										</div>
+										<div class="flex items-center gap-4 mt-4">
+											<div
+												class="tooltip tooltip-right"
+												data-tip={$t('adventures.wiki_location_desc')}
+											>
+												<button type="button" class="btn btn-neutral gap-2" on:click={generateDesc}>
+													<svg
+														class="w-4 h-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M13 10V3L4 14h7v7l9-11h-7z"
+														/>
+													</svg>
+													{$t('adventures.generate_desc')}
+												</button>
+											</div>
+											{#if wikiError}
+												<div class="alert alert-error alert-sm">
+													<svg
+														class="w-4 h-4"
+														fill="none"
+														stroke="currentColor"
+														viewBox="0 0 24 24"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															stroke-width="2"
+															d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+														/>
+													</svg>
+													<span class="text-sm">{wikiError}</span>
+												</div>
+											{/if}
+										</div>
 									</div>
 								</div>
-							{/if}
+							</div>
 						</div>
 					</div>
 
-					<LocationDropdown bind:item={location} bind:triggerMarkVisted {initialLatLng} />
+					<!-- Location Section -->
+					<div class="mb-6">
+						<LocationDropdown bind:item={location} bind:triggerMarkVisted {initialLatLng} />
+					</div>
 
-					<div class="collapse collapse-plus bg-base-200 mb-4 overflow-visible">
+					<!-- Tags Section -->
+					<div
+						class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+					>
 						<input type="checkbox" />
-						<div class="collapse-title text-xl font-medium">
-							{$t('adventures.tags')} ({location.tags?.length || 0})
+						<div
+							class="collapse-title text-xl font-semibold bg-gradient-to-r from-secondary/10 to-secondary/5"
+						>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-secondary/10 rounded-lg">
+									<svg
+										class="w-5 h-5 text-secondary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"
+										/>
+									</svg>
+								</div>
+								{$t('adventures.tags')} ({location.tags?.length || 0})
+							</div>
 						</div>
-						<div class="collapse-content">
+						<div class="collapse-content bg-base-100/50 p-6">
 							<input
 								type="text"
 								id="tags"
@@ -684,52 +883,70 @@
 						</div>
 					</div>
 
-					<DateRangeCollapse type="adventure" {collection} bind:visits={location.visits} />
+					<!-- Date Range Section -->
+					<div class="mb-6">
+						<DateRangeCollapse type="adventure" {collection} bind:visits={location.visits} />
+					</div>
 
-					<div>
-						<div class="mt-4">
-							{#if warningMessage != ''}
-								<div role="alert" class="alert alert-warning mb-2">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										class="h-6 w-6 shrink-0 stroke-current"
-										fill="none"
-										viewBox="0 0 24 24"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											stroke-width="2"
-											d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-										/>
-									</svg>
-									<span>{$t('adventures.warning')}: {warningMessage}</span>
-								</div>
-							{/if}
-							<div class="flex flex-row gap-2">
-								{#if !isLoading}
-									<button type="submit" class="btn btn-primary">{$t('adventures.save_next')}</button
-									>
-								{:else}
-									<button type="button" class="btn btn-primary"
-										><span class="loading loading-spinner loading-md"></span></button
-									>
-								{/if}
-								<button type="button" class="btn" on:click={close}>{$t('about.close')}</button>
+					<!-- Warning Messages -->
+					{#if warningMessage != ''}
+						<div class="alert alert-warning mb-6">
+							<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+								/>
+							</svg>
+							<div>
+								<h3 class="font-bold">{$t('adventures.warning')}</h3>
+								<div class="text-sm">{warningMessage}</div>
 							</div>
 						</div>
+					{/if}
+					<div
+						class="bottom-0 bg-base-100/90 backdrop-blur-lg border-t border-base-300 -mx-6 -mb-6 px-6 py-4 mt-6"
+					>
+						<button type="submit" class="btn btn-primary gap-2">
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+							{$t('adventures.save_next')}
+						</button>
+						<button type="button" class="btn btn-ghost gap-2" on:click={close}>
+							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M6 18L18 6M6 6l12 12"
+								/>
+							</svg>
+							{$t('about.close')}
+						</button>
 					</div>
 				</form>
 			</div>
 		{:else}
-			<div class="modal-action items-center">
-				<div class="collapse collapse-plus bg-base-200 mb-4">
-					<input type="checkbox" />
-					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.attachments')} ({location.attachments?.length || 0})
+			<!-- Attachments Section -->
+			<div class="card bg-base-200 mb-6">
+				<div class="card-body">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="card-title text-lg">
+							{$t('adventures.attachments')}
+							<div class="badge badge-neutral">{location.attachments?.length || 0}</div>
+						</h3>
 					</div>
-					<div class="collapse-content">
-						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+					<!-- Existing Attachments Grid -->
+					{#if location.attachments?.length > 0}
+						<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
 							{#each location.attachments as attachment}
 								<AttachmentCard
 									{attachment}
@@ -739,190 +956,237 @@
 								/>
 							{/each}
 						</div>
-						<div class="flex gap-2 m-4">
+					{/if}
+
+					<!-- Upload New Attachment -->
+					<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+						<h4 class="font-medium mb-3">{$t('adventures.upload_attachment')}</h4>
+						<div class="flex flex-col sm:flex-row gap-3">
 							<input
 								type="file"
 								id="fileInput"
-								class="file-input file-input-bordered w-full max-w-xs"
+								class="file-input file-input-bordered flex-1"
 								accept={allowedFileTypes.join(',')}
 								on:change={handleFileChange}
 							/>
-
 							<input
 								type="text"
-								class="input input-bordered w-full"
+								class="input input-bordered flex-1"
 								placeholder={$t('adventures.attachment_name')}
 								bind:value={attachmentName}
 							/>
-							<button class="btn btn-neutral" on:click={uploadAttachment}>
+							<button class="btn btn-primary btn-sm sm:btn-md" on:click={uploadAttachment}>
 								{$t('adventures.upload')}
 							</button>
 						</div>
+					</div>
 
-						<div role="alert" class="alert bg-neutral">
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								class="stroke-info h-6 w-6 shrink-0"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-								></path>
-							</svg>
-							<span>{$t('adventures.gpx_tip')}</span>
-						</div>
-
-						{#if attachmentToEdit}
+					<!-- Edit Attachment Form -->
+					{#if attachmentToEdit}
+						<div class="bg-warning/10 p-4 rounded-lg border border-warning/20 mt-4">
+							<h4 class="font-medium mb-3 text-warning">
+								{$t('transportation.edit')}
+								{$t('adventures.attachment_name')}
+							</h4>
 							<form
 								on:submit={(e) => {
 									e.preventDefault();
 									editAttachment();
 								}}
+								class="flex flex-col sm:flex-row gap-3"
 							>
-								<div class="flex gap-2 m-4">
-									<input
-										type="text"
-										class="input input-bordered w-full"
-										placeholder={$t('adventures.attachment_name')}
-										bind:value={attachmentToEdit.name}
-									/>
-									<button type="submit" class="btn btn-neutral">{$t('transportation.edit')}</button>
-								</div>
+								<input
+									type="text"
+									class="input input-bordered flex-1"
+									placeholder={$t('adventures.attachment_name')}
+									bind:value={attachmentToEdit.name}
+								/>
+								<button type="submit" class="btn btn-warning btn-sm sm:btn-md">
+									{$t('transportation.edit')}
+								</button>
 							</form>
-						{/if}
+						</div>
+					{/if}
+
+					<!-- GPX Tip -->
+					<div class="alert alert-info mt-4">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 24 24"
+							class="stroke-current h-6 w-6 shrink-0"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							></path>
+						</svg>
+						<span class="text-sm">{$t('adventures.gpx_tip')}</span>
 					</div>
 				</div>
 			</div>
-			<div class="collapse collapse-plus bg-base-200 mb-4">
-				<input type="checkbox" checked />
-				<div class="collapse-title text-xl font-medium">
-					{$t('adventures.images')} ({location.images?.length || 0})
-				</div>
-				<div class="collapse-content">
-					<label for="image" class="block font-medium mb-2">
-						{$t('adventures.image')}
-					</label>
-					<form class="flex flex-col items-start gap-2">
-						<input
-							type="file"
-							name="image"
-							class="file-input file-input-bordered w-full max-w-sm"
-							bind:this={fileInput}
-							accept="image/*"
-							id="image"
-							multiple
-							on:change={handleMultipleFiles}
-						/>
-						<input type="hidden" name="adventure" value={location.id} id="adventure" />
-					</form>
 
-					<div class="mb-4">
-						<label for="url" class="block font-medium mb-2">
-							{$t('adventures.url')}
-						</label>
-						<div class="flex gap-2">
-							<input
-								type="text"
-								id="url"
-								name="url"
-								bind:value={url}
-								class="input input-bordered flex-1"
-								placeholder="Enter image URL"
-							/>
-							<button class="btn btn-neutral" type="button" on:click={fetchImage}>
-								{$t('adventures.fetch_image')}
-							</button>
-						</div>
+			<!-- Images Section -->
+			<div class="card bg-base-200 mb-6">
+				<div class="card-body">
+					<div class="flex items-center justify-between mb-4">
+						<h3 class="card-title text-lg">
+							{$t('adventures.images')}
+							<div class="badge badge-neutral">{location.images?.length || 0}</div>
+						</h3>
 					</div>
 
-					<div class="mb-4">
-						<label for="name" class="block font-medium mb-2">
-							{$t('adventures.wikipedia')}
-						</label>
-						<div class="flex gap-2">
-							<input
-								type="text"
-								id="name"
-								name="name"
-								bind:value={imageSearch}
-								class="input input-bordered flex-1"
-								placeholder="Search Wikipedia for images"
-							/>
-							<button class="btn btn-neutral" type="button" on:click={fetchWikiImage}>
-								{$t('adventures.fetch_image')}
-							</button>
+					<!-- Image Upload Methods -->
+					<div class="grid gap-4 lg:grid-cols-2">
+						<!-- File Upload -->
+						<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+							<h4 class="font-medium mb-3">{$t('adventures.upload_from_device')}</h4>
+							<form class="space-y-3">
+								<input
+									type="file"
+									name="image"
+									class="file-input file-input-bordered w-full"
+									bind:this={fileInput}
+									accept="image/*"
+									id="image"
+									multiple
+									on:change={handleMultipleFiles}
+								/>
+								<input type="hidden" name="adventure" value={location.id} id="adventure" />
+							</form>
 						</div>
-						{#if wikiImageError}
-							<p class="text-red-500">{$t('adventures.wiki_image_error')}</p>
+
+						<!-- URL Upload -->
+						<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+							<h4 class="font-medium mb-3">{$t('adventures.upload_from_url')}</h4>
+							<div class="flex gap-2">
+								<input
+									type="text"
+									id="url"
+									name="url"
+									bind:value={url}
+									class="input input-bordered flex-1"
+									placeholder="Enter image URL"
+								/>
+								<button class="btn btn-primary btn-sm" type="button" on:click={fetchImage}>
+									{$t('adventures.fetch_image')}
+								</button>
+							</div>
+						</div>
+
+						<!-- Wikipedia Search -->
+						<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+							<h4 class="font-medium mb-3">{$t('adventures.wikipedia')}</h4>
+							<div class="flex gap-2">
+								<input
+									type="text"
+									id="name"
+									name="name"
+									bind:value={imageSearch}
+									class="input input-bordered flex-1"
+									placeholder="Search Wikipedia for images"
+								/>
+								<button class="btn btn-primary btn-sm" type="button" on:click={fetchWikiImage}>
+									{$t('adventures.fetch_image')}
+								</button>
+							</div>
+							{#if wikiImageError}
+								<div class="alert alert-error mt-2">
+									<span class="text-sm">{$t('adventures.wiki_image_error')}</span>
+								</div>
+							{/if}
+						</div>
+
+						<!-- Immich Integration -->
+						{#if immichIntegration}
+							<div class="bg-base-100 p-4 rounded-lg border border-base-300">
+								<h4 class="font-medium mb-3">Immich Integration</h4>
+								<ImmichSelect
+									{location}
+									on:fetchImage={(e) => {
+										url = e.detail;
+										fetchImage();
+									}}
+									{copyImmichLocally}
+									on:remoteImmichSaved={(e) => {
+										const newImage = {
+											id: e.detail.id,
+											image: e.detail.image,
+											is_primary: e.detail.is_primary,
+											immich_id: e.detail.immich_id
+										};
+										images = [...images, newImage];
+										location.images = images;
+										addToast('success', $t('adventures.image_upload_success'));
+									}}
+								/>
+							</div>
 						{/if}
 					</div>
 
-					{#if immichIntegration}
-						<ImmichSelect
-							{location}
-							on:fetchImage={(e) => {
-								url = e.detail;
-								fetchImage();
-							}}
-							{copyImmichLocally}
-							on:remoteImmichSaved={(e) => {
-								const newImage = {
-									id: e.detail.id,
-									image: e.detail.image,
-									is_primary: e.detail.is_primary,
-									immich_id: e.detail.immich_id
-								};
-								images = [...images, newImage];
-								location.images = images;
-								addToast('success', $t('adventures.image_upload_success'));
-							}}
-						/>
-					{/if}
+					<div class="divider my-6"></div>
 
-					<div class="divider"></div>
+					<!-- Current Images -->
+					<div class="space-y-4">
+						<h4 class="font-semibold text-lg">{$t('adventures.my_images')}</h4>
 
-					{#if images.length > 0}
-						<h1 class="font-semibold text-xl mb-4">{$t('adventures.my_images')}</h1>
-						<div class="flex flex-wrap gap-4">
-							{#each images as image}
-								<div class="relative h-32 w-32">
-									<button
-										type="button"
-										class="absolute top-1 right-1 btn btn-error btn-xs z-10"
-										on:click={() => removeImage(image.id)}
-									>
-										✕
-									</button>
-									{#if !image.is_primary}
-										<button
-											type="button"
-											class="absolute top-1 left-1 btn btn-success btn-xs z-10"
-											on:click={() => makePrimaryImage(image.id)}
-										>
-											<Star class="h-4 w-4" />
-										</button>
-									{:else}
-										<!-- crown icon -->
-
-										<div class="absolute top-1 left-1 bg-warning text-white rounded-full p-1 z-10">
-											<Crown class="h-4 w-4" />
+						{#if images.length > 0}
+							<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+								{#each images as image}
+									<div class="relative group">
+										<div class="aspect-square overflow-hidden rounded-lg bg-base-300">
+											<img
+												src={image.image}
+												alt={image.id}
+												class="w-full h-full object-cover transition-transform group-hover:scale-105"
+											/>
 										</div>
-									{/if}
-									<img
-										src={image.image}
-										alt={image.id}
-										class="w-full h-full object-cover rounded-md shadow-md"
-									/>
-								</div>
-							{/each}
-						</div>
-					{:else}
-						<h1 class="font-semibold text-xl text-gray-500">{$t('adventures.no_images')}</h1>
-					{/if}
+
+										<!-- Image Controls -->
+										<div
+											class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2"
+										>
+											{#if !image.is_primary}
+												<button
+													type="button"
+													class="btn btn-success btn-sm"
+													on:click={() => makePrimaryImage(image.id)}
+													title="Make Primary"
+												>
+													<Star class="h-4 w-4" />
+												</button>
+											{/if}
+
+											<button
+												type="button"
+												class="btn btn-error btn-sm"
+												on:click={() => removeImage(image.id)}
+												title="Remove"
+											>
+												✕
+											</button>
+										</div>
+
+										<!-- Primary Badge -->
+										{#if image.is_primary}
+											<div
+												class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1"
+											>
+												<Crown class="h-4 w-4" />
+											</div>
+										{/if}
+									</div>
+								{/each}
+							</div>
+						{:else}
+							<div class="text-center py-8">
+								<div class="text-base-content/60 text-lg mb-2">{$t('adventures.no_images')}</div>
+								<p class="text-sm text-base-content/40">Upload images to get started</p>
+							</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 			<div class="mt-4">

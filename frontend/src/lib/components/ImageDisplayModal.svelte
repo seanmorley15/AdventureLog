@@ -5,7 +5,7 @@
 	let modal: HTMLDialogElement;
 	import type { Location } from '$lib/types';
 
-	export let images: { image: string; adventure: Location | null }[] = [];
+	export let images: { image: string; adventure: any | null }[] = [];
 	export let initialIndex: number = 0;
 	import { t } from 'svelte-i18n';
 

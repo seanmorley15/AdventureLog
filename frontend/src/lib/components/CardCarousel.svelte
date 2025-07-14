@@ -1,9 +1,9 @@
 <script lang="ts">
-	import type { Location } from '$lib/types';
+	import type { Location, Lodging, Transportation } from '$lib/types';
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
 	import { t } from 'svelte-i18n';
 
-	export let adventures: Location[] = [];
+	export let adventures: Location[] | Transportation[] | Lodging[] = [];
 
 	let currentSlide = 0;
 	let showImageModal = false;

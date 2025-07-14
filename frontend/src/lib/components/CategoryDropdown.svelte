@@ -5,6 +5,7 @@
 
 	export let categories: Category[] = [];
 	export let selected_category: Category | null = null;
+	export let searchTerm: string = '';
 	let new_category: Category = {
 		name: '',
 		display_name: '',
@@ -60,62 +61,206 @@
 	});
 </script>
 
-<div class="mt-2 relative" bind:this={dropdownRef}>
-	<button type="button" class="btn btn-outline w-full text-left" on:click={toggleDropdown}>
-		{selected_category && selected_category.name
-			? selected_category.display_name + ' ' + selected_category.icon
-			: $t('categories.select_category')}
-	</button>
+<div class="dropdown w-full" bind:this={dropdownRef}>
+	<!-- Main dropdown trigger -->
+	<div
+		tabindex="0"
+		role="button"
+		class="btn btn-outline w-full justify-between"
+		on:click={toggleDropdown}
+	>
+		<span class="flex items-center gap-2">
+			{#if selected_category && selected_category.name}
+				<span class="text-lg">{selected_category.icon}</span>
+				<span class="truncate">{selected_category.display_name}</span>
+			{:else}
+				<span class="text-base-content/70">{$t('categories.select_category')}</span>
+			{/if}
+		</span>
+		<svg
+			class="w-4 h-4 transition-transform duration-200 {isOpen ? 'rotate-180' : ''}"
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+		</svg>
+	</div>
 
 	{#if isOpen}
-		<div class="absolute z-10 w-full mt-1 bg-base-300 rounded shadow-lg p-2">
-			<!-- svelte-ignore a11y-click-events-have-key-events -->
-			<!-- svelte-ignore a11y-no-static-element-interactions -->
-			<div class="flex flex-col gap-2">
-				<div class="flex items-center gap-2">
-					<input
-						type="text"
-						placeholder={$t('categories.category_name')}
-						class="input input-bordered w-full max-w-xs"
-						bind:value={new_category.display_name}
-					/>
-					<input
-						type="text"
-						placeholder={$t('categories.icon')}
-						class="input input-bordered w-full max-w-xs"
-						bind:value={new_category.icon}
-					/>
-					<button on:click={toggleEmojiPicker} type="button" class="btn btn-secondary">
-						{!isEmojiPickerVisible ? $t('adventures.show') : $t('adventures.hide')}
-						{$t('adventures.emoji_picker')}
-					</button>
-					<button on:click={custom_category} type="button" class="btn btn-primary">
-						{$t('adventures.add')}
-					</button>
-				</div>
+		<!-- Dropdown content -->
+		<div
+			class="dropdown-content z-[1] w-full mt-1 bg-base-300 rounded-box shadow-xl border border-base-300 max-h-96 overflow-y-auto"
+		>
+			<!-- Category Creator Section -->
+			<div class="p-4 border-b border-base-300">
+				<h3 class="font-semibold text-sm text-base-content/80 mb-3 flex items-center gap-2">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+						/>
+					</svg>
+					{$t('categories.add_new_category')}
+				</h3>
 
-				{#if isEmojiPickerVisible}
-					<div class="mt-2">
-						<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+				<div class="space-y-3">
+					<!-- Input row -->
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+						<div class="form-control">
+							<input
+								type="text"
+								placeholder={$t('categories.category_name')}
+								class="input input-bordered input-sm w-full"
+								bind:value={new_category.display_name}
+							/>
+						</div>
+						<div class="form-control">
+							<div class="input-group">
+								<input
+									type="text"
+									placeholder={$t('categories.icon')}
+									class="input input-bordered input-sm flex-1"
+									bind:value={new_category.icon}
+								/>
+								<button
+									on:click={toggleEmojiPicker}
+									type="button"
+									class="btn btn-square btn-sm btn-secondary"
+									class:btn-active={isEmojiPickerVisible}
+								>
+									😊
+								</button>
+							</div>
+						</div>
 					</div>
-				{/if}
+
+					<!-- Action button -->
+					<div class="flex justify-end">
+						<button
+							on:click={custom_category}
+							type="button"
+							class="btn btn-primary btn-sm"
+							disabled={!new_category.display_name.trim()}
+						>
+							<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+								/>
+							</svg>
+							{$t('adventures.add')}
+						</button>
+					</div>
+
+					<!-- Emoji Picker -->
+					{#if isEmojiPickerVisible}
+						<div class=" p-3 rounded-lg border border-base-300">
+							<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+						</div>
+					{/if}
+				</div>
 			</div>
 
-			<div class="flex flex-wrap gap-2 mt-2">
-				<!-- Sort the categories dynamically before rendering -->
-				{#each categories
-					.slice()
-					.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0)) as category}
-					<button
-						type="button"
-						class="btn btn-neutral flex items-center space-x-2"
-						on:click={() => selectCategory(category)}
-						role="option"
-						aria-selected={selected_category && selected_category.id === category.id}
+			<!-- Categories List Section -->
+			<div class="p-4">
+				<h3 class="font-semibold text-sm text-base-content/80 mb-3 flex items-center gap-2">
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+						/>
+					</svg>
+					{$t('categories.select_category')}
+				</h3>
+
+				{#if categories.length > 0}
+					<!-- Search/Filter (optional) -->
+					<div class="form-control mb-3">
+						<input
+							type="text"
+							placeholder={$t('navbar.search')}
+							class="input input-bordered input-sm w-full"
+							bind:value={searchTerm}
+						/>
+					</div>
+
+					<!-- Categories Grid -->
+					<div
+						class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto"
 					>
-						<span>{category.display_name} {category.icon} ({category.num_locations})</span>
-					</button>
-				{/each}
+						{#each categories
+							.slice()
+							.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0))
+							.filter((category) => !searchTerm || category.display_name
+										.toLowerCase()
+										.includes(searchTerm.toLowerCase())) as category}
+							<button
+								type="button"
+								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
+								class:btn-active={selected_category && selected_category.id === category.id}
+								on:click={() => selectCategory(category)}
+								role="option"
+								aria-selected={selected_category && selected_category.id === category.id}
+							>
+								<div class="flex items-center gap-2 w-full">
+									<span class="text-lg shrink-0">{category.icon}</span>
+									<div class="flex-1 text-left">
+										<div class="font-medium text-sm truncate">{category.display_name}</div>
+										<div class="text-xs text-base-content/60">
+											{category.num_locations}
+											{$t('locations.locations')}
+										</div>
+									</div>
+								</div>
+							</button>
+						{/each}
+					</div>
+
+					{#if categories.filter((category) => !searchTerm || category.display_name
+								.toLowerCase()
+								.includes(searchTerm.toLowerCase())).length === 0}
+						<div class="text-center py-8 text-base-content/60">
+							<svg
+								class="w-12 h-12 mx-auto mb-2 opacity-50"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M9.172 16.172a4 4 0 015.656 0M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+								/>
+							</svg>
+							<p class="text-sm">{$t('categories.no_categories_found')}</p>
+						</div>
+					{/if}
+				{:else}
+					<div class="text-center py-8 text-base-content/60">
+						<svg
+							class="w-12 h-12 mx-auto mb-2 opacity-50"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.99 1.99 0 013 12V7a4 4 0 014-4z"
+							/>
+						</svg>
+						<p class="text-sm">{$t('categories.no_categories_yet')}</p>
+					</div>
+				{/if}
 			</div>
 		</div>
 	{/if}

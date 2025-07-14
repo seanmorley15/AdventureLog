@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
@@ -128,7 +129,7 @@ class BackupViewSet(viewsets.ViewSet):
                 image_data = {
                     'immich_id': image.immich_id,
                     'is_primary': image.is_primary,
-                    'filename': None
+                    'filename': None,
                 }
                 if image.image:
                     image_data['filename'] = image.image.name.split('/')[-1]
@@ -348,7 +349,7 @@ class BackupViewSet(viewsets.ViewSet):
         
         # Delete location-related data
         user.contentimage_set.all().delete()
-        user.attachment_set.all().delete()
+        user.contentattachment_set.all().delete()
         # Visits are deleted via cascade when locations are deleted
         user.location_set.all().delete()
         
@@ -468,7 +469,7 @@ class BackupViewSet(viewsets.ViewSet):
             )
             location.save(_skip_geocode=True)  # Skip geocoding for now
             
-            # Add to collections using export_ids
+            # Add to collections using export_ids - MUST be done after save()
             for collection_export_id in adv_data.get('collection_export_ids', []):
                 if collection_export_id in collection_map:
                     location.collections.add(collection_map[collection_export_id])
@@ -484,14 +485,17 @@ class BackupViewSet(viewsets.ViewSet):
                 )
             
             # Import images
+            content_type = ContentType.objects.get(model='location')
+
             for img_data in adv_data.get('images', []):
                 immich_id = img_data.get('immich_id')
                 if immich_id:
                     ContentImage.objects.create(
                         user=user,
-                        location=location,
                         immich_id=immich_id,
-                        is_primary=img_data.get('is_primary', False)
+                        is_primary=img_data.get('is_primary', False),
+                        content_type=content_type,
+                        object_id=location.id
                     )
                     summary['images'] += 1
                 else:
@@ -502,9 +506,10 @@ class BackupViewSet(viewsets.ViewSet):
                             img_file = ContentFile(img_content, name=filename)
                             ContentImage.objects.create(
                                 user=user,
-                                location=location,
                                 image=img_file,
-                                is_primary=img_data.get('is_primary', False)
+                                is_primary=img_data.get('is_primary', False),
+                                content_type=content_type,
+                                object_id=location.id
                             )
                             summary['images'] += 1
                         except KeyError:
@@ -519,9 +524,10 @@ class BackupViewSet(viewsets.ViewSet):
                         att_file = ContentFile(att_content, name=filename)
                         ContentAttachment.objects.create(
                             user=user,
-                            location=location,
                             file=att_file,
-                            name=att_data.get('name')
+                            name=att_data.get('name'),
+                            content_type=content_type,
+                            object_id=location.id
                         )
                         summary['attachments'] += 1
                     except KeyError:
