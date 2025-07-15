@@ -50,7 +50,7 @@
 </script>
 
 <div
-	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group overflow-hidden"
+	class="card w-full max-w-md text-base-content hover:shadow-sm transition-all duration-300 border border-base-300 hover:border-primary/20 group overflow-hidden"
 >
 	<div class="card-body p-6 space-y-4">
 		<!-- Header -->

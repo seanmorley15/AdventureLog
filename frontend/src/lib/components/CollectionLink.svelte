@@ -102,7 +102,7 @@
 						<Collections class="w-8 h-8 text-primary" />
 					</div>
 					<div>
-						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+						<h1 class="text-3xl font-bold text-black bg-clip-text">
 							{$t('adventures.my_collections')}
 						</h1>
 						<p class="text-sm text-base-content/60">

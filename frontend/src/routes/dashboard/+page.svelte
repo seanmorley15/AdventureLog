@@ -45,7 +45,7 @@
 							</div>
 						</div> -->
 						<div>
-							<h1 class="text-4xl lg:text-5xl font-bold bg-clip-text text-primary">
+							<h1 class="text-4xl lg:text-5xl font-bold bg-clip-text text-black">
 								{$t('dashboard.welcome_back')}, {user?.first_name
 									? `${user.first_name}`
 									: user?.username}!
@@ -67,12 +67,12 @@
 				<div class="flex flex-col sm:flex-row gap-3">
 					<a
 						href="/adventures"
-						class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+						class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full"
 					>
 						<Plus class="w-5 h-5" />
 						{$t('map.add_adventure')}
 					</a>
-					<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
+					<a href="/worldtravel" class="btn btn-outline btn-lg gap-2 rounded-full">
 						<FlagCheckeredVariantIcon class="w-5 h-5" />
 						{$t('home.explore_world')}
 					</a>
@@ -86,7 +86,7 @@
 		>
 			<!-- Countries Visited -->
 			<div
-				class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 shadow-xl border border-primary/20 hover:shadow-2xl transition-all duration-300"
+				class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:shadow-2xl transition-all duration-300"
 			>
 				<div class="card-body p-6">
 					<div class="flex items-center justify-between">
@@ -117,7 +117,7 @@
 
 			<!-- Regions Visited -->
 			<div
-				class="stat-card card bg-gradient-to-br from-success/10 to-success/5 shadow-xl border border-success/20 hover:shadow-2xl transition-all duration-300"
+				class="stat-card card bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:shadow-2xl transition-all duration-300"
 			>
 				<div class="card-body p-6">
 					<div class="flex items-center justify-between">
@@ -138,7 +138,7 @@
 
 			<!-- Cities Visited -->
 			<div
-				class="stat-card card bg-gradient-to-br from-info/10 to-info/5 shadow-xl border border-info/20 hover:shadow-2xl transition-all duration-300"
+				class="stat-card card bg-gradient-to-br from-info/10 to-info/5 border border-info/20 hover:shadow-2xl transition-all duration-300"
 			>
 				<div class="card-body p-6">
 					<div class="flex items-center justify-between">
@@ -188,7 +188,7 @@
 		<!-- Empty State / Inspiration -->
 		{#if recentAdventures.length === 0}
 			<div
-				class="empty-state card bg-gradient-to-br from-base-100 to-base-200 shadow-2xl border border-base-300"
+				class="empty-state card bg-gradient-to-br from-base-100 to-base-200 border border-base-300"
 			>
 				<div class="card-body p-12 text-center">
 					<div class="flex justify-center mb-6">
@@ -209,12 +209,12 @@
 					<div class="flex flex-col sm:flex-row gap-4 justify-center">
 						<a
 							href="/adventures"
-							class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300"
+							class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300 rounded-full font-normal"
 						>
 							<Plus class="w-5 h-5" />
 							{$t('map.add_adventure')}
 						</a>
-						<a href="/worldtravel" class="btn btn-outline btn-lg gap-2">
+						<a href="/worldtravel" class="btn btn-outline btn-lg gap-2 rounded-full font-normal">
 							<FlagCheckeredVariantIcon class="w-5 h-5" />
 							{$t('home.explore_world')}
 						</a>

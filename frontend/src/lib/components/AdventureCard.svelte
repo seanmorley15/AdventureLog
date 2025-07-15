@@ -176,7 +176,7 @@
 {/if}
 
 <div
-	class="card w-full max-w-md bg-base-300 shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
+	class="card w-full max-w-md shadow-sm hover:shadow-md transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
 	<!-- Image Section with Overlay -->
 	<div class="relative overflow-hidden rounded-t-2xl">
@@ -215,7 +215,9 @@
 		<!-- Category Badge -->
 		{#if adventure.category}
 			<div class="absolute bottom-4 left-4">
-				<div class="badge badge-primary shadow-lg font-medium">
+				<div
+					class="font-medium h-[24px] text-primary bg-[#EDF3FF] rounded-full px-[12px] pb-[3px] !border-none"
+				>
 					{adventure.category.display_name}
 					{adventure.category.icon}
 				</div>

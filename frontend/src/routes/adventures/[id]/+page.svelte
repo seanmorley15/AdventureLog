@@ -153,7 +153,7 @@
 	{#if data.user && data.user.uuid == adventure.user_id}
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
-				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+				class="btn btn-primary btn-circle w-16 h hover:shadow-2xl transition-all duration-300 hover:scale-110"
 				on:click={() => (isEditModalOpen = true)}
 			>
 				<ClipboardList class="w-8 h-8" />
@@ -316,7 +316,7 @@
 			<div class="lg:col-span-2 space-y-6 sm:space-y-8">
 				<!-- Author Info Card -->
 				{#if adventure.user}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<div class="flex items-center gap-4">
 								{#if adventure.user.profile_pic}
@@ -354,8 +354,10 @@
 											{adventure.user.last_name || ''}
 										{/if}
 									</div>
-									<div class="flex items-center gap-2 text-sm opacity-70 mt-1">
-										<div class="badge badge-sm">
+									<div class="flex items-center gap-2 text-sm mt-1">
+										<div
+											class="badge bg-primary text-white block h-[25px] text-[14px] flex items-center"
+										>
 											{adventure.is_public
 												? `🌍 ${$t('adventures.public')}`
 												: `🔒 ${$t('adventures.private')}`}
@@ -382,7 +384,7 @@
 
 				<!-- Description Card -->
 				{#if adventure.description}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">📝 {$t('adventures.description')}</h2>
 							<article class="prose max-w-none">
@@ -394,7 +396,7 @@
 
 				<!-- Visits Timeline -->
 				{#if adventure.visits.length > 0}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-6">🎯 {$t('adventures.visits')}</h2>
 							<div class="space-y-4">
@@ -407,7 +409,7 @@
 											{/if}
 										</div>
 										<div class="flex-1 pb-4">
-											<div class="card bg-base-200 shadow">
+											<div class="card bg-white">
 												<div class="card-body p-4">
 													{#if isAllDay(visit.start_date)}
 														<div class="flex items-center gap-2 mb-2">
@@ -450,7 +452,7 @@
 														</div>
 													{/if}
 													{#if visit.notes}
-														<div class="mt-3 p-3 bg-base-200 rounded-lg">
+														<div class="mt-3 p-3 bg-white-200 rounded-lg">
 															<p class="text-sm italic">"{visit.notes}"</p>
 														</div>
 													{/if}
@@ -466,14 +468,14 @@
 
 				<!-- Map Section -->
 				{#if (adventure.longitude && adventure.latitude) || geojson}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.location')}</h2>
 
 							{#if adventure.longitude && adventure.latitude}
 								<!-- Compact Coordinates Card -->
 								<div
-									class="card bg-gradient-to-br from-primary/5 to-secondary/5 shadow-lg mb-4 border border-primary/10"
+									class="card bg-gradient-to-br from-primary/5 to-secondary/5 mb-4 border border-primary/10"
 								>
 									<div class="card-body p-4">
 										<div class="flex items-center justify-between mb-3">
@@ -483,14 +485,14 @@
 										</div>
 
 										<div class="grid grid-cols-2 gap-3 mb-4">
-											<div class="text-center p-2 bg-base-200/70 rounded border border-primary/10">
+											<div class="text-center p-2 bg-white-200/70 rounded border border-primary/10">
 												<div class="text-xs text-primary/70 uppercase tracking-wide">
 													{$t('adventures.latitude')}
 												</div>
 												<div class="text-lg font-bold text-primary">{adventure.latitude}°</div>
 											</div>
 											<div
-												class="text-center p-2 bg-base-200/70 rounded border border-secondary/10"
+												class="text-center p-2 bg-white-200/70 rounded border border-secondary/10"
 											>
 												<div class="text-xs text-secondary/70 uppercase tracking-wide">
 													{$t('adventures.longitude')}
@@ -598,7 +600,7 @@
 								</div>
 							{/if}
 
-							<div class="rounded-lg overflow-hidden shadow-lg">
+							<div class="rounded-lg overflow-hidden">
 								<MapLibre
 									style={getBasemapUrl()}
 									class="w-full h-96"
@@ -645,7 +647,7 @@
 			<!-- Right Column - Sidebar -->
 			<div class="space-y-4 sm:space-y-6">
 				<!-- Quick Info Card -->
-				<div class="card bg-base-200 shadow-xl">
+				<div class="card bg-white">
 					<div class="card-body">
 						<h3 class="card-title text-lg mb-4">ℹ️ {$t('adventures.basic_information')}</h3>
 						<div class="space-y-3">
@@ -679,7 +681,7 @@
 
 				<!-- Sunrise/Sunset -->
 				{#if adventure.sun_times && adventure.sun_times.length > 0}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">
 								🌅 {$t('adventures.sun_times')}
@@ -703,7 +705,7 @@
 
 				<!-- Attachments -->
 				{#if adventure.attachments && adventure.attachments.length > 0}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">
 								📎 {$t('adventures.attachments')}
@@ -722,7 +724,7 @@
 
 				<!-- Additional Images -->
 				{#if adventure.images && adventure.images.length > 1}
-					<div class="card bg-base-200 shadow-xl">
+					<div class="card bg-white">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">

@@ -91,12 +91,12 @@
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
-	<div class="drawer lg:drawer-open">
+	<div class="drawer lg:drawer-open p-[12px]">
 		<input id="travel-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
-		<div class="drawer-content">
+		<div class="drawer-content bg-white rounded-[24px] overflow-hidden">
 			<!-- Header Section -->
-			<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
+			<div class="sticky top-0 z-30">
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
@@ -108,7 +108,7 @@
 									<Globe class="w-8 h-8 text-primary" />
 								</div>
 								<div>
-									<h1 class="text-3xl font-bold text-primary bg-clip-text">
+									<h1 class="text-3xl font-bold text-black bg-clip-text">
 										{$t('worldtravel.country_list')}
 									</h1>
 									<p class="text-sm text-base-content/60">
@@ -231,7 +231,7 @@
 			<!-- Map Section -->
 			{#if showMap}
 				<div class="container mx-auto px-6 py-4">
-					<div class="card bg-base-100 shadow-xl">
+					<div class="card bg-base-100">
 						<div class="card-body p-4">
 							<MapLibre
 								style={getBasemapUrl()}

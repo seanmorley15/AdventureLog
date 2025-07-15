@@ -183,7 +183,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 					<!-- Adventures -->
 					<div
-						class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 shadow-xl border border-primary/20 hover:shadow-2xl transition-all duration-300"
+						class="stat-card card bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 hover:shadow-2xl transition-all duration-300"
 					>
 						<div class="card-body p-6">
 							<div class="flex items-center justify-between">
@@ -226,7 +226,7 @@
 
 					<!-- Countries -->
 					<div
-						class="stat-card card bg-gradient-to-br from-success/10 to-success/5 shadow-xl border border-success/20 hover:shadow-2xl transition-all duration-300"
+						class="stat-card card bg-gradient-to-br from-success/10 to-success/5 border border-success/20 hover:shadow-2xl transition-all duration-300"
 					>
 						<div class="card-body p-6">
 							<div class="flex items-center justify-between">
@@ -261,7 +261,7 @@
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<!-- Regions -->
 					<div
-						class="stat-card card bg-gradient-to-br from-info/10 to-info/5 shadow-xl border border-info/20 hover:shadow-2xl transition-all duration-300"
+						class="stat-card card bg-gradient-to-br from-info/10 to-info/5 border border-info/20 hover:shadow-2xl transition-all duration-300"
 					>
 						<div class="card-body p-6">
 							<div class="flex items-center justify-between">
@@ -344,7 +344,7 @@
 			</div>
 
 			{#if adventures && adventures.length === 0}
-				<div class="card bg-base-100 shadow-xl">
+				<div class="card bg-base-100">
 					<div class="card-body text-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl w-fit mx-auto mb-6">
 							<Airplane class="w-16 h-16 text-base-content/30" />
@@ -387,7 +387,7 @@
 			</div>
 
 			{#if collections && collections.length === 0}
-				<div class="card bg-base-100 shadow-xl">
+				<div class="card bg-base-100">
 					<div class="card-body text-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl w-fit mx-auto mb-6">
 							<CollectionIcon class="w-16 h-16 text-base-content/30" />

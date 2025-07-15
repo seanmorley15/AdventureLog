@@ -1,17 +1,24 @@
 services:
   web:
-    #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    build: ./frontend/
+    #image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    #platform: linux/amd64
     container_name: adventurelog-frontend
     restart: unless-stopped
     env_file: .env
     ports:
-      - "${FRONTEND_PORT:-8015}:3000"
+      - "${FRONTEND_PORT:-8015}:5173"
     depends_on:
       - server
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: sh -c "pnpm install && pnpm run dev --host 0.0.0.0"
+    user: "0:0" # Run as root for development to avoid permission issues
 
   db:
     image: postgis/postgis:16-3.5
+    platform: linux/amd64
     container_name: adventurelog-db
     restart: unless-stopped
     env_file: .env
@@ -19,8 +26,9 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    build: ./backend/
+    #image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    #platform: linux/amd64
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: .env
@@ -29,7 +37,10 @@ services:
     depends_on:
       - db
     volumes:
+      - ./backend:/code
       - adventurelog_media:/code/media/
+    user: "0:0" # Run as root for development to avoid permission issues
+    command: sh -c "chmod +x /code/entrypoint.sh && cd /code/server && /code/entrypoint.sh"
 
 volumes:
   postgres_data:

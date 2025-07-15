@@ -2,7 +2,11 @@
 export default {
 	content: ['./src/**/*.{html,js,svelte,ts}'],
 	theme: {
-		extend: {}
+		extend: {
+			borderRadius: {
+				card: '24px'
+			}
+		}
 	},
 	plugins: [require('@tailwindcss/typography'), require('daisyui')],
 	daisyui: {
@@ -128,6 +132,44 @@ export default {
 					success: '#A3BE8C', // Success
 					warning: '#D08770', // Warning
 					error: '#BF616A' // Error
+				},
+				traveler: {
+					primary: '#0057FF', // Primary color
+					'primary-100': '#EDF3FF',
+					'primary-focus': '#0057FF', // Primary color - focused
+					'primary-content': '#ECEFF4', // Foreground content color to use on primary color
+
+					secondary: '#0057FF', // Secondary color
+					'secondary-focus': '#0057FF', // Secondary color - focused
+					'secondary-content': '#ECEFF4', // Foreground content color to use on secondary color
+
+					accent: '#B48EAD', // Accent color
+					'accent-focus': '#A3BE8C', // Accent color - focused
+					'accent-content': '#ECEFF4', // Foreground content color to use on accent color
+
+					neutral: '#4C566A', // Neutral color
+					'neutral-focus': '#3B4252', // Neutral color - focused
+					'neutral-content': '#D8DEE9', // Foreground content color to use on neutral color
+					base: '#ffffff', // Base color of page, used for blank backgrounds
+					'base-100': '#FAFAFA', // Base color of page, used for blank backgrounds
+					'base-200': '#F9FAFB', // Base color, a little lighter
+					'base-300': '#E5E9F0', // Base color, even more lighter
+					'base-content': '#2E3440', // Foreground content color to use on base color
+
+					info: '#88C0D0', // Info
+					success: '#A3BE8C', // Success
+					warning: '#D08770', // Warning
+					error: '#BF616A', // Error
+
+					'--rounded-box': '24px', // border radius rounded-box utility class, used in card and other large boxes
+					'--rounded-btn': '1.9rem', // border radius rounded-btn utility class, used in buttons and similar elements
+					'--rounded-badge': '1.9rem', // border radius rounded-badge utility class, used in badges and similar
+					'--animation-btn': '0.25s', // duration of animation when you click on button
+					'--animation-input': '0.2s', // duration of animation for inputs like checkbox, toggle, radio, etc
+					'--btn-focus-scale': '0.95', // scale transform of button when you focus on it
+					'--border-btn': '1px', // border width of buttons
+					'--tab-border': '1px', // border width of tabs
+					'--tab-radius': '0.5rem' // border radius of tabs
 				}
 			}
 		]

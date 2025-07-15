@@ -1054,7 +1054,7 @@
 								dateString
 							] || []}
 
-						<div class="card bg-base-100 shadow-xl my-8">
+						<div class="card bg-base-100 my-8">
 							<div class="card-body bg-base-200">
 								<h2 class="card-title text-3xl justify-center g">
 									{$t('adventures.day')}
@@ -1536,7 +1536,7 @@
 					</MapLibre>
 					{#each filteredRecomendations as recomendation}
 						{#if recomendation.name && recomendation.longitude && recomendation.latitude}
-							<div class="card bg-base-100 shadow-xl my-4 w-full">
+							<div class="card bg-base-100 my-4 w-full">
 								<div class="card-body">
 									<h2 class="card-title text-xl font-bold">
 										{recomendation.name || $t('recomendations.recommendation')}
@@ -1566,7 +1566,7 @@
 					{/each}
 				{/if}
 				{#if loadingRecomendations}
-					<div class="card bg-base-100 shadow-xl my-4 w-full">
+					<div class="card bg-base-100 my-4 w-full">
 						<div class="card-body">
 							<div class="flex flex-col items-center justify-center">
 								<span class="loading loading-ring loading-lg"></span>
