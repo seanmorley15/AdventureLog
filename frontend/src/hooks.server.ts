@@ -67,15 +67,11 @@ export const authHook: Handle = async ({ event, resolve }) => {
 };
 
 export const themeHook: Handle = async ({ event, resolve }) => {
-	let theme = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
+	let theme = event.url.searchParams.get('theme') || event.cookies.get('colortheme') || 'traveler';
 
-	if (theme) {
-		return await resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
-		});
-	}
-
-	return await resolve(event);
+	return await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
+	});
 };
 
 // hook to get the langauge cookie and set the locale
