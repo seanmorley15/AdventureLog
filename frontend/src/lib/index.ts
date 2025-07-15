@@ -493,7 +493,8 @@ export let themes = [
 	{ name: 'aqua', label: 'Aqua' },
 	{ name: 'aestheticLight', label: 'Aesthetic Light' },
 	{ name: 'aestheticDark', label: 'Aesthetic Dark' },
-	{ name: 'northernLights', label: 'Northern Lights' }
+	{ name: 'northernLights', label: 'Northern Lights' },
+	{ name: 'traveler', label: 'Traveler' }
 ];
 
 export function osmTagToEmoji(tag: string) {
