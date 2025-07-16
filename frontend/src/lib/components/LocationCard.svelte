@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { goto } from '$app/navigation';
-	import type { Adventure, Collection, User } from '$lib/types';
+	import type { Location, Collection, User } from '$lib/types';
 	const dispatch = createEventDispatcher();
 
 	import Launch from '~icons/mdi/launch';
@@ -31,19 +31,19 @@
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
 
-	export let adventure: Adventure;
+	export let adventure: Location;
 	let displayActivityTypes: string[] = [];
 	let remainingCount = 0;
 
 	// Process activity types for display
 	$: {
-		if (adventure.activity_types) {
-			if (adventure.activity_types.length <= 3) {
-				displayActivityTypes = adventure.activity_types;
+		if (adventure.tags) {
+			if (adventure.tags.length <= 3) {
+				displayActivityTypes = adventure.tags;
 				remainingCount = 0;
 			} else {
-				displayActivityTypes = adventure.activity_types.slice(0, 3);
-				remainingCount = adventure.activity_types.length - 3;
+				displayActivityTypes = adventure.tags.slice(0, 3);
+				remainingCount = adventure.tags.length - 3;
 			}
 		}
 	}
@@ -77,11 +77,11 @@
 	}
 
 	async function deleteAdventure() {
-		let res = await fetch(`/api/adventures/${adventure.id}`, {
+		let res = await fetch(`/api/locations/${adventure.id}`, {
 			method: 'DELETE'
 		});
 		if (res.ok) {
-			addToast('info', $t('adventures.adventure_delete_success'));
+			addToast('info', $t('adventures.location_delete_success'));
 			dispatch('delete', adventure.id);
 		} else {
 			console.log('Error deleting adventure');
@@ -98,7 +98,7 @@
 			updatedCollections.push(collectionId);
 		}
 
-		let res = await fetch(`/api/adventures/${adventure.id}`, {
+		let res = await fetch(`/api/locations/${adventure.id}`, {
 			method: 'PATCH',
 			headers: {
 				'Content-Type': 'application/json'
@@ -109,16 +109,16 @@
 		if (res.ok) {
 			// Only update the adventure.collections after server confirms success
 			adventure.collections = updatedCollections;
-			addToast('info', `${$t('adventures.collection_link_success')}`);
+			addToast('info', `${$t('adventures.collection_link_location_success')}`);
 		} else {
-			addToast('error', `${$t('adventures.collection_link_error')}`);
+			addToast('error', `${$t('adventures.collection_link_location_error')}`);
 		}
 	}
 
 	async function removeFromCollection(event: CustomEvent<string>) {
 		let collectionId = event.detail;
 		if (!collectionId) {
-			addToast('error', `${$t('adventures.collection_remove_error')}`);
+			addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			return;
 		}
 
@@ -128,7 +128,7 @@
 				(c) => String(c) !== String(collectionId)
 			);
 
-			let res = await fetch(`/api/adventures/${adventure.id}`, {
+			let res = await fetch(`/api/locations/${adventure.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -139,9 +139,9 @@
 			if (res.ok) {
 				// Only update adventure.collections after server confirms success
 				adventure.collections = updatedCollections;
-				addToast('info', `${$t('adventures.collection_remove_success')}`);
+				addToast('info', `${$t('adventures.collection_remove_location_success')}`);
 			} else {
-				addToast('error', `${$t('adventures.collection_remove_error')}`);
+				addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			}
 		}
 	}
@@ -166,9 +166,9 @@
 
 {#if isWarningModalOpen}
 	<DeleteWarning
-		title={$t('adventures.delete_adventure')}
+		title={$t('adventures.delete_location')}
 		button_text="Delete"
-		description={$t('adventures.adventure_delete_confirm')}
+		description={$t('adventures.location_delete_confirm')}
 		is_warning={false}
 		on:close={() => (isWarningModalOpen = false)}
 		on:confirm={deleteAdventure}
@@ -228,7 +228,7 @@
 		<!-- Header Section -->
 		<div class="space-y-3">
 			<button
-				on:click={() => goto(`/adventures/${adventure.id}`)}
+				on:click={() => goto(`/locations/${adventure.id}`)}
 				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline"
 			>
 				{adventure.name}
@@ -273,14 +273,14 @@
 				{#if type != 'link'}
 					<div class="flex justify-between items-center">
 						<button
-							class="btn btn-neutral btn-sm flex-1 mr-2"
-							on:click={() => goto(`/adventures/${adventure.id}`)}
+							class="btn btn-base-300 btn-sm flex-1 mr-2"
+							on:click={() => goto(`/locations/${adventure.id}`)}
 						>
 							<Launch class="w-4 h-4" />
 							{$t('adventures.open_details')}
 						</button>
 
-						{#if adventure.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+						{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid))}
 							<div class="dropdown dropdown-end">
 								<div tabindex="0" role="button" class="btn btn-square btn-sm btn-base-300">
 									<DotsHorizontal class="w-5 h-5" />
@@ -293,11 +293,11 @@
 									<li>
 										<button on:click={editAdventure} class="flex items-center gap-2">
 											<FileDocumentEdit class="w-4 h-4" />
-											{$t('adventures.edit_adventure')}
+											{$t('adventures.edit_location')}
 										</button>
 									</li>
 
-									{#if user?.uuid == adventure.user_id}
+									{#if user?.uuid == adventure.user?.uuid}
 										<li>
 											<button
 												on:click={() => (isCollectionModalOpen = true)}

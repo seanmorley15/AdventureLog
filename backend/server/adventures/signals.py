@@ -1,8 +1,8 @@
 from django.db.models.signals import m2m_changed
 from django.dispatch import receiver
-from adventures.models import Adventure
+from adventures.models import Location
 
-@receiver(m2m_changed, sender=Adventure.collections.through)
+@receiver(m2m_changed, sender=Location.collections.through)
 def update_adventure_publicity(sender, instance, action, **kwargs):
     """
     Signal handler to update adventure publicity when collections are added/removed

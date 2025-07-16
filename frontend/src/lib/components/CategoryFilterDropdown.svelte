@@ -8,7 +8,7 @@
 	let adventure_types: Category[] = [];
 
 	onMount(async () => {
-		let categoryFetch = await fetch('/api/categories/categories');
+		let categoryFetch = await fetch('/api/categories');
 		let categoryData = await categoryFetch.json();
 		adventure_types = categoryData;
 		console.log(categoryData);
@@ -60,7 +60,7 @@
 						/>
 						<span>
 							{type.display_name}
-							{type.icon} ({type.num_adventures})
+							{type.icon} ({type.num_locations})
 						</span>
 					</label>
 				</li>

@@ -6,5 +6,5 @@ def get_user_uuid(user):
 class CustomModelSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['user_id'] = get_user_uuid(instance.user_id)
+        representation['user'] = get_user_uuid(instance.user)
         return representation
