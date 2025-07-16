@@ -60,7 +60,8 @@
 		pl: 'Polski',
 		ko: '한국어',
 		no: 'Norsk',
-		ru: 'Русский'
+		ru: 'Русский',
+		'pt-br': 'Português (Brasil)'
 	};
 
 	const submitLocaleChange = (event: Event) => {
