@@ -18,6 +18,12 @@ Follow the steps below to generate your own API key:
 10. Click on **Create credentials** and select **API key**.
 11. A dialog will appear with your new API key. Copy this key for later use.
 
+> [!Note]
+> When creating the API Key, you can choose which APIs it can use.
+> For versions *v0.10.0* and _lower_, you need the *Geocoding* and *Places* APIs.
+> For versions _higher_ than v0.10.0, You'll need *Geocoding* and *Places (New)*.
+> Note that the latter isn't enabled by default!
+
 <!-- To prevent misuse:
 
 1. Click the **Edit icon** next to your new API key.
