@@ -21,7 +21,7 @@ Follow the steps below to generate your own API key:
 > [!Note]
 > When creating the API Key, you can choose which APIs it can use.
 > For versions *v0.10.0* and _lower_, you need the *Geocoding* and *Places* APIs.
-> For versions _hogher_ than v0.10.0, You'll need *Geocoding* and *Places (New)*.
+> For versions _higher_ than v0.10.0, You'll need *Geocoding* and *Places (New)*.
 > Note that the latter isn't enabled by default!
 
 <!-- To prevent misuse:
