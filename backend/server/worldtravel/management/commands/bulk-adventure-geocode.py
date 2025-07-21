@@ -1,12 +1,12 @@
 from django.core.management.base import BaseCommand
-from adventures.models import Adventure
+from adventures.models import Location
 import time
 
 class Command(BaseCommand):
 	help = 'Bulk geocode all adventures by triggering save on each one'
 
 	def handle(self, *args, **options):
-		adventures = Adventure.objects.all()
+		adventures = Location.objects.all()
 		total = adventures.count()
 		
 		self.stdout.write(self.style.SUCCESS(f'Starting bulk geocoding of {total} adventures'))

@@ -9,7 +9,7 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
-	import type { Adventure, Collection, User } from '$lib/types';
+	import type { Location, Collection, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 
@@ -91,7 +91,7 @@
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={collection.adventures} />
+		<CardCarousel adventures={collection.locations} />
 
 		<!-- Badge Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -119,8 +119,8 @@
 
 			<!-- Adventure Count -->
 			<p class="text-sm text-base-content/70">
-				{collection.adventures.length}
-				{$t('navbar.adventures')}
+				{collection.locations.length}
+				{$t('locations.locations')}
 			</p>
 
 			<!-- Date Range -->
@@ -170,7 +170,7 @@
 						<Launch class="w-4 h-4" />
 						{$t('adventures.open_details')}
 					</button>
-					{#if user && user.uuid == collection.user_id}
+					{#if user && user.uuid == collection.user}
 						<div class="dropdown dropdown-end">
 							<button type="button" class="btn btn-square btn-sm btn-base-300">
 								<DotsHorizontal class="w-5 h-5" />

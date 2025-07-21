@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Adventure, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
+	import type { Location, Checklist, Collection, Lodging, Note, Transportation } from '$lib/types';
 	import { onMount, onDestroy } from 'svelte';
 	import type { PageData } from './$types';
 	import { marked } from 'marked'; // Import the markdown parser
@@ -15,8 +15,8 @@
 	import DayGrid from '@event-calendar/day-grid';
 
 	import Plus from '~icons/mdi/plus';
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import AdventureLink from '$lib/components/AdventureLink.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
+	import AdventureLink from '$lib/components/LocationLink.svelte';
 	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
 	import TransportationCard from '$lib/components/TransportationCard.svelte';
 	import NoteCard from '$lib/components/NoteCard.svelte';
@@ -25,7 +25,7 @@
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 	import {
-		groupAdventuresByDate,
+		groupLocationsByDate,
 		groupNotesByDate,
 		groupTransportationsByDate,
 		groupChecklistsByDate,
@@ -39,7 +39,7 @@
 
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
@@ -242,14 +242,14 @@
 	let currentView: string = 'itinerary';
 	let currentItineraryView: string = 'date';
 
-	let adventures: Adventure[] = [];
+	let adventures: Location[] = [];
 
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items
 	function createLineData(
 		items: Array<{
-			item: Adventure | Transportation | Lodging | Note | Checklist;
+			item: Location | Transportation | Lodging | Note | Checklist;
 			start: string;
 			end: string;
 		}>
@@ -333,7 +333,7 @@
 	}
 
 	let orderedItems: Array<{
-		item: Adventure | Transportation | Lodging;
+		item: Location | Transportation | Lodging;
 		type: 'adventure' | 'transportation' | 'lodging';
 		start: string; // ISO date string
 		end: string; // ISO date string
@@ -417,7 +417,7 @@
 	onMount(() => {
 		if (data.props.adventure) {
 			collection = data.props.adventure;
-			adventures = collection.adventures as Adventure[];
+			adventures = collection.locations as Location[];
 		} else {
 			notFound = true;
 		}
@@ -461,7 +461,7 @@
 		adventures = adventures.filter((a) => a.id !== event.detail);
 	}
 
-	async function addAdventure(event: CustomEvent<Adventure>) {
+	async function addAdventure(event: CustomEvent<Location>) {
 		console.log(event.detail);
 		if (adventures.find((a) => a.id === event.detail.id)) {
 			return;
@@ -477,7 +477,7 @@
 				}
 			}
 
-			let res = await fetch(`/api/adventures/${adventure.id}/`, {
+			let res = await fetch(`/api/locations/${adventure.id}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
@@ -498,7 +498,7 @@
 	function recomendationToAdventure(recomendation: any) {
 		adventureToEdit = {
 			id: '',
-			user_id: null,
+			user: null,
 			name: recomendation.name,
 			latitude: recomendation.latitude,
 			longitude: recomendation.longitude,
@@ -513,27 +513,27 @@
 				icon: osmTagToEmoji(recomendation.tag),
 				id: '',
 				name: recomendation.tag,
-				user_id: ''
+				user: ''
 			},
 			attachments: []
 		};
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
-	let adventureToEdit: Adventure | null = null;
+	let adventureToEdit: Location | null = null;
 	let transportationToEdit: Transportation | null = null;
 	let isShowingLodgingModal: boolean = false;
 	let lodgingToEdit: Lodging | null = null;
-	let isAdventureModalOpen: boolean = false;
+	let isLocationModalOpen: boolean = false;
 	let isNoteModalOpen: boolean = false;
 	let noteToEdit: Note | null;
 	let checklistToEdit: Checklist | null;
 
 	let newType: string;
 
-	function editAdventure(event: CustomEvent<Adventure>) {
+	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
 	function editTransportation(event: CustomEvent<Transportation>) {
@@ -546,7 +546,7 @@
 		isShowingLodgingModal = true;
 	}
 
-	function saveOrCreateAdventure(event: CustomEvent<Adventure>) {
+	function saveOrCreateAdventure(event: CustomEvent<Location>) {
 		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
 			adventures = adventures.map((adventure) => {
 				if (adventure.id === event.detail.id) {
@@ -557,7 +557,7 @@
 		} else {
 			adventures = [event.detail, ...adventures];
 		}
-		isAdventureModalOpen = false;
+		isLocationModalOpen = false;
 	}
 
 	let isPopupOpen = false;
@@ -585,7 +585,7 @@
 		console.log(filteredRecomendations);
 		console.log(selectedRecomendationTag);
 	}
-	async function getRecomendations(adventure: Adventure) {
+	async function getRecomendations(adventure: Location) {
 		recomendationsData = null;
 		selectedRecomendationTag = '';
 		loadingRecomendations = true;
@@ -688,10 +688,10 @@
 	/>
 {/if}
 
-{#if isAdventureModalOpen}
-	<AdventureModal
-		{adventureToEdit}
-		on:close={() => (isAdventureModalOpen = false)}
+{#if isLocationModalOpen}
+	<LocationModal
+		locationToEdit={adventureToEdit}
+		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreateAdventure}
 		{collection}
 	/>
@@ -748,7 +748,7 @@
 	</div>
 {/if}
 {#if collection && collection.id}
-	{#if data.user && data.user.uuid && (data.user.uuid == collection.user_id || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
+	{#if data.user && data.user.uuid && (data.user.uuid == collection.user || (collection.shared_with && collection.shared_with.includes(data.user.uuid))) && !collection.is_archived}
 		<div class="fixed bottom-4 right-4 z-[999]">
 			<div class="flex flex-row items-center justify-center gap-4">
 				<div class="dropdown dropdown-top dropdown-end z-[999]">
@@ -760,7 +760,7 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						{#if collection.user_id === data.user.uuid}
+						{#if collection.user === data.user.uuid}
 							<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 							<button
 								class="btn btn-primary"
@@ -768,18 +768,18 @@
 									isShowingLinkModal = true;
 								}}
 							>
-								{$t('adventures.adventure')}</button
+								{$t('locations.location')}</button
 							>
 						{/if}
 						<p class="text-center font-bold text-lg">{$t('adventures.add_new')}</p>
 						<button
 							class="btn btn-primary"
 							on:click={() => {
-								isAdventureModalOpen = true;
+								isLocationModalOpen = true;
 								adventureToEdit = null;
 							}}
 						>
-							{$t('adventures.adventure')}</button
+							{$t('locations.location')}</button
 						>
 
 						<button
@@ -1032,7 +1032,7 @@
 						{@const dateString = adjustedDate.toISOString().split('T')[0]}
 
 						{@const dayAdventures =
-							groupAdventuresByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
+							groupLocationsByDate(adventures, new Date(collection.start_date), numberOfDays + 1)[
 								dateString
 							] || []}
 						{@const dayTransportations =
@@ -1069,7 +1069,7 @@
 								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 									{#if dayAdventures.length > 0}
 										{#each dayAdventures as adventure}
-											<AdventureCard
+											<LocationCard
 												user={data.user}
 												on:edit={editAdventure}
 												on:delete={deleteAdventure}
@@ -1224,7 +1224,7 @@
 												</div>
 											</div>
 											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
-												<AdventureCard
+												<LocationCard
 													user={data.user}
 													on:edit={editAdventure}
 													on:delete={deleteAdventure}
@@ -1323,7 +1323,7 @@
 										{/if}
 										<button
 											class="btn btn-neutral btn-wide btn-sm mt-4"
-											on:click={() => goto(`/adventures/${adventure.id}`)}
+											on:click={() => goto(`/locations/${adventure.id}`)}
 											>{$t('map.view_details')}</button
 										>
 									</Popup>
@@ -1418,7 +1418,7 @@
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">
-					{$t('adventures.adventure_calendar')}
+					{$t('adventures.visit_calendar')}
 				</h2>
 				<Calendar {plugins} {options} />
 			</div>
@@ -1428,7 +1428,7 @@
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">
-					{$t('recomendations.adventure_recommendations')}
+					{$t('recomendations.location_recommendations')}
 				</h2>
 				{#each adventures as adventure}
 					{#if adventure.longitude && adventure.latitude}
@@ -1439,7 +1439,7 @@
 				{/each}
 				{#if adventures.length == 0}
 					<div class="alert alert-info">
-						<p class="text-center text-lg">{$t('adventures.no_adventures_to_recommendations')}</p>
+						<p class="text-center text-lg">{$t('adventures.no_locations_to_recommendations')}</p>
 					</div>
 				{/if}
 				<div class="mt-4">
@@ -1526,7 +1526,7 @@
 											<button
 												class="btn btn-neutral btn-wide btn-sm mt-4"
 												on:click={() => recomendationToAdventure(recomendation)}
-												>{$t('adventures.create_adventure')}</button
+												>{$t('adventures.create_location')}</button
 											>
 										</Popup>
 									{/if}
@@ -1558,7 +1558,7 @@
 										class="btn btn-primary"
 										on:click={() => recomendationToAdventure(recomendation)}
 									>
-										{$t('adventures.create_adventure')}
+										{$t('adventures.create_location')}
 									</button>
 								</div>
 							</div>
@@ -1587,8 +1587,8 @@
 		<div class="hero-content text-center">
 			<div class="max-w-md">
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
 				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>

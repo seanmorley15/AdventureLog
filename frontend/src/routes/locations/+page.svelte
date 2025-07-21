@@ -2,12 +2,12 @@
 	import { enhance, deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import AdventureCard from '$lib/components/AdventureCard.svelte';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import LocationCard from '$lib/components/LocationCard.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Adventure, Category } from '$lib/types';
+	import type { Location, Category } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -23,7 +23,7 @@
 
 	export let data: any;
 
-	let adventures: Adventure[] = data.props.adventures || [];
+	let adventures: Location[] = data.props.adventures || [];
 
 	let currentSort = {
 		order_by: '',
@@ -41,8 +41,8 @@
 
 	let is_category_modal_open: boolean = false;
 	let typeString: string = '';
-	let adventureToEdit: Adventure | null = null;
-	let isAdventureModalOpen: boolean = false;
+	let adventureToEdit: Location | null = null;
+	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
 
 	// Reactive statements
@@ -130,7 +130,7 @@
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function saveOrCreate(event: CustomEvent<Adventure>) {
+	function saveOrCreate(event: CustomEvent<Location>) {
 		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
 			adventures = adventures.map((adventure) => {
 				if (adventure.id === event.detail.id) {
@@ -141,12 +141,12 @@
 		} else {
 			adventures = [event.detail, ...adventures];
 		}
-		isAdventureModalOpen = false;
+		isLocationModalOpen = false;
 	}
 
-	function editAdventure(event: CustomEvent<Adventure>) {
+	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
-		isAdventureModalOpen = true;
+		isLocationModalOpen = true;
 	}
 
 	function toggleSidebar() {
@@ -163,14 +163,14 @@
 </script>
 
 <svelte:head>
-	<title>{$t('navbar.adventures')}</title>
+	<title>{$t('locations.locations')}</title>
 	<meta name="description" content="View your completed and planned adventures." />
 </svelte:head>
 
-{#if isAdventureModalOpen}
-	<AdventureModal
-		{adventureToEdit}
-		on:close={() => (isAdventureModalOpen = false)}
+{#if isLocationModalOpen}
+	<LocationModal
+		locationToEdit={adventureToEdit}
+		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreate}
 	/>
 {/if}
@@ -198,11 +198,11 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('navbar.my_adventures')}
+										{$t('locations.my_locations')}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{count}
-										{$t('navbar.adventures')} • {getVisitedCount()}
+										{$t('locations.locations')} • {getVisitedCount()}
 										{$t('adventures.visited')} • {getPlannedCount()}
 										{$t('adventures.planned')}
 									</p>
@@ -241,7 +241,7 @@
 							<Compass class="w-16 h-16 text-base-content/30" />
 						</div>
 						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-							{$t('adventures.no_adventures_found')}
+							{$t('adventures.no_locations_found')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{$t('adventures.no_adventures_message')}
@@ -250,11 +250,11 @@
 							class="btn btn-primary btn-wide mt-6 gap-2"
 							on:click={() => {
 								adventureToEdit = null;
-								isAdventureModalOpen = true;
+								isLocationModalOpen = true;
 							}}
 						>
 							<Plus class="w-5 h-5" />
-							{$t('adventures.create_adventure')}
+							{$t('adventures.create_location')}
 						</button>
 					</div>
 				{:else}
@@ -263,7 +263,7 @@
 						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
 						{#each adventures as adventure}
-							<AdventureCard
+							<LocationCard
 								user={data.user}
 								{adventure}
 								on:delete={deleteAdventure}
@@ -470,7 +470,7 @@
 									class="checkbox checkbox-primary"
 									checked={currentSort.includeCollections}
 								/>
-								<span class="label-text">{$t('adventures.collection_adventures')}</span>
+								<span class="label-text">{$t('adventures.collection_locations')}</span>
 							</label>
 						</div>
 
@@ -503,12 +503,12 @@
 				<button
 					class="btn btn-primary gap-2 w-full"
 					on:click={() => {
-						isAdventureModalOpen = true;
+						isLocationModalOpen = true;
 						adventureToEdit = null;
 					}}
 				>
 					<Compass class="w-5 h-5" />
-					{$t('adventures.adventure')}
+					{$t('locations.location')}
 				</button>
 			</ul>
 		</div>

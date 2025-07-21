@@ -17,7 +17,7 @@
 		description: collectionToEdit?.description || '',
 		start_date: collectionToEdit?.start_date || null,
 		end_date: collectionToEdit?.end_date || null,
-		user_id: collectionToEdit?.user_id || '',
+		user: collectionToEdit?.user || '',
 		is_public: collectionToEdit?.is_public || false,
 		adventures: collectionToEdit?.adventures || [],
 		link: collectionToEdit?.link || '',

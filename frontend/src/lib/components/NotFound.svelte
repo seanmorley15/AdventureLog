@@ -12,7 +12,7 @@
 			<img src={Lost} alt="Lost" class="w-1/2" />
 		</div>
 		<h1 class="mt-4 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-			{$t('adventures.no_adventures_found')}
+			{$t('adventures.no_locations_found')}
 		</h1>
 		{#if !error}
 			<p class="mt-4 text-muted-foreground">

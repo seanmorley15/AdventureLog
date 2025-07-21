@@ -1,11 +1,9 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
-from adventures.models import Adventure, Collection
-from users.serializers import CustomUserDetailsSerializer as PublicUserSerializer
+from adventures.models import Location, Collection
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -26,21 +24,21 @@ class StatsViewSet(viewsets.ViewSet):
         user.email = None
 
         # get the counts for the user
-        adventure_count = Adventure.objects.filter(
-            user_id=user.id).count()
+        location_count = Location.objects.filter(
+            user=user.id).count()
         trips_count = Collection.objects.filter(
-            user_id=user.id).count()
+            user=user.id).count()
         visited_city_count = VisitedCity.objects.filter(
-            user_id=user.id).count()
+            user=user.id).count()
         total_cities = City.objects.count()
         visited_region_count = VisitedRegion.objects.filter(
-            user_id=user.id).count()
+            user=user.id).count()
         total_regions = Region.objects.count()
         visited_country_count = VisitedRegion.objects.filter(
-            user_id=user.id).values('region__country').distinct().count()
+            user=user.id).values('region__country').distinct().count()
         total_countries = Country.objects.count()
         return Response({
-            'adventure_count': adventure_count,
+            'location_count': location_count,
             'trips_count': trips_count,
             'visited_city_count': visited_city_count,
             'total_cities': total_cities,

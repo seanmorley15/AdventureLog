@@ -102,7 +102,7 @@
 					<div class="flex flex-col sm:flex-row gap-4 pt-4">
 						{#if data.user}
 							<button
-								on:click={() => goto('/adventures')}
+								on:click={() => goto('/locations')}
 								class="btn btn-primary btn-lg gap-3 shadow-lg hover:shadow-xl transition-all duration-300 group"
 							>
 								<PlayIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />

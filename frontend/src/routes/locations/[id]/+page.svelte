@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { AdditionalAdventure } from '$lib/types';
+	import type { AdditionalLocation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
@@ -16,7 +16,7 @@
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
+	import LocationModal from '$lib/components/LocationModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 	import { getBasemapUrl, isAllDay } from '$lib';
@@ -45,7 +45,9 @@
 			const promises = gpxfiles.map(async (gpxfile) => {
 				try {
 					const gpxFileName = gpxfile.split('/').pop();
-					const res = await fetch('/gpx/' + gpxFileName);
+					const res = await fetch(gpxfile, {
+						credentials: 'include'
+					});
 
 					if (!res.ok) {
 						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
@@ -77,7 +79,7 @@
 	export let data: PageData;
 	console.log(data);
 
-	let adventure: AdditionalAdventure;
+	let adventure: AdditionalLocation;
 	let currentSlide = 0;
 
 	function goToSlide(index: number) {
@@ -86,7 +88,9 @@
 
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
-	let image_url: string | null = null;
+	let adventure_images: { image: string; adventure: AdditionalLocation | null }[] = [];
+	let modalInitialIndex: number = 0;
+	let isImageModalOpen: boolean = false;
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -106,11 +110,24 @@
 		await getGpxFiles();
 	});
 
-	async function saveEdit(event: CustomEvent<AdditionalAdventure>) {
+	async function saveEdit(event: CustomEvent<AdditionalLocation>) {
 		adventure = event.detail;
 		isEditModalOpen = false;
 		geojson = null;
 		await getGpxFiles();
+	}
+
+	function closeImageModal() {
+		isImageModalOpen = false;
+	}
+
+	function openImageModal(imageIndex: number) {
+		adventure_images = adventure.images.map(img => ({
+			image: img.image,
+			adventure: adventure
+		}));
+		modalInitialIndex = imageIndex;
+		isImageModalOpen = true;
 	}
 </script>
 
@@ -119,8 +136,8 @@
 		<div class="hero-content text-center">
 			<div class="max-w-md">
 				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.not_found')}</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.not_found_desc')}</p>
+				<h1 class="text-5xl font-bold text-primary mb-4">{$t('adventures.location_not_found')}</h1>
+				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
 				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
 					{$t('adventures.homepage')}
 				</button>
@@ -130,15 +147,19 @@
 {/if}
 
 {#if isEditModalOpen}
-	<AdventureModal
-		adventureToEdit={adventure}
+	<LocationModal
+		locationToEdit={adventure}
 		on:close={() => (isEditModalOpen = false)}
 		on:save={saveEdit}
 	/>
 {/if}
 
-{#if image_url}
-	<ImageDisplayModal image={image_url} on:close={() => (image_url = null)} {adventure} />
+{#if isImageModalOpen}
+	<ImageDisplayModal
+		images={adventure_images}
+		initialIndex={modalInitialIndex}
+		on:close={closeImageModal}
+	/>
 {/if}
 
 {#if !adventure && !notFound}
@@ -150,7 +171,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user && data.user.uuid == adventure.user_id}
+	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
 		<div class="fixed bottom-6 right-6 z-50">
 			<button
 				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
@@ -174,7 +195,7 @@
 					>
 						<button
 							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => (image_url = image.image)}
+							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${adventure.name}`}
 						>
 							<img src={image.image} class="w-full h-full object-cover" alt={adventure.name} />
@@ -649,11 +670,11 @@
 					<div class="card-body">
 						<h3 class="card-title text-lg mb-4">ℹ️ {$t('adventures.basic_information')}</h3>
 						<div class="space-y-3">
-							{#if adventure.activity_types && adventure.activity_types?.length > 0}
+							{#if adventure.tags && adventure.tags?.length > 0}
 								<div>
 									<div class="text-sm opacity-70 mb-1">{$t('adventures.tags')}</div>
 									<div class="flex flex-wrap gap-1">
-										{#each adventure.activity_types as activity}
+										{#each adventure.tags as activity}
 											<span class="badge badge-sm badge-outline">{activity}</span>
 										{/each}
 									</div>
@@ -726,13 +747,13 @@
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-								{#each adventure.images as image}
+								{#each adventure.images as image, index}
 									<div class="relative group">
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
-											on:click={() => (image_url = image.image)}
-											on:keydown={(e) => e.key === 'Enter' && (image_url = image.image)}
+											on:click={() => openImageModal(index)}
+											on:keydown={(e) => e.key === 'Enter' && openImageModal(index)}
 											role="button"
 											tabindex="0"
 										></div>

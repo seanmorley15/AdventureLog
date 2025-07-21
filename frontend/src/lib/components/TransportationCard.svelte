@@ -192,7 +192,7 @@
 		</div>
 
 		<!-- Actions -->
-		{#if transportation.user_id === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+		{#if transportation.user === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 			<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
 				<button
 					class="btn btn-neutral btn-sm flex items-center gap-1"

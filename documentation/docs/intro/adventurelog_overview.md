@@ -1,6 +1,6 @@
 # About AdventureLog
 
-Starting from a simple idea of tracking travel locations (called adventures), AdventureLog has grown into a full-fledged travel companion. With AdventureLog, you can log your adventures, keep track of where you've been on the world map, plan your next trip collaboratively, and share your experiences with friends and family. **AdventureLog is the ultimate travel companion for the modern-day explorer**.
+Starting from a simple idea of tracking travel locations, AdventureLog has grown into a full-fledged travel companion. With AdventureLog, you can log your adventures, keep track of where you've been on the world map, plan your next trip collaboratively, and share your experiences with friends and family. **AdventureLog is the ultimate travel companion for the modern-day explorer**.
 
 ## Features
 

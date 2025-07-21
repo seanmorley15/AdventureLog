@@ -1,7 +1,7 @@
 import os
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from adventures.models import AdventureImage, Attachment
+from adventures.models import LocationImage, Attachment
 from users.models import CustomUser
 
 
@@ -21,8 +21,8 @@ class Command(BaseCommand):
 		# Get all image and attachment file paths from database
 		used_files = set()
 		
-		# Get AdventureImage file paths
-		for img in AdventureImage.objects.all():
+		# Get LocationImage file paths
+		for img in LocationImage.objects.all():
 			if img.image and img.image.name:
 				used_files.add(os.path.join(settings.MEDIA_ROOT, img.image.name))
 		
