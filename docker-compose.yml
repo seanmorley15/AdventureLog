@@ -2,9 +2,10 @@ name: adventurelog
 
 # Common DB variables used by both backend and db
 x-env-common: &env-common
-  POSTGRES_DB: adventurelog # If you change this, it needs to also be changed in the backend
-  POSTGRES_USER: adventurelog # If you change this, it needs to also be changed in the backend
-  POSTGRES_PASSWORD: changeme123 # If you change this, it needs to also be changed in the backend
+  POSTGRES_DB: adventurelog
+  POSTGRES_USER: adventurelog
+  POSTGRES_PASSWORD: changeme123
+  # POSTGRES_PASSWORD_FILE: /run/secrets/postgres-password # Uncomment this block if you'd rather use docker secrets (more-secure)
 
 # Environment variables for the backend service
 x-env-backend: &env-backend
@@ -13,8 +14,10 @@ x-env-backend: &env-backend
   <<: *env-common
   # AdventureLog base configuration
   SECRET_KEY: changeme123 # Replace with the actual secret key
+  # SECRET_KEY_FILE: /run/secrets/secret-key # Uncomment this block if you'd rather use docker secrets (more-secure)
   DJANGO_ADMIN_USERNAME: admin # Replace with the actual admin username
   DJANGO_ADMIN_PASSWORD: admin # Replace with the actual admin password
+  # DJANGO_ADMIN_PASSWORD_FILE: /run/secrets/django-admin-password # Uncomment this block if you'd rather use docker secrets (more-secure)
   DJANGO_ADMIN_EMAIL: admin@example.com # Replace with the actual admin email
   BACKEND_PORT: 8016 # Don't forget to update CSRF_TRUSTED_ORIGINS and PUBLIC_URL in backend, and PUBLIC_SERVER_URL in frontend if you make changes to this.
   PUBLIC_URL: http://localhost:8016 # Replace with your domain where the backend is accessible publicly, used for the creation of image URLs
@@ -31,7 +34,8 @@ x-env-backend: &env-backend
   # EMAIL_USE_SSL: True
   # EMAIL_HOST_USER: user
   # EMAIL_HOST_PASSWORD: password
-  # DEFAULT_FROM_EMAIL: ${COMPOSE_PROJECT_NAME@example.com
+  # # EMAIL_HOST_PASSWORD_FILE: /run/secrets/email-host-password # Uncomment this block if you'd rather use docker secrets (more-secure)
+  # DEFAULT_FROM_EMAIL: adventurelog@example.com
   # GOOGLE_MAPS_API_KEY: your_google_maps_api_key
   # PUBLIC_UMAMI_SRC: https://cloud.umami.is/script.js # If you are using the hosted version of Umami
   # PUBLIC_UMAMI_WEBSITE_ID: 
@@ -55,6 +59,8 @@ services:
       <<: *env-common
     volumes:
       - data:/var/lib/postgresql/data/
+    # secrets: # Uncomment this block if you'd rather use docker secrets (more-secure)
+    #   - postgres-password
     networks:
       - default
     healthcheck:
@@ -109,6 +115,11 @@ services:
         condition: service_healthy
     volumes:
       - media:/code/media/
+    # secrets: # Uncomment this block if you'd rather use docker secrets (more-secure)
+    #   - postgres-password
+    #   - secret-key
+    #   # - email-host-password
+    #   - django-admin-password
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:80/"]
       interval: 30s
@@ -126,3 +137,13 @@ services:
 volumes:
   data:
   media:
+
+# secrets: # Uncomment this block if you'd rather use docker secrets (more-secure)
+#   postgres-password:
+#     file: .secrets/postgres-password.secret
+#   secret-key:
+#     file: .secrets/secret-key.secret
+#   # email-host-password: # Uncomment this if you want to use secrets with the email host password
+#   #   file: .secrets/email-host-password.secret
+#   django-admin-password:
+#     file: .secrets/django-admin-password.secret

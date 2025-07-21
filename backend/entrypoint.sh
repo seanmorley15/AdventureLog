@@ -1,5 +1,18 @@
 #!/usr/bin/env bash
 
+# Load environment variables from *_FILE if set
+for file_var in $(env | grep -E '^[A-Z0-9_]+_FILE=' | sed -E 's/=.*//'); do
+  var_name="${file_var%_FILE}"
+  file_path="${!file_var}"
+
+  if [ -r "$file_path" ]; then
+    export "$var_name"="$(< "$file_path")"
+    unset "$file_var"
+  else
+    >&2 echo "Warning: Cannot read file for $file_var: $file_path"
+  fi
+done
+
 # Function to check PostgreSQL availability
 # Helper to get the first non-empty environment variable
 get_env() {
