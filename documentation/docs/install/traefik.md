@@ -4,4 +4,4 @@ Traefik is a modern HTTP reverse proxy and load balancer that makes deploying mi
 
 AdventureLog has a built-in Traefik configuration that makes it easy to deploy and manage your AdventureLog instance.
 
-The most recent version of the Traefik `docker-compose.yml` file can be found in the [AdventureLog GitHub repository](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose-traefik.yaml).
+The most recent version of [docker-compose.yml](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml) file includes example Traefik container labels. To deploy Traefik itself, consult the [Traefik v3.x documentation](https://doc.traefik.io/traefik/).
