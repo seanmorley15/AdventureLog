@@ -114,6 +114,11 @@ class VisitAdmin(admin.ModelAdmin):
     search_fields = ('notes',)
 
 
+    def save_model(self, request, obj, form, change):
+        obj.full_clean()
+        super().save_model(request, obj, form, change)
+
+
     def image_display(self, obj):
         if obj.image:  # Ensure this field matches your model's image field
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')

@@ -548,8 +548,32 @@ class Visit(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def clean(self):
-        if self.start_date > self.end_date:
+        super().clean()
+
+        # Validate start date is before end date
+        if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError('The start date must be before or equal to the end date.')
+        
+        # Validates that visit dates fall within their collection date range
+        if self.start_date and self.end_date and self.adventure:
+            collections = self.adventure.collections.filter(start_date__isnull=False, end_date__isnull=False)
+
+            if collections.exists():
+                visit_start_date = self.start_date.date() if hasattr(self.start_date, 'date') else self.start_date
+                visit_end_date = self.end_date.date() if hasattr(self.end_date, 'date') else self.end_date
+
+                for collection in collections:
+                    collection_start_date = collection.start_date
+                    collection_end_date = collection.end_date
+
+                    if not (
+                        collection_start_date <= visit_start_date <= collection_end_date and
+                        collection_start_date <= visit_end_date <= collection_end_date
+                    ):
+                        raise ValidationError(
+                            f'Visit dates ({visit_start_date}) to ({visit_end_date}) for {self.adventure.name}' \
+                            'should be between the collection date range'
+                        )
 
     def __str__(self):
         return f"{self.adventure.name} - {self.start_date} to {self.end_date}"
