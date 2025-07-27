@@ -1177,11 +1177,8 @@
 											<div class="flex justify-between items-center mb-4">
 												<span class="badge badge-lg">{$t(`adventures.${orderedItem.type}`)}</span>
 												<div class="text-sm opacity-80 text-right">
-													{new Date(orderedItem.start).toLocaleDateString(undefined, {
-														month: 'short',
-														day: 'numeric'
-													})}
 													{#if orderedItem.start !== orderedItem.end}
+														{new Date(orderedItem.start).toLocaleDateString(undefined, {})}
 														<div>
 															{new Date(orderedItem.start).toLocaleTimeString(undefined, {
 																hour: '2-digit',
@@ -1219,7 +1216,12 @@
 															)}m
 														</div>
 													{:else}
-														<p>{$t('adventures.all_day')} ⏱️</p>
+														<div>
+															{new Date(orderedItem.start).toLocaleDateString(undefined, {
+																timeZone: 'UTC'
+															})}
+														</div>
+														<div>{$t('adventures.all_day')} ⏱️</div>
 													{/if}
 												</div>
 											</div>
