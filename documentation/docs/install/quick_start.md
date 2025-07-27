@@ -5,7 +5,7 @@ Install **AdventureLog** in seconds using our automated script.
 ## 🧪 One-Liner Install
 
 ```bash
-curl -sSL https://get.adventurelog.app | bash
+bash -c "$(curl -sSL https://get.adventurelog.app)"
 ```
 
 This will:
@@ -27,7 +27,7 @@ This will:
 The script automatically:
 
 1. Verifies Docker is installed and running
-2. Downloads `docker-compose.yml` and `.env`
+2. Downloads `docker-compose.yml`
 3. Prompts you for domain and port settings
 4. Waits for services to start
 5. Prints success info with next steps

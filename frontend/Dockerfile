@@ -1,49 +1,65 @@
-# Use this image as the platform to build the app
-FROM node:22-alpine AS external-website
+# ----------------------
+# Stage 1: Build the app
+# ----------------------
+FROM docker.io/node:22-alpine AS builder
 
-# Metadata labels for the AdventureLog image
+ARG GIT_SHA=unknown
+ARG GIT_TAG=latest
+ARG BUILD_DATE=unknown
+
+# Set working directory
+WORKDIR /app
+
+COPY . ./
+# Install pnpm globally
+RUN npm install -g pnpm && \
+    pnpm install --frozen-lockfile && \
+    rm -f .env && \
+    pnpm run build && \
+    mv /app/package.json /app/build/package.json;\
+    ls -lah .; \
+    ls -lah ./build
+
+# ----------------------------
+# Stage 2: Install Production Dependencies
+# ----------------------------
+FROM docker.io/node:22-alpine AS deps
+
+WORKDIR /app
+COPY --from=builder /app/build/package.json ./
+RUN npm install --omit=dev && \
+    addgroup -g 349 adventurelog && \
+    adduser -D -u 349 -G adventurelog adventurelog && \
+    chown -R 349:349 /app
+
+# ----------------------------
+# Stage 3: Distroless Runtime
+# ----------------------------
+FROM gcr.io/distroless/nodejs20
+
 LABEL maintainer="Sean Morley" \
-      version="v0.10.0" \
-      description="AdventureLog — the ultimate self-hosted travel companion." \
       org.opencontainers.image.title="AdventureLog" \
       org.opencontainers.image.description="AdventureLog is a self-hosted travel companion that helps you plan, track, and share your adventures." \
-      org.opencontainers.image.version="v0.10.0" \
       org.opencontainers.image.authors="Sean Morley" \
       org.opencontainers.image.url="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/banner.png" \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
       org.opencontainers.image.vendor="Sean Morley" \
-      org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+      org.opencontainers.image.version="${GIT_TAG}" \
+      org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
       org.opencontainers.image.licenses="GPL-3.0"
 
-# The WORKDIR instruction sets the working directory for everything that will happen next
+USER 349:349
 WORKDIR /app
 
-# Install pnpm globally first
-RUN npm install -g pnpm
+COPY --from=builder /etc/passwd /etc/passwd
+COPY --from=builder /etc/group /etc/group
+COPY --from=builder /app/build ./
+COPY --from=deps /app/node_modules ./node_modules
 
-# Copy package files first for better Docker layer caching
-COPY package.json pnpm-lock.yaml* ./
+CMD ["index.js"]
 
-# Clean install all node modules using pnpm with frozen lockfile
-RUN pnpm install --frozen-lockfile
-
-# Copy the rest of the application files
-COPY . .
-
-# Remove the development .env file if present
-RUN rm -f .env
-
-# Build SvelteKit app
-RUN pnpm run build
-
-# Make startup script executable
-RUN chmod +x ./startup.sh
-
-# Change to non-root user for security
-USER node:node
-
-# Expose the port that the app is listening on
 EXPOSE 3000
 
-# Run startup.sh instead of the default command
-CMD ["./startup.sh"]
+HEALTHCHECK --interval=10s --timeout=3s --retries=3 \
+  CMD /nodejs/bin/node -e "require('net').connect(3000).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"

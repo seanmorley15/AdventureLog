@@ -1,78 +1,63 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: example-name
+  name: adventurelog
   labels:
-    app: adventure
+    app: adventurelog
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: adventure
+      app: adventurelog
   template:
     metadata:
-      name: adventure
       labels:
-        app: adventure
+        app: adventurelog
     spec:
       volumes:
-        - name: adventure-journal
+        - name: media
           persistentVolumeClaim:
-            claimName: adventure-journal-pvc
-        - name: adventure-journal-db
+            claimName: media-pvc
+        - name: data
           persistentVolumeClaim:
-            claimName: adventure-journal-db-pvc
+            claimName: data-pvc
       containers:
-        - name: adventure-frontend
+        - name: frontend
           image: ghcr.io/seanmorley15/adventurelog-frontend:latest
-          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           env:
+            - name: FRONTEND_PORT
+              value: "8015"
             - name: PUBLIC_SERVER_URL
-              value: "http://internally-and-externally.reachable.io:80"
+              value: "http://backend:8000"
             - name: ORIGIN
-              value: "http://url-typed-into-browser.io:80"
+              value: "http://localhost:8015"
             - name: BODY_SIZE_LIMIT
               value: "Infinity"
+          readinessProbe:
+            exec:
+              command: ["/nodejs/bin/node", "-e", "require('net').connect(3000).on('connect', () => process.exit(0)).on('error', () => process.exit(1))"]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
 
-        - name: adventure-db
-          image: postgis/postgis:15-3.3
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 5432
-          volumeMounts:
-            - name: adventure-journal-db
-              mountPath: /var/lib/postgresql/data
-          env:
-            - name: POSTGRES_DB
-              value: database
-            - name: PGDATA
-              value: /var/lib/postgresql/data/pgdata/subdir
-            - name: POSTGRES_USER
-              value: adventure
-            - name: POSTGRES_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: adventurelog-secret
-                  key: adventure-postgres-password
-
-        - name: adventure-backend
+        - name: backend
           image: ghcr.io/seanmorley15/adventurelog-backend:latest
-          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
             - containerPort: 8000
           volumeMounts:
-            - name: adventure-journal
+            - name: media
               mountPath: /code/media
           env:
             - name: PGHOST
-              value: "adventure-db-svc"
-            - name: PGDATABASE
-              value: "database"
-            - name: PGUSER
-              value: "adventure"
+              value: "db"
+            - name: POSTGRES_DB
+              value: "adventurelog"
+            - name: POSTGRES_USER
+              value: "adventurelog"
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
@@ -82,58 +67,101 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: adventurelog-secret
-                  key: adventure-postgres-password
-            - name: PUBLIC_URL
-              value: "http://internally-and-externally.reachable.io:80" # Match the outward port, used for the creation of image urls
-            - name: FRONTEND_URL
-              value: "http://url-typed-into-browser.io:80"
-            - name: CSRF_TRUSTED_ORIGINS
-              value: "http://url-typed-into-browser.io:80, http://internally-and-externally.reachable.io:80"
+                  key: secret-key
             - name: DJANGO_ADMIN_USERNAME
               value: "admin"
             - name: DJANGO_ADMIN_PASSWORD
               value: "admin"
             - name: DJANGO_ADMIN_EMAIL
               value: "admin@example.com"
+            - name: BACKEND_PORT
+              value: "8016"
+            - name: PUBLIC_URL
+              value: "http://localhost:8016"
+            - name: FRONTEND_URL
+              value: "http://localhost:8015"
+            - name: CSRF_TRUSTED_ORIGINS
+              value: "http://localhost:8016,http://localhost:8015"
             - name: DEBUG
-              value: "True"
+              value: "false"
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 20
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+
+        - name: db
+          image: postgis/postgis:16-3.5
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          env:
+            - name: POSTGRES_DB
+              value: "adventurelog"
+            - name: POSTGRES_USER
+              value: "adventurelog"
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: adventurelog-secret
+                  key: adventure-postgres-password
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "adventurelog"]
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 10
+            failureThreshold: 5
       restartPolicy: Always
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: adventure-db-svc
+  name: backend
 spec:
   selector:
-    app: adventure
+    app: adventurelog
   ports:
-    - name: db
-      protocol: TCP
-      port: 5432
-      targetPort: 5432
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: backend
+      port: 8000
+      targetPort: 8000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: server
+  name: frontend
 spec:
   selector:
-    app: adventure
+    app: adventurelog
   ports:
     - name: http
-      protocol: TCP
-      port: 80
-      targetPort: 80
-    - name: base
-      protocol: TCP
-      port: 8000
-      targetPort: 8000
+      port: 3000
+      targetPort: 3000
 ---
-# If you aren't automatically provisioning PVCs (i.e. with Longhorn, you'll need to also create the PV's)
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  selector:
+    app: adventurelog
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: adventure-journal-pvc
+  name: media-pvc
 spec:
   accessModes:
     - ReadWriteOnce
@@ -144,10 +172,19 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: adventure-journal-db-pvc
+  name: data-pvc
 spec:
   accessModes:
     - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: adventurelog-secret
+type: Opaque
+stringData:
+  adventure-postgres-password: changeme123
+  secret-key: changeme123

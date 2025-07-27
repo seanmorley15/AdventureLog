@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # =============================================================================
@@ -20,6 +20,16 @@ declare -g ADMIN_PASSWORD=""
 declare -g DB_PASSWORD=""
 declare -g FRONTEND_PORT=""
 declare -g BACKEND_PORT=""
+declare -g TRAEFIK_ENABLED=""
+declare -g USE_EMAIL=""
+declare -g USE_DOCKER_SECRETS=""
+declare -g EMAIL_HOST=""
+declare -g EMAIL_USE_TLS=""
+declare -g EMAIL_PORT=""
+declare -g EMAIL_USE_SSL=""
+declare -g EMAIL_HOST_USER=""
+declare -g EMAIL_HOST_PASSWORD=""
+declare -g FINISHED_CORRECTLY="true"
 
 # Color codes for beautiful output
 readonly RED='\033[0;31m'
@@ -55,6 +65,11 @@ log_error() {
 log_header() {
     echo -e "${PURPLE}$1${NC}"
 }
+
+# pause(){
+#     read -s -n 1 -p "Press any key to continue . . ."
+#     echo ""
+# }
 
 print_banner() {
     cat << 'EOF'
@@ -183,18 +198,11 @@ check_dependencies() {
     log_info "Checking system dependencies..."
     
     local missing_deps=()
-    
-    if ! command -v curl &>/dev/null; then
-        missing_deps+=("curl")
-    fi
-    
-    if ! command -v docker &>/dev/null; then
-        missing_deps+=("docker")
-    fi
-    
-    if ! command -v docker-compose &>/dev/null && ! docker compose version &>/dev/null; then
-        missing_deps+=("docker-compose")
-    fi
+    for bin in curl docker docker-compose tr sed; do
+        if ! command -v "$bin" >/dev/null 2>&1; then
+            missing_deps+=("$bin")
+        fi
+    done
     
     if [ ${#missing_deps[@]} -ne 0 ]; then
         log_error "Missing dependencies: ${missing_deps[*]}"
@@ -204,6 +212,12 @@ check_dependencies() {
             case $dep in
                 "curl")
                     echo "  • curl: apt-get install curl (Ubuntu/Debian) or brew install curl (macOS)"
+                    ;;
+                "tr")
+                    echo "  • curl: apt-get install coreutils (Ubuntu/Debian) and should be installed by default on macOS"
+                    ;;
+                "sed")
+                    echo "  • curl: apt-get install sed (Ubuntu/Debian) or brew install gnu-sed (macOS)"
                     ;;
                 "docker")
                     echo "  • Docker: https://docs.docker.com/get-docker/"
@@ -282,12 +296,93 @@ download_files() {
         exit 1
     fi
     log_success "docker-compose.yml downloaded"
-    
-    if ! curl -fsSL --connect-timeout 10 --max-time 30 "$ENV_FILE_URL" -o .env; then
-        log_error "Failed to download .env template"
-        exit 1
-    fi
-    log_success ".env template downloaded"
+}
+
+prompt_email_configuration() {
+    echo ""
+    log_header "📧  SMTP Email Configuration"
+    echo ""
+    echo "Please enter the required SMTP settings for sending emails from AdventureLog."
+    echo ""
+
+    # SMTP Host
+    while true; do
+        read -r -p "📨 SMTP Host: " EMAIL_HOST
+        if [[ -n "$EMAIL_HOST" ]]; then
+            break
+        else
+            log_error "SMTP Host cannot be empty."
+        fi
+    done
+
+    # Use TLS
+    while true; do
+        read -r -p "🔐 Use TLS? (y/n): " input_tls
+        case "${input_tls,,}" in
+            y | yes)
+                EMAIL_USE_TLS=true
+                break
+                ;;
+            n | no)
+                EMAIL_USE_TLS=false
+                break
+                ;;
+            *)
+                log_error "Invalid input. Please enter y or n."
+                ;;
+        esac
+    done
+
+    # Use SSL
+    while true; do
+        read -r -p "🔐 Use SSL? (y/n): " input_ssl
+        case "${input_ssl,,}" in
+            y | yes)
+                EMAIL_USE_SSL=true
+                break
+                ;;
+            n | no)
+                EMAIL_USE_SSL=false
+                break
+                ;;
+            *)
+                log_error "Invalid input. Please enter y or n."
+                ;;
+        esac
+    done
+
+    # SMTP Port
+    while true; do
+        read -r -p "🔌 SMTP Port: " EMAIL_PORT
+        if [[ "$EMAIL_PORT" =~ ^[0-9]+$ ]]; then
+            break
+        else
+            log_error "Please enter a valid numeric port."
+        fi
+    done
+
+    # SMTP Username
+    while true; do
+        read -r -p "👤 SMTP Username: " EMAIL_HOST_USER
+        if [[ -n "$EMAIL_HOST_USER" ]]; then
+            break
+        else
+            log_error "SMTP Username cannot be empty."
+        fi
+    done
+
+    # SMTP Password
+    while true; do
+        read -r -s -p "🔑 SMTP Password: " EMAIL_HOST_PASSWORD
+        echo
+        if [[ -n "$EMAIL_HOST_PASSWORD" ]]; then
+            break
+        else
+            log_error "Passwords do not match or are empty. Please try again."
+        fi
+    done
+
+    log_success "SMTP configuration completed."
 }
 
 prompt_configuration() {
@@ -333,233 +428,330 @@ prompt_configuration() {
     # Check port availability
     check_port_availability "$FRONTEND_PORT" "frontend"
     check_port_availability "$BACKEND_PORT" "backend"
+
+    while true; do
+        read -r -p "🚦 Use SMTP email with AdventureLog? (Y/n): " input_email
+        case "${input_email,,}" in
+            y | yes | "") 
+                USE_EMAIL=true
+                prompt_email_configuration
+                break
+                ;;
+            n | no)
+                USE_EMAIL=false
+                break
+                ;;
+            *)
+                log_error "Invalid input. Please enter Y or N."
+                ;;
+        esac
+    done
+    log_success "Using SMTP email with AdventureLog?: $USE_EMAIL"
+
+    while true; do
+        read -r -p "🚦 Enable Traefik labels? (Y/n): " input_traefik
+        case "${input_traefik,,}" in
+            y | yes | "") 
+                TRAEFIK_ENABLED=true
+                break
+                ;;
+            n | no)
+                TRAEFIK_ENABLED=false
+                break
+                ;;
+            *)
+                log_error "Invalid input. Please enter Y or N."
+                ;;
+        esac
+    done
+    log_success "Traefik enabled?: $TRAEFIK_ENABLED"
+
+    while true; do
+        read -r -p "🚦 Use docker secrets, which is more secure? (Y/n): " input_secrets
+        case "${input_secrets,,}" in
+            y | yes | "") 
+                USE_DOCKER_SECRETS=true
+                break
+                ;;
+            n | no)
+                USE_DOCKER_SECRETS=false
+                break
+                ;;
+            *)
+                log_error "Invalid input. Please enter Y or N."
+                ;;
+        esac
+    done
+    log_success "Using Docker Secrets enabled?: $USE_DOCKER_SECRETS"
     
     echo ""
 }
 
-configure_environment_fallback() {
-    log_info "Using simple configuration approach..."
-    
-    # Generate simple passwords using a basic method
-    DB_PASSWORD="$(date +%s | sha256sum | base64 | head -c 32)"
-    ADMIN_PASSWORD="$(date +%s | sha256sum | base64 | head -c 24)"
-    
-    log_info "Generated passwords using fallback method"
-    
-    # Create backup
-    cp .env .env.backup
-    
-    # Use simple string replacement with perl if available
-    if command -v perl &>/dev/null; then
-        log_info "Using perl for configuration..."
-        # Fix: Update BOTH password variables for database consistency
-        perl -pi -e "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$DB_PASSWORD/" .env
-        perl -pi -e "s/^DATABASE_PASSWORD=.*/DATABASE_PASSWORD=$DB_PASSWORD/" .env
-        perl -pi -e "s/^DJANGO_ADMIN_PASSWORD=.*/DJANGO_ADMIN_PASSWORD=$ADMIN_PASSWORD/" .env
-        perl -pi -e "s|^ORIGIN=.*|ORIGIN=$FRONTEND_ORIGIN|" .env
-        perl -pi -e "s|^PUBLIC_URL=.*|PUBLIC_URL=$BACKEND_URL|" .env
-        perl -pi -e "s|^CSRF_TRUSTED_ORIGINS=.*|CSRF_TRUSTED_ORIGINS=$FRONTEND_ORIGIN,$BACKEND_URL|" .env
-        perl -pi -e "s|^FRONTEND_URL=.*|FRONTEND_URL=$FRONTEND_ORIGIN|" .env
-        # Add port configuration
-        perl -pi -e "s/^FRONTEND_PORT=.*/FRONTEND_PORT=$FRONTEND_PORT/" .env
-        perl -pi -e "s/^BACKEND_PORT=.*/BACKEND_PORT=$BACKEND_PORT/" .env
-        
-        # Add port variables if they don't exist
-        if ! grep -q "^FRONTEND_PORT=" .env; then
-            echo "FRONTEND_PORT=$FRONTEND_PORT" >> .env
-        fi
-        if ! grep -q "^BACKEND_PORT=" .env; then
-            echo "BACKEND_PORT=$BACKEND_PORT" >> .env
-        fi
-        
-        if grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env; then
-            log_success "Configuration completed successfully"
-            return 0
-        fi
-    fi
-    
-    # Manual approach - create .env from scratch with key variables
-    log_info "Creating minimal .env configuration..."
-    cat > .env << EOF
-# Database Configuration
-POSTGRES_DB=adventurelog
-POSTGRES_USER=adventurelog
-POSTGRES_PASSWORD=$DB_PASSWORD
-DATABASE_PASSWORD=$DB_PASSWORD
-
-# Django Configuration
-DJANGO_ADMIN_USERNAME=admin
-DJANGO_ADMIN_PASSWORD=$ADMIN_PASSWORD
-SECRET_KEY=$(openssl rand -base64 32 2>/dev/null || echo "change-this-secret-key-$(date +%s)")
-
-# URL Configuration
-ORIGIN=$FRONTEND_ORIGIN
-PUBLIC_URL=$BACKEND_URL
-FRONTEND_URL=$FRONTEND_ORIGIN
-CSRF_TRUSTED_ORIGINS=$FRONTEND_ORIGIN,$BACKEND_URL
-
-# Port Configuration
-FRONTEND_PORT=$FRONTEND_PORT
-BACKEND_PORT=$BACKEND_PORT
-
-# Additional Settings
-DEBUG=False
-EOF
-    
-    log_success "Created minimal .env configuration"
-    return 0
-}
-
 configure_environment() {
-    log_info "Generating secure configuration..."
-    
-    # Debug: Test password generation first
-    log_info "Testing password generation..."
-    if ! command -v tr &>/dev/null; then
-        log_error "tr command not found - required for password generation"
-        exit 1
-    fi
-    
-    # Generate secure passwords with error checking
-    log_info "Generating database password..."
+    log_info "Verifying required tools..."
+
+    for cmd in tr sed cp grep wc mkdir; do
+        if ! command -v "$cmd" &>/dev/null; then
+            log_error "$cmd is required but not found."
+            exit 1
+        fi
+    done
+
+    log_info "Generating secure secrets..."
     DB_PASSWORD=$(generate_secure_password 32)
-    if [[ -z "$DB_PASSWORD" ]]; then
-        log_error "Failed to generate database password"
-        exit 1
-    fi
-    log_success "Database password generated (${#DB_PASSWORD} characters)"
-    
-    log_info "Generating admin password..."
     ADMIN_PASSWORD=$(generate_secure_password 24)
-    if [[ -z "$ADMIN_PASSWORD" ]]; then
-        log_error "Failed to generate admin password"
+    SECRET_KEY=$(generate_secure_password 50)
+
+    if [[ -z "$DB_PASSWORD" || -z "$ADMIN_PASSWORD" || -z "$SECRET_KEY" ]]; then
+        log_error "❌ Failed to generate secure credentials"
         exit 1
     fi
-    log_success "Admin password generated (${#ADMIN_PASSWORD} characters)"
-    
-    # Debug: Check if .env file exists and is readable
-    log_info "Checking .env file..."
-    if [[ ! -f ".env" ]]; then
-        log_error ".env file not found"
+
+    log_success "✅ Secrets generated: DB(${#DB_PASSWORD}), Admin(${#ADMIN_PASSWORD}), Key(${#SECRET_KEY})"
+
+    FRONTEND_PORT="${FRONTEND_PORT:-8015}"
+    BACKEND_PORT="${BACKEND_PORT:-8016}"
+    FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-"http://localhost:$FRONTEND_PORT"}"
+    BACKEND_URL="${BACKEND_URL:-"http://localhost:$BACKEND_PORT"}"
+    CSRF_TRUSTED="$BACKEND_URL,$FRONTEND_ORIGIN"
+
+    if [[ ! -f "docker-compose.yml" ]]; then
+        log_error "docker-compose.yml not found"
         exit 1
     fi
-    
-    if [[ ! -r ".env" ]]; then
-        log_error ".env file is not readable"
+
+    cp docker-compose.yml docker-compose.yml.bak || {
+        log_error "Failed to back up docker-compose.yml"
         exit 1
-    fi
-    
-    log_info "File check passed - .env exists and is readable ($(wc -l < .env) lines)"
-    
-    # Try fallback method first (simpler and more reliable)
-    log_info "Attempting configuration..."
-    if configure_environment_fallback; then
-        return 0
-    fi
-    
-    log_warning "Fallback method failed, trying advanced processing..."
-    
-    # Fallback to bash processing
-    # Create backup of original .env
-    cp .env .env.backup
-    
-    # Create a new .env file by processing the original line by line
-    local temp_file=".env.temp"
-    local processed_lines=0
-    local updated_lines=0
-    
-    while IFS= read -r line || [[ -n "$line" ]]; do
-        ((processed_lines++))
-        case "$line" in
-            POSTGRES_PASSWORD=*)
-                echo "POSTGRES_PASSWORD=$DB_PASSWORD"
-                ((updated_lines++))
-                ;;
-            DATABASE_PASSWORD=*)
-                echo "DATABASE_PASSWORD=$DB_PASSWORD"
-                ((updated_lines++))
-                ;;
-            DJANGO_ADMIN_PASSWORD=*)
-                echo "DJANGO_ADMIN_PASSWORD=$ADMIN_PASSWORD"
-                ((updated_lines++))
-                ;;
-            ORIGIN=*)
-                echo "ORIGIN=$FRONTEND_ORIGIN"
-                ((updated_lines++))
-                ;;
-            PUBLIC_URL=*)
-                echo "PUBLIC_URL=$BACKEND_URL"
-                ((updated_lines++))
-                ;;
-            CSRF_TRUSTED_ORIGINS=*)
-                echo "CSRF_TRUSTED_ORIGINS=$FRONTEND_ORIGIN,$BACKEND_URL"
-                ((updated_lines++))
-                ;;
-            FRONTEND_URL=*)
-                echo "FRONTEND_URL=$FRONTEND_ORIGIN"
-                ((updated_lines++))
-                ;;
-            FRONTEND_PORT=*)
-                echo "FRONTEND_PORT=$FRONTEND_PORT"
-                ((updated_lines++))
-                ;;
-            BACKEND_PORT=*)
-                echo "BACKEND_PORT=$BACKEND_PORT"
-                ((updated_lines++))
-                ;;
-            *)
-                echo "$line"
-                ;;
-        esac
-    done < .env > "$temp_file"
-    
-    # Add port variables if they weren't found in the original file
-    if ! grep -q "^FRONTEND_PORT=" "$temp_file"; then
-        echo "FRONTEND_PORT=$FRONTEND_PORT" >> "$temp_file"
-        ((updated_lines++))
-    fi
-    if ! grep -q "^BACKEND_PORT=" "$temp_file"; then
-        echo "BACKEND_PORT=$BACKEND_PORT" >> "$temp_file"
-        ((updated_lines++))
-    fi
-    
-    log_info "Processed $processed_lines lines, updated $updated_lines configuration values"
-    
-    # Check if temp file was created successfully
-    if [[ ! -f "$temp_file" ]]; then
-        log_error "Failed to create temporary configuration file"
-        exit 1
-    fi
-    
-    # Replace the original .env with the configured one
-    if mv "$temp_file" .env; then
-        log_success "Environment configured with secure passwords and port settings"
+    }
+
+    log_info "Applying configuration to docker-compose.yml..."
+
+    # Handle Docker secrets if enabled
+    if [[ "$USE_DOCKER_SECRETS" == "true" ]]; then
+        log_info "Enabling Docker secrets..."
+
+        mkdir -p .secrets
+
+        # Save secrets to files
+        echo "$DB_PASSWORD" > .secrets/postgres-password.secret || FINISHED_CORRECTLY=false
+        echo "$SECRET_KEY" > .secrets/secret-key.secret || FINISHED_CORRECTLY=false
+        echo "$ADMIN_PASSWORD" > .secrets/django-admin-password.secret || FINISHED_CORRECTLY=false
+
+        # Uncomment secret references in docker-compose.yml
+        sed -i '' -E \
+            -e 's/^([[:space:]]*)#[[:space:]]*(secrets:)/\1\2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*( - postgres-password)/\1\2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*( - secret-key)/\1\2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*( - django-admin-password)/\1\2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*#( - email-host-password)/\1# \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]](secrets:[[:space:]]*#.*)/\1\2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(postgres-password:)/\1  \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(file: .secrets\/postgres-password\.secret)/\1    \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(secret-key:)/\1  \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(file: .secrets\/secret-key\.secret)/\1    \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*#[[:space:]]*(email-host-password:)/\1  # \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*#[[:space:]]*(file: .secrets\/email-host-password\.secret)/\1  #   \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(django-admin-password:)/\1  \2/' \
+            -e 's/^([[:space:]]*)#[[:space:]]*(file: .secrets\/django-admin-password\.secret)/\1    \2/' \
+            docker-compose.yml || FINISHED_CORRECTLY=false
+        # for swapping normal variables to secrets
+        awk '
+        {
+            lines[NR] = $0
+
+            # Match lines like: [whitespace]#[whitespace]VARIABLE_FILE:
+            if ($0 ~ /^[[:space:]]*#[[:space:]]*[A-Z0-9_]+_FILE:/) {
+                line = $0
+                indent = line
+                sub(/[^[:space:]]+.*/, "", indent) # Get leading whitespace
+
+                # Remove leading `#` and any spaces after
+                sub(/^[[:space:]]*#[[:space:]]*/, "", line)
+                split(line, parts, ":")
+                split(parts[1], name_parts, "_FILE")
+                varname = name_parts[1]
+
+                uncomment_line[NR] = indent line
+                comment_var[varname] = 1
+            }
+        }
+        END {
+            for (i = 1; i <= NR; i++) {
+                line = lines[i]
+
+                # Replace commented *_FILE line with uncommented version (with indent)
+                if (i in uncomment_line) {
+                    print uncomment_line[i]
+                    continue
+                }
+
+                # Comment out original VARIABLE: line if a *_FILE was found
+                if (line ~ /^[[:space:]]*[A-Z0-9_]+:/) {
+                    indent = line
+                    sub(/[^[:space:]]+.*/, "", indent)
+                    split(line, parts, ":")
+                    var = parts[1]
+                    gsub(/^[[:space:]]*/, "", var)
+
+                    if (var in comment_var) {
+                        print indent "# " substr(line, length(indent)+1)
+                        continue
+                    }
+                }
+
+                # Default: print line as-is
+                print line
+            }
+        }
+        ' docker-compose.yml > docker-compose.yml.tmp && {
+            mv docker-compose.yml.tmp docker-compose.yml
+        } || FINISHED_CORRECTLY=false
+
+        # Handle email password secret comments
+        awk '
+        {
+            lines[NR] = $0
+        }
+
+        END {
+            for (i = 1; i <= NR; i++) {
+                line1 = lines[i]
+                line2 = lines[i + 1]
+
+                # Match: line1 = single-commented VAR, line2 = double-commented VAR_FILE
+                if (line1 ~ /^[[:space:]]*#[[:space:]]*[A-Z0-9_]+:[[:space:]]*/ &&
+                    line2 ~ /^[[:space:]]*#[[:space:]]*#[[:space:]]*[A-Z0-9_]+_FILE:/) {
+
+                    # Extract indent from line1
+                    indent1 = line1
+                    sub(/[^[:space:]]+.*/, "", indent1)
+
+                    # Clean VAR line for recommenting
+                    clean1 = line1
+                    gsub(/^[[:space:]]*#[[:space:]]*/, "", clean1)
+
+                    # Print double-commented VAR line
+                    print indent1 "# # " clean1
+
+                    # Extract indent from line2
+                    indent2 = line2
+                    sub(/[^[:space:]]+.*/, "", indent2)
+
+                    # Clean VAR_FILE line to single-comment
+                    clean2 = line2
+                    gsub(/^[[:space:]]*#[[:space:]]*/, "", clean2) # Remove first #
+                    gsub(/^[[:space:]]*#[[:space:]]*/, "", clean2) # Remove second #
+
+                    # Print single-commented VAR_FILE line
+                    print indent2 "# " clean2
+
+                    i++ # Skip next line since we just processed it
+                    continue
+                }
+
+                # Default: print original line
+                print lines[i]
+            }
+        }
+        ' docker-compose.yml > docker-compose.yml.tmp && {
+            mv docker-compose.yml.tmp docker-compose.yml
+        } || FINISHED_CORRECTLY=false
+
+        log_success "Docker secrets configured"
     else
-        log_error "Failed to replace .env file"
-        log_info "Restoring backup and exiting"
-        mv .env.backup .env
-        rm -f "$temp_file"
+        # Default env var replacements (no secrets)
+        sed -i '' -E \
+            -e "s|^([[:space:]]*POSTGRES_PASSWORD:).*|\1 $DB_PASSWORD|" \
+            -e "s|^([[:space:]]*DJANGO_ADMIN_PASSWORD:).*|\1 $ADMIN_PASSWORD|" \
+            -e "s|^([[:space:]]*SECRET_KEY:).*|\1 $SECRET_KEY|" \
+            -e "s|^([[:space:]]*EMAIL_HOST_PASSWORD:).*|\1 $EMAIL_HOST_PASSWORD|" \
+            docker-compose.yml || FINISHED_CORRECTLY=false
+
+        # if [[ "$USE_EMAIL" == "true" ]]; then
+        # fi
+    fi
+        # Handle email config if enabled
+    if [[ "$USE_EMAIL" == "true" ]]; then
+        log_info "Enabling email configuration..."
+        sed -i '' -E \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_BACKEND:).*/\1\2 email/" \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_HOST:).*/\1\2 $EMAIL_HOST/" \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_USE_TLS:).*/\1\2 $EMAIL_USE_TLS/" \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_PORT:).*/\1\2 $EMAIL_PORT/" \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_USE_SSL:).*/\1\2 $EMAIL_USE_SSL/" \
+            -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_HOST_USER:).*/\1\2 $EMAIL_HOST_USER/" \
+            docker-compose.yml || FINISHED_CORRECTLY=false
+        
+        if [[ "$USE_DOCKER_SECRETS" == "true" ]]; then
+            sed -i '' -E \
+                -e "s/^([[:space:]]*)#[[:space:]]*(# EMAIL_HOST_PASSWORD:).*/\1\2/" \
+                -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_HOST_PASSWORD_FILE:).*/\1\2 \/run\/secrets\/email-host-password/" \
+                -e "s/^([[:space:]]*)#[[:space:]]*(- email-host-password)/\1 \2/" \
+                -e "s/^([[:space:]]*)#[[:space:]]*(email-host-password:)/\1\2/" \
+                -e "s/^([[:space:]]*)#[[:space:]]*(file: .secrets\/email-host-password\.secret)/\1  \2/" \
+                docker-compose.yml || FINISHED_CORRECTLY=false
+        else
+            sed -i '' -E \
+                -e "s/^([[:space:]]*)#[[:space:]]*(EMAIL_HOST_PASSWORD:).*/\1\2 $EMAIL_HOST_PASSWORD/" \
+                docker-compose.yml || FINISHED_CORRECTLY=false
+        fi
+
+        log_success "Email configuration applied"
+    fi
+
+    # Replace other standard values
+    sed -i '' -E \
+        -e "s|^( *BACKEND_PORT:).*|\1 $BACKEND_PORT|" \
+        -e "s|^( *FRONTEND_PORT:).*|\1 $FRONTEND_PORT|" \
+        -e "s|^( *PUBLIC_URL:).*|\1 $BACKEND_URL|" \
+        -e "s|^( *FRONTEND_URL:).*|\1 $FRONTEND_ORIGIN|" \
+        -e "s|^( *ORIGIN:).*|\1 $FRONTEND_ORIGIN|" \
+        -e "s|^( *CSRF_TRUSTED_ORIGINS:).*|\1 $CSRF_TRUSTED|" \
+        -e "s|([[:space:]]+-[[:space:]]*\")([0-9]+)(:3000\")|\1$FRONTEND_PORT\3|" \
+        -e "s|([[:space:]]+-[[:space:]]*\")([0-9]+)(:80\")|\1$BACKEND_PORT\3|" \
+        docker-compose.yml || FINISHED_CORRECTLY=false
+
+    if [[ "$TRAEFIK_ENABLED" == "true" ]]; then
+        sed -i '' -E \
+            -e 's/^([[:space:]]*)#([[:space:]]*labels:)/\1 \2/' \
+            -e 's/^([[:space:]]*)#([[:space:]]*-?[[:space:]]*"traefik\..*")/\1 \2/' \
+            docker-compose.yml || FINISHED_CORRECTLY=false
+    fi
+
+    if [[ "$FINISHED_CORRECTLY" == "false" ]]; then
+        log_error "configuration failed"
+        log_info "Restoring backup..."
+        mv docker-compose.yml.bak docker-compose.yml
         exit 1
     fi
-    
-    # Verify critical configuration was applied
-    if grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env && (grep -q "DATABASE_PASSWORD=$DB_PASSWORD" .env || grep -q "POSTGRES_PASSWORD=$DB_PASSWORD" .env); then
-        log_success "Configuration verification passed - database password variables set"
+
+    log_success "docker-compose.yml updated"
+
+    log_info "🔍 Verifying updated values in docker-compose.yml:"
+    diff -y docker-compose.yml.bak docker-compose.yml || :
+
+    # Basic verification of values present
+    if [[ "$USE_DOCKER_SECRETS" == "false" ]]; then
+        if grep -q "$DB_PASSWORD" docker-compose.yml && grep -q "$FRONTEND_PORT" docker-compose.yml && grep -q "$BACKEND_PORT" docker-compose.yml; then
+            log_success "✅ Configuration verification passed"
+        else
+            log_warning "⚠️  Some configuration values may not have applied properly"
+            log_info "Restoring backup for safety... (renaming auto-configured docker-compose.yml to docker-compose.yml.install)"
+            mv docker-compose.yml docker-compose.yml.install
+            mv docker-compose.yml.bak docker-compose.yml
+            exit 1
+        fi
     else
-        log_error "Configuration verification failed - database passwords not properly configured"
-        log_info "Showing database-related lines in .env for debugging:"
-        grep -E "(POSTGRES_PASSWORD|DATABASE_PASSWORD)" .env | while read -r line; do
-            echo "  $line"
-        done
-        mv .env.backup .env
-        exit 1
-    fi
-    
-    # Verify port configuration
-    if grep -q "FRONTEND_PORT=$FRONTEND_PORT" .env && grep -q "BACKEND_PORT=$BACKEND_PORT" .env; then
-        log_success "Port configuration verified - frontend: $FRONTEND_PORT, backend: $BACKEND_PORT"
-    else
-        log_warning "Port configuration may not be complete - check .env file manually"
+        if grep -q "postgres-password" docker-compose.yml && grep -q "$FRONTEND_PORT" docker-compose.yml && grep -q "$BACKEND_PORT" docker-compose.yml; then
+            log_success "✅ Configuration verification passed"
+        else
+            log_warning "⚠️  Some configuration values may not have applied properly"
+            log_info "Restoring backup for safety... (renaming auto-configured docker-compose.yml to docker-compose.yml.install)"
+            mv docker-compose.yml docker-compose.yml.install
+            mv docker-compose.yml.bak docker-compose.yml
+            exit 1
+        fi
     fi
 }
 
