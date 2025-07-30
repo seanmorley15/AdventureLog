@@ -83,7 +83,7 @@
 	let immichIntegration: boolean = false;
 	let copyImmichLocally: boolean = false;
 
-	import ActivityComplete from './ActivityComplete.svelte';
+	import ActivityComplete from './TagComplete.svelte';
 	import CategoryDropdown from './CategoryDropdown.svelte';
 	import { findFirstValue, isAllDay } from '$lib';
 	import MarkdownEditor from './MarkdownEditor.svelte';
@@ -879,7 +879,7 @@
 								bind:value={location.tags}
 								class="input input-bordered w-full"
 							/>
-							<ActivityComplete bind:activities={location.tags} />
+							<ActivityComplete bind:tags={location.tags} />
 						</div>
 					</div>
 

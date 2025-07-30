@@ -3,7 +3,6 @@
 	import type { Category } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
-	export let categories: Category[] = [];
 	export let selected_category: Category | null = null;
 	export let searchTerm: string = '';
 	let new_category: Category = {
@@ -14,6 +13,12 @@
 		user: '',
 		num_locations: 0
 	};
+
+	$: {
+		console.log('Selected category changed:', selected_category);
+	}
+
+	let categories: Category[] = [];
 
 	let isOpen: boolean = false;
 	let isEmojiPickerVisible: boolean = false;
@@ -45,7 +50,15 @@
 	let dropdownRef: HTMLDivElement;
 
 	onMount(() => {
-		categories = categories.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0));
+		const loadData = async () => {
+			await import('emoji-picker-element');
+			let res = await fetch('/api/categories');
+			categories = await res.json();
+			categories = categories.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0));
+		};
+
+		loadData();
+
 		const handleClickOutside = (event: MouseEvent) => {
 			if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
 				isOpen = false;
@@ -55,9 +68,6 @@
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
 		};
-	});
-	onMount(async () => {
-		await import('emoji-picker-element');
 	});
 </script>
 

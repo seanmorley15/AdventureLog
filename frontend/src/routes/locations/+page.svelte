@@ -20,6 +20,7 @@
 	import Star from '~icons/mdi/star';
 	import Tag from '~icons/mdi/tag';
 	import Compass from '~icons/mdi/compass';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	export let data: any;
 
@@ -33,6 +34,19 @@
 		includeCollections: true,
 		is_visited: 'all'
 	};
+
+	let locationBeingUpdated: Location | undefined = undefined;
+
+	// Sync the locationBeingUpdated with the adventures array
+	$: {
+		if (locationBeingUpdated && locationBeingUpdated.id) {
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated!.id);
+			if (index !== -1) {
+				adventures[index] = { ...locationBeingUpdated };
+				adventures = adventures; // Trigger reactivity
+			}
+		}
+	}
 
 	let resultsPerPage: number = 25;
 	let count = data.props.count || 0;
@@ -141,7 +155,6 @@
 		} else {
 			adventures = [event.detail, ...adventures];
 		}
-		isLocationModalOpen = false;
 	}
 
 	function editAdventure(event: CustomEvent<Location>) {
@@ -168,11 +181,18 @@
 </svelte:head>
 
 {#if isLocationModalOpen}
-	<LocationModal
+	<!-- <LocationModal
 		locationToEdit={adventureToEdit}
 		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreate}
 		user={data.user}
+	/> -->
+	<NewLocationModal
+		on:close={() => (isLocationModalOpen = false)}
+		on:save={saveOrCreate}
+		user={data.user}
+		locationToEdit={adventureToEdit}
+		bind:location={locationBeingUpdated}
 	/>
 {/if}
 

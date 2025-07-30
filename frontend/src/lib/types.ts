@@ -279,7 +279,6 @@ export type ImmichAlbum = {
 export type Attachment = {
 	id: string;
 	file: string;
-	location: string;
 	extension: string;
 	user: string;
 	name: string;

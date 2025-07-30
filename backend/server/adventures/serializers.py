@@ -230,7 +230,7 @@ class LocationSerializer(CustomModelSerializer):
         return obj.is_visited_status()
 
     def create(self, validated_data):
-        visits_data = validated_data.pop('visits', None)
+        visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         

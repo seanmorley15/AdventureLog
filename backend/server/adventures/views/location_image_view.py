@@ -262,24 +262,38 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def _create_standard_image(self, request, content_object, content_type, object_id):
-        """Handle standard image creation"""
-        # Add content type and object ID to request data
-        request_data = request.data.copy()
-        request_data['content_type'] = content_type.id
-        request_data['object_id'] = object_id
+        """Handle standard image creation without deepcopy issues"""
         
-        # Create serializer with modified data
+        # Get uploaded image file safely
+        image_file = request.FILES.get('image')
+        if not image_file:
+            return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Build a clean dict for serializer input
+        request_data = {
+            'content_type': content_type.id,
+            'object_id': object_id,
+        }
+
+        # Optionally add other fields (e.g., caption, alt text) from request.data
+        for key in ['caption', 'alt_text', 'description']:  # update as needed
+            if key in request.data:
+                request_data[key] = request.data[key]
+
+        # Create and validate serializer
         serializer = self.get_serializer(data=request_data)
         serializer.is_valid(raise_exception=True)
-        
-        # Save the image
+
+        # Save with image passed explicitly
         serializer.save(
-            user=content_object.user if hasattr(content_object, 'user') else request.user,
+            user=getattr(content_object, 'user', request.user),
             content_type=content_type,
-            object_id=object_id
+            object_id=object_id,
+            image=image_file
         )
-        
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
     
     def perform_create(self, serializer):
         # The content_type and object_id are already set in the create method
