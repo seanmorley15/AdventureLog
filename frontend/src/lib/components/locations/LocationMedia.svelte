@@ -746,8 +746,8 @@
 		</div>
 
 		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-between pt-4">
-			<button class="btn btn-ghost gap-2" on:click={handleBack}>
+		<div class="flex gap-3 justify-end pt-4">
+			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				Back
 			</button>

@@ -447,7 +447,7 @@
 
 	<!-- Action Buttons -->
 	<div class="flex gap-3 pt-4">
-		<button class="btn btn-ghost flex-1" on:click={() => dispatch('cancel')}>
+		<button class="btn btn-neutral-200 flex-1" on:click={() => dispatch('cancel')}>
 			{$t('common.cancel') || 'Cancel'}
 		</button>
 		<button class="btn btn-primary flex-1" on:click={continueWithLocation}>

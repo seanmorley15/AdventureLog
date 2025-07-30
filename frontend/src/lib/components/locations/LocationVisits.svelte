@@ -5,6 +5,7 @@
 	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
 	import { onMount } from 'svelte';
 	import { isAllDay } from '$lib';
+	import { createEventDispatcher } from 'svelte';
 
 	// Icons
 	import CalendarIcon from '~icons/mdi/calendar';
@@ -16,6 +17,7 @@
 	import AlertIcon from '~icons/mdi/alert';
 	import CheckIcon from '~icons/mdi/check';
 	import SettingsIcon from '~icons/mdi/cog';
+	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 
 	// Props
 	export let collection: Collection | null = null;
@@ -27,6 +29,8 @@
 	export let note: string | null = null;
 	export let visits: (Visit | TransportationVisit)[] | null = null;
 	export let objectId: string;
+
+	const dispatch = createEventDispatcher();
 
 	// Types
 	type Visit = {
@@ -316,6 +320,14 @@
 		}
 	}
 
+	function handleBack() {
+		dispatch('back');
+	}
+
+	function handleClose() {
+		dispatch('close');
+	}
+
 	// Lifecycle
 	onMount(async () => {
 		if ((type === 'transportation' || type === 'lodging') && utcStartDate) {
@@ -598,5 +610,16 @@
 				</div>
 			{/if}
 		{/if}
+		<div class="flex gap-3 justify-end pt-4">
+			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
+				<ArrowLeftIcon class="w-5 h-5" />
+				Back
+			</button>
+
+			<button class="btn btn-primary gap-2" on:click={handleClose}>
+				<CheckIcon class="w-5 h-5" />
+				Done
+			</button>
+		</div>
 	</div>
 </div>

@@ -283,6 +283,7 @@
 					steps[3].selected = false;
 					steps[2].selected = true;
 				}}
+				on:close={() => close()}
 			/>
 		{/if}
 	</div>
