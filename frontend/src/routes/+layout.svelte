@@ -17,8 +17,9 @@
 	register('ko', () => import('../locales/ko.json'));
 	register('no', () => import('../locales/no.json'));
 	register('ru', () => import('../locales/ru.json'));
+	register('pt-br', () => import('../locales/pt-br.json'));
 
-	let locales = ['en', 'es', 'fr', 'de', 'it', 'zh', 'nl', 'sv', 'pl', 'ko', 'no', 'ru'];
+	let locales = ['en', 'es', 'fr', 'de', 'it', 'zh', 'nl', 'sv', 'pl', 'ko', 'no', 'ru', 'pt-br'];
 
 	if (browser) {
 		init({
