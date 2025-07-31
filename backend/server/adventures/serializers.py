@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -473,3 +473,10 @@ class CollectionSerializer(CustomModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
+    
+class CollectionInviteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='collection.name', read_only=True)
+    class Meta:
+        model = CollectionInvite
+        fields = ['id', 'collection', 'created_at', 'name']
+        read_only_fields = ['id', 'created_at']

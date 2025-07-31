@@ -306,3 +306,10 @@ export type Lodging = {
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[]; // Array of images associated with the lodging
 };
+
+export type CollectionInvite = {
+	id: string;
+	collection: string; // UUID of the collection
+	name: string; // Name of the collection
+	created_at: string; // ISO 8601 date string
+};

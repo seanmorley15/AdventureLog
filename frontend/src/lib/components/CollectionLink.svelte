@@ -177,7 +177,7 @@
 						<div class="stat py-2 px-4">
 							<div class="stat-title text-xs flex items-center gap-1">
 								<Share class="w-3 h-3" />
-								{$t('collection.shared')}
+								{$t('share.shared')}
 							</div>
 							<div class="stat-value text-lg text-warning">{sharedCollectionsCount}</div>
 						</div>
@@ -224,7 +224,7 @@
 			{#if loading}
 				<div class="flex flex-col items-center justify-center py-16">
 					<div class="loading loading-spinner loading-lg text-primary mb-4"></div>
-					<p class="text-base-content/60">{$t('loading.collections')}</p>
+					<p class="text-base-content/60">{$t('adventures.loading_collections')}</p>
 				</div>
 			{:else if filteredOwnCollections.length === 0 && filteredSharedCollections.length === 0}
 				<div class="flex flex-col items-center justify-center py-16">
@@ -260,7 +260,7 @@
 							<div class="flex items-center gap-2 mb-4">
 								<Collections class="w-5 h-5 text-primary" />
 								<h2 class="text-lg font-semibold text-base-content">
-									{$t('collection.my_collections')}
+									{$t('adventures.my_collections')}
 								</h2>
 								<div class="badge badge-primary badge-sm">
 									{filteredOwnCollections.length}
@@ -287,7 +287,7 @@
 							<div class="flex items-center gap-2 mb-4">
 								<Share class="w-5 h-5 text-warning" />
 								<h2 class="text-lg font-semibold text-base-content">
-									{$t('collection.shared_with_me')}
+									{$t('navbar.shared_with_me')}
 								</h2>
 								<div class="badge badge-warning badge-sm">
 									{filteredSharedCollections.length}
@@ -308,7 +308,7 @@
 										<div class="absolute -top-2 -right-2 z-10">
 											<div class="badge badge-warning badge-sm gap-1 shadow-lg">
 												<Share class="w-3 h-3" />
-												{$t('collection.shared')}
+												{$t('share.shared')}
 											</div>
 										</div>
 									</div>

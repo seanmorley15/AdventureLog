@@ -256,6 +256,16 @@ class Location(models.Model):
 
     def __str__(self):
         return self.name
+    
+class CollectionInvite(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='invites')
+    invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collection_invites')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Invite for {self.invited_user.username} to {self.collection.name}"
 
 class Collection(models.Model):
     #id = models.AutoField(primary_key=True)

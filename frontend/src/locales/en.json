@@ -311,7 +311,12 @@
     "reservation_number": "Reservation Number",
     "filters_and_sort": "Filters & Sort",
     "filters_and_stats": "Filters & Stats",
-    "travel_progress": "Travel Progress"
+    "travel_progress": "Travel Progress",
+    "left_collection_message": "Successfully left collection",
+    "leave_collection": "Leave Collection",
+    "leave": "Leave",
+    "leave_collection_warning": "Are you sure you want to leave this collection? Any locations you added will be unlinked and remain in your account.",
+    "loading_collections": "Loading collections..."
   },
   "worldtravel": {
     "country_list": "Country List",
@@ -761,5 +766,18 @@
     "locations": "Locations",
     "my_locations": "My Locations"
   },
-  "settings_download_backup": "Download Backup"
+  "settings_download_backup": "Download Backup",
+  "invites": {
+    "accepted": "Invite accepted",
+    "accept_failed": "Failed to accept invite",
+    "declined": "Invite declined",
+    "decline_failed": "Failed to decline invite",
+    "title": "Invites",
+    "pending_invites": "Pending Invites",
+    "no_invites": "No invites",
+    "decline": "Decline",
+    "accept": "Accept",
+    "invited_on": "Invited on",
+    "no_invites_desc": "Make sure your profile is public so users can invite you."
+  }
 }
