@@ -670,7 +670,11 @@
     "not_shared_with": "Not Shared With",
     "no_shared_found": "No collections found that are shared with you.",
     "set_public": "In order to allow users to share with you, you need your profile set to public.",
-    "go_to_settings": "Go to settings"
+    "go_to_settings": "Go to settings",
+    "revoke_invite": "Revoke Invite",
+    "send_invite": "Send Invite",
+    "available": "Available",
+    "pending": "Pending"
   },
   "languages": {},
   "profile": {

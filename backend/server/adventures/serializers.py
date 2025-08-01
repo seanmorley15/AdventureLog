@@ -463,7 +463,7 @@ class CollectionSerializer(CustomModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'description', 'user', 'name', 'is_public', 'locations', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
