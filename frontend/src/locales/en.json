@@ -747,7 +747,8 @@
     "network_error": "Network error while connecting to the Immich server. Please check your connection and try again."
   },
   "google_maps": {
-    "google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations."
+    "google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations.",
+    "google_maps_integration_desc_no_staff": "This integration must first be enabled by the admin on this server."
   },
   "recomendations": {
     "recommendation": "Recommendation",
@@ -786,5 +787,17 @@
     "invited_on": "Invited on",
     "no_invites_desc": "Make sure your profile is public so users can invite you.",
     "by": "by"
+  },
+  "strava": {
+    "strava_integration_desc": "Connect to Strava to easily import your activties into locations and visits",
+    "not_configured": "Strava Not Configured",
+    "admin_setup_required": "The server administrator must enable it globally",
+    "ready_to_connect": "Ready to Connect",
+    "connect_account": "Connect Account",
+    "account_connected": "Account Connected",
+    "disconnect": "Disconnect",
+    "authorization_error": "Error redirecting to strava authorization URL",
+    "disconnected": "Successfully disconnected from Strava",
+    "disconnect_error": "Error disconnecting from Strava"
   }
 }

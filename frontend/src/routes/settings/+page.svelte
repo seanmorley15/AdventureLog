@@ -25,7 +25,8 @@
 	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 	let googleMapsEnabled = data.props.googleMapsEnabled;
-	let stravaEnabled = data.props.stravaEnabled;
+	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
+	let stravaUserEnabled = data.props.stravaUserEnabled;
 	let activeSection: string = 'profile';
 	let acknowledgeRestoreOverride: boolean = false;
 
@@ -270,6 +271,36 @@
 				addToast('error', $t('settings.reset_session_error'));
 			}
 			addToast('error', $t('settings.generic_error'));
+		}
+	}
+
+	async function stravaAuthorizeRedirect() {
+		const res = await fetch('/api/integrations/strava/authorize/', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			const data = await res.json();
+			window.location.href = data.auth_url;
+		} else {
+			addToast('error', $t('strava.authorization_error'));
+		}
+	}
+
+	async function stravaDisconnect() {
+		const res = await fetch('/api/integrations/strava/disable/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			addToast('success', $t('strava.disconnected'));
+			stravaUserEnabled = false;
+		} else {
+			addToast('error', $t('strava.disconnect_error'));
 		}
 	}
 </script>
@@ -913,43 +944,87 @@
 										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
 									{/if}
 								</div>
-								<div class="mt-4 p-4 bg-info/10 rounded-lg">
-									<p class="text-sm">
-										📖 {$t('immich.need_help')}
-										<a
-											class="link link-primary"
-											href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
-											target="_blank">{$t('navbar.documentation')}</a
-										>
-									</p>
-								</div>
+								{#if user.is_staff || !googleMapsEnabled}
+									<div class="mt-4 p-4 bg-info/10 rounded-lg">
+										{#if user.is_staff}
+											<p class="text-sm">
+												📖 {$t('immich.need_help')}
+												<a
+													class="link link-primary"
+													href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
+													target="_blank">{$t('navbar.documentation')}</a
+												>
+											</p>
+										{:else if !googleMapsEnabled}
+											<p class="text-sm">
+												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
+											</p>
+										{/if}
+									</div>
+								{/if}
 							</div>
 
+							<!-- Strava Integration Section -->
 							<div class="p-6 bg-base-200 rounded-xl">
 								<div class="flex items-center gap-4 mb-4">
 									<img src={StravaLogo} alt="Strava" class="w-8 h-8 rounded-md" />
 									<div>
 										<h3 class="text-xl font-bold">Strava</h3>
 										<p class="text-sm text-base-content/70">
-											{$t('google_maps.google_maps_integration_desc')}
+											{$t('strava.strava_integration_desc')}
 										</p>
 									</div>
-									{#if stravaEnabled}
+									{#if stravaGlobalEnabled && stravaUserEnabled}
 										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
 									{:else}
 										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
 									{/if}
 								</div>
-								<div class="mt-4 p-4 bg-info/10 rounded-lg">
-									<p class="text-sm">
-										📖 {$t('immich.need_help')}
-										<a
-											class="link link-primary"
-											href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
-											target="_blank">{$t('navbar.documentation')}</a
-										>
-									</p>
-								</div>
+
+								<!-- Content based on integration status -->
+								{#if !stravaGlobalEnabled}
+									<!-- Strava not enabled globally -->
+									<div class="text-center">
+										<p class="text-base-content/70 mb-4">
+											{$t('strava.not_enabled') ||
+												'Strava integration is not enabled on this instance.'}
+										</p>
+									</div>
+								{:else if !stravaUserEnabled && stravaGlobalEnabled}
+									<!-- Globally enabled but user not connected -->
+									<div class="text-center">
+										<button class="btn btn-primary" on:click={stravaAuthorizeRedirect}>
+											🔗 {$t('strava.connect_account')}
+										</button>
+									</div>
+								{:else if stravaGlobalEnabled && stravaUserEnabled}
+									<!-- User connected - show management options -->
+									<div class="text-center">
+										<button class="btn btn-error" on:click={stravaDisconnect}>
+											❌ {$t('strava.disconnect')}
+										</button>
+									</div>
+								{/if}
+
+								<!-- Help documentation link -->
+								{#if user.is_staff || !stravaGlobalEnabled}
+									<div class="mt-4 p-4 bg-info/10 rounded-lg">
+										{#if user.is_staff}
+											<p class="text-sm">
+												📖 {$t('immich.need_help')}
+												<a
+													class="link link-primary"
+													href="https://adventurelog.app/docs/configuration/strava_integration.html"
+													target="_blank">{$t('navbar.documentation')}</a
+												>
+											</p>
+										{:else if !stravaGlobalEnabled}
+											<p class="text-sm">
+												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
+											</p>
+										{/if}
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/if}

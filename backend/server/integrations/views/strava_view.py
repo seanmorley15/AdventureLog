@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 import requests
 import logging
 import time
+from django.shortcuts import redirect
 from django.conf import settings
 from integrations.models import StravaToken
 
@@ -87,16 +88,12 @@ class StravaIntegrationView(viewsets.ViewSet):
                 }
             )
 
-            return Response(
-                {
-                    'message': 'Strava access token obtained and saved successfully.',
-                    'access_token': response_data.get('access_token'),
-                    'expires_at': response_data.get('expires_at'),
-                    'refresh_token': response_data.get('refresh_token'),
-                    'athlete': response_data.get('athlete'),
-                },
-                status=status.HTTP_200_OK
-            )
+            # redirect to frontend url / setttigns
+            frontend_url = settings.FRONTEND_URL
+            if not frontend_url.endswith('/'):
+                frontend_url += '/'
+            return redirect(f"{frontend_url}settings?strava_authorized=true")
+
 
         except requests.RequestException as e:
             logger.error("Error during Strava OAuth token exchange: %s", str(e))
@@ -109,6 +106,28 @@ class StravaIntegrationView(viewsets.ViewSet):
                 },
                 status=status.HTTP_502_BAD_GATEWAY
             )
+        
+    @action(detail=False, methods=['post'], url_path='disable')
+    def disable(self, request):
+        """
+        Disables the Strava integration for the authenticated user by deleting their StravaToken.
+        """
+        strava_token = StravaToken.objects.filter(user=request.user).first()
+        if not strava_token:
+            return Response(
+                {
+                    'message': 'Strava integration is not enabled for this user.',
+                    'error': True,
+                    'code': 'strava.not_enabled'
+                },
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        strava_token.delete()
+        return Response(
+            {'message': 'Strava integration disabled successfully.'},
+            status=status.HTTP_204_NO_CONTENT
+        )
         
     def refresh_strava_token_if_needed(self, user):
         strava_token = StravaToken.objects.filter(user=user).first()
