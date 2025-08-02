@@ -266,6 +266,9 @@ class CollectionInvite(models.Model):
 
     def __str__(self):
         return f"Invite for {self.invited_user.username} to {self.collection.name}"
+    
+    class Meta:
+        verbose_name = "Collection Invite"
 
 class Collection(models.Model):
     #id = models.AutoField(primary_key=True)
@@ -580,3 +583,39 @@ class Lodging(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Trail(models.Model):
+    """
+    Represents a trail associated with a user.
+    Supports referencing either a Wanderer trail ID or an external link (e.g., AllTrails).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='trails')
+    name = models.CharField(max_length=200)
+
+    # Either an external link (e.g., AllTrails, Trailforks) or a Wanderer ID
+    link = models.URLField("External Trail Link", max_length=2083, blank=True, null=True)
+    wanderer_id = models.CharField("Wanderer Trail ID", max_length=100, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Trail"
+        verbose_name_plural = "Trails"
+
+    def clean(self):
+        has_link = bool(self.link and str(self.link).strip())
+        has_wanderer_id = bool(self.wanderer_id and str(self.wanderer_id).strip())
+
+        if has_link and has_wanderer_id:
+            raise ValidationError("Cannot have both a link and a Wanderer ID. Provide only one.")
+        if not has_link and not has_wanderer_id:
+            raise ValidationError("You must provide either a link or a Wanderer ID.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Ensure clean() is called on save
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({'Wanderer' if self.wanderer_id else 'External'})"

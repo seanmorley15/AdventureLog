@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -84,6 +84,28 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_num_locations(self, obj):
         return Location.objects.filter(category=obj, user=obj.user).count()
     
+class TrailSerializer(CustomModelSerializer):
+    provider = serializers.SerializerMethodField()
+    class Meta:
+        model = Trail
+        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider']
+        read_only_fields = ['id', 'created_at', 'user', 'provider']
+
+    def get_provider(self, obj):
+        if obj.wanderer_id:
+            return 'Wanderer'
+        # check the link to get the provider such as Strava, AllTrails, etc.
+        if obj.link:
+            if 'strava' in obj.link:
+                return 'Strava'
+            elif 'alltrails' in obj.link:
+                return 'AllTrails'
+            elif 'komoot' in obj.link:
+                return 'Komoot'
+            elif 'outdooractive' in obj.link:
+                return 'Outdooractive'
+        return 'External Link'
+    
 class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
@@ -105,13 +127,14 @@ class LocationSerializer(CustomModelSerializer):
         queryset=Collection.objects.all(), 
         required=False
     )
+    trails = TrailSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Location
         fields = [
             'id', 'name', 'description', 'rating', 'tags', 'location', 
             'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
 
@@ -476,7 +499,11 @@ class CollectionSerializer(CustomModelSerializer):
     
 class CollectionInviteSerializer(serializers.ModelSerializer):
     name = serializers.CharField(source='collection.name', read_only=True)
+    collection_owner_username = serializers.CharField(source='collection.user.username', read_only=True)
+    collection_user_first_name = serializers.CharField(source='collection.user.first_name', read_only=True)
+    collection_user_last_name = serializers.CharField(source='collection.user.last_name', read_only=True)
+    
     class Meta:
         model = CollectionInvite
-        fields = ['id', 'collection', 'created_at', 'name']
+        fields = ['id', 'collection', 'created_at', 'name', 'collection_owner_username', 'collection_user_first_name', 'collection_user_last_name']
         read_only_fields = ['id', 'created_at']

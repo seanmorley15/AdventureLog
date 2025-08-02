@@ -50,6 +50,7 @@ export type Location = {
 	city?: City | null;
 	region?: Region | null;
 	country?: Country | null;
+	trails: Trail[];
 };
 
 export type AdditionalLocation = Location & {
@@ -312,4 +313,18 @@ export type CollectionInvite = {
 	collection: string; // UUID of the collection
 	name: string; // Name of the collection
 	created_at: string; // ISO 8601 date string
+	collection_owner_username: string; // Username of the collection owner
+	collection_user_first_name: string; // First name of the collection user
+	collection_user_last_name: string; // Last name of the collection user
+};
+
+export type Trail = {
+	id: string;
+	user: string;
+	name: string;
+	location: string; // UUID of the location
+	created_at: string; // ISO 8601 date string
+	link?: string | null; // Optional link to the trail
+	wanderer_id?: string | null; // Optional ID for integration with Wanderer
+	provider: string; // Provider of the trail data, e.g., 'wanderer', 'external'
 };

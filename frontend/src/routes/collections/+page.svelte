@@ -415,6 +415,10 @@
 														<p class="text-xs text-base-content/50">
 															{$t('invites.invited_on')}
 															{formatDate(invite.created_at)}
+															{$t('invites.by')}
+															{invite.collection_owner_username || ''}
+															({invite.collection_user_first_name || ''}
+															{invite.collection_user_last_name || ''})
 														</p>
 													</div>
 												</div>

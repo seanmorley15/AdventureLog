@@ -1,7 +1,7 @@
 import os
 from django.contrib import admin
 from django.utils.html import mark_safe
-from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging, CollectionInvite
+from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail
 from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity 
 from allauth.account.decorators import secure_admin_login
 
@@ -124,6 +124,16 @@ class VisitAdmin(admin.ModelAdmin):
 
     image_display.short_description = 'Image Preview'
 
+class CollectionInviteAdmin(admin.ModelAdmin):
+    list_display = ('collection', 'invited_user', 'created_at')
+    search_fields = ('collection__name', 'invited_user__username')
+    readonly_fields = ('created_at',)
+
+    def invited_user(self, obj):
+        return obj.invited_user.username if obj.invited_user else 'N/A'
+    
+    invited_user.short_description = 'Invited User'
+
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'user', 'display_name', 'icon')
     search_fields = ('name', 'display_name')
@@ -153,7 +163,8 @@ admin.site.register(City, CityAdmin)
 admin.site.register(VisitedCity)
 admin.site.register(ContentAttachment)
 admin.site.register(Lodging)
-admin.site.register(CollectionInvite)
+admin.site.register(CollectionInvite, CollectionInviteAdmin)
+admin.site.register(Trail)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

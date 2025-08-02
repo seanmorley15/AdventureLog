@@ -324,6 +324,8 @@ LOGGING = {
     },
 }
 
+PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
+
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 
 # Major release version of AdventureLog, not including the patch version date.
@@ -333,3 +335,6 @@ ADVENTURELOG_RELEASE_VERSION = 'v0.10.0'
 COUNTRY_REGION_JSON_VERSION = 'v2.6'
 
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
+
+STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
+STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')

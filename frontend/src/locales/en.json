@@ -316,7 +316,9 @@
     "leave_collection": "Leave Collection",
     "leave": "Leave",
     "leave_collection_warning": "Are you sure you want to leave this collection? Any locations you added will be unlinked and remain in your account.",
-    "loading_collections": "Loading collections..."
+    "loading_collections": "Loading collections...",
+    "quick_start": "Quick Start",
+    "details": "Details"
   },
   "worldtravel": {
     "country_list": "Country List",
@@ -782,6 +784,7 @@
     "decline": "Decline",
     "accept": "Accept",
     "invited_on": "Invited on",
-    "no_invites_desc": "Make sure your profile is public so users can invite you."
+    "no_invites_desc": "Make sure your profile is public so users can invite you.",
+    "by": "by"
   }
 }

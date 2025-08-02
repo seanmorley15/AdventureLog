@@ -107,6 +107,10 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         """
         user = request.user
         is_safe_method = request.method in permissions.SAFE_METHODS
+
+        # If the object has a location field, get that location and continue checking with that object, basically from the location's perspective. I am very proud of this line of code and that's why I am writing this comment.
+        if type(obj).__name__ == 'Trail':
+            obj = obj.location
         
         # Anonymous users only get read access to public objects
         if not user or not user.is_authenticated:

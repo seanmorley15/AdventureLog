@@ -14,3 +14,13 @@ class ImmichIntegration(models.Model):
 
     def __str__(self):
         return self.user.username + ' - ' + self.server_url
+    
+class StravaToken(models.Model):
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='strava_tokens')
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    expires_at = models.BigIntegerField()  # Unix timestamp
+    athlete_id = models.BigIntegerField(null=True, blank=True)
+    scope = models.CharField(max_length=255, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)

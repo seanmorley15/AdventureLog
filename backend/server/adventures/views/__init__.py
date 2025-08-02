@@ -15,3 +15,4 @@ from .attachment_view import *
 from .lodging_view import *
 from .recommendations_view import *
 from .import_export_view import *
+from .trail_view import *

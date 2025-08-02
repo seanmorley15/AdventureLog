@@ -53,7 +53,8 @@
 			icon: '',
 			user: ''
 		},
-		attachments: []
+		attachments: [],
+		trails: []
 	};
 
 	export let locationToEdit: Location | null = null;
@@ -81,7 +82,7 @@
 			icon: '',
 			user: ''
 		},
-
+		trails: locationToEdit?.trails || [],
 		attachments: locationToEdit?.attachments || []
 	};
 	onMount(async () => {
@@ -167,18 +168,24 @@
 								>
 									<path
 										fill-rule="evenodd"
-										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z"
+										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5-5z"
 										clip-rule="evenodd"
 									/>
 								</svg>
 							</div>
-							<div
+							<button
 								class="timeline-end timeline-box {step.selected
 									? 'bg-primary text-primary-content'
-									: 'bg-base-200'}"
+									: 'bg-base-200'} hover:bg-primary/80 transition-colors cursor-pointer"
+								on:click={() => {
+									// Reset all steps
+									steps.forEach((s) => (s.selected = false));
+									// Select clicked step
+									steps[index].selected = true;
+								}}
 							>
 								{step.name}
-							</div>
+							</button>
 							{#if index < steps.length - 1}
 								<hr />
 							{/if}
@@ -263,6 +270,7 @@
 			<LocationMedia
 				bind:images={location.images}
 				bind:attachments={location.attachments}
+				bind:trails={location.trails}
 				on:back={() => {
 					steps[2].selected = false;
 					steps[1].selected = true;

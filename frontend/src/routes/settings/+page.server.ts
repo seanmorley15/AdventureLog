@@ -80,6 +80,7 @@ export const load: PageServerLoad = async (event) => {
 	}
 	let integrations = await integrationsFetch.json();
 	let googleMapsEnabled = integrations.google_maps as boolean;
+	let stravaEnabled = integrations.strava as boolean;
 
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
@@ -98,7 +99,8 @@ export const load: PageServerLoad = async (event) => {
 			immichIntegration,
 			publicUrl,
 			socialProviders,
-			googleMapsEnabled
+			googleMapsEnabled,
+			stravaEnabled
 		}
 	};
 };

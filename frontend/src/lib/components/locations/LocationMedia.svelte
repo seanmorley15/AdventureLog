@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, ContentImage } from '$lib/types';
+	import type { Attachment, ContentImage, Trail } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -18,6 +18,8 @@
 	import ImageIcon from '~icons/mdi/image';
 	import AttachmentIcon from '~icons/mdi/attachment';
 	import SwapHorizontalVariantIcon from '~icons/mdi/swap-horizontal-variant';
+	import LinkIcon from '~icons/mdi/link';
+	import PlusIcon from '~icons/mdi/plus';
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from '../ImmichSelect.svelte';
@@ -25,6 +27,7 @@
 	// Props
 	export let images: ContentImage[] = [];
 	export let attachments: Attachment[] = [];
+	export let trails: Trail[] = [];
 	export let itemId: string = '';
 
 	// Component state
@@ -45,6 +48,18 @@
 	let attachmentName: string = '';
 	let attachmentToEdit: Attachment | null = null;
 	let editingAttachmentName: string = '';
+
+	// Trail state
+	let trailName: string = '';
+	let trailLink: string = '';
+	let trailWandererId: string = '';
+	let trailError: string = '';
+	let isTrailLoading: boolean = false;
+	let trailToEdit: Trail | null = null;
+	let editingTrailName: string = '';
+	let editingTrailLink: string = '';
+	let editingTrailWandererId: string = '';
+	let showAddTrailForm: boolean = false;
 
 	// Allowed file types for attachments
 	const allowedFileTypes = [
@@ -84,6 +99,10 @@
 
 	function updateAttachmentsList(newAttachment: Attachment) {
 		attachments = [...attachments, newAttachment];
+	}
+
+	function updateTrailsList(newTrail: Trail) {
+		trails = [...trails, newTrail];
 	}
 
 	// API calls
@@ -376,6 +395,160 @@
 		}
 	}
 
+	// Trail event handlers
+	function validateTrailForm(): boolean {
+		if (!trailName.trim()) {
+			trailError = 'Trail name is required';
+			return false;
+		}
+
+		const hasLink = trailLink.trim() !== '';
+		const hasWandererId = trailWandererId.trim() !== '';
+
+		if (hasLink && hasWandererId) {
+			trailError = 'Cannot have both a link and a Wanderer ID. Provide only one.';
+			return false;
+		}
+
+		if (!hasLink && !hasWandererId) {
+			trailError = 'You must provide either a link or a Wanderer ID.';
+			return false;
+		}
+
+		trailError = '';
+		return true;
+	}
+
+	async function createTrail() {
+		if (!validateTrailForm()) return;
+
+		isTrailLoading = true;
+
+		const trailData = {
+			name: trailName.trim(),
+			location: itemId,
+			link: trailLink.trim() || null,
+			wanderer_id: trailWandererId.trim() || null
+		};
+
+		try {
+			const res = await fetch('/api/trails/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(trailData)
+			});
+
+			if (res.ok) {
+				const newTrail = await res.json();
+				updateTrailsList(newTrail);
+				addToast('success', 'Trail created successfully');
+				resetTrailForm();
+			} else {
+				const errorData = await res.json();
+				throw new Error(errorData.message || 'Failed to create trail');
+			}
+		} catch (error) {
+			console.error('Trail creation error:', error);
+			trailError = error instanceof Error ? error.message : 'Failed to create trail';
+			addToast('error', 'Failed to create trail');
+		} finally {
+			isTrailLoading = false;
+		}
+	}
+
+	function resetTrailForm() {
+		trailName = '';
+		trailLink = '';
+		trailWandererId = '';
+		trailError = '';
+		showAddTrailForm = false;
+	}
+
+	function startEditingTrail(trail: Trail) {
+		trailToEdit = trail;
+		editingTrailName = trail.name;
+		editingTrailLink = trail.link || '';
+		editingTrailWandererId = trail.wanderer_id || '';
+	}
+
+	function cancelEditingTrail() {
+		trailToEdit = null;
+		editingTrailName = '';
+		editingTrailLink = '';
+		editingTrailWandererId = '';
+	}
+
+	function validateEditTrailForm(): boolean {
+		if (!editingTrailName.trim()) {
+			return false;
+		}
+
+		const hasLink = editingTrailLink.trim() !== '';
+		const hasWandererId = editingTrailWandererId.trim() !== '';
+
+		if (hasLink && hasWandererId) {
+			return false;
+		}
+
+		if (!hasLink && !hasWandererId) {
+			return false;
+		}
+
+		return true;
+	}
+
+	async function saveTrailEdit() {
+		if (!trailToEdit || !validateEditTrailForm()) return;
+
+		const trailData = {
+			name: editingTrailName.trim(),
+			link: editingTrailLink.trim() || null,
+			wanderer_id: editingTrailWandererId.trim() || null
+		};
+
+		try {
+			const res = await fetch(`/api/trails/${trailToEdit.id}`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(trailData)
+			});
+
+			if (res.ok) {
+				const updatedTrail = await res.json();
+				trails = trails.map((trail) => (trail.id === trailToEdit!.id ? updatedTrail : trail));
+				addToast('success', 'Trail updated successfully');
+				cancelEditingTrail();
+			} else {
+				throw new Error('Failed to update trail');
+			}
+		} catch (error) {
+			console.error('Error updating trail:', error);
+			addToast('error', 'Failed to update trail');
+		}
+	}
+
+	async function removeTrail(trailId: string) {
+		try {
+			const res = await fetch(`/api/trails/${trailId}`, {
+				method: 'DELETE'
+			});
+
+			if (res.status === 204) {
+				trails = trails.filter((trail) => trail.id !== trailId);
+				addToast('success', 'Trail removed successfully');
+			} else {
+				throw new Error('Failed to remove trail');
+			}
+		} catch (error) {
+			console.error('Error removing trail:', error);
+			addToast('error', 'Failed to remove trail');
+		}
+	}
+
 	// Navigation handlers
 	function handleBack() {
 		dispatch('back');
@@ -629,17 +802,6 @@
 							</div>
 						{/if}
 					</div>
-
-					<!-- File Type Info -->
-					<div class="alert alert-info">
-						<InfoIcon class="h-5 w-5" />
-						<div>
-							<div class="text-sm font-medium">Supported file types:</div>
-							<div class="text-xs text-base-content/70 mt-1">
-								GPX, KML, PDF, DOC, TXT, JSON, CSV, XLSX and more
-							</div>
-						</div>
-					</div>
 				</div>
 
 				<!-- Attachment Gallery -->
@@ -727,21 +889,208 @@
 			</div>
 		</div>
 
-		<!-- Trails Managment -->
+		<!-- Trails Management -->
 		<div class="card bg-base-100 border border-base-300 shadow-lg">
 			<div class="card-body p-6">
-				<div class="flex items-center gap-3 mb-6">
-					<div class="p-2 bg-accent/10 rounded-lg">
-						<SwapHorizontalVariantIcon class="w-5 h-5 text-accent" />
+				<div class="flex items-center justify-between mb-6">
+					<div class="flex items-center gap-3">
+						<div class="p-2 bg-accent/10 rounded-lg">
+							<SwapHorizontalVariantIcon class="w-5 h-5 text-accent" />
+						</div>
+						<h2 class="text-xl font-bold">Trails Management</h2>
 					</div>
-					<h2 class="text-xl font-bold">Trails Management</h2>
+					<button
+						class="btn btn-accent btn-sm gap-2"
+						on:click={() => (showAddTrailForm = !showAddTrailForm)}
+					>
+						<PlusIcon class="w-4 h-4" />
+						Add Trail
+					</button>
 				</div>
-				<p class="text-base-content/70 mb-4">
-					You can manage trails associated with this location in the Trails section.
-				</p>
-				<p class="text-sm text-base-content/50">
-					Coming soon: Create, edit, and delete trails directly from this section.
-				</p>
+
+				<div class="text-sm text-base-content/60 mb-4">
+					Manage trails associated with this location. Trails can be linked to external services
+					like AllTrails or referenced by Wanderer ID.
+				</div>
+
+				<!-- Add Trail Form -->
+				{#if showAddTrailForm}
+					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
+						<h4 class="font-medium mb-3 text-accent">Add New Trail</h4>
+						<div class="grid gap-3">
+							<input
+								type="text"
+								bind:value={trailName}
+								class="input input-bordered"
+								placeholder="Trail name"
+								disabled={isTrailLoading}
+							/>
+							<input
+								type="url"
+								bind:value={trailLink}
+								class="input input-bordered"
+								placeholder="External link (e.g., AllTrails, Trailforks)"
+								disabled={isTrailLoading || trailWandererId.trim() !== ''}
+							/>
+							<div class="text-center text-sm text-base-content/60">OR</div>
+							<input
+								type="text"
+								bind:value={trailWandererId}
+								class="input input-bordered"
+								placeholder="Wanderer Trail ID"
+								disabled={isTrailLoading || trailLink.trim() !== ''}
+							/>
+							{#if trailError}
+								<div class="alert alert-error py-2">
+									<span class="text-sm">{trailError}</span>
+								</div>
+							{/if}
+							<div class="flex gap-2 justify-end">
+								<button
+									class="btn btn-ghost btn-sm"
+									disabled={isTrailLoading}
+									on:click={resetTrailForm}
+								>
+									Cancel
+								</button>
+								<button
+									class="btn btn-accent btn-sm"
+									class:loading={isTrailLoading}
+									disabled={isTrailLoading ||
+										!trailName.trim() ||
+										(!trailLink.trim() && !trailWandererId.trim())}
+									on:click={createTrail}
+								>
+									Create Trail
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Trails Gallery -->
+				{#if trails.length > 0}
+					<div class="divider">Current Trails</div>
+					<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+						{#each trails as trail (trail.id)}
+							<div class="relative group">
+								{#if trailToEdit?.id === trail.id}
+									<!-- Edit Mode -->
+									<div class="bg-warning/10 p-4 rounded-lg border border-warning/30">
+										<div class="flex items-center gap-2 mb-3">
+											<EditIcon class="w-4 h-4 text-warning" />
+											<span class="text-sm font-medium text-warning">Editing Trail</span>
+										</div>
+										<div class="grid gap-3">
+											<input
+												type="text"
+												bind:value={editingTrailName}
+												class="input input-bordered input-sm"
+												placeholder="Trail name"
+											/>
+											<input
+												type="url"
+												bind:value={editingTrailLink}
+												class="input input-bordered input-sm"
+												placeholder="External link"
+												disabled={editingTrailWandererId.trim() !== ''}
+											/>
+											<div class="text-center text-xs text-base-content/60">OR</div>
+											<input
+												type="text"
+												bind:value={editingTrailWandererId}
+												class="input input-bordered input-sm"
+												placeholder="Wanderer Trail ID"
+												disabled={editingTrailLink.trim() !== ''}
+											/>
+										</div>
+										<div class="flex gap-2 mt-3">
+											<button
+												class="btn btn-success btn-xs flex-1"
+												disabled={!validateEditTrailForm()}
+												on:click={saveTrailEdit}
+											>
+												<CheckIcon class="w-3 h-3" />
+												Save
+											</button>
+											<button class="btn btn-ghost btn-xs flex-1" on:click={cancelEditingTrail}>
+												<CloseIcon class="w-3 h-3" />
+												Cancel
+											</button>
+										</div>
+									</div>
+								{:else}
+									<!-- Normal Display -->
+									<div
+										class="bg-base-50 p-4 rounded-lg border border-base-200 hover:border-base-300 transition-colors"
+									>
+										<div class="flex items-center gap-3 mb-3">
+											<div class="p-2 bg-accent/10 rounded">
+												{#if trail.wanderer_id}
+													<Star class="w-4 h-4 text-accent" />
+												{:else}
+													<LinkIcon class="w-4 h-4 text-accent" />
+												{/if}
+											</div>
+											<div class="flex-1 min-w-0">
+												<div class="font-medium truncate">{trail.name}</div>
+												<div class="text-xs text-accent/70 mt-1">
+													{trail.provider || 'External'}
+												</div>
+											</div>
+										</div>
+
+										{#if trail.link}
+											<a
+												href={trail.link}
+												target="_blank"
+												rel="noopener noreferrer"
+												class="text-xs text-accent hover:text-accent-focus mb-3 break-all block underline"
+											>
+												{trail.link}
+											</a>
+										{:else if trail.wanderer_id}
+											<div class="text-xs text-base-content/60 mb-3 break-all">
+												Wanderer ID: {trail.wanderer_id}
+											</div>
+										{:else}
+											<div class="text-xs text-base-content/40 mb-3 italic">
+												No external link available
+											</div>
+										{/if}
+
+										<!-- Trail Controls -->
+										<div class="flex gap-2 justify-end">
+											<button
+												type="button"
+												class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
+												data-tip="Edit Trail"
+												on:click={() => startEditingTrail(trail)}
+											>
+												<EditIcon class="w-3 h-3" />
+											</button>
+											<button
+												type="button"
+												class="btn btn-error btn-xs btn-square tooltip tooltip-top"
+												data-tip="Remove Trail"
+												on:click={() => removeTrail(trail.id)}
+											>
+												<TrashIcon class="w-3 h-3" />
+											</button>
+										</div>
+									</div>
+								{/if}
+							</div>
+						{/each}
+					</div>
+				{:else}
+					<div class="bg-base-200/50 rounded-lg p-8 text-center">
+						<div class="text-base-content/60 mb-2">No trails added yet</div>
+						<div class="text-sm text-base-content/40">
+							Add your first trail using the button above
+						</div>
+					</div>
+				{/if}
 			</div>
 		</div>
 
