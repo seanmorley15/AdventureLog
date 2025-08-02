@@ -92,7 +92,7 @@ class StravaIntegrationView(viewsets.ViewSet):
             frontend_url = settings.FRONTEND_URL
             if not frontend_url.endswith('/'):
                 frontend_url += '/'
-            return redirect(f"{frontend_url}settings?strava_authorized=true")
+            return redirect(f"{frontend_url}settings?tab=integrations")
 
 
         except requests.RequestException as e:
