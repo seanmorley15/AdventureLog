@@ -1,6 +1,6 @@
 from django.utils import timezone
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -106,11 +106,34 @@ class TrailSerializer(CustomModelSerializer):
                 return 'Outdooractive'
         return 'External Link'
     
+class ActivitySerializer(CustomModelSerializer):
+    trail = TrailSerializer(read_only=True)
+    
+    class Meta:
+        model = Activity
+        fields = [
+            'id', 'user', 'visit', 'trail', 'gpx_file', 'name', 'type', 'sport_type',
+            'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
+            'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
+            'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
+            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id'
+        ]
+        read_only_fields = ['id', 'user']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.gpx_file:
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+            representation['gpx_file'] = f"{public_url}/media/{instance.gpx_file.name}"
+        return representation
+
+    
 class VisitSerializer(serializers.ModelSerializer):
+    activities = ActivitySerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities']
         read_only_fields = ['id']
                                    
 class LocationSerializer(CustomModelSerializer):

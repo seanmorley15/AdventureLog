@@ -619,3 +619,58 @@ class Trail(models.Model):
 
     def __str__(self):
         return f"{self.name} ({'Wanderer' if self.wanderer_id else 'External'})"
+    
+class Activity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name='activities')
+    trail = models.ForeignKey(Trail, on_delete=models.CASCADE, related_name='activities', blank=True, null=True)
+
+    # GPX File
+    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True)
+
+    # Descriptive
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=100, default='general')  # E.g., Run, Hike, Bike
+    sport_type = models.CharField(max_length=100, blank=True, null=True)  # Optional detailed type
+
+    # Time & Distance
+    distance = models.FloatField(blank=True, null=True)  # in meters
+    moving_time = models.DurationField(blank=True, null=True)
+    elapsed_time = models.DurationField(blank=True, null=True)
+    rest_time = models.DurationField(blank=True, null=True)
+
+    # Elevation
+    elevation_gain = models.FloatField(blank=True, null=True)  # in meters
+    elevation_loss = models.FloatField(blank=True, null=True)  # estimated
+    elev_high = models.FloatField(blank=True, null=True)
+    elev_low = models.FloatField(blank=True, null=True)
+
+    # Timing
+    start_date = models.DateTimeField(blank=True, null=True)
+    start_date_local = models.DateTimeField(blank=True, null=True)
+    timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], blank=True, null=True)
+
+    # Speed
+    average_speed = models.FloatField(blank=True, null=True)  # in m/s
+    max_speed = models.FloatField(blank=True, null=True)      # in m/s
+
+    # Optional metrics
+    average_cadence = models.FloatField(blank=True, null=True)
+    calories = models.FloatField(blank=True, null=True)
+
+    # Coordinates
+    start_lat = models.FloatField(blank=True, null=True)
+    start_lng = models.FloatField(blank=True, null=True)
+    end_lat = models.FloatField(blank=True, null=True)
+    end_lng = models.FloatField(blank=True, null=True)
+
+    # Optional links
+    external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+
+    class Meta:
+        verbose_name = "Activity"
+        verbose_name_plural = "Activities"

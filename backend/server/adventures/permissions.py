@@ -111,7 +111,12 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         # If the object has a location field, get that location and continue checking with that object, basically from the location's perspective. I am very proud of this line of code and that's why I am writing this comment.
         if type(obj).__name__ == 'Trail':
             obj = obj.location
-        
+
+        if type(obj).__name__ == 'Activity':
+            # If the object is an Activity, get its location
+            if hasattr(obj, 'visit') and hasattr(obj.visit, 'location'):
+                obj = obj.visit.location
+
         # Anonymous users only get read access to public objects
         if not user or not user.is_authenticated:
             return is_safe_method and getattr(obj, 'is_public', False)

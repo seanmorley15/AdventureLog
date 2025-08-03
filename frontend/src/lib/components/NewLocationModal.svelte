@@ -285,6 +285,7 @@
 		{#if steps[3].selected}
 			<LocationVisits
 				bind:visits={location.visits}
+				bind:trails={location.trails}
 				objectId={location.id}
 				type="location"
 				on:back={() => {

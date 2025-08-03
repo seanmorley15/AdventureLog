@@ -36,6 +36,7 @@ export type Location = {
 		end_date: string;
 		timezone: string | null;
 		notes: string;
+		activities: Activity[]; // Array of activities associated with the visit
 	}[];
 	collections?: string[] | null;
 	latitude: number | null;
@@ -327,4 +328,88 @@ export type Trail = {
 	link?: string | null; // Optional link to the trail
 	wanderer_id?: string | null; // Optional ID for integration with Wanderer
 	provider: string; // Provider of the trail data, e.g., 'wanderer', 'external'
+};
+
+export type StravaActivity = {
+	id: number;
+	name: string;
+	type: string;
+	sport_type: string;
+	distance: number;
+	distance_km: number;
+	distance_miles: number;
+	moving_time: number;
+	elapsed_time: number;
+	rest_time: number;
+	total_elevation_gain: number;
+	estimated_elevation_loss: number;
+	elev_high: number;
+	elev_low: number;
+	total_elevation_range: number;
+	start_date: string; // ISO 8601 format
+	start_date_local: string; // ISO 8601 format
+	timezone: string;
+	timezone_raw: string;
+	average_speed: number;
+	average_speed_kmh: number;
+	average_speed_mph: number;
+	max_speed: number;
+	max_speed_kmh: number;
+	max_speed_mph: number;
+	pace_per_km_seconds: number;
+	pace_per_mile_seconds: number;
+	grade_adjusted_average_speed: number | null;
+	average_cadence: number | null;
+	average_watts: number | null;
+	max_watts: number | null;
+	kilojoules: number | null;
+	calories: number | null;
+	achievement_count: number;
+	kudos_count: number;
+	comment_count: number;
+	pr_count: number;
+	gear_id: string | null;
+	device_name: string | null;
+	trainer: boolean;
+	manual: boolean;
+	start_latlng: [number, number] | null; // [latitude, longitude]
+	end_latlng: [number, number] | null; // [latitude, longitude]
+	export_original: string; // URL
+	export_gpx: string; // URL
+	visibility: string;
+	photo_count: number;
+	has_heartrate: boolean;
+	flagged: boolean;
+	commute: boolean;
+};
+
+export type Activity = {
+	id: string;
+	user: string;
+	visit: string;
+	trail: Trail | null;
+	gpx_file: string | null;
+	name: string;
+	type: string;
+	sport_type: string | null;
+	distance: number | null;
+	moving_time: string | null; // ISO 8601 duration string
+	elapsed_time: string | null; // ISO 8601 duration string
+	rest_time: string | null; // ISO 8601 duration string
+	elevation_gain: number | null;
+	elevation_loss: number | null;
+	elev_high: number | null;
+	elev_low: number | null;
+	start_date: string | null; // ISO 8601 date string
+	start_date_local: string | null; // ISO 8601 date string
+	timezone: string | null;
+	average_speed: number | null;
+	max_speed: number | null;
+	average_cadence: number | null;
+	calories: number | null;
+	start_lat: number | null;
+	start_lng: number | null;
+	end_lat: number | null;
+	end_lng: number | null;
+	external_service_id: string | null;
 };
