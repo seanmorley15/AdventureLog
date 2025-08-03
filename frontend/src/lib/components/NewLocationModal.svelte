@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Location, Attachment, Category, Collection, User } from '$lib/types';
+	import type { Location, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import LocationQuickStart from './locations/LocationQuickStart.svelte';
@@ -260,6 +260,7 @@
 					location.location = e.detail.location;
 					location.tags = e.detail.tags;
 					location.user = e.detail.user;
+					location.id = e.detail.id;
 
 					steps[1].selected = false;
 					steps[2].selected = true;

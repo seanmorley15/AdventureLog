@@ -6,6 +6,7 @@
 	import { onMount } from 'svelte';
 	import { isAllDay } from '$lib';
 	import { createEventDispatcher } from 'svelte';
+	import { deserialize } from '$app/forms';
 
 	// Icons
 	import CalendarIcon from '~icons/mdi/calendar';
@@ -75,6 +76,7 @@
 	let expandedVisits: { [visitId: string]: boolean } = {};
 	let uploadingActivity: { [visitId: string]: boolean } = {};
 	let showActivityUpload: { [visitId: string]: boolean } = {};
+	let pendingStravaImport: { [visitId: string]: StravaActivity | null } = {};
 
 	// Activity form state
 	let activityForm = {
@@ -293,9 +295,12 @@
 		const newVisit = createVisitObject();
 
 		// Patch updated visits array to location and get the response with actual IDs
+		console.log('Adding new visit:', newVisit);
+		console.log(objectId);
 		if (type === 'location' && objectId) {
 			try {
 				const updatedVisits = visits ? [...visits, newVisit] : [newVisit];
+				console.log('Patching visits:', updatedVisits);
 
 				const response = await fetch(`/api/locations/${objectId}/`, {
 					method: 'PATCH',
@@ -425,6 +430,10 @@
 	function hideActivityUploadForm(visitId: string) {
 		showActivityUpload[visitId] = false;
 		showActivityUpload = { ...showActivityUpload };
+
+		// Clear pending import
+		delete pendingStravaImport[visitId];
+		pendingStravaImport = { ...pendingStravaImport };
 	}
 
 	function handleGpxFileChange(event: Event) {
@@ -437,6 +446,12 @@
 	async function uploadActivity(visitId: string) {
 		if (!activityForm.name.trim()) {
 			alert('Activity name is required');
+			return;
+		}
+
+		// If this is a Strava import, require GPX file
+		if (pendingStravaImport[visitId] && !activityForm.gpx_file) {
+			alert('Please upload the GPX file to complete the Strava import');
 			return;
 		}
 
@@ -473,13 +488,20 @@
 				formData.append('gpx_file', activityForm.gpx_file);
 			}
 
-			const response = await fetch('/api/activities/', {
+			// Add external service ID if this is a Strava import
+			if (pendingStravaImport[visitId]) {
+				formData.append('external_service_id', pendingStravaImport[visitId].id.toString());
+			}
+
+			const response = await fetch('/locations?/activity', {
 				method: 'POST',
 				body: formData
 			});
 
 			if (response.ok) {
-				const newActivity = await response.json();
+				const newActivityResponse = deserialize(await response.text()) as { data: Activity };
+				const newActivity = newActivityResponse.data as Activity;
+				console.log('Activity uploaded successfully:', newActivity);
 
 				// Update the visit's activities array
 				if (visits) {
@@ -497,16 +519,10 @@
 				// Hide the upload form
 				hideActivityUploadForm(visitId);
 
-				// Update the location with new visits data
-				if (type === 'location' && objectId) {
-					await fetch(`/api/locations/${objectId}/`, {
-						method: 'PATCH',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({ visits })
-					});
-				}
+				const importMessage = pendingStravaImport[visitId]
+					? `Strava activity "${activityForm.name}" imported successfully!`
+					: 'Activity uploaded successfully!';
+				alert(importMessage);
 			} else {
 				const errorText = await response.text();
 				console.error('Failed to upload activity:', errorText);
@@ -567,79 +583,37 @@
 		const stravaActivity = event.detail;
 
 		try {
-			// Convert Strava activity to our activity format
-			const formData = new FormData();
-			formData.append('visit', visitId);
-			formData.append('name', stravaActivity.name);
-			formData.append('type', stravaActivity.type);
-			formData.append('sport_type', stravaActivity.sport_type || stravaActivity.type);
+			// Open GPX export in new tab
+			window.open(stravaActivity.export_gpx, '_blank');
 
-			// Convert distance from meters to kilometers
-			if (stravaActivity.distance) {
-				formData.append('distance', (stravaActivity.distance / 1000).toString());
-			}
+			// Store the pending import and show upload form
+			pendingStravaImport[visitId] = stravaActivity;
+			pendingStravaImport = { ...pendingStravaImport };
 
-			// Convert time to ISO duration format
-			if (stravaActivity.moving_time) {
-				formData.append('moving_time', `PT${stravaActivity.moving_time}S`);
-			}
+			// Pre-fill the activity form with Strava data
+			activityForm = {
+				name: stravaActivity.name,
+				type: stravaActivity.type,
+				sport_type: stravaActivity.sport_type || stravaActivity.type,
+				distance: stravaActivity.distance ? stravaActivity.distance / 1000 : null, // Convert to km
+				moving_time: stravaActivity.moving_time ? formatDuration(stravaActivity.moving_time) : '',
+				elapsed_time: stravaActivity.elapsed_time
+					? formatDuration(stravaActivity.elapsed_time)
+					: '',
+				elevation_gain: stravaActivity.total_elevation_gain || null,
+				elevation_loss: stravaActivity.estimated_elevation_loss || null,
+				start_date: stravaActivity.start_date ? stravaActivity.start_date.substring(0, 16) : '',
+				calories: stravaActivity.calories || null,
+				notes: '',
+				gpx_file: null
+			};
 
-			if (stravaActivity.elapsed_time) {
-				formData.append('elapsed_time', `PT${stravaActivity.elapsed_time}S`);
-			}
-
-			// Add elevation data
-			if (stravaActivity.total_elevation_gain) {
-				formData.append('elevation_gain', stravaActivity.total_elevation_gain.toString());
-			}
-
-			if (stravaActivity.estimated_elevation_loss) {
-				formData.append('elevation_loss', stravaActivity.estimated_elevation_loss.toString());
-			}
-
-			// Add start date
-			if (stravaActivity.start_date) {
-				formData.append('start_date', stravaActivity.start_date);
-			}
-
-			// Add calories if available
-			if (stravaActivity.calories) {
-				formData.append('calories', stravaActivity.calories.toString());
-			}
-
-			// Add external service ID to track the Strava origin
-			formData.append('external_service_id', stravaActivity.id.toString());
-
-			const response = await fetch('/api/activities/', {
-				method: 'POST',
-				body: formData
-			});
-
-			if (response.ok) {
-				const newActivity = await response.json();
-
-				// Update the visit's activities array
-				if (visits) {
-					visits = visits.map((visit) => {
-						if (visit.id === visitId) {
-							return {
-								...visit,
-								activities: [...(visit.activities || []), newActivity]
-							};
-						}
-						return visit;
-					});
-				}
-
-				alert(`Activity "${stravaActivity.name}" imported successfully`);
-			} else {
-				const errorText = await response.text();
-				console.error('Failed to import Strava activity:', errorText);
-				alert('Failed to import activity. Please try again.');
-			}
+			// Show the upload form
+			showActivityUpload[visitId] = true;
+			showActivityUpload = { ...showActivityUpload };
 		} catch (error) {
-			console.error('Error importing Strava activity:', error);
-			alert('Error importing activity. Please try again.');
+			console.error('Error initiating Strava import:', error);
+			alert('Error downloading GPX file. Please try again.');
 		}
 	}
 
@@ -1058,7 +1032,13 @@
 												<div class="flex items-center justify-between mb-3">
 													<div class="flex items-center gap-2">
 														<UploadIcon class="w-4 h-4 text-success" />
-														<h4 class="font-medium text-sm">Add New Activity</h4>
+														<h4 class="font-medium text-sm">
+															{#if pendingStravaImport[visit.id]}
+																Complete Strava Import
+															{:else}
+																Add New Activity
+															{/if}
+														</h4>
 													</div>
 													<button
 														class="btn btn-ghost btn-xs"
@@ -1068,7 +1048,46 @@
 													</button>
 												</div>
 
+												{#if pendingStravaImport[visit.id]}
+													<div class="alert alert-info mb-4">
+														<div class="flex items-center gap-2">
+															<RunFastIcon class="w-4 h-4" />
+															<div class="text-sm">
+																<div class="font-medium">Strava Activity Ready</div>
+																<div class="text-xs opacity-75">
+																	GPX file downloaded. Please upload it below to complete the
+																	import.
+																</div>
+															</div>
+														</div>
+													</div>
+												{/if}
+
 												<div class="bg-base-200/50 p-4 rounded-lg">
+													{#if pendingStravaImport[visit.id]}
+														<!-- Highlight GPX upload for Strava imports -->
+														<div
+															class="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-lg"
+														>
+															<div class="flex items-center gap-2 mb-2">
+																<FileIcon class="w-4 h-4 text-warning" />
+																<label class="label-text font-medium text-warning"
+																	>GPX File Required *</label
+																>
+															</div>
+															<input
+																type="file"
+																accept=".gpx"
+																class="file-input file-input-bordered file-input-warning w-full"
+																on:change={handleGpxFileChange}
+															/>
+															<div class="text-xs text-warning/80 mt-1">
+																Upload the GPX file that was just downloaded to complete the Strava
+																import
+															</div>
+														</div>
+													{/if}
+
 													<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 														<!-- Activity Name -->
 														<div class="md:col-span-2">
@@ -1078,6 +1097,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="Morning Run"
 																bind:value={activityForm.name}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1087,6 +1107,7 @@
 															<select
 																class="select select-bordered select-sm w-full mt-1"
 																bind:value={activityForm.type}
+																disabled={!!pendingStravaImport[visit.id]}
 															>
 																{#each activityTypes as activityType}
 																	<option value={activityType}>{activityType}</option>
@@ -1102,6 +1123,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="Trail Running"
 																bind:value={activityForm.sport_type}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1114,6 +1136,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="5.2"
 																bind:value={activityForm.distance}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1127,6 +1150,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="0:25:30"
 																bind:value={activityForm.moving_time}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1140,6 +1164,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="0:30:00"
 																bind:value={activityForm.elapsed_time}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1150,6 +1175,7 @@
 																type="datetime-local"
 																class="input input-bordered input-sm w-full mt-1"
 																bind:value={activityForm.start_date}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1163,6 +1189,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_gain}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1176,6 +1203,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_loss}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1187,19 +1215,22 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="300"
 																bind:value={activityForm.calories}
+																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
-														<!-- GPX File -->
-														<div class="md:col-span-2">
-															<label class="label-text text-xs font-medium">GPX File</label>
-															<input
-																type="file"
-																accept=".gpx"
-																class="file-input file-input-bordered file-input-sm w-full mt-1"
-																on:change={handleGpxFileChange}
-															/>
-														</div>
+														<!-- GPX File (for manual uploads) -->
+														{#if !pendingStravaImport[visit.id]}
+															<div class="md:col-span-2">
+																<label class="label-text text-xs font-medium">GPX File</label>
+																<input
+																	type="file"
+																	accept=".gpx"
+																	class="file-input file-input-bordered file-input-sm w-full mt-1"
+																	on:change={handleGpxFileChange}
+																/>
+															</div>
+														{/if}
 													</div>
 
 													<div class="flex justify-end gap-2 mt-4">
@@ -1213,11 +1244,20 @@
 														<button
 															class="btn btn-success btn-sm gap-2"
 															on:click={() => uploadActivity(visit.id)}
-															disabled={uploadingActivity[visit.id] || !activityForm.name.trim()}
+															disabled={uploadingActivity[visit.id] ||
+																!activityForm.name.trim() ||
+																(pendingStravaImport[visit.id] && !activityForm.gpx_file)}
 														>
 															{#if uploadingActivity[visit.id]}
 																<LoadingIcon class="w-3 h-3 animate-spin" />
-																Uploading...
+																{#if pendingStravaImport[visit.id]}
+																	Importing...
+																{:else}
+																	Uploading...
+																{/if}
+															{:else if pendingStravaImport[visit.id]}
+																<UploadIcon class="w-3 h-3" />
+																Complete Import
 															{:else}
 																<UploadIcon class="w-3 h-3" />
 																Upload Activity
