@@ -515,7 +515,8 @@
 				name: recomendation.tag,
 				user: ''
 			},
-			attachments: []
+			attachments: [],
+			trails: []
 		};
 		isLocationModalOpen = true;
 	}
