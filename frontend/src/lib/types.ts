@@ -389,6 +389,7 @@ export type Activity = {
 	visit: string;
 	trail: string | null;
 	gpx_file: string | null;
+	geojson: any | undefined; // GeoJSON representation of the activity
 	name: string;
 	type: string;
 	sport_type: string | null;

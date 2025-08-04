@@ -7,6 +7,8 @@ from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
+import gpxpy
+import geojson
 
 
 class ContentImageSerializer(CustomModelSerializer):
@@ -107,6 +109,7 @@ class TrailSerializer(CustomModelSerializer):
         return 'External Link'
     
 class ActivitySerializer(CustomModelSerializer):
+    geojson = serializers.SerializerMethodField()
     
     class Meta:
         model = Activity
@@ -115,7 +118,7 @@ class ActivitySerializer(CustomModelSerializer):
             'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
             'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
             'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
-            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id'
+            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'geojson'
         ]
         read_only_fields = ['id', 'user']
 
@@ -125,9 +128,33 @@ class ActivitySerializer(CustomModelSerializer):
             public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
             representation['gpx_file'] = f"{public_url}/media/{instance.gpx_file.name}"
         return representation
-
     
+    def get_geojson(self, obj):
+        if not obj.gpx_file:
+            return None
+
+        try:
+            with obj.gpx_file.open('r') as f:
+                gpx = gpxpy.parse(f)
+
+            features = []
+            for track in gpx.tracks:
+                for segment in track.segments:
+                    coords = [(pt.longitude, pt.latitude) for pt in segment.points]
+                    if not coords:
+                        continue
+                    features.append(geojson.Feature(
+                        geometry=geojson.LineString(coords),
+                        properties={"name": track.name or "GPX Track"}
+                    ))
+
+            return geojson.FeatureCollection(features)
+
+        except Exception as e:
+            return {"error": str(e)}
+
 class VisitSerializer(serializers.ModelSerializer):
+
     activities = ActivitySerializer(many=True, read_only=True, required=False)
 
     class Meta:

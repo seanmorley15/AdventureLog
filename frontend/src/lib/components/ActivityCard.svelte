@@ -11,6 +11,8 @@
 	export let trails: Trail[];
 	export let visit: Visit | TransportationVisit;
 
+	export let readOnly: boolean = false;
+
 	$: trail = activity.trail ? trails.find((t) => t.id === activity.trail) : null;
 
 	console.log(activity.trail, trails, trail);
@@ -75,12 +77,14 @@
 			</div>
 		</div>
 
-		<button
-			class="btn btn-error btn-xs tooltip tooltip-top ml-2"
-			data-tip="Delete Activity"
-			on:click={() => deleteActivity(visit.id, activity.id)}
-		>
-			<TrashIcon class="w-3 h-3" />
-		</button>
+		{#if !readOnly}
+			<button
+				class="btn btn-error btn-xs tooltip tooltip-top ml-2"
+				data-tip="Delete Activity"
+				on:click={() => deleteActivity(visit.id, activity.id)}
+			>
+				<TrashIcon class="w-3 h-3" />
+			</button>
+		{/if}
 	</div>
 </div>
