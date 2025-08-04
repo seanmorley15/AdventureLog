@@ -1,5 +1,12 @@
 <script lang="ts">
-	import type { Collection, StravaActivity, Trail, Activity } from '$lib/types';
+	import type {
+		Collection,
+		StravaActivity,
+		Trail,
+		Activity,
+		Visit,
+		TransportationVisit
+	} from '$lib/types';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { t } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
@@ -25,6 +32,7 @@
 	import FileIcon from '~icons/mdi/file';
 	import CloseIcon from '~icons/mdi/close';
 	import StravaActivityCard from '../StravaActivityCard.svelte';
+	import ActivityCard from '../ActivityCard.svelte';
 
 	// Props
 	export let collection: Collection | null = null;
@@ -41,24 +49,6 @@
 	const dispatch = createEventDispatcher();
 
 	// Types
-	type Visit = {
-		id: string;
-		start_date: string;
-		end_date: string;
-		notes: string;
-		timezone: string | null;
-		activities?: Activity[];
-	};
-
-	type TransportationVisit = {
-		id: string;
-		start_date: string;
-		end_date: string;
-		notes: string;
-		start_timezone: string;
-		end_timezone: string;
-		activities?: Activity[];
-	};
 
 	// Component state
 	let allDay: boolean = false;
@@ -90,8 +80,19 @@
 		elevation_loss: null as number | null,
 		start_date: '',
 		calories: null as number | null,
-		notes: '',
-		gpx_file: null as File | null
+		gpx_file: null as File | null,
+		trail: null as string | null,
+		elev_high: null as number | null,
+		elev_low: null as number | null,
+		rest_time: null as number | null,
+		average_speed: null as number | null,
+		max_speed: null as number | null,
+		average_cadence: null as number | null,
+		start_lat: null as number | null,
+		start_lng: null as number | null,
+		end_lat: null as number | null,
+		end_lng: null as number | null,
+		timezone: undefined as string | undefined
 	};
 
 	// Activity types for dropdown
@@ -422,8 +423,19 @@
 			elevation_loss: null,
 			start_date: '',
 			calories: null,
-			notes: '',
-			gpx_file: null
+			gpx_file: null,
+			trail: null,
+			elev_high: null,
+			elev_low: null,
+			rest_time: null,
+			average_speed: null,
+			max_speed: null,
+			average_cadence: null,
+			start_lat: null,
+			start_lng: null,
+			end_lat: null,
+			end_lng: null,
+			timezone: undefined
 		};
 	}
 
@@ -480,8 +492,29 @@
 			if (activityForm.elevation_loss)
 				formData.append('elevation_loss', activityForm.elevation_loss.toString());
 			if (activityForm.start_date)
-				formData.append('start_date', new Date(activityForm.start_date).toISOString());
+				formData.append('start_date', formatUTCDate(activityForm.start_date));
+
 			if (activityForm.calories) formData.append('calories', activityForm.calories.toString());
+			if (activityForm.trail) formData.append('trail', activityForm.trail);
+			if (activityForm.elev_high) formData.append('elev_high', activityForm.elev_high.toString());
+			if (activityForm.elev_low) formData.append('elev_low', activityForm.elev_low.toString());
+			if (activityForm.rest_time) formData.append('rest_time', activityForm.rest_time.toString());
+			if (activityForm.average_speed)
+				formData.append('average_speed', activityForm.average_speed.toString());
+			if (activityForm.max_speed) formData.append('max_speed', activityForm.max_speed.toString());
+			if (activityForm.average_cadence)
+				formData.append('average_cadence', activityForm.average_cadence.toString());
+			if (activityForm.start_lat !== null)
+				formData.append('start_lat', activityForm.start_lat.toString());
+			if (activityForm.start_lng !== null)
+				formData.append('start_lng', activityForm.start_lng.toString());
+			if (activityForm.end_lat !== null)
+				formData.append('end_lat', activityForm.end_lat.toString());
+			if (activityForm.end_lng !== null)
+				formData.append('end_lng', activityForm.end_lng.toString());
+			if (activityForm.timezone) {
+				formData.append('timezone', activityForm.timezone);
+			}
 
 			// Add GPX file if provided
 			if (activityForm.gpx_file) {
@@ -546,28 +579,28 @@
 			});
 
 			if (response.ok) {
-				// Update the visit's activities array
-				if (visits) {
-					visits = visits.map((visit) => {
-						if (visit.id === visitId) {
-							return {
-								...visit,
-								activities: (visit.activities || []).filter((a) => a.id !== activityId)
-							};
-						}
-						return visit;
-					});
-				}
-
-				// Update the location with new visits data
+				// Refetch the location data to get the updated visits with correct IDs
 				if (type === 'location' && objectId) {
-					await fetch(`/api/locations/${objectId}/`, {
-						method: 'PATCH',
-						headers: {
-							'Content-Type': 'application/json'
-						},
-						body: JSON.stringify({ visits })
-					});
+					const locationResponse = await fetch(`/api/locations/${objectId}/`);
+					if (locationResponse.ok) {
+						const updatedLocation = await locationResponse.json();
+						visits = updatedLocation.visits;
+					} else {
+						console.error('Failed to refetch location data:', await locationResponse.text());
+					}
+				} else {
+					// Fallback: Update the visit's activities array locally
+					if (visits) {
+						visits = visits.map((visit) => {
+							if (visit.id === visitId) {
+								return {
+									...visit,
+									activities: (visit.activities || []).filter((a) => a.id !== activityId)
+								};
+							}
+							return visit;
+						});
+					}
 				}
 			} else {
 				console.error('Failed to delete activity:', await response.text());
@@ -582,10 +615,9 @@
 	async function handleStravaActivityImport(event: CustomEvent<StravaActivity>, visitId: string) {
 		const stravaActivity = event.detail;
 
-		try {
-			// Open GPX export in new tab
-			window.open(stravaActivity.export_gpx, '_blank');
+		console.log('Handling Strava activity import:', stravaActivity);
 
+		try {
 			// Store the pending import and show upload form
 			pendingStravaImport[visitId] = stravaActivity;
 			pendingStravaImport = { ...pendingStravaImport };
@@ -604,8 +636,19 @@
 				elevation_loss: stravaActivity.estimated_elevation_loss || null,
 				start_date: stravaActivity.start_date ? stravaActivity.start_date.substring(0, 16) : '',
 				calories: stravaActivity.calories || null,
-				notes: '',
-				gpx_file: null
+				gpx_file: null,
+				trail: null,
+				elev_high: stravaActivity.elev_high || null,
+				elev_low: stravaActivity.elev_low || null,
+				rest_time: stravaActivity.rest_time || null,
+				average_speed: stravaActivity.average_speed || null,
+				max_speed: stravaActivity.max_speed || null,
+				average_cadence: stravaActivity.average_cadence || null,
+				start_lat: stravaActivity.start_latlng ? stravaActivity.start_latlng[0] : null,
+				start_lng: stravaActivity.start_latlng ? stravaActivity.start_latlng[1] : null,
+				end_lat: stravaActivity.end_latlng ? stravaActivity.end_latlng[0] : null,
+				end_lng: stravaActivity.end_latlng ? stravaActivity.end_latlng[1] : null,
+				timezone: stravaActivity.timezone || undefined
 			};
 
 			// Show the upload form
@@ -773,13 +816,17 @@
 						{#if type === 'transportation'}
 							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 								<div>
-									<label class="label-text text-sm font-medium">Departure Timezone</label>
+									<label class="label-text text-sm font-medium" for="departure-timezone-selector"
+										>Departure Timezone</label
+									>
 									<div class="mt-1">
 										<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 									</div>
 								</div>
 								<div>
-									<label class="label-text text-sm font-medium">Arrival Timezone</label>
+									<label class="label-text text-sm font-medium" for="arrival-timezone-selector"
+										>Arrival Timezone</label
+									>
 									<div class="mt-1">
 										<TimezoneSelector bind:selectedTimezone={selectedEndTimezone} />
 									</div>
@@ -787,7 +834,9 @@
 							</div>
 						{:else}
 							<div>
-								<label class="label-text text-sm font-medium">Timezone</label>
+								<label class="label-text text-sm font-medium" for="timezone-selector"
+									>Timezone</label
+								>
 								<div class="mt-1">
 									<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 								</div>
@@ -798,8 +847,9 @@
 						<div class="flex flex-wrap gap-6">
 							<div class="flex items-center gap-3">
 								<ClockIcon class="w-4 h-4 text-base-content/70" />
-								<label class="label-text text-sm font-medium">All Day</label>
+								<label class="label-text text-sm font-medium" for="all-day-toggle">All Day</label>
 								<input
+									id="all-day-toggle"
 									type="checkbox"
 									class="toggle toggle-{typeConfig.color} toggle-sm"
 									bind:checked={allDay}
@@ -810,9 +860,11 @@
 							{#if collection?.start_date && collection?.end_date}
 								<div class="flex items-center gap-3">
 									<CalendarIcon class="w-4 h-4 text-base-content/70" />
-									<label class="label-text text-sm font-medium">Constrain to Collection Dates</label
+									<label class="label-text text-sm font-medium" for="constrain-dates"
+										>Constrain to Collection Dates</label
 									>
 									<input
+										id="constrain-dates"
 										type="checkbox"
 										class="toggle toggle-{typeConfig.color} toggle-sm"
 										bind:checked={constrainDates}
@@ -830,11 +882,12 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<!-- Start Date -->
 						<div>
-							<label class="label-text text-sm font-medium">
+							<label class="label-text text-sm font-medium" for="start-date-input">
 								{typeConfig.startLabel}
 							</label>
 							{#if allDay}
 								<input
+									id="start-date-input"
 									type="date"
 									class="input input-bordered w-full mt-1"
 									bind:value={localStartDate}
@@ -844,6 +897,7 @@
 								/>
 							{:else}
 								<input
+									id="start-date-input"
 									type="datetime-local"
 									class="input input-bordered w-full mt-1"
 									bind:value={localStartDate}
@@ -857,11 +911,12 @@
 						<!-- End Date -->
 						{#if localStartDate}
 							<div>
-								<label class="label-text text-sm font-medium">
+								<label class="label-text text-sm font-medium" for="end-date-input">
 									{typeConfig.endLabel}
 								</label>
 								{#if allDay}
 									<input
+										id="end-date-input"
 										type="date"
 										class="input input-bordered w-full mt-1"
 										bind:value={localEndDate}
@@ -871,6 +926,7 @@
 									/>
 								{:else}
 									<input
+										id="end-date-input"
 										type="datetime-local"
 										class="input input-bordered w-full mt-1"
 										bind:value={localEndDate}
@@ -886,8 +942,9 @@
 					<!-- Notes (Location only) -->
 					{#if type === 'location'}
 						<div class="mt-4">
-							<label class="label-text text-sm font-medium">Notes</label>
+							<label class="label-text text-sm font-medium" for="visit-notes">Notes</label>
 							<textarea
+								id="visit-notes"
 								class="textarea textarea-bordered w-full mt-1"
 								rows="3"
 								placeholder="Add notes about this visit..."
@@ -1071,16 +1128,33 @@
 														>
 															<div class="flex items-center gap-2 mb-2">
 																<FileIcon class="w-4 h-4 text-warning" />
-																<label class="label-text font-medium text-warning"
-																	>GPX File Required *</label
+																<label
+																	class="label-text font-medium text-warning"
+																	for="gpx-file-{visit.id}">GPX File Required *</label
 																>
 															</div>
-															<input
-																type="file"
-																accept=".gpx"
-																class="file-input file-input-bordered file-input-warning w-full"
-																on:change={handleGpxFileChange}
-															/>
+															<div class="flex gap-2">
+																<input
+																	id="gpx-file-{visit.id}"
+																	type="file"
+																	accept=".gpx"
+																	class="file-input file-input-bordered file-input-warning flex-1"
+																	on:change={handleGpxFileChange}
+																/>
+																<button
+																	type="button"
+																	class="btn btn-warning btn-sm gap-1"
+																	on:click={() => {
+																		const stravaActivity = pendingStravaImport[visit.id];
+																		if (stravaActivity && stravaActivity.export_gpx) {
+																			window.open(stravaActivity.export_gpx, '_blank');
+																		}
+																	}}
+																>
+																	<UploadIcon class="w-3 h-3" />
+																	Download GPX
+																</button>
+															</div>
 															<div class="text-xs text-warning/80 mt-1">
 																Upload the GPX file that was just downloaded to complete the Strava
 																import
@@ -1091,8 +1165,12 @@
 													<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 														<!-- Activity Name -->
 														<div class="md:col-span-2">
-															<label class="label-text text-xs font-medium">Activity Name *</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="activity-name-{visit.id}">Activity Name *</label
+															>
 															<input
+																id="activity-name-{visit.id}"
 																type="text"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="Morning Run"
@@ -1103,8 +1181,12 @@
 
 														<!-- Activity Type -->
 														<div>
-															<label class="label-text text-xs font-medium">Type</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="activity-type-{visit.id}">Type</label
+															>
 															<select
+																id="activity-type-{visit.id}"
 																class="select select-bordered select-sm w-full mt-1"
 																bind:value={activityForm.type}
 																disabled={!!pendingStravaImport[visit.id]}
@@ -1117,8 +1199,12 @@
 
 														<!-- Sport Type -->
 														<div>
-															<label class="label-text text-xs font-medium">Sport Type</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="sport-type-{visit.id}">Sport Type</label
+															>
 															<input
+																id="sport-type-{visit.id}"
 																type="text"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="Trail Running"
@@ -1129,8 +1215,12 @@
 
 														<!-- Distance -->
 														<div>
-															<label class="label-text text-xs font-medium">Distance (km)</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="distance-{visit.id}">Distance (km)</label
+															>
 															<input
+																id="distance-{visit.id}"
 																type="number"
 																step="0.01"
 																class="input input-bordered input-sm w-full mt-1"
@@ -1142,10 +1232,12 @@
 
 														<!-- Moving Time -->
 														<div>
-															<label class="label-text text-xs font-medium"
-																>Moving Time (HH:MM:SS)</label
+															<label
+																class="label-text text-xs font-medium"
+																for="moving-time-{visit.id}">Moving Time (HH:MM:SS)</label
 															>
 															<input
+																id="moving-time-{visit.id}"
 																type="text"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="0:25:30"
@@ -1156,10 +1248,12 @@
 
 														<!-- Elapsed Time -->
 														<div>
-															<label class="label-text text-xs font-medium"
-																>Elapsed Time (HH:MM:SS)</label
+															<label
+																class="label-text text-xs font-medium"
+																for="elapsed-time-{visit.id}">Elapsed Time (HH:MM:SS)</label
 															>
 															<input
+																id="elapsed-time-{visit.id}"
 																type="text"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="0:30:00"
@@ -1170,8 +1264,12 @@
 
 														<!-- Start Date -->
 														<div>
-															<label class="label-text text-xs font-medium">Start Date</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="start-date-{visit.id}">Start Date</label
+															>
 															<input
+																id="start-date-{visit.id}"
 																type="datetime-local"
 																class="input input-bordered input-sm w-full mt-1"
 																bind:value={activityForm.start_date}
@@ -1181,10 +1279,12 @@
 
 														<!-- Elevation Gain -->
 														<div>
-															<label class="label-text text-xs font-medium"
-																>Elevation Gain (m)</label
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-gain-{visit.id}">Elevation Gain (m)</label
 															>
 															<input
+																id="elevation-gain-{visit.id}"
 																type="number"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
@@ -1195,10 +1295,12 @@
 
 														<!-- Elevation Loss -->
 														<div>
-															<label class="label-text text-xs font-medium"
-																>Elevation Loss (m)</label
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-loss-{visit.id}">Elevation Loss (m)</label
 															>
 															<input
+																id="elevation-loss-{visit.id}"
 																type="number"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
@@ -1209,8 +1311,12 @@
 
 														<!-- Calories -->
 														<div>
-															<label class="label-text text-xs font-medium">Calories</label>
+															<label
+																class="label-text text-xs font-medium"
+																for="calories-{visit.id}">Calories</label
+															>
 															<input
+																id="calories-{visit.id}"
 																type="number"
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="300"
@@ -1219,11 +1325,209 @@
 															/>
 														</div>
 
+														<!-- Elevation High -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-high-{visit.id}">Elevation High (m)</label
+															>
+															<input
+																id="elevation-high-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="2000"
+																bind:value={activityForm.elev_high}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Elevation Low -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-low-{visit.id}">Elevation Low (m)</label
+															>
+															<input
+																id="elevation-low-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="1000"
+																bind:value={activityForm.elev_low}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Rest Time -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="rest-time-{visit.id}">Rest Time (s)</label
+															>
+															<input
+																id="rest-time-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="60"
+																bind:value={activityForm.rest_time}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Start Latitude -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="start-lat-{visit.id}">Start Latitude</label
+															>
+															<input
+																id="start-lat-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="37.7749"
+																bind:value={activityForm.start_lat}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Start Longitude -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="start-lng-{visit.id}">Start Longitude</label
+															>
+															<input
+																id="start-lng-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="-122.4194"
+																bind:value={activityForm.start_lng}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- End Latitude -->
+														<div>
+															<label class="label-text text-xs font-medium" for="end-lat-{visit.id}"
+																>End Latitude</label
+															>
+															<input
+																id="end-lat-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="37.7749"
+																bind:value={activityForm.end_lat}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- End Longitude -->
+														<div>
+															<label class="label-text text-xs font-medium" for="end-lng-{visit.id}"
+																>End Longitude</label
+															>
+															<input
+																id="end-lng-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="-122.4194"
+																bind:value={activityForm.end_lng}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Timezone -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="timezone-{visit.id}">Timezone</label
+															>
+															<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
+														</div>
+
+														<!-- Average Speed -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="average-speed-{visit.id}">Average Speed (m/s)</label
+															>
+															<input
+																id="average-speed-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="3.5"
+																bind:value={activityForm.average_speed}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Max Speed -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="max-speed-{visit.id}">Max Speed (m/s)</label
+															>
+															<input
+																id="max-speed-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="5.0"
+																bind:value={activityForm.max_speed}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Average Cadence -->
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="average-cadence-{visit.id}">Average Cadence (rpm)</label
+															>
+															<input
+																id="average-cadence-{visit.id}"
+																type="number"
+																step="any"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="80"
+																bind:value={activityForm.average_cadence}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+
+														<!-- Trail Selection -->
+														{#if type === 'location' && trails && trails.length > 0}
+															<div class="md:col-span-2">
+																<label
+																	class="label-text text-xs font-medium"
+																	for="trail-select-{visit.id}">Trail</label
+																>
+																<select
+																	id="trail-select-{visit.id}"
+																	class="select select-bordered select-sm w-full mt-1"
+																	bind:value={activityForm.trail}
+																>
+																	<option value="">Select a trail</option>
+																	{#each trails as trail (trail.id)}
+																		<option value={trail.id}>{trail.name}</option>
+																	{/each}
+																</select>
+															</div>
+														{/if}
+
 														<!-- GPX File (for manual uploads) -->
 														{#if !pendingStravaImport[visit.id]}
 															<div class="md:col-span-2">
-																<label class="label-text text-xs font-medium">GPX File</label>
+																<label
+																	class="label-text text-xs font-medium"
+																	for="gpx-file-manual-{visit.id}">GPX File</label
+																>
 																<input
+																	id="gpx-file-manual-{visit.id}"
 																	type="file"
 																	accept=".gpx"
 																	class="file-input file-input-bordered file-input-sm w-full mt-1"
@@ -1280,67 +1584,13 @@
 
 												<div class="space-y-2">
 													{#each visit.activities as activity (activity.id)}
-														<div class="bg-base-200/50 p-3 rounded-lg">
-															<div class="flex items-start justify-between">
-																<div class="flex-1 min-w-0">
-																	<div class="flex items-center gap-2 mb-1">
-																		<RunFastIcon class="w-3 h-3 text-success flex-shrink-0" />
-																		<h5 class="font-medium text-sm truncate">{activity.name}</h5>
-																		<span class="badge badge-outline badge-xs">{activity.type}</span
-																		>
-																	</div>
-
-																	<div class="text-xs text-base-content/70 space-y-1">
-																		{#if activity.distance}
-																			<div class="flex items-center gap-4">
-																				<span>Distance: {activity.distance} km</span>
-																				{#if activity.moving_time}
-																					<span>Time: {activity.moving_time}</span>
-																				{/if}
-																			</div>
-																		{/if}
-
-																		{#if activity.elevation_gain || activity.elevation_loss}
-																			<div class="flex items-center gap-4">
-																				{#if activity.elevation_gain}
-																					<span>↗ {activity.elevation_gain}m</span>
-																				{/if}
-																				{#if activity.elevation_loss}
-																					<span>↘ {activity.elevation_loss}m</span>
-																				{/if}
-																			</div>
-																		{/if}
-
-																		{#if activity.start_date}
-																			<div>
-																				Started: {new Date(activity.start_date).toLocaleString()}
-																			</div>
-																		{/if}
-
-																		{#if activity.gpx_file}
-																			<div class="flex items-center gap-1">
-																				<FileIcon class="w-3 h-3" />
-																				<a
-																					href={activity.gpx_file}
-																					target="_blank"
-																					class="link link-primary"
-																				>
-																					View GPX
-																				</a>
-																			</div>
-																		{/if}
-																	</div>
-																</div>
-
-																<button
-																	class="btn btn-error btn-xs tooltip tooltip-top ml-2"
-																	data-tip="Delete Activity"
-																	on:click={() => deleteActivity(visit.id, activity.id)}
-																>
-																	<TrashIcon class="w-3 h-3" />
-																</button>
-															</div>
-														</div>
+														<ActivityCard
+															{activity}
+															{trails}
+															{visit}
+															on:delete={(event) =>
+																deleteActivity(event.detail.visitId, event.detail.activityId)}
+														/>
 													{/each}
 												</div>
 											</div>

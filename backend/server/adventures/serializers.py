@@ -107,7 +107,6 @@ class TrailSerializer(CustomModelSerializer):
         return 'External Link'
     
 class ActivitySerializer(CustomModelSerializer):
-    trail = TrailSerializer(read_only=True)
     
     class Meta:
         model = Activity

@@ -387,7 +387,7 @@ export type Activity = {
 	id: string;
 	user: string;
 	visit: string;
-	trail: Trail | null;
+	trail: string | null;
 	gpx_file: string | null;
 	name: string;
 	type: string;
@@ -412,4 +412,23 @@ export type Activity = {
 	end_lat: number | null;
 	end_lng: number | null;
 	external_service_id: string | null;
+};
+
+export type Visit = {
+	id: string;
+	start_date: string;
+	end_date: string;
+	notes: string;
+	timezone: string | null;
+	activities?: Activity[];
+};
+
+export type TransportationVisit = {
+	id: string;
+	start_date: string;
+	end_date: string;
+	notes: string;
+	start_timezone: string;
+	end_timezone: string;
+	activities?: Activity[];
 };
