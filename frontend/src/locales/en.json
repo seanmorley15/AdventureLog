@@ -799,5 +799,10 @@
     "authorization_error": "Error redirecting to strava authorization URL",
     "disconnected": "Successfully disconnected from Strava",
     "disconnect_error": "Error disconnecting from Strava"
+  },
+  "wanderer": {
+    "wanderer_integration_desc": "Connect to Wanderer to easily import and view your trails in locations",
+    "connection_error": "Error connecting to Wanderer",
+    "connected": "Successfully connected to Wanderer"
   }
 }

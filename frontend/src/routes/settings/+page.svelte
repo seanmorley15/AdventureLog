@@ -28,6 +28,7 @@
 	let googleMapsEnabled = data.props.googleMapsEnabled;
 	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
 	let stravaUserEnabled = data.props.stravaUserEnabled;
+	let wandererEnabled = data.props.wandererEnabled;
 	let activeSection: string = 'profile';
 
 	// Initialize activeSection from URL on mount
@@ -53,6 +54,12 @@
 		api_key: '',
 		id: '',
 		copy_locally: true
+	};
+
+	let newWandererIntegration = {
+		server_url: '',
+		username: '',
+		password: ''
 	};
 
 	let isMFAModalOpen: boolean = false;
@@ -319,6 +326,39 @@
 			stravaUserEnabled = false;
 		} else {
 			addToast('error', $t('strava.disconnect_error'));
+		}
+	}
+
+	async function wandererDisconnect() {
+		const res = await fetch('/api/integrations/wanderer/disable/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			addToast('success', $t('wanderer.disconnected'));
+			wandererEnabled = false;
+		} else {
+			addToast('error', $t('wanderer.disconnect_error'));
+		}
+	}
+
+	async function wandererConnect() {
+		const res = await fetch('/api/integrations/wanderer/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(newWandererIntegration)
+		});
+		if (res.ok) {
+			addToast('success', $t('wanderer.connected'));
+			wandererEnabled = true;
+			newWandererIntegration = { server_url: '', username: '', password: '' };
+		} else {
+			const data = await res.json();
+			addToast('error', $t('wanderer.connection_error'));
 		}
 	}
 </script>
@@ -1054,10 +1094,10 @@
 									<div>
 										<h3 class="text-xl font-bold">Wanderer</h3>
 										<p class="text-sm text-base-content/70">
-											{$t('strava.strava_integration_desc')}
+											{$t('wanderer.wanderer_integration_desc')}
 										</p>
 									</div>
-									{#if stravaGlobalEnabled && stravaUserEnabled}
+									{#if wandererEnabled}
 										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
 									{:else}
 										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
@@ -1065,25 +1105,56 @@
 								</div>
 
 								<!-- Content based on integration status -->
-								{#if !stravaGlobalEnabled}
-									<!-- Strava not enabled globally -->
-									<div class="text-center">
-										<p class="text-base-content/70 mb-4">
-											{$t('strava.not_enabled') ||
-												'Strava integration is not enabled on this instance.'}
-										</p>
-									</div>
-								{:else if !stravaUserEnabled && stravaGlobalEnabled}
-									<!-- Globally enabled but user not connected -->
-									<div class="text-center">
-										<button class="btn btn-primary" on:click={stravaAuthorizeRedirect}>
-											🔗 {$t('strava.connect_account')}
+								{#if !wandererEnabled}
+									<!-- login form with server url username and password -->
+									<div class="space-y-4">
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Server URL</span>
+											</label>
+											<input
+												type="url"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="https://wanderer.example.com"
+												bind:value={newWandererIntegration.server_url}
+											/>
+										</div>
+
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Username</span>
+											</label>
+											<input
+												type="text"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your username"
+												bind:value={newWandererIntegration.username}
+											/>
+										</div>
+
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Password</span>
+											</label>
+											<input
+												type="password"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your password"
+												bind:value={newWandererIntegration.password}
+											/>
+										</div>
+
+										<button class="btn btn-primary w-full" on:click={wandererConnect}>
+											🔗 Connect to Wanderer
 										</button>
 									</div>
-								{:else if stravaGlobalEnabled && stravaUserEnabled}
+								{:else}
 									<!-- User connected - show management options -->
 									<div class="text-center">
-										<button class="btn btn-error" on:click={stravaDisconnect}>
+										<button class="btn btn-error" on:click={wandererDisconnect}>
 											❌ {$t('strava.disconnect')}
 										</button>
 									</div>
@@ -1097,7 +1168,7 @@
 												📖 {$t('immich.need_help')}
 												<a
 													class="link link-primary"
-													href="https://adventurelog.app/docs/configuration/strava_integration.html"
+													href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
 													target="_blank">{$t('navbar.documentation')}</a
 												>
 											</p>
