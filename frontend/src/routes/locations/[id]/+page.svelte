@@ -21,6 +21,7 @@
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 	import { getBasemapUrl, isAllDay } from '$lib';
 	import ActivityCard from '$lib/components/ActivityCard.svelte';
+	import TrailCard from '$lib/components/TrailCard.svelte';
 
 	let geojson: any;
 
@@ -504,33 +505,10 @@
 							<h2 class="card-title text-2xl mb-6">🥾 {$t('adventures.trails')}</h2>
 							<div class="grid gap-4">
 								{#each adventure.trails as trail}
-									<div class="card bg-base-100 shadow">
-										<div class="card-body p-4">
-											<div class="flex items-start justify-between">
-												<div class="flex-1">
-													<h3 class="font-bold text-lg">{trail.name}</h3>
-													<div class="flex items-center gap-2 mt-2">
-														{#if trail.provider}
-															<span class="badge badge-outline badge-sm">{trail.provider}</span>
-														{/if}
-														<span class="text-sm opacity-70">
-															Created: {new Date(trail.created_at).toLocaleDateString()}
-														</span>
-													</div>
-												</div>
-												{#if trail.link}
-													<a
-														href={trail.link}
-														target="_blank"
-														rel="noopener noreferrer"
-														class="btn btn-sm btn-primary"
-													>
-														🔗 View Trail
-													</a>
-												{/if}
-											</div>
-										</div>
-									</div>
+									<TrailCard
+										{trail}
+										measurementSystem={data.user?.measurement_system || 'metric'}
+									/>
 								{/each}
 							</div>
 						</div>
