@@ -92,10 +92,23 @@ class CategorySerializer(serializers.ModelSerializer):
 class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
     wanderer_data = serializers.SerializerMethodField()
+    wanderer_link = serializers.SerializerMethodField()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._wanderer_integration_cache = {}
+    
     class Meta:
         model = Trail
-        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data']
+        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data', 'wanderer_link']
         read_only_fields = ['id', 'created_at', 'user', 'provider']
+
+    def _get_wanderer_integration(self, user):
+        """Cache wanderer integration to avoid multiple database queries"""
+        if user.id not in self._wanderer_integration_cache:
+            from integrations.models import WandererIntegration
+            self._wanderer_integration_cache[user.id] = WandererIntegration.objects.filter(user=user).first()
+        return self._wanderer_integration_cache[user.id]
 
     def get_provider(self, obj):
         if obj.wanderer_id:
@@ -116,23 +129,39 @@ class TrailSerializer(CustomModelSerializer):
         if not obj.wanderer_id:
             return None
         
+        # Use cached integration
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+        
         # Fetch the Wanderer trail data
-        from integrations.models import WandererIntegration
         from integrations.wanderer_services import fetch_trail_by_id
         try:
-            integration = WandererIntegration.objects.filter(user=obj.user).first()
-            if not integration:
-                return None
-            
-            # Assuming there's a method to fetch trail data by ID
             trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
             if not trail_data:
                 return None
-            obj.wanderer_data = trail_data
+            
+            # Cache the trail data and link on the object to avoid refetching
+            obj._wanderer_data = trail_data
+            base_url = integration.server_url.rstrip('/')
+            obj._wanderer_link = f"{base_url}/trails/{obj.wanderer_id}"
+            
             return trail_data
         except Exception as e:
-            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}")
+            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}: {e}")
             return None
+    
+    def get_wanderer_link(self, obj):
+        if not obj.wanderer_id:
+            return None
+        
+        # Use cached integration
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+        
+        base_url = integration.server_url.rstrip('/')
+        return f"{base_url}/trail/view/@{integration.username}/{obj.wanderer_id}"
             
     
 class ActivitySerializer(CustomModelSerializer):

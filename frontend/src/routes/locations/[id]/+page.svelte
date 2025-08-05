@@ -119,6 +119,7 @@
 	}
 
 	export let data: PageData;
+	let measurementSystem = data.user?.measurement_system || 'metric';
 	console.log(data);
 
 	let adventure: AdditionalLocation;
@@ -175,7 +176,7 @@
 	}
 
 	function getTotalDistance(adventure: AdditionalLocation) {
-		return adventure.visits.reduce(
+		const totalMeters = adventure.visits.reduce(
 			(total, visit) =>
 				total +
 				(visit.activities
@@ -183,10 +184,14 @@
 					: 0),
 			0
 		);
+
+		// Convert meters to km, then to miles if using imperial system
+		const totalKm = totalMeters / 1000;
+		return measurementSystem === 'imperial' ? totalKm * 0.621371 : totalKm;
 	}
 
 	function getTotalElevationGain(adventure: AdditionalLocation) {
-		return adventure.visits.reduce(
+		const totalMeters = adventure.visits.reduce(
 			(total, visit) =>
 				total +
 				(visit.activities
@@ -194,6 +199,9 @@
 					: 0),
 			0
 		);
+
+		// Convert to feet if using imperial system
+		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
 	}
 
 	async function saveEdit(event: CustomEvent<AdditionalLocation>) {
@@ -860,7 +868,9 @@
 									<div class="stat">
 										<div class="stat-title">Total Distance</div>
 										<div class="stat-value text-xl">
-											{getTotalDistance(adventure).toFixed(1)} km
+											{getTotalDistance(adventure).toFixed(1)}
+											{#if measurementSystem === 'imperial'}mi
+											{:else}km{/if}
 										</div>
 									</div>
 								{/if}
@@ -868,7 +878,9 @@
 									<div class="stat">
 										<div class="stat-title">Total Elevation</div>
 										<div class="stat-value text-xl">
-											{getTotalElevationGain(adventure).toFixed(0)} m
+											{getTotalElevationGain(adventure).toFixed(0)}
+											{#if measurementSystem === 'imperial'}ft
+											{:else}m{/if}
 										</div>
 									</div>
 								{/if}

@@ -140,9 +140,9 @@
 				{/if}
 			</div>
 
-			{#if trail.link}
+			{#if trail.link || trail.wanderer_link}
 				<a
-					href={trail.link}
+					href={trail.wanderer_link || trail.link}
 					target="_blank"
 					rel="noopener noreferrer"
 					class="btn btn-sm btn-primary"
