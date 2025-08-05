@@ -113,8 +113,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
             "is_connected": True,
         })
 
-    @action(detail=False, methods=["get"], url_path='list')
-    def list_trails(self, request):
+    @action(detail=False, methods=["get"], url_path='trails')
+    def trails(self, request):
         inst = self._get_obj()
         
         # Check if we need to prompt for password
@@ -131,9 +131,12 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
                 })
             raise ValidationError({"detail": str(e)})
 
-        url = f"{inst.server_url.rstrip('/')}/api/v1/list"
+        # Pass along all query parameters except password
+        params = {k: v for k, v in request.query_params.items() if k != "password"}
+        
+        url = f"{inst.server_url.rstrip('/')}/api/v1/trail"
         try:
-            response = session.get(url, timeout=10)
+            response = session.get(url, params=params, timeout=10)
             response.raise_for_status()
         except requests.RequestException as exc:
             raise ValidationError({"detail": f"Error fetching trails: {exc}"})

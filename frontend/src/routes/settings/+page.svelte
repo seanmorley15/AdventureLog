@@ -29,6 +29,7 @@
 	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
 	let stravaUserEnabled = data.props.stravaUserEnabled;
 	let wandererEnabled = data.props.wandererEnabled;
+	let wandererExpired = data.props.wandererExpired;
 	let activeSection: string = 'profile';
 
 	// Initialize activeSection from URL on mount
@@ -359,6 +360,28 @@
 		} else {
 			const data = await res.json();
 			addToast('error', $t('wanderer.connection_error'));
+		}
+	}
+
+	async function wandererRefresh() {
+		if (wandererEnabled) {
+			const res = await fetch(`/api/integrations/wanderer/refresh/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					password: newWandererIntegration.password
+				})
+			});
+			if (res.ok) {
+				addToast('success', $t('wanderer.refreshed'));
+				newWandererIntegration.password = '';
+				wandererExpired = false;
+			} else {
+				addToast('error', $t('wanderer.refresh_error'));
+			}
+			newWandererIntegration.password = '';
 		}
 	}
 </script>
@@ -1103,6 +1126,27 @@
 										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
 									{/if}
 								</div>
+
+								{#if wandererEnabled && wandererExpired}
+									<div class="space-y-4 mb-4">
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Password</span>
+											</label>
+											<input
+												type="password"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your password"
+												bind:value={newWandererIntegration.password}
+											/>
+										</div>
+
+										<button class="btn btn-primary w-full" on:click={wandererRefresh}>
+											🔗 Wanderer Reauth
+										</button>
+									</div>
+								{/if}
 
 								<!-- Content based on integration status -->
 								{#if !wandererEnabled}

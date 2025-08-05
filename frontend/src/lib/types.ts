@@ -433,3 +433,35 @@ export type TransportationVisit = {
 	end_timezone: string;
 	activities?: Activity[];
 };
+
+export type WandererTrail = {
+	id: string;
+	name: string;
+	distance: number;
+	duration: number;
+	elevation_gain: number;
+	elevation_loss: number;
+	author: string;
+	category: string;
+	collectionId: string;
+	collectionName: string;
+	created: string; // ISO 8601 date string
+	date: string;
+	description: string;
+	difficulty: string;
+	external_id: string;
+	external_provider: string;
+	gpx: string;
+	iri: string;
+	lat: number;
+	like_count: number;
+	location: string;
+	lon: number;
+	photos: string[];
+	public: boolean;
+	tags: string[];
+	thumbnail: number;
+	updated: string; // ISO 8601 date string
+	waypoints: string[];
+	expand: any;
+};

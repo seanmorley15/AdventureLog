@@ -2,6 +2,7 @@ import os
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
+from django.utils import timezone
 from integrations.models import ImmichIntegration, StravaToken, WandererIntegration
 from django.conf import settings
 
@@ -17,6 +18,12 @@ class IntegrationView(viewsets.ViewSet):
         strava_integration_global = settings.STRAVA_CLIENT_ID != '' and settings.STRAVA_CLIENT_SECRET != ''
         strava_integration_user = StravaToken.objects.filter(user=request.user).exists()
         wanderer_integration = WandererIntegration.objects.filter(user=request.user).exists()
+        is_wanderer_expired = False
+
+        if wanderer_integration:
+            token_expiry = WandererIntegration.objects.filter(user=request.user).first().token_expiry
+            if token_expiry and token_expiry < timezone.now():
+                is_wanderer_expired = True
 
         return Response(
             {
@@ -26,7 +33,10 @@ class IntegrationView(viewsets.ViewSet):
                     'global': strava_integration_global,
                     'user': strava_integration_user
                 },
-                'wanderer': wanderer_integration
+                'wanderer': {
+                    'exists': wanderer_integration,
+                    'expired': is_wanderer_expired
+                }
             },
             status=status.HTTP_200_OK
         )

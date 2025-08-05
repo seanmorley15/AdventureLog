@@ -82,7 +82,8 @@ export const load: PageServerLoad = async (event) => {
 	let googleMapsEnabled = integrations.google_maps as boolean;
 	let stravaGlobalEnabled = integrations.strava.global as boolean;
 	let stravaUserEnabled = integrations.strava.user as boolean;
-	let wandererEnabled = integrations.wanderer as boolean;
+	let wandererEnabled = integrations.wanderer.exists as boolean;
+	let wandererExpired = integrations.wanderer.expired as boolean;
 
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
@@ -104,7 +105,8 @@ export const load: PageServerLoad = async (event) => {
 			googleMapsEnabled,
 			stravaGlobalEnabled,
 			stravaUserEnabled,
-			wandererEnabled
+			wandererEnabled,
+			wandererExpired
 		}
 	};
 };

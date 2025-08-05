@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, ContentImage, Trail } from '$lib/types';
+	import type { Attachment, ContentImage, Trail, WandererTrail } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -23,6 +23,7 @@
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from '../ImmichSelect.svelte';
+	import WandererCard from '../WandererCard.svelte';
 
 	// Props
 	export let images: ContentImage[] = [];
@@ -60,6 +61,12 @@
 	let editingTrailLink: string = '';
 	let editingTrailWandererId: string = '';
 	let showAddTrailForm: boolean = false;
+	let showWandererForm: boolean = false;
+	let isWandererEnabled: boolean = false;
+	let searchQuery: string = '';
+	let isSearching: boolean = false;
+
+	let wandererFetchedTrails: WandererTrail[] = [];
 
 	// Allowed file types for attachments
 	const allowedFileTypes = [
@@ -395,34 +402,17 @@
 		}
 	}
 
-	// Trail event handlers
-	function validateTrailForm(): boolean {
-		if (!trailName.trim()) {
-			trailError = 'Trail name is required';
-			return false;
-		}
-
-		const hasLink = trailLink.trim() !== '';
-		const hasWandererId = trailWandererId.trim() !== '';
-
-		if (hasLink && hasWandererId) {
-			trailError = 'Cannot have both a link and a Wanderer ID. Provide only one.';
-			return false;
-		}
-
-		if (!hasLink && !hasWandererId) {
-			trailError = 'You must provide either a link or a Wanderer ID.';
-			return false;
-		}
-
-		trailError = '';
-		return true;
-	}
-
 	async function createTrail() {
-		if (!validateTrailForm()) return;
-
 		isTrailLoading = true;
+
+		// if wanderer ID is provided, use it and remove link
+		if (trailWandererId.trim()) {
+			trailLink = '';
+		} else if (!trailLink.trim()) {
+			trailError = $t('adventures.trail_link_required');
+			isTrailLoading = false;
+			return;
+		}
 
 		const trailData = {
 			name: trailName.trim(),
@@ -461,7 +451,6 @@
 	function resetTrailForm() {
 		trailName = '';
 		trailLink = '';
-		trailWandererId = '';
 		trailError = '';
 		showAddTrailForm = false;
 	}
@@ -473,11 +462,79 @@
 		editingTrailWandererId = trail.wanderer_id || '';
 	}
 
+	async function fetchWandererTrails(filter = '') {
+		isSearching = true;
+		try {
+			const url = new URL('/api/integrations/wanderer/trails', window.location.origin);
+			if (filter) {
+				url.searchParams.append('filter', filter);
+			}
+
+			let res = await fetch(url, {
+				method: 'GET'
+			});
+
+			if (res.ok) {
+				let itemsResponse = await res.json();
+				wandererFetchedTrails = itemsResponse.items || [];
+			} else {
+				const errorData = await res.json();
+				addToast('error', errorData.message || 'Failed to fetch Wanderer trails');
+			}
+		} catch (error) {
+			addToast('error', 'Network error while fetching trails');
+		} finally {
+			isSearching = false;
+		}
+	}
+
+	// Updated function to show wanderer form
+	async function doShowWandererForm() {
+		showWandererForm = true;
+		showAddTrailForm = false;
+		await fetchWandererTrails(); // Initial load without filter
+	}
+
+	// Function to handle search
+	async function handleSearch() {
+		if (!searchQuery.trim()) {
+			// If search is empty, fetch all trails
+			await fetchWandererTrails();
+			return;
+		}
+
+		// Create filter string for name search (case-insensitive)
+		const filter = `name~"${searchQuery}"`;
+		await fetchWandererTrails(filter);
+	}
+
+	// Debounced search function (optional - for real-time search)
+	let searchTimeout: string | number | NodeJS.Timeout | undefined;
+	function debouncedSearch() {
+		clearTimeout(searchTimeout);
+		searchTimeout = setTimeout(handleSearch, 300); // 300ms delay
+	}
+
+	// Function to clear search
+	async function clearSearch() {
+		searchQuery = '';
+		await fetchWandererTrails();
+	}
+
+	async function linkWandererTrail(event: CustomEvent<WandererTrail>) {
+		const trail = event.detail;
+		let trailId = trail.id;
+		trailName = trail.name;
+		trailLink = '';
+		trailWandererId = trailId;
+		trailError = '';
+		createTrail();
+	}
+
 	function cancelEditingTrail() {
 		trailToEdit = null;
 		editingTrailName = '';
 		editingTrailLink = '';
-		editingTrailWandererId = '';
 	}
 
 	function validateEditTrailForm(): boolean {
@@ -567,19 +624,28 @@
 	// Lifecycle
 	onMount(async () => {
 		try {
-			const res = await fetch('/api/integrations/immich/');
+			const res = await fetch('/api/integrations');
 
 			if (res.ok) {
 				const data = await res.json();
-				if (data.id) {
+
+				// Check Immich integration
+				if (data.immich) {
 					immichIntegration = true;
-					copyImmichLocally = data.copy_locally || false;
+					// For copyImmichLocally, we might need to fetch specific details if needed
+					// or set a default value since it's not in the new response structure
+					copyImmichLocally = false;
+				}
+
+				// Check Wanderer integration
+				if (data.wanderer && data.wanderer.exists && !data.wanderer.expired) {
+					isWandererEnabled = true;
 				}
 			} else if (res.status !== 404) {
 				addToast('error', $t('immich.integration_fetch_error'));
 			}
 		} catch (error) {
-			console.error('Error checking Immich integration:', error);
+			console.error('Error checking integrations:', error);
 		}
 	});
 </script>
@@ -899,18 +965,32 @@
 						</div>
 						<h2 class="text-xl font-bold">Trails Management</h2>
 					</div>
-					<button
-						class="btn btn-accent btn-sm gap-2"
-						on:click={() => (showAddTrailForm = !showAddTrailForm)}
-					>
-						<PlusIcon class="w-4 h-4" />
-						Add Trail
-					</button>
+					<div class="flex items-center gap-2">
+						<button
+							class="btn btn-accent btn-sm gap-2"
+							on:click={() => {
+								showAddTrailForm = !showAddTrailForm;
+								if (showAddTrailForm) showWandererForm = false;
+							}}
+						>
+							<PlusIcon class="w-4 h-4" />
+							Add Trail
+						</button>
+						<button
+							class="btn btn-accent btn-sm gap-2"
+							on:click={() => {
+								doShowWandererForm();
+							}}
+						>
+							<PlusIcon class="w-4 h-4" />
+							Add Wanderer Trail
+						</button>
+					</div>
 				</div>
 
 				<div class="text-sm text-base-content/60 mb-4">
 					Manage trails associated with this location. Trails can be linked to external services
-					like AllTrails or referenced by Wanderer ID.
+					like AllTrails or link to Wanderer trails.
 				</div>
 
 				<!-- Add Trail Form -->
@@ -930,15 +1010,7 @@
 								bind:value={trailLink}
 								class="input input-bordered"
 								placeholder="External link (e.g., AllTrails, Trailforks)"
-								disabled={isTrailLoading || trailWandererId.trim() !== ''}
-							/>
-							<div class="text-center text-sm text-base-content/60">OR</div>
-							<input
-								type="text"
-								bind:value={trailWandererId}
-								class="input input-bordered"
-								placeholder="Wanderer Trail ID"
-								disabled={isTrailLoading || trailLink.trim() !== ''}
+								disabled={isTrailLoading}
 							/>
 							{#if trailError}
 								<div class="alert alert-error py-2">
@@ -956,12 +1028,102 @@
 								<button
 									class="btn btn-accent btn-sm"
 									class:loading={isTrailLoading}
-									disabled={isTrailLoading ||
-										!trailName.trim() ||
-										(!trailLink.trim() && !trailWandererId.trim())}
+									disabled={isTrailLoading || !trailName.trim() || !trailLink.trim()}
 									on:click={createTrail}
 								>
 									Create Trail
+								</button>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Wanderer Trails Form -->
+				{#if showWandererForm}
+					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
+						<h4 class="font-medium mb-3 text-accent">Add Wanderer Trail</h4>
+						<div class="grid gap-3">
+							{#if isWandererEnabled}
+								<p class="text-sm text-base-content/60 mb-2">
+									Select a trail from your Wanderer account:
+								</p>
+
+								<!-- Search Box -->
+								<div class="relative">
+									<input
+										type="text"
+										placeholder="Search trails by name..."
+										class="input input-bordered w-full pr-20"
+										bind:value={searchQuery}
+										on:input={debouncedSearch}
+										on:keydown={(e) => e.key === 'Enter' && handleSearch()}
+									/>
+									<div class="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+										{#if searchQuery}
+											<button
+												class="btn btn-ghost btn-xs btn-circle"
+												on:click={clearSearch}
+												disabled={isSearching}
+												title="Clear search"
+											>
+												✕
+											</button>
+										{/if}
+										<button
+											class="btn btn-accent btn-xs"
+											class:loading={isSearching}
+											on:click={handleSearch}
+											disabled={isSearching}
+											title="Search"
+										>
+											{#if !isSearching}🔍{/if}
+										</button>
+									</div>
+								</div>
+
+								<!-- Search Status -->
+								{#if searchQuery && !isSearching}
+									<p class="text-xs text-base-content/50">
+										{wandererFetchedTrails.length} trail(s) found for "{searchQuery}"
+									</p>
+								{/if}
+
+								<!-- Trail Cards -->
+								<div class="max-h-96 overflow-y-auto">
+									{#if isSearching}
+										<div class="flex justify-center py-8">
+											<span class="loading loading-spinner loading-md"></span>
+										</div>
+									{:else if wandererFetchedTrails.length === 0}
+										<div class="text-center py-8 text-base-content/60">
+											{#if searchQuery}
+												No trails found matching "{searchQuery}"
+											{:else}
+												No trails available
+											{/if}
+										</div>
+									{:else}
+										{#each wandererFetchedTrails as trail (trail.id)}
+											<WandererCard {trail} on:link={linkWandererTrail} />
+										{/each}
+									{/if}
+								</div>
+							{:else}
+								<p class="text-sm text-base-content/60">
+									Wanderer integration is not enabled or has expired.
+								</p>
+							{/if}
+
+							<div class="flex gap-2 justify-end">
+								<button
+									class="btn btn-ghost btn-sm"
+									on:click={() => {
+										showWandererForm = false;
+										showAddTrailForm = false;
+										searchQuery = ''; // Clear search when closing
+									}}
+								>
+									Close
 								</button>
 							</div>
 						</div>
@@ -994,14 +1156,6 @@
 												class="input input-bordered input-sm"
 												placeholder="External link"
 												disabled={editingTrailWandererId.trim() !== ''}
-											/>
-											<div class="text-center text-xs text-base-content/60">OR</div>
-											<input
-												type="text"
-												bind:value={editingTrailWandererId}
-												class="input input-bordered input-sm"
-												placeholder="Wanderer Trail ID"
-												disabled={editingTrailLink.trim() !== ''}
 											/>
 										</div>
 										<div class="flex gap-2 mt-3">
@@ -1049,11 +1203,7 @@
 											>
 												{trail.link}
 											</a>
-										{:else if trail.wanderer_id}
-											<div class="text-xs text-base-content/60 mb-3 break-all">
-												Wanderer ID: {trail.wanderer_id}
-											</div>
-										{:else}
+										{:else if !trail.wanderer_id}
 											<div class="text-xs text-base-content/40 mb-3 italic">
 												No external link available
 											</div>
@@ -1061,14 +1211,16 @@
 
 										<!-- Trail Controls -->
 										<div class="flex gap-2 justify-end">
-											<button
-												type="button"
-												class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
-												data-tip="Edit Trail"
-												on:click={() => startEditingTrail(trail)}
-											>
-												<EditIcon class="w-3 h-3" />
-											</button>
+											{#if !trail.wanderer_id}
+												<button
+													type="button"
+													class="btn btn-warning btn-xs btn-square tooltip tooltip-top"
+													data-tip="Edit Trail"
+													on:click={() => startEditingTrail(trail)}
+												>
+													<EditIcon class="w-3 h-3" />
+												</button>
+											{/if}
 											<button
 												type="button"
 												class="btn btn-error btn-xs btn-square tooltip tooltip-top"
