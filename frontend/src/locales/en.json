@@ -542,7 +542,9 @@
     "data_override_warning_desc": "Restoring data will completely replace all existing data (that is included \t\t\t\t\t\t\t\t\t\t\t\tin the backup) in your account. This action cannot be undone.",
     "select_backup_file": "Select backup file",
     "data_override_acknowledge": "I acknowledge that this will override all my existing data",
-    "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account."
+    "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account.",
+    "use_imperial": "Use Imperial Units",
+    "use_imperial_desc": "Use imperial units (feet, inches, pounds) instead of metric units"
   },
   "collection": {
     "collection_created": "Collection created successfully!",

@@ -515,23 +515,44 @@
 											accept="image/*"
 										/>
 									</div>
-								</div>
 
-								<div class="form-control">
-									<label class="label cursor-pointer justify-start gap-4">
-										<input
-											type="checkbox"
-											bind:checked={user.public_profile}
-											name="public_profile"
-											class="toggle toggle-primary"
-										/>
-										<div>
-											<span class="label-text font-medium">{$t('auth.public_profile')}</span>
-											<p class="text-sm text-base-content/60">
-												{$t('settings.public_profile_desc')}
-											</p>
-										</div>
-									</label>
+									<div class="form-control">
+										<label class="label cursor-pointer justify-start gap-4">
+											<input
+												type="checkbox"
+												bind:checked={user.public_profile}
+												name="public_profile"
+												class="toggle toggle-primary"
+											/>
+											<div>
+												<span class="label-text font-medium">{$t('auth.public_profile')}</span>
+												<p class="text-sm text-base-content/60">
+													{$t('settings.public_profile_desc')}
+												</p>
+											</div>
+										</label>
+									</div>
+
+									<!-- metric or imperal toggle -->
+									<div class="form-control">
+										<label class="label cursor-pointer justify-start gap-4">
+											<input
+												type="checkbox"
+												checked={user.measurement_system === 'imperial'}
+												name="measurement_system"
+												class="toggle toggle-primary"
+												on:change={() =>
+													(user.measurement_system =
+														user.measurement_system === 'metric' ? 'imperial' : 'metric')}
+											/>
+											<div>
+												<span class="label-text font-medium">{$t('settings.use_imperial')}</span>
+												<p class="text-sm text-base-content/60">
+													{$t('settings.use_imperial_desc')}
+												</p>
+											</div>
+										</label>
+									</div>
 								</div>
 
 								<button class="btn btn-primary btn-wide">
