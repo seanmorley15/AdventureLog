@@ -45,6 +45,7 @@
 	export let visits: (Visit | TransportationVisit)[] | null = null;
 	export let objectId: string;
 	export let trails: Trail[] = [];
+	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 
 	const dispatch = createEventDispatcher();
 
@@ -627,7 +628,7 @@
 				name: stravaActivity.name,
 				type: stravaActivity.type,
 				sport_type: stravaActivity.sport_type || stravaActivity.type,
-				distance: stravaActivity.distance ? stravaActivity.distance / 1000 : null, // Convert to km
+				distance: stravaActivity.distance || null, // Keep in meters
 				moving_time: stravaActivity.moving_time ? formatDuration(stravaActivity.moving_time) : '',
 				elapsed_time: stravaActivity.elapsed_time
 					? formatDuration(stravaActivity.elapsed_time)
@@ -1175,7 +1176,6 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="Morning Run"
 																bind:value={activityForm.name}
-																readonly={!!pendingStravaImport[visit.id]}
 															/>
 														</div>
 
@@ -1588,6 +1588,7 @@
 															{activity}
 															{trails}
 															{visit}
+															{measurementSystem}
 															on:delete={(event) =>
 																deleteActivity(event.detail.visitId, event.detail.activityId)}
 														/>
@@ -1619,6 +1620,7 @@
 																<StravaActivityCard
 																	{activity}
 																	on:import={(event) => handleStravaActivityImport(event, visit.id)}
+																	{measurementSystem}
 																/>
 															</div>
 														{/each}

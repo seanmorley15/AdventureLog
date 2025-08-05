@@ -6,6 +6,7 @@
 	const dispatch = createEventDispatcher();
 
 	export let activity: StravaActivity;
+	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 
 	interface SportConfig {
 		color: string;
@@ -48,10 +49,21 @@
 		});
 	}
 
-	function formatPace(seconds: number): string {
+	function formatPace(seconds: number, system: 'metric' | 'imperial'): string {
 		const minutes = Math.floor(seconds / 60);
 		const secs = Math.floor(seconds % 60);
-		return `${minutes}:${secs.toString().padStart(2, '0')}`;
+		const unit = system === 'metric' ? 'km' : 'mi';
+		return `${minutes}:${secs.toString().padStart(2, '0')}/${unit}`;
+	}
+
+	function convertElevation(
+		meters: number,
+		system: 'metric' | 'imperial'
+	): { value: number; unit: string } {
+		if (system === 'imperial') {
+			return { value: meters * 3.28084, unit: 'ft' };
+		}
+		return { value: meters, unit: 'm' };
 	}
 
 	function handleImportActivity() {
@@ -59,6 +71,21 @@
 	}
 
 	$: typeConfig = getTypeConfig(activity.sport_type);
+	$: distance =
+		measurementSystem === 'metric'
+			? { value: activity.distance_km, unit: 'km' }
+			: { value: activity.distance_miles, unit: 'mi' };
+	$: speed =
+		measurementSystem === 'metric'
+			? { value: activity.average_speed_kmh, unit: 'km/h' }
+			: { value: activity.average_speed_mph, unit: 'mph' };
+	$: maxSpeed =
+		measurementSystem === 'metric'
+			? { value: activity.max_speed_kmh, unit: 'km/h' }
+			: { value: activity.max_speed_mph, unit: 'mph' };
+	$: elevation = convertElevation(activity.total_elevation_gain, measurementSystem);
+	$: paceSeconds =
+		measurementSystem === 'metric' ? activity.pace_per_km_seconds : activity.pace_per_mile_seconds;
 </script>
 
 <div class="card bg-base-50 border border-base-200 hover:shadow-md transition-shadow">
@@ -147,8 +174,8 @@
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">Distance</div>
-				<div class="stat-value text-lg">{activity.distance_km.toFixed(2)}</div>
-				<div class="stat-desc">km ({activity.distance_miles.toFixed(2)} mi)</div>
+				<div class="stat-value text-lg">{distance.value.toFixed(2)}</div>
+				<div class="stat-desc">{distance.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">Time</div>
@@ -157,13 +184,13 @@
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">Avg Speed</div>
-				<div class="stat-value text-lg">{activity.average_speed_kmh.toFixed(1)}</div>
-				<div class="stat-desc">km/h ({activity.average_speed_mph.toFixed(1)} mph)</div>
+				<div class="stat-value text-lg">{speed.value.toFixed(1)}</div>
+				<div class="stat-desc">{speed.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
 				<div class="stat-title text-xs">Elevation</div>
-				<div class="stat-value text-lg">{activity.total_elevation_gain.toFixed(0)}</div>
-				<div class="stat-desc">m gain</div>
+				<div class="stat-value text-lg">{elevation.value.toFixed(0)}</div>
+				<div class="stat-desc">{elevation.unit} gain</div>
 			</div>
 		</div>
 
@@ -197,15 +224,16 @@
 		</div>
 
 		<!-- Footer with pace and max speed -->
-		{#if activity.pace_per_km_seconds}
+		{#if paceSeconds}
 			<div class="flex justify-between items-center mt-3 pt-3 border-t border-base-300">
 				<div class="text-sm">
 					<span class="font-medium">Pace:</span>
-					{formatPace(activity.pace_per_km_seconds)}/km
+					{formatPace(paceSeconds, measurementSystem)}
 				</div>
 				<div class="text-sm">
 					<span class="font-medium">Max Speed:</span>
-					{activity.max_speed_kmh.toFixed(1)} km/h
+					{maxSpeed.value.toFixed(1)}
+					{maxSpeed.unit}
 				</div>
 			</div>
 		{/if}

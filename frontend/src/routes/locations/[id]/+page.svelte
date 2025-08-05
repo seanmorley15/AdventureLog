@@ -613,6 +613,7 @@
 																		readOnly={true}
 																		trails={adventure.trails}
 																		{visit}
+																		measurementSystem={data.user?.measurement_system || 'metric'}
 																	/>
 																{/each}
 															</div>

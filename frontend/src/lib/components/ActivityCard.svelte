@@ -6,10 +6,13 @@
 	import FileIcon from '~icons/mdi/file';
 	import TrashIcon from '~icons/mdi/trash-can';
 	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { getDistance, getElevation } from '$lib';
 
 	export let activity: Activity;
 	export let trails: Trail[];
 	export let visit: Visit | TransportationVisit;
+
+	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 
 	export let readOnly: boolean = false;
 
@@ -35,7 +38,10 @@
 			<div class="text-xs text-base-content/70 space-y-1">
 				{#if activity.distance}
 					<div class="flex items-center gap-4">
-						<span>Distance: {activity.distance} km</span>
+						<span
+							>Distance: {getDistance(measurementSystem, activity.distance)}
+							{measurementSystem === 'imperial' ? 'miles' : 'km'}</span
+						>
 						{#if activity.moving_time}
 							<span>Time: {activity.moving_time}</span>
 						{/if}
@@ -45,10 +51,16 @@
 				{#if activity.elevation_gain || activity.elevation_loss}
 					<div class="flex items-center gap-4">
 						{#if activity.elevation_gain}
-							<span>↗ {activity.elevation_gain}m</span>
+							<span
+								>↗ {getElevation(measurementSystem, activity.elevation_gain)}
+								{measurementSystem === 'imperial' ? 'feet' : 'm'}</span
+							>
 						{/if}
 						{#if activity.elevation_loss}
-							<span>↘ {activity.elevation_loss}m</span>
+							<span
+								>↘ {getElevation(measurementSystem, activity.elevation_loss)}
+								{measurementSystem === 'imperial' ? 'feet' : 'm'}</span
+							>
 						{/if}
 					</div>
 				{/if}

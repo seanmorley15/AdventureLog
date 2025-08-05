@@ -294,6 +294,7 @@
 					steps[2].selected = true;
 				}}
 				on:close={() => close()}
+				measurementSystem={user?.measurement_system || 'metric'}
 			/>
 		{/if}
 	</div>
