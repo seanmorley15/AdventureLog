@@ -20,6 +20,12 @@
 	import SwapHorizontalVariantIcon from '~icons/mdi/swap-horizontal-variant';
 	import LinkIcon from '~icons/mdi/link';
 	import PlusIcon from '~icons/mdi/plus';
+	import MapPin from '~icons/mdi/map-marker';
+	import Clock from '~icons/mdi/clock';
+	import TrendingUp from '~icons/mdi/trending-up';
+	import Calendar from '~icons/mdi/calendar';
+	import Users from '~icons/mdi/account-supervisor';
+	import Camera from '~icons/mdi/camera';
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from '../ImmichSelect.svelte';
@@ -30,6 +36,7 @@
 	export let attachments: Attachment[] = [];
 	export let trails: Trail[] = [];
 	export let itemId: string = '';
+	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 
 	// Component state
 	let fileInput: HTMLInputElement;
@@ -460,6 +467,37 @@
 		editingTrailName = trail.name;
 		editingTrailLink = trail.link || '';
 		editingTrailWandererId = trail.wanderer_id || '';
+	}
+
+	function getDistance(meters: number) {
+		// Convert meters to miles based measurement system
+		if (measurementSystem === 'imperial') {
+			return `${(meters * 0.000621371).toFixed(2)} mi`;
+		} else {
+			return `${(meters / 1000).toFixed(2)} km`;
+		}
+	}
+
+	function getElevation(meters: number) {
+		// Convert meters to feet based measurement system
+		if (measurementSystem === 'imperial') {
+			return `${(meters * 3.28084).toFixed(1)} ft`;
+		} else {
+			return `${meters.toFixed(1)} m`;
+		}
+	}
+
+	function getDuration(minutes: number) {
+		const hours = Math.floor(minutes / 60);
+		const mins = minutes % 60;
+		if (hours > 0) {
+			return `${hours}h ${mins}m`;
+		}
+		return `${mins}m`;
+	}
+
+	function formatDate(dateString: string | number | Date) {
+		return new Date(dateString).toLocaleDateString();
 	}
 
 	async function fetchWandererTrails(filter = '') {
@@ -1178,6 +1216,7 @@
 									<div
 										class="bg-base-50 p-4 rounded-lg border border-base-200 hover:border-base-300 transition-colors"
 									>
+										<!-- Header -->
 										<div class="flex items-center gap-3 mb-3">
 											<div class="p-2 bg-accent/10 rounded">
 												{#if trail.wanderer_id}
@@ -1194,6 +1233,90 @@
 											</div>
 										</div>
 
+										<!-- Wanderer Trail Enhanced Data -->
+										{#if trail.wanderer_data}
+											<div class="mb-4 space-y-3">
+												<!-- Trail Stats -->
+												<div class="grid grid-cols-2 gap-3">
+													<div class="flex items-center gap-2 text-sm">
+														<MapPin class="w-3 h-3 text-base-content/60" />
+														<span class="text-base-content/80">
+															{getDistance(trail.wanderer_data.distance)}
+														</span>
+													</div>
+													{#if trail.wanderer_data.duration > 0}
+														<div class="flex items-center gap-2 text-sm">
+															<Clock class="w-3 h-3 text-base-content/60" />
+															<span class="text-base-content/80">
+																{getDuration(trail.wanderer_data.duration)}
+															</span>
+														</div>
+													{/if}
+													{#if trail.wanderer_data.elevation_gain > 0}
+														<div class="flex items-center gap-2 text-sm">
+															<TrendingUp class="w-3 h-3 text-base-content/60" />
+															<span class="text-base-content/80">
+																{getElevation(trail.wanderer_data.elevation_gain)} gain
+															</span>
+														</div>
+													{/if}
+													<div class="flex items-center gap-2 text-sm">
+														<Calendar class="w-3 h-3 text-base-content/60" />
+														<span class="text-base-content/80">
+															{formatDate(trail.wanderer_data.date)}
+														</span>
+													</div>
+												</div>
+
+												<!-- Difficulty Badge -->
+												{#if trail.wanderer_data.difficulty}
+													<div class="flex items-center gap-2">
+														<span
+															class="badge badge-sm"
+															class:badge-success={trail.wanderer_data.difficulty === 'easy'}
+															class:badge-warning={trail.wanderer_data.difficulty === 'moderate'}
+															class:badge-error={trail.wanderer_data.difficulty === 'hard'}
+														>
+															{trail.wanderer_data.difficulty}
+														</span>
+														{#if trail.wanderer_data.like_count > 0}
+															<div class="flex items-center gap-1 text-xs text-base-content/60">
+																<Users class="w-3 h-3" />
+																{trail.wanderer_data.like_count} likes
+															</div>
+														{/if}
+													</div>
+												{/if}
+
+												<!-- Description -->
+												{#if trail.wanderer_data.description}
+													<div class="text-sm text-base-content/70 leading-relaxed">
+														{@html trail.wanderer_data.description}
+													</div>
+												{/if}
+
+												<!-- Location -->
+												{#if trail.wanderer_data.location}
+													<div class="text-xs text-base-content/60 flex items-center gap-1">
+														<MapPin class="w-3 h-3" />
+														{trail.wanderer_data.location}
+													</div>
+												{/if}
+
+												<!-- Photos indicator -->
+												{#if trail.wanderer_data.photos && trail.wanderer_data.photos.length > 0}
+													<div class="flex items-center gap-1 text-xs text-base-content/60">
+														<Camera class="w-3 h-3" />
+														{trail.wanderer_data.photos.length} photo{trail.wanderer_data.photos
+															.length > 1
+															? 's'
+															: ''}
+													</div>
+												{/if}
+											</div>
+										{/if}
+
+										<!-- External Link -->
 										{#if trail.link}
 											<a
 												href={trail.link}

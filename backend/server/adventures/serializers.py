@@ -9,6 +9,9 @@ from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 import gpxpy
 import geojson
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ContentImageSerializer(CustomModelSerializer):
@@ -88,9 +91,10 @@ class CategorySerializer(serializers.ModelSerializer):
     
 class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
+    wanderer_data = serializers.SerializerMethodField()
     class Meta:
         model = Trail
-        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider']
+        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data']
         read_only_fields = ['id', 'created_at', 'user', 'provider']
 
     def get_provider(self, obj):
@@ -107,6 +111,29 @@ class TrailSerializer(CustomModelSerializer):
             elif 'outdooractive' in obj.link:
                 return 'Outdooractive'
         return 'External Link'
+    
+    def get_wanderer_data(self, obj):
+        if not obj.wanderer_id:
+            return None
+        
+        # Fetch the Wanderer trail data
+        from integrations.models import WandererIntegration
+        from integrations.wanderer_services import fetch_trail_by_id
+        try:
+            integration = WandererIntegration.objects.filter(user=obj.user).first()
+            if not integration:
+                return None
+            
+            # Assuming there's a method to fetch trail data by ID
+            trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
+            if not trail_data:
+                return None
+            obj.wanderer_data = trail_data
+            return trail_data
+        except Exception as e:
+            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}")
+            return None
+            
     
 class ActivitySerializer(CustomModelSerializer):
     geojson = serializers.SerializerMethodField()

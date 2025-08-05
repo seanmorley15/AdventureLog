@@ -109,3 +109,19 @@ def make_wanderer_request(integration: WandererIntegration, endpoint: str, metho
     except requests.RequestException as exc:
         logger.error(f"Error making {method} request to {url}: {exc}")
         raise IntegrationError(f"Error communicating with Wanderer: {exc}")
+    
+# function to fetch a specific trail by ID
+def fetch_trail_by_id(integration: WandererIntegration, trail_id: str, password_for_reauth: str = None):
+    """
+    Fetch a specific trail by its ID from the Wanderer API.
+    
+    Args:
+        integration: WandererIntegration instance
+        trail_id: ID of the trail to fetch
+        password_for_reauth: Password to use if re-authentication is needed
+    
+    Returns:
+        dict: Trail data from the API
+    """
+    response = make_wanderer_request(integration, f"/api/v1/trail/{trail_id}", password_for_reauth=password_for_reauth)
+    return response.json()

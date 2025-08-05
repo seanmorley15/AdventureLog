@@ -329,6 +329,7 @@ export type Trail = {
 	link?: string | null; // Optional link to the trail
 	wanderer_id?: string | null; // Optional ID for integration with Wanderer
 	provider: string; // Provider of the trail data, e.g., 'wanderer', 'external'
+	wanderer_data: WandererTrail | null; // Optional data from Wanderer integration
 };
 
 export type StravaActivity = {
@@ -464,5 +465,4 @@ export type WandererTrail = {
 	thumbnail: number;
 	updated: string; // ISO 8601 date string
 	waypoints: string[];
-	expand: any;
 };

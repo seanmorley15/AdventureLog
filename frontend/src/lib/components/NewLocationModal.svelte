@@ -281,6 +281,7 @@
 					steps[2].selected = false;
 					steps[3].selected = true;
 				}}
+				measurementSystem={user?.measurement_system || 'metric'}
 			/>
 		{/if}
 		{#if steps[3].selected}
