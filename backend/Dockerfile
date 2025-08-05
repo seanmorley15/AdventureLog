@@ -24,7 +24,7 @@ WORKDIR /code
 
 # Install system dependencies (Nginx included)
 RUN apt-get update \
-    && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx supervisor \
+    && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx memcached supervisor \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
