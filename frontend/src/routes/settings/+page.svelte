@@ -1290,6 +1290,14 @@
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
+											<span>🥾 {$t('settings.trails')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>⏱️ {$t('settings.activities')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
 											<span>🌍 {$t('settings.world_travel_visits')}</span>
 											<span>✅</span>
 										</div>

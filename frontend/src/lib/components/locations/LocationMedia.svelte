@@ -1141,9 +1141,11 @@
 											{/if}
 										</div>
 									{:else}
-										{#each wandererFetchedTrails as trail (trail.id)}
-											<WandererCard {trail} on:link={linkWandererTrail} />
-										{/each}
+										<div class="space-y-3">
+											{#each wandererFetchedTrails as trail (trail.id)}
+												<WandererCard {trail} on:link={linkWandererTrail} />
+											{/each}
+										</div>
 									{/if}
 								</div>
 							{:else}
@@ -1154,7 +1156,7 @@
 
 							<div class="flex gap-2 justify-end">
 								<button
-									class="btn btn-ghost btn-sm"
+									class="btn btn-accent btn-sm"
 									on:click={() => {
 										showWandererForm = false;
 										showAddTrailForm = false;

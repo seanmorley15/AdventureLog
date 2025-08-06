@@ -544,7 +544,9 @@
     "data_override_acknowledge": "I acknowledge that this will override all my existing data",
     "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account.",
     "use_imperial": "Use Imperial Units",
-    "use_imperial_desc": "Use imperial units (feet, inches, pounds) instead of metric units"
+    "use_imperial_desc": "Use imperial units (feet, inches, pounds) instead of metric units",
+    "trails": "Trails",
+    "activities": "Activities"
   },
   "collection": {
     "collection_created": "Collection created successfully!",
