@@ -267,8 +267,16 @@ class CollectionInvite(models.Model):
     def __str__(self):
         return f"Invite for {self.invited_user.username} to {self.collection.name}"
     
+    def clean(self):
+        if self.collection.user == self.invited_user:
+            raise ValidationError("You cannot invite yourself to your own collection.")
+        # dont allow if the user is already shared with the collection
+        if self.invited_user in self.collection.shared_with.all():
+            raise ValidationError("This user is already shared with the collection.")
+    
     class Meta:
         verbose_name = "Collection Invite"
+        unique_together = ('collection', 'invited_user')
 
 class Collection(models.Model):
     #id = models.AutoField(primary_key=True)

@@ -61,6 +61,7 @@
 		longitude: number | null;
 		location: string;
 		tags: string[];
+		collections?: string[];
 	} = {
 		name: '',
 		category: null,
@@ -71,7 +72,8 @@
 		latitude: null,
 		longitude: null,
 		location: '',
-		tags: []
+		tags: [],
+		collections: []
 	};
 
 	let user: User | null = null;
@@ -84,6 +86,7 @@
 	export let initialLocation: any = null;
 	export let currentUser: any = null;
 	export let editingLocation: any = null;
+	export let collection: Collection | null = null;
 
 	$: user = currentUser;
 	$: locationToEdit = editingLocation;
@@ -316,6 +319,9 @@
 		}
 		if (location.longitude !== null && typeof location.longitude === 'number') {
 			location.longitude = parseFloat(location.longitude.toFixed(6));
+		}
+		if (collection && collection.id) {
+			location.collections = [collection.id];
 		}
 
 		// either a post or a patch depending on whether we're editing or creating

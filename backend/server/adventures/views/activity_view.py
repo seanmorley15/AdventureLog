@@ -39,12 +39,12 @@ class ActivityViewSet(viewsets.ModelViewSet):
         Set the user when creating an activity.
         """
         visit = serializer.validated_data.get('visit')
-        location = visit.location if visit else None
+        location = visit.location
 
         if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
             raise PermissionDenied("You do not have permission to add an activity to this location.")
 
-        serializer.save(user=self.request.user)
+        serializer.save(user=location.user)
 
     def perform_update(self, serializer):
         instance = serializer.instance

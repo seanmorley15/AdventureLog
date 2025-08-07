@@ -78,6 +78,9 @@ def get_valid_session(integration: WandererIntegration, password_for_reauth: str
     """
     now = django_timezone.now()
     session = requests.Session()
+
+    if not integration:
+        raise IntegrationError("No Wanderer integration found.")
     
     # Check if we have a valid token
     if integration.token and integration.token_expiry and integration.token_expiry > now:

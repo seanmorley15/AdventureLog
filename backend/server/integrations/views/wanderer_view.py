@@ -35,6 +35,9 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
     def create(self, request):
         if WandererIntegration.objects.filter(user=request.user).exists():
             raise ValidationError("Wanderer integration already exists. Use UPDATE instead.")
+        
+        if not request.user.is_authenticated:
+            raise ValidationError("You must be authenticated to create a Wanderer integration.")
 
         server_url = request.data.get("server_url")
         username = request.data.get("username")
@@ -66,6 +69,12 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
 
     def update(self, request, pk=None):
         inst = self._get_obj()
+
+        if not inst:
+            raise NotFound("Wanderer integration not found.")
+        if not self.request.user.is_authenticated:
+            raise ValidationError("You must be authenticated to update the integration.")
+
         changed = False
         for field in ("server_url", "username"):
             if field in request.data and getattr(inst, field) != request.data[field]:
@@ -94,12 +103,21 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["post"])
     def disable(self, request):
         inst = self._get_obj()
+
+        if not inst:
+            raise NotFound("Wanderer integration not found.")
+        if not self.request.user.is_authenticated:
+            raise ValidationError("You must be authenticated to disable the integration.")
+
         inst.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=False, methods=["post"])
     def refresh(self, request):
         inst = self._get_obj()
+
+        if not self.request.user.is_authenticated:
+            raise ValidationError("You must be authenticated to refresh the integration.")
 
         password = request.data.get("password")
         try:
@@ -116,6 +134,9 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
     @action(detail=False, methods=["get"], url_path='trails')
     def trails(self, request):
         inst = self._get_obj()
+
+        if not self.request.user.is_authenticated:
+            raise ValidationError("You must be authenticated to access trails.")
         
         # Check if we need to prompt for password
         password = request.query_params.get("password")  # Allow password via query param if needed

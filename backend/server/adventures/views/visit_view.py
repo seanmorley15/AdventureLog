@@ -21,7 +21,7 @@ class VisitViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         if not user or not user.is_authenticated:
-            return Visit.objects.none()
+            raise PermissionDenied("You must be authenticated to view visits.")
         
         # Build the filter for accessible locations
         location_filter = Q(location__user=user)  # User owns the location

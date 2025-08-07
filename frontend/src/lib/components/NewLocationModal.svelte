@@ -252,6 +252,7 @@
 			<LocationDetails
 				currentUser={user}
 				initialLocation={location}
+				{collection}
 				bind:editingLocation={location}
 				on:back={() => {
 					steps[1].selected = false;
@@ -281,6 +282,7 @@
 				bind:images={location.images}
 				bind:attachments={location.attachments}
 				bind:trails={location.trails}
+				userIsOwner={user?.uuid === location.user?.uuid}
 				on:back={() => {
 					steps[2].selected = false;
 					steps[1].selected = true;

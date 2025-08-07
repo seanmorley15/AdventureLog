@@ -21,8 +21,8 @@ class TrailViewSet(viewsets.ModelViewSet):
         user = self.request.user
         
         if not user or not user.is_authenticated:
-            return Trail.objects.none()
-        
+            raise PermissionDenied("You must be authenticated to view trails.")
+
         # Build the filter for accessible locations
         location_filter = Q(location__user=user)  # User owns the location
         
@@ -37,13 +37,14 @@ class TrailViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         location = serializer.validated_data.get('location')
 
-        # Optional: import this if not in the same file
-        # from adventures.permissions import IsOwnerOrSharedWithFullAccess
-
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
             raise PermissionDenied("You do not have permission to add a trail to this location.")
 
-        serializer.save(user=self.request.user)
+        # dont allow a user who does not own the location to attach a wanderer trail
+        if location.user != self.request.user and serializer.validated_data.get('wanderer_id'):
+            raise PermissionDenied("You cannot attach a wanderer trail to a location you do not own.")
+
+        serializer.save(user=location.user)
 
     def perform_update(self, serializer):
         instance = serializer.instance

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Attachment, ContentImage, Trail, WandererTrail } from '$lib/types';
+	import type { Attachment, ContentImage, Trail, User, WandererTrail } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -37,7 +37,7 @@
 	export let trails: Trail[] = [];
 	export let itemId: string = '';
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
-
+	export let userIsOwner: boolean = false;
 	// Component state
 	let fileInput: HTMLInputElement;
 	let attachmentFileInput: HTMLInputElement;
@@ -1014,15 +1014,17 @@
 							<PlusIcon class="w-4 h-4" />
 							Add Trail
 						</button>
-						<button
-							class="btn btn-accent btn-sm gap-2"
-							on:click={() => {
-								doShowWandererForm();
-							}}
-						>
-							<PlusIcon class="w-4 h-4" />
-							Add Wanderer Trail
-						</button>
+						{#if userIsOwner}
+							<button
+								class="btn btn-accent btn-sm gap-2"
+								on:click={() => {
+									doShowWandererForm();
+								}}
+							>
+								<PlusIcon class="w-4 h-4" />
+								Add Wanderer Trail
+							</button>
+						{/if}
 					</div>
 				</div>
 
