@@ -538,12 +538,17 @@
 			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
 
 			if (index !== -1) {
-				adventures[index] = { ...locationBeingUpdated };
+				// Ensure visits are properly synced
+				adventures[index] = {
+					...adventures[index],
+					...locationBeingUpdated,
+					visits: locationBeingUpdated.visits || adventures[index].visits || []
+				};
 				adventures = adventures; // Trigger reactivity
 			} else {
 				adventures = [{ ...locationBeingUpdated }, ...adventures];
 				if (data.props.adventure) {
-					data.props.adventure.locations = adventures; // Update data.props.adventure.locations as well
+					data.props.adventure.locations = adventures;
 				}
 			}
 		}
@@ -709,7 +714,6 @@
 {#if isLocationModalOpen}
 	<NewLocationModal
 		on:close={() => (isLocationModalOpen = false)}
-		on:save={saveOrCreateAdventure}
 		user={data.user}
 		locationToEdit={adventureToEdit}
 		bind:location={locationBeingUpdated}
