@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { enhance, deserialize } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import LocationCard from '$lib/components/LocationCard.svelte';
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
-	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Location, Category } from '$lib/types';
+	import type { Location } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -15,9 +12,7 @@
 	import Sort from '~icons/mdi/sort';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
 	import Calendar from '~icons/mdi/calendar';
-	import Star from '~icons/mdi/star';
 	import Tag from '~icons/mdi/tag';
 	import Compass from '~icons/mdi/compass';
 	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
@@ -40,10 +35,14 @@
 	// Sync the locationBeingUpdated with the adventures array
 	$: {
 		if (locationBeingUpdated && locationBeingUpdated.id) {
-			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated!.id);
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+
 			if (index !== -1) {
 				adventures[index] = { ...locationBeingUpdated };
 				adventures = adventures; // Trigger reactivity
+			} else {
+				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				data.props.adventures = adventures; // Update data.props.adventures as well
 			}
 		}
 	}
@@ -144,19 +143,6 @@
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function saveOrCreate(event: CustomEvent<Location>) {
-		if (adventures.find((adventure) => adventure.id === event.detail.id)) {
-			adventures = adventures.map((adventure) => {
-				if (adventure.id === event.detail.id) {
-					return event.detail;
-				}
-				return adventure;
-			});
-		} else {
-			adventures = [event.detail, ...adventures];
-		}
-	}
-
 	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
 		isLocationModalOpen = true;
@@ -181,15 +167,8 @@
 </svelte:head>
 
 {#if isLocationModalOpen}
-	<!-- <LocationModal
-		locationToEdit={adventureToEdit}
-		on:close={() => (isLocationModalOpen = false)}
-		on:save={saveOrCreate}
-		user={data.user}
-	/> -->
 	<NewLocationModal
 		on:close={() => (isLocationModalOpen = false)}
-		on:save={saveOrCreate}
 		user={data.user}
 		locationToEdit={adventureToEdit}
 		bind:location={locationBeingUpdated}

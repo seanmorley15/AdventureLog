@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import type { Location, User } from '$lib/types';
+	import type { Collection, Location, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import LocationQuickStart from './locations/LocationQuickStart.svelte';
 	import LocationDetails from './locations/LocationDetails.svelte';
 	import LocationMedia from './locations/LocationMedia.svelte';
 	import LocationVisits from './locations/LocationVisits.svelte';
+
 	export let user: User | null = null;
+	export let collection: Collection | null = null;
+	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 
 	const dispatch = createEventDispatcher();
 
@@ -95,6 +98,12 @@
 		} else {
 			steps[0].selected = false;
 			steps[1].selected = true;
+		}
+		if (initialLatLng) {
+			location.latitude = initialLatLng.lat;
+			location.longitude = initialLatLng.lng;
+			steps[1].selected = true;
+			steps[0].selected = false;
 		}
 	});
 
@@ -296,6 +305,7 @@
 				}}
 				on:close={() => close()}
 				measurementSystem={user?.measurement_system || 'metric'}
+				{collection}
 			/>
 		{/if}
 	</div>

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import type { Location, VisitedRegion } from '$lib/types.js';
@@ -13,11 +12,10 @@
 	import Plus from '~icons/mdi/plus';
 	import Clear from '~icons/mdi/close';
 	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
 	import Pin from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
-	import Category from '~icons/mdi/shape';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	export let data;
 
@@ -39,7 +37,6 @@
 	let newLongitude: number | null = null;
 	let newLatitude: number | null = null;
 
-	let openPopupId: string | null = null;
 	let isPopupOpen = false;
 
 	// Statistics
@@ -65,6 +62,25 @@
 		if (!newMarker) {
 			newLongitude = null;
 			newLatitude = null;
+		}
+	}
+
+	let locationBeingUpdated: Location | undefined = undefined;
+
+	// Sync the locationBeingUpdated with the adventures array
+	$: {
+		if (locationBeingUpdated && locationBeingUpdated.id) {
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+
+			if (index !== -1) {
+				adventures[index] = { ...locationBeingUpdated };
+				adventures = adventures; // Trigger reactivity
+			} else {
+				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				if (data.props.adventures) {
+					data.props.adventures = adventures; // Update data.props.adventure.locations as well
+				}
+			}
 		}
 	}
 
@@ -461,11 +477,12 @@
 </div>
 
 {#if createModalOpen}
-	<LocationModal
+	<NewLocationModal
 		on:close={() => (createModalOpen = false)}
 		on:save={createNewAdventure}
 		{initialLatLng}
 		user={data.user}
+		bind:location={locationBeingUpdated}
 	/>
 {/if}
 

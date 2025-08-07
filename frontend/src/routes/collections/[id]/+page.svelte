@@ -39,13 +39,13 @@
 
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	import LodgingModal from '$lib/components/LodgingModal.svelte';
 	import LodgingCard from '$lib/components/LodgingCard.svelte';
 	import CollectionAllView from '$lib/components/CollectionAllView.svelte';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -530,7 +530,24 @@
 	let noteToEdit: Note | null;
 	let checklistToEdit: Checklist | null;
 
-	let newType: string;
+	let locationBeingUpdated: Location | undefined = undefined;
+
+	// Sync the locationBeingUpdated with the adventures array
+	$: {
+		if (locationBeingUpdated && locationBeingUpdated.id) {
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+
+			if (index !== -1) {
+				adventures[index] = { ...locationBeingUpdated };
+				adventures = adventures; // Trigger reactivity
+			} else {
+				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				if (data.props.adventure) {
+					data.props.adventure.locations = adventures; // Update data.props.adventure.locations as well
+				}
+			}
+		}
+	}
 
 	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
@@ -690,12 +707,13 @@
 {/if}
 
 {#if isLocationModalOpen}
-	<LocationModal
-		locationToEdit={adventureToEdit}
+	<NewLocationModal
 		on:close={() => (isLocationModalOpen = false)}
 		on:save={saveOrCreateAdventure}
-		{collection}
 		user={data.user}
+		locationToEdit={adventureToEdit}
+		bind:location={locationBeingUpdated}
+		{collection}
 	/>
 {/if}
 
@@ -790,7 +808,6 @@
 								// Reset the transportation object for creating a new one
 								transportationToEdit = null;
 								isShowingTransportationModal = true;
-								newType = '';
 							}}
 						>
 							{$t('adventures.transportation')}</button
@@ -799,7 +816,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isNoteModalOpen = true;
-								newType = '';
+
 								noteToEdit = null;
 							}}
 						>
@@ -809,7 +826,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isShowingChecklistModal = true;
-								newType = '';
+
 								checklistToEdit = null;
 							}}
 						>
@@ -819,7 +836,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isShowingLodgingModal = true;
-								newType = '';
+
 								lodgingToEdit = null;
 							}}
 						>

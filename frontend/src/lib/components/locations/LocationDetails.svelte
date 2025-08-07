@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { MapLibre, Marker, MapEvents } from 'svelte-maplibre';
-	import { t } from 'svelte-i18n';
+	import { number, t } from 'svelte-i18n';
 	import { getBasemapUrl } from '$lib';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Collection, Location } from '$lib/types';
@@ -210,6 +210,7 @@
 
 	async function performDetailedReverseGeocode(lat: number, lng: number) {
 		try {
+			console.log('Performing detailed reverse geocoding for:', lat, lng);
 			const response = await fetch(
 				`/api/reverse-geocode/reverse_geocode/?lat=${lat}&lon=${lng}&format=json`
 			);
@@ -349,6 +350,33 @@
 		dispatch('back');
 	}
 
+	onMount(async () => {
+		if (initialLocation.latitude && initialLocation.longitude) {
+			selectedMarker = {
+				lng: initialLocation.longitude,
+				lat: initialLocation.latitude
+			};
+			location.latitude = initialLocation.latitude;
+			location.longitude = initialLocation.longitude;
+			mapCenter = [initialLocation.longitude, initialLocation.latitude];
+			mapZoom = 14;
+			selectedLocation = {
+				name: initialLocation.name || '',
+				lat: initialLocation.latitude,
+				lng: initialLocation.longitude,
+				location: initialLocation.location || '',
+				type: 'point',
+				category: initialLocation.category || null
+			};
+			selectedMarker = {
+				lng: Number(initialLocation.longitude),
+				lat: Number(initialLocation.latitude)
+			};
+			// trigger reverse geocoding to populate location data
+			await performDetailedReverseGeocode(initialLocation.latitude, initialLocation.longitude);
+		}
+	});
+
 	onMount(() => {
 		if (initialLocation && typeof initialLocation === 'object') {
 			// Only update location properties if they don't already have values
@@ -364,17 +392,6 @@
 				if (initialLocation.category && initialLocation.category.id) {
 					location.category = initialLocation.category;
 				}
-			}
-
-			if (initialLocation.latitude && initialLocation.longitude) {
-				selectedMarker = {
-					lng: initialLocation.longitude,
-					lat: initialLocation.latitude
-				};
-				location.latitude = initialLocation.latitude;
-				location.longitude = initialLocation.longitude;
-				mapCenter = [initialLocation.longitude, initialLocation.latitude];
-				mapZoom = 14;
 			}
 
 			if (initialLocation.tags && Array.isArray(initialLocation.tags)) {
@@ -397,7 +414,7 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 pl-6 pr-6">
+<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
 	<div class="max-w-full mx-auto space-y-6">
 		<!-- Basic Information Section -->
 		<div class="card bg-base-100 border border-base-300 shadow-lg">
@@ -454,7 +471,7 @@
 
 						<!-- Rating Field -->
 						<div class="form-control">
-							<label class="label">
+							<label class="label" for="rating">
 								<span class="label-text font-medium">Rating</span>
 							</label>
 							<div
@@ -464,6 +481,7 @@
 									<input
 										type="radio"
 										name="rating"
+										id="rating"
 										class="rating-hidden"
 										checked={Number.isNaN(location.rating)}
 									/>
@@ -615,7 +633,7 @@
 
 						<!-- Search Input -->
 						<div class="form-control">
-							<label class="label">
+							<label class="label" for="search-location">
 								<span class="label-text font-medium">Search Location</span>
 							</label>
 							<div class="relative">
@@ -624,6 +642,7 @@
 								</div>
 								<input
 									type="text"
+									id="search-location"
 									bind:value={searchQuery}
 									on:input={handleSearchInput}
 									placeholder="Enter city, location, or landmark..."
@@ -649,9 +668,9 @@
 							</div>
 						{:else if searchResults.length > 0}
 							<div class="space-y-2">
-								<label class="label">
+								<div class="label">
 									<span class="label-text text-sm font-medium">Search Results</span>
-								</label>
+								</div>
 								<div class="max-h-48 overflow-y-auto space-y-1">
 									{#each searchResults as result}
 										<button
@@ -732,9 +751,9 @@
 					<!-- Map -->
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
-							<label class="label">
+							<div class="label">
 								<span class="label-text font-medium">Interactive Map</span>
-							</label>
+							</div>
 							{#if isReverseGeocoding}
 								<div class="flex items-center gap-2">
 									<span class="loading loading-spinner loading-sm"></span>

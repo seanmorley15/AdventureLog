@@ -16,12 +16,12 @@
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 	import { getBasemapUrl, isAllDay } from '$lib';
 	import ActivityCard from '$lib/components/ActivityCard.svelte';
 	import TrailCard from '$lib/components/TrailCard.svelte';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	let geojson: any;
 
@@ -241,11 +241,11 @@
 {/if}
 
 {#if isEditModalOpen}
-	<LocationModal
-		locationToEdit={adventure}
+	<NewLocationModal
 		on:close={() => (isEditModalOpen = false)}
-		on:save={saveEdit}
 		user={data.user}
+		locationToEdit={adventure}
+		bind:location={adventure}
 	/>
 {/if}
 
