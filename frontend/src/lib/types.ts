@@ -31,14 +31,7 @@ export type Location = {
 	rating?: number | null;
 	link?: string | null;
 	images: ContentImage[];
-	visits: {
-		id: string;
-		start_date: string;
-		end_date: string;
-		timezone: string | null;
-		notes: string;
-		activities: Activity[]; // Array of activities associated with the visit
-	}[];
+	visits: Visit[];
 	collections?: string[] | null;
 	latitude: number | null;
 	longitude: number | null;
@@ -425,6 +418,9 @@ export type Visit = {
 	notes: string;
 	timezone: string | null;
 	activities?: Activity[];
+	location: string;
+	created_at: string;
+	updated_at: string;
 };
 
 export type TransportationVisit = {

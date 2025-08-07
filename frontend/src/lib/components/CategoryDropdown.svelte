@@ -39,6 +39,9 @@
 
 	function custom_category() {
 		new_category.name = new_category.display_name.toLowerCase().replace(/ /g, '_');
+		if (!new_category.icon) {
+			new_category.icon = '🌎'; // Default icon if none selected
+		}
 		selectCategory(new_category);
 	}
 

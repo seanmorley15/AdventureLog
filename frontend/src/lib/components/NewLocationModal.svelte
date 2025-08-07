@@ -298,7 +298,6 @@
 				bind:visits={location.visits}
 				bind:trails={location.trails}
 				objectId={location.id}
-				type="location"
 				on:back={() => {
 					steps[3].selected = false;
 					steps[2].selected = true;

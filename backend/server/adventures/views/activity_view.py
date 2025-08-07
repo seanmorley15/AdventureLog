@@ -3,6 +3,7 @@ from django.db.models import Q
 from adventures.models import Location, Activity
 from adventures.serializers import ActivitySerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from rest_framework.exceptions import PermissionDenied
 
 class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = ActivitySerializer
@@ -37,4 +38,32 @@ class ActivityViewSet(viewsets.ModelViewSet):
         """
         Set the user when creating an activity.
         """
+        visit = serializer.validated_data.get('visit')
+        location = visit.location if visit else None
+
+        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
+            raise PermissionDenied("You do not have permission to add an activity to this location.")
+
         serializer.save(user=self.request.user)
+
+    def perform_update(self, serializer):
+        instance = serializer.instance
+        new_visit = serializer.validated_data.get('visit')
+        
+        # Prevent changing visit/location after creation
+        if new_visit and new_visit != instance.visit:
+            raise PermissionDenied("Cannot change activity visit after creation. Create a new activity instead.")
+        
+        # Check permission for updates to the existing location
+        location = instance.visit.location if instance.visit else None
+        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
+            raise PermissionDenied("You do not have permission to update this activity.")
+
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        location = instance.visit.location if instance.visit else None
+        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
+            raise PermissionDenied("You do not have permission to delete this activity.")
+
+        instance.delete()

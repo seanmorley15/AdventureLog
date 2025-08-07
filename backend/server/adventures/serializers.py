@@ -215,8 +215,13 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities']
-        read_only_fields = ['id']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        if not validated_data.get('end_date') and validated_data.get('start_date'):
+            validated_data['end_date'] = validated_data['start_date']
+        return super().create(validated_data)
                                    
 class LocationSerializer(CustomModelSerializer):
     images = serializers.SerializerMethodField()
@@ -358,16 +363,11 @@ class LocationSerializer(CustomModelSerializer):
         return obj.is_visited_status()
 
     def create(self, validated_data):
-        visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
         print(category_data)
         location = Location.objects.create(**validated_data)
-        
-        # Handle visits
-        for visit_data in visits_data:
-            Visit.objects.create(location=location, **visit_data)
 
         # Handle category
         if category_data:
@@ -384,7 +384,6 @@ class LocationSerializer(CustomModelSerializer):
 
     def update(self, instance, validated_data):
         has_visits = 'visits' in validated_data
-        visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
 
         collections_data = validated_data.pop('collections', None)
@@ -404,27 +403,6 @@ class LocationSerializer(CustomModelSerializer):
         # Handle collections - only update if collections were provided
         if collections_data is not None:
             instance.collections.set(collections_data)
-
-        # Handle visits
-        if has_visits:
-            current_visits = instance.visits.all()
-            current_visit_ids = set(current_visits.values_list('id', flat=True))
-
-            updated_visit_ids = set()
-            for visit_data in visits_data:
-                visit_id = visit_data.get('id')
-                if visit_id and visit_id in current_visit_ids:
-                    visit = current_visits.get(id=visit_id)
-                    for attr, value in visit_data.items():
-                        setattr(visit, attr, value)
-                    visit.save()
-                    updated_visit_ids.add(visit_id)
-                else:
-                    new_visit = Visit.objects.create(location=instance, **visit_data)
-                    updated_visit_ids.add(new_visit.id)
-
-            visits_to_delete = current_visit_ids - updated_visit_ids
-            instance.visits.filter(id__in=visits_to_delete).delete()
 
         # call save on the location to update the updated_at field and trigger any geocoding
         instance.save()
