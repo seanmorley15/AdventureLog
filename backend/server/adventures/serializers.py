@@ -7,6 +7,7 @@ from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
+from adventures.utils.geojson import gpx_to_geojson
 import gpxpy
 import geojson
 import logging
@@ -45,9 +46,10 @@ class ContentImageSerializer(CustomModelSerializer):
     
 class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
+    geojson = serializers.SerializerMethodField()
     class Meta:
         model = ContentAttachment
-        fields = ['id', 'file', 'extension', 'name', 'user']
+        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson']
         read_only_fields = ['id', 'user']
 
     def get_extension(self, obj):
@@ -62,6 +64,11 @@ class AttachmentSerializer(CustomModelSerializer):
             public_url = public_url.replace("'", "")
             representation['file'] = f"{public_url}/media/{instance.file.name}"
         return representation
+
+    def get_geojson(self, obj):
+        if obj.file and obj.file.name.endswith('.gpx'):
+            return gpx_to_geojson(obj.file)
+        return None
     
 class CategorySerializer(serializers.ModelSerializer):
     num_locations = serializers.SerializerMethodField()
@@ -186,28 +193,7 @@ class ActivitySerializer(CustomModelSerializer):
         return representation
     
     def get_geojson(self, obj):
-        if not obj.gpx_file:
-            return None
-
-        try:
-            with obj.gpx_file.open('r') as f:
-                gpx = gpxpy.parse(f)
-
-            features = []
-            for track in gpx.tracks:
-                for segment in track.segments:
-                    coords = [(pt.longitude, pt.latitude) for pt in segment.points]
-                    if not coords:
-                        continue
-                    features.append(geojson.Feature(
-                        geometry=geojson.LineString(coords),
-                        properties={"name": track.name or "GPX Track"}
-                    ))
-
-            return geojson.FeatureCollection(features)
-
-        except Exception as e:
-            return {"error": str(e)}
+        return gpx_to_geojson(obj.gpx_file)
 
 class VisitSerializer(serializers.ModelSerializer):
 

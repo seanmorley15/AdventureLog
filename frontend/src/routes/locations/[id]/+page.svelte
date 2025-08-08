@@ -9,8 +9,6 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
-	import toGeoJSON from '@mapbox/togeojson';
-	// @ts-ignore
 	import { DateTime } from 'luxon';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
@@ -28,95 +26,6 @@
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
 	};
-
-	async function getGpxFiles() {
-		let gpxfiles: string[] = [];
-
-		if (adventure.attachments && adventure.attachments.length > 0) {
-			gpxfiles = adventure.attachments
-				.filter((attachment) => attachment.extension === 'gpx')
-				.map((attachment) => attachment.file);
-		}
-
-		geojson = {
-			type: 'FeatureCollection',
-			features: []
-		};
-
-		if (gpxfiles.length > 0) {
-			const promises = gpxfiles.map(async (gpxfile) => {
-				try {
-					const gpxFileName = gpxfile.split('/').pop();
-					const res = await fetch(gpxfile, {
-						credentials: 'include'
-					});
-
-					if (!res.ok) {
-						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
-						return [];
-					}
-
-					const gpxData = await res.text();
-					const parser = new DOMParser();
-					const gpx = parser.parseFromString(gpxData, 'text/xml');
-
-					const convertedGeoJSON = toGeoJSON.gpx(gpx);
-					return convertedGeoJSON.features || [];
-				} catch (error) {
-					console.error(`Error processing GPX file ${gpxfile}:`, error);
-					return [];
-				}
-			});
-
-			const results = await Promise.allSettled(promises);
-
-			results.forEach((result) => {
-				if (result.status === 'fulfilled' && result.value.length > 0) {
-					geojson.features.push(...result.value);
-				}
-			});
-		}
-
-		// for every location.visit there is an array of activitites which might have a field .geojson with a geojson object
-		if (adventure.visits && adventure.visits.length > 0) {
-			adventure.visits.forEach((visit) => {
-				if (visit.activities && visit.activities.length > 0) {
-					visit.activities.forEach((activity) => {
-						if (activity.geojson) {
-							// Ensure geojson object exists and has features array
-							if (!geojson || !geojson.features) {
-								geojson = {
-									type: 'FeatureCollection',
-									features: []
-								};
-							}
-
-							// Extract features from the activity's FeatureCollection
-							if (activity.geojson.features && Array.isArray(activity.geojson.features)) {
-								activity.geojson.features.forEach((feature: { properties: any }) => {
-									// Add activity metadata to each feature's properties
-									const enhancedFeature = {
-										...feature,
-										properties: {
-											...feature.properties,
-											name: activity.name || 'Activity',
-											description: activity.type || '',
-											activityType: activity.type || 'unknown',
-											visitId: visit.id,
-											visitStartDate: visit.start_date,
-											visitEndDate: visit.end_date,
-											visitNotes: visit.notes || ''
-										}
-									};
-									geojson.features.push(enhancedFeature);
-								});
-							}
-						}
-					});
-				}
-			});
-		}
-	}
 
 	export let data: PageData;
 	let measurementSystem = data.user?.measurement_system || 'metric';
@@ -150,11 +59,14 @@
 		} else {
 			notFound = true;
 		}
-		await getGpxFiles();
 	});
 
 	function hasActivityGeojson(adventure: AdditionalLocation) {
 		return adventure.visits.some((visit) => visit.activities.some((activity) => activity.geojson));
+	}
+
+	function hasAttachmentGeojson(adventure: AdditionalLocation) {
+		return adventure.attachments.some((attachment) => attachment.geojson);
 	}
 
 	function getActivityColor(activityType: string) {
@@ -202,13 +114,6 @@
 
 		// Convert to feet if using imperial system
 		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
-	}
-
-	async function saveEdit(event: CustomEvent<AdditionalLocation>) {
-		adventure = event.detail;
-		isEditModalOpen = false;
-		geojson = null;
-		await getGpxFiles();
 	}
 
 	function closeImageModal() {
@@ -616,7 +521,7 @@
 				{/if}
 
 				<!-- Map Section -->
-				{#if (adventure.longitude && adventure.latitude) || geojson || hasActivityGeojson(adventure)}
+				{#if (adventure.longitude && adventure.latitude) || hasAttachmentGeojson(adventure) || hasActivityGeojson(adventure)}
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.location')}</h2>
@@ -792,6 +697,20 @@
 												</GeoJSON>
 											{/if}
 										{/each}
+									{/each}
+
+									{#each adventure.attachments as attachment}
+										{#if attachment.geojson}
+											<GeoJSON data={attachment.geojson}>
+												<LineLayer
+													paint={{
+														'line-color': '#00FF00',
+														'line-width': 2,
+														'line-opacity': 0.6
+													}}
+												/>
+											</GeoJSON>
+										{/if}
 									{/each}
 
 									{#if adventure.longitude && adventure.latitude}

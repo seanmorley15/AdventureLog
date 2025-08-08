@@ -278,6 +278,7 @@ export type Attachment = {
 	extension: string;
 	user: string;
 	name: string;
+	geojson: any | null; // GeoJSON representation of the attachment if the file is a GPX
 };
 
 export type Lodging = {
@@ -417,7 +418,7 @@ export type Visit = {
 	end_date: string;
 	notes: string;
 	timezone: string | null;
-	activities?: Activity[];
+	activities: Activity[];
 	location: string;
 	created_at: string;
 	updated_at: string;
