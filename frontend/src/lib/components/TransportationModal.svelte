@@ -12,6 +12,11 @@
 	import { DefaultMarker, MapLibre } from 'svelte-maplibre';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
 	import { getBasemapUrl } from '$lib';
+	import { deserialize } from '$app/forms';
+
+	import FileImage from '~icons/mdi/file-image';
+	import Star from '~icons/mdi/star';
+	import Crown from '~icons/mdi/crown';
 
 	export let collection: Collection;
 	export let transportationToEdit: Transportation | null = null;
@@ -40,7 +45,8 @@
 		destination_longitude: transportationToEdit?.destination_longitude || NaN,
 		start_timezone: transportationToEdit?.start_timezone || '',
 		end_timezone: transportationToEdit?.end_timezone || '',
-		distance: null
+		distance: null,
+		images: transportationToEdit?.images || []
 	};
 
 	let startTimezone: string | undefined = transportation.start_timezone ?? undefined;
@@ -53,9 +59,53 @@
 	let starting_airport: string = '';
 	let ending_airport: string = '';
 
+	// hold image files so they can be uploaded later
+	let imageInput: HTMLInputElement;
+	let imageFiles: File[] = [];
+
 	$: {
 		if (!transportation.rating) {
 			transportation.rating = NaN;
+		}
+	}
+
+	function handleImageChange(event: Event) {
+		const target = event.target as HTMLInputElement;
+		if (target?.files) {
+			if (!transportation.id) {
+				imageFiles = Array.from(target.files);
+				console.log('Images ready for deferred upload:', imageFiles);
+			} else {
+				imageFiles = Array.from(target.files);
+				for (const file of imageFiles) {
+					uploadImage(file);
+				}
+			}
+		}
+	}
+
+	async function uploadImage(file: File) {
+		let formData = new FormData();
+		formData.append('image', file);
+		formData.append('object_id', transportation.id);
+		formData.append('content_type', 'transportation');
+
+		let res = await fetch(`/locations?/image`, {
+			method: 'POST',
+			body: formData
+		});
+		if (res.ok) {
+			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
+			let newImage = {
+				id: newData.data.id,
+				image: newData.data.image,
+				is_primary: false,
+				immich_id: null
+			};
+			transportation.images = [...(transportation.images || []), newImage];
+			addToast('success', $t('adventures.image_upload_success'));
+		} else {
+			addToast('error', $t('adventures.image_upload_error'));
 		}
 	}
 
@@ -73,6 +123,36 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
 			close();
+		}
+	}
+
+	async function removeImage(id: string) {
+		let res = await fetch(`/api/images/${id}/image_delete`, {
+			method: 'POST'
+		});
+		if (res.status === 204) {
+			transportation.images = transportation.images.filter((image) => image.id !== id);
+			addToast('success', $t('adventures.image_removed_success'));
+		} else {
+			addToast('error', $t('adventures.image_removed_error'));
+		}
+	}
+
+	async function makePrimaryImage(image_id: string) {
+		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
+			method: 'POST'
+		});
+		if (res.ok) {
+			transportation.images = transportation.images.map((image) => {
+				if (image.id === image_id) {
+					image.is_primary = true;
+				} else {
+					image.is_primary = false;
+				}
+				return image;
+			});
+		} else {
+			console.error('Error in makePrimaryImage:', res);
 		}
 	}
 
@@ -183,6 +263,10 @@
 				transportation = data as Transportation;
 
 				addToast('success', $t('adventures.location_created'));
+				// Handle image uploads after transportation is created
+				for (const file of imageFiles) {
+					await uploadImage(file);
+				}
 				dispatch('save', transportation);
 			} else {
 				console.error(data);
@@ -209,146 +293,243 @@
 	}
 </script>
 
-<dialog id="my_modal_1" class="modal">
+<dialog id="my_modal_1" class="modal backdrop-blur-sm">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<div class="modal-box w-11/12 max-w-3xl" role="dialog" on:keydown={handleKeydown} tabindex="0">
-		<h3 class="font-bold text-2xl">
-			{transportationToEdit
-				? $t('transportation.edit_transportation')
-				: $t('transportation.new_transportation')}
-		</h3>
-		<div class="modal-action items-center">
+	<div
+		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		role="dialog"
+		on:keydown={handleKeydown}
+		tabindex="0"
+	>
+		<!-- Header Section - Following adventurelog pattern -->
+		<div
+			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+		>
+			<div class="flex items-center justify-between">
+				<div class="flex items-center gap-3">
+					<div class="p-2 bg-primary/10 rounded-xl">
+						<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 9l3 3m0 0l-3 3m3-3H8m13 0a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+					</div>
+					<div>
+						<h1 class="text-3xl font-bold text-primary bg-clip-text">
+							{transportationToEdit
+								? $t('transportation.edit_transportation')
+								: $t('transportation.new_transportation')}
+						</h1>
+						<p class="text-sm text-base-content/60">
+							{transportationToEdit
+								? $t('transportation.update_transportation_details')
+								: $t('transportation.create_new_transportation')}
+						</p>
+					</div>
+				</div>
+
+				<!-- Close Button -->
+				<button class="btn btn-ghost btn-square" on:click={close}>
+					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M6 18L18 6M6 6l12 12"
+						/>
+					</svg>
+				</button>
+			</div>
+		</div>
+
+		<!-- Main Content -->
+		<div class="px-2">
 			<form method="post" style="width: 100%;" on:submit={handleSubmit}>
 				<!-- Basic Information Section -->
-				<div class="collapse collapse-plus bg-base-200 mb-4">
+				<div
+					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+				>
 					<input type="checkbox" checked />
-					<div class="collapse-title text-xl font-medium">
-						{$t('adventures.basic_information')}
-					</div>
-					<div class="collapse-content">
-						<!-- Name -->
-						<div>
-							<label for="name">
-								{$t('adventures.name')}<span class="text-red-500">*</span>
-							</label>
-							<input
-								type="text"
-								id="name"
-								name="name"
-								bind:value={transportation.name}
-								class="input input-bordered w-full"
-								required
-							/>
-						</div>
-						<!-- Type selection -->
-						<div>
-							<label for="type">
-								{$t('transportation.type')}<span class="text-red-500">*</span>
-							</label>
-							<div>
-								<select
-									class="select select-bordered w-full max-w-xs"
-									name="type"
-									id="type"
-									bind:value={transportation.type}
+					<div
+						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+					>
+						<div class="flex items-center gap-3">
+							<div class="p-2 bg-primary/10 rounded-lg">
+								<svg
+									class="w-5 h-5 text-primary"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
 								>
-									<option disabled selected>{$t('transportation.type')}</option>
-									<option value="car">{$t('transportation.modes.car')}</option>
-									<option value="plane">{$t('transportation.modes.plane')}</option>
-									<option value="train">{$t('transportation.modes.train')}</option>
-									<option value="bus">{$t('transportation.modes.bus')}</option>
-									<option value="boat">{$t('transportation.modes.boat')}</option>
-									<option value="bike">{$t('transportation.modes.bike')}</option>
-									<option value="walking">{$t('transportation.modes.walking')}</option>
-									<option value="other">{$t('transportation.modes.other')}</option>
-								</select>
+									<path
+										stroke-linecap="round"
+										stroke-linejoin="round"
+										stroke-width="2"
+										d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+									/>
+								</svg>
 							</div>
+							{$t('adventures.basic_information')}
 						</div>
-						<!-- Description -->
-						<div>
-							<label for="description">{$t('adventures.description')}</label><br />
-							<MarkdownEditor bind:text={transportation.description} editor_height={'h-32'} />
-						</div>
-						<!-- Rating -->
-						<div>
-							<label for="rating">{$t('adventures.rating')}</label><br />
-							<input
-								type="number"
-								min="0"
-								max="5"
-								hidden
-								bind:value={transportation.rating}
-								id="rating"
-								name="rating"
-								class="input input-bordered w-full max-w-xs mt-1"
-							/>
-							<div class="rating -ml-3 mt-1">
-								<input
-									type="radio"
-									name="rating-2"
-									class="rating-hidden"
-									checked={Number.isNaN(transportation.rating)}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (transportation.rating = 1)}
-									checked={transportation.rating === 1}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (transportation.rating = 2)}
-									checked={transportation.rating === 2}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (transportation.rating = 3)}
-									checked={transportation.rating === 3}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (transportation.rating = 4)}
-									checked={transportation.rating === 4}
-								/>
-								<input
-									type="radio"
-									name="rating-2"
-									class="mask mask-star-2 bg-orange-400"
-									on:click={() => (transportation.rating = 5)}
-									checked={transportation.rating === 5}
-								/>
-								{#if transportation.rating}
-									<button
-										type="button"
-										class="btn btn-sm btn-error ml-2"
-										on:click={() => (transportation.rating = NaN)}
+					</div>
+					<div class="collapse-content bg-base-100/50 pt-4 p-6 space-y-3">
+						<!-- Dual Column Layout for Large Screens -->
+						<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+							<!-- Left Column -->
+							<div class="space-y-4">
+								<!-- Name Field -->
+								<div class="form-control">
+									<label class="label" for="name">
+										<span class="label-text font-medium"
+											>{$t('adventures.name')}<span class="text-error ml-1">*</span></span
+										>
+									</label>
+									<input
+										type="text"
+										id="name"
+										name="name"
+										bind:value={transportation.name}
+										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										placeholder={$t('transportation.enter_transportation_name')}
+										required
+									/>
+								</div>
+
+								<!-- Type Selection -->
+								<div class="form-control">
+									<label class="label" for="type">
+										<span class="label-text font-medium"
+											>{$t('transportation.type')}<span class="text-error ml-1">*</span></span
+										>
+									</label>
+									<select
+										class="select select-bordered w-full bg-base-100/80 focus:bg-base-100"
+										name="type"
+										id="type"
+										bind:value={transportation.type}
 									>
-										{$t('adventures.remove')}
-									</button>
-								{/if}
+										<option disabled selected>{$t('transportation.select_type')}</option>
+										<option value="car">{$t('transportation.modes.car')}</option>
+										<option value="plane">{$t('transportation.modes.plane')}</option>
+										<option value="train">{$t('transportation.modes.train')}</option>
+										<option value="bus">{$t('transportation.modes.bus')}</option>
+										<option value="boat">{$t('transportation.modes.boat')}</option>
+										<option value="bike">{$t('transportation.modes.bike')}</option>
+										<option value="walking">{$t('transportation.modes.walking')}</option>
+										<option value="other">{$t('transportation.modes.other')}</option>
+									</select>
+								</div>
+
+								<!-- Rating Field -->
+								<div class="form-control">
+									<label class="label" for="rating">
+										<span class="label-text font-medium">{$t('adventures.rating')}</span>
+									</label>
+									<input
+										type="number"
+										min="0"
+										max="5"
+										hidden
+										bind:value={transportation.rating}
+										id="rating"
+										name="rating"
+										class="input input-bordered w-full max-w-xs"
+									/>
+									<div
+										class="flex items-center gap-4 p-4 bg-base-100/80 border border-base-300 rounded-xl"
+									>
+										<div class="rating">
+											<input
+												type="radio"
+												name="rating-2"
+												class="rating-hidden"
+												checked={Number.isNaN(transportation.rating)}
+											/>
+											<input
+												type="radio"
+												name="rating-2"
+												class="mask mask-star-2 bg-warning"
+												on:click={() => (transportation.rating = 1)}
+												checked={transportation.rating === 1}
+											/>
+											<input
+												type="radio"
+												name="rating-2"
+												class="mask mask-star-2 bg-warning"
+												on:click={() => (transportation.rating = 2)}
+												checked={transportation.rating === 2}
+											/>
+											<input
+												type="radio"
+												name="rating-2"
+												class="mask mask-star-2 bg-warning"
+												on:click={() => (transportation.rating = 3)}
+												checked={transportation.rating === 3}
+											/>
+											<input
+												type="radio"
+												name="rating-2"
+												class="mask mask-star-2 bg-warning"
+												on:click={() => (transportation.rating = 4)}
+												checked={transportation.rating === 4}
+											/>
+											<input
+												type="radio"
+												name="rating-2"
+												class="mask mask-star-2 bg-warning"
+												on:click={() => (transportation.rating = 5)}
+												checked={transportation.rating === 5}
+											/>
+										</div>
+										{#if transportation.rating}
+											<button
+												type="button"
+												class="btn btn-error btn-sm"
+												on:click={() => (transportation.rating = NaN)}
+											>
+												{$t('adventures.remove')}
+											</button>
+										{/if}
+									</div>
+								</div>
 							</div>
-						</div>
-						<!-- Link -->
-						<div>
-							<label for="link">{$t('adventures.link')}</label>
-							<input
-								type="url"
-								id="link"
-								name="link"
-								bind:value={transportation.link}
-								class="input input-bordered w-full"
-							/>
+
+							<!-- Right Column -->
+							<div class="space-y-4">
+								<!-- Link Field -->
+								<div class="form-control">
+									<label class="label" for="link">
+										<span class="label-text font-medium">{$t('adventures.link')}</span>
+									</label>
+									<input
+										type="url"
+										id="link"
+										name="link"
+										bind:value={transportation.link}
+										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										placeholder={$t('transportation.enter_link')}
+									/>
+								</div>
+
+								<!-- Description Field -->
+								<div class="form-control">
+									<label class="label" for="description">
+										<span class="label-text font-medium">{$t('adventures.description')}</span>
+									</label>
+									<div class="bg-base-100/80 border border-base-300 rounded-xl p-2">
+										<MarkdownEditor bind:text={transportation.description} editor_height={'h-32'} />
+									</div>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
+
+				<!-- Date Range Section -->
 
 				<DateRangeCollapse
 					type="transportation"
@@ -359,124 +540,193 @@
 					{collection}
 				/>
 
-				<!-- Flight Information -->
-				<div class="collapse collapse-plus bg-base-200 mb-4">
+				<!-- Location/Flight Information Section -->
+				<div
+					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+				>
 					<input type="checkbox" checked />
-					<div class="collapse-title text-xl font-medium">
-						{#if transportation?.type == 'plane'}
-							{$t('adventures.flight_information')}
-						{:else}
-							{$t('adventures.location_information')}
-						{/if}
+					<div
+						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+					>
+						<div class="flex items-center gap-3">
+							<div class="p-2 bg-primary/10 rounded-lg">
+								<svg
+									class="w-5 h-5 text-primary"
+									fill="none"
+									stroke="currentColor"
+									viewBox="0 0 24 24"
+								>
+									{#if transportation?.type == 'plane'}
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+										/>
+									{:else}
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+										/>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+										/>
+									{/if}
+								</svg>
+							</div>
+							{#if transportation?.type == 'plane'}
+								{$t('adventures.flight_information')}
+							{:else}
+								{$t('adventures.location_information')}
+							{/if}
+						</div>
 					</div>
 
-					<div class="collapse-content">
+					<div class="collapse-content bg-base-100/50 pt-4 p-6">
 						{#if transportation?.type == 'plane'}
-							<!-- Flight Number -->
-							<div class="mb-4">
-								<label for="flight_number" class="label">
-									<span class="label-text">{$t('transportation.flight_number')}</span>
-								</label>
-								<input
-									type="text"
-									id="flight_number"
-									name="flight_number"
-									bind:value={transportation.flight_number}
-									class="input input-bordered w-full"
-								/>
+							<!-- Flight-specific fields -->
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+								<!-- Flight Number -->
+								<div class="form-control">
+									<label class="label" for="flight_number">
+										<span class="label-text font-medium">{$t('transportation.flight_number')}</span>
+									</label>
+									<input
+										type="text"
+										id="flight_number"
+										name="flight_number"
+										bind:value={transportation.flight_number}
+										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										placeholder={$t('transportation.enter_flight_number')}
+									/>
+								</div>
 							</div>
 
-							<!-- Starting Airport -->
+							<!-- Airport Fields (if locations not set) -->
 							{#if !transportation.from_location || !transportation.to_location}
-								<div class="mb-4">
-									<label for="starting_airport" class="label">
-										<span class="label-text">{$t('adventures.starting_airport')}</span>
-									</label>
-									<input
-										type="text"
-										id="starting_airport"
-										bind:value={starting_airport}
-										name="starting_airport"
-										class="input input-bordered w-full"
-										placeholder={$t('transportation.starting_airport_desc')}
-									/>
-									<label for="ending_airport" class="label">
-										<span class="label-text">{$t('adventures.ending_airport')}</span>
-									</label>
-									<input
-										type="text"
-										id="ending_airport"
-										bind:value={ending_airport}
-										name="ending_airport"
-										class="input input-bordered w-full"
-										placeholder={$t('transportation.ending_airport_desc')}
-									/>
-									<button type="button" class="btn btn-primary mt-2" on:click={geocode}>
+								<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+									<div class="form-control">
+										<label class="label" for="starting_airport">
+											<span class="label-text font-medium">{$t('adventures.starting_airport')}</span
+											>
+										</label>
+										<input
+											type="text"
+											id="starting_airport"
+											bind:value={starting_airport}
+											name="starting_airport"
+											class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+											placeholder={$t('transportation.starting_airport_desc')}
+										/>
+									</div>
+
+									<div class="form-control">
+										<label class="label" for="ending_airport">
+											<span class="label-text font-medium">{$t('adventures.ending_airport')}</span>
+										</label>
+										<input
+											type="text"
+											id="ending_airport"
+											bind:value={ending_airport}
+											name="ending_airport"
+											class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+											placeholder={$t('transportation.ending_airport_desc')}
+										/>
+									</div>
+								</div>
+
+								<div class="flex justify-start mb-6">
+									<button type="button" class="btn btn-primary gap-2" on:click={geocode}>
+										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+											/>
+										</svg>
 										{$t('transportation.fetch_location_information')}
 									</button>
 								</div>
 							{/if}
+						{/if}
 
-							{#if transportation.from_location && transportation.to_location}
+						<!-- Location Fields (for all types or when flight locations are set) -->
+						{#if transportation?.type != 'plane' || (transportation.from_location && transportation.to_location)}
+							<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 								<!-- From Location -->
-								<div class="mb-4">
-									<label for="from_location" class="label">
-										<span class="label-text">{$t('transportation.from_location')}</span>
+								<div class="form-control">
+									<label class="label" for="from_location">
+										<span class="label-text font-medium">{$t('transportation.from_location')}</span>
 									</label>
 									<input
 										type="text"
 										id="from_location"
 										name="from_location"
 										bind:value={transportation.from_location}
-										class="input input-bordered w-full"
+										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										placeholder={$t('transportation.enter_from_location')}
 									/>
 								</div>
+
 								<!-- To Location -->
-								<div class="mb-4">
-									<label for="to_location" class="label">
-										<span class="label-text">{$t('transportation.to_location')}</span>
+								<div class="form-control">
+									<label class="label" for="to_location">
+										<span class="label-text font-medium">{$t('transportation.to_location')}</span>
 									</label>
 									<input
 										type="text"
 										id="to_location"
 										name="to_location"
 										bind:value={transportation.to_location}
-										class="input input-bordered w-full"
+										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
+										placeholder={$t('transportation.enter_to_location')}
 									/>
 								</div>
+							</div>
+
+							{#if transportation?.type != 'plane'}
+								<div class="flex justify-start mb-6">
+									<button type="button" class="btn btn-primary gap-2" on:click={geocode}>
+										<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+											<path
+												stroke-linecap="round"
+												stroke-linejoin="round"
+												stroke-width="2"
+												d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+											/>
+										</svg>
+										{$t('transportation.fetch_location_information')}
+									</button>
+								</div>
 							{/if}
-						{:else}
-							<!-- From Location -->
-							<div class="mb-4">
-								<label for="from_location" class="label">
-									<span class="label-text">{$t('transportation.from_location')}</span>
-								</label>
-								<input
-									type="text"
-									id="from_location"
-									name="from_location"
-									bind:value={transportation.from_location}
-									class="input input-bordered w-full"
-								/>
-							</div>
-							<!-- To Location -->
-							<div class="mb-4">
-								<label for="to_location" class="label">
-									<span class="label-text">{$t('transportation.to_location')}</span>
-								</label>
-								<input
-									type="text"
-									id="to_location"
-									name="to_location"
-									bind:value={transportation.to_location}
-									class="input input-bordered w-full"
-								/>
-							</div>
-							<button type="button" class="btn btn-primary mt-2" on:click={geocode}>
-								Fetch Location Information
-							</button>
 						{/if}
-						<div class="mt-4">
+
+						<!-- Map Section -->
+						<div class="bg-base-100/80 border border-base-300 rounded-xl p-4 mb-6">
+							<div class="mb-4">
+								<h4 class="font-semibold text-base-content flex items-center gap-2">
+									<svg
+										class="w-5 h-5 text-primary"
+										fill="none"
+										stroke="currentColor"
+										viewBox="0 0 24 24"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-1.447-.894L15 4m0 13V4m0 0L9 7"
+										/>
+									</svg>
+									{$t('adventures.route_map')}
+								</h4>
+							</div>
 							<MapLibre
 								style={getBasemapUrl()}
 								class="relative aspect-[9/16] max-h-[70vh] w-full sm:aspect-video sm:max-h-full rounded-lg"
@@ -497,34 +747,168 @@
 								{/if}
 							</MapLibre>
 						</div>
+
+						<!-- Clear Location Button -->
 						{#if transportation.from_location || transportation.to_location}
-							<button
-								type="button"
-								class="btn btn-error btn-sm mt-2"
-								on:click={() => {
-									transportation.from_location = '';
-									transportation.to_location = '';
-									starting_airport = '';
-									ending_airport = '';
-									transportation.origin_latitude = NaN;
-									transportation.origin_longitude = NaN;
-									transportation.destination_latitude = NaN;
-									transportation.destination_longitude = NaN;
-								}}
-							>
-								{$t('adventures.clear_location')}
-							</button>
+							<div class="flex justify-start">
+								<button
+									type="button"
+									class="btn btn-error btn-sm gap-2"
+									on:click={() => {
+										transportation.from_location = '';
+										transportation.to_location = '';
+										starting_airport = '';
+										ending_airport = '';
+										transportation.origin_latitude = NaN;
+										transportation.origin_longitude = NaN;
+										transportation.destination_latitude = NaN;
+										transportation.destination_longitude = NaN;
+									}}
+								>
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											stroke-width="2"
+											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+										/>
+									</svg>
+									{$t('adventures.clear_location')}
+								</button>
+							</div>
+						{/if}
+					</div>
+				</div>
+
+				<!-- images section -->
+				<div
+					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
+				>
+					<input type="checkbox" checked />
+					<div
+						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
+					>
+						<div class="flex items-center gap-3">
+							<div class="p-2 bg-primary/10 rounded-lg">
+								<FileImage class="w-5 h-5 text-primary" />
+							</div>
+							{$t('adventures.images')}
+						</div>
+					</div>
+					<div class="collapse-content bg-base-100/50 pt-4 p-6">
+						<div class="form-control">
+							<label class="label" for="image">
+								<span class="label-text font-medium">{$t('adventures.upload_image')}</span>
+							</label>
+							<input
+								type="file"
+								id="image"
+								name="image"
+								accept="image/*"
+								multiple
+								bind:this={imageInput}
+								on:change={handleImageChange}
+								class="file-input file-input-bordered file-input-primary w-full bg-base-100/80 focus:bg-base-100"
+							/>
+						</div>
+						<p class="text-sm text-base-content/60 mt-2">
+							{$t('adventures.image_upload_desc')}
+						</p>
+						{#if imageFiles.length > 0 && !transportation.id}
+							<div class="mt-4">
+								<h4 class="font-semibold text-base-content mb-2">
+									{$t('adventures.selected_images')}
+								</h4>
+								<ul class="list-disc pl-5 space-y-1">
+									{#each imageFiles as file}
+										<li>{file.name} ({Math.round(file.size / 1024)} KB)</li>
+									{/each}
+								</ul>
+							</div>
+						{/if}
+						{#if transportation.id}
+							<div class="divider my-6"></div>
+
+							<!-- Current Images -->
+							<div class="space-y-4">
+								<h4 class="font-semibold text-lg">{$t('adventures.my_images')}</h4>
+
+								{#if transportation.images.length > 0}
+									<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+										{#each transportation.images as image}
+											<div class="relative group">
+												<div class="aspect-square overflow-hidden rounded-lg bg-base-300">
+													<img
+														src={image.image}
+														alt={image.id}
+														class="w-full h-full object-cover transition-transform group-hover:scale-105"
+													/>
+												</div>
+
+												<!-- Image Controls -->
+												<div
+													class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2"
+												>
+													{#if !image.is_primary}
+														<button
+															type="button"
+															class="btn btn-success btn-sm"
+															on:click={() => makePrimaryImage(image.id)}
+															title="Make Primary"
+														>
+															<Star class="h-4 w-4" />
+														</button>
+													{/if}
+
+													<button
+														type="button"
+														class="btn btn-error btn-sm"
+														on:click={() => removeImage(image.id)}
+														title="Remove"
+													>
+														✕
+													</button>
+												</div>
+
+												<!-- Primary Badge -->
+												{#if image.is_primary}
+													<div
+														class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1"
+													>
+														<Crown class="h-4 w-4" />
+													</div>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								{:else}
+									<div class="text-center py-8">
+										<div class="text-base-content/60 text-lg mb-2">
+											{$t('adventures.no_images')}
+										</div>
+										<p class="text-sm text-base-content/40">Upload images to get started</p>
+									</div>
+								{/if}
+							</div>
 						{/if}
 					</div>
 				</div>
 
 				<!-- Form Actions -->
-				<div class="mt-4">
-					<button type="submit" class="btn btn-primary">
-						{$t('notes.save')}
-					</button>
-					<button type="button" class="btn" on:click={close}>
+				<div class="flex justify-end gap-3 mt-8 pt-6 border-t border-base-300">
+					<button type="button" class="btn btn-ghost" on:click={close}>
 						{$t('about.close')}
+					</button>
+					<button type="submit" class="btn btn-primary gap-2">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+							/>
+						</svg>
+						{$t('notes.save')}
 					</button>
 				</div>
 			</form>

@@ -311,7 +311,14 @@
     "reservation_number": "Reservation Number",
     "filters_and_sort": "Filters & Sort",
     "filters_and_stats": "Filters & Stats",
-    "travel_progress": "Travel Progress"
+    "travel_progress": "Travel Progress",
+    "left_collection_message": "Successfully left collection",
+    "leave_collection": "Leave Collection",
+    "leave": "Leave",
+    "leave_collection_warning": "Are you sure you want to leave this collection? Any locations you added will be unlinked and remain in your account.",
+    "loading_collections": "Loading collections...",
+    "quick_start": "Quick Start",
+    "details": "Details"
   },
   "worldtravel": {
     "country_list": "Country List",
@@ -535,7 +542,11 @@
     "data_override_warning_desc": "Restoring data will completely replace all existing data (that is included \t\t\t\t\t\t\t\t\t\t\t\tin the backup) in your account. This action cannot be undone.",
     "select_backup_file": "Select backup file",
     "data_override_acknowledge": "I acknowledge that this will override all my existing data",
-    "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account."
+    "data_override_acknowledge_desc": "This action is irreversible and will replace all locations, collections, \t\t\t\t\t\t\t\t\t\t\t\t\t\tand visits in your account.",
+    "use_imperial": "Use Imperial Units",
+    "use_imperial_desc": "Use imperial units (feet, inches, pounds) instead of metric units",
+    "trails": "Trails",
+    "activities": "Activities"
   },
   "collection": {
     "collection_created": "Collection created successfully!",
@@ -665,7 +676,11 @@
     "not_shared_with": "Not Shared With",
     "no_shared_found": "No collections found that are shared with you.",
     "set_public": "In order to allow users to share with you, you need your profile set to public.",
-    "go_to_settings": "Go to settings"
+    "go_to_settings": "Go to settings",
+    "revoke_invite": "Revoke Invite",
+    "send_invite": "Send Invite",
+    "available": "Available",
+    "pending": "Pending"
   },
   "languages": {},
   "profile": {
@@ -736,7 +751,8 @@
     "network_error": "Network error while connecting to the Immich server. Please check your connection and try again."
   },
   "google_maps": {
-    "google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations."
+    "google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations.",
+    "google_maps_integration_desc_no_staff": "This integration must first be enabled by the admin on this server."
   },
   "recomendations": {
     "recommendation": "Recommendation",
@@ -761,5 +777,36 @@
     "locations": "Locations",
     "my_locations": "My Locations"
   },
-  "settings_download_backup": "Download Backup"
+  "settings_download_backup": "Download Backup",
+  "invites": {
+    "accepted": "Invite accepted",
+    "accept_failed": "Failed to accept invite",
+    "declined": "Invite declined",
+    "decline_failed": "Failed to decline invite",
+    "title": "Invites",
+    "pending_invites": "Pending Invites",
+    "no_invites": "No invites",
+    "decline": "Decline",
+    "accept": "Accept",
+    "invited_on": "Invited on",
+    "no_invites_desc": "Make sure your profile is public so users can invite you.",
+    "by": "by"
+  },
+  "strava": {
+    "strava_integration_desc": "Connect to Strava to easily import your activties into locations and visits",
+    "not_configured": "Strava Not Configured",
+    "admin_setup_required": "The server administrator must enable it globally",
+    "ready_to_connect": "Ready to Connect",
+    "connect_account": "Connect Account",
+    "account_connected": "Account Connected",
+    "disconnect": "Disconnect",
+    "authorization_error": "Error redirecting to strava authorization URL",
+    "disconnected": "Successfully disconnected from Strava",
+    "disconnect_error": "Error disconnecting from Strava"
+  },
+  "wanderer": {
+    "wanderer_integration_desc": "Connect to Wanderer to easily import and view your trails in locations",
+    "connection_error": "Error connecting to Wanderer",
+    "connected": "Successfully connected to Wanderer"
+  }
 }

@@ -259,7 +259,14 @@
     "wiki_location_desc": "Drar utdrag från Wikipedia -artikeln som matchar namnet på platsen.",
     "will_be_marked_location": "kommer att markeras som besöks när platsen har sparats.",
     "no_locations_found": "Inga platser hittades",
-    "image_modal_navigate": "Använd pilnycklar eller klicka för att navigera"
+    "image_modal_navigate": "Använd pilnycklar eller klicka för att navigera",
+    "details": "Information",
+    "leave": "Lämna",
+    "leave_collection": "Lämna samlingen",
+    "leave_collection_warning": "Är du säker på att du vill lämna den här samlingen? \nAlla platser du har lagt till kommer att vara länkade och stanna kvar på ditt konto.",
+    "left_collection_message": "Framgångsrikt lämnade samlingen",
+    "loading_collections": "Laddar samlingar ...",
+    "quick_start": "Snabbstart"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -535,7 +542,11 @@
     "restore_data": "Återställa data",
     "restore_data_desc": "Ladda upp en säkerhetskopieringsfil för att återställa dina data.",
     "select_backup_file": "Välj säkerhetskopieringsfil",
-    "world_travel_visits": "Världsresebesök"
+    "world_travel_visits": "Världsresebesök",
+    "activities": "Aktiviteter",
+    "trails": "Spår",
+    "use_imperial": "Använd imperialistiska enheter",
+    "use_imperial_desc": "Använd imperialistiska enheter (fötter, tum, pund) istället för metriska enheter"
   },
   "checklist": {
     "checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",
@@ -649,7 +660,11 @@
     "with": "med",
     "go_to_settings": "Gå till inställningar",
     "no_shared_found": "Inga samlingar hittades som delas med dig.",
-    "set_public": "För att tillåta användare att dela med dig måste du ha en offentlig profil."
+    "set_public": "För att tillåta användare att dela med dig måste du ha en offentlig profil.",
+    "available": "Tillgänglig",
+    "pending": "I avvaktan på",
+    "revoke_invite": "Återkalla inbjudan",
+    "send_invite": "Skicka inbjudan"
   },
   "profile": {
     "member_since": "Medlem sedan",
@@ -743,7 +758,8 @@
     "edit_lodging": "Redigera logi"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet."
+    "google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet.",
+    "google_maps_integration_desc_no_staff": "Denna integration måste först aktiveras av administratören på denna server."
   },
   "calendar": {
     "all_day_event": "Hela dagen",
@@ -761,5 +777,36 @@
     "locations": "Plats",
     "my_locations": "Mina platser"
   },
-  "settings_download_backup": "Ladda ner säkerhetskopiering"
+  "settings_download_backup": "Ladda ner säkerhetskopiering",
+  "invites": {
+    "accept": "Acceptera",
+    "accept_failed": "Det gick inte att acceptera inbjudan",
+    "accepted": "Bjuda in accepterad",
+    "by": "av",
+    "decline": "Nedgång",
+    "decline_failed": "Det gick inte att avslå inbjudan",
+    "declined": "Inbjudan avvisade",
+    "invited_on": "Inbjudna till",
+    "no_invites": "Inga inbjudningar",
+    "no_invites_desc": "Se till att din profil är offentlig så att användare kan bjuda in dig.",
+    "pending_invites": "Väntande inbjudningar",
+    "title": "Inbjudning"
+  },
+  "strava": {
+    "account_connected": "Kontonansluten",
+    "admin_setup_required": "Serveradministratören måste aktivera den globalt",
+    "authorization_error": "Fel omdirigering till STRAVA -auktorisation URL",
+    "connect_account": "Anslutningskonto",
+    "disconnect": "Koppla av",
+    "disconnect_error": "Fel koppla från Strava",
+    "disconnected": "Framgångsrikt kopplad från Strava",
+    "not_configured": "Strava inte konfigurerad",
+    "ready_to_connect": "Redo att ansluta",
+    "strava_integration_desc": "Anslut till Strava för att enkelt importera dina aktiviteter till platser och besök"
+  },
+  "wanderer": {
+    "connected": "Framgångsrikt ansluten till vandrare",
+    "connection_error": "Fel som ansluter till vandrare",
+    "wanderer_integration_desc": "Anslut till Wanderer för att enkelt importera och se dina spår på platser"
+  }
 }

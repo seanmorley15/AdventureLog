@@ -5,7 +5,7 @@
 	import CollectionLink from '$lib/components/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Collection } from '$lib/types';
+	import type { Collection, CollectionInvite } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -14,6 +14,11 @@
 	import Archive from '~icons/mdi/archive';
 	import Share from '~icons/mdi/share-variant';
 	import CollectionIcon from '~icons/mdi/folder-multiple';
+	import MailIcon from '~icons/mdi/email';
+	import CheckIcon from '~icons/mdi/check';
+	import CloseIcon from '~icons/mdi/close';
+	import { addToast } from '$lib/toasts';
+	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
 
 	export let data: any;
 	console.log('Collections page data:', data);
@@ -25,7 +30,7 @@
 	let newType: string = '';
 	let resultsPerPage: number = 25;
 	let isShowingCollectionModal: boolean = false;
-	let activeView: 'owned' | 'shared' | 'archived' = 'owned';
+	let activeView: 'owned' | 'shared' | 'archived' | 'invites' = 'owned';
 
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
@@ -34,6 +39,8 @@
 	let currentPage: number = data.props.currentPage || 1;
 	let orderBy = data.props.order_by || 'updated_at';
 	let orderDirection = data.props.order_direction || 'asc';
+
+	let invites: CollectionInvite[] = data.props.invites || [];
 
 	let sidebarOpen = false;
 	let collectionToEdit: Collection | null = null;
@@ -54,7 +61,9 @@
 				? sharedCollections.length
 				: activeView === 'archived'
 					? archivedCollections.length
-					: 0;
+					: activeView === 'invites'
+						? invites.length
+						: 0;
 
 	// Optionally, keep count in sync with collections only for owned view
 	$: {
@@ -152,6 +161,26 @@
 		isShowingCollectionModal = true;
 	}
 
+	let isShowingConfirmLeaveModal: boolean = false;
+	let collectionIdToLeave: string | null = null;
+
+	async function leaveCollection() {
+		let res = await fetch(`/api/collections/${collectionIdToLeave}/leave`, {
+			method: 'POST'
+		});
+		if (res.ok) {
+			addToast('info', $t('adventures.left_collection_message'));
+			// Remove from shared collections
+			sharedCollections = sharedCollections.filter(
+				(collection) => collection.id !== collectionIdToLeave
+			);
+			// Optionally, you can also remove from owned collections if needed
+			collections = collections.filter((collection) => collection.id !== collectionIdToLeave);
+		} else {
+			console.log('Error leaving collection');
+		}
+	}
+
 	function saveEdit(event: CustomEvent<Collection>) {
 		collections = collections.map((adventure) => {
 			if (adventure.id === event.detail.id) {
@@ -166,8 +195,59 @@
 		sidebarOpen = !sidebarOpen;
 	}
 
-	function switchView(view: 'owned' | 'shared' | 'archived') {
+	function switchView(view: 'owned' | 'shared' | 'archived' | 'invites') {
 		activeView = view;
+	}
+
+	// Invite functions
+	async function acceptInvite(invite: CollectionInvite) {
+		try {
+			const res = await fetch(`/api/collections/${invite.collection}/accept-invite/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (res.ok) {
+				// Remove invite from list
+				invites = invites.filter((i) => i.id !== invite.id);
+				addToast('success', `${$t('invites.accepted')} "${invite.name}"`);
+				// Optionally refresh shared collections
+				await goto(window.location.pathname, { invalidateAll: true });
+			} else {
+				const error = await res.json();
+				addToast('error', error.error || $t('invites.accept_failed'));
+			}
+		} catch (error) {
+			addToast('error', $t('invites.accept_failed'));
+		}
+	}
+
+	async function declineInvite(invite: CollectionInvite) {
+		try {
+			const res = await fetch(`/api/collections/${invite.collection}/decline-invite/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+
+			if (res.ok) {
+				// Remove invite from list
+				invites = invites.filter((i) => i.id !== invite.id);
+				addToast('success', `${$t('invites.declined')} "${invite.name}"`);
+			} else {
+				const error = await res.json();
+				addToast('error', error.error || $t('invites.decline_failed'));
+			}
+		} catch (error) {
+			addToast('error', $t('invites.decline_failed'));
+		}
+	}
+
+	function formatDate(dateString: string): string {
+		return new Date(dateString).toLocaleDateString();
 	}
 </script>
 
@@ -175,6 +255,17 @@
 	<title>Collections</title>
 	<meta name="description" content="View your adventure collections." />
 </svelte:head>
+
+{#if isShowingConfirmLeaveModal}
+	<DeleteWarning
+		title={$t('adventures.leave_collection')}
+		button_text={$t('adventures.leave')}
+		description={$t('adventures.leave_collection_warning')}
+		is_warning={true}
+		on:close={() => (isShowingConfirmLeaveModal = false)}
+		on:confirm={leaveCollection}
+	/>
+{/if}
 
 {#if isShowingCollectionModal}
 	<CollectionModal
@@ -204,7 +295,9 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t(`adventures.my_collections`)}
+										{activeView === 'invites'
+											? $t('invites.title')
+											: $t(`adventures.my_collections`)}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{currentCount}
@@ -212,7 +305,9 @@
 											? $t('navbar.collections')
 											: activeView === 'shared'
 												? $t('collection.shared_collections')
-												: $t('adventures.archived_collections')}
+												: activeView === 'archived'
+													? $t('adventures.archived_collections')
+													: $t('invites.pending_invites')}
 									</p>
 								</div>
 							</div>
@@ -258,6 +353,27 @@
 									{archivedCollections.length}
 								</div>
 							</button>
+							<button
+								class="tab gap-2 {activeView === 'invites' ? 'tab-active' : ''}"
+								on:click={() => switchView('invites')}
+							>
+								<div class="indicator">
+									<MailIcon class="w-4 h-4" />
+									{#if invites.length > 0}
+										<span class="indicator-item badge badge-xs badge-error"></span>
+									{/if}
+								</div>
+								<span class="hidden sm:inline">{$t('invites.title')}</span>
+								<div
+									class="badge badge-sm {activeView === 'invites'
+										? 'badge-primary'
+										: invites.length > 0
+											? 'badge-error'
+											: 'badge-ghost'}"
+								>
+									{invites.length}
+								</div>
+							</button>
 						</div>
 					</div>
 				</div>
@@ -265,7 +381,72 @@
 
 			<!-- Main Content -->
 			<div class="container mx-auto px-6 py-8">
-				{#if currentCollections.length === 0}
+				{#if activeView === 'invites'}
+					<!-- Invites Content -->
+					{#if invites.length === 0}
+						<div class="flex flex-col items-center justify-center py-16">
+							<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
+								<MailIcon class="w-16 h-16 text-base-content/30" />
+							</div>
+							<h3 class="text-xl font-semibold text-base-content/70 mb-2">
+								{$t('invites.no_invites')}
+							</h3>
+							<p class="text-base-content/50 text-center max-w-md">
+								{$t('invites.no_invites_desc')}
+							</p>
+						</div>
+					{:else}
+						<div class="space-y-4">
+							{#each invites as invite}
+								<div
+									class="card bg-base-100 shadow-lg border border-base-300 hover:shadow-xl transition-shadow"
+								>
+									<div class="card-body p-6">
+										<div class="flex items-start justify-between">
+											<div class="flex-1">
+												<div class="flex items-center gap-3 mb-2">
+													<div class="p-2 bg-primary/10 rounded-lg">
+														<CollectionIcon class="w-5 h-5 text-primary" />
+													</div>
+													<div>
+														<h3 class="font-semibold text-lg">
+															{invite.name}
+														</h3>
+														<p class="text-xs text-base-content/50">
+															{$t('invites.invited_on')}
+															{formatDate(invite.created_at)}
+															{$t('invites.by')}
+															{invite.collection_owner_username || ''}
+															({invite.collection_user_first_name || ''}
+															{invite.collection_user_last_name || ''})
+														</p>
+													</div>
+												</div>
+											</div>
+											<div class="flex gap-2 ml-4">
+												<button
+													class="btn btn-success btn-sm gap-2"
+													on:click={() => acceptInvite(invite)}
+												>
+													<CheckIcon class="w-4 h-4" />
+													{$t('invites.accept')}
+												</button>
+												<button
+													class="btn btn-error btn-sm btn-outline gap-2"
+													on:click={() => declineInvite(invite)}
+												>
+													<CloseIcon class="w-4 h-4" />
+													{$t('invites.decline')}
+												</button>
+											</div>
+										</div>
+									</div>
+								</div>
+							{/each}
+						</div>
+					{/if}
+				{:else if currentCollections.length === 0}
+					<!-- Empty State for Collections -->
 					<div class="flex flex-col items-center justify-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
 							{#if activeView === 'owned'}
@@ -318,6 +499,10 @@
 								on:archive={archiveCollection}
 								on:unarchive={unarchiveCollection}
 								user={data.user}
+								on:leave={(e) => {
+									collectionIdToLeave = e.detail;
+									isShowingConfirmLeaveModal = true;
+								}}
 							/>
 						{/each}
 					</div>
@@ -356,79 +541,82 @@
 						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
-					<!-- Sort Form - Updated to use URL navigation -->
-					<div class="card bg-base-200/50 p-4">
-						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-							<Sort class="w-5 h-5" />
-							{$t(`adventures.sort`)}
-						</h3>
+					<!-- Only show sort options for collection views, not invites -->
+					{#if activeView !== 'invites'}
+						<!-- Sort Form - Updated to use URL navigation -->
+						<div class="card bg-base-200/50 p-4">
+							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+								<Sort class="w-5 h-5" />
+								{$t(`adventures.sort`)}
+							</h3>
 
-						<div class="space-y-4">
-							<div>
-								<!-- svelte-ignore a11y-label-has-associated-control -->
-								<label class="label">
-									<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
-								</label>
-								<div class="join w-full">
-									<button
-										class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
-											? 'btn-active'
-											: ''}"
-										on:click={() => updateSort(orderBy, 'asc')}
-									>
-										{$t(`adventures.ascending`)}
-									</button>
-									<button
-										class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
-											? 'btn-active'
-											: ''}"
-										on:click={() => updateSort(orderBy, 'desc')}
-									>
-										{$t(`adventures.descending`)}
-									</button>
+							<div class="space-y-4">
+								<div>
+									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<label class="label">
+										<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
+									</label>
+									<div class="join w-full">
+										<button
+											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
+												? 'btn-active'
+												: ''}"
+											on:click={() => updateSort(orderBy, 'asc')}
+										>
+											{$t(`adventures.ascending`)}
+										</button>
+										<button
+											class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
+												? 'btn-active'
+												: ''}"
+											on:click={() => updateSort(orderBy, 'desc')}
+										>
+											{$t(`adventures.descending`)}
+										</button>
+									</div>
 								</div>
-							</div>
 
-							<div>
-								<!-- svelte-ignore a11y-label-has-associated-control -->
-								<label class="label">
-									<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-								</label>
-								<div class="space-y-2">
-									<label class="label cursor-pointer justify-start gap-3">
-										<input
-											type="radio"
-											name="order_by_radio"
-											class="radio radio-primary radio-sm"
-											checked={orderBy === 'updated_at'}
-											on:change={() => updateSort('updated_at', orderDirection)}
-										/>
-										<span class="label-text">{$t('adventures.updated')}</span>
+								<div>
+									<!-- svelte-ignore a11y-label-has-associated-control -->
+									<label class="label">
+										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 									</label>
-									<label class="label cursor-pointer justify-start gap-3">
-										<input
-											type="radio"
-											name="order_by_radio"
-											class="radio radio-primary radio-sm"
-											checked={orderBy === 'start_date'}
-											on:change={() => updateSort('start_date', orderDirection)}
-										/>
-										<span class="label-text">{$t('adventures.start_date')}</span>
-									</label>
-									<label class="label cursor-pointer justify-start gap-3">
-										<input
-											type="radio"
-											name="order_by_radio"
-											class="radio radio-primary radio-sm"
-											checked={orderBy === 'name'}
-											on:change={() => updateSort('name', orderDirection)}
-										/>
-										<span class="label-text">{$t('adventures.name')}</span>
-									</label>
+									<div class="space-y-2">
+										<label class="label cursor-pointer justify-start gap-3">
+											<input
+												type="radio"
+												name="order_by_radio"
+												class="radio radio-primary radio-sm"
+												checked={orderBy === 'updated_at'}
+												on:change={() => updateSort('updated_at', orderDirection)}
+											/>
+											<span class="label-text">{$t('adventures.updated')}</span>
+										</label>
+										<label class="label cursor-pointer justify-start gap-3">
+											<input
+												type="radio"
+												name="order_by_radio"
+												class="radio radio-primary radio-sm"
+												checked={orderBy === 'start_date'}
+												on:change={() => updateSort('start_date', orderDirection)}
+											/>
+											<span class="label-text">{$t('adventures.start_date')}</span>
+										</label>
+										<label class="label cursor-pointer justify-start gap-3">
+											<input
+												type="radio"
+												name="order_by_radio"
+												class="radio radio-primary radio-sm"
+												checked={orderBy === 'name'}
+												on:change={() => updateSort('name', orderDirection)}
+											/>
+											<span class="label-text">{$t('adventures.name')}</span>
+										</label>
+									</div>
 								</div>
 							</div>
 						</div>
-					</div>
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -311,7 +311,14 @@
     "wiki_location_desc": "Trekker utdrag fra Wikipedia -artikkelen som samsvarer med navnet på stedet.",
     "will_be_marked_location": "vil bli merket som besøkt når stedet er lagret.",
     "no_locations_found": "Ingen steder funnet",
-    "image_modal_navigate": "Bruk piltastene eller klikk for å navigere"
+    "image_modal_navigate": "Bruk piltastene eller klikk for å navigere",
+    "details": "Detaljer",
+    "leave": "Forlate",
+    "leave_collection": "Forlate samlingen",
+    "leave_collection_warning": "Er du sikker på at du vil forlate denne samlingen? \nEventuelle steder du har lagt til, vil bli koblet til og forblir på kontoen din.",
+    "left_collection_message": "Vellykket igjen samling",
+    "loading_collections": "Laster inn samlinger ...",
+    "quick_start": "Rask start"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -535,7 +542,11 @@
     "restore_data": "Gjenopprett data",
     "restore_data_desc": "Last opp en sikkerhetskopifil for å gjenopprette dataene dine.",
     "select_backup_file": "Velg sikkerhetskopifil",
-    "world_travel_visits": "Verdens reisebesøk"
+    "world_travel_visits": "Verdens reisebesøk",
+    "activities": "Aktiviteter",
+    "trails": "Stier",
+    "use_imperial": "Bruk keiserlige enheter",
+    "use_imperial_desc": "Bruk keiserlige enheter (føtter, tommer, pund) i stedet for metriske enheter"
   },
   "collection": {
     "collection_created": "Samling opprettet!",
@@ -665,7 +676,11 @@
     "not_shared_with": "Ikke delt med",
     "no_shared_found": "Ingen samlinger funnet som er delt med deg.",
     "set_public": "For å la brukere dele med deg, må profilen din være offentlig.",
-    "go_to_settings": "Gå til innstillinger"
+    "go_to_settings": "Gå til innstillinger",
+    "available": "Tilgjengelig",
+    "pending": "I påvente av",
+    "revoke_invite": "Revoke Inviter",
+    "send_invite": "Send invitasjon"
   },
   "languages": {},
   "profile": {
@@ -743,7 +758,8 @@
     "location_recommendations": "Stedsanbefalinger"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Koble til Google Maps-kontoen din for å få søkeresultater og anbefalinger av høy kvalitet."
+    "google_maps_integration_desc": "Koble til Google Maps-kontoen din for å få søkeresultater og anbefalinger av høy kvalitet.",
+    "google_maps_integration_desc_no_staff": "Denne integrasjonen må først aktiveres av administratoren på denne serveren."
   },
   "calendar": {
     "all_day_event": "Hele dagens arrangement",
@@ -761,5 +777,36 @@
     "locations": "Lokasjoner",
     "my_locations": "Mine lokasjoner"
   },
-  "settings_download_backup": "Last ned sikkerhetskopi"
+  "settings_download_backup": "Last ned sikkerhetskopi",
+  "invites": {
+    "accept": "Akseptere",
+    "accept_failed": "Kunne ikke godta invitasjon",
+    "accepted": "Inviter akseptert",
+    "by": "ved",
+    "decline": "Avslå",
+    "decline_failed": "Kunne ikke avvise invitasjon",
+    "declined": "Invitasjonen avvist",
+    "invited_on": "Invitert videre",
+    "no_invites": "Ingen invitasjoner",
+    "no_invites_desc": "Forsikre deg om at profilen din er offentlig slik at brukere kan invitere deg.",
+    "pending_invites": "I påvente av invitasjoner",
+    "title": "Inviterer"
+  },
+  "strava": {
+    "account_connected": "Konto tilkoblet",
+    "admin_setup_required": "Serveradministratoren må aktivere den globalt",
+    "authorization_error": "Feil omdirigere til URL -URL for Strava",
+    "connect_account": "Koble til konto",
+    "disconnect": "Frakople",
+    "disconnect_error": "Feil fra å koble fra Strava",
+    "disconnected": "Vellykket koblet fra Strava",
+    "not_configured": "Strava ikke konfigurert",
+    "ready_to_connect": "Klar til å koble til",
+    "strava_integration_desc": "Koble til Strava for enkelt å importere aktivitetene dine til steder og besøk"
+  },
+  "wanderer": {
+    "connected": "Vellykket koblet til vandrer",
+    "connection_error": "Feil tilkobling til vandrer",
+    "wanderer_integration_desc": "Koble til Wanderer for enkelt å importere og se løypene dine på steder"
+  }
 }

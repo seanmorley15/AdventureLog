@@ -623,3 +623,22 @@ export function getBasemapUrl() {
 	}
 	return 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 }
+
+export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {
+	if (measurementSystem === 'imperial') {
+		const miles = meters / 1609.34;
+		return miles.toFixed(2);
+	} else {
+		const km = meters / 1000;
+		return km.toFixed(2);
+	}
+}
+
+export function getElevation(measurementSystem: 'metric' | 'imperial', elevation: number): string {
+	if (measurementSystem === 'imperial') {
+		const feet = elevation * 3.28084;
+		return Math.round(feet).toString();
+	} else {
+		return Math.round(elevation).toString();
+	}
+}

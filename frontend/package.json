@@ -40,7 +40,6 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
-		"@mapbox/togeojson": "^0.16.2",
 		"dompurify": "^3.2.4",
 		"emoji-picker-element": "^1.26.0",
 		"gsap": "^3.12.7",

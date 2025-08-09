@@ -311,7 +311,14 @@
     "wiki_location_desc": "Wyciąga fragment artykułu Wikipedii pasujący do nazwy lokalizacji.",
     "will_be_marked_location": "zostanie oznaczone jako odwiedzone po zapisaniu lokalizacji.",
     "no_locations_found": "Nie znaleziono żadnych lokalizacji",
-    "image_modal_navigate": "Użyj klawiszy strzałek lub kliknij, aby nawigować"
+    "image_modal_navigate": "Użyj klawiszy strzałek lub kliknij, aby nawigować",
+    "details": "Bliższe dane",
+    "leave": "Wyjechać",
+    "leave_collection": "Zostaw kolekcję",
+    "leave_collection_warning": "Czy na pewno chcesz opuścić tę kolekcję? \nWszelkie dodane lokalizacje zostaną niezłączone i pozostaną na Twoim koncie.",
+    "left_collection_message": "Z powodzeniem pozostawiono kolekcję",
+    "loading_collections": "Ładowanie kolekcji ...",
+    "quick_start": "Szybki start"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -535,7 +542,11 @@
     "restore_data": "Przywróć dane",
     "restore_data_desc": "Prześlij plik kopii zapasowej, aby przywrócić dane.",
     "select_backup_file": "Wybierz plik kopii zapasowej",
-    "world_travel_visits": "Wizyty podróży na świecie"
+    "world_travel_visits": "Wizyty podróży na świecie",
+    "activities": "Zajęcia",
+    "trails": "Szlaki",
+    "use_imperial": "Używaj jednostek cesarskich",
+    "use_imperial_desc": "Użyj jednostek cesarskich (stopy, cale, funty) zamiast jednostek metrycznych"
   },
   "collection": {
     "collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -648,7 +659,11 @@
     "not_shared_with": "Brak udostępnionych",
     "no_shared_found": "Brak kolekcji udostępnionych Tobie.",
     "set_public": "Aby umożliwić użytkownikom udostępnianie Tobie, musisz ustawić swój profil jako publiczny.",
-    "go_to_settings": "Przejdź do ustawień"
+    "go_to_settings": "Przejdź do ustawień",
+    "available": "Dostępny",
+    "pending": "Aż do",
+    "revoke_invite": "Cofnij zaproszenie",
+    "send_invite": "Wyślij zaproszenie"
   },
   "languages": {},
   "profile": {
@@ -743,7 +758,8 @@
     "resort": "Uciec"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji."
+    "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji.",
+    "google_maps_integration_desc_no_staff": "Ta integracja musi najpierw włączyć przez administratora na tym serwerze."
   },
   "calendar": {
     "all_day_event": "Wydarzenie przez cały dzień",
@@ -761,5 +777,36 @@
     "locations": "Lokalizacje",
     "my_locations": "Moje lokalizacje"
   },
-  "settings_download_backup": "Pobierz kopię zapasową"
+  "settings_download_backup": "Pobierz kopię zapasową",
+  "invites": {
+    "accept": "Przyjąć",
+    "accept_failed": "Nie udało się zaakceptować zaproszenia",
+    "accepted": "Zaproś zaakceptowane",
+    "by": "przez",
+    "decline": "Spadek",
+    "decline_failed": "Nie udało się odmówić",
+    "declined": "Zaproś o odmowę",
+    "invited_on": "Zaproszony",
+    "no_invites": "Żadnych zaproszeń",
+    "no_invites_desc": "Upewnij się, że Twój profil jest publiczny, aby użytkownicy mogli Cię zaprosić.",
+    "pending_invites": "Oczekujące zaproszenia",
+    "title": "Zaprasza"
+  },
+  "strava": {
+    "account_connected": "Podłączone konto",
+    "admin_setup_required": "Administrator serwera musi go włączyć na całym świecie",
+    "authorization_error": "Przekierowanie błędów do URL autoryzacji Strava",
+    "connect_account": "Połącz konto",
+    "disconnect": "Odłączyć",
+    "disconnect_error": "Odłączenie błędów od Strava",
+    "disconnected": "Pomyślnie odłączony od Strava",
+    "not_configured": "Strava nie skonfigurowana",
+    "ready_to_connect": "Gotowy do połączenia",
+    "strava_integration_desc": "Połącz się z Stravą, aby łatwo zaimportować swoje czynności do lokalizacji i wizyt"
+  },
+  "wanderer": {
+    "connected": "Pomyślnie związany z Wandererem",
+    "connection_error": "Błąd łączący się z Wandererem",
+    "wanderer_integration_desc": "Połącz się z Wandererem, aby łatwo importować i przeglądać szlaki w lokalizacjach"
+  }
 }

@@ -15,10 +15,11 @@ from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from django.conf import settings
+from django.contrib.contenttypes.models import ContentType
 
 from adventures.models import (
     Location, Collection, Transportation, Note, Checklist, ChecklistItem,
-    LocationImage, Attachment, Category, Lodging, Visit
+    ContentImage, ContentAttachment, Category, Lodging, Visit, Trail, Activity
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 
@@ -110,25 +111,76 @@ class BackupViewSet(viewsets.ViewSet):
                 'category_name': location.category.name if location.category else None,
                 'collection_export_ids': [collection_name_to_id[col_name] for col_name in location.collections.values_list('name', flat=True) if col_name in collection_name_to_id],
                 'visits': [],
+                'trails': [],
                 'images': [],
                 'attachments': []
             }
             
             # Add visits
-            for visit in location.visits.all():
-                location_data['visits'].append({
+            for visit_idx, visit in enumerate(location.visits.all()):
+                visit_data = {
+                    'export_id': visit_idx,  # Add unique identifier for this visit
                     'start_date': visit.start_date.isoformat() if visit.start_date else None,
                     'end_date': visit.end_date.isoformat() if visit.end_date else None,
                     'timezone': visit.timezone,
-                    'notes': visit.notes
-                })
+                    'notes': visit.notes,
+                    'activities': []
+                }
+                
+                # Add activities for this visit
+                for activity in visit.activities.all():
+                    activity_data = {
+                        'name': activity.name,
+                        'type': activity.type,
+                        'sport_type': activity.sport_type,
+                        'distance': float(activity.distance) if activity.distance else None,
+                        'moving_time': activity.moving_time.total_seconds() if activity.moving_time else None,
+                        'elapsed_time': activity.elapsed_time.total_seconds() if activity.elapsed_time else None,
+                        'rest_time': activity.rest_time.total_seconds() if activity.rest_time else None,
+                        'elevation_gain': float(activity.elevation_gain) if activity.elevation_gain else None,
+                        'elevation_loss': float(activity.elevation_loss) if activity.elevation_loss else None,
+                        'elev_high': float(activity.elev_high) if activity.elev_high else None,
+                        'elev_low': float(activity.elev_low) if activity.elev_low else None,
+                        'start_date': activity.start_date.isoformat() if activity.start_date else None,
+                        'start_date_local': activity.start_date_local.isoformat() if activity.start_date_local else None,
+                        'timezone': activity.timezone,
+                        'average_speed': float(activity.average_speed) if activity.average_speed else None,
+                        'max_speed': float(activity.max_speed) if activity.max_speed else None,
+                        'average_cadence': float(activity.average_cadence) if activity.average_cadence else None,
+                        'calories': float(activity.calories) if activity.calories else None,
+                        'start_lat': float(activity.start_lat) if activity.start_lat else None,
+                        'start_lng': float(activity.start_lng) if activity.start_lng else None,
+                        'end_lat': float(activity.end_lat) if activity.end_lat else None,
+                        'end_lng': float(activity.end_lng) if activity.end_lng else None,
+                        'external_service_id': activity.external_service_id,
+                        'trail_name': activity.trail.name if activity.trail else None,  # Link by trail name
+                        'gpx_filename': None
+                    }
+                    
+                    # Handle GPX file
+                    if activity.gpx_file:
+                        activity_data['gpx_filename'] = activity.gpx_file.name.split('/')[-1]
+                    
+                    visit_data['activities'].append(activity_data)
+                
+                location_data['visits'].append(visit_data)
+            
+            # Add trails for this location
+            for trail in location.trails.all():
+                trail_data = {
+                    'name': trail.name,
+                    'link': trail.link,
+                    'wanderer_id': trail.wanderer_id,
+                    'created_at': trail.created_at.isoformat() if trail.created_at else None
+                }
+                location_data['trails'].append(trail_data)
             
             # Add images
             for image in location.images.all():
                 image_data = {
                     'immich_id': image.immich_id,
                     'is_primary': image.is_primary,
-                    'filename': None
+                    'filename': None,
                 }
                 if image.image:
                     image_data['filename'] = image.image.name.split('/')[-1]
@@ -241,7 +293,7 @@ class BackupViewSet(viewsets.ViewSet):
                 # Add JSON data
                 zip_file.writestr('data.json', json.dumps(export_data, indent=2))
                 
-                # Add images and attachments
+                # Add images, attachments, and GPX files
                 files_added = set()
                 
                 for location in user.location_set.all():
@@ -266,6 +318,18 @@ class BackupViewSet(viewsets.ViewSet):
                                 files_added.add(attachment.file.name)
                             except Exception as e:
                                 print(f"Error adding attachment {attachment.file.name}: {e}")
+                    
+                    # Add GPX files from activities
+                    for visit in location.visits.all():
+                        for activity in visit.activities.all():
+                            if activity.gpx_file and activity.gpx_file.name not in files_added:
+                                try:
+                                    gpx_content = default_storage.open(activity.gpx_file.name).read()
+                                    filename = activity.gpx_file.name.split('/')[-1]
+                                    zip_file.writestr(f'gpx/{filename}', gpx_content)
+                                    files_added.add(activity.gpx_file.name)
+                                except Exception as e:
+                                    print(f"Error adding GPX file {activity.gpx_file.name}: {e}")
         
         # Return ZIP file as response
         with open(tmp_file.name, 'rb') as zip_file:
@@ -340,6 +404,8 @@ class BackupViewSet(viewsets.ViewSet):
     def _clear_user_data(self, user):
         """Clear all existing user data before import"""
         # Delete in reverse order of dependencies
+        user.activity_set.all().delete()  # Delete activities first
+        user.trail_set.all().delete()     # Delete trails
         user.checklistitem_set.all().delete()
         user.checklist_set.all().delete()
         user.note_set.all().delete()
@@ -347,8 +413,8 @@ class BackupViewSet(viewsets.ViewSet):
         user.lodging_set.all().delete()
         
         # Delete location-related data
-        user.locationimage_set.all().delete()
-        user.attachment_set.all().delete()
+        user.contentimage_set.all().delete()
+        user.contentattachment_set.all().delete()
         # Visits are deleted via cascade when locations are deleted
         user.location_set.all().delete()
         
@@ -362,13 +428,19 @@ class BackupViewSet(viewsets.ViewSet):
     
     def _import_data(self, backup_data, zip_file, user):
         """Import backup data and return summary"""
+        from datetime import timedelta
+        
         # Track mappings and counts
         category_map = {}
         collection_map = {}  # Map export_id to actual collection object
+        location_map = {}    # Map location export_id to actual location object
+        trail_name_map = {}  # Map (location_id, trail_name) to trail object
         summary = {
             'categories': 0, 'collections': 0, 'locations': 0,
             'transportation': 0, 'notes': 0, 'checklists': 0,
-            'checklist_items': 0, 'lodging': 0, 'images': 0, 'attachments': 0, 'visited_cities': 0, 'visited_regions': 0
+            'checklist_items': 0, 'lodging': 0, 'images': 0, 
+            'attachments': 0, 'visited_cities': 0, 'visited_regions': 0,
+            'trails': 0, 'activities': 0, 'gpx_files': 0
         }
 
         # Import Visited Cities
@@ -467,31 +539,111 @@ class BackupViewSet(viewsets.ViewSet):
                 category=category_map.get(adv_data.get('category_name'))
             )
             location.save(_skip_geocode=True)  # Skip geocoding for now
+            location_map[adv_data['export_id']] = location
             
-            # Add to collections using export_ids
+            # Add to collections using export_ids - MUST be done after save()
             for collection_export_id in adv_data.get('collection_export_ids', []):
                 if collection_export_id in collection_map:
                     location.collections.add(collection_map[collection_export_id])
             
-            # Import visits
+            # Import trails for this location first
+            for trail_data in adv_data.get('trails', []):
+                trail = Trail.objects.create(
+                    user=user,
+                    location=location,
+                    name=trail_data['name'],
+                    link=trail_data.get('link'),
+                    wanderer_id=trail_data.get('wanderer_id'),
+                    created_at=trail_data.get('created_at')
+                )
+                trail_name_map[(location.id, trail_data['name'])] = trail
+                summary['trails'] += 1
+            
+            # Import visits and their activities
             for visit_data in adv_data.get('visits', []):
-                Visit.objects.create(
+                visit = Visit.objects.create(
                     location=location,
                     start_date=visit_data.get('start_date'),
                     end_date=visit_data.get('end_date'),
                     timezone=visit_data.get('timezone'),
                     notes=visit_data.get('notes')
                 )
+                
+                # Import activities for this visit
+                for activity_data in visit_data.get('activities', []):
+                    # Find the trail if specified
+                    trail = None
+                    if activity_data.get('trail_name'):
+                        trail = trail_name_map.get((location.id, activity_data['trail_name']))
+                    
+                    # Convert time durations back from seconds
+                    moving_time = None
+                    if activity_data.get('moving_time') is not None:
+                        moving_time = timedelta(seconds=activity_data['moving_time'])
+                    
+                    elapsed_time = None
+                    if activity_data.get('elapsed_time') is not None:
+                        elapsed_time = timedelta(seconds=activity_data['elapsed_time'])
+                    
+                    rest_time = None
+                    if activity_data.get('rest_time') is not None:
+                        rest_time = timedelta(seconds=activity_data['rest_time'])
+                    
+                    activity = Activity(
+                        user=user,
+                        visit=visit,
+                        trail=trail,
+                        name=activity_data['name'],
+                        type=activity_data.get('type', 'general'),
+                        sport_type=activity_data.get('sport_type'),
+                        distance=activity_data.get('distance'),
+                        moving_time=moving_time,
+                        elapsed_time=elapsed_time,
+                        rest_time=rest_time,
+                        elevation_gain=activity_data.get('elevation_gain'),
+                        elevation_loss=activity_data.get('elevation_loss'),
+                        elev_high=activity_data.get('elev_high'),
+                        elev_low=activity_data.get('elev_low'),
+                        start_date=activity_data.get('start_date'),
+                        start_date_local=activity_data.get('start_date_local'),
+                        timezone=activity_data.get('timezone'),
+                        average_speed=activity_data.get('average_speed'),
+                        max_speed=activity_data.get('max_speed'),
+                        average_cadence=activity_data.get('average_cadence'),
+                        calories=activity_data.get('calories'),
+                        start_lat=activity_data.get('start_lat'),
+                        start_lng=activity_data.get('start_lng'),
+                        end_lat=activity_data.get('end_lat'),
+                        end_lng=activity_data.get('end_lng'),
+                        external_service_id=activity_data.get('external_service_id')
+                    )
+                    
+                    # Handle GPX file
+                    gpx_filename = activity_data.get('gpx_filename')
+                    if gpx_filename:
+                        try:
+                            gpx_content = zip_file.read(f'gpx/{gpx_filename}')
+                            gpx_file = ContentFile(gpx_content, name=gpx_filename)
+                            activity.gpx_file = gpx_file
+                            summary['gpx_files'] += 1
+                        except KeyError:
+                            pass  # GPX file not found in backup
+                    
+                    activity.save()
+                    summary['activities'] += 1
             
             # Import images
+            content_type = ContentType.objects.get(model='location')
+
             for img_data in adv_data.get('images', []):
                 immich_id = img_data.get('immich_id')
                 if immich_id:
-                    LocationImage.objects.create(
+                    ContentImage.objects.create(
                         user=user,
-                        location=location,
                         immich_id=immich_id,
-                        is_primary=img_data.get('is_primary', False)
+                        is_primary=img_data.get('is_primary', False),
+                        content_type=content_type,
+                        object_id=location.id
                     )
                     summary['images'] += 1
                 else:
@@ -500,11 +652,12 @@ class BackupViewSet(viewsets.ViewSet):
                         try:
                             img_content = zip_file.read(f'images/{filename}')
                             img_file = ContentFile(img_content, name=filename)
-                            LocationImage.objects.create(
+                            ContentImage.objects.create(
                                 user=user,
-                                location=location,
                                 image=img_file,
-                                is_primary=img_data.get('is_primary', False)
+                                is_primary=img_data.get('is_primary', False),
+                                content_type=content_type,
+                                object_id=location.id
                             )
                             summary['images'] += 1
                         except KeyError:
@@ -517,11 +670,12 @@ class BackupViewSet(viewsets.ViewSet):
                     try:
                         att_content = zip_file.read(f'attachments/{filename}')
                         att_file = ContentFile(att_content, name=filename)
-                        Attachment.objects.create(
+                        ContentAttachment.objects.create(
                             user=user,
-                            location=location,
                             file=att_file,
-                            name=att_data.get('name')
+                            name=att_data.get('name'),
+                            content_type=content_type,
+                            object_id=location.id
                         )
                         summary['attachments'] += 1
                     except KeyError:

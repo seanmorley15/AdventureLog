@@ -18,6 +18,12 @@
 	import TrendingUp from '~icons/mdi/trending-up';
 	import Share from '~icons/mdi/share-variant';
 	import Award from '~icons/mdi/award';
+	import Run from '~icons/mdi/run';
+	import Timer from '~icons/mdi/timer-outline';
+	import TrendingUpOutline from '~icons/mdi/trending-up';
+	import Mountain from '~icons/mdi/mountain';
+
+	let measurementSystem = data.user?.measurement_system || 'metric';
 
 	let stats: {
 		visited_country_count: number;
@@ -28,12 +34,40 @@
 		total_countries: number;
 		visited_city_count: number;
 		total_cities: number;
+		activity_count: number;
+		activity_distance: number;
+		activity_moving_time: number;
+		activity_elevation: number;
 	} | null;
 
 	const user: User = data.user;
 	const adventures: Location[] = data.adventures;
 	const collections: Collection[] = data.collections;
 	stats = data.stats || null;
+
+	// function to take in meters for distance and return it in either kilometers or miles
+	function getDistance(meters: number): string {
+		return measurementSystem === 'imperial'
+			? `${(meters * 0.000621371).toFixed(2)} mi`
+			: `${(meters / 1000).toFixed(2)} km`;
+	}
+
+	function getElevation(meters: number): string {
+		return measurementSystem === 'imperial'
+			? `${(meters * 3.28084).toFixed(1)} ft`
+			: `${meters.toFixed(1)} m`;
+	}
+
+	// Function to format time from seconds to readable format
+	function formatTime(seconds: number): string {
+		const hours = Math.floor(seconds / 3600);
+		const minutes = Math.floor((seconds % 3600) / 60);
+
+		if (hours > 0) {
+			return `${hours}h ${minutes}m`;
+		}
+		return `${minutes}m`;
+	}
 
 	// Calculate achievements
 	$: worldExplorationPercentage = stats
@@ -258,7 +292,7 @@
 				</div>
 
 				<!-- Secondary Stats -->
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 					<!-- Regions -->
 					<div
 						class="stat-card card bg-gradient-to-br from-info/10 to-info/5 shadow-xl border border-info/20 hover:shadow-2xl transition-all duration-300"
@@ -320,6 +354,104 @@
 						</div>
 					</div>
 				</div>
+
+				<!-- Activity Stats Section -->
+				{#if stats.activity_count > 0}
+					<div class="mb-8">
+						<div class="text-center mb-6">
+							<h3 class="text-2xl font-bold mb-2">Activity Statistics</h3>
+							<p class="text-base-content/60">Your fitness and activity achievements</p>
+						</div>
+
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+							<!-- Total Activities -->
+							<div
+								class="stat-card card bg-gradient-to-br from-accent/10 to-accent/5 shadow-xl border border-accent/20 hover:shadow-2xl transition-all duration-300"
+							>
+								<div class="card-body p-6">
+									<div class="flex items-center justify-between">
+										<div>
+											<div class="text-accent/70 font-medium text-sm uppercase tracking-wide">
+												Activities
+											</div>
+											<div class="text-3xl font-bold text-accent">{stats.activity_count}</div>
+											<div class="text-accent/60 mt-2">Total recorded</div>
+										</div>
+										<div class="p-3 bg-accent/20 rounded-2xl">
+											<Run class="w-6 h-6 text-accent" />
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Total Distance -->
+							<div
+								class="stat-card card bg-gradient-to-br from-error/10 to-error/5 shadow-xl border border-error/20 hover:shadow-2xl transition-all duration-300"
+							>
+								<div class="card-body p-6">
+									<div class="flex items-center justify-between">
+										<div>
+											<div class="text-error/70 font-medium text-sm uppercase tracking-wide">
+												Distance
+											</div>
+											<div class="text-3xl font-bold text-error">
+												{getDistance(stats.activity_distance)}
+											</div>
+											<div class="text-error/60 mt-2">Total covered</div>
+										</div>
+										<div class="p-3 bg-error/20 rounded-2xl">
+											<TrendingUpOutline class="w-6 h-6 text-error" />
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Moving Time -->
+							<div
+								class="stat-card card bg-gradient-to-br from-purple-500/10 to-purple-500/5 shadow-xl border border-purple-500/20 hover:shadow-2xl transition-all duration-300"
+							>
+								<div class="card-body p-6">
+									<div class="flex items-center justify-between">
+										<div>
+											<div class="text-purple-500/70 font-medium text-sm uppercase tracking-wide">
+												Moving Time
+											</div>
+											<div class="text-3xl font-bold text-purple-500">
+												{formatTime(stats.activity_moving_time)}
+											</div>
+											<div class="text-purple-500/60 mt-2">Active duration</div>
+										</div>
+										<div class="p-3 bg-purple-500/20 rounded-2xl">
+											<Timer class="w-6 h-6 text-purple-500" />
+										</div>
+									</div>
+								</div>
+							</div>
+
+							<!-- Elevation Gain -->
+							<div
+								class="stat-card card bg-gradient-to-br from-orange-500/10 to-orange-500/5 shadow-xl border border-orange-500/20 hover:shadow-2xl transition-all duration-300"
+							>
+								<div class="card-body p-6">
+									<div class="flex items-center justify-between">
+										<div>
+											<div class="text-orange-500/70 font-medium text-sm uppercase tracking-wide">
+												Elevation
+											</div>
+											<div class="text-3xl font-bold text-orange-500">
+												{getElevation(stats.activity_elevation)}
+											</div>
+											<div class="text-orange-500/60 mt-2">Total gained</div>
+										</div>
+										<div class="p-3 bg-orange-500/20 rounded-2xl">
+											<Mountain class="w-6 h-6 text-orange-500" />
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
 			</div>
 		{/if}
 

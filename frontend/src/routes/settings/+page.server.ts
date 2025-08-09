@@ -80,6 +80,10 @@ export const load: PageServerLoad = async (event) => {
 	}
 	let integrations = await integrationsFetch.json();
 	let googleMapsEnabled = integrations.google_maps as boolean;
+	let stravaGlobalEnabled = integrations.strava.global as boolean;
+	let stravaUserEnabled = integrations.strava.user as boolean;
+	let wandererEnabled = integrations.wanderer.exists as boolean;
+	let wandererExpired = integrations.wanderer.expired as boolean;
 
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
@@ -98,7 +102,11 @@ export const load: PageServerLoad = async (event) => {
 			immichIntegration,
 			publicUrl,
 			socialProviders,
-			googleMapsEnabled
+			googleMapsEnabled,
+			stravaGlobalEnabled,
+			stravaUserEnabled,
+			wandererEnabled,
+			wandererExpired
 		}
 	};
 };
@@ -121,6 +129,7 @@ export const actions: Actions = {
 			let last_name = formData.get('last_name') as string | null | undefined;
 			let profile_pic = formData.get('profile_pic') as File | null | undefined;
 			let public_profile = formData.get('public_profile') as string | null | undefined | boolean;
+			let measurement_system = formData.get('measurement_system') as string | null | undefined;
 
 			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
 				headers: {
@@ -138,6 +147,13 @@ export const actions: Actions = {
 				public_profile = true;
 			} else {
 				public_profile = false;
+			}
+
+			// Gets the boolean value of the measurement_system input checked means imperial
+			if (measurement_system === 'on') {
+				measurement_system = 'imperial';
+			} else {
+				measurement_system = 'metric';
 			}
 
 			let currentUser = (await resCurrent.json()) as User;
@@ -170,6 +186,7 @@ export const actions: Actions = {
 				formDataToSend.append('profile_pic', profile_pic);
 			}
 			formDataToSend.append('public_profile', public_profile.toString());
+			formDataToSend.append('measurement_system', measurement_system.toString());
 
 			let csrfToken = await fetchCSRFToken();
 

@@ -4,11 +4,12 @@ from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from adventures.models import Collection, Location, Transportation, Note, Checklist
+from adventures.models import Collection, Location, Transportation, Note, Checklist, CollectionInvite
 from adventures.permissions import CollectionShared
-from adventures.serializers import CollectionSerializer
+from adventures.serializers import CollectionSerializer, CollectionInviteSerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
+from users.serializers import CustomUserDetailsSerializer as UserSerializer
 
 class CollectionViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionSerializer
@@ -158,7 +159,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
     
-    # Adds a new user to the shared_with field of a location
+    # Created a custom action to share a collection with another user by their UUID
+    # This action will create a CollectionInvite instead of directly sharing the collection
     @action(detail=True, methods=['post'], url_path='share/(?P<uuid>[^/.]+)')
     def share(self, request, pk=None, uuid=None):
         collection = self.get_object()
@@ -172,20 +174,140 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if user == request.user:
             return Response({"error": "Cannot share with yourself"}, status=400)
         
+        # Check if user is already shared with the collection
         if collection.shared_with.filter(id=user.id).exists():
-            return Response({"error": "Location is already shared with this user"}, status=400)
+            return Response({"error": "Collection is already shared with this user"}, status=400)
         
-        collection.shared_with.add(user)
-        collection.save()
-        return Response({"success": f"Shared with {user.username}"})
+        # Check if there's already a pending invite for this user
+        if CollectionInvite.objects.filter(collection=collection, invited_user=user).exists():
+            return Response({"error": "Invite already sent to this user"}, status=400)
+        
+        # Create the invite instead of directly sharing
+        invite = CollectionInvite.objects.create(
+            collection=collection,
+            invited_user=user
+        )
+        
+        return Response({"success": f"Invite sent to {user.username}"})
     
+    # Custom action to list all invites for a user
+    @action(detail=False, methods=['get'], url_path='invites')
+    def invites(self, request):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        invites = CollectionInvite.objects.filter(invited_user=request.user)
+        serializer = CollectionInviteSerializer(invites, many=True)
+        
+        return Response(serializer.data)
+
+    # Add these methods to your CollectionViewSet class
+
+    @action(detail=True, methods=['post'], url_path='revoke-invite/(?P<uuid>[^/.]+)')
+    def revoke_invite(self, request, pk=None, uuid=None):
+        """Revoke a pending invite for a collection"""
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        collection = self.get_object()
+        
+        if not uuid:
+            return Response({"error": "User UUID is required"}, status=400)
+        
+        try:
+            user = User.objects.get(uuid=uuid, public_profile=True)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=404)
+        
+        # Only collection owner can revoke invites
+        if collection.user != request.user:
+            return Response({"error": "Only collection owner can revoke invites"}, status=403)
+        
+        try:
+            invite = CollectionInvite.objects.get(collection=collection, invited_user=user)
+            invite.delete()
+            return Response({"success": f"Invite revoked for {user.username}"})
+        except CollectionInvite.DoesNotExist:
+            return Response({"error": "No pending invite found for this user"}, status=404)
+
+    @action(detail=True, methods=['post'], url_path='accept-invite')
+    def accept_invite(self, request, pk=None):
+        """Accept a collection invite"""
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        collection = self.get_object()
+        
+        try:
+            invite = CollectionInvite.objects.get(collection=collection, invited_user=request.user)
+        except CollectionInvite.DoesNotExist:
+            return Response({"error": "No pending invite found for this collection"}, status=404)
+        
+        # Add user to collection's shared_with
+        collection.shared_with.add(request.user)
+        
+        # Delete the invite
+        invite.delete()
+        
+        return Response({"success": f"Successfully joined collection: {collection.name}"})
+
+    @action(detail=True, methods=['post'], url_path='decline-invite')
+    def decline_invite(self, request, pk=None):
+        """Decline a collection invite"""
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        collection = self.get_object()
+        
+        try:
+            invite = CollectionInvite.objects.get(collection=collection, invited_user=request.user)
+            invite.delete()
+            return Response({"success": f"Declined invite for collection: {collection.name}"})
+        except CollectionInvite.DoesNotExist:
+            return Response({"error": "No pending invite found for this collection"}, status=404)
+    
+    # Action to list all users a collection **can** be shared with, excluding those already shared with and those with pending invites
+    @action(detail=True, methods=['get'], url_path='can-share')
+    def can_share(self, request, pk=None):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        collection = self.get_object()
+        
+        # Get users with pending invites and users already shared with
+        users_with_pending_invites = set(str(uuid) for uuid in CollectionInvite.objects.filter(collection=collection).values_list('invited_user__uuid', flat=True))
+        users_already_shared = set(str(uuid) for uuid in collection.shared_with.values_list('uuid', flat=True))
+
+        # Get all users with public profiles excluding only the owner
+        all_users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
+        
+        # Return fully serialized user data with status
+        serializer = UserSerializer(all_users, many=True)
+        result_data = []
+        for user_data in serializer.data:
+            user_data.pop('has_password', None)
+            user_data.pop('disable_password', None)
+            # Add status field
+            if user_data['uuid'] in users_with_pending_invites:
+                user_data['status'] = 'pending'
+            elif user_data['uuid'] in users_already_shared:
+                user_data['status'] = 'shared'
+            else:
+                user_data['status'] = 'available'
+            result_data.append(user_data)
+        
+        return Response(result_data)
+
     @action(detail=True, methods=['post'], url_path='unshare/(?P<uuid>[^/.]+)')
     def unshare(self, request, pk=None, uuid=None):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
+        
         collection = self.get_object()
+        
         if not uuid:
             return Response({"error": "User UUID is required"}, status=400)
+        
         try:
             user = User.objects.get(uuid=uuid, public_profile=True)
         except User.DoesNotExist:
@@ -197,9 +319,58 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if not collection.shared_with.filter(id=user.id).exists():
             return Response({"error": "Collection is not shared with this user"}, status=400)
         
+        # Remove user from shared_with
         collection.shared_with.remove(user)
+        
+        # Handle locations owned by the unshared user that are in this collection
+        # These locations should be removed from the collection since they lose access
+        locations_to_remove = collection.locations.filter(user=user)
+        removed_count = locations_to_remove.count()
+        
+        if locations_to_remove.exists():
+            # Remove these locations from the collection
+            collection.locations.remove(*locations_to_remove)
+        
         collection.save()
-        return Response({"success": f"Unshared with {user.username}"})
+        
+        success_message = f"Unshared with {user.username}"
+        if removed_count > 0:
+            success_message += f" and removed {removed_count} location(s) they owned from the collection"
+        
+        return Response({"success": success_message})
+    
+    # Action for a shared user to leave a collection
+    @action(detail=True, methods=['post'], url_path='leave')
+    def leave(self, request, pk=None):
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+        
+        collection = self.get_object()
+        
+        if request.user == collection.user:
+            return Response({"error": "Owner cannot leave their own collection"}, status=400)
+        
+        if not collection.shared_with.filter(id=request.user.id).exists():
+            return Response({"error": "You are not a member of this collection"}, status=400)
+        
+        # Remove the user from shared_with
+        collection.shared_with.remove(request.user)
+        
+        # Handle locations owned by the user that are in this collection
+        locations_to_remove = collection.locations.filter(user=request.user)
+        removed_count = locations_to_remove.count()
+        
+        if locations_to_remove.exists():
+            # Remove these locations from the collection
+            collection.locations.remove(*locations_to_remove)
+        
+        collection.save()
+        
+        success_message = f"You have left the collection: {collection.name}"
+        if removed_count > 0:
+            success_message += f" and removed {removed_count} location(s) you owned from the collection"
+        
+        return Response({"success": success_message})
 
     def get_queryset(self):
         if self.action == 'destroy':
@@ -208,6 +379,16 @@ class CollectionViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update']:
             return Collection.objects.filter(
                 Q(user=self.request.user.id) | Q(shared_with=self.request.user)
+            ).distinct()
+        
+        # Allow access to collections with pending invites for accept/decline actions
+        if self.action in ['accept_invite', 'decline_invite']:
+            if not self.request.user.is_authenticated:
+                return Collection.objects.none()
+            return Collection.objects.filter(
+                Q(user=self.request.user.id) | 
+                Q(shared_with=self.request.user) | 
+                Q(invites__invited_user=self.request.user)
             ).distinct()
         
         if self.action == 'retrieve':
