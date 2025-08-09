@@ -259,7 +259,14 @@
     "wiki_location_desc": "위치 이름과 일치하는 Wikipedia 기사에서 발췌 한 내용을 가져옵니다.",
     "will_be_marked_location": "위치가 저장되면 방문한대로 표시됩니다.",
     "no_locations_found": "발견 된 위치는 없습니다",
-    "image_modal_navigate": "화살표 키를 사용하거나 클릭하여 탐색하십시오"
+    "image_modal_navigate": "화살표 키를 사용하거나 클릭하여 탐색하십시오",
+    "details": "세부",
+    "leave": "떠나다",
+    "leave_collection": "컬렉션을 떠나십시오",
+    "leave_collection_warning": "이 컬렉션을 떠나고 싶습니까? \n추가 한 모든 위치는 inke가 무제한 상태이며 귀하의 계정에 남아 있습니다.",
+    "left_collection_message": "성공적으로 컬렉션을 떠났습니다",
+    "loading_collections": "컬렉션로드 ...",
+    "quick_start": "빠른 시작"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -627,7 +634,11 @@
     "restore_data": "데이터를 복원하십시오",
     "restore_data_desc": "백업 파일을 업로드하여 데이터를 복원하십시오.",
     "select_backup_file": "백업 파일을 선택하십시오",
-    "world_travel_visits": "세계 여행 방문"
+    "world_travel_visits": "세계 여행 방문",
+    "activities": "활동",
+    "trails": "트레일",
+    "use_imperial": "제국 유닛을 사용하십시오",
+    "use_imperial_desc": "메트릭 단위 대신 황실 단위 (피트, 인치, 파운드)를 사용하십시오."
   },
   "share": {
     "go_to_settings": "설정으로 이동",
@@ -639,7 +650,11 @@
     "shared": "공유됨",
     "shared_with": "공유한 사용자",
     "unshared": "공유되지 않음",
-    "with": "함께 하는 사용자"
+    "with": "함께 하는 사용자",
+    "available": "사용 가능",
+    "pending": "보류 중",
+    "revoke_invite": "취소 초대",
+    "send_invite": "초대를 보내십시오"
   },
   "transportation": {
     "edit": "편집",
@@ -742,7 +757,8 @@
     "villa": "별장"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오."
+    "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오.",
+    "google_maps_integration_desc_no_staff": "이 통합은 먼저이 서버의 관리자가 활성화해야합니다."
   },
   "calendar": {
     "all_day_event": "하루 종일 이벤트",
@@ -760,5 +776,36 @@
     "locations": "위치",
     "my_locations": "내 위치"
   },
-  "settings_download_backup": "백업을 다운로드하십시오"
+  "settings_download_backup": "백업을 다운로드하십시오",
+  "invites": {
+    "accept": "수용하다",
+    "accept_failed": "초대를 수락하지 못했습니다",
+    "accepted": "허가를 초대하십시오",
+    "by": "~에 의해",
+    "decline": "감소",
+    "decline_failed": "초대를 거부하지 못했습니다",
+    "declined": "초대 거절",
+    "invited_on": "초대",
+    "no_invites": "초대하지 않습니다",
+    "no_invites_desc": "사용자가 귀하를 초대 할 수 있도록 프로필이 공개되어 있는지 확인하십시오.",
+    "pending_invites": "보류중인 초대",
+    "title": "초대"
+  },
+  "strava": {
+    "account_connected": "계정이 연결되어 있습니다",
+    "admin_setup_required": "서버 관리자는 전 세계적으로 활성화해야합니다",
+    "authorization_error": "Strava Authorization URL로 오류를 방향으로 리디렉션합니다",
+    "connect_account": "계정을 연결하십시오",
+    "disconnect": "연결을 끊습니다",
+    "disconnect_error": "Strava에서 오류 분리",
+    "disconnected": "Strava에서 성공적으로 분리되었습니다",
+    "not_configured": "Strava는 구성되지 않았습니다",
+    "ready_to_connect": "연결 준비",
+    "strava_integration_desc": "Strava에 연결하여 액티브를 위치 및 방문으로 쉽게 가져 오십시오."
+  },
+  "wanderer": {
+    "connected": "Wanderer에 성공적으로 연결되었습니다",
+    "connection_error": "방랑자에 연결하는 오류",
+    "wanderer_integration_desc": "Wanderer에 연결하여 위치에서 트레일을 쉽게 가져오고 볼 수 있습니다."
+  }
 }

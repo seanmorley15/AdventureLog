@@ -311,7 +311,14 @@
     "wiki_location_desc": "从Wikipedia文章中提取摘录，符合该位置的名称。",
     "will_be_marked_location": "保存位置后，将被标记为访问。",
     "no_locations_found": "找不到位置",
-    "image_modal_navigate": "使用箭头键或单击以导航"
+    "image_modal_navigate": "使用箭头键或单击以导航",
+    "details": "细节",
+    "leave": "离开",
+    "leave_collection": "离开收藏",
+    "leave_collection_warning": "您确定要离开这个系列吗？\n您添加的任何位置都将被取消链接并保留在您的帐户中。",
+    "left_collection_message": "成功离开收藏",
+    "loading_collections": "加载收藏...",
+    "quick_start": "快速开始"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -535,7 +542,11 @@
     "restore_data": "还原数据",
     "restore_data_desc": "上传备份文件以还原数据。",
     "select_backup_file": "选择备份文件",
-    "world_travel_visits": "世界旅行访问"
+    "world_travel_visits": "世界旅行访问",
+    "activities": "活动",
+    "trails": "步道",
+    "use_imperial": "使用帝国单位",
+    "use_imperial_desc": "使用帝国单位（英尺，英寸，磅）代替度量单位"
   },
   "checklist": {
     "checklist_delete_error": "删除清单时出错",
@@ -649,7 +660,11 @@
     "with": "和",
     "go_to_settings": "前往设置",
     "no_shared_found": "未找到与您共享的合集。",
-    "set_public": "为了允许用户与您共享，您需要将您的个人资料设置为公开。"
+    "set_public": "为了允许用户与您共享，您需要将您的个人资料设置为公开。",
+    "available": "可用的",
+    "pending": "待办的",
+    "revoke_invite": "撤销邀请",
+    "send_invite": "发送邀请"
   },
   "profile": {
     "member_since": "会员自",
@@ -743,7 +758,8 @@
     "resort": "度假村"
   },
   "google_maps": {
-    "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。"
+    "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。",
+    "google_maps_integration_desc_no_staff": "该集成必须首先由该服务器上的管理员启用。"
   },
   "calendar": {
     "all_day_event": "全天活动",
@@ -761,5 +777,36 @@
     "locations": "位置",
     "my_locations": "我的位置"
   },
-  "settings_download_backup": "下载备份"
+  "settings_download_backup": "下载备份",
+  "invites": {
+    "accept": "接受",
+    "accept_failed": "未能接受邀请",
+    "accepted": "邀请接受",
+    "by": "经过",
+    "decline": "衰退",
+    "decline_failed": "未能拒绝邀请",
+    "declined": "邀请被拒绝",
+    "invited_on": "邀请",
+    "no_invites": "没有邀请",
+    "no_invites_desc": "确保您的个人资料是公开的，以便用户可以邀请您。",
+    "pending_invites": "等待邀请",
+    "title": "邀请"
+  },
+  "strava": {
+    "account_connected": "帐户连接",
+    "admin_setup_required": "服务器管理员必须在全球范围内启用它",
+    "authorization_error": "错误将重定向到Strava授权URL",
+    "connect_account": "连接帐户",
+    "disconnect": "断开",
+    "disconnect_error": "与Strava断开连接的错误",
+    "disconnected": "成功与Strava断开连接",
+    "not_configured": "Strava未配置",
+    "ready_to_connect": "准备连接",
+    "strava_integration_desc": "连接到Strava，轻松将您的活动导入到位置和访问中"
+  },
+  "wanderer": {
+    "connected": "成功与流浪者联系",
+    "connection_error": "与流浪者连接的错误",
+    "wanderer_integration_desc": "连接到流浪者轻松导入并在位置查看您的步道"
+  }
 }

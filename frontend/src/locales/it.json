@@ -259,7 +259,14 @@
     "wiki_location_desc": "Estratto dall'articolo di Wikipedia che corrisponde al nome della posizione.",
     "will_be_marked_location": "sarà contrassegnato come visitato una volta salvata la posizione.",
     "no_locations_found": "Nessuna posizione trovata",
-    "image_modal_navigate": "Usa i tasti freccia o fai clic per navigare"
+    "image_modal_navigate": "Usa i tasti freccia o fai clic per navigare",
+    "details": "Dettagli",
+    "leave": "Partire",
+    "leave_collection": "Lascia collezione",
+    "leave_collection_warning": "Sei sicuro di voler lasciare questa collezione? \nTutte le posizioni aggiunte saranno non incazzate e rimarranno nel tuo account.",
+    "left_collection_message": "Collezione lasciata con successo",
+    "loading_collections": "Caricamento delle collezioni ...",
+    "quick_start": "Inizio rapido"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -535,7 +542,11 @@
     "restore_data": "Ripristina i dati",
     "restore_data_desc": "Carica un file di backup per ripristinare i dati.",
     "select_backup_file": "Seleziona il file di backup",
-    "world_travel_visits": "Visite di viaggio nel mondo"
+    "world_travel_visits": "Visite di viaggio nel mondo",
+    "activities": "Attività",
+    "trails": "Trails",
+    "use_imperial": "Usa le unità imperiali",
+    "use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche"
   },
   "checklist": {
     "checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",
@@ -649,7 +660,11 @@
     "with": "con",
     "go_to_settings": "Vai alle impostazioni",
     "no_shared_found": "Nessuna collezione trovata condivisa con te.",
-    "set_public": "Per consentire agli utenti di condividere con te, è necessario che il tuo profilo sia impostato su pubblico."
+    "set_public": "Per consentire agli utenti di condividere con te, è necessario che il tuo profilo sia impostato su pubblico.",
+    "available": "Disponibile",
+    "pending": "In attesa di",
+    "revoke_invite": "Revoca invito",
+    "send_invite": "Invia invito"
   },
   "profile": {
     "member_since": "Membro da",
@@ -743,7 +758,8 @@
     "motel": "Motel"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità."
+    "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità.",
+    "google_maps_integration_desc_no_staff": "Questa integrazione deve prima essere abilitata dall'amministratore su questo server."
   },
   "calendar": {
     "all_day_event": "Evento per tutto il giorno",
@@ -761,5 +777,36 @@
     "locations": "Luoghi",
     "my_locations": "Le mie posizioni"
   },
-  "settings_download_backup": "Scarica il backup"
+  "settings_download_backup": "Scarica il backup",
+  "invites": {
+    "accept": "Accettare",
+    "accept_failed": "Impossibile accettare l'invito",
+    "accepted": "Invito accettato",
+    "by": "di",
+    "decline": "Declino",
+    "decline_failed": "Non ha rifiutato l'invito",
+    "declined": "Invito è diminuito",
+    "invited_on": "Invitato su",
+    "no_invites": "Nessun invito",
+    "no_invites_desc": "Assicurati che il tuo profilo sia pubblico in modo che gli utenti possano invitarti.",
+    "pending_invites": "In sospeso inviti",
+    "title": "Inviti"
+  },
+  "strava": {
+    "account_connected": "Conto collegato",
+    "admin_setup_required": "L'amministratore del server deve abilitarlo a livello globale",
+    "authorization_error": "Reindirizzamento dell'errore all'URL di autorizzazione Strava",
+    "connect_account": "Connect Account",
+    "disconnect": "Disconnessione",
+    "disconnect_error": "Errore di disconnessione da Strava",
+    "disconnected": "Disconnesso con successo da Strava",
+    "not_configured": "Strava non configurato",
+    "ready_to_connect": "Pronto per connettersi",
+    "strava_integration_desc": "Connettiti a Strava per importare facilmente le tue attivi in posizioni e visite"
+  },
+  "wanderer": {
+    "connected": "Collegato con successo a Wanderer",
+    "connection_error": "Errore che si collega a Wanderer",
+    "wanderer_integration_desc": "Connettiti a Wanderer per importare facilmente e visualizzare i tuoi sentieri in luoghi"
+  }
 }

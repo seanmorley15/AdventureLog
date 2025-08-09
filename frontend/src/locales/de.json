@@ -259,7 +259,14 @@
     "wiki_location_desc": "Zieht Auszug aus dem Wikipedia -Artikel, der dem Namen des Standorts entspricht.",
     "will_be_marked_location": "wird als besucht markiert, sobald der Standort gespeichert ist.",
     "no_locations_found": "Keine Standorte gefunden",
-    "image_modal_navigate": "Verwenden Sie Pfeiltasten oder klicken Sie, um zu navigieren"
+    "image_modal_navigate": "Verwenden Sie Pfeiltasten oder klicken Sie, um zu navigieren",
+    "details": "Details",
+    "leave": "Verlassen",
+    "leave_collection": "Sammlung verlassen",
+    "leave_collection_warning": "Sind Sie sicher, dass Sie diese Sammlung verlassen möchten? \nAlle von Ihnen hinzugefügten Standorte werden nicht verknüpft und bleiben in Ihrem Konto.",
+    "left_collection_message": "Erfolgreich verlassene Sammlung",
+    "loading_collections": "Ladesammlungen ...",
+    "quick_start": "Schneller Start"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -535,7 +542,11 @@
     "restore_data": "Daten wiederherstellen",
     "restore_data_desc": "Laden Sie eine Sicherungsdatei hoch, um Ihre Daten wiederherzustellen.",
     "select_backup_file": "Wählen Sie Sicherungsdatei",
-    "world_travel_visits": "Weltreisebesuche"
+    "world_travel_visits": "Weltreisebesuche",
+    "activities": "Aktivitäten",
+    "trails": "Wanderwege",
+    "use_imperial": "Verwenden Sie kaiserliche Einheiten",
+    "use_imperial_desc": "Verwenden Sie kaiserliche Einheiten (Füße, Zoll, Pfund) anstelle von metrischen Einheiten"
   },
   "checklist": {
     "checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -649,7 +660,11 @@
     "with": "mit",
     "go_to_settings": "Gehe zu Einstellungen",
     "no_shared_found": "Es wurden keine Sammlungen gefunden, die mit Ihnen geteilt wurden.",
-    "set_public": "Damit Benutzer Inhalte mit Ihnen teilen können, muss Ihr Profil auf „Öffentlich“ gesetzt sein."
+    "set_public": "Damit Benutzer Inhalte mit Ihnen teilen können, muss Ihr Profil auf „Öffentlich“ gesetzt sein.",
+    "available": "Verfügbar",
+    "pending": "Ausstehend",
+    "revoke_invite": "REVOKE einladung",
+    "send_invite": "Senden Sie Einladung"
   },
   "profile": {
     "member_since": "Mitglied seit",
@@ -743,7 +758,8 @@
     "villa": "Villa"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten."
+    "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten.",
+    "google_maps_integration_desc_no_staff": "Diese Integration muss zunächst vom Administrator auf diesem Server aktiviert werden."
   },
   "calendar": {
     "all_day_event": "Ganztägige Veranstaltung",
@@ -761,5 +777,36 @@
     "locations": "Standorte",
     "my_locations": "Meine Standorte"
   },
-  "settings_download_backup": "Backup herunterladen"
+  "settings_download_backup": "Backup herunterladen",
+  "invites": {
+    "accept": "Akzeptieren",
+    "accept_failed": "Versäumte die Einladung zu akzeptieren",
+    "accepted": "Einladen akzeptiert",
+    "by": "von",
+    "decline": "Abfall",
+    "decline_failed": "Versäumte die Einladung abzulehnen",
+    "declined": "Einladung lehnte ab",
+    "invited_on": "Eingeladen",
+    "no_invites": "Keine Einladungen",
+    "no_invites_desc": "Stellen Sie sicher, dass Ihr Profil öffentlich ist, damit Benutzer Sie einladen können.",
+    "pending_invites": "Ausgeladenen Einladungen",
+    "title": "Lädt ein"
+  },
+  "strava": {
+    "account_connected": "Konto angeschlossen",
+    "admin_setup_required": "Der Serveradministrator muss es weltweit aktivieren",
+    "authorization_error": "Fehler umleiten zur Strava -Autorisierungs -URL",
+    "connect_account": "Konto verbinden",
+    "disconnect": "Trennen",
+    "disconnect_error": "Fehlertrennung von Strava",
+    "disconnected": "Erfolgreich von Strava getrennt von Strawa",
+    "not_configured": "Strava nicht konfiguriert",
+    "ready_to_connect": "Herstellen zu verbinden",
+    "strava_integration_desc": "Stellen Sie eine Verbindung zu Strava her, um Ihre Aktivitäten einfach in Orte und Besuche zu importieren"
+  },
+  "wanderer": {
+    "connected": "Erfolgreich mit Wanderer verbunden",
+    "connection_error": "Fehler, die eine Verbindung zum Wanderer herstellen",
+    "wanderer_integration_desc": "Stellen Sie eine Verbindung zum Wanderer her, um Ihre Trails einfach an Orten zu importieren und anzusehen"
+  }
 }
