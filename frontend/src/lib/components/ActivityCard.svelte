@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Activity, Trail, TransportationVisit, Visit } from '$lib/types';
+	import { t } from 'svelte-i18n';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import RunFastIcon from '~icons/mdi/run-fast';
@@ -17,8 +18,6 @@
 	export let readOnly: boolean = false;
 
 	$: trail = activity.trail ? trails.find((t) => t.id === activity.trail) : null;
-
-	console.log(activity.trail, trails, trail);
 
 	function deleteActivity(visitId: string, activityId: string) {
 		// Dispatch an event to the parent component to handle deletion
@@ -43,7 +42,7 @@
 							{measurementSystem === 'imperial' ? 'miles' : 'km'}</span
 						>
 						{#if activity.moving_time}
-							<span>Time: {activity.moving_time}</span>
+							<span>{$t('adventures.time')}: {activity.moving_time}</span>
 						{/if}
 					</div>
 				{/if}
@@ -67,7 +66,7 @@
 
 				{#if trail}
 					<div>
-						Trail: {trail.name}
+						{$t('adventures.trail')}: {trail.name}
 					</div>
 				{/if}
 
@@ -83,7 +82,9 @@
 				{#if activity.gpx_file}
 					<div class="flex items-center gap-1">
 						<FileIcon class="w-3 h-3" />
-						<a href={activity.gpx_file} target="_blank" class="link link-primary"> View GPX </a>
+						<a href={activity.gpx_file} target="_blank" class="link link-primary">
+							{$t('adventures.view_gpx')}
+						</a>
 					</div>
 				{/if}
 			</div>

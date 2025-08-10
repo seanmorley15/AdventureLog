@@ -272,7 +272,6 @@
 				visitIdEditing = null;
 			} else {
 				const errorText = await response.text();
-				alert(`Failed to update visit: ${errorText}`);
 			}
 		} else {
 			// post to /api/visits for new visit
@@ -426,13 +425,13 @@
 
 	async function uploadActivity(visitId: string) {
 		if (!activityForm.name.trim()) {
-			alert('Activity name is required');
+			alert($t('adventures.activity_name_required'));
 			return;
 		}
 
 		// If this is a Strava import, require GPX file
 		if (pendingStravaImport[visitId] && !activityForm.gpx_file) {
-			alert('Please upload the GPX file to complete the Strava import');
+			alert($t('strava.gpx_required'));
 			return;
 		}
 
@@ -503,7 +502,6 @@
 			if (response.ok) {
 				const newActivityResponse = deserialize(await response.text()) as { data: Activity };
 				const newActivity = newActivityResponse.data as Activity;
-				console.log('Activity uploaded successfully:', newActivity);
 
 				// Update the visit's activities array
 				if (visits) {
@@ -520,19 +518,12 @@
 
 				// Hide the upload form
 				hideActivityUploadForm(visitId);
-
-				const importMessage = pendingStravaImport[visitId]
-					? `Strava activity "${activityForm.name}" imported successfully!`
-					: 'Activity uploaded successfully!';
-				alert(importMessage);
 			} else {
 				const errorText = await response.text();
 				console.error('Failed to upload activity:', errorText);
-				alert('Failed to upload activity. Please try again.');
 			}
 		} catch (error) {
 			console.error('Error uploading activity:', error);
-			alert('Error uploading activity. Please try again.');
 		} finally {
 			uploadingActivity[visitId] = false;
 			uploadingActivity = { ...uploadingActivity };
@@ -540,7 +531,7 @@
 	}
 
 	async function deleteActivity(visitId: string, activityId: string) {
-		if (!confirm('Are you sure you want to delete this activity?')) return;
+		if (!confirm($t('adventures.confirm_delete_activity'))) return;
 
 		try {
 			const response = await fetch(`/api/activities/${activityId}/`, {
@@ -559,18 +550,14 @@
 				}
 			} else {
 				console.error('Failed to delete activity:', await response.text());
-				alert('Failed to delete activity. Please try again.');
 			}
 		} catch (error) {
 			console.error('Error deleting activity:', error);
-			alert('Error deleting activity. Please try again.');
 		}
 	}
 
 	async function handleStravaActivityImport(event: CustomEvent<StravaActivity>, visitId: string) {
 		const stravaActivity = event.detail;
-
-		console.log('Handling Strava activity import:', stravaActivity);
 
 		try {
 			// Store the pending import and show upload form
@@ -611,7 +598,6 @@
 			showActivityUpload = { ...showActivityUpload };
 		} catch (error) {
 			console.error('Error initiating Strava import:', error);
-			alert('Error downloading GPX file. Please try again.');
 		}
 	}
 
@@ -685,7 +671,7 @@
 			method: 'DELETE'
 		}).then((response) => {
 			if (!response.ok) {
-				alert('Failed to delete visit. Please try again.');
+				console.error('Error deleting visit:', response.statusText);
 			} else {
 				// remove the visit from the local state
 				visits = visits?.filter((v) => v.id !== visitId) ?? null;
@@ -756,14 +742,16 @@
 				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
 					<div class="flex items-center gap-2 mb-4">
 						<SettingsIcon class="w-4 h-4 text-base-content/70" />
-						<h3 class="font-medium text-base-content/80">Settings</h3>
+						<h3 class="font-medium text-base-content/80">{$t('navbar.settings')}</h3>
 					</div>
 
 					<div class="space-y-4">
 						<!-- Timezone Selection -->
 
 						<div>
-							<label class="label-text text-sm font-medium" for="timezone-selector">Timezone</label>
+							<label class="label-text text-sm font-medium" for="timezone-selector"
+								>{$t('adventures.timezone')}</label
+							>
 							<div class="mt-1">
 								<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
 							</div>
@@ -773,7 +761,9 @@
 						<div class="flex flex-wrap gap-6">
 							<div class="flex items-center gap-3">
 								<ClockIcon class="w-4 h-4 text-base-content/70" />
-								<label class="label-text text-sm font-medium" for="all-day-toggle">All Day</label>
+								<label class="label-text text-sm font-medium" for="all-day-toggle"
+									>{$t('adventures.all_day')}</label
+								>
 								<input
 									id="all-day-toggle"
 									type="checkbox"
@@ -787,7 +777,7 @@
 								<div class="flex items-center gap-3">
 									<CalendarIcon class="w-4 h-4 text-base-content/70" />
 									<label class="label-text text-sm font-medium" for="constrain-dates"
-										>Constrain to Collection Dates</label
+										>{$t('adventures.date_constrain')}</label
 									>
 									<input
 										id="constrain-dates"
@@ -803,7 +793,7 @@
 
 				<!-- Date Selection Section -->
 				<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6">
-					<h3 class="font-medium text-base-content/80 mb-4">Date Selection</h3>
+					<h3 class="font-medium text-base-content/80 mb-4">{$t('adventures.date_selection')}</h3>
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<!-- Start Date -->
@@ -868,12 +858,14 @@
 					<!-- Notes (Location only) -->
 
 					<div class="mt-4">
-						<label class="label-text text-sm font-medium" for="visit-notes">Notes</label>
+						<label class="label-text text-sm font-medium" for="visit-notes"
+							>{$t('adventures.notes')}</label
+						>
 						<textarea
 							id="visit-notes"
 							class="textarea textarea-bordered w-full mt-1"
 							rows="3"
-							placeholder="Add notes about this visit..."
+							placeholder={$t('adventures.notes_placeholder') + '...'}
 							bind:value={note}
 						></textarea>
 					</div>
@@ -887,7 +879,7 @@
 							on:click={addVisit}
 						>
 							<PlusIcon class="w-4 h-4" />
-							Add Visit
+							{visitIdEditing ? $t('adventures.update_visit') : $t('adventures.add_visit')}
 						</button>
 					</div>
 				</div>
@@ -896,7 +888,7 @@
 				{#if !isDateValid}
 					<div class="alert alert-error mb-6">
 						<AlertIcon class="w-5 h-5" />
-						<span class="text-sm">Invalid date range - end date must be after start date</span>
+						<span class="text-sm">{$t('adventures.invalid_date_range')}</span>
 					</div>
 				{/if}
 
@@ -904,15 +896,15 @@
 
 				<div class="bg-base-50 p-4 rounded-lg border border-base-200">
 					<h3 class="font-medium text-base-content/80 mb-4">
-						Visits ({visits?.length || 0})
+						{$t('adventures.visits')} ({visits?.length || 0})
 					</h3>
 
 					{#if !visits || visits.length === 0}
 						<div class="text-center py-8 text-base-content/60">
 							<CalendarIcon class="w-8 h-8 mx-auto mb-2 opacity-50" />
-							<p class="text-sm">No visits added yet</p>
+							<p class="text-sm">{$t('adventures.no_visits')}</p>
 							<p class="text-xs text-base-content/40 mt-1">
-								Create your first visit by selecting dates above
+								{$t('adventures.no_visits_description')}
 							</p>
 						</div>
 					{:else}
@@ -925,7 +917,9 @@
 										<div class="flex-1 min-w-0">
 											<div class="flex items-center gap-2 mb-2">
 												{#if isAllDay(visit.start_date)}
-													<span class="badge badge-outline badge-sm">All Day</span>
+													<span class="badge badge-outline badge-sm"
+														>{$t('adventures.all_day')}</span
+													>
 												{:else}
 													<ClockIcon class="w-3 h-3 text-base-content/50" />
 												{/if}
@@ -960,7 +954,8 @@
 												<div class="flex items-center gap-2 mt-2">
 													<RunFastIcon class="w-3 h-3 text-success" />
 													<span class="text-xs text-success font-medium">
-														{visit.activities.length} saved activities
+														{visit.activities.length}
+														{$t('adventures.saved_activities')}
 													</span>
 												</div>
 											{/if}
@@ -972,7 +967,7 @@
 											{#if stravaEnabled}
 												<button
 													class="btn btn-info btn-xs tooltip tooltip-top gap-1"
-													data-tip="View Strava Activities"
+													data-tip={$t('adventures.view_strava_activities')}
 													on:click={() => toggleVisitActivities(visit)}
 												>
 													<RunFastIcon class="w-3 h-3" />
@@ -985,7 +980,7 @@
 											<!-- Upload Activity Button -->
 											<button
 												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
-												data-tip="Add Activity"
+												data-tip={$t('adventures.add_activity')}
 												on:click={() => showActivityUploadForm(visit.id)}
 											>
 												<UploadIcon class="w-3 h-3" />
@@ -993,14 +988,14 @@
 
 											<button
 												class="btn btn-warning btn-xs tooltip tooltip-top"
-												data-tip="Edit Visit"
+												data-tip={$t('adventures.edit_visit')}
 												on:click={() => editVisit(visit)}
 											>
 												<EditIcon class="w-3 h-3" />
 											</button>
 											<button
 												class="btn btn-error btn-xs tooltip tooltip-top"
-												data-tip="Remove Visit"
+												data-tip={$t('adventures.remove_visit')}
 												on:click={() => removeVisit(visit.id)}
 											>
 												<TrashIcon class="w-3 h-3" />
@@ -1016,9 +1011,9 @@
 													<UploadIcon class="w-4 h-4 text-success" />
 													<h4 class="font-medium text-sm">
 														{#if pendingStravaImport[visit.id]}
-															Complete Strava Import
+															{$t('adventures.complete_strava_import')}
 														{:else}
-															Add New Activity
+															{$t('adventures.add_new_activity')}
 														{/if}
 													</h4>
 												</div>
@@ -1035,9 +1030,11 @@
 													<div class="flex items-center gap-2">
 														<RunFastIcon class="w-4 h-4" />
 														<div class="text-sm">
-															<div class="font-medium">Strava Activity Ready</div>
+															<div class="font-medium">
+																{$t('adventures.strava_activity_ready')}
+															</div>
 															<div class="text-xs opacity-75">
-																GPX file downloaded. Please upload it below to complete the import.
+																{$t('adventures.gpx_file_downloaded')}
 															</div>
 														</div>
 													</div>
@@ -1052,7 +1049,8 @@
 															<FileIcon class="w-4 h-4 text-warning" />
 															<label
 																class="label-text font-medium text-warning"
-																for="gpx-file-{visit.id}">GPX File Required *</label
+																for="gpx-file-{visit.id}"
+																>{$t('adventures.gpx_file_required')} *</label
 															>
 														</div>
 														<div class="flex gap-2">
@@ -1074,12 +1072,11 @@
 																}}
 															>
 																<UploadIcon class="w-3 h-3" />
-																Download GPX
+																{$t('adventures.download_gpx')}
 															</button>
 														</div>
 														<div class="text-xs text-warning/80 mt-1">
-															Upload the GPX file that was just downloaded to complete the Strava
-															import
+															{$t('adventures.upload_gpx_file')}
 														</div>
 													</div>
 												{/if}
@@ -1089,13 +1086,14 @@
 													<div class="md:col-span-2">
 														<label
 															class="label-text text-xs font-medium"
-															for="activity-name-{visit.id}">Activity Name *</label
+															for="activity-name-{visit.id}"
+															>{$t('adventures.activity_name')} *</label
 														>
 														<input
 															id="activity-name-{visit.id}"
 															type="text"
 															class="input input-bordered input-sm w-full mt-1"
-															placeholder="Morning Run"
+															placeholder={$t('adventures.activity_name_placeholder')}
 															bind:value={activityForm.name}
 														/>
 													</div>
@@ -1104,7 +1102,7 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="activity-type-{visit.id}">Type</label
+															for="activity-type-{visit.id}">{$t('transportation.type')}</label
 														>
 														<select
 															id="activity-type-{visit.id}"
@@ -1122,13 +1120,13 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="sport-type-{visit.id}">Sport Type</label
+															for="sport-type-{visit.id}">{$t('adventures.sport_type')}</label
 														>
 														<input
 															id="sport-type-{visit.id}"
 															type="text"
 															class="input input-bordered input-sm w-full mt-1"
-															placeholder="Trail Running"
+															placeholder={$t('adventures.sport_type_placeholder')}
 															bind:value={activityForm.sport_type}
 															readonly={!!pendingStravaImport[visit.id]}
 														/>
@@ -1137,7 +1135,7 @@
 													<!-- Distance -->
 													<div>
 														<label class="label-text text-xs font-medium" for="distance-{visit.id}"
-															>Distance (km)</label
+															>{$t('adventures.distance')} (km)</label
 														>
 														<input
 															id="distance-{visit.id}"
@@ -1154,7 +1152,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="moving-time-{visit.id}">Moving Time (HH:MM:SS)</label
+															for="moving-time-{visit.id}"
+															>{$t('adventures.moving_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="moving-time-{visit.id}"
@@ -1170,7 +1169,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="elapsed-time-{visit.id}">Elapsed Time (HH:MM:SS)</label
+															for="elapsed-time-{visit.id}"
+															>{$t('adventures.elapsed_time')} (HH:MM:SS)</label
 														>
 														<input
 															id="elapsed-time-{visit.id}"
@@ -1186,7 +1186,7 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="start-date-{visit.id}">Start Date</label
+															for="start-date-{visit.id}">{$t('adventures.start_date')}</label
 														>
 														<input
 															id="start-date-{visit.id}"
@@ -1201,7 +1201,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="elevation-gain-{visit.id}">Elevation Gain (m)</label
+															for="elevation-gain-{visit.id}"
+															>{$t('adventures.elevation_gain')} (m)</label
 														>
 														<input
 															id="elevation-gain-{visit.id}"
@@ -1217,7 +1218,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="elevation-loss-{visit.id}">Elevation Loss (m)</label
+															for="elevation-loss-{visit.id}"
+															>{$t('adventures.elevation_loss')} (m)</label
 														>
 														<input
 															id="elevation-loss-{visit.id}"
@@ -1232,7 +1234,7 @@
 													<!-- Calories -->
 													<div>
 														<label class="label-text text-xs font-medium" for="calories-{visit.id}"
-															>Calories</label
+															>{$t('adventures.calories')}</label
 														>
 														<input
 															id="calories-{visit.id}"
@@ -1248,7 +1250,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="elevation-high-{visit.id}">Elevation High (m)</label
+															for="elevation-high-{visit.id}"
+															>{$t('adventures.elevation_high')} (m)</label
 														>
 														<input
 															id="elevation-high-{visit.id}"
@@ -1264,7 +1267,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="elevation-low-{visit.id}">Elevation Low (m)</label
+															for="elevation-low-{visit.id}"
+															>{$t('adventures.elevation_low')} (m)</label
 														>
 														<input
 															id="elevation-low-{visit.id}"
@@ -1279,7 +1283,7 @@
 													<!-- Rest Time -->
 													<div>
 														<label class="label-text text-xs font-medium" for="rest-time-{visit.id}"
-															>Rest Time (s)</label
+															>{$t('adventures.rest_time')} (s)</label
 														>
 														<input
 															id="rest-time-{visit.id}"
@@ -1294,7 +1298,7 @@
 													<!-- Start Latitude -->
 													<div>
 														<label class="label-text text-xs font-medium" for="start-lat-{visit.id}"
-															>Start Latitude</label
+															>{$t('adventures.start_lat')} (°)</label
 														>
 														<input
 															id="start-lat-{visit.id}"
@@ -1310,7 +1314,7 @@
 													<!-- Start Longitude -->
 													<div>
 														<label class="label-text text-xs font-medium" for="start-lng-{visit.id}"
-															>Start Longitude</label
+															>{$t('adventures.start_lng')} (°)</label
 														>
 														<input
 															id="start-lng-{visit.id}"
@@ -1326,7 +1330,7 @@
 													<!-- End Latitude -->
 													<div>
 														<label class="label-text text-xs font-medium" for="end-lat-{visit.id}"
-															>End Latitude</label
+															>{$t('adventures.end_lat')} (°)</label
 														>
 														<input
 															id="end-lat-{visit.id}"
@@ -1342,7 +1346,7 @@
 													<!-- End Longitude -->
 													<div>
 														<label class="label-text text-xs font-medium" for="end-lng-{visit.id}"
-															>End Longitude</label
+															>{$t('adventures.end_lng')} (°)</label
 														>
 														<input
 															id="end-lng-{visit.id}"
@@ -1358,7 +1362,7 @@
 													<!-- Timezone -->
 													<div>
 														<label class="label-text text-xs font-medium" for="timezone-{visit.id}"
-															>Timezone</label
+															>{$t('adventures.timezone')}</label
 														>
 														<TimezoneSelector bind:selectedTimezone={activityForm.timezone} />
 													</div>
@@ -1367,7 +1371,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="average-speed-{visit.id}">Average Speed (m/s)</label
+															for="average-speed-{visit.id}"
+															>{$t('adventures.average_speed')} (m/s)</label
 														>
 														<input
 															id="average-speed-{visit.id}"
@@ -1383,7 +1388,7 @@
 													<!-- Max Speed -->
 													<div>
 														<label class="label-text text-xs font-medium" for="max-speed-{visit.id}"
-															>Max Speed (m/s)</label
+															>{$t('adventures.max_speed')} (m/s)</label
 														>
 														<input
 															id="max-speed-{visit.id}"
@@ -1400,7 +1405,8 @@
 													<div>
 														<label
 															class="label-text text-xs font-medium"
-															for="average-cadence-{visit.id}">Average Cadence (rpm)</label
+															for="average-cadence-{visit.id}"
+															>{$t('adventures.average_cadence')} (rpm)</label
 														>
 														<input
 															id="average-cadence-{visit.id}"
@@ -1418,7 +1424,7 @@
 														<div class="md:col-span-2">
 															<label
 																class="label-text text-xs font-medium"
-																for="trail-select-{visit.id}">Trail</label
+																for="trail-select-{visit.id}">{$t('adventures.trail')}</label
 															>
 															<select
 																id="trail-select-{visit.id}"
@@ -1438,7 +1444,7 @@
 														<div class="md:col-span-2">
 															<label
 																class="label-text text-xs font-medium"
-																for="gpx-file-manual-{visit.id}">GPX File</label
+																for="gpx-file-manual-{visit.id}">{$t('adventures.gpx_file')}</label
 															>
 															<input
 																id="gpx-file-manual-{visit.id}"
@@ -1469,16 +1475,16 @@
 														{#if uploadingActivity[visit.id]}
 															<LoadingIcon class="w-3 h-3 animate-spin" />
 															{#if pendingStravaImport[visit.id]}
-																Importing...
+																{$t('adventures.importing')}...
 															{:else}
-																Uploading...
+																{$t('adventures.uploading')}...
 															{/if}
 														{:else if pendingStravaImport[visit.id]}
 															<UploadIcon class="w-3 h-3" />
-															Complete Import
+															{$t('adventures.complete_import')}
 														{:else}
 															<UploadIcon class="w-3 h-3" />
-															Upload Activity
+															{$t('adventures.upload_activity')}
 														{/if}
 													</button>
 												</div>
@@ -1492,7 +1498,7 @@
 											<div class="flex items-center gap-2 mb-3">
 												<RunFastIcon class="w-4 h-4 text-success" />
 												<h4 class="font-medium text-sm">
-													Saved Activities ({visit.activities.length})
+													{$t('adventures.saved_activities')} ({visit.activities.length})
 												</h4>
 											</div>
 
@@ -1516,7 +1522,9 @@
 										<div class="mt-4 pt-4 border-t border-base-300">
 											<div class="flex items-center gap-2 mb-3">
 												<RunFastIcon class="w-4 h-4 text-info" />
-												<h4 class="font-medium text-sm">Strava Activities During Visit</h4>
+												<h4 class="font-medium text-sm">
+													{$t('adventures.strava_activities_during_visit')}
+												</h4>
 												{#if loadingActivities[visit.id]}
 													<LoadingIcon class="w-4 h-4 animate-spin text-info" />
 												{/if}
@@ -1525,7 +1533,9 @@
 											{#if loadingActivities[visit.id]}
 												<div class="text-center py-4">
 													<div class="loading loading-spinner loading-sm"></div>
-													<p class="text-xs text-base-content/60 mt-2">Loading activities...</p>
+													<p class="text-xs text-base-content/60 mt-2">
+														{$t('adventures.loading_activities')}...
+													</p>
 												</div>
 											{:else if visitActivities[visit.id] && visitActivities[visit.id].length > 0}
 												<div class="space-y-2">
@@ -1542,7 +1552,7 @@
 											{:else}
 												<div class="text-center py-4 text-base-content/60">
 													<div class="text-2xl mb-2">🏃‍♂️</div>
-													<p class="text-xs">No Strava activities found during this visit</p>
+													<p class="text-xs">{$t('adventures.no_strava_activities')}</p>
 												</div>
 											{/if}
 										</div>
@@ -1558,12 +1568,12 @@
 		<div class="flex gap-3 justify-end pt-4">
 			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
-				Back
+				{$t('adventures.back')}
 			</button>
 
 			<button class="btn btn-primary gap-2" on:click={handleClose}>
 				<CheckIcon class="w-5 h-5" />
-				Done
+				{$t('adventures.done')}
 			</button>
 		</div>
 	</div>

@@ -1,11 +1,10 @@
 <script lang="ts">
-	import type { Attachment, ContentImage, Trail, User, WandererTrail } from '$lib/types';
+	import type { Attachment, ContentImage, Trail, WandererTrail } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
 
 	// Icons
-	import InfoIcon from '~icons/mdi/information';
 	import Star from '~icons/mdi/star';
 	import Crown from '~icons/mdi/crown';
 	import SaveIcon from '~icons/mdi/content-save';
@@ -440,7 +439,7 @@
 			if (res.ok) {
 				const newTrail = await res.json();
 				updateTrailsList(newTrail);
-				addToast('success', 'Trail created successfully');
+				addToast('success', $t('adventures.trail_created_successfully'));
 				resetTrailForm();
 			} else {
 				const errorData = await res.json();
@@ -449,7 +448,7 @@
 		} catch (error) {
 			console.error('Trail creation error:', error);
 			trailError = error instanceof Error ? error.message : 'Failed to create trail';
-			addToast('error', 'Failed to create trail');
+			addToast('error', $t('adventures.trail_creation_failed'));
 		} finally {
 			isTrailLoading = false;
 		}
@@ -517,10 +516,10 @@
 				wandererFetchedTrails = itemsResponse.items || [];
 			} else {
 				const errorData = await res.json();
-				addToast('error', errorData.message || 'Failed to fetch Wanderer trails');
+				addToast('error', errorData.message || $t('adventures.trail_fetch_failed'));
 			}
 		} catch (error) {
-			addToast('error', 'Network error while fetching trails');
+			addToast('error', $t('adventures.trail_fetch_failed'));
 		} finally {
 			isSearching = false;
 		}
@@ -615,14 +614,14 @@
 			if (res.ok) {
 				const updatedTrail = await res.json();
 				trails = trails.map((trail) => (trail.id === trailToEdit!.id ? updatedTrail : trail));
-				addToast('success', 'Trail updated successfully');
+				addToast('success', $t('adventures.trail_updated_successfully'));
 				cancelEditingTrail();
 			} else {
 				throw new Error('Failed to update trail');
 			}
 		} catch (error) {
 			console.error('Error updating trail:', error);
-			addToast('error', 'Failed to update trail');
+			addToast('error', $t('adventures.trail_update_failed'));
 		}
 	}
 
@@ -634,13 +633,13 @@
 
 			if (res.status === 204) {
 				trails = trails.filter((trail) => trail.id !== trailId);
-				addToast('success', 'Trail removed successfully');
+				addToast('success', $t('adventures.trail_removed_successfully'));
 			} else {
 				throw new Error('Failed to remove trail');
 			}
 		} catch (error) {
 			console.error('Error removing trail:', error);
-			addToast('error', 'Failed to remove trail');
+			addToast('error', $t('adventures.trail_removal_failed'));
 		}
 	}
 
@@ -697,7 +696,7 @@
 					<div class="p-2 bg-primary/10 rounded-lg">
 						<ImageIcon class="w-5 h-5 text-primary" />
 					</div>
-					<h2 class="text-xl font-bold">Image Management</h2>
+					<h2 class="text-xl font-bold">{$t('adventures.image_management')}</h2>
 				</div>
 
 				<!-- Upload Options Grid -->
@@ -849,9 +848,9 @@
 					</div>
 				{:else}
 					<div class="bg-base-200/50 rounded-lg p-8 text-center">
-						<div class="text-base-content/60 mb-2">No images uploaded yet</div>
+						<div class="text-base-content/60 mb-2">{$t('adventures.no_images_uploaded_yet')}</div>
 						<div class="text-sm text-base-content/40">
-							Upload your first image using one of the options above
+							{$t('adventures.upload_first_image')}
 						</div>
 					</div>
 				{/if}
@@ -865,7 +864,7 @@
 					<div class="p-2 bg-secondary/10 rounded-lg">
 						<AttachmentIcon class="w-5 h-5 text-secondary" />
 					</div>
-					<h2 class="text-xl font-bold">Attachment Management</h2>
+					<h2 class="text-xl font-bold">{$t('adventures.attachment_management')}</h2>
 				</div>
 
 				<!-- Upload Options -->
@@ -910,7 +909,7 @@
 
 				<!-- Attachment Gallery -->
 				{#if attachments.length > 0}
-					<div class="divider">Current Attachments</div>
+					<div class="divider">{$t('adventures.current_attachments')}</div>
 					<div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
 						{#each attachments as attachment (attachment.id)}
 							<div class="relative group">
@@ -937,7 +936,7 @@
 												on:click={cancelEditingAttachment}
 											>
 												<CloseIcon class="w-3 h-3" />
-												Cancel
+												{$t('adventures.cancel')}
 											</button>
 										</div>
 									</div>
@@ -984,9 +983,11 @@
 					</div>
 				{:else}
 					<div class="bg-base-200/50 rounded-lg p-8 text-center">
-						<div class="text-base-content/60 mb-2">No attachments uploaded yet</div>
+						<div class="text-base-content/60 mb-2">
+							{$t('adventures.no_attachments_uploaded_yet')}
+						</div>
 						<div class="text-sm text-base-content/40">
-							Upload your first attachment using the options above
+							{$t('adventures.upload_first_attachment')}
 						</div>
 					</div>
 				{/if}
@@ -1001,7 +1002,7 @@
 						<div class="p-2 bg-accent/10 rounded-lg">
 							<SwapHorizontalVariantIcon class="w-5 h-5 text-accent" />
 						</div>
-						<h2 class="text-xl font-bold">Trails Management</h2>
+						<h2 class="text-xl font-bold">{$t('adventures.trails_management')}</h2>
 					</div>
 					<div class="flex items-center gap-2">
 						<button
@@ -1012,7 +1013,7 @@
 							}}
 						>
 							<PlusIcon class="w-4 h-4" />
-							Add Trail
+							{$t('adventures.add_trail')}
 						</button>
 						{#if userIsOwner}
 							<button
@@ -1022,21 +1023,20 @@
 								}}
 							>
 								<PlusIcon class="w-4 h-4" />
-								Add Wanderer Trail
+								{$t('adventures.add_wanderer_trail')}
 							</button>
 						{/if}
 					</div>
 				</div>
 
 				<div class="text-sm text-base-content/60 mb-4">
-					Manage trails associated with this location. Trails can be linked to external services
-					like AllTrails or link to Wanderer trails.
+					{$t('adventures.trails_management_description')}
 				</div>
 
 				<!-- Add Trail Form -->
 				{#if showAddTrailForm}
 					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
-						<h4 class="font-medium mb-3 text-accent">Add New Trail</h4>
+						<h4 class="font-medium mb-3 text-accent">{$t('adventures.add_new_trail')}</h4>
 						<div class="grid gap-3">
 							<input
 								type="text"
@@ -1049,7 +1049,7 @@
 								type="url"
 								bind:value={trailLink}
 								class="input input-bordered"
-								placeholder="External link (e.g., AllTrails, Trailforks)"
+								placeholder={$t('adventures.external_link') + ' (AllTrails, Trailforks, etc.)'}
 								disabled={isTrailLoading}
 							/>
 							{#if trailError}
@@ -1063,7 +1063,7 @@
 									disabled={isTrailLoading}
 									on:click={resetTrailForm}
 								>
-									Cancel
+									{$t('adventures.cancel')}
 								</button>
 								<button
 									class="btn btn-accent btn-sm"
@@ -1071,7 +1071,7 @@
 									disabled={isTrailLoading || !trailName.trim() || !trailLink.trim()}
 									on:click={createTrail}
 								>
-									Create Trail
+									{$t('adventures.create_trail')}
 								</button>
 							</div>
 						</div>
@@ -1081,18 +1081,18 @@
 				<!-- Wanderer Trails Form -->
 				{#if showWandererForm}
 					<div class="bg-accent/5 p-4 rounded-lg border border-accent/20 mb-6">
-						<h4 class="font-medium mb-3 text-accent">Add Wanderer Trail</h4>
+						<h4 class="font-medium mb-3 text-accent">{$t('adventures.add_wanderer_trail')}</h4>
 						<div class="grid gap-3">
 							{#if isWandererEnabled}
 								<p class="text-sm text-base-content/60 mb-2">
-									Select a trail from your Wanderer account:
+									{$t('adventures.select_wanderer_trail')}:
 								</p>
 
 								<!-- Search Box -->
 								<div class="relative">
 									<input
 										type="text"
-										placeholder="Search trails by name..."
+										placeholder={$t('adventures.search_trails_placeholder') + '...'}
 										class="input input-bordered w-full pr-20"
 										bind:value={searchQuery}
 										on:input={debouncedSearch}
@@ -1124,7 +1124,8 @@
 								<!-- Search Status -->
 								{#if searchQuery && !isSearching}
 									<p class="text-xs text-base-content/50">
-										{wandererFetchedTrails.length} trail(s) found for "{searchQuery}"
+										{wandererFetchedTrails.length}
+										{$t('adventures.trails_found_for')}{searchQuery}
 									</p>
 								{/if}
 
@@ -1137,9 +1138,9 @@
 									{:else if wandererFetchedTrails.length === 0}
 										<div class="text-center py-8 text-base-content/60">
 											{#if searchQuery}
-												No trails found matching "{searchQuery}"
+												{$t('adventures.no_trails_found_matching')} "{searchQuery}"
 											{:else}
-												No trails available
+												{$t('adventures.no_trails_available')}
 											{/if}
 										</div>
 									{:else}
@@ -1152,7 +1153,7 @@
 								</div>
 							{:else}
 								<p class="text-sm text-base-content/60">
-									Wanderer integration is not enabled or has expired.
+									{$t('adventures.wanderer_integration_error')}
 								</p>
 							{/if}
 
@@ -1165,7 +1166,7 @@
 										searchQuery = ''; // Clear search when closing
 									}}
 								>
-									Close
+									{$t('about.close')}
 								</button>
 							</div>
 						</div>
@@ -1190,13 +1191,13 @@
 												type="text"
 												bind:value={editingTrailName}
 												class="input input-bordered input-sm"
-												placeholder="Trail name"
+												placeholder={$t('adventures.trail_name')}
 											/>
 											<input
 												type="url"
 												bind:value={editingTrailLink}
 												class="input input-bordered input-sm"
-												placeholder="External link"
+												placeholder={$t('adventures.external_link')}
 												disabled={editingTrailWandererId.trim() !== ''}
 											/>
 										</div>
@@ -1207,11 +1208,11 @@
 												on:click={saveTrailEdit}
 											>
 												<CheckIcon class="w-3 h-3" />
-												Save
+												{$t('notes.save')}
 											</button>
 											<button class="btn btn-ghost btn-xs flex-1" on:click={cancelEditingTrail}>
 												<CloseIcon class="w-3 h-3" />
-												Cancel
+												{$t('adventures.cancel')}
 											</button>
 										</div>
 									</div>
@@ -1332,7 +1333,7 @@
 											</a>
 										{:else if !trail.wanderer_id}
 											<div class="text-xs text-base-content/40 mb-3 italic">
-												No external link available
+												{$t('adventures.no_external_link')}
 											</div>
 										{/if}
 
@@ -1364,9 +1365,9 @@
 					</div>
 				{:else}
 					<div class="bg-base-200/50 rounded-lg p-8 text-center">
-						<div class="text-base-content/60 mb-2">No trails added yet</div>
+						<div class="text-base-content/60 mb-2">{$t('adventures.no_trails_added')}</div>
 						<div class="text-sm text-base-content/40">
-							Add your first trail using the button above
+							{$t('adventures.add_first_trail')}
 						</div>
 					</div>
 				{/if}
@@ -1377,12 +1378,12 @@
 		<div class="flex gap-3 justify-end pt-4">
 			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
-				Back
+				{$t('adventures.back')}
 			</button>
 
 			<button class="btn btn-primary gap-2" on:click={handleNext}>
 				<SaveIcon class="w-5 h-5" />
-				Next
+				{$t('adventures.continue')}
 			</button>
 		</div>
 	</div>

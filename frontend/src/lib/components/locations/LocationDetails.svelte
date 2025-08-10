@@ -213,7 +213,6 @@
 
 	async function performDetailedReverseGeocode(lat: number, lng: number) {
 		try {
-			console.log('Performing detailed reverse geocoding for:', lat, lng);
 			const response = await fetch(
 				`/api/reverse-geocode/reverse_geocode/?lat=${lat}&lon=${lng}&format=json`
 			);
@@ -299,10 +298,10 @@
 				const data = await response.json();
 				location.description = data.extract || '';
 			} else {
-				wikiError = 'Failed to generate description from Wikipedia';
+				wikiError = `${$t('adventures.wikipedia_error') || 'Error fetching description from Wikipedia'}`;
 			}
 		} catch (error) {
-			wikiError = 'Error connecting to Wikipedia service';
+			wikiError = `${$t('adventures.wikipedia_error') || ''}`;
 		} finally {
 			isGeneratingDesc = false;
 		}
@@ -429,7 +428,7 @@
 					<div class="p-2 bg-primary/10 rounded-lg">
 						<InfoIcon class="w-5 h-5 text-primary" />
 					</div>
-					<h2 class="text-xl font-bold">Basic Information</h2>
+					<h2 class="text-xl font-bold">{$t('adventures.basic_information')}</h2>
 				</div>
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -439,7 +438,7 @@
 						<div class="form-control">
 							<label class="label" for="name">
 								<span class="label-text font-medium">
-									Name <span class="text-error">*</span>
+									{$t('adventures.name')} <span class="text-error">*</span>
 								</span>
 							</label>
 							<input
@@ -456,7 +455,7 @@
 						<div class="form-control">
 							<label class="label" for="category">
 								<span class="label-text font-medium">
-									Category <span class="text-error">*</span>
+									{$t('adventures.category')} <span class="text-error">*</span>
 								</span>
 							</label>
 							{#if (user && ownerUser && user.uuid == ownerUser.uuid) || !ownerUser}
@@ -478,7 +477,7 @@
 						<!-- Rating Field -->
 						<div class="form-control">
 							<label class="label" for="rating">
-								<span class="label-text font-medium">Rating</span>
+								<span class="label-text font-medium">{$t('adventures.rating')}</span>
 							</label>
 							<div
 								class="flex items-center gap-4 p-3 bg-base-100/80 border border-base-300 rounded-lg"
@@ -508,7 +507,7 @@
 										on:click={() => (location.rating = NaN)}
 									>
 										<ClearIcon class="w-4 h-4" />
-										Remove
+										{$t('adventures.remove')}
 									</button>
 								{/if}
 							</div>
@@ -520,7 +519,7 @@
 						<!-- Link Field -->
 						<div class="form-control">
 							<label class="label" for="link">
-								<span class="label-text font-medium">Link</span>
+								<span class="label-text font-medium">{$t('adventures.link')}</span>
 							</label>
 							<input
 								type="url"
@@ -542,9 +541,9 @@
 										bind:checked={location.is_public}
 									/>
 									<div>
-										<span class="label-text font-medium">Public Location</span>
+										<span class="label-text font-medium">{$t('adventures.public_location')}</span>
 										<p class="text-sm text-base-content/60">
-											Make this location visible to other users
+											{$t('adventures.public_location_description')}
 										</p>
 									</div>
 								</label>
@@ -554,7 +553,7 @@
 						<!-- Description Field -->
 						<div class="form-control">
 							<label class="label" for="description">
-								<span class="label-text font-medium">Description</span>
+								<span class="label-text font-medium">{$t('adventures.description')}</span>
 							</label>
 							<MarkdownEditor bind:text={location.description} editor_height="h-32" />
 
@@ -570,7 +569,7 @@
 									{:else}
 										<GenerateIcon class="w-4 h-4" />
 									{/if}
-									Generate Description
+									{$t('adventures.generate_desc')}
 								</button>
 								{#if wikiError}
 									<div class="alert alert-error alert-sm">
@@ -617,7 +616,7 @@
 					<div class="p-2 bg-secondary/10 rounded-lg">
 						<MapIcon class="w-5 h-5 text-secondary" />
 					</div>
-					<h2 class="text-xl font-bold">Location & Map</h2>
+					<h2 class="text-xl font-bold">{$t('adventures.location_map')}</h2>
 				</div>
 
 				<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -626,7 +625,7 @@
 						<!-- Location Display Name Input -->
 						<div class="form-control">
 							<label class="label" for="location-display">
-								<span class="label-text font-medium">Location Display Name</span>
+								<span class="label-text font-medium">{$t('adventures.location_display_name')}</span>
 							</label>
 							<input
 								type="text"
@@ -640,7 +639,7 @@
 						<!-- Search Input -->
 						<div class="form-control">
 							<label class="label" for="search-location">
-								<span class="label-text font-medium">Search Location</span>
+								<span class="label-text font-medium">{$t('adventures.search_location')}</span>
 							</label>
 							<div class="relative">
 								<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -670,12 +669,16 @@
 						{#if isSearching}
 							<div class="flex items-center justify-center py-4">
 								<span class="loading loading-spinner loading-sm"></span>
-								<span class="ml-2 text-sm text-base-content/60">Searching...</span>
+								<span class="ml-2 text-sm text-base-content/60"
+									>{$t('adventures.searching')}...</span
+								>
 							</div>
 						{:else if searchResults.length > 0}
 							<div class="space-y-2">
 								<div class="label">
-									<span class="label-text text-sm font-medium">Search Results</span>
+									<span class="label-text text-sm font-medium"
+										>{$t('adventures.search_results')}</span
+									>
 								</div>
 								<div class="max-h-48 overflow-y-auto space-y-1">
 									{#each searchResults as result}
@@ -701,12 +704,12 @@
 
 						<!-- Current Location Button -->
 						<div class="flex items-center gap-2">
-							<div class="divider divider-horizontal text-xs">OR</div>
+							<div class="divider divider-horizontal text-xs">{$t('adventures.or')}</div>
 						</div>
 
 						<button class="btn btn-outline gap-2 w-full" on:click={useCurrentLocation}>
 							<LocationIcon class="w-4 h-4" />
-							Use Current Location
+							{$t('adventures.use_current_location')}
 						</button>
 
 						<!-- Selected Location Display -->
@@ -718,7 +721,9 @@
 											<CheckIcon class="w-4 h-4 text-success" />
 										</div>
 										<div class="flex-1 min-w-0">
-											<h4 class="font-semibold text-success mb-1">Location Selected</h4>
+											<h4 class="font-semibold text-success mb-1">
+												{$t('adventures.location_selected')}
+											</h4>
 											<p class="text-sm text-base-content/80 truncate">{selectedLocation.name}</p>
 											<p class="text-xs text-base-content/60 mt-1">
 												{selectedMarker.lat.toFixed(6)}, {selectedMarker.lng.toFixed(6)}
@@ -758,12 +763,14 @@
 					<div class="space-y-4">
 						<div class="flex items-center justify-between">
 							<div class="label">
-								<span class="label-text font-medium">Interactive Map</span>
+								<span class="label-text font-medium">{$t('worldtravel.interactive_map')}</span>
 							</div>
 							{#if isReverseGeocoding}
 								<div class="flex items-center gap-2">
 									<span class="loading loading-spinner loading-sm"></span>
-									<span class="text-sm text-base-content/60">Getting location details...</span>
+									<span class="text-sm text-base-content/60"
+										>{$t('worldtravel.getting_location_details')}...</span
+									>
 								</div>
 							{/if}
 						</div>
@@ -792,7 +799,7 @@
 
 						{#if !selectedMarker}
 							<p class="text-sm text-base-content/60 text-center">
-								Click on the map to select a location
+								{$t('adventures.click_on_map')}
 							</p>
 						{/if}
 					</div>
@@ -804,7 +811,7 @@
 		<div class="flex gap-3 justify-end pt-4">
 			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
-				Back
+				{$t('adventures.back')}
 			</button>
 			<button
 				class="btn btn-primary gap-2"
@@ -813,10 +820,10 @@
 			>
 				{#if isReverseGeocoding}
 					<span class="loading loading-spinner loading-sm"></span>
-					Processing...
+					{$t('adventures.processing')}...
 				{:else}
 					<SaveIcon class="w-5 h-5" />
-					Next
+					{$t('adventures.continue')}
 				{/if}
 			</button>
 		</div>

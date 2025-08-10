@@ -359,8 +359,8 @@
 				{#if stats.activity_count > 0}
 					<div class="mb-8">
 						<div class="text-center mb-6">
-							<h3 class="text-2xl font-bold mb-2">Activity Statistics</h3>
-							<p class="text-base-content/60">Your fitness and activity achievements</p>
+							<h3 class="text-2xl font-bold mb-2">{$t('adventures.activity_statistics')}</h3>
+							<p class="text-base-content/60">{$t('adventures.activity_statistics_description')}</p>
 						</div>
 
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -372,10 +372,10 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-accent/70 font-medium text-sm uppercase tracking-wide">
-												Activities
+												{$t('adventures.activities_name')}
 											</div>
 											<div class="text-3xl font-bold text-accent">{stats.activity_count}</div>
-											<div class="text-accent/60 mt-2">Total recorded</div>
+											<div class="text-accent/60 mt-2">{$t('adventures.total_recorded')}</div>
 										</div>
 										<div class="p-3 bg-accent/20 rounded-2xl">
 											<Run class="w-6 h-6 text-accent" />
@@ -392,12 +392,12 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-error/70 font-medium text-sm uppercase tracking-wide">
-												Distance
+												{$t('adventures.distance')}
 											</div>
 											<div class="text-3xl font-bold text-error">
 												{getDistance(stats.activity_distance)}
 											</div>
-											<div class="text-error/60 mt-2">Total covered</div>
+											<div class="text-error/60 mt-2">{$t('adventures.total_covered')}</div>
 										</div>
 										<div class="p-3 bg-error/20 rounded-2xl">
 											<TrendingUpOutline class="w-6 h-6 text-error" />
@@ -414,12 +414,12 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-purple-500/70 font-medium text-sm uppercase tracking-wide">
-												Moving Time
+												{$t('adventures.moving_time')}
 											</div>
 											<div class="text-3xl font-bold text-purple-500">
 												{formatTime(stats.activity_moving_time)}
 											</div>
-											<div class="text-purple-500/60 mt-2">Active duration</div>
+											<div class="text-purple-500/60 mt-2">{$t('adventures.active_duration')}</div>
 										</div>
 										<div class="p-3 bg-purple-500/20 rounded-2xl">
 											<Timer class="w-6 h-6 text-purple-500" />

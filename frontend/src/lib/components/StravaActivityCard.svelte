@@ -2,6 +2,7 @@
 	import { formatDateInTimezone } from '$lib/dateUtils';
 	import type { StravaActivity } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
+	import { t } from 'svelte-i18n';
 
 	const dispatch = createEventDispatcher();
 
@@ -114,7 +115,7 @@
 					type="button"
 					on:click={handleImportActivity}
 					class="btn btn-success btn-sm btn-circle"
-					aria-label="Import activity"
+					aria-label={$t('adventures.import_activity')}
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -130,7 +131,7 @@
 						tabindex="0"
 						role="button"
 						class="btn btn-ghost btn-sm btn-circle"
-						aria-label="Activity options"
+						aria-label={$t('adventures.activity_options')}
 					>
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -148,12 +149,12 @@
 					>
 						<li>
 							<a href={activity.export_gpx} target="_blank" rel="noopener noreferrer">
-								Export GPX
+								{$t('adventures.export_gpx')}
 							</a>
 						</li>
 						<li>
 							<a href={activity.export_original} target="_blank" rel="noopener noreferrer">
-								Export Original
+								{$t('adventures.export_original')}
 							</a>
 						</li>
 						<li>
@@ -162,7 +163,7 @@
 								target="_blank"
 								rel="noopener noreferrer"
 							>
-								View on Strava
+								{$t('adventures.view_on') + ' Strava'}
 							</a>
 						</li>
 					</ul>
@@ -173,24 +174,24 @@
 		<!-- Main Stats -->
 		<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
 			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">Distance</div>
+				<div class="stat-title text-xs">{$t('adventures.distance')}</div>
 				<div class="stat-value text-lg">{distance.value.toFixed(2)}</div>
 				<div class="stat-desc">{distance.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">Time</div>
+				<div class="stat-title text-xs">{$t('adventures.time')}</div>
 				<div class="stat-value text-lg">{formatTime(activity.moving_time)}</div>
-				<div class="stat-desc">Moving time</div>
+				<div class="stat-desc">{$t('adventures.moving_time')}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">Avg Speed</div>
+				<div class="stat-title text-xs">{$t('adventures.avg_speed')}</div>
 				<div class="stat-value text-lg">{speed.value.toFixed(1)}</div>
 				<div class="stat-desc">{speed.unit}</div>
 			</div>
 			<div class="stat bg-base-100 rounded-lg p-3">
-				<div class="stat-title text-xs">Elevation</div>
+				<div class="stat-title text-xs">{$t('adventures.elevation')}</div>
 				<div class="stat-value text-lg">{elevation.value.toFixed(0)}</div>
-				<div class="stat-desc">{elevation.unit} gain</div>
+				<div class="stat-desc">{elevation.unit} {$t('adventures.gain')}</div>
 			</div>
 		</div>
 
@@ -198,12 +199,13 @@
 		<div class="flex flex-wrap gap-2 text-sm">
 			{#if activity.average_cadence}
 				<div class="badge badge-ghost">
-					<span class="font-medium">Cadence:</span>&nbsp;{activity.average_cadence.toFixed(1)}
+					<span class="font-medium">{$t('adventures.cadence')}:</span
+					>&nbsp;{activity.average_cadence.toFixed(1)}
 				</div>
 			{/if}
 			{#if activity.calories}
 				<div class="badge badge-ghost">
-					<span class="font-medium">Calories:</span>&nbsp;{activity.calories}
+					<span class="font-medium">{$t('adventures.calories')}:</span>&nbsp;{activity.calories}
 				</div>
 			{/if}
 			{#if activity.kudos_count > 0}
@@ -213,7 +215,8 @@
 			{/if}
 			{#if activity.achievement_count > 0}
 				<div class="badge badge-success badge-outline">
-					<span class="font-medium">Achievements:</span>&nbsp;{activity.achievement_count}
+					<span class="font-medium">{$t('adventures.achievements')}:</span
+					>&nbsp;{activity.achievement_count}
 				</div>
 			{/if}
 			{#if activity.pr_count > 0}
@@ -227,11 +230,11 @@
 		{#if paceSeconds}
 			<div class="flex justify-between items-center mt-3 pt-3 border-t border-base-300">
 				<div class="text-sm">
-					<span class="font-medium">Pace:</span>
+					<span class="font-medium">{$t('adventures.pace')}:</span>
 					{formatPace(paceSeconds, measurementSystem)}
 				</div>
 				<div class="text-sm">
-					<span class="font-medium">Max Speed:</span>
+					<span class="font-medium">{$t('adventures.max_speed')}:</span>
 					{maxSpeed.value.toFixed(1)}
 					{maxSpeed.unit}
 				</div>

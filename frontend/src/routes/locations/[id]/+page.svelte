@@ -257,7 +257,7 @@
 										on:click={() =>
 											goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
 										class="btn btn-circle btn-sm btn-primary"
-										aria-label="Previous image"
+										aria-label={$t('adventures.previous_image')}
 									>
 										❮
 									</button>
@@ -270,7 +270,7 @@
 										on:click={() =>
 											goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
 										class="btn btn-circle btn-sm btn-primary"
-										aria-label="Next image"
+										aria-label={$t('adventures.next_image')}
 									>
 										❯
 									</button>

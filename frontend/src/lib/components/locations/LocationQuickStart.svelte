@@ -212,10 +212,6 @@
 		}
 	}
 
-	$: {
-		console.log('Selected Location:', selectedLocation);
-	}
-
 	// Continue with selected location
 	function continueWithLocation() {
 		if (selectedLocation && selectedMarker) {
@@ -297,13 +293,13 @@
 				{#if isSearching}
 					<div class="flex items-center justify-center py-4">
 						<span class="loading loading-spinner loading-sm"></span>
-						<span class="ml-2 text-sm text-base-content/60">Searching...</span>
+						<span class="ml-2 text-sm text-base-content/60">{$t('adventures.searching')}...</span>
 					</div>
 				{:else if searchResults.length > 0}
 					<div class="space-y-2">
 						<!-- svelte-ignore a11y-label-has-associated-control -->
 						<label class="label">
-							<span class="label-text text-sm font-medium">Search Results</span>
+							<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
 						</label>
 						<div class="max-h-48 overflow-y-auto space-y-1">
 							{#each searchResults as result}
@@ -365,7 +361,9 @@
 			{#if isReverseGeocoding}
 				<div class="flex items-center justify-center py-2 mb-4">
 					<span class="loading loading-spinner loading-sm"></span>
-					<span class="ml-2 text-sm text-base-content/60">Getting location details...</span>
+					<span class="ml-2 text-sm text-base-content/60"
+						>{$t('adventures.getting_location_details')}...</span
+					>
 				</div>
 			{/if}
 
@@ -402,7 +400,7 @@
 						<CheckIcon class="w-5 h-5 text-success" />
 					</div>
 					<div class="flex-1 min-w-0">
-						<h4 class="font-semibold text-success mb-1">Location Selected</h4>
+						<h4 class="font-semibold text-success mb-1">{$t('adventures.location_selected')}</h4>
 						<p class="text-sm text-base-content/80 truncate">{selectedLocation.name}</p>
 						<p class="text-xs text-base-content/60 mt-1">
 							{selectedMarker.lat.toFixed(6)}, {selectedMarker.lng.toFixed(6)}
@@ -448,14 +446,14 @@
 	<!-- Action Buttons -->
 	<div class="flex gap-3 pt-4">
 		<button class="btn btn-neutral-200 flex-1" on:click={() => dispatch('cancel')}>
-			{$t('common.cancel') || 'Cancel'}
+			{$t('adventures.cancel') || 'Cancel'}
 		</button>
 		<button class="btn btn-primary flex-1" on:click={continueWithLocation}>
 			{#if isReverseGeocoding}
 				<span class="loading loading-spinner loading-xs"></span>
-				Getting details...
+				{$t('adventures.getting_location_details') || 'Getting details...'}
 			{:else}
-				{$t('common.continue') || 'Continue with This Location'}
+				{$t('adventures.continue')}
 			{/if}
 		</button>
 	</div>

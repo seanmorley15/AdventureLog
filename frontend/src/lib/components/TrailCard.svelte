@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Trail } from '$lib/types';
+	import { t } from 'svelte-i18n';
 
 	// Icons (only those used)
 	import Calendar from '~icons/mdi/calendar';
@@ -33,10 +34,6 @@
 	function formatDate(date: string | number | Date) {
 		return new Date(date).toLocaleDateString();
 	}
-
-	function pluralize(count: number, singular: string, plural = singular + 's') {
-		return `${count} ${count === 1 ? singular : plural}`;
-	}
 </script>
 
 <div class="card bg-base-100 shadow">
@@ -52,7 +49,7 @@
 						<span class="badge badge-outline badge-sm">{trail.provider}</span>
 					{/if}
 					<span class="text-sm opacity-70">
-						Created: {formatDate(trail.created_at)}
+						{$t('adventures.created')}: {formatDate(trail.created_at)}
 					</span>
 				</div>
 
@@ -80,7 +77,8 @@
 								<div class="flex items-center gap-2 text-sm">
 									<TrendingUp class="w-3 h-3 text-base-content/60" />
 									<span class="text-base-content/80">
-										{getElevation(trail.wanderer_data.elevation_gain)} gain
+										{getElevation(trail.wanderer_data.elevation_gain)}
+										{$t('adventures.gain')}
 									</span>
 								</div>
 							{/if}
@@ -108,7 +106,7 @@
 								{#if trail.wanderer_data.like_count > 0}
 									<div class="flex items-center gap-1 text-xs text-base-content/60">
 										<Users class="w-3 h-3" />
-										{pluralize(trail.wanderer_data.like_count, 'like')}
+										{$t('adventures.likes')}: {trail.wanderer_data.like_count}
 									</div>
 								{/if}
 							</div>
@@ -133,7 +131,7 @@
 						{#if trail.wanderer_data.photos?.length > 0}
 							<div class="flex items-center gap-1 text-xs text-base-content/60">
 								<Camera class="w-3 h-3" />
-								{pluralize(trail.wanderer_data.photos.length, 'photo')}
+								{$t('adventures.photos')}: {trail.wanderer_data.photos.length}
 							</div>
 						{/if}
 					</div>
@@ -147,7 +145,7 @@
 					rel="noopener noreferrer"
 					class="btn btn-sm btn-primary"
 				>
-					🔗 View Trail
+					🔗 {$t('adventures.view_trail')}
 				</a>
 			{/if}
 		</div>

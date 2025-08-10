@@ -1189,7 +1189,7 @@
 										<div class="form-control">
 											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">Username</span>
+												<span class="label-text font-medium">{$t('auth.username')}</span>
 											</label>
 											<input
 												type="text"
@@ -1202,7 +1202,7 @@
 										<div class="form-control">
 											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">Password</span>
+												<span class="label-text font-medium">{$t('auth.password')}</span>
 											</label>
 											<input
 												type="password"
@@ -1213,7 +1213,7 @@
 										</div>
 
 										<button class="btn btn-primary w-full" on:click={wandererConnect}>
-											🔗 Connect to Wanderer
+											🔗 {$t('adventures.connect_to_wanderer')}
 										</button>
 									</div>
 								{:else}

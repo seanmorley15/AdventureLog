@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { t } from 'svelte-i18n';
 	const dispatch = createEventDispatcher();
 	import MountainIcon from '~icons/mdi/mountain';
 	import MapPinIcon from '~icons/mdi/map-marker';
@@ -85,9 +86,9 @@
 			<div class="text-xs text-base-content/70 space-y-1">
 				{#if trail.distance}
 					<div class="flex items-center gap-4">
-						<span>Distance: {formatDistance(trail.distance)}</span>
+						<span>{$t('adventures.distance')}: {formatDistance(trail.distance)}</span>
 						{#if trail.duration > 0}
-							<span>Duration: {Math.round(trail.duration / 60)} min</span>
+							<span>{$t('adventures.duration')}: {Math.round(trail.duration / 60)} min</span>
 						{/if}
 					</div>
 				{/if}
@@ -112,21 +113,23 @@
 				{#if trail.created}
 					<div class="flex items-center gap-1">
 						<CalendarIcon class="w-3 h-3" />
-						<span>Created: {formatDate(trail.created)}</span>
+						<span>{$t('adventures.created')}: {formatDate(trail.created)}</span>
 					</div>
 				{/if}
 
 				{#if trail.photos && trail.photos.length > 0}
 					<div class="flex items-center gap-1">
 						<CameraIcon class="w-3 h-3" />
-						<span>{trail.photos.length} photo{trail.photos.length !== 1 ? 's' : ''}</span>
+						<span>{$t('adventures.photos')}: {trail.photos.length}</span>
 					</div>
 				{/if}
 
 				{#if trail.gpx}
 					<div class="flex items-center gap-1">
 						<FileIcon class="w-3 h-3" />
-						<a href={trail.gpx} target="_blank" class="link link-primary text-xs"> View GPX </a>
+						<a href={trail.gpx} target="_blank" class="link link-primary text-xs">
+							{$t('adventures.view_gpx')}
+						</a>
 					</div>
 				{/if}
 			</div>
