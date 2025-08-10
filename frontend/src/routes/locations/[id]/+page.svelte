@@ -9,17 +9,17 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	// @ts-ignore
-	import toGeoJSON from '@mapbox/togeojson';
-	// @ts-ignore
 	import { DateTime } from 'luxon';
 
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
 	import { getBasemapUrl, isAllDay } from '$lib';
+	import ActivityCard from '$lib/components/ActivityCard.svelte';
+	import TrailCard from '$lib/components/TrailCard.svelte';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	let geojson: any;
 
@@ -27,56 +27,8 @@
 		return marked(markdown) as string;
 	};
 
-	async function getGpxFiles() {
-		let gpxfiles: string[] = [];
-
-		if (adventure.attachments && adventure.attachments.length > 0) {
-			gpxfiles = adventure.attachments
-				.filter((attachment) => attachment.extension === 'gpx')
-				.map((attachment) => attachment.file);
-		}
-
-		geojson = {
-			type: 'FeatureCollection',
-			features: []
-		};
-
-		if (gpxfiles.length > 0) {
-			const promises = gpxfiles.map(async (gpxfile) => {
-				try {
-					const gpxFileName = gpxfile.split('/').pop();
-					const res = await fetch(gpxfile, {
-						credentials: 'include'
-					});
-
-					if (!res.ok) {
-						console.error(`Failed to fetch GPX file: ${gpxFileName}`);
-						return [];
-					}
-
-					const gpxData = await res.text();
-					const parser = new DOMParser();
-					const gpx = parser.parseFromString(gpxData, 'text/xml');
-
-					const convertedGeoJSON = toGeoJSON.gpx(gpx);
-					return convertedGeoJSON.features || [];
-				} catch (error) {
-					console.error(`Error processing GPX file ${gpxfile}:`, error);
-					return [];
-				}
-			});
-
-			const results = await Promise.allSettled(promises);
-
-			results.forEach((result) => {
-				if (result.status === 'fulfilled' && result.value.length > 0) {
-					geojson.features.push(...result.value);
-				}
-			});
-		}
-	}
-
 	export let data: PageData;
+	let measurementSystem = data.user?.measurement_system || 'metric';
 	console.log(data);
 
 	let adventure: AdditionalLocation;
@@ -107,14 +59,61 @@
 		} else {
 			notFound = true;
 		}
-		await getGpxFiles();
 	});
 
-	async function saveEdit(event: CustomEvent<AdditionalLocation>) {
-		adventure = event.detail;
-		isEditModalOpen = false;
-		geojson = null;
-		await getGpxFiles();
+	function hasActivityGeojson(adventure: AdditionalLocation) {
+		return adventure.visits.some((visit) => visit.activities.some((activity) => activity.geojson));
+	}
+
+	function hasAttachmentGeojson(adventure: AdditionalLocation) {
+		return adventure.attachments.some((attachment) => attachment.geojson);
+	}
+
+	function getActivityColor(activityType: string) {
+		const colors: Record<string, string> = {
+			Hike: '#10B981',
+			Run: '#F59E0B',
+			Bike: '#3B82F6',
+			Walk: '#8B5CF6',
+			default: '#6B7280'
+		};
+		return colors[activityType] || colors.default;
+	}
+
+	function getTotalActivities(adventure: AdditionalLocation) {
+		return adventure.visits.reduce(
+			(total, visit) => total + (visit.activities ? visit.activities.length : 0),
+			0
+		);
+	}
+
+	function getTotalDistance(adventure: AdditionalLocation) {
+		const totalMeters = adventure.visits.reduce(
+			(total, visit) =>
+				total +
+				(visit.activities
+					? visit.activities.reduce((sum, activity) => sum + (activity.distance || 0), 0)
+					: 0),
+			0
+		);
+
+		// Convert meters to km, then to miles if using imperial system
+		const totalKm = totalMeters / 1000;
+		return measurementSystem === 'imperial' ? totalKm * 0.621371 : totalKm;
+	}
+
+	function getTotalElevationGain(adventure: AdditionalLocation) {
+		const totalMeters = adventure.visits.reduce(
+			(total, visit) =>
+				total +
+				(visit.activities
+					? visit.activities.reduce((sum, activity) => sum + (activity.elevation_gain || 0), 0)
+					: 0),
+			0
+		);
+
+		// Convert to feet if using imperial system
+		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
 	}
 
 	function closeImageModal() {
@@ -122,7 +121,7 @@
 	}
 
 	function openImageModal(imageIndex: number) {
-		adventure_images = adventure.images.map(img => ({
+		adventure_images = adventure.images.map((img) => ({
 			image: img.image,
 			adventure: adventure
 		}));
@@ -147,16 +146,17 @@
 {/if}
 
 {#if isEditModalOpen}
-	<LocationModal
-		locationToEdit={adventure}
+	<NewLocationModal
 		on:close={() => (isEditModalOpen = false)}
-		on:save={saveEdit}
+		user={data.user}
+		locationToEdit={adventure}
+		bind:location={adventure}
 	/>
 {/if}
 
 {#if isImageModalOpen}
 	<ImageDisplayModal
-		images={adventure_images}
+		images={adventure.images}
 		initialIndex={modalInitialIndex}
 		on:close={closeImageModal}
 	/>
@@ -241,6 +241,11 @@
 									{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
 								</div>
 							{/if}
+							{#if adventure.trails && adventure.trails.length > 0}
+								<div class="badge badge-lg badge-info font-semibold px-4 py-3">
+									🥾 {adventure.trails.length} Trail{adventure.trails.length === 1 ? '' : 's'}
+								</div>
+							{/if}
 						</div>
 
 						<!-- Image Navigation -->
@@ -252,7 +257,7 @@
 										on:click={() =>
 											goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
 										class="btn btn-circle btn-sm btn-primary"
-										aria-label="Previous image"
+										aria-label={$t('adventures.previous_image')}
 									>
 										❮
 									</button>
@@ -265,7 +270,7 @@
 										on:click={() =>
 											goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
 										class="btn btn-circle btn-sm btn-primary"
-										aria-label="Next image"
+										aria-label={$t('adventures.next_image')}
 									>
 										❯
 									</button>
@@ -381,13 +386,6 @@
 												? `🌍 ${$t('adventures.public')}`
 												: `🔒 ${$t('adventures.private')}`}
 										</div>
-										<!-- {#if data.props.collection}
-											<div class="badge badge-sm badge-outline">
-												📚 <a href="/collections/{data.props.collection.id}" class="link"
-													>{data.props.collection.name}</a
-												>
-											</div>
-										{/if} -->
 										{#if adventure.collections && adventure.collections.length > 0}
 											<div class="badge badge-sm badge-outline">
 												📚
@@ -413,6 +411,23 @@
 					</div>
 				{/if}
 
+				<!-- Trails Section -->
+				{#if adventure.trails && adventure.trails.length > 0}
+					<div class="card bg-base-200 shadow-xl">
+						<div class="card-body">
+							<h2 class="card-title text-2xl mb-6">🥾 {$t('adventures.trails')}</h2>
+							<div class="grid gap-4">
+								{#each adventure.trails as trail}
+									<TrailCard
+										{trail}
+										measurementSystem={data.user?.measurement_system || 'metric'}
+									/>
+								{/each}
+							</div>
+						</div>
+					</div>
+				{/if}
+
 				<!-- Visits Timeline -->
 				{#if adventure.visits.length > 0}
 					<div class="card bg-base-200 shadow-xl">
@@ -428,7 +443,7 @@
 											{/if}
 										</div>
 										<div class="flex-1 pb-4">
-											<div class="card bg-base-200 shadow">
+											<div class="card bg-base-100 shadow">
 												<div class="card-body p-4">
 													{#if isAllDay(visit.start_date)}
 														<div class="flex items-center gap-2 mb-2">
@@ -475,6 +490,26 @@
 															<p class="text-sm italic">"{visit.notes}"</p>
 														</div>
 													{/if}
+
+													<!-- Activities Section -->
+													{#if visit.activities && visit.activities.length > 0}
+														<div class="mt-4">
+															<h4 class="font-semibold mb-3 flex items-center gap-2">
+																🏃‍♂️ Activities ({visit.activities.length})
+															</h4>
+															<div class="space-y-3">
+																{#each visit.activities as activity}
+																	<ActivityCard
+																		{activity}
+																		readOnly={true}
+																		trails={adventure.trails}
+																		{visit}
+																		measurementSystem={data.user?.measurement_system || 'metric'}
+																	/>
+																{/each}
+															</div>
+														</div>
+													{/if}
 												</div>
 											</div>
 										</div>
@@ -486,7 +521,7 @@
 				{/if}
 
 				<!-- Map Section -->
-				{#if (adventure.longitude && adventure.latitude) || geojson}
+				{#if (adventure.longitude && adventure.latitude) || hasAttachmentGeojson(adventure) || hasActivityGeojson(adventure)}
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.location')}</h2>
@@ -560,7 +595,16 @@
 														class="btn btn-xs btn-outline hover:btn-success"
 														on:click={() => goto(`/worldtravel/${adventure.country?.country_code}`)}
 													>
-														🌎 {adventure.country.name}
+														{#if adventure.country.flag_url}
+															<img
+																src={adventure.country.flag_url}
+																alt={adventure.country.name}
+																class="w-4 h-3 rounded"
+															/>
+														{:else}
+															🌎
+														{/if}
+														{adventure.country.name}
 													</button>
 												{/if}
 											</div>
@@ -638,6 +682,37 @@
 										</GeoJSON>
 									{/if}
 
+									<!-- Activity GPS tracks -->
+									{#each adventure.visits as visit}
+										{#each visit.activities as activity}
+											{#if activity.geojson}
+												<GeoJSON data={activity.geojson}>
+													<LineLayer
+														paint={{
+															'line-color': getActivityColor(activity.type),
+															'line-width': 3,
+															'line-opacity': 0.8
+														}}
+													/>
+												</GeoJSON>
+											{/if}
+										{/each}
+									{/each}
+
+									{#each adventure.attachments as attachment}
+										{#if attachment.geojson}
+											<GeoJSON data={attachment.geojson}>
+												<LineLayer
+													paint={{
+														'line-color': '#00FF00',
+														'line-width': 2,
+														'line-opacity': 0.6
+													}}
+												/>
+											</GeoJSON>
+										{/if}
+									{/each}
+
 									{#if adventure.longitude && adventure.latitude}
 										<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>
 											<Popup openOn="click" offset={[0, -10]}>
@@ -697,6 +772,41 @@
 						</div>
 					</div>
 				</div>
+
+				<!-- Activity Summary -->
+				{#if getTotalActivities(adventure) > 0}
+					<div class="card bg-base-200 shadow-xl">
+						<div class="card-body">
+							<h3 class="card-title text-lg mb-4">🏃‍♂️ Activity Summary</h3>
+							<div class="space-y-2">
+								<div class="stat">
+									<div class="stat-title">Total Activities</div>
+									<div class="stat-value text-2xl">{getTotalActivities(adventure)}</div>
+								</div>
+								{#if getTotalDistance(adventure) > 0}
+									<div class="stat">
+										<div class="stat-title">Total Distance</div>
+										<div class="stat-value text-xl">
+											{getTotalDistance(adventure).toFixed(1)}
+											{#if measurementSystem === 'imperial'}mi
+											{:else}km{/if}
+										</div>
+									</div>
+								{/if}
+								{#if getTotalElevationGain(adventure) > 0}
+									<div class="stat">
+										<div class="stat-title">Total Elevation</div>
+										<div class="stat-value text-xl">
+											{getTotalElevationGain(adventure).toFixed(0)}
+											{#if measurementSystem === 'imperial'}ft
+											{:else}m{/if}
+										</div>
+									</div>
+								{/if}
+							</div>
+						</div>
+					</div>
+				{/if}
 
 				<!-- Sunrise/Sunset -->
 				{#if adventure.sun_times && adventure.sun_times.length > 0}

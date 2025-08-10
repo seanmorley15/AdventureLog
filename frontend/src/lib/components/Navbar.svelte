@@ -61,6 +61,8 @@
 		ko: '한국어',
 		no: 'Norsk',
 		ru: 'Русский',
+		ja: '日本語',
+		ar: 'العربية',
 		'pt-br': 'Português (Brasil)'
 	};
 

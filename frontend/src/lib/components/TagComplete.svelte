@@ -2,13 +2,13 @@
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
-	export let activities: string[] | undefined | null;
+	export let tags: string[] | undefined | null;
 
-	let allActivities: string[] = [];
+	let allTags: string[] = [];
 	let inputVal: string = '';
 
-	if (activities == null || activities == undefined) {
-		activities = [];
+	if (tags == null || tags == undefined) {
+		tags = [];
 	}
 
 	onMount(async () => {
@@ -20,30 +20,29 @@
 		});
 		let data = await res.json();
 		if (data && data.activities) {
-			allActivities = data.activities;
+			allTags = data.activities;
 		}
 	});
 
 	function addActivity() {
-		if (inputVal && activities) {
+		if (inputVal && tags) {
 			const trimmedInput = inputVal.trim().toLocaleLowerCase();
-			if (trimmedInput && !activities.includes(trimmedInput)) {
-				activities = [...activities, trimmedInput];
+			if (trimmedInput && !tags.includes(trimmedInput)) {
+				tags = [...tags, trimmedInput];
 				inputVal = '';
 			}
 		}
 	}
 
 	function removeActivity(item: string) {
-		if (activities) {
-			activities = activities.filter((activity) => activity !== item);
+		if (tags) {
+			tags = tags.filter((activity) => activity !== item);
 		}
 	}
 
-	$: filteredItems = allActivities.filter(function (activity) {
+	$: filteredItems = allTags.filter(function (activity) {
 		return (
-			activity.toLowerCase().includes(inputVal.toLowerCase()) &&
-			(!activities || !activities.includes(activity))
+			activity.toLowerCase().includes(inputVal.toLowerCase()) && (!tags || !tags.includes(activity))
 		);
 	});
 </script>
@@ -88,8 +87,8 @@
 
 <div class="mt-2">
 	<ul class="space-y-2">
-		{#if activities}
-			{#each activities as activity}
+		{#if tags}
+			{#each tags as activity}
 				<li class="flex items-center justify-between bg-base-200 p-2 rounded">
 					{activity}
 					<button

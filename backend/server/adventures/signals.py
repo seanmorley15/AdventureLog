@@ -6,7 +6,10 @@ from adventures.models import Location
 def update_adventure_publicity(sender, instance, action, **kwargs):
     """
     Signal handler to update adventure publicity when collections are added/removed
+    This function checks if the adventure's collections contain any public collection.
     """
+    if not isinstance(instance, Location):
+        return
     # Only process when collections are added or removed
     if action in ('post_add', 'post_remove', 'post_clear'):
         collections = instance.collections.all()

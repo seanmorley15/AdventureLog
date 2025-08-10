@@ -20,6 +20,7 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	import ShareModal from './ShareModal.svelte';
 	import CardCarousel from './CardCarousel.svelte';
+	import ExitRun from '~icons/mdi/exit-run';
 
 	const dispatch = createEventDispatcher();
 
@@ -91,7 +92,11 @@
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel adventures={collection.locations} />
+		<CardCarousel
+			images={collection.locations.flatMap((location) => location.images)}
+			name={collection.name}
+			icon="📚"
+		/>
 
 		<!-- Badge Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -239,6 +244,26 @@
 										</button>
 									</li>
 								{/if}
+							</ul>
+						</div>
+					{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
+						<!-- dropdown with leave button -->
+						<div class="dropdown dropdown-end">
+							<button type="button" class="btn btn-square btn-sm btn-base-300">
+								<DotsHorizontal class="w-5 h-5" />
+							</button>
+							<ul
+								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+							>
+								<li>
+									<button
+										class="text-error flex items-center gap-2"
+										on:click={() => dispatch('leave', collection.id)}
+									>
+										<ExitRun class="w-4 h-4" />
+										{$t('adventures.leave_collection')}
+									</button>
+								</li>
 							</ul>
 						</div>
 					{/if}

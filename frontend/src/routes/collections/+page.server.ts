@@ -67,6 +67,17 @@ export const load = (async (event) => {
 		}
 		let archivedCollections = (await archivedRes.json()) as Collection[];
 
+		let inviteRes = await fetch(`${serverEndpoint}/api/collections/invites/`, {
+			headers: {
+				Cookie: `sessionid=${sessionId}`
+			}
+		});
+		if (!inviteRes.ok) {
+			console.error('Failed to fetch invites');
+			return redirect(302, '/login');
+		}
+		let invites = await inviteRes.json();
+
 		// Calculate current page from URL
 		const currentPage = parseInt(page);
 
@@ -80,7 +91,8 @@ export const load = (async (event) => {
 				currentPage,
 				order_by,
 				order_direction,
-				archivedCollections
+				archivedCollections,
+				invites
 			}
 		};
 	}

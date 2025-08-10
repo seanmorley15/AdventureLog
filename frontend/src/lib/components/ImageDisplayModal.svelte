@@ -3,15 +3,15 @@
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
 	let modal: HTMLDialogElement;
-	import type { Location } from '$lib/types';
-
-	export let images: { image: string; adventure: Location | null }[] = [];
-	export let initialIndex: number = 0;
 	import { t } from 'svelte-i18n';
+	import type { ContentImage } from '$lib/types';
+	export let images: ContentImage[] = [];
+	export let initialIndex: number = 0;
+	export let name: string = '';
+	export let location: string = '';
 
 	let currentIndex = initialIndex;
 	let currentImage = images[currentIndex]?.image || '';
-	let currentAdventure = images[currentIndex]?.adventure || null;
 
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
@@ -48,7 +48,6 @@
 	function updateCurrentSlide(index: number) {
 		currentIndex = index;
 		currentImage = images[currentIndex]?.image || '';
-		currentAdventure = images[currentIndex]?.adventure || null;
 	}
 
 	function nextSlide() {
@@ -86,7 +85,7 @@
 		on:keydown={handleKeydown}
 		tabindex="0"
 	>
-		{#if currentAdventure && currentImage}
+		{#if images.length > 0 && currentImage}
 			<!-- Header -->
 			<div
 				class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
@@ -110,7 +109,7 @@
 						</div>
 						<div>
 							<h1 class="text-2xl font-bold text-primary">
-								{currentAdventure.name}
+								{name}
 							</h1>
 							{#if images.length > 1}
 								<p class="text-sm text-base-content/60">
@@ -174,7 +173,7 @@
 				<div class="flex justify-center items-center max-w-full">
 					<img
 						src={currentImage}
-						alt={currentAdventure.name}
+						alt={name}
 						class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-lg"
 						style="max-width: 100%; max-height: 75vh; object-fit: contain;"
 					/>
@@ -210,11 +209,7 @@
 									: 'border-base-300 hover:border-base-400'}"
 								on:click={() => goToSlide(index)}
 							>
-								<img
-									src={imageData.image}
-									alt={imageData.adventure?.name || 'Image'}
-									class="w-full h-full object-cover"
-								/>
+								<img src={imageData.image} alt={name} class="w-full h-full object-cover" />
 							</button>
 						{/each}
 					</div>
@@ -227,7 +222,7 @@
 			>
 				<div class="flex items-center justify-between">
 					<div class="text-sm text-base-content/60">
-						{#if currentAdventure.location}
+						{#if location}
 							<span class="flex items-center gap-1">
 								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
@@ -243,7 +238,7 @@
 										d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
 									/>
 								</svg>
-								{currentAdventure.location}
+								{location}
 							</span>
 						{/if}
 					</div>

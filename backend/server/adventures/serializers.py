@@ -1,18 +1,24 @@
 from django.utils import timezone
 import os
-from .models import Location, LocationImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, Attachment, Lodging
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
+from adventures.utils.geojson import gpx_to_geojson
+import gpxpy
+import geojson
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-class LocationImageSerializer(CustomModelSerializer):
+class ContentImageSerializer(CustomModelSerializer):
     class Meta:
-        model = LocationImage
-        fields = ['id', 'image', 'location', 'is_primary', 'user', 'immich_id']
+        model = ContentImage
+        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
         read_only_fields = ['id', 'user']
 
     def to_representation(self, instance):
@@ -40,9 +46,10 @@ class LocationImageSerializer(CustomModelSerializer):
     
 class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
+    geojson = serializers.SerializerMethodField()
     class Meta:
-        model = Attachment
-        fields = ['id', 'file', 'location', 'extension', 'name', 'user']
+        model = ContentAttachment
+        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson']
         read_only_fields = ['id', 'user']
 
     def get_extension(self, obj):
@@ -57,6 +64,11 @@ class AttachmentSerializer(CustomModelSerializer):
             public_url = public_url.replace("'", "")
             representation['file'] = f"{public_url}/media/{instance.file.name}"
         return representation
+
+    def get_geojson(self, obj):
+        if obj.file and obj.file.name.endswith('.gpx'):
+            return gpx_to_geojson(obj.file)
+        return None
     
 class CategorySerializer(serializers.ModelSerializer):
     num_locations = serializers.SerializerMethodField()
@@ -84,12 +96,118 @@ class CategorySerializer(serializers.ModelSerializer):
     def get_num_locations(self, obj):
         return Location.objects.filter(category=obj, user=obj.user).count()
     
+class TrailSerializer(CustomModelSerializer):
+    provider = serializers.SerializerMethodField()
+    wanderer_data = serializers.SerializerMethodField()
+    wanderer_link = serializers.SerializerMethodField()
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._wanderer_integration_cache = {}
+    
+    class Meta:
+        model = Trail
+        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data', 'wanderer_link']
+        read_only_fields = ['id', 'created_at', 'user', 'provider']
+
+    def _get_wanderer_integration(self, user):
+        """Cache wanderer integration to avoid multiple database queries"""
+        if user.id not in self._wanderer_integration_cache:
+            from integrations.models import WandererIntegration
+            self._wanderer_integration_cache[user.id] = WandererIntegration.objects.filter(user=user).first()
+        return self._wanderer_integration_cache[user.id]
+
+    def get_provider(self, obj):
+        if obj.wanderer_id:
+            return 'Wanderer'
+        # check the link to get the provider such as Strava, AllTrails, etc.
+        if obj.link:
+            if 'strava' in obj.link:
+                return 'Strava'
+            elif 'alltrails' in obj.link:
+                return 'AllTrails'
+            elif 'komoot' in obj.link:
+                return 'Komoot'
+            elif 'outdooractive' in obj.link:
+                return 'Outdooractive'
+        return 'External Link'
+    
+    def get_wanderer_data(self, obj):
+        if not obj.wanderer_id:
+            return None
+        
+        # Use cached integration
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+        
+        # Fetch the Wanderer trail data
+        from integrations.wanderer_services import fetch_trail_by_id
+        try:
+            trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
+            if not trail_data:
+                return None
+            
+            # Cache the trail data and link on the object to avoid refetching
+            obj._wanderer_data = trail_data
+            base_url = integration.server_url.rstrip('/')
+            obj._wanderer_link = f"{base_url}/trails/{obj.wanderer_id}"
+            
+            return trail_data
+        except Exception as e:
+            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}: {e}")
+            return None
+    
+    def get_wanderer_link(self, obj):
+        if not obj.wanderer_id:
+            return None
+        
+        # Use cached integration
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+        
+        base_url = integration.server_url.rstrip('/')
+        return f"{base_url}/trail/view/@{integration.username}/{obj.wanderer_id}"
+            
+    
+class ActivitySerializer(CustomModelSerializer):
+    geojson = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Activity
+        fields = [
+            'id', 'user', 'visit', 'trail', 'gpx_file', 'name', 'type', 'sport_type',
+            'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
+            'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
+            'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',
+            'start_lat', 'start_lng', 'end_lat', 'end_lng', 'external_service_id', 'geojson'
+        ]
+        read_only_fields = ['id', 'user']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if instance.gpx_file:
+            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+            representation['gpx_file'] = f"{public_url}/media/{instance.gpx_file.name}"
+        return representation
+    
+    def get_geojson(self, obj):
+        return gpx_to_geojson(obj.gpx_file)
+
 class VisitSerializer(serializers.ModelSerializer):
+
+    activities = ActivitySerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes']
-        read_only_fields = ['id']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def create(self, validated_data):
+        if not validated_data.get('end_date') and validated_data.get('start_date'):
+            validated_data['end_date'] = validated_data['start_date']
+        return super().create(validated_data)
                                    
 class LocationSerializer(CustomModelSerializer):
     images = serializers.SerializerMethodField()
@@ -105,13 +223,14 @@ class LocationSerializer(CustomModelSerializer):
         queryset=Collection.objects.all(), 
         required=False
     )
+    trails = TrailSerializer(many=True, read_only=True, required=False)
 
     class Meta:
         model = Location
         fields = [
             'id', 'name', 'description', 'rating', 'tags', 'location', 
             'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region'
+            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
 
@@ -122,21 +241,71 @@ class LocationSerializer(CustomModelSerializer):
         return representation
 
     def get_images(self, obj):
-        serializer = LocationImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
     def validate_collections(self, collections):
-        """Validate that collections belong to the same user"""
+        """Validate that collections are compatible with the location being created/updated"""
+        
         if not collections:
             return collections
             
         user = self.context['request'].user
-        for collection in collections:
-            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
+        
+        # Get the location being updated (if this is an update operation)
+        location_owner = getattr(self.instance, 'user', None) if self.instance else user
+        
+        # For updates, we need to check if collections are being added or removed
+        current_collections = set(self.instance.collections.all()) if self.instance else set()
+        new_collections_set = set(collections)
+        
+        collections_to_add = new_collections_set - current_collections
+        collections_to_remove = current_collections - new_collections_set
+        
+        # Validate collections being added
+        for collection in collections_to_add:
+            
+            # Check if user has permission to use this collection
+            user_has_shared_access = collection.shared_with.filter(id=user.id).exists()
+            
+            if collection.user != user and not user_has_shared_access:
                 raise serializers.ValidationError(
-                    f"Collection '{collection.name}' does not belong to the current user."
+                    f"The requested collection does not belong to the current user."
                 )
+            
+            # Check location owner compatibility - both directions
+            if collection.user != location_owner:
+                
+                # If user owns the collection but not the location, location owner must have shared access
+                if collection.user == user:
+                    location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
+                    
+                    if not location_owner_has_shared_access:
+                        raise serializers.ValidationError(
+                            f"Locations must be associated with collections owned by the same user or shared collections. Collection owner: {collection.user.username} Location owner: {location_owner.username if location_owner else 'None'}"
+                        )
+                
+                # If using someone else's collection, location owner must have shared access
+                else:
+                    location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
+                    
+                    if not location_owner_has_shared_access:
+                        raise serializers.ValidationError(
+                            "Location cannot be added to collection unless the location owner has shared access to the collection."
+                        )
+        
+        # Validate collections being removed - allow if user owns the collection OR owns the location
+        for collection in collections_to_remove:
+            user_owns_collection = collection.user == user
+            user_owns_location = location_owner == user if location_owner else False
+            user_has_shared_access = collection.shared_with.filter(id=user.id).exists()
+            
+            if not (user_owns_collection or user_owns_location or user_has_shared_access):
+                raise serializers.ValidationError(
+                    "You don't have permission to remove this location from one of the collections it's linked to."
+                )
+        
         return collections
 
     def validate_category(self, category_data):
@@ -180,16 +349,11 @@ class LocationSerializer(CustomModelSerializer):
         return obj.is_visited_status()
 
     def create(self, validated_data):
-        visits_data = validated_data.pop('visits', None)
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
         print(category_data)
         location = Location.objects.create(**validated_data)
-        
-        # Handle visits
-        for visit_data in visits_data:
-            Visit.objects.create(location=location, **visit_data)
 
         # Handle category
         if category_data:
@@ -206,7 +370,6 @@ class LocationSerializer(CustomModelSerializer):
 
     def update(self, instance, validated_data):
         has_visits = 'visits' in validated_data
-        visits_data = validated_data.pop('visits', [])
         category_data = validated_data.pop('category', None)
 
         collections_data = validated_data.pop('collections', None)
@@ -227,27 +390,6 @@ class LocationSerializer(CustomModelSerializer):
         if collections_data is not None:
             instance.collections.set(collections_data)
 
-        # Handle visits
-        if has_visits:
-            current_visits = instance.visits.all()
-            current_visit_ids = set(current_visits.values_list('id', flat=True))
-
-            updated_visit_ids = set()
-            for visit_data in visits_data:
-                visit_id = visit_data.get('id')
-                if visit_id and visit_id in current_visit_ids:
-                    visit = current_visits.get(id=visit_id)
-                    for attr, value in visit_data.items():
-                        setattr(visit, attr, value)
-                    visit.save()
-                    updated_visit_ids.add(visit_id)
-                else:
-                    new_visit = Visit.objects.create(location=instance, **visit_data)
-                    updated_visit_ids.add(new_visit.id)
-
-            visits_to_delete = current_visit_ids - updated_visit_ids
-            instance.visits.filter(id__in=visits_to_delete).delete()
-
         # call save on the location to update the updated_at field and trigger any geocoding
         instance.save()
 
@@ -255,6 +397,7 @@ class LocationSerializer(CustomModelSerializer):
 
 class TransportationSerializer(CustomModelSerializer):
     distance = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
@@ -263,9 +406,14 @@ class TransportationSerializer(CustomModelSerializer):
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
             'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
-            'start_timezone', 'end_timezone', 'distance'
+            'start_timezone', 'end_timezone', 'distance', 'images'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance']
+
+    def get_images(self, obj):
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
     def get_distance(self, obj):
         if (
@@ -281,15 +429,21 @@ class TransportationSerializer(CustomModelSerializer):
         return None
 
 class LodgingSerializer(CustomModelSerializer):
+    images = serializers.SerializerMethodField()
 
     class Meta:
         model = Lodging
         fields = [
             'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
-            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public', 
-            'collection', 'created_at', 'updated_at', 'type', 'timezone'
+            'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public',
+            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def get_images(self, obj):
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [image for image in serializer.data if image is not None]
 
 class NoteSerializer(CustomModelSerializer):
 
@@ -401,7 +555,7 @@ class CollectionSerializer(CustomModelSerializer):
     class Meta:
         model = Collection
         fields = ['id', 'description', 'user', 'name', 'is_public', 'locations', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -411,3 +565,14 @@ class CollectionSerializer(CustomModelSerializer):
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
         return representation
+    
+class CollectionInviteSerializer(serializers.ModelSerializer):
+    name = serializers.CharField(source='collection.name', read_only=True)
+    collection_owner_username = serializers.CharField(source='collection.user.username', read_only=True)
+    collection_user_first_name = serializers.CharField(source='collection.user.first_name', read_only=True)
+    collection_user_last_name = serializers.CharField(source='collection.user.last_name', read_only=True)
+    
+    class Meta:
+        model = CollectionInvite
+        fields = ['id', 'collection', 'created_at', 'name', 'collection_owner_username', 'collection_user_first_name', 'collection_user_last_name']
+        read_only_fields = ['id', 'created_at']

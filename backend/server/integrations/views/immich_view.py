@@ -1,41 +1,18 @@
 import os
 from rest_framework.response import Response
 from rest_framework import viewsets, status
-from .serializers import ImmichIntegrationSerializer
-from .models import ImmichIntegration
+from integrations.serializers import ImmichIntegrationSerializer
+from integrations.models import ImmichIntegration
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 import requests
-from rest_framework.pagination import PageNumberPagination
-from django.conf import settings
-from adventures.models import LocationImage
+from adventures.models import ContentImage
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
+from integrations.utils import StandardResultsSetPagination
 import logging
 
 logger = logging.getLogger(__name__)
-
-class IntegrationView(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
-    def list(self, request):
-        """
-        RESTful GET method for listing all integrations.
-        """
-        immich_integrations = ImmichIntegration.objects.filter(user=request.user)
-        google_map_integration = settings.GOOGLE_MAPS_API_KEY != ''
-
-        return Response(
-            {
-                'immich': immich_integrations.exists(),
-                'google_maps': google_map_integration
-            },
-            status=status.HTTP_200_OK
-        )
-
-class StandardResultsSetPagination(PageNumberPagination):
-    page_size = 25
-    page_size_query_param = 'page_size'
-    max_page_size = 1000
 
 class ImmichIntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -255,9 +232,9 @@ class ImmichIntegrationView(viewsets.ViewSet):
         Access levels (in order of priority):
         1. Public locations: accessible by anyone
         2. Private locations in public collections: accessible by anyone
-        3. Private locations in private collections shared with user: accessible by shared users
+        3. Private locations in private collections shared with user: accessible by shared users, and the collection owner
         4. Private locations: accessible only to the owner
-        5. No LocationImage: owner can still view via integration
+        5. No ContentImage: owner can still view via integration
         """
         if not imageid or not integration_id:
             return Response({
@@ -270,50 +247,96 @@ class ImmichIntegrationView(viewsets.ViewSet):
         integration = get_object_or_404(ImmichIntegration, id=integration_id)
         owner_id = integration.user
 
-        # Try to find the image entry with collections and sharing information
-        image_entry = (
-            LocationImage.objects
+        # Get all images for this immich_id and user
+        image_entries = list(
+            ContentImage.objects
             .filter(immich_id=imageid, user=owner_id)
-            .select_related('location')
-            .prefetch_related('location__collections', 'location__collections__shared_with')
-            .order_by('-location__is_public')  # Public locations first
-            .first()
+            .select_related('content_type')
         )
+
+        # Sort by access level priority and find the best match
+        def get_access_priority(image_entry):
+            """Return priority score for access control (lower = higher priority)"""
+            content_obj = image_entry.content_object
+            
+            # Only handle Location objects for now (can be extended for other types)
+            if not hasattr(content_obj, 'is_public'):
+                return 999  # Low priority for non-location objects
+            
+            # For Location objects, check access levels
+            if content_obj.is_public:
+                return 0  # Highest priority - public location
+            
+            # Check if location is in any public collection
+            if hasattr(content_obj, 'collections'):
+                collections = content_obj.collections.all()
+                if any(collection.is_public for collection in collections):
+                    return 1  # Second priority - private location in public collection
+                    
+                # Check for shared collections (if user is authenticated)
+                if (request.user.is_authenticated and 
+                    any(collection.shared_with.filter(id=request.user.id).exists() 
+                        for collection in collections)):
+                    return 2  # Third priority - shared collection access
+            
+            return 3  # Lowest priority - private location, owner access only
+
+        # Sort image entries by access priority
+        image_entries.sort(key=get_access_priority)
+        image_entry = image_entries[0] if image_entries else None
 
         # Access control
         if image_entry:
-            location = image_entry.location
-            collections = location.collections.all()
-
-            # Determine access level
-            is_authorized = False
-
-            # Level 1: Public location (highest priority)
-            if location.is_public:
-                is_authorized = True
-
-            # Level 2: Private location in any public collection
-            elif any(collection.is_public for collection in collections):
-                is_authorized = True
-                
-            # Level 3: Owner access
-            elif request.user.is_authenticated and request.user == owner_id:
-                is_authorized = True
-                
-            # Level 4: Shared collection access - check if user has access to any collection
-            elif (request.user.is_authenticated and 
-                any(collection.shared_with.filter(id=request.user.id).exists() 
-                    for collection in collections)):
-                is_authorized = True
+            content_obj = image_entry.content_object
             
-            if not is_authorized:
-                return Response({
-                    'message': 'This image belongs to a private location and you are not authorized.',
-                    'error': True,
-                    'code': 'immich.permission_denied'
-                }, status=status.HTTP_403_FORBIDDEN)
+            # Only apply access control to Location objects
+            if hasattr(content_obj, 'is_public'):
+                location = content_obj
+                
+                # Determine access level
+                is_authorized = False
+
+                # Level 1: Public location (highest priority)
+                if location.is_public:
+                    is_authorized = True
+
+                # Level 2: Private location in any public collection
+                elif hasattr(location, 'collections'):
+                    collections = location.collections.all()
+                    if any(collection.is_public for collection in collections):
+                        is_authorized = True
+                    
+                    # Level 3: Owner access
+                    elif request.user.is_authenticated and request.user == owner_id:
+                        is_authorized = True
+                        
+                    # Level 4: Shared collection access or collection owner access
+                    elif (request.user.is_authenticated and 
+                        (any(collection.shared_with.filter(id=request.user.id).exists() 
+                            for collection in collections) or
+                         any(collection.user == request.user for collection in collections))):
+                        is_authorized = True
+                else:
+                    # Location without collections - owner access only
+                    if request.user.is_authenticated and request.user == owner_id:
+                        is_authorized = True
+                
+                if not is_authorized:
+                    return Response({
+                        'message': 'This image belongs to a private location and you are not authorized.',
+                        'error': True,
+                        'code': 'immich.permission_denied'
+                    }, status=status.HTTP_403_FORBIDDEN)
+            else:
+                # For non-Location objects, allow only owner access for now
+                if not request.user.is_authenticated or request.user != owner_id:
+                    return Response({
+                        'message': 'This image is not publicly accessible and you are not the owner.',
+                        'error': True,
+                        'code': 'immich.permission_denied'
+                    }, status=status.HTTP_403_FORBIDDEN)
         else:
-            # No LocationImage exists; allow only the integration owner
+            # No ContentImage exists; allow only the integration owner
             if not request.user.is_authenticated or request.user != owner_id:
                 return Response({
                     'message': 'Image is not linked to any location and you are not the owner.',

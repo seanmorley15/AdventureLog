@@ -39,13 +39,13 @@
 
 	import ChecklistCard from '$lib/components/ChecklistCard.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
-	import LocationModal from '$lib/components/LocationModal.svelte';
 	import TransportationModal from '$lib/components/TransportationModal.svelte';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	import LodgingModal from '$lib/components/LodgingModal.svelte';
 	import LodgingCard from '$lib/components/LodgingCard.svelte';
 	import CollectionAllView from '$lib/components/CollectionAllView.svelte';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 
 	export let data: PageData;
 	console.log(data);
@@ -515,7 +515,8 @@
 				name: recomendation.tag,
 				user: ''
 			},
-			attachments: []
+			attachments: [],
+			trails: []
 		};
 		isLocationModalOpen = true;
 	}
@@ -529,7 +530,29 @@
 	let noteToEdit: Note | null;
 	let checklistToEdit: Checklist | null;
 
-	let newType: string;
+	let locationBeingUpdated: Location | undefined = undefined;
+
+	// Sync the locationBeingUpdated with the adventures array
+	$: {
+		if (locationBeingUpdated && locationBeingUpdated.id) {
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+
+			if (index !== -1) {
+				// Ensure visits are properly synced
+				adventures[index] = {
+					...adventures[index],
+					...locationBeingUpdated,
+					visits: locationBeingUpdated.visits || adventures[index].visits || []
+				};
+				adventures = adventures; // Trigger reactivity
+			} else {
+				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				if (data.props.adventure) {
+					data.props.adventure.locations = adventures;
+				}
+			}
+		}
+	}
 
 	function editAdventure(event: CustomEvent<Location>) {
 		adventureToEdit = event.detail;
@@ -689,10 +712,11 @@
 {/if}
 
 {#if isLocationModalOpen}
-	<LocationModal
-		locationToEdit={adventureToEdit}
+	<NewLocationModal
 		on:close={() => (isLocationModalOpen = false)}
-		on:save={saveOrCreateAdventure}
+		user={data.user}
+		locationToEdit={adventureToEdit}
+		bind:location={locationBeingUpdated}
 		{collection}
 	/>
 {/if}
@@ -760,7 +784,7 @@
 						tabindex="0"
 						class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 					>
-						{#if collection.user === data.user.uuid}
+						{#if collection.user === data.user.uuid || (collection.shared_with && collection.shared_with.includes(data.user.uuid))}
 							<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>
 							<button
 								class="btn btn-primary"
@@ -788,7 +812,6 @@
 								// Reset the transportation object for creating a new one
 								transportationToEdit = null;
 								isShowingTransportationModal = true;
-								newType = '';
 							}}
 						>
 							{$t('adventures.transportation')}</button
@@ -797,7 +820,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isNoteModalOpen = true;
-								newType = '';
+
 								noteToEdit = null;
 							}}
 						>
@@ -807,7 +830,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isShowingChecklistModal = true;
-								newType = '';
+
 								checklistToEdit = null;
 							}}
 						>
@@ -817,7 +840,7 @@
 							class="btn btn-primary"
 							on:click={() => {
 								isShowingLodgingModal = true;
-								newType = '';
+
 								lodgingToEdit = null;
 							}}
 						>
@@ -1225,7 +1248,7 @@
 													{/if}
 												</div>
 											</div>
-											{#if orderedItem.type === 'adventure' && orderedItem.item && 'images' in orderedItem.item}
+											{#if orderedItem.type === 'adventure' && orderedItem.item && 'visits' in orderedItem.item}
 												<LocationCard
 													user={data.user}
 													on:edit={editAdventure}
@@ -1294,7 +1317,11 @@
 								{#if isPopupOpen}
 									<Popup openOn="click" offset={[0, -10]} on:close={() => (isPopupOpen = false)}>
 										{#if adventure.images && adventure.images.length > 0}
-											<CardCarousel adventures={[adventure]} />
+											<CardCarousel
+												images={adventure.images}
+												name={adventure.name}
+												icon={adventure?.category?.icon}
+											/>
 										{/if}
 										<div class="text-lg text-black font-bold">{adventure.name}</div>
 										<p class="font-semibold text-black text-md">

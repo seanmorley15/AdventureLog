@@ -17,6 +17,7 @@ declare global {
 				public_profile: boolean;
 				has_password: boolean;
 				disable_password: boolean;
+				measurement_system: 'metric' | 'imperial';
 			} | null;
 			locale: string;
 		}

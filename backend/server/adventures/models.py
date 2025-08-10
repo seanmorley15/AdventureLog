@@ -14,6 +14,10 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from adventures.utils.timezones import TIMEZONES
 
+from django.contrib.contenttypes.fields import GenericForeignKey
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericRelation
+
 def background_geocode_and_assign(location_id: str):
     print(f"[Location Geocode Thread] Starting geocode for location {location_id}")
     try:
@@ -126,41 +130,48 @@ class Visit(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Generic relations for images and attachments
+    images = GenericRelation('ContentImage', related_query_name='visit')
+    attachments = GenericRelation('ContentAttachment', related_query_name='visit')
+
     def clean(self):
         if self.start_date > self.end_date:
             raise ValidationError('The start date must be before or equal to the end date.')
+
+    def delete(self, *args, **kwargs):
+        # Delete all associated images and attachments
+        for image in self.images.all():
+            image.delete()
+        for attachment in self.attachments.all():
+            attachment.delete()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"{self.location.name} - {self.start_date} to {self.end_date}"
 
 class Location(models.Model):
-    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user)
-
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
     name = models.CharField(max_length=200)
     location = models.CharField(max_length=200, blank=True, null=True)
-    tags = ArrayField(models.CharField(
-        max_length=100), blank=True, null=True)
+    tags = ArrayField(models.CharField(max_length=100), blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
     is_public = models.BooleanField(default=False)
-
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-
     city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
     region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True)
     country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True)
-
-    # Changed from ForeignKey to ManyToManyField
     collections = models.ManyToManyField('Collection', blank=True, related_name='locations')
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # Generic relations for images and attachments
+    images = GenericRelation('ContentImage', related_query_name='location')
+    attachments = GenericRelation('ContentAttachment', related_query_name='location')
 
     objects = LocationManager()
 
@@ -236,16 +247,36 @@ class Location(models.Model):
         return result
 
     def delete(self, *args, **kwargs):
-        # Delete all associated AdventureImages first to trigger their filesystem cleanup
+        # Delete all associated images and attachments (handled by GenericRelation)
         for image in self.images.all():
             image.delete()
-        # Delete all associated Attachment files first to trigger their filesystem cleanup
         for attachment in self.attachments.all():
             attachment.delete()
         super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.name
+    
+class CollectionInvite(models.Model):
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='invites')
+    invited_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collection_invites')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Invite for {self.invited_user.username} to {self.collection.name}"
+    
+    def clean(self):
+        if self.collection.user == self.invited_user:
+            raise ValidationError("You cannot invite yourself to your own collection.")
+        # dont allow if the user is already shared with the collection
+        if self.invited_user in self.collection.shared_with.all():
+            raise ValidationError("This user is already shared with the collection.")
+    
+    class Meta:
+        verbose_name = "Collection Invite"
+        unique_together = ('collection', 'invited_user')
 
 class Collection(models.Model):
     #id = models.AutoField(primary_key=True)
@@ -275,10 +306,8 @@ class Collection(models.Model):
         return self.name
     
 class Transportation(models.Model):
-    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     type = models.CharField(max_length=100, choices=TRANSPORTATION_TYPES)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
@@ -300,8 +329,11 @@ class Transportation(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Generic relations for images and attachments
+    images = GenericRelation('ContentImage', related_query_name='transportation')
+    attachments = GenericRelation('ContentAttachment', related_query_name='transportation')
+
     def clean(self):
-        print(self.date)
         if self.date and self.end_date and self.date > self.end_date:
             raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
         
@@ -311,14 +343,20 @@ class Transportation(models.Model):
             if self.user != self.collection.user:
                 raise ValidationError('Transportations must be associated with collections owned by the same user. Collection owner: ' + self.collection.user.username + ' Transportation owner: ' + self.user.username)
 
+    def delete(self, *args, **kwargs):
+        # Delete all associated images and attachments
+        for image in self.images.all():
+            image.delete()
+        for attachment in self.attachments.all():
+            attachment.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
 class Note(models.Model):
-    #id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     name = models.CharField(max_length=200)
     content = models.TextField(blank=True, null=True)
     links = ArrayField(models.URLField(), blank=True, null=True)
@@ -328,12 +366,24 @@ class Note(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Generic relations for images and attachments
+    images = GenericRelation('ContentImage', related_query_name='note')
+    attachments = GenericRelation('ContentAttachment', related_query_name='note')
+
     def clean(self):
         if self.collection:
             if self.collection.is_public and not self.is_public:
-                raise ValidationError('Notes associated with a public collection must be public. Collection: ' + self.collection.name + ' Transportation: ' + self.name)
+                raise ValidationError('Notes associated with a public collection must be public. Collection: ' + self.collection.name + ' Note: ' + self.name)
             if self.user != self.collection.user:
-                raise ValidationError('Notes must be associated with collections owned by the same user. Collection owner: ' + self.collection.user.username + ' Transportation owner: ' + self.user.username)
+                raise ValidationError('Notes must be associated with collections owned by the same user. Collection owner: ' + self.collection.user.username + ' Note owner: ' + self.user.username)
+
+    def delete(self, *args, **kwargs):
+        # Delete all associated images and attachments
+        for image in self.images.all():
+            image.delete()
+        for attachment in self.attachments.all():
+            attachment.delete()
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -391,7 +441,8 @@ class PathAndRename:
         filename = f"{uuid.uuid4()}.{ext}"
         return os.path.join(self.path, filename)
 
-class LocationImage(models.Model):
+class ContentImage(models.Model):
+    """Generic image model that can be attached to any content type"""
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     image = ResizedImageField(
@@ -402,11 +453,21 @@ class LocationImage(models.Model):
         null=True,
     )
     immich_id = models.CharField(max_length=200, null=True, blank=True)
-    location = models.ForeignKey(Location, related_name='images', on_delete=models.CASCADE)
     is_primary = models.BooleanField(default=False)
+    
+    # Generic foreign key fields
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='content_images')
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = "Content Image"
+        verbose_name_plural = "Content Images"
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
 
     def clean(self):
-
         # One of image or immich_id must be set, but not both
         has_image = bool(self.image and str(self.image).strip())
         has_immich_id = bool(self.immich_id and str(self.immich_id).strip())
@@ -415,7 +476,7 @@ class LocationImage(models.Model):
             raise ValidationError("Cannot have both image file and Immich ID. Please provide only one.")
         if not has_image and not has_immich_id:
             raise ValidationError("Must provide either an image file or an Immich ID.")
-        
+
     def save(self, *args, **kwargs):
         # Clean empty strings to None for proper database storage
         if not self.image:
@@ -423,25 +484,37 @@ class LocationImage(models.Model):
         if not self.immich_id or not str(self.immich_id).strip():
             self.immich_id = None
             
-        self.full_clean()  # This calls clean() method
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Remove file from disk when deleting AdventureImage
+        # Remove file from disk when deleting image
         if self.image and os.path.isfile(self.image.path):
             os.remove(self.image.path)
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return self.image.url if self.image else f"Immich ID: {self.immich_id or 'No image'}"
-    
-class Attachment(models.Model):
+        content_name = getattr(self.content_object, 'name', 'Unknown')
+        return f"Image for {self.content_type.model}: {content_name}"
+
+class ContentAttachment(models.Model):
+    """Generic attachment model that can be attached to any content type"""
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user)
-    file = models.FileField(upload_to=PathAndRename('attachments/'),validators=[validate_file_extension])
-    location = models.ForeignKey(Location, related_name='attachments', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
+    file = models.FileField(upload_to=PathAndRename('attachments/'), validators=[validate_file_extension])
     name = models.CharField(max_length=200, null=True, blank=True)
+    
+    # Generic foreign key fields
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='content_attachments')
+    object_id = models.UUIDField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    class Meta:
+        verbose_name = "Content Attachment"
+        verbose_name_plural = "Content Attachments"
+        indexes = [
+            models.Index(fields=["content_type", "object_id"]),
+        ]
 
     def delete(self, *args, **kwargs):
         if self.file and os.path.isfile(self.file.path):
@@ -449,7 +522,8 @@ class Attachment(models.Model):
         super().delete(*args, **kwargs)
 
     def __str__(self):
-        return self.file.url
+        content_name = getattr(self.content_object, 'name', 'Unknown')
+        return f"Attachment for {self.content_type.model}: {content_name}"
 
 class Category(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
@@ -474,8 +548,7 @@ class Category(models.Model):
     
 class Lodging(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    user = models.ForeignKey(
-        User, on_delete=models.CASCADE, default=default_user)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=100, choices=LODGING_TYPES, default='other')
     description = models.TextField(blank=True, null=True)
@@ -494,6 +567,10 @@ class Lodging(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    # Generic relations for images and attachments
+    images = GenericRelation('ContentImage', related_query_name='lodging')
+    attachments = GenericRelation('ContentAttachment', related_query_name='lodging')
+
     def clean(self):
         if self.check_in and self.check_out and self.check_in > self.check_out:
             raise ValidationError('The start date must be before the end date. Start date: ' + str(self.check_in) + ' End date: ' + str(self.check_out))
@@ -504,5 +581,104 @@ class Lodging(models.Model):
             if self.user != self.collection.user:
                 raise ValidationError('Lodging must be associated with collections owned by the same user. Collection owner: ' + self.collection.user.username + ' Lodging owner: ' + self.user.username)
 
+    def delete(self, *args, **kwargs):
+        # Delete all associated images and attachments
+        for image in self.images.all():
+            image.delete()
+        for attachment in self.attachments.all():
+            attachment.delete()
+        super().delete(*args, **kwargs)
+
     def __str__(self):
         return self.name
+    
+class Trail(models.Model):
+    """
+    Represents a trail associated with a user.
+    Supports referencing either a Wanderer trail ID or an external link (e.g., AllTrails).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name='trails')
+    name = models.CharField(max_length=200)
+
+    # Either an external link (e.g., AllTrails, Trailforks) or a Wanderer ID
+    link = models.URLField("External Trail Link", max_length=2083, blank=True, null=True)
+    wanderer_id = models.CharField("Wanderer Trail ID", max_length=100, blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Trail"
+        verbose_name_plural = "Trails"
+
+    def clean(self):
+        has_link = bool(self.link and str(self.link).strip())
+        has_wanderer_id = bool(self.wanderer_id and str(self.wanderer_id).strip())
+
+        if has_link and has_wanderer_id:
+            raise ValidationError("Cannot have both a link and a Wanderer ID. Provide only one.")
+        if not has_link and not has_wanderer_id:
+            raise ValidationError("You must provide either a link or a Wanderer ID.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Ensure clean() is called on save
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} ({'Wanderer' if self.wanderer_id else 'External'})"
+    
+class Activity(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
+    visit = models.ForeignKey(Visit, on_delete=models.CASCADE, related_name='activities')
+    trail = models.ForeignKey(Trail, on_delete=models.CASCADE, related_name='activities', blank=True, null=True)
+
+    # GPX File
+    gpx_file = models.FileField(upload_to=PathAndRename('activities/'), validators=[validate_file_extension], blank=True, null=True)
+
+    # Descriptive
+    name = models.CharField(max_length=200)
+    type = models.CharField(max_length=100, default='general')  # E.g., Run, Hike, Bike
+    sport_type = models.CharField(max_length=100, blank=True, null=True)  # Optional detailed type
+
+    # Time & Distance
+    distance = models.FloatField(blank=True, null=True)  # in meters
+    moving_time = models.DurationField(blank=True, null=True)
+    elapsed_time = models.DurationField(blank=True, null=True)
+    rest_time = models.DurationField(blank=True, null=True)
+
+    # Elevation
+    elevation_gain = models.FloatField(blank=True, null=True)  # in meters
+    elevation_loss = models.FloatField(blank=True, null=True)  # estimated
+    elev_high = models.FloatField(blank=True, null=True)
+    elev_low = models.FloatField(blank=True, null=True)
+
+    # Timing
+    start_date = models.DateTimeField(blank=True, null=True)
+    start_date_local = models.DateTimeField(blank=True, null=True)
+    timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], blank=True, null=True)
+
+    # Speed
+    average_speed = models.FloatField(blank=True, null=True)  # in m/s
+    max_speed = models.FloatField(blank=True, null=True)      # in m/s
+
+    # Optional metrics
+    average_cadence = models.FloatField(blank=True, null=True)
+    calories = models.FloatField(blank=True, null=True)
+
+    # Coordinates
+    start_lat = models.FloatField(blank=True, null=True)
+    start_lng = models.FloatField(blank=True, null=True)
+    end_lat = models.FloatField(blank=True, null=True)
+    end_lng = models.FloatField(blank=True, null=True)
+
+    # Optional links
+    external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID
+
+    def __str__(self):
+        return f"{self.name} ({self.type})"
+
+    class Meta:
+        verbose_name = "Activity"
+        verbose_name_plural = "Activities"

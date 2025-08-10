@@ -24,3 +24,6 @@ overpy==0.7
 publicsuffix2==2.20191221
 geopy==2.4.1
 psutil==6.1.1
+geojson==3.2.0
+gpxpy==1.6.2
+pymemcache==4.0.0

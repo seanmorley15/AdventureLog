@@ -9,7 +9,7 @@ class LocationManager(models.Manager):
             query |= Q(user=user)
 
         if include_shared:
-            query |= Q(collections__shared_with=user)
+            query |= Q(collections__shared_with=user) | Q(collections__user=user)
 
         if include_public:
             query |= Q(is_public=True)

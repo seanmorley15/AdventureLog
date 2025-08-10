@@ -215,6 +215,15 @@
 						>
 							{$t('navbar.documentation')} →
 						</a>
+						<!-- discord -->
+						<a
+							href="https://discord.gg/wRbQ9Egr8C"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="btn btn-outline btn-sm"
+						>
+							Discord →
+						</a>
 					</div>
 				</div>
 			</div>

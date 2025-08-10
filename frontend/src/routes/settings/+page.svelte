@@ -10,6 +10,8 @@
 	import { appTitle, appVersion, copyrightYear } from '$lib/config.js';
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
+	import StravaLogo from '$lib/assets/strava.svg';
+	import WandererLogo from '$lib/assets/wanderer.svg';
 
 	export let data;
 	console.log(data);
@@ -24,7 +26,28 @@
 	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 	let googleMapsEnabled = data.props.googleMapsEnabled;
+	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
+	let stravaUserEnabled = data.props.stravaUserEnabled;
+	let wandererEnabled = data.props.wandererEnabled;
+	let wandererExpired = data.props.wandererExpired;
 	let activeSection: string = 'profile';
+
+	// Initialize activeSection from URL on mount
+	onMount(() => {
+		if (browser && $page.url.searchParams.has('tab')) {
+			activeSection = $page.url.searchParams.get('tab') || 'profile';
+		}
+	});
+
+	function setActiveSection(sectionId: string) {
+		activeSection = sectionId;
+		if (browser) {
+			const url = new URL($page.url);
+			url.searchParams.set('tab', sectionId);
+			history.replaceState({}, '', url);
+		}
+	}
+
 	let acknowledgeRestoreOverride: boolean = false;
 
 	let newImmichIntegration: ImmichIntegration = {
@@ -32,6 +55,12 @@
 		api_key: '',
 		id: '',
 		copy_locally: true
+	};
+
+	let newWandererIntegration = {
+		server_url: '',
+		username: '',
+		password: ''
 	};
 
 	let isMFAModalOpen: boolean = false;
@@ -270,6 +299,91 @@
 			addToast('error', $t('settings.generic_error'));
 		}
 	}
+
+	async function stravaAuthorizeRedirect() {
+		const res = await fetch('/api/integrations/strava/authorize/', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			const data = await res.json();
+			window.location.href = data.auth_url;
+		} else {
+			addToast('error', $t('strava.authorization_error'));
+		}
+	}
+
+	async function stravaDisconnect() {
+		const res = await fetch('/api/integrations/strava/disable/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			addToast('success', $t('strava.disconnected'));
+			stravaUserEnabled = false;
+		} else {
+			addToast('error', $t('strava.disconnect_error'));
+		}
+	}
+
+	async function wandererDisconnect() {
+		const res = await fetch('/api/integrations/wanderer/disable/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		});
+		if (res.ok) {
+			addToast('success', $t('wanderer.disconnected'));
+			wandererEnabled = false;
+		} else {
+			addToast('error', $t('wanderer.disconnect_error'));
+		}
+	}
+
+	async function wandererConnect() {
+		const res = await fetch('/api/integrations/wanderer/', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(newWandererIntegration)
+		});
+		if (res.ok) {
+			addToast('success', $t('wanderer.connected'));
+			wandererEnabled = true;
+			newWandererIntegration = { server_url: '', username: '', password: '' };
+		} else {
+			const data = await res.json();
+			addToast('error', $t('wanderer.connection_error'));
+		}
+	}
+
+	async function wandererRefresh() {
+		if (wandererEnabled) {
+			const res = await fetch(`/api/integrations/wanderer/refresh/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					password: newWandererIntegration.password
+				})
+			});
+			if (res.ok) {
+				addToast('success', $t('wanderer.refreshed'));
+				newWandererIntegration.password = '';
+				wandererExpired = false;
+			} else {
+				addToast('error', $t('wanderer.refresh_error'));
+			}
+			newWandererIntegration.password = '';
+		}
+	}
 </script>
 
 {#if isMFAModalOpen}
@@ -310,7 +424,7 @@
 									section.id
 										? 'bg-primary text-primary-content shadow-lg'
 										: 'hover:bg-base-200'}"
-									on:click={() => (activeSection = section.id)}
+									on:click={() => setActiveSection(section.id)}
 								>
 									<span class="text-xl">{section.icon}</span>
 									<span class="font-medium">{section.label()}</span>
@@ -401,23 +515,44 @@
 											accept="image/*"
 										/>
 									</div>
-								</div>
 
-								<div class="form-control">
-									<label class="label cursor-pointer justify-start gap-4">
-										<input
-											type="checkbox"
-											bind:checked={user.public_profile}
-											name="public_profile"
-											class="toggle toggle-primary"
-										/>
-										<div>
-											<span class="label-text font-medium">{$t('auth.public_profile')}</span>
-											<p class="text-sm text-base-content/60">
-												{$t('settings.public_profile_desc')}
-											</p>
-										</div>
-									</label>
+									<div class="form-control">
+										<label class="label cursor-pointer justify-start gap-4">
+											<input
+												type="checkbox"
+												bind:checked={user.public_profile}
+												name="public_profile"
+												class="toggle toggle-primary"
+											/>
+											<div>
+												<span class="label-text font-medium">{$t('auth.public_profile')}</span>
+												<p class="text-sm text-base-content/60">
+													{$t('settings.public_profile_desc')}
+												</p>
+											</div>
+										</label>
+									</div>
+
+									<!-- metric or imperal toggle -->
+									<div class="form-control">
+										<label class="label cursor-pointer justify-start gap-4">
+											<input
+												type="checkbox"
+												checked={user.measurement_system === 'imperial'}
+												name="measurement_system"
+												class="toggle toggle-primary"
+												on:change={() =>
+													(user.measurement_system =
+														user.measurement_system === 'metric' ? 'imperial' : 'metric')}
+											/>
+											<div>
+												<span class="label-text font-medium">{$t('settings.use_imperial')}</span>
+												<p class="text-sm text-base-content/60">
+													{$t('settings.use_imperial_desc')}
+												</p>
+											</div>
+										</label>
+									</div>
 								</div>
 
 								<button class="btn btn-primary btn-wide">
@@ -896,7 +1031,7 @@
 							</div>
 
 							<!-- Google maps integration - displayt only if its connected -->
-							<div class="p-6 bg-base-200 rounded-xl">
+							<div class="p-6 bg-base-200 rounded-xl mb-4">
 								<div class="flex items-center gap-4 mb-4">
 									<img src={GoogleMapsLogo} alt="Google Maps" class="w-8 h-8" />
 									<div>
@@ -911,16 +1046,204 @@
 										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
 									{/if}
 								</div>
-								<div class="mt-4 p-4 bg-info/10 rounded-lg">
-									<p class="text-sm">
-										📖 {$t('immich.need_help')}
-										<a
-											class="link link-primary"
-											href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
-											target="_blank">{$t('navbar.documentation')}</a
-										>
-									</p>
+								{#if user.is_staff || !googleMapsEnabled}
+									<div class="mt-4 p-4 bg-info/10 rounded-lg">
+										{#if user.is_staff}
+											<p class="text-sm">
+												📖 {$t('immich.need_help')}
+												<a
+													class="link link-primary"
+													href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
+													target="_blank">{$t('navbar.documentation')}</a
+												>
+											</p>
+										{:else if !googleMapsEnabled}
+											<p class="text-sm">
+												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
+											</p>
+										{/if}
+									</div>
+								{/if}
+							</div>
+
+							<!-- Strava Integration Section -->
+							<div class="p-6 bg-base-200 rounded-xl mb-4">
+								<div class="flex items-center gap-4 mb-4">
+									<img src={StravaLogo} alt="Strava" class="w-8 h-8 rounded-md" />
+									<div>
+										<h3 class="text-xl font-bold">Strava</h3>
+										<p class="text-sm text-base-content/70">
+											{$t('strava.strava_integration_desc')}
+										</p>
+									</div>
+									{#if stravaGlobalEnabled && stravaUserEnabled}
+										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
+									{:else}
+										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
+									{/if}
 								</div>
+
+								<!-- Content based on integration status -->
+								{#if !stravaGlobalEnabled}
+									<!-- Strava not enabled globally -->
+									<div class="text-center">
+										<p class="text-base-content/70 mb-4">
+											{$t('strava.not_enabled') ||
+												'Strava integration is not enabled on this instance.'}
+										</p>
+									</div>
+								{:else if !stravaUserEnabled && stravaGlobalEnabled}
+									<!-- Globally enabled but user not connected -->
+									<div class="text-center">
+										<button class="btn btn-primary" on:click={stravaAuthorizeRedirect}>
+											🔗 {$t('strava.connect_account')}
+										</button>
+									</div>
+								{:else if stravaGlobalEnabled && stravaUserEnabled}
+									<!-- User connected - show management options -->
+									<div class="text-center">
+										<button class="btn btn-error" on:click={stravaDisconnect}>
+											❌ {$t('strava.disconnect')}
+										</button>
+									</div>
+								{/if}
+
+								<!-- Help documentation link -->
+								{#if user.is_staff || !stravaGlobalEnabled}
+									<div class="mt-4 p-4 bg-info/10 rounded-lg">
+										{#if user.is_staff}
+											<p class="text-sm">
+												📖 {$t('immich.need_help')}
+												<a
+													class="link link-primary"
+													href="https://adventurelog.app/docs/configuration/strava_integration.html"
+													target="_blank">{$t('navbar.documentation')}</a
+												>
+											</p>
+										{:else if !stravaGlobalEnabled}
+											<p class="text-sm">
+												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
+											</p>
+										{/if}
+									</div>
+								{/if}
+							</div>
+
+							<div class="p-6 bg-base-200 rounded-xl">
+								<div class="flex items-center gap-4 mb-4">
+									<div
+										class="w-8 h-8 rounded-md bg-base-content"
+										style="mask: url({WandererLogo}) no-repeat center; mask-size: contain; -webkit-mask: url({WandererLogo}) no-repeat center; -webkit-mask-size: contain;"
+									></div>
+									<div>
+										<h3 class="text-xl font-bold">Wanderer</h3>
+										<p class="text-sm text-base-content/70">
+											{$t('wanderer.wanderer_integration_desc')}
+										</p>
+									</div>
+									{#if wandererEnabled}
+										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
+									{:else}
+										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
+									{/if}
+								</div>
+
+								{#if wandererEnabled && wandererExpired}
+									<div class="space-y-4 mb-4">
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Password</span>
+											</label>
+											<input
+												type="password"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your password"
+												bind:value={newWandererIntegration.password}
+											/>
+										</div>
+
+										<button class="btn btn-primary w-full" on:click={wandererRefresh}>
+											🔗 Wanderer Reauth
+										</button>
+									</div>
+								{/if}
+
+								<!-- Content based on integration status -->
+								{#if !wandererEnabled}
+									<!-- login form with server url username and password -->
+									<div class="space-y-4">
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">Server URL</span>
+											</label>
+											<input
+												type="url"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="https://wanderer.example.com"
+												bind:value={newWandererIntegration.server_url}
+											/>
+										</div>
+
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">{$t('auth.username')}</span>
+											</label>
+											<input
+												type="text"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your username"
+												bind:value={newWandererIntegration.username}
+											/>
+										</div>
+
+										<div class="form-control">
+											<!-- svelte-ignore a11y-label-has-associated-control -->
+											<label class="label">
+												<span class="label-text font-medium">{$t('auth.password')}</span>
+											</label>
+											<input
+												type="password"
+												class="input input-bordered input-primary focus:input-primary"
+												placeholder="Enter your password"
+												bind:value={newWandererIntegration.password}
+											/>
+										</div>
+
+										<button class="btn btn-primary w-full" on:click={wandererConnect}>
+											🔗 {$t('adventures.connect_to_wanderer')}
+										</button>
+									</div>
+								{:else}
+									<!-- User connected - show management options -->
+									<div class="text-center">
+										<button class="btn btn-error" on:click={wandererDisconnect}>
+											❌ {$t('strava.disconnect')}
+										</button>
+									</div>
+								{/if}
+
+								<!-- Help documentation link -->
+								{#if user.is_staff || !stravaGlobalEnabled}
+									<div class="mt-4 p-4 bg-info/10 rounded-lg">
+										{#if user.is_staff}
+											<p class="text-sm">
+												📖 {$t('immich.need_help')}
+												<a
+													class="link link-primary"
+													href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
+													target="_blank">{$t('navbar.documentation')}</a
+												>
+											</p>
+										{:else if !stravaGlobalEnabled}
+											<p class="text-sm">
+												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
+											</p>
+										{/if}
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/if}
@@ -964,6 +1287,14 @@
 										</div>
 										<div class="flex items-center justify-between">
 											<span>🖼️ {$t('settings.media')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>🥾 {$t('settings.trails')}</span>
+											<span>✅</span>
+										</div>
+										<div class="flex items-center justify-between">
+											<span>⏱️ {$t('settings.activities')}</span>
 											<span>✅</span>
 										</div>
 										<div class="flex items-center justify-between">
