@@ -110,8 +110,6 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
 
         # If the object has a location field, get that location and continue checking with that object, basically from the location's perspective. I am very proud of this line of code and that's why I am writing this comment.
 
-        print("Checking permissions for object", obj, "of type", type(obj).__name__)
-
         if type(obj).__name__ == 'Trail':
             obj = obj.location
 
