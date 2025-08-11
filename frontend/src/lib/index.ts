@@ -642,3 +642,16 @@ export function getElevation(measurementSystem: 'metric' | 'imperial', elevation
 		return Math.round(elevation).toString();
 	}
 }
+
+export function getActivityColor(activityType: string) {
+	const colors: Record<string, string> = {
+		Hike: '#10B981',
+		Run: '#F59E0B',
+		Bike: '#3B82F6',
+		Walk: '#8B5CF6',
+		AlpineSki: '#0EA5E9',
+		StandUpPaddling: '#3B82F6',
+		default: '#6B7280'
+	};
+	return colors[activityType] || colors.default;
+}

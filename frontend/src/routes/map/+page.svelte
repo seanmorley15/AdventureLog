@@ -1,10 +1,18 @@
 <script lang="ts">
-	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
+	import {
+		DefaultMarker,
+		MapEvents,
+		MapLibre,
+		Popup,
+		Marker,
+		GeoJSON,
+		LineLayer
+	} from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import type { Location, VisitedRegion } from '$lib/types.js';
+	import type { Activity, Location, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
-	import { getBasemapUrl } from '$lib';
+	import { getActivityColor, getBasemapUrl } from '$lib';
 
 	// Icons
 	import MapIcon from '~icons/mdi/map';
@@ -16,6 +24,7 @@
 	import Calendar from '~icons/mdi/calendar';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
 	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
+	import ActivityIcon from '~icons/mdi/run-fast';
 
 	export let data;
 
@@ -27,6 +36,8 @@
 
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
 	let adventures: Location[] = data.props.adventures;
+
+	let activities: Activity[] = [];
 
 	let filteredAdventures = adventures;
 
@@ -82,6 +93,20 @@
 				}
 			}
 		}
+	}
+
+	let showActivities: boolean = false;
+
+	$: {
+		// if show activities is true, fetch all activities
+		if (showActivities && activities.length === 0) {
+			fetchAllActivities();
+		}
+	}
+
+	async function fetchAllActivities() {
+		const response = await fetch('/api/activities');
+		activities = await response.json();
 	}
 
 	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
@@ -323,6 +348,22 @@
 									</Marker>
 								{/if}
 							{/each}
+
+							{#if showActivities}
+								{#each activities as activity}
+									{#if activity.geojson}
+										<GeoJSON data={activity.geojson}>
+											<LineLayer
+												paint={{
+													'line-color': getActivityColor(activity.type),
+													'line-width': 3,
+													'line-opacity': 0.8
+												}}
+											/>
+										</GeoJSON>
+									{/if}
+								{/each}
+							{/if}
 						</MapLibre>
 					</div>
 				</div>
@@ -427,6 +468,18 @@
 								<span class="label-text flex items-center gap-2">
 									<LocationIcon class="w-4 h-4" />
 									{$t('map.show_visited_regions')} ({totalRegions})
+								</span>
+							</label>
+
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={showActivities}
+									class="checkbox checkbox-accent checkbox-sm"
+								/>
+								<span class="label-text flex items-center gap-2">
+									<ActivityIcon class="w-4 h-4" />
+									{$t('map.show_activities')} ({activities.length})
 								</span>
 							</label>
 						</div>

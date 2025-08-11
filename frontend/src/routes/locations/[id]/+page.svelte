@@ -16,7 +16,7 @@
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/AttachmentCard.svelte';
-	import { getBasemapUrl, isAllDay } from '$lib';
+	import { getActivityColor, getBasemapUrl, isAllDay } from '$lib';
 	import ActivityCard from '$lib/components/ActivityCard.svelte';
 	import TrailCard from '$lib/components/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
@@ -67,17 +67,6 @@
 
 	function hasAttachmentGeojson(adventure: AdditionalLocation) {
 		return adventure.attachments.some((attachment) => attachment.geojson);
-	}
-
-	function getActivityColor(activityType: string) {
-		const colors: Record<string, string> = {
-			Hike: '#10B981',
-			Run: '#F59E0B',
-			Bike: '#3B82F6',
-			Walk: '#8B5CF6',
-			default: '#6B7280'
-		};
-		return colors[activityType] || colors.default;
 	}
 
 	function getTotalActivities(adventure: AdditionalLocation) {
