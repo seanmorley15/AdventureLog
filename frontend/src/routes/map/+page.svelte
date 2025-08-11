@@ -12,7 +12,7 @@
 	import type { Activity, Location, VisitedCity, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
-	import { getActivityColor, getBasemapUrl } from '$lib';
+	import { basemapOptions, getActivityColor, getBasemapLabel, getBasemapUrl } from '$lib';
 
 	// Icons
 	import MapIcon from '~icons/mdi/map';
@@ -25,6 +25,7 @@
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
 	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
 	import ActivityIcon from '~icons/mdi/run-fast';
+	import MapStyleSelector from '$lib/components/MapStyleSelector.svelte';
 
 	export let data;
 
@@ -33,6 +34,8 @@
 	let showActivities: boolean = false;
 	let showCities: boolean = false;
 	let sidebarOpen: boolean = false;
+
+	let basemapType: string = 'default'; // default
 
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
@@ -233,10 +236,19 @@
 
 			<!-- Map Section -->
 			<div class="container mx-auto px-6 py-4 flex-1">
-				<div class="card bg-base-100 shadow-xl h-full">
-					<div class="card-body p-4 h-full">
+				<div class="card bg-base-100 shadow-xl h-full relative">
+					<!-- Integrated Map Type Selector -->
+					<div
+						class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200"
+					>
+						<div class="p-2">
+							<MapStyleSelector bind:basemapType />
+						</div>
+					</div>
+
+					<div class="card-body p-0 h-full">
 						<MapLibre
-							style={getBasemapUrl()}
+							style={getBasemapUrl(basemapType)}
 							class="w-full h-full min-h-[70vh] rounded-lg"
 							standardControls
 						>
@@ -244,7 +256,7 @@
 								{#if adventure.latitude && adventure.longitude}
 									<Marker
 										lngLat={[adventure.longitude, adventure.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer  hover:scale-110 {adventure.is_visited
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer hover:scale-110 transition-transform {adventure.is_visited
 											? 'bg-red-300 hover:bg-red-400'
 											: 'bg-blue-300 hover:bg-blue-400'} text-black focus:outline-6 focus:outline-black"
 										on:click={togglePopup}

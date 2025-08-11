@@ -617,13 +617,240 @@ export function getIsDarkMode() {
 	return false;
 }
 
-export function getBasemapUrl() {
-	if (getIsDarkMode()) {
-		return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+export function getBasemapUrl(type = 'default'): any {
+	switch (type) {
+		// Satellite & Imagery
+		case 'satellite':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, Maxar, Earthstar Geographics, USGS'
+			);
+
+		case 'satellite-labels':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+				'© Esri',
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+			);
+
+		// Topographic & Terrain
+		case 'elevation':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, USGS, NOAA'
+			);
+
+		case 'usgs-topo':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		case 'esri-topo':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, FAO, NOAA'
+			);
+
+		// OpenStreetMap Variants
+		case 'osm-standard':
+			return getXYZStyle(
+				'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors'
+			);
+
+		case 'osm-humanitarian':
+			return getXYZStyle(
+				'https://tile-{s}.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, Humanitarian OSM Team'
+			);
+
+		case 'osm-france':
+			return getXYZStyle(
+				'https://tile-{s}.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+				'© OpenStreetMap France'
+			);
+
+		// Carto Basemaps
+		case 'carto-light':
+			return getXYZStyle(
+				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, © CartoDB'
+			);
+
+		case 'carto-dark':
+			return getXYZStyle(
+				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, © CartoDB'
+			);
+
+		case 'carto-positron':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO'
+			);
+
+		case 'carto-positron-labels':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO',
+				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
+			);
+
+		case 'carto-voyager':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO'
+			);
+
+		// WikiMedia Maps
+		case 'wikimedia':
+			return getXYZStyle(
+				'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, Wikimedia Maps'
+			);
+
+		// USGS & Government Maps
+		case 'usgs-imagery':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		case 'usgs-imagery-topo':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		// Specialized Maps
+		case 'esri-streets':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, EPA'
+			);
+
+		case 'esri-national-geographic':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, National Geographic, Garmin, HERE, UNEP-WCMC'
+			);
+
+		case 'esri-oceans':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, GEBCO, NOAA, National Geographic, Garmin, HERE'
+			);
+
+		case 'esri-gray':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, EPA'
+			);
+
+		// OpenTopoMap
+		case 'opentopomap':
+			return getXYZStyle(
+				'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+				'© OpenTopoMap (CC-BY-SA), © OpenStreetMap contributors'
+			);
+
+		// Default - Vector tiles with dark/light mode
+		default:
+			return getIsDarkMode()
+				? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+				: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 	}
-	return 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 }
 
+// Enhanced basemap options array
+export const basemapOptions = [
+	// Standard & Vector
+	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
+	{ value: 'osm-standard', label: 'OpenStreetMap', icon: '🌍', category: 'Standard' },
+	{ value: 'wikimedia', label: 'Wikimedia', icon: '📖', category: 'Standard' },
+
+	// Satellite & Imagery
+	{ value: 'satellite', label: 'Satellite', icon: '🛰️', category: 'Satellite' },
+	{ value: 'satellite-labels', label: 'Satellite + Labels', icon: '🏷️', category: 'Satellite' },
+	{ value: 'usgs-imagery', label: 'USGS Imagery', icon: '📸', category: 'Satellite' },
+	{ value: 'usgs-imagery-topo', label: 'USGS Imagery + Topo', icon: '🗻', category: 'Satellite' },
+
+	// Topographic & Terrain
+	{ value: 'elevation', label: 'Elevation', icon: '🏔️', category: 'Topographic' },
+	{ value: 'usgs-topo', label: 'USGS Topo', icon: '📊', category: 'Topographic' },
+	{ value: 'esri-topo', label: 'Esri Topo', icon: '🗾', category: 'Topographic' },
+	{ value: 'opentopomap', label: 'OpenTopoMap', icon: '🧭', category: 'Topographic' },
+
+	// Clean & Minimal
+	{ value: 'carto-light', label: 'Light', icon: '☀️', category: 'Clean' },
+	{ value: 'carto-dark', label: 'Dark', icon: '🌙', category: 'Clean' },
+	{ value: 'carto-positron', label: 'Positron', icon: '⚡', category: 'Clean' },
+	{ value: 'carto-positron-labels', label: 'Positron + Labels', icon: '🏷️', category: 'Clean' },
+	{ value: 'esri-gray', label: 'Gray Canvas', icon: '⬜', category: 'Clean' },
+
+	// Specialized
+	{ value: 'carto-voyager', label: 'Voyager', icon: '🚢', category: 'Specialized' },
+	{ value: 'osm-humanitarian', label: 'Humanitarian', icon: '🏥', category: 'Specialized' },
+	{ value: 'esri-streets', label: 'Streets', icon: '🛣️', category: 'Specialized' },
+	{
+		value: 'esri-national-geographic',
+		label: 'National Geographic',
+		icon: '🌎',
+		category: 'Specialized'
+	},
+	{ value: 'esri-oceans', label: 'Oceans', icon: '🌊', category: 'Specialized' },
+	{ value: 'osm-france', label: 'France Style', icon: '🇫🇷', category: 'Specialized' }
+];
+
+export function getBasemapLabel(value: string) {
+	const option = basemapOptions.find((opt) => opt.value === value);
+	return option ? option.label : 'Default';
+}
+
+// Helper function for XYZ tile services (update this too)
+function getXYZStyle(url: string, attribution: string, backgroundUrl: string | null = null) {
+	const sources: Record<string, any> = {
+		'raster-tiles': {
+			type: 'raster',
+			tiles: [url.replace('{s}', 'a'), url.replace('{s}', 'b'), url.replace('{s}', 'c')],
+			tileSize: 256,
+			attribution: attribution
+		}
+	};
+
+	const layers = [];
+
+	// Add background layer if provided
+	if (backgroundUrl) {
+		sources['background-tiles'] = {
+			type: 'raster',
+			tiles: [
+				backgroundUrl.replace('{s}', 'a'),
+				backgroundUrl.replace('{s}', 'b'),
+				backgroundUrl.replace('{s}', 'c')
+			],
+			tileSize: 256
+		};
+		layers.push({
+			id: 'background-layer',
+			type: 'raster',
+			source: 'background-tiles'
+		});
+	}
+
+	layers.push({
+		id: 'raster-layer',
+		type: 'raster',
+		source: 'raster-tiles'
+	});
+
+	return {
+		version: 8,
+		sources: sources,
+		layers: layers
+	};
+}
 export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {
 	if (measurementSystem === 'imperial') {
 		const miles = meters / 1609.34;
