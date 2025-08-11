@@ -509,6 +509,7 @@
 								<span class="label-text flex items-center gap-2">
 									<LocationIcon class="w-4 h-4" />
 									{$t('map.show_visited_cities')}
+									{visitedCities.length > 0 ? ` (${visitedCities.length})` : ''}
 								</span>
 							</label>
 
@@ -520,17 +521,19 @@
 								/>
 								<span class="label-text flex items-center gap-2">
 									<ActivityIcon class="w-4 h-4" />
-									{$t('settings.activities')} ({activities.length})
+									{$t('settings.activities')}{activities.length > 0
+										? ` (${activities.length})`
+										: ''}
 								</span>
 							</label>
 						</div>
 					</div>
 
-					<!-- New Adventure Section -->
+					<!-- New Location Section -->
 					<div class="card bg-base-200/50 p-4">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Plus class="w-5 h-5" />
-							Add Adventure
+							{$t('adventures.new_location')}
 						</h3>
 
 						{#if newMarker}
