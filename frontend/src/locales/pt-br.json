@@ -593,7 +593,9 @@
     "place_marker_desc_location": "Clique no mapa para colocar um marcador.",
     "regions": "Regiões",
     "show_visited_regions": "Show Regiões visitadas",
-    "view_details": "Ver detalhes"
+    "view_details": "Ver detalhes",
+    "show_activities": "Mostrar atividades",
+    "show_visited_cities": "Cidades visitadas"
   },
   "navbar": {
     "about": "Sobre aventureLog",

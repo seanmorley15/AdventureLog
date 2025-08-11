@@ -9,7 +9,7 @@
 		LineLayer
 	} from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import type { Activity, Location, VisitedRegion } from '$lib/types.js';
+	import type { Activity, Location, VisitedCity, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	import { getActivityColor, getBasemapUrl } from '$lib';
@@ -29,12 +29,15 @@
 	export let data;
 
 	let createModalOpen: boolean = false;
-	let showGeo: boolean = false;
-	let sidebarOpen = false;
+	let showRegions: boolean = false;
+	let showActivities: boolean = false;
+	let showCities: boolean = false;
+	let sidebarOpen: boolean = false;
 
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
+	let visitedCities: VisitedCity[] = [];
 	let adventures: Location[] = data.props.adventures;
 
 	let activities: Activity[] = [];
@@ -95,8 +98,6 @@
 		}
 	}
 
-	let showActivities: boolean = false;
-
 	$: {
 		// if show activities is true, fetch all activities
 		if (showActivities && activities.length === 0) {
@@ -107,6 +108,17 @@
 	async function fetchAllActivities() {
 		const response = await fetch('/api/activities');
 		activities = await response.json();
+	}
+
+	$: {
+		if (showCities && visitedCities.length === 0) {
+			fetchVisitedCities();
+		}
+	}
+
+	async function fetchVisitedCities() {
+		const response = await fetch('/api/visitedcity');
+		visitedCities = await response.json();
 	}
 
 	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
@@ -333,7 +345,7 @@
 							{/if}
 
 							{#each visitedRegions as region}
-								{#if showGeo}
+								{#if showRegions}
 									<Marker
 										lngLat={[region.longitude, region.latitude]}
 										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer transition-transform hover:scale-110"
@@ -348,6 +360,23 @@
 									</Marker>
 								{/if}
 							{/each}
+
+							{#if showCities}
+								{#each visitedCities as city}
+									<Marker
+										lngLat={[city.longitude, city.latitude]}
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 hover:bg-blue-400 text-black shadow-lg cursor-pointer transition-transform hover:scale-110"
+									>
+										<LocationIcon class="w-5 h-5 text-blue-700" />
+										<Popup openOn="click" offset={[0, -10]}>
+											<div class="space-y-2">
+												<div class="text-lg text-black font-bold">{city.name}</div>
+												<div class="badge badge-success badge-sm">{city.id}</div>
+											</div>
+										</Popup>
+									</Marker>
+								{/each}
+							{/if}
 
 							{#if showActivities}
 								{#each activities as activity}
@@ -462,12 +491,24 @@
 							<label class="label cursor-pointer justify-start gap-3">
 								<input
 									type="checkbox"
-									bind:checked={showGeo}
+									bind:checked={showRegions}
 									class="checkbox checkbox-accent checkbox-sm"
 								/>
 								<span class="label-text flex items-center gap-2">
 									<LocationIcon class="w-4 h-4" />
-									{$t('map.show_visited_regions')} ({totalRegions})
+									{$t('profile.visited_regions')} ({totalRegions})
+								</span>
+							</label>
+
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={showCities}
+									class="checkbox checkbox-warning checkbox-sm"
+								/>
+								<span class="label-text flex items-center gap-2">
+									<LocationIcon class="w-4 h-4" />
+									{$t('map.show_visited_cities')}
 								</span>
 							</label>
 
@@ -475,11 +516,11 @@
 								<input
 									type="checkbox"
 									bind:checked={showActivities}
-									class="checkbox checkbox-accent checkbox-sm"
+									class="checkbox checkbox-error checkbox-sm"
 								/>
 								<span class="label-text flex items-center gap-2">
 									<ActivityIcon class="w-4 h-4" />
-									{$t('map.show_activities')} ({activities.length})
+									{$t('settings.activities')} ({activities.length})
 								</span>
 							</label>
 						</div>

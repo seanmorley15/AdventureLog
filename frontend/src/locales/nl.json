@@ -781,7 +781,9 @@
     "add_location_at_marker": "Voeg een nieuwe locatie toe bij Marker",
     "location_map": "Locatiekaart",
     "locations_shown": "Getoonde locaties",
-    "place_marker_desc_location": "Klik op de kaart om een ​​marker te plaatsen."
+    "place_marker_desc_location": "Klik op de kaart om een ​​marker te plaatsen.",
+    "show_activities": "Toon activiteiten",
+    "show_visited_cities": "Bezochte steden"
   },
   "languages": {},
   "share": {

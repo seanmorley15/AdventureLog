@@ -781,7 +781,9 @@
     "add_location_at_marker": "Aggiungi nuova posizione al marcatore",
     "location_map": "Mappa della posizione",
     "locations_shown": "posizioni mostrate",
-    "place_marker_desc_location": "Fai clic sulla mappa per posizionare un indicatore."
+    "place_marker_desc_location": "Fai clic sulla mappa per posizionare un indicatore.",
+    "show_activities": "Mostra attività",
+    "show_visited_cities": "Città visitate"
   },
   "languages": {},
   "share": {

@@ -798,7 +798,9 @@
     "display_options": "Display Options",
     "marker_placed_on_map": "Marker placed on map",
     "place_marker_desc_location": "Click on the map to place a marker.",
-    "locations_shown": "locations shown"
+    "locations_shown": "locations shown",
+    "show_activities": "Show Activities",
+    "show_visited_cities": "Visited Cities"
   },
   "share": {
     "shared": "Shared",

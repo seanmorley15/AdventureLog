@@ -781,7 +781,9 @@
     "add_location_at_marker": "Fügen Sie einen neuen Standort bei Marker hinzu",
     "location_map": "Standortkarte",
     "locations_shown": "Standorte gezeigt",
-    "place_marker_desc_location": "Klicken Sie auf die Karte, um einen Marker zu platzieren."
+    "place_marker_desc_location": "Klicken Sie auf die Karte, um einen Marker zu platzieren.",
+    "show_activities": "Aktivitäten zeigen",
+    "show_visited_cities": "Besuchte Städte"
   },
   "languages": {},
   "share": {

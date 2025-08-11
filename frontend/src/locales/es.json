@@ -781,7 +781,9 @@
     "add_location_at_marker": "Agregar nueva ubicación en el marcador",
     "location_map": "Mapa de ubicación",
     "locations_shown": "ubicaciones mostradas",
-    "place_marker_desc_location": "Haga clic en el mapa para colocar un marcador."
+    "place_marker_desc_location": "Haga clic en el mapa para colocar un marcador.",
+    "show_activities": "Mostrar actividades",
+    "show_visited_cities": "Ciudades visitadas"
   },
   "share": {
     "no_users_shared": "Ningún usuario compartió con",

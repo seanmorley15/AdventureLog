@@ -593,7 +593,9 @@
     "place_marker_desc_location": "انقر على الخريطة لوضع علامة.",
     "regions": "المناطق",
     "show_visited_regions": "عرض المناطق التي تمت زيارتها",
-    "view_details": "عرض التفاصيل"
+    "view_details": "عرض التفاصيل",
+    "show_activities": "إظهار الأنشطة",
+    "show_visited_cities": "زار المدن"
   },
   "navbar": {
     "about": "حول المغامرة",

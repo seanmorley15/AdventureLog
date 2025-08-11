@@ -781,7 +781,9 @@
     "add_location_at_marker": "在标记处添加新位置",
     "location_map": "位置图",
     "locations_shown": "显示的位置",
-    "place_marker_desc_location": "单击地图以放置标记。"
+    "place_marker_desc_location": "单击地图以放置标记。",
+    "show_activities": "展示活动",
+    "show_visited_cities": "参观城市"
   },
   "languages": {},
   "share": {

@@ -543,7 +543,9 @@
     "add_location_at_marker": "마커에 새 위치를 추가하십시오",
     "location_map": "위치지도",
     "locations_shown": "표시된 위치",
-    "place_marker_desc_location": "지도를 클릭하여 마커를 배치하십시오."
+    "place_marker_desc_location": "지도를 클릭하여 마커를 배치하십시오.",
+    "show_activities": "활동을 보여줍니다",
+    "show_visited_cities": "도시를 방문했습니다"
   },
   "navbar": {
     "about": "Adventurelog 소개",

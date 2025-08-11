@@ -781,7 +781,9 @@
     "add_location_at_marker": "Dodaj nową lokalizację na znaczniku",
     "location_map": "Mapa lokalizacji",
     "locations_shown": "Pokazane lokalizacje",
-    "place_marker_desc_location": "Kliknij mapę, aby umieścić znacznik."
+    "place_marker_desc_location": "Kliknij mapę, aby umieścić znacznik.",
+    "show_activities": "Pokaż działania",
+    "show_visited_cities": "Odwiedzone miasta"
   },
   "share": {
     "shared": "Udostępnione",

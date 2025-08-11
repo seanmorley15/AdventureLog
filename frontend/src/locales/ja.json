@@ -593,7 +593,9 @@
     "place_marker_desc_location": "マップをクリックしてマーカーを配置します。",
     "regions": "地域",
     "show_visited_regions": "訪問した地域を表示します",
-    "view_details": "詳細を表示します"
+    "view_details": "詳細を表示します",
+    "show_activities": "アクティビティを表示します",
+    "show_visited_cities": "訪問した都市"
   },
   "navbar": {
     "about": "AdventureLogについて",

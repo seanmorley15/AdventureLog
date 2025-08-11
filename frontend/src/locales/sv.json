@@ -781,7 +781,9 @@
     "add_location_at_marker": "Lägg till en ny plats på Marker",
     "location_map": "Platskarta",
     "locations_shown": "Visas",
-    "place_marker_desc_location": "Klicka på kartan för att placera en markör."
+    "place_marker_desc_location": "Klicka på kartan för att placera en markör.",
+    "show_activities": "Visningsaktiviteter",
+    "show_visited_cities": "Besökta städer"
   },
   "languages": {},
   "share": {
