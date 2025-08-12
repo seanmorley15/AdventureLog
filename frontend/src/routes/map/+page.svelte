@@ -239,7 +239,7 @@
 				<div class="card bg-base-100 shadow-xl h-full relative">
 					<!-- Integrated Map Type Selector -->
 					<div
-						class="absolute top-4 right-4 z-10 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200"
+						class="absolute top-4 right-4 z-10 bg-base-200 backdrop-blur-sm rounded-lg shadow-lg"
 					>
 						<div class="p-2">
 							<MapStyleSelector bind:basemapType />

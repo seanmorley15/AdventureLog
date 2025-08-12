@@ -980,6 +980,8 @@ function getXYZStyle(tileUrl: string | string[], attribution: string, baseUrl?: 
 
 // Enhanced basemap options array
 export const basemapOptions = [
+	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
+
 	// 3D Terrain Maps (New Category)
 	{ value: 'terrain-3d', label: '3D Terrain', icon: '🏔️', category: '3D Terrain' },
 	{
@@ -991,7 +993,6 @@ export const basemapOptions = [
 	{ value: 'topo-terrain-3d', label: '3D Topographic', icon: '🗻', category: '3D Terrain' },
 
 	// Standard & Vector
-	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
 	{ value: 'osm-standard', label: 'OpenStreetMap', icon: '🌍', category: 'Standard' },
 	{ value: 'wikimedia', label: 'Wikimedia', icon: '📖', category: 'Standard' },
 

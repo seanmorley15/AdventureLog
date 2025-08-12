@@ -8,22 +8,20 @@
 
 <div class="dropdown dropdown-left">
 	<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2 min-h-0 h-8 px-3">
-		<MapIcon class="w-4 h-4 text-neutral" />
-		<span class="text-xs font-medium text-neutral">{getBasemapLabel(basemapType)}</span>
-		<svg class="w-3 h-3 text-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<MapIcon class="w-4 h-4" />
+		<span class="text-xs font-medium">{getBasemapLabel(basemapType)}</span>
+		<svg class="w-3 h-3 fill-none" stroke="currentColor" viewBox="0 0 24 24">
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 		</svg>
 	</div>
-	<ul
-		class="dropdown-content z-20 menu p-2 shadow-lg bg-white rounded-box w-48 border border-gray-200"
-	>
+	<ul class="dropdown-content z-20 menu p-2 shadow-lg bg-base-200 rounded-box w-48">
 		{#each basemapOptions as option}
 			<li>
 				<button
-					class="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-gray-100 transition-colors {basemapType ===
+					class="flex items-center gap-3 px-3 py-2 text-sm rounded-md transition-colors {basemapType ===
 					option.value
-						? 'bg-primary/10 text-primary font-medium'
-						: 'text-gray-700'}"
+						? 'bg-primary/10  font-medium'
+						: ''}"
 					on:click={() => (basemapType = option.value)}
 				>
 					<span class="text-lg">{option.icon}</span>
