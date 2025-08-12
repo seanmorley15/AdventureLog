@@ -677,7 +677,7 @@ class Activity(models.Model):
     external_service_id = models.CharField(max_length=100, blank=True, null=True)  # E.g., Strava ID
 
     def __str__(self):
-        return f"{self.name} ({self.type})"
+        return f"{self.name} ({self.sport_type})"
 
     class Meta:
         verbose_name = "Activity"
