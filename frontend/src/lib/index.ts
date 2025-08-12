@@ -617,9 +617,176 @@ export function getIsDarkMode() {
 	return false;
 }
 
+// Enhanced basemap functions with 3D terrain support
 export function getBasemapUrl(type = 'default'): any {
 	switch (type) {
-		// Satellite & Imagery
+		// 3D Terrain Maps with elevation data
+		case 'terrain-3d':
+			return {
+				version: 8,
+				name: '3D Terrain',
+				sources: {
+					'raster-tiles': {
+						type: 'raster',
+						tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'],
+						tileSize: 256,
+						attribution: '© OpenStreetMap contributors, © CARTO'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#b8dee6'
+						}
+					},
+					{
+						id: 'raster-layer',
+						type: 'raster',
+						source: 'raster-tiles'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 1.5
+				}
+			};
+
+		case 'satellite-terrain-3d':
+			return {
+				version: 8,
+				name: 'Satellite 3D Terrain',
+				sources: {
+					satellite: {
+						type: 'raster',
+						tiles: [
+							'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+						],
+						tileSize: 256,
+						attribution: '© Esri, Maxar, Earthstar Geographics, USGS'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#000'
+						}
+					},
+					{
+						id: 'satellite-layer',
+						type: 'raster',
+						source: 'satellite'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 2.0
+				}
+			};
+
+		case 'topo-terrain-3d':
+			return {
+				version: 8,
+				name: 'Topographic 3D Terrain',
+				sources: {
+					topo: {
+						type: 'raster',
+						tiles: [
+							'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+						],
+						tileSize: 256,
+						attribution: '© Esri, HERE, Garmin, USGS, FAO, NOAA'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#f5f5dc'
+						}
+					},
+					{
+						id: 'topo-layer',
+						type: 'raster',
+						source: 'topo'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 1.8
+				}
+			};
+
+		// Alternative free terrain source using MapTiler (no key required for basic use)
+		case 'maptiler-terrain-3d':
+			return {
+				version: 8,
+				name: 'MapTiler 3D Terrain',
+				sources: {
+					maptiler: {
+						type: 'raster',
+						tiles: [
+							'https://api.maptiler.com/maps/outdoor/256/{z}/{x}/{y}.png?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+						],
+						tileSize: 256,
+						attribution: '© MapTiler © OpenStreetMap contributors'
+					},
+					'terrain-rgb': {
+						type: 'raster-dem',
+						tiles: [
+							'https://api.maptiler.com/tiles/terrain-rgb/{z}/{x}/{y}.png?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+						],
+						encoding: 'mapbox',
+						tileSize: 256,
+						maxzoom: 12
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#e8f4f8'
+						}
+					},
+					{
+						id: 'maptiler-layer',
+						type: 'raster',
+						source: 'maptiler'
+					}
+				],
+				terrain: {
+					source: 'terrain-rgb',
+					exaggeration: 1.5
+				}
+			};
+
+		// Existing non-3D maps...
 		case 'satellite':
 			return getXYZStyle(
 				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -633,7 +800,6 @@ export function getBasemapUrl(type = 'default'): any {
 				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
 			);
 
-		// Topographic & Terrain
 		case 'elevation':
 			return getXYZStyle(
 				'https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
@@ -652,7 +818,6 @@ export function getBasemapUrl(type = 'default'): any {
 				'© Esri, HERE, Garmin, USGS, FAO, NOAA'
 			);
 
-		// OpenStreetMap Variants
 		case 'osm-standard':
 			return getXYZStyle(
 				'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -671,7 +836,6 @@ export function getBasemapUrl(type = 'default'): any {
 				'© OpenStreetMap France'
 			);
 
-		// Carto Basemaps
 		case 'carto-light':
 			return getXYZStyle(
 				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
@@ -703,14 +867,12 @@ export function getBasemapUrl(type = 'default'): any {
 				'© OpenStreetMap contributors, © CARTO'
 			);
 
-		// WikiMedia Maps
 		case 'wikimedia':
 			return getXYZStyle(
 				'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png',
 				'© OpenStreetMap contributors, Wikimedia Maps'
 			);
 
-		// USGS & Government Maps
 		case 'usgs-imagery':
 			return getXYZStyle(
 				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
@@ -723,7 +885,6 @@ export function getBasemapUrl(type = 'default'): any {
 				'© USGS'
 			);
 
-		// Specialized Maps
 		case 'esri-streets':
 			return getXYZStyle(
 				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
@@ -748,14 +909,16 @@ export function getBasemapUrl(type = 'default'): any {
 				'© Esri, HERE, Garmin, USGS, EPA'
 			);
 
-		// OpenTopoMap
 		case 'opentopomap':
 			return getXYZStyle(
-				'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+				[
+					'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+					'https://b.tile.opentopomap.org/{z}/{x}/{y}.png',
+					'https://c.tile.opentopomap.org/{z}/{x}/{y}.png'
+				],
 				'© OpenTopoMap (CC-BY-SA), © OpenStreetMap contributors'
 			);
 
-		// Default - Vector tiles with dark/light mode
 		default:
 			return getIsDarkMode()
 				? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -763,8 +926,70 @@ export function getBasemapUrl(type = 'default'): any {
 	}
 }
 
+// Helper function for XYZ tile styles (updated to handle arrays and remove {s} placeholders)
+function getXYZStyle(tileUrl: string | string[], attribution: string, baseUrl?: string) {
+	// Convert single URL to array and expand any remaining {s} placeholders
+	let tiles: string[];
+	if (Array.isArray(tileUrl)) {
+		tiles = tileUrl;
+	} else {
+		if (tileUrl.includes('{s}')) {
+			// Fallback: expand {s} to common subdomains
+			const subdomains = ['a', 'b', 'c'];
+			tiles = subdomains.map((s) => tileUrl.replace('{s}', s));
+		} else {
+			tiles = [tileUrl];
+		}
+	}
+
+	return {
+		version: 8,
+		sources: {
+			'raster-tiles': {
+				type: 'raster',
+				tiles: tiles,
+				tileSize: 256,
+				attribution: attribution
+			},
+			...(baseUrl && {
+				'base-tiles': {
+					type: 'raster',
+					tiles: [baseUrl],
+					tileSize: 256
+				}
+			})
+		},
+		layers: [
+			...(baseUrl
+				? [
+						{
+							id: 'base-layer',
+							type: 'raster' as const,
+							source: 'base-tiles'
+						}
+					]
+				: []),
+			{
+				id: 'raster-layer',
+				type: 'raster' as const,
+				source: 'raster-tiles'
+			}
+		]
+	};
+}
+
 // Enhanced basemap options array
 export const basemapOptions = [
+	// 3D Terrain Maps (New Category)
+	{ value: 'terrain-3d', label: '3D Terrain', icon: '🏔️', category: '3D Terrain' },
+	{
+		value: 'satellite-terrain-3d',
+		label: '3D Satellite Terrain',
+		icon: '🛰️',
+		category: '3D Terrain'
+	},
+	{ value: 'topo-terrain-3d', label: '3D Topographic', icon: '🗻', category: '3D Terrain' },
+
 	// Standard & Vector
 	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
 	{ value: 'osm-standard', label: 'OpenStreetMap', icon: '🌍', category: 'Standard' },
@@ -808,49 +1033,6 @@ export function getBasemapLabel(value: string) {
 	return option ? option.label : 'Default';
 }
 
-// Helper function for XYZ tile services (update this too)
-function getXYZStyle(url: string, attribution: string, backgroundUrl: string | null = null) {
-	const sources: Record<string, any> = {
-		'raster-tiles': {
-			type: 'raster',
-			tiles: [url.replace('{s}', 'a'), url.replace('{s}', 'b'), url.replace('{s}', 'c')],
-			tileSize: 256,
-			attribution: attribution
-		}
-	};
-
-	const layers = [];
-
-	// Add background layer if provided
-	if (backgroundUrl) {
-		sources['background-tiles'] = {
-			type: 'raster',
-			tiles: [
-				backgroundUrl.replace('{s}', 'a'),
-				backgroundUrl.replace('{s}', 'b'),
-				backgroundUrl.replace('{s}', 'c')
-			],
-			tileSize: 256
-		};
-		layers.push({
-			id: 'background-layer',
-			type: 'raster',
-			source: 'background-tiles'
-		});
-	}
-
-	layers.push({
-		id: 'raster-layer',
-		type: 'raster',
-		source: 'raster-tiles'
-	});
-
-	return {
-		version: 8,
-		sources: sources,
-		layers: layers
-	};
-}
 export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {
 	if (measurementSystem === 'imperial') {
 		const miles = meters / 1609.34;
