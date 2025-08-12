@@ -396,7 +396,7 @@
 										<GeoJSON data={activity.geojson}>
 											<LineLayer
 												paint={{
-													'line-color': getActivityColor(activity.type),
+													'line-color': getActivityColor(activity.sport_type),
 													'line-width': 3,
 													'line-opacity': 0.8
 												}}

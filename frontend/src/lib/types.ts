@@ -388,7 +388,7 @@ export type Activity = {
 	gpx_file: string | null;
 	geojson: any | undefined; // GeoJSON representation of the activity
 	name: string;
-	sport_type: string | null;
+	sport_type: string;
 	distance: number | null;
 	moving_time: string | null; // ISO 8601 duration string
 	elapsed_time: string | null; // ISO 8601 duration string
