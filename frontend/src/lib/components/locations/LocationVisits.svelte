@@ -1198,38 +1198,42 @@
 													</div>
 
 													<!-- Elevation Gain -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="elevation-gain-{visit.id}"
-															>{$t('adventures.elevation_gain')} (m)</label
-														>
-														<input
-															id="elevation-gain-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="150"
-															bind:value={activityForm.elevation_gain}
-															readonly={!!pendingStravaImport[visit.id]}
-														/>
-													</div>
+													{#if !activityForm.gpx_file}
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-gain-{visit.id}"
+																>{$t('adventures.elevation_gain')} (m)</label
+															>
+															<input
+																id="elevation-gain-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="150"
+																bind:value={activityForm.elevation_gain}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+													{/if}
 
 													<!-- Elevation Loss -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="elevation-loss-{visit.id}"
-															>{$t('adventures.elevation_loss')} (m)</label
-														>
-														<input
-															id="elevation-loss-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="150"
-															bind:value={activityForm.elevation_loss}
-															readonly={!!pendingStravaImport[visit.id]}
-														/>
-													</div>
+													{#if !activityForm.gpx_file}
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-loss-{visit.id}"
+																>{$t('adventures.elevation_loss')} (m)</label
+															>
+															<input
+																id="elevation-loss-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="150"
+																bind:value={activityForm.elevation_loss}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+													{/if}
 
 													<!-- Calories -->
 													<div>
@@ -1247,38 +1251,42 @@
 													</div>
 
 													<!-- Elevation High -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="elevation-high-{visit.id}"
-															>{$t('adventures.elevation_high')} (m)</label
-														>
-														<input
-															id="elevation-high-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="2000"
-															bind:value={activityForm.elev_high}
-															readonly={!!pendingStravaImport[visit.id]}
-														/>
-													</div>
+													{#if !activityForm.gpx_file}
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-high-{visit.id}"
+																>{$t('adventures.elevation_high')} (m)</label
+															>
+															<input
+																id="elevation-high-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="2000"
+																bind:value={activityForm.elev_high}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+													{/if}
 
 													<!-- Elevation Low -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="elevation-low-{visit.id}"
-															>{$t('adventures.elevation_low')} (m)</label
-														>
-														<input
-															id="elevation-low-{visit.id}"
-															type="number"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder="1000"
-															bind:value={activityForm.elev_low}
-															readonly={!!pendingStravaImport[visit.id]}
-														/>
-													</div>
+													{#if !activityForm.gpx_file}
+														<div>
+															<label
+																class="label-text text-xs font-medium"
+																for="elevation-low-{visit.id}"
+																>{$t('adventures.elevation_low')} (m)</label
+															>
+															<input
+																id="elevation-low-{visit.id}"
+																type="number"
+																class="input input-bordered input-sm w-full mt-1"
+																placeholder="1000"
+																bind:value={activityForm.elev_low}
+																readonly={!!pendingStravaImport[visit.id]}
+															/>
+														</div>
+													{/if}
 
 													<!-- Rest Time -->
 													<div>

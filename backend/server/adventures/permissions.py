@@ -33,11 +33,6 @@ class CollectionShared(permissions.BasePermission):
             # Anonymous: only read public
             return request.method in permissions.SAFE_METHODS and obj.is_public
 
-        # debug print
-        print(f"User {user.id} is checking permissions for {obj.id}")
-        print(f"Object user: {getattr(obj, 'user', None)}")
-        print(f"Action: {getattr(view, 'action', None)}")
-
         # Special case for accept_invite and decline_invite actions
         # Allow access if user has a pending invite for this collection
         if hasattr(view, 'action') and view.action in ['accept_invite', 'decline_invite']:
