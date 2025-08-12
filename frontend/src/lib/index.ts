@@ -1053,15 +1053,77 @@ export function getElevation(measurementSystem: 'metric' | 'imperial', elevation
 	}
 }
 
+export let SPORT_TYPE_CHOICES = [
+	// General Sports
+	{ key: 'General', label: 'General', icon: '🏃', color: '#6B7280' },
+
+	// Foot Sports
+	{ key: 'Run', label: 'Run', icon: '🏃‍♂️', color: '#F59E0B' },
+	{ key: 'TrailRun', label: 'Trail Run', icon: '🏃‍♀️', color: '#F59E0B' },
+	{ key: 'Walk', label: 'Walk', icon: '🚶', color: '#8B5CF6' },
+	{ key: 'Hike', label: 'Hike', icon: '🥾', color: '#10B981' },
+	{ key: 'VirtualRun', label: 'Virtual Run', icon: '💻', color: '#F59E0B' },
+
+	// Cycle Sports
+	{ key: 'Ride', label: 'Ride', icon: '🚴', color: '#3B82F6' },
+	{ key: 'MountainBikeRide', label: 'Mountain Bike Ride', icon: '🚵', color: '#3B82F6' },
+	{ key: 'GravelRide', label: 'Gravel Ride', icon: '🚴‍♀️', color: '#3B82F6' },
+	{ key: 'EBikeRide', label: 'E-Bike Ride', icon: '🔋', color: '#3B82F6' },
+	{ key: 'EMountainBikeRide', label: 'E-Mountain Bike Ride', icon: '⚡', color: '#3B82F6' },
+	{ key: 'Velomobile', label: 'Velomobile', icon: '🚲', color: '#3B82F6' },
+	{ key: 'VirtualRide', label: 'Virtual Ride', icon: '🖥️', color: '#3B82F6' },
+
+	// Water Sports
+	{ key: 'Canoeing', label: 'Canoe', icon: '🛶', color: '#06B6D4' },
+	{ key: 'Kayaking', label: 'Kayak', icon: '🛶', color: '#06B6D4' },
+	{ key: 'Kitesurfing', label: 'Kitesurf', icon: '🪁', color: '#06B6D4' },
+	{ key: 'Rowing', label: 'Rowing', icon: '🚣', color: '#06B6D4' },
+	{ key: 'StandUpPaddling', label: 'Stand Up Paddling', icon: '🏄', color: '#3B82F6' },
+	{ key: 'Surfing', label: 'Surf', icon: '🏄‍♂️', color: '#06B6D4' },
+	{ key: 'Swim', label: 'Swim', icon: '🏊', color: '#06B6D4' },
+	{ key: 'Windsurfing', label: 'Windsurf', icon: '🏄‍♀️', color: '#06B6D4' },
+	{ key: 'Sailing', label: 'Sail', icon: '⛵', color: '#06B6D4' },
+
+	// Winter Sports
+	{ key: 'IceSkate', label: 'Ice Skate', icon: '⛸️', color: '#0EA5E9' },
+	{ key: 'AlpineSki', label: 'Alpine Ski', icon: '⛷️', color: '#0EA5E9' },
+	{ key: 'BackcountrySki', label: 'Backcountry Ski', icon: '🎿', color: '#0EA5E9' },
+	{ key: 'NordicSki', label: 'Nordic Ski', icon: '🎿', color: '#0EA5E9' },
+	{ key: 'Snowboard', label: 'Snowboard', icon: '🏂', color: '#0EA5E9' },
+	{ key: 'Snowshoe', label: 'Snowshoe', icon: '🥾', color: '#0EA5E9' },
+
+	// Other Sports
+	{ key: 'Handcycle', label: 'Handcycle', icon: '🚴‍♂️', color: '#EF4444' },
+	{ key: 'InlineSkate', label: 'Inline Skate', icon: '🛼', color: '#8B5CF6' },
+	{ key: 'RockClimbing', label: 'Rock Climb', icon: '🧗', color: '#DC2626' },
+	{ key: 'RollerSki', label: 'Roller Ski', icon: '🎿', color: '#F97316' },
+	{ key: 'Golf', label: 'Golf', icon: '⛳', color: '#22C55E' },
+	{ key: 'Skateboard', label: 'Skateboard', icon: '🛹', color: '#F59E0B' },
+	{ key: 'Soccer', label: 'Football (Soccer)', icon: '⚽', color: '#10B981' },
+	{ key: 'Wheelchair', label: 'Wheelchair', icon: '♿', color: '#3B82F6' },
+	{ key: 'Badminton', label: 'Badminton', icon: '🏸', color: '#F59E0B' },
+	{ key: 'Tennis', label: 'Tennis', icon: '🎾', color: '#10B981' },
+	{ key: 'Pickleball', label: 'Pickleball', icon: '🏓', color: '#F59E0B' },
+	{ key: 'Crossfit', label: 'Crossfit', icon: '💪', color: '#DC2626' },
+	{ key: 'Elliptical', label: 'Elliptical', icon: '🏃‍♀️', color: '#8B5CF6' },
+	{ key: 'StairStepper', label: 'Stair Stepper', icon: '🪜', color: '#6B7280' },
+	{ key: 'WeightTraining', label: 'Weight Training', icon: '🏋️', color: '#DC2626' },
+	{ key: 'Yoga', label: 'Yoga', icon: '🧘', color: '#8B5CF6' },
+	{ key: 'Workout', label: 'Workout', icon: '💪', color: '#EF4444' },
+	{ key: 'HIIT', label: 'HIIT', icon: '⚡', color: '#F59E0B' },
+	{ key: 'Pilates', label: 'Pilates', icon: '🧘‍♀️', color: '#8B5CF6' },
+	{ key: 'TableTennis', label: 'Table Tennis', icon: '🏓', color: '#F59E0B' },
+	{ key: 'Squash', label: 'Squash', icon: '🎾', color: '#F59E0B' },
+	{ key: 'Racquetball', label: 'Racquetball', icon: '🎾', color: '#F59E0B' },
+	{ key: 'VirtualRow', label: 'Virtual Rowing', icon: '🚣‍♂️', color: '#06B6D4' }
+];
+
 export function getActivityColor(activityType: string) {
-	const colors: Record<string, string> = {
-		Hike: '#10B981',
-		Run: '#F59E0B',
-		Bike: '#3B82F6',
-		Walk: '#8B5CF6',
-		AlpineSki: '#0EA5E9',
-		StandUpPaddling: '#3B82F6',
-		default: '#6B7280'
-	};
-	return colors[activityType] || colors.default;
+	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
+	return activity ? activity.color : '#6B7280'; // Default gray if not found
+}
+
+export function getActivityIcon(activityType: string) {
+	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
+	return activity ? activity.icon : '🏅'; // Default medal if not found
 }

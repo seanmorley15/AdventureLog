@@ -399,7 +399,11 @@
     "view_strava_activities": "Strava 활동을보십시오",
     "view_trail": "트레일보기",
     "wanderer_integration_error": "방랑자 통합은 활성화되지 않았거나 만료되었습니다.",
-    "wikipedia_error": "Wikipedia에서 설명을 생성하지 못했습니다"
+    "wikipedia_error": "Wikipedia에서 설명을 생성하지 못했습니다",
+    "high": "높은",
+    "low": "낮은",
+    "rest": "나머지",
+    "total": "총"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",

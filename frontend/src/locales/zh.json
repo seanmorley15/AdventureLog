@@ -451,7 +451,11 @@
     "view_strava_activities": "查看Strava活动",
     "view_trail": "查看步道",
     "wanderer_integration_error": "流浪者集成未启用或已过期。",
-    "wikipedia_error": "无法从Wikipedia产生描述"
+    "wikipedia_error": "无法从Wikipedia产生描述",
+    "high": "高的",
+    "low": "低的",
+    "rest": "休息",
+    "total": "全部的"
   },
   "auth": {
     "forgot_password": "忘记密码？",

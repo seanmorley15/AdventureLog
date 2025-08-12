@@ -451,7 +451,11 @@
     "edit_visit": "Editar visita",
     "remove_visit": "Eliminar visita",
     "strava_activities_during_visit": "Actividades de Strava durante la visita",
-    "update_visit": "Visita de actualización"
+    "update_visit": "Visita de actualización",
+    "high": "Alto",
+    "low": "Bajo",
+    "rest": "Descansar",
+    "total": "Total"
   },
   "worldtravel": {
     "all": "Todo",

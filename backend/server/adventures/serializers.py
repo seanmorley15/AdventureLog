@@ -177,7 +177,7 @@ class ActivitySerializer(CustomModelSerializer):
     class Meta:
         model = Activity
         fields = [
-            'id', 'user', 'visit', 'trail', 'gpx_file', 'name', 'type', 'sport_type',
+            'id', 'user', 'visit', 'trail', 'gpx_file', 'name', 'sport_type',
             'distance', 'moving_time', 'elapsed_time', 'rest_time', 'elevation_gain',
             'elevation_loss', 'elev_high', 'elev_low', 'start_date', 'start_date_local',
             'timezone', 'average_speed', 'max_speed', 'average_cadence', 'calories',

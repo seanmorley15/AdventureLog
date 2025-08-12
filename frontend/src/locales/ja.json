@@ -398,7 +398,11 @@
     "view_strava_activities": "ストラバアクティビティを表示します",
     "view_trail": "トレイルを表示します",
     "wanderer_integration_error": "ワンダラーの統合は有効になっていないか、有効期限が切れていません。",
-    "wikipedia_error": "ウィキペディアから説明を生成できませんでした"
+    "wikipedia_error": "ウィキペディアから説明を生成できませんでした",
+    "high": "高い",
+    "low": "低い",
+    "rest": "休む",
+    "total": "合計"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",

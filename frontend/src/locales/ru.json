@@ -451,7 +451,11 @@
     "view_strava_activities": "Посмотреть мероприятия Strava",
     "view_trail": "Посмотреть след",
     "wanderer_integration_error": "Интеграция Wanderer не включена или истек.",
-    "wikipedia_error": "Не удалось получить описание из Википедии"
+    "wikipedia_error": "Не удалось получить описание из Википедии",
+    "high": "Высокий",
+    "low": "Низкий",
+    "rest": "Отдых",
+    "total": "Общий"
   },
   "worldtravel": {
     "country_list": "Список стран",

@@ -11,7 +11,7 @@
 	import { t } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
 	import { onMount } from 'svelte';
-	import { isAllDay } from '$lib';
+	import { isAllDay, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
 
@@ -72,7 +72,6 @@
 	// Activity form state
 	let activityForm = {
 		name: '',
-		type: 'Run',
 		sport_type: 'Run',
 		distance: null as number | null,
 		moving_time: '',
@@ -95,26 +94,6 @@
 		end_lng: null as number | null,
 		timezone: undefined as string | undefined
 	};
-
-	// Activity types for dropdown
-	const activityTypes = [
-		'Run',
-		'Ride',
-		'Swim',
-		'Hike',
-		'Walk',
-		'Workout',
-		'CrossTrain',
-		'Rock Climbing',
-		'Alpine Ski',
-		'Nordic Ski',
-		'Kayaking',
-		'Canoeing',
-		'Rowing',
-		'Golf',
-		'Tennis',
-		'Other'
-	];
 
 	function getTypeConfig() {
 		return {
@@ -382,7 +361,6 @@
 		// Reset form
 		activityForm = {
 			name: '',
-			type: 'Run',
 			sport_type: 'Run',
 			distance: null,
 			moving_time: '',
@@ -444,7 +422,6 @@
 			// Add basic activity data
 			formData.append('visit', visitId);
 			formData.append('name', activityForm.name);
-			formData.append('type', activityForm.type);
 			if (activityForm.sport_type) formData.append('sport_type', activityForm.sport_type);
 			if (activityForm.distance) formData.append('distance', activityForm.distance.toString());
 			if (activityForm.moving_time) {
@@ -567,7 +544,6 @@
 			// Pre-fill the activity form with Strava data
 			activityForm = {
 				name: stravaActivity.name,
-				type: stravaActivity.type,
 				sport_type: stravaActivity.sport_type || stravaActivity.type,
 				distance: stravaActivity.distance || null, // Keep in meters
 				moving_time: stravaActivity.moving_time ? formatDuration(stravaActivity.moving_time) : '',
@@ -1098,38 +1074,24 @@
 														/>
 													</div>
 
-													<!-- Activity Type -->
-													<div>
-														<label
-															class="label-text text-xs font-medium"
-															for="activity-type-{visit.id}">{$t('transportation.type')}</label
-														>
-														<select
-															id="activity-type-{visit.id}"
-															class="select select-bordered select-sm w-full mt-1"
-															bind:value={activityForm.type}
-															disabled={!!pendingStravaImport[visit.id]}
-														>
-															{#each activityTypes as activityType}
-																<option value={activityType}>{activityType}</option>
-															{/each}
-														</select>
-													</div>
-
 													<!-- Sport Type -->
 													<div>
 														<label
 															class="label-text text-xs font-medium"
 															for="sport-type-{visit.id}">{$t('adventures.sport_type')}</label
 														>
-														<input
+														<select
 															id="sport-type-{visit.id}"
-															type="text"
-															class="input input-bordered input-sm w-full mt-1"
-															placeholder={$t('adventures.sport_type_placeholder')}
+															class="select select-bordered select-sm w-full mt-1"
 															bind:value={activityForm.sport_type}
-															readonly={!!pendingStravaImport[visit.id]}
-														/>
+															disabled={!!pendingStravaImport[visit.id]}
+														>
+															{#each SPORT_TYPE_CHOICES as sportType}
+																<option value={sportType.key}
+																	>{sportType.icon} {sportType.label}</option
+																>
+															{/each}
+														</select>
 													</div>
 
 													<!-- Distance -->

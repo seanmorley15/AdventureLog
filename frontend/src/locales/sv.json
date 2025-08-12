@@ -399,7 +399,11 @@
     "view_strava_activities": "Se Strava -aktiviteter",
     "view_trail": "Utsiktspår",
     "wanderer_integration_error": "Wanderer -integration är inte aktiverad eller har löpt ut.",
-    "wikipedia_error": "Det gick inte att generera beskrivning från Wikipedia"
+    "wikipedia_error": "Det gick inte att generera beskrivning från Wikipedia",
+    "high": "Hög",
+    "low": "Låg",
+    "rest": "Vila",
+    "total": "Total"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

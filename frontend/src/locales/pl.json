@@ -451,7 +451,11 @@
     "view_strava_activities": "Zobacz działania Strava",
     "view_trail": "Zobacz szlak",
     "wanderer_integration_error": "Integracja Wanderer nie jest włączona lub wygasła.",
-    "wikipedia_error": "Nie udało się wygenerować opisu z Wikipedii"
+    "wikipedia_error": "Nie udało się wygenerować opisu z Wikipedii",
+    "high": "Wysoki",
+    "low": "Niski",
+    "rest": "Odpoczynek",
+    "total": "Całkowity"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

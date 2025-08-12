@@ -398,7 +398,11 @@
     "no_file_selected": "لم يتم تحديد ملف",
     "no_images_uploaded_yet": "لا توجد صور تم تحميلها بعد",
     "no_strava_activities": "لم يتم العثور على أنشطة سترافا خلال هذه الزيارة",
-    "no_trails_added": "لا توجد مسارات بعد ذلك"
+    "no_trails_added": "لا توجد مسارات بعد ذلك",
+    "high": "عالي",
+    "low": "قليل",
+    "rest": "استراحة",
+    "total": "المجموع"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",

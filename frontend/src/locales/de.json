@@ -399,7 +399,11 @@
     "update_location_details": "Standortdetails aktualisieren",
     "update_visit": "Aktualisieren Sie den Besuch",
     "upload_activity": "Aktivität hochladen",
-    "upload_attachment": "Laden Sie den Anhang hoch"
+    "upload_attachment": "Laden Sie den Anhang hoch",
+    "high": "Hoch",
+    "low": "Niedrig",
+    "rest": "Ausruhen",
+    "total": "Gesamt"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

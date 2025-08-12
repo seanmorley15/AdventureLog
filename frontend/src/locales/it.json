@@ -399,7 +399,11 @@
     "view_strava_activities": "Visualizza le attività di Strava",
     "view_trail": "Visualizza il percorso",
     "wanderer_integration_error": "L'integrazione di Wanderer non è abilitata o è scaduta.",
-    "wikipedia_error": "Impossibile generare descrizione da Wikipedia"
+    "wikipedia_error": "Impossibile generare descrizione da Wikipedia",
+    "high": "Alto",
+    "low": "Basso",
+    "rest": "Riposo",
+    "total": "Totale"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

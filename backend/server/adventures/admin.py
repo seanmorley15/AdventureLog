@@ -143,10 +143,10 @@ class CollectionAdmin(admin.ModelAdmin):
 
     list_display = ('name', 'user', 'is_public')
 
+class ActivityAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'visit__location', 'sport_type', 'distance', 'elevation_gain', 'moving_time')
+
 admin.site.register(CustomUser, CustomUserAdmin)
-
-
-
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Visit, VisitAdmin)
@@ -165,7 +165,7 @@ admin.site.register(ContentAttachment)
 admin.site.register(Lodging)
 admin.site.register(CollectionInvite, CollectionInviteAdmin)
 admin.site.register(Trail)
-admin.site.register(Activity)
+admin.site.register(Activity, ActivityAdmin)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

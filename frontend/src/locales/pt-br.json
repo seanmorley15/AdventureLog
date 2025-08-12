@@ -398,7 +398,11 @@
     "edit_visit": "Editar visita",
     "remove_visit": "Remova a visita",
     "strava_activities_during_visit": "Atividades de Strava durante a visita",
-    "update_visit": "Atualizar visita"
+    "update_visit": "Atualizar visita",
+    "high": "Alto",
+    "low": "Baixo",
+    "rest": "Descansar",
+    "total": "Total"
   },
   "auth": {
     "confirm_password": "Confirme sua senha",

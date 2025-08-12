@@ -399,7 +399,11 @@
     "view_strava_activities": "Bekijk Strava -activiteiten",
     "view_trail": "Bekijk pad",
     "wanderer_integration_error": "Wanderer -integratie is niet ingeschakeld of is verlopen.",
-    "wikipedia_error": "Kan geen beschrijving van Wikipedia genereren"
+    "wikipedia_error": "Kan geen beschrijving van Wikipedia genereren",
+    "high": "Hoog",
+    "low": "Laag",
+    "rest": "Rest",
+    "total": "Totaal"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

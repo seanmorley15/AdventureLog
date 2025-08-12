@@ -451,7 +451,11 @@
     "view_strava_activities": "Se Strava -aktiviteter",
     "view_trail": "Utsikt Trail",
     "wanderer_integration_error": "Wanderer -integrasjon er ikke aktivert eller har utløpt.",
-    "wikipedia_error": "Kunne ikke generere beskrivelse fra Wikipedia"
+    "wikipedia_error": "Kunne ikke generere beskrivelse fra Wikipedia",
+    "high": "Høy",
+    "low": "Lav",
+    "rest": "Hvile",
+    "total": "Total"
   },
   "worldtravel": {
     "country_list": "Liste over land",

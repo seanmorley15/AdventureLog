@@ -13,6 +13,7 @@ from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from adventures.utils.timezones import TIMEZONES
+from adventures.utils.sports_types import SPORT_TYPE_CHOICES
 
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -639,8 +640,7 @@ class Activity(models.Model):
 
     # Descriptive
     name = models.CharField(max_length=200)
-    type = models.CharField(max_length=100, default='general')  # E.g., Run, Hike, Bike
-    sport_type = models.CharField(max_length=100, blank=True, null=True)  # Optional detailed type
+    sport_type = models.CharField(max_length=100, choices=SPORT_TYPE_CHOICES, default='General')  # Optional detailed type
 
     # Time & Distance
     distance = models.FloatField(blank=True, null=True)  # in meters

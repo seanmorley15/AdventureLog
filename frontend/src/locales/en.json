@@ -451,7 +451,11 @@
     "edit_visit": "Edit Visit",
     "remove_visit": "Remove Visit",
     "download_gpx": "Download GPX",
-    "strava_activities_during_visit": "Strava Activities During Visit"
+    "strava_activities_during_visit": "Strava Activities During Visit",
+    "total": "Total",
+    "rest": "Rest",
+    "high": "High",
+    "low": "Low"
   },
   "worldtravel": {
     "country_list": "Country List",

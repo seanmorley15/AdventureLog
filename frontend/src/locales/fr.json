@@ -399,7 +399,11 @@
     "view_strava_activities": "Voir les activités de Strava",
     "view_trail": "Voir le sentier",
     "wanderer_integration_error": "L'intégration des vagabonds n'est pas activée ou a expiré.",
-    "wikipedia_error": "Échec de génération de description à partir de Wikipedia"
+    "wikipedia_error": "Échec de génération de description à partir de Wikipedia",
+    "high": "Haut",
+    "low": "Faible",
+    "total": "Total",
+    "rest": "Repos"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
