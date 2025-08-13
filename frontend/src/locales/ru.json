@@ -455,7 +455,20 @@
     "high": "Высокий",
     "low": "Низкий",
     "rest": "Отдых",
-    "total": "Общий"
+    "total": "Общий",
+    "attachment_removed_error": "Ошибка удаления вложения",
+    "attachment_removed_success": "Приложение удалено успешно",
+    "attachments_upload_info": "Вложения будут загружены после сохранения",
+    "image_upload_info": "Изображения будут загружены после сохранения",
+    "linked_locations": "Связанные локации",
+    "lodging_save_error": "Ошибка сохранения жилья",
+    "my_attachments": "Мои вложения",
+    "no_attachments": "Нет вложений",
+    "no_attachments_desc": "Загрузить файлы, чтобы начать",
+    "no_images_desc": "Загрузить изображения, чтобы начать",
+    "route_map": "Маршрутная карта",
+    "selected_attachments": "Выбранные вложения",
+    "selected_images": "Выбранные изображения"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -754,7 +767,15 @@
       "walking": "Пешком",
       "other": "Другое"
     },
-    "edit_transportation": "Редактировать транспорт"
+    "edit_transportation": "Редактировать транспорт",
+    "create_new_transportation": "Новый транспорт",
+    "enter_flight_number": "Введите номер полета",
+    "enter_from_location": "Введите из местоположения",
+    "enter_link": "Введите ссылку",
+    "enter_to_location": "Введите в местоположение",
+    "enter_transportation_name": "Введите название транспорта",
+    "select_type": "Выберите тип",
+    "update_transportation_details": "Обновите детали транспорта"
   },
   "lodging": {
     "new_lodging": "Новое жилье",
@@ -771,7 +792,12 @@
     "villa": "Вилла",
     "motel": "Мотель",
     "other": "Другое",
-    "reservation_number": "Номер бронирования"
+    "reservation_number": "Номер бронирования",
+    "create_new_lodging": "Новое жилье",
+    "enter_lodging_name": "Введите имя жилья",
+    "enter_price": "Введите цену",
+    "enter_reservation_number": "Введите номер бронирования",
+    "update_lodging_details": "Обновить детали жилья"
   },
   "search": {
     "adventurelog_results": "Результаты AdventureLog",

@@ -398,6 +398,7 @@ class LocationSerializer(CustomModelSerializer):
 class TransportationSerializer(CustomModelSerializer):
     distance = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
@@ -406,7 +407,7 @@ class TransportationSerializer(CustomModelSerializer):
             'link', 'date', 'flight_number', 'from_location', 'to_location', 
             'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
             'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
-            'start_timezone', 'end_timezone', 'distance', 'images'
+            'start_timezone', 'end_timezone', 'distance', 'images', 'attachments'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance']
 
@@ -414,6 +415,11 @@ class TransportationSerializer(CustomModelSerializer):
         serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
+
+    def get_attachments(self, obj):
+        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [attachment for attachment in serializer.data if attachment is not None]
 
     def get_distance(self, obj):
         if (
@@ -430,13 +436,14 @@ class TransportationSerializer(CustomModelSerializer):
 
 class LodgingSerializer(CustomModelSerializer):
     images = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
 
     class Meta:
         model = Lodging
         fields = [
             'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
             'reservation_number', 'price', 'latitude', 'longitude', 'location', 'is_public',
-            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images'
+            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images', 'attachments'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user']
 
@@ -444,6 +451,11 @@ class LodgingSerializer(CustomModelSerializer):
         serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
+
+    def get_attachments(self, obj):
+        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
+        # Filter out None values from the serialized data
+        return [attachment for attachment in serializer.data if attachment is not None]
 
 class NoteSerializer(CustomModelSerializer):
 

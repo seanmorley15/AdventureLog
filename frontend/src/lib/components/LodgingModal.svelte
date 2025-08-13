@@ -7,17 +7,22 @@
 	import LocationDropdown from './LocationDropdown.svelte';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
 	import { isAllDay } from '$lib';
-	import { deserialize } from '$app/forms';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
+	import ImageDropdown from './ImageDropdown.svelte';
+	import AttachmentDropdown from './AttachmentDropdown.svelte';
 
 	const dispatch = createEventDispatcher();
 
 	export let collection: Collection;
 	export let lodgingToEdit: Lodging | null = null;
 
-	let imageInput: HTMLInputElement;
-	let imageFiles: File[] = [];
+	let imageDropdownRef: any;
+	let attachmentDropdownRef: any;
+
+	// when this is true the image and attachment sections will create their upload requests
+	let isImagesUploading: boolean = false;
+	let isAttachmentsUploading: boolean = false;
 
 	let modal: HTMLDialogElement;
 	let lodging: Lodging = { ...initializeLodging(lodgingToEdit) };
@@ -48,78 +53,9 @@
 			created_at: lodgingToEdit?.created_at || '',
 			updated_at: lodgingToEdit?.updated_at || '',
 			timezone: lodgingToEdit?.timezone || '',
-			images: lodgingToEdit?.images || []
+			images: lodgingToEdit?.images || [],
+			attachments: lodgingToEdit?.attachments || []
 		};
-	}
-
-	function handleImageChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		if (target?.files) {
-			if (!lodging.id) {
-				imageFiles = Array.from(target.files);
-				console.log('Images ready for deferred upload:', imageFiles);
-			} else {
-				imageFiles = Array.from(target.files);
-				for (const file of imageFiles) {
-					uploadImage(file);
-				}
-			}
-		}
-	}
-
-	async function uploadImage(file: File) {
-		let formData = new FormData();
-		formData.append('image', file);
-		formData.append('object_id', lodging.id);
-		formData.append('content_type', 'lodging');
-
-		let res = await fetch(`/locations?/image`, {
-			method: 'POST',
-			body: formData
-		});
-		if (res.ok) {
-			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			let newImage = {
-				id: newData.data.id,
-				image: newData.data.image,
-				is_primary: false,
-				immich_id: null
-			};
-			lodging.images = [...(lodging.images || []), newImage];
-			addToast('success', $t('adventures.image_upload_success'));
-		} else {
-			addToast('error', $t('adventures.image_upload_error'));
-		}
-	}
-
-	async function removeImage(id: string) {
-		let res = await fetch(`/api/images/${id}/image_delete`, {
-			method: 'POST'
-		});
-		if (res.status === 204) {
-			lodging.images = lodging.images.filter((image) => image.id !== id);
-			addToast('success', $t('adventures.image_removed_success'));
-		} else {
-			addToast('error', $t('adventures.image_removed_error'));
-		}
-	}
-
-	async function makePrimaryImage(image_id: string) {
-		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
-			method: 'POST'
-		});
-		if (res.ok) {
-			lodging.images = lodging.images.map((image) => {
-				if (image.id === image_id) {
-					image.is_primary = true;
-				} else {
-					image.is_primary = false;
-				}
-				return image;
-			});
-		} else {
-			console.error('Error in makePrimaryImage:', res);
-		}
 	}
 
 	// Set full start and end dates from collection
@@ -158,7 +94,6 @@
 		lodging.timezone = lodgingTimezone || null;
 
 		// Auto-set end date if missing but start date exists
-		//  If check_out is not set, we will set it to the next day at 9:00 AM in the lodging's timezone if it is a timed event. If it is an all-day event, we will set it to the next day at UTC 00:00:00.
 		if (lodging.check_in && !lodging.check_out) {
 			if (isAllDay(lodging.check_in)) {
 				// For all-day, just add one day and keep at UTC 00:00:00
@@ -174,28 +109,76 @@
 			}
 		}
 
-		// Create or update lodging...
-		const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
-		const method = lodging.id === '' ? 'POST' : 'PATCH';
-		const res = await fetch(url, {
-			method,
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(lodging)
-		});
-		const data = await res.json();
-		if (data.id) {
-			lodging = data as Lodging;
-			const toastMessage =
-				lodging.id === '' ? 'adventures.adventure_created' : 'adventures.adventure_updated';
-			addToast('success', $t(toastMessage));
-			dispatch('save', lodging);
-		} else {
-			const errorMessage =
-				lodging.id === ''
-					? 'adventures.adventure_create_error'
-					: 'adventures.adventure_update_error';
-			addToast('error', $t(errorMessage));
+		try {
+			// Create or update lodging first
+			const url = lodging.id === '' ? '/api/lodging' : `/api/lodging/${lodging.id}`;
+			const method = lodging.id === '' ? 'POST' : 'PATCH';
+			const res = await fetch(url, {
+				method,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(lodging)
+			});
+			const data = await res.json();
+
+			if (data.id) {
+				lodging = data as Lodging;
+
+				// Now handle image uploads if there are any pending
+				if (imageDropdownRef?.hasImagesToUpload()) {
+					isImagesUploading = true;
+
+					// Wait for image upload to complete
+					await waitForUploadComplete();
+				}
+
+				// Similarly handle attachments if needed
+				if (attachmentDropdownRef?.hasAttachmentsToUpload()) {
+					isAttachmentsUploading = true;
+
+					// Wait for attachment upload to complete
+					await waitForAttachmentUploadComplete();
+				}
+
+				dispatch('save', lodging);
+			} else {
+				const errorMessage =
+					lodging.id === ''
+						? 'adventures.adventure_create_error'
+						: 'adventures.adventure_update_error';
+				addToast('error', $t(errorMessage));
+			}
+		} catch (error) {
+			console.error('Error saving lodging:', error);
+			addToast('error', $t('adventures.lodging_save_error'));
 		}
+	}
+
+	// Helper function to wait for image upload completion
+	async function waitForUploadComplete(): Promise<void> {
+		return new Promise((resolve) => {
+			const checkUpload = () => {
+				if (!isImagesUploading) {
+					resolve();
+				} else {
+					setTimeout(checkUpload, 100);
+				}
+			};
+			checkUpload();
+		});
+	}
+
+	// Helper function to wait for attachment upload completion
+	async function waitForAttachmentUploadComplete(): Promise<void> {
+		return new Promise((resolve) => {
+			const checkUpload = () => {
+				if (!isAttachmentsUploading) {
+					resolve();
+				} else {
+					setTimeout(checkUpload, 100);
+				}
+			};
+			checkUpload();
+		});
 	}
 </script>
 
@@ -316,7 +299,7 @@
 										id="type"
 										bind:value={lodging.type}
 									>
-										<option disabled selected>{$t('lodging.select_type')}</option>
+										<option disabled selected>{$t('transportation.select_type')}</option>
 										<option value="hotel">{$t('lodging.hotel')}</option>
 										<option value="hostel">{$t('lodging.hostel')}</option>
 										<option value="resort">{$t('lodging.resort')}</option>
@@ -418,7 +401,7 @@
 										name="link"
 										bind:value={lodging.link}
 										class="input input-bordered w-full bg-base-100/80 focus:bg-base-100"
-										placeholder={$t('lodging.enter_link')}
+										placeholder={$t('transportation.enter_link')}
 									/>
 								</div>
 
@@ -519,154 +502,20 @@
 				<LocationDropdown bind:item={lodging} />
 
 				<!-- Images Section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
-					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
-					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<svg
-									class="w-5 h-5 text-primary"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-								>
-									<path
-										stroke-linecap="round"
-										stroke-linejoin="round"
-										stroke-width="2"
-										d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-									/>
-								</svg>
-							</div>
-							{$t('adventures.images')}
-						</div>
-					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6">
-						<div class="form-control">
-							<label class="label" for="image">
-								<span class="label-text font-medium">{$t('adventures.upload_image')}</span>
-							</label>
-							<input
-								type="file"
-								id="image"
-								name="image"
-								accept="image/*"
-								multiple
-								bind:this={imageInput}
-								on:change={handleImageChange}
-								class="file-input file-input-bordered file-input-primary w-full bg-base-100/80 focus:bg-base-100"
-							/>
-						</div>
-						<p class="text-sm text-base-content/60 mt-2">
-							{$t('adventures.image_upload_desc')}
-						</p>
-						{#if imageFiles.length > 0 && !lodging.id}
-							<div class="mt-4">
-								<h4 class="font-semibold text-base-content mb-2">
-									{$t('adventures.selected_images')}
-								</h4>
-								<ul class="list-disc pl-5 space-y-1">
-									{#each imageFiles as file}
-										<li>{file.name} ({Math.round(file.size / 1024)} KB)</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-						{#if lodging.id}
-							<div class="divider my-6"></div>
+				<ImageDropdown
+					bind:this={imageDropdownRef}
+					bind:object={lodging}
+					objectType="lodging"
+					bind:isImagesUploading
+				/>
 
-							<!-- Current Images -->
-							<div class="space-y-4">
-								<h4 class="font-semibold text-lg">{$t('adventures.my_images')}</h4>
-
-								{#if lodging.images && lodging.images.length > 0}
-									<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-										{#each lodging.images as image}
-											<div class="relative group">
-												<div class="aspect-square overflow-hidden rounded-lg bg-base-300">
-													<img
-														src={image.image}
-														alt={image.id}
-														class="w-full h-full object-cover transition-transform group-hover:scale-105"
-													/>
-												</div>
-
-												<!-- Image Controls -->
-												<div
-													class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2"
-												>
-													{#if !image.is_primary}
-														<button
-															type="button"
-															class="btn btn-success btn-sm"
-															on:click={() => makePrimaryImage(image.id)}
-															title="Make Primary"
-														>
-															<svg
-																class="h-4 w-4"
-																fill="none"
-																stroke="currentColor"
-																viewBox="0 0 24 24"
-															>
-																<path
-																	stroke-linecap="round"
-																	stroke-linejoin="round"
-																	stroke-width="2"
-																	d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
-																></path>
-															</svg>
-														</button>
-													{/if}
-
-													<button
-														type="button"
-														class="btn btn-error btn-sm"
-														on:click={() => removeImage(image.id)}
-														title="Remove"
-													>
-														✕
-													</button>
-												</div>
-
-												<!-- Primary Badge -->
-												{#if image.is_primary}
-													<div
-														class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1"
-													>
-														<svg
-															class="h-4 w-4"
-															fill="none"
-															stroke="currentColor"
-															viewBox="0 0 24 24"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M5 3l14 9-14 9V3z"
-															></path>
-														</svg>
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<div class="text-center py-8">
-										<div class="text-base-content/60 text-lg mb-2">
-											{$t('adventures.no_images')}
-										</div>
-										<p class="text-sm text-base-content/40">Upload images to get started</p>
-									</div>
-								{/if}
-							</div>
-						{/if}
-					</div>
-				</div>
+				<!-- Attachments Section -->
+				<AttachmentDropdown
+					bind:this={attachmentDropdownRef}
+					bind:object={lodging}
+					objectType="lodging"
+					bind:isAttachmentsUploading
+				/>
 
 				<!-- Form Actions -->
 				<div class="flex justify-end gap-3 mt-8 pt-6 border-t border-base-300">

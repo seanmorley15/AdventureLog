@@ -173,6 +173,7 @@ export type Transportation = {
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[]; // Array of images associated with the transportation
+	attachments: Attachment[]; // Array of attachments associated with the transportation
 };
 
 export type Note = {
@@ -302,6 +303,7 @@ export type Lodging = {
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[]; // Array of images associated with the lodging
+	attachments: Attachment[]; // Array of attachments associated with the lodging
 };
 
 export type CollectionInvite = {

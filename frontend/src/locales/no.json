@@ -455,7 +455,20 @@
     "high": "Høy",
     "low": "Lav",
     "rest": "Hvile",
-    "total": "Total"
+    "total": "Total",
+    "attachment_removed_error": "Feil fjerning av vedlegg",
+    "attachment_removed_success": "Vedlegget fjernet suksessfullt",
+    "attachments_upload_info": "Vedlegg vil bli lastet opp etter å ha lagret",
+    "image_upload_info": "Bilder blir lastet opp etter å ha lagret",
+    "linked_locations": "Koblede steder",
+    "lodging_save_error": "Feil lagring av losji",
+    "my_attachments": "Mine vedlegg",
+    "no_attachments": "Ingen vedlegg",
+    "no_attachments_desc": "Last opp filer for å komme i gang",
+    "no_images_desc": "Last opp bilder for å komme i gang",
+    "route_map": "Rutekart",
+    "selected_attachments": "Utvalgte vedlegg",
+    "selected_images": "Utvalgte bilder"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -754,7 +767,15 @@
       "walking": "Går",
       "other": "Annet"
     },
-    "edit_transportation": "Rediger transport"
+    "edit_transportation": "Rediger transport",
+    "create_new_transportation": "Ny transport",
+    "enter_flight_number": "Skriv inn flynummer",
+    "enter_from_location": "Gå inn fra stedet",
+    "enter_link": "Skriv inn lenken",
+    "enter_to_location": "Gå til stedet",
+    "enter_transportation_name": "Skriv inn transportnavn",
+    "select_type": "Velg Type",
+    "update_transportation_details": "Oppdater transportdetaljer"
   },
   "lodging": {
     "new_lodging": "Ny overnatting",
@@ -771,7 +792,12 @@
     "villa": "Villa",
     "motel": "Motell",
     "other": "Annet",
-    "reservation_number": "Reservasjonsnummer"
+    "reservation_number": "Reservasjonsnummer",
+    "create_new_lodging": "Ny losji",
+    "enter_lodging_name": "Skriv inn losji -navn",
+    "enter_price": "Angi pris",
+    "enter_reservation_number": "Angi reservasjonsnummer",
+    "update_lodging_details": "Oppdater innleveringsdetaljer"
   },
   "search": {
     "adventurelog_results": "AdventureLog-resultater",

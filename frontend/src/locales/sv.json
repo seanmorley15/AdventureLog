@@ -403,7 +403,20 @@
     "high": "Hög",
     "low": "Låg",
     "rest": "Vila",
-    "total": "Total"
+    "total": "Total",
+    "attachment_removed_error": "Fel att ta bort bilaga",
+    "attachment_removed_success": "Bilaget tas bort framgångsrikt",
+    "attachments_upload_info": "Bilagor kommer att laddas upp efter att ha sparat",
+    "image_upload_info": "Bilder kommer att laddas upp efter att ha sparat",
+    "linked_locations": "Länkade platser",
+    "lodging_save_error": "Felbesparande logi",
+    "my_attachments": "Mina bilagor",
+    "no_attachments": "Inga bilagor",
+    "no_attachments_desc": "Ladda upp filer för att komma igång",
+    "no_images_desc": "Ladda upp bilder för att komma igång",
+    "route_map": "Ruttkarta",
+    "selected_attachments": "Valda bilagor",
+    "selected_images": "Valda bilder"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -754,7 +767,15 @@
     "type": "Typ",
     "ending_airport_desc": "Ange slut på flygplatskoden (t.ex. LAX)",
     "fetch_location_information": "Hämta platsinformation",
-    "starting_airport_desc": "Ange start av flygplatskoden (t.ex. JFK)"
+    "starting_airport_desc": "Ange start av flygplatskoden (t.ex. JFK)",
+    "create_new_transportation": "Ny transport",
+    "enter_flight_number": "Ange flygnummer",
+    "enter_from_location": "Ange från platsen",
+    "enter_link": "Ange länken",
+    "enter_to_location": "Ange till platsen",
+    "enter_transportation_name": "Ange transportnamn",
+    "select_type": "Välj typ",
+    "update_transportation_details": "Uppdatera transportdetaljer"
   },
   "search": {
     "adventurelog_results": "AdventureLog-resultat",
@@ -895,7 +916,12 @@
     "resort": "Tillflykt",
     "villa": "Villa",
     "edit": "Redigera",
-    "edit_lodging": "Redigera logi"
+    "edit_lodging": "Redigera logi",
+    "create_new_lodging": "Inställning",
+    "enter_lodging_name": "Ange logi -namn",
+    "enter_price": "Ange pris",
+    "enter_reservation_number": "Ange bokningsnummer",
+    "update_lodging_details": "Uppdatera logiinformation"
   },
   "google_maps": {
     "google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet.",

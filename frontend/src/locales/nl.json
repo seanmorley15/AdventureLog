@@ -403,7 +403,20 @@
     "high": "Hoog",
     "low": "Laag",
     "rest": "Rest",
-    "total": "Totaal"
+    "total": "Totaal",
+    "attachment_removed_error": "Fout bij het verwijderen van bijlage",
+    "attachment_removed_success": "Bevestiging is succesvol verwijderd",
+    "attachments_upload_info": "Bijlagen worden geüpload na het opslaan van de",
+    "image_upload_info": "Afbeeldingen worden geüpload na het opslaan van de",
+    "linked_locations": "Gekoppelde locaties",
+    "lodging_save_error": "Error Saving accommodatie",
+    "my_attachments": "Mijn bijlagen",
+    "no_attachments": "Geen bijlagen",
+    "no_attachments_desc": "Upload bestanden om te beginnen",
+    "no_images_desc": "Upload afbeeldingen om te beginnen",
+    "route_map": "Routekaart",
+    "selected_attachments": "Geselecteerde bijlagen",
+    "selected_images": "Geselecteerde afbeeldingen"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -754,7 +767,15 @@
     "transportation_deleted": "Vervoer succesvol verwijderd!",
     "ending_airport_desc": "Voer aankomst luchthavencode in (bijv. LAX)",
     "fetch_location_information": "Locatie-informatie ophalen",
-    "starting_airport_desc": "Voer de vertrek luchthavencode in (bijv. JFK)"
+    "starting_airport_desc": "Voer de vertrek luchthavencode in (bijv. JFK)",
+    "create_new_transportation": "Nieuw transport",
+    "enter_flight_number": "Voer het vluchtnummer in",
+    "enter_from_location": "Voer vanaf de locatie in",
+    "enter_link": "Voer link in",
+    "enter_to_location": "Ga naar de locatie",
+    "enter_transportation_name": "Voer de transportnaam in",
+    "select_type": "Selecteer type",
+    "update_transportation_details": "Update transportdetails"
   },
   "search": {
     "adventurelog_results": "AdventureLog resultaten",
@@ -895,7 +916,12 @@
     "other": "Ander",
     "reservation_number": "Reserveringsnummer",
     "resort": "Vakantiepark",
-    "villa": "Villa"
+    "villa": "Villa",
+    "create_new_lodging": "Nieuwe accommodatie",
+    "enter_lodging_name": "Voer een accommodatie in",
+    "enter_price": "De prijs binnenkomen",
+    "enter_reservation_number": "Voer het reserveringsnummer in",
+    "update_lodging_details": "Update Lodging -details"
   },
   "google_maps": {
     "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen.",

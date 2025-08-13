@@ -455,7 +455,20 @@
     "high": "Wysoki",
     "low": "Niski",
     "rest": "Odpoczynek",
-    "total": "Całkowity"
+    "total": "Całkowity",
+    "attachment_removed_error": "Błąd usuwanie załącznika",
+    "attachment_removed_success": "Załączanie usunięte z fucsid",
+    "attachments_upload_info": "Załączniki zostaną przesłane po zapisaniu",
+    "image_upload_info": "Obrazy zostaną przesłane po zapisaniu",
+    "lodging_save_error": "Zapisywanie błędów",
+    "my_attachments": "Moje załączniki",
+    "no_attachments": "Brak załączników",
+    "no_attachments_desc": "Prześlij pliki na początek",
+    "no_images_desc": "Prześlij obrazy na początek",
+    "route_map": "Mapa trasy",
+    "selected_attachments": "Wybrane załączniki",
+    "selected_images": "Wybrane obrazy",
+    "linked_locations": "Połączone lokalizacje"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -754,7 +767,15 @@
     "edit_transportation": "Edytuj transport",
     "ending_airport_desc": "Wprowadź końcowe kod lotniska (np. LAX)",
     "fetch_location_information": "Pobierać informacje o lokalizacji",
-    "starting_airport_desc": "Wprowadź początkowy kod lotniska (np. JFK)"
+    "starting_airport_desc": "Wprowadź początkowy kod lotniska (np. JFK)",
+    "create_new_transportation": "Nowy transport",
+    "enter_flight_number": "Wprowadź numer lotu",
+    "enter_from_location": "Wprowadź z lokalizacji",
+    "enter_link": "Wprowadź link",
+    "enter_to_location": "Wprowadź do lokalizacji",
+    "enter_transportation_name": "Wprowadź nazwę transportu",
+    "select_type": "Wybierz Typ",
+    "update_transportation_details": "Zaktualizuj szczegóły transportu"
   },
   "search": {
     "adventurelog_results": "Wyniki AdventureLog",
@@ -895,7 +916,12 @@
     "new_lodging": "Nowe zakwaterowanie",
     "other": "Inny",
     "reservation_number": "Numer rezerwacji",
-    "resort": "Uciec"
+    "resort": "Uciec",
+    "create_new_lodging": "Nowe zakwaterowanie",
+    "enter_lodging_name": "Wprowadź nazwę lodowania",
+    "enter_price": "Wprowadź cenę",
+    "enter_reservation_number": "Wprowadź numer rezerwacji",
+    "update_lodging_details": "Zaktualizuj szczegóły lodowania"
   },
   "google_maps": {
     "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji.",

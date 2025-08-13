@@ -403,7 +403,20 @@
     "high": "Haut",
     "low": "Faible",
     "total": "Total",
-    "rest": "Repos"
+    "rest": "Repos",
+    "attachment_removed_error": "Erreur supprimant la pièce jointe",
+    "attachment_removed_success": "Attachement supprimé avec succès",
+    "attachments_upload_info": "Les pièces jointes seront téléchargées après avoir enregistré le",
+    "image_upload_info": "Les images seront téléchargées après avoir enregistré le",
+    "linked_locations": "Emplacements liés",
+    "lodging_save_error": "Économie d'erreur",
+    "my_attachments": "Mes pièces jointes",
+    "no_attachments": "Aucune pièce jointe",
+    "no_attachments_desc": "Télécharger des fichiers pour commencer",
+    "no_images_desc": "Télécharger des images pour commencer",
+    "route_map": "Carte d'itinéraire",
+    "selected_attachments": "Attachements sélectionnés",
+    "selected_images": "Images sélectionnées"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -754,7 +767,15 @@
     "transportation_deleted": "Déplacement supprimé avec succès !",
     "ending_airport_desc": "Entrez le code de l'aéroport de départ (par exemple, CDG)",
     "fetch_location_information": "Récupérer les informations sur les lieux",
-    "starting_airport_desc": "Entrez le code de l'aéroport d'arrivée (par exemple, ORY)"
+    "starting_airport_desc": "Entrez le code de l'aéroport d'arrivée (par exemple, ORY)",
+    "create_new_transportation": "Nouveau transport",
+    "enter_flight_number": "Entrez le numéro de vol",
+    "enter_from_location": "Entrer de l'emplacement",
+    "enter_link": "Entrez le lien",
+    "enter_to_location": "Entrez à l'emplacement",
+    "enter_transportation_name": "Entrez le nom du transport",
+    "select_type": "Sélectionner le type",
+    "update_transportation_details": "Mettre à jour les détails du transport"
   },
   "search": {
     "adventurelog_results": "Résultats dans AdventureLog",
@@ -895,7 +916,12 @@
     "other": "Autre",
     "reservation_number": "Numéro de réservation",
     "resort": "Complexe touristique",
-    "villa": "Villa"
+    "villa": "Villa",
+    "create_new_lodging": "Nouveau logement",
+    "enter_lodging_name": "Entrez le nom de l'hébergement",
+    "enter_price": "Saisir le prix",
+    "enter_reservation_number": "Entrez le numéro de réservation",
+    "update_lodging_details": "Mettre à jour les détails de l'hébergement"
   },
   "google_maps": {
     "google_maps_integration_desc": "Connectez votre compte Google Maps pour obtenir des résultats de recherche et recommandations de recherche de haute qualité.",

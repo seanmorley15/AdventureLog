@@ -9,28 +9,7 @@ from adventures.serializers import ContentImageSerializer
 from integrations.models import ImmichIntegration
 from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existing permission class
 import requests
-
-
-class ContentImagePermission(IsOwnerOrSharedWithFullAccess):
-    """
-    Specialized permission for ContentImage objects that checks permissions
-    on the related content object.
-    """
-    
-    def has_object_permission(self, request, view, obj):
-        """
-        For ContentImage objects, check permissions on the related content object.
-        """
-        if not request.user or not request.user.is_authenticated:
-            return False
-            
-        # Get the related content object
-        content_object = obj.content_object
-        if not content_object:
-            return False
-        
-        # Use the parent permission class to check access to the content object
-        return super().has_object_permission(request, view, content_object)
+from adventures.permissions import ContentImagePermission
 
 
 class ContentImageViewSet(viewsets.ModelViewSet):
@@ -80,6 +59,21 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 # Lodging owned by user
                 Q(content_type=ContentType.objects.get_for_model(Lodging)) &
                 Q(object_id__in=Lodging.objects.filter(user=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                # Notes shared with user
+                Q(content_type=ContentType.objects.get_for_model(Note)) &
+                Q(object_id__in=Note.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                # Lodging shared with user
+                Q(content_type=ContentType.objects.get_for_model(Lodging)) &
+                Q(object_id__in=Lodging.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                # Transportation shared with user
+                Q(content_type=ContentType.objects.get_for_model(Transportation)) &
+                Q(object_id__in=Transportation.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
             ) |
             (
                 # Visits - access through location's user

@@ -402,7 +402,20 @@
     "high": "高い",
     "low": "低い",
     "rest": "休む",
-    "total": "合計"
+    "total": "合計",
+    "attachment_removed_error": "添付ファイルの削除エラー",
+    "linked_locations": "リンクされた場所",
+    "lodging_save_error": "宿泊の保存エラー",
+    "my_attachments": "私の添付ファイル",
+    "no_attachments": "添付ファイルはありません",
+    "no_attachments_desc": "ファイルをアップロードして開始します",
+    "no_images_desc": "開始するには画像をアップロードします",
+    "route_map": "ルートマップ",
+    "selected_attachments": "選択した添付ファイル",
+    "selected_images": "選択した画像",
+    "attachment_removed_success": "添付ファイルは成功して削除されました",
+    "attachments_upload_info": "添付ファイルは、保存後にアップロードされます",
+    "image_upload_info": "保存後に画像がアップロードされます"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",
@@ -577,7 +590,12 @@
     "other": "他の",
     "reservation_number": "予約番号",
     "resort": "リゾート",
-    "villa": "ヴィラ"
+    "villa": "ヴィラ",
+    "create_new_lodging": "新しい宿泊",
+    "enter_lodging_name": "宿泊名を入力します",
+    "enter_price": "価格を入力します",
+    "enter_reservation_number": "予約番号を入力します",
+    "update_lodging_details": "宿泊の詳細を更新します"
   },
   "map": {
     "add_adventure": "新しい冒険を追加します",
@@ -881,7 +899,15 @@
     "to_location": "場所へ",
     "transportation_delete_error": "輸送を削除するエラー",
     "transportation_deleted": "輸送が正常に削除されました！",
-    "type": "タイプ"
+    "type": "タイプ",
+    "create_new_transportation": "新しい輸送",
+    "enter_flight_number": "フライト番号を入力します",
+    "enter_from_location": "場所から入力します",
+    "enter_link": "リンクを入力します",
+    "enter_to_location": "場所に入ります",
+    "enter_transportation_name": "交通名を入力してください",
+    "select_type": "[タイプ]を選択します",
+    "update_transportation_details": "交通機関の詳細を更新します"
   },
   "users": {
     "no_users_found": "パブリックプロファイルで見つかったユーザーは見つかりませんでした。"

@@ -228,11 +228,11 @@
 <div
 	class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
 >
-	<input type="checkbox" />
-	<div class="collapse-title text-xl font-semibold bg-gradient-to-r from-accent/10 to-accent/5">
+	<input type="checkbox" checked />
+	<div class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5">
 		<div class="flex items-center gap-3">
-			<div class="p-2 bg-accent/10 rounded-lg">
-				<svg class="w-5 h-5 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<div class="p-2 bg-primary/10 rounded-lg">
+				<svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
 						stroke-linejoin="round"
@@ -254,7 +254,7 @@
 		<!-- Location Name Input -->
 		<div class="form-control">
 			<label class="label">
-				<span class="label-text font-medium">{$t('adventures.location')}</span>
+				<span class="label-text font-medium">{$t('adventures.display_name')}</span>
 			</label>
 			<div class="flex items-center gap-3">
 				<input
@@ -263,7 +263,7 @@
 					name="location"
 					bind:value={item.location}
 					class="input input-bordered flex-1 bg-base-100/80 focus:bg-base-100"
-					placeholder={$t('adventures.enter_location_name')}
+					placeholder="Boston, MA, US"
 				/>
 				{#if is_custom_location}
 					<button
@@ -421,7 +421,7 @@
 							d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
 						/>
 					</svg>
-					{$t('adventures.interactive_map')}
+					{$t('worldtravel.interactive_map')}
 				</span>
 			</label>
 			<div class="bg-base-100/80 border border-base-300 rounded-xl p-4">

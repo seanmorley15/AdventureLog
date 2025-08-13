@@ -403,7 +403,20 @@
     "high": "높은",
     "low": "낮은",
     "rest": "나머지",
-    "total": "총"
+    "total": "총",
+    "attachment_removed_error": "첨부 파일 제거 오류",
+    "attachment_removed_success": "첨부 파일이 성공적으로 제거되었습니다",
+    "attachments_upload_info": "저장 후 첨부 파일이 업로드됩니다",
+    "image_upload_info": "저장 후 이미지가 업로드됩니다",
+    "linked_locations": "연결된 위치",
+    "lodging_save_error": "오류 저축 숙박",
+    "my_attachments": "내 첨부 파일",
+    "no_attachments": "첨부 파일이 없습니다",
+    "no_attachments_desc": "시작하려면 파일을 업로드하십시오",
+    "no_images_desc": "시작하려면 이미지를 업로드하십시오",
+    "route_map": "경로지도",
+    "selected_attachments": "선택된 첨부 파일",
+    "selected_images": "선택된 이미지"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -817,7 +830,15 @@
     "type": "유형",
     "ending_airport_desc": "엔드 공항 코드 입력 (예 : LAX)",
     "fetch_location_information": "위치 정보를 가져 오십시오",
-    "starting_airport_desc": "공항 시작 코드 입력 (예 : JFK)"
+    "starting_airport_desc": "공항 시작 코드 입력 (예 : JFK)",
+    "create_new_transportation": "새로운 교통",
+    "enter_flight_number": "비행 번호를 입력하십시오",
+    "enter_from_location": "위치에서 입력하십시오",
+    "enter_link": "링크를 입력하십시오",
+    "enter_to_location": "위치에 입력하십시오",
+    "enter_transportation_name": "운송 이름을 입력하십시오",
+    "select_type": "유형을 선택하십시오",
+    "update_transportation_details": "전송 세부 사항을 업데이트하십시오"
   },
   "users": {
     "no_users_found": "공개 프로필인 사용자가 없습니다."
@@ -894,7 +915,12 @@
     "other": "다른",
     "reservation_number": "예약 번호",
     "resort": "의지",
-    "villa": "별장"
+    "villa": "별장",
+    "create_new_lodging": "새로운 숙박",
+    "enter_lodging_name": "숙박 이름을 입력하십시오",
+    "enter_price": "가격을 입력하십시오",
+    "enter_reservation_number": "예약 번호를 입력하십시오",
+    "update_lodging_details": "숙박 세부 사항을 업데이트하십시오"
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오.",

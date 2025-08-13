@@ -402,7 +402,20 @@
     "high": "Alto",
     "low": "Baixo",
     "rest": "Descansar",
-    "total": "Total"
+    "total": "Total",
+    "attachment_removed_error": "Erro removendo o anexo",
+    "attachment_removed_success": "Anexo removido com sucesso",
+    "attachments_upload_info": "Anexos serão enviados após salvar o",
+    "image_upload_info": "As imagens serão enviadas após salvar o",
+    "linked_locations": "Locais vinculados",
+    "lodging_save_error": "Erro salvar o alojamento",
+    "my_attachments": "Meus anexos",
+    "no_attachments": "Sem anexos",
+    "no_attachments_desc": "Carregue os arquivos para começar",
+    "no_images_desc": "Carregue imagens para começar",
+    "route_map": "Mapa de rota",
+    "selected_attachments": "Anexos selecionados",
+    "selected_images": "Imagens selecionadas"
   },
   "auth": {
     "confirm_password": "Confirme sua senha",
@@ -577,7 +590,12 @@
     "other": "Outro",
     "reservation_number": "Número de reserva",
     "resort": "Recorrer",
-    "villa": "Villa"
+    "villa": "Villa",
+    "create_new_lodging": "Novo alojamento",
+    "enter_lodging_name": "Digite o nome da hospedagem",
+    "enter_price": "Insira o preço",
+    "enter_reservation_number": "Digite o número de reserva",
+    "update_lodging_details": "Atualizar detalhes de hospedagem"
   },
   "map": {
     "add_adventure": "Adicione nova aventura",
@@ -881,7 +899,15 @@
     "to_location": "Para localização",
     "transportation_delete_error": "Erro excluindo o transporte",
     "transportation_deleted": "Transporte excluído com sucesso!",
-    "type": "Tipo"
+    "type": "Tipo",
+    "create_new_transportation": "Novo transporte",
+    "enter_flight_number": "Digite o número do voo",
+    "enter_from_location": "Entre no local",
+    "enter_link": "Digite o link",
+    "enter_to_location": "Entre no local",
+    "enter_transportation_name": "Digite o nome do transporte",
+    "select_type": "Selecione Tipo",
+    "update_transportation_details": "Atualize os detalhes do transporte"
   },
   "users": {
     "no_users_found": "Não há usuários encontrados com perfis públicos."

@@ -223,3 +223,25 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         # Individual object permissions are handled in has_object_permission
         return (request.user and request.user.is_authenticated) or \
                request.method in permissions.SAFE_METHODS
+    
+
+class ContentImagePermission(IsOwnerOrSharedWithFullAccess):
+    """
+    Specialized permission for ContentImage objects that checks permissions
+    on the related content object.
+    """
+    
+    def has_object_permission(self, request, view, obj):
+        """
+        For ContentImage objects, check permissions on the related content object.
+        """
+        if not request.user or not request.user.is_authenticated:
+            return False
+            
+        # Get the related content object
+        content_object = obj.content_object
+        if not content_object:
+            return False
+        
+        # Use the parent permission class to check access to the content object
+        return super().has_object_permission(request, view, content_object)

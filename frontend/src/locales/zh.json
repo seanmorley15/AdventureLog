@@ -455,7 +455,20 @@
     "high": "高的",
     "low": "低的",
     "rest": "休息",
-    "total": "全部的"
+    "total": "全部的",
+    "attachment_removed_error": "删除附件的错误",
+    "attachment_removed_success": "固定被吸收去除",
+    "attachments_upload_info": "保存后，附件将上传",
+    "image_upload_info": "保存后将上传图像",
+    "linked_locations": "链接的位置",
+    "lodging_save_error": "保存错误的住宿",
+    "my_attachments": "我的附件",
+    "no_attachments": "没有附件",
+    "no_attachments_desc": "上传文件开始",
+    "no_images_desc": "上传图像开始",
+    "route_map": "路线图",
+    "selected_attachments": "选定的附件",
+    "selected_images": "选定的图像"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -754,7 +767,15 @@
     "type": "类型",
     "ending_airport_desc": "输入到达机场代码（如：LAX）",
     "fetch_location_information": "获取位置信息",
-    "starting_airport_desc": "输入出发机场代码（如：JFK）"
+    "starting_airport_desc": "输入出发机场代码（如：JFK）",
+    "create_new_transportation": "新运输",
+    "enter_flight_number": "输入航班号",
+    "enter_from_location": "从位置输入",
+    "enter_link": "输入链接",
+    "enter_to_location": "输入位置",
+    "enter_transportation_name": "输入运输名称",
+    "select_type": "选择类型",
+    "update_transportation_details": "更新运输详细信息"
   },
   "search": {
     "adventurelog_results": "AdventureLog 结果",
@@ -895,7 +916,12 @@
     "new_lodging": "新住宿",
     "other": "其他",
     "reservation_number": "预订号",
-    "resort": "度假村"
+    "resort": "度假村",
+    "create_new_lodging": "新住宿",
+    "enter_lodging_name": "输入住宿名称",
+    "enter_price": "输入价格",
+    "enter_reservation_number": "输入预订号",
+    "update_lodging_details": "更新住宿详细信息"
   },
   "google_maps": {
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的位置搜索结果和建议。",

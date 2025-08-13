@@ -455,7 +455,20 @@
     "high": "Alto",
     "low": "Bajo",
     "rest": "Descansar",
-    "total": "Total"
+    "total": "Total",
+    "attachment_removed_error": "Error al eliminar el archivo adjunto",
+    "attachment_removed_success": "Adjunto eliminado con éxito",
+    "attachments_upload_info": "Los archivos adjuntos se cargarán después de guardar el",
+    "image_upload_info": "Las imágenes se cargarán después de guardar el",
+    "linked_locations": "Ubicaciones vinculadas",
+    "lodging_save_error": "Error al horno de alojamiento",
+    "my_attachments": "Mis archivos adjuntos",
+    "no_attachments": "Sin archivos adjuntos",
+    "no_attachments_desc": "Subir archivos para comenzar",
+    "no_images_desc": "Subir imágenes para comenzar",
+    "route_map": "Mapa de ruta",
+    "selected_attachments": "Archivos adjuntos seleccionados",
+    "selected_images": "Imágenes seleccionadas"
   },
   "worldtravel": {
     "all": "Todo",
@@ -754,7 +767,15 @@
     "transportation_delete_error": "Error al eliminar el transporte",
     "ending_airport_desc": "Ingrese el código de aeropuerto final (por ejemplo, LAX)",
     "fetch_location_information": "Información de ubicación para obtener",
-    "starting_airport_desc": "Ingrese el código de aeropuerto inicial (por ejemplo, JFK)"
+    "starting_airport_desc": "Ingrese el código de aeropuerto inicial (por ejemplo, JFK)",
+    "create_new_transportation": "Nuevo transporte",
+    "enter_flight_number": "Ingrese el número de vuelo",
+    "enter_from_location": "Ingrese desde la ubicación",
+    "enter_link": "Ingrese el enlace",
+    "enter_to_location": "Ingrese a la ubicación",
+    "enter_transportation_name": "Ingrese el nombre del transporte",
+    "select_type": "Tipo de selección",
+    "update_transportation_details": "Actualizar detalles de transporte"
   },
   "search": {
     "adventurelog_results": "Resultados del registro de aventuras",
@@ -895,7 +916,12 @@
     "reservation_number": "Número de reserva",
     "resort": "Complejo",
     "villa": "Villa",
-    "edit_lodging": "Editar alojamiento"
+    "edit_lodging": "Editar alojamiento",
+    "create_new_lodging": "Nuevo alojamiento",
+    "enter_lodging_name": "Ingrese el nombre de alojamiento",
+    "enter_price": "Ingresar precio",
+    "enter_reservation_number": "Ingrese el número de reserva",
+    "update_lodging_details": "Actualizar detalles de alojamiento"
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad.",

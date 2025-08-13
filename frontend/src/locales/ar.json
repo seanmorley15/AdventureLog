@@ -402,7 +402,20 @@
     "high": "عالي",
     "low": "قليل",
     "rest": "استراحة",
-    "total": "المجموع"
+    "total": "المجموع",
+    "attachment_removed_error": "خطأ إزالة المرفق",
+    "attachment_removed_success": "مرفق تمت إزالته بشجاعة",
+    "attachments_upload_info": "سيتم تحميل المرفقات بعد حفظ",
+    "image_upload_info": "سيتم تحميل الصور بعد حفظ",
+    "linked_locations": "المواقع المرتبطة",
+    "lodging_save_error": "خطأ حفظ الإقامة",
+    "my_attachments": "مرفقاتي",
+    "no_attachments": "لا مرفقات",
+    "no_attachments_desc": "تحميل الملفات للبدء",
+    "no_images_desc": "تحميل الصور للبدء",
+    "route_map": "خريطة الطريق",
+    "selected_attachments": "مرفقات محددة",
+    "selected_images": "صور محددة"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",
@@ -577,7 +590,12 @@
     "other": "آخر",
     "reservation_number": "رقم الحجز",
     "resort": "ملجأ",
-    "villa": "فيلا"
+    "villa": "فيلا",
+    "create_new_lodging": "سكن جديد",
+    "enter_lodging_name": "أدخل اسم الإقامة",
+    "enter_price": "أدخل السعر",
+    "enter_reservation_number": "أدخل رقم الحجز",
+    "update_lodging_details": "تحديث تفاصيل الإقامة"
   },
   "map": {
     "add_adventure": "أضف مغامرة جديدة",
@@ -881,7 +899,15 @@
     "to_location": "إلى الموقع",
     "transportation_delete_error": "خطأ حذف النقل",
     "transportation_deleted": "تم حذف النقل بنجاح!",
-    "type": "يكتب"
+    "type": "يكتب",
+    "create_new_transportation": "نقل جديد",
+    "enter_flight_number": "أدخل رقم الرحلة",
+    "enter_from_location": "أدخل من الموقع",
+    "enter_link": "أدخل الرابط",
+    "enter_to_location": "أدخل إلى الموقع",
+    "enter_transportation_name": "أدخل اسم النقل",
+    "select_type": "حدد النوع",
+    "update_transportation_details": "تحديث تفاصيل النقل"
   },
   "users": {
     "no_users_found": "لم يتم العثور على مستخدمين مع ملفات تعريف عامة."

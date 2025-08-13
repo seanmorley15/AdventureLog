@@ -455,7 +455,20 @@
     "total": "Total",
     "rest": "Rest",
     "high": "High",
-    "low": "Low"
+    "low": "Low",
+    "route_map": "Route Map",
+    "selected_images": "Selected Images",
+    "selected_attachments": "Selected Attachments",
+    "my_attachments": "My Attachments",
+    "linked_locations": "Linked Locations",
+    "lodging_save_error": "Error saving lodging",
+    "attachment_removed_success": "Attachment removed sucessfully",
+    "attachment_removed_error": "Error removing attachment",
+    "no_attachments": "No Attachments",
+    "no_attachments_desc": "Upload files to get started",
+    "attachments_upload_info": "Attachments will be uploaded after saving the",
+    "image_upload_info": "Images will be uploaded after saving the",
+    "no_images_desc": "Upload images to get started"
   },
   "worldtravel": {
     "country_list": "Country List",
@@ -754,7 +767,15 @@
       "walking": "Walking",
       "other": "Other"
     },
-    "edit_transportation": "Edit Transportation"
+    "edit_transportation": "Edit Transportation",
+    "update_transportation_details": "Update Transportation Details",
+    "create_new_transportation": "New Transportation",
+    "enter_transportation_name": "Enter transportation name",
+    "select_type": "Select Type",
+    "enter_link": "Enter link",
+    "enter_flight_number": "Enter flight number",
+    "enter_from_location": "Enter from location",
+    "enter_to_location": "Enter to location"
   },
   "lodging": {
     "new_lodging": "New Lodging",
@@ -771,7 +792,12 @@
     "villa": "Villa",
     "motel": "Motel",
     "other": "Other",
-    "reservation_number": "Reservation Number"
+    "reservation_number": "Reservation Number",
+    "update_lodging_details": "Update Lodging Details",
+    "create_new_lodging": "New Lodging",
+    "enter_lodging_name": "Enter lodging name",
+    "enter_reservation_number": "Enter reservation number",
+    "enter_price": "Enter price"
   },
   "search": {
     "adventurelog_results": "AdventureLog Results",

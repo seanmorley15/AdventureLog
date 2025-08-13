@@ -12,14 +12,19 @@
 	import { DefaultMarker, MapLibre } from 'svelte-maplibre';
 	import DateRangeCollapse from './DateRangeCollapse.svelte';
 	import { getBasemapUrl } from '$lib';
-	import { deserialize } from '$app/forms';
 
-	import FileImage from '~icons/mdi/file-image';
-	import Star from '~icons/mdi/star';
-	import Crown from '~icons/mdi/crown';
+	import ImageDropdown from './ImageDropdown.svelte';
+	import AttachmentDropdown from './AttachmentDropdown.svelte';
 
 	export let collection: Collection;
 	export let transportationToEdit: Transportation | null = null;
+
+	let imageDropdownRef: any;
+	let attachmentDropdownRef: any;
+
+	// when this is true the image and attachment sections will create their upload requests
+	let isImagesUploading: boolean = false;
+	let isAttachmentsUploading: boolean = false;
 
 	// Initialize transportation object
 	let transportation: Transportation = {
@@ -46,7 +51,8 @@
 		start_timezone: transportationToEdit?.start_timezone || '',
 		end_timezone: transportationToEdit?.end_timezone || '',
 		distance: null,
-		images: transportationToEdit?.images || []
+		images: transportationToEdit?.images || [],
+		attachments: transportationToEdit?.attachments || []
 	};
 
 	let startTimezone: string | undefined = transportation.start_timezone ?? undefined;
@@ -59,53 +65,9 @@
 	let starting_airport: string = '';
 	let ending_airport: string = '';
 
-	// hold image files so they can be uploaded later
-	let imageInput: HTMLInputElement;
-	let imageFiles: File[] = [];
-
 	$: {
 		if (!transportation.rating) {
 			transportation.rating = NaN;
-		}
-	}
-
-	function handleImageChange(event: Event) {
-		const target = event.target as HTMLInputElement;
-		if (target?.files) {
-			if (!transportation.id) {
-				imageFiles = Array.from(target.files);
-				console.log('Images ready for deferred upload:', imageFiles);
-			} else {
-				imageFiles = Array.from(target.files);
-				for (const file of imageFiles) {
-					uploadImage(file);
-				}
-			}
-		}
-	}
-
-	async function uploadImage(file: File) {
-		let formData = new FormData();
-		formData.append('image', file);
-		formData.append('object_id', transportation.id);
-		formData.append('content_type', 'transportation');
-
-		let res = await fetch(`/locations?/image`, {
-			method: 'POST',
-			body: formData
-		});
-		if (res.ok) {
-			let newData = deserialize(await res.text()) as { data: { id: string; image: string } };
-			let newImage = {
-				id: newData.data.id,
-				image: newData.data.image,
-				is_primary: false,
-				immich_id: null
-			};
-			transportation.images = [...(transportation.images || []), newImage];
-			addToast('success', $t('adventures.image_upload_success'));
-		} else {
-			addToast('error', $t('adventures.image_upload_error'));
 		}
 	}
 
@@ -123,36 +85,6 @@
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') {
 			close();
-		}
-	}
-
-	async function removeImage(id: string) {
-		let res = await fetch(`/api/images/${id}/image_delete`, {
-			method: 'POST'
-		});
-		if (res.status === 204) {
-			transportation.images = transportation.images.filter((image) => image.id !== id);
-			addToast('success', $t('adventures.image_removed_success'));
-		} else {
-			addToast('error', $t('adventures.image_removed_error'));
-		}
-	}
-
-	async function makePrimaryImage(image_id: string) {
-		let res = await fetch(`/api/images/${image_id}/toggle_primary`, {
-			method: 'POST'
-		});
-		if (res.ok) {
-			transportation.images = transportation.images.map((image) => {
-				if (image.id === image_id) {
-					image.is_primary = true;
-				} else {
-					image.is_primary = false;
-				}
-				return image;
-			});
-		} else {
-			console.error('Error in makePrimaryImage:', res);
 		}
 	}
 
@@ -241,6 +173,10 @@
 				Math.round(transportation.destination_longitude * 1e6) / 1e6;
 		}
 
+		if (!transportation.type) {
+			transportation.type = 'other';
+		}
+
 		// Use the stored UTC dates for submission
 		const submissionData = {
 			...transportation
@@ -264,9 +200,25 @@
 
 				addToast('success', $t('adventures.location_created'));
 				// Handle image uploads after transportation is created
-				for (const file of imageFiles) {
-					await uploadImage(file);
+
+				// Now handle image uploads if there are any pending
+				if (imageDropdownRef?.hasImagesToUpload()) {
+					console.log('Triggering image upload...');
+					isImagesUploading = true;
+
+					// Wait for image upload to complete
+					await waitForUploadComplete();
 				}
+
+				// Similarly handle attachments if needed
+				if (attachmentDropdownRef?.hasAttachmentsToUpload()) {
+					console.log('Triggering attachment upload...');
+					isAttachmentsUploading = true;
+
+					// Wait for attachment upload to complete
+					await waitForAttachmentUploadComplete();
+				}
+
 				dispatch('save', transportation);
 			} else {
 				console.error(data);
@@ -290,6 +242,34 @@
 				addToast('error', $t('adventures.location_update_error'));
 			}
 		}
+	}
+
+	// Helper function to wait for image upload completion
+	async function waitForUploadComplete(): Promise<void> {
+		return new Promise((resolve) => {
+			const checkUpload = () => {
+				if (!isImagesUploading) {
+					resolve();
+				} else {
+					setTimeout(checkUpload, 100);
+				}
+			};
+			checkUpload();
+		});
+	}
+
+	// Helper function to wait for attachment upload completion
+	async function waitForAttachmentUploadComplete(): Promise<void> {
+		return new Promise((resolve) => {
+			const checkUpload = () => {
+				if (!isAttachmentsUploading) {
+					resolve();
+				} else {
+					setTimeout(checkUpload, 100);
+				}
+			};
+			checkUpload();
+		});
 	}
 </script>
 
@@ -780,119 +760,21 @@
 					</div>
 				</div>
 
-				<!-- images section -->
-				<div
-					class="collapse collapse-plus bg-base-200/50 border border-base-300/50 mb-6 rounded-2xl overflow-hidden"
-				>
-					<input type="checkbox" checked />
-					<div
-						class="collapse-title text-xl font-semibold bg-gradient-to-r from-primary/10 to-primary/5"
-					>
-						<div class="flex items-center gap-3">
-							<div class="p-2 bg-primary/10 rounded-lg">
-								<FileImage class="w-5 h-5 text-primary" />
-							</div>
-							{$t('adventures.images')}
-						</div>
-					</div>
-					<div class="collapse-content bg-base-100/50 pt-4 p-6">
-						<div class="form-control">
-							<label class="label" for="image">
-								<span class="label-text font-medium">{$t('adventures.upload_image')}</span>
-							</label>
-							<input
-								type="file"
-								id="image"
-								name="image"
-								accept="image/*"
-								multiple
-								bind:this={imageInput}
-								on:change={handleImageChange}
-								class="file-input file-input-bordered file-input-primary w-full bg-base-100/80 focus:bg-base-100"
-							/>
-						</div>
-						<p class="text-sm text-base-content/60 mt-2">
-							{$t('adventures.image_upload_desc')}
-						</p>
-						{#if imageFiles.length > 0 && !transportation.id}
-							<div class="mt-4">
-								<h4 class="font-semibold text-base-content mb-2">
-									{$t('adventures.selected_images')}
-								</h4>
-								<ul class="list-disc pl-5 space-y-1">
-									{#each imageFiles as file}
-										<li>{file.name} ({Math.round(file.size / 1024)} KB)</li>
-									{/each}
-								</ul>
-							</div>
-						{/if}
-						{#if transportation.id}
-							<div class="divider my-6"></div>
+				<!-- Images Section -->
+				<ImageDropdown
+					bind:this={imageDropdownRef}
+					bind:object={transportation}
+					objectType="transportation"
+					bind:isImagesUploading
+				/>
 
-							<!-- Current Images -->
-							<div class="space-y-4">
-								<h4 class="font-semibold text-lg">{$t('adventures.my_images')}</h4>
-
-								{#if transportation.images.length > 0}
-									<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-										{#each transportation.images as image}
-											<div class="relative group">
-												<div class="aspect-square overflow-hidden rounded-lg bg-base-300">
-													<img
-														src={image.image}
-														alt={image.id}
-														class="w-full h-full object-cover transition-transform group-hover:scale-105"
-													/>
-												</div>
-
-												<!-- Image Controls -->
-												<div
-													class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2"
-												>
-													{#if !image.is_primary}
-														<button
-															type="button"
-															class="btn btn-success btn-sm"
-															on:click={() => makePrimaryImage(image.id)}
-															title="Make Primary"
-														>
-															<Star class="h-4 w-4" />
-														</button>
-													{/if}
-
-													<button
-														type="button"
-														class="btn btn-error btn-sm"
-														on:click={() => removeImage(image.id)}
-														title="Remove"
-													>
-														✕
-													</button>
-												</div>
-
-												<!-- Primary Badge -->
-												{#if image.is_primary}
-													<div
-														class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1"
-													>
-														<Crown class="h-4 w-4" />
-													</div>
-												{/if}
-											</div>
-										{/each}
-									</div>
-								{:else}
-									<div class="text-center py-8">
-										<div class="text-base-content/60 text-lg mb-2">
-											{$t('adventures.no_images')}
-										</div>
-										<p class="text-sm text-base-content/40">Upload images to get started</p>
-									</div>
-								{/if}
-							</div>
-						{/if}
-					</div>
-				</div>
+				<!-- Attachments Section -->
+				<AttachmentDropdown
+					bind:this={attachmentDropdownRef}
+					bind:object={transportation}
+					objectType="transportation"
+					bind:isAttachmentsUploading
+				/>
 
 				<!-- Form Actions -->
 				<div class="flex justify-end gap-3 mt-8 pt-6 border-t border-base-300">

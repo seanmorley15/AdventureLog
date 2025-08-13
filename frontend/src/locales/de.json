@@ -403,7 +403,20 @@
     "high": "Hoch",
     "low": "Niedrig",
     "rest": "Ausruhen",
-    "total": "Gesamt"
+    "total": "Gesamt",
+    "attachment_removed_error": "Fehler Entfernen des Anhangs",
+    "attachment_removed_success": "Anhaftung erfolgreich entfernt",
+    "attachments_upload_info": "Anhänge werden nach dem Speichern der Hochgelände hochgeladen",
+    "image_upload_info": "Bilder werden nach dem Speichern der hochgeladen",
+    "linked_locations": "Verknüpfte Orte",
+    "lodging_save_error": "Fehler speichern Unterkunft",
+    "my_attachments": "Meine Anhänge",
+    "no_attachments": "Keine Anhänge",
+    "no_attachments_desc": "Laden Sie Dateien hoch, um loszulegen",
+    "no_images_desc": "Laden Sie Bilder hoch, um loszulegen",
+    "route_map": "Routenkarte",
+    "selected_attachments": "Ausgewählte Anhänge",
+    "selected_images": "Ausgewählte Bilder"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -754,7 +767,15 @@
     "to_location": "Zum Standort",
     "ending_airport_desc": "Geben Sie den Flughafencode des Zielflughafens ein (z. B. LAX)",
     "fetch_location_information": "Standortinformationen abrufen",
-    "starting_airport_desc": "Geben Sie den Flughafencode des Startflughafens ein (z. B. JFK)"
+    "starting_airport_desc": "Geben Sie den Flughafencode des Startflughafens ein (z. B. JFK)",
+    "create_new_transportation": "Neuer Transport",
+    "enter_flight_number": "Flugnummer eingeben",
+    "enter_from_location": "Vom Standort eingeben",
+    "enter_link": "Link eingeben",
+    "enter_to_location": "Geben Sie an Ort ein",
+    "enter_transportation_name": "Geben Sie den Transportnamen ein",
+    "select_type": "Wählen Sie Typ",
+    "update_transportation_details": "Aktualisieren Sie die Transportdetails"
   },
   "search": {
     "adventurelog_results": "AdventureLog-Ergebnisse",
@@ -895,7 +916,12 @@
     "other": "Sonstige",
     "reservation_number": "Reservierungsnummer",
     "resort": "Ferienanlage",
-    "villa": "Villa"
+    "villa": "Villa",
+    "create_new_lodging": "Neue Unterkunft",
+    "enter_lodging_name": "Geben Sie den Unterkunftsnamen ein",
+    "enter_price": "Preis eingeben",
+    "enter_reservation_number": "Geben Sie die Reservierungsnummer ein",
+    "update_lodging_details": "Aktualisieren Sie die Unterkunftsdetails"
   },
   "google_maps": {
     "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten.",

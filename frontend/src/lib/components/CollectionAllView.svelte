@@ -426,7 +426,7 @@
 	<div class="mb-8">
 		<div class="flex items-center justify-between mx-4 mb-4">
 			<h1 class="text-3xl font-bold text-primary">
-				{$t('adventures.linked_adventures')}
+				{$t('adventures.linked_locations')}
 			</h1>
 			<div class="badge badge-primary badge-lg">{filteredAdventures.length}</div>
 		</div>
