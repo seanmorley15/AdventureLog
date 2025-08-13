@@ -79,7 +79,7 @@
 	<div
 		tabindex="0"
 		role="button"
-		class="btn btn-outline w-full justify-between"
+		class="btn btn-outline w-full justify-between sm:h-auto h-12"
 		on:click={toggleDropdown}
 	>
 		<span class="flex items-center gap-2">
@@ -101,11 +101,154 @@
 	</div>
 
 	{#if isOpen}
-		<!-- Dropdown content -->
+		<!-- Mobile Modal Overlay (only on small screens) -->
+		<div class="fixed inset-0 bg-black/50 z-40 sm:hidden" on:click={() => (isOpen = false)}></div>
+
+		<!-- Mobile Bottom Sheet -->
 		<div
-			class="dropdown-content z-[1] w-full mt-1 bg-base-300 rounded-box shadow-xl border border-base-300 max-h-96 overflow-y-auto"
+			class="fixed bottom-0 left-0 right-0 z-50 bg-base-100 rounded-t-2xl shadow-2xl border-t border-base-300 max-h-[90vh] flex flex-col sm:hidden"
 		>
-			<!-- Category Creator Section -->
+			<!-- Mobile Header -->
+			<div class="flex-shrink-0 bg-base-100 border-b border-base-300 p-4">
+				<div class="flex items-center justify-between">
+					<h2 class="text-lg font-semibold">{$t('categories.select_category')}</h2>
+					<button class="btn btn-ghost btn-sm btn-circle" on:click={() => (isOpen = false)}>
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</button>
+				</div>
+			</div>
+
+			<div class="flex-1 overflow-y-auto min-h-0">
+				<!-- Mobile Category Creator Section -->
+				<div class="p-4 border-b border-base-300">
+					<h3 class="font-semibold text-sm text-base-content/80 mb-3 flex items-center gap-2">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+							/>
+						</svg>
+						{$t('categories.add_new_category')}
+					</h3>
+
+					<div class="space-y-3">
+						<div class="space-y-2">
+							<input
+								type="text"
+								placeholder={$t('categories.category_name')}
+								class="input input-bordered w-full h-12 text-base"
+								bind:value={new_category.display_name}
+							/>
+							<div class="join w-full">
+								<input
+									type="text"
+									placeholder={$t('categories.icon')}
+									class="input input-bordered join-item flex-1 h-12 text-base"
+									bind:value={new_category.icon}
+								/>
+								<button
+									on:click={toggleEmojiPicker}
+									type="button"
+									class="btn join-item h-12 w-12 text-lg"
+									class:btn-active={isEmojiPickerVisible}
+								>
+									😊
+								</button>
+							</div>
+						</div>
+
+						<button
+							on:click={custom_category}
+							type="button"
+							class="btn btn-primary h-12 w-full"
+							disabled={!new_category.display_name.trim()}
+						>
+							<svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+									d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+								/>
+							</svg>
+							{$t('adventures.add')}
+						</button>
+
+						{#if isEmojiPickerVisible}
+							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
+								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+							</div>
+						{/if}
+					</div>
+				</div>
+
+				<!-- Mobile Categories List -->
+				<div class="p-4">
+					<h3 class="font-semibold text-sm text-base-content/80 mb-3">
+						{$t('categories.select_category')}
+					</h3>
+
+					{#if categories.length > 0}
+						<div class="form-control mb-4">
+							<input
+								type="text"
+								placeholder={$t('navbar.search')}
+								class="input input-bordered w-full h-12 text-base"
+								bind:value={searchTerm}
+							/>
+						</div>
+
+						<div class="space-y-2">
+							{#each categories
+								.slice()
+								.sort((a, b) => (b.num_locations || 0) - (a.num_locations || 0))
+								.filter((category) => !searchTerm || category.display_name
+											.toLowerCase()
+											.includes(searchTerm.toLowerCase())) as category}
+								<button
+									type="button"
+									class="w-full text-left p-4 rounded-lg border border-base-300 hover:border-primary hover:bg-primary/5 transition-colors"
+									class:bg-primary={selected_category && selected_category.id === category.id}
+									class:text-primary-content={selected_category &&
+										selected_category.id === category.id}
+									class:border-primary={selected_category && selected_category.id === category.id}
+									on:click={() => selectCategory(category)}
+								>
+									<div class="flex items-center gap-3 w-full">
+										<span class="text-2xl flex-shrink-0">{category.icon}</span>
+										<div class="flex-1 min-w-0">
+											<div class="font-medium text-base truncate">{category.display_name}</div>
+											<div class="text-sm opacity-70 mt-1">
+												{category.num_locations}
+												{$t('locations.locations')}
+											</div>
+										</div>
+									</div>
+								</button>
+							{/each}
+						</div>
+					{/if}
+				</div>
+			</div>
+
+			<!-- Bottom safe area -->
+			<div class="flex-shrink-0 h-4"></div>
+		</div>
+
+		<!-- Desktop Dropdown -->
+		<div
+			class="dropdown-content z-[1] w-full mt-1 bg-base-300 rounded-box shadow-xl border border-base-300 max-h-96 overflow-y-auto hidden sm:block"
+		>
+			<!-- Desktop Category Creator Section -->
 			<div class="p-4 border-b border-base-300">
 				<h3 class="font-semibold text-sm text-base-content/80 mb-3 flex items-center gap-2">
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,7 +263,6 @@
 				</h3>
 
 				<div class="space-y-3">
-					<!-- Input row -->
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-2">
 						<div class="form-control">
 							<input
@@ -150,7 +292,6 @@
 						</div>
 					</div>
 
-					<!-- Action button -->
 					<div class="flex justify-end">
 						<button
 							on:click={custom_category}
@@ -170,16 +311,15 @@
 						</button>
 					</div>
 
-					<!-- Emoji Picker -->
 					{#if isEmojiPickerVisible}
-						<div class=" p-3 rounded-lg border border-base-300">
+						<div class="p-3 rounded-lg border border-base-300">
 							<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
 						</div>
 					{/if}
 				</div>
 			</div>
 
-			<!-- Categories List Section -->
+			<!-- Desktop Categories List Section -->
 			<div class="p-4">
 				<h3 class="font-semibold text-sm text-base-content/80 mb-3 flex items-center gap-2">
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,7 +334,6 @@
 				</h3>
 
 				{#if categories.length > 0}
-					<!-- Search/Filter (optional) -->
 					<div class="form-control mb-3">
 						<input
 							type="text"
@@ -204,7 +343,6 @@
 						/>
 					</div>
 
-					<!-- Categories Grid -->
 					<div
 						class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-60 overflow-y-auto"
 					>

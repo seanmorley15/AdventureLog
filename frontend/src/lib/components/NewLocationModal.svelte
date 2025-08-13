@@ -162,18 +162,22 @@
 					</div>
 				</div>
 
-				<ul class="timeline">
+				<ul
+					class="timeline timeline-vertical timeline-compact sm:timeline-horizontal sm:timeline-normal"
+				>
 					{#each steps as step, index}
 						<li>
 							{#if index > 0}
-								<hr />
+								<hr class="bg-base-300" />
 							{/if}
 							<div class="timeline-middle">
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
 									viewBox="0 0 20 20"
 									fill="currentColor"
-									class="h-5 w-5 {step.selected ? 'text-primary' : 'text-base-content/40'}"
+									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
+										? 'text-primary'
+										: 'text-base-content/40'}"
 								>
 									<path
 										fill-rule="evenodd"
@@ -183,7 +187,7 @@
 								</svg>
 							</div>
 							<button
-								class="timeline-end timeline-box {step.selected
+								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
 									? 'bg-primary text-primary-content'
 									: 'bg-base-200'} hover:bg-primary/80 transition-colors cursor-pointer"
 								on:click={() => {
@@ -193,10 +197,13 @@
 									steps[index].selected = true;
 								}}
 							>
-								{step.name}
+								<span class="hidden sm:inline">{step.name}</span>
+								<span class="sm:hidden"
+									>{step.name.substring(0, 8)}{step.name.length > 8 ? '...' : ''}</span
+								>
 							</button>
 							{#if index < steps.length - 1}
-								<hr />
+								<hr class="bg-base-300" />
 							{/if}
 						</li>
 					{/each}
@@ -282,6 +289,7 @@
 				bind:images={location.images}
 				bind:attachments={location.attachments}
 				bind:trails={location.trails}
+				itemName={location.name}
 				userIsOwner={user?.uuid === location.user?.uuid}
 				on:back={() => {
 					steps[2].selected = false;

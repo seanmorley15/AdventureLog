@@ -33,6 +33,7 @@
 	// Props
 	export let images: ContentImage[] = [];
 	export let attachments: Attachment[] = [];
+	export let itemName: string = '';
 	export let trails: Trail[] = [];
 	export let itemId: string = '';
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
@@ -683,6 +684,9 @@
 			}
 		} catch (error) {
 			console.error('Error checking integrations:', error);
+		}
+		if (itemName) {
+			imageSearch = itemName;
 		}
 	});
 </script>
