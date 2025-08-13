@@ -62,3 +62,16 @@ SPORT_TYPE_CHOICES = [
     ('Racquetball', 'Racquetball'),
     ('VirtualRow', 'Virtual Rowing'),
 ]
+
+SPORT_CATEGORIES = {
+    'running': ['Run', 'TrailRun', 'VirtualRun'],
+    'walking_hiking': ['Walk', 'Hike'],
+    'cycling': ['Ride', 'MountainBikeRide', 'GravelRide', 'EBikeRide', 'EMountainBikeRide', 'Velomobile', 'VirtualRide'],
+    'water_sports': ['Canoeing', 'Kayaking', 'Kitesurfing', 'Rowing', 'StandUpPaddling', 'Surfing', 'Swim', 'Windsurfing', 'Sailing', 'VirtualRow'],
+    'winter_sports': ['IceSkate', 'AlpineSki', 'BackcountrySki', 'NordicSki', 'Snowboard', 'Snowshoe'],
+    'fitness_gym': ['Crossfit', 'Elliptical', 'StairStepper', 'WeightTraining', 'Yoga', 'Workout', 'HIIT', 'Pilates'],
+    'racket_sports': ['Badminton', 'Tennis', 'Pickleball', 'TableTennis', 'Squash', 'Racquetball'],
+    'climbing_adventure': ['RockClimbing'],
+    'team_sports': ['Soccer'],
+    'other_sports': ['Handcycle', 'InlineSkate', 'RollerSki', 'Golf', 'Skateboard', 'Wheelchair', 'General']
+    }

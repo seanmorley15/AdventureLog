@@ -2,7 +2,7 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
-from django.db import models
+from adventures.utils.sports_types import SPORT_CATEGORIES
 from django.db.models import Sum, Avg, Max, Count, Q
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
 from adventures.models import Location, Collection, Activity
@@ -14,26 +14,12 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for listing the stats of a user.
     """
-    
-    # Define sport categories for better organization
-    SPORT_CATEGORIES = {
-        'running': ['Run', 'TrailRun', 'VirtualRun'],
-        'walking_hiking': ['Walk', 'Hike'],
-        'cycling': ['Ride', 'MountainBikeRide', 'GravelRide', 'EBikeRide', 'EMountainBikeRide', 'Velomobile', 'VirtualRide'],
-        'water_sports': ['Canoeing', 'Kayaking', 'Kitesurfing', 'Rowing', 'StandUpPaddling', 'Surfing', 'Swim', 'Windsurfing', 'Sailing', 'VirtualRow'],
-        'winter_sports': ['IceSkate', 'AlpineSki', 'BackcountrySki', 'NordicSki', 'Snowboard', 'Snowshoe'],
-        'fitness_gym': ['Crossfit', 'Elliptical', 'StairStepper', 'WeightTraining', 'Yoga', 'Workout', 'HIIT', 'Pilates'],
-        'racket_sports': ['Badminton', 'Tennis', 'Pickleball', 'TableTennis', 'Squash', 'Racquetball'],
-        'climbing_adventure': ['RockClimbing'],
-        'team_sports': ['Soccer'],
-        'other_sports': ['Handcycle', 'InlineSkate', 'RollerSki', 'Golf', 'Skateboard', 'Wheelchair', 'General']
-    }
 
     def _get_activity_stats_by_category(self, user_activities):
         """Calculate detailed stats for each sport category"""
         category_stats = {}
         
-        for category, sports in self.SPORT_CATEGORIES.items():
+        for category, sports in SPORT_CATEGORIES.items():
             activities = user_activities.filter(sport_type__in=sports)
             
             if activities.exists():

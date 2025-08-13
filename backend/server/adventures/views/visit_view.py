@@ -4,6 +4,7 @@ from adventures.models import Location, Visit
 from adventures.serializers import VisitSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from rest_framework.exceptions import PermissionDenied
+from adventures.models import background_geocode_and_assign
 
 class VisitViewSet(viewsets.ModelViewSet):
     serializer_class = VisitSerializer
@@ -45,6 +46,9 @@ class VisitViewSet(viewsets.ModelViewSet):
 
         serializer.save()
 
+        # This will update any visited regions or cities based on if it's now visited
+        background_geocode_and_assign(str(location.id))
+
     def perform_update(self, serializer):
         instance = serializer.instance
         new_location = serializer.validated_data.get('location')
@@ -52,12 +56,14 @@ class VisitViewSet(viewsets.ModelViewSet):
         # Prevent changing location after creation
         if new_location and new_location != instance.location:
             raise PermissionDenied("Cannot change visit location after creation. Create a new visit instead.")
-        
+
         # Check permission for updates to the existing location
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, instance.location):
             raise PermissionDenied("You do not have permission to update this visit.")
 
         serializer.save()
+
+        background_geocode_and_assign(str(instance.location.id))
 
     def perform_destroy(self, instance):
         if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, instance.location):
