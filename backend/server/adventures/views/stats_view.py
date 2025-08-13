@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from django.db import models
+from django.db.models import Sum, Avg, Max, Count, Q
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
 from adventures.models import Location, Collection, Activity
 from django.contrib.auth import get_user_model
@@ -13,45 +14,149 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for listing the stats of a user.
     """
+    
+    # Define sport categories for better organization
+    SPORT_CATEGORIES = {
+        'running': ['Run', 'TrailRun', 'VirtualRun'],
+        'walking_hiking': ['Walk', 'Hike'],
+        'cycling': ['Ride', 'MountainBikeRide', 'GravelRide', 'EBikeRide', 'EMountainBikeRide', 'Velomobile', 'VirtualRide'],
+        'water_sports': ['Canoeing', 'Kayaking', 'Kitesurfing', 'Rowing', 'StandUpPaddling', 'Surfing', 'Swim', 'Windsurfing', 'Sailing', 'VirtualRow'],
+        'winter_sports': ['IceSkate', 'AlpineSki', 'BackcountrySki', 'NordicSki', 'Snowboard', 'Snowshoe'],
+        'fitness_gym': ['Crossfit', 'Elliptical', 'StairStepper', 'WeightTraining', 'Yoga', 'Workout', 'HIIT', 'Pilates'],
+        'racket_sports': ['Badminton', 'Tennis', 'Pickleball', 'TableTennis', 'Squash', 'Racquetball'],
+        'climbing_adventure': ['RockClimbing'],
+        'team_sports': ['Soccer'],
+        'other_sports': ['Handcycle', 'InlineSkate', 'RollerSki', 'Golf', 'Skateboard', 'Wheelchair', 'General']
+    }
+
+    def _get_activity_stats_by_category(self, user_activities):
+        """Calculate detailed stats for each sport category"""
+        category_stats = {}
+        
+        for category, sports in self.SPORT_CATEGORIES.items():
+            activities = user_activities.filter(sport_type__in=sports)
+            
+            if activities.exists():
+                # Calculate aggregated stats
+                stats = activities.aggregate(
+                    count=Count('id'),
+                    total_distance=Sum('distance'),
+                    total_moving_time=Sum('moving_time'),
+                    total_elevation_gain=Sum('elevation_gain'),
+                    total_elevation_loss=Sum('elevation_loss'),
+                    avg_distance=Avg('distance'),
+                    max_distance=Max('distance'),
+                    avg_elevation_gain=Avg('elevation_gain'),
+                    max_elevation_gain=Max('elevation_gain'),
+                    avg_speed=Avg('average_speed'),
+                    max_speed=Max('max_speed'),
+                    total_calories=Sum('calories')
+                )
+                
+                # Convert Duration objects to total seconds for JSON serialization
+                total_moving_seconds = 0
+                if stats['total_moving_time']:
+                    total_moving_seconds = int(stats['total_moving_time'].total_seconds())
+                
+                # Get sport type breakdown within category
+                sport_breakdown = {}
+                for sport in sports:
+                    sport_activities = activities.filter(sport_type=sport)
+                    if sport_activities.exists():
+                        sport_stats = sport_activities.aggregate(
+                            count=Count('id'),
+                            total_distance=Sum('distance'),
+                            total_elevation_gain=Sum('elevation_gain')
+                        )
+                        sport_breakdown[sport] = {
+                            'count': sport_stats['count'],
+                            'total_distance': round(sport_stats['total_distance'] or 0, 2),
+                            'total_elevation_gain': round(sport_stats['total_elevation_gain'] or 0, 2)
+                        }
+                
+                category_stats[category] = {
+                    'count': stats['count'],
+                    'total_distance': round(stats['total_distance'] or 0, 2),
+                    'total_moving_time': total_moving_seconds,
+                    'total_elevation_gain': round(stats['total_elevation_gain'] or 0, 2),
+                    'total_elevation_loss': round(stats['total_elevation_loss'] or 0, 2),
+                    'avg_distance': round(stats['avg_distance'] or 0, 2),
+                    'max_distance': round(stats['max_distance'] or 0, 2),
+                    'avg_elevation_gain': round(stats['avg_elevation_gain'] or 0, 2),
+                    'max_elevation_gain': round(stats['max_elevation_gain'] or 0, 2),
+                    'avg_speed': round(stats['avg_speed'] or 0, 2),
+                    'max_speed': round(stats['max_speed'] or 0, 2),
+                    'total_calories': round(stats['total_calories'] or 0, 2),
+                    'sports': sport_breakdown
+                }
+        
+        return category_stats
+
+    def _get_overall_activity_stats(self, user_activities):
+        """Calculate overall activity statistics"""
+        if not user_activities.exists():
+            return {
+                'total_count': 0,
+                'total_distance': 0,
+                'total_moving_time': 0,
+                'total_elevation_gain': 0,
+                'total_elevation_loss': 0,
+                'total_calories': 0
+            }
+        
+        stats = user_activities.aggregate(
+            total_count=Count('id'),
+            total_distance=Sum('distance'),
+            total_moving_time=Sum('moving_time'),
+            total_elevation_gain=Sum('elevation_gain'),
+            total_elevation_loss=Sum('elevation_loss'),
+            total_calories=Sum('calories')
+        )
+        
+        # Convert Duration to seconds
+        total_moving_seconds = 0
+        if stats['total_moving_time']:
+            total_moving_seconds = int(stats['total_moving_time'].total_seconds())
+        
+        return {
+            'total_count': stats['total_count'],
+            'total_distance': round(stats['total_distance'] or 0, 2),
+            'total_moving_time': total_moving_seconds,
+            'total_elevation_gain': round(stats['total_elevation_gain'] or 0, 2),
+            'total_elevation_loss': round(stats['total_elevation_loss'] or 0, 2),
+            'total_calories': round(stats['total_calories'] or 0, 2)
+        }
+
     @action(detail=False, methods=['get'], url_path=r'counts/(?P<username>[\w.@+-]+)')
     def counts(self, request, username):
         if request.user.username == username:
             user = get_object_or_404(User, username=username)
         else:
             user = get_object_or_404(User, username=username, public_profile=True)
-        # serializer = PublicUserSerializer(user)
         
         # remove the email address from the response
         user.email = None
-
+        
         # get the counts for the user
-        location_count = Location.objects.filter(
-            user=user.id).count()
-        trips_count = Collection.objects.filter(
-            user=user.id).count()
-        visited_city_count = VisitedCity.objects.filter(
-            user=user.id).count()
+        location_count = Location.objects.filter(user=user.id).count()
+        trips_count = Collection.objects.filter(user=user.id).count()
+        visited_city_count = VisitedCity.objects.filter(user=user.id).count()
         total_cities = City.objects.count()
-        visited_region_count = VisitedRegion.objects.filter(
-            user=user.id).count()
+        visited_region_count = VisitedRegion.objects.filter(user=user.id).count()
         total_regions = Region.objects.count()
         visited_country_count = VisitedRegion.objects.filter(
             user=user.id).values('region__country').distinct().count()
         total_countries = Country.objects.count()
         
-        # get activity counts
-        user_activities = Activity.objects.filter(
-            user=user.id)
+        # get activity data
+        user_activities = Activity.objects.filter(user=user.id)
         
-        activity_count = user_activities.count()
-        activity_distance = user_activities.aggregate(
-            total_distance=models.Sum('distance'))['total_distance'] or 0
-        activity_moving_time = user_activities.aggregate(
-            total_duration=models.Sum('moving_time'))['total_duration'] or 0
-        activity_elevation = user_activities.aggregate(
-            total_elevation=models.Sum('elevation_gain'))['total_elevation'] or 0
+        # Get enhanced activity statistics
+        overall_activity_stats = self._get_overall_activity_stats(user_activities)
+        activity_stats_by_category = self._get_activity_stats_by_category(user_activities)
         
         return Response({
+            # Travel stats
             'location_count': location_count,
             'trips_count': trips_count,
             'visited_city_count': visited_city_count,
@@ -60,8 +165,16 @@ class StatsViewSet(viewsets.ViewSet):
             'total_regions': total_regions,
             'visited_country_count': visited_country_count,
             'total_countries': total_countries,
-            'activity_distance': activity_distance, # measured in meters
-            'activity_moving_time': activity_moving_time, # measured in seconds
-            'activity_elevation': activity_elevation, # measured in meters
-            'activity_count': activity_count,
-        }) 
+            
+            # Overall activity stats
+            'activities_overall': overall_activity_stats,
+            
+            # Detailed activity stats by category
+            'activities_by_category': activity_stats_by_category,
+            
+            # Legacy fields (for backward compatibility)
+            'activity_distance': overall_activity_stats['total_distance'],
+            'activity_moving_time': overall_activity_stats['total_moving_time'],
+            'activity_elevation': overall_activity_stats['total_elevation_gain'],
+            'activity_count': overall_activity_stats['total_count'],
+        })

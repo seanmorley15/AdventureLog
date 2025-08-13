@@ -468,7 +468,14 @@
     "no_attachments_desc": "Upload files to get started",
     "attachments_upload_info": "Attachments will be uploaded after saving the",
     "image_upload_info": "Images will be uploaded after saving the",
-    "no_images_desc": "Upload images to get started"
+    "no_images_desc": "Upload images to get started",
+    "activities_text": "activities",
+    "total_climbed": "Total climbed",
+    "distance_covered": "Distance covered",
+    "total_distance": "Total Distance",
+    "total_activities": "Total Activities",
+    "recorded_sessions": "Recorded sessions",
+    "activity_breakdown_by_category": "Activity Breakdown by Category"
   },
   "worldtravel": {
     "country_list": "Country List",

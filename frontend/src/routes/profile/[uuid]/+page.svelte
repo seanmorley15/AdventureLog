@@ -22,8 +22,21 @@
 	import Timer from '~icons/mdi/timer-outline';
 	import TrendingUpOutline from '~icons/mdi/trending-up';
 	import Mountain from '~icons/mdi/mountain';
+	import Walk from '~icons/mdi/walk';
+	import Bike from '~icons/mdi/bike';
+	import Snowflake from '~icons/mdi/snowflake';
+	import WaterOutline from '~icons/mdi/water-outline';
+	import Dumbbell from '~icons/mdi/dumbbell';
+	import TennisOutline from '~icons/mdi/tennis';
+	import RockClimbing from '~icons/mdi/image-filter-hdr';
+	import Soccer from '~icons/mdi/soccer';
+	import DotsHorizontal from '~icons/mdi/dots-horizontal';
+	import Fire from '~icons/mdi/fire';
+	import ChevronDown from '~icons/mdi/chevron-down';
+	import ChevronUp from '~icons/mdi/chevron-up';
 
 	let measurementSystem = data.user?.measurement_system || 'metric';
+	let expandedCategories = new Set();
 
 	let stats: {
 		visited_country_count: number;
@@ -34,6 +47,40 @@
 		total_countries: number;
 		visited_city_count: number;
 		total_cities: number;
+		activities_overall: {
+			total_count: number;
+			total_distance: number;
+			total_moving_time: number;
+			total_elevation_gain: number;
+			total_elevation_loss: number;
+			total_calories: number;
+		};
+		activities_by_category: Record<
+			string,
+			{
+				count: number;
+				total_distance: number;
+				total_moving_time: number;
+				total_elevation_gain: number;
+				total_elevation_loss: number;
+				avg_distance: number;
+				max_distance: number;
+				avg_elevation_gain: number;
+				max_elevation_gain: number;
+				avg_speed: number;
+				max_speed: number;
+				total_calories: number;
+				sports: Record<
+					string,
+					{
+						count: number;
+						total_distance: number;
+						total_elevation_gain: number;
+					}
+				>;
+			}
+		>;
+		// Legacy fields
 		activity_count: number;
 		activity_distance: number;
 		activity_moving_time: number;
@@ -44,6 +91,98 @@
 	const adventures: Location[] = data.adventures;
 	const collections: Collection[] = data.collections;
 	stats = data.stats || null;
+
+	// Activity category configurations
+	const categoryConfig: Record<
+		string,
+		{
+			name: string;
+			icon: any;
+			color: string;
+			bgGradient: string;
+			borderColor: string;
+		}
+	> = {
+		running: {
+			name: 'Running',
+			icon: Run,
+			color: 'error',
+			bgGradient: 'from-error/10 to-error/5',
+			borderColor: 'border-error/20'
+		},
+		walking_hiking: {
+			name: 'Walking & Hiking',
+			icon: Walk,
+			color: 'success',
+			bgGradient: 'from-success/10 to-success/5',
+			borderColor: 'border-success/20'
+		},
+		cycling: {
+			name: 'Cycling',
+			icon: Bike,
+			color: 'info',
+			bgGradient: 'from-info/10 to-info/5',
+			borderColor: 'border-info/20'
+		},
+		winter_sports: {
+			name: 'Winter Sports',
+			icon: Snowflake,
+			color: 'primary',
+			bgGradient: 'from-primary/10 to-primary/5',
+			borderColor: 'border-primary/20'
+		},
+		water_sports: {
+			name: 'Water Sports',
+			icon: WaterOutline,
+			color: 'accent',
+			bgGradient: 'from-accent/10 to-accent/5',
+			borderColor: 'border-accent/20'
+		},
+		fitness_gym: {
+			name: 'Fitness & Gym',
+			icon: Dumbbell,
+			color: 'warning',
+			bgGradient: 'from-warning/10 to-warning/5',
+			borderColor: 'border-warning/20'
+		},
+		racket_sports: {
+			name: 'Racket Sports',
+			icon: TennisOutline,
+			color: 'secondary',
+			bgGradient: 'from-secondary/10 to-secondary/5',
+			borderColor: 'border-secondary/20'
+		},
+		climbing_adventure: {
+			name: 'Climbing & Adventure',
+			icon: RockClimbing,
+			color: 'orange-500',
+			bgGradient: 'from-orange-500/10 to-orange-500/5',
+			borderColor: 'border-orange-500/20'
+		},
+		team_sports: {
+			name: 'Team Sports',
+			icon: Soccer,
+			color: 'green-500',
+			bgGradient: 'from-green-500/10 to-green-500/5',
+			borderColor: 'border-green-500/20'
+		},
+		other_sports: {
+			name: 'Other Sports',
+			icon: DotsHorizontal,
+			color: 'purple-500',
+			bgGradient: 'from-purple-500/10 to-purple-500/5',
+			borderColor: 'border-purple-500/20'
+		}
+	};
+
+	function toggleCategory(category: string) {
+		if (expandedCategories.has(category)) {
+			expandedCategories.delete(category);
+		} else {
+			expandedCategories.add(category);
+		}
+		expandedCategories = expandedCategories; // Trigger reactivity
+	}
 
 	// function to take in meters for distance and return it in either kilometers or miles
 	function getDistance(meters: number): string {
@@ -67,6 +206,16 @@
 			return `${hours}h ${minutes}m`;
 		}
 		return `${minutes}m`;
+	}
+
+	function getSpeed(ms: number): string {
+		if (measurementSystem === 'imperial') {
+			const mph = ms * 2.237;
+			return `${mph.toFixed(1)} mph`;
+		} else {
+			const kmh = ms * 3.6;
+			return `${kmh.toFixed(1)} km/h`;
+		}
 	}
 
 	// Calculate achievements
@@ -355,15 +504,16 @@
 					</div>
 				</div>
 
-				<!-- Activity Stats Section -->
-				{#if stats.activity_count > 0}
+				<!-- Enhanced Activity Stats Section -->
+				{#if stats.activities_overall && stats.activities_overall.total_count > 0}
 					<div class="mb-8">
 						<div class="text-center mb-6">
 							<h3 class="text-2xl font-bold mb-2">{$t('adventures.activity_statistics')}</h3>
 							<p class="text-base-content/60">{$t('adventures.activity_statistics_description')}</p>
 						</div>
 
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+						<!-- Overall Activity Summary -->
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 							<!-- Total Activities -->
 							<div
 								class="stat-card card bg-gradient-to-br from-accent/10 to-accent/5 shadow-xl border border-accent/20 hover:shadow-2xl transition-all duration-300"
@@ -372,10 +522,12 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-accent/70 font-medium text-sm uppercase tracking-wide">
-												{$t('adventures.activities_name')}
+												{$t('adventures.total_activities')}
 											</div>
-											<div class="text-3xl font-bold text-accent">{stats.activity_count}</div>
-											<div class="text-accent/60 mt-2">{$t('adventures.total_recorded')}</div>
+											<div class="text-3xl font-bold text-accent">
+												{stats.activities_overall.total_count}
+											</div>
+											<div class="text-accent/60 mt-2">{$t('adventures.recorded_sessions')}</div>
 										</div>
 										<div class="p-3 bg-accent/20 rounded-2xl">
 											<Run class="w-6 h-6 text-accent" />
@@ -392,12 +544,12 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-error/70 font-medium text-sm uppercase tracking-wide">
-												{$t('adventures.distance')}
+												{$t('adventures.total_distance')}
 											</div>
 											<div class="text-3xl font-bold text-error">
-												{getDistance(stats.activity_distance)}
+												{getDistance(stats.activities_overall.total_distance)}
 											</div>
-											<div class="text-error/60 mt-2">{$t('adventures.total_covered')}</div>
+											<div class="text-error/60 mt-2">{$t('adventures.distance_covered')}</div>
 										</div>
 										<div class="p-3 bg-error/20 rounded-2xl">
 											<TrendingUpOutline class="w-6 h-6 text-error" />
@@ -417,7 +569,7 @@
 												{$t('adventures.moving_time')}
 											</div>
 											<div class="text-3xl font-bold text-purple-500">
-												{formatTime(stats.activity_moving_time)}
+												{formatTime(stats.activities_overall.total_moving_time)}
 											</div>
 											<div class="text-purple-500/60 mt-2">{$t('adventures.active_duration')}</div>
 										</div>
@@ -436,12 +588,12 @@
 									<div class="flex items-center justify-between">
 										<div>
 											<div class="text-orange-500/70 font-medium text-sm uppercase tracking-wide">
-												Elevation
+												{$t('adventures.elevation_gain')}
 											</div>
 											<div class="text-3xl font-bold text-orange-500">
-												{getElevation(stats.activity_elevation)}
+												{getElevation(stats.activities_overall.total_elevation_gain)}
 											</div>
-											<div class="text-orange-500/60 mt-2">Total gained</div>
+											<div class="text-orange-500/60 mt-2">{$t('adventures.total_climbed')}</div>
 										</div>
 										<div class="p-3 bg-orange-500/20 rounded-2xl">
 											<Mountain class="w-6 h-6 text-orange-500" />
@@ -449,6 +601,155 @@
 									</div>
 								</div>
 							</div>
+						</div>
+
+						<!-- Activity Categories -->
+						<div class="space-y-4">
+							<h4 class="text-xl font-bold text-center mb-6">
+								{$t('adventures.activity_breakdown_by_category')}
+							</h4>
+
+							{#each Object.entries(stats.activities_by_category) as [categoryKey, categoryData]}
+								{@const config = categoryConfig[categoryKey]}
+								{@const isExpanded = expandedCategories.has(categoryKey)}
+
+								<div
+									class="card bg-gradient-to-br {config.bgGradient} shadow-xl border {config.borderColor} hover:shadow-2xl transition-all duration-300"
+								>
+									<div class="card-body p-6">
+										<!-- Category Header -->
+										<div
+											class="flex items-center justify-between cursor-pointer"
+											role="button"
+											tabindex="0"
+											on:click={() => toggleCategory(categoryKey)}
+											on:keydown={(e) => {
+												if (e.key === 'Enter' || e.key === ' ') {
+													e.preventDefault();
+													toggleCategory(categoryKey);
+												}
+											}}
+										>
+											<div class="flex items-center gap-4">
+												<div class="p-3 bg-{config.color}/20 rounded-2xl">
+													<svelte:component
+														this={config.icon}
+														class="w-6 h-6 text-{config.color}"
+													/>
+												</div>
+												<div>
+													<h5 class="text-xl font-bold text-{config.color}">{config.name}</h5>
+													<p class="text-{config.color}/60">
+														{categoryData.count}
+														{$t('adventures.activities_text')}
+													</p>
+												</div>
+											</div>
+											<div class="flex items-center gap-4">
+												<div class="text-right">
+													<div class="text-2xl font-bold text-{config.color}">
+														{getDistance(categoryData.total_distance)}
+													</div>
+													<div class="text-{config.color}/60 text-sm">
+														{getElevation(categoryData.total_elevation_gain)}
+														{$t('adventures.elevation')}
+													</div>
+												</div>
+												<svelte:component
+													this={isExpanded ? ChevronUp : ChevronDown}
+													class="w-5 h-5 text-{config.color}/60"
+												/>
+											</div>
+										</div>
+
+										<!-- Expanded Details -->
+										{#if isExpanded}
+											<div class="mt-6 space-y-6">
+												<!-- Quick Stats Grid -->
+												<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Time
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{formatTime(categoryData.total_moving_time)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Avg Speed
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getSpeed(categoryData.avg_speed)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Max Distance
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getDistance(categoryData.max_distance)}
+														</div>
+													</div>
+													{#if categoryData.total_calories > 0}
+														<div
+															class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+														>
+															<div class="text-{config.color}/70 text-xs uppercase font-medium">
+																{$t('adventures.calories')}
+															</div>
+															<div
+																class="text-lg font-bold text-{config.color} flex items-center gap-1"
+															>
+																<Fire class="w-4 h-4" />
+																{Math.round(categoryData.total_calories)}
+															</div>
+														</div>
+													{/if}
+												</div>
+
+												<!-- Individual Sports Breakdown -->
+												{#if Object.keys(categoryData.sports).length > 1}
+													<div>
+														<h6 class="font-semibold text-{config.color} mb-3">Sport Types</h6>
+														<div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+															{#each Object.entries(categoryData.sports) as [sportType, sportData]}
+																<div
+																	class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+																>
+																	<div class="flex justify-between items-start">
+																		<div>
+																			<div class="font-medium text-{config.color}">{sportType}</div>
+																			<div class="text-{config.color}/60 text-sm">
+																				{sportData.count}
+																				{$t('adventures.activities_text')}
+																			</div>
+																		</div>
+																		<div class="text-right">
+																			<div class="font-bold text-{config.color}">
+																				{getDistance(sportData.total_distance)}
+																			</div>
+																			<div class="text-{config.color}/60 text-xs">
+																				{getElevation(sportData.total_elevation_gain)} elev
+																			</div>
+																		</div>
+																	</div>
+																</div>
+															{/each}
+														</div>
+													</div>
+												{/if}
+											</div>
+										{/if}
+									</div>
+								</div>
+							{/each}
 						</div>
 					</div>
 				{/if}
@@ -542,3 +843,15 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	.stat-card:hover {
+		transform: translateY(-2px);
+	}
+
+	.adventure-card:hover,
+	.collection-card:hover {
+		transform: translateY(-4px);
+		transition: all 0.3s ease;
+	}
+</style>
