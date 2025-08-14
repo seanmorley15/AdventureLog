@@ -519,7 +519,7 @@
 
 				<!-- Form Actions -->
 				<div class="flex justify-end gap-3 mt-8 pt-6 border-t border-base-300">
-					<button type="button" class="btn btn-ghost" on:click={close}>
+					<button type="button" class="btn btn-neutral-200" on:click={close}>
 						{$t('about.close')}
 					</button>
 					<button type="submit" class="btn btn-primary gap-2">
