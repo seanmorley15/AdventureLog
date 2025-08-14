@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	let isSubmitting: boolean = false;
 
 	export let data;
 	console.log(data);
@@ -15,35 +16,36 @@
 	import OpenIdConnect from '~icons/mdi/openid';
 
 	import { page } from '$app/stores';
-	import { gsap } from 'gsap'; // Import GSAP
+	import { gsap } from 'gsap';
 	import { onMount } from 'svelte';
 
+	function handleEnhanceSubmit() {
+		isSubmitting = true;
+		// If the form is aborted or done, reset the state
+		return async ({ update, result }: { update: any; result: any }) => {
+			if (result.type === 'success') {
+				// Keep isSubmitting as true for success to show loading state
+				await update(result);
+			} else {
+				isSubmitting = false;
+				await update(result);
+			}
+		};
+	}
+
 	onMount(() => {
-		gsap.from('.card', {
-			opacity: 0,
-			y: 50,
-			duration: 1,
-			ease: 'power3.out'
-		});
-		gsap.from('.text-center', {
-			opacity: 0,
-			x: -50,
-			duration: 1,
-			ease: 'power2.out'
-		});
-		gsap.from('.input', {
-			opacity: 0,
-			y: 30,
-			duration: 1,
-			ease: 'power2.out'
-		});
+		// Minimal fade-in only
+		gsap.fromTo(
+			'.main-container',
+			{ opacity: 0 },
+			{ opacity: 1, duration: 0.6, ease: 'power2.out' }
+		);
 	});
 
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
 	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
-
 	let background: Background = data.props?.background ?? { url: '' };
 </script>
 
@@ -51,97 +53,170 @@
 	<ImageInfoModal {background} on:close={() => (isImageInfoModalOpen = false)} />
 {/if}
 
-<div
-	class="min-h-screen bg-no-repeat bg-cover flex items-center justify-center"
-	style="background-image: url('{background.url}')"
->
-	<div
-		class="card card-compact m-12 w-full max-w-4xl bg-base-100 shadow-xl p-6 flex flex-col md:flex-row"
-	>
-		<div class="flex-1">
-			<h3 class="text-center">AdventureLog</h3>
-			<article class="text-center text-4xl mb-4 font-extrabold">
-				<h1>{$t('auth.login')}</h1>
-			</article>
+<div class="min-h-screen bg-base-200">
+	<!-- Background image if provided -->
+	{#if background.url}
+		<div
+			class="fixed inset-0 bg-cover bg-center bg-no-repeat opacity-60"
+			style="background-image: url('{background.url}')"
+		></div>
+	{/if}
 
-			<div class="flex justify-center">
-				<form method="post" use:enhance class="w-full max-w-xs">
-					<label for="username">{$t('auth.username')}</label>
-					<input
-						name="username"
-						id="username"
-						class="block input input-bordered w-full max-w-xs"
-					/><br />
-					<label for="password">{$t('auth.password')}</label>
-					<input
-						type="password"
-						name="password"
-						id="password"
-						class="block input input-bordered w-full max-w-xs"
-					/><br />
-					{#if $page.form?.mfa_required}
-						<label for="totp">TOTP</label>
-						<input
-							type="text"
-							name="totp"
-							id="totp"
-							inputmode="numeric"
-							pattern="[0-9]*"
-							autocomplete="one-time-code"
-							class="block input input-bordered w-full max-w-xs"
-						/><br />
-					{/if}
-					<button class="py-2 px-4 btn btn-primary mr-2">{$t('auth.login')}</button>
+	<div class="main-container relative z-10 min-h-screen flex items-center justify-center p-4">
+		<div class="w-full max-w-5xl">
+			<div class="card bg-base-100 shadow-2xl">
+				<div class="card-body p-0">
+					<div class="grid lg:grid-cols-2 min-h-[600px]">
+						<!-- Login Section -->
+						<div class="p-8 lg:p-12 flex flex-col justify-center">
+							<!-- Header -->
+							<div class="text-center mb-8">
+								<div class="mb-4">
+									<h1 class="text-3xl font-bold text-primary mb-1">AdventureLog</h1>
+									<div class="w-12 h-1 bg-primary mx-auto rounded"></div>
+								</div>
+								<h2 class="text-4xl font-bold text-base-content mb-2">{$t('auth.login')}</h2>
+							</div>
 
-					{#if socialProviders.length > 0}
-						<div class="divider text-center text-sm my-4">{$t('auth.or_3rd_party')}</div>
-						<div class="flex justify-center">
-							{#each socialProviders as provider}
-								<a href={provider.url} class="btn btn-primary mr-2 flex items-center">
-									{#if provider.provider === 'github'}
-										<GitHub class="w-4 h-4 mr-2" />
-									{:else if provider.provider === 'openid_connect'}
-										<OpenIdConnect class="w-4 h-4 mr-2" />
+							<!-- Form -->
+							<div class="max-w-sm mx-auto w-full">
+								<form method="post" use:enhance={handleEnhanceSubmit} class="space-y-4">
+									<!-- Username -->
+									<div class="form-control">
+										<label class="label" for="username">
+											<span class="label-text font-medium">{$t('auth.username')}</span>
+										</label>
+										<input
+											name="username"
+											id="username"
+											type="text"
+											class="input input-bordered w-full focus:input-primary"
+											placeholder={$t('auth.enter_username')}
+											autocomplete="username"
+										/>
+									</div>
+
+									<!-- Password -->
+									<div class="form-control">
+										<label class="label" for="password">
+											<span class="label-text font-medium">{$t('auth.password')}</span>
+										</label>
+										<input
+											type="password"
+											name="password"
+											id="password"
+											class="input input-bordered w-full focus:input-primary"
+											placeholder={$t('auth.enter_password')}
+											autocomplete="current-password"
+										/>
+									</div>
+
+									<!-- TOTP -->
+									{#if $page.form?.mfa_required}
+										<div class="form-control">
+											<label class="label" for="totp">
+												<span class="label-text font-medium">{$t('auth.totp')}</span>
+											</label>
+											<input
+												type="text"
+												name="totp"
+												id="totp"
+												inputmode="numeric"
+												pattern="[0-9]*"
+												autocomplete="one-time-code"
+												class="input input-bordered w-full focus:input-primary"
+												placeholder="000000"
+												maxlength="6"
+											/>
+										</div>
 									{/if}
-									{provider.name}
-								</a>
-							{/each}
+
+									<!-- Submit Button -->
+									<div class="form-control mt-6">
+										<button type="submit" class="btn btn-primary w-full" disabled={isSubmitting}>
+											{#if isSubmitting}
+												<span class="loading loading-spinner"></span>
+												<span class="ml-2">Logging in…</span>
+											{:else}
+												{$t('auth.login')}
+											{/if}
+										</button>
+									</div>
+
+									<!-- Error Message -->
+									{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
+										<div class="alert alert-error mt-4">
+											<span>{$t($page.form.message) || $t('auth.login_error')}</span>
+										</div>
+									{/if}
+
+									<!-- Social Login -->
+									{#if socialProviders.length > 0}
+										<div class="divider text-sm">{$t('auth.or_3rd_party')}</div>
+
+										<div class="space-y-2">
+											{#each socialProviders as provider}
+												<a
+													href={provider.url}
+													class="btn btn-outline w-full flex items-center gap-2"
+												>
+													{#if provider.provider === 'github'}
+														<GitHub class="w-4 h-4" />
+													{:else if provider.provider === 'openid_connect'}
+														<OpenIdConnect class="w-4 h-4" />
+													{/if}
+													Continue with {provider.name}
+												</a>
+											{/each}
+										</div>
+									{/if}
+
+									<!-- Footer Links -->
+									<div class="flex justify-between text-sm mt-6 pt-4 border-t border-base-300">
+										<a href="/signup" class="link link-primary">
+											{$t('auth.signup')}
+										</a>
+										<a href="/user/reset-password" class="link link-primary">
+											{$t('auth.forgot_password')}
+										</a>
+									</div>
+								</form>
+							</div>
 						</div>
-					{/if}
 
-					<div class="flex justify-between mt-4">
-						<p><a href="/signup" class="underline">{$t('auth.signup')}</a></p>
-						<p>
-							<a href="/user/reset-password" class="underline">{$t('auth.forgot_password')}</a>
-						</p>
+						<!-- Quote/Info Section -->
+						<div
+							class="bg-primary/5 p-8 lg:p-12 flex items-center justify-center border-l border-base-300"
+						>
+							<div class="text-center max-w-md">
+								{#if quote && quote.quote}
+									<div class="space-y-4">
+										<div class="text-6xl text-primary/30 mb-2">"</div>
+										<blockquote class="text-lg font-medium text-base-content leading-relaxed">
+											{quote.quote}
+										</blockquote>
+										<footer class="text-base-content/70 font-medium">
+											— {quote.author}
+										</footer>
+									</div>
+								{/if}
+							</div>
+						</div>
 					</div>
-				</form>
-			</div>
-
-			{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
-				<div class="text-center text-error mt-4">
-					{$t($page.form.message) || $t('auth.login_error')}
 				</div>
-			{/if}
-		</div>
-
-		<div class="flex-1 flex justify-center items-center mt-12 md:mt-0 md:ml-6">
-			<blockquote class="w-80 text-center text-2xl font-semibold break-words">
-				{#if quote != null}
-					{quote.quote}
-				{/if}
-				<footer class="text-sm mt-1">{quote.author}</footer>
-			</blockquote>
+			</div>
 		</div>
 	</div>
-</div>
 
-<div class="fixed bottom-4 right-4 z-[999]">
-	<div class="dropdown dropdown-left dropdown-end">
-		<button class="btn m-1 btn-circle btn-md" on:click={() => (isImageInfoModalOpen = true)}>
+	<!-- Image Info Button -->
+	{#if background.url}
+		<button
+			class="btn btn-circle btn-sm fixed bottom-4 right-4 bg-base-100/80 border-base-300 z-20"
+			on:click={() => (isImageInfoModalOpen = true)}
+		>
 			<FileImageBox class="w-4 h-4" />
 		</button>
-	</div>
+	{/if}
 </div>
 
 <svelte:head>
@@ -151,3 +226,10 @@
 		content="Login to your AdventureLog account to start logging your adventures!"
 	/>
 </svelte:head>
+
+<style>
+	.input:focus {
+		outline: 2px solid hsl(var(--p));
+		outline-offset: 2px;
+	}
+</style>

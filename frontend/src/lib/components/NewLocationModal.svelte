@@ -19,19 +19,23 @@
 	let steps = [
 		{
 			name: $t('adventures.quick_start'),
-			selected: true
+			selected: true,
+			requires_id: false
 		},
 		{
 			name: $t('adventures.details'),
-			selected: false
+			selected: false,
+			requires_id: false
 		},
 		{
 			name: $t('settings.media'),
-			selected: false
+			selected: false,
+			requires_id: true
 		},
 		{
 			name: $t('adventures.visits'),
-			selected: false
+			selected: false,
+			requires_id: true
 		}
 	];
 
@@ -189,13 +193,16 @@
 							<button
 								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
 									? 'bg-primary text-primary-content'
-									: 'bg-base-200'} hover:bg-primary/80 transition-colors cursor-pointer"
+									: 'bg-base-200'} {step.requires_id && !location.id
+									? 'opacity-50 cursor-not-allowed'
+									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
 								on:click={() => {
 									// Reset all steps
 									steps.forEach((s) => (s.selected = false));
 									// Select clicked step
 									steps[index].selected = true;
 								}}
+								disabled={step.requires_id && !location.id}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
 								<span class="sm:hidden"

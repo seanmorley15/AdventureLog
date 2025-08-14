@@ -262,12 +262,12 @@
 	<div class="card-body p-6 space-y-4">
 		<!-- Header Section -->
 		<div class="space-y-3">
-			<button
-				on:click={() => goto(`/locations/${adventure.id}`)}
-				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline"
+			<a
+				href="/locations/{adventure.id}"
+				class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline block"
 			>
 				{adventure.name}
-			</button>
+			</a>
 
 			<!-- Location -->
 			{#if adventure.location}

@@ -555,7 +555,10 @@
     "no_public_locations": "No public locations found",
     "no_public_collections": "No public collections found",
     "user_locations": "User Locations",
-    "user_collections": "User Collections"
+    "user_collections": "User Collections",
+    "enter_username": "Enter your username",
+    "enter_password": "Enter your password",
+    "totp": "Two-Factor Code"
   },
   "users": {
     "no_users_found": "No users found with public profiles."

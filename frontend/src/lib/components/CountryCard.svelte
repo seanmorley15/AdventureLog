@@ -25,7 +25,12 @@
 	<!-- Content -->
 	<div class="card-body p-6 space-y-4">
 		<!-- Title -->
-		<h2 class="text-xl font-bold truncate">{country.name}</h2>
+		<a
+			href="/worldtravel/{country.country_code}"
+			class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline block"
+		>
+			{country.name}
+		</a>
 
 		<!-- Info Badges -->
 		<div class="flex flex-wrap gap-2">
