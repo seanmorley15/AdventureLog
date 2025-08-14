@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from adventures.utils.sports_types import SPORT_CATEGORIES
+from adventures.utils.get_is_visited import is_location_visited
 from django.db.models import Sum, Avg, Max, Count, Q
+from django.utils import timezone
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
 from adventures.models import Location, Collection, Activity
 from django.contrib.auth import get_user_model
@@ -14,6 +16,19 @@ class StatsViewSet(viewsets.ViewSet):
     """
     A simple ViewSet for listing the stats of a user.
     """
+
+    def _get_visited_locations_count(self, user):
+        """Calculate count of visited locations for a user"""
+        visited_count = 0
+        
+        # Get all locations for this user
+        user_locations = Location.objects.filter(user=user).prefetch_related('visits')
+        
+        for location in user_locations:
+            if is_location_visited(location):
+                visited_count += 1
+        
+        return visited_count
 
     def _get_activity_stats_by_category(self, user_activities):
         """Calculate detailed stats for each sport category"""
@@ -125,6 +140,7 @@ class StatsViewSet(viewsets.ViewSet):
         
         # get the counts for the user
         location_count = Location.objects.filter(user=user.id).count()
+        visited_location_count = self._get_visited_locations_count(user)
         trips_count = Collection.objects.filter(user=user.id).count()
         visited_city_count = VisitedCity.objects.filter(user=user.id).count()
         total_cities = City.objects.count()
@@ -144,6 +160,7 @@ class StatsViewSet(viewsets.ViewSet):
         return Response({
             # Travel stats
             'location_count': location_count,
+            'visited_location_count': visited_location_count,
             'trips_count': trips_count,
             'visited_city_count': visited_city_count,
             'total_cities': total_cities,

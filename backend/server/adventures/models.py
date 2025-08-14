@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from adventures.utils.timezones import TIMEZONES
 from adventures.utils.sports_types import SPORT_TYPE_CHOICES
-
+from adventures.utils.get_is_visited import is_location_visited
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
@@ -177,15 +177,7 @@ class Location(models.Model):
     objects = LocationManager()
 
     def is_visited_status(self):
-        current_date = timezone.now().date()
-        for visit in self.visits.all():
-            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
-            end_date = visit.end_date.date() if isinstance(visit.end_date, timezone.datetime) else visit.end_date
-            if start_date and end_date and (start_date <= current_date):
-                return True
-            elif start_date and not end_date and (start_date <= current_date):
-                return True
-        return False
+        return is_location_visited(self)
 
     def clean(self, skip_shared_validation=False):
         """
