@@ -12,7 +12,6 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import LocationSerializer
 from adventures.utils import pagination
 
-
 class LocationViewSet(viewsets.ModelViewSet):
     """
     ViewSet for managing Adventure objects with support for filtering, sorting,
