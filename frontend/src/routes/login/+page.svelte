@@ -136,7 +136,7 @@
 										<button type="submit" class="btn btn-primary w-full" disabled={isSubmitting}>
 											{#if isSubmitting}
 												<span class="loading loading-spinner"></span>
-												<span class="ml-2">Logging in…</span>
+												<span class="ml-2">{$t('auth.logging_in')}...</span>
 											{:else}
 												{$t('auth.login')}
 											{/if}

@@ -22,6 +22,9 @@ ENV PYTHONUNBUFFERED=1
 # Set the working directory
 WORKDIR /code
 
+# Set non-interactive mode for apt-get
+ENV DEBIAN_FRONTEND=noninteractive
+
 # Install system dependencies (Nginx included)
 RUN apt-get update \
     && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx memcached supervisor \
