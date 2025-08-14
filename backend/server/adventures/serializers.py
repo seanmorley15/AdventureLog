@@ -1,4 +1,3 @@
-from django.utils import timezone
 import os
 from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity
 from rest_framework import serializers
