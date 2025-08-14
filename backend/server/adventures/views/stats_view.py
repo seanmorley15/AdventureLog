@@ -4,8 +4,7 @@ from rest_framework.decorators import action
 from django.shortcuts import get_object_or_404
 from adventures.utils.sports_types import SPORT_CATEGORIES
 from adventures.utils.get_is_visited import is_location_visited
-from django.db.models import Sum, Avg, Max, Count, Q
-from django.utils import timezone
+from django.db.models import Sum, Avg, Max, Count
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
 from adventures.models import Location, Collection, Activity
 from django.contrib.auth import get_user_model
