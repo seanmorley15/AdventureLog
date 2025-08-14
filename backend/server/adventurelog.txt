@@ -4,4 +4,4 @@
 ██╔══██║██║  ██║╚██╗ ██╔╝██╔══╝  ██║╚██╗██║   ██║   ██║   ██║██╔══██╗██╔══╝  ██║     ██║   ██║██║   ██║
 ██║  ██║██████╔╝ ╚████╔╝ ███████╗██║ ╚████║   ██║   ╚██████╔╝██║  ██║███████╗███████╗╚██████╔╝╚██████╔╝
 ╚═╝  ╚═╝╚═════╝   ╚═══╝  ╚══════╝╚═╝  ╚═══╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝ 
-“The world is full of wonderful things you haven't seen yet. Don't ever give up on the chance of seeing them.” - J.K. Rowling
+“Go confidently in the direction of your dreams! Live the life you've imagined. As you simplify your life, the laws of the universe will be simpler.” ― Henry David Thoreau
