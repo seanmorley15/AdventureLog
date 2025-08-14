@@ -43,6 +43,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies (including GDAL)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+      postgresql-client \
       gdal-bin \
       libgdal-dev \
       nginx \
