@@ -1,5 +1,9 @@
 name: Upload the tagged release CDN image to GHCR and Docker Hub
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   release:
     types: [released]

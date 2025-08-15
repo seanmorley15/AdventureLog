@@ -55,8 +55,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
 
         try:
             token, expiry = login_to_wanderer(inst, password)
-        except IntegrationError as e:
-            raise ValidationError({"error": str(e)})
+        except IntegrationError:
+            raise ValidationError({"error": "Failed to authenticate with Wanderer server."})
 
         inst.token = token
         inst.token_expiry = expiry
@@ -92,8 +92,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
         if password:
             try:
                 token, expiry = login_to_wanderer(inst, password)
-            except IntegrationError as e:
-                raise ValidationError({"error": str(e)})
+            except IntegrationError:
+                raise ValidationError({"error": "Failed to update integration. Please check your credentials and try again."})
             inst.token = token
             inst.token_expiry = expiry
 
@@ -122,8 +122,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
         password = request.data.get("password")
         try:
             session = get_valid_session(inst, password_for_reauth=password)
-        except IntegrationError as e:
-            raise ValidationError({"detail": str(e)})
+        except IntegrationError:
+            raise ValidationError({"detail": "An error occurred while refreshing the integration."})
 
         return Response({
             "token": inst.token,
@@ -147,10 +147,10 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
             # If session expired and no password provided, give a helpful error
             if "password is required" in str(e).lower():
                 raise ValidationError({
-                    "detail": str(e),
+                    "detail": "Session expired or not authenticated. Please provide your password to re-authenticate.",
                     "requires_password": True
                 })
-            raise ValidationError({"detail": str(e)})
+            raise ValidationError({"detail": "An error occurred while refreshing the integration."})
 
         # Pass along all query parameters except password
         params = {k: v for k, v in request.query_params.items() if k != "password"}
@@ -159,7 +159,7 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
         try:
             response = session.get(url, params=params, timeout=10)
             response.raise_for_status()
-        except requests.RequestException as exc:
-            raise ValidationError({"detail": f"Error fetching trails: {exc}"})
+        except requests.RequestException:
+            raise ValidationError({"detail": f"Error fetching trails"})
 
         return Response(response.json())

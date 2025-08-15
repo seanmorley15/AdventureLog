@@ -138,8 +138,7 @@ class StravaIntegrationView(viewsets.ViewSet):
                 {
                     'message': 'Failed to connect to Strava.',
                     'error': True,
-                    'code': 'strava.connection_failed',
-                    'details': str(e)
+                    'code': 'strava.connection_failed'
                 },
                 status=status.HTTP_502_BAD_GATEWAY
             )
@@ -209,8 +208,7 @@ class StravaIntegrationView(viewsets.ViewSet):
                 return None, Response({
                     'message': 'Failed to connect to Strava for token refresh.',
                     'error': True,
-                    'code': 'strava.connection_failed',
-                    'details': str(e)
+                    'code': 'strava.connection_failed'
                 }, status=status.HTTP_502_BAD_GATEWAY)
 
         return strava_token, None
@@ -426,8 +424,7 @@ class StravaIntegrationView(viewsets.ViewSet):
             return Response({
                 'message': 'Failed to connect to Strava.',
                 'error': True,
-                'code': 'strava.connection_failed',
-                'details': str(e)
+                'code': 'strava.connection_failed'
             }, status=status.HTTP_502_BAD_GATEWAY)
 
     @action(detail=False, methods=['get'], url_path='activities/(?P<activity_id>[^/.]+)')
@@ -463,6 +460,5 @@ class StravaIntegrationView(viewsets.ViewSet):
             return Response({
                 'message': 'Failed to connect to Strava.',
                 'error': True,
-                'code': 'strava.connection_failed',
-                'details': str(e)
+                'code': 'strava.connection_failed'
             }, status=status.HTTP_502_BAD_GATEWAY)
