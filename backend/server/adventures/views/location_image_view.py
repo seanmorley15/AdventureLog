@@ -260,7 +260,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         
         # Get uploaded image file safely
         image_file = request.FILES.get('image')
-        if not image_file:
+        immich_id = request.data.get('immich_id')
+
+        if not image_file and not immich_id:
             return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
         
         # Build a clean dict for serializer input
@@ -268,6 +270,10 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             'content_type': content_type.id,
             'object_id': object_id,
         }
+
+        # Add immich_id if provided
+        if immich_id:
+            request_data['immich_id'] = immich_id
 
         # Optionally add other fields (e.g., caption, alt text) from request.data
         for key in ['caption', 'alt_text', 'description']:  # update as needed
@@ -278,13 +284,19 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request_data)
         serializer.is_valid(raise_exception=True)
 
-        # Save with image passed explicitly
-        serializer.save(
-            user=getattr(content_object, 'user', request.user),
-            content_type=content_type,
-            object_id=object_id,
-            image=image_file
-        )
+        # Prepare save parameters
+        save_kwargs = {
+            'user': getattr(content_object, 'user', request.user),
+            'content_type': content_type,
+            'object_id': object_id,
+        }
+        
+        # Add image file if provided
+        if image_file:
+            save_kwargs['image'] = image_file
+
+        # Save with appropriate parameters
+        serializer.save(**save_kwargs)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
