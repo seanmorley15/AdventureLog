@@ -57,7 +57,7 @@ Capture rich details for every location: name, dates, precise locations, vivid d
 ::: details 🗺️ **Interactive World Map**  
 Track every destination you’ve visited or plan to visit with our beautifully detailed, interactive world map. Easily filter locations by visit status — visited or planned — and add new locations by simply clicking on the map. Watch your travel story unfold visually as your journey grows.  
 <img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/map.png" alt="Interactive World Map" style="max-width:100%; margin-top:10px;" />  
-<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/development/brand/screenshots/map-satellite.png" alt="Interactive World Map" style="max-width:100%; margin-top:10px;" />  
+<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/map-satellite.png" alt="Interactive World Map" style="max-width:100%; margin-top:10px;" />  
 :::
 
 ::: details ✈️ **Comprehensive Trip Planning**  
