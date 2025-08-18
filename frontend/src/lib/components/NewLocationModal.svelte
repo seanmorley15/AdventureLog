@@ -253,7 +253,6 @@
 					location.longitude = e.detail.longitude;
 					steps[0].selected = false;
 					steps[1].selected = true;
-					console.log('Location selected:', e.detail);
 				}}
 				on:cancel={() => close()}
 				on:next={() => {
