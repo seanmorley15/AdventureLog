@@ -5,16 +5,17 @@ Starting from a simple idea of tracking travel locations, AdventureLog has grown
 ## Features
 
 - **Track Your Adventures** 🌍: Log your adventures and keep track of where you've been on the world map.
-  - Adventures can store a variety of information, including the location, date, and description.
-  - Adventures can be sorted into custom categories for easy organization.
-  - Adventures can be marked as private or public, allowing you to share your adventures with friends and family.
+  - Locations can store a variety of information, including the location, date, and description.
+  - Locations can be sorted into custom categories for easy organization.
+  - Locations can be marked as private or public, allowing you to share your adventures with friends and family.
   - Keep track of the countries and regions you've visited with the world travel book.
+  - Upload trails and activities to your locations to remember your experiences with detailed maps and stats.
 - **Plan Your Next Trip** 📃: Take the guesswork out of planning your next adventure with an easy-to-use itinerary planner.
   - Itineraries can be created for any number of days and can include multiple destinations.
   - Itineraries include many planning features like flight information, notes, checklists, and links to external resources.
   - Itineraries can be shared with friends and family for collaborative planning.
 - **Share Your Experiences** 📸: Share your adventures with friends and family and collaborate on trips together.
-  - Adventures and itineraries can be shared via a public link or directly with other AdventureLog users.
+  - Locations and itineraries can be shared via a public link or directly with other AdventureLog users.
   - Collaborators can view and edit shared itineraries (collections), making planning a breeze.
 
 ## Why AdventureLog?
