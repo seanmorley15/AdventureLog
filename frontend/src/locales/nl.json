@@ -1007,7 +1007,8 @@
     "not_configured": "Strava niet geconfigureerd",
     "ready_to_connect": "Klaar om verbinding te maken",
     "strava_integration_desc": "Maak verbinding met Strava om uw activties eenvoudig te importeren in locaties en bezoeken",
-    "gpx_required": "Upload het GPX -bestand om de strava -import te voltooien"
+    "gpx_required": "Upload het GPX -bestand om de strava -import te voltooien",
+    "not_enabled": "Strava -integratie is niet ingeschakeld in deze instantie."
   },
   "wanderer": {
     "connected": "Succesvol verbonden met Wanderer",

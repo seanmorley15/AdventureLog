@@ -913,7 +913,8 @@
     "not_configured": "Strava لم يتم تكوينه",
     "ready_to_connect": "جاهز للاتصال",
     "strava_integration_desc": "اتصل بـ Strava لاستيراد التنشيطات الخاصة بك بسهولة إلى مواقع وزيارات",
-    "gpx_required": "يرجى تحميل ملف GPX لإكمال استيراد Strava"
+    "gpx_required": "يرجى تحميل ملف GPX لإكمال استيراد Strava",
+    "not_enabled": "لا يتم تمكين تكامل Strava في هذه الحالة."
   },
   "transportation": {
     "edit": "يحرر",

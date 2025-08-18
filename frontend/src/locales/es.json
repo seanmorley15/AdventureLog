@@ -1007,7 +1007,8 @@
     "not_configured": "Strava no configurado",
     "ready_to_connect": "Listo para conectarse",
     "strava_integration_desc": "Conéctese a Strava para importar fácilmente sus actividades a ubicaciones y visitas",
-    "gpx_required": "Sube el archivo GPX para completar la importación de Strava"
+    "gpx_required": "Sube el archivo GPX para completar la importación de Strava",
+    "not_enabled": "La integración de Strava no está habilitada en este caso."
   },
   "wanderer": {
     "connected": "Conectado con éxito a Wanderer",

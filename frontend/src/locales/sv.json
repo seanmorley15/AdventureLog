@@ -1007,7 +1007,8 @@
     "not_configured": "Strava inte konfigurerad",
     "ready_to_connect": "Redo att ansluta",
     "strava_integration_desc": "Anslut till Strava för att enkelt importera dina aktiviteter till platser och besök",
-    "gpx_required": "Ladda upp GPX -filen för att slutföra Strava -importen"
+    "gpx_required": "Ladda upp GPX -filen för att slutföra Strava -importen",
+    "not_enabled": "Strava -integration är inte aktiverad i det här fallet."
   },
   "wanderer": {
     "connected": "Framgångsrikt ansluten till vandrare",

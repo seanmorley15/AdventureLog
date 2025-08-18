@@ -1006,7 +1006,8 @@
     "not_configured": "Strava는 구성되지 않았습니다",
     "ready_to_connect": "연결 준비",
     "strava_integration_desc": "Strava에 연결하여 액티브를 위치 및 방문으로 쉽게 가져 오십시오.",
-    "gpx_required": "Strava 가져 오기를 완료하려면 GPX 파일을 업로드하십시오."
+    "gpx_required": "Strava 가져 오기를 완료하려면 GPX 파일을 업로드하십시오.",
+    "not_enabled": "이 인스턴스에서는 Strava 통합이 활성화되지 않습니다."
   },
   "wanderer": {
     "connected": "Wanderer에 성공적으로 연결되었습니다",

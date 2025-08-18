@@ -1007,7 +1007,8 @@
     "not_configured": "Strava nicht konfiguriert",
     "ready_to_connect": "Herstellen zu verbinden",
     "strava_integration_desc": "Stellen Sie eine Verbindung zu Strava her, um Ihre Aktivitäten einfach in Orte und Besuche zu importieren",
-    "gpx_required": "Bitte laden Sie die GPX -Datei hoch, um den Strava -Import zu vervollständigen"
+    "gpx_required": "Bitte laden Sie die GPX -Datei hoch, um den Strava -Import zu vervollständigen",
+    "not_enabled": "Die Strava -Integration ist in dieser Instanz nicht aktiviert."
   },
   "wanderer": {
     "connected": "Erfolgreich mit Wanderer verbunden",

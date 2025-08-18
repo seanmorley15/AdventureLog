@@ -913,7 +913,8 @@
     "not_configured": "Strava não configurado",
     "ready_to_connect": "Pronto para se conectar",
     "strava_integration_desc": "Conecte -se ao Strava para importar facilmente suas atividades para locais e visitas",
-    "gpx_required": "Faça o upload do arquivo GPX para concluir a importação de Strava"
+    "gpx_required": "Faça o upload do arquivo GPX para concluir a importação de Strava",
+    "not_enabled": "A integração de Strava não está ativada nesta instância."
   },
   "transportation": {
     "edit": "Editar",

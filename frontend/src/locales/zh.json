@@ -1007,7 +1007,8 @@
     "not_configured": "Strava未配置",
     "ready_to_connect": "准备连接",
     "strava_integration_desc": "连接到Strava，轻松将您的活动导入到位置和访问中",
-    "gpx_required": "请上传GPX文件以完成Strava导入"
+    "gpx_required": "请上传GPX文件以完成Strava导入",
+    "not_enabled": "在这种情况下未启用Strava集成。"
   },
   "wanderer": {
     "connected": "成功与流浪者联系",

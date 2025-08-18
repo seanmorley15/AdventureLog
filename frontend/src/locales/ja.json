@@ -913,7 +913,8 @@
     "not_configured": "Stravaが構成されていません",
     "ready_to_connect": "接続する準備ができました",
     "strava_integration_desc": "Stravaに接続して、アクティビティを場所や訪問に簡単にインポートする",
-    "gpx_required": "GPXファイルをアップロードして、STRAVAインポートを完了してください"
+    "gpx_required": "GPXファイルをアップロードして、STRAVAインポートを完了してください",
+    "not_enabled": "このインスタンスでは、STRAVA統合は有効になりません。"
   },
   "transportation": {
     "edit": "編集",
