@@ -446,8 +446,9 @@ class BackupViewSet(viewsets.ViewSet):
         for city_data in backup_data.get('visited_cities', []):
             try:
                 city_obj = City.objects.get(id=city_data['city'])
-                VisitedCity.objects.create(user=user, city=city_obj)
-                summary['visited_cities'] += 1
+                visited_city, created = VisitedCity.objects.get_or_create(user=user, city=city_obj)
+                if created:
+                    summary['visited_cities'] += 1
             except City.DoesNotExist:
                 # If city does not exist, we can skip or log it
                 pass
@@ -456,8 +457,9 @@ class BackupViewSet(viewsets.ViewSet):
         for region_data in backup_data.get('visited_regions', []):
             try:
                 region_obj = Region.objects.get(id=region_data['region'])
-                VisitedRegion.objects.create(user=user, region=region_obj)
-                summary['visited_regions'] += 1
+                visited_region, created = VisitedRegion.objects.get_or_create(user=user, region=region_obj)
+                if created:
+                    summary['visited_regions'] += 1
             except Region.DoesNotExist:
                 # If region does not exist, we can skip or log it
                 pass
