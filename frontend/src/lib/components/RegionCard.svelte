@@ -54,7 +54,12 @@
 >
 	<div class="card-body p-6 space-y-4">
 		<!-- Header -->
-		<h2 class="text-xl font-bold truncate">{region.name}</h2>
+		<a
+			href="/worldtravel/{region.id.split('-')[0]}/{region.id}"
+			class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline block"
+		>
+			{region.name}
+		</a>
 
 		<!-- Metadata Badges -->
 		<div class="flex flex-wrap gap-2">

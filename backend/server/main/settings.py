@@ -88,7 +88,9 @@ ACCOUNT_EMAIL_VERIFICATION = 'none'
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
+        'LOCATION': '127.0.0.1:11211',
+        'TIMEOUT': 60 * 60 * 24,  # Optional: 1 day cache
     }
 }
 
@@ -295,6 +297,8 @@ CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGIN
 
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
 
+CORS_ALLOW_CREDENTIALS = True
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 LOGGING = {
@@ -322,9 +326,17 @@ LOGGING = {
     },
 }
 
+PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
+
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
+
+# Major release version of AdventureLog, not including the patch version date.
+ADVENTURELOG_RELEASE_VERSION = 'v0.10.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.6'
 
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
+
+STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
+STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')

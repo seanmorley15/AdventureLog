@@ -4,7 +4,7 @@ import randomBackgrounds from './json/backgrounds.json';
 // @ts-ignore
 import { DateTime } from 'luxon';
 import type {
-	Adventure,
+	Location,
 	Background,
 	Checklist,
 	Collection,
@@ -34,26 +34,6 @@ export function checkLink(link: string) {
 	}
 }
 
-export async function exportData() {
-	let res = await fetch('/api/adventures/all');
-	let adventures = (await res.json()) as Adventure[];
-
-	res = await fetch('/api/collections/all');
-	let collections = (await res.json()) as Collection[];
-
-	res = await fetch('/api/visitedregion');
-	let visitedRegions = await res.json();
-
-	const data = {
-		adventures,
-		collections,
-		visitedRegions
-	};
-
-	const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
-	return URL.createObjectURL(blob);
-}
-
 export function isValidUrl(url: string) {
 	try {
 		new URL(url);
@@ -63,22 +43,22 @@ export function isValidUrl(url: string) {
 	}
 }
 
-export function groupAdventuresByDate(
-	adventures: Adventure[],
+export function groupLocationsByDate(
+	locations: Location[],
 	startDate: Date,
 	numberOfDays: number
-): Record<string, Adventure[]> {
-	const groupedAdventures: Record<string, Adventure[]> = {};
+): Record<string, Location[]> {
+	const groupedLocations: Record<string, Location[]> = {};
 
 	// Initialize all days in the range using DateTime
 	for (let i = 0; i < numberOfDays; i++) {
 		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
 		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
-		groupedAdventures[dateString] = [];
+		groupedLocations[dateString] = [];
 	}
 
-	adventures.forEach((adventure) => {
-		adventure.visits.forEach((visit) => {
+	locations.forEach((location) => {
+		location.visits.forEach((visit: { start_date: string; end_date: string; timezone: any }) => {
 			if (visit.start_date) {
 				// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
 				const startHasZeros = isAllDay(visit.start_date);
@@ -115,10 +95,10 @@ export function groupAdventuresByDate(
 					const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
 					const currentDateStr = currentDate.toISODate();
 
-					// Include the current day if it falls within the adventure date range
+					// Include the current day if it falls within the location date range
 					if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-						if (groupedAdventures[currentDateStr]) {
-							groupedAdventures[currentDateStr].push(adventure);
+						if (groupedLocations[currentDateStr]) {
+							groupedLocations[currentDateStr].push(location);
 						}
 					}
 				}
@@ -126,7 +106,7 @@ export function groupAdventuresByDate(
 		});
 	});
 
-	return groupedAdventures;
+	return groupedLocations;
 }
 
 function getLocalDateString(date: Date): string {
@@ -426,15 +406,6 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	other: '❓'
 };
 
-export function getAdventureTypeLabel(type: string) {
-	// return the emoji ADVENTURE_TYPE_ICONS label for the given type if not found return ? emoji
-	if (type in ADVENTURE_TYPE_ICONS) {
-		return ADVENTURE_TYPE_ICONS[type as keyof typeof ADVENTURE_TYPE_ICONS];
-	} else {
-		return '❓';
-	}
-}
-
 export function getRandomBackground() {
 	const today = new Date();
 
@@ -646,9 +617,513 @@ export function getIsDarkMode() {
 	return false;
 }
 
-export function getBasemapUrl() {
-	if (getIsDarkMode()) {
-		return 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json';
+// Enhanced basemap functions with 3D terrain support
+export function getBasemapUrl(type = 'default'): any {
+	switch (type) {
+		// 3D Terrain Maps with elevation data
+		case 'terrain-3d':
+			return {
+				version: 8,
+				name: '3D Terrain',
+				sources: {
+					'raster-tiles': {
+						type: 'raster',
+						tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'],
+						tileSize: 256,
+						attribution: '© OpenStreetMap contributors, © CARTO'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#b8dee6'
+						}
+					},
+					{
+						id: 'raster-layer',
+						type: 'raster',
+						source: 'raster-tiles'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 1.5
+				}
+			};
+
+		case 'satellite-terrain-3d':
+			return {
+				version: 8,
+				name: 'Satellite 3D Terrain',
+				sources: {
+					satellite: {
+						type: 'raster',
+						tiles: [
+							'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+						],
+						tileSize: 256,
+						attribution: '© Esri, Maxar, Earthstar Geographics, USGS'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#000'
+						}
+					},
+					{
+						id: 'satellite-layer',
+						type: 'raster',
+						source: 'satellite'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 2.0
+				}
+			};
+
+		case 'topo-terrain-3d':
+			return {
+				version: 8,
+				name: 'Topographic 3D Terrain',
+				sources: {
+					topo: {
+						type: 'raster',
+						tiles: [
+							'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}'
+						],
+						tileSize: 256,
+						attribution: '© Esri, HERE, Garmin, USGS, FAO, NOAA'
+					},
+					terrain: {
+						type: 'raster-dem',
+						tiles: ['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png'],
+						encoding: 'terrarium',
+						tileSize: 256,
+						maxzoom: 15
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#f5f5dc'
+						}
+					},
+					{
+						id: 'topo-layer',
+						type: 'raster',
+						source: 'topo'
+					}
+				],
+				terrain: {
+					source: 'terrain',
+					exaggeration: 1.8
+				}
+			};
+
+		// Alternative free terrain source using MapTiler (no key required for basic use)
+		case 'maptiler-terrain-3d':
+			return {
+				version: 8,
+				name: 'MapTiler 3D Terrain',
+				sources: {
+					maptiler: {
+						type: 'raster',
+						tiles: [
+							'https://api.maptiler.com/maps/outdoor/256/{z}/{x}/{y}.png?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+						],
+						tileSize: 256,
+						attribution: '© MapTiler © OpenStreetMap contributors'
+					},
+					'terrain-rgb': {
+						type: 'raster-dem',
+						tiles: [
+							'https://api.maptiler.com/tiles/terrain-rgb/{z}/{x}/{y}.png?key=get_your_own_OpIi9ZULNHzrESv6T2vL'
+						],
+						encoding: 'mapbox',
+						tileSize: 256,
+						maxzoom: 12
+					}
+				},
+				layers: [
+					{
+						id: 'background',
+						type: 'background',
+						paint: {
+							'background-color': '#e8f4f8'
+						}
+					},
+					{
+						id: 'maptiler-layer',
+						type: 'raster',
+						source: 'maptiler'
+					}
+				],
+				terrain: {
+					source: 'terrain-rgb',
+					exaggeration: 1.5
+				}
+			};
+
+		// Existing non-3D maps...
+		case 'satellite':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, Maxar, Earthstar Geographics, USGS'
+			);
+
+		case 'satellite-labels':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+				'© Esri',
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+			);
+
+		case 'elevation':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Elevation/World_Hillshade/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, USGS, NOAA'
+			);
+
+		case 'usgs-topo':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSTopo/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		case 'esri-topo':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, FAO, NOAA'
+			);
+
+		case 'osm-standard':
+			return getXYZStyle(
+				'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors'
+			);
+
+		case 'osm-humanitarian':
+			return getXYZStyle(
+				'https://tile-{s}.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, Humanitarian OSM Team'
+			);
+
+		case 'osm-france':
+			return getXYZStyle(
+				'https://tile-{s}.openstreetmap.fr/osmfr/{z}/{x}/{y}.png',
+				'© OpenStreetMap France'
+			);
+
+		case 'carto-light':
+			return getXYZStyle(
+				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, © CartoDB'
+			);
+
+		case 'carto-dark':
+			return getXYZStyle(
+				'https://cartodb-basemaps-{s}.global.ssl.fastly.net/dark_all/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, © CartoDB'
+			);
+
+		case 'carto-positron':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO'
+			);
+
+		case 'carto-positron-labels':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO',
+				'https://basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png'
+			);
+
+		case 'carto-voyager':
+			return getXYZStyle(
+				'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+				'© OpenStreetMap contributors, © CARTO'
+			);
+
+		case 'wikimedia':
+			return getXYZStyle(
+				'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png',
+				'© OpenStreetMap contributors, Wikimedia Maps'
+			);
+
+		case 'usgs-imagery':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		case 'usgs-imagery-topo':
+			return getXYZStyle(
+				'https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryTopo/MapServer/tile/{z}/{y}/{x}',
+				'© USGS'
+			);
+
+		case 'esri-streets':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, EPA'
+			);
+
+		case 'esri-national-geographic':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, National Geographic, Garmin, HERE, UNEP-WCMC'
+			);
+
+		case 'esri-oceans':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, GEBCO, NOAA, National Geographic, Garmin, HERE'
+			);
+
+		case 'esri-gray':
+			return getXYZStyle(
+				'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+				'© Esri, HERE, Garmin, USGS, EPA'
+			);
+
+		case 'opentopomap':
+			return getXYZStyle(
+				[
+					'https://a.tile.opentopomap.org/{z}/{x}/{y}.png',
+					'https://b.tile.opentopomap.org/{z}/{x}/{y}.png',
+					'https://c.tile.opentopomap.org/{z}/{x}/{y}.png'
+				],
+				'© OpenTopoMap (CC-BY-SA), © OpenStreetMap contributors'
+			);
+
+		default:
+			return getIsDarkMode()
+				? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+				: 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
 	}
-	return 'https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json';
+}
+
+// Helper function for XYZ tile styles (updated to handle arrays and remove {s} placeholders)
+function getXYZStyle(tileUrl: string | string[], attribution: string, baseUrl?: string) {
+	// Convert single URL to array and expand any remaining {s} placeholders
+	let tiles: string[];
+	if (Array.isArray(tileUrl)) {
+		tiles = tileUrl;
+	} else {
+		if (tileUrl.includes('{s}')) {
+			// Fallback: expand {s} to common subdomains
+			const subdomains = ['a', 'b', 'c'];
+			tiles = subdomains.map((s) => tileUrl.replace('{s}', s));
+		} else {
+			tiles = [tileUrl];
+		}
+	}
+
+	return {
+		version: 8,
+		sources: {
+			'raster-tiles': {
+				type: 'raster',
+				tiles: tiles,
+				tileSize: 256,
+				attribution: attribution
+			},
+			...(baseUrl && {
+				'base-tiles': {
+					type: 'raster',
+					tiles: [baseUrl],
+					tileSize: 256
+				}
+			})
+		},
+		layers: [
+			...(baseUrl
+				? [
+						{
+							id: 'base-layer',
+							type: 'raster' as const,
+							source: 'base-tiles'
+						}
+					]
+				: []),
+			{
+				id: 'raster-layer',
+				type: 'raster' as const,
+				source: 'raster-tiles'
+			}
+		]
+	};
+}
+
+// Enhanced basemap options array
+export const basemapOptions = [
+	{ value: 'default', label: 'Default', icon: '🗺️', category: 'Standard' },
+
+	// 3D Terrain Maps (New Category)
+	{ value: 'terrain-3d', label: '3D Terrain', icon: '🏔️', category: '3D Terrain' },
+	{
+		value: 'satellite-terrain-3d',
+		label: '3D Satellite Terrain',
+		icon: '🛰️',
+		category: '3D Terrain'
+	},
+	{ value: 'topo-terrain-3d', label: '3D Topographic', icon: '🗻', category: '3D Terrain' },
+
+	// Standard & Vector
+	{ value: 'osm-standard', label: 'OpenStreetMap', icon: '🌍', category: 'Standard' },
+	{ value: 'wikimedia', label: 'Wikimedia', icon: '📖', category: 'Standard' },
+
+	// Satellite & Imagery
+	{ value: 'satellite', label: 'Satellite', icon: '🛰️', category: 'Satellite' },
+	{ value: 'satellite-labels', label: 'Satellite + Labels', icon: '🏷️', category: 'Satellite' },
+	{ value: 'usgs-imagery', label: 'USGS Imagery', icon: '📸', category: 'Satellite' },
+	{ value: 'usgs-imagery-topo', label: 'USGS Imagery + Topo', icon: '🗻', category: 'Satellite' },
+
+	// Topographic & Terrain
+	{ value: 'elevation', label: 'Elevation', icon: '🏔️', category: 'Topographic' },
+	{ value: 'usgs-topo', label: 'USGS Topo', icon: '📊', category: 'Topographic' },
+	{ value: 'esri-topo', label: 'Esri Topo', icon: '🗾', category: 'Topographic' },
+	{ value: 'opentopomap', label: 'OpenTopoMap', icon: '🧭', category: 'Topographic' },
+
+	// Clean & Minimal
+	{ value: 'carto-light', label: 'Light', icon: '☀️', category: 'Clean' },
+	{ value: 'carto-dark', label: 'Dark', icon: '🌙', category: 'Clean' },
+	{ value: 'carto-positron', label: 'Positron', icon: '⚡', category: 'Clean' },
+	{ value: 'carto-positron-labels', label: 'Positron + Labels', icon: '🏷️', category: 'Clean' },
+	{ value: 'esri-gray', label: 'Gray Canvas', icon: '⬜', category: 'Clean' },
+
+	// Specialized
+	{ value: 'carto-voyager', label: 'Voyager', icon: '🚢', category: 'Specialized' },
+	{ value: 'osm-humanitarian', label: 'Humanitarian', icon: '🏥', category: 'Specialized' },
+	{ value: 'esri-streets', label: 'Streets', icon: '🛣️', category: 'Specialized' },
+	{
+		value: 'esri-national-geographic',
+		label: 'National Geographic',
+		icon: '🌎',
+		category: 'Specialized'
+	},
+	{ value: 'esri-oceans', label: 'Oceans', icon: '🌊', category: 'Specialized' },
+	{ value: 'osm-france', label: 'France Style', icon: '🇫🇷', category: 'Specialized' }
+];
+
+export function getBasemapLabel(value: string) {
+	const option = basemapOptions.find((opt) => opt.value === value);
+	return option ? option.label : 'Default';
+}
+
+export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {
+	if (measurementSystem === 'imperial') {
+		const miles = meters / 1609.34;
+		return miles.toFixed(2);
+	} else {
+		const km = meters / 1000;
+		return km.toFixed(2);
+	}
+}
+
+export function getElevation(measurementSystem: 'metric' | 'imperial', elevation: number): string {
+	if (measurementSystem === 'imperial') {
+		const feet = elevation * 3.28084;
+		return Math.round(feet).toString();
+	} else {
+		return Math.round(elevation).toString();
+	}
+}
+
+export let SPORT_TYPE_CHOICES = [
+	// General Sports
+	{ key: 'General', label: 'General', icon: '🏃', color: '#6B7280' },
+
+	// Foot Sports
+	{ key: 'Run', label: 'Run', icon: '🏃‍♂️', color: '#F59E0B' },
+	{ key: 'TrailRun', label: 'Trail Run', icon: '🏃‍♀️', color: '#F59E0B' },
+	{ key: 'Walk', label: 'Walk', icon: '🚶', color: '#8B5CF6' },
+	{ key: 'Hike', label: 'Hike', icon: '🥾', color: '#10B981' },
+	{ key: 'VirtualRun', label: 'Virtual Run', icon: '💻', color: '#F59E0B' },
+
+	// Cycle Sports
+	{ key: 'Ride', label: 'Ride', icon: '🚴', color: '#3B82F6' },
+	{ key: 'MountainBikeRide', label: 'Mountain Bike Ride', icon: '🚵', color: '#3B82F6' },
+	{ key: 'GravelRide', label: 'Gravel Ride', icon: '🚴‍♀️', color: '#3B82F6' },
+	{ key: 'EBikeRide', label: 'E-Bike Ride', icon: '🔋', color: '#3B82F6' },
+	{ key: 'EMountainBikeRide', label: 'E-Mountain Bike Ride', icon: '⚡', color: '#3B82F6' },
+	{ key: 'Velomobile', label: 'Velomobile', icon: '🚲', color: '#3B82F6' },
+	{ key: 'VirtualRide', label: 'Virtual Ride', icon: '🖥️', color: '#3B82F6' },
+
+	// Water Sports
+	{ key: 'Canoeing', label: 'Canoe', icon: '🛶', color: '#06B6D4' },
+	{ key: 'Kayaking', label: 'Kayak', icon: '🛶', color: '#06B6D4' },
+	{ key: 'Kitesurfing', label: 'Kitesurf', icon: '🪁', color: '#06B6D4' },
+	{ key: 'Rowing', label: 'Rowing', icon: '🚣', color: '#06B6D4' },
+	{ key: 'StandUpPaddling', label: 'Stand Up Paddling', icon: '🏄', color: '#3B82F6' },
+	{ key: 'Surfing', label: 'Surf', icon: '🏄‍♂️', color: '#06B6D4' },
+	{ key: 'Swim', label: 'Swim', icon: '🏊', color: '#06B6D4' },
+	{ key: 'Windsurfing', label: 'Windsurf', icon: '🏄‍♀️', color: '#06B6D4' },
+	{ key: 'Sailing', label: 'Sail', icon: '⛵', color: '#06B6D4' },
+
+	// Winter Sports
+	{ key: 'IceSkate', label: 'Ice Skate', icon: '⛸️', color: '#0EA5E9' },
+	{ key: 'AlpineSki', label: 'Alpine Ski', icon: '⛷️', color: '#0EA5E9' },
+	{ key: 'BackcountrySki', label: 'Backcountry Ski', icon: '🎿', color: '#0EA5E9' },
+	{ key: 'NordicSki', label: 'Nordic Ski', icon: '🎿', color: '#0EA5E9' },
+	{ key: 'Snowboard', label: 'Snowboard', icon: '🏂', color: '#0EA5E9' },
+	{ key: 'Snowshoe', label: 'Snowshoe', icon: '🥾', color: '#0EA5E9' },
+
+	// Other Sports
+	{ key: 'Handcycle', label: 'Handcycle', icon: '🚴‍♂️', color: '#EF4444' },
+	{ key: 'InlineSkate', label: 'Inline Skate', icon: '🛼', color: '#8B5CF6' },
+	{ key: 'RockClimbing', label: 'Rock Climb', icon: '🧗', color: '#DC2626' },
+	{ key: 'RollerSki', label: 'Roller Ski', icon: '🎿', color: '#F97316' },
+	{ key: 'Golf', label: 'Golf', icon: '⛳', color: '#22C55E' },
+	{ key: 'Skateboard', label: 'Skateboard', icon: '🛹', color: '#F59E0B' },
+	{ key: 'Soccer', label: 'Football (Soccer)', icon: '⚽', color: '#10B981' },
+	{ key: 'Wheelchair', label: 'Wheelchair', icon: '♿', color: '#3B82F6' },
+	{ key: 'Badminton', label: 'Badminton', icon: '🏸', color: '#F59E0B' },
+	{ key: 'Tennis', label: 'Tennis', icon: '🎾', color: '#10B981' },
+	{ key: 'Pickleball', label: 'Pickleball', icon: '🏓', color: '#F59E0B' },
+	{ key: 'Crossfit', label: 'Crossfit', icon: '💪', color: '#DC2626' },
+	{ key: 'Elliptical', label: 'Elliptical', icon: '🏃‍♀️', color: '#8B5CF6' },
+	{ key: 'StairStepper', label: 'Stair Stepper', icon: '🪜', color: '#6B7280' },
+	{ key: 'WeightTraining', label: 'Weight Training', icon: '🏋️', color: '#DC2626' },
+	{ key: 'Yoga', label: 'Yoga', icon: '🧘', color: '#8B5CF6' },
+	{ key: 'Workout', label: 'Workout', icon: '💪', color: '#EF4444' },
+	{ key: 'HIIT', label: 'HIIT', icon: '⚡', color: '#F59E0B' },
+	{ key: 'Pilates', label: 'Pilates', icon: '🧘‍♀️', color: '#8B5CF6' },
+	{ key: 'TableTennis', label: 'Table Tennis', icon: '🏓', color: '#F59E0B' },
+	{ key: 'Squash', label: 'Squash', icon: '🎾', color: '#F59E0B' },
+	{ key: 'Racquetball', label: 'Racquetball', icon: '🎾', color: '#F59E0B' },
+	{ key: 'VirtualRow', label: 'Virtual Rowing', icon: '🚣‍♂️', color: '#06B6D4' }
+];
+
+export function getActivityColor(activityType: string) {
+	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
+	return activity ? activity.color : '#6B7280'; // Default gray if not found
+}
+
+export function getActivityIcon(activityType: string) {
+	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
+	return activity ? activity.icon : '🏅'; // Default medal if not found
 }

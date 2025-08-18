@@ -40,7 +40,6 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
-		"@mapbox/togeojson": "^0.16.2",
 		"dompurify": "^3.2.4",
 		"emoji-picker-element": "^1.26.0",
 		"gsap": "^3.12.7",
@@ -50,5 +49,13 @@
 		"qrcode": "^1.5.4",
 		"svelte-i18n": "^4.0.1",
 		"svelte-maplibre": "^0.9.8"
+	},
+	"overrides": {
+		"esbuild": "^0.25.9"
+	},
+	"pnpm": {
+		"overrides": {
+			"esbuild": "^0.25.9"
+		}
 	}
 }

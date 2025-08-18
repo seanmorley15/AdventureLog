@@ -1,11 +1,18 @@
 <script lang="ts">
-	import AdventureModal from '$lib/components/AdventureModal.svelte';
-	import { DefaultMarker, MapEvents, MapLibre, Popup, Marker } from 'svelte-maplibre';
+	import {
+		DefaultMarker,
+		MapEvents,
+		MapLibre,
+		Popup,
+		Marker,
+		GeoJSON,
+		LineLayer
+	} from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import type { Adventure, VisitedRegion } from '$lib/types.js';
+	import type { Activity, Location, VisitedCity, VisitedRegion } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
-	import { getBasemapUrl } from '$lib';
+	import { basemapOptions, getActivityColor, getBasemapLabel, getBasemapUrl } from '$lib';
 
 	// Icons
 	import MapIcon from '~icons/mdi/map';
@@ -13,22 +20,30 @@
 	import Plus from '~icons/mdi/plus';
 	import Clear from '~icons/mdi/close';
 	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
 	import Pin from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
-	import Category from '~icons/mdi/shape';
-	import Location from '~icons/mdi/crosshairs-gps';
+	import LocationIcon from '~icons/mdi/crosshairs-gps';
+	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
+	import ActivityIcon from '~icons/mdi/run-fast';
+	import MapStyleSelector from '$lib/components/MapStyleSelector.svelte';
 
 	export let data;
 
 	let createModalOpen: boolean = false;
-	let showGeo: boolean = false;
-	let sidebarOpen = false;
+	let showRegions: boolean = false;
+	let showActivities: boolean = false;
+	let showCities: boolean = false;
+	let sidebarOpen: boolean = false;
+
+	let basemapType: string = 'default'; // default
 
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
-	let adventures: Adventure[] = data.props.adventures;
+	let visitedCities: VisitedCity[] = [];
+	let adventures: Location[] = data.props.adventures;
+
+	let activities: Activity[] = [];
 
 	let filteredAdventures = adventures;
 
@@ -39,7 +54,6 @@
 	let newLongitude: number | null = null;
 	let newLatitude: number | null = null;
 
-	let openPopupId: string | null = null;
 	let isPopupOpen = false;
 
 	// Statistics
@@ -66,6 +80,48 @@
 			newLongitude = null;
 			newLatitude = null;
 		}
+	}
+
+	let locationBeingUpdated: Location | undefined = undefined;
+
+	// Sync the locationBeingUpdated with the adventures array
+	$: {
+		if (locationBeingUpdated && locationBeingUpdated.id) {
+			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+
+			if (index !== -1) {
+				adventures[index] = { ...locationBeingUpdated };
+				adventures = adventures; // Trigger reactivity
+			} else {
+				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				if (data.props.adventures) {
+					data.props.adventures = adventures; // Update data.props.adventure.locations as well
+				}
+			}
+		}
+	}
+
+	$: {
+		// if show activities is true, fetch all activities
+		if (showActivities && activities.length === 0) {
+			fetchAllActivities();
+		}
+	}
+
+	async function fetchAllActivities() {
+		const response = await fetch('/api/activities');
+		activities = await response.json();
+	}
+
+	$: {
+		if (showCities && visitedCities.length === 0) {
+			fetchVisitedCities();
+		}
+	}
+
+	async function fetchVisitedCities() {
+		const response = await fetch('/api/visitedcity');
+		visitedCities = await response.json();
 	}
 
 	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
@@ -123,13 +179,13 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('map.adventure_map')}
+										{$t('map.location_map')}
 									</h1>
 									<p class="text-sm text-base-content/60">
 										{filteredAdventures.length}
 										{$t('worldtravel.of')}
 										{totalAdventures}
-										{$t('map.adventures_shown')}
+										{$t('map.locations_shown')}
 									</p>
 								</div>
 							</div>
@@ -137,7 +193,7 @@
 
 						<!-- Quick Stats -->
 						<div class="hidden md:flex items-center gap-2">
-							<div class="stats stats-horizontal bg-base-100 shadow-lg">
+							<div class="stats stats-horizontal bg-base-200/50 border border-base-300/50">
 								<div class="stat py-2 px-4">
 									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
 									<div class="stat-value text-lg text-success">{visitedAdventures}</div>
@@ -157,7 +213,7 @@
 							{#if newMarker}
 								<button type="button" class="btn btn-primary btn-sm gap-2" on:click={newAdventure}>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure_at_marker')}
+									{$t('map.add_location_at_marker')}
 								</button>
 								<button type="button" class="btn btn-ghost btn-sm gap-2" on:click={clearMarker}>
 									<Clear class="w-4 h-4" />
@@ -170,7 +226,7 @@
 									on:click={() => (createModalOpen = true)}
 								>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure')}
+									{$t('map.add_location')}
 								</button>
 							{/if}
 						</div>
@@ -180,10 +236,19 @@
 
 			<!-- Map Section -->
 			<div class="container mx-auto px-6 py-4 flex-1">
-				<div class="card bg-base-100 shadow-xl h-full">
-					<div class="card-body p-4 h-full">
+				<div class="card bg-base-100 shadow-xl h-full relative">
+					<!-- Integrated Map Type Selector -->
+					<div
+						class="absolute top-4 right-4 z-10 bg-base-200 backdrop-blur-sm rounded-lg shadow-lg"
+					>
+						<div class="p-2">
+							<MapStyleSelector bind:basemapType />
+						</div>
+					</div>
+
+					<div class="card-body p-0 h-full">
 						<MapLibre
-							style={getBasemapUrl()}
+							style={getBasemapUrl(basemapType)}
 							class="w-full h-full min-h-[70vh] rounded-lg"
 							standardControls
 						>
@@ -191,7 +256,7 @@
 								{#if adventure.latitude && adventure.longitude}
 									<Marker
 										lngLat={[adventure.longitude, adventure.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer  hover:scale-110 {adventure.is_visited
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer hover:scale-110 transition-transform {adventure.is_visited
 											? 'bg-red-300 hover:bg-red-400'
 											: 'bg-blue-300 hover:bg-blue-400'} text-black focus:outline-6 focus:outline-black"
 										on:click={togglePopup}
@@ -208,7 +273,11 @@
 												<div class="min-w-64 max-w-sm">
 													{#if adventure.images && adventure.images.length > 0}
 														<div class="mb-3">
-															<CardCarousel adventures={[adventure]} />
+															<CardCarousel
+																images={adventure.images}
+																name={adventure.name}
+																icon={adventure?.category?.icon}
+															/>
 														</div>
 													{/if}
 													<div class="space-y-2">
@@ -262,13 +331,13 @@
 																	target="_blank"
 																	rel="noopener noreferrer"
 																>
-																	<Location class="w-4 h-4" />
+																	<LocationIcon class="w-4 h-4" />
 																	{$t('adventures.open_in_maps')}
 																</a>
 															{/if}
 															<button
 																class="btn btn-primary btn-sm gap-2"
-																on:click={() => goto(`/adventures/${adventure.id}`)}
+																on:click={() => goto(`/locations/${adventure.id}`)}
 															>
 																<Eye class="w-4 h-4" />
 																{$t('map.view_details')}
@@ -288,12 +357,12 @@
 							{/if}
 
 							{#each visitedRegions as region}
-								{#if showGeo}
+								{#if showRegions}
 									<Marker
 										lngLat={[region.longitude, region.latitude]}
 										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-green-300 hover:bg-green-400 text-black shadow-lg cursor-pointer transition-transform hover:scale-110"
 									>
-										<Location class="w-5 h-5 text-green-700" />
+										<LocationIcon class="w-5 h-5 text-green-700" />
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="space-y-2">
 												<div class="text-lg text-black font-bold">{region.name}</div>
@@ -303,6 +372,39 @@
 									</Marker>
 								{/if}
 							{/each}
+
+							{#if showCities}
+								{#each visitedCities as city}
+									<Marker
+										lngLat={[city.longitude, city.latitude]}
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 bg-blue-300 hover:bg-blue-400 text-black shadow-lg cursor-pointer transition-transform hover:scale-110"
+									>
+										<LocationIcon class="w-5 h-5 text-blue-700" />
+										<Popup openOn="click" offset={[0, -10]}>
+											<div class="space-y-2">
+												<div class="text-lg text-black font-bold">{city.name}</div>
+												<div class="badge badge-success badge-sm">{city.id}</div>
+											</div>
+										</Popup>
+									</Marker>
+								{/each}
+							{/if}
+
+							{#if showActivities}
+								{#each activities as activity}
+									{#if activity.geojson}
+										<GeoJSON data={activity.geojson}>
+											<LineLayer
+												paint={{
+													'line-color': getActivityColor(activity.sport_type),
+													'line-width': 3,
+													'line-opacity': 0.8
+												}}
+											/>
+										</GeoJSON>
+									{/if}
+								{/each}
+							{/if}
 						</MapLibre>
 					</div>
 				</div>
@@ -401,22 +503,49 @@
 							<label class="label cursor-pointer justify-start gap-3">
 								<input
 									type="checkbox"
-									bind:checked={showGeo}
+									bind:checked={showRegions}
 									class="checkbox checkbox-accent checkbox-sm"
 								/>
 								<span class="label-text flex items-center gap-2">
-									<Location class="w-4 h-4" />
-									{$t('map.show_visited_regions')} ({totalRegions})
+									<LocationIcon class="w-4 h-4" />
+									{$t('profile.visited_regions')} ({totalRegions})
+								</span>
+							</label>
+
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={showCities}
+									class="checkbox checkbox-warning checkbox-sm"
+								/>
+								<span class="label-text flex items-center gap-2">
+									<LocationIcon class="w-4 h-4" />
+									{$t('map.show_visited_cities')}
+									{visitedCities.length > 0 ? ` (${visitedCities.length})` : ''}
+								</span>
+							</label>
+
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={showActivities}
+									class="checkbox checkbox-error checkbox-sm"
+								/>
+								<span class="label-text flex items-center gap-2">
+									<ActivityIcon class="w-4 h-4" />
+									{$t('settings.activities')}{activities.length > 0
+										? ` (${activities.length})`
+										: ''}
 								</span>
 							</label>
 						</div>
 					</div>
 
-					<!-- New Adventure Section -->
+					<!-- New Location Section -->
 					<div class="card bg-base-200/50 p-4">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<Plus class="w-5 h-5" />
-							Add Adventure
+							{$t('adventures.new_location')}
 						</h3>
 
 						{#if newMarker}
@@ -427,7 +556,7 @@
 								</div>
 								<button type="button" class="btn btn-primary w-full gap-2" on:click={newAdventure}>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure_at_marker')}
+									{$t('map.add_location_at_marker')}
 								</button>
 								<button type="button" class="btn btn-ghost w-full gap-2" on:click={clearMarker}>
 									<Clear class="w-4 h-4" />
@@ -437,7 +566,7 @@
 						{:else}
 							<div class="space-y-3">
 								<p class="text-sm text-base-content/60">
-									{$t('map.place_marker_desc')}
+									{$t('map.place_marker_desc_location')}
 								</p>
 								<button
 									type="button"
@@ -445,7 +574,7 @@
 									on:click={() => (createModalOpen = true)}
 								>
 									<Plus class="w-4 h-4" />
-									{$t('map.add_adventure')}
+									{$t('map.add_location')}
 								</button>
 							</div>
 						{/if}
@@ -457,10 +586,12 @@
 </div>
 
 {#if createModalOpen}
-	<AdventureModal
+	<NewLocationModal
 		on:close={() => (createModalOpen = false)}
 		on:save={createNewAdventure}
 		{initialLatLng}
+		user={data.user}
+		bind:location={locationBeingUpdated}
 	/>
 {/if}
 

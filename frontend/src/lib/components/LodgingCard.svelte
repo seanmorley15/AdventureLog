@@ -10,6 +10,7 @@
 	import { formatDateInTimezone } from '$lib/dateUtils';
 	import { formatAllDayDate } from '$lib/dateUtils';
 	import { isAllDay } from '$lib';
+	import CardCarousel from './CardCarousel.svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -96,6 +97,20 @@
 <div
 	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group"
 >
+	<!-- Image Section with Overlay -->
+	<div class="relative overflow-hidden rounded-t-2xl">
+		<CardCarousel images={lodging.images} icon={getLodgingIcon(lodging.type)} name={lodging.name} />
+
+		<!-- Category Badge -->
+		{#if lodging.type}
+			<div class="absolute bottom-4 left-4">
+				<div class="badge badge-primary shadow-lg font-medium">
+					{$t(`lodging.${lodging.type}`)}
+					{getLodgingIcon(lodging.type)}
+				</div>
+			</div>
+		{/if}
+	</div>
 	<div class="card-body p-6 space-y-4">
 		<!-- Header -->
 		<div class="flex flex-col gap-3">
@@ -156,7 +171,7 @@
 		</div>
 
 		<!-- Reservation Info -->
-		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+		{#if lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 			<div class="space-y-2">
 				{#if lodging.reservation_number}
 					<div class="flex items-center gap-2">
@@ -174,7 +189,7 @@
 		{/if}
 
 		<!-- Actions -->
-		{#if lodging.user_id == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
+		{#if lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid))}
 			<div class="pt-4 border-t border-base-300 flex justify-end gap-2">
 				<button
 					class="btn btn-neutral btn-sm flex items-center gap-1"

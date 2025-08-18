@@ -18,6 +18,7 @@ To integrate Immich with AdventureLog, you need to have an Immich server running
 1. Obtain the Immich API Key from the Immich server.
    - In the Immich web interface, click on your user profile picture, go to `Account Settings` > `API Keys`.
    - Click `New API Key` and name it something like `AdventureLog`.
+   - Make sure the key has the following permissions: `asset.read, album.read, asset.view, library.read, user.read`
    - Copy the generated API Key, you will need it in the next step.
 2. Go to the AdventureLog web interface, click on your user profile picture, go to `Settings` and scroll down to the `Immich Integration` section.
    - Enter the URL of your Immich server, e.g. `https://immich.example.com/api`. Note that `localhost` or `127.0.0.1` will probably not work because Immich and AdventureLog are running on different docker networks. It is recommended to use the IP address of the server where Immich is running ex `http://my-server-ip:port` or a domain name.

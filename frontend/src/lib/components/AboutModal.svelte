@@ -33,146 +33,210 @@
 	}
 </script>
 
-<dialog id="about_modal" class="modal backdrop-blur-md bg-opacity-70">
+<dialog id="about_modal" class="modal backdrop-blur-sm">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div
-		class="modal-box rounded-xl shadow-lg backdrop-blur-lg bg-white/80 dark:bg-gray-900/80 transition-transform duration-300 ease-out transform scale-100"
+		class="modal-box w-11/12 max-w-2xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
 		role="dialog"
 		on:keydown={handleKeydown}
 		tabindex="0"
 	>
-		<!-- Branding -->
-		<div class="text-center">
-			<h3
-				class="text-2xl font-extrabold text-gray-800 dark:text-white flex items-center justify-center"
-			>
-				{$t('about.about')} AdventureLog
-				<img src="/favicon.png" alt="Map Logo" class="w-12 h-12 ml-3 inline-block" />
-			</h3>
-			<p class="mt-2 text-gray-500 dark:text-gray-300 text-sm">
-				AdventureLog
-				<a
-					href={versionChangelog}
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-primary hover:underline"
-				>
-					{appVersion}
-				</a>
-			</p>
+		<!-- Header -->
+		<div class="flex items-center justify-between mb-6">
+			<div class="flex items-center gap-3">
+				<div class="p-2 bg-primary/10 rounded-lg">
+					<img src="/favicon.png" alt="AdventureLog" class="w-12 h-12" />
+				</div>
+				<div>
+					<h1 class="text-2xl font-bold text-primary">
+						{$t('about.about')} AdventureLog
+					</h1>
+				</div>
+			</div>
+
+			<button class="btn btn-ghost btn-sm btn-square" on:click={close}>
+				<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2"
+						d="M6 18L18 6M6 6l12 12"
+					/>
+				</svg>
+			</button>
 		</div>
 
-		<!-- Links and Details -->
-		<div class="mt-4 text-center">
-			<p class="text-sm text-gray-600 dark:text-gray-400">
-				© {copyrightYear}
-				<a
-					href="https://seanmorley.com"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-primary hover:underline"
-				>
-					Sean Morley
-				</a>
-			</p>
-			<p class="text-sm text-gray-600 dark:text-gray-400">{$t('about.license')}</p>
-			<p class="text-sm text-gray-600 dark:text-gray-400">
-				<a
-					href="https://github.com/seanmorley15/AdventureLog"
-					target="_blank"
-					rel="noopener noreferrer"
-					class="text-primary hover:underline"
-				>
-					{$t('about.source_code')}
-				</a>
-			</p>
-			<p class="text-sm text-gray-600 dark:text-gray-400">{$t('about.message')}</p>
-		</div>
+		<!-- Content -->
+		<div class="space-y-4">
+			<!-- Version & Developer Info -->
+			<div class="card bg-base-200/30 border border-base-300">
+				<div class="card-body p-4">
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div>
+							<div class="text-sm text-base-content/60">{$t('about.version')}</div>
+							<div class="text-lg font-bold text-primary">{appVersion}</div>
+							<a
+								href={versionChangelog}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-sm link link-primary"
+							>
+								{$t('about.view_changelog')} →
+							</a>
+						</div>
+						<div>
+							<div class="text-sm text-base-content/60">{$t('about.developer')}</div>
+							<a
+								href="https://seanmorley.com"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-lg font-semibold link link-primary"
+							>
+								Sean Morley
+							</a>
+							<div class="text-sm text-base-content/60">{$t('about.message')}</div>
+						</div>
+					</div>
+				</div>
+			</div>
 
-		<!-- Divider -->
-		<div class="my-6 border-t border-gray-200 dark:border-gray-700"></div>
+			<!-- Map Services -->
+			<div class="card bg-base-200/30 border border-base-300">
+				<div class="card-body p-4">
+					<h3 class="font-bold text-primary mb-3 flex items-center gap-2">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						{$t('about.attributions')}
+					</h3>
+					{#if integrations && integrations?.google_maps}
+						<div class="flex items-center gap-2">
+							<span class="text-sm text-base-content/60">{$t('about.nominatim_1')}</span>
+							<a
+								href="https://developers.google.com/maps/terms"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="link link-primary font-semibold"
+							>
+								Google Maps Platform
+							</a>
+						</div>
+					{:else if integrations && !integrations?.google_maps}
+						<div class="flex items-center gap-2">
+							<span class="text-sm text-base-content/60">{$t('about.nominatim_1')}</span>
+							<a
+								href="https://operations.osmfoundation.org/policies/nominatim/"
+								target="_blank"
+								rel="noopener noreferrer"
+								class="link link-primary font-semibold"
+							>
+								OpenStreetMap Nominatim
+							</a>
+						</div>
+					{:else}
+						<div class="text-sm text-base-content/60">{$t('about.generic_attributions')}</div>
+					{/if}
+					<p class="text-sm text-base-content/60">{$t('about.other_attributions')}</p>
+				</div>
+			</div>
 
-		<!-- OSS Acknowledgments -->
-		<div class="text-left">
-			<h3 class="text-lg font-semibold text-gray-800 dark:text-white">
-				{$t('about.oss_attributions')}
-			</h3>
-			{#if integrations && integrations?.google_maps}
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					{$t('about.nominatim_1')}
+			<!-- Liscense info -->
+			<div class="card bg-base-200/30 border border-base-300">
+				<div class="card-body p-4">
+					<h3 class="font-bold text-primary mb-3 flex items-center gap-2">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+								d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+							/>
+						</svg>
+						{$t('about.license_info')}
+					</h3>
+					<p class="text-sm text-base-content/60 mb-2">
+						© {copyrightYear}
+						<a
+							href="https://seanmorley.com"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="link link-primary"
+						>
+							Sean Morley
+						</a>
+					</p>
+					<p class="text-sm text-base-content/60">
+						{$t('about.license')}
+					</p>
+
 					<a
-						href="https://developers.google.com/maps/terms"
+						href="https://github.com/seanmorley15/AdventureLog/blob/main/LICENSE"
 						target="_blank"
 						rel="noopener noreferrer"
-						class="text-primary hover:underline"
+						class="link link-primary mt-2"
 					>
-						Google Maps
+						{$t('about.view_license')} →
 					</a>
-					.
-				</p>
-			{:else if integrations && !integrations?.google_maps}
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					{$t('about.nominatim_1')}
-					<a
-						href="https://operations.osmfoundation.org/policies/nominatim/"
-						target="_blank"
-						rel="noopener noreferrer"
-						class="text-primary hover:underline"
-					>
-						OpenStreetMap
-					</a>
-					. {$t('about.nominatim_2')}
-				</p>
-			{:else}
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-					{$t('about.generic_attributions')}
-				</p>
-			{/if}
+				</div>
+			</div>
 
-			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">{$t('about.other_attributions')}</p>
+			<!-- Links -->
+			<div class="card bg-base-200/30 border border-base-300">
+				<div class="card-body p-4">
+					<div class="flex flex-wrap gap-3">
+						<a
+							href="https://github.com/seanmorley15/AdventureLog"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="btn btn-outline btn-sm"
+						>
+							GitHub →
+						</a>
+						<a
+							href="https://seanmorley.com/sponsor"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="btn btn-outline btn-sm"
+						>
+							{$t('about.sponsor')} →
+						</a>
+						<!-- documentation -->
+						<a
+							href="https://adventurelog.app"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="btn btn-outline btn-sm"
+						>
+							{$t('navbar.documentation')} →
+						</a>
+						<!-- discord -->
+						<a
+							href="https://discord.gg/wRbQ9Egr8C"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="btn btn-outline btn-sm"
+						>
+							Discord →
+						</a>
+					</div>
+				</div>
+			</div>
 		</div>
 
-		<!-- Close Button -->
-		<div class="flex justify-center mt-6">
-			<button
-				class="px-6 py-2 text-sm font-medium text-white bg-primary rounded-full shadow-md hover:shadow-lg hover:scale-105 transform transition"
-				on:click={close}
-			>
+		<!-- Footer -->
+		<div class="flex items-center justify-between mt-6 pt-4 border-t border-base-300">
+			<div class="text-sm text-base-content/60">
+				{$t('about.thank_you')}
+			</div>
+			<button class="btn btn-primary btn-sm" on:click={close}>
 				{$t('about.close')}
 			</button>
 		</div>
 	</div>
 </dialog>
-
-<style>
-	.modal {
-		display: grid;
-		place-items: center;
-		background: rgba(0, 0, 0, 0.5);
-		animation: fadeIn 0.3s ease-in-out;
-	}
-	.modal-box {
-		max-width: 600px;
-		padding: 2rem;
-		animation: slideUp 0.4s ease-out;
-	}
-	@keyframes fadeIn {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-	@keyframes slideUp {
-		from {
-			transform: translateY(20%);
-			opacity: 0;
-		}
-		to {
-			transform: translateY(0);
-			opacity: 1;
-		}
-	}
-</style>

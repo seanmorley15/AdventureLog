@@ -10,8 +10,23 @@
 
 	export let sharing: boolean = false;
 	export let shared_with: string[] | undefined = undefined;
+	export let user: User & { status?: 'available' | 'pending' };
 
-	export let user: User;
+	$: isShared = shared_with?.includes(user.uuid) || false;
+	$: isPending = user.status === 'pending';
+	$: isAvailable = user.status === 'available';
+
+	function handleShare() {
+		dispatch('share', user);
+	}
+
+	function handleUnshare() {
+		dispatch('unshare', user);
+	}
+
+	function handleRevoke() {
+		dispatch('revoke', user);
+	}
 </script>
 
 <div
@@ -44,6 +59,23 @@
 			{#if user.is_staff}
 				<div class="badge badge-outline badge-primary mt-2">{$t('settings.admin')}</div>
 			{/if}
+
+			<!-- Status Badge for sharing mode -->
+			{#if sharing}
+				{#if isPending}
+					<div class="badge badge-warning badge-sm mt-2">
+						{$t('share.pending')}
+					</div>
+				{:else if isShared}
+					<div class="badge badge-success badge-sm mt-2">
+						{$t('share.shared')}
+					</div>
+				{:else if isAvailable}
+					<div class="badge badge-ghost badge-sm mt-2">
+						{$t('share.available')}
+					</div>
+				{/if}
+			{/if}
 		</div>
 
 		<!-- Join Date -->
@@ -65,13 +97,17 @@
 				>
 					{$t('adventures.view_profile')}
 				</button>
-			{:else if shared_with && !shared_with.includes(user.uuid)}
-				<button class="btn btn-sm btn-success w-full" on:click={() => dispatch('share', user)}>
-					{$t('adventures.share')}
-				</button>
-			{:else}
-				<button class="btn btn-sm btn-error w-full" on:click={() => dispatch('unshare', user)}>
+			{:else if isShared}
+				<button class="btn btn-sm btn-error w-full" on:click={handleUnshare}>
 					{$t('adventures.remove')}
+				</button>
+			{:else if isPending}
+				<button class="btn btn-sm btn-warning btn-outline w-full" on:click={handleRevoke}>
+					{$t('share.revoke_invite')}
+				</button>
+			{:else if isAvailable}
+				<button class="btn btn-sm btn-success w-full" on:click={handleShare}>
+					{$t('share.send_invite')}
 				</button>
 			{/if}
 		</div>

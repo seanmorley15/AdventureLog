@@ -9,6 +9,7 @@ class CustomUser(AbstractUser):
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     public_profile = models.BooleanField(default=False)
     disable_password = models.BooleanField(default=False)
+    measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     
     def __str__(self):
         return self.username

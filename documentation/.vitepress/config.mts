@@ -176,6 +176,14 @@ export default defineConfig({
             link: "/docs/configuration/google_maps_integration",
           },
           {
+            text: "Strava Integration",
+            link: "/docs/configuration/strava_integration",
+          },
+          {
+            text: "Wanderer Integration",
+            link: "/docs/configuration/wanderer_integration",
+          },
+          {
             text: "Social Auth and OIDC",
             link: "/docs/configuration/social_auth",
           },
