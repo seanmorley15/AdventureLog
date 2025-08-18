@@ -114,6 +114,16 @@ Explore and manage the countries you’ve visited or plan to visit with an organ
 
 :::
 
+::: details 📱 **Android Authority**
+
+> "AdventureLog behaves more like a super-charged travel journal than yet another travel app.”
+>
+> — _Dhruv Bhutani, Android Authority_
+
+[Article Link](https://www.androidauthority.com/self-hosted-travel-app-3572353/)
+
+:::
+
 ## 🏗️ Built With Excellence
 
 <div class="tech-stack">

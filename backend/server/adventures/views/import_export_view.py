@@ -131,7 +131,6 @@ class BackupViewSet(viewsets.ViewSet):
                 for activity in visit.activities.all():
                     activity_data = {
                         'name': activity.name,
-                        'type': activity.type,
                         'sport_type': activity.sport_type,
                         'distance': float(activity.distance) if activity.distance else None,
                         'moving_time': activity.moving_time.total_seconds() if activity.moving_time else None,
@@ -594,7 +593,6 @@ class BackupViewSet(viewsets.ViewSet):
                         visit=visit,
                         trail=trail,
                         name=activity_data['name'],
-                        type=activity_data.get('type', 'general'),
                         sport_type=activity_data.get('sport_type'),
                         distance=activity_data.get('distance'),
                         moving_time=moving_time,
