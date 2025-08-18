@@ -211,7 +211,7 @@
 			class:tab-active={searchCategory === 'search'}
 			on:click={() => handleSearchCategoryChange('search')}
 		>
-			{$t('immich.search')}
+			{$t('navbar.search')}
 		</button>
 		<button
 			class="tab"
@@ -235,7 +235,7 @@
 			<form on:submit|preventDefault={searchImmich} class="flex gap-2">
 				<input
 					type="text"
-					placeholder={$t('immich.search_placeholder')}
+					placeholder={$t('immich.image_search_placeholder') + '...'}
 					bind:value={immichSearchValue}
 					class="input input-bordered flex-1"
 					disabled={loading}
@@ -246,7 +246,7 @@
 					class:loading
 					disabled={loading || !immichSearchValue.trim()}
 				>
-					{$t('immich.search')}
+					{$t('navbar.search')}
 				</button>
 			</form>
 		{:else if searchCategory === 'date'}
@@ -274,9 +274,7 @@
 					disabled={loading}
 				>
 					<option value="" disabled>
-						{albums.length > 0
-							? $t('immich.select_album_placeholder')
-							: $t('immich.loading_albums')}
+						{albums.length > 0 ? $t('immich.select_album') : $t('immich.loading_albums')}
 					</option>
 					{#each albums as album (album.id)}
 						<option value={album.id}>{album.albumName}</option>

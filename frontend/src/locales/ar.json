@@ -415,7 +415,14 @@
     "no_images_desc": "تحميل الصور للبدء",
     "route_map": "خريطة الطريق",
     "selected_attachments": "مرفقات محددة",
-    "selected_images": "صور محددة"
+    "selected_images": "صور محددة",
+    "activities_text": "أنشطة",
+    "activity_breakdown_by_category": "انهيار النشاط حسب الفئة",
+    "distance_covered": "مسافة مغطاة",
+    "recorded_sessions": "جلسات مسجلة",
+    "total_activities": "الأنشطة الكلية",
+    "total_climbed": "مجموع تسلق",
+    "total_distance": "إجمالي المسافة"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",
@@ -437,7 +444,11 @@
     "signup": "اشتراك",
     "user_collections": "مجموعات المستخدم",
     "user_locations": "مواقع المستخدم",
-    "username": "اسم المستخدم"
+    "username": "اسم المستخدم",
+    "enter_password": "أدخل كلمة المرور الخاصة بك",
+    "enter_username": "أدخل اسم المستخدم الخاص بك",
+    "logging_in": "تسجيل الدخول",
+    "totp": "رمز ثنائي العوامل"
   },
   "calendar": {
     "all_day_event": "الحدث طوال اليوم",
@@ -471,7 +482,17 @@
     "item_cannot_be_empty": "لا يمكن أن يكون العنصر فارغًا",
     "items": "أغراض",
     "new_checklist": "قائمة مراجعة جديدة",
-    "new_item": "عنصر جديد"
+    "new_item": "عنصر جديد",
+    "add_new_item": "أضف عنصرًا جديدًا",
+    "add_your_first_item": "أضف العنصر الأول",
+    "checklist_viewer": "عارض قائمة المراجعة",
+    "completed": "مكتمل",
+    "current_items": "العناصر الحالية",
+    "editing_checklist": "قائمة التحقق من التحرير",
+    "enter_checklist_title": "أدخل عنوان قائمة المراجعة",
+    "no_items_yet": "لا توجد عناصر حتى الآن",
+    "update_checklist_details": "قائمة التحقق من التحرير",
+    "viewing_checklist": "عرض قائمة المراجعة"
   },
   "collection": {
     "archived_appear_here": "سوف تظهر مجموعات أرشفة هنا.",
@@ -554,7 +575,19 @@
     "no_items_found": "لم يتم العثور على عناصر",
     "server_url": "url خادم Imich",
     "update_integration": "تحديث التكامل",
-    "validation_error": "حدث خطأ مع التحقق من التكامل الضيق. \nيرجى التحقق من عنوان URL الخاص بالخادم ومفتاح API."
+    "validation_error": "حدث خطأ مع التحقق من التكامل الضيق. \nيرجى التحقق من عنوان URL الخاص بالخادم ومفتاح API.",
+    "by_album": "بواسطة الألبوم",
+    "by_date": "حسب التاريخ",
+    "error_no_object_id": "لم يتم توفير معرف كائن",
+    "fetch_error": "خطأ جلب البيانات من التكامل الثير",
+    "image_search_placeholder": "ابحث باستخدام Imich",
+    "loading": "تحميل",
+    "loading_albums": "ألبومات تحميل",
+    "no_images": "لم يتم العثور على صور",
+    "select_album": "حدد الألبوم",
+    "select_album_first": "حدد ألبوم أولاً",
+    "select_date": "حدد التاريخ",
+    "try_different_date": "جرب تاريخًا مختلفًا"
   },
   "invites": {
     "accept": "يقبل",
@@ -651,7 +684,8 @@
       "northernLights": "الأضواء الشمالية"
     },
     "users": "المستخدمون",
-    "worldtravel": "السفر العالمي"
+    "worldtravel": "السفر العالمي",
+    "navigation": "ملاحة"
   },
   "notes": {
     "add_a_link": "أضف رابطًا",
@@ -665,7 +699,11 @@
     "note_public": "هذه الملاحظة عامة لأنها في مجموعة عامة.",
     "note_viewer": "لاحظ العارض",
     "open": "يفتح",
-    "save": "يحفظ"
+    "save": "يحفظ",
+    "create_new_note": "إنشاء ملاحظة جديدة",
+    "enter_note_title": "أدخل عنوان الملاحظة",
+    "update_note_details": "ملاحظة التحرير",
+    "viewing_note": "عرض ملاحظة"
   },
   "profile": {
     "discovered": "اكتشف",

@@ -31,7 +31,8 @@
       "light": "Lys",
       "night": "Natt",
       "northernLights": "Nordlys"
-    }
+    },
+    "navigation": "Navigasjon"
   },
   "about": {
     "about": "Om",
@@ -468,7 +469,14 @@
     "no_images_desc": "Last opp bilder for å komme i gang",
     "route_map": "Rutekart",
     "selected_attachments": "Utvalgte vedlegg",
-    "selected_images": "Utvalgte bilder"
+    "selected_images": "Utvalgte bilder",
+    "activities_text": "aktiviteter",
+    "activity_breakdown_by_category": "Aktivitetsfordeling etter kategori",
+    "distance_covered": "Avstand dekket",
+    "recorded_sessions": "Innspilte økter",
+    "total_activities": "Total aktiviteter",
+    "total_climbed": "Totalt klatret",
+    "total_distance": "Total avstand"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -547,7 +555,11 @@
     "no_public_collections": "Ingen offentlige samlinger funnet",
     "user_collections": "Brukerens samlinger",
     "no_public_locations": "Ingen offentlige steder funnet",
-    "user_locations": "Brukerplasser"
+    "user_locations": "Brukerplasser",
+    "enter_password": "Skriv inn passordet ditt",
+    "enter_username": "Skriv inn brukernavnet ditt",
+    "logging_in": "Logger inn",
+    "totp": "To-faktorkode"
   },
   "users": {
     "no_users_found": "Ingen brukere med offentlig profil funnet."
@@ -731,7 +743,11 @@
     "save": "Lagre",
     "note_public": "Dette notatet er offentlig fordi det er i en offentlig samling.",
     "add_a_link": "Legg til en lenke",
-    "invalid_url": "Ugyldig URL"
+    "invalid_url": "Ugyldig URL",
+    "create_new_note": "Lag ny merknad",
+    "enter_note_title": "Skriv inn notattittel",
+    "update_note_details": "Redigeringsnotat",
+    "viewing_note": "Visningsnotat"
   },
   "checklist": {
     "checklist_deleted": "Sjekkliste slettet!",
@@ -743,7 +759,17 @@
     "new_item": "Nytt punkt",
     "checklist_public": "Denne sjekklisten er offentlig fordi den er i en offentlig samling.",
     "item_cannot_be_empty": "Punktet kan ikke være tomt",
-    "item_already_exists": "Punktet finnes allerede"
+    "item_already_exists": "Punktet finnes allerede",
+    "add_new_item": "Legg til nytt vare",
+    "add_your_first_item": "Legg til din første vare",
+    "checklist_viewer": "Sjekklistevisning",
+    "completed": "Fullført",
+    "current_items": "Gjeldende gjenstander",
+    "editing_checklist": "Redigering av sjekkliste",
+    "enter_checklist_title": "Skriv inn sjekklistetittel",
+    "no_items_yet": "Ingen ting ennå",
+    "update_checklist_details": "Redigering av sjekkliste",
+    "viewing_checklist": "Viser sjekkliste"
   },
   "transportation": {
     "transportation_deleted": "Transport slettet!",
@@ -914,7 +940,19 @@
     "integration_already_exists": "En Immich -integrasjon eksisterer allerede. \nDu kan bare ha en integrasjon om gangen.",
     "integration_not_found": "Immich -integrasjon ikke funnet. \nOpprett en ny integrasjon.",
     "network_error": "Nettverksfeil mens du kobler til Immich -serveren. \nVennligst sjekk tilkoblingen din og prøv igjen.",
-    "validation_error": "Det oppstod en feil under validering av Immich -integrasjonen. \nVennligst sjekk server -URL -en og API -tasten."
+    "validation_error": "Det oppstod en feil under validering av Immich -integrasjonen. \nVennligst sjekk server -URL -en og API -tasten.",
+    "by_album": "Med album",
+    "by_date": "Etter dato",
+    "error_no_object_id": "Ingen objekt -ID ble gitt",
+    "fetch_error": "Feil med å hente data fra Immich -integrasjonen",
+    "image_search_placeholder": "Søk ved hjelp av Immich",
+    "loading": "Lasting",
+    "loading_albums": "Laster inn album",
+    "no_images": "Ingen bilder funnet",
+    "select_album": "Velg album",
+    "select_album_first": "Velg et album først",
+    "select_date": "Velg dato",
+    "try_different_date": "Prøv en annen dato"
   },
   "recomendations": {
     "recommendation": "Anbefaling",

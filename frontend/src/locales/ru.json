@@ -31,7 +31,8 @@
       "light": "Свет",
       "night": "Ночь",
       "northernLights": "Северное сияние"
-    }
+    },
+    "navigation": "Навигация"
   },
   "about": {
     "about": "О программе",
@@ -468,7 +469,14 @@
     "no_images_desc": "Загрузить изображения, чтобы начать",
     "route_map": "Маршрутная карта",
     "selected_attachments": "Выбранные вложения",
-    "selected_images": "Выбранные изображения"
+    "selected_images": "Выбранные изображения",
+    "activities_text": "деятельность",
+    "activity_breakdown_by_category": "Распад деятельности по категории",
+    "distance_covered": "Расстояние",
+    "recorded_sessions": "Записанные сеансы",
+    "total_activities": "Общая деятельность",
+    "total_climbed": "Всего поднялось",
+    "total_distance": "Общее расстояние"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -547,7 +555,11 @@
     "no_public_collections": "Публичные коллекции не найдены",
     "user_collections": "Коллекции пользователя",
     "no_public_locations": "Общественных мест не найдено",
-    "user_locations": "Пользовательские местоположения"
+    "user_locations": "Пользовательские местоположения",
+    "enter_password": "Введите свой пароль",
+    "enter_username": "Введите свое имя пользователя",
+    "logging_in": "Вход в систему",
+    "totp": "Двухфакторный код"
   },
   "users": {
     "no_users_found": "Пользователи с публичными профилями не найдены."
@@ -731,7 +743,11 @@
     "save": "Сохранить",
     "note_public": "Эта заметка публична, потому что находится в публичной коллекции.",
     "add_a_link": "Добавить ссылку",
-    "invalid_url": "Неверный URL"
+    "invalid_url": "Неверный URL",
+    "create_new_note": "Создайте новую ноту",
+    "enter_note_title": "Введите заголовок",
+    "update_note_details": "Редактирование примечания",
+    "viewing_note": "Просмотр примечания"
   },
   "checklist": {
     "checklist_deleted": "Чек-лист успешно удален!",
@@ -743,7 +759,17 @@
     "new_item": "Новый элемент",
     "checklist_public": "Этот чек-лист публичен, потому что находится в публичной коллекции.",
     "item_cannot_be_empty": "Элемент не может быть пустым",
-    "item_already_exists": "Элемент уже существует"
+    "item_already_exists": "Элемент уже существует",
+    "add_new_item": "Добавить новый элемент",
+    "add_your_first_item": "Добавьте свой первый элемент",
+    "checklist_viewer": "Просмотр просмотра контрольного списка",
+    "completed": "Завершенный",
+    "current_items": "Текущие элементы",
+    "editing_checklist": "Редактирование контрольного списка",
+    "enter_checklist_title": "Введите заголовок контрольного списка",
+    "no_items_yet": "Пока нет предметов",
+    "update_checklist_details": "Редактирование контрольного списка",
+    "viewing_checklist": "Просмотр контрольного списка"
   },
   "transportation": {
     "transportation_deleted": "Транспорт успешно удален!",
@@ -914,7 +940,19 @@
     "integration_already_exists": "Интеграция Immich уже существует. Вы можете иметь только одну интеграцию одновременно.",
     "integration_not_found": "Интеграция Immich не найдена. Пожалуйста, создайте новую интеграцию.",
     "validation_error": "Произошла ошибка при проверке интеграции Immich. Пожалуйста, проверьте URL сервера и API ключ.",
-    "network_error": "Сетевая ошибка при подключении к серверу Immich. Пожалуйста, проверьте ваше соединение и попробуйте еще раз."
+    "network_error": "Сетевая ошибка при подключении к серверу Immich. Пожалуйста, проверьте ваше соединение и попробуйте еще раз.",
+    "by_album": "По альбому",
+    "by_date": "На дату",
+    "error_no_object_id": "Идентификатор объекта не был предоставлен",
+    "fetch_error": "Ошибка извлечения данных из интеграции Immich",
+    "image_search_placeholder": "Поиск с помощью Immich",
+    "loading": "Загрузка",
+    "loading_albums": "Загрузка альбомов",
+    "no_images": "Не было найдено изображений",
+    "select_album_first": "Сначала выберите альбом",
+    "select_date": "Выберите дату",
+    "try_different_date": "Попробуйте другую дату",
+    "select_album": "Выберите альбом"
   },
   "google_maps": {
     "google_maps_integration_desc": "Подключите ваш аккаунт Google Maps для получения высококачественных результатов поиска местоположений и рекомендаций.",

@@ -416,7 +416,14 @@
     "no_images_desc": "Carica immagini per iniziare",
     "route_map": "Mappa del percorso",
     "selected_attachments": "Allegati selezionati",
-    "selected_images": "Immagini selezionate"
+    "selected_images": "Immagini selezionate",
+    "activities_text": "attività",
+    "activity_breakdown_by_category": "Bruteodown per le attività per categoria",
+    "distance_covered": "Distanza coperta",
+    "recorded_sessions": "Sessioni registrate",
+    "total_activities": "Attività totali",
+    "total_climbed": "Totale scalato",
+    "total_distance": "Distanza totale"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -468,7 +475,8 @@
     "language_selection": "Lingua",
     "support": "Supporto",
     "calendar": "Calendario",
-    "admin_panel": "Pannello di amministrazione"
+    "admin_panel": "Pannello di amministrazione",
+    "navigation": "Navigazione"
   },
   "auth": {
     "confirm_password": "Conferma password",
@@ -490,7 +498,11 @@
     "no_public_collections": "Nessuna collezione pubblica trovata",
     "user_collections": "Collezioni utente",
     "no_public_locations": "Nessuna posizione pubblica trovata",
-    "user_locations": "Posizioni degli utenti"
+    "user_locations": "Posizioni degli utenti",
+    "enter_password": "Inserisci la tua password",
+    "enter_username": "Inserisci il tuo nome utente",
+    "logging_in": "Accedere",
+    "totp": "Codice a due fattori"
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "L'elemento non può essere vuoto",
     "items": "Elementi",
     "new_item": "Nuovo elemento",
-    "new_checklist": "Nuova lista di controllo"
+    "new_checklist": "Nuova lista di controllo",
+    "add_new_item": "Aggiungi nuovo articolo",
+    "add_your_first_item": "Aggiungi il tuo primo articolo",
+    "checklist_viewer": "Visualizzatore della lista di controllo",
+    "completed": "Completato",
+    "current_items": "Articoli attuali",
+    "editing_checklist": "Elenco di controllo della modifica",
+    "enter_checklist_title": "Inserisci il titolo dell'elenco di controllo",
+    "no_items_yet": "Nessun oggetto ancora",
+    "update_checklist_details": "Elenco di controllo della modifica",
+    "viewing_checklist": "Visualizzazione della lista di controllo"
   },
   "collection": {
     "error_creating_collection": "Errore durante la creazione della collezione",
@@ -743,7 +765,11 @@
     "open": "Aprire",
     "save": "Salva",
     "invalid_url": "URL non valido",
-    "note_viewer": "Visualizzatore di note"
+    "note_viewer": "Visualizzatore di note",
+    "create_new_note": "Crea una nuova nota",
+    "enter_note_title": "Immettere il titolo della nota",
+    "update_note_details": "Nota di modifica",
+    "viewing_note": "Nota di visualizzazione"
   },
   "transportation": {
     "edit": "Modificare",
@@ -892,7 +918,19 @@
     "integration_not_found": "Integrazione immich non trovata. \nSi prega di creare una nuova integrazione.",
     "network_error": "Errore di rete durante la connessione al server immich. \nControlla la tua connessione e riprova.",
     "validation_error": "Si è verificato un errore durante la convalida dell'integrazione immich. \nControlla l'URL e la chiave API del server.",
-    "copy_locally_desc": "Copia le immagini sul server per l'accesso offline. \nUtilizza più spazio su disco."
+    "copy_locally_desc": "Copia le immagini sul server per l'accesso offline. \nUtilizza più spazio su disco.",
+    "by_album": "Per album",
+    "by_date": "Di data",
+    "error_no_object_id": "Non è stato fornito nessun ID oggetto",
+    "fetch_error": "Errore di recupero dei dati dall'integrazione immich",
+    "image_search_placeholder": "Cerca usando immich",
+    "loading": "Caricamento",
+    "loading_albums": "Caricamento di album",
+    "no_images": "Nessuna immagine trovata",
+    "select_album": "Seleziona l'album",
+    "select_album_first": "Seleziona prima un album",
+    "select_date": "Seleziona Data",
+    "try_different_date": "Prova una data diversa"
   },
   "recomendations": {
     "recommendation": "Raccomandazione",

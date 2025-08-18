@@ -940,7 +940,19 @@
     "integration_already_exists": "An Immich integration already exists. You can only have one integration at a time.",
     "integration_not_found": "Immich integration not found. Please create a new integration.",
     "validation_error": "An error occurred while validating the Immich integration. Please check your server URL and API key.",
-    "network_error": "Network error while connecting to the Immich server. Please check your connection and try again."
+    "network_error": "Network error while connecting to the Immich server. Please check your connection and try again.",
+    "fetch_error": "Error fetching data from the Immich integration",
+    "error_no_object_id": "No object ID was provided",
+    "by_date": "By Date",
+    "by_album": "By Album",
+    "image_search_placeholder": "Search using Immich",
+    "select_date": "Select Date",
+    "select_album": "Select Album",
+    "loading_albums": "Loading Albums",
+    "loading": "Loading",
+    "no_images": "No Images Found",
+    "try_different_date": "Try a different date",
+    "select_album_first": "Select an Album First"
   },
   "google_maps": {
     "google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations.",

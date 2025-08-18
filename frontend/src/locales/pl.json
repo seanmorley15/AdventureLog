@@ -31,7 +31,8 @@
       "northernLights": "Północne światła"
     },
     "calendar": "Kalendarz",
-    "admin_panel": "Panel administracyjny"
+    "admin_panel": "Panel administracyjny",
+    "navigation": "Nawigacja"
   },
   "about": {
     "about": "O aplikacji",
@@ -468,7 +469,14 @@
     "route_map": "Mapa trasy",
     "selected_attachments": "Wybrane załączniki",
     "selected_images": "Wybrane obrazy",
-    "linked_locations": "Połączone lokalizacje"
+    "linked_locations": "Połączone lokalizacje",
+    "activities_text": "zajęcia",
+    "activity_breakdown_by_category": "Awaria aktywności według kategorii",
+    "distance_covered": "Ochrony odległości",
+    "recorded_sessions": "Nagrane sesje",
+    "total_activities": "Całkowite działania",
+    "total_climbed": "Całkowita wspinana",
+    "total_distance": "Całkowita odległość"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -547,7 +555,11 @@
     "no_public_collections": "Nie znaleziono publicznych kolekcji",
     "user_collections": "Kolekcje użytkowników",
     "no_public_locations": "Nie znaleziono żadnych lokalizacji publicznych",
-    "user_locations": "Lokalizacje użytkowników"
+    "user_locations": "Lokalizacje użytkowników",
+    "enter_password": "Wprowadź swoje hasło",
+    "enter_username": "Wprowadź swoją nazwę użytkownika",
+    "logging_in": "Logowanie",
+    "totp": "Kod dwuskładnikowy"
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -731,7 +743,11 @@
     "note_public": "Ta notatka jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "add_a_link": "Dodaj link",
     "invalid_url": "Nieprawidłowy URL",
-    "note_viewer": "Przeglądarka notatek"
+    "note_viewer": "Przeglądarka notatek",
+    "create_new_note": "Utwórz nową notatkę",
+    "enter_note_title": "Wprowadź tytuł notatki",
+    "update_note_details": "Notatka edycyjna",
+    "viewing_note": "Uwaga przeglądania"
   },
   "checklist": {
     "checklist_deleted": "Lista kontrolna została pomyślnie usunięta!",
@@ -743,7 +759,17 @@
     "checklist_public": "Ta lista kontrolna jest publiczna, ponieważ znajduje się w publicznej kolekcji.",
     "item_cannot_be_empty": "Element nie może być pusty",
     "item_already_exists": "Element już istnieje",
-    "new_checklist": "Nowa lista kontrolna"
+    "new_checklist": "Nowa lista kontrolna",
+    "add_new_item": "Dodaj nowy element",
+    "add_your_first_item": "Dodaj swój pierwszy element",
+    "checklist_viewer": "Przeglądarka listy kontrolnej",
+    "completed": "Zakończony",
+    "current_items": "Aktualne elementy",
+    "editing_checklist": "Edycja listy kontrolnej",
+    "enter_checklist_title": "Wprowadź tytuł listy kontrolnej",
+    "no_items_yet": "Nie ma jeszcze przedmiotów",
+    "update_checklist_details": "Edycja listy kontrolnej",
+    "viewing_checklist": "Przeglądanie listy kontrolnej"
   },
   "transportation": {
     "transportation_deleted": "Transport został pomyślnie usunięty!",
@@ -892,7 +918,19 @@
     "integration_already_exists": "Immichu jest już integracja i immich. \nMożesz mieć tylko jedną integrację na raz.",
     "integration_not_found": "Nie znaleziono integracji imich. \nUtwórz nową integrację.",
     "network_error": "Błąd sieci podczas łączenia się z serwerem IMMICH. \nSprawdź połączenie i spróbuj ponownie.",
-    "validation_error": "Wystąpił błąd podczas walidacji integracji immicha. \nSprawdź swój adres URL serwera i klawisz API."
+    "validation_error": "Wystąpił błąd podczas walidacji integracji immicha. \nSprawdź swój adres URL serwera i klawisz API.",
+    "by_album": "Według albumu",
+    "by_date": "Według daty",
+    "error_no_object_id": "Nie podano identyfikatora obiektu",
+    "fetch_error": "Błąd pobieranie danych z integracji IMMICH",
+    "image_search_placeholder": "Wyszukaj za pomocą IMMICH",
+    "loading": "Załadunek",
+    "loading_albums": "Ładowanie albumów",
+    "no_images": "Nie znaleziono zdjęć",
+    "select_album": "Wybierz album",
+    "select_album_first": "Najpierw wybierz album",
+    "select_date": "Wybierz datę",
+    "try_different_date": "Wypróbuj inną datę"
   },
   "recomendations": {
     "recommendation": "Zalecenie",

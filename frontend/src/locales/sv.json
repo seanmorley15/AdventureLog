@@ -416,7 +416,14 @@
     "no_images_desc": "Ladda upp bilder för att komma igång",
     "route_map": "Ruttkarta",
     "selected_attachments": "Valda bilagor",
-    "selected_images": "Valda bilder"
+    "selected_images": "Valda bilder",
+    "activities_text": "aktiviteter",
+    "activity_breakdown_by_category": "Aktivitetsfördelning efter kategori",
+    "distance_covered": "Täckt avstånd",
+    "recorded_sessions": "Inspelade sessioner",
+    "total_activities": "Totala aktiviteter",
+    "total_climbed": "Total stigning",
+    "total_distance": "Totalt avstånd"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -468,7 +475,8 @@
     "language_selection": "Språk",
     "support": "Support",
     "calendar": "Kalender",
-    "admin_panel": "Administratör"
+    "admin_panel": "Administratör",
+    "navigation": "Navigering"
   },
   "worldtravel": {
     "all": "Alla",
@@ -547,7 +555,11 @@
     "no_public_collections": "Inga offentliga samlingar hittades",
     "user_collections": "Användarsamlingar",
     "no_public_locations": "Inga offentliga platser hittades",
-    "user_locations": "Användarplatser"
+    "user_locations": "Användarplatser",
+    "enter_password": "Ange ditt lösenord",
+    "enter_username": "Ange ditt användarnamn",
+    "logging_in": "Inloggning",
+    "totp": "Tvåfaktorkod"
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "Listobjektet får inte vara tomt",
     "items": "Punkter",
     "new_item": "Nytt föremål",
-    "new_checklist": "Ny checklista"
+    "new_checklist": "Ny checklista",
+    "add_new_item": "Lägg till nytt objekt",
+    "add_your_first_item": "Lägg till ditt första objekt",
+    "checklist_viewer": "Checklista Viewer",
+    "completed": "Avslutad",
+    "current_items": "Aktuella artiklar",
+    "editing_checklist": "Redigera checklista",
+    "enter_checklist_title": "Ange checklista -titel",
+    "no_items_yet": "Inga artiklar än",
+    "update_checklist_details": "Redigera checklista",
+    "viewing_checklist": "Visa checklista"
   },
   "collection": {
     "collection_created": "Samlingen har skapats!",
@@ -743,7 +765,11 @@
     "open": "Öppna",
     "save": "Spara",
     "invalid_url": "Ogiltig URL",
-    "note_viewer": "Note Viewer"
+    "note_viewer": "Note Viewer",
+    "create_new_note": "Skapa ny anteckning",
+    "enter_note_title": "Ange antecknings titel",
+    "update_note_details": "Redigeringsanteckning",
+    "viewing_note": "Visningsnot"
   },
   "transportation": {
     "edit": "Redigera",
@@ -892,7 +918,19 @@
     "integration_already_exists": "En immich integration finns redan. \nDu kan bara ha en integration åt gången.",
     "integration_not_found": "Imkik integration hittades inte. \nSkapa en ny integration.",
     "network_error": "Nätverksfel vid anslutning till den immich servern. \nKontrollera din anslutning och försök igen.",
-    "validation_error": "Ett fel inträffade vid validering av den immich integrationen. \nKontrollera din server -URL- och API -nyckel."
+    "validation_error": "Ett fel inträffade vid validering av den immich integrationen. \nKontrollera din server -URL- och API -nyckel.",
+    "by_album": "Efter album",
+    "by_date": "På datum",
+    "error_no_object_id": "Inget objekt -ID tillhandahölls",
+    "fetch_error": "Fel som hämtar data från den immich integrationen",
+    "image_search_placeholder": "Sök med Immich",
+    "loading": "Belastning",
+    "loading_albums": "Laddar album",
+    "no_images": "Inga bilder hittades",
+    "select_album": "Välj album",
+    "select_album_first": "Välj ett album först",
+    "select_date": "Välj datum",
+    "try_different_date": "Prova ett annat datum"
   },
   "recomendations": {
     "recommendation": "Rekommendation",

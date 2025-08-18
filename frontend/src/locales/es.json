@@ -31,7 +31,8 @@
     "language_selection": "Idioma",
     "support": "Soporte",
     "calendar": "Calendario",
-    "admin_panel": "Panel de administración"
+    "admin_panel": "Panel de administración",
+    "navigation": "Navegación"
   },
   "about": {
     "about": "Acerca de",
@@ -468,7 +469,14 @@
     "no_images_desc": "Subir imágenes para comenzar",
     "route_map": "Mapa de ruta",
     "selected_attachments": "Archivos adjuntos seleccionados",
-    "selected_images": "Imágenes seleccionadas"
+    "selected_images": "Imágenes seleccionadas",
+    "activities_text": "actividades",
+    "activity_breakdown_by_category": "Desglose de actividad por categoría",
+    "distance_covered": "Distancia cubierta",
+    "recorded_sessions": "Sesiones grabadas",
+    "total_activities": "Actividades totales",
+    "total_climbed": "Total escalado",
+    "total_distance": "Distancia total"
   },
   "worldtravel": {
     "all": "Todo",
@@ -547,7 +555,11 @@
     "no_public_collections": "No se encontraron colecciones públicas",
     "user_collections": "Colecciones de usuarios",
     "no_public_locations": "No se encontraron ubicaciones públicas",
-    "user_locations": "Ubicación de usuarios"
+    "user_locations": "Ubicación de usuarios",
+    "enter_password": "Ingrese su contraseña",
+    "enter_username": "Ingrese su nombre de usuario",
+    "logging_in": "Iniciar sesión",
+    "totp": "Código de dos factores"
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "El elemento no puede estar vacío",
     "items": "Elementos",
     "new_item": "Nuevo artículo",
-    "new_checklist": "Nueva lista de verificación"
+    "new_checklist": "Nueva lista de verificación",
+    "add_new_item": "Agregar nuevo artículo",
+    "add_your_first_item": "Agrega tu primer artículo",
+    "checklist_viewer": "Visor de la lista de verificación",
+    "completed": "Terminado",
+    "current_items": "Artículos actuales",
+    "editing_checklist": "Lista de verificación de edición",
+    "enter_checklist_title": "Ingrese el título de la lista de verificación",
+    "no_items_yet": "No hay artículos todavía",
+    "update_checklist_details": "Lista de verificación de edición",
+    "viewing_checklist": "Visualización de la lista de verificación"
   },
   "collection": {
     "collection_created": "¡Colección creada con éxito!",
@@ -743,7 +765,11 @@
     "open": "Abrir",
     "save": "Guardar",
     "invalid_url": "URL no válida",
-    "note_viewer": "Visor de notas"
+    "note_viewer": "Visor de notas",
+    "create_new_note": "Crear nueva nota",
+    "enter_note_title": "Ingrese el título de nota",
+    "update_note_details": "Nota de edición",
+    "viewing_note": "Nota de visualización"
   },
   "transportation": {
     "modes": {
@@ -892,7 +918,19 @@
     "integration_already_exists": "Ya existe una integración Immich. \nSolo puedes tener una integración a la vez.",
     "integration_not_found": "Integración Immich no encontrada. \nPor favor cree una nueva integración.",
     "network_error": "Error de red mientras se conecta al servidor Immich. \nVerifique su conexión y vuelva a intentarlo.",
-    "validation_error": "Se produjo un error al validar la integración de Immich. \nVerifique la URL y la tecla API de su servidor."
+    "validation_error": "Se produjo un error al validar la integración de Immich. \nVerifique la URL y la tecla API de su servidor.",
+    "by_album": "Por álbum",
+    "by_date": "Por fecha",
+    "error_no_object_id": "No se proporcionó una identificación de objeto",
+    "fetch_error": "Error al obtener datos de la integración de Immich",
+    "image_search_placeholder": "Buscar usando Immich",
+    "loading": "Cargando",
+    "loading_albums": "Cargando álbumes",
+    "no_images": "No se encuentran imágenes",
+    "select_album": "Álbum seleccionado",
+    "select_album_first": "Seleccione un álbum primero",
+    "select_date": "Fecha de selección",
+    "try_different_date": "Prueba una fecha diferente"
   },
   "recomendations": {
     "recommendation": "Recomendación",

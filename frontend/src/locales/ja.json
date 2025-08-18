@@ -415,7 +415,14 @@
     "selected_images": "選択した画像",
     "attachment_removed_success": "添付ファイルは成功して削除されました",
     "attachments_upload_info": "添付ファイルは、保存後にアップロードされます",
-    "image_upload_info": "保存後に画像がアップロードされます"
+    "image_upload_info": "保存後に画像がアップロードされます",
+    "activities_text": "活動",
+    "activity_breakdown_by_category": "カテゴリ別のアクティビティの内訳",
+    "distance_covered": "カバーされている距離",
+    "recorded_sessions": "録音されたセッション",
+    "total_activities": "総アクティビティ",
+    "total_climbed": "総登り",
+    "total_distance": "総距離"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",
@@ -437,7 +444,11 @@
     "user_collections": "ユーザーコレクション",
     "user_locations": "ユーザーの場所",
     "username": "ユーザー名",
-    "password": "パスワード"
+    "password": "パスワード",
+    "enter_password": "パスワードを入力してください",
+    "enter_username": "ユーザー名を入力します",
+    "logging_in": "ログインします",
+    "totp": "二因子コード"
   },
   "calendar": {
     "all_day_event": "終日イベント",
@@ -471,7 +482,17 @@
     "item_cannot_be_empty": "アイテムを空にすることはできません",
     "items": "アイテム",
     "new_checklist": "新しいチェックリスト",
-    "new_item": "新しいアイテム"
+    "new_item": "新しいアイテム",
+    "add_new_item": "新しいアイテムを追加します",
+    "add_your_first_item": "最初のアイテムを追加します",
+    "checklist_viewer": "チェックリストビューアー",
+    "completed": "完了しました",
+    "current_items": "現在のアイテム",
+    "editing_checklist": "編集チェックリスト",
+    "enter_checklist_title": "チェックリストのタイトルを入力します",
+    "no_items_yet": "まだアイテムはありません",
+    "update_checklist_details": "編集チェックリスト",
+    "viewing_checklist": "チェックリストの表示"
   },
   "collection": {
     "archived_appear_here": "アーカイブコレクションがここに表示されます。",
@@ -554,7 +575,19 @@
     "server_url": "Immich Server URL",
     "update_integration": "統合を更新します",
     "validation_error": "Immichの統合の検証中にエラーが発生しました。\nサーバーのURLとAPIキーを確認してください。",
-    "integration_not_found": "Immichの統合が見つかりません。\n新しい統合を作成してください。"
+    "integration_not_found": "Immichの統合が見つかりません。\n新しい統合を作成してください。",
+    "by_album": "アルバムによって",
+    "by_date": "日付までに",
+    "error_no_object_id": "オブジェクトIDは提供されていません",
+    "fetch_error": "Immich統合からデータの取得エラー",
+    "image_search_placeholder": "Immichを使用して検索します",
+    "loading": "読み込み",
+    "loading_albums": "アルバムのロード",
+    "no_images": "画像は見つかりません",
+    "select_album": "アルバムを選択します",
+    "select_album_first": "最初にアルバムを選択してください",
+    "select_date": "[日付]を選択します",
+    "try_different_date": "別の日付を試してください"
   },
   "invites": {
     "accept": "受け入れる",
@@ -651,7 +684,8 @@
       "northernLights": "オーロラ"
     },
     "users": "ユーザー",
-    "worldtravel": "世界旅行"
+    "worldtravel": "世界旅行",
+    "navigation": "ナビゲーション"
   },
   "notes": {
     "add_a_link": "リンクを追加します",
@@ -665,7 +699,11 @@
     "note_public": "このメモは、公開コレクションにあるため公開されています。",
     "note_viewer": "視聴者に注意してください",
     "open": "開ける",
-    "save": "保存"
+    "save": "保存",
+    "create_new_note": "新しいメモを作成します",
+    "enter_note_title": "ノートタイトルを入力します",
+    "update_note_details": "編集ノート",
+    "viewing_note": "閲覧メモ"
   },
   "profile": {
     "discovered": "発見した",

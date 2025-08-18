@@ -415,7 +415,14 @@
     "no_images_desc": "Carregue imagens para começar",
     "route_map": "Mapa de rota",
     "selected_attachments": "Anexos selecionados",
-    "selected_images": "Imagens selecionadas"
+    "selected_images": "Imagens selecionadas",
+    "activities_text": "atividades",
+    "activity_breakdown_by_category": "Redução de atividades por categoria",
+    "distance_covered": "Distância coberta",
+    "recorded_sessions": "Sessões gravadas",
+    "total_activities": "Atividades totais",
+    "total_climbed": "Total escalou",
+    "total_distance": "Distância total"
   },
   "auth": {
     "confirm_password": "Confirme sua senha",
@@ -437,7 +444,11 @@
     "signup": "Inscrever-se",
     "user_collections": "Coleções de usuários",
     "user_locations": "Locais de usuários",
-    "username": "Nome de usuário"
+    "username": "Nome de usuário",
+    "enter_password": "Digite sua senha",
+    "enter_username": "Digite seu nome de usuário",
+    "logging_in": "Login",
+    "totp": "Código de dois fatores"
   },
   "calendar": {
     "all_day_event": "Evento durante todo o dia",
@@ -471,7 +482,17 @@
     "item_cannot_be_empty": "Item não pode estar vazio",
     "items": "Unid",
     "new_checklist": "Nova lista de verificação",
-    "new_item": "Novo item"
+    "new_item": "Novo item",
+    "add_new_item": "Adicione um novo item",
+    "add_your_first_item": "Adicione seu primeiro item",
+    "checklist_viewer": "Visualizador da lista de verificação",
+    "completed": "Concluído",
+    "current_items": "Itens atuais",
+    "editing_checklist": "Lista de verificação de edição",
+    "enter_checklist_title": "Digite o título da lista de verificação",
+    "no_items_yet": "Sem itens ainda",
+    "update_checklist_details": "Lista de verificação de edição",
+    "viewing_checklist": "Visualizando a lista de verificação"
   },
   "collection": {
     "archived_appear_here": "Coleções arquivadas aparecerão aqui.",
@@ -554,7 +575,19 @@
     "no_items_found": "Nenhum itens encontrado",
     "server_url": "URL do servidor imich",
     "update_integration": "Atualizar integração",
-    "validation_error": "Ocorreu um erro ao validar a integração Immich. \nPor favor, verifique o URL do seu servidor e a tecla API."
+    "validation_error": "Ocorreu um erro ao validar a integração Immich. \nPor favor, verifique o URL do seu servidor e a tecla API.",
+    "by_album": "Por álbum",
+    "by_date": "Por data",
+    "error_no_object_id": "Nenhum ID de objeto foi fornecido",
+    "fetch_error": "Erro a busca de dados da Integração Immich",
+    "image_search_placeholder": "Pesquise usando Immich",
+    "loading": "Carregando",
+    "loading_albums": "Carregando álbuns",
+    "no_images": "Nenhuma imagem encontrada",
+    "select_album": "Selecione Álbum",
+    "select_album_first": "Selecione um álbum primeiro",
+    "select_date": "Selecione a data",
+    "try_different_date": "Tente um encontro diferente"
   },
   "invites": {
     "accept": "Aceitar",
@@ -651,7 +684,8 @@
       "northernLights": "Luzes do norte"
     },
     "users": "Usuários",
-    "worldtravel": "Viagens mundiais"
+    "worldtravel": "Viagens mundiais",
+    "navigation": "Navegação"
   },
   "notes": {
     "add_a_link": "Adicione um link",
@@ -665,7 +699,11 @@
     "note_public": "Esta nota é pública porque está em uma coleção pública.",
     "note_viewer": "Nota Visualizador",
     "open": "Abrir",
-    "save": "Salvar"
+    "save": "Salvar",
+    "create_new_note": "Crie uma nova nota",
+    "enter_note_title": "Digite o título da nota",
+    "update_note_details": "Nota de edição",
+    "viewing_note": "Visualizando nota"
   },
   "profile": {
     "discovered": "descoberto",

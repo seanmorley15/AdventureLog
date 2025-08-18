@@ -416,7 +416,14 @@
     "no_images_desc": "Télécharger des images pour commencer",
     "route_map": "Carte d'itinéraire",
     "selected_attachments": "Attachements sélectionnés",
-    "selected_images": "Images sélectionnées"
+    "selected_images": "Images sélectionnées",
+    "activities_text": "activités",
+    "activity_breakdown_by_category": "Déchange d'activité par catégorie",
+    "distance_covered": "Distance couverte",
+    "recorded_sessions": "Sessions enregistrées",
+    "total_activities": "Activités totales",
+    "total_climbed": "Total grimpé",
+    "total_distance": "Distance totale"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -468,7 +475,8 @@
     "language_selection": "Langue",
     "support": "Soutien",
     "calendar": "Calendrier",
-    "admin_panel": "Panneau d'administration"
+    "admin_panel": "Panneau d'administration",
+    "navigation": "Navigation"
   },
   "auth": {
     "confirm_password": "Confirmer le mot de passe",
@@ -490,7 +498,11 @@
     "no_public_collections": "Aucune collection publique trouvée",
     "user_collections": "Collections de l'utilisateur",
     "no_public_locations": "Aucun emplacement public trouvé",
-    "user_locations": "Emplacements des utilisateurs"
+    "user_locations": "Emplacements des utilisateurs",
+    "enter_password": "Entrez votre mot de passe",
+    "enter_username": "Entrez votre nom d'utilisateur",
+    "logging_in": "Se connecter",
+    "totp": "Code à deux facteurs"
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec un profil public."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "L'élément ne peut pas être vide",
     "items": "Éléments",
     "new_item": "Nouvel élément",
-    "new_checklist": "Nouvelle liste de contrôle"
+    "new_checklist": "Nouvelle liste de contrôle",
+    "add_new_item": "Ajouter un nouvel article",
+    "add_your_first_item": "Ajoutez votre premier article",
+    "checklist_viewer": "Visionner de la liste de contrôle",
+    "completed": "Complété",
+    "current_items": "Articles actuels",
+    "editing_checklist": "Liste de contrôle d'édition",
+    "enter_checklist_title": "Entrez le titre de la liste de contrôle",
+    "no_items_yet": "Pas encore d'articles",
+    "update_checklist_details": "Liste de contrôle d'édition",
+    "viewing_checklist": "Affichage de la liste de contrôle"
   },
   "collection": {
     "collection_created": "Collection créée avec succès !",
@@ -743,7 +765,11 @@
     "open": "Ouvrir",
     "save": "Sauvegarder",
     "invalid_url": "URL invalide",
-    "note_viewer": "Visionneuse de notes"
+    "note_viewer": "Visionneuse de notes",
+    "create_new_note": "Créer une nouvelle note",
+    "enter_note_title": "Entrez le titre de la note",
+    "update_note_details": "Note de montage",
+    "viewing_note": "Note d'observation"
   },
   "transportation": {
     "edit": "Modifier",
@@ -892,7 +918,19 @@
     "integration_already_exists": "Une intégration Immich existe déjà. \nVous ne pouvez avoir qu'une seule intégration à la fois.",
     "integration_not_found": "L'intégration d'immich n'est pas trouvée. \nVeuillez créer une nouvelle intégration.",
     "network_error": "Erreur réseau lors de la connexion au serveur Immich. \nVeuillez vérifier votre connexion et réessayer.",
-    "validation_error": "Une erreur s'est produite lors de la validation de l'intégration d'Immich. \nVeuillez vérifier l'URL et la clé API de votre serveur."
+    "validation_error": "Une erreur s'est produite lors de la validation de l'intégration d'Immich. \nVeuillez vérifier l'URL et la clé API de votre serveur.",
+    "by_album": "Par album",
+    "by_date": "Par date",
+    "error_no_object_id": "Aucun ID d'objet n'a été fourni",
+    "fetch_error": "Erreur récupérant les données de l'intégration d'Immich",
+    "image_search_placeholder": "Recherche à l'aide d'Immich",
+    "loading": "Chargement",
+    "loading_albums": "Chargement des albums",
+    "no_images": "Aucune image trouvée",
+    "select_album": "Sélectionner l'album",
+    "select_album_first": "Sélectionnez d'abord un album",
+    "select_date": "Sélectionner la date",
+    "try_different_date": "Essayez une date différente"
   },
   "recomendations": {
     "recommendation": "Recommandation",

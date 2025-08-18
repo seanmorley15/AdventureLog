@@ -31,7 +31,8 @@
     "language_selection": "语言",
     "support": "支持",
     "calendar": "日历",
-    "admin_panel": "管理面板"
+    "admin_panel": "管理面板",
+    "navigation": "导航"
   },
   "about": {
     "about": "关于",
@@ -468,7 +469,14 @@
     "no_images_desc": "上传图像开始",
     "route_map": "路线图",
     "selected_attachments": "选定的附件",
-    "selected_images": "选定的图像"
+    "selected_images": "选定的图像",
+    "activities_text": "活动",
+    "activity_breakdown_by_category": "类别的活动分解",
+    "distance_covered": "覆盖距离",
+    "recorded_sessions": "记录的会议",
+    "total_activities": "总活动",
+    "total_climbed": "总攀登",
+    "total_distance": "总距离"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -490,7 +498,11 @@
     "no_public_collections": "未找到公开合集",
     "user_collections": "用户合集",
     "no_public_locations": "找不到公共场所",
-    "user_locations": "用户位置"
+    "user_locations": "用户位置",
+    "enter_password": "输入您的密码",
+    "enter_username": "输入您的用户名",
+    "logging_in": "登录",
+    "totp": "两因素代码"
   },
   "worldtravel": {
     "all": "全部",
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "项目内容不能为空",
     "items": "项目",
     "new_item": "新项目",
-    "new_checklist": "新建清单"
+    "new_checklist": "新建清单",
+    "add_new_item": "添加新项目",
+    "add_your_first_item": "添加您的第一个项目",
+    "checklist_viewer": "清单查看器",
+    "completed": "完全的",
+    "current_items": "当前项目",
+    "editing_checklist": "编辑清单",
+    "enter_checklist_title": "输入清单标题",
+    "no_items_yet": "还没有物品",
+    "update_checklist_details": "编辑清单",
+    "viewing_checklist": "查看清单"
   },
   "collection": {
     "collection_created": "合集创建成功！",
@@ -743,7 +765,11 @@
     "open": "打开",
     "save": "保存",
     "invalid_url": "无效网址",
-    "note_viewer": "笔记查看器"
+    "note_viewer": "笔记查看器",
+    "create_new_note": "创建新注释",
+    "enter_note_title": "输入注释标题",
+    "update_note_details": "编辑说明",
+    "viewing_note": "查看说明"
   },
   "transportation": {
     "edit": "编辑",
@@ -892,7 +918,19 @@
     "integration_already_exists": "Immich整合已经存在。\n您一次只能进行一个集成。",
     "integration_not_found": "没有找到Immich整合。\n请创建一个新的集成。",
     "network_error": "连接到Immich服务器时的网络错误。\n请检查您的连接，然后重试。",
-    "validation_error": "在验证IMMICH集成时发生了错误。\n请检查您的服务器URL和API键。"
+    "validation_error": "在验证IMMICH集成时发生了错误。\n请检查您的服务器URL和API键。",
+    "by_album": "专辑",
+    "by_date": "按日期",
+    "error_no_object_id": "没有提供对象ID",
+    "fetch_error": "从Immich集成中获取数据的错误",
+    "image_search_placeholder": "使用Immich搜索",
+    "loading": "加载中",
+    "loading_albums": "加载专辑",
+    "no_images": "找不到图像",
+    "select_album": "选择专辑",
+    "select_album_first": "首先选择专辑",
+    "select_date": "选择日期",
+    "try_different_date": "尝试其他日期"
   },
   "recomendations": {
     "recommendation": "推荐",

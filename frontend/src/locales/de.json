@@ -416,7 +416,14 @@
     "no_images_desc": "Laden Sie Bilder hoch, um loszulegen",
     "route_map": "Routenkarte",
     "selected_attachments": "Ausgewählte Anhänge",
-    "selected_images": "Ausgewählte Bilder"
+    "selected_images": "Ausgewählte Bilder",
+    "activities_text": "Aktivitäten",
+    "activity_breakdown_by_category": "Aktivitätsaufschlüsselung nach Kategorie",
+    "distance_covered": "Entfernung bedeckt",
+    "recorded_sessions": "Aufgenommene Sitzungen",
+    "total_activities": "Gesamtaktivitäten",
+    "total_climbed": "Total bestiegen",
+    "total_distance": "Gesamtabstand"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -468,7 +475,8 @@
     "language_selection": "Sprachauswahl",
     "support": "Unterstützung",
     "calendar": "Kalender",
-    "admin_panel": "Administration"
+    "admin_panel": "Administration",
+    "navigation": "Navigation"
   },
   "auth": {
     "confirm_password": "Passwort bestätigen",
@@ -490,7 +498,11 @@
     "no_public_collections": "Keine öffentlichen Sammlungen gefunden",
     "user_collections": "Benutzersammlungen",
     "no_public_locations": "Keine öffentlichen Standorte gefunden",
-    "user_locations": "Benutzerstandorte"
+    "user_locations": "Benutzerstandorte",
+    "enter_password": "Geben Sie Ihr Passwort ein",
+    "enter_username": "Geben Sie Ihren Benutzernamen ein",
+    "logging_in": "Anmeldung hinein",
+    "totp": "Zwei-Faktor-Code"
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichem Profil gefunden."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "Der Eintrag darf nicht leer sein",
     "items": "Einträge",
     "new_item": "Neuer Eintrag",
-    "new_checklist": "Neue Checkliste"
+    "new_checklist": "Neue Checkliste",
+    "add_new_item": "Neuer Artikel hinzufügen",
+    "add_your_first_item": "Fügen Sie Ihren ersten Artikel hinzu",
+    "checklist_viewer": "Checkliste Viewer",
+    "completed": "Vollendet",
+    "current_items": "Aktuelle Elemente",
+    "editing_checklist": "Checkliste bearbeiten",
+    "enter_checklist_title": "Geben Sie den Checklisten -Titel ein",
+    "no_items_yet": "Noch keine Gegenstände",
+    "update_checklist_details": "Checkliste bearbeiten",
+    "viewing_checklist": "Checkliste anzeigen"
   },
   "collection": {
     "collection_created": "Sammlung erfolgreich erstellt!",
@@ -743,7 +765,11 @@
     "open": "Öffnen",
     "save": "Speichern",
     "invalid_url": "Ungültige URL",
-    "note_viewer": "Notizenbetrachter"
+    "note_viewer": "Notizenbetrachter",
+    "create_new_note": "Neue Notiz erstellen",
+    "enter_note_title": "Geben Sie einen Notiz Titel ein",
+    "update_note_details": "Bearbeitungsnotiz",
+    "viewing_note": "Hinweis anzeigen"
   },
   "transportation": {
     "edit": "Bearbeiten",
@@ -892,7 +918,19 @@
     "integration_already_exists": "Es gibt bereits eine Immichintegration. \nSie können jeweils nur eine Integration haben.",
     "integration_not_found": "Immich -Integration nicht gefunden. \nBitte erstellen Sie eine neue Integration.",
     "network_error": "Netzwerkfehler beim Verbindung mit dem Immich -Server. \nBitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    "validation_error": "Bei der Validierung der Immichintegration trat ein Fehler auf. \nBitte überprüfen Sie Ihre Server -URL- und API -Schlüssel."
+    "validation_error": "Bei der Validierung der Immichintegration trat ein Fehler auf. \nBitte überprüfen Sie Ihre Server -URL- und API -Schlüssel.",
+    "by_album": "Nach Album",
+    "by_date": "Nach Datum",
+    "error_no_object_id": "Es wurde keine Objekt -ID bereitgestellt",
+    "fetch_error": "Fehler beim Abholen von Fehlern aus der Immichintegration",
+    "image_search_placeholder": "Suche mit Immich",
+    "loading": "Laden",
+    "loading_albums": "Alben laden",
+    "no_images": "Keine Bilder gefunden",
+    "select_album": "Album auswählen",
+    "select_album_first": "Wählen Sie zuerst ein Album aus",
+    "select_date": "Datum auswählen",
+    "try_different_date": "Versuchen Sie es mit einem anderen Datum"
   },
   "recomendations": {
     "recommendation": "Empfehlung",

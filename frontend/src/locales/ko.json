@@ -416,7 +416,14 @@
     "no_images_desc": "시작하려면 이미지를 업로드하십시오",
     "route_map": "경로지도",
     "selected_attachments": "선택된 첨부 파일",
-    "selected_images": "선택된 이미지"
+    "selected_images": "선택된 이미지",
+    "activities_text": "활동",
+    "activity_breakdown_by_category": "카테고리 별 활동 분해",
+    "distance_covered": "거리는",
+    "recorded_sessions": "기록 된 세션",
+    "total_activities": "총 활동",
+    "total_climbed": "총계가 올라 갔다",
+    "total_distance": "총 거리"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -438,7 +445,11 @@
     "no_public_collections": "공개 컬렉션이 발견되지 않았습니다",
     "user_collections": "사용자 수집",
     "no_public_locations": "공공 장소가 발견되지 않았습니다",
-    "user_locations": "사용자 위치"
+    "user_locations": "사용자 위치",
+    "enter_password": "비밀번호를 입력하십시오",
+    "enter_username": "사용자 이름을 입력하십시오",
+    "logging_in": "로그인",
+    "totp": "2 단계 코드"
   },
   "categories": {
     "category_name": "카테고리 이름",
@@ -461,7 +472,17 @@
     "item_cannot_be_empty": "항목은 비어있을 수 없습니다",
     "items": "항목",
     "new_checklist": "새 체크리스트",
-    "new_item": "새 항목"
+    "new_item": "새 항목",
+    "add_your_first_item": "첫 번째 항목을 추가하십시오",
+    "completed": "완전한",
+    "current_items": "현재 항목",
+    "editing_checklist": "체크리스트 편집",
+    "enter_checklist_title": "체크리스트 제목을 입력하십시오",
+    "no_items_yet": "아직 항목이 없습니다",
+    "update_checklist_details": "체크리스트 편집",
+    "viewing_checklist": "체크리스트보기",
+    "add_new_item": "새 항목을 추가하십시오",
+    "checklist_viewer": "점검표 뷰어"
   },
   "collection": {
     "collection_created": "컬렉션이 성공적으로 생성되었습니다!",
@@ -540,7 +561,19 @@
     "integration_already_exists": "면역 통합이 이미 존재합니다. \n한 번에 하나만 통합 할 수 있습니다.",
     "integration_not_found": "Immich 통합을 찾을 수 없습니다. \n새로운 통합을 작성하십시오.",
     "network_error": "Immich 서버에 연결하는 동안 네트워크 오류. \n연결을 확인하고 다시 시도하십시오.",
-    "validation_error": "면역 통합을 검증하는 동안 오류가 발생했습니다. \n서버 URL 및 API 키를 확인하십시오."
+    "validation_error": "면역 통합을 검증하는 동안 오류가 발생했습니다. \n서버 URL 및 API 키를 확인하십시오.",
+    "by_album": "앨범에 의해",
+    "by_date": "날짜에 따라",
+    "error_no_object_id": "객체 ID가 제공되지 않았습니다",
+    "fetch_error": "Immich 통합에서 데이터를 가져 오기",
+    "image_search_placeholder": "Immich를 사용하여 검색하십시오",
+    "loading": "로딩",
+    "loading_albums": "앨범로드",
+    "no_images": "이미지가 없습니다",
+    "select_album": "앨범을 선택하십시오",
+    "select_album_first": "먼저 앨범을 선택하십시오",
+    "select_date": "날짜를 선택하십시오",
+    "try_different_date": "다른 날짜를 시도하십시오"
   },
   "map": {
     "add_adventure": "새로운 모험 추가",
@@ -596,7 +629,8 @@
     },
     "users": "사용자",
     "worldtravel": "세계 여행",
-    "admin_panel": "관리자 패널"
+    "admin_panel": "관리자 패널",
+    "navigation": "항해"
   },
   "notes": {
     "add_a_link": "링크 추가",
@@ -610,7 +644,11 @@
     "note_public": "이 노트는 공개 컬렉션에 있기 때문에 공개되었습니다.",
     "note_viewer": "노트 뷰어",
     "open": "열기",
-    "save": "저장"
+    "save": "저장",
+    "create_new_note": "새 메모를 만듭니다",
+    "enter_note_title": "메모 제목을 입력하십시오",
+    "update_note_details": "편집 노트",
+    "viewing_note": "보기 노트"
   },
   "profile": {
     "member_since": "가입 시점",

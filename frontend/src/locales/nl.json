@@ -416,7 +416,14 @@
     "no_images_desc": "Upload afbeeldingen om te beginnen",
     "route_map": "Routekaart",
     "selected_attachments": "Geselecteerde bijlagen",
-    "selected_images": "Geselecteerde afbeeldingen"
+    "selected_images": "Geselecteerde afbeeldingen",
+    "activities_text": "activiteiten",
+    "activity_breakdown_by_category": "Activiteitsafbraak per categorie",
+    "distance_covered": "Afstand afgevaardigd",
+    "recorded_sessions": "Opgenomen sessies",
+    "total_activities": "Totale activiteiten",
+    "total_climbed": "Totaal geklommen",
+    "total_distance": "Totale afstand"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -468,7 +475,8 @@
     "language_selection": "Taal",
     "support": "Steun",
     "calendar": "Kalender",
-    "admin_panel": "Admin -paneel"
+    "admin_panel": "Admin -paneel",
+    "navigation": "Navigatie"
   },
   "auth": {
     "confirm_password": "Bevestig wachtwoord",
@@ -490,7 +498,11 @@
     "no_public_collections": "Geen openbare collecties gevonden",
     "user_collections": "Gebruikerscollecties",
     "no_public_locations": "Geen openbare locaties gevonden",
-    "user_locations": "Gebruikerslocaties"
+    "user_locations": "Gebruikerslocaties",
+    "enter_password": "Voer uw wachtwoord in",
+    "enter_username": "Voer uw gebruikersnaam in",
+    "logging_in": "Inloggen",
+    "totp": "Tweefactorcode"
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."
@@ -709,7 +721,17 @@
     "item_cannot_be_empty": "Artikel mag niet leeg zijn",
     "items": "Artikelen",
     "new_item": "Nieuw artikel",
-    "new_checklist": "Nieuwe checklist"
+    "new_checklist": "Nieuwe checklist",
+    "add_new_item": "Voeg nieuw item toe",
+    "add_your_first_item": "Voeg uw eerste item toe",
+    "checklist_viewer": "Checklist Viewer",
+    "completed": "Voltooid",
+    "current_items": "Huidige items",
+    "editing_checklist": "Bewerkingshoofdlijst",
+    "enter_checklist_title": "Voer de titel van de checklist in",
+    "no_items_yet": "Nog geen items",
+    "update_checklist_details": "Bewerkingshoofdlijst",
+    "viewing_checklist": "Checklist bekijken"
   },
   "collection": {
     "collection_created": "Collectie succesvol aangemaakt!",
@@ -743,7 +765,11 @@
     "open": "Open",
     "save": "Opslaan",
     "invalid_url": "Ongeldige URL",
-    "note_viewer": "Bekijk notities"
+    "note_viewer": "Bekijk notities",
+    "create_new_note": "Maak een nieuwe noot",
+    "enter_note_title": "Voer de titel in",
+    "update_note_details": "Bewerkingsnoot",
+    "viewing_note": "Bekekennota"
   },
   "transportation": {
     "edit": "Bewerk",
@@ -892,7 +918,19 @@
     "integration_already_exists": "Er bestaat al een Immich integratie. \nU kunt maar één integratie tegelijk hebben.",
     "integration_not_found": "Immich integratie niet gevonden. \nMaak een nieuwe integratie.",
     "network_error": "Netwerkfout terwijl u verbinding maakt met de Immich server. \nControleer uw verbinding en probeer het opnieuw.",
-    "validation_error": "Er is een fout opgetreden bij het valideren van de Immich integratie. \nControleer uw server-URL en API-toets."
+    "validation_error": "Er is een fout opgetreden bij het valideren van de Immich integratie. \nControleer uw server-URL en API-toets.",
+    "by_album": "Per album",
+    "by_date": "Op datum",
+    "error_no_object_id": "Er is geen object -ID verstrekt",
+    "fetch_error": "Fout bij het ophalen van gegevens uit de Immich -integratie",
+    "image_search_placeholder": "Zoek met behulp van Immich",
+    "loading": "Laden",
+    "loading_albums": "Albums laden",
+    "no_images": "Geen afbeeldingen gevonden",
+    "select_album": "Selecteer album",
+    "select_album_first": "Selecteer eerst een album",
+    "select_date": "Selecteer datum",
+    "try_different_date": "Probeer een andere datum"
   },
   "recomendations": {
     "recommendation": "Aanbeveling",
