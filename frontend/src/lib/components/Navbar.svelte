@@ -60,7 +60,10 @@
 		pl: 'Polski',
 		ko: '한국어',
 		no: 'Norsk',
-		ru: 'Русский'
+		ru: 'Русский',
+		ja: '日本語',
+		ar: 'العربية',
+		'pt-br': 'Português (Brasil)'
 	};
 
 	const submitLocaleChange = (event: Event) => {
@@ -103,7 +106,7 @@
 
 	// Navigation items for better organization
 	const navigationItems = [
-		{ path: '/adventures', icon: MapMarker, label: 'navbar.adventures' },
+		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
 		{ path: '/collections', icon: FormatListBulletedSquare, label: 'navbar.collections' },
 		{ path: '/worldtravel', icon: Earth, label: 'navbar.worldtravel' },
 		{ path: '/map', icon: Map, label: 'navbar.map' },
@@ -134,18 +137,18 @@
 						<h3
 							class="text-sm font-semibold text-base-content/60 uppercase tracking-wide mb-2 px-2"
 						>
-							Navigation
+							{$t('navbar.navigation')}
 						</h3>
 						{#each navigationItems as item}
 							<li>
-								<button
+								<a
+									href={item.path}
 									class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl"
-									on:click={() => goto(item.path)}
 									class:btn-active={$page.url.pathname === item.path}
 								>
 									<svelte:component this={item.icon} class="w-5 h-5" />
 									{$t(item.label)}
-								</button>
+								</a>
 							</li>
 						{/each}
 					</div>
@@ -157,7 +160,7 @@
 						<h3
 							class="text-sm font-semibold text-base-content/60 uppercase tracking-wide mb-2 px-2"
 						>
-							Search
+							{$t('navbar.search')}
 						</h3>
 						<form class="flex gap-2" on:submit={searchGo}>
 							<label class="input input-bordered flex items-center gap-2 flex-1">
@@ -207,15 +210,15 @@
 			<ul class="menu menu-horizontal gap-1">
 				{#each navigationItems as item}
 					<li>
-						<button
+						<a
+							href={item.path}
 							class="btn btn-ghost gap-2 rounded-xl transition-all duration-200 hover:bg-base-200"
 							class:bg-primary-10={$page.url.pathname === item.path}
 							class:text-primary={$page.url.pathname === item.path}
-							on:click={() => goto(item.path)}
 						>
 							<svelte:component this={item.icon} class="w-4 h-4" />
 							<span class="hidden xl:inline">{$t(item.label)}</span>
-						</button>
+						</a>
 					</li>
 				{/each}
 			</ul>

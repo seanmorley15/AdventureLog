@@ -167,7 +167,7 @@ def extractIsoCode(user, data):
             return {"error": "No region found"}
         
         region = Region.objects.filter(id=iso_code).first()
-        visited_region = VisitedRegion.objects.filter(region=region, user_id=user).first()
+        visited_region = VisitedRegion.objects.filter(region=region, user=user).first()
         
         region_visited = False
         city_visited = False
@@ -177,7 +177,7 @@ def extractIsoCode(user, data):
             if town_city_or_county:
                 display_name = f"{town_city_or_county}, {region.name}, {country_code}"
                 city = City.objects.filter(name__contains=town_city_or_county, region=region).first()
-                visited_city = VisitedCity.objects.filter(city=city, user_id=user).first()
+                visited_city = VisitedCity.objects.filter(city=city, user=user).first()
 
         if visited_region:
             region_visited = True
@@ -196,7 +196,11 @@ def is_host_resolvable(hostname: str) -> bool:
 
 def reverse_geocode(lat, lon, user):
     if getattr(settings, 'GOOGLE_MAPS_API_KEY', None):
-        return reverse_geocode_google(lat, lon, user)
+        google_result = reverse_geocode_google(lat, lon, user)
+        if "error" not in google_result:
+            return google_result
+        # If Google fails, fallback to OSM
+        return reverse_geocode_osm(lat, lon, user)
     return reverse_geocode_osm(lat, lon, user)
 
 def reverse_geocode_osm(lat, lon, user):

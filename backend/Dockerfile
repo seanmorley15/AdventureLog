@@ -1,60 +1,73 @@
-# Use the official Python slim image as the base image
-FROM python:3.13-slim
+# Stage 1: Build stage with dependencies
+FROM python:3.13-slim AS builder
 
-# Metadata labels for the AdventureLog image
+# Metadata labels
 LABEL maintainer="Sean Morley" \
-      version="v0.10.0" \
+      version="0.10.0" \
       description="AdventureLog — the ultimate self-hosted travel companion." \
       org.opencontainers.image.title="AdventureLog" \
-      org.opencontainers.image.description="AdventureLog is a self-hosted travel companion that helps you plan, track, and share your adventures." \
-      org.opencontainers.image.version="v0.10.0" \
+      org.opencontainers.image.description="AdventureLog helps you plan, track, and share your adventures." \
+      org.opencontainers.image.version="0.10.0" \
       org.opencontainers.image.authors="Sean Morley" \
-      org.opencontainers.image.url="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/banner.png" \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
       org.opencontainers.image.vendor="Sean Morley" \
-      org.opencontainers.image.created="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
       org.opencontainers.image.licenses="GPL-3.0"
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-
-# Set the working directory
 WORKDIR /code
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Install system dependencies (Nginx included)
-RUN apt-get update \
-    && apt-get install -y git postgresql-client gdal-bin libgdal-dev nginx supervisor \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install system dependencies needed for build
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      git \
+      postgresql-client \
+      gdal-bin \
+      libgdal-dev \
+      nginx \
+      memcached \
+      supervisor \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY ./server/requirements.txt /code/
 RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt
 
-# Create necessary directories
-RUN mkdir -p /code/static /code/media
-# RUN mkdir -p /code/staticfiles /code/media
+# Stage 2: Final image with runtime dependencies
+FROM python:3.13-slim
+WORKDIR /code
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Copy the Django project code into the Docker image
+# Install runtime dependencies (including GDAL)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      postgresql-client \
+      gdal-bin \
+      libgdal-dev \
+      nginx \
+      memcached \
+      supervisor \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.13/site-packages /usr/local/lib/python3.13/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Copy project code and configs
 COPY ./server /code/
-
-# Copy Nginx configuration
 COPY ./nginx.conf /etc/nginx/nginx.conf
-
-# Copy Supervisor configuration
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ./entrypoint.sh /code/entrypoint.sh
+RUN chmod +x /code/entrypoint.sh \
+    && mkdir -p /code/static /code/media
 
 # Collect static files
 RUN python3 manage.py collectstatic --noinput --verbosity 2
 
-# Set the entrypoint script
-COPY ./entrypoint.sh /code/entrypoint.sh
-RUN chmod +x /code/entrypoint.sh
-
-# Expose ports for NGINX and Gunicorn
+# Expose ports
 EXPOSE 80 8000
 
-# Command to start Supervisor (which starts Nginx and Gunicorn)
+# Start Supervisor
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

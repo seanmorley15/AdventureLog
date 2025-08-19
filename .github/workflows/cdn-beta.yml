@@ -1,5 +1,9 @@
 name: Upload beta CDN image to GHCR and Docker Hub
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
     branches:

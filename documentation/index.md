@@ -44,19 +44,20 @@ You can also explore our [full installation guide](/docs/install/getting_started
 
 ## 📸 See It In Action
 
-::: details 🗂️ **Adventure Overview & Management**  
-Manage your full list of adventures with ease. View upcoming and past trips, filter and sort by status, date, or category to find exactly what you want quickly.  
-<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png" alt="Adventure Overview" style="max-width:100%; margin-top:10px;" />  
+::: details 🗂️ **Location Overview & Management**  
+Manage your full list of locations with ease. View upcoming and past trips, filter and sort by status, date, or category to find exactly what you want quickly.  
+<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/adventures.png" alt="Location Overview" style="max-width:100%; margin-top:10px;" />  
 :::
 
 ::: details 📋 **Detailed Adventure Logs**  
-Capture rich details for every adventure: name, dates, precise locations, vivid descriptions, personal ratings, photos, and customizable categories. Your memories deserve to be more than just map pins — keep them alive with full, organized logs.  
+Capture rich details for every location: name, dates, precise locations, vivid descriptions, personal ratings, photos, and customizable categories. Your memories deserve to be more than just map pins — keep them alive with full, organized logs.  
 <img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/details.png" alt="Detailed Adventure Logs" style="max-width:100%; margin-top:10px;" />  
 :::
 
 ::: details 🗺️ **Interactive World Map**  
-Track every destination you’ve visited or plan to visit with our beautifully detailed, interactive world map. Easily filter locations by visit status — visitedor planned — and add new adventures by simply clicking on the map. Watch your travel story unfold visually as your journey grows.  
+Track every destination you’ve visited or plan to visit with our beautifully detailed, interactive world map. Easily filter locations by visit status — visited or planned — and add new locations by simply clicking on the map. Watch your travel story unfold visually as your journey grows.  
 <img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/map.png" alt="Interactive World Map" style="max-width:100%; margin-top:10px;" />  
+<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/map-satellite.png" alt="Interactive World Map" style="max-width:100%; margin-top:10px;" />  
 :::
 
 ::: details ✈️ **Comprehensive Trip Planning**  
@@ -69,9 +70,9 @@ Unlock insights into your travel habits and milestones through elegant, easy-to-
 <img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/dashboard.png" alt="Travel Statistics Dashboard" style="max-width:100%; margin-top:10px;" />  
 :::
 
-::: details ✏️ **Edit & Customize Adventures**  
-Make quick updates or deep customizations to any adventure using a clean and intuitive editing interface. Add photos, update notes, adjust dates, and more—keeping your records accurate and personal.  
-<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/edit.png" alt="Edit Adventure Modal" style="max-width:100%; margin-top:10px;" />  
+::: details ✏️ **Edit & Customize Locations**  
+Make quick updates or deep customizations to any location using a clean and intuitive editing interface. Add photos, update notes, adjust dates, and more—keeping your records accurate and personal.  
+<img src="https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots/edit.png" alt="Edit Location Modal" style="max-width:100%; margin-top:10px;" />  
 :::
 
 ::: details 🌍 **Countries & Regions Explorer**  
@@ -111,6 +112,16 @@ Explore and manage the countries you’ve visited or plan to visit with an organ
 > — _Open Source Daily_
 
 [Article Link](https://opensourcedaily.blog/adventurelog-private-open-source-travel-tracking-trip-planning/)
+
+:::
+
+::: details 📱 **Android Authority**
+
+> "AdventureLog behaves more like a super-charged travel journal than yet another travel app.”
+>
+> — _Dhruv Bhutani, Android Authority_
+
+[Article Link](https://www.androidauthority.com/self-hosted-travel-app-3572353/)
 
 :::
 

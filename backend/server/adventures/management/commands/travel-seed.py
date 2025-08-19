@@ -2,7 +2,7 @@
 
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
-from adventures.models import Adventure
+from adventures.models import Location
 
 
 class Command(BaseCommand):
@@ -38,8 +38,8 @@ class Command(BaseCommand):
         ]
 
         for name, location, type_ in adventures:
-            Adventure.objects.create(
-                user_id=user,
+            Location.objects.create(
+                user=user,
                 name=name,
                 location=location,
                 type=type_,
