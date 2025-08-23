@@ -111,6 +111,62 @@ export const load: PageServerLoad = async (event) => {
 	};
 };
 
+async function uploadFileToApi(event, targetUrl: string) {
+    try {
+        if (!event.locals.user) {
+            return redirect(302, '/');
+        }
+        let sessionId = event.cookies.get('sessionid');
+        if (!sessionId) {
+            return redirect(302, '/');
+        }
+
+        const formData = await event.request.formData();
+        const file = formData.get('file') as File | null | undefined;
+        const confirm = formData.get('confirm') as string | null | undefined;
+
+        if (!file || file.size === 0) {
+            return fail(400, { message: 'settings.no_file_selected' });
+        }
+
+        if (confirm !== 'yes') {
+            return fail(400, { message: 'settings.confirmation_required' });
+        }
+
+        let csrfToken = await fetchCSRFToken();
+
+        // Create FormData for the API request
+        const apiFormData = new FormData();
+        apiFormData.append('file', file);
+        apiFormData.append('confirm', 'yes');
+
+        let res = await fetch(targetUrl, {
+            method: 'POST',
+            headers: {
+                Referer: event.url.origin,
+                Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+                'X-CSRFToken': csrfToken
+            },
+            body: apiFormData
+        });
+
+        if (!res.ok) {
+            const errorData = await res.json();
+            return fail(res.status, {
+                message: errorData.code
+                    ? `settings.restore_error_${errorData.code}`
+                    : 'settings.generic_error',
+                details: errorData
+            });
+        }
+
+        return { success: true };
+    } catch (error) {
+        console.error('Upload error:', error);
+        return fail(500, { message: 'settings.generic_error' });
+    }
+}
+
 export const actions: Actions = {
 	changeDetails: async (event) => {
 		if (!event.locals.user) {
@@ -279,59 +335,10 @@ export const actions: Actions = {
 			return { success: true };
 		}
 	},
-	restoreData: async (event) => {
-		if (!event.locals.user) {
-			return redirect(302, '/');
-		}
-		let sessionId = event.cookies.get('sessionid');
-		if (!sessionId) {
-			return redirect(302, '/');
-		}
-
-		try {
-			const formData = await event.request.formData();
-			const file = formData.get('file') as File | null | undefined;
-			const confirm = formData.get('confirm') as string | null | undefined;
-
-			if (!file || file.size === 0) {
-				return fail(400, { message: 'settings.no_file_selected' });
-			}
-
-			if (confirm !== 'yes') {
-				return fail(400, { message: 'settings.confirmation_required' });
-			}
-
-			let csrfToken = await fetchCSRFToken();
-
-			// Create FormData for the API request
-			const apiFormData = new FormData();
-			apiFormData.append('file', file);
-			apiFormData.append('confirm', 'yes');
-
-			let res = await fetch(`${endpoint}/api/backup/import/`, {
-				method: 'POST',
-				headers: {
-					Referer: event.url.origin,
-					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken
-				},
-				body: apiFormData
-			});
-
-			if (!res.ok) {
-				const errorData = await res.json();
-				return fail(res.status, {
-					message: errorData.code
-						? `settings.restore_error_${errorData.code}`
-						: 'settings.generic_error',
-					details: errorData
-				});
-			}
-
-			return { success: true };
-		} catch (error) {
-			console.error('Restore error:', error);
-			return fail(500, { message: 'settings.generic_error' });
-		}
-	}
+    restoreData: async (event) => {
+        return uploadFileToApi(event, `${endpoint}/api/backup/import/`);
+    },
+    importPolarsteps: async (event) => {
+        return uploadFileToApi(event, `${endpoint}/api/import/polarsteps/`);
+    }
 };

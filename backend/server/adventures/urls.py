@@ -23,6 +23,7 @@ router.register(r'backup', BackupViewSet, basename='backup')
 router.register(r'trails', TrailViewSet, basename='trails')
 router.register(r'activities', ActivityViewSet, basename='activities')
 router.register(r'visits', VisitViewSet, basename='visits')
+router.register(r'import', ImportViewSet, basename='import')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix
