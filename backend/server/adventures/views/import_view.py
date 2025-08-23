@@ -89,7 +89,7 @@ class ImportViewSet(viewsets.ViewSet):
         category, _ = Category.objects.get_or_create(
             user=user,
             name='import',
-            defaults={'display_name': 'Import', 'icon': '📥'}
+            defaults={'display_name': 'General', 'icon': '🌍'}
         )
 
         # Create Collection
@@ -97,20 +97,25 @@ class ImportViewSet(viewsets.ViewSet):
             user=user,
             name=import_data.get('name'),
             description=import_data.get('summary'),
-            start_date=timestamp_to_datetime(import_data.get('start_date')),
-            end_date=timestamp_to_datetime(import_data.get('end_date'))
+            created_at=timestamp_to_datetime(import_data.get('creation_time'), import_data.get('timezone_id')),
+            start_date=timestamp_to_date(import_data.get('start_date'), import_data.get('timezone_id')),
+            end_date=timestamp_to_date(import_data.get('end_date'), import_data.get('timezone_id'))
         )
         summary['collections'] += 1
 
         # Import each step as a Location + Visit
         for adv_data in import_data.get('all_steps', []):
+            if adv_data.get('is_deleted') is True:
+                continue
+
             location = Location(
                 user=user,
                 name=adv_data.get('display_name') or adv_data.get('name') or adv_data['location']['name'],
                 description=adv_data.get('description'),
                 longitude=adv_data['location']['lon'],
                 latitude=adv_data['location']['lat'],
-                category=category
+                category=category,
+                created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
             location.save(_skip_geocode=True)
             location.collections.add(collection)
@@ -127,7 +132,8 @@ class ImportViewSet(viewsets.ViewSet):
                 location=location,
                 start_date=start_dt,
                 end_date=end_dt,
-                timezone=adv_data.get('timezone_id')
+                timezone=adv_data.get('timezone_id'),
+                created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
 
             summary['locations'] += 1
@@ -149,11 +155,18 @@ def timestamp_to_datetime(ts, tz_name=None):
         return None
 
 
-def timestamp_to_date(ts):
-    """Convert a Unix timestamp (seconds) to a date, or None if invalid."""
+def timestamp_to_date(ts, tz_name=None):
+    """Convert a Unix timestamp (seconds) to a date in the given timezone, or None if invalid."""
     if ts is None:
         return None
     try:
-        return datetime.datetime.fromtimestamp(ts).date()
+        # Convert timestamp to UTC datetime
+        dt_utc = datetime.datetime.fromtimestamp(ts, tz=ZoneInfo("UTC"))
+        if tz_name:
+            tz = ZoneInfo(tz_name)
+            dt_local = dt_utc.astimezone(tz)
+        else:
+            dt_local = dt_utc
+        return dt_local.date()
     except (TypeError, ValueError, OSError):
         return None
