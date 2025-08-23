@@ -6,8 +6,10 @@ import tempfile
 import zipfile
 from zoneinfo import ZoneInfo
 
-from adventures.models import Location, Collection, Category, Visit
+from adventures.models import Location, Collection, Category, Visit, ContentImage
 from django.contrib.auth import get_user_model
+from django.contrib.contenttypes.models import ContentType
+from django.core.files.base import ContentFile
 from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -135,6 +137,43 @@ class ImportViewSet(viewsets.ViewSet):
                 timezone=adv_data.get('timezone_id'),
                 created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
+
+            # Import images
+            step_id = adv_data.get('id')
+            if step_id is not None:
+                folder_name = None
+                # Find folder ending with _{step_id}
+                for name in zip_file.namelist():
+                    parts = name.split('/')
+                    for part in parts:
+                        if part.endswith(f'_{step_id}'):
+                            folder_name = '/'.join(parts[:parts.index(part) + 1]) + '/photos/'
+                            print(f"Looking for images in folder: {folder_name}", flush=True)
+                            break
+                    if folder_name:
+                        break
+
+                if folder_name:
+                    content_type = ContentType.objects.get(model='location')
+
+                    for zip_name in zip_file.namelist():
+                        if zip_name.startswith(folder_name) and zip_name.count('/') == folder_name.count('/'):
+                            print(f"Importing image: {zip_name}", flush=True)
+                            try:
+                                img_content = zip_file.read(zip_name)
+                                filename = os.path.basename(zip_name)
+                                img_file = ContentFile(img_content, name=filename)
+
+                                ContentImage.objects.create(
+                                    user=user,
+                                    image=img_file,
+                                    is_primary=False,
+                                    content_type=content_type,
+                                    object_id=location.id
+                                )
+                                summary['images'] += 1
+                            except KeyError:
+                                continue
 
             summary['locations'] += 1
 
