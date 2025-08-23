@@ -7,7 +7,7 @@ import zipfile
 from pathlib import PurePosixPath
 from zoneinfo import ZoneInfo
 
-from adventures.models import Location, Collection, Category, Visit, ContentImage
+from adventures.models import Location, Collection, Category, Visit, ContentImage, ContentAttachment
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
@@ -120,7 +120,7 @@ class ImportViewSet(viewsets.ViewSet):
                 category=category,
                 created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
-            location.save(_skip_geocode=True)
+            location.save(_skip_geocode=False) # Start geocoding, could lead to performance issues
             location.collections.add(collection)
 
             # Compute start and end times
@@ -139,26 +139,31 @@ class ImportViewSet(viewsets.ViewSet):
                 created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
 
-            # Import images
+            # Import images & attachments
+            content_type = ContentType.objects.get(model='location')
             step_id = adv_data.get('id')
             if step_id is not None:
                 # Find the folder ending with _{step_id}
-                folder_name = None
+                photos_folder_name = None
+                videos_folder_name = None
                 for name in zip_file.namelist():
                     path = PurePosixPath(name)
                     for part in path.parts:
                         if part.endswith(f'_{step_id}'):
-                            # Build path up to the matched folder, add /photos/
-                            folder_name = str(PurePosixPath(*path.parts[:path.parts.index(part) + 1], 'photos')) + '/'
+                            # Build paths for photos and videos
+                            photos_folder_name = str(
+                                PurePosixPath(*path.parts[:path.parts.index(part) + 1], 'photos')
+                            ) + '/'
+                            videos_folder_name = str(
+                                PurePosixPath(*path.parts[:path.parts.index(part) + 1], 'videos')
+                            ) + '/'
                             break
-                    if folder_name:
+                    if photos_folder_name:
                         break
 
-                if folder_name:
-                    content_type = ContentType.objects.get(model='location')
-
+                if photos_folder_name:
                     # Import images from that folder
-                    for zip_name in filter(lambda n: n.startswith(folder_name) and not n.endswith('/'),
+                    for zip_name in filter(lambda n: n.startswith(photos_folder_name) and not n.endswith('/'),
                                            zip_file.namelist()):
                         try:
                             img_content = zip_file.read(zip_name)
@@ -174,7 +179,27 @@ class ImportViewSet(viewsets.ViewSet):
                             )
                             summary['images'] += 1
                         except KeyError:
-                            continue
+                            pass
+
+                if videos_folder_name:
+                    # Import videos as attachments
+                    for zip_name in filter(lambda n: n.startswith(videos_folder_name) and not n.endswith('/'),
+                                           zip_file.namelist()):
+                        try:
+                            img_content = zip_file.read(zip_name)
+                            filename = os.path.basename(zip_name)
+                            video_file = ContentFile(img_content, name=filename)
+
+                            ContentAttachment.objects.create(
+                                user=user,
+                                file=video_file,
+                                name="Imported Video",
+                                content_type=content_type,
+                                object_id=location.id
+                            )
+                            summary['attachments'] += 1
+                        except KeyError:
+                            pass
 
             summary['locations'] += 1
 
