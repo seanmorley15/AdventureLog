@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 import zipfile
+from pathlib import PurePosixPath
 from zoneinfo import ZoneInfo
 
 from adventures.models import Location, Collection, Category, Visit, ContentImage
@@ -141,14 +142,14 @@ class ImportViewSet(viewsets.ViewSet):
             # Import images
             step_id = adv_data.get('id')
             if step_id is not None:
+                # Find the folder ending with _{step_id}
                 folder_name = None
-                # Find folder ending with _{step_id}
                 for name in zip_file.namelist():
-                    parts = name.split('/')
-                    for part in parts:
+                    path = PurePosixPath(name)
+                    for part in path.parts:
                         if part.endswith(f'_{step_id}'):
-                            folder_name = '/'.join(parts[:parts.index(part) + 1]) + '/photos/'
-                            print(f"Looking for images in folder: {folder_name}", flush=True)
+                            # Build path up to the matched folder, add /photos/
+                            folder_name = str(PurePosixPath(*path.parts[:path.parts.index(part) + 1], 'photos')) + '/'
                             break
                     if folder_name:
                         break
@@ -156,24 +157,24 @@ class ImportViewSet(viewsets.ViewSet):
                 if folder_name:
                     content_type = ContentType.objects.get(model='location')
 
-                    for zip_name in zip_file.namelist():
-                        if zip_name.startswith(folder_name) and zip_name.count('/') == folder_name.count('/'):
-                            print(f"Importing image: {zip_name}", flush=True)
-                            try:
-                                img_content = zip_file.read(zip_name)
-                                filename = os.path.basename(zip_name)
-                                img_file = ContentFile(img_content, name=filename)
+                    # Import images from that folder
+                    for zip_name in filter(lambda n: n.startswith(folder_name) and not n.endswith('/'),
+                                           zip_file.namelist()):
+                        try:
+                            img_content = zip_file.read(zip_name)
+                            filename = os.path.basename(zip_name)
+                            img_file = ContentFile(img_content, name=filename)
 
-                                ContentImage.objects.create(
-                                    user=user,
-                                    image=img_file,
-                                    is_primary=False,
-                                    content_type=content_type,
-                                    object_id=location.id
-                                )
-                                summary['images'] += 1
-                            except KeyError:
-                                continue
+                            ContentImage.objects.create(
+                                user=user,
+                                image=img_file,
+                                is_primary=False,
+                                content_type=content_type,
+                                object_id=location.id
+                            )
+                            summary['images'] += 1
+                        except KeyError:
+                            continue
 
             summary['locations'] += 1
 
