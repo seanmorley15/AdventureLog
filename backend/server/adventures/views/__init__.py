@@ -18,3 +18,4 @@ from .import_export_view import *
 from .trail_view import *
 from .activity_view import *
 from .visit_view import *
+from .import_view import *
