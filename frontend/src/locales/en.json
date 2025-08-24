@@ -684,6 +684,7 @@
         "import_desc": "Import data from other sources.",
         "import_polarsteps": "Import Polarsteps Data",
         "import_polarsteps_desc": "Here you can import your data from Polarsteps. First, download a copy of your data by following the instructions <a href=\"https://support.polarsteps.com/hc/en-nl/articles/24266264821138-How-can-I-export-a-copy-of-my-data\" target=\"_blank\" rel=\"noopener noreferrer\"  class=\"text-primary hover:underline\">here</a>. Once you receive the file user_data.zip, upload it here to import your data.",
+        "import_category": "Category (Choose category for imported locations, default is \"General\")",
         "keep_data_warning": "Keep Data Warning.",
         "keep_data_warning_desc": "Always create a backup of your data in the “Backup & Restore” section before importing data from another source. This allows you to roll back if the import fails. Additionally, keep an original copy of the data you plan to import.",
         "select_import_file": "Select import file",

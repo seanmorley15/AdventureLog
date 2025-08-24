@@ -39,8 +39,6 @@ class ImportViewSet(viewsets.ViewSet):
             return Response({'message': 'No file provided'}, status=status.HTTP_400_BAD_REQUEST)
 
         import_file = request.FILES['file']
-        user = request.user
-
         # Save file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp_file:
             for chunk in import_file.chunks():
@@ -63,11 +61,35 @@ class ImportViewSet(viewsets.ViewSet):
                     return Response({'message': 'Invalid backup file - missing trip.json files'},
                                     status=status.HTTP_400_BAD_REQUEST)
 
+                # Get category data from request or default values
+                request_category = request.data.get("category", {})
+                if isinstance(request_category, str):
+                    try:
+                        request_category = json.loads(request_category) or {}
+                    except json.JSONDecodeError:
+                        request_category = {}
+                if not isinstance(request_category, dict):
+                    request_category = {}
+
+                category_name = request_category.get("name", "general")
+                category_display_name = request_category.get("display_name", "General")
+                category_icon = request_category.get("icon", "🌍")
+
+                # Create Category
+                import_category, _ = Category.objects.get_or_create(
+                    user=request.user,
+                    name=category_name,
+                    defaults={
+                        'display_name': category_display_name,
+                        'icon': category_icon
+                    }
+                )
+
                 for trip_file in trip_files:
                     import_data = json.loads(zip_file.read(trip_file).decode('utf-8'))
 
                     with transaction.atomic():
-                        summary = self._import_polarsteps(import_data, zip_file, user, summary)
+                        summary = self._import_polarsteps(import_data, zip_file, request.user, import_category, summary)
 
                 return Response({
                     'success': True,
@@ -86,15 +108,8 @@ class ImportViewSet(viewsets.ViewSet):
         finally:
             os.unlink(tmp_file_path)
 
-    def _import_polarsteps(self, import_data, zip_file, user, summary):
+    def _import_polarsteps(self, import_data, zip_file, user, import_category, summary):
         """Import polarsteps data and return summary"""
-        # Create Category
-        category, _ = Category.objects.get_or_create(
-            user=user,
-            name='import',
-            defaults={'display_name': 'General', 'icon': '🌍'}
-        )
-
         # Create Collection
         collection = Collection.objects.create(
             user=user,
@@ -117,10 +132,10 @@ class ImportViewSet(viewsets.ViewSet):
                 description=adv_data.get('description'),
                 longitude=adv_data['location']['lon'],
                 latitude=adv_data['location']['lat'],
-                category=category,
+                category=import_category,
                 created_at=timestamp_to_datetime(adv_data.get('creation_time'), adv_data.get('timezone_id'))
             )
-            location.save(_skip_geocode=False) # Start geocoding, could lead to performance issues
+            location.save(_skip_geocode=True)  # Not sure if this makes sense
             location.collections.add(collection)
 
             # Compute start and end times

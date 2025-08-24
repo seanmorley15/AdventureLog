@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import type { ImmichIntegration, User } from '$lib/types.js';
+	import type { ImmichIntegration, User, Category } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
@@ -12,6 +12,7 @@
 	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
 	import StravaLogo from '$lib/assets/strava.svg';
 	import WandererLogo from '$lib/assets/wanderer.svg';
+    import CategoryDropdown from "../../lib/components/CategoryDropdown.svelte";
 
 	export let data;
 	console.log(data);
@@ -64,13 +65,14 @@
 	};
 
 	let isMFAModalOpen: boolean = false;
+    let importCategory: Category | null;
 
 	const sections = [
 		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
 		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
 		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
 		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
-		{ id: 'backup_restore', icon: '📦', label: () => $t('settings.backup_restore') },
+		{ id: 'import_export', icon: '📦', label: () => $t('settings.backup_restore') },
 		{ id: 'import', icon: '📥', label: () => $t('settings.import') },
 		{ id: 'admin', icon: '⚙️', label: () => $t('settings.admin') },
 		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
@@ -1506,6 +1508,15 @@
                                             class="space-y-4"
                                     >
                                         <div class="form-control">
+                                            <label class="label" for="category">
+								            <span class="label-text font-medium">
+									            {$t('settings.import_category')}
+								            </span>
+                                            </label>
+                                            <!-- Maybe move out of polarsteps section if needed multiple times -->
+                                            <CategoryDropdown bind:selected_category={importCategory} />
+                                            <input type="hidden" name="importCategory" value={JSON.stringify(importCategory)} />
+
                                             <label class="label" for="import-file">
 												<span class="label-text font-medium"
                                                 >{$t('settings.select_import_file')}</span

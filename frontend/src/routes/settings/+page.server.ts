@@ -124,6 +124,7 @@ async function uploadFileToApi(event, targetUrl: string) {
         const formData = await event.request.formData();
         const file = formData.get('file') as File | null | undefined;
         const confirm = formData.get('confirm') as string | null | undefined;
+        const category = formData.get('importCategory') as string | null | undefined;
 
         if (!file || file.size === 0) {
             return fail(400, { message: 'settings.no_file_selected' });
@@ -139,6 +140,9 @@ async function uploadFileToApi(event, targetUrl: string) {
         const apiFormData = new FormData();
         apiFormData.append('file', file);
         apiFormData.append('confirm', 'yes');
+        if (category != null) {
+            apiFormData.append('category', category);
+        }
 
         let res = await fetch(targetUrl, {
             method: 'POST',
