@@ -1499,6 +1499,49 @@
                                         {@html $t('settings.import_polarsteps_desc')}
                                     </p>
 
+                                    <h4 class="text-sm font-semibold mb-3 text-base-content/70">
+                                        {$t('settings.whats_included')}
+                                    </h4>
+                                    <div class="grid grid-cols-1 gap-4 text-sm">
+                                        <!-- Included -->
+                                        <div class="space-y-1">
+                                            <div class="flex items-center justify-between">
+                                                <span>📚 {$t('settings.import_polarsteps_collections')}</span>
+                                                <span>✅</span>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <span>📍 {$t('settings.import_polarsteps_locations')}</span>
+                                                <span>✅</span>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <span>🖼️ {$t('settings.import_polarsteps_photos')}</span>
+                                                <span>✅</span>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <span>🎥 {$t('settings.import_polarsteps_videos')}</span>
+                                                <span>✅</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br/>
+                                    <h4 class="text-sm font-semibold mb-3 text-base-content/70">
+                                        {$t('settings.whats_not_included')}
+                                    </h4>
+                                    <div class="grid grid-cols-1 gap-4 text-sm">
+                                    <!-- Not Included -->
+                                        <div class="space-y-1">
+                                            <div class="flex items-center justify-between">
+                                                <span>🥾 {$t('settings.import_polarsteps_travel_tracker')}</span>
+                                                <span>❌</span>
+                                            </div>
+                                            <div class="flex items-center justify-between">
+                                                <span>📒 {$t('settings.import_polarsteps_planned_steps')}</span>
+                                                <span>❌</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <br/>
+
                                     <!-- File Upload Form -->
                                     <form
                                             method="post"
