@@ -1226,22 +1226,16 @@
 								{/if}
 
 								<!-- Help documentation link -->
-								{#if user.is_staff || !stravaGlobalEnabled}
+								{#if !stravaGlobalEnabled}
 									<div class="mt-4 p-4 bg-info/10 rounded-lg">
-										{#if user.is_staff}
-											<p class="text-sm">
-												📖 {$t('immich.need_help')}
-												<a
-													class="link link-primary"
-													href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
-													target="_blank">{$t('navbar.documentation')}</a
-												>
-											</p>
-										{:else if !stravaGlobalEnabled}
-											<p class="text-sm">
-												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
-											</p>
-										{/if}
+										<p class="text-sm">
+											📖 {$t('immich.need_help')}
+											<a
+												class="link link-primary"
+												href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
+												target="_blank">{$t('navbar.documentation')}</a
+											>
+										</p>
 									</div>
 								{/if}
 							</div>
