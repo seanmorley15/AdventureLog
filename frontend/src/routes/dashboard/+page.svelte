@@ -52,9 +52,9 @@
 							</h1>
 							<p class="text-lg text-base-content/60 mt-2">
 								{#if stats.location_count > 0}
-									{$t('dashboard.welcome_text_1')}
+									{$t('dashboard.location_welcome_text_1')}
 									<span class="font-semibold text-primary">{stats.location_count}</span>
-									{$t('dashboard.welcome_text_2')}
+									{$t('dashboard.location_welcome_text_2')}
 								{:else}
 									{$t('dashboard.welcome_text_3')}
 								{/if}
