@@ -22,7 +22,7 @@ export const load = (async (event) => {
 			typeString = 'all';
 		}
 
-		const include_collections = event.url.searchParams.get('include_collections') || 'false';
+		const include_collections = event.url.searchParams.get('include_collections') || 'true';
 		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
 		const order_direction = event.url.searchParams.get('order_direction') || 'asc';
 		const page = event.url.searchParams.get('page') || '1';
