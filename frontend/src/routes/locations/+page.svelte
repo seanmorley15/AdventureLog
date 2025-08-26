@@ -114,10 +114,10 @@
 		} else {
 			currentSort.visited = false;
 		}
-		if (url.searchParams.get('include_collections') === 'on') {
-			currentSort.includeCollections = true;
-		} else {
+		if (url.searchParams.get('include_collections') === 'false') {
 			currentSort.includeCollections = false;
+		} else {
+			currentSort.includeCollections = true;
 		}
 
 		if (!currentSort.visited && !currentSort.planned) {
@@ -469,6 +469,15 @@
 									id="include_collections"
 									class="checkbox checkbox-primary"
 									checked={currentSort.includeCollections}
+									on:change={(e) => {
+										const url = new URL(window.location.href);
+										if (e.currentTarget.checked) {
+											url.searchParams.delete('include_collections');
+										} else {
+											url.searchParams.set('include_collections', 'false');
+										}
+										goto(url.toString(), { invalidateAll: true, replaceState: true });
+									}}
 								/>
 								<span class="label-text">{$t('adventures.collection_locations')}</span>
 							</label>
