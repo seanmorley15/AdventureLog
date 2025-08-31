@@ -7,8 +7,6 @@ from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
-import gpxpy
-import geojson
 import logging
 
 logger = logging.getLogger(__name__)
