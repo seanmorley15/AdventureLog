@@ -14,7 +14,7 @@ class GenerateDescription(viewsets.ViewSet):
     
     # User-Agent header required by Wikipedia API
     HEADERS = {
-        'User-Agent': f'AdventureLog/{settings.ADVENTURELOG_RELEASE_VERSION}'
+        'User-Agent': f'AdventureLog/{getattr(settings, "ADVENTURELOG_RELEASE_VERSION", "unknown")}'
     }
 
     @action(detail=False, methods=['get'])
