@@ -7,6 +7,8 @@ from django.conf import settings
 import urllib.parse
 import logging
 
+logger = logging.getLogger(__name__)
+
 class GenerateDescription(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
     
@@ -99,7 +101,8 @@ class GenerateDescription(viewsets.ViewSet):
             return Response(original_image)
             
         except requests.exceptions.RequestException as e:
-            return Response({"error": f"Failed to fetch data: {str(e)}"}, status=500)
+            logger.exception("Failed to fetch data from Wikipedia")
+            return Response({"error": "Failed to fetch data from Wikipedia."}, status=500)
         except ValueError as e:  # JSON decode error
             return Response({"error": "Invalid response from Wikipedia API"}, status=500)
     
