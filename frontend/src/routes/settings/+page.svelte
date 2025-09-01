@@ -1233,7 +1233,7 @@
 											📖 {$t('immich.need_help')}
 											<a
 												class="link link-primary"
-												href="https://adventurelog.app/docs/configuration/immich_integration.html"
+												href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
 												target="_blank">{$t('navbar.documentation')}</a
 											>
 										</p>

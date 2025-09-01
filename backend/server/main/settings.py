@@ -331,7 +331,7 @@ PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 
 # Major release version of AdventureLog, not including the patch version date.
-ADVENTURELOG_RELEASE_VERSION = 'v0.10.0'
+ADVENTURELOG_RELEASE_VERSION = 'v0.11.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.6'

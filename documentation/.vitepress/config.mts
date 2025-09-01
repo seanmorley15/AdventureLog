@@ -53,7 +53,7 @@ export default defineConfig({
           priceCurrency: "USD",
           description: "Open-source version available for self-hosting.",
         },
-        softwareVersion: "v0.10.0",
+        softwareVersion: "v0.11.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
         screenshot:
@@ -257,6 +257,10 @@ export default defineConfig({
         text: "Changelogs",
         collapsed: false,
         items: [
+          {
+            text: "v0.11.0",
+            link: "/docs/changelogs/v0-11-0",
+          },
           {
             text: "v0.10.0",
             link: "/docs/changelogs/v0-10-0",
