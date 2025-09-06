@@ -30,6 +30,7 @@
   - [Features](#-features)
 - [Roadmap](#-roadmap)
 - [Contributing](#-contributing)
+  - [Translation](#-translation)
 - [License](#-license)
 - [Contact](#-contact)
 - [Acknowledgements](#-acknowledgements)
@@ -124,6 +125,14 @@ The AdventureLog Roadmap can be found [here](https://github.com/users/seanmorley
 Contributions are always welcome!
 
 See `contributing.md` for ways to get started.
+
+### Translation
+
+AdventureLog is available on [Weblate](https://hosted.weblate.org/projects/adventurelog/). If you would like to help translate AdventureLog into your language, please visit the link and contribute!
+
+<a href="https://hosted.weblate.org/engage/adventurelog/">
+<img src="https://hosted.weblate.org/widget/adventurelog/multi-auto.svg" alt="Translation status" />
+</a>
 
 <!-- License -->
 
