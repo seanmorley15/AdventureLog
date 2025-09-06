@@ -217,7 +217,7 @@
         "flight_information": "Información de vuelo",
         "from": "De",
         "no_location_found": "No se encontró ninguna ubicación",
-        "note_delete_confirm": "¿Estás seguro de que deseas eliminar esta nota? \nEsta acción no se puede deshacer.",
+        "note_delete_confirm": "¿Estás seguro de que deseas eliminar esta nota? Esta acción no se puede deshacer.",
         "out_of_range": "No en el rango de fechas del itinerario",
         "start": "Comenzar",
         "starting_airport": "Aeropuerto de inicio",
