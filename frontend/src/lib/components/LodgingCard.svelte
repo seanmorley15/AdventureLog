@@ -7,7 +7,7 @@
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from './DeleteWarning.svelte';
 	import { LODGING_TYPES_ICONS } from '$lib';
-	import { formatDateInTimezone } from '$lib/dateUtils';
+	import { formatDateInTimezone, isEntityOutsideCollectionDateRange } from '$lib/dateUtils';
 	import { formatAllDayDate } from '$lib/dateUtils';
 	import { isAllDay } from '$lib';
 	import CardCarousel from './CardCarousel.svelte';
@@ -31,38 +31,11 @@
 		dispatch('edit', lodging);
 	}
 
-	let unlinked: boolean = false;
+	let outsideCollectionRange: boolean = false;
 
 	$: {
-		if (collection?.start_date && collection.end_date) {
-			// Parse transportation dates
-			let transportationStartDate = lodging.check_in
-				? new Date(lodging.check_in.split('T')[0]) // Ensure proper date parsing
-				: null;
-			let transportationEndDate = lodging.check_out
-				? new Date(lodging.check_out.split('T')[0])
-				: null;
-
-			// Parse collection dates
-			let collectionStartDate = new Date(collection.start_date);
-			let collectionEndDate = new Date(collection.end_date);
-
-			// Check if the collection range is outside the transportation range
-			const startOutsideRange =
-				transportationStartDate &&
-				collectionStartDate < transportationStartDate &&
-				collectionEndDate < transportationStartDate;
-
-			const endOutsideRange =
-				transportationEndDate &&
-				collectionStartDate > transportationEndDate &&
-				collectionEndDate > transportationEndDate;
-
-			unlinked = !!(
-				startOutsideRange ||
-				endOutsideRange ||
-				(!transportationStartDate && !transportationEndDate)
-			);
+		if (collection) {
+			outsideCollectionRange = isEntityOutsideCollectionDateRange(lodging, collection);
 		}
 	}
 
@@ -120,7 +93,7 @@
 					{$t(`lodging.${lodging.type}`)}
 					{getLodgingIcon(lodging.type)}
 				</div>
-				{#if unlinked}
+				{#if outsideCollectionRange}
 					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 				{/if}
 			</div>
