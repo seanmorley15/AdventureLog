@@ -18,6 +18,7 @@ Perfect for Docker beginners.
 - [Kubernetes + Kustomize](kustomize.md) — Advanced, scalable deployment
 - [Unraid](unraid.md) — Easy integration for homelabbers
 - [Umbrel](https://apps.umbrel.com/app/adventurelog) — Home server app store
+- [TrueNAS](https://apps.truenas.com/catalog/adventurelog/) — TrueNAS app catalog
 
 ## ⚙️ Advanced & Alternative Setups
 
