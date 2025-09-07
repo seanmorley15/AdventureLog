@@ -422,7 +422,9 @@
     "recorded_sessions": "録音されたセッション",
     "total_activities": "総アクティビティ",
     "total_climbed": "総登り",
-    "total_distance": "総距離"
+    "total_distance": "総距離",
+    "dates_not_saved": "まだ追加されていません",
+    "dates_not_saved_description": "[訪問の追加]をクリックして保存します"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",

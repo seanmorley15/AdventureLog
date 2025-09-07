@@ -27,3 +27,4 @@ psutil==6.1.1
 geojson==3.2.0
 gpxpy==1.6.2
 pymemcache==4.0.0
+legacy-cgi==2.6.3

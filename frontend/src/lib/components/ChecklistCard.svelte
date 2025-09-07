@@ -9,29 +9,18 @@
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
 	import DeleteWarning from './DeleteWarning.svelte';
+	import { isEntityOutsideCollectionDateRange } from '$lib/dateUtils';
 
 	export let checklist: Checklist;
 	export let user: User | null = null;
-	export let collection: Collection | null = null;
+	export let collection: Collection;
 
 	let isWarningModalOpen: boolean = false;
 
-	let unlinked: boolean = false;
+	let outsideCollectionRange: boolean = false;
 
 	$: {
-		if (collection?.start_date && collection.end_date) {
-			const startOutsideRange =
-				checklist.date &&
-				collection.start_date < checklist.date &&
-				collection.end_date < checklist.date;
-
-			const endOutsideRange =
-				checklist.date &&
-				collection.start_date > checklist.date &&
-				collection.end_date > checklist.date;
-
-			unlinked = !!(startOutsideRange || endOutsideRange || !checklist.date);
-		}
+		outsideCollectionRange = isEntityOutsideCollectionDateRange(checklist, collection);
 	}
 
 	function editChecklist() {
@@ -71,7 +60,7 @@
 			<h2 class="text-xl font-bold break-words">{checklist.name}</h2>
 			<div class="flex flex-wrap gap-2">
 				<div class="badge badge-primary">{$t('adventures.checklist')}</div>
-				{#if unlinked}
+				{#if outsideCollectionRange}
 					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 				{/if}
 			</div>

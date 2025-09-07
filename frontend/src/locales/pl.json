@@ -476,7 +476,9 @@
     "recorded_sessions": "Nagrane sesje",
     "total_activities": "Całkowite działania",
     "total_climbed": "Całkowita wspinana",
-    "total_distance": "Całkowita odległość"
+    "total_distance": "Całkowita odległość",
+    "dates_not_saved": "Wizyta jeszcze nie dodana",
+    "dates_not_saved_description": "Kliknij Dodaj wizytę, aby zapisać"
   },
   "worldtravel": {
     "country_list": "Lista krajów",

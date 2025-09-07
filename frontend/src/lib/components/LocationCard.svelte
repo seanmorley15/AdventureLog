@@ -22,6 +22,7 @@
 	import StarOutline from '~icons/mdi/star-outline';
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
+	import { isEntityOutsideCollectionDateRange } from '$lib/dateUtils';
 
 	export let type: string | null = null;
 	export let user: User | null;
@@ -48,17 +49,13 @@
 		}
 	}
 
-	let unlinked: boolean = false;
+	let outsideCollectionRange: boolean = false;
 
-	// Reactive block to update `unlinked` when dependencies change
 	$: {
-		if (collection && collection?.start_date && collection.end_date) {
-			unlinked = adventure.visits.every((visit) => {
-				if (!visit.start_date || !visit.end_date) return true;
-				const isBeforeVisit = collection.end_date && collection.end_date < visit.start_date;
-				const isAfterVisit = collection.start_date && collection.start_date > visit.end_date;
-				return isBeforeVisit || isAfterVisit;
-			});
+		if (collection) {
+			outsideCollectionRange = adventure.visits.every((visit) =>
+				isEntityOutsideCollectionDateRange(visit, collection)
+			);
 		}
 	}
 
@@ -199,7 +196,7 @@
 			>
 				{adventure.is_visited ? $t('adventures.visited') : $t('adventures.planned')}
 			</div>
-			{#if unlinked}
+			{#if outsideCollectionRange}
 				<div class="badge badge-sm badge-error shadow-lg">{$t('adventures.out_of_range')}</div>
 			{/if}
 		</div>

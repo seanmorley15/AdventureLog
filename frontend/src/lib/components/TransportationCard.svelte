@@ -8,7 +8,11 @@
 	import DeleteWarning from './DeleteWarning.svelte';
 	// import ArrowDownThick from '~icons/mdi/arrow-down-thick';
 	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
+	import {
+		formatAllDayDate,
+		formatDateInTimezone,
+		isEntityOutsideCollectionDateRange
+	} from '$lib/dateUtils';
 	import { isAllDay } from '$lib';
 	import CardCarousel from './CardCarousel.svelte';
 
@@ -36,52 +40,11 @@
 		dispatch('edit', transportation);
 	}
 
-	let unlinked: boolean = false;
+	let outsideCollectionRange: boolean = false;
 
 	$: {
-		if (collection?.start_date && collection.end_date) {
-			// Parse transportation dates
-			let transportationStartDate = transportation.date
-				? new Date(transportation.date.split('T')[0]) // Ensure proper date parsing
-				: null;
-			let transportationEndDate = transportation.end_date
-				? new Date(transportation.end_date.split('T')[0])
-				: null;
-
-			// Parse collection dates
-			let collectionStartDate = new Date(collection.start_date);
-			let collectionEndDate = new Date(collection.end_date);
-
-			// // Debugging outputs
-			// console.log(
-			// 	'Transportation Start Date:',
-			// 	transportationStartDate,
-			// 	'Transportation End Date:',
-			// 	transportationEndDate
-			// );
-			// console.log(
-			// 	'Collection Start Date:',
-			// 	collectionStartDate,
-			// 	'Collection End Date:',
-			// 	collectionEndDate
-			// );
-
-			// Check if the collection range is outside the transportation range
-			const startOutsideRange =
-				transportationStartDate &&
-				collectionStartDate < transportationStartDate &&
-				collectionEndDate < transportationStartDate;
-
-			const endOutsideRange =
-				transportationEndDate &&
-				collectionStartDate > transportationEndDate &&
-				collectionEndDate > transportationEndDate;
-
-			unlinked = !!(
-				startOutsideRange ||
-				endOutsideRange ||
-				(!transportationStartDate && !transportationEndDate)
-			);
+		if (collection) {
+			outsideCollectionRange = isEntityOutsideCollectionDateRange(transportation, collection);
 		}
 	}
 
@@ -165,7 +128,7 @@
 				{#if transportation.type === 'plane' && transportation.flight_number}
 					<div class="badge badge-neutral">{transportation.flight_number}</div>
 				{/if}
-				{#if unlinked}
+				{#if outsideCollectionRange}
 					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 				{/if}
 			</div>
