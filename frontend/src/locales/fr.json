@@ -423,7 +423,9 @@
     "recorded_sessions": "Sessions enregistrées",
     "total_activities": "Activités totales",
     "total_climbed": "Total grimpé",
-    "total_distance": "Distance totale"
+    "total_distance": "Distance totale",
+    "dates_not_saved": "Visitez non encore ajouté",
+    "dates_not_saved_description": "Cliquez sur Ajouter une visite pour enregistrer"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
