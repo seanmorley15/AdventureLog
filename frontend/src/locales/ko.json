@@ -423,7 +423,9 @@
     "recorded_sessions": "기록 된 세션",
     "total_activities": "총 활동",
     "total_climbed": "총계가 올라 갔다",
-    "total_distance": "총 거리"
+    "total_distance": "총 거리",
+    "dates_not_saved": "아직 추가되지 않았습니다",
+    "dates_not_saved_description": "저장을 위해 방문 추가를 클릭하십시오"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",

@@ -2,7 +2,7 @@
   "navbar": {
     "adventures": "Eventyr",
     "collections": "Samlinger",
-    "worldtravel": "Verdensreiser",
+    "worldtravel": "Verden",
     "map": "Kart",
     "users": "Brukere",
     "search": "Søk",
@@ -244,7 +244,6 @@
     "attachment_name": "Vedleggsnavn",
     "gpx_tip": "Last opp GPX-filer i vedlegg for å se dem på kartet!",
     "attachment_update_error": "Feil ved oppdatering av vedlegg",
-    "activities": {},
     "lodging_information": "Overnattingsinformasjon",
     "price": "Pris",
     "reservation_number": "Reservasjonsnummer",
@@ -476,7 +475,9 @@
     "recorded_sessions": "Innspilte økter",
     "total_activities": "Total aktiviteter",
     "total_climbed": "Totalt klatret",
-    "total_distance": "Total avstand"
+    "total_distance": "Total avstand",
+    "dates_not_saved": "Besøk ikke lagt til ennå",
+    "dates_not_saved_description": "Klikk Legg til besøk for å lagre"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -874,7 +875,6 @@
     "revoke_invite": "Revoke Inviter",
     "send_invite": "Send invitasjon"
   },
-  "languages": {},
   "profile": {
     "member_since": "Medlem siden",
     "user_stats": "Brukerstatistikk",

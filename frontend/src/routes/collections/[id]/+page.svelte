@@ -389,6 +389,21 @@
 		});
 	}
 
+	$: filteredOrderedItems = orderedItems.filter((item) => {
+		if (!collection?.start_date || !collection?.end_date) {
+			return true; // If no date range is set, show all items
+		}
+
+		const collectionStart = new Date(collection.start_date);
+		const collectionEnd = new Date(collection.end_date);
+		const itemStart = new Date(item.start);
+		const itemEnd = new Date(item.end);
+
+		// Check if item overlaps with collection date range
+		// Item is included if it starts before collection ends AND ends after collection starts
+		return itemStart <= collectionEnd && itemEnd >= collectionStart;
+	});
+
 	$: {
 		numAdventures = adventures.length;
 		numVisited = adventures.filter((adventure) => adventure.is_visited).length;
@@ -1176,11 +1191,11 @@
 					<div class="flex flex-col items-center">
 						<div class="w-full max-w-4xl relative">
 							<!-- Vertical timeline line that spans the entire height -->
-							{#if orderedItems.length > 0}
+							{#if filteredOrderedItems.length > 0}
 								<div class="absolute left-8 top-0 bottom-0 w-1 bg-primary"></div>
 							{/if}
 							<ul class="relative">
-								{#each orderedItems as orderedItem, index}
+								{#each filteredOrderedItems as orderedItem, index}
 									<li class="relative pl-20 mb-8">
 										<!-- Timeline Icon -->
 										<div
@@ -1281,7 +1296,7 @@
 									</li>
 								{/each}
 							</ul>
-							{#if orderedItems.length === 0}
+							{#if filteredOrderedItems.length === 0}
 								<div class="alert alert-info">
 									<p class="text-center text-lg">{$t('adventures.no_ordered_items')}</p>
 								</div>
@@ -1360,7 +1375,7 @@
 							</Marker>
 						{/if}
 					{/each}
-					{#if lineData}
+					{#if lineData && collection.start_date && collection.end_date}
 						<GeoJSON data={lineData}>
 							<LineLayer
 								layout={{ 'line-cap': 'round', 'line-join': 'round' }}

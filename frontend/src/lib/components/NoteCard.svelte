@@ -15,23 +15,18 @@
 	import TrashCan from '~icons/mdi/trash-can';
 	import Calendar from '~icons/mdi/calendar';
 	import DeleteWarning from './DeleteWarning.svelte';
+	import { isEntityOutsideCollectionDateRange } from '$lib/dateUtils';
 
 	export let note: Note;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
 
 	let isWarningModalOpen: boolean = false;
-	let unlinked: boolean = false;
+	let outsideCollectionRange: boolean = false;
 
 	$: {
-		if (collection?.start_date && collection.end_date) {
-			const startOutsideRange =
-				note.date && collection.start_date < note.date && collection.end_date < note.date;
-
-			const endOutsideRange =
-				note.date && collection.start_date > note.date && collection.end_date > note.date;
-
-			unlinked = !!(startOutsideRange || endOutsideRange || !note.date);
+		if (collection) {
+			outsideCollectionRange = isEntityOutsideCollectionDateRange(note, collection);
 		}
 	}
 
@@ -73,7 +68,7 @@
 			<h2 class="text-xl font-bold break-words">{note.name}</h2>
 			<div class="flex flex-wrap gap-2">
 				<div class="badge badge-primary">{$t('adventures.note')}</div>
-				{#if unlinked}
+				{#if outsideCollectionRange}
 					<div class="badge badge-error">{$t('adventures.out_of_range')}</div>
 				{/if}
 			</div>

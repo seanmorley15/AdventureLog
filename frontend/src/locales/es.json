@@ -78,7 +78,6 @@
     "remove_from_collection": "Eliminar de la Colección",
     "add_to_collection": "Añadir a la Colección",
     "delete": "Eliminar",
-    "activities": {},
     "no_image_found": "No se encontró ninguna imagen",
     "collection": "Colección",
     "homepage": "Página principal",
@@ -207,7 +206,7 @@
     "download_calendar": "Descargar Calendario",
     "md_instructions": "Escriba aquí con markdown...",
     "preview": "Vista Previa",
-    "checklist_delete_confirm": "¿Está seguro de que desea eliminar esta lista de tareas? \nEsta acción no se puede deshacer.",
+    "checklist_delete_confirm": "¿Está seguro de que desea eliminar esta lista de tareas? Esta acción no se puede deshacer.",
     "clear_location": "Borrar ubicación",
     "date_information": "Información de fecha",
     "delete_checklist": "Eliminar lista de tareas",
@@ -297,7 +296,7 @@
     "edit_location": "Ubicación de edición",
     "location_create_error": "No se pudo crear la ubicación",
     "location_created": "Ubicación creada",
-    "location_delete_confirm": "¿Estás seguro de que quieres eliminar esta ubicación? \nEsta acción no se puede deshacer.",
+    "location_delete_confirm": "¿Estás seguro de que quieres eliminar esta ubicación? Esta acción no se puede deshacer.",
     "location_delete_success": "Ubicación eliminada con éxito!",
     "location_not_found": "Ubicación no encontrada",
     "location_not_found_desc": "No se podía encontrar la ubicación que estaba buscando. \nPruebe una ubicación diferente o vuelva a consultar más tarde.",
@@ -476,7 +475,9 @@
     "recorded_sessions": "Sesiones grabadas",
     "total_activities": "Actividades totales",
     "total_climbed": "Total escalado",
-    "total_distance": "Distancia total"
+    "total_distance": "Distancia total",
+    "dates_not_saved": "Visita aún no agregada",
+    "dates_not_saved_description": "Haga clic en Agregar visita a Guardar"
   },
   "worldtravel": {
     "all": "Todo",
@@ -852,7 +853,6 @@
     "revoke_invite": "Revocar la invitación",
     "send_invite": "Enviar invitación"
   },
-  "languages": {},
   "profile": {
     "member_since": "Miembro desde",
     "user_stats": "Estadísticas de usuario",

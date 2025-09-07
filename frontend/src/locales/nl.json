@@ -423,7 +423,9 @@
     "recorded_sessions": "Opgenomen sessies",
     "total_activities": "Totale activiteiten",
     "total_climbed": "Totaal geklommen",
-    "total_distance": "Totale afstand"
+    "total_distance": "Totale afstand",
+    "dates_not_saved": "Bezoek nog niet toegevoegd",
+    "dates_not_saved_description": "Klik op Bezoek toevoegen om op te slaan"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

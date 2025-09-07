@@ -28,6 +28,7 @@
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import RunFastIcon from '~icons/mdi/run-fast';
 	import LoadingIcon from '~icons/mdi/loading';
+	import InfoIcon from '~icons/mdi/information';
 	import UploadIcon from '~icons/mdi/upload';
 	import FileIcon from '~icons/mdi/file';
 	import CloseIcon from '~icons/mdi/close';
@@ -1534,6 +1535,17 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- if localStartDate and localEndDate are set, show a callout saying its not saved yet -->
+		{#if localStartDate || localEndDate}
+			<div class="alert alert-neutral">
+				<InfoIcon class="w-5 h-5" />
+				<div>
+					<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
+					<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="flex gap-3 justify-end pt-4">
 			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>

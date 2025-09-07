@@ -422,7 +422,9 @@
     "recorded_sessions": "جلسات مسجلة",
     "total_activities": "الأنشطة الكلية",
     "total_climbed": "مجموع تسلق",
-    "total_distance": "إجمالي المسافة"
+    "total_distance": "إجمالي المسافة",
+    "dates_not_saved": "زيارة لم تتم إضافتها بعد",
+    "dates_not_saved_description": "انقر فوق إضافة زيارة إلى حفظ"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",

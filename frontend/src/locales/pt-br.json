@@ -422,7 +422,9 @@
     "recorded_sessions": "Sessões gravadas",
     "total_activities": "Atividades totais",
     "total_climbed": "Total escalou",
-    "total_distance": "Distância total"
+    "total_distance": "Distância total",
+    "dates_not_saved": "Visite ainda não adicionado",
+    "dates_not_saved_description": "Clique em Adicionar visita para salvar"
   },
   "auth": {
     "confirm_password": "Confirme sua senha",

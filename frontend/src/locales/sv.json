@@ -423,7 +423,9 @@
     "recorded_sessions": "Inspelade sessioner",
     "total_activities": "Totala aktiviteter",
     "total_climbed": "Total stigning",
-    "total_distance": "Totalt avstånd"
+    "total_distance": "Totalt avstånd",
+    "dates_not_saved": "Besök ännu inte tillagd",
+    "dates_not_saved_description": "Klicka på Lägg till Besök för att spara"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",

@@ -1,34 +1,27 @@
 // @ts-ignore
 import { DateTime } from 'luxon';
+import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
+import { isAllDay } from '$lib';
 
 /**
  * Convert a UTC ISO date to a datetime-local value in the specified timezone
- * @param utcDate - UTC date in ISO format or null
- * @param timezone - Target timezone (defaults to browser timezone)
- * @returns Formatted local datetime string for input fields (YYYY-MM-DDTHH:MM)
  */
 export function toLocalDatetime(
 	utcDate: string | null,
 	timezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone
 ): string {
 	if (!utcDate) return '';
-
 	const dt = DateTime.fromISO(utcDate, { zone: 'UTC' });
 	if (!dt.isValid) return '';
-
 	const isoString = dt.setZone(timezone).toISO({
 		suppressSeconds: true,
 		includeOffset: false
 	});
-
 	return isoString ? isoString.slice(0, 16) : '';
 }
 
 /**
  * Convert a local datetime to UTC
- * @param localDate - Local datetime string in ISO format
- * @param timezone - Source timezone (defaults to browser timezone)
- * @returns UTC datetime in ISO format or null
  */
 export function toUTCDatetime(
 	localDate: string,
@@ -36,15 +29,12 @@ export function toUTCDatetime(
 	allDay: boolean = false
 ): string | null {
 	if (!localDate) return null;
-
 	if (allDay) {
-		// Treat input as date-only, set UTC midnight manually
+		// Treat as date only, set UTC midnight
 		return DateTime.fromISO(localDate, { zone: 'UTC' })
 			.startOf('day')
 			.toISO({ suppressMilliseconds: true });
 	}
-
-	// Normal timezone conversion for datetime-local input
 	return DateTime.fromISO(localDate, { zone: timezone })
 		.toUTC()
 		.toISO({ suppressMilliseconds: true });
@@ -52,8 +42,6 @@ export function toUTCDatetime(
 
 /**
  * Updates local datetime values based on UTC date and timezone
- * @param params Object containing UTC date and timezone
- * @returns Object with updated local datetime string
  */
 export function updateLocalDate({
 	utcDate,
@@ -62,15 +50,11 @@ export function updateLocalDate({
 	utcDate: string | null;
 	timezone: string;
 }) {
-	return {
-		localDate: toLocalDatetime(utcDate, timezone)
-	};
+	return { localDate: toLocalDatetime(utcDate, timezone) };
 }
 
 /**
  * Updates UTC datetime values based on local datetime and timezone
- * @param params Object containing local date and timezone
- * @returns Object with updated UTC datetime string
  */
 export function updateUTCDate({
 	localDate,
@@ -81,40 +65,27 @@ export function updateUTCDate({
 	timezone: string;
 	allDay?: boolean;
 }) {
-	return {
-		utcDate: toUTCDatetime(localDate, timezone, allDay)
-	};
+	return { utcDate: toUTCDatetime(localDate, timezone, allDay) };
 }
 
 /**
  * Validate date ranges using UTC comparison
- * @param startDate - Start date string in UTC (ISO format)
- * @param endDate - End date string in UTC (ISO format)
- * @returns Object with validation result and optional error message
  */
 export function validateDateRange(
 	startDate: string,
 	endDate: string
 ): { valid: boolean; error?: string } {
 	if (endDate && !startDate) {
-		return {
-			valid: false,
-			error: 'Start date is required when end date is provided'
-		};
+		return { valid: false, error: 'Start date is required when end date is provided' };
 	}
-
 	if (
 		startDate &&
 		endDate &&
 		DateTime.fromISO(startDate, { zone: 'utc' }).toMillis() >
 			DateTime.fromISO(endDate, { zone: 'utc' }).toMillis()
 	) {
-		return {
-			valid: false,
-			error: 'Start date must be before end date (based on UTC)'
-		};
+		return { valid: false, error: 'Start date must be before end date (based on UTC)' };
 	}
-
 	return { valid: true };
 }
 
@@ -135,11 +106,6 @@ export function formatDateInTimezone(utcDate: string, timezone: string | null): 
 	}
 }
 
-/**
- * Format UTC date for display
- * @param utcDate - UTC date in ISO format
- * @returns Formatted date string without seconds (YYYY-MM-DD HH:MM)
- */
 export function formatUTCDate(utcDate: string | null): string {
 	if (!utcDate) return '';
 	const dateTime = DateTime.fromISO(utcDate);
@@ -147,23 +113,159 @@ export function formatUTCDate(utcDate: string | null): string {
 	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
 }
 
-/**
- * Format all-day date for display without timezone conversion
- * @param dateString - Date string in ISO format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
- * @returns Formatted date string (e.g., "Jun 1, 2025")
- */
 export function formatAllDayDate(dateString: string): string {
 	if (!dateString) return '';
-
-	// Extract just the date part and add midday time to avoid timezone issues
 	const datePart = dateString.split('T')[0];
 	const dateWithMidday = `${datePart}T12:00:00`;
-
 	return new Intl.DateTimeFormat('en-US', {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric'
 	}).format(new Date(dateWithMidday));
+}
+
+// ==== FIXED TIMEZONE-AWARE DATE RANGE LOGIC ====
+
+/**
+ * Extracts start and end dates from various entity types (Luxon DateTime)
+ * Returns also isAllDay flag for correct comparison logic
+ */
+function getEntityDateRange(entity: Visit | Transportation | Lodging | Note | Checklist): {
+	start: DateTime | null;
+	end: DateTime | null;
+	isAllDay: boolean;
+} {
+	let start: DateTime | null = null;
+	let end: DateTime | null = null;
+	let isAllDayEvent = false;
+	try {
+		let timezone = (entity as Visit).timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
+		if ('start_date' in entity && 'end_date' in entity) {
+			// Check if all-day (no time portion)
+			isAllDayEvent = isAllDay(entity.start_date) && isAllDay(entity.end_date);
+			console;
+			if (isAllDayEvent) {
+				start = entity.start_date
+					? DateTime.fromISO(entity.start_date.split('T')[0], { zone: 'UTC' }).startOf('day')
+					: null;
+				end = entity.end_date
+					? DateTime.fromISO(entity.end_date.split('T')[0], { zone: 'UTC' }).endOf('day')
+					: null;
+			} else {
+				start = DateTime.fromISO(entity.start_date, { zone: 'UTC' }).setZone(timezone);
+				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).setZone(timezone);
+			}
+		} else if ('date' in entity && 'end_date' in entity) {
+			isAllDayEvent = !!(entity.date && entity.date.length === 10);
+			if (isAllDayEvent) {
+				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).startOf('day');
+				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).endOf('day');
+			} else {
+				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).setZone(timezone);
+				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).setZone(timezone);
+			}
+		} else if ('check_in' in entity && 'check_out' in entity) {
+			isAllDayEvent = !!(entity.check_in && entity.check_in.length === 10);
+			if (isAllDayEvent) {
+				start = DateTime.fromISO(entity.check_in, { zone: 'UTC' }).startOf('day');
+				end = DateTime.fromISO(entity.check_out, { zone: 'UTC' }).endOf('day');
+			} else {
+				start = DateTime.fromISO(entity.check_in, { zone: 'UTC' }).setZone(timezone);
+				end = DateTime.fromISO(entity.check_out, { zone: 'UTC' }).setZone(timezone);
+			}
+		} else if ('date' in entity) {
+			isAllDayEvent = !!(entity.date && entity.date.length === 10);
+			if (isAllDayEvent) {
+				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).startOf('day');
+				end = start;
+			} else {
+				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).setZone(timezone);
+				end = start;
+			}
+		}
+	} catch (error) {
+		console.error('Error processing entity dates:', error);
+	}
+	return { start, end, isAllDay: isAllDayEvent };
+}
+
+/**
+ * Extract collection start/end as Luxon DateTime w/allDay logic
+ */
+function getCollectionDateRange(collection: Collection): {
+	start: DateTime | null;
+	end: DateTime | null;
+	isAllDay: boolean;
+} {
+	if (!collection.start_date || !collection.end_date) {
+		return { start: null, end: null, isAllDay: false };
+	}
+
+	// Assume collection always uses full datetimes in ISO string
+	const isAllDay = collection.start_date.length === 10 && collection.end_date.length === 10;
+	const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+	const start = isAllDay
+		? DateTime.fromISO(collection.start_date, { zone: 'UTC' }).startOf('day')
+		: DateTime.fromISO(collection.start_date, { zone: 'UTC' }).setZone(timezone);
+	const end = isAllDay
+		? DateTime.fromISO(collection.end_date, { zone: 'UTC' }).endOf('day')
+		: DateTime.fromISO(collection.end_date, { zone: 'UTC' }).setZone(timezone);
+	return { start, end, isAllDay };
+}
+
+/**
+ * Checks if an entity falls within a collection's date range (timezone-safe, all-day-aware)
+ */
+export function isEntityInCollectionDateRange(
+	entity: Visit | Transportation | Lodging | Note | Checklist,
+	collection: Collection
+): boolean {
+	if (!collection?.start_date || !collection.end_date) {
+		return false;
+	}
+
+	const { start: entityStart, end: entityEnd, isAllDay: entityAllDay } = getEntityDateRange(entity);
+	const {
+		start: collStart,
+		end: collEnd,
+		isAllDay: collAllDay
+	} = getCollectionDateRange(collection);
+
+	// If any dates are missing, don't match
+	if (!entityStart || !collStart) return false;
+
+	// If either side is all-day, use date comparison
+	if (entityAllDay || collAllDay) {
+		// Compare only date components
+		const entStartDate = entityStart.startOf('day');
+		const entEndDate = (entityEnd || entityStart).endOf('day');
+		const colStartDate = collStart.startOf('day');
+		const colEndDate = collEnd.endOf('day');
+		return entStartDate <= colEndDate && entEndDate >= colStartDate;
+	} else {
+		// Compare actual DateTimes
+		const entEnd = entityEnd || entityStart;
+		return entityStart <= collEnd && entEnd >= collStart;
+	}
+}
+
+export function isEntityOutsideCollectionDateRange(
+	entity: Visit | Transportation | Lodging | Note | Checklist,
+	collection: Collection
+): boolean {
+	return !isEntityInCollectionDateRange(entity, collection);
+}
+
+export function getEntitiesInDateRange<
+	T extends Visit | Transportation | Lodging | Note | Checklist
+>(entities: T[], collection: Collection): T[] {
+	return entities.filter((entity) => isEntityInCollectionDateRange(entity, collection));
+}
+
+export function getEntitiesOutsideDateRange<
+	T extends Visit | Transportation | Lodging | Note | Checklist
+>(entities: T[], collection: Collection): T[] {
+	return entities.filter((entity) => isEntityOutsideCollectionDateRange(entity, collection));
 }
 
 export const VALID_TIMEZONES = [
