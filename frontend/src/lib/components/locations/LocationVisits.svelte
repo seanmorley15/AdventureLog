@@ -38,7 +38,6 @@
 	// Props
 	export let collection: Collection | null = null;
 	export let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let selectedEndTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	export let utcStartDate: string | null = null;
 	export let utcEndDate: string | null = null;
 	export let note: string | null = null;
@@ -136,7 +135,7 @@
 
 			const end = updateLocalDate({
 				utcDate: utcEndDate,
-				timezone: selectedEndTimezone
+				timezone: selectedStartTimezone
 			}).localDate;
 
 			localStartDate = start;
@@ -192,7 +191,7 @@
 
 		utcEndDate = updateUTCDate({
 			localDate: localEndDate,
-			timezone: selectedEndTimezone,
+			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
 	}
@@ -214,7 +213,7 @@
 
 		utcEndDate = updateUTCDate({
 			localDate: localEndDate,
-			timezone: selectedEndTimezone,
+			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
 
@@ -225,7 +224,7 @@
 
 		localEndDate = updateLocalDate({
 			utcDate: utcEndDate,
-			timezone: selectedEndTimezone
+			timezone: selectedStartTimezone
 		}).localDate;
 	}
 
@@ -587,7 +586,7 @@
 		if ('start_timezone' in visit && typeof visit.start_timezone === 'string') {
 			selectedStartTimezone = visit.start_timezone;
 			if ('end_timezone' in visit && typeof visit.end_timezone === 'string') {
-				selectedEndTimezone = visit.end_timezone;
+				selectedStartTimezone = visit.end_timezone;
 			}
 		} else if (visit.timezone) {
 			selectedStartTimezone = visit.timezone;
@@ -673,14 +672,14 @@
 
 		localEndDate = updateLocalDate({
 			utcDate: utcEndDate,
-			timezone: selectedEndTimezone
+			timezone: selectedStartTimezone
 		}).localDate;
 
 		if (!selectedStartTimezone) {
 			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		}
-		if (!selectedEndTimezone) {
-			selectedEndTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		if (!selectedStartTimezone) {
+			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		}
 
 		// Check if Strava is enabled by making a simple API call
