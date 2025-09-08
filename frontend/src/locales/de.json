@@ -423,7 +423,9 @@
     "recorded_sessions": "Aufgenommene Sitzungen",
     "total_activities": "Gesamtaktivitäten",
     "total_climbed": "Total bestiegen",
-    "total_distance": "Gesamtabstand"
+    "total_distance": "Gesamtabstand",
+    "dates_not_saved": "Besuchen Sie noch nicht hinzugefügt",
+    "dates_not_saved_description": "Klicken Sie auf Besuchen Sie, um sie zu speichern"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",

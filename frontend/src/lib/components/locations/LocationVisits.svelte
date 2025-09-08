@@ -28,6 +28,7 @@
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import RunFastIcon from '~icons/mdi/run-fast';
 	import LoadingIcon from '~icons/mdi/loading';
+	import InfoIcon from '~icons/mdi/information';
 	import UploadIcon from '~icons/mdi/upload';
 	import FileIcon from '~icons/mdi/file';
 	import CloseIcon from '~icons/mdi/close';
@@ -37,7 +38,6 @@
 	// Props
 	export let collection: Collection | null = null;
 	export let selectedStartTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
-	export let selectedEndTimezone: string = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	export let utcStartDate: string | null = null;
 	export let utcEndDate: string | null = null;
 	export let note: string | null = null;
@@ -135,7 +135,7 @@
 
 			const end = updateLocalDate({
 				utcDate: utcEndDate,
-				timezone: selectedEndTimezone
+				timezone: selectedStartTimezone
 			}).localDate;
 
 			localStartDate = start;
@@ -191,7 +191,7 @@
 
 		utcEndDate = updateUTCDate({
 			localDate: localEndDate,
-			timezone: selectedEndTimezone,
+			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
 	}
@@ -213,7 +213,7 @@
 
 		utcEndDate = updateUTCDate({
 			localDate: localEndDate,
-			timezone: selectedEndTimezone,
+			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
 
@@ -224,7 +224,7 @@
 
 		localEndDate = updateLocalDate({
 			utcDate: utcEndDate,
-			timezone: selectedEndTimezone
+			timezone: selectedStartTimezone
 		}).localDate;
 	}
 
@@ -586,7 +586,7 @@
 		if ('start_timezone' in visit && typeof visit.start_timezone === 'string') {
 			selectedStartTimezone = visit.start_timezone;
 			if ('end_timezone' in visit && typeof visit.end_timezone === 'string') {
-				selectedEndTimezone = visit.end_timezone;
+				selectedStartTimezone = visit.end_timezone;
 			}
 		} else if (visit.timezone) {
 			selectedStartTimezone = visit.timezone;
@@ -672,14 +672,14 @@
 
 		localEndDate = updateLocalDate({
 			utcDate: utcEndDate,
-			timezone: selectedEndTimezone
+			timezone: selectedStartTimezone
 		}).localDate;
 
 		if (!selectedStartTimezone) {
 			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		}
-		if (!selectedEndTimezone) {
-			selectedEndTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+		if (!selectedStartTimezone) {
+			selectedStartTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 		}
 
 		// Check if Strava is enabled by making a simple API call
@@ -1534,6 +1534,17 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- if localStartDate and localEndDate are set, show a callout saying its not saved yet -->
+		{#if localStartDate || localEndDate}
+			<div class="alert alert-neutral">
+				<InfoIcon class="w-5 h-5" />
+				<div>
+					<div class="font-medium text-sm">{$t('adventures.dates_not_saved')}</div>
+					<div class="text-xs opacity-75">{$t('adventures.dates_not_saved_description')}</div>
+				</div>
+			</div>
+		{/if}
 
 		<div class="flex gap-3 justify-end pt-4">
 			<button class="btn btn-neutral-200 gap-2" on:click={handleBack}>

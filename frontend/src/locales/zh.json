@@ -476,7 +476,9 @@
     "recorded_sessions": "记录的会议",
     "total_activities": "总活动",
     "total_climbed": "总攀登",
-    "total_distance": "总距离"
+    "total_distance": "总距离",
+    "dates_not_saved": "访问尚未添加",
+    "dates_not_saved_description": "点击添加访问以保存"
   },
   "auth": {
     "forgot_password": "忘记密码？",

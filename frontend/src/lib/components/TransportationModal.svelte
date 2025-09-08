@@ -173,6 +173,10 @@
 				Math.round(transportation.destination_longitude * 1e6) / 1e6;
 		}
 
+		if (transportation.date && !transportation.end_date) {
+			transportation.end_date = transportation.date;
+		}
+
 		if (!transportation.type) {
 			transportation.type = 'other';
 		}

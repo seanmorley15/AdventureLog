@@ -14,7 +14,7 @@
 
 	let items: ChecklistItem[] = [];
 
-	let constrainDates: boolean = false;
+	let constrainDates: boolean = true;
 
 	items = checklist?.items || [];
 

@@ -17,7 +17,7 @@
 	export let collection: Collection;
 	export let user: User | null = null;
 
-	let constrainDates: boolean = false;
+	let constrainDates: boolean = true;
 
 	let isReadOnly =
 		!(note && user?.uuid == note?.user) &&
