@@ -475,7 +475,9 @@
 		"total_distance": "Celková vzdialenosť",
 		"total_activities": "Celkový počet aktivít",
 		"recorded_sessions": "Zaznamenané relácie",
-		"activity_breakdown_by_category": "Rozpis aktivít podľa kategórie"
+		"activity_breakdown_by_category": "Rozpis aktivít podľa kategórie",
+		"dates_not_saved": "Návšteva ešte nepridaná",
+		"dates_not_saved_description": "Klikni na Pridať navštevu pre uloženie"
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
