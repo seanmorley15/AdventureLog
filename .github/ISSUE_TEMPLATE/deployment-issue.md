@@ -1,15 +1,25 @@
 ---
 name: Deployment Issue
-about: Request help deploying AdventureLog on your machine. The more details, the
-  better I can help!
-title: "[DEPLOYMENT]"
+about: Request help deploying AdventureLog. For faster support, please use our Discord community!
+title: "[DEPLOYMENT] <short description>"
 labels: deployment
-assignees: ''
+assignees: ""
+---
+
+⚠️ **Note:** GitHub issues are primarily for tracking bugs and feature requests.  
+For general deployment troubleshooting and faster community support, please visit our **Discord**: https://discord.gg/wRbQ9Egr8C
 
 ---
 
-## Explain your issue
+## 🖥️ Describe Your Issue
 
-## Provide an **obfuscated** `docker-compose.yml`
+A clear and concise description of the deployment problem.
 
-## Provide any necessary logs from the containers and browser
+## 🐳 Docker Compose (Obfuscated)
+
+Please include your `docker-compose.yml` or relevant variable configuration.  
+⚠️ Make sure to **remove or obfuscate sensitive information** (passwords, tokens, keys, etc.).
+
+```yaml
+# Example (with secrets removed)
+```
