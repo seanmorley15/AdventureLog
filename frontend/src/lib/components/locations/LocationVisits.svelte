@@ -198,6 +198,7 @@
 
 	function handleAllDayToggle() {
 		if (allDay) {
+			// Strip time component, keep date
 			localStartDate =
 				localStartDate && localStartDate.includes('T')
 					? localStartDate.split('T')[0]
@@ -205,6 +206,7 @@
 			localEndDate =
 				localEndDate && localEndDate.includes('T') ? localEndDate.split('T')[0] : localEndDate;
 		} else {
+			// Add time component if missing
 			if (localStartDate && !localStartDate.includes('T')) {
 				localStartDate = localStartDate + 'T00:00';
 			}
@@ -213,6 +215,7 @@
 			}
 		}
 
+		// Update UTC dates only, don't convert back to local to avoid timezone shifts
 		utcStartDate = updateUTCDate({
 			localDate: localStartDate,
 			timezone: selectedStartTimezone,
@@ -224,16 +227,6 @@
 			timezone: selectedStartTimezone,
 			allDay
 		}).utcDate;
-
-		localStartDate = updateLocalDate({
-			utcDate: utcStartDate,
-			timezone: selectedStartTimezone
-		}).localDate;
-
-		localEndDate = updateLocalDate({
-			utcDate: utcEndDate,
-			timezone: selectedStartTimezone
-		}).localDate;
 	}
 
 	async function addVisit() {
