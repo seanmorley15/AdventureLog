@@ -1230,7 +1230,7 @@
 														</div>
 														<div>
 															<!-- Duration -->
-															{Math.round(
+															{Math.floor(
 																(new Date(orderedItem.end).getTime() -
 																	new Date(orderedItem.start).getTime()) /
 																	1000 /
