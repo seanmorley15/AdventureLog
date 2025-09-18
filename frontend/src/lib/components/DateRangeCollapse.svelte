@@ -230,11 +230,21 @@
 							bind:checked={allDay}
 							on:change={() => {
 								if (allDay) {
-									localStartDate = localStartDate ? localStartDate.split('T')[0] : '';
-									localEndDate = localEndDate ? localEndDate.split('T')[0] : '';
+									localStartDate =
+										localStartDate && localStartDate.includes('T')
+											? localStartDate.split('T')[0]
+											: localStartDate;
+									localEndDate =
+										localEndDate && localEndDate.includes('T')
+											? localEndDate.split('T')[0]
+											: localEndDate;
 								} else {
-									localStartDate = localStartDate + 'T00:00';
-									localEndDate = localEndDate + 'T23:59';
+									if (localStartDate && !localStartDate.includes('T')) {
+										localStartDate = localStartDate + 'T00:00';
+									}
+									if (localEndDate && !localEndDate.includes('T')) {
+										localEndDate = localEndDate + 'T23:59';
+									}
 								}
 								utcStartDate = updateUTCDate({
 									localDate: localStartDate,
