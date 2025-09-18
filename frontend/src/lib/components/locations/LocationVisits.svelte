@@ -899,6 +899,9 @@
 												{:else}
 													<ClockIcon class="w-3 h-3 text-base-content/50" />
 												{/if}
+												{#if visit.timezone}
+													<span class="badge badge-outline badge-sm">{visit.timezone}</span>
+												{/if}
 												<div class="text-sm font-medium truncate">
 													{#if isAllDay(visit.start_date)}
 														{visit.start_date && typeof visit.start_date === 'string'
