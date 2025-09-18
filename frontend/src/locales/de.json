@@ -696,7 +696,7 @@
 		"verify_setup": "Verifizierung des Setup",
 		"whats_included": "Was ist enthalten",
 		"backup_your_data": "Sichern Sie Ihre Daten",
-		"backup_your_data_desc": "Laden Sie eine vollständige Sicherung Ihrer Kontodaten, einschließlich Standorte, Sammlungen, Medien und Besuchen, herunter.",
+		"backup_your_data_desc": "Laden Sie eine vollständige Sicherung Ihrer Kontodaten, einschließlich Standorte, Sammlungen, Medien und Besuche, herunter.",
 		"data_override_acknowledge": "Ich bestätige, dass dies alle meine vorhandenen Daten überschreibt",
 		"data_override_acknowledge_desc": "Diese Aktion ist irreversibel und ersetzt alle Standorte, Sammlungen und Besuche in Ihrem Konto.",
 		"data_override_warning": "Daten-Überschreibungs-Warnung",
