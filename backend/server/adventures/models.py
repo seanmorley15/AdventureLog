@@ -305,7 +305,7 @@ class Transportation(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
     rating = models.FloatField(blank=True, null=True)
-    link = models.URLField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=2083)
     date = models.DateTimeField(blank=True, null=True)
     end_date = models.DateTimeField(blank=True, null=True)
     start_timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
