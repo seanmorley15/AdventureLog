@@ -436,3 +436,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return paginator.get_paginated_response(serializer.data)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def get_serializer(self, *args, **kwargs):
+        # Add nested=True to serializer context for GET list requests
+        context = self.get_serializer_context()
+        # If this is a list action, make sure nested=True in context
+        if self.action == 'list':
+            context['nested'] = True
+        kwargs['context'] = context
+        return super().get_serializer(*args, **kwargs)

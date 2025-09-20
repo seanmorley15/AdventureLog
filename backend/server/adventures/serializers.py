@@ -597,13 +597,19 @@ class CollectionSerializer(CustomModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with']
 
     def get_locations(self, obj):
-        # Always allow locations in nested context
-        context = self.context.copy()
-        context['nested'] = False
-        return LocationSerializer(obj.locations.all(), many=True, context=context).data
+        if self.context.get('nested', False):
+            allowed_nested_fields = set(self.context.get('allowed_nested_fields', []))
+            return LocationSerializer(
+            obj.locations.all(), 
+            many=True, 
+            context={**self.context, 'nested': True, 'allowed_nested_fields': allowed_nested_fields}
+        ).data
+        
+        return LocationSerializer(obj.locations.all(), many=True, context=self.context).data
 
     def get_transportations(self, obj):
         # Only include transportations if not in nested context
+        print(f"self.context: {self.context}")
         if self.context.get('nested', False):
             return []
         return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
