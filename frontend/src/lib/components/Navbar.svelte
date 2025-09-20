@@ -64,7 +64,8 @@
 		ja: '日本語',
 		ar: 'العربية',
 		'pt-br': 'Português (Brasil)',
-		sk: 'Slovenský'
+		sk: 'Slovenský',
+		tr: 'Türkçe'
 	};
 
 	const submitLocaleChange = (event: Event) => {

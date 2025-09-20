@@ -889,7 +889,13 @@
     "revoke_invite": "Revoke Invite",
     "send_invite": "Send Invite",
     "available": "Available",
-    "pending": "Pending"
+    "pending": "Pending",
+    "available_users": "Available Users",
+    "revoke_failed": "Revoke Failed",
+    "invite_revoked": "Invite Revoked",
+    "unshare_failed": "Unshare Failed",
+    "invite_failed": "Invite Failed",
+    "invite_sent": "Invite Sent"
   },
   "languages": {},
   "profile": {
