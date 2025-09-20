@@ -6,11 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, action
 from django.contrib.gis.geos import Point
-from django.conf import settings
 from django.core.cache import cache
 from django.views.decorators.cache import cache_page
 from django.utils.decorators import method_decorator
-from django.contrib.staticfiles import finders
 from adventures.models import Location
 
 # Cache TTL
@@ -59,6 +57,28 @@ def visits_by_region(request, region_id):
     serializer = VisitedCitySerializer(visits, many=True)
     cache.set(cache_key, serializer.data, CACHE_TTL)
     return Response(serializer.data)
+
+# view called spin the globe that return a random country, a random region in that country and a random city in that region
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def globespin(request):
+    import random
+    country = random.choice(Country.objects.all())
+    data = {
+        "country": CountrySerializer(country).data,
+    }
+    
+    regions = Region.objects.filter(country=country)
+    if regions.exists():
+        region = random.choice(regions)
+        data["region"] = RegionSerializer(region).data
+        
+        cities = City.objects.filter(region=region)
+        if cities.exists():
+            city = random.choice(cities)
+            data["city"] = CitySerializer(city).data
+    
+    return Response(data)
 
 @method_decorator(cache_page(CACHE_TTL), name='list')
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):

@@ -235,7 +235,6 @@ class LocationSerializer(CustomModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         is_nested = self.context.get('nested', False)
-        print(f"LocationSerializer to_representation called. is_nested={is_nested}")
         allowed_nested_fields = set(self.context.get('allowed_nested_fields', []))
 
         if not is_nested:
@@ -367,7 +366,6 @@ class LocationSerializer(CustomModelSerializer):
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
-        print(category_data)
         location = Location.objects.create(**validated_data)
 
         # Handle category
@@ -609,7 +607,6 @@ class CollectionSerializer(CustomModelSerializer):
 
     def get_transportations(self, obj):
         # Only include transportations if not in nested context
-        print(f"self.context: {self.context}")
         if self.context.get('nested', False):
             return []
         return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
