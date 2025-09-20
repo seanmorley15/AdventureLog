@@ -9,7 +9,7 @@
 		LineLayer
 	} from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import type { Activity, Location, VisitedCity, VisitedRegion } from '$lib/types.js';
+	import type { Activity, Location, VisitedCity, VisitedRegion, Pin } from '$lib/types.js';
 	import CardCarousel from '$lib/components/CardCarousel.svelte';
 	import { goto } from '$app/navigation';
 	import { basemapOptions, getActivityColor, getBasemapLabel, getBasemapUrl } from '$lib';
@@ -20,7 +20,7 @@
 	import Plus from '~icons/mdi/plus';
 	import Clear from '~icons/mdi/close';
 	import Eye from '~icons/mdi/eye';
-	import Pin from '~icons/mdi/map-marker';
+	import PinIcon from '~icons/mdi/map-marker';
 	import Calendar from '~icons/mdi/calendar';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
 	import NewLocationModal from '$lib/components/NewLocationModal.svelte';
@@ -35,17 +35,16 @@
 	let showCities: boolean = false;
 	let sidebarOpen: boolean = false;
 
-	let basemapType: string = 'default'; // default
+	let basemapType: string = 'default';
 
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
 	let visitedRegions: VisitedRegion[] = data.props.visitedRegions;
 	let visitedCities: VisitedCity[] = [];
-	let adventures: Location[] = data.props.adventures;
-
+	let pins: Pin[] = data.props.pins; // Lightweight pin objects
 	let activities: Activity[] = [];
 
-	let filteredAdventures = adventures;
+	let filteredPins = pins;
 
 	let showVisited: boolean = true;
 	let showPlanned: boolean = true;
@@ -54,23 +53,25 @@
 	let newLongitude: number | null = null;
 	let newLatitude: number | null = null;
 
-	let isPopupOpen = false;
+	// Cache for full location data
+	let locationCache: Map<string, Location> = new Map();
+	let loadingLocations: Set<string> = new Set();
+
+	let locationBeingUpdated: Location | undefined = undefined;
 
 	// Statistics
-	$: totalAdventures = adventures.length;
-	$: visitedAdventures = adventures.filter((adventure) => adventure.is_visited).length;
-	$: plannedAdventures = adventures.filter((adventure) => !adventure.is_visited).length;
+	$: totalAdventures = pins.length;
+	$: visitedAdventures = pins.filter((pin) => pin.is_visited).length;
+	$: plannedAdventures = pins.filter((pin) => !pin.is_visited).length;
 	$: totalRegions = visitedRegions.length;
 
 	// Get unique categories for filtering
-	$: categories = [
-		...new Set(adventures.map((adventure) => adventure.category?.display_name).filter(Boolean))
-	];
+	$: categories = [...new Set(pins.map((pin) => pin.category?.display_name).filter(Boolean))];
 
-	// Updates the filtered adventures based on the checkboxes
+	// Updates the filtered pins based on the checkboxes
 	$: {
-		filteredAdventures = adventures.filter(
-			(adventure) => (showVisited && adventure.is_visited) || (showPlanned && !adventure.is_visited)
+		filteredPins = pins.filter(
+			(pin) => (showVisited && pin.is_visited) || (showPlanned && !pin.is_visited)
 		);
 	}
 
@@ -82,22 +83,37 @@
 		}
 	}
 
-	let locationBeingUpdated: Location | undefined = undefined;
-
-	// Sync the locationBeingUpdated with the adventures array
+	// Sync the locationBeingUpdated with the pins array
 	$: {
 		if (locationBeingUpdated && locationBeingUpdated.id) {
-			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+			const index = pins.findIndex((pin) => pin.id === locationBeingUpdated?.id);
 
 			if (index !== -1) {
-				adventures[index] = { ...locationBeingUpdated };
-				adventures = adventures; // Trigger reactivity
+				// Update existing pin with new data
+				pins[index] = {
+					id: locationBeingUpdated.id,
+					name: locationBeingUpdated.name,
+					latitude: locationBeingUpdated.latitude?.toString() || '',
+					longitude: locationBeingUpdated.longitude?.toString() || '',
+					is_visited: locationBeingUpdated.is_visited,
+					category: locationBeingUpdated.category
+				};
+				pins = pins; // Trigger reactivity
 			} else {
-				adventures = [{ ...locationBeingUpdated }, ...adventures];
-				if (data.props.adventures) {
-					data.props.adventures = adventures; // Update data.props.adventure.locations as well
-				}
+				// Add new pin
+				const newPin: Pin = {
+					id: locationBeingUpdated.id,
+					name: locationBeingUpdated.name,
+					latitude: locationBeingUpdated.latitude?.toString() || '',
+					longitude: locationBeingUpdated.longitude?.toString() || '',
+					is_visited: locationBeingUpdated.is_visited,
+					category: locationBeingUpdated.category
+				};
+				pins = [newPin, ...pins];
 			}
+
+			// Also update the cache
+			locationCache.set(locationBeingUpdated.id, locationBeingUpdated);
 		}
 	}
 
@@ -124,6 +140,36 @@
 		visitedCities = await response.json();
 	}
 
+	async function fetchLocationDetails(locationId: string): Promise<Location | null> {
+		// Check cache first
+		if (locationCache.has(locationId)) {
+			return locationCache.get(locationId)!;
+		}
+
+		// Prevent duplicate requests
+		if (loadingLocations.has(locationId)) {
+			return null;
+		}
+
+		try {
+			loadingLocations.add(locationId);
+			const response = await fetch(`/api/locations/${locationId}`);
+
+			if (!response.ok) {
+				throw new Error(`Failed to fetch location: ${response.statusText}`);
+			}
+
+			const location: Location = await response.json();
+			locationCache.set(locationId, location);
+			return location;
+		} catch (error) {
+			console.error('Error fetching location details:', error);
+			return null;
+		} finally {
+			loadingLocations.delete(locationId);
+		}
+	}
+
 	function addMarker(e: { detail: { lngLat: { lng: any; lat: any } } }) {
 		newMarker = null;
 		newMarker = { lngLat: e.detail.lngLat };
@@ -137,21 +183,42 @@
 	}
 
 	function createNewAdventure(event: CustomEvent) {
-		adventures = [...adventures, event.detail];
+		const location: Location = event.detail;
+
+		// Add to pins array
+		const newPin: Pin = {
+			id: location.id,
+			name: location.name,
+			latitude: location.latitude?.toString() || '',
+			longitude: location.longitude?.toString() || '',
+			is_visited: location.is_visited,
+			category: location.category
+		};
+
+		pins = [...pins, newPin];
+
+		// Add to cache
+		locationCache.set(location.id, location);
+
 		newMarker = null;
 		createModalOpen = false;
 	}
 
-	function togglePopup() {
-		isPopupOpen = !isPopupOpen;
-	}
-
-	function toggleSidebar() {
-		sidebarOpen = !sidebarOpen;
-	}
-
 	function clearMarker() {
 		newMarker = null;
+	}
+
+	// Function to handle popup opening - only fetch when actually needed
+	let openPopups = new Set<string>();
+
+	function handlePopupOpen(pinId: string) {
+		openPopups.add(pinId);
+		openPopups = openPopups; // Trigger reactivity
+	}
+
+	function handlePopupClose(pinId: string) {
+		openPopups.delete(pinId);
+		openPopups = openPopups; // Trigger reactivity
 	}
 </script>
 
@@ -170,7 +237,10 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
+							<button
+								class="btn btn-ghost btn-square lg:hidden"
+								on:click={() => (sidebarOpen = !sidebarOpen)}
+							>
 								<Filter class="w-5 h-5" />
 							</button>
 							<div class="flex items-center gap-3">
@@ -182,7 +252,7 @@
 										{$t('map.location_map')}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredAdventures.length}
+										{filteredPins.length}
 										{$t('worldtravel.of')}
 										{totalAdventures}
 										{$t('map.locations_shown')}
@@ -252,101 +322,146 @@
 							class="w-full h-full min-h-[70vh] rounded-lg"
 							standardControls
 						>
-							{#each filteredAdventures as adventure}
-								{#if adventure.latitude && adventure.longitude}
+							{#each filteredPins as pin}
+								{#if pin.latitude && pin.longitude}
 									<Marker
-										lngLat={[adventure.longitude, adventure.latitude]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer hover:scale-110 transition-transform {adventure.is_visited
+										lngLat={[parseFloat(pin.longitude), parseFloat(pin.latitude)]}
+										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer hover:scale-110 transition-transform {pin.is_visited
 											? 'bg-red-300 hover:bg-red-400'
 											: 'bg-blue-300 hover:bg-blue-400'} text-black focus:outline-6 focus:outline-black"
-										on:click={togglePopup}
 									>
 										<span class="text-xl">
-											{adventure.category?.icon || '📍'}
+											{pin.category?.icon || '📍'}
 										</span>
-										{#if isPopupOpen}
-											<Popup
-												openOn="click"
-												offset={[0, -10]}
-												on:close={() => (isPopupOpen = false)}
-											>
-												<div class="min-w-64 max-w-sm">
-													{#if adventure.images && adventure.images.length > 0}
-														<div class="mb-3">
-															<CardCarousel
-																images={adventure.images}
-																name={adventure.name}
-																icon={adventure?.category?.icon}
-															/>
+
+										<Popup
+											openOn="click"
+											offset={[0, -10]}
+											on:open={() => handlePopupOpen(pin.id)}
+											on:close={() => handlePopupClose(pin.id)}
+										>
+											<div class="min-w-64 max-w-sm">
+												{#if openPopups.has(pin.id)}
+													{#await fetchLocationDetails(pin.id)}
+														<div class="flex items-center justify-center p-4">
+															<span class="loading loading-spinner loading-sm"></span>
+															<span class="ml-2 text-sm">Loading details...</span>
 														</div>
-													{/if}
-													<div class="space-y-2">
-														<div class="text-lg text-black font-bold">{adventure.name}</div>
-														<div class="flex items-center gap-2">
-															<span
-																class="badge {adventure.is_visited
-																	? 'badge-success'
-																	: 'badge-info'} badge-sm"
-															>
-																{adventure.is_visited
-																	? $t('adventures.visited')
-																	: $t('adventures.planned')}
-															</span>
-															{#if adventure.category}
-																<span class="badge badge-outline badge-sm">
-																	{adventure.category.display_name}
-																	{adventure.category.icon}
-																</span>
+													{:then location}
+														{#if location}
+															{#if location.images && location.images.length > 0}
+																<div class="mb-3">
+																	<CardCarousel
+																		images={location.images}
+																		name={location.name}
+																		icon={location?.category?.icon}
+																	/>
+																</div>
 															{/if}
-														</div>
-														{#if adventure.visits && adventure.visits.length > 0}
-															<div class="text-black text-sm space-y-1">
-																{#each adventure.visits as visit}
-																	<div class="flex items-center gap-1">
-																		<Calendar class="w-3 h-3" />
-																		<span>
-																			{visit.start_date
-																				? new Date(visit.start_date).toLocaleDateString(undefined, {
-																						timeZone: 'UTC'
-																					})
-																				: ''}
-																			{visit.end_date &&
-																			visit.end_date !== '' &&
-																			visit.end_date !== visit.start_date
-																				? ' - ' +
-																					new Date(visit.end_date).toLocaleDateString(undefined, {
-																						timeZone: 'UTC'
-																					})
-																				: ''}
+															<div class="space-y-2">
+																<div class="text-lg text-black font-bold">{location.name}</div>
+																<div class="flex items-center gap-2">
+																	<span
+																		class="badge {location.is_visited
+																			? 'badge-success'
+																			: 'badge-info'} badge-sm"
+																	>
+																		{location.is_visited
+																			? $t('adventures.visited')
+																			: $t('adventures.planned')}
+																	</span>
+																	{#if location.category}
+																		<span class="badge badge-outline badge-sm">
+																			{location.category.display_name}
+																			{location.category.icon}
 																		</span>
+																	{/if}
+																</div>
+																{#if location.visits && location.visits.length > 0}
+																	<div class="text-black text-sm space-y-1">
+																		{#each location.visits as visit}
+																			<div class="flex items-center gap-1">
+																				<Calendar class="w-3 h-3" />
+																				<span>
+																					{visit.start_date
+																						? new Date(visit.start_date).toLocaleDateString(
+																								undefined,
+																								{
+																									timeZone: 'UTC'
+																								}
+																							)
+																						: ''}
+																					{visit.end_date &&
+																					visit.end_date !== '' &&
+																					visit.end_date !== visit.start_date
+																						? ' - ' +
+																							new Date(visit.end_date).toLocaleDateString(
+																								undefined,
+																								{
+																									timeZone: 'UTC'
+																								}
+																							)
+																						: ''}
+																				</span>
+																			</div>
+																		{/each}
 																	</div>
-																{/each}
+																{/if}
+																<div class="flex flex-col gap-2 pt-2">
+																	{#if location.longitude && location.latitude}
+																		<a
+																			class="btn btn-outline btn-sm gap-2"
+																			href={`https://maps.apple.com/?q=${location.latitude},${location.longitude}`}
+																			target="_blank"
+																			rel="noopener noreferrer"
+																		>
+																			<LocationIcon class="w-4 h-4" />
+																			{$t('adventures.open_in_maps')}
+																		</a>
+																	{/if}
+																	<button
+																		class="btn btn-primary btn-sm gap-2"
+																		on:click={() => goto(`/locations/${location.id}`)}
+																	>
+																		<Eye class="w-4 h-4" />
+																		{$t('map.view_details')}
+																	</button>
+																</div>
+															</div>
+														{:else}
+															<div class="p-4 text-center">
+																<div class="text-lg text-black font-bold">{pin.name}</div>
+																<div class="text-sm text-gray-600">Failed to load details</div>
+																<button
+																	class="btn btn-primary btn-sm gap-2 mt-2"
+																	on:click={() => goto(`/locations/${pin.id}`)}
+																>
+																	<Eye class="w-4 h-4" />
+																	{$t('map.view_details')}
+																</button>
 															</div>
 														{/if}
-														<div class="flex flex-col gap-2 pt-2">
-															{#if adventure.longitude && adventure.latitude}
-																<a
-																	class="btn btn-outline btn-sm gap-2"
-																	href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-																	target="_blank"
-																	rel="noopener noreferrer"
-																>
-																	<LocationIcon class="w-4 h-4" />
-																	{$t('adventures.open_in_maps')}
-																</a>
-															{/if}
+													{:catch error}
+														<div class="p-4 text-center">
+															<div class="text-lg text-black font-bold">{pin.name}</div>
+															<div class="text-sm text-red-600">Error loading details</div>
 															<button
-																class="btn btn-primary btn-sm gap-2"
-																on:click={() => goto(`/locations/${adventure.id}`)}
+																class="btn btn-primary btn-sm gap-2 mt-2"
+																on:click={() => goto(`/locations/${pin.id}`)}
 															>
 																<Eye class="w-4 h-4" />
 																{$t('map.view_details')}
 															</button>
 														</div>
+													{/await}
+												{:else}
+													<div class="p-4 text-center">
+														<div class="text-lg text-black font-bold">{pin.name}</div>
+														<div class="text-sm text-gray-600">Click to load details...</div>
 													</div>
-												</div>
-											</Popup>
-										{/if}
+												{/if}
+											</div>
+										</Popup>
 									</Marker>
 								{/if}
 							{/each}
@@ -551,7 +666,7 @@
 						{#if newMarker}
 							<div class="space-y-3">
 								<div class="alert alert-info">
-									<Pin class="w-4 h-4" />
+									<PinIcon class="w-4 h-4" />
 									<span class="text-sm">{$t('map.marker_placed_on_map')}</span>
 								</div>
 								<button type="button" class="btn btn-primary w-full gap-2" on:click={newAdventure}>

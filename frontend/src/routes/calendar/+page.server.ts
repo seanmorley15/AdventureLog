@@ -8,11 +8,14 @@ const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	let sessionId = event.cookies.get('sessionid');
-	let visitedFetch = await fetch(`${endpoint}/api/locations/all/?include_collections=true`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
+	let visitedFetch = await fetch(
+		`${endpoint}/api/locations/all?include_collections=true&nested=true&allowed_nested_fields=visits`,
+		{
+			headers: {
+				Cookie: `sessionid=${sessionId}`
+			}
 		}
-	});
+	);
 	let adventures = (await visitedFetch.json()) as Location[];
 
 	// Get user's local timezone as fallback

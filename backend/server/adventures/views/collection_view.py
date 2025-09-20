@@ -16,7 +16,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
 
-
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
         order_direction = self.request.query_params.get('order_direction', 'asc')
@@ -48,14 +47,36 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         return queryset.order_by(ordering)
     
-    def list(self, request, *args, **kwargs):
+    def get_serializer_context(self):
+        """Override to add nested and exclusion contexts based on query parameters"""
+        context = super().get_serializer_context()
+        
+        # Handle nested parameter
+        is_nested = self.request.query_params.get('nested', 'false').lower() == 'true'
+        if is_nested:
+            context['nested'] = True
+        
+        # Handle individual exclusion parameters (if using granular approach)
+        exclude_params = [
+            'exclude_transportations',
+            'exclude_notes', 
+            'exclude_checklists',
+            'exclude_lodging'
+        ]
+        
+        for param in exclude_params:
+            if self.request.query_params.get(param, 'false').lower() == 'true':
+                context[param] = True
+            
+        return context
+    
+    def list(self, request):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
         queryset = Collection.objects.filter(user=request.user, is_archived=False)
         queryset = self.apply_sorting(queryset)
-        collections = self.paginate_and_respond(queryset, request)
-        return collections
+        return self.paginate_and_respond(queryset, request)
     
     @action(detail=False, methods=['get'])
     def all(self, request):
