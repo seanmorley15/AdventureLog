@@ -71,7 +71,7 @@
 	// Updates the filtered pins based on the checkboxes
 	$: {
 		filteredPins = pins.filter(
-			(pin) => (showVisited && pin.is_visited) || (showPlanned && !pin.is_visited)
+			(pin) => (showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true)
 		);
 	}
 
