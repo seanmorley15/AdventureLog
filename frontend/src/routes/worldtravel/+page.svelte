@@ -76,19 +76,20 @@
 	}
 
 	// when isGlobeSpin is enabled, fetch /api/globespin/
-	let globeSpinData: {
+	type GlobeSpinData = {
 		country: {
-			flag_url: any;
-			name: any;
-			country_code: any;
+			flag_url: string;
+			name: string;
+			country_code: string;
 			num_visits: number;
-			subregion: any;
-			capital: any;
+			subregion: string;
+			capital: string;
 			num_regions: number;
 		};
-		region: { name: any; num_cities: any };
-		city: { name: any; region_name: any };
-	} | null = null;
+		region: { name: string; num_cities: number };
+		city: { name: string; region_name: string };
+	};
+	let globeSpinData: GlobeSpinData | null = null;
 	let isLoadingGlobeSpin = false;
 
 	async function fetchGlobeSpin() {
