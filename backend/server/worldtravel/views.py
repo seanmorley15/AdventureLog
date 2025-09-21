@@ -62,20 +62,19 @@ def visits_by_region(request, region_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def globespin(request):
-    import random
-    country = random.choice(Country.objects.all())
+    country = Country.objects.order_by('?').first()
     data = {
         "country": CountrySerializer(country).data,
     }
     
     regions = Region.objects.filter(country=country)
     if regions.exists():
-        region = random.choice(regions)
+        region = regions.order_by('?').first()
         data["region"] = RegionSerializer(region).data
         
         cities = City.objects.filter(region=region)
         if cities.exists():
-            city = random.choice(cities)
+            city = cities.order_by('?').first()
             data["city"] = CitySerializer(city).data
     
     return Response(data)
