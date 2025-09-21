@@ -535,7 +535,22 @@
     "unvisited_first": "Najpierw niewidziane",
     "visited_first": "Odwiedziłem pierwszy",
     "total_items": "Całkowite przedmioty",
-    "getting_location_details": "Uzyskanie szczegółów lokalizacji"
+    "getting_location_details": "Uzyskanie szczegółów lokalizacji",
+    "cities_available": "Dostępne miasta",
+    "destination_revealed": "Ujawnione miejsce docelowe!",
+    "dive_deeper": "Nurkuj głębiej",
+    "exploration_progress": "Postęp eksploracyjny",
+    "explore_country": "Poznaj kraj",
+    "globe_spin_error_desc": "Błąd przyciąganie danych spinowych globe",
+    "hide_globe_spin": "Ukryj globe spin",
+    "in": "W",
+    "loading_globe_spin": "Ładowanie globowego spinu",
+    "no_globe_spin_data": "Brak danych spinowych globe",
+    "show_globe_spin": "Pokaż globe spin",
+    "spin_again": "Obrócić ponownie",
+    "spinning_globe": "Spinning Globe",
+    "try_again": "Spróbuj ponownie",
+    "your_random_adventure_awaits": "Twoja przypadkowa przygoda czeka!"
   },
   "auth": {
     "username": "Nazwa użytkownika",
@@ -852,7 +867,13 @@
     "available": "Dostępny",
     "pending": "Aż do",
     "revoke_invite": "Cofnij zaproszenie",
-    "send_invite": "Wyślij zaproszenie"
+    "send_invite": "Wyślij zaproszenie",
+    "available_users": "Dostępni użytkownicy",
+    "invite_failed": "Zaproś nieudane",
+    "invite_revoked": "Zaproś cofnięte",
+    "invite_sent": "Zaproś wysłane",
+    "revoke_failed": "Revoke nie powiodło się",
+    "unshare_failed": "Unhare nie powiodło się"
   },
   "languages": {},
   "profile": {

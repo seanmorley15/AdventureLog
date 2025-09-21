@@ -564,7 +564,22 @@
     "unvisited_first": "Non visitato per primo",
     "visited_first": "Visitato per primo",
     "total_items": "Articoli totali",
-    "getting_location_details": "Ottenere dettagli sulla posizione"
+    "getting_location_details": "Ottenere dettagli sulla posizione",
+    "cities_available": "Città disponibili",
+    "destination_revealed": "Destinazione rivelata!",
+    "dive_deeper": "Immergersi più in profondità",
+    "exploration_progress": "Progressi di esplorazione",
+    "explore_country": "Esplora il paese",
+    "globe_spin_error_desc": "Errore che recupera i dati di spin Globe",
+    "hide_globe_spin": "Nascondi lo spin di globo",
+    "in": "In",
+    "loading_globe_spin": "Caricamento di rotazione del globo",
+    "no_globe_spin_data": "Nessun dati di spin Globe",
+    "show_globe_spin": "Mostra lo spin globo",
+    "spin_again": "Girare di nuovo",
+    "spinning_globe": "Globe rotante",
+    "try_again": "Riprova",
+    "your_random_adventure_awaits": "La tua avventura casuale ti aspetta!"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",
@@ -853,7 +868,13 @@
     "available": "Disponibile",
     "pending": "In attesa di",
     "revoke_invite": "Revoca invito",
-    "send_invite": "Invia invito"
+    "send_invite": "Invia invito",
+    "available_users": "Utenti disponibili",
+    "invite_failed": "Invito fallito",
+    "invite_revoked": "Invita revocato",
+    "invite_sent": "Invito inviato",
+    "revoke_failed": "Revoca fallita",
+    "unshare_failed": "Unshare non è riuscito"
   },
   "profile": {
     "member_since": "Membro da",

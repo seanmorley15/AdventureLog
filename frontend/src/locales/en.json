@@ -535,7 +535,22 @@
     "oldest_first": "Oldest First",
     "visited_first": "Visited First",
     "unvisited_first": "Unvisited First",
-    "getting_location_details": "Getting location details"
+    "getting_location_details": "Getting location details",
+    "hide_globe_spin": "Hide Globe Spin",
+    "show_globe_spin": "Show Globe Spin",
+    "loading_globe_spin": "Loading Globe Spin",
+    "spinning_globe": "Spinning Globe",
+    "destination_revealed": "Destination Revealed!",
+    "your_random_adventure_awaits": "Your Random Adventure Awaits!",
+    "exploration_progress": "Exploration Progress",
+    "dive_deeper": "Dive Deeper",
+    "cities_available": "Cities Available",
+    "in": "in",
+    "explore_country": "Explore Country",
+    "spin_again": "Spin Again",
+    "globe_spin_error_desc": "Error fetching globe spin data",
+    "try_again": "Try Again",
+    "no_globe_spin_data": "No Globe Spin Data"
   },
   "auth": {
     "username": "Username",
@@ -874,7 +889,13 @@
     "revoke_invite": "Revoke Invite",
     "send_invite": "Send Invite",
     "available": "Available",
-    "pending": "Pending"
+    "pending": "Pending",
+    "available_users": "Available Users",
+    "revoke_failed": "Revoke Failed",
+    "invite_revoked": "Invite Revoked",
+    "unshare_failed": "Unshare Failed",
+    "invite_failed": "Invite Failed",
+    "invite_sent": "Invite Sent"
   },
   "languages": {},
   "profile": {

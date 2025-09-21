@@ -43,8 +43,8 @@
 		try {
 			// Fetch both own collections and shared collections
 			const [ownRes, sharedRes] = await Promise.all([
-				fetch(`/api/collections/all/`, { method: 'GET' }),
-				fetch(`/api/collections/shared`, { method: 'GET' })
+				fetch(`/api/collections/all?nested=true`, { method: 'GET' }),
+				fetch(`/api/collections/shared?nested=true`, { method: 'GET' })
 			]);
 
 			const ownResult = await ownRes.json();

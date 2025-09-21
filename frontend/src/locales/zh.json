@@ -561,7 +561,22 @@
     "unvisited_first": "未访问优先",
     "visited_first": "已访问优先",
     "total_items": "总项目",
-    "getting_location_details": "获取地点详细信息"
+    "getting_location_details": "获取地点详细信息",
+    "cities_available": "可用的城市",
+    "destination_revealed": "目的地揭示了！",
+    "dive_deeper": "深入潜水",
+    "exploration_progress": "勘探进度",
+    "explore_country": "探索国家",
+    "globe_spin_error_desc": "错误获取地球旋转数据",
+    "hide_globe_spin": "隐藏环球旋转",
+    "in": "在",
+    "loading_globe_spin": "加载地球旋转",
+    "no_globe_spin_data": "没有地球旋转数据",
+    "show_globe_spin": "显示环球旋转",
+    "spin_again": "再次旋转",
+    "spinning_globe": "旋转地球",
+    "try_again": "再试一次",
+    "your_random_adventure_awaits": "您的随机冒险在等待！"
   },
   "users": {
     "no_users_found": "未找到已公开的用户。"
@@ -854,8 +869,12 @@
     "pending": "待办的",
     "revoke_invite": "撤销邀请",
     "send_invite": "发送邀请",
-    "available_users": "可邀请的用户",
-    "no_available_users": "没有可邀请的用户"
+    "available_users": "可用用户",
+    "invite_failed": "邀请失败",
+    "invite_revoked": "邀请被撤销",
+    "invite_sent": "邀请发送",
+    "revoke_failed": "撤销失败",
+    "unshare_failed": "没有共享失败"
   },
   "profile": {
     "member_since": "会员自",

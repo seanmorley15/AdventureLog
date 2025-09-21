@@ -52,10 +52,12 @@
 	let outsideCollectionRange: boolean = false;
 
 	$: {
-		if (collection) {
+		if (collection && collection.start_date && collection.end_date) {
 			outsideCollectionRange = adventure.visits.every((visit) =>
 				isEntityOutsideCollectionDateRange(visit, collection)
 			);
+		} else {
+			outsideCollectionRange = false;
 		}
 	}
 

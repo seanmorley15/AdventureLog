@@ -20,7 +20,6 @@
     "view_license": "Afficher la licence"
   },
   "adventures": {
-    "activities": {},
     "add_to_collection": "Ajouter à la collection",
     "delete": "Supprimer",
     "edit_adventure": "Modifier l'aventure",
@@ -189,7 +188,7 @@
     "display_name": "Nom d'affichage",
     "location_details": "Détails du lieu",
     "lodging": "Hébergement",
-    "lodging_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet hébergement? \nCette action ne peut pas être annulée.",
+    "lodging_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet hébergement? Cette action ne peut pas être annulée.",
     "lodging_information": "Informations sur l'hébergement",
     "price": "Prix",
     "region": "Région",
@@ -244,7 +243,7 @@
     "edit_location": "Modifier l'emplacement",
     "location_create_error": "Échec de la création de l'emplacement",
     "location_created": "Emplacement créé",
-    "location_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet emplacement? \nCette action ne peut pas être annulée.",
+    "location_delete_confirm": "Êtes-vous sûr de vouloir supprimer cet emplacement? Cette action ne peut pas être annulée.",
     "location_delete_success": "Emplacement supprimé avec succès!",
     "location_not_found": "Emplacement introuvable",
     "location_not_found_desc": "L'emplacement que vous recherchiez n'a pas pu être trouvé. \nVeuillez essayer un autre emplacement ou revenir plus tard.",
@@ -564,7 +563,22 @@
     "unvisited_first": "Sans visité d'abord",
     "visited_first": "Visité en premier",
     "total_items": "Total des articles",
-    "getting_location_details": "Obtenir les détails de l'emplacement"
+    "getting_location_details": "Obtenir les détails de l'emplacement",
+    "cities_available": "Villes disponibles",
+    "destination_revealed": "Destination révélée!",
+    "dive_deeper": "Plonger plus profondément",
+    "exploration_progress": "Progrès de l'exploration",
+    "explore_country": "Explorer le pays",
+    "globe_spin_error_desc": "Erreur pour récupérer les données de spin globe",
+    "hide_globe_spin": "Hide Globe Spin",
+    "in": "dans",
+    "loading_globe_spin": "Chargement du globe Spin",
+    "no_globe_spin_data": "Pas de données de spin globe",
+    "show_globe_spin": "Montrer le spin au globe",
+    "spin_again": "Remonter",
+    "spinning_globe": "Globe de rotation",
+    "try_again": "Essayer à nouveau",
+    "your_random_adventure_awaits": "Votre aventure aléatoire vous attend!"
   },
   "settings": {
     "account_settings": "Paramètres du compte utilisateur",
@@ -838,7 +852,6 @@
     "show_activities": "Montrer les activités",
     "show_visited_cities": "Villes visites"
   },
-  "languages": {},
   "share": {
     "no_users_shared": "Aucun utilisateur",
     "not_shared_with": "Pas encore partagé avec",
@@ -853,7 +866,13 @@
     "available": "Disponible",
     "pending": "En attente",
     "revoke_invite": "Revoke Inviter",
-    "send_invite": "Envoyer l'invitation"
+    "send_invite": "Envoyer l'invitation",
+    "available_users": "Utilisateurs disponibles",
+    "invite_failed": "L'invitation a échoué",
+    "invite_revoked": "Inviter révoqué",
+    "invite_sent": "Inviter envoyé",
+    "revoke_failed": "Revoke a échoué",
+    "unshare_failed": "Sans partage a échoué"
   },
   "profile": {
     "member_since": "Membre depuis",
