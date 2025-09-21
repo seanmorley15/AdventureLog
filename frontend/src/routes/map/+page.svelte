@@ -326,9 +326,9 @@
 								{#if pin.latitude && pin.longitude}
 									<Marker
 										lngLat={[parseFloat(pin.longitude), parseFloat(pin.latitude)]}
-										class="grid h-8 w-8 place-items-center rounded-full border border-gray-200 shadow-lg cursor-pointer hover:scale-110 transition-transform {pin.is_visited
-											? 'bg-red-300 hover:bg-red-400'
-											: 'bg-blue-300 hover:bg-blue-400'} text-black focus:outline-6 focus:outline-black"
+										class="grid h-8 w-8 place-items-center rounded-full border-2 border-white shadow-lg cursor-pointer hover:scale-110 transition-all duration-200 {pin.is_visited
+											? 'bg-gradient-to-br from-emerald-400 to-emerald-600 hover:from-emerald-500 hover:to-emerald-700'
+											: 'bg-gradient-to-br from-blue-400 to-blue-600 hover:from-blue-500 hover:to-blue-700'} text-white focus:outline-4 focus:outline-primary/50"
 									>
 										<span class="text-xl">
 											{pin.category?.icon || '📍'}
