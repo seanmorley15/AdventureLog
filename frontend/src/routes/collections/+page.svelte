@@ -5,7 +5,7 @@
 	import CollectionLink from '$lib/components/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
-	import type { Collection, CollectionInvite } from '$lib/types';
+	import type { Collection, CollectionInvite, SlimCollection } from '$lib/types';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -23,9 +23,9 @@
 	export let data: any;
 	console.log('Collections page data:', data);
 
-	let collections: Collection[] = data.props.adventures || [];
-	let sharedCollections: Collection[] = data.props.sharedCollections || [];
-	let archivedCollections: Collection[] = data.props.archivedCollections || [];
+	let collections: SlimCollection[] = data.props.adventures || [];
+	let sharedCollections: SlimCollection[] = data.props.sharedCollections || [];
+	let archivedCollections: SlimCollection[] = data.props.archivedCollections || [];
 
 	let newType: string = '';
 	let resultsPerPage: number = 25;
@@ -142,7 +142,7 @@
 		}
 	}
 
-	function saveOrCreate(event: CustomEvent<Collection>) {
+	function saveOrCreate(event: CustomEvent<SlimCollection>) {
 		if (collections.find((collection) => collection.id === event.detail.id)) {
 			collections = collections.map((collection) => {
 				if (collection.id === event.detail.id) {
@@ -156,8 +156,8 @@
 		isShowingCollectionModal = false;
 	}
 
-	function editCollection(event: CustomEvent<Collection>) {
-		collectionToEdit = event.detail;
+	function editCollection(event: CustomEvent<SlimCollection>) {
+		collectionToEdit = event.detail as unknown as Collection;
 		isShowingCollectionModal = true;
 	}
 
@@ -181,7 +181,7 @@
 		}
 	}
 
-	function saveEdit(event: CustomEvent<Collection>) {
+	function saveEdit(event: CustomEvent<SlimCollection>) {
 		collections = collections.map((adventure) => {
 			if (adventure.id === event.detail.id) {
 				return event.detail;

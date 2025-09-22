@@ -9,7 +9,7 @@
 	import ShareVariant from '~icons/mdi/share-variant';
 
 	import { goto } from '$app/navigation';
-	import type { Location, Collection, User } from '$lib/types';
+	import type { Location, Collection, User, SlimCollection, ContentImage } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 
@@ -55,7 +55,21 @@
 		}
 	}
 
-	export let collection: Collection;
+	export let collection: Collection | SlimCollection;
+
+	let location_images: ContentImage[] = [];
+	if ('location_images' in collection) {
+		location_images = collection.location_images;
+	} else {
+		location_images = collection.locations.flatMap((location: Location) => location.images);
+	}
+
+	let locationLength: number = 0;
+	if ('location_count' in collection) {
+		locationLength = collection.location_count;
+	} else {
+		locationLength = collection.locations.length;
+	}
 
 	async function deleteCollection() {
 		let res = await fetch(`/api/collections/${collection.id}`, {
@@ -92,11 +106,7 @@
 >
 	<!-- Image Carousel -->
 	<div class="relative overflow-hidden rounded-t-2xl">
-		<CardCarousel
-			images={collection.locations.flatMap((location) => location.images)}
-			name={collection.name}
-			icon="📚"
-		/>
+		<CardCarousel images={location_images} name={collection.name} icon="📚" />
 
 		<!-- Badge Overlay -->
 		<div class="absolute top-4 left-4 flex flex-col gap-2">
@@ -124,7 +134,7 @@
 
 			<!-- Adventure Count -->
 			<p class="text-sm text-base-content/70">
-				{collection.locations.length}
+				{locationLength}
 				{$t('locations.locations')}
 			</p>
 
