@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location, Collection } from '$lib/types';
+import type { Location, Collection, SlimCollection } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken } from '$lib/index.server';
@@ -62,11 +62,11 @@ export const load = (async (event) => {
 				next: collectionsData.next,
 				previous: collectionsData.previous,
 				count: collectionsData.count,
-				sharedCollections: sharedData as Collection[],
+				sharedCollections: sharedData as SlimCollection[],
 				currentPage,
 				order_by,
 				order_direction,
-				archivedCollections: archivedData as Collection[],
+				archivedCollections: archivedData as SlimCollection[],
 				invites: invitesData
 			}
 		};

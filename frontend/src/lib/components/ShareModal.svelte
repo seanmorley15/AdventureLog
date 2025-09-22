@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Collection, User } from '$lib/types';
+	import type { Collection, SlimCollection, User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -11,7 +11,7 @@
 	import Share from '~icons/mdi/share';
 	import Clear from '~icons/mdi/close';
 
-	export let collection: Collection;
+	export let collection: SlimCollection | Collection;
 
 	// Extended user interface to include status
 	interface UserWithStatus extends User {
@@ -160,6 +160,7 @@
 
 <dialog id="my_modal_1" class="modal">
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 	<div
 		class="modal-box w-11/12 max-w-5xl p-6 space-y-6"
 		role="dialog"
