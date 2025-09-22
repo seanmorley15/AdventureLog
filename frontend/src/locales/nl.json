@@ -564,7 +564,22 @@
     "unvisited_first": "Eerst niet bezocht",
     "visited_first": "Eerst bezocht",
     "total_items": "Totale items",
-    "getting_location_details": "Locatiegegevens krijgen"
+    "getting_location_details": "Locatiegegevens krijgen",
+    "cities_available": "Steden beschikbaar",
+    "destination_revealed": "Bestemming onthuld!",
+    "dive_deeper": "Duik dieper",
+    "exploration_progress": "Verkennings voortgang",
+    "explore_country": "Verken het land",
+    "globe_spin_error_desc": "Fout bij het ophalen van globe spin -gegevens",
+    "hide_globe_spin": "Globe spin verbergen",
+    "in": "in",
+    "loading_globe_spin": "Globe spin laden",
+    "no_globe_spin_data": "Geen Globe spin -gegevens",
+    "show_globe_spin": "Toon Globe Spin",
+    "spin_again": "Weer spinnen",
+    "spinning_globe": "Spinnende bol",
+    "try_again": "Probeer het opnieuw",
+    "your_random_adventure_awaits": "Je willekeurige avontuur wacht!"
   },
   "settings": {
     "account_settings": "Gebruikersaccount instellingen",
@@ -853,7 +868,13 @@
     "available": "Beschikbaar",
     "pending": "In behandeling",
     "revoke_invite": "Revoke uitnodigen",
-    "send_invite": "Stuur uitnodiging"
+    "send_invite": "Stuur uitnodiging",
+    "available_users": "Beschikbare gebruikers",
+    "invite_failed": "Uitnodigen mislukt",
+    "invite_revoked": "Uitnodigen ingetrokken",
+    "invite_sent": "Uitnodigen verzonden",
+    "revoke_failed": "Revoke mislukt",
+    "unshare_failed": "Onverschuiving mislukt"
   },
   "profile": {
     "member_since": "Lid sinds",

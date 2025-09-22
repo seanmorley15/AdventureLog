@@ -1,24 +1,23 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
-import os
-import json
-from django.http import JsonResponse
+from rest_framework.decorators import api_view, permission_classes, action
 from django.contrib.gis.geos import Point
-from django.conf import settings
-from rest_framework.decorators import action
-from django.contrib.staticfiles import finders
+from django.core.cache import cache
+from django.views.decorators.cache import cache_page
+from django.utils.decorators import method_decorator
 from adventures.models import Location
 
+# Cache TTL
+CACHE_TTL = 60 * 60 * 24  # 1 day
+
+@cache_page(CACHE_TTL)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def regions_by_country(request, country_code):
-    # require authentication
     country = get_object_or_404(Country, country_code=country_code)
     regions = Region.objects.filter(country=country).order_by('name')
     serializer = RegionSerializer(regions, many=True)
@@ -27,12 +26,17 @@ def regions_by_country(request, country_code):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def visits_by_country(request, country_code):
+    cache_key = f"visits_by_country_{country_code}_{request.user.id}"
+    data = cache.get(cache_key)
+    if data is not None:
+        return Response(data)
     country = get_object_or_404(Country, country_code=country_code)
     visits = VisitedRegion.objects.filter(region__country=country, user=request.user.id)
-
     serializer = VisitedRegionSerializer(visits, many=True)
+    cache.set(cache_key, serializer.data, CACHE_TTL)
     return Response(serializer.data)
 
+@cache_page(CACHE_TTL)
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def cities_by_region(request, region_id):
@@ -44,12 +48,38 @@ def cities_by_region(request, region_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def visits_by_region(request, region_id):
+    cache_key = f"visits_by_region_{region_id}_{request.user.id}"
+    data = cache.get(cache_key)
+    if data is not None:
+        return Response(data)
     region = get_object_or_404(Region, id=region_id)
     visits = VisitedCity.objects.filter(city__region=region, user=request.user.id)
-
     serializer = VisitedCitySerializer(visits, many=True)
+    cache.set(cache_key, serializer.data, CACHE_TTL)
     return Response(serializer.data)
 
+# view called spin the globe that return a random country, a random region in that country and a random city in that region
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def globespin(request):
+    country = Country.objects.order_by('?').first()
+    data = {
+        "country": CountrySerializer(country).data,
+    }
+    
+    regions = Region.objects.filter(country=country)
+    if regions.exists():
+        region = regions.order_by('?').first()
+        data["region"] = RegionSerializer(region).data
+        
+        cities = City.objects.filter(region=region)
+        if cities.exists():
+            city = cities.order_by('?').first()
+            data["city"] = CitySerializer(city).data
+    
+    return Response(data)
+
+@method_decorator(cache_page(CACHE_TTL), name='list')
 class CountryViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Country.objects.all().order_by('name')
     serializer_class = CountrySerializer
@@ -60,15 +90,12 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
         lat = float(request.query_params.get('lat'))
         lon = float(request.query_params.get('lon'))
         point = Point(lon, lat, srid=4326)
-        
         region = Region.objects.filter(geometry__contains=point).first()
-        
         if region:
             return Response({'in_region': True, 'region_name': region.name, 'region_id': region.id})
         else:
             return Response({'in_region': False})
-        
-    # make a post action that will get all of the users adventures and check if the point is in any of the regions if so make a visited region object for that user if it does not already exist
+
     @action(detail=False, methods=['post'])
     def region_check_all_adventures(self, request):
         adventures = Location.objects.filter(user=request.user.id, type='visited')
@@ -87,6 +114,7 @@ class CountryViewSet(viewsets.ReadOnlyModelViewSet):
                     continue
         return Response({'regions_visited': count})
 
+@method_decorator(cache_page(CACHE_TTL), name='list')
 class RegionViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Region.objects.all()
     serializer_class = RegionSerializer
@@ -113,7 +141,6 @@ class VisitedRegionViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def destroy(self, request, **kwargs):
-        # delete by region id
         region = get_object_or_404(Region, id=kwargs['pk'])
         visited_region = VisitedRegion.objects.filter(user=request.user.id, region=region)
         if visited_region.exists():
@@ -137,7 +164,6 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
-        # if the region is not visited, visit it
         region = serializer.validated_data['city'].region
         if not VisitedRegion.objects.filter(user=request.user.id, region=region).exists():
             VisitedRegion.objects.create(user=request.user, region=region)
@@ -145,7 +171,6 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
     
     def destroy(self, request, **kwargs):
-        # delete by city id
         city = get_object_or_404(City, id=kwargs['pk'])
         visited_city = VisitedCity.objects.filter(user=request.user.id, city=city)
         if visited_city.exists():

@@ -465,3 +465,12 @@ export type WandererTrail = {
 	updated: string; // ISO 8601 date string
 	waypoints: string[];
 };
+
+export type Pin = {
+	id: string;
+	name: string;
+	latitude: string;
+	longitude: string;
+	is_visited?: boolean;
+	category: Category | null;
+};

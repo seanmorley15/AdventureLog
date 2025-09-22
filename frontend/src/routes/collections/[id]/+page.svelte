@@ -33,7 +33,8 @@
 		groupLodgingByDate,
 		LODGING_TYPES_ICONS,
 		getBasemapUrl,
-		isAllDay
+		isAllDay,
+		getActivityColor
 	} from '$lib';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
 
@@ -1230,7 +1231,7 @@
 														</div>
 														<div>
 															<!-- Duration -->
-															{Math.round(
+															{Math.floor(
 																(new Date(orderedItem.end).getTime() -
 																	new Date(orderedItem.start).getTime()) /
 																	1000 /
@@ -1375,6 +1376,39 @@
 							</Marker>
 						{/if}
 					{/each}
+
+					<!-- Shows activity GPX on the map -->
+					{#each adventures as adventure}
+						{#each adventure.visits as visit}
+							{#each visit.activities as activity}
+								{#if activity.geojson}
+									<GeoJSON data={activity.geojson}>
+										<LineLayer
+											paint={{
+												'line-color': getActivityColor(activity.sport_type),
+												'line-width': 3,
+												'line-opacity': 0.8
+											}}
+										/>
+									</GeoJSON>
+								{/if}
+							{/each}
+						{/each}
+						{#each adventure.attachments as attachment}
+							{#if attachment.geojson}
+								<GeoJSON data={attachment.geojson}>
+									<LineLayer
+										paint={{
+											'line-color': '#00FF00',
+											'line-width': 2,
+											'line-opacity': 0.6
+										}}
+									/>
+								</GeoJSON>
+							{/if}
+						{/each}
+					{/each}
+
 					{#if lineData && collection.start_date && collection.end_date}
 						<GeoJSON data={lineData}>
 							<LineLayer

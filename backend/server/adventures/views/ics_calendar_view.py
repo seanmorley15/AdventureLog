@@ -13,7 +13,8 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def generate(self, request):
         locations = Location.objects.filter(user=request.user)
-        serializer = LocationSerializer(locations, many=True)
+        context={'nested': True, 'allowed_nested_fields': ['visits']}
+        serializer = LocationSerializer(locations, many=True, context=context)
         user = request.user
         name = f"{user.first_name} {user.last_name}"
         

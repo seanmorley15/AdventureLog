@@ -234,8 +234,25 @@ class LocationSerializer(CustomModelSerializer):
     # Makes it so the whole user object is returned in the serializer instead of just the user uuid
     def to_representation(self, instance):
         representation = super().to_representation(instance)
-        representation['user'] = CustomUserDetailsSerializer(instance.user, context=self.context).data
+        is_nested = self.context.get('nested', False)
+        allowed_nested_fields = set(self.context.get('allowed_nested_fields', []))
+
+        if not is_nested:
+            # Full representation for standalone locations
+            representation['user'] = CustomUserDetailsSerializer(instance.user, context=self.context).data
+        else:
+            # Slim representation for nested contexts, but keep allowed fields
+            fields_to_remove = [
+                'visits', 'attachments', 'trails', 'collections',
+                'user', 'city', 'country', 'region'
+            ]
+            for field in fields_to_remove:
+                # Keep field if explicitly allowed for nested mode
+                if field not in allowed_nested_fields:
+                    representation.pop(field, None)
+
         return representation
+
 
     def get_images(self, obj):
         serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
@@ -349,7 +366,6 @@ class LocationSerializer(CustomModelSerializer):
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
-        print(category_data)
         location = Location.objects.create(**validated_data)
 
         # Handle category
@@ -391,6 +407,18 @@ class LocationSerializer(CustomModelSerializer):
         instance.save()
 
         return instance
+    
+class MapPinSerializer(serializers.ModelSerializer):
+    is_visited = serializers.SerializerMethodField()
+    category = CategorySerializer(read_only=True, required=False)
+    
+    class Meta:
+        model = Location
+        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
+        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
+    
+    def get_is_visited(self, obj):
+        return obj.is_visited_status()
 
 class TransportationSerializer(CustomModelSerializer):
     distance = serializers.SerializerMethodField()
@@ -555,24 +583,67 @@ class ChecklistSerializer(CustomModelSerializer):
         return data
 
 class CollectionSerializer(CustomModelSerializer):
-    locations = LocationSerializer(many=True, read_only=True)
-    transportations = TransportationSerializer(many=True, read_only=True, source='transportation_set')
-    notes = NoteSerializer(many=True, read_only=True, source='note_set')
-    checklists = ChecklistSerializer(many=True, read_only=True, source='checklist_set')
-    lodging = LodgingSerializer(many=True, read_only=True, source='lodging_set')
+    locations = serializers.SerializerMethodField()
+    transportations = serializers.SerializerMethodField()
+    notes = serializers.SerializerMethodField()
+    checklists = serializers.SerializerMethodField()
+    lodging = serializers.SerializerMethodField()
 
     class Meta:
         model = Collection
         fields = ['id', 'description', 'user', 'name', 'is_public', 'locations', 'created_at', 'start_date', 'end_date', 'transportations', 'notes', 'updated_at', 'checklists', 'is_archived', 'shared_with', 'link', 'lodging']
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with']
 
+    def get_locations(self, obj):
+        if self.context.get('nested', False):
+            allowed_nested_fields = set(self.context.get('allowed_nested_fields', []))
+            return LocationSerializer(
+            obj.locations.all(), 
+            many=True, 
+            context={**self.context, 'nested': True, 'allowed_nested_fields': allowed_nested_fields}
+        ).data
+        
+        return LocationSerializer(obj.locations.all(), many=True, context=self.context).data
+
+    def get_transportations(self, obj):
+        # Only include transportations if not in nested context
+        if self.context.get('nested', False):
+            return []
+        return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+
+    def get_notes(self, obj):
+        # Only include notes if not in nested context
+        if self.context.get('nested', False):
+            return []
+        return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+
+    def get_checklists(self, obj):
+        # Only include checklists if not in nested context
+        if self.context.get('nested', False):
+            return []
+        return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+
+    def get_lodging(self, obj):
+        # Only include lodging if not in nested context
+        if self.context.get('nested', False):
+            return []
+        return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+
     def to_representation(self, instance):
         representation = super().to_representation(instance)
+        
         # Make it display the user uuid for the shared users instead of the PK
         shared_uuids = []
         for user in instance.shared_with.all():
             shared_uuids.append(str(user.uuid))
         representation['shared_with'] = shared_uuids
+        
+        # If nested, remove the heavy fields entirely from the response
+        if self.context.get('nested', False):
+            fields_to_remove = ['transportations', 'notes', 'checklists', 'lodging']
+            for field in fields_to_remove:
+                representation.pop(field, None)
+        
         return representation
     
 class CollectionInviteSerializer(serializers.ModelSerializer):

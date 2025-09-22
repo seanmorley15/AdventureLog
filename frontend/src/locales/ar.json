@@ -902,7 +902,13 @@
     "shared": "مشترك",
     "shared_with": "مشترك مع",
     "unshared": "غير مشترك",
-    "with": "مع"
+    "with": "مع",
+    "available_users": "المستخدمين المتاحين",
+    "invite_failed": "فشل دعوة",
+    "invite_revoked": "دعوة إلغاء",
+    "invite_sent": "دعوة إرسال",
+    "revoke_failed": "فشل الإلغاء",
+    "unshare_failed": "فشل Unshare"
   },
   "strava": {
     "account_connected": "حساب متصل",
@@ -1013,6 +1019,21 @@
     "visit_remove_failed": "فشل في إزالة الزيارة",
     "visit_to": "زيارة",
     "visited_first": "زار أولاً",
-    "getting_location_details": "الحصول على تفاصيل الموقع"
+    "getting_location_details": "الحصول على تفاصيل الموقع",
+    "cities_available": "المدن المتاحة",
+    "destination_revealed": "كشفت الوجهة!",
+    "dive_deeper": "الغوص أعمق",
+    "exploration_progress": "تقدم الاستكشاف",
+    "explore_country": "استكشف البلد",
+    "globe_spin_error_desc": "خطأ جلب بيانات الدوران العالمي",
+    "hide_globe_spin": "إخفاء الدوران العالمي",
+    "in": "في",
+    "loading_globe_spin": "تحميل الكرة الأرضية",
+    "no_globe_spin_data": "لا توجد بيانات تدور حول العالم",
+    "show_globe_spin": "عرض Globe Spin",
+    "spin_again": "تدور مرة أخرى",
+    "spinning_globe": "كرة الغزل",
+    "try_again": "حاول ثانية",
+    "your_random_adventure_awaits": "مغامرتك العشوائية تنتظر!"
   }
 }
