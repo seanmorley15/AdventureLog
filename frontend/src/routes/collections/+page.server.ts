@@ -30,8 +30,8 @@ export const load = (async (event) => {
 		Cookie: `sessionid=${sessionId}`
 	};
 
-	// Build API URL with nested=true for lighter payload
-	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true`;
+	// Build API URL with nested=true for lighter payload - use 'all' endpoint for owned collections only
+	const apiUrl = `${serverEndpoint}/api/collections/all/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true`;
 
 	try {
 		// Execute all API calls in parallel
