@@ -170,6 +170,11 @@
 			return regularVisit;
 		}
 	}
+
+	function handleSingleTimezoneChange(timezone) {
+		selectedStartTimezone = timezone;
+		selectedEndTimezone = timezone;
+	}
 </script>
 
 <div
@@ -217,7 +222,10 @@
 						<div>
 							<label class="label-text text-sm font-medium">Timezone</label>
 							<div class="mt-1">
-								<TimezoneSelector bind:selectedTimezone={selectedStartTimezone} />
+								<TimezoneSelector
+									value={selectedStartTimezone}
+									on:change={(event) => handleSingleTimezoneChange(event.detail.value)}
+								/>
 							</div>
 						</div>
 					{/if}
