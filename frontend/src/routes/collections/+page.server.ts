@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location, Collection } from '$lib/types';
+import type { Location, Collection, SlimCollection } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
 import { fetchCSRFToken } from '$lib/index.server';
@@ -12,88 +12,66 @@ const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 export const load = (async (event) => {
 	if (!event.locals.user) {
 		return redirect(302, '/login');
-	} else {
-		let next = null;
-		let previous = null;
-		let count = 0;
-		let collections: Location[] = [];
-		let sessionId = event.cookies.get('sessionid');
+	}
 
-		// Get sorting parameters from URL
-		const order_by = event.url.searchParams.get('order_by') || 'updated_at';
-		const order_direction = event.url.searchParams.get('order_direction') || 'desc';
-		const page = event.url.searchParams.get('page') || '1';
+	const sessionId = event.cookies.get('sessionid');
+	if (!sessionId) {
+		return redirect(302, '/login');
+	}
 
-		// Build API URL with parameters
-		let apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}`;
+	// Get sorting parameters from URL
+	const order_by = event.url.searchParams.get('order_by') || 'updated_at';
+	const order_direction = event.url.searchParams.get('order_direction') || 'desc';
+	const page = event.url.searchParams.get('page') || '1';
+	const currentPage = parseInt(page);
 
-		let initialFetch = await fetch(apiUrl, {
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			},
-			credentials: 'include'
-		});
-		if (!initialFetch.ok) {
-			console.error('Failed to fetch collections');
-			return redirect(302, '/login');
-		} else {
-			let res = await initialFetch.json();
-			let visited = res.results as Location[];
-			next = res.next;
-			previous = res.previous;
-			count = res.count;
-			collections = [...collections, ...visited];
-		}
+	// Common headers for all requests
+	const headers = {
+		Cookie: `sessionid=${sessionId}`
+	};
 
-		let sharedRes = await fetch(`${serverEndpoint}/api/collections/shared/`, {
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
-		});
-		if (!sharedRes.ok) {
-			console.error('Failed to fetch shared collections');
+	// Build API URL with nested=true for lighter payload
+	const apiUrl = `${serverEndpoint}/api/collections/?order_by=${order_by}&order_direction=${order_direction}&page=${page}&nested=true`;
+
+	try {
+		// Execute all API calls in parallel
+		const [collectionsRes, sharedRes, archivedRes, invitesRes] = await Promise.all([
+			fetch(apiUrl, { headers, credentials: 'include' }),
+			fetch(`${serverEndpoint}/api/collections/shared/?nested=true`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/archived/?nested=true`, { headers }),
+			fetch(`${serverEndpoint}/api/collections/invites/`, { headers })
+		]);
+
+		// Check if main collections request failed (most critical)
+		if (!collectionsRes.ok) {
+			console.error('Failed to fetch collections:', collectionsRes.status);
 			return redirect(302, '/login');
 		}
-		let sharedCollections = (await sharedRes.json()) as Collection[];
 
-		let archivedRes = await fetch(`${serverEndpoint}/api/collections/archived/`, {
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
-		});
-		if (!archivedRes.ok) {
-			console.error('Failed to fetch archived collections');
-			return redirect(302, '/login');
-		}
-		let archivedCollections = (await archivedRes.json()) as Collection[];
-
-		let inviteRes = await fetch(`${serverEndpoint}/api/collections/invites/`, {
-			headers: {
-				Cookie: `sessionid=${sessionId}`
-			}
-		});
-		if (!inviteRes.ok) {
-			console.error('Failed to fetch invites');
-			return redirect(302, '/login');
-		}
-		let invites = await inviteRes.json();
-
-		// Calculate current page from URL
-		const currentPage = parseInt(page);
+		// Parse responses in parallel
+		const [collectionsData, sharedData, archivedData, invitesData] = await Promise.all([
+			collectionsRes.json(),
+			sharedRes.ok ? sharedRes.json() : [],
+			archivedRes.ok ? archivedRes.json() : [],
+			invitesRes.ok ? invitesRes.json() : []
+		]);
 
 		return {
 			props: {
-				adventures: collections,
-				next,
-				previous,
-				count,
-				sharedCollections,
+				adventures: collectionsData.results as Location[],
+				next: collectionsData.next,
+				previous: collectionsData.previous,
+				count: collectionsData.count,
+				sharedCollections: sharedData as SlimCollection[],
 				currentPage,
 				order_by,
 				order_direction,
-				archivedCollections,
-				invites
+				archivedCollections: archivedData as SlimCollection[],
+				invites: invitesData
 			}
 		};
+	} catch (error) {
+		console.error('Error fetching data:', error);
+		return redirect(302, '/login');
 	}
 }) satisfies PageServerLoad;

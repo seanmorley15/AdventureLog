@@ -902,7 +902,13 @@
     "shared": "共有",
     "shared_with": "共有",
     "unshared": "非共有",
-    "with": "と"
+    "with": "と",
+    "available_users": "利用可能なユーザー",
+    "invite_failed": "招待は失敗しました",
+    "invite_revoked": "招待された招待",
+    "invite_sent": "送信招待",
+    "revoke_failed": "取り消しは失敗しました",
+    "unshare_failed": "UNSHAREは失敗しました"
   },
   "strava": {
     "account_connected": "接続されたアカウント",
@@ -1013,6 +1019,21 @@
     "visit_remove_failed": "訪問を削除できませんでした",
     "visit_to": "訪問",
     "visited_first": "最初に訪問しました",
-    "getting_location_details": "場所の詳細を取得します"
+    "getting_location_details": "場所の詳細を取得します",
+    "cities_available": "利用可能な都市",
+    "destination_revealed": "目的地が明らかに！",
+    "dive_deeper": "より深く潜ります",
+    "exploration_progress": "探索の進行",
+    "explore_country": "国を探索します",
+    "globe_spin_error_desc": "グローブスピンデータの取得エラー",
+    "hide_globe_spin": "グローブスピンを隠します",
+    "in": "で",
+    "loading_globe_spin": "グローブスピンのロード",
+    "no_globe_spin_data": "グローブスピンデータはありません",
+    "show_globe_spin": "グローブスピンを表示します",
+    "spin_again": "もう一度スピンします",
+    "spinning_globe": "スピニンググローブ",
+    "try_again": "もう一度やり直してください",
+    "your_random_adventure_awaits": "あなたのランダムな冒険が待っています！"
   }
 }

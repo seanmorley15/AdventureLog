@@ -1,21 +1,27 @@
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.db.models.functions import Lower
 from django.db import transaction
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from adventures.models import Collection, Location, Transportation, Note, Checklist, CollectionInvite
+from adventures.models import Collection, Location, Transportation, Note, Checklist, CollectionInvite, ContentImage
 from adventures.permissions import CollectionShared
-from adventures.serializers import CollectionSerializer, CollectionInviteSerializer
+from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
+
 
 class CollectionViewSet(viewsets.ModelViewSet):
     serializer_class = CollectionSerializer
     permission_classes = [CollectionShared]
     pagination_class = pagination.StandardResultsSetPagination
 
+    def get_serializer_class(self):
+        """Return different serializers based on the action"""
+        if self.action in ['list', 'all', 'archived', 'shared']:
+            return UltraSlimCollectionSerializer
+        return CollectionSerializer
 
     def apply_sorting(self, queryset):
         order_by = self.request.query_params.get('order_by', 'name')
@@ -48,14 +54,95 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
         return queryset.order_by(ordering)
     
-    def list(self, request, *args, **kwargs):
+    def get_serializer_context(self):
+        """Override to add nested and exclusion contexts based on query parameters"""
+        context = super().get_serializer_context()
+        
+        # Handle nested parameter (only for full serializer actions)
+        if self.action not in ['list', 'all', 'archived', 'shared']:
+            is_nested = self.request.query_params.get('nested', 'false').lower() == 'true'
+            if is_nested:
+                context['nested'] = True
+            
+            # Handle individual exclusion parameters (if using granular approach)
+            exclude_params = [
+                'exclude_transportations',
+                'exclude_notes', 
+                'exclude_checklists',
+                'exclude_lodging'
+            ]
+            
+            for param in exclude_params:
+                if self.request.query_params.get(param, 'false').lower() == 'true':
+                    context[param] = True
+                    
+        return context
+
+    def get_optimized_queryset_for_listing(self):
+        """Get optimized queryset for list actions with prefetching"""
+        return self.get_base_queryset().select_related('user').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
+        )
+
+    def get_base_queryset(self):
+        """Base queryset logic extracted for reuse"""
+        if self.action == 'destroy':
+            return Collection.objects.filter(user=self.request.user.id)
+        
+        if self.action in ['update', 'partial_update']:
+            return Collection.objects.filter(
+                Q(user=self.request.user.id) | Q(shared_with=self.request.user)
+            ).distinct()
+        
+        # Allow access to collections with pending invites for accept/decline actions
+        if self.action in ['accept_invite', 'decline_invite']:
+            if not self.request.user.is_authenticated:
+                return Collection.objects.none()
+            return Collection.objects.filter(
+                Q(user=self.request.user.id) | 
+                Q(shared_with=self.request.user) | 
+                Q(invites__invited_user=self.request.user)
+            ).distinct()
+        
+        if self.action == 'retrieve':
+            if not self.request.user.is_authenticated:
+                return Collection.objects.filter(is_public=True)
+            return Collection.objects.filter(
+                Q(is_public=True) | Q(user=self.request.user.id) | Q(shared_with=self.request.user)
+            ).distinct()
+        
+        # For list action, include collections owned by the user or shared with the user, that are not archived
+        return Collection.objects.filter(
+            (Q(user=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
+        ).distinct()
+
+    def get_queryset(self):
+        """Get queryset with optimizations for list actions"""
+        if self.action in ['list', 'all', 'archived', 'shared']:
+            return self.get_optimized_queryset_for_listing()
+        return self.get_base_queryset()
+    
+    def list(self, request):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        queryset = Collection.objects.filter(user=request.user, is_archived=False)
+        
+        queryset = Collection.objects.filter(
+            (Q(user=request.user.id) | Q(shared_with=request.user)) & Q(is_archived=False)
+        ).distinct().select_related('user').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
+        )
+        
         queryset = self.apply_sorting(queryset)
-        collections = self.paginate_and_respond(queryset, request)
-        return collections
+        return self.paginate_and_respond(queryset, request)
     
     @action(detail=False, methods=['get'])
     def all(self, request):
@@ -64,6 +151,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
        
         queryset = Collection.objects.filter(
             Q(user=request.user)
+        ).select_related('user').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
         )
         
         queryset = self.apply_sorting(queryset)
@@ -78,6 +171,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
        
         queryset = Collection.objects.filter(
             Q(user=request.user.id) & Q(is_archived=True)
+        ).select_related('user').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
         )
         
         queryset = self.apply_sorting(queryset)
@@ -152,9 +251,17 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def shared(self, request):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
+        
         queryset = Collection.objects.filter(
             shared_with=request.user
+        ).select_related('user').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
         )
+        
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -200,8 +307,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
         serializer = CollectionInviteSerializer(invites, many=True)
         
         return Response(serializer.data)
-
-    # Add these methods to your CollectionViewSet class
 
     @action(detail=True, methods=['post'], url_path='revoke-invite/(?P<uuid>[^/.]+)')
     def revoke_invite(self, request, pk=None, uuid=None):
@@ -371,37 +476,6 @@ class CollectionViewSet(viewsets.ModelViewSet):
             success_message += f" and removed {removed_count} location(s) you owned from the collection"
         
         return Response({"success": success_message})
-
-    def get_queryset(self):
-        if self.action == 'destroy':
-            return Collection.objects.filter(user=self.request.user.id)
-        
-        if self.action in ['update', 'partial_update']:
-            return Collection.objects.filter(
-                Q(user=self.request.user.id) | Q(shared_with=self.request.user)
-            ).distinct()
-        
-        # Allow access to collections with pending invites for accept/decline actions
-        if self.action in ['accept_invite', 'decline_invite']:
-            if not self.request.user.is_authenticated:
-                return Collection.objects.none()
-            return Collection.objects.filter(
-                Q(user=self.request.user.id) | 
-                Q(shared_with=self.request.user) | 
-                Q(invites__invited_user=self.request.user)
-            ).distinct()
-        
-        if self.action == 'retrieve':
-            if not self.request.user.is_authenticated:
-                return Collection.objects.filter(is_public=True)
-            return Collection.objects.filter(
-                Q(is_public=True) | Q(user=self.request.user.id) | Q(shared_with=self.request.user)
-            ).distinct()
-        
-        # For list action, include collections owned by the user or shared with the user, that are not archived
-        return Collection.objects.filter(
-            (Q(user=self.request.user.id) | Q(shared_with=self.request.user)) & Q(is_archived=False)
-        ).distinct()
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it

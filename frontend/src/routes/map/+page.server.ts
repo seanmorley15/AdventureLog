@@ -1,7 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { Location, VisitedRegion } from '$lib/types';
+import type { Location, Pin, VisitedRegion } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -9,7 +9,7 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	} else {
 		let sessionId = event.cookies.get('sessionid');
-		let visitedFetch = await fetch(`${endpoint}/api/locations/all/?include_collections=true`, {
+		let pinFetch = await fetch(`${endpoint}/api/locations/pins/`, {
 			headers: {
 				Cookie: `sessionid=${sessionId}`
 			}
@@ -22,19 +22,19 @@ export const load = (async (event) => {
 		});
 
 		let visitedRegions = (await visitedRegionsFetch.json()) as VisitedRegion[];
-		let adventures = (await visitedFetch.json()) as Location[];
+		let pins = (await pinFetch.json()) as Pin[];
 
 		if (!visitedRegionsFetch.ok) {
 			console.error('Failed to fetch visited regions');
 			return redirect(302, '/login');
-		} else if (!visitedFetch.ok) {
-			console.error('Failed to fetch visited adventures');
+		} else if (!pinFetch.ok) {
+			console.error('Failed to fetch location pins');
 			return redirect(302, '/login');
 		} else {
 			return {
 				props: {
 					visitedRegions,
-					adventures
+					pins
 				}
 			};
 		}

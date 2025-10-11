@@ -137,6 +137,23 @@ export type Collection = {
 	link?: string | null;
 };
 
+export type SlimCollection = {
+	id: string;
+	user: string;
+	name: string;
+	description: string;
+	is_public: boolean;
+	start_date: string | null;
+	end_date: string | null;
+	is_archived: boolean;
+	link: string | null;
+	created_at: string;
+	updated_at: string;
+	location_images: ContentImage[];
+	location_count: number;
+	shared_with: string[];
+};
+
 export type GeocodeSearchResult = {
 	lat?: string;
 	lon?: string;
@@ -464,4 +481,13 @@ export type WandererTrail = {
 	thumbnail: number;
 	updated: string; // ISO 8601 date string
 	waypoints: string[];
+};
+
+export type Pin = {
+	id: string;
+	name: string;
+	latitude: string;
+	longitude: string;
+	is_visited?: boolean;
+	category: Category | null;
 };

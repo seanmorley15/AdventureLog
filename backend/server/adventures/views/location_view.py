@@ -9,7 +9,7 @@ from rest_framework.response import Response
 import requests
 from adventures.models import Location, Category
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer
+from adventures.serializers import LocationSerializer, MapPinSerializer
 from adventures.utils import pagination
 
 class LocationViewSet(viewsets.ModelViewSet):
@@ -193,6 +193,8 @@ class LocationViewSet(viewsets.ModelViewSet):
             return Response({"error": "User is not authenticated"}, status=400)
 
         include_collections = request.query_params.get('include_collections', 'false') == 'true'
+        nested = request.query_params.get('nested', 'false') == 'true'
+        allowedNestedFields = request.query_params.get('allowed_nested_fields', '').split(',')
         
         # Build queryset with collection filtering
         base_filter = Q(user=request.user.id)
@@ -203,7 +205,7 @@ class LocationViewSet(viewsets.ModelViewSet):
             queryset = Location.objects.filter(base_filter, collections__isnull=True)
 
         queryset = self.apply_sorting(queryset)
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields})
         return Response(serializer.data)
 
     @action(detail=True, methods=['get'], url_path='additional-info')
@@ -227,6 +229,17 @@ class LocationViewSet(viewsets.ModelViewSet):
         response_data['sun_times'] = self._get_sun_times(adventure, response_data.get('visits', []))
         
         return Response(response_data)
+    
+    # view to return location name and lat/lon for all locations a user owns for the golobal map
+    @action(detail=False, methods=['get'], url_path='pins')
+    def map_locations(self, request):
+        """Get all locations with name and lat/lon for map display."""
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+
+        locations = Location.objects.filter(user=request.user)
+        serializer = MapPinSerializer(locations, many=True)
+        return Response(serializer.data)
 
     # ==================== HELPER METHODS ====================
 

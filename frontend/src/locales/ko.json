@@ -846,7 +846,13 @@
     "available": "사용 가능",
     "pending": "보류 중",
     "revoke_invite": "취소 초대",
-    "send_invite": "초대를 보내십시오"
+    "send_invite": "초대를 보내십시오",
+    "available_users": "사용 가능한 사용자",
+    "invite_failed": "초대 실패",
+    "invite_revoked": "취소 된 초대",
+    "invite_sent": "초대장",
+    "revoke_failed": "취소가 실패했습니다",
+    "unshare_failed": "공해를 실패했습니다"
   },
   "transportation": {
     "edit": "편집",
@@ -938,7 +944,22 @@
     "unvisited_first": "먼저 방문하지 않습니다",
     "visited_first": "먼저 방문했습니다",
     "total_items": "총 항목",
-    "getting_location_details": "위치 세부 정보 얻기"
+    "getting_location_details": "위치 세부 정보 얻기",
+    "dive_deeper": "더 깊이 다이빙하십시오",
+    "exploration_progress": "탐사 진행",
+    "explore_country": "국가를 탐험하십시오",
+    "globe_spin_error_desc": "오류 페치 글로브 스핀 데이터",
+    "hide_globe_spin": "글로브 스핀을 숨기십시오",
+    "in": "~에",
+    "loading_globe_spin": "로드 글로브 스핀",
+    "no_globe_spin_data": "글로브 스핀 데이터가 없습니다",
+    "show_globe_spin": "글로브 스핀을 보여주십시오",
+    "spin_again": "다시 회전하십시오",
+    "spinning_globe": "회전하는 글로브",
+    "try_again": "다시 시도하십시오",
+    "your_random_adventure_awaits": "당신의 임의의 모험이 기다리고 있습니다!",
+    "cities_available": "이용 가능",
+    "destination_revealed": "목적지 공개!"
   },
   "lodging": {
     "apartment": "아파트",

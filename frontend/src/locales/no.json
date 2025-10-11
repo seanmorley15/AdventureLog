@@ -534,7 +534,22 @@
     "unvisited_first": "Uvisitert først",
     "visited_first": "Besøkte først",
     "total_items": "Totalt gjenstander",
-    "getting_location_details": "Få stedsdetaljer"
+    "getting_location_details": "Få stedsdetaljer",
+    "cities_available": "Byer tilgjengelig",
+    "destination_revealed": "Destinasjon avslørt!",
+    "dive_deeper": "Dykk dypere",
+    "exploration_progress": "Utforskningsfremgang",
+    "explore_country": "Utforsk landet",
+    "globe_spin_error_desc": "Feilhåndtering av klode -spinndata",
+    "hide_globe_spin": "Skjul klode spinn",
+    "in": "i",
+    "loading_globe_spin": "Laster klode spinn",
+    "no_globe_spin_data": "Ingen klode spinndata",
+    "show_globe_spin": "Vis Globe Spin",
+    "spin_again": "Spinn igjen",
+    "spinning_globe": "Spinnende klode",
+    "try_again": "Prøv igjen",
+    "your_random_adventure_awaits": "Ditt tilfeldige eventyr venter!"
   },
   "auth": {
     "username": "Brukernavn",
@@ -873,7 +888,13 @@
     "available": "Tilgjengelig",
     "pending": "I påvente av",
     "revoke_invite": "Revoke Inviter",
-    "send_invite": "Send invitasjon"
+    "send_invite": "Send invitasjon",
+    "available_users": "Tilgjengelige brukere",
+    "invite_failed": "Inviter mislyktes",
+    "invite_revoked": "Inviter tilbakekalt",
+    "invite_sent": "Inviter sendt",
+    "revoke_failed": "Revoke mislyktes",
+    "unshare_failed": "Unshare mislyktes"
   },
   "profile": {
     "member_since": "Medlem siden",

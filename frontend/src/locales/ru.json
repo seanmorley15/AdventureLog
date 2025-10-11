@@ -535,7 +535,22 @@
     "unvisited_first": "Сначала не посещенные",
     "visited_first": "Сначала посещенные",
     "total_items": "Общие предметы",
-    "getting_location_details": "Получение деталей локации"
+    "getting_location_details": "Получение деталей локации",
+    "cities_available": "Города доступны",
+    "destination_revealed": "Открыто место!",
+    "dive_deeper": "Погрузитесь глубже",
+    "exploration_progress": "Прогресс исследования",
+    "explore_country": "Исследуйте страну",
+    "globe_spin_error_desc": "Ошибка извлечения данных спиновых глобусов",
+    "hide_globe_spin": "Скрыть глобус спин",
+    "in": "в",
+    "loading_globe_spin": "Загрузка глобуса спина",
+    "no_globe_spin_data": "Нет данных о вращении Globe",
+    "show_globe_spin": "Показать Globe Spin",
+    "spin_again": "Снова спите",
+    "spinning_globe": "Вращающийся глобус",
+    "try_again": "Попробуйте еще раз",
+    "your_random_adventure_awaits": "Ваше случайное приключение ждет!"
   },
   "auth": {
     "username": "Имя пользователя",
@@ -874,7 +889,13 @@
     "available": "Доступный",
     "pending": "В ожидании",
     "revoke_invite": "Отменить приглашение",
-    "send_invite": "Отправить приглашение"
+    "send_invite": "Отправить приглашение",
+    "available_users": "Доступные пользователи",
+    "invite_failed": "Приглашение не удалось",
+    "invite_revoked": "Пригласить отменен",
+    "invite_sent": "Пригласить отправлено",
+    "revoke_failed": "Отмена не удалась",
+    "unshare_failed": "UNSHARE не удалось"
   },
   "languages": {},
   "profile": {
