@@ -173,8 +173,12 @@
 
 	<!-- Hero Section -->
 	<div class="relative">
-		{#if adventure.images && adventure.images.length > 0}
-			<div class="hero min-h-[60vh] relative overflow-hidden">
+		<div
+			class="hero min-h-[60vh] relative overflow-hidden"
+			class:min-h-[30vh]={!adventure.images || adventure.images.length === 0}
+		>
+			<!-- Background: Images or Gradient -->
+			{#if adventure.images && adventure.images.length > 0}
 				<div class="hero-overlay bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
 				{#each adventure.images as image, i}
 					<div
@@ -191,137 +195,129 @@
 						</button>
 					</div>
 				{/each}
+			{:else}
+				<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
+			{/if}
 
-				<div class="hero-content relative z-10 text-center text-white">
-					<div class="max-w-4xl">
-						<h1 class="text-6xl font-bold mb-4 drop-shadow-lg">{adventure.name}</h1>
+			<!-- Content -->
+			<div
+				class="hero-content relative z-10 text-center"
+				class:text-white={adventure.images?.length > 0}
+			>
+				<div class="max-w-4xl">
+					<h1 class="text-6xl font-bold mb-4 drop-shadow-lg">{adventure.name}</h1>
 
-						<!-- Rating -->
-						{#if adventure.rating !== undefined && adventure.rating !== null}
-							<div class="flex justify-center mb-6">
-								<div class="rating rating-lg">
-									{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-										<input
-											type="radio"
-											name="rating-hero"
-											class="mask mask-star-2 bg-warning"
-											checked={star <= adventure.rating}
-											disabled
-										/>
-									{/each}
-								</div>
+					<!-- Rating -->
+					{#if adventure.rating !== undefined && adventure.rating !== null}
+						<div class="flex justify-center mb-6">
+							<div class="rating rating-lg">
+								{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
+									<input
+										type="radio"
+										name="rating-hero"
+										class="mask mask-star-2 bg-warning"
+										checked={star <= adventure.rating}
+										disabled
+									/>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<!-- Quick Info Badges -->
+					<div class="flex flex-wrap justify-center gap-4 mb-6">
+						<a
+							href="/locations?types={adventure.category?.name}"
+							class="badge badge-lg badge-primary font-semibold px-4 py-3 cursor-pointer hover:brightness-110 transition-all"
+						>
+							{adventure.category?.display_name}
+							{adventure.category?.icon}
+						</a>
+						{#if adventure.location}
+							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
+								📍 {adventure.location}
 							</div>
 						{/if}
-
-						<!-- Quick Info Cards -->
-						<div class="flex flex-wrap justify-center gap-4 mb-6">
-							<div class="badge badge-lg badge-primary font-semibold px-4 py-3">
-								{adventure.category?.display_name}
-								{adventure.category?.icon}
+						{#if adventure.visits.length > 0}
+							<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
+								🎯 {adventure.visits.length}
+								{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
 							</div>
-							{#if adventure.location}
-								<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-									📍 {adventure.location}
+						{/if}
+						{#if adventure.is_visited}
+							<div class="badge badge-lg badge-success font-semibold px-4 py-3">
+								✅ {$t('adventures.visited')}
+							</div>
+						{:else}
+							<div class="badge badge-lg badge-warning font-semibold px-4 py-3">
+								⏳ {$t('adventures.not_visited')}
+							</div>
+						{/if}
+						{#if adventure.trails && adventure.trails.length > 0}
+							<div class="badge badge-lg badge-info font-semibold px-4 py-3">
+								🥾 {adventure.trails.length} Trail{adventure.trails.length === 1 ? '' : 's'}
+							</div>
+						{/if}
+					</div>
+
+					<!-- Image Navigation (only shown when multiple images exist) -->
+					{#if adventure.images && adventure.images.length > 1}
+						<div class="w-full max-w-md mx-auto">
+							<!-- Navigation arrows and current position -->
+							<div class="flex items-center justify-center gap-4 mb-3">
+								<button
+									on:click={() =>
+										goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
+									class="btn btn-circle btn-sm btn-primary"
+									aria-label={$t('adventures.previous_image')}
+								>
+									❮
+								</button>
+
+								<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+									{currentSlide + 1} / {adventure.images.length}
 								</div>
-							{/if}
-							{#if adventure.visits.length > 0}
-								<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
-									🎯 {adventure.visits.length}
-									{adventure.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}
+
+								<button
+									on:click={() =>
+										goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
+									class="btn btn-circle btn-sm btn-primary"
+									aria-label={$t('adventures.next_image')}
+								>
+									❯
+								</button>
+							</div>
+
+							<!-- Dot navigation -->
+							{#if adventure.images.length <= 12}
+								<div class="flex justify-center gap-2 flex-wrap">
+									{#each adventure.images as _, i}
+										<button
+											on:click={() => goToSlide(i)}
+											class="btn btn-circle btn-xs transition-all duration-200"
+											class:btn-primary={i === currentSlide}
+											class:btn-outline={i !== currentSlide}
+											class:opacity-50={i !== currentSlide}
+										>
+											{i + 1}
+										</button>
+									{/each}
 								</div>
-							{/if}
-							{#if adventure.trails && adventure.trails.length > 0}
-								<div class="badge badge-lg badge-info font-semibold px-4 py-3">
-									🥾 {adventure.trails.length} Trail{adventure.trails.length === 1 ? '' : 's'}
+							{:else}
+								<div class="relative">
+									<div
+										class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
+									></div>
+									<div
+										class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
+									></div>
 								</div>
 							{/if}
 						</div>
-
-						<!-- Image Navigation -->
-						{#if adventure.images.length > 1}
-							<div class="w-full max-w-md mx-auto">
-								<!-- Navigation arrows and current position indicator -->
-								<div class="flex items-center justify-center gap-4 mb-3">
-									<button
-										on:click={() =>
-											goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
-										class="btn btn-circle btn-sm btn-primary"
-										aria-label={$t('adventures.previous_image')}
-									>
-										❮
-									</button>
-
-									<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-										{currentSlide + 1} / {adventure.images.length}
-									</div>
-
-									<button
-										on:click={() =>
-											goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
-										class="btn btn-circle btn-sm btn-primary"
-										aria-label={$t('adventures.next_image')}
-									>
-										❯
-									</button>
-								</div>
-
-								<!-- Scrollable dot navigation for many images -->
-								{#if adventure.images.length <= 12}
-									<!-- Show all dots for 12 or fewer images -->
-									<div class="flex justify-center gap-2 flex-wrap">
-										{#each adventure.images as _, i}
-											<button
-												on:click={() => goToSlide(i)}
-												class="btn btn-circle btn-xs transition-all duration-200"
-												class:btn-primary={i === currentSlide}
-												class:btn-outline={i !== currentSlide}
-												class:opacity-50={i !== currentSlide}
-											>
-												{i + 1}
-											</button>
-										{/each}
-									</div>
-								{:else}
-									<!-- Scrollable navigation for many images -->
-									<div class="relative">
-										<div
-											class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
-										></div>
-										<div
-											class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
-										></div>
-									</div>
-								{/if}
-							</div>
-						{/if}
-					</div>
+					{/if}
 				</div>
 			</div>
-		{:else}
-			<!-- No image hero -->
-			<div class="hero min-h-[40vh] bg-gradient-to-br from-primary/20 to-secondary/20">
-				<div class="hero-content text-center">
-					<div class="max-w-4xl">
-						<h1 class="text-6xl font-bold mb-6">{adventure.name}</h1>
-						{#if adventure.rating !== undefined && adventure.rating !== null}
-							<div class="flex justify-center mb-6">
-								<div class="rating rating-lg">
-									{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-										<input
-											type="radio"
-											name="rating-hero-no-img"
-											class="mask mask-star-2 bg-warning"
-											checked={star <= adventure.rating}
-											disabled
-										/>
-									{/each}
-								</div>
-							</div>
-						{/if}
-					</div>
-				</div>
-			</div>
-		{/if}
+		</div>
 	</div>
 
 	<!-- Main Content -->
@@ -841,7 +837,7 @@
 				{/if}
 
 				<!-- Additional Images -->
-				{#if adventure.images && adventure.images.length > 1}
+				{#if adventure.images}
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
