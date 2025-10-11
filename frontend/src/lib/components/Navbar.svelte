@@ -65,7 +65,8 @@
 		ar: 'العربية',
 		'pt-br': 'Português (Brasil)',
 		sk: 'Slovenský',
-		tr: 'Türkçe'
+		tr: 'Türkçe',
+		hu: 'Magyar'
 	};
 
 	const submitLocaleChange = (event: Event) => {
