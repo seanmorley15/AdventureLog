@@ -22,6 +22,7 @@
 	register('pt-br', () => import('../locales/pt-br.json'));
 	register('sk', () => import('../locales/sk.json'));
 	register('tr', () => import('../locales/tr.json'));
+	register('hu', () => import('../locales/hu.json'));
 
 	let locales = [
 		'en',
@@ -40,7 +41,8 @@
 		'ar',
 		'pt-br',
 		'sk',
-		'tr'
+		'tr',
+		'hu'
 	];
 
 	if (browser) {
