@@ -334,7 +334,7 @@ PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
 ADVENTURELOG_RELEASE_VERSION = 'v0.11.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v2.6'
+COUNTRY_REGION_JSON_VERSION = 'v3.0'
 
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
 
