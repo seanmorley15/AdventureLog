@@ -23,7 +23,7 @@ cp .env.example .env
 
 ::: tip
 
-If running on an ARM based machine, you will need to use a different PostGIS Image. It is recommended to use the `tobi312/rpi-postgresql-postgis:15-3.3-alpine-arm` image or a custom version found [here](https://hub.docker.com/r/tobi312/rpi-postgresql-postgis/tags). The AdventureLog containers are ARM compatible.
+If running on an ARM based machine, you will need to use a different PostGIS Image. It is recommended to use the `imresamu/postgis:15-3.3-alpine3.21` image or a custom version found [here](https://hub.docker.com/r/imresamu/postgis/tags). The AdventureLog containers are ARM compatible.
 
 :::
 
