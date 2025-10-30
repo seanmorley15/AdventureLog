@@ -10,6 +10,7 @@
 	import Target from '~icons/mdi/target';
 	import FormatListChecks from '~icons/mdi/format-list-checks';
 	import Delete from '~icons/mdi/delete';
+	import Pencil from '~icons/mdi/pencil';
 
 	export let data: any;
 	export let form: any;
@@ -19,6 +20,7 @@
 	let currentPage = 1;
 	let statusFilter = 'all';
 	let showModal = false;
+	let showEditModal = false;
 	let isSubmitting = false;
 	
 	// Form fields
@@ -27,9 +29,18 @@
 	let tags = '';
 	let status = 'planned';
 	let notes = '';
+	
+	// Edit fields
+	let editingItem: any = null;
+	let editTitle = '';
+	let editDescription = '';
+	let editTags = '';
+	let editStatus = 'planned';
+	let editNotes = '';
 
 	$: if (form?.success) {
 		closeModal();
+		closeEditModal();
 		// Reload to show new item
 		invalidateAll();
 	}
@@ -115,6 +126,27 @@
 		tags = '';
 		status = 'planned';
 		notes = '';
+		isSubmitting = false;
+	}
+	
+	function openEditModal(item: any) {
+		editingItem = item;
+		editTitle = item.title;
+		editDescription = item.description || '';
+		editTags = item.tags ? item.tags.join(', ') : '';
+		editStatus = item.status;
+		editNotes = item.notes || '';
+		showEditModal = true;
+	}
+	
+	function closeEditModal() {
+		showEditModal = false;
+		editingItem = null;
+		editTitle = '';
+		editDescription = '';
+		editTags = '';
+		editStatus = 'planned';
+		editNotes = '';
 		isSubmitting = false;
 	}
 </script>
@@ -217,6 +249,28 @@
 								{#if item.location}
 									<span class="text-xs text-base-content/60">Linked to location</span>
 								{/if}
+								<!-- Action buttons -->
+								<div class="flex gap-2 mt-2">
+									<button 
+										class="btn btn-sm btn-ghost gap-1" 
+										on:click={() => openEditModal(item)}
+										title="Edit item"
+									>
+										<Pencil class="w-4 h-4" />
+										Edit
+									</button>
+									<form method="POST" action="?/delete" use:enhance={handleFormSubmit}>
+										<input type="hidden" name="id" value={item.id} />
+										<button 
+											type="submit" 
+											class="btn btn-sm btn-ghost btn-error gap-1"
+											title="Delete item"
+										>
+											<Delete class="w-4 h-4" />
+											Delete
+										</button>
+									</form>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -318,5 +372,102 @@
 			</form>
 		</div>
 		<div class="modal-backdrop" on:click={closeModal}></div>
+	</div>
+{/if}
+
+<!-- Edit Item Modal -->
+{#if showEditModal && editingItem}
+	<div class="modal modal-open">
+		<div class="modal-box max-w-2xl">
+			<h3 class="font-bold text-lg mb-4">Edit Bucket List Item</h3>
+			<form method="POST" action="?/update" use:enhance={handleFormSubmit}>
+				<input type="hidden" name="id" value={editingItem.id} />
+				
+				<div class="form-control w-full mb-4">
+					<label class="label" for="edit-title">
+						<span class="label-text">Title <span class="text-error">*</span></span>
+					</label>
+					<input
+						id="edit-title"
+						name="title"
+						type="text"
+						placeholder="e.g., Visit the Northern Lights"
+						class="input input-bordered w-full"
+						bind:value={editTitle}
+						required
+					/>
+				</div>
+
+				<div class="form-control w-full mb-4">
+					<label class="label" for="edit-description">
+						<span class="label-text">Description</span>
+					</label>
+					<textarea
+						id="edit-description"
+						name="description"
+						placeholder="Describe your travel goal..."
+						class="textarea textarea-bordered h-24"
+						bind:value={editDescription}
+					></textarea>
+				</div>
+
+				<div class="form-control w-full mb-4">
+					<label class="label" for="edit-tags">
+						<span class="label-text">Tags</span>
+					</label>
+					<input
+						id="edit-tags"
+						name="tags"
+						type="text"
+						placeholder="e.g., adventure, nature, photography (comma-separated)"
+						class="input input-bordered w-full"
+						bind:value={editTags}
+					/>
+					<label class="label">
+						<span class="label-text-alt">Separate multiple tags with commas</span>
+					</label>
+				</div>
+
+				<div class="form-control w-full mb-4">
+					<label class="label" for="edit-status">
+						<span class="label-text">Status</span>
+					</label>
+					<select id="edit-status" name="status" class="select select-bordered w-full" bind:value={editStatus}>
+						<option value="planned">Planned</option>
+						<option value="in_progress">In Progress</option>
+						<option value="completed">Completed</option>
+					</select>
+				</div>
+
+				<div class="form-control w-full mb-4">
+					<label class="label" for="edit-notes">
+						<span class="label-text">Notes</span>
+					</label>
+					<textarea
+						id="edit-notes"
+						name="notes"
+						placeholder="Any additional notes or details..."
+						class="textarea textarea-bordered h-20"
+						bind:value={editNotes}
+					></textarea>
+				</div>
+
+				<div class="modal-action">
+					<button type="button" class="btn" on:click={closeEditModal} disabled={isSubmitting}>
+						Cancel
+					</button>
+					<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
+						{#if isSubmitting}
+							<span class="loading loading-spinner loading-sm"></span>
+							Updating...
+						{:else}
+							<Pencil class="w-5 h-5" />
+							Update Item
+						{/if}
+					</button>
+				</div>
+			</form>
+		</div>
+		<div class="modal-backdrop" on:click={closeEditModal}></div>
 	</div>
 {/if}

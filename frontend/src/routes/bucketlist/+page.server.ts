@@ -118,6 +118,73 @@ export const actions = {
 		}
 	},
 
+	update: async ({ request, fetch, locals, cookies }) => {
+		console.log('Update action called');
+		
+		if (!locals.user) {
+			return fail(401, { error: 'Unauthorized - Please log in first' });
+		}
+
+		const formData = await request.formData();
+		const id = formData.get('id')?.toString();
+		const title = formData.get('title')?.toString();
+		const description = formData.get('description')?.toString() || '';
+		const tags = formData.get('tags')?.toString() || '';
+		const status = formData.get('status')?.toString() || 'planned';
+		const notes = formData.get('notes')?.toString() || '';
+
+		console.log('Update form data:', { id, title, description, tags, status, notes });
+
+		if (!id) {
+			return fail(400, { error: 'ID is required' });
+		}
+
+		if (!title) {
+			return fail(400, { error: 'Title is required' });
+		}
+
+		try {
+			const csrfToken = await fetchCSRFToken();
+			
+			const payload = {
+				title: title.trim(),
+				description: description.trim(),
+				tags: tags.trim() ? tags.split(',').map(t => t.trim()) : [],
+				status,
+				notes: notes.trim(),
+				is_public: false
+			};
+			
+			console.log('Sending update payload:', JSON.stringify(payload));
+
+			const response = await fetch(`${endpoint}/api/bucketlist/items/${id}/`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+					'X-CSRFToken': csrfToken,
+					Cookie: `sessionid=${cookies.get('sessionid')}; csrftoken=${csrfToken}`
+				},
+				credentials: 'include',
+				body: JSON.stringify(payload)
+			});
+
+			console.log('Update response status:', response.status);
+
+			if (!response.ok) {
+				const error = await response.text();
+				console.log('Update error response:', error);
+				return fail(response.status, { error: `Failed to update item: ${error}` });
+			}
+
+			const result = await response.json();
+			console.log('Success! Updated item:', result);
+			return { success: true };
+		} catch (error) {
+			console.error('Update exception:', error);
+			return fail(500, { error: 'Failed to update item: ' + error });
+		}
+	},
+
 	delete: async ({ request, fetch, locals, cookies }) => {
 		if (!locals.user) {
 			return fail(401, { error: 'Unauthorized' });
