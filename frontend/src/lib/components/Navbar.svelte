@@ -13,6 +13,7 @@
 	import Earth from '~icons/mdi/earth';
 	import Magnify from '~icons/mdi/magnify';
 	import Map from '~icons/mdi/map';
+	import Target from '~icons/mdi/target';
 	import Menu from '~icons/mdi/menu';
 	import Avatar from './Avatar.svelte';
 	import { page } from '$app/stores';
@@ -111,6 +112,7 @@
 	const navigationItems = [
 		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
 		{ path: '/collections', icon: FormatListBulletedSquare, label: 'navbar.collections' },
+		{ path: '/bucketlist', icon: Target, label: 'Bucket List' },
 		{ path: '/worldtravel', icon: Earth, label: 'navbar.worldtravel' },
 		{ path: '/map', icon: Map, label: 'navbar.map' },
 		{ path: '/calendar', icon: Calendar, label: 'navbar.calendar' },

@@ -20,7 +20,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies needed for build
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      git \
+    git \
+    bash \
       postgresql-client \
       gdal-bin \
       libgdal-dev \
@@ -43,6 +44,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Install runtime dependencies (including GDAL)
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    bash \
       postgresql-client \
       gdal-bin \
       libgdal-dev \
@@ -60,6 +62,11 @@ COPY ./server /code/
 COPY ./nginx.conf /etc/nginx/nginx.conf
 COPY ./supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY ./entrypoint.sh /code/entrypoint.sh
+
+# Fix Windows CRLF line endings to Unix LF
+RUN sed -i 's/\r$//' /code/entrypoint.sh
+
+# Make entrypoint executable and create necessary directories
 RUN chmod +x /code/entrypoint.sh \
     && mkdir -p /code/static /code/media
 
