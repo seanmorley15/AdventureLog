@@ -23,12 +23,12 @@
 	let isOpen: boolean = false;
 	let isEmojiPickerVisible: boolean = false;
 
-	function toggleEmojiPicker(event: Event) {
+	function toggleEmojiPicker(event: MouseEvent) {
 		event.stopPropagation();
 		isEmojiPickerVisible = !isEmojiPickerVisible;
 	}
 
-	function toggleDropdown(event: Event) {
+	function toggleDropdown(event: MouseEvent) {
 		event.stopPropagation();
 		isOpen = !isOpen;
 	}
@@ -40,7 +40,7 @@
 		isEmojiPickerVisible = false;
 	}
 
-	function custom_category(event: Event) {
+	function custom_category(event: MouseEvent) {
 		event.preventDefault();
 		event.stopPropagation();
 		new_category.name = new_category.display_name.toLowerCase().replace(/ /g, '_');
@@ -56,6 +56,8 @@
 		isEmojiPickerVisible = false;
 	}
 
+	// Prevent Enter key from closing dropdown or submitting parent forms
+	// This is especially important in Safari where Enter can trigger unexpected behaviors
 	function handleInputKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
 			event.preventDefault();
@@ -94,6 +96,8 @@
 		type="button"
 		tabindex="0"
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
+		aria-expanded={isOpen}
+		aria-haspopup="true"
 		on:click={toggleDropdown}
 	>
 		<span class="flex items-center gap-2">
