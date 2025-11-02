@@ -501,7 +501,6 @@ export type BucketListItem = {
 	status: string;
 	location: Location | null;
 	notes: string | null;
-	is_public: boolean;
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[];

@@ -24,7 +24,6 @@ class BucketItem(models.Model):
     # Optional link to an existing Location
     location = models.ForeignKey('adventures.Location', on_delete=models.SET_NULL, blank=True, null=True)
     notes = models.TextField(blank=True, null=True)
-    is_public = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

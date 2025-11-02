@@ -31,7 +31,6 @@ class BucketItemSerializer(CustomModelSerializer):
             'location',     # nested read representation
             'location_id',  # write-only id for create/update
             'notes',
-            'is_public',
             'created_at',
             'updated_at'
         )
