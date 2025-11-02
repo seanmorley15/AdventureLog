@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { enhance } from '$app/forms';
-	import { t } from 'svelte-i18n';
+	// Icons
 	import Plus from '~icons/mdi/plus';
 	import CheckCircle from '~icons/mdi/check-circle';
 	import ProgressClock from '~icons/mdi/progress-clock';
@@ -11,52 +8,29 @@
 	import FormatListChecks from '~icons/mdi/format-list-checks';
 	import Delete from '~icons/mdi/delete';
 	import Pencil from '~icons/mdi/pencil';
+	import Search from '~icons/mdi/magnify';
+	import Clear from '~icons/mdi/close';
+	import Filter from '~icons/mdi/filter-variant';
+	import Trophy from '~icons/mdi/trophy';
+	import Tag from '~icons/mdi/tag';
+	import type { BucketListItem } from '$lib/types';
+	import BucketListModal from '$lib/components/BucketListModal.svelte';
 
 	export let data: any;
-	export let form: any;
 
-	let bucketItems = data.props?.bucketItems || [];
-	let count = data.props?.count || 0;
-	let currentPage = 1;
+	let bucketItems: BucketListItem[] = data.props?.bucketItems || [];
 	let statusFilter = 'all';
+	let searchQuery = '';
+	let sidebarOpen = false;
 	let showModal = false;
-	let showEditModal = false;
-	let isSubmitting = false;
-	
-	// Form fields
-	let title = '';
-	let description = '';
-	let tags = '';
-	let status = 'planned';
-	let notes = '';
-	
-	// Edit fields
-	let editingItem: any = null;
-	let editTitle = '';
-	let editDescription = '';
-	let editTags = '';
-	let editStatus = 'planned';
-	let editNotes = '';
+	let editingItem: BucketListItem | null = null;
 
-	$: if (form?.success) {
-		closeModal();
-		closeEditModal();
-		// Reload to show new item
-		invalidateAll();
-	}
-
-	$: if (form?.error) {
-		alert('Error: ' + form.error);
-		isSubmitting = false;
-	}
-	
-	function handleFormSubmit() {
-		return async ({ result, update }) => {
-			isSubmitting = true;
-			await update();
-			isSubmitting = false;
-		};
-	}
+	$: filteredItems = filterItems(bucketItems, searchQuery, statusFilter);
+	$: completedCount = bucketItems.filter((item) => item.status === 'completed').length;
+	$: inProgressCount = bucketItems.filter((item) => item.status === 'in_progress').length;
+	$: plannedCount = bucketItems.filter((item) => item.status === 'planned').length;
+	$: totalCount = bucketItems.length || 1;
+	$: completionPercentage = Math.round((completedCount / totalCount) * 100);
 
 	const statusOptions = [
 		{ value: 'all', label: 'All', icon: FormatListChecks },
@@ -65,409 +39,384 @@
 		{ value: 'completed', label: 'Completed', icon: CheckCircle }
 	];
 
-	$: {
-		if (data.props?.bucketItems) {
-			bucketItems = data.props.bucketItems;
+	function filterItems(items: BucketListItem[], query: string, status: string): BucketListItem[] {
+		let filtered = items;
+
+		if (query) {
+			const lowerQuery = query.toLowerCase();
+			filtered = filtered.filter(
+				(item) =>
+					item.title.toLowerCase().includes(lowerQuery) ||
+					item.description?.toLowerCase().includes(lowerQuery) ||
+					item.tags?.some((tag) => tag.toLowerCase().includes(lowerQuery))
+			);
 		}
-		if (data.props?.count !== undefined) {
-			count = data.props.count;
+
+		if (status !== 'all') {
+			filtered = filtered.filter((item) => item.status === status);
+		}
+
+		return filtered;
+	}
+
+	function clearFilters() {
+		searchQuery = '';
+		statusFilter = 'all';
+	}
+
+	function getStatusBadgeClass(status: string): string {
+		switch (status) {
+			case 'completed':
+				return 'badge-success';
+			case 'in_progress':
+				return 'badge-warning';
+			default:
+				return 'badge-info';
 		}
 	}
 
-	$: {
-		let url = new URL($page.url);
-		let pageParam = url.searchParams.get('page');
-		if (pageParam) {
-			currentPage = parseInt(pageParam);
+	function getStatusLabel(status: string): string {
+		switch (status) {
+			case 'completed':
+				return 'Completed';
+			case 'in_progress':
+				return 'In Progress';
+			default:
+				return 'Planned';
 		}
-		let statusParam = url.searchParams.get('status');
-		if (statusParam) {
-			statusFilter = statusParam;
-		}
 	}
 
-	function changeStatus(newStatus: string) {
-		statusFilter = newStatus;
-		let url = new URL(window.location.href);
-		if (newStatus === 'all') {
-			url.searchParams.delete('status');
-		} else {
-			url.searchParams.set('status', newStatus);
-		}
-		url.searchParams.set('page', '1');
-		goto(url.toString(), { invalidateAll: true });
-	}
-
-	function getStatusBadgeClass(status: string) {
-		if (status === 'completed') return 'badge-success';
-		if (status === 'in_progress') return 'badge-warning';
-		return 'badge-info';
-	}
-
-	function getStatusLabel(status: string) {
-		if (status === 'completed') return 'Completed';
-		if (status === 'in_progress') return 'In Progress';
-		return 'Planned';
-	}
-
-	const completedCount = bucketItems.filter(item => item.status === 'completed').length;
-	const totalCount = bucketItems.length || 1;
-	const completionPercentage = Math.round((completedCount / totalCount) * 100);
-	
-	function openModal() {
+	function openCreateModal() {
+		editingItem = null;
 		showModal = true;
 	}
-	
-	function closeModal() {
-		showModal = false;
-		// Reset form
-		title = '';
-		description = '';
-		tags = '';
-		status = 'planned';
-		notes = '';
-		isSubmitting = false;
-	}
-	
-	function openEditModal(item: any) {
+
+	function openEditModal(item: BucketListItem) {
 		editingItem = item;
-		editTitle = item.title;
-		editDescription = item.description || '';
-		editTags = item.tags ? item.tags.join(', ') : '';
-		editStatus = item.status;
-		editNotes = item.notes || '';
-		showEditModal = true;
+		showModal = true;
 	}
-	
-	function closeEditModal() {
-		showEditModal = false;
+
+	function handleModalClose() {
+		showModal = false;
 		editingItem = null;
-		editTitle = '';
-		editDescription = '';
-		editTags = '';
-		editStatus = 'planned';
-		editNotes = '';
-		isSubmitting = false;
+	}
+
+	async function handleDelete(itemId: string) {
+		if (!confirm('Are you sure you want to delete this item?')) {
+			return;
+		}
+
+		try {
+			const response = await fetch(`/api/bucketlist/items/${itemId}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to delete item');
+			}
+
+			// Remove item from list
+			bucketItems = bucketItems.filter((item) => item.id !== itemId);
+		} catch (err) {
+			alert(err instanceof Error ? err.message : 'Failed to delete item');
+		}
 	}
 </script>
 
-<div class="container mx-auto p-4 max-w-7xl">
-	<!-- Header -->
-	<div class="mb-8">
-		<div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-			<div>
-				<h1 class="text-3xl font-bold flex items-center gap-3">
-					<Target class="w-8 h-8" />
-					Bucket List
-				</h1>
-				<p class="text-base-content/60 mt-2">
-					Track your travel goals and dream experiences
-				</p>
-			</div>
-			<button class="btn btn-primary gap-2" on:click={openModal}>
-				<Plus class="w-5 h-5" />
-				Add Item
-			</button>
-		</div>
+<svelte:head>
+	<title>Bucket List - Track Your Travel Goals</title>
+	<meta
+		name="description"
+		content="Track your travel goals and dream experiences with your bucket list."
+	/>
+</svelte:head>
 
-		<!-- Progress Bar -->
-		{#if bucketItems.length > 0}
-			<div class="card bg-base-200 shadow-md p-6">
-				<div class="flex items-center justify-between mb-2">
-					<span class="text-sm font-semibold">Overall Progress</span>
-					<span class="text-sm text-base-content/60"
-						>{completedCount} of {totalCount} completed</span
-					>
-				</div>
-				<progress class="progress progress-success w-full" value={completionPercentage} max="100"
-				></progress>
-				<div class="text-right mt-1 text-xs text-base-content/60">
-					{completionPercentage}%
-				</div>
-			</div>
-		{/if}
-	</div>
+<div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
+	<div class="drawer lg:drawer-open">
+		<input id="bucket-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
-	<!-- Status Filter -->
-	<div class="flex flex-wrap gap-2 mb-6">
-		{#each statusOptions as option}
-			<button
-				class="btn btn-sm gap-2"
-				class:btn-active={statusFilter === option.value}
-				on:click={() => changeStatus(option.value)}
-			>
-				<svelte:component this={option.icon} class="w-4 h-4" />
-				{option.label}
-				{#if option.value !== 'all'}
-					<span class="badge badge-sm">
-						{bucketItems.filter(item => item.status === option.value).length}
-					</span>
-				{/if}
-			</button>
-		{/each}
-	</div>
-
-	<!-- Items List -->
-	{#if bucketItems.length === 0}
-		<div class="text-center py-16">
-			<Target class="w-16 h-16 mx-auto text-base-content/20 mb-4" />
-			<h3 class="text-xl font-semibold mb-2">No bucket list items yet</h3>
-			<p class="text-base-content/60 mb-6">Start tracking your travel dreams and goals!</p>
-			<button class="btn btn-primary gap-2" on:click={openModal}>
-				<Plus class="w-5 h-5" />
-				Add Your First Item
-			</button>
-		</div>
-	{:else}
-		<div class="grid gap-4">
-			{#each bucketItems as item (item.id)}
-				<div class="card bg-base-100 shadow hover:shadow-lg transition-all border border-base-300">
-					<div class="card-body">
-						<div class="flex items-start justify-between gap-4">
-							<div class="flex-1">
-								<h3 class="card-title text-lg">{item.title}</h3>
-								{#if item.description}
-									<p class="text-sm text-base-content/70 mt-2">{item.description}</p>
-								{/if}
-								{#if item.tags && item.tags.length > 0}
-									<div class="flex flex-wrap gap-2 mt-3">
-										{#each item.tags as tag}
-											<span class="badge badge-sm badge-ghost">{tag}</span>
-										{/each}
-									</div>
-								{/if}
-								{#if item.notes}
-									<div class="text-xs text-base-content/60 mt-2 italic">
-										Note: {item.notes}
-									</div>
-								{/if}
+		<div class="drawer-content">
+			<!-- Header Section -->
+			<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
+				<div class="container mx-auto px-6 py-4">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-4">
+							<button
+								class="btn btn-ghost btn-square lg:hidden"
+								on:click={() => (sidebarOpen = !sidebarOpen)}
+							>
+								<Filter class="w-5 h-5" />
+							</button>
+							<div class="flex items-center gap-3">
+								<div class="p-2 bg-primary/10 rounded-xl">
+									<Target class="w-8 h-8 text-primary" />
+								</div>
+								<div>
+									<h1 class="text-3xl font-bold bg-clip-text text-primary">Bucket List</h1>
+									<p class="text-sm text-base-content/60">
+										{filteredItems.length} of {bucketItems.length} items
+									</p>
+								</div>
 							</div>
-							<div class="flex flex-col items-end gap-2">
-								<span class="badge {getStatusBadgeClass(item.status)} badge-sm">
-									{getStatusLabel(item.status)}
-								</span>
-								{#if item.location}
-									<span class="text-xs text-base-content/60">Linked to location</span>
-								{/if}
-								<!-- Action buttons -->
-								<div class="flex gap-2 mt-2">
-									<button 
-										class="btn btn-sm btn-ghost gap-1" 
-										on:click={() => openEditModal(item)}
-										title="Edit item"
-									>
-										<Pencil class="w-4 h-4" />
-										Edit
-									</button>
-									<form method="POST" action="?/delete" use:enhance={handleFormSubmit}>
-										<input type="hidden" name="id" value={item.id} />
-										<button 
-											type="submit" 
-											class="btn btn-sm btn-ghost btn-error gap-1"
+						</div>
+
+						<!-- Completion Badge & Add Button -->
+						<div class="hidden md:flex items-center gap-3">
+							{#if completionPercentage === 100 && bucketItems.length > 0}
+								<div class="badge badge-success gap-2 p-3">
+									<Trophy class="w-4 h-4" />
+									Complete!
+								</div>
+							{:else}
+								<div class="badge badge-primary gap-2 p-3">
+									<Target class="w-4 h-4" />
+									{completionPercentage}%
+								</div>
+							{/if}
+							<button class="btn btn-primary gap-2" on:click={openCreateModal}>
+								<Plus class="w-5 h-5" />
+								Add Item
+							</button>
+						</div>
+					</div>
+
+					<!-- Search and Filters -->
+					<div class="mt-4 flex items-center gap-4">
+						<div class="relative flex-1 max-w-md">
+							<Search
+								class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40"
+							/>
+							<input
+								type="text"
+								placeholder="Search bucket list..."
+								class="input input-bordered w-full pl-10 pr-10 bg-base-100/80"
+								bind:value={searchQuery}
+							/>
+							{#if searchQuery}
+								<button
+									class="absolute right-3 top-1/2 -translate-y-1/2 text-base-content/40 hover:text-base-content"
+									on:click={() => (searchQuery = '')}
+								>
+									<Clear class="w-4 h-4" />
+								</button>
+							{/if}
+						</div>
+						<button class="btn btn-primary gap-2 md:hidden" on:click={openCreateModal}>
+							<Plus class="w-5 h-5" />
+						</button>
+					</div>
+
+					<!-- Filter Chips -->
+					<div class="mt-4 flex flex-wrap items-center gap-2">
+						<span class="text-sm font-medium text-base-content/60">Filter by:</span>
+						<div class="tabs tabs-boxed bg-base-200">
+							{#each statusOptions as option}
+								<button
+									class="tab tab-sm gap-2 {statusFilter === option.value ? 'tab-active' : ''}"
+									on:click={() => (statusFilter = option.value)}
+								>
+									<svelte:component this={option.icon} class="w-3 h-3" />
+									{option.label}
+									{#if option.value !== 'all'}
+										<span class="badge badge-xs">
+											{bucketItems.filter((item) => item.status === option.value).length}
+										</span>
+									{/if}
+								</button>
+							{/each}
+						</div>
+
+						{#if searchQuery || statusFilter !== 'all'}
+							<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+								<Clear class="w-3 h-3" />
+								Clear all
+							</button>
+						{/if}
+					</div>
+				</div>
+			</div>
+
+			<!-- Main Content -->
+			<div class="container mx-auto px-6 py-8">
+				{#if filteredItems.length === 0}
+					<div class="flex flex-col items-center justify-center py-16">
+						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
+							<Target class="w-16 h-16 text-base-content/30" />
+						</div>
+						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
+							{bucketItems.length === 0 ? 'No bucket list items yet' : 'No items found'}
+						</h3>
+						<p class="text-base-content/50 text-center max-w-md mb-6">
+							{bucketItems.length === 0
+								? 'Start tracking your travel dreams and goals!'
+								: 'Try adjusting your filters or search query.'}
+						</p>
+						{#if bucketItems.length === 0}
+							<button class="btn btn-primary gap-2" on:click={openCreateModal}>
+								<Plus class="w-4 h-4" />
+								Add Your First Item
+							</button>
+						{:else}
+							<button class="btn btn-primary gap-2" on:click={clearFilters}>
+								<Clear class="w-4 h-4" />
+								Clear Filters
+							</button>
+						{/if}
+					</div>
+				{:else}
+					<!-- Items Grid -->
+					<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+						{#each filteredItems as item (item.id)}
+							<div
+								class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all border border-base-300"
+							>
+								<div class="card-body">
+									<div class="flex items-start justify-between gap-2 mb-2">
+										<h3 class="card-title text-lg flex-1">{item.title}</h3>
+										<span class="badge {getStatusBadgeClass(item.status)} badge-sm">
+											{getStatusLabel(item.status)}
+										</span>
+									</div>
+
+									{#if item.description}
+										<p class="text-sm text-base-content/70 line-clamp-3">{item.description}</p>
+									{/if}
+
+									{#if item.tags && item.tags.length > 0}
+										<div class="flex flex-wrap gap-2 mt-2">
+											{#each item.tags as tag}
+												<span class="badge badge-sm badge-ghost gap-1">
+													<Tag class="w-3 h-3" />
+													{tag}
+												</span>
+											{/each}
+										</div>
+									{/if}
+
+									{#if item.notes}
+										<div
+											class="mt-2 p-2 bg-base-200/50 rounded text-xs text-base-content/60 italic"
+										>
+											{item.notes}
+										</div>
+									{/if}
+
+									<div class="card-actions justify-end mt-4 pt-4 border-t border-base-300">
+										<button
+											class="btn btn-sm btn-ghost gap-1"
+											on:click={() => openEditModal(item)}
+											title="Edit item"
+										>
+											<Pencil class="w-4 h-4" />
+											Edit
+										</button>
+										<button
+											class="btn btn-sm btn-ghost text-error gap-1"
+											on:click={() => handleDelete(item.id)}
 											title="Delete item"
 										>
 											<Delete class="w-4 h-4" />
 											Delete
 										</button>
-									</form>
+									</div>
 								</div>
 							</div>
+						{/each}
+					</div>
+				{/if}
+			</div>
+		</div>
+
+		<!-- Sidebar -->
+		<div class="drawer-side z-50">
+			<label for="bucket-drawer" class="drawer-overlay"></label>
+			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
+				<div class="p-6">
+					<!-- Sidebar Header -->
+					<div class="flex items-center gap-3 mb-8">
+						<div class="p-2 bg-primary/10 rounded-lg">
+							<Target class="w-6 h-6 text-primary" />
+						</div>
+						<h2 class="text-xl font-bold">Progress & Stats</h2>
+					</div>
+
+					<!-- Overall Progress -->
+					<div class="card bg-base-200/50 p-4 mb-6">
+						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+							<Trophy class="w-5 h-5" />
+							Overall Progress
+						</h3>
+
+						<div class="space-y-4">
+							<div class="stat p-0">
+								<div class="stat-title text-sm">Total Items</div>
+								<div class="stat-value text-2xl">{bucketItems.length}</div>
+								<div class="stat-desc">Travel goals & dreams</div>
+							</div>
+
+							<div class="grid grid-cols-3 gap-2">
+								<div class="stat p-0">
+									<div class="stat-title text-xs">Planned</div>
+									<div class="stat-value text-lg text-info">{plannedCount}</div>
+								</div>
+								<div class="stat p-0">
+									<div class="stat-title text-xs">In Progress</div>
+									<div class="stat-value text-lg text-warning">{inProgressCount}</div>
+								</div>
+								<div class="stat p-0">
+									<div class="stat-title text-xs">Done</div>
+									<div class="stat-value text-lg text-success">{completedCount}</div>
+								</div>
+							</div>
+
+							<!-- Progress Bar -->
+							<div class="space-y-2">
+								<div class="flex justify-between text-sm">
+									<span>Completion</span>
+									<span class="font-semibold">{completionPercentage}%</span>
+								</div>
+								<progress
+									class="progress progress-success w-full"
+									value={completedCount}
+									max={bucketItems.length || 1}
+								></progress>
+							</div>
+
+							{#if completionPercentage === 100 && bucketItems.length > 0}
+								<div class="alert alert-success">
+									<Trophy class="w-4 h-4" />
+									<span class="text-sm">All goals completed! 🎉</span>
+								</div>
+							{/if}
 						</div>
 					</div>
+
+					<!-- Quick Stats -->
+					<div class="space-y-3">
+						<h3 class="font-semibold text-sm text-base-content/60 uppercase tracking-wide">
+							Quick Actions
+						</h3>
+						<button class="btn btn-outline w-full gap-2" on:click={openCreateModal}>
+							<Plus class="w-4 h-4" />
+							Add New Item
+						</button>
+						{#if searchQuery || statusFilter !== 'all'}
+							<button class="btn btn-ghost w-full gap-2" on:click={clearFilters}>
+								<Clear class="w-4 h-4" />
+								Clear All Filters
+							</button>
+						{/if}
+					</div>
 				</div>
-			{/each}
+			</div>
 		</div>
-	{/if}
+	</div>
 </div>
 
-<!-- Add Item Modal -->
-{#if showModal}
-	<div class="modal modal-open">
-		<div class="modal-box max-w-2xl">
-			<h3 class="font-bold text-lg mb-4">Add Bucket List Item</h3>
-			<form method="POST" action="?/create" use:enhance={handleFormSubmit}>
-				<div class="form-control w-full mb-4">
-					<label class="label" for="title">
-						<span class="label-text">Title <span class="text-error">*</span></span>
-					</label>
-					<input
-						id="title"
-						name="title"
-						type="text"
-						placeholder="e.g., Visit the Northern Lights"
-						class="input input-bordered w-full"
-						value={title}
-						required
-					/>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="description">
-						<span class="label-text">Description</span>
-					</label>
-					<textarea
-						id="description"
-						name="description"
-						placeholder="Describe your travel goal..."
-						class="textarea textarea-bordered h-24"
-						value={description}
-					></textarea>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="tags">
-						<span class="label-text">Tags</span>
-					</label>
-					<input
-						id="tags"
-						name="tags"
-						type="text"
-						placeholder="e.g., adventure, nature, photography (comma-separated)"
-						class="input input-bordered w-full"
-						value={tags}
-					/>
-					<label class="label">
-						<span class="label-text-alt">Separate multiple tags with commas</span>
-					</label>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="status">
-						<span class="label-text">Status</span>
-					</label>
-					<select id="status" name="status" class="select select-bordered w-full" value={status}>
-						<option value="planned">Planned</option>
-						<option value="in_progress">In Progress</option>
-						<option value="completed">Completed</option>
-					</select>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="notes">
-						<span class="label-text">Notes</span>
-					</label>
-					<textarea
-						id="notes"
-						name="notes"
-						placeholder="Any additional notes or details..."
-						class="textarea textarea-bordered h-20"
-						value={notes}
-					></textarea>
-				</div>
-
-				<div class="modal-action">
-					<button type="button" class="btn" on:click={closeModal} disabled={isSubmitting}>
-						Cancel
-					</button>
-					<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
-						{#if isSubmitting}
-							<span class="loading loading-spinner loading-sm"></span>
-							Creating...
-						{:else}
-							<Plus class="w-5 h-5" />
-							Create Item
-						{/if}
-					</button>
-				</div>
-			</form>
-		</div>
-		<div class="modal-backdrop" on:click={closeModal}></div>
-	</div>
-{/if}
-
-<!-- Edit Item Modal -->
-{#if showEditModal && editingItem}
-	<div class="modal modal-open">
-		<div class="modal-box max-w-2xl">
-			<h3 class="font-bold text-lg mb-4">Edit Bucket List Item</h3>
-			<form method="POST" action="?/update" use:enhance={handleFormSubmit}>
-				<input type="hidden" name="id" value={editingItem.id} />
-				
-				<div class="form-control w-full mb-4">
-					<label class="label" for="edit-title">
-						<span class="label-text">Title <span class="text-error">*</span></span>
-					</label>
-					<input
-						id="edit-title"
-						name="title"
-						type="text"
-						placeholder="e.g., Visit the Northern Lights"
-						class="input input-bordered w-full"
-						bind:value={editTitle}
-						required
-					/>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="edit-description">
-						<span class="label-text">Description</span>
-					</label>
-					<textarea
-						id="edit-description"
-						name="description"
-						placeholder="Describe your travel goal..."
-						class="textarea textarea-bordered h-24"
-						bind:value={editDescription}
-					></textarea>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="edit-tags">
-						<span class="label-text">Tags</span>
-					</label>
-					<input
-						id="edit-tags"
-						name="tags"
-						type="text"
-						placeholder="e.g., adventure, nature, photography (comma-separated)"
-						class="input input-bordered w-full"
-						bind:value={editTags}
-					/>
-					<label class="label">
-						<span class="label-text-alt">Separate multiple tags with commas</span>
-					</label>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="edit-status">
-						<span class="label-text">Status</span>
-					</label>
-					<select id="edit-status" name="status" class="select select-bordered w-full" bind:value={editStatus}>
-						<option value="planned">Planned</option>
-						<option value="in_progress">In Progress</option>
-						<option value="completed">Completed</option>
-					</select>
-				</div>
-
-				<div class="form-control w-full mb-4">
-					<label class="label" for="edit-notes">
-						<span class="label-text">Notes</span>
-					</label>
-					<textarea
-						id="edit-notes"
-						name="notes"
-						placeholder="Any additional notes or details..."
-						class="textarea textarea-bordered h-20"
-						bind:value={editNotes}
-					></textarea>
-				</div>
-
-				<div class="modal-action">
-					<button type="button" class="btn" on:click={closeEditModal} disabled={isSubmitting}>
-						Cancel
-					</button>
-					<button type="submit" class="btn btn-primary" disabled={isSubmitting}>
-						{#if isSubmitting}
-							<span class="loading loading-spinner loading-sm"></span>
-							Updating...
-						{:else}
-							<Pencil class="w-5 h-5" />
-							Update Item
-						{/if}
-					</button>
-				</div>
-			</form>
-		</div>
-		<div class="modal-backdrop" on:click={closeEditModal}></div>
-	</div>
-{/if}
+<!-- Modal Component -->
+<BucketListModal
+	bind:show={showModal}
+	bind:editItem={editingItem}
+	bind:items={bucketItems}
+	on:close={handleModalClose}
+/>
