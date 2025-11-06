@@ -23,11 +23,13 @@
 	let isOpen: boolean = false;
 	let isEmojiPickerVisible: boolean = false;
 
-	function toggleEmojiPicker() {
+	function toggleEmojiPicker(event: MouseEvent) {
+		event.stopPropagation();
 		isEmojiPickerVisible = !isEmojiPickerVisible;
 	}
 
-	function toggleDropdown() {
+	function toggleDropdown(event: MouseEvent) {
+		event.stopPropagation();
 		isOpen = !isOpen;
 	}
 
@@ -35,9 +37,12 @@
 		console.log('category', category);
 		selected_category = category;
 		isOpen = false;
+		isEmojiPickerVisible = false;
 	}
 
-	function custom_category() {
+	function custom_category(event: MouseEvent) {
+		event.preventDefault();
+		event.stopPropagation();
 		new_category.name = new_category.display_name.toLowerCase().replace(/ /g, '_');
 		if (!new_category.icon) {
 			new_category.icon = '🌎'; // Default icon if none selected
@@ -46,7 +51,18 @@
 	}
 
 	function handleEmojiSelect(event: CustomEvent) {
+		event.stopPropagation();
 		new_category.icon = event.detail.unicode;
+		isEmojiPickerVisible = false;
+	}
+
+	// Prevent Enter key from closing dropdown or submitting parent forms
+	// This is especially important in Safari where Enter can trigger unexpected behaviors
+	function handleInputKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			event.stopPropagation();
+		}
 	}
 
 	// Close dropdown when clicking outside
@@ -76,10 +92,12 @@
 
 <div class="dropdown w-full" bind:this={dropdownRef}>
 	<!-- Main dropdown trigger -->
-	<div
+	<button
+		type="button"
 		tabindex="0"
-		role="button"
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
+		aria-expanded={isOpen}
+		aria-haspopup="true"
 		on:click={toggleDropdown}
 	>
 		<span class="flex items-center gap-2">
@@ -98,21 +116,33 @@
 		>
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
 		</svg>
-	</div>
+	</button>
 
 	{#if isOpen}
 		<!-- Mobile Modal Overlay (only on small screens) -->
-		<div class="fixed inset-0 bg-black/50 z-40 sm:hidden" on:click={() => (isOpen = false)}></div>
+		<div
+			class="fixed inset-0 bg-black/50 z-40 sm:hidden"
+			role="presentation"
+			on:click|stopPropagation={() => (isOpen = false)}
+			on:keydown={(e) => e.key === 'Escape' && (isOpen = false)}
+		></div>
 
 		<!-- Mobile Bottom Sheet -->
 		<div
 			class="fixed bottom-0 left-0 right-0 z-50 bg-base-100 rounded-t-2xl shadow-2xl border-t border-base-300 max-h-[90vh] flex flex-col sm:hidden"
+			role="dialog"
+			aria-modal="true"
+			on:click|stopPropagation
 		>
 			<!-- Mobile Header -->
 			<div class="flex-shrink-0 bg-base-100 border-b border-base-300 p-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold">{$t('categories.select_category')}</h2>
-					<button class="btn btn-ghost btn-sm btn-circle" on:click={() => (isOpen = false)}>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-circle"
+						on:click|stopPropagation={() => (isOpen = false)}
+					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -147,6 +177,8 @@
 								placeholder={$t('categories.category_name')}
 								class="input input-bordered w-full h-12 text-base"
 								bind:value={new_category.display_name}
+								on:keydown={handleInputKeydown}
+								on:click|stopPropagation
 							/>
 							<div class="join w-full">
 								<input
@@ -154,6 +186,8 @@
 									placeholder={$t('categories.icon')}
 									class="input input-bordered join-item flex-1 h-12 text-base"
 									bind:value={new_category.icon}
+									on:keydown={handleInputKeydown}
+									on:click|stopPropagation
 								/>
 								<button
 									on:click={toggleEmojiPicker}
@@ -184,7 +218,12 @@
 						</button>
 
 						{#if isEmojiPickerVisible}
-							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
+							<div
+								class="p-3 rounded-lg border border-base-300 bg-base-50"
+								role="dialog"
+								aria-label="Emoji picker"
+								on:click|stopPropagation
+							>
 								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
 							</div>
 						{/if}
@@ -204,6 +243,8 @@
 								placeholder={$t('navbar.search')}
 								class="input input-bordered w-full h-12 text-base"
 								bind:value={searchTerm}
+								on:keydown={handleInputKeydown}
+								on:click|stopPropagation
 							/>
 						</div>
 
@@ -221,7 +262,7 @@
 									class:text-primary-content={selected_category &&
 										selected_category.id === category.id}
 									class:border-primary={selected_category && selected_category.id === category.id}
-									on:click={() => selectCategory(category)}
+									on:click|stopPropagation={() => selectCategory(category)}
 								>
 									<div class="flex items-center gap-3 w-full">
 										<span class="text-2xl flex-shrink-0">{category.icon}</span>
@@ -247,6 +288,7 @@
 		<!-- Desktop Dropdown -->
 		<div
 			class="dropdown-content z-[1] w-full mt-1 bg-base-300 rounded-box shadow-xl border border-base-300 max-h-96 overflow-y-auto hidden sm:block"
+			on:click|stopPropagation
 		>
 			<!-- Desktop Category Creator Section -->
 			<div class="p-4 border-b border-base-300">
@@ -270,6 +312,8 @@
 								placeholder={$t('categories.category_name')}
 								class="input input-bordered input-sm w-full"
 								bind:value={new_category.display_name}
+								on:keydown={handleInputKeydown}
+								on:click|stopPropagation
 							/>
 						</div>
 						<div class="form-control">
@@ -279,6 +323,8 @@
 									placeholder={$t('categories.icon')}
 									class="input input-bordered input-sm flex-1"
 									bind:value={new_category.icon}
+									on:keydown={handleInputKeydown}
+									on:click|stopPropagation
 								/>
 								<button
 									on:click={toggleEmojiPicker}
@@ -312,7 +358,12 @@
 					</div>
 
 					{#if isEmojiPickerVisible}
-						<div class="p-3 rounded-lg border border-base-300">
+						<div
+							class="p-3 rounded-lg border border-base-300"
+							role="dialog"
+							aria-label="Emoji picker"
+							on:click|stopPropagation
+						>
 							<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
 						</div>
 					{/if}
@@ -340,6 +391,8 @@
 							placeholder={$t('navbar.search')}
 							class="input input-bordered input-sm w-full"
 							bind:value={searchTerm}
+							on:keydown={handleInputKeydown}
+							on:click|stopPropagation
 						/>
 					</div>
 
@@ -356,7 +409,7 @@
 								type="button"
 								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
 								class:btn-active={selected_category && selected_category.id === category.id}
-								on:click={() => selectCategory(category)}
+								on:click|stopPropagation={() => selectCategory(category)}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>
