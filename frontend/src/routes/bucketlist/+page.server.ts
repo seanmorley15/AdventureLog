@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ fetch, locals, url, cookies }) => {
 	try {
 		const page = url.searchParams.get('page') || '1';
 		const status = url.searchParams.get('status') || 'all';
-		
+
 		let apiUrl = `${endpoint}/api/bucketlist/items/?page=${page}`;
 		if (status !== 'all') {
 			apiUrl += `&status=${status}`;
@@ -31,7 +31,7 @@ export const load: PageServerLoad = async ({ fetch, locals, url, cookies }) => {
 			},
 			credentials: 'include'
 		});
-		
+
 		if (res.ok) {
 			const data = await res.json();
 			return {
