@@ -10,6 +10,7 @@ from integrations.models import ImmichIntegration
 from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existing permission class
 import requests
 from adventures.permissions import ContentImagePermission
+from bucketlist.models import BucketItem
 
 
 class ContentImageViewSet(viewsets.ModelViewSet):
@@ -89,6 +90,11 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 # Visits - access through collections owned by user
                 Q(content_type=ContentType.objects.get_for_model(Visit)) &
                 Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                # BucketItems owned by user
+                Q(content_type=ContentType.objects.get_for_model(BucketItem)) &
+                Q(object_id__in=BucketItem.objects.filter(user=self.request.user).values_list('id', flat=True))
             )
         ).distinct()
 
@@ -156,6 +162,7 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             'note': Note,
             'lodging': Lodging,
             'visit': Visit,
+            'bucketitem': BucketItem,
         }
         
         if content_type_name not in content_type_map:
