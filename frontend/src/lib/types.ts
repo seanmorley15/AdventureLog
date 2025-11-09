@@ -491,3 +491,18 @@ export type Pin = {
 	is_visited?: boolean;
 	category: Category | null;
 };
+
+export type BucketListItem = {
+	id: string;
+	user: string;
+	title: string;
+	description: string | null;
+	tags: string[] | null;
+	status: string;
+	location: Location | null;
+	notes: string | null;
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+	images: ContentImage[];
+	attachments: Attachment[];
+};
