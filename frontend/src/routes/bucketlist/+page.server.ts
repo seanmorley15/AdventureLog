@@ -53,6 +53,48 @@ export const load: PageServerLoad = async ({ fetch, locals, url, cookies }) => {
 	};
 };
 
+async function uploadImage(itemId: string, imageFile: File, csrfToken: string, sessionId: string): Promise<void> {
+	const imageFormData = new FormData();
+	imageFormData.append('image', imageFile);
+	imageFormData.append('content_type', 'bucketitem');
+	imageFormData.append('object_id', itemId);
+	
+	const imageResponse = await fetch(`${endpoint}/api/images/`, {
+		method: 'POST',
+		headers: {
+			'X-CSRFToken': csrfToken,
+			Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
+		},
+		credentials: 'include',
+		body: imageFormData
+	});
+	
+	if (!imageResponse.ok) {
+		console.error('Failed to upload image:', await imageResponse.text());
+	}
+}
+
+async function uploadAttachment(itemId: string, attachmentFile: File, csrfToken: string, sessionId: string): Promise<void> {
+	const attachmentFormData = new FormData();
+	attachmentFormData.append('attachment', attachmentFile);
+	attachmentFormData.append('content_type', 'bucketitem');
+	attachmentFormData.append('object_id', itemId);
+	
+	const attachmentResponse = await fetch(`${endpoint}/api/attachments/`, {
+		method: 'POST',
+		headers: {
+			'X-CSRFToken': csrfToken,
+			Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`
+		},
+		credentials: 'include',
+		body: attachmentFormData
+	});
+	
+	if (!attachmentResponse.ok) {
+		console.error('Failed to upload attachment:', await attachmentResponse.text());
+	}
+}
+
 export const actions = {
 	create: async ({ request, fetch, locals, cookies }) => {
 		console.log('Create action called');
@@ -69,8 +111,9 @@ export const actions = {
 		const tags = formData.get('tags')?.toString() || '';
 		const status = formData.get('status')?.toString() || 'planned';
 		const notes = formData.get('notes')?.toString() || '';
+		const location = formData.get('location')?.toString() || '';
 
-		console.log('Form data:', { title, description, tags, status, notes });
+		console.log('Form data:', { title, description, tags, status, notes, location });
 
 		if (!title) {
 			return fail(400, { error: 'Title is required' });
@@ -79,7 +122,7 @@ export const actions = {
 		try {
 			const csrfToken = await fetchCSRFToken();
 			
-			const payload = {
+			const payload: any = {
 				title: title.trim(),
 				description: description.trim(),
 				tags: tags.trim() ? tags.split(',').map(t => t.trim()) : [],
@@ -87,6 +130,10 @@ export const actions = {
 				notes: notes.trim(),
 				is_public: false
 			};
+			
+			if (location) {
+				payload.location = location;
+			}
 			
 			console.log('Sending payload:', JSON.stringify(payload));
 
@@ -111,6 +158,27 @@ export const actions = {
 
 			const result = await response.json();
 			console.log('Success! Created item:', result);
+			
+			// Upload images if any
+			const images = formData.getAll('images');
+			if (images && images.length > 0 && images[0] instanceof File && images[0].size > 0) {
+				for (const image of images) {
+					if (image instanceof File) {
+						await uploadImage(result.id, image, csrfToken, cookies.get('sessionid') || '');
+					}
+				}
+			}
+			
+			// Upload attachments if any
+			const attachments = formData.getAll('attachments');
+			if (attachments && attachments.length > 0 && attachments[0] instanceof File && attachments[0].size > 0) {
+				for (const attachment of attachments) {
+					if (attachment instanceof File) {
+						await uploadAttachment(result.id, attachment, csrfToken, cookies.get('sessionid') || '');
+					}
+				}
+			}
+			
 			return { success: true };
 		} catch (error) {
 			console.error('Exception:', error);
@@ -132,8 +200,9 @@ export const actions = {
 		const tags = formData.get('tags')?.toString() || '';
 		const status = formData.get('status')?.toString() || 'planned';
 		const notes = formData.get('notes')?.toString() || '';
+		const location = formData.get('location')?.toString() || '';
 
-		console.log('Update form data:', { id, title, description, tags, status, notes });
+		console.log('Update form data:', { id, title, description, tags, status, notes, location });
 
 		if (!id) {
 			return fail(400, { error: 'ID is required' });
@@ -146,7 +215,7 @@ export const actions = {
 		try {
 			const csrfToken = await fetchCSRFToken();
 			
-			const payload = {
+			const payload: any = {
 				title: title.trim(),
 				description: description.trim(),
 				tags: tags.trim() ? tags.split(',').map(t => t.trim()) : [],
@@ -154,6 +223,10 @@ export const actions = {
 				notes: notes.trim(),
 				is_public: false
 			};
+			
+			if (location) {
+				payload.location = location;
+			}
 			
 			console.log('Sending update payload:', JSON.stringify(payload));
 
@@ -178,6 +251,27 @@ export const actions = {
 
 			const result = await response.json();
 			console.log('Success! Updated item:', result);
+			
+			// Upload images if any
+			const images = formData.getAll('images');
+			if (images && images.length > 0 && images[0] instanceof File && images[0].size > 0) {
+				for (const image of images) {
+					if (image instanceof File) {
+						await uploadImage(id, image, csrfToken, cookies.get('sessionid') || '');
+					}
+				}
+			}
+			
+			// Upload attachments if any
+			const attachments = formData.getAll('attachments');
+			if (attachments && attachments.length > 0 && attachments[0] instanceof File && attachments[0].size > 0) {
+				for (const attachment of attachments) {
+					if (attachment instanceof File) {
+						await uploadAttachment(id, attachment, csrfToken, cookies.get('sessionid') || '');
+					}
+				}
+			}
+			
 			return { success: true };
 		} catch (error) {
 			console.error('Update exception:', error);

@@ -6,6 +6,7 @@ from adventures.models import Location, Transportation, Note, Lodging, Visit, Co
 from adventures.serializers import AttachmentSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.permissions import ContentImagePermission
+from bucketlist.models import BucketItem
 
 
 class AttachmentViewSet(viewsets.ModelViewSet):
@@ -85,6 +86,11 @@ class AttachmentViewSet(viewsets.ModelViewSet):
                 # Visits - access through collections owned by user
                 Q(content_type=ContentType.objects.get_for_model(Visit)) &
                 Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
+            ) |
+            (
+                # BucketItems owned by user
+                Q(content_type=ContentType.objects.get_for_model(BucketItem)) &
+                Q(object_id__in=BucketItem.objects.filter(user=self.request.user).values_list('id', flat=True))
             )
         ).distinct()
 
@@ -123,6 +129,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             'note': Note,
             'lodging': Lodging,
             'visit': Visit,
+            'bucketitem': BucketItem,
         }
         
         if content_type_name not in content_type_map:
@@ -164,6 +171,7 @@ class AttachmentViewSet(viewsets.ModelViewSet):
             'note': Note,
             'lodging': Lodging,
             'visit': Visit,
+            'bucketitem': BucketItem,
         }
         
         model_class = content_type_map[content_type_name]

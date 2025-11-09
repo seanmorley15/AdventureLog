@@ -11,6 +11,10 @@
 	import FormatListChecks from '~icons/mdi/format-list-checks';
 	import Delete from '~icons/mdi/delete';
 	import Pencil from '~icons/mdi/pencil';
+	import MapMarker from '~icons/mdi/map-marker';
+	import Image from '~icons/mdi/image';
+	import Paperclip from '~icons/mdi/paperclip';
+	import Close from '~icons/mdi/close';
 
 	export let data: any;
 	export let form: any;
@@ -29,6 +33,9 @@
 	let tags = '';
 	let status = 'planned';
 	let notes = '';
+	let selectedLocation: string = '';
+	let imageFiles: FileList | null = null;
+	let attachmentFiles: FileList | null = null;
 	
 	// Edit fields
 	let editingItem: any = null;
@@ -37,6 +44,15 @@
 	let editTags = '';
 	let editStatus = 'planned';
 	let editNotes = '';
+	let editSelectedLocation: string = '';
+	let editImageFiles: FileList | null = null;
+	let editAttachmentFiles: FileList | null = null;
+	
+	// Location search
+	let locationSearch = '';
+	let editLocationSearch = '';
+	let locations: any[] = [];
+	let searchTimeout: any = null;
 
 	$: if (form?.success) {
 		closeModal();
@@ -116,6 +132,7 @@
 	
 	function openModal() {
 		showModal = true;
+		searchLocations(''); // Load initial locations
 	}
 	
 	function closeModal() {
@@ -126,17 +143,42 @@
 		tags = '';
 		status = 'planned';
 		notes = '';
+		selectedLocation = '';
+		locationSearch = '';
+		imageFiles = null;
+		attachmentFiles = null;
 		isSubmitting = false;
 	}
 	
-	function openEditModal(item: any) {
+	async function openEditModal(item: any) {
 		editingItem = item;
 		editTitle = item.title;
 		editDescription = item.description || '';
 		editTags = item.tags ? item.tags.join(', ') : '';
 		editStatus = item.status;
 		editNotes = item.notes || '';
+		editSelectedLocation = item.location || '';
+		editImageFiles = null;
+		editAttachmentFiles = null;
+		
+		// If there's a location, fetch its name for display
+		if (item.location) {
+			try {
+				const response = await fetch(`/api/locations/${item.location}/`);
+				if (response.ok) {
+					const locationData = await response.json();
+					editLocationSearch = locationData.name;
+				}
+			} catch (error) {
+				console.error('Failed to fetch location:', error);
+				editLocationSearch = '';
+			}
+		} else {
+			editLocationSearch = '';
+		}
+		
 		showEditModal = true;
+		searchLocations(''); // Load initial locations
 	}
 	
 	function closeEditModal() {
@@ -147,7 +189,68 @@
 		editTags = '';
 		editStatus = 'planned';
 		editNotes = '';
+		editSelectedLocation = '';
+		editLocationSearch = '';
+		editImageFiles = null;
+		editAttachmentFiles = null;
 		isSubmitting = false;
+	}
+	
+	// Search for locations
+	async function searchLocations(query: string) {
+		if (searchTimeout) clearTimeout(searchTimeout);
+		
+		searchTimeout = setTimeout(async () => {
+			try {
+				const response = await fetch(`/api/locations/?search=${encodeURIComponent(query)}&page_size=20`);
+				if (response.ok) {
+					const result = await response.json();
+					locations = result.results || [];
+				}
+			} catch (error) {
+				console.error('Error searching locations:', error);
+			}
+		}, 300);
+	}
+	
+	// Handle location search input
+	function handleLocationSearch(event: Event, isEdit: boolean = false) {
+		const input = event.target as HTMLInputElement;
+		const query = input.value;
+		if (isEdit) {
+			editLocationSearch = query;
+		} else {
+			locationSearch = query;
+		}
+		searchLocations(query);
+	}
+	
+	// Select a location
+	function selectLocation(locationId: string, isEdit: boolean = false) {
+		console.log('Selecting location:', locationId, 'isEdit:', isEdit);
+		if (isEdit) {
+			editSelectedLocation = locationId;
+			const loc = locations.find(l => l.id === locationId);
+			editLocationSearch = loc ? loc.name : '';
+			console.log('Edit location set to:', editSelectedLocation, editLocationSearch);
+		} else {
+			selectedLocation = locationId;
+			const loc = locations.find(l => l.id === locationId);
+			locationSearch = loc ? loc.name : '';
+			console.log('Selected location set to:', selectedLocation, locationSearch);
+		}
+		locations = []; // Close the dropdown
+	}
+	
+	// Clear selected location
+	function clearLocation(isEdit: boolean = false) {
+		if (isEdit) {
+			editSelectedLocation = '';
+			editLocationSearch = '';
+		} else {
+			selectedLocation = '';
+			locationSearch = '';
+		}
 	}
 </script>
 
@@ -241,6 +344,53 @@
 										Note: {item.notes}
 									</div>
 								{/if}
+								
+								<!-- Location Display -->
+								{#if item.location}
+									<div class="flex items-center gap-1 mt-2 text-sm">
+										<MapMarker size="16" class="text-primary" />
+										<span class="text-base-content/70">Location: {item.location_name || item.location}</span>
+									</div>
+								{/if}
+								
+								<!-- Images Display -->
+								{#if item.images && item.images.length > 0}
+									<div class="mt-3">
+										<div class="flex items-center gap-2 mb-2">
+											<Image size="16" class="text-primary" />
+											<span class="text-sm font-medium">Photos ({item.images.length})</span>
+										</div>
+										<div class="flex flex-wrap gap-2">
+											{#each item.images as image}
+												<a href={image.image} target="_blank" class="hover:opacity-80 transition-opacity">
+													<img src={image.image} alt="Bucket item" class="w-20 h-20 object-cover rounded border border-base-300" />
+												</a>
+											{/each}
+										</div>
+									</div>
+								{/if}
+								
+								<!-- Attachments Display -->
+								{#if item.attachments && item.attachments.length > 0}
+									<div class="mt-3">
+										<div class="flex items-center gap-2 mb-2">
+											<Paperclip size="16" class="text-primary" />
+											<span class="text-sm font-medium">Attachments ({item.attachments.length})</span>
+										</div>
+										<div class="flex flex-col gap-1">
+											{#each item.attachments as attachment}
+												<a 
+													href={attachment.attachment} 
+													target="_blank"
+													class="text-sm text-primary hover:underline flex items-center gap-1"
+												>
+													<Paperclip size="14" />
+													{attachment.attachment.split('/').pop()}
+												</a>
+											{/each}
+										</div>
+									</div>
+								{/if}
 							</div>
 							<div class="flex flex-col items-end gap-2">
 								<span class="badge {getStatusBadgeClass(item.status)} badge-sm">
@@ -285,7 +435,7 @@
 	<div class="modal modal-open">
 		<div class="modal-box max-w-2xl">
 			<h3 class="font-bold text-lg mb-4">Add Bucket List Item</h3>
-			<form method="POST" action="?/create" use:enhance={handleFormSubmit}>
+			<form method="POST" action="?/create" enctype="multipart/form-data" use:enhance={handleFormSubmit}>
 				<div class="form-control w-full mb-4">
 					<label class="label" for="title">
 						<span class="label-text">Title <span class="text-error">*</span></span>
@@ -355,6 +505,95 @@
 					></textarea>
 				</div>
 
+				<!-- Location Selection -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<MapMarker size="16" />
+							Link to Location {#if selectedLocation}<span class="badge badge-success badge-sm ml-2">Selected</span>{/if}
+						</span>
+					</label>
+					<div class="relative">
+						<input
+							type="text"
+							placeholder="Search for a location..."
+							class="input input-bordered w-full"
+							class:input-success={selectedLocation}
+							bind:value={locationSearch}
+							on:input={(e) => handleLocationSearch(e, false)}
+							readonly={selectedLocation ? true : false}
+						/>
+						{#if selectedLocation}
+							<button
+								type="button"
+								class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+								on:click={() => clearLocation(false)}
+								title="Clear location"
+							>
+								<Close size="16" />
+							</button>
+						{/if}
+					</div>
+					{#if locations.length > 0 && !selectedLocation}
+						<ul class="menu bg-base-200 rounded-box mt-2 max-h-60 overflow-y-auto">
+							{#each locations as location}
+								<li>
+									<button type="button" on:click={() => selectLocation(location.id, false)}>
+										{location.name}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+					{#if selectedLocation}
+						<label class="label">
+							<span class="label-text-alt text-success">✓ Location linked. Click X to change.</span>
+						</label>
+					{/if}
+					<input type="hidden" name="location" value={selectedLocation} />
+				</div>
+
+				<!-- Image Upload -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<Image size="16" />
+							Photos
+						</span>
+					</label>
+					<input
+						type="file"
+						name="images"
+						accept="image/*"
+						multiple
+						class="file-input file-input-bordered w-full"
+						bind:files={imageFiles}
+					/>
+					<label class="label">
+						<span class="label-text-alt">You can select multiple images</span>
+					</label>
+				</div>
+
+				<!-- Attachment Upload -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<Paperclip size="16" />
+							Attachments
+						</span>
+					</label>
+					<input
+						type="file"
+						name="attachments"
+						multiple
+						class="file-input file-input-bordered w-full"
+						bind:files={attachmentFiles}
+					/>
+					<label class="label">
+						<span class="label-text-alt">Upload documents, PDFs, etc.</span>
+					</label>
+				</div>
+
 				<div class="modal-action">
 					<button type="button" class="btn" on:click={closeModal} disabled={isSubmitting}>
 						Cancel
@@ -380,7 +619,7 @@
 	<div class="modal modal-open">
 		<div class="modal-box max-w-2xl">
 			<h3 class="font-bold text-lg mb-4">Edit Bucket List Item</h3>
-			<form method="POST" action="?/update" use:enhance={handleFormSubmit}>
+			<form method="POST" action="?/update" enctype="multipart/form-data" use:enhance={handleFormSubmit}>
 				<input type="hidden" name="id" value={editingItem.id} />
 				
 				<div class="form-control w-full mb-4">
@@ -450,6 +689,95 @@
 						class="textarea textarea-bordered h-20"
 						bind:value={editNotes}
 					></textarea>
+				</div>
+
+				<!-- Location Selection -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<MapMarker size="16" />
+							Link to Location {#if editSelectedLocation}<span class="badge badge-success badge-sm ml-2">Selected</span>{/if}
+						</span>
+					</label>
+					<div class="relative">
+						<input
+							type="text"
+							placeholder="Search for a location..."
+							class="input input-bordered w-full"
+							class:input-success={editSelectedLocation}
+							bind:value={editLocationSearch}
+							on:input={(e) => handleLocationSearch(e, true)}
+							readonly={editSelectedLocation ? true : false}
+						/>
+						{#if editSelectedLocation}
+							<button
+								type="button"
+								class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+								on:click={() => clearLocation(true)}
+								title="Clear location"
+							>
+								<Close size="16" />
+							</button>
+						{/if}
+					</div>
+					{#if locations.length > 0 && !editSelectedLocation}
+						<ul class="menu bg-base-200 rounded-box mt-2 max-h-60 overflow-y-auto">
+							{#each locations as location}
+								<li>
+									<button type="button" on:click={() => selectLocation(location.id, true)}>
+										{location.name}
+									</button>
+								</li>
+							{/each}
+						</ul>
+					{/if}
+					{#if editSelectedLocation}
+						<label class="label">
+							<span class="label-text-alt text-success">✓ Location linked. Click X to change.</span>
+						</label>
+					{/if}
+					<input type="hidden" name="location" value={editSelectedLocation} />
+				</div>
+
+				<!-- Image Upload -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<Image size="16" />
+							Photos
+						</span>
+					</label>
+					<input
+						type="file"
+						name="images"
+						accept="image/*"
+						multiple
+						class="file-input file-input-bordered w-full"
+						bind:files={editImageFiles}
+					/>
+					<label class="label">
+						<span class="label-text-alt">You can select multiple images</span>
+					</label>
+				</div>
+
+				<!-- Attachment Upload -->
+				<div class="form-control w-full mb-4">
+					<label class="label">
+						<span class="label-text flex items-center gap-2">
+							<Paperclip size="16" />
+							Attachments
+						</span>
+					</label>
+					<input
+						type="file"
+						name="attachments"
+						multiple
+						class="file-input file-input-bordered w-full"
+						bind:files={editAttachmentFiles}
+					/>
+					<label class="label">
+						<span class="label-text-alt">Upload documents, PDFs, etc.</span>
+					</label>
 				</div>
 
 				<div class="modal-action">
