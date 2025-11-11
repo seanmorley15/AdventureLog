@@ -253,7 +253,7 @@
 
 <svelte:head>
 	<title>Collections</title>
-	<meta name="description" content="View your adventure collections." />
+	<meta name="description" content="View your location collections." />
 </svelte:head>
 
 {#if isShowingConfirmLeaveModal}
