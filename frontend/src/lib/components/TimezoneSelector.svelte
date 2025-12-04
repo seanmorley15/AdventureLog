@@ -10,6 +10,7 @@
 	let dropdownOpen = false;
 	let searchQuery = '';
 	let searchInput: HTMLInputElement | null = null;
+	let rootRef: HTMLElement | null = null;
 	const timezones = Intl.supportedValuesOf('timeZone');
 
 	// Filter timezones based on search query
@@ -42,18 +43,30 @@
 		}
 	}
 
-	// Close dropdown if clicked outside
+	// Close dropdown if clicked/touched outside. Use composedPath and pointer events
 	onMount(() => {
-		const handleClickOutside = (e: MouseEvent) => {
-			const dropdown = document.getElementById(instanceId);
-			if (dropdown && !dropdown.contains(e.target as Node)) dropdownOpen = false;
+		const handlePointerDownOutside = (e: Event) => {
+			const ev: any = e as any;
+			const path: EventTarget[] = ev.composedPath ? ev.composedPath() : ev.path || [];
+			if (!rootRef) return;
+			if (Array.isArray(path)) {
+				if (!path.includes(rootRef)) dropdownOpen = false;
+			} else {
+				if (!(e.target instanceof Node) || !(rootRef as HTMLElement).contains(e.target as Node))
+					dropdownOpen = false;
+			}
 		};
-		document.addEventListener('click', handleClickOutside);
-		return () => document.removeEventListener('click', handleClickOutside);
+
+		document.addEventListener('pointerdown', handlePointerDownOutside, true);
+		document.addEventListener('touchstart', handlePointerDownOutside, true);
+		return () => {
+			document.removeEventListener('pointerdown', handlePointerDownOutside, true);
+			document.removeEventListener('touchstart', handlePointerDownOutside, true);
+		};
 	});
 </script>
 
-<div class="form-control w-full max-w-xs relative" id={instanceId}>
+<div class="form-control w-full max-w-xs relative" bind:this={rootRef} id={instanceId}>
 	<label class="label" for={`timezone-display-${instanceId}`}>
 		<span class="label-text">{$t('adventures.timezone')}</span>
 	</label>
@@ -66,6 +79,11 @@
 		aria-haspopup="listbox"
 		aria-expanded={dropdownOpen}
 		class="input input-bordered flex justify-between items-center cursor-pointer"
+		on:pointerdown={(e) => {
+			e.preventDefault();
+			e.stopPropagation();
+			dropdownOpen = !dropdownOpen;
+		}}
 		on:click={() => (dropdownOpen = !dropdownOpen)}
 		on:keydown={handleKeydown}
 	>
@@ -108,6 +126,11 @@
 							<button
 								type="button"
 								class={`w-full text-left truncate ${tz === selectedTimezone ? 'active font-bold' : ''}`}
+								on:pointerdown={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									selectTimezone(tz);
+								}}
 								on:click={() => selectTimezone(tz)}
 								on:keydown={(e) => handleKeydown(e, tz)}
 								role="option"

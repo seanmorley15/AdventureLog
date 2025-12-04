@@ -7,7 +7,13 @@
 </script>
 
 <div class="dropdown dropdown-left">
-	<div tabindex="0" role="button" class="btn btn-sm btn-ghost gap-2 min-h-0 h-8 px-3">
+	<div
+		tabindex="0"
+		role="button"
+		aria-haspopup="menu"
+		aria-expanded="false"
+		class="btn btn-sm btn-ghost gap-2 min-h-0 h-8 px-3"
+	>
 		<MapIcon class="w-4 h-4" />
 		<span class="text-xs font-medium">{getBasemapLabel(basemapType)}</span>
 		<svg class="w-3 h-3 fill-none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +28,13 @@
 					option.value
 						? 'bg-primary/10  font-medium'
 						: ''}"
+					on:pointerdown={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						basemapType = option.value;
+					}}
 					on:click={() => (basemapType = option.value)}
+					role="menuitem"
 				>
 					<span class="text-lg">{option.icon}</span>
 					<span>{option.label}</span>

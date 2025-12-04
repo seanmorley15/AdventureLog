@@ -46,11 +46,20 @@
 	}
 
 	function handleEmojiSelect(event: CustomEvent) {
-		new_category.icon = event.detail.unicode;
+		// emoji-picker-element may provide different shapes across browsers
+		// Be tolerant: prefer unicode, fall back to other common fields
+		const d: any = (event as any).detail || {};
+		new_category.icon =
+			d.unicode ||
+			d.emoji ||
+			d.native ||
+			d.character ||
+			(d.emoji && (d.emoji.unicode || d.emoji.character)) ||
+			String(d || '');
 	}
 
-	// Close dropdown when clicking outside
-	let dropdownRef: HTMLDivElement;
+	// Close dropdown when clicking outside. Use composedPath() and pointer events
+	let dropdownRef: HTMLDivElement | null = null;
 
 	onMount(() => {
 		const loadData = async () => {
@@ -62,14 +71,28 @@
 
 		loadData();
 
-		const handleClickOutside = (event: MouseEvent) => {
-			if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
-				isOpen = false;
+		const handlePointerDownOutside = (event: PointerEvent | MouseEvent) => {
+			// Use composedPath for Shadow DOM compatibility (emoji-picker uses shadow DOM)
+			const path: EventTarget[] = (event as any).composedPath
+				? (event as any).composedPath()
+				: (event as any).path || [];
+			if (!dropdownRef) return;
+			if (Array.isArray(path)) {
+				if (!path.includes(dropdownRef)) {
+					isOpen = false;
+				}
+			} else {
+				// fallback to contains when composedPath not available
+				if (!(event.target instanceof Node) || !dropdownRef.contains(event.target as Node)) {
+					isOpen = false;
+				}
 			}
 		};
-		document.addEventListener('click', handleClickOutside);
+
+		// listen on capture for pointerdown to be responsive across platforms
+		document.addEventListener('pointerdown', handlePointerDownOutside, true);
 		return () => {
-			document.removeEventListener('click', handleClickOutside);
+			document.removeEventListener('pointerdown', handlePointerDownOutside, true);
 		};
 	});
 </script>
@@ -81,6 +104,12 @@
 		role="button"
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
 		on:click={toggleDropdown}
+		on:keydown={(e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				toggleDropdown();
+			}
+		}}
 	>
 		<span class="flex items-center gap-2">
 			{#if selected_category && selected_category.name}
@@ -102,7 +131,18 @@
 
 	{#if isOpen}
 		<!-- Mobile Modal Overlay (only on small screens) -->
-		<div class="fixed inset-0 bg-black/50 z-40 sm:hidden" on:click={() => (isOpen = false)}></div>
+		<div
+			class="fixed inset-0 bg-black/50 z-40 sm:hidden"
+			role="button"
+			tabindex="0"
+			on:click={() => (isOpen = false)}
+			on:keydown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') {
+					e.preventDefault();
+					isOpen = false;
+				}
+			}}
+		></div>
 
 		<!-- Mobile Bottom Sheet -->
 		<div
