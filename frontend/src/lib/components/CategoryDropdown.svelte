@@ -71,28 +71,42 @@
 
 		loadData();
 
-		const handlePointerDownOutside = (event: PointerEvent | MouseEvent) => {
+		const handlePointerDownOutside = (event: PointerEvent | MouseEvent | TouchEvent) => {
 			// Use composedPath for Shadow DOM compatibility (emoji-picker uses shadow DOM)
-			const path: EventTarget[] = (event as any).composedPath
-				? (event as any).composedPath()
-				: (event as any).path || [];
+			const anyEvt: any = event as any;
+			const path: EventTarget[] = anyEvt.composedPath ? anyEvt.composedPath() : anyEvt.path || [];
 			if (!dropdownRef) return;
+
+			// If the event occurred inside the dropdown or inside an <emoji-picker>, do nothing.
 			if (Array.isArray(path)) {
-				if (!path.includes(dropdownRef)) {
-					isOpen = false;
+				for (const node of path) {
+					try {
+						if (node === dropdownRef) return;
+						if (node instanceof Element && node.closest && node.closest('emoji-picker')) return;
+						if (node && (node as any).localName === 'emoji-picker') return;
+					} catch (e) {
+						// Ignore errors accessing nodes from other realms / shadow DOM
+					}
 				}
+				// Not inside dropdown or emoji picker -> close
+				isOpen = false;
 			} else {
-				// fallback to contains when composedPath not available
-				if (!(event.target instanceof Node) || !dropdownRef.contains(event.target as Node)) {
-					isOpen = false;
-				}
+				// fallback to contains/closest when composedPath not available
+				const target = event.target as Node | null;
+				if (!target) return;
+				if (dropdownRef.contains(target)) return;
+				if (target instanceof Element && target.closest && target.closest('emoji-picker')) return;
+				isOpen = false;
 			}
 		};
 
 		// listen on capture for pointerdown to be responsive across platforms
+		// Listen to both pointerdown and touchstart for better coverage on iOS Safari
 		document.addEventListener('pointerdown', handlePointerDownOutside, true);
+		document.addEventListener('touchstart', handlePointerDownOutside, true);
 		return () => {
 			document.removeEventListener('pointerdown', handlePointerDownOutside, true);
+			document.removeEventListener('touchstart', handlePointerDownOutside, true);
 		};
 	});
 </script>
@@ -197,6 +211,7 @@
 								/>
 								<button
 									on:click={toggleEmojiPicker}
+									on:touchstart|preventDefault={toggleEmojiPicker}
 									type="button"
 									class="btn join-item h-12 w-12 text-lg"
 									class:btn-active={isEmojiPickerVisible}
@@ -225,7 +240,8 @@
 
 						{#if isEmojiPickerVisible}
 							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
-								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+								<emoji-picker on:emoji-click={handleEmojiSelect} on:emoji-select={handleEmojiSelect}
+								></emoji-picker>
 							</div>
 						{/if}
 					</div>
@@ -322,6 +338,7 @@
 								/>
 								<button
 									on:click={toggleEmojiPicker}
+									on:touchstart|preventDefault={toggleEmojiPicker}
 									type="button"
 									class="btn btn-square btn-sm btn-secondary"
 									class:btn-active={isEmojiPickerVisible}
@@ -353,7 +370,8 @@
 
 					{#if isEmojiPickerVisible}
 						<div class="p-3 rounded-lg border border-base-300">
-							<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
+							<emoji-picker on:emoji-click={handleEmojiSelect} on:emoji-select={handleEmojiSelect}
+							></emoji-picker>
 						</div>
 					{/if}
 				</div>
