@@ -278,6 +278,8 @@
 										selected_category.id === category.id}
 									class:border-primary={selected_category && selected_category.id === category.id}
 									on:click={() => selectCategory(category)}
+									on:touchstart|stopPropagation={() => {}}
+									on:pointerdown|stopPropagation={() => {}}
 								>
 									<div class="flex items-center gap-3 w-full">
 										<span class="text-2xl flex-shrink-0">{category.icon}</span>
@@ -415,6 +417,8 @@
 								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
 								class:btn-active={selected_category && selected_category.id === category.id}
 								on:click={() => selectCategory(category)}
+								on:touchstart|stopPropagation={() => {}}
+								on:pointerdown|stopPropagation={() => {}}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>
