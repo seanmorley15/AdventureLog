@@ -100,13 +100,12 @@
 			}
 		};
 
-		// listen on capture for pointerdown to be responsive across platforms
-		// Listen to both pointerdown and touchstart for better coverage on iOS Safari
-		document.addEventListener('pointerdown', handlePointerDownOutside, true);
-		document.addEventListener('touchstart', handlePointerDownOutside, true);
+		// Use a non-capturing 'click' listener so element click handlers
+		// run first (addresses Safari where capture-phase handlers close
+		// the dropdown before the button's click handler executes).
+		document.addEventListener('click', handlePointerDownOutside, false);
 		return () => {
-			document.removeEventListener('pointerdown', handlePointerDownOutside, true);
-			document.removeEventListener('touchstart', handlePointerDownOutside, true);
+			document.removeEventListener('click', handlePointerDownOutside, false);
 		};
 	});
 </script>
