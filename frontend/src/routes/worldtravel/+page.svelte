@@ -4,7 +4,8 @@
 	import type { Country } from '$lib/types';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
-	import { MapLibre, Marker } from 'svelte-maplibre';
+	import { CircleLayer, GeoJSON, MapLibre, MarkerLayer, SymbolLayer } from 'svelte-maplibre';
+	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
 
 	// Icons
 	import Globe from '~icons/mdi/earth';
@@ -28,6 +29,157 @@
 	let showMap: boolean = false;
 	let showGlobeSpin: boolean = false;
 	let sidebarOpen = false;
+
+	type VisitStatus = 'not_visited' | 'partial' | 'complete';
+
+	type CountryFeatureProperties = {
+		name: string;
+		country_code: string;
+		visitStatus: VisitStatus;
+		num_visits: number;
+		num_regions: number;
+	};
+
+	type CountryFeature = {
+		type: 'Feature';
+		geometry: {
+			type: 'Point';
+			coordinates: [number, number];
+		};
+		properties: CountryFeatureProperties;
+	};
+
+	type CountryFeatureCollection = {
+		type: 'FeatureCollection';
+		features: CountryFeature[];
+	};
+	type ClusterSource = {
+		getClusterExpansionZoom: (
+			clusterId: number,
+			callback: (error: unknown, zoom: number) => void
+		) => void;
+	};
+
+	const COUNTRY_SOURCE_ID = 'worldtravel-countries';
+	const countryClusterOptions: ClusterOptions = {
+		radius: 300,
+		maxZoom: 5,
+		minPoints: 1
+	};
+
+	let countriesGeoJson: CountryFeatureCollection = {
+		type: 'FeatureCollection',
+		features: []
+	};
+
+	function parseCoordinate(value: number | string | null | undefined): number | null {
+		if (value === null || value === undefined) {
+			return null;
+		}
+
+		const numeric = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function getCountryCoordinates(country: Country): [number, number] | null {
+		const latitude = parseCoordinate(country.latitude);
+		const longitude = parseCoordinate(country.longitude);
+
+		if (latitude === null || longitude === null) {
+			return null;
+		}
+
+		return [longitude, latitude];
+	}
+
+	function getVisitStatus(country: Country): VisitStatus {
+		if (country.num_visits === 0) {
+			return 'not_visited';
+		}
+		if (country.num_regions > 0 && country.num_visits >= country.num_regions) {
+			return 'complete';
+		}
+		return 'partial';
+	}
+
+	function countryToFeature(country: Country, coordinates: [number, number]): CountryFeature {
+		const visitStatus = getVisitStatus(country);
+		return {
+			type: 'Feature',
+			geometry: {
+				type: 'Point',
+				coordinates
+			},
+			properties: {
+				name: country.name,
+				country_code: country.country_code,
+				visitStatus,
+				num_visits: country.num_visits,
+				num_regions: country.num_regions
+			}
+		};
+	}
+
+	function getVisitStatusClass(status: VisitStatus): string {
+		switch (status) {
+			case 'not_visited':
+				return 'bg-red-200';
+			case 'complete':
+				return 'bg-green-200';
+			default:
+				return 'bg-blue-200';
+		}
+	}
+
+	function getMarkerProps(feature: any): CountryFeatureProperties | null {
+		if (!feature) {
+			return null;
+		}
+
+		return feature.properties ?? null;
+	}
+
+	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
+		const { clusterId, features, map, source } = event.detail;
+		if (!clusterId || !features?.length) {
+			return;
+		}
+
+		const clusterFeature = features[0] as {
+			geometry?: { type?: string; coordinates?: [number, number] };
+		};
+		const coordinates =
+			clusterFeature?.geometry?.type === 'Point' ? clusterFeature.geometry.coordinates : undefined;
+		if (!coordinates) {
+			return;
+		}
+
+		const geoJsonSource = map.getSource(source) as ClusterSource | undefined;
+		if (!geoJsonSource || typeof geoJsonSource.getClusterExpansionZoom !== 'function') {
+			return;
+		}
+
+		geoJsonSource.getClusterExpansionZoom(Number(clusterId), (error: unknown, zoom: number) => {
+			if (error) {
+				console.error('Failed to expand cluster', error);
+				return;
+			}
+
+			map.easeTo({
+				center: coordinates,
+				zoom
+			});
+		});
+	}
+
+	function handleCountryMarkerClick(event: CustomEvent<any>) {
+		const countryCode = event.detail.feature?.properties?.country_code;
+		if (!countryCode) {
+			return;
+		}
+
+		goto(`/worldtravel/${countryCode}`);
+	}
 
 	worldSubregions = [...new Set(allCountries.map((country) => country.subregion))];
 	worldSubregions = worldSubregions.filter((subregion) => subregion !== '');
@@ -74,6 +226,20 @@
 			);
 		}
 	}
+
+	$: countriesGeoJson = {
+		type: 'FeatureCollection',
+		features: filteredCountries
+			.map((country) => {
+				const coordinates = getCountryCoordinates(country);
+				if (!coordinates) {
+					return null;
+				}
+
+				return countryToFeature(country, coordinates);
+			})
+			.filter((feature): feature is CountryFeature => feature !== null)
+	};
 
 	// when isGlobeSpin is enabled, fetch /api/globespin/
 	type GlobeSpinData = {
@@ -291,25 +457,59 @@
 								standardControls
 								zoom={2}
 							>
-								{#each filteredCountries as country}
-									{#if country.latitude && country.longitude}
-										<Marker
-											lngLat={[country.longitude, country.latitude]}
-											class={`grid px-2 py-1 place-items-center rounded-full border border-gray-200 ${
-												country.num_visits === 0
-													? 'bg-red-200'
-													: country.num_visits === country.num_regions
-														? 'bg-green-200'
-														: 'bg-blue-200'
-											} text-black focus:outline-6 focus:outline-black cursor-pointer`}
-											on:click={() => goto(`/worldtravel/${country.country_code}`)}
-										>
-											<span class="text-xs font-medium">
-												{country.name}
-											</span>
-										</Marker>
-									{/if}
-								{/each}
+								<GeoJSON
+									id={COUNTRY_SOURCE_ID}
+									data={countriesGeoJson}
+									cluster={countryClusterOptions}
+									generateId
+								>
+									<CircleLayer
+										id="worldtravel-country-clusters"
+										applyToClusters
+										hoverCursor="pointer"
+										paint={{
+											'circle-color': [
+												'step',
+												['get', 'point_count'],
+												'#60a5fa',
+												20,
+												'#facc15',
+												60,
+												'#f472b6'
+											],
+											'circle-radius': ['step', ['get', 'point_count'], 24, 20, 34, 60, 46],
+											'circle-opacity': 0.85
+										}}
+										on:click={handleClusterClick}
+									/>
+									<SymbolLayer
+										id="worldtravel-country-cluster-count"
+										applyToClusters
+										layout={{
+											'text-field': '{point_count_abbreviated}',
+											'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+											'text-size': 12
+										}}
+										paint={{ 'text-color': '#1f2937' }}
+									/>
+									<MarkerLayer
+										applyToClusters={false}
+										on:click={handleCountryMarkerClick}
+										let:feature={featureData}
+									>
+										{@const markerProps = getMarkerProps(featureData)}
+										{#if markerProps}
+											<button
+												type="button"
+												class={`grid px-2 py-1 place-items-center rounded-full border border-gray-200 ${getVisitStatusClass(markerProps.visitStatus)} text-black focus:outline-6 focus:outline-black cursor-pointer whitespace-nowrap`}
+												title={markerProps.name}
+												aria-label={markerProps.name}
+											>
+												<span class="text-xs font-medium">{markerProps.name}</span>
+											</button>
+										{/if}
+									</MarkerLayer>
+								</GeoJSON>
 							</MapLibre>
 						</div>
 					</div>

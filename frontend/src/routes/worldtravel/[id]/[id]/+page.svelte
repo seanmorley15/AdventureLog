@@ -17,6 +17,7 @@
 	import Cancel from '~icons/mdi/cancel';
 	import Trophy from '~icons/mdi/trophy';
 	import Target from '~icons/mdi/target';
+	import Info from '~icons/mdi/information-outline';
 	import CityIcon from '~icons/mdi/city';
 
 	export let data: PageData;
@@ -30,6 +31,8 @@
 	const allCities: City[] = data.props?.cities || [];
 	let visitedCities: VisitedCity[] = data.props?.visitedCities || [];
 	const region = data.props?.region || null;
+	let description: string = data.props?.description || '';
+	let showFullDesc = false;
 
 	console.log(data);
 
@@ -181,7 +184,7 @@
 					</div>
 
 					<!-- Search and Filters -->
-					<div class="mt-4 flex items-center gap-4">
+					<div class="mt-4 flex flex-col lg:flex-row items-start lg:items-center gap-4">
 						<div class="relative flex-1 max-w-md">
 							<Search
 								class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40"
@@ -201,46 +204,79 @@
 								</button>
 							{/if}
 						</div>
-					</div>
 
-					<!-- Filter Chips -->
-					<div class="mt-4 flex flex-wrap items-center gap-2">
-						<span class="text-sm font-medium text-base-content/60"
-							>{$t('worldtravel.filter_by')}:</span
-						>
-						<div class="tabs tabs-boxed bg-base-200">
-							<button
-								class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'all')}
+						<!-- Filter Chips -->
+						<div class="flex flex-wrap items-center gap-2">
+							<span class="text-sm font-medium text-base-content/60"
+								>{$t('worldtravel.filter_by')}:</span
 							>
-								<MapMarker class="w-3 h-3" />
-								All
-							</button>
-							<button
-								class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'visited')}
-							>
-								<Check class="w-3 h-3" />
-								{$t('adventures.visited')}
-							</button>
-							<button
-								class="tab tab-sm gap-2 {filterOption === 'not-visited' ? 'tab-active' : ''}"
-								on:click={() => (filterOption = 'not-visited')}
-							>
-								<Cancel class="w-3 h-3" />
-								{$t('adventures.not_visited')}
-							</button>
+							<div class="tabs tabs-boxed bg-base-200">
+								<button
+									class="tab tab-sm gap-2 {filterOption === 'all' ? 'tab-active' : ''}"
+									on:click={() => (filterOption = 'all')}
+								>
+									<MapMarker class="w-3 h-3" />
+									All
+								</button>
+								<button
+									class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
+									on:click={() => (filterOption = 'visited')}
+								>
+									<Check class="w-3 h-3" />
+									{$t('adventures.visited')}
+								</button>
+								<button
+									class="tab tab-sm gap-2 {filterOption === 'not-visited' ? 'tab-active' : ''}"
+									on:click={() => (filterOption = 'not-visited')}
+								>
+									<Cancel class="w-3 h-3" />
+									{$t('adventures.not_visited')}
+								</button>
+							</div>
+
+							{#if searchQuery || filterOption !== 'all'}
+								<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
+									<Clear class="w-3 h-3" />
+									{$t('worldtravel.clear_all')}
+								</button>
+							{/if}
 						</div>
-
-						{#if searchQuery || filterOption !== 'all'}
-							<button class="btn btn-ghost btn-xs gap-1" on:click={clearFilters}>
-								<Clear class="w-3 h-3" />
-								{$t('worldtravel.clear_all')}
-							</button>
-						{/if}
 					</div>
 				</div>
 			</div>
+
+			<!-- Description Section -->
+			{#if description}
+				<div class="container mx-auto px-6 py-4">
+					<div class="card bg-base-100 shadow-xl">
+						<div class="card-body p-4">
+							<div class="flex items-center gap-2 mb-4">
+								<Info class="w-5 h-5 text-primary" />
+								<h2 class="text-lg font-semibold">{$t('worldtravel.about_country')}</h2>
+							</div>
+							<p
+								class="text-base-content/70 leading-relaxed"
+								class:overflow-hidden={!showFullDesc}
+								style={!showFullDesc && description.length > 400
+									? 'max-height:8rem;overflow:hidden;'
+									: ''}
+							>
+								{description}
+							</p>
+							{#if description.length > 400}
+								<button
+									class="btn btn-ghost btn-sm mt-3"
+									on:click={() => (showFullDesc = !showFullDesc)}
+								>
+									{#if showFullDesc}{$t('worldtravel.show_less')}{:else}{$t(
+											'worldtravel.show_more'
+										)}{/if}
+								</button>
+							{/if}
+						</div>
+					</div>
+				</div>
+			{/if}
 
 			<!-- Map Section -->
 			{#if allCities.length > 0}

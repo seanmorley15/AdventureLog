@@ -46,20 +46,11 @@
 	}
 
 	function handleEmojiSelect(event: CustomEvent) {
-		// emoji-picker-element may provide different shapes across browsers
-		// Be tolerant: prefer unicode, fall back to other common fields
-		const d: any = (event as any).detail || {};
-		new_category.icon =
-			d.unicode ||
-			d.emoji ||
-			d.native ||
-			d.character ||
-			(d.emoji && (d.emoji.unicode || d.emoji.character)) ||
-			String(d || '');
+		new_category.icon = event.detail.unicode;
 	}
 
-	// Close dropdown when clicking outside. Use composedPath() and pointer events
-	let dropdownRef: HTMLDivElement | null = null;
+	// Close dropdown when clicking outside
+	let dropdownRef: HTMLDivElement;
 
 	onMount(() => {
 		const loadData = async () => {
@@ -71,41 +62,14 @@
 
 		loadData();
 
-		const handlePointerDownOutside = (event: PointerEvent | MouseEvent | TouchEvent) => {
-			// Use composedPath for Shadow DOM compatibility (emoji-picker uses shadow DOM)
-			const anyEvt: any = event as any;
-			const path: EventTarget[] = anyEvt.composedPath ? anyEvt.composedPath() : anyEvt.path || [];
-			if (!dropdownRef) return;
-
-			// If the event occurred inside the dropdown or inside an <emoji-picker>, do nothing.
-			if (Array.isArray(path)) {
-				for (const node of path) {
-					try {
-						if (node === dropdownRef) return;
-						if (node instanceof Element && node.closest && node.closest('emoji-picker')) return;
-						if (node && (node as any).localName === 'emoji-picker') return;
-					} catch (e) {
-						// Ignore errors accessing nodes from other realms / shadow DOM
-					}
-				}
-				// Not inside dropdown or emoji picker -> close
-				isOpen = false;
-			} else {
-				// fallback to contains/closest when composedPath not available
-				const target = event.target as Node | null;
-				if (!target) return;
-				if (dropdownRef.contains(target)) return;
-				if (target instanceof Element && target.closest && target.closest('emoji-picker')) return;
+		const handleClickOutside = (event: MouseEvent) => {
+			if (dropdownRef && !dropdownRef.contains(event.target as Node)) {
 				isOpen = false;
 			}
 		};
-
-		// Use a non-capturing 'click' listener so element click handlers
-		// run first (addresses Safari where capture-phase handlers close
-		// the dropdown before the button's click handler executes).
-		document.addEventListener('click', handlePointerDownOutside, false);
+		document.addEventListener('click', handleClickOutside);
 		return () => {
-			document.removeEventListener('click', handlePointerDownOutside, false);
+			document.removeEventListener('click', handleClickOutside);
 		};
 	});
 </script>
@@ -117,12 +81,6 @@
 		role="button"
 		class="btn btn-outline w-full justify-between sm:h-auto h-12"
 		on:click={toggleDropdown}
-		on:keydown={(e) => {
-			if (e.key === 'Enter' || e.key === ' ') {
-				e.preventDefault();
-				toggleDropdown();
-			}
-		}}
 	>
 		<span class="flex items-center gap-2">
 			{#if selected_category && selected_category.name}
@@ -144,18 +102,7 @@
 
 	{#if isOpen}
 		<!-- Mobile Modal Overlay (only on small screens) -->
-		<div
-			class="fixed inset-0 bg-black/50 z-40 sm:hidden"
-			role="button"
-			tabindex="0"
-			on:click={() => (isOpen = false)}
-			on:keydown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					isOpen = false;
-				}
-			}}
-		></div>
+		<div class="fixed inset-0 bg-black/50 z-40 sm:hidden" on:click={() => (isOpen = false)}></div>
 
 		<!-- Mobile Bottom Sheet -->
 		<div
@@ -210,7 +157,6 @@
 								/>
 								<button
 									on:click={toggleEmojiPicker}
-									on:touchstart|preventDefault={toggleEmojiPicker}
 									type="button"
 									class="btn join-item h-12 w-12 text-lg"
 									class:btn-active={isEmojiPickerVisible}
@@ -239,8 +185,7 @@
 
 						{#if isEmojiPickerVisible}
 							<div class="p-3 rounded-lg border border-base-300 bg-base-50">
-								<emoji-picker on:emoji-click={handleEmojiSelect} on:emoji-select={handleEmojiSelect}
-								></emoji-picker>
+								<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
 							</div>
 						{/if}
 					</div>
@@ -277,8 +222,6 @@
 										selected_category.id === category.id}
 									class:border-primary={selected_category && selected_category.id === category.id}
 									on:click={() => selectCategory(category)}
-									on:touchstart|stopPropagation={() => {}}
-									on:pointerdown|stopPropagation={() => {}}
 								>
 									<div class="flex items-center gap-3 w-full">
 										<span class="text-2xl flex-shrink-0">{category.icon}</span>
@@ -339,7 +282,6 @@
 								/>
 								<button
 									on:click={toggleEmojiPicker}
-									on:touchstart|preventDefault={toggleEmojiPicker}
 									type="button"
 									class="btn btn-square btn-sm btn-secondary"
 									class:btn-active={isEmojiPickerVisible}
@@ -371,8 +313,7 @@
 
 					{#if isEmojiPickerVisible}
 						<div class="p-3 rounded-lg border border-base-300">
-							<emoji-picker on:emoji-click={handleEmojiSelect} on:emoji-select={handleEmojiSelect}
-							></emoji-picker>
+							<emoji-picker on:emoji-click={handleEmojiSelect}></emoji-picker>
 						</div>
 					{/if}
 				</div>
@@ -416,8 +357,6 @@
 								class="btn btn-ghost btn-sm justify-start h-auto py-2 px-3"
 								class:btn-active={selected_category && selected_category.id === category.id}
 								on:click={() => selectCategory(category)}
-								on:touchstart|stopPropagation={() => {}}
-								on:pointerdown|stopPropagation={() => {}}
 								role="option"
 								aria-selected={selected_category && selected_category.id === category.id}
 							>
