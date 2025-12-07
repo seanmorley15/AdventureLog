@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import CountryCard from '$lib/components/CountryCard.svelte';
+	import ClusterMap from '$lib/components/ClusterMap.svelte';
 	import type { Country } from '$lib/types';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
-	import { CircleLayer, GeoJSON, MapLibre, MarkerLayer, SymbolLayer } from 'svelte-maplibre';
-	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
+	import type { ClusterOptions } from 'svelte-maplibre';
 
 	// Icons
 	import Globe from '~icons/mdi/earth';
@@ -53,13 +53,6 @@
 		type: 'FeatureCollection';
 		features: CountryFeature[];
 	};
-	type ClusterSource = {
-		getClusterExpansionZoom: (
-			clusterId: number,
-			callback: (error: unknown, zoom: number) => void
-		) => void;
-	};
-
 	const COUNTRY_SOURCE_ID = 'worldtravel-countries';
 	const countryClusterOptions: ClusterOptions = {
 		radius: 300,
@@ -139,41 +132,24 @@
 		return feature.properties ?? null;
 	}
 
-	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
-		const { clusterId, features, map, source } = event.detail;
-		if (!clusterId || !features?.length) {
-			return;
+	function markerClassResolver(props: { visitStatus?: string } | null): string {
+		if (!props?.visitStatus) {
+			return '';
 		}
 
-		const clusterFeature = features[0] as {
-			geometry?: { type?: string; coordinates?: [number, number] };
-		};
-		const coordinates =
-			clusterFeature?.geometry?.type === 'Point' ? clusterFeature.geometry.coordinates : undefined;
-		if (!coordinates) {
-			return;
+		if (
+			props.visitStatus === 'not_visited' ||
+			props.visitStatus === 'partial' ||
+			props.visitStatus === 'complete'
+		) {
+			return getVisitStatusClass(props.visitStatus);
 		}
 
-		const geoJsonSource = map.getSource(source) as ClusterSource | undefined;
-		if (!geoJsonSource || typeof geoJsonSource.getClusterExpansionZoom !== 'function') {
-			return;
-		}
-
-		geoJsonSource.getClusterExpansionZoom(Number(clusterId), (error: unknown, zoom: number) => {
-			if (error) {
-				console.error('Failed to expand cluster', error);
-				return;
-			}
-
-			map.easeTo({
-				center: coordinates,
-				zoom
-			});
-		});
+		return '';
 	}
 
-	function handleCountryMarkerClick(event: CustomEvent<any>) {
-		const countryCode = event.detail.feature?.properties?.country_code;
+	function handleMarkerSelect(event: CustomEvent<{ countryCode?: string }>) {
+		const countryCode = event.detail.countryCode;
 		if (!countryCode) {
 			return;
 		}
@@ -451,66 +427,16 @@
 				<div class="container mx-auto px-6 py-4">
 					<div class="card bg-base-100 shadow-xl">
 						<div class="card-body p-4">
-							<MapLibre
-								style={getBasemapUrl()}
-								class="aspect-[16/10] w-full rounded-lg"
-								standardControls
-								zoom={2}
-							>
-								<GeoJSON
-									id={COUNTRY_SOURCE_ID}
-									data={countriesGeoJson}
-									cluster={countryClusterOptions}
-									generateId
-								>
-									<CircleLayer
-										id="worldtravel-country-clusters"
-										applyToClusters
-										hoverCursor="pointer"
-										paint={{
-											'circle-color': [
-												'step',
-												['get', 'point_count'],
-												'#60a5fa',
-												20,
-												'#facc15',
-												60,
-												'#f472b6'
-											],
-											'circle-radius': ['step', ['get', 'point_count'], 24, 20, 34, 60, 46],
-											'circle-opacity': 0.85
-										}}
-										on:click={handleClusterClick}
-									/>
-									<SymbolLayer
-										id="worldtravel-country-cluster-count"
-										applyToClusters
-										layout={{
-											'text-field': '{point_count_abbreviated}',
-											'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-											'text-size': 12
-										}}
-										paint={{ 'text-color': '#1f2937' }}
-									/>
-									<MarkerLayer
-										applyToClusters={false}
-										on:click={handleCountryMarkerClick}
-										let:feature={featureData}
-									>
-										{@const markerProps = getMarkerProps(featureData)}
-										{#if markerProps}
-											<button
-												type="button"
-												class={`grid px-2 py-1 place-items-center rounded-full border border-gray-200 ${getVisitStatusClass(markerProps.visitStatus)} text-black focus:outline-6 focus:outline-black cursor-pointer whitespace-nowrap`}
-												title={markerProps.name}
-												aria-label={markerProps.name}
-											>
-												<span class="text-xs font-medium">{markerProps.name}</span>
-											</button>
-										{/if}
-									</MarkerLayer>
-								</GeoJSON>
-							</MapLibre>
+							<ClusterMap
+								geoJson={countriesGeoJson}
+								sourceId={COUNTRY_SOURCE_ID}
+								clusterOptions={countryClusterOptions}
+								mapStyle={getBasemapUrl()}
+								mapClass="aspect-[16/10] w-full rounded-lg"
+								on:markerSelect={handleMarkerSelect}
+								{getMarkerProps}
+								markerClass={markerClassResolver}
+							/>
 						</div>
 					</div>
 				</div>
