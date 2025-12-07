@@ -5,6 +5,24 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="manifest" crossorigin="use-credentials" href="/manifest.json" />
+
+		<!-- iOS / Safari PWA support -->
+		<meta name="apple-mobile-web-app-capable" content="yes" />
+		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+		<!-- Apple touch icons (place files in frontend/static/) -->
+		<link rel="apple-touch-icon" sizes="180x180" href="%sveltekit.assets%/apple-touch-icon.png" />
+		<link
+			rel="apple-touch-icon"
+			sizes="152x152"
+			href="%sveltekit.assets%/apple-touch-icon-152.png"
+		/>
+		<link
+			rel="apple-touch-icon"
+			sizes="120x120"
+			href="%sveltekit.assets%/apple-touch-icon-120.png"
+		/>
+
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

@@ -57,11 +57,36 @@ export const load = (async (event) => {
 		country = (await res.json()) as Country;
 	}
 
+	// Attempt to fetch a short description (Wikipedia/Wikidata generated) for the country
+	let description: string | null = null;
+	try {
+		const descRes = await fetch(
+			`${endpoint}/api/generate/desc/?name=${encodeURIComponent(country.name)}`,
+			{
+				method: 'GET',
+				headers: {
+					Cookie: `sessionid=${sessionId}`
+				}
+			}
+		);
+		if (descRes.ok) {
+			const descJson = await descRes.json();
+			if (descJson && typeof descJson.extract === 'string') {
+				description = descJson.extract;
+			}
+		} else {
+			console.debug('No description available for', country.name);
+		}
+	} catch (e) {
+		console.debug('Failed to fetch description:', e);
+	}
+
 	return {
 		props: {
 			regions,
 			visitedRegions,
-			country
+			country,
+			description
 		}
 	};
 }) satisfies PageServerLoad;
