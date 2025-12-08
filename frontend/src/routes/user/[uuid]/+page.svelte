@@ -31,5 +31,5 @@
 
 <svelte:head>
 	<title>{user.username} | AdventureLog</title>
-	<meta name="description" content="View your adventure collections." />
+	<meta name="description" content="View your location collections." />
 </svelte:head>

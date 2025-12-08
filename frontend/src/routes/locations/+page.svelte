@@ -166,7 +166,7 @@
 
 <svelte:head>
 	<title>{$t('locations.locations')}</title>
-	<meta name="description" content="View your completed and planned adventures." />
+	<meta name="description" content="View your completed and planned locations." />
 </svelte:head>
 
 {#if isLocationModalOpen}
