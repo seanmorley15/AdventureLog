@@ -11,7 +11,7 @@
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
 	import StravaLogo from '$lib/assets/strava.svg';
-	import WandererLogo from '$lib/assets/wanderer.svg';
+	import WandererLogoSrc from '$lib/assets/wanderer.svg';
 
 	export let data;
 	console.log(data);
@@ -1129,12 +1129,9 @@
 								{/if}
 							</div>
 
-							<div class="p-6 bg-base-200 rounded-xl">
+							<div class="p-6 bg-base-200 rounded-xl mb-4">
 								<div class="flex items-center gap-4 mb-4">
-									<div
-										class="w-8 h-8 rounded-md bg-base-content"
-										style="mask: url({WandererLogo}) no-repeat center; mask-size: contain; -webkit-mask: url({WandererLogo}) no-repeat center; -webkit-mask-size: contain;"
-									></div>
+									<img src={WandererLogoSrc} alt="Wanderer" class="w-8 h-8" />
 									<div>
 										<h3 class="text-xl font-bold">Wanderer</h3>
 										<p class="text-sm text-base-content/70">

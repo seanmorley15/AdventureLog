@@ -35,7 +35,7 @@
 	import ChevronDown from '~icons/mdi/chevron-down';
 	import ChevronUp from '~icons/mdi/chevron-up';
 
-	let measurementSystem = data.user?.measurement_system || 'metric';
+	let measurementSystem: string = 'metric';
 	let expandedCategories = new Set();
 
 	let stats: {
@@ -87,10 +87,16 @@
 		activity_elevation: number;
 	} | null;
 
-	const user: User = data.user;
-	const adventures: Location[] = data.adventures;
-	const collections: Collection[] = data.collections;
-	stats = data.stats || null;
+	let user: User = data.user;
+	let adventures: Location[] = data.adventures;
+	let collections: Collection[] = data.collections;
+
+	// Keep values reactive when `data` changes (client navigation between params)
+	$: user = data.user;
+	$: adventures = data.adventures;
+	$: collections = data.collections;
+	$: measurementSystem = data.user?.measurement_system || 'metric';
+	$: stats = data.stats || null;
 
 	// Activity category configurations
 	const categoryConfig: Record<

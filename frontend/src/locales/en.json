@@ -553,7 +553,8 @@
     "no_globe_spin_data": "No Globe Spin Data",
     "show_less": "Show Less",
     "show_more": "Show More",
-    "about_country": "About Country"
+    "about_country": "About Country",
+    "about_region": "About Region"
   },
   "auth": {
     "username": "Username",
