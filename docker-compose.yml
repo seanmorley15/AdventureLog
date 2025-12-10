@@ -1,7 +1,6 @@
 services:
   web:
-    #build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    build: ./frontend/
     container_name: adventurelog-frontend
     restart: unless-stopped
     env_file: .env
@@ -19,8 +18,8 @@ services:
       - postgres_data:/var/lib/postgresql/data/
 
   server:
-    #build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    build: ./backend/
+    # Use local code to include recent changes
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: .env

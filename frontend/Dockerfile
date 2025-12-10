@@ -36,6 +36,9 @@ RUN rm -f .env
 # Build SvelteKit app
 RUN pnpm run build
 
+# Fix line endings in startup script (Windows CRLF to Unix LF)
+RUN sed -i 's/\r$//' ./startup.sh
+
 # Make startup script executable
 RUN chmod +x ./startup.sh
 

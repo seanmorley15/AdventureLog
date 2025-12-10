@@ -59,6 +59,7 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'bucketlist',
     'integrations',
     'django.contrib.gis',
     # 'achievements', # Not done yet, will be added later in a future update

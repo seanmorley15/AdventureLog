@@ -15,6 +15,13 @@
 	import DayGrid from '@event-calendar/day-grid';
 
 	import Plus from '~icons/mdi/plus';
+	import Filter from '~icons/mdi/filter-variant';
+	import MapMarkerIcon from '~icons/mdi/map-marker';
+	import HotelIcon from '~icons/mdi/hotel';
+	import TransportIcon from '~icons/mdi/car';
+	import CalendarIcon from '~icons/mdi/calendar';
+	import TagIcon from '~icons/mdi/tag';
+	import LineIcon from '~icons/mdi/vector-line';
 	import LocationCard from '$lib/components/LocationCard.svelte';
 	import AdventureLink from '$lib/components/LocationLink.svelte';
 	import { MapLibre, Marker, Popup, LineLayer, GeoJSON } from 'svelte-maplibre';
@@ -245,6 +252,15 @@
 
 	let adventures: Location[] = [];
 
+	// Trip Map Filter State
+	let mapShowLocations: boolean = true;
+	let mapShowLodging: boolean = true;
+	let mapShowTransportation: boolean = true;
+	let mapShowLines: boolean = true;
+	let mapStartDate: string = '';
+	let mapEndDate: string = '';
+	let mapSelectedCategories: string[] = [];
+
 	$: lineData = createLineData(orderedItems);
 
 	// Function to create GeoJSON line data from ordered items
@@ -404,6 +420,82 @@
 		// Item is included if it starts before collection ends AND ends after collection starts
 		return itemStart <= collectionEnd && itemEnd >= collectionStart;
 	});
+
+	// Trip Map Filtering Logic
+	$: filteredMapAdventures = adventures.filter((adventure) => {
+		if (!mapShowLocations) return false;
+
+		// Filter by date range if specified
+		if (mapStartDate || mapEndDate) {
+			const hasValidVisit = adventure.visits.some((visit) => {
+				if (!visit.start_date) return false;
+				const visitStart = new Date(visit.start_date);
+				const visitEnd = visit.end_date ? new Date(visit.end_date) : visitStart;
+
+				const afterStart = !mapStartDate || visitStart >= new Date(mapStartDate);
+				const beforeEnd = !mapEndDate || visitEnd <= new Date(mapEndDate);
+
+				return afterStart && beforeEnd;
+			});
+
+			if (!hasValidVisit) return false;
+		}
+
+		// Filter by category if specified
+		if (mapSelectedCategories.length > 0 && adventure.category) {
+			const categoryName = adventure.category.display_name || adventure.category.name;
+			if (!mapSelectedCategories.includes(categoryName)) return false;
+		}
+
+		return true;
+	});
+
+	$: filteredMapTransportation = transportations.filter((transport) => {
+		if (!mapShowTransportation) return false;
+
+		// Filter by date range if specified
+		if (mapStartDate || mapEndDate) {
+			if (!transport.date) return false;
+
+			const transportStart = new Date(transport.date);
+			const transportEnd = transport.end_date ? new Date(transport.end_date) : transportStart;
+
+			const afterStart = !mapStartDate || transportStart >= new Date(mapStartDate);
+			const beforeEnd = !mapEndDate || transportEnd <= new Date(mapEndDate);
+
+			if (!afterStart || !beforeEnd) return false;
+		}
+
+		return true;
+	});
+
+	$: filteredMapLodging = lodging.filter((lodge) => {
+		if (!mapShowLodging) return false;
+
+		// Filter by date range if specified
+		if (mapStartDate || mapEndDate) {
+			if (!lodge.check_in) return false;
+
+			const lodgeStart = new Date(lodge.check_in);
+			const lodgeEnd = lodge.check_out ? new Date(lodge.check_out) : lodgeStart;
+
+			const afterStart = !mapStartDate || lodgeStart >= new Date(mapStartDate);
+			const beforeEnd = !mapEndDate || lodgeEnd <= new Date(mapEndDate);
+
+			if (!afterStart || !beforeEnd) return false;
+		}
+
+		return true;
+	});
+
+	// Get unique categories for the filter
+	$: availableCategories = [
+		...new Set(
+			adventures
+				.map((a) => a.category?.display_name || a.category?.name)
+				.filter((name): name is string => name !== undefined && name !== null)
+		)
+	].sort();
 
 	$: {
 		numAdventures = adventures.length;
@@ -1313,12 +1405,159 @@
 		<div class="card bg-base-200 shadow-xl my-8 mx-auto w-10/12">
 			<div class="card-body">
 				<h2 class="card-title text-3xl justify-center mb-4">Trip Map</h2>
+				
+				<!-- Map Filter Controls -->
+				<div class="card bg-base-100 p-4 mb-6">
+					<div class="flex items-center gap-2 mb-4">
+						<Filter class="w-5 h-5 text-primary" />
+						<h3 class="font-semibold text-lg">{$t('map.map_controls')}</h3>
+					</div>
+
+					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+						<!-- Type Filters -->
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={mapShowLocations}
+									class="checkbox checkbox-primary"
+								/>
+								<MapMarkerIcon class="w-5 h-5" />
+								<span class="label-text font-semibold">Locations</span>
+								<span class="badge badge-sm">{filteredMapAdventures.length}</span>
+							</label>
+						</div>
+
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={mapShowLodging}
+									class="checkbox checkbox-primary"
+								/>
+								<HotelIcon class="w-5 h-5" />
+								<span class="label-text font-semibold">Lodging</span>
+								<span class="badge badge-sm">{filteredMapLodging.length}</span>
+							</label>
+						</div>
+
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={mapShowTransportation}
+									class="checkbox checkbox-primary"
+								/>
+								<TransportIcon class="w-5 h-5" />
+								<span class="label-text font-semibold">Transportation</span>
+								<span class="badge badge-sm">{filteredMapTransportation.length}</span>
+							</label>
+						</div>
+
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									bind:checked={mapShowLines}
+									class="checkbox checkbox-primary"
+								/>
+								<LineIcon class="w-5 h-5" />
+								<span class="label-text font-semibold">Connecting Lines</span>
+							</label>
+						</div>
+					</div>
+
+					<!-- Date Range Filters -->
+					<div class="divider mt-4 mb-2">Date Filters</div>
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						<div class="form-control">
+							<label class="label">
+								<span class="label-text flex items-center gap-2">
+									<CalendarIcon class="w-4 h-4" />
+									Start Date
+								</span>
+							</label>
+							<input
+								type="date"
+								bind:value={mapStartDate}
+								class="input input-bordered input-sm"
+								placeholder="Filter from..."
+							/>
+						</div>
+
+						<div class="form-control">
+							<label class="label">
+								<span class="label-text flex items-center gap-2">
+									<CalendarIcon class="w-4 h-4" />
+									End Date
+								</span>
+							</label>
+							<input
+								type="date"
+								bind:value={mapEndDate}
+								class="input input-bordered input-sm"
+								placeholder="Filter to..."
+							/>
+						</div>
+					</div>
+
+					<!-- Category Filter -->
+					{#if availableCategories.length > 0}
+						<div class="divider mt-4 mb-2">Category Filters</div>
+						<div class="form-control">
+							<label class="label">
+								<span class="label-text flex items-center gap-2">
+									<TagIcon class="w-4 h-4" />
+									Categories
+								</span>
+							</label>
+							<div class="flex flex-wrap gap-2">
+								{#each availableCategories as category}
+									<label class="label cursor-pointer gap-2 bg-base-200 px-3 py-1 rounded-lg">
+										<input
+											type="checkbox"
+											value={category}
+											checked={mapSelectedCategories.includes(category)}
+											on:change={(e) => {
+												if (e.currentTarget.checked) {
+													mapSelectedCategories = [...mapSelectedCategories, category];
+												} else {
+													mapSelectedCategories = mapSelectedCategories.filter(
+														(c) => c !== category
+													);
+												}
+											}}
+											class="checkbox checkbox-xs checkbox-primary"
+										/>
+										<span class="text-sm">{category}</span>
+									</label>
+								{/each}
+							</div>
+						</div>
+					{/if}
+
+					<!-- Clear Filters Button -->
+					{#if mapStartDate || mapEndDate || mapSelectedCategories.length > 0}
+						<button
+							class="btn btn-sm btn-ghost gap-2 mt-4"
+							on:click={() => {
+								mapStartDate = '';
+								mapEndDate = '';
+								mapSelectedCategories = [];
+							}}
+						>
+							<Filter class="w-4 h-4" />
+							Clear Date & Category Filters
+						</button>
+					{/if}
+				</div>
+
 				<MapLibre
 					style={getBasemapUrl()}
 					class="aspect-[9/16] max-h-[70vh] sm:aspect-video sm:max-h-full w-full rounded-lg"
 					standardControls
 				>
-					{#each adventures as adventure}
+					{#each filteredMapAdventures as adventure}
 						{#if adventure.longitude && adventure.latitude}
 							<Marker
 								lngLat={[adventure.longitude, adventure.latitude]}
@@ -1378,7 +1617,7 @@
 					{/each}
 
 					<!-- Shows activity GPX on the map -->
-					{#each adventures as adventure}
+					{#each filteredMapAdventures as adventure}
 						{#each adventure.visits as visit}
 							{#each visit.activities as activity}
 								{#if activity.geojson}
@@ -1409,7 +1648,7 @@
 						{/each}
 					{/each}
 
-					{#if lineData && collection.start_date && collection.end_date}
+					{#if lineData && collection.start_date && collection.end_date && mapShowLines}
 						<GeoJSON data={lineData}>
 							<LineLayer
 								layout={{ 'line-cap': 'round', 'line-join': 'round' }}
@@ -1422,7 +1661,7 @@
 							/>
 						</GeoJSON>
 					{/if}
-					{#each transportations as transportation}
+					{#each filteredMapTransportation as transportation}
 						{#if transportation.origin_latitude && transportation.origin_longitude && transportation.destination_latitude && transportation.destination_longitude}
 							<!-- Origin Marker -->
 							<Marker
@@ -1466,7 +1705,7 @@
 						{/if}
 					{/each}
 
-					{#each lodging as hotel}
+					{#each filteredMapLodging as hotel}
 						{#if hotel.longitude && hotel.latitude}
 							<Marker
 								lngLat={{
