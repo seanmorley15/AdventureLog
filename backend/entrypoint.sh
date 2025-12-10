@@ -1,9 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Function to check PostgreSQL availability
 # Helper to get the first non-empty environment variable
 get_env() {
   for var in "$@"; do
+    # indirect expansion (bash)
     value="${!var}"
     if [ -n "$value" ]; then
       echo "$value"
@@ -34,9 +35,6 @@ until check_postgres; do
 done
 
 >&2 echo "PostgreSQL is up - continuing..."
-
-# run sql commands
-# psql -h "$PGHOST" -U "$PGUSER" -d "$PGDATABASE" -f /app/backend/init-postgis.sql
 
 # Apply Django migrations
 python manage.py migrate
@@ -75,14 +73,9 @@ fi
 
 
 # Sync the countries and world travel regions
-# Sync the countries and world travel regions
-python manage.py download-countries
-if [ $? -eq 137 ]; then
-  >&2 echo "WARNING: The download-countries command was interrupted. This is likely due to lack of memory allocated to the container or the host. Please try again with more memory."
-  exit 1
-fi
+python manage.py download-countries || true
 
-cat /code/adventurelog.txt
+cat /code/adventurelog.txt || true
 
 # Start Gunicorn in foreground
 exec gunicorn main.wsgi:application \
