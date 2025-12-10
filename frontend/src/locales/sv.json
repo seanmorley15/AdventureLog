@@ -549,7 +549,11 @@
     "spin_again": "Snurra igen",
     "spinning_globe": "Snurrande jordklot",
     "try_again": "Försök igen",
-    "your_random_adventure_awaits": "Ditt slumpmässiga äventyr väntar!"
+    "your_random_adventure_awaits": "Ditt slumpmässiga äventyr väntar!",
+    "about_country": "Om Country",
+    "about_region": "Om regionen",
+    "show_less": "Visa mindre",
+    "show_more": "Visa mer"
   },
   "auth": {
     "confirm_password": "Bekräfta lösenord",

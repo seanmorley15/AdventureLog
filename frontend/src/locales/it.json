@@ -579,7 +579,11 @@
     "spin_again": "Girare di nuovo",
     "spinning_globe": "Globe rotante",
     "try_again": "Riprova",
-    "your_random_adventure_awaits": "La tua avventura casuale ti aspetta!"
+    "your_random_adventure_awaits": "La tua avventura casuale ti aspetta!",
+    "about_country": "Informazioni sul paese",
+    "about_region": "A proposito di Regione",
+    "show_less": "Mostra meno",
+    "show_more": "Mostra altro"
   },
   "settings": {
     "account_settings": "Impostazioni dell'account utente",

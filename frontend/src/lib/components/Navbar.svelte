@@ -66,6 +66,7 @@
 		'pt-br': 'Português (Brasil)',
 		sk: 'Slovenský',
 		tr: 'Türkçe',
+		uk: 'Українська',
 		hu: 'Magyar'
 	};
 

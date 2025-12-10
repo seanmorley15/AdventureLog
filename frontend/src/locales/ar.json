@@ -1034,6 +1034,10 @@
     "spin_again": "تدور مرة أخرى",
     "spinning_globe": "كرة الغزل",
     "try_again": "حاول ثانية",
-    "your_random_adventure_awaits": "مغامرتك العشوائية تنتظر!"
+    "your_random_adventure_awaits": "مغامرتك العشوائية تنتظر!",
+    "about_country": "حول البلد",
+    "about_region": "حول المنطقة",
+    "show_less": "عرض أقل",
+    "show_more": "عرض المزيد"
   }
 }

@@ -549,7 +549,11 @@
     "spin_again": "Spinn igjen",
     "spinning_globe": "Spinnende klode",
     "try_again": "Prøv igjen",
-    "your_random_adventure_awaits": "Ditt tilfeldige eventyr venter!"
+    "your_random_adventure_awaits": "Ditt tilfeldige eventyr venter!",
+    "about_country": "Om landet",
+    "about_region": "Om regionen",
+    "show_less": "Vis mindre",
+    "show_more": "Vis mer"
   },
   "auth": {
     "username": "Brukernavn",

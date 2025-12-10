@@ -579,7 +579,11 @@
     "spin_again": "Weer spinnen",
     "spinning_globe": "Spinnende bol",
     "try_again": "Probeer het opnieuw",
-    "your_random_adventure_awaits": "Je willekeurige avontuur wacht!"
+    "your_random_adventure_awaits": "Je willekeurige avontuur wacht!",
+    "about_country": "Over land",
+    "about_region": "Over Regio",
+    "show_less": "Toon minder",
+    "show_more": "Toon meer"
   },
   "settings": {
     "account_settings": "Gebruikersaccount instellingen",

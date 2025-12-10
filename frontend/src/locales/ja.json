@@ -1034,6 +1034,10 @@
     "spin_again": "もう一度スピンします",
     "spinning_globe": "スピニンググローブ",
     "try_again": "もう一度やり直してください",
-    "your_random_adventure_awaits": "あなたのランダムな冒険が待っています！"
+    "your_random_adventure_awaits": "あなたのランダムな冒険が待っています！",
+    "about_country": "国について",
+    "about_region": "地域について",
+    "show_less": "表示を減らす",
+    "show_more": "もっと見る"
   }
 }

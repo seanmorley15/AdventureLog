@@ -22,6 +22,7 @@
 	register('pt-br', () => import('../locales/pt-br.json'));
 	register('sk', () => import('../locales/sk.json'));
 	register('tr', () => import('../locales/tr.json'));
+	register('uk', () => import('../locales/uk.json'));
 	register('hu', () => import('../locales/hu.json'));
 
 	let locales = [
@@ -42,6 +43,7 @@
 		'pt-br',
 		'sk',
 		'tr',
+		'uk',
 		'hu'
 	];
 

@@ -576,7 +576,11 @@
     "spin_again": "再次旋转",
     "spinning_globe": "旋转地球",
     "try_again": "再试一次",
-    "your_random_adventure_awaits": "您的随机冒险在等待！"
+    "your_random_adventure_awaits": "您的随机冒险在等待！",
+    "about_country": "关于国家",
+    "about_region": "关于地区",
+    "show_less": "显示较少",
+    "show_more": "显示更多"
   },
   "users": {
     "no_users_found": "未找到已公开的用户。"
