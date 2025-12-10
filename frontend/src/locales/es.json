@@ -549,7 +549,11 @@
     "spin_again": "Girar de nuevo",
     "spinning_globe": "Globo hilado",
     "try_again": "Intentar otra vez",
-    "your_random_adventure_awaits": "¡Tu aventura aleatoria te espera!"
+    "your_random_adventure_awaits": "¡Tu aventura aleatoria te espera!",
+    "about_country": "Acerca del país",
+    "about_region": "Acerca de la región",
+    "show_less": "Mostrar menos",
+    "show_more": "Mostrar más"
   },
   "auth": {
     "forgot_password": "¿Has olvidado tu contraseña?",

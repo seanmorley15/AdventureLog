@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { MapLibre, Marker, MapEvents } from 'svelte-maplibre';
-	import { number, t } from 'svelte-i18n';
+	import { t } from 'svelte-i18n';
 	import { getBasemapUrl } from '$lib';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Collection, Location } from '$lib/types';
@@ -14,11 +14,7 @@
 	import ClearIcon from '~icons/mdi/close';
 	import PinIcon from '~icons/mdi/map-marker';
 	import InfoIcon from '~icons/mdi/information';
-	import StarIcon from '~icons/mdi/star';
-	import LinkIcon from '~icons/mdi/link';
-	import TextIcon from '~icons/mdi/text';
 	import CategoryIcon from '~icons/mdi/tag';
-	import PublicIcon from '~icons/mdi/earth';
 	import GenerateIcon from '~icons/mdi/lightning-bolt';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
@@ -323,14 +319,27 @@
 			location.collections = [collection.id];
 		}
 
-		// either a post or a patch depending on whether we're editing or creating
+		// Build payload and avoid sending an empty `collections` array when editing
+		const payload: any = { ...location };
+
+		// If we're editing and the original location had collections, but the form's collections
+		// is empty (i.e. user didn't modify collections), omit collections from payload so the
+		// server doesn't clear them unintentionally.
 		if (locationToEdit && locationToEdit.id) {
+			if (
+				(!payload.collections || payload.collections.length === 0) &&
+				locationToEdit.collections &&
+				locationToEdit.collections.length > 0
+			) {
+				delete payload.collections;
+			}
+
 			let res = await fetch(`/api/locations/${locationToEdit.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(location)
+				body: JSON.stringify(payload)
 			});
 			let updatedLocation = await res.json();
 			location = updatedLocation;
@@ -340,7 +349,7 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify(location)
+				body: JSON.stringify(payload)
 			});
 			let newLocation = await res.json();
 			location = newLocation;
@@ -401,6 +410,21 @@
 
 			if (initialLocation.tags && Array.isArray(initialLocation.tags)) {
 				location.tags = initialLocation.tags;
+			}
+
+			// Preserve existing collections when editing so we don't accidentally send an empty array
+			if (initialLocation.collections && Array.isArray(initialLocation.collections)) {
+				location.collections = initialLocation.collections.map((c: any) =>
+					typeof c === 'string' ? c : c.id
+				);
+			} else if (
+				locationToEdit &&
+				locationToEdit.collections &&
+				Array.isArray(locationToEdit.collections)
+			) {
+				location.collections = locationToEdit.collections.map((c: any) =>
+					typeof c === 'string' ? c : c.id
+				);
 			}
 
 			if (initialLocation.location) {

@@ -959,7 +959,11 @@
     "try_again": "다시 시도하십시오",
     "your_random_adventure_awaits": "당신의 임의의 모험이 기다리고 있습니다!",
     "cities_available": "이용 가능",
-    "destination_revealed": "목적지 공개!"
+    "destination_revealed": "목적지 공개!",
+    "about_country": "국가 소개",
+    "about_region": "지역정보",
+    "show_less": "간략히 표시",
+    "show_more": "더보기"
   },
   "lodging": {
     "apartment": "아파트",

@@ -252,7 +252,7 @@
 						<div class="card-body p-4">
 							<div class="flex items-center gap-2 mb-4">
 								<Info class="w-5 h-5 text-primary" />
-								<h2 class="text-lg font-semibold">{$t('worldtravel.about_country')}</h2>
+								<h2 class="text-lg font-semibold">{$t('worldtravel.about_region')}</h2>
 							</div>
 							<p
 								class="text-base-content/70 leading-relaxed"

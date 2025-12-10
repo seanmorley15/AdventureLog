@@ -550,7 +550,11 @@
     "spin_again": "Снова спите",
     "spinning_globe": "Вращающийся глобус",
     "try_again": "Попробуйте еще раз",
-    "your_random_adventure_awaits": "Ваше случайное приключение ждет!"
+    "your_random_adventure_awaits": "Ваше случайное приключение ждет!",
+    "about_country": "О стране",
+    "about_region": "О регионе",
+    "show_less": "Показать меньше",
+    "show_more": "Показать больше"
   },
   "auth": {
     "username": "Имя пользователя",

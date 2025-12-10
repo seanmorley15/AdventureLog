@@ -550,7 +550,11 @@
     "spin_again": "Obrócić ponownie",
     "spinning_globe": "Spinning Globe",
     "try_again": "Spróbuj ponownie",
-    "your_random_adventure_awaits": "Twoja przypadkowa przygoda czeka!"
+    "your_random_adventure_awaits": "Twoja przypadkowa przygoda czeka!",
+    "about_country": "O kraju",
+    "about_region": "O Regionie",
+    "show_less": "Pokaż mniej",
+    "show_more": "Pokaż więcej"
   },
   "auth": {
     "username": "Nazwa użytkownika",
