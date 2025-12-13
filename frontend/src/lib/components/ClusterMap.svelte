@@ -41,6 +41,22 @@
 	export let mapClass = '';
 	export let zoom = 2;
 	export let standardControls = true;
+	export let fitToBounds: boolean = true;
+	export let fitPadding: number = 40;
+	export let fitMaxZoom: number = 8;
+	// Optional level context (e.g. 'country' | 'region' | 'city'). When provided,
+	// `fitMaxZooms` can supply level-specific maximum zoom values used when
+	// fitting bounds. This lets callers choose different fit zooms for country,
+	// region, and city views.
+	export let fitLevel: string = '';
+	export let fitMaxZooms: Record<string, number> = { country: 4, region: 7, city: 12 };
+
+	// Effective fit max zoom (prefers level-specific value if available)
+	let effectiveFitMaxZoom: number = fitMaxZoom;
+	$: effectiveFitMaxZoom =
+		fitLevel && fitMaxZooms && fitMaxZooms[fitLevel] !== undefined
+			? fitMaxZooms[fitLevel]
+			: fitMaxZoom;
 
 	export let getMarkerProps: (feature: unknown) => MarkerProps = (feature) =>
 		feature && typeof feature === 'object' && feature !== null && 'properties' in (feature as any)
@@ -79,6 +95,75 @@
 
 	let resolvedClusterCirclePaint: Record<string, unknown> = clusterCirclePaint;
 	$: resolvedClusterCirclePaint = clusterCirclePaint as Record<string, unknown>;
+
+	// Map instance (bound from MapLibre) and bounding state
+	let map: any = undefined;
+	let _lastBoundsKey: string | null = null;
+
+	// When `geoJson` changes, compute bounding box and fit map to bounds (only when changed)
+	$: if (
+		map &&
+		fitToBounds &&
+		geoJson &&
+		Array.isArray(geoJson.features) &&
+		geoJson.features.length > 0
+	) {
+		let minLon = 180;
+		let minLat = 90;
+		let maxLon = -180;
+		let maxLat = -90;
+
+		for (const f of geoJson.features) {
+			const coords = (f && f.geometry && f.geometry.coordinates) || null;
+			if (!coords || !Array.isArray(coords) || coords.length < 2) continue;
+			const lon = Number(coords[0]);
+			const lat = Number(coords[1]);
+			if (!Number.isFinite(lon) || !Number.isFinite(lat)) continue;
+			minLon = Math.min(minLon, lon);
+			minLat = Math.min(minLat, lat);
+			maxLon = Math.max(maxLon, lon);
+			maxLat = Math.max(maxLat, lat);
+		}
+
+		if (minLon <= maxLon && minLat <= maxLat) {
+			const boundsKey = `${minLon},${minLat},${maxLon},${maxLat}`;
+			if (boundsKey !== _lastBoundsKey) {
+				_lastBoundsKey = boundsKey;
+
+				// If bounds represent effectively a single point, use easeTo with a sensible zoom
+				const lonDelta = Math.abs(maxLon - minLon);
+				const latDelta = Math.abs(maxLat - minLat);
+				const isSinglePoint = lonDelta < 1e-6 && latDelta < 1e-6;
+
+				try {
+					if (isSinglePoint) {
+						const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
+						map.easeTo({ center, zoom: Math.max(zoom, effectiveFitMaxZoom), duration: 1000 });
+					} else {
+						const bounds: [[number, number], [number, number]] = [
+							[minLon, minLat],
+							[maxLon, maxLat]
+						];
+						// Use fitBounds to contain all points with padding and a max zoom
+						if (typeof map.fitBounds === 'function') {
+							map.fitBounds(bounds, {
+								padding: fitPadding,
+								maxZoom: effectiveFitMaxZoom,
+								duration: 1000
+							});
+						} else {
+							// Fallback: center and set zoom if fitBounds not available
+							const center = [(minLon + maxLon) / 2, (minLat + maxLat) / 2];
+							map.easeTo({ center, duration: 1000 });
+						}
+					}
+				} catch (err) {
+					// If something fails (map not ready), ignore — it will re-run when map is available.
+					console.error('ClusterMap: fitBounds failed', err);
+				}
+			}
+		}
+	}
 
 	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
 		const { clusterId, features, map, source } = event.detail;
@@ -131,7 +216,7 @@
 	}
 </script>
 
-<MapLibre style={mapStyle} class={mapClass} {standardControls} {zoom}>
+<MapLibre bind:map style={mapStyle} class={mapClass} {standardControls} {zoom}>
 	<GeoJSON id={sourceId} data={geoJson} cluster={clusterOptions} generateId>
 		<CircleLayer
 			id={`${sourceId}-clusters`}

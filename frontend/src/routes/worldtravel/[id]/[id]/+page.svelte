@@ -5,7 +5,8 @@
 	import type { City, VisitedCity } from '$lib/types';
 	import type { PageData } from './$types';
 	import { t } from 'svelte-i18n';
-	import { MapLibre, Marker } from 'svelte-maplibre';
+	import ClusterMap from '$lib/components/ClusterMap.svelte';
+	import type { ClusterOptions } from 'svelte-maplibre';
 
 	// Icons
 	import MapMarker from '~icons/mdi/map-marker';
@@ -125,6 +126,87 @@
 			addToast('info', `${$t('worldtravel.visit_to')} ${city.name} ${$t('worldtravel.removed')}`);
 		}
 	}
+
+	// ClusterMap integration for cities
+	type VisitStatus = 'visited' | 'not_visited';
+
+	type CityFeatureProperties = {
+		id: string | number;
+		name: string;
+		visitStatus: VisitStatus;
+	};
+
+	type CityFeature = {
+		type: 'Feature';
+		geometry: { type: 'Point'; coordinates: [number, number] };
+		properties: CityFeatureProperties;
+	};
+
+	type CityFeatureCollection = { type: 'FeatureCollection'; features: CityFeature[] };
+
+	function parseCoordinate(value: number | string | null | undefined): number | null {
+		if (value === null || value === undefined) return null;
+		const numeric = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function cityToFeature(city: City): CityFeature | null {
+		const lat = parseCoordinate(city.latitude);
+		const lon = parseCoordinate(city.longitude);
+		if (lat === null || lon === null) return null;
+		const isVisited = visitedCities.some((vc) => vc.city === city.id);
+		return {
+			type: 'Feature',
+			geometry: { type: 'Point', coordinates: [lon, lat] },
+			properties: {
+				id: city.id,
+				name: city.name,
+				visitStatus: isVisited ? 'visited' : 'not_visited'
+			}
+		};
+	}
+
+	const CITY_SOURCE_ID = 'worldtravel-cities';
+	const cityClusterOptions: ClusterOptions = { radius: 300, maxZoom: 12, minPoints: 1 };
+
+	let citiesGeoJson: CityFeatureCollection = { type: 'FeatureCollection', features: [] };
+	$: citiesGeoJson = {
+		type: 'FeatureCollection',
+		features: filteredCities
+			.map((c) => cityToFeature(c))
+			.filter((f): f is CityFeature => f !== null)
+	};
+
+	function getMarkerProps(feature: any): CityFeatureProperties | null {
+		return feature && feature.properties ? feature.properties : null;
+	}
+
+	function getVisitStatusClass(status: VisitStatus): string {
+		return status === 'visited' ? 'bg-green-200' : 'bg-red-200';
+	}
+
+	function markerClassResolver(props: { visitStatus?: string } | null): string {
+		if (!props?.visitStatus) return '';
+		return getVisitStatusClass(props.visitStatus as VisitStatus);
+	}
+
+	function markerLabelResolver(props: { name?: string } | null): string {
+		if (!props) return '';
+		return showGeo ? (props.name ?? '') : '';
+	}
+
+	function handleMarkerSelect(event: CustomEvent<any>) {
+		const id = event.detail?.markerProps?.id as string | number | undefined;
+		if (id === undefined || id === null) return;
+		const city = allCities.find((c) => String(c.id) === String(id));
+		if (!city) return;
+		const isVisited = visitedCities.some((vc) => vc.city === city.id);
+		if (isVisited) {
+			removeVisit(city);
+		} else {
+			markVisited(city);
+		}
+	}
 </script>
 
 <svelte:head>
@@ -216,7 +298,7 @@
 									on:click={() => (filterOption = 'all')}
 								>
 									<MapMarker class="w-3 h-3" />
-									All
+									{$t('adventures.all')}
 								</button>
 								<button
 									class="tab tab-sm gap-2 {filterOption === 'visited' ? 'tab-active' : ''}"
@@ -299,35 +381,18 @@
 									</div>
 								</div>
 							</div>
-							<MapLibre
-								style={getBasemapUrl()}
-								class="aspect-[16/10] w-full rounded-lg"
-								standardControls
-								center={allCities[0] &&
-								allCities[0].longitude !== null &&
-								allCities[0].latitude !== null
-									? [allCities[0].longitude, allCities[0].latitude]
-									: [0, 0]}
-								zoom={8}
-							>
-								{#each filteredCities as city}
-									{#if city.latitude && city.longitude && showGeo}
-										<Marker
-											lngLat={[city.longitude, city.latitude]}
-											class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 {visitedCities.some(
-												(visitedCity) => visitedCity.city === city.id
-											)
-												? 'bg-green-200'
-												: 'bg-red-200'} text-black focus:outline-6 focus:outline-black"
-											on:click={toggleVisited(city)}
-										>
-											<span class="text-xs">
-												{city.name}
-											</span>
-										</Marker>
-									{/if}
-								{/each}
-							</MapLibre>
+							<ClusterMap
+								geoJson={citiesGeoJson}
+								sourceId={CITY_SOURCE_ID}
+								clusterOptions={cityClusterOptions}
+								mapStyle={getBasemapUrl()}
+								mapClass="aspect-[16/10] w-full rounded-lg"
+								fitLevel="city"
+								on:markerSelect={handleMarkerSelect}
+								{getMarkerProps}
+								markerClass={markerClassResolver}
+								markerLabel={markerLabelResolver}
+							/>
 						</div>
 					</div>
 				</div>

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import RegionCard from '$lib/components/RegionCard.svelte';
 	import type { Region, VisitedRegion } from '$lib/types';
-	import { MapLibre, Marker } from 'svelte-maplibre';
+	import ClusterMap from '$lib/components/ClusterMap.svelte';
+	import type { ClusterOptions } from 'svelte-maplibre';
 	import type { PageData } from './$types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
@@ -127,6 +128,100 @@
 		} else {
 			visitedRegions = visitedRegions.filter((visitedRegion) => visitedRegion.region !== region.id);
 			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
+		}
+	}
+
+	// ClusterMap integration for regions
+	type VisitStatus = 'visited' | 'not_visited';
+
+	type RegionFeatureProperties = {
+		id: string | number;
+		name: string;
+		visitStatus: VisitStatus;
+	};
+
+	type RegionFeature = {
+		type: 'Feature';
+		geometry: {
+			type: 'Point';
+			coordinates: [number, number];
+		};
+		properties: RegionFeatureProperties;
+	};
+
+	type RegionFeatureCollection = {
+		type: 'FeatureCollection';
+		features: RegionFeature[];
+	};
+
+	function parseCoordinate(value: number | string | null | undefined): number | null {
+		if (value === null || value === undefined) return null;
+		const numeric = typeof value === 'number' ? value : Number(value);
+		return Number.isFinite(numeric) ? numeric : null;
+	}
+
+	function regionToFeature(region: Region): RegionFeature | null {
+		const lat = parseCoordinate(region.latitude);
+		const lon = parseCoordinate(region.longitude);
+		if (lat === null || lon === null) return null;
+
+		const isVisited = visitedRegions.some((vr) => vr.region === region.id);
+		return {
+			type: 'Feature',
+			geometry: { type: 'Point', coordinates: [lon, lat] },
+			properties: {
+				id: region.id,
+				name: region.name,
+				visitStatus: isVisited ? 'visited' : 'not_visited'
+			}
+		};
+	}
+
+	const REGION_SOURCE_ID = 'worldtravel-regions';
+	const regionClusterOptions: ClusterOptions = { radius: 300, maxZoom: 8, minPoints: 1 };
+
+	let regionsGeoJson: RegionFeatureCollection = { type: 'FeatureCollection', features: [] };
+	$: regionsGeoJson = {
+		type: 'FeatureCollection',
+		features: regions.map((r) => regionToFeature(r)).filter((f): f is RegionFeature => f !== null)
+	};
+
+	function getMarkerProps(feature: any): RegionFeatureProperties | null {
+		return feature && feature.properties ? feature.properties : null;
+	}
+
+	function getVisitStatusClass(status: VisitStatus): string {
+		switch (status) {
+			case 'visited':
+				return 'bg-green-200';
+			case 'not_visited':
+			default:
+				return 'bg-red-200';
+		}
+	}
+
+	function markerClassResolver(props: { visitStatus?: string } | null): string {
+		if (!props?.visitStatus) return '';
+		return getVisitStatusClass(props.visitStatus as VisitStatus);
+	}
+
+	function markerLabelResolver(props: { name?: string } | null): string {
+		// Toggle label visibility while keeping marker visible
+		if (!props) return '';
+		return showGeo ? (props.name ?? '') : '';
+	}
+
+	function handleMarkerSelect(event: CustomEvent<any>) {
+		const id = event.detail?.markerProps?.id as string | number | undefined;
+		if (id === undefined || id === null) return;
+		const region = regions.find((r) => String(r.id) === String(id));
+		if (!region) return;
+		// Toggle visit on click
+		const isVisited = visitedRegions.some((vr) => vr.region === region.id);
+		if (isVisited) {
+			removeVisit(region);
+		} else {
+			markVisited(region);
 		}
 	}
 </script>
@@ -303,31 +398,18 @@
 									</div>
 								</div>
 							</div>
-							<MapLibre
-								style={getBasemapUrl()}
-								class="aspect-[16/10] w-full rounded-lg"
-								standardControls
-								center={[regions[0]?.longitude || 0, regions[0]?.latitude || 0]}
-								zoom={6}
-							>
-								{#each regions as region}
-									{#if region.latitude && region.longitude && showGeo}
-										<Marker
-											lngLat={[region.longitude, region.latitude]}
-											class="grid px-2 py-1 place-items-center rounded-full border border-gray-200 {visitedRegions.some(
-												(visitedRegion) => visitedRegion.region === region.id
-											)
-												? 'bg-green-200'
-												: 'bg-red-200'} text-black focus:outline-6 focus:outline-black"
-											on:click={togleVisited(region)}
-										>
-											<span class="text-xs">
-												{region.name}
-											</span>
-										</Marker>
-									{/if}
-								{/each}
-							</MapLibre>
+							<ClusterMap
+								geoJson={regionsGeoJson}
+								sourceId={REGION_SOURCE_ID}
+								clusterOptions={regionClusterOptions}
+								mapStyle={getBasemapUrl()}
+								mapClass="aspect-[16/10] w-full rounded-lg"
+								fitLevel="region"
+								on:markerSelect={handleMarkerSelect}
+								{getMarkerProps}
+								markerClass={markerClassResolver}
+								markerLabel={markerLabelResolver}
+							/>
 						</div>
 					</div>
 				</div>

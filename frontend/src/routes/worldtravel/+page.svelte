@@ -433,6 +433,7 @@
 								clusterOptions={countryClusterOptions}
 								mapStyle={getBasemapUrl()}
 								mapClass="aspect-[16/10] w-full rounded-lg"
+								fitLevel="country"
 								on:markerSelect={handleMarkerSelect}
 								{getMarkerProps}
 								markerClass={markerClassResolver}
