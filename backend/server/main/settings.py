@@ -1,11 +1,8 @@
 """
-Django settings for demo project.
+AdventureLog Server settings
 
-For more information on this file, see
-https://docs.djangoproject.com/en/1.7/topics/settings/
-
-For the full list of settings and their values, see
-https://docs.djangoproject.com/en/1.7/ref/settings/
+Reference:
+- Django settings: https://docs.djangoproject.com/en/stable/ref/settings/
 """
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -15,14 +12,21 @@ from os import getenv
 from pathlib import Path
 from urllib.parse import urlparse
 from publicsuffix2 import get_sld
-# Load environment variables from .env file
+
+# ---------------------------------------------------------------------------
+# Environment & Paths
+# ---------------------------------------------------------------------------
+# Load environment variables from .env file early so getenv works everywhere.
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
+# See Django deployment checklist for production hardening.
 
+# ---------------------------------------------------------------------------
+# Core Security & Debug
+# ---------------------------------------------------------------------------
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = getenv('SECRET_KEY')
 
@@ -34,8 +38,11 @@ DEBUG = getenv('DEBUG', 'true').lower() == 'true'
 #     '127.0.0.1',
 #     'server'
 # ]
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['*']  # In production, restrict to known hosts.
 
+# ---------------------------------------------------------------------------
+# Installed Apps
+# ---------------------------------------------------------------------------
 INSTALLED_APPS = (
     'django.contrib.admin',
     'django.contrib.auth',
@@ -67,6 +74,9 @@ INSTALLED_APPS = (
 
 )
 
+# ---------------------------------------------------------------------------
+# Middleware
+# ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'adventures.middleware.XSessionTokenMiddleware',
@@ -83,9 +93,9 @@ MIDDLEWARE = (
     'allauth.account.middleware.AccountMiddleware',
 )
 
-# disable verifications for new users
-ACCOUNT_EMAIL_VERIFICATION = 'none'
-
+# ---------------------------------------------------------------------------
+# Caching
+# ---------------------------------------------------------------------------
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.memcached.PyMemcacheCache',
@@ -101,9 +111,9 @@ ROOT_URLCONF = 'main.urls'
 
 # WSGI_APPLICATION = 'demo.wsgi.application'
 
+# ---------------------------------------------------------------------------
 # Database
-# https://docs.djangoproject.com/en/1.7/ref/settings/#databases
-
+# ---------------------------------------------------------------------------
 # Using legacy PG environment variables for compatibility with existing setups
 
 def env(*keys, default=None):
@@ -131,58 +141,52 @@ DATABASES = {
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 
+# ---------------------------------------------------------------------------
+# Internationalization
+# ---------------------------------------------------------------------------
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_L10N = True
-
 USE_TZ = True
 
+# ---------------------------------------------------------------------------
+# Frontend URL & Cookies
+# ---------------------------------------------------------------------------
+# Derive frontend URL from environment and configure cookie behavior.
 unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
 FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = 'Lax'
-
 SESSION_COOKIE_NAME = 'sessionid'
 
+# Secure cookies if frontend is served over HTTPS
 SESSION_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 CSRF_COOKIE_SECURE = FRONTEND_URL.startswith('https')
 
-
+# Dynamically determine cookie domain to support subdomains while avoiding IPs
 hostname = urlparse(FRONTEND_URL).hostname
 is_ip_address = hostname.replace('.', '').isdigit()
-
-# Check if the hostname is single-label (no dots)
-is_single_label = '.' not in hostname
+is_single_label = '.' not in hostname  # single-label hostnames (e.g., "localhost")
 
 if is_ip_address or is_single_label:
-    # Do not set a domain for IP addresses or single-label hostnames
     SESSION_COOKIE_DOMAIN = None
 else:
-    # Use publicsuffix2 to calculate the correct cookie domain
     cookie_domain = get_sld(hostname)
-    if cookie_domain:
-        SESSION_COOKIE_DOMAIN = f".{cookie_domain}"
-    else:
-        # Fallback to the hostname if parsing fails
-        SESSION_COOKIE_DOMAIN = hostname
+    SESSION_COOKIE_DOMAIN = f".{cookie_domain}" if cookie_domain else hostname
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.7/howto/static-files/
-
+# ---------------------------------------------------------------------------
+# Static & Media Files
+# ---------------------------------------------------------------------------
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATIC_URL = '/static/'
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'  # This path must match the NGINX root
+MEDIA_ROOT = BASE_DIR / 'media'  # Must match NGINX root for media serving
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
 STORAGES = {
@@ -196,6 +200,9 @@ STORAGES = {
 
 SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 
+# ---------------------------------------------------------------------------
+# Templates
+# ---------------------------------------------------------------------------
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -212,21 +219,18 @@ TEMPLATES = [
     },
 ]
 
-# Authentication settings
-
+# ---------------------------------------------------------------------------
+# Authentication & Accounts
+# ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
 
 AUTH_USER_MODEL = 'users.CustomUser'
-
 ACCOUNT_ADAPTER = 'users.adapters.NoNewUsersAccountAdapter'
-
 ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 
 SESSION_SAVE_EVERY_REQUEST = True
-
-# Set login redirect URL to the frontend
-LOGIN_REDIRECT_URL = FRONTEND_URL
+LOGIN_REDIRECT_URL = FRONTEND_URL  # Redirect to frontend after login
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 
@@ -235,8 +239,7 @@ HEADLESS_FRONTEND_URLS = {
     "account_reset_password": f"{FRONTEND_URL}/user/reset-password",
     "account_reset_password_from_key": f"{FRONTEND_URL}/user/reset-password/{{key}}",
     "account_signup": f"{FRONTEND_URL}/signup",
-    # Fallback in case the state containing the `next` URL is lost and the handshake
-    # with the third-party provider fails.
+    # Fallback if handshake with provider fails and `next` URL is lost.
     "socialaccount_login_error": f"{FRONTEND_URL}/account/provider/callback",
 }
 
@@ -249,8 +252,12 @@ AUTHENTICATION_BACKENDS = [
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_AUTHENTICATION_METHOD = 'username'
-ACCOUNT_EMAIL_VERIFICATION = 'optional'
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_EMAIL_VERIFICATION = getenv('ACCOUNT_EMAIL_VERIFICATION', 'none')  # 'none', 'optional', 'mandatory'
+
+SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-link by email
+SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 
 if getenv('EMAIL_BACKEND', 'console') == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
@@ -274,6 +281,9 @@ else:
 # DEFAULT_FROM_EMAIL = 'mail@mail.user.com'
 
 
+# ---------------------------------------------------------------------------
+# Django REST Framework
+# ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.SessionAuthentication',
@@ -292,15 +302,18 @@ else:
     )
 
 
+# ---------------------------------------------------------------------------
+# CORS & CSRF
+# ---------------------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
-
-
 CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
-
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
+# ---------------------------------------------------------------------------
+# Logging
+# ---------------------------------------------------------------------------
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -326,6 +339,9 @@ LOGGING = {
     },
 }
 
+# ---------------------------------------------------------------------------
+# Public URLs & Third-Party Integrations
+# ---------------------------------------------------------------------------
 PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
 
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
@@ -336,7 +352,7 @@ ADVENTURELOG_RELEASE_VERSION = 'v0.11.0'
 # https://github.com/dr5hn/countries-states-cities-database/tags
 COUNTRY_REGION_JSON_VERSION = 'v2.6'
 
+# External service keys (do not hardcode secrets)
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
-
 STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
 STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')

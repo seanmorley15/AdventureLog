@@ -864,6 +864,7 @@
 													<button
 														class="btn btn-sm btn-warning"
 														on:click={() => removeEmail(email)}
+														disabled={emails.length === 1 || email.primary}
 													>
 														{$t('adventures.remove')}
 													</button>
