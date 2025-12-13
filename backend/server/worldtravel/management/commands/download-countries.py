@@ -167,7 +167,7 @@ class Command(BaseCommand):
                 # Process regions/states
                 if country['states']:
                     for state in country['states']:
-                        state_id = f"{country_code}-{state['state_code']}"
+                        state_id = f"{country_code}-{state['iso2']}"
                         state_name = state['name']
                         state_lat = round(float(state['latitude']), 6) if state['latitude'] else None
                         state_lng = round(float(state['longitude']), 6) if state['longitude'] else None
