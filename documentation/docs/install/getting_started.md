@@ -22,6 +22,7 @@ Perfect for Docker beginners.
 
 ## ⚙️ Advanced & Alternative Setups
 
-- [Nginx Proxy Manager](nginx_proxy_manager.md) — Easy reverse proxy config
+- [Dev Container + WSL](dev_container_wsl.md) - Windows dev environment with WSL 2 + Dev Containers
+- [Nginx Proxy Manager](nginx_proxy_manager.md) - Easy reverse proxy config
 - [Traefik](traefik.md) — Dynamic reverse proxy with automation
 - [Caddy](caddy.md) — Automatic HTTPS with a clean config

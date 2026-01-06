@@ -138,6 +138,7 @@ export default defineConfig({
             link: "/docs/install/kustomize",
           },
           { text: "Unraid 🧡", link: "/docs/install/unraid" },
+          { text: "Dev Container + WSL 🧰", link: "/docs/install/dev_container_wsl" },
 
           {
             text: "With A Reverse Proxy",
