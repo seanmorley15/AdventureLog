@@ -12,6 +12,7 @@ Before starting, ensure you have the following installed:
   Download from: [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)
 
   > Docker Desktop must be configured to use **WSL 2**
+  > Make sure Docker Desktop is running before you start the steps below.
 
 * **WSL 2 with a Linux distribution installed**
   Ubuntu is recommended.
@@ -19,6 +20,7 @@ Before starting, ensure you have the following installed:
   ```bash
   wsl --install -d Ubuntu
   ```
+  Run this in **Windows PowerShell** (or **Windows Terminal**).
 
 * **Visual Studio Code**
   [https://code.visualstudio.com/](https://code.visualstudio.com/)
@@ -47,7 +49,7 @@ Before starting, ensure you have the following installed:
 
 ### 1. Clone the Repository (inside WSL)
 
-Open **Ubuntu (WSL)** and run:
+Open a WSL terminal (search for "WSL" in the Windows Start menu and open the WSL terminal), then run:
 
 ```bash
 cd ~
@@ -62,16 +64,16 @@ cd AdventureLog
 > git clone https://github.com/<your-username>/AdventureLog.git
 > ```
 
-### 2. Create the Development `.env` File
+### 2. Create the Development `.env` File (via WSL)
 
 ```bash
-cp .env.example .env
+cp .env.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
 ```
 
-This creates the `.env` file required for the containers to start.
+This creates the `.env` file required for the containers to start and enables DEBUG for local development.
 
 > **NOTE**
-> The application will start without modifying `.env`. The default values provided in `.env.example` are sufficient for running the project.
+> The rest of the defaults in `.env.example` are sufficient for running the project.
 
 #### Environment Variables
 
@@ -103,16 +105,25 @@ VS Code will:
 * Install dependencies
 * Attach the editor to the running container
 
-The first build may take a few minutes.
+The first build usually takes around 30 seconds.
 
 ## Running the Application
 
 Once the Dev Container is running, the services are started using Docker Compose.
+Use the VS Code terminal (inside the Dev Container) for the commands below.
 
-If not started automatically, run:
+To start the app, enter the following command:
 
 ```bash
-docker compose up
+docker compose -f docker-compose.dev.yml up --build
+```
+
+Bringing the app up usually takes around 1-2 minutes.
+
+To fully reset the database and media volumes, run:
+
+```bash
+docker compose -f docker-compose.dev.yml down -v
 ```
 
 ## Accessing the App
@@ -123,7 +134,9 @@ docker compose up
 * **Backend (API)**
   [http://localhost:8016](http://localhost:8016)
 
-Admin credentials are taken from your `.env` file.
+Admin credentials are taken from your `.env` file. The `docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
+It also checks whether the countries/flags data already exists before re-importing it, so the first build can take longer and subsequent `down`/`up` runs are faster.
+This dev setup can feel a bit slower because hot reload, dependency installs, and initial database bootstrapping all happen inside containers.
 
 ## Common Issues
 

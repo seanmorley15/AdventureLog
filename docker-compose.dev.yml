@@ -1,0 +1,59 @@
+services:
+  web:
+    build: ./frontend/
+    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    container_name: adventurelog-frontend
+    restart: unless-stopped
+    user: root
+    env_file: .env
+    environment:
+      - CI=true
+      - NODE_OPTIONS=--max-old-space-size=4096
+    ports:
+      - "${FRONTEND_PORT:-8015}:3000"
+    depends_on:
+      - server
+    volumes:
+      - ./frontend:/app
+      - pnpm_store:/pnpm-store
+    command: sh -c "mkdir -p /pnpm-store && chown -R node:node /pnpm-store && su node -c 'pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile && pnpm exec vite dev --host 0.0.0.0 --port 3000 --strictPort'"
+
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: adventurelog-db
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+
+  server:
+    build: ./backend/
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    container_name: adventurelog-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_ADMIN_USERNAME}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_ADMIN_EMAIL}
+    ports:
+      - "${BACKEND_PORT:-8016}:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./backend/server:/code
+      - adventurelog_media:/code/media/
+    command: >
+      sh -c "memcached -u nobody -m 64 -p 11211 -d;
+      until pg_isready -h db -p 5432 >/dev/null 2>&1; do sleep 1; done;
+      python manage.py migrate --noinput;
+      python manage.py shell -c \"from worldtravel.models import Country; import sys; sys.exit(0 if Country.objects.exists() else 1)\" || python manage.py download-countries;
+      if [ -n \"$$DJANGO_SUPERUSER_USERNAME\" ] && [ -n \"$$DJANGO_SUPERUSER_PASSWORD\" ] && [ -n \"$$DJANGO_SUPERUSER_EMAIL\" ]; then
+        python manage.py createsuperuser --noinput --username \"$$DJANGO_SUPERUSER_USERNAME\" --email \"$$DJANGO_SUPERUSER_EMAIL\" || true;
+      fi;
+      python manage.py runserver 0.0.0.0:8000"
+
+volumes:
+  postgres_data:
+  adventurelog_media:
+  pnpm_store:
