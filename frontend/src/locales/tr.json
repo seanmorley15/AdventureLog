@@ -477,7 +477,13 @@
     "with_activities": "Faaliyetlerle",
     "written": "Yazılı",
     "categories": "Kategoriler",
-    "cities": "Şehirler"
+    "cities": "Şehirler",
+    "export_failed": "Dışa aktarma başarısız oldu",
+    "export_success": "Dışa aktarılan koleksiyon",
+    "export_zip": "ZIP'i dışa aktar",
+    "import_failed": "İçe Aktarma Başarısız",
+    "import_from_file": "Dosyadan içe aktar",
+    "import_success": "İçe Aktarma Başarısı"
   },
   "worldtravel": {
     "country_list": "Ülke Listesi",
@@ -567,7 +573,8 @@
     "enter_username": "Kullanıcı adınızı girin",
     "enter_password": "Şifrenizi girin",
     "totp": "İki Aşamalı Doğrulama Kodu",
-    "logging_in": "Giriş yapılıyor"
+    "logging_in": "Giriş yapılıyor",
+    "user_email_verification_required": "E-posta doğrulaması gerekli. \nDoğrulama bağlantısı için lütfen e-postanızı kontrol edin."
   },
   "users": {
     "no_users_found": "Herkese açık profili olan kullanıcı bulunamadı."
@@ -989,7 +996,13 @@
     "searching": "Arama...",
     "select_location_or_query": "Yakındaki harika yerleri keşfetmek için bir konum seçin veya bir arama sorgusu girin!",
     "total_results": "Toplam Sonuçlar",
-    "use_search_instead": "Bunun yerine aramayı kullanın"
+    "use_search_instead": "Bunun yerine aramayı kullanın",
+    "add_location": "Konum Ekle",
+    "add_lodging": "Konaklama Ekle",
+    "away": "uzak",
+    "hours": "Saat",
+    "open": "Açık",
+    "your_location": "Konumunuz"
   },
   "calendar": {
     "today": "Bugün",

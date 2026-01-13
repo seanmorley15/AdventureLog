@@ -428,7 +428,13 @@
     "view": "ビュー",
     "wiki_results_found": "ウィキペディアの結果",
     "with_activities": "アクティビティあり",
-    "written": "書かれた"
+    "written": "書かれた",
+    "export_failed": "エクスポートに失敗しました",
+    "export_success": "エクスポートされたコレクション",
+    "export_zip": "ZIP をエクスポート",
+    "import_failed": "インポートに失敗しました",
+    "import_from_file": "ファイルからインポート",
+    "import_success": "インポート成功"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",
@@ -453,7 +459,8 @@
     "enter_password": "パスワードを入力してください",
     "enter_username": "ユーザー名を入力します",
     "logging_in": "ログインします",
-    "totp": "二因子コード"
+    "totp": "二因子コード",
+    "user_email_verification_required": "メール認証が必要です。\nメールに確認用のリンクがあるかどうかを確認してください。"
   },
   "calendar": {
     "all_day_event": "終日イベント",
@@ -745,7 +752,13 @@
     "searching": "検索中...",
     "select_location_or_query": "場所を選択するか、検索クエリを入力して、近くの素晴らしい場所を見つけてください。",
     "total_results": "合計結果",
-    "use_search_instead": "代わりに検索を使用してください"
+    "use_search_instead": "代わりに検索を使用してください",
+    "add_location": "場所を追加",
+    "add_lodging": "宿泊施設を追加する",
+    "away": "離れて",
+    "hours": "営業時間",
+    "open": "開ける",
+    "your_location": "あなたの所在地"
   },
   "search": {
     "cities": "都市",

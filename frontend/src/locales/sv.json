@@ -428,7 +428,13 @@
     "view": "Se",
     "wiki_results_found": "Wikipedia resultat",
     "with_activities": "Med aktiviteter",
-    "written": "Skriftlig"
+    "written": "Skriftlig",
+    "export_failed": "Exporten misslyckades",
+    "export_success": "Exporterad samling",
+    "export_zip": "Exportera ZIP",
+    "import_failed": "Importen misslyckades",
+    "import_from_file": "Importera från fil",
+    "import_success": "Importen lyckades"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -567,7 +573,8 @@
     "enter_password": "Ange ditt lösenord",
     "enter_username": "Ange ditt användarnamn",
     "logging_in": "Inloggning",
-    "totp": "Tvåfaktorkod"
+    "totp": "Tvåfaktorkod",
+    "user_email_verification_required": "E-postverifiering krävs. \nKontrollera din e-post för en verifieringslänk."
   },
   "users": {
     "no_users_found": "Inga användare hittades med offentliga profiler."
@@ -964,7 +971,13 @@
     "searching": "Sökande...",
     "select_location_or_query": "Välj en plats eller ange en sökfråga för att upptäcka fantastiska platser i närheten!",
     "total_results": "Totala resultat",
-    "use_search_instead": "Använd sök istället"
+    "use_search_instead": "Använd sök istället",
+    "add_location": "Lägg till plats",
+    "add_lodging": "Lägg till boende",
+    "away": "bort",
+    "hours": "Timmar",
+    "open": "Öppna",
+    "your_location": "Din plats"
   },
   "lodging": {
     "apartment": "Lägenhet",

@@ -477,7 +477,13 @@
     "view": "Utsikt",
     "wiki_results_found": "Wikipedia-resultater",
     "with_activities": "Med aktiviteter",
-    "written": "Skrevet"
+    "written": "Skrevet",
+    "export_failed": "Eksporten mislyktes",
+    "export_success": "Eksportert samling",
+    "export_zip": "Eksporter ZIP",
+    "import_failed": "Import mislyktes",
+    "import_from_file": "Importer fra fil",
+    "import_success": "Import suksess"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -567,7 +573,8 @@
     "enter_password": "Skriv inn passordet ditt",
     "enter_username": "Skriv inn brukernavnet ditt",
     "logging_in": "Logger inn",
-    "totp": "To-faktorkode"
+    "totp": "To-faktorkode",
+    "user_email_verification_required": "E-postbekreftelse kreves. \nVennligst sjekk e-posten din for en bekreftelseslenke."
   },
   "users": {
     "no_users_found": "Ingen brukere med offentlig profil funnet."
@@ -985,7 +992,13 @@
     "searching": "Søker...",
     "select_location_or_query": "Velg et sted eller skriv inn et søkeord for å oppdage fantastiske steder i nærheten!",
     "total_results": "Totale resultater",
-    "use_search_instead": "Bruk søk ​​i stedet"
+    "use_search_instead": "Bruk søk ​​i stedet",
+    "add_location": "Legg til plassering",
+    "add_lodging": "Legg til overnatting",
+    "away": "borte",
+    "hours": "Timer",
+    "open": "Åpne",
+    "your_location": "Din plassering"
   },
   "google_maps": {
     "google_maps_integration_desc": "Koble til Google Maps-kontoen din for å få søkeresultater og anbefalinger av høy kvalitet.",

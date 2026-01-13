@@ -428,7 +428,13 @@
     "view": "Visualizar",
     "wiki_results_found": "Resultados da Wikipédia",
     "with_activities": "Com atividades",
-    "written": "Escrito"
+    "written": "Escrito",
+    "export_failed": "Falha na exportação",
+    "export_success": "Coleção exportada",
+    "export_zip": "Exportar ZIP",
+    "import_failed": "Falha na importação",
+    "import_from_file": "Importar do arquivo",
+    "import_success": "Sucesso na importação"
   },
   "auth": {
     "confirm_password": "Confirme a sua senha",
@@ -453,7 +459,8 @@
     "enter_password": "Digite a sua senha",
     "enter_username": "Digite o seu nome de usuário",
     "logging_in": "Registrar",
-    "totp": "Autenticação de dois fatores"
+    "totp": "Autenticação de dois fatores",
+    "user_email_verification_required": "Verificação de e-mail necessária. \nVerifique seu e-mail para obter um link de verificação."
   },
   "calendar": {
     "all_day_event": "Evento durante o dia todo",
@@ -745,7 +752,13 @@
     "searching": "Procurando...",
     "select_location_or_query": "Selecione um local ou digite uma consulta de pesquisa para descobrir lugares incríveis próximos!",
     "total_results": "Resultados totais",
-    "use_search_instead": "Use a pesquisa"
+    "use_search_instead": "Use a pesquisa",
+    "add_location": "Adicionar local",
+    "add_lodging": "Adicionar hospedagem",
+    "away": "ausente",
+    "hours": "Horas",
+    "open": "Abrir",
+    "your_location": "Sua localização"
   },
   "search": {
     "cities": "Cidades",

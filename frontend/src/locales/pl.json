@@ -478,7 +478,13 @@
     "view": "Pogląd",
     "wiki_results_found": "Wyniki Wikipedii",
     "with_activities": "Z zajęciami",
-    "written": "Pisemny"
+    "written": "Pisemny",
+    "export_failed": "Eksport nie powiódł się",
+    "export_success": "Eksportowana kolekcja",
+    "export_zip": "Eksportuj ZIP",
+    "import_failed": "Import nie powiódł się",
+    "import_from_file": "Importuj z pliku",
+    "import_success": "Sukces importu"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -568,7 +574,8 @@
     "enter_password": "Wprowadź swoje hasło",
     "enter_username": "Wprowadź swoją nazwę użytkownika",
     "logging_in": "Logowanie",
-    "totp": "Kod dwuskładnikowy"
+    "totp": "Kod dwuskładnikowy",
+    "user_email_verification_required": "Wymagana weryfikacja e-mailowa. \nSprawdź swoją skrzynkę e-mail, gdzie znajduje się link weryfikacyjny."
   },
   "users": {
     "no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
@@ -966,7 +973,13 @@
     "searching": "Badawczy...",
     "select_location_or_query": "Wybierz lokalizację lub wprowadź zapytanie, aby odkryć niesamowite miejsca w pobliżu!",
     "total_results": "Wyniki ogółem",
-    "use_search_instead": "Zamiast tego użyj wyszukiwania"
+    "use_search_instead": "Zamiast tego użyj wyszukiwania",
+    "add_location": "Dodaj lokalizację",
+    "add_lodging": "Dodaj zakwaterowanie",
+    "away": "z dala",
+    "hours": "Godziny",
+    "open": "Otwarte",
+    "your_location": "Twoja lokalizacja"
   },
   "lodging": {
     "apartment": "Apartament",

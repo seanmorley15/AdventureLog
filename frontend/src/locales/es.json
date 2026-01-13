@@ -477,7 +477,13 @@
     "view": "Vista",
     "wiki_results_found": "Resultados de Wikipedia",
     "with_activities": "Con actividades",
-    "written": "Escrito"
+    "written": "Escrito",
+    "export_failed": "Exportación fallida",
+    "export_success": "Colección exportada",
+    "export_zip": "Exportar ZIP",
+    "import_failed": "Importación fallida",
+    "import_from_file": "Importar desde archivo",
+    "import_success": "Importación exitosa"
   },
   "worldtravel": {
     "no_countries_found": "No se encontraron países",
@@ -567,7 +573,8 @@
     "enter_password": "Ingrese su contraseña",
     "enter_username": "Ingrese su nombre de usuario",
     "logging_in": "Iniciar sesión",
-    "totp": "Código de dos factores"
+    "totp": "Código de dos factores",
+    "user_email_verification_required": "Se requiere verificación por correo electrónico. \nPor favor revise su correo electrónico para obtener un enlace de verificación."
   },
   "users": {
     "no_users_found": "No se encontraron usuarios con perfiles públicos."
@@ -964,7 +971,13 @@
     "searching": "Búsqueda...",
     "select_location_or_query": "¡Seleccione una ubicación o ingrese una consulta de búsqueda para descubrir lugares increíbles cercanos!",
     "total_results": "Resultados totales",
-    "use_search_instead": "Utilice la búsqueda en su lugar"
+    "use_search_instead": "Utilice la búsqueda en su lugar",
+    "add_location": "Agregar ubicación",
+    "add_lodging": "Añadir Alojamiento",
+    "away": "lejos",
+    "hours": "Horas",
+    "open": "Abierto",
+    "your_location": "Tu ubicación"
   },
   "lodging": {
     "apartment": "Apartamento",

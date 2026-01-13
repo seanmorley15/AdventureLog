@@ -477,7 +477,13 @@
     "view": "Zobraziť",
     "wiki_results_found": "Výsledky z Wikipédie",
     "with_activities": "S aktivitami",
-    "written": "Napísané"
+    "written": "Napísané",
+    "export_failed": "Export zlyhal",
+    "export_success": "Exportovaná kolekcia",
+    "export_zip": "Exportovať ZIP",
+    "import_failed": "Import zlyhal",
+    "import_from_file": "Importovať zo súboru",
+    "import_success": "Import bol úspešný"
   },
   "worldtravel": {
     "country_list": "Zoznam krajín",
@@ -567,7 +573,8 @@
     "enter_username": "Zadajte vaše používateľské meno",
     "enter_password": "Zadajte vaše heslo",
     "totp": "Dvojfaktorový kód",
-    "logging_in": "Prihlasovanie"
+    "logging_in": "Prihlasovanie",
+    "user_email_verification_required": "Vyžaduje sa overenie e-mailom. \nSkontrolujte svoj e-mail, kde nájdete overovací odkaz."
   },
   "users": {
     "no_users_found": "Nenašli sa žiadni používatelia s verejnými profilmi."
@@ -989,7 +996,13 @@
     "searching": "Hľadá sa...",
     "select_location_or_query": "Vyberte miesto alebo zadajte vyhľadávací dopyt a objavte úžasné miesta v okolí!",
     "total_results": "Celkové výsledky",
-    "use_search_instead": "Namiesto toho použite vyhľadávanie"
+    "use_search_instead": "Namiesto toho použite vyhľadávanie",
+    "add_location": "Pridať polohu",
+    "add_lodging": "Pridať ubytovanie",
+    "away": "preč",
+    "hours": "Hodiny",
+    "open": "OTVORENÉ",
+    "your_location": "Vaša poloha"
   },
   "calendar": {
     "today": "Dnes",

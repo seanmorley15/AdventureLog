@@ -428,7 +428,13 @@
     "view": "Sicht",
     "wiki_results_found": "Wikipedia-Ergebnisse",
     "with_activities": "Mit Aktivitäten",
-    "written": "Geschrieben"
+    "written": "Geschrieben",
+    "export_failed": "Der Export ist fehlgeschlagen",
+    "export_success": "Exportierte Sammlung",
+    "export_zip": "ZIP exportieren",
+    "import_failed": "Import fehlgeschlagen",
+    "import_from_file": "Aus Datei importieren",
+    "import_success": "Erfolg importieren"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
@@ -502,7 +508,8 @@
     "enter_password": "Geben Sie Ihr Passwort ein",
     "enter_username": "Geben Sie Ihren Benutzernamen ein",
     "logging_in": "Anmelden",
-    "totp": "Zwei-Faktor-Code"
+    "totp": "Zwei-Faktor-Code",
+    "user_email_verification_required": "E-Mail-Bestätigung erforderlich. \nBitte überprüfen Sie Ihre E-Mail auf einen Bestätigungslink."
   },
   "users": {
     "no_users_found": "Keine Benutzer mit öffentlichem Profil gefunden."
@@ -964,7 +971,13 @@
     "searching": "Suche...",
     "select_location_or_query": "Wählen Sie einen Ort aus oder geben Sie eine Suchanfrage ein, um tolle Orte in der Nähe zu entdecken!",
     "total_results": "Gesamtergebnisse",
-    "use_search_instead": "Verwenden Sie stattdessen die Suche"
+    "use_search_instead": "Verwenden Sie stattdessen die Suche",
+    "add_location": "Standort hinzufügen",
+    "add_lodging": "Unterkunft hinzufügen",
+    "away": "weg",
+    "hours": "Std",
+    "open": "Offen",
+    "your_location": "Ihr Standort"
   },
   "lodging": {
     "apartment": "Wohnung",

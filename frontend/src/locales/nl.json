@@ -429,7 +429,13 @@
     "view": "Weergave",
     "wiki_results_found": "Wikipedia-resultaten",
     "with_activities": "Met activiteiten",
-    "written": "Geschreven"
+    "written": "Geschreven",
+    "export_failed": "Exporteren is mislukt",
+    "export_success": "Geëxporteerde collectie",
+    "export_zip": "ZIP exporteren",
+    "import_failed": "Importeren mislukt",
+    "import_from_file": "Importeren uit bestand",
+    "import_success": "Succes importeren"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -503,7 +509,8 @@
     "enter_password": "Voer uw wachtwoord in",
     "enter_username": "Voer uw gebruikersnaam in",
     "logging_in": "Inloggen",
-    "totp": "Tweefactorcode"
+    "totp": "Tweefactorcode",
+    "user_email_verification_required": "E-mailverificatie vereist. \nControleer uw e-mail voor een verificatielink."
   },
   "users": {
     "no_users_found": "Er zijn geen gebruikers gevonden met openbare profielen."
@@ -966,7 +973,13 @@
     "searching": "Zoeken...",
     "select_location_or_query": "Selecteer een locatie of voer een zoekopdracht in om geweldige plekken in de buurt te ontdekken!",
     "total_results": "Totale resultaten",
-    "use_search_instead": "Gebruik in plaats daarvan de zoekfunctie"
+    "use_search_instead": "Gebruik in plaats daarvan de zoekfunctie",
+    "add_location": "Locatie toevoegen",
+    "add_lodging": "Voeg accommodatie toe",
+    "away": "weg",
+    "hours": "Uur",
+    "open": "Open",
+    "your_location": "Uw locatie"
   },
   "lodging": {
     "apartment": "Appartement",

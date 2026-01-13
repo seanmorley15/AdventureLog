@@ -429,7 +429,13 @@
     "view": "보다",
     "wiki_results_found": "위키피디아 결과",
     "with_activities": "활동 포함",
-    "written": "쓴"
+    "written": "쓴",
+    "export_failed": "내보내기 실패",
+    "export_success": "내보낸 컬렉션",
+    "export_zip": "우편번호 내보내기",
+    "import_failed": "가져오기 실패",
+    "import_from_file": "파일에서 가져오기",
+    "import_success": "가져오기 성공"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -454,7 +460,8 @@
     "enter_password": "비밀번호를 입력하십시오",
     "enter_username": "사용자 이름을 입력하십시오",
     "logging_in": "로그인",
-    "totp": "2 단계 코드"
+    "totp": "2 단계 코드",
+    "user_email_verification_required": "이메일 인증이 필요합니다. \n확인 링크가 있는지 이메일을 확인하세요."
   },
   "categories": {
     "category_name": "카테고리 이름",
@@ -689,7 +696,13 @@
     "searching": "수색...",
     "select_location_or_query": "위치를 선택하거나 검색어를 입력하여 근처의 놀라운 장소를 찾아보세요!",
     "total_results": "총 결과",
-    "use_search_instead": "대신 검색을 사용하세요"
+    "use_search_instead": "대신 검색을 사용하세요",
+    "add_location": "위치 추가",
+    "add_lodging": "숙박 추가",
+    "away": "떨어져 있는",
+    "hours": "시간",
+    "open": "열려 있는",
+    "your_location": "귀하의 위치"
   },
   "search": {
     "cities": "도시",

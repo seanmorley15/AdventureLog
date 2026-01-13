@@ -478,7 +478,13 @@
     "view": "Kilátás",
     "wiki_results_found": "Wikipédia eredmények",
     "with_activities": "Tevékenységekkel",
-    "written": "Írott"
+    "written": "Írott",
+    "export_failed": "Nem sikerült exportálni",
+    "export_success": "Exportált gyűjtemény",
+    "export_zip": "ZIP exportálása",
+    "import_failed": "Az importálás sikertelen",
+    "import_from_file": "Importálás fájlból",
+    "import_success": "Sikeres importálás"
   },
   "worldtravel": {
     "country_list": "Országlista",
@@ -568,7 +574,8 @@
     "enter_username": "Add meg a felhasználónevedet",
     "enter_password": "Add meg a jelszavadat",
     "totp": "Kétlépcsős azonosító kód",
-    "logging_in": "Bejelentkezés folyamatban"
+    "logging_in": "Bejelentkezés folyamatban",
+    "user_email_verification_required": "E-mail ellenőrzés szükséges. \nKérjük, ellenőrizze e-mailjeit az ellenőrző linkért."
   },
   "users": {
     "no_users_found": "Nem találhatók nyilvános profillal rendelkező felhasználók."
@@ -991,7 +998,13 @@
     "searching": "Keresés...",
     "select_location_or_query": "Válasszon ki egy helyet, vagy írjon be egy keresési lekérdezést, hogy csodálatos helyeket fedezzen fel a közelben!",
     "total_results": "Összes Eredmények",
-    "use_search_instead": "Használja inkább a keresést"
+    "use_search_instead": "Használja inkább a keresést",
+    "add_location": "Hely hozzáadása elemre",
+    "add_lodging": "Szállás hozzáadása",
+    "away": "el",
+    "hours": "Órák",
+    "open": "Nyitott",
+    "your_location": "Az Ön helye"
   },
   "calendar": {
     "today": "Ma",

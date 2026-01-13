@@ -428,7 +428,13 @@
     "view": "Voir",
     "wiki_results_found": "Résultats Wikipédia",
     "with_activities": "Avec des activités",
-    "written": "Écrit"
+    "written": "Écrit",
+    "export_failed": "Échec de l'exportation",
+    "export_success": "Collection exportée",
+    "export_zip": "Exporter le code postal",
+    "import_failed": "Échec de l'importation",
+    "import_from_file": "Importer à partir d'un fichier",
+    "import_success": "Succès de l'importation"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -502,7 +508,8 @@
     "enter_password": "Entrez votre mot de passe",
     "enter_username": "Entrez votre nom d'utilisateur",
     "logging_in": "Se connecter",
-    "totp": "Code à deux facteurs"
+    "totp": "Code à deux facteurs",
+    "user_email_verification_required": "Vérification par e-mail requise. \nVeuillez vérifier votre courrier électronique pour un lien de vérification."
   },
   "users": {
     "no_users_found": "Aucun utilisateur trouvé avec un profil public."
@@ -964,7 +971,13 @@
     "searching": "Recherche...",
     "select_location_or_query": "Sélectionnez un emplacement ou saisissez une requête de recherche pour découvrir des endroits incroyables à proximité !",
     "total_results": "Résultats totaux",
-    "use_search_instead": "Utilisez plutôt la recherche"
+    "use_search_instead": "Utilisez plutôt la recherche",
+    "add_location": "Ajouter un emplacement",
+    "add_lodging": "Ajouter un hébergement",
+    "away": "loin",
+    "hours": "Heures",
+    "open": "Ouvrir",
+    "your_location": "Votre emplacement"
   },
   "lodging": {
     "apartment": "Appartement",

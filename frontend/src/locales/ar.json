@@ -428,7 +428,13 @@
     "view": "منظر",
     "wiki_results_found": "نتائج ويكيبيديا",
     "with_activities": "مع الأنشطة",
-    "written": "مكتوب"
+    "written": "مكتوب",
+    "export_failed": "فشل التصدير",
+    "export_success": "المجموعة المصدرة",
+    "export_zip": "تصدير الرمز البريدي",
+    "import_failed": "فشل الاستيراد",
+    "import_from_file": "استيراد من ملف",
+    "import_success": "نجاح الاستيراد"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",
@@ -453,7 +459,8 @@
     "enter_password": "أدخل كلمة المرور الخاصة بك",
     "enter_username": "أدخل اسم المستخدم الخاص بك",
     "logging_in": "تسجيل الدخول",
-    "totp": "رمز ثنائي العوامل"
+    "totp": "رمز ثنائي العوامل",
+    "user_email_verification_required": "التحقق من البريد الإلكتروني مطلوب. \nيرجى التحقق من بريدك الإلكتروني للحصول على رابط التحقق."
   },
   "calendar": {
     "all_day_event": "الحدث طوال اليوم",
@@ -745,7 +752,13 @@
     "searching": "جارٍ البحث...",
     "select_location_or_query": "حدد موقعًا أو أدخل استعلام بحث لاكتشاف الأماكن الرائعة القريبة!",
     "total_results": "النتائج الإجمالية",
-    "use_search_instead": "استخدم البحث بدلاً من ذلك"
+    "use_search_instead": "استخدم البحث بدلاً من ذلك",
+    "add_location": "أضف الموقع",
+    "add_lodging": "أضف السكن",
+    "away": "بعيد",
+    "hours": "ساعات",
+    "open": "يفتح",
+    "your_location": "موقعك"
   },
   "search": {
     "cities": "المدن",

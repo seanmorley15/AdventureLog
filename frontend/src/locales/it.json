@@ -429,7 +429,13 @@
     "view": "Visualizzazione",
     "wiki_results_found": "Risultati di Wikipedia",
     "with_activities": "Con attività",
-    "written": "Scritto"
+    "written": "Scritto",
+    "export_failed": "Esportazione non riuscita",
+    "export_success": "Collezione esportata",
+    "export_zip": "Esporta CAP",
+    "import_failed": "Importazione non riuscita",
+    "import_from_file": "Importa da file",
+    "import_success": "Importazione riuscita"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -503,7 +509,8 @@
     "enter_password": "Inserisci la tua password",
     "enter_username": "Inserisci il tuo nome utente",
     "logging_in": "Accedere",
-    "totp": "Codice a due fattori"
+    "totp": "Codice a due fattori",
+    "user_email_verification_required": "È richiesta la verifica dell'e-mail. \nControlla la tua email per un collegamento di verifica."
   },
   "users": {
     "no_users_found": "Nessun utente trovato con profili pubblici."
@@ -966,7 +973,13 @@
     "searching": "Ricerca...",
     "select_location_or_query": "Seleziona una posizione o inserisci una query di ricerca per scoprire luoghi meravigliosi nelle vicinanze!",
     "total_results": "Risultati totali",
-    "use_search_instead": "Utilizza invece la ricerca"
+    "use_search_instead": "Utilizza invece la ricerca",
+    "add_location": "Aggiungi posizione",
+    "away": "lontano",
+    "hours": "Ore",
+    "open": "Aprire",
+    "your_location": "La tua posizione",
+    "add_lodging": "Aggiungi alloggio"
   },
   "lodging": {
     "apartment": "Appartamento",

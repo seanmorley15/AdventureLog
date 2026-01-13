@@ -478,7 +478,13 @@
     "search_start_location": "搜索起始位置",
     "start_location": "起始位置",
     "airport_code_examples": "肯尼迪机场、洛杉矶国际机场、伦敦HR...",
-    "enter_location_display_name": "输入位置显示名称"
+    "enter_location_display_name": "输入位置显示名称",
+    "export_failed": "导出失败",
+    "export_success": "导出集合",
+    "export_zip": "导出邮政编码",
+    "import_failed": "导入失败",
+    "import_from_file": "从文件导入",
+    "import_success": "导入成功"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -503,7 +509,8 @@
     "enter_password": "输入您的密码",
     "enter_username": "输入您的用户名",
     "logging_in": "登录",
-    "totp": "二步验证代码"
+    "totp": "二步验证代码",
+    "user_email_verification_required": "需要电子邮件验证。\n请检查您的电子邮件以获取验证链接。"
   },
   "worldtravel": {
     "country_list": "国家列表",
@@ -966,7 +973,13 @@
     "select_location_or_query": "选择一个位置或输入搜索查询来发现附近的精彩地点！",
     "total_results": "总结果",
     "use_search_instead": "使用搜索代替",
-    "any": "任何"
+    "any": "任何",
+    "add_location": "添加位置",
+    "add_lodging": "添加住宿",
+    "away": "离开",
+    "hours": "时间",
+    "open": "打开",
+    "your_location": "您的位置"
   },
   "lodging": {
     "campground": "露营地",
