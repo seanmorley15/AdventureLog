@@ -8,3 +8,6 @@ CVE-2025-64756
 # esbuild doesn't use the vulnerable archive/tar or crypto/x509 paths in a way that's exploitable.
 CVE-2025-58183
 CVE-2025-61729
+
+# jaraco.context Has a Path Traversal Vulnerability Fixed via setuptools
+GHSA-58pv-8j8x-9vj2
