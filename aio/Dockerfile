@@ -76,7 +76,7 @@ COPY aio/nginx.conf /etc/nginx/nginx.conf
 COPY aio/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Collect static files (best-effort)
-RUN python3 manage.py collectstatic --noinput --verbosity 1 || true
+RUN python3 /code/backend/server/manage.py collectstatic --noinput --verbosity 1 || true
 
 EXPOSE 80
 
