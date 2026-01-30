@@ -22,6 +22,7 @@
 		"@sveltejs/kit": "^2.20.7",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@tailwindcss/typography": "^0.5.16",
+		"@types/canvas-confetti": "^1.9.0",
 		"@types/node": "^22.15.2",
 		"@types/qrcode": "^1.5.5",
 		"autoprefixer": "^10.4.21",
@@ -41,6 +42,7 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
+		"canvas-confetti": "^1.9.4",
 		"dompurify": "^3.2.5",
 		"emoji-picker-element": "^1.26.3",
 		"gsap": "^3.12.7",
