@@ -1,142 +1,184 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import confetti from 'canvas-confetti';
-	import LanguageBlock from './LanguageBlock.svelte';
+	import { fly, fade } from 'svelte/transition';
+	import PasswordUnlockModal from './PasswordUnlockModal.svelte';
 
 	export let step: number;
 	export let title_es: string;
 	export let title_en: string;
 	export let clue_es: string;
 	export let clue_en: string;
+	export let description_es: string;
+	export let description_en: string;
 	export let locationName: string;
 	export let googleMapsUrl: string;
 	export let photo: string;
 	export let photoBlur: string;
+	export let password: string;
 	export let isUnlocked: boolean = false;
-	export let onUnlock: () => void = () => {};
+	export let onUnlock: (password: string) => void = () => {};
 
+	let showPasswordModal = false;
 	let imageLoaded = false;
-	let showConfetti = false;
 
-	function handleUnlock() {
-		showConfetti = true;
-		onUnlock();
+	function handleUnlockClick() {
+		showPasswordModal = true;
+	}
+
+	function handlePasswordUnlocked() {
+		isUnlocked = true;
+		showPasswordModal = false;
+		onUnlock(password);
 
 		// Trigger confetti
 		if (typeof window !== 'undefined') {
 			confetti({
-				particleCount: 100,
-				spread: 60,
+				particleCount: 150,
+				spread: 70,
 				origin: { x: 0.5, y: 0.5 },
-				colors: ['#e04d75', '#eab308', '#ffc0cb', '#fdf2f4']
+				colors: ['#9333ea', '#ec4899', '#8b5cf6', '#f472b6'],
+				gravity: 0.8,
+				ticks: 80
 			});
 		}
 	}
-
-	function openMaps() {
-		if (typeof window !== 'undefined') {
-			window.open(googleMapsUrl, '_blank');
-		}
-	}
-
-	onMount(() => {
-		const img = new Image();
-		img.onload = () => (imageLoaded = true);
-		img.src = photo;
-	});
 </script>
 
-<div class="max-w-2xl mx-auto px-4 py-8">
+<div
+	class="card bg-gradient-to-br from-white to-gray-50 shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition-all"
+	transition:fly={{ y: 20, duration: 500 }}
+>
+	<!-- Image Container -->
 	<div
-		class="rounded-3xl overflow-hidden shadow-lg transition-all duration-500"
-		class:ring-2={isUnlocked}
-		class:ring-amber-500={isUnlocked}
+		class="relative w-full h-80 md:h-96 overflow-hidden bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
 	>
-		<!-- Image Container -->
-		<div class="relative w-full aspect-video bg-stone-100 overflow-hidden">
+		{#if isUnlocked}
 			<img
-				src={isUnlocked ? photo : photoBlur}
-				alt={locationName}
-				class="w-full h-full object-cover transition-all duration-700"
-				class:blur-xl={!isUnlocked}
-				class:blur-none={isUnlocked}
+				src={photo}
+				alt={title_en}
+				class="w-full h-full object-cover"
+				transition:fade={{ duration: 400 }}
+				on:load={() => (imageLoaded = true)}
 			/>
-
-			<!-- Locked Overlay -->
-			{#if !isUnlocked}
-				<div
-					class="absolute inset-0 bg-gradient-to-b from-black/60 to-black/85 flex items-center justify-center"
-				>
-					<div class="text-center">
-						<div class="text-6xl mb-4">🔒</div>
-						<p class="text-white font-semibold">Sorpresa bloqueada</p>
-						<p class="text-white/70 text-sm">Locked</p>
-					</div>
+			<a
+				href={googleMapsUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="absolute top-4 right-4 bg-white/95 hover:bg-white px-4 py-2 rounded-full text-sm font-bold text-blue-600 shadow-lg transition-all hover:shadow-xl hover:scale-110"
+			>
+				📍 Navigate
+			</a>
+		{:else}
+			<!-- Locked State -->
+			<img src={photoBlur} alt="Locked" class="w-full h-full object-cover filter blur-xl" />
+			<div
+				class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center backdrop-blur-sm"
+			>
+				<div class="text-center">
+					<div class="text-7xl mb-3 animate-pulse">🔒</div>
+					<p class="text-white font-bold text-lg">Surprise Locked</p>
+					<p class="text-white/90 text-sm">Password required to reveal</p>
 				</div>
-			{/if}
-
-			<!-- Progress Badge -->
-			<div class="absolute top-4 right-4 bg-amber-50/95 px-3 py-2 rounded-full text-sm font-medium">
-				<span class="text-amber-950">{step}</span>
-				<span class="text-amber-600">/6</span>
 			</div>
-		</div>
+		{/if}
+	</div>
 
-		<!-- Content -->
-		<div class="p-6 bg-gradient-to-b from-white to-amber-50/50">
-			<!-- Title & Clue -->
-			<div class="mb-6">
-				<LanguageBlock
-					spanish={title_es}
-					english={title_en}
-					spanishSize="text-2xl md:text-3xl"
-					englishSize="text-xs md:text-sm"
-				/>
+	<!-- Content -->
+	<div class="p-6 md:p-8">
+		<!-- Progress Indicator -->
+		<div class="flex items-center justify-between mb-4">
+			<div
+				class="inline-block bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg"
+			>
+				Step {step} of 6 ✨
 			</div>
-
-			<!-- Clue Text -->
 			{#if isUnlocked}
-				<div
-					class="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-100 transition-all duration-500"
-				>
-					<p class="text-stone-900 font-body text-sm md:text-base mb-3">{clue_es}</p>
-					<p class="text-stone-600 font-body text-xs md:text-sm">{clue_en}</p>
-				</div>
+				<span class="text-3xl animate-bounce">🎉</span>
 			{/if}
-
-			<!-- Buttons -->
-			<div class="flex flex-col gap-3">
-				{#if !isUnlocked}
-					<button
-						on:click={handleUnlock}
-						class="w-full py-3 px-4 bg-gradient-to-r from-amber-400 to-amber-300 text-amber-950 font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95"
-					>
-						✨ Siguiente sorpresa / Next Surprise
-					</button>
-				{:else}
-					<button
-						on:click={openMaps}
-						class="w-full py-3 px-4 bg-gradient-to-r from-rose-400 to-rose-300 text-white font-semibold rounded-full hover:shadow-lg hover:scale-105 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2"
-					>
-						<span>📍</span>
-						<span>Navegar / Navigate to {locationName}</span>
-					</button>
-				{/if}
-			</div>
 		</div>
+
+		<!-- Bilingual Title -->
+		<div class="mb-6">
+			<h2
+				class="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 mb-2"
+			>
+				{title_es}
+			</h2>
+			<p class="text-sm text-gray-500 italic font-medium">{title_en}</p>
+		</div>
+
+		<!-- Content Display -->
+		{#if isUnlocked}
+			<!-- Unlocked Content -->
+			<div class="mb-6 space-y-3 animate-fadeIn">
+				<div class="border-l-4 border-purple-500 pl-4">
+					<p class="text-gray-800 font-semibold leading-relaxed">{clue_es}</p>
+					<p class="text-gray-500 text-sm italic mt-2">{clue_en}</p>
+				</div>
+
+				<div
+					class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-200"
+				>
+					<p class="text-gray-700 text-sm leading-relaxed">{description_es}</p>
+					<p class="text-gray-500 text-xs italic mt-2">{description_en}</p>
+				</div>
+
+				<!-- Location Badge -->
+				<div
+					class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200"
+				>
+					<p class="text-sm font-bold text-green-700">📍 {locationName}</p>
+				</div>
+			</div>
+
+			<!-- Continue Button -->
+			<button
+				disabled
+				class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg cursor-default hover:shadow-xl transition-all"
+			>
+				✅ Step Unlocked!
+			</button>
+		{:else}
+			<!-- Locked Content -->
+			<div class="mb-6">
+				<p class="text-gray-700 font-semibold leading-relaxed mb-3">{clue_es}</p>
+				<p class="text-gray-500 text-sm italic">{clue_en}</p>
+			</div>
+
+			<!-- Unlock Button -->
+			<button
+				on:click={handleUnlockClick}
+				class="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 text-lg"
+			>
+				🔐 Unlock Surprise #{step}
+			</button>
+		{/if}
 	</div>
 </div>
 
+<!-- Password Modal -->
+<PasswordUnlockModal
+	isOpen={showPasswordModal}
+	stepNumber={step}
+	correctPassword={password}
+	on:unlocked={handlePasswordUnlocked}
+	on:close={() => (showPasswordModal = false)}
+/>
+
 <style>
-	:global(.font-display) {
-		font-family: 'Playfair Display', Georgia, serif;
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
-	:global(.font-body) {
-		font-family:
-			'Inter',
-			-apple-system,
-			BlinkMacSystemFont,
-			'Segoe UI',
-			sans-serif;
+
+	:global(.animate-fadeIn) {
+		animation: fadeIn 0.5s ease-out;
 	}
 </style>
