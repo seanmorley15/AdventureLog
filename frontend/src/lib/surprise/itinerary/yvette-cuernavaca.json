@@ -9,7 +9,7 @@
     "locationName": "Las Huertas Thermal Springs",
     "googleMapsUrl": "https://maps.google.com/?q=Las+Huertas+Morelos+Mexico",
     "photo": "https://images.unsplash.com/photo-1656352451218-202ab9bd09a6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHx3YXRlcmZhbGwlMjBBZ3VhJTIwQXp1bCUyME1leGljb3xlbnwwfDB8fHwxNzY5ODQ5MTg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step1-blur.jpg",
+    "photoBlur": "/surprise/yvette/step1-blur.svg",
     "password": "AGUA2026",
     "description_es": "Sumérgate en aguas termales naturales rodeadas de vegetación exuberante.",
     "description_en": "Immerse yourself in natural thermal waters surrounded by lush vegetation."
@@ -24,7 +24,7 @@
     "locationName": "Barranca de Amanalco",
     "googleMapsUrl": "https://maps.google.com/?q=Barranca+de+Amanalco+Cuernavaca",
     "photo": "https://images.unsplash.com/photo-1710196913619-75570747478a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHxtb25hcmNoJTIwYnV0dGVyZmx5JTIwZm9yZXN0JTIwTWV4aWNvfGVufDB8MHx8fDE3Njk4NDkxNzB8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step2-blur.jpg",
+    "photoBlur": "/surprise/yvette/step2-blur.svg",
     "password": "BOSQUE2026",
     "description_es": "Un refugio natural de serenidad a pocos minutos del centro.",
     "description_en": "A natural sanctuary of serenity within minutes of the city center."
@@ -39,7 +39,7 @@
     "locationName": "Catedral de Cuernavaca",
     "googleMapsUrl": "https://maps.google.com/?q=Catedral+de+Cuernavaca+Mexico",
     "photo": "https://images.unsplash.com/photo-1581388231958-4e1978771a61?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHxUZXBvenRsYW4lMjBNZXhpY28lMjBtb3VudGFpbnMlMjBweXJhbWlkfGVufDB8MHx8fDE3Njk4NDkxNzF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step3-blur.jpg",
+    "photoBlur": "/surprise/yvette/step3-blur.svg",
     "password": "HISTORIA2026",
     "description_es": "El claustro histórico de la Catedral Metropolitana, un tesoro arquitectónico.",
     "description_en": "The historic cloister of the Metropolitan Cathedral, an architectural treasure."
@@ -54,7 +54,7 @@
     "locationName": "Jardín Borda",
     "googleMapsUrl": "https://maps.google.com/?q=Jardin+Borda+Cuernavaca",
     "photo": "https://images.unsplash.com/photo-1762592958299-f41204b8b358?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHxNZXhpY2FuJTIwbWFya2V0JTIwZmxvd2VycyUyMGNvbG9yZnVsJTIwdmVuZG9yfGVufDB8MHx8fDE3Njk4NDkxNzF8MA&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step4-blur.jpg",
+    "photoBlur": "/surprise/yvette/step4-blur.svg",
     "password": "FLORES2026",
     "description_es": "Un jardín histórico de ensueño con fuentes y senderos románticos.",
     "description_en": "A dreamlike historic garden with fountains and romantic pathways."
@@ -69,7 +69,7 @@
     "locationName": "Los Manantiales",
     "googleMapsUrl": "https://maps.google.com/?q=Los+Manantiales+Cuernavaca",
     "photo": "https://images.unsplash.com/photo-1666025959951-da3036b03b29?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHxNZXhpY2FuJTIwcmVzdGF1cmFudCUyMGRpbm5lciUyMGVsZWdhbnR8ZW58MHwwfHx8MTc2OTg0OTE3Mnww&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step5-blur.jpg",
+    "photoBlur": "/surprise/yvette/step5-blur.svg",
     "password": "CENA2026",
     "description_es": "Un restaurante icónico bajo la estructura wavit de Candela.",
     "description_en": "An iconic restaurant beneath Candela's wave-like structure."
@@ -84,7 +84,7 @@
     "locationName": "Jardines de México — Mariposario",
     "googleMapsUrl": "https://maps.google.com/?q=Jardines+de+Mexico+Mariposario+Tequesquitengo",
     "photo": "https://images.unsplash.com/photo-1592510476943-59d922f151cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w4NjYwMTR8MHwxfHNlYXJjaHwxfHxidXR0ZXJmbHklMjBnYXJkZW4lMjBuYXR1cmUlMjBjb2xvcmZ1bCUyMG1hZ2ljYWx8ZW58MHwwfHx8MTc2OTg0OTE3Mnww&ixlib=rb-4.1.0&q=80&w=1080",
-    "photoBlur": "/surprise/yvette/step6-blur.jpg",
+    "photoBlur": "/surprise/yvette/step6-blur.svg",
     "password": "MARIPOSA2026",
     "description_es": "Un santuario de mariposas en un jardín botánico espectacular.",
     "description_en": "A butterfly sanctuary in a spectacular botanical garden."

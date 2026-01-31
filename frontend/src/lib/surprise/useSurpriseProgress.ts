@@ -1,25 +1,18 @@
 import { browser } from '$app/environment';
 
-export function useSurpriseProgress() {
+export default function useSurpriseProgress() {
 	const storageKey = 'yvette_surprise_progress';
 
-	function getProgress(): number {
-		if (!browser) return 0;
+	function getProgress(): number[] {
+		if (!browser) return [];
 		const stored = localStorage.getItem(storageKey);
-		return stored ? parseInt(stored, 10) : 0;
+		return stored ? JSON.parse(stored) : [];
 	}
 
-	function setProgress(step: number): void {
+	function saveProgress(steps: number[]): void {
 		if (!browser) return;
-		localStorage.setItem(storageKey, String(step));
-		window.dispatchEvent(new CustomEvent('surprise-progress', { detail: { step } }));
-	}
-
-	function advanceProgress(): number {
-		const current = getProgress();
-		const newStep = Math.min(current + 1, 6);
-		setProgress(newStep);
-		return newStep;
+		localStorage.setItem(storageKey, JSON.stringify(steps));
+		window.dispatchEvent(new CustomEvent('surprise-progress', { detail: { steps } }));
 	}
 
 	function resetProgress(): void {
@@ -27,5 +20,5 @@ export function useSurpriseProgress() {
 		localStorage.removeItem(storageKey);
 	}
 
-	return { getProgress, setProgress, advanceProgress, resetProgress };
+	return { getProgress, saveProgress, resetProgress };
 }
