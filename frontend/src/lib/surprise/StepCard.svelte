@@ -1,7 +1,7 @@
 <script lang="ts">
 	import confetti from 'canvas-confetti';
 	import { fly, fade } from 'svelte/transition';
-	import PasswordUnlockModal from './PasswordUnlockModal.svelte';
+	import { onMount } from 'svelte';
 
 	export let step: number;
 	export let title_es: string;
@@ -14,36 +14,56 @@
 	export let googleMapsUrl: string;
 	export let photo: string;
 	export let photoBlur: string;
-	export let password: string;
-	export let isUnlocked: boolean = false;
-	export let onUnlock: () => void = () => {};
+	export let isViewed: boolean = false;
+	export let onView: () => void = () => {};
 
-	let showPasswordModal = false;
 	let imageError = false;
+	let cardElement: HTMLElement;
+	let hasTriggeredConfetti = false;
 
-	function handleUnlockClick() {
-		showPasswordModal = true;
-	}
+	onMount(() => {
+		// Create an intersection observer to trigger confetti when card comes into view
+		const observer = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting && !hasTriggeredConfetti && !isViewed) {
+						// Trigger confetti when card is viewed for the first time
+						hasTriggeredConfetti = true;
+						onView();
+						triggerConfetti();
+					}
+				});
+			},
+			{ threshold: 0.5 }
+		);
 
-	function handlePasswordUnlocked() {
-		showPasswordModal = false;
-		onUnlock();
+		if (cardElement) {
+			observer.observe(cardElement);
+		}
 
-		// Trigger confetti
+		return () => {
+			if (cardElement) {
+				observer.unobserve(cardElement);
+			}
+		};
+	});
+
+	function triggerConfetti() {
 		if (typeof window !== 'undefined') {
 			confetti({
-				particleCount: 150,
-				spread: 70,
-				origin: { x: 0.5, y: 0.5 },
+				particleCount: 100,
+				spread: 60,
+				origin: { x: 0.5, y: 0.6 },
 				colors: ['#9333ea', '#ec4899', '#8b5cf6', '#f472b6'],
 				gravity: 0.8,
-				ticks: 80
+				ticks: 60
 			});
 		}
 	}
 </script>
 
 <div
+	bind:this={cardElement}
 	class="card bg-gradient-to-br from-white to-gray-50 shadow-xl rounded-2xl overflow-hidden hover:shadow-2xl transition-all"
 	transition:fly={{ y: 20, duration: 500 }}
 >
@@ -51,45 +71,31 @@
 	<div
 		class="relative w-full h-80 md:h-96 overflow-hidden bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
 	>
-		{#if isUnlocked}
-			{#if imageError}
-				<!-- Fallback gradient when image fails to load -->
-				<div class="w-full h-full bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center">
-					<div class="text-center text-white">
-						<div class="text-6xl mb-2">🏞️</div>
-						<p class="font-bold">{title_es}</p>
-					</div>
-				</div>
-			{:else}
-				<img
-					src={photo}
-					alt={title_en}
-					class="w-full h-full object-cover"
-					transition:fade={{ duration: 400 }}
-					on:error={() => (imageError = true)}
-				/>
-			{/if}
-			<a
-				href={googleMapsUrl}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="absolute top-4 right-4 bg-white/95 hover:bg-white px-4 py-2 rounded-full text-sm font-bold text-blue-600 shadow-lg transition-all hover:shadow-xl hover:scale-110"
-			>
-				📍 Navigate
-			</a>
-		{:else}
-			<!-- Locked State -->
-			<img src={photoBlur} alt="Locked" class="w-full h-full object-cover filter blur-xl" />
-			<div
-				class="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent flex items-center justify-center backdrop-blur-sm"
-			>
-				<div class="text-center">
-					<div class="text-7xl mb-3 animate-pulse">🔒</div>
-					<p class="text-white font-bold text-lg">Surprise Locked</p>
-					<p class="text-white/90 text-sm">Password required to reveal</p>
+		{#if imageError}
+			<!-- Fallback gradient when image fails to load -->
+			<div class="w-full h-full bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center">
+				<div class="text-center text-white">
+					<div class="text-6xl mb-2">🏞️</div>
+					<p class="font-bold">{title_es}</p>
 				</div>
 			</div>
+		{:else}
+			<img
+				src={photo}
+				alt={title_en}
+				class="w-full h-full object-cover"
+				transition:fade={{ duration: 400 }}
+				on:error={() => (imageError = true)}
+			/>
 		{/if}
+		<a
+			href={googleMapsUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="absolute top-4 right-4 bg-white/95 hover:bg-white px-4 py-2 rounded-full text-sm font-bold text-blue-600 shadow-lg transition-all hover:shadow-xl hover:scale-110"
+		>
+			📍 Navigate
+		</a>
 	</div>
 
 	<!-- Content -->
@@ -101,7 +107,7 @@
 			>
 				Step {step} of 6 ✨
 			</div>
-			{#if isUnlocked}
+			{#if isViewed}
 				<span class="text-3xl animate-bounce">🎉</span>
 			{/if}
 		</div>
@@ -116,63 +122,39 @@
 			<p class="text-sm text-gray-500 italic font-medium">{title_en}</p>
 		</div>
 
-		<!-- Content Display -->
-		{#if isUnlocked}
-			<!-- Unlocked Content -->
-			<div class="mb-6 space-y-3 animate-fadeIn">
-				<div class="border-l-4 border-purple-500 pl-4">
-					<p class="text-gray-800 font-semibold leading-relaxed">{clue_es}</p>
-					<p class="text-gray-500 text-sm italic mt-2">{clue_en}</p>
-				</div>
-
-				<div
-					class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-200"
-				>
-					<p class="text-gray-700 text-sm leading-relaxed">{description_es}</p>
-					<p class="text-gray-500 text-xs italic mt-2">{description_en}</p>
-				</div>
-
-				<!-- Location Badge -->
-				<div
-					class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200"
-				>
-					<p class="text-sm font-bold text-green-700">📍 {locationName}</p>
-				</div>
+		<!-- Content Display (Always Visible) -->
+		<div class="mb-6 space-y-3 animate-fadeIn">
+			<div class="border-l-4 border-purple-500 pl-4">
+				<p class="text-gray-800 font-semibold leading-relaxed">{clue_es}</p>
+				<p class="text-gray-500 text-sm italic mt-2">{clue_en}</p>
 			</div>
 
-			<!-- Continue Button -->
-			<button
-				disabled
-				class="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-bold py-3 rounded-lg shadow-lg cursor-default hover:shadow-xl transition-all"
+			<div
+				class="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-200"
 			>
-				✅ Step Unlocked!
-			</button>
-		{:else}
-			<!-- Locked Content -->
-			<div class="mb-6">
-				<p class="text-gray-700 font-semibold leading-relaxed mb-3">{clue_es}</p>
-				<p class="text-gray-500 text-sm italic">{clue_en}</p>
+				<p class="text-gray-700 text-sm leading-relaxed">{description_es}</p>
+				<p class="text-gray-500 text-xs italic mt-2">{description_en}</p>
 			</div>
 
-			<!-- Unlock Button -->
-			<button
-				on:click={handleUnlockClick}
-				class="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 text-lg"
+			<!-- Location Badge -->
+			<div
+				class="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl border border-green-200"
 			>
-				🔐 Unlock Surprise #{step}
-			</button>
-		{/if}
+				<p class="text-sm font-bold text-green-700">📍 {locationName}</p>
+			</div>
+		</div>
+
+		<!-- Action Button -->
+		<a
+			href={googleMapsUrl}
+			target="_blank"
+			rel="noopener noreferrer"
+			class="block w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-4 rounded-lg shadow-lg hover:shadow-xl transition-all hover:scale-105 active:scale-95 text-center text-lg"
+		>
+			🗺️ Open in Maps
+		</a>
 	</div>
 </div>
-
-<!-- Password Modal -->
-<PasswordUnlockModal
-	isOpen={showPasswordModal}
-	stepNumber={step}
-	correctPassword={password}
-	on:unlocked={handlePasswordUnlocked}
-	on:close={() => (showPasswordModal = false)}
-/>
 
 <style>
 	@keyframes fadeIn {
