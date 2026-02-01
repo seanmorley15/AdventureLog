@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd frontend && npm run build",
+  "outputDirectory": "frontend/.vercel/output",
+  "installCommand": "npm install --prefix frontend"
+}
