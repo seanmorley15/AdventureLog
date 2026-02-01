@@ -28,8 +28,8 @@
 		}
 	});
 
-	function handleStepUnlock(stepNum: number, password: string) {
-		unlockedSteps.add(stepNum);
+	function handleStepUnlock(stepNum: number) {
+		unlockedSteps = new Set([...unlockedSteps, stepNum]);
 		saveProgress(Array.from(unlockedSteps));
 	}
 </script>
@@ -90,7 +90,7 @@
 						photoBlur={step.photoBlur}
 						password={step.password}
 						isUnlocked={unlockedSteps.has(step.step)}
-						onUnlock={(password) => handleStepUnlock(step.step, password)}
+						onUnlock={() => handleStepUnlock(step.step)}
 					/>
 				{/each}
 			</div>

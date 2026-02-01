@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import confetti from 'canvas-confetti';
 	import { fly, fade } from 'svelte/transition';
 	import PasswordUnlockModal from './PasswordUnlockModal.svelte';
@@ -17,19 +16,18 @@
 	export let photoBlur: string;
 	export let password: string;
 	export let isUnlocked: boolean = false;
-	export let onUnlock: (password: string) => void = () => {};
+	export let onUnlock: () => void = () => {};
 
 	let showPasswordModal = false;
-	let imageLoaded = false;
+	let imageError = false;
 
 	function handleUnlockClick() {
 		showPasswordModal = true;
 	}
 
 	function handlePasswordUnlocked() {
-		isUnlocked = true;
 		showPasswordModal = false;
-		onUnlock(password);
+		onUnlock();
 
 		// Trigger confetti
 		if (typeof window !== 'undefined') {
@@ -54,13 +52,23 @@
 		class="relative w-full h-80 md:h-96 overflow-hidden bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400"
 	>
 		{#if isUnlocked}
-			<img
-				src={photo}
-				alt={title_en}
-				class="w-full h-full object-cover"
-				transition:fade={{ duration: 400 }}
-				on:load={() => (imageLoaded = true)}
-			/>
+			{#if imageError}
+				<!-- Fallback gradient when image fails to load -->
+				<div class="w-full h-full bg-gradient-to-br from-purple-400 via-pink-400 to-orange-400 flex items-center justify-center">
+					<div class="text-center text-white">
+						<div class="text-6xl mb-2">🏞️</div>
+						<p class="font-bold">{title_es}</p>
+					</div>
+				</div>
+			{:else}
+				<img
+					src={photo}
+					alt={title_en}
+					class="w-full h-full object-cover"
+					transition:fade={{ duration: 400 }}
+					on:error={() => (imageError = true)}
+				/>
+			{/if}
 			<a
 				href={googleMapsUrl}
 				target="_blank"

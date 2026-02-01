@@ -5,19 +5,32 @@ export default function useSurpriseProgress() {
 
 	function getProgress(): number[] {
 		if (!browser) return [];
-		const stored = localStorage.getItem(storageKey);
-		return stored ? JSON.parse(stored) : [];
+		try {
+			const stored = localStorage.getItem(storageKey);
+			return stored ? JSON.parse(stored) : [];
+		} catch (error) {
+			console.warn('Failed to load surprise progress:', error);
+			return [];
+		}
 	}
 
 	function saveProgress(steps: number[]): void {
 		if (!browser) return;
-		localStorage.setItem(storageKey, JSON.stringify(steps));
-		window.dispatchEvent(new CustomEvent('surprise-progress', { detail: { steps } }));
+		try {
+			localStorage.setItem(storageKey, JSON.stringify(steps));
+			window.dispatchEvent(new CustomEvent('surprise-progress', { detail: { steps } }));
+		} catch (error) {
+			console.warn('Failed to save surprise progress:', error);
+		}
 	}
 
 	function resetProgress(): void {
 		if (!browser) return;
-		localStorage.removeItem(storageKey);
+		try {
+			localStorage.removeItem(storageKey);
+		} catch (error) {
+			console.warn('Failed to reset surprise progress:', error);
+		}
 	}
 
 	return { getProgress, saveProgress, resetProgress };

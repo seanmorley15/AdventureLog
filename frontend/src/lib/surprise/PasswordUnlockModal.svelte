@@ -37,6 +37,10 @@
 	<div
 		class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
 		on:click={handleClose}
+		on:keydown={(e) => e.key === 'Escape' && handleClose()}
+		role="button"
+		tabindex="-1"
+		aria-label="Close modal"
 	>
 		<div
 			class="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl"
