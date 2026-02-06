@@ -84,6 +84,9 @@
     "latitude": "纬度",
     "visit": "访问",
     "visits": "访问次数",
+    "last_edited_by": "最后编辑者",
+    "contributors": "贡献者",
+    "added_by": "添加者",
     "create_new": "创建新的...",
     "sort": "排序",
     "order_by": "排序依据",
@@ -1128,5 +1131,21 @@
     "no_matches": "没有匹配项",
     "search": "搜索货币",
     "select_currency": "选择货币"
+  },
+  "history": {
+    "title": "历史记录",
+    "created": "已创建",
+    "updated": "已更新",
+    "deleted": "已删除",
+    "by": "由",
+    "no_history": "暂无历史记录",
+    "view_history": "查看历史",
+    "changes": "更改",
+    "revert": "撤销"
+  },
+  "collaborative": {
+    "mode_enabled": "协作模式",
+    "public_content": "公开内容",
+    "can_edit": "您可以编辑"
   }
 }

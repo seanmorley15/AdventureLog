@@ -76,6 +76,9 @@
     "longitude": "Longitud",
     "visit": "Visita",
     "visits": "Visitas",
+    "last_edited_by": "Última edición por",
+    "contributors": "Colaboradores",
+    "added_by": "Añadido por",
     "create_new": "Crear nuevo...",
     "ascending": "Ascendente",
     "date": "Fecha",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Los elementos del contexto del viaje se aplican a todo el viaje; por ejemplo, ubicaciones que son el destino en sí, notas generales o listas de equipaje que son importantes para todo el viaje.",
     "unscheduled_items": "Artículos no programados",
     "unscheduled_items_desc": "Estos elementos están vinculados a este viaje pero aún no se han agregado a un día específico."
+  },
+  "history": {
+    "title": "Historial",
+    "created": "Creado",
+    "updated": "Actualizado",
+    "deleted": "Eliminado",
+    "by": "por",
+    "no_history": "Sin historial disponible",
+    "view_history": "Ver historial",
+    "changes": "Cambios",
+    "revert": "Revertir"
+  },
+  "collaborative": {
+    "mode_enabled": "Modo colaborativo",
+    "public_content": "Contenido público",
+    "can_edit": "Puedes editar esto"
   }
 }

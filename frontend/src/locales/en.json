@@ -132,6 +132,9 @@
     "coordinates": "Coordinates",
     "copy_coordinates": "Copy Coordinates",
     "visits": "Visits",
+    "added_by": "Added by",
+    "last_edited_by": "Last edited by",
+    "contributors": "Contributors",
     "create_new": "Create New",
     "sort": "Sort",
     "order_by": "Order By",
@@ -183,6 +186,10 @@
     "transport_activity_paths": "Transport & activity paths",
     "clear": "Clear",
     "my_collections": "My Collections",
+    "ownership_filter": "Ownership",
+    "all_locations": "All Locations",
+    "my_locations": "My Locations",
+    "public_locations": "Public Locations",
     "show_filters": "Show Filters",
     "hide_filters": "Hide Filters",
     "pins": "pins",
@@ -923,7 +930,9 @@
     "select_category": "Select Category",
     "category_name": "Category Name",
     "add_new_category": "Add New Category",
-    "name_required": "Category name is required"
+    "name_required": "Category name is required",
+    "make_public": "Public",
+    "public_description": "Public categories are visible and usable by all users"
   },
   "dashboard": {
     "welcome_back": "Welcome back",
@@ -1093,6 +1102,9 @@
   },
   "collections": {
     "not_found": "Collection Not Found",
+    "all_collections": "All Collections",
+    "my_collections_tab": "My Collections",
+    "public_collections": "Public Collections",
     "all_items": "All Items",
     "no_calendar_events": "No visits are scheduled for this collection yet.",
     "events": "events",
@@ -1130,5 +1142,21 @@
     "select_currency": "Select currency",
     "search": "Search currency",
     "no_matches": "No matches"
+  },
+  "history": {
+    "title": "History",
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "by": "by",
+    "no_history": "No history available",
+    "view_history": "View History",
+    "changes": "Changes",
+    "revert": "Revert"
+  },
+  "collaborative": {
+    "mode_enabled": "Collaborative Mode",
+    "public_content": "Public Content",
+    "can_edit": "You can edit this"
   }
 }

@@ -201,6 +201,9 @@
     "visit_calendar": "Calendário de visitas",
     "visited": "Visitado",
     "visits": "Visitas",
+    "last_edited_by": "Última edição por",
+    "contributors": "Colaboradores",
+    "added_by": "Adicionado por",
     "wiki_image_error": "Erro ao baixar a imagem da Wikipedia",
     "wikipedia": "Wikipedia",
     "wikipedia_error": "Falha ao gerar descrição da Wikipédia",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Os itens de contexto da viagem aplicam-se a toda a viagem — por exemplo, locais que são o próprio destino, notas gerais ou listas de embalagem que são importantes para toda a viagem.",
     "unscheduled_items": "Itens não programados",
     "unscheduled_items_desc": "Esses itens estão vinculados a esta viagem, mas ainda não foram adicionados a um dia específico."
+  },
+  "history": {
+    "title": "Histórico",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "deleted": "Excluído",
+    "by": "por",
+    "no_history": "Nenhum histórico disponível",
+    "view_history": "Ver histórico",
+    "changes": "Alterações",
+    "revert": "Reverter"
+  },
+  "collaborative": {
+    "mode_enabled": "Modo colaborativo",
+    "public_content": "Conteúdo público",
+    "can_edit": "Você pode editar isso"
   }
 }

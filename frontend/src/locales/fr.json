@@ -45,6 +45,10 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "my_collections": "Mes collections",
+    "ownership_filter": "Propriété",
+    "all_locations": "Tous les lieux",
+    "my_locations": "Mes lieux",
+    "public_locations": "Lieux publics",
     "name": "Nom",
     "no_image_url": "Aucune image trouvée à cette URL.",
     "order_by": "Trier par",
@@ -63,6 +67,9 @@
     "visit": "Visite",
     "visited": "Visitée",
     "visits": "Visites",
+    "added_by": "Ajouté par",
+    "last_edited_by": "Modifié par",
+    "contributors": "Contributeurs",
     "wiki_image_error": "Erreur lors de la récupération de l'image depuis Wikipédia",
     "add": "Ajouter",
     "basic_information": "Informations de base",
@@ -900,7 +907,9 @@
     "select_category": "Sélectionnez une catégorie",
     "add_new_category": "Ajouter une nouvelle catégorie",
     "name_required": "Le nom de catégorie est requis",
-    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page."
+    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page.",
+    "make_public": "Publique",
+    "public_description": "Les catégories publiques sont visibles et utilisables par tous les utilisateurs"
   },
   "dashboard": {
     "countries_visited": "Pays visités",
@@ -1054,6 +1063,9 @@
   },
   "collections": {
     "all_items": "Tous les articles",
+    "all_collections": "Toutes les collections",
+    "my_collections_tab": "Mes collections",
+    "public_collections": "Collections publiques",
     "currencies": "Devises",
     "currency": "Devise",
     "event_timezone": "Fuseau horaire de l'événement",
@@ -1128,5 +1140,21 @@
     "unscheduled_items": "Éléments non planifiés",
     "unscheduled_items_desc": "Ces éléments sont liés à ce voyage mais n'ont pas encore été ajoutés à un jour spécifique.",
     "link_existing_item": "Lier un élément existant"
+  },
+  "history": {
+    "title": "Historique",
+    "created": "Créé",
+    "updated": "Modifié",
+    "deleted": "Supprimé",
+    "by": "par",
+    "no_history": "Aucun historique",
+    "view_history": "Voir l'historique",
+    "changes": "Modifications",
+    "revert": "Annuler"
+  },
+  "collaborative": {
+    "mode_enabled": "Mode collaboratif",
+    "public_content": "Contenu public",
+    "can_edit": "Vous pouvez modifier"
   }
 }

@@ -125,6 +125,9 @@
     "visit": "방문",
     "visited": "방문함",
     "visits": "방문",
+    "last_edited_by": "마지막 수정자",
+    "contributors": "기여자",
+    "added_by": "추가한 사람",
     "wiki_image_error": "위키백과 이미지 가져오기 오류",
     "wikipedia": "위키백과",
     "checklists": "체크리스트",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
     "unscheduled_items": "예정되지 않은 품목",
     "unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+  },
+  "history": {
+    "title": "기록",
+    "created": "생성됨",
+    "updated": "수정됨",
+    "deleted": "삭제됨",
+    "by": "작성자",
+    "no_history": "기록이 없습니다",
+    "view_history": "기록 보기",
+    "changes": "변경 사항",
+    "revert": "되돌리기"
+  },
+  "collaborative": {
+    "mode_enabled": "협업 모드",
+    "public_content": "공개 콘텐츠",
+    "can_edit": "편집할 수 있습니다"
   }
 }

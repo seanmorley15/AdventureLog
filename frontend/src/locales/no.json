@@ -84,6 +84,9 @@
     "latitude": "Breddegrad",
     "visit": "Besøk",
     "visits": "Besøk",
+    "last_edited_by": "Sist redigert av",
+    "contributors": "Bidragsytere",
+    "added_by": "Lagt til av",
     "create_new": "Opprett nytt...",
     "sort": "Sorter",
     "order_by": "Sorter etter",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Turkontekstelementer gjelder for hele turen – for eksempel steder som er selve destinasjonen, generelle notater eller pakkelister som er viktige for hele turen.",
     "unscheduled_items": "Ikke-planlagte elementer",
     "unscheduled_items_desc": "Disse elementene er knyttet til denne turen, men har ikke blitt lagt til en bestemt dag ennå."
+  },
+  "history": {
+    "title": "Historikk",
+    "created": "Opprettet",
+    "updated": "Oppdatert",
+    "deleted": "Slettet",
+    "by": "av",
+    "no_history": "Ingen historikk tilgjengelig",
+    "view_history": "Vis historikk",
+    "changes": "Endringer",
+    "revert": "Angre"
+  },
+  "collaborative": {
+    "mode_enabled": "Samarbeidsmodus",
+    "public_content": "Offentlig innhold",
+    "can_edit": "Du kan redigere dette"
   }
 }

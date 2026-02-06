@@ -55,6 +55,9 @@
     "updated": "Aggiornato",
     "visit": "Visita",
     "visits": "Visite",
+    "last_edited_by": "Ultima modifica di",
+    "contributors": "Collaboratori",
+    "added_by": "Aggiunto da",
     "dates": "Date",
     "duration": "Durata",
     "image_upload_error": "Errore durante il caricamento dell'immagine",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Gli elementi contestuali del viaggio si applicano all'intero viaggio, ad esempio luoghi che rappresentano la destinazione stessa, note generali o liste di cose da portare importanti per l'intero viaggio.",
     "unscheduled_items": "Elementi non pianificati",
     "unscheduled_items_desc": "Questi elementi sono collegati a questo viaggio ma non sono ancora stati aggiunti a un giorno specifico."
+  },
+  "history": {
+    "title": "Cronologia",
+    "created": "Creato",
+    "updated": "Aggiornato",
+    "deleted": "Eliminato",
+    "by": "da",
+    "no_history": "Nessuna cronologia disponibile",
+    "view_history": "Visualizza cronologia",
+    "changes": "Modifiche",
+    "revert": "Annulla"
+  },
+  "collaborative": {
+    "mode_enabled": "Modalità collaborativa",
+    "public_content": "Contenuto pubblico",
+    "can_edit": "Puoi modificare questo"
   }
 }

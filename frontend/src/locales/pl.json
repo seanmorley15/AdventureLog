@@ -76,6 +76,9 @@
     "latitude": "Szerokość geograficzna",
     "visit": "Odwiedź",
     "visits": "Odwiedziny",
+    "last_edited_by": "Ostatnia edycja przez",
+    "contributors": "Współtwórcy",
+    "added_by": "Dodane przez",
     "create_new": "Utwórz nową...",
     "sort": "Sortuj",
     "order_by": "Sortuj według",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Elementy kontekstu podróży dotyczą całej podróży — na przykład lokalizacje będące samym celem podróży, uwagi ogólne lub listy rzeczy do spakowania ważne dla całej podróży.",
     "unscheduled_items": "Niezaplanowane pozycje",
     "unscheduled_items_desc": "Te elementy są powiązane z tą podróżą, ale nie zostały jeszcze dodane do konkretnego dnia."
+  },
+  "history": {
+    "title": "Historia",
+    "created": "Utworzono",
+    "updated": "Zaktualizowano",
+    "deleted": "Usunięto",
+    "by": "przez",
+    "no_history": "Brak historii",
+    "view_history": "Zobacz historię",
+    "changes": "Zmiany",
+    "revert": "Cofnij"
+  },
+  "collaborative": {
+    "mode_enabled": "Tryb współpracy",
+    "public_content": "Treść publiczna",
+    "can_edit": "Możesz to edytować"
   }
 }

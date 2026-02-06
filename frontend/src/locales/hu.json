@@ -100,6 +100,9 @@
     "coordinates": "Koordináták",
     "copy_coordinates": "Koordináták másolása",
     "visits": "Látogatások",
+    "last_edited_by": "Utoljára szerkesztette",
+    "contributors": "Közreműködők",
+    "added_by": "Hozzáadta",
     "create_new": "Új létrehozása...",
     "sort": "Rendezés",
     "order_by": "Rendezés alapja",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Az utazási kontextus elemei az egész utazásra vonatkoznak – például olyan helyek, amelyek maga az úti cél, általános megjegyzések vagy csomaglisták, amelyek az egész utazás szempontjából fontosak.",
     "unscheduled_items": "Nem ütemezett tételek",
     "unscheduled_items_desc": "Ezek az elemek ehhez az utazáshoz kapcsolódnak, de még nem adták hozzá egy adott naphoz."
+  },
+  "history": {
+    "title": "Előzmények",
+    "created": "Létrehozva",
+    "updated": "Frissítve",
+    "deleted": "Törölve",
+    "by": "által",
+    "no_history": "Nincs előzmény",
+    "view_history": "Előzmények megtekintése",
+    "changes": "Változások",
+    "revert": "Visszaállítás"
+  },
+  "collaborative": {
+    "mode_enabled": "Együttműködési mód",
+    "public_content": "Nyilvános tartalom",
+    "can_edit": "Szerkesztheted"
   }
 }

@@ -100,6 +100,9 @@
     "coordinates": "Koordinatlar",
     "copy_coordinates": "Koordinatları Kopyala",
     "visits": "Ziyaretler",
+    "last_edited_by": "Son düzenleyen",
+    "contributors": "Katkıda bulunanlar",
+    "added_by": "Ekleyen",
     "create_new": "Yeni Oluştur",
     "sort": "Sıralama",
     "order_by": "Sıralama Ölçütü",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Seyahat bağlamı öğeleri seyahatin tamamı için geçerlidir; örneğin varış noktasının kendisi olan konumlar, genel notlar veya seyahatin tamamı için önemli olan paket listeleri.",
     "unscheduled_items": "Planlanmamış Öğeler",
     "unscheduled_items_desc": "Bu öğeler bu geziye bağlı ancak henüz belirli bir güne eklenmedi."
+  },
+  "history": {
+    "title": "Geçmiş",
+    "created": "Oluşturuldu",
+    "updated": "Güncellendi",
+    "deleted": "Silindi",
+    "by": "tarafından",
+    "no_history": "Geçmiş yok",
+    "view_history": "Geçmişi görüntüle",
+    "changes": "Değişiklikler",
+    "revert": "Geri al"
+  },
+  "collaborative": {
+    "mode_enabled": "İşbirliği modu",
+    "public_content": "Herkese açık içerik",
+    "can_edit": "Düzenleyebilirsiniz"
   }
 }

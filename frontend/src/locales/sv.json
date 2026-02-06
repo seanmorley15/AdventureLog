@@ -58,6 +58,9 @@
 		"visit": "Besök",
 		"visited": "Besökta",
 		"visits": "Besök",
+		"last_edited_by": "Senast redigerad av",
+		"contributors": "Bidragsgivare",
+		"added_by": "Tillagd av",
 		"image_upload_error": "Det gick inte att ladda upp bilden",
 		"image_upload_success": "Bilden har laddats upp!",
 		"no_image_url": "Ingen bild hittades på den webbadressen.",
@@ -1128,5 +1131,21 @@
 		"trip_context_info": "Resans kontextobjekt gäller för hela resan – till exempel platser som är själva destinationen, allmänna anteckningar eller packlistor som är viktiga för hela resan.",
 		"unscheduled_items": "Oschemalagda objekt",
 		"unscheduled_items_desc": "Dessa objekt är länkade till denna resa men har inte lagts till en specifik dag än."
+	},
+	"history": {
+		"title": "Historik",
+		"created": "Skapad",
+		"updated": "Uppdaterad",
+		"deleted": "Borttagen",
+		"by": "av",
+		"no_history": "Ingen historik tillgänglig",
+		"view_history": "Visa historik",
+		"changes": "Ändringar",
+		"revert": "Ångra"
+	},
+	"collaborative": {
+		"mode_enabled": "Samarbetsläge",
+		"public_content": "Offentligt innehåll",
+		"can_edit": "Du kan redigera detta"
 	}
 }

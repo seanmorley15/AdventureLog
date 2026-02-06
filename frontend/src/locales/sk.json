@@ -100,6 +100,9 @@
 		"coordinates": "Súradnice",
 		"copy_coordinates": "Kopírovať súradnice",
 		"visits": "Návštevy",
+		"last_edited_by": "Naposledy upravil",
+		"contributors": "Prispievatelia",
+		"added_by": "Pridal",
 		"create_new": "Vytvoriť nové",
 		"sort": "Zoradiť",
 		"order_by": "Zoradiť podľa",
@@ -1128,5 +1131,21 @@
 		"trip_context_info": "Kontextové položky cesty sa vzťahujú na celú cestu – napríklad miesta, ktoré sú samotným cieľom, všeobecné poznámky alebo zoznamy balíkov, ktoré sú dôležité pre celú cestu.",
 		"unscheduled_items": "Neplánované položky",
 		"unscheduled_items_desc": "Tieto položky sú spojené s touto cestou, ale zatiaľ neboli pridané ku konkrétnemu dňu."
+	},
+	"history": {
+		"title": "História",
+		"created": "Vytvorené",
+		"updated": "Aktualizované",
+		"deleted": "Vymazané",
+		"by": "od",
+		"no_history": "Žiadna história",
+		"view_history": "Zobraziť históriu",
+		"changes": "Zmeny",
+		"revert": "Vrátiť späť"
+	},
+	"collaborative": {
+		"mode_enabled": "Režim spolupráce",
+		"public_content": "Verejný obsah",
+		"can_edit": "Môžete upravovať"
 	}
 }

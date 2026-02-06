@@ -186,6 +186,9 @@
     "visit_calendar": "カレンダーにアクセスしてください",
     "visited": "訪問",
     "visits": "訪問",
+    "last_edited_by": "最終編集者",
+    "contributors": "貢献者",
+    "added_by": "追加者",
     "wiki_image_error": "ウィキペディアからの画像の取得エラー",
     "wikipedia": "ウィキペディア",
     "collection_remove_location_success": "コレクションから正常に削除された場所！",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "旅行コンテキスト項目は、旅行全体に適用されます。たとえば、目的地そのものである場所、一般的なメモ、旅行全体にとって重要な持ち物リストなどです。",
     "unscheduled_items": "予定外の項目",
     "unscheduled_items_desc": "これらのアイテムはこの旅行にリンクされていますが、まだ特定の日に追加されていません。"
+  },
+  "history": {
+    "title": "履歴",
+    "created": "作成",
+    "updated": "更新",
+    "deleted": "削除",
+    "by": "によって",
+    "no_history": "履歴はありません",
+    "view_history": "履歴を見る",
+    "changes": "変更",
+    "revert": "元に戻す"
+  },
+  "collaborative": {
+    "mode_enabled": "コラボレーションモード",
+    "public_content": "公開コンテンツ",
+    "can_edit": "編集できます"
   }
 }

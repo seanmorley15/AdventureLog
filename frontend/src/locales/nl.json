@@ -55,6 +55,9 @@
     "updated": "Gewijzigd",
     "visit": "Bezoek",
     "visits": "Bezoeken",
+    "last_edited_by": "Laatst bewerkt door",
+    "contributors": "Bijdragers",
+    "added_by": "Toegevoegd door",
     "dates": "Datums",
     "duration": "Duur",
     "image_upload_error": "Fout bij het uploaden van de afbeelding",
@@ -1128,5 +1131,21 @@
     "trip_context_info": "Reiscontextitems zijn van toepassing op de hele reis, bijvoorbeeld locaties die de bestemming zelf vormen, algemene opmerkingen of paklijsten die belangrijk zijn voor de hele reis.",
     "unscheduled_items": "Niet-geplande items",
     "unscheduled_items_desc": "Deze items zijn gekoppeld aan deze reis, maar nog niet toegevoegd aan een specifieke dag."
+  },
+  "history": {
+    "title": "Geschiedenis",
+    "created": "Aangemaakt",
+    "updated": "Bijgewerkt",
+    "deleted": "Verwijderd",
+    "by": "door",
+    "no_history": "Geen geschiedenis beschikbaar",
+    "view_history": "Geschiedenis bekijken",
+    "changes": "Wijzigingen",
+    "revert": "Ongedaan maken"
+  },
+  "collaborative": {
+    "mode_enabled": "Samenwerkingsmodus",
+    "public_content": "Openbare inhoud",
+    "can_edit": "Je kunt dit bewerken"
   }
 }
