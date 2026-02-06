@@ -37,4 +37,19 @@ class DisableCSRFForMobileLoginSignup(MiddlewareMixin):
         is_login_or_signup = request.path in ['/auth/browser/v1/auth/login', '/auth/browser/v1/auth/signup']
         if is_mobile and is_login_or_signup:
             setattr(request, '_dont_enforce_csrf_checks', True)
+
+
+class AuditUserMiddleware:
+    """Middleware to capture the current user for audit logging in collaborative mode."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        from adventures.signals import set_current_user
+        if hasattr(request, 'user') and request.user.is_authenticated:
+            set_current_user(request.user)
+        response = self.get_response(request)
+        set_current_user(None)
+        return response
        
