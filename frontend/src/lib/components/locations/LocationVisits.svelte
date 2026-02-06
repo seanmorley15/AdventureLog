@@ -46,6 +46,7 @@
 	export let trails: Trail[] = [];
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	export let currentUserUsername: string | null = null; // Current user's username for ownership checks
 
 	const dispatch = createEventDispatcher();
 
@@ -931,6 +932,11 @@
 								>
 									<div class="flex items-start justify-between">
 										<div class="flex-1 min-w-0">
+											{#if visit.user_username}
+												<div class="text-xs opacity-60 mb-2">
+													{$t('adventures.added_by')} <a href="/profile/{visit.user_username}" class="font-semibold link link-hover link-primary">{visit.user_username}</a>
+												</div>
+											{/if}
 											<div class="flex items-center gap-2 mb-2">
 												{#if isAllDay(visit.start_date)}
 													<span class="badge badge-outline badge-sm"
@@ -996,29 +1002,32 @@
 												</button>
 											{/if}
 
-											<!-- Upload Activity Button -->
-											<button
-												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
-												data-tip={$t('adventures.add_activity')}
-												on:click={() => showActivityUploadForm(visit.id)}
-											>
-												<UploadIcon class="w-3 h-3" />
-											</button>
+											<!-- Only show edit/delete buttons if user owns this visit -->
+											{#if !visit.user_username || visit.user_username === currentUserUsername}
+												<!-- Upload Activity Button -->
+												<button
+													class="btn btn-success btn-xs tooltip tooltip-top gap-1"
+													data-tip={$t('adventures.add_activity')}
+													on:click={() => showActivityUploadForm(visit.id)}
+												>
+													<UploadIcon class="w-3 h-3" />
+												</button>
 
-											<button
-												class="btn btn-warning btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.edit_visit')}
-												on:click={() => editVisit(visit)}
-											>
-												<EditIcon class="w-3 h-3" />
-											</button>
-											<button
-												class="btn btn-error btn-xs tooltip tooltip-top"
-												data-tip={$t('adventures.remove_visit')}
-												on:click={() => removeVisit(visit.id)}
-											>
-												<TrashIcon class="w-3 h-3" />
-											</button>
+												<button
+													class="btn btn-warning btn-xs tooltip tooltip-top"
+													data-tip={$t('adventures.edit_visit')}
+													on:click={() => editVisit(visit)}
+												>
+													<EditIcon class="w-3 h-3" />
+												</button>
+												<button
+													class="btn btn-error btn-xs tooltip tooltip-top"
+													data-tip={$t('adventures.remove_visit')}
+													on:click={() => removeVisit(visit.id)}
+												>
+													<TrashIcon class="w-3 h-3" />
+												</button>
+											{/if}
 										</div>
 									</div>
 
