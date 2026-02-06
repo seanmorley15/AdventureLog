@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const COLLABORATIVE_MODE = process.env['COLLABORATIVE_MODE'] === 'true';
 import type { Location } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
@@ -40,9 +41,21 @@ export const load = (async (event) => {
 
 		if (!initialFetch.ok) {
 			let error_message = await initialFetch.json();
-			console.error(error_message);
-			console.error('Failed to fetch visited adventures');
-			return redirect(302, '/login');
+			console.error('Locations fetch error:', error_message);
+			console.error('Status:', initialFetch.status);
+			// Only redirect to login on 401/403, not on other errors
+			if (initialFetch.status === 401 || initialFetch.status === 403) {
+				return redirect(302, '/login');
+			}
+			// For other errors, return empty list
+			return {
+				props: {
+					adventures: [],
+					count: 0
+				},
+				collaborativeMode: COLLABORATIVE_MODE,
+				error: error_message
+			};
 		} else {
 			let res = await initialFetch.json();
 			let visited = res.results as Location[];
@@ -55,7 +68,8 @@ export const load = (async (event) => {
 			props: {
 				adventures,
 				count
-			}
+			},
+			collaborativeMode: COLLABORATIVE_MODE
 		};
 	}
 }) satisfies PageServerLoad;

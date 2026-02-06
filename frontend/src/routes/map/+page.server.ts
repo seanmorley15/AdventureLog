@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const COLLABORATIVE_MODE = process.env['COLLABORATIVE_MODE'] === 'true';
 import type { Location, Pin, VisitedRegion } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -35,7 +36,8 @@ export const load = (async (event) => {
 				props: {
 					visitedRegions,
 					pins
-				}
+				},
+				collaborativeMode: COLLABORATIVE_MODE
 			};
 		}
 	}

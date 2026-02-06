@@ -1,6 +1,7 @@
 import { fail, redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const COLLABORATIVE_MODE = process.env['COLLABORATIVE_MODE'] === 'true';
 import type { Location, Collection, SlimCollection } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
@@ -71,7 +72,8 @@ export const load = (async (event) => {
 				status,
 				archivedCollections: archivedData as SlimCollection[],
 				invites: invitesData
-			}
+			},
+			collaborativeMode: COLLABORATIVE_MODE
 		};
 	} catch (error) {
 		console.error('Error fetching data:', error);

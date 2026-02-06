@@ -47,9 +47,26 @@
 	let sidebarOpen = false;
 	let collectionToEdit: Collection | null = null;
 
+	// Ownership filter for collaborative mode
+	let ownershipFilter: 'all' | 'mine' | 'public' = 'all';
+
+	// Filter collections by ownership (for collaborative mode)
+	$: filteredOwnedCollections = (() => {
+		if (!data.collaborativeMode || ownershipFilter === 'all') {
+			return collections;
+		}
+		if (ownershipFilter === 'mine') {
+			return collections.filter((c) => c.is_owned === true);
+		}
+		if (ownershipFilter === 'public') {
+			return collections.filter((c) => c.is_owned === false);
+		}
+		return collections;
+	})();
+
 	$: currentCollections =
 		activeView === 'owned'
-			? collections
+			? filteredOwnedCollections
 			: activeView === 'shared'
 				? sharedCollections
 				: activeView === 'archived'
@@ -629,6 +646,48 @@
 
 					<!-- Only show sort options for collection views, not invites -->
 					{#if activeView !== 'invites'}
+						<!-- Ownership Filter (collaborative mode only) -->
+						{#if data.collaborativeMode && activeView === 'owned'}
+							<div class="card bg-base-200/50 p-4 mb-4">
+								<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+									<Share class="w-5 h-5" />
+									{$t('adventures.ownership_filter')}
+								</h3>
+								<div class="space-y-2">
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'all'}
+											on:change={() => (ownershipFilter = 'all')}
+										/>
+										<span class="label-text">{$t('collections.all_collections')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'mine'}
+											on:change={() => (ownershipFilter = 'mine')}
+										/>
+										<span class="label-text">{$t('collections.my_collections_tab')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'public'}
+											on:change={() => (ownershipFilter = 'public')}
+										/>
+										<span class="label-text">{$t('collections.public_collections')}</span>
+									</label>
+								</div>
+							</div>
+						{/if}
+
 						<!-- Status Filter -->
 						<div class="card bg-base-200/50 p-4 mb-4">
 							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">

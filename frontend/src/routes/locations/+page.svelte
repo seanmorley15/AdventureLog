@@ -58,6 +58,9 @@
 	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
 
+	// Ownership filter for collaborative mode
+	let ownershipFilter: 'all' | 'mine' | 'public' = 'all';
+
 	// Reactive statements - Only read from URL, don't write
 	$: {
 		if (typeof window !== 'undefined') {
@@ -152,6 +155,20 @@
 	function getPlannedCount() {
 		return adventures.filter((a) => !a.is_visited).length;
 	}
+
+	// Filter adventures by ownership (for collaborative mode)
+	$: filteredByOwnership = (() => {
+		if (!data.collaborativeMode || ownershipFilter === 'all') {
+			return adventures;
+		}
+		if (ownershipFilter === 'mine') {
+			return adventures.filter((a) => (a as Location).is_owned === true);
+		}
+		if (ownershipFilter === 'public') {
+			return adventures.filter((a) => (a as Location).is_owned === false);
+		}
+		return adventures;
+	})();
 </script>
 
 <svelte:head>
@@ -169,7 +186,10 @@
 {/if}
 
 {#if is_category_modal_open}
-	<CategoryModal on:close={() => (is_category_modal_open = false)} />
+	<CategoryModal
+		on:close={() => (is_category_modal_open = false)}
+		collaborativeMode={data.collaborativeMode}
+	/>
 {/if}
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
@@ -228,7 +248,7 @@
 
 			<!-- Main Content -->
 			<div class="container mx-auto px-6 py-8">
-				{#if adventures.length === 0}
+				{#if filteredByOwnership.length === 0}
 					<div class="flex flex-col items-center justify-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
 							<Compass class="w-16 h-16 text-base-content/30" />
@@ -255,7 +275,7 @@
 					<div
 						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
-						{#each adventures as adventure}
+						{#each filteredByOwnership as adventure}
 							<LocationCard
 								user={data.user}
 								{adventure}
@@ -478,6 +498,48 @@
 								<span class="label-text">{$t('adventures.collection_locations')}</span>
 							</label>
 						</div>
+
+						<!-- Ownership Filter (collaborative mode only) -->
+						{#if data.collaborativeMode}
+							<div class="card bg-base-200/50 p-4">
+								<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+									<Eye class="w-5 h-5" />
+									{$t('adventures.ownership_filter')}
+								</h3>
+								<div class="space-y-2">
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'all'}
+											on:change={() => (ownershipFilter = 'all')}
+										/>
+										<span class="label-text">{$t('adventures.all_locations')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'mine'}
+											on:change={() => (ownershipFilter = 'mine')}
+										/>
+										<span class="label-text">{$t('adventures.my_locations')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3">
+										<input
+											type="radio"
+											name="ownership"
+											class="radio radio-primary radio-sm"
+											checked={ownershipFilter === 'public'}
+											on:change={() => (ownershipFilter = 'public')}
+										/>
+										<span class="label-text">{$t('adventures.public_locations')}</span>
+									</label>
+								</div>
+							</div>
+						{/if}
 
 						<button type="submit" class="btn btn-primary w-full gap-2">
 							<Filter class="w-4 h-4" />

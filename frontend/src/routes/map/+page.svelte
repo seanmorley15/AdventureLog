@@ -50,6 +50,9 @@
 	let showPlanned: boolean = true;
 	let searchQuery: string = '';
 
+	// Ownership filter for collaborative mode
+	let ownershipFilter: 'all' | 'mine' | 'public' = 'all';
+
 	let newMarker: { lngLat: any } | null = null;
 	let newLongitude: number | null = null;
 	let newLatitude: number | null = null;
@@ -163,7 +166,7 @@
 	// Get unique categories for filtering
 	$: categories = [...new Set(pins.map((pin) => pin.category?.display_name).filter(Boolean))];
 
-	// Updates the filtered pins based on the checkboxes and search query
+	// Updates the filtered pins based on the checkboxes, search query, and ownership
 	$: {
 		const query = searchQuery.toLowerCase().trim();
 		filteredPins = pins.filter((pin) => {
@@ -171,6 +174,12 @@
 			const statusMatch =
 				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
 			if (!statusMatch) return false;
+
+			// Filter by ownership (collaborative mode)
+			if (data.collaborativeMode && ownershipFilter !== 'all') {
+				if (ownershipFilter === 'mine' && pin.is_owned !== true) return false;
+				if (ownershipFilter === 'public' && pin.is_owned !== false) return false;
+			}
 
 			// Filter by search query
 			if (!query) return true;
@@ -1009,6 +1018,48 @@
 							</label>
 						</div>
 					</div>
+
+					<!-- Ownership Filter (collaborative mode only) -->
+					{#if data.collaborativeMode}
+						<div class="card bg-base-200/50 p-4 mb-6">
+							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+								<Eye class="w-5 h-5" />
+								{$t('adventures.ownership_filter')}
+							</h3>
+							<div class="space-y-2">
+								<label class="label cursor-pointer justify-start gap-3">
+									<input
+										type="radio"
+										name="ownership"
+										class="radio radio-primary radio-sm"
+										checked={ownershipFilter === 'all'}
+										on:change={() => (ownershipFilter = 'all')}
+									/>
+									<span class="label-text">{$t('adventures.all_locations')}</span>
+								</label>
+								<label class="label cursor-pointer justify-start gap-3">
+									<input
+										type="radio"
+										name="ownership"
+										class="radio radio-primary radio-sm"
+										checked={ownershipFilter === 'mine'}
+										on:change={() => (ownershipFilter = 'mine')}
+									/>
+									<span class="label-text">{$t('adventures.my_locations')}</span>
+								</label>
+								<label class="label cursor-pointer justify-start gap-3">
+									<input
+										type="radio"
+										name="ownership"
+										class="radio radio-primary radio-sm"
+										checked={ownershipFilter === 'public'}
+										on:change={() => (ownershipFilter = 'public')}
+									/>
+									<span class="label-text">{$t('adventures.public_locations')}</span>
+								</label>
+							</div>
+						</div>
+					{/if}
 
 					<!-- New Location Section -->
 					<div class="card bg-base-200/50 p-4">

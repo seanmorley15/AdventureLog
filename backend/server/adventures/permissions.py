@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from django.conf import settings
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
     """
@@ -128,13 +129,11 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
 
         
         if type(obj).__name__ == 'Visit':
-            print("Checking permissions for Visit object", obj)
             # If the object is a Visit, get its location
             if hasattr(obj, 'location'):
                 obj = obj.location
 
         if type(obj).__name__ == 'CollectionItineraryItem':
-            print("Checking permissions for CollectionItineraryItem object", obj)
             if hasattr(obj, 'object_id') and hasattr(obj, 'content_type'):
                 content_object = obj.content_type.get_object_for_this_type(id=obj.object_id)
                 obj = content_object
@@ -142,7 +141,11 @@ class IsOwnerOrSharedWithFullAccess(permissions.BasePermission):
         # Anonymous users only get read access to public objects
         if not user or not user.is_authenticated:
             return is_safe_method and getattr(obj, 'is_public', False)
-        
+
+        # Collaborative mode: authenticated users can edit public content
+        if getattr(settings, 'COLLABORATIVE_MODE', False) and getattr(obj, 'is_public', False):
+            return True
+
         # Owner always has full access
         if self._is_owner(obj, user):
             return True
@@ -248,19 +251,37 @@ class ContentImagePermission(IsOwnerOrSharedWithFullAccess):
     """
     Specialized permission for ContentImage objects that checks permissions
     on the related content object.
+
+    In collaborative mode, users can only delete their own images.
     """
-    
+
     def has_object_permission(self, request, view, obj):
         """
         For ContentImage objects, check permissions on the related content object.
+        For DELETE operations in collaborative mode, only allow image owner to delete.
         """
         if not request.user or not request.user.is_authenticated:
             return False
-            
+
         # Get the related content object
         content_object = obj.content_object
         if not content_object:
             return False
-        
+
+        # Check if this is a delete operation (DELETE method or image_delete action which uses POST)
+        is_delete_operation = (
+            request.method == 'DELETE' or
+            (hasattr(view, 'action') and view.action == 'image_delete')
+        )
+
+        # In collaborative mode, only allow deleting your own uploads
+        # Even location owners cannot delete files uploaded by others
+        if is_delete_operation and getattr(settings, 'COLLABORATIVE_MODE', False):
+            # Only the uploader can delete their own files
+            if obj.user == request.user:
+                return True
+            # Otherwise, deny deletion
+            return False
+
         # Use the parent permission class to check access to the content object
         return super().has_object_permission(request, view, content_object)

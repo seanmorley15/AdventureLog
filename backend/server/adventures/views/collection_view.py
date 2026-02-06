@@ -168,11 +168,17 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # make sure the user is authenticated
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        
+
         # List should only return collections owned by the requesting user (shared collections are available
-        # via the `shared` action).
+        # via the `shared` action). In collaborative mode, also include public collections.
+        base_filter = Q(user=request.user.id) & Q(is_archived=False)
+
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            # Include public collections from other users in collaborative mode
+            base_filter = base_filter | Q(is_public=True)
+
         queryset = Collection.objects.filter(
-            Q(user=request.user.id) & Q(is_archived=False)
+            base_filter
         ).distinct().select_related('user', 'primary_image').prefetch_related(
             Prefetch(
                 'locations__images',
@@ -180,7 +186,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 to_attr='primary_images'
             )
         )
-        
+
         queryset = self.apply_status_filter(queryset)
         queryset = self.apply_sorting(queryset)
         return self.paginate_and_respond(queryset, request)
