@@ -98,6 +98,8 @@ class NoteViewSet(viewsets.ModelViewSet):
     
     # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
+        from django.conf import settings
+
         # Retrieve the collection from the validated data
         collection = serializer.validated_data.get('collection')
 
@@ -108,8 +110,13 @@ class NoteViewSet(viewsets.ModelViewSet):
             if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
                 # Return an error response if the user does not have permission
                 raise PermissionDenied("You do not have permission to use this collection.")
-            # if collection the owner of the adventure is the owner of the collection
-            serializer.save(user=collection.user)
+
+            # In collaborative mode, notes are attributed to the creator, not the collection owner
+            if getattr(settings, 'COLLABORATIVE_MODE', False):
+                serializer.save(user=self.request.user)
+            else:
+                # if collection the owner of the adventure is the owner of the collection
+                serializer.save(user=collection.user)
             return
 
         # Save the adventure with the current user as the owner
