@@ -100,6 +100,9 @@
     "coordinates": "Koordináták",
     "copy_coordinates": "Koordináták másolása",
     "visits": "Látogatások",
+    "last_edited_by": "Utoljára szerkesztette",
+    "contributors": "Közreműködők",
+    "added_by": "Hozzáadta",
     "create_new": "Új létrehozása...",
     "sort": "Rendezés",
     "order_by": "Rendezés alapja",
@@ -144,9 +147,12 @@
     "collection_locations": "Gyűjtemény helyeinek megjelenítése",
     "filter": "Szűrő",
     "category_filter": "Kategóriaszűrő",
+    "filter_by_type": "Szűrés Típus szerint",
     "category": "Kategória",
     "clear": "Törlés",
     "my_collections": "Saját gyűjteményeim",
+    "ownership_filter": "Tulajdonos",
+    "visibility": "Láthatóság",
     "archived_collections": "Archivált gyűjtemények",
     "share": "Megosztás",
     "private": "Privát",
@@ -194,6 +200,13 @@
     "update_visited_regions": "Látogatott régiók frissítése",
     "link_new": "Új összekapcsolása...",
     "add_new": "Új hozzáadása...",
+    "link_transportation": "Közlekedés összekapcsolása",
+    "link_lodging": "Szállás összekapcsolása",
+    "unlinked": "Nincs összekapcsolva",
+    "no_transportations_available": "Nincs elérhető közlekedés",
+    "all_transportations_linked": "Minden közlekedés már össze van kapcsolva gyűjteményekkel.",
+    "no_lodging_available": "Nincs elérhető szállás",
+    "all_lodging_linked": "Minden szállás már össze van kapcsolva gyűjteményekkel.",
     "transportation": "Közlekedés",
     "note": "Jegyzet",
     "checklist": "Ellenőrzőlista",
@@ -813,6 +826,9 @@
     "transportation_delete_error": "Hiba a szállítás törlésekor",
     "type": "Típus",
     "new_transportation": "Új szállítás",
+    "my_transportations": "Szállításaim",
+    "no_transportations_found": "Nem található szállítás",
+    "create_transportation": "Szállítás Létrehozása",
     "flight_number": "Járatszám",
     "from_location": "Kiindulási hely",
     "to_location": "Célállomás",
@@ -841,12 +857,20 @@
     "arrival_timezone": "Érkezési időzóna",
     "departure_code": "Indulási kód",
     "departure_date": "Indulás dátuma",
-    "departure_timezone": "Indulási időzóna"
+    "departure_timezone": "Indulási időzóna",
+    "public_transportation": "Nyilvános közlekedés",
+    "public_transportation_description": "Engedélyezze más felhasználóknak, hogy megtekinthessék ezt a közlekedést",
+    "move_to_collection_confirm": "Ez a közlekedés már egy másik gyűjteményben van. Áthelyezi ebbe a gyűjteménybe?",
+    "linked_success": "Közlekedés sikeresen összekapcsolva",
+    "linked_error": "Nem sikerült összekapcsolni a közlekedést"
   },
   "lodging": {
     "new_lodging": "Új szállás",
     "edit": "Szerkesztés",
     "edit_lodging": "Szállás szerkesztése",
+    "my_lodging": "Szállásaim",
+    "no_lodging_found": "Nem található szállás",
+    "create_lodging": "Szállás Létrehozása",
     "hotel": "Hotel",
     "hostel": "Hostel",
     "resort": "Üdülőhely",
@@ -864,7 +888,12 @@
     "enter_lodging_name": "Add meg a szállás nevét",
     "enter_reservation_number": "Add meg a foglalási számot",
     "invalid_link": "Adjon meg egy érvényes URL-t (pl. https://example.com).",
-    "save_failed": "Nem sikerült a szállás mentése. \nKérjük, próbálja újra."
+    "save_failed": "Nem sikerült a szállás mentése. \nKérjük, próbálja újra.",
+    "public_lodging": "Nyilvános szállás",
+    "public_lodging_description": "Engedélyezze más felhasználóknak, hogy megtekinthessék ezt a szállást",
+    "move_to_collection_confirm": "Ez a szállás már egy másik gyűjteményben van. Áthelyezi ebbe a gyűjteménybe?",
+    "linked_success": "Szállás sikeresen összekapcsolva",
+    "linked_error": "Nem sikerült összekapcsolni a szállást"
   },
   "search": {
     "result": "Találat",
@@ -946,7 +975,9 @@
     "view_all": "Összes megtekintése",
     "welcome_text_1": "Eddig ennyi kalandban voltál:",
     "welcome_text_2": "kaland",
-    "welcome_text_3": "Folytasd a felfedezést és az utazásaid dokumentálását!"
+    "welcome_text_3": "Folytasd a felfedezést és az utazásaid dokumentálását!",
+    "recent_travel_plans": "Legutóbbi utazási terveid",
+    "recent_accommodations": "Legutóbbi szállásaid"
   },
   "immich": {
     "immich": "Immich",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Az utazási kontextus elemei az egész utazásra vonatkoznak – például olyan helyek, amelyek maga az úti cél, általános megjegyzések vagy csomaglisták, amelyek az egész utazás szempontjából fontosak.",
     "unscheduled_items": "Nem ütemezett tételek",
     "unscheduled_items_desc": "Ezek az elemek ehhez az utazáshoz kapcsolódnak, de még nem adták hozzá egy adott naphoz."
+  },
+  "history": {
+    "title": "Előzmények",
+    "created": "Létrehozva",
+    "updated": "Frissítve",
+    "deleted": "Törölve",
+    "by": "által",
+    "no_history": "Nincs előzmény",
+    "view_history": "Előzmények megtekintése",
+    "changes": "Változások",
+    "revert": "Visszaállítás"
+  },
+  "collaborative": {
+    "mode_enabled": "Együttműködési mód",
+    "public_content": "Nyilvános tartalom",
+    "can_edit": "Szerkesztheted"
   }
 }

@@ -100,6 +100,9 @@
     "coordinates": "Koordinatlar",
     "copy_coordinates": "Koordinatları Kopyala",
     "visits": "Ziyaretler",
+    "last_edited_by": "Son düzenleyen",
+    "contributors": "Katkıda bulunanlar",
+    "added_by": "Ekleyen",
     "create_new": "Yeni Oluştur",
     "sort": "Sıralama",
     "order_by": "Sıralama Ölçütü",
@@ -156,9 +159,12 @@
     "collection_locations": "Koleksiyon Konumlarını Dahil Et",
     "filter": "Filtre",
     "category_filter": "Kategori Filtresi",
+    "filter_by_type": "Türe Göre Filtrele",
     "category": "Kategori",
     "clear": "Temizle",
     "my_collections": "Koleksiyonlarım",
+    "ownership_filter": "Sahiplik",
+    "visibility": "Görünürlük",
     "archived_collections": "Arşivlenmiş Koleksiyonlar",
     "share": "Paylaş",
     "private": "Gizli",
@@ -206,6 +212,13 @@
     "update_visited_regions": "Ziyaret Edilen Bölgeleri Güncelle",
     "link_new": "Yeni Bağlantı Ekle...",
     "add_new": "Yeni Ekle...",
+    "link_transportation": "Ulaşım Bağla",
+    "link_lodging": "Konaklama Bağla",
+    "unlinked": "Bağlı Değil",
+    "no_transportations_available": "Kullanılabilir ulaşım yok",
+    "all_transportations_linked": "Tüm ulaşımlar zaten koleksiyonlara bağlı.",
+    "no_lodging_available": "Kullanılabilir konaklama yok",
+    "all_lodging_linked": "Tüm konaklamalar zaten koleksiyonlara bağlı.",
     "from": "Nereden",
     "to": "Nereye",
     "start": "Başlat",
@@ -813,6 +826,9 @@
     "transportation_delete_error": "Ulaşım silinirken hata oluştu",
     "type": "Tür",
     "new_transportation": "Yeni Ulaşım",
+    "my_transportations": "Ulaşımlarım",
+    "no_transportations_found": "Ulaşım bulunamadı",
+    "create_transportation": "Ulaşım Oluştur",
     "flight_number": "Uçuş Numarası",
     "from_location": "Başlangıç Konumu",
     "to_location": "Varış Konumu",
@@ -841,12 +857,20 @@
     "arrival_timezone": "Varış Saat Dilimi",
     "departure_code": "Kalkış Kodu",
     "departure_date": "Ayrılış Tarihi",
-    "departure_timezone": "Kalkış Saat Dilimi"
+    "departure_timezone": "Kalkış Saat Dilimi",
+    "public_transportation": "Herkese Açık Ulaşım",
+    "public_transportation_description": "Diğer kullanıcıların bu ulaşımı görmesine izin ver",
+    "move_to_collection_confirm": "Bu ulaşım zaten başka bir koleksiyonda. Bu koleksiyona taşınsın mı?",
+    "linked_success": "Ulaşım başarıyla bağlandı",
+    "linked_error": "Ulaşım bağlanamadı"
   },
   "lodging": {
     "new_lodging": "Yeni Konaklama",
     "edit": "Düzenle",
     "edit_lodging": "Konaklamayı Düzenle",
+    "my_lodging": "Konaklamalarım",
+    "no_lodging_found": "Konaklama bulunamadı",
+    "create_lodging": "Konaklama Oluştur",
     "hotel": "Otel",
     "hostel": "Hostel",
     "resort": "Tatil Köyü",
@@ -864,7 +888,12 @@
     "enter_lodging_name": "Konaklama adını girin",
     "enter_reservation_number": "Rezervasyon numarası girin",
     "invalid_link": "Lütfen geçerli bir URL girin (ör. https://example.com).",
-    "save_failed": "Konaklama kaydedilemedi. \nLütfen tekrar deneyin."
+    "save_failed": "Konaklama kaydedilemedi. \nLütfen tekrar deneyin.",
+    "public_lodging": "Herkese Açık Konaklama",
+    "public_lodging_description": "Diğer kullanıcıların bu konaklamayı görmesine izin ver",
+    "move_to_collection_confirm": "Bu konaklama zaten başka bir koleksiyonda. Bu koleksiyona taşınsın mı?",
+    "linked_success": "Konaklama başarıyla bağlandı",
+    "linked_error": "Konaklama bağlanamadı"
   },
   "search": {
     "result": "Sonuç",
@@ -946,7 +975,9 @@
     "view_all": "Tümünü Görüntüle",
     "welcome_text_1": "Şu kadar süredir",
     "welcome_text_2": "şu ana kadar maceralar",
-    "welcome_text_3": "Seyahatlerinizi keşfetmeye ve belgelemeye devam edin!"
+    "welcome_text_3": "Seyahatlerinizi keşfetmeye ve belgelemeye devam edin!",
+    "recent_travel_plans": "Son seyahat planlarınız",
+    "recent_accommodations": "Son konaklamalarınız"
   },
   "immich": {
     "immich": "Immich",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Seyahat bağlamı öğeleri seyahatin tamamı için geçerlidir; örneğin varış noktasının kendisi olan konumlar, genel notlar veya seyahatin tamamı için önemli olan paket listeleri.",
     "unscheduled_items": "Planlanmamış Öğeler",
     "unscheduled_items_desc": "Bu öğeler bu geziye bağlı ancak henüz belirli bir güne eklenmedi."
+  },
+  "history": {
+    "title": "Geçmiş",
+    "created": "Oluşturuldu",
+    "updated": "Güncellendi",
+    "deleted": "Silindi",
+    "by": "tarafından",
+    "no_history": "Geçmiş yok",
+    "view_history": "Geçmişi görüntüle",
+    "changes": "Değişiklikler",
+    "revert": "Geri al"
+  },
+  "collaborative": {
+    "mode_enabled": "İşbirliği modu",
+    "public_content": "Herkese açık içerik",
+    "can_edit": "Düzenleyebilirsiniz"
   }
 }

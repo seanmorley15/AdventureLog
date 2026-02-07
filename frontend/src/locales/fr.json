@@ -28,6 +28,7 @@
     "ascending": "Ascendant",
     "cancel": "Annuler",
     "category_filter": "Filtres de catégorie",
+    "filter_by_type": "Filtrer par Type",
     "clear": "Réinitialiser",
     "collection": "Collection",
     "create_new": "Créer une nouvelle aventure...",
@@ -45,6 +46,11 @@
     "latitude": "Latitude",
     "longitude": "Longitude",
     "my_collections": "Mes collections",
+    "ownership_filter": "Propriété",
+    "visibility": "Visibilité",
+    "all_locations": "Tous les lieux",
+    "my_locations": "Mes lieux",
+    "public_locations": "Lieux publics",
     "name": "Nom",
     "no_image_url": "Aucune image trouvée à cette URL.",
     "order_by": "Trier par",
@@ -63,6 +69,9 @@
     "visit": "Visite",
     "visited": "Visitée",
     "visits": "Visites",
+    "added_by": "Ajouté par",
+    "last_edited_by": "Modifié par",
+    "contributors": "Contributeurs",
     "wiki_image_error": "Erreur lors de la récupération de l'image depuis Wikipédia",
     "add": "Ajouter",
     "basic_information": "Informations de base",
@@ -90,6 +99,13 @@
     "regions_updated": "régions mises à jour",
     "update_visited_regions": "Mettre à jour les régions visitées",
     "add_new": "Ajouter un nouveau...",
+    "link_transportation": "Lier transport",
+    "link_lodging": "Lier hébergement",
+    "unlinked": "Non lié",
+    "no_transportations_available": "Aucun transport disponible",
+    "all_transportations_linked": "Tous les transports sont déjà liés à des collections.",
+    "no_lodging_available": "Aucun hébergement disponible",
+    "all_lodging_linked": "Tous les hébergements sont déjà liés à des collections.",
     "checklists": "Listes de contrôle",
     "days": "jours",
     "link_new": "Ajouter un lien vers...",
@@ -824,6 +840,9 @@
       "walking": "Marche"
     },
     "new_transportation": "Nouveau déplacement",
+    "my_transportations": "Mes Transports",
+    "no_transportations_found": "Aucun transport trouvé",
+    "create_transportation": "Créer un Transport",
     "to_location": "Vers le lieu",
     "type": "Type",
     "transportation_delete_error": "Erreur lors de la suppression du déplacement",
@@ -841,7 +860,12 @@
     "arrival_timezone": "Fuseau horaire d'arrivée",
     "departure_code": "Code de départ",
     "departure_date": "Date de départ",
-    "departure_timezone": "Fuseau horaire de départ"
+    "departure_timezone": "Fuseau horaire de départ",
+    "public_transportation": "Transport public",
+    "public_transportation_description": "Autoriser les autres utilisateurs à voir ce transport",
+    "move_to_collection_confirm": "Ce transport est déjà dans une autre collection. Le déplacer vers cette collection ?",
+    "linked_success": "Transport lié avec succès",
+    "linked_error": "Échec de la liaison du transport"
   },
   "search": {
     "cities": "Villes",
@@ -909,7 +933,9 @@
     "select_category": "Sélectionnez une catégorie",
     "add_new_category": "Ajouter une nouvelle catégorie",
     "name_required": "Le nom de catégorie est requis",
-    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page."
+    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page.",
+    "make_public": "Publique",
+    "public_description": "Les catégories publiques sont visibles et utilisables par tous les utilisateurs"
   },
   "dashboard": {
     "countries_visited": "Pays visités",
@@ -923,7 +949,9 @@
     "view_all": "Afficher tous",
     "welcome_text_1": "Tu as été sur",
     "welcome_text_2": "Aventures jusqu'à présent",
-    "welcome_text_3": "Continuez à explorer et à documenter vos voyages!"
+    "welcome_text_3": "Continuez à explorer et à documenter vos voyages!",
+    "recent_travel_plans": "Vos récents plans de voyage",
+    "recent_accommodations": "Vos hébergements récents"
   },
   "immich": {
     "api_key": "Clé d'API Immich",
@@ -995,6 +1023,9 @@
     "campground": "Camping",
     "edit": "Modifier",
     "edit_lodging": "Modifier l'hébergement",
+    "my_lodging": "Mes Hébergements",
+    "no_lodging_found": "Aucun hébergement trouvé",
+    "create_lodging": "Créer un Hébergement",
     "hostel": "Auberge",
     "hotel": "Hôtel",
     "house": "Maison",
@@ -1009,7 +1040,12 @@
     "enter_reservation_number": "Entrez le numéro de réservation",
     "update_lodging_details": "Mettre à jour les détails de l'hébergement",
     "invalid_link": "Veuillez saisir une URL valide (par exemple https://example.com).",
-    "save_failed": "Échec de l'enregistrement de l'hébergement. \nVeuillez réessayer."
+    "save_failed": "Échec de l'enregistrement de l'hébergement. \nVeuillez réessayer.",
+    "public_lodging": "Hébergement public",
+    "public_lodging_description": "Autoriser les autres utilisateurs à voir cet hébergement",
+    "move_to_collection_confirm": "Cet hébergement est déjà dans une autre collection. Le déplacer vers cette collection ?",
+    "linked_success": "Hébergement lié avec succès",
+    "linked_error": "Échec de la liaison de l'hébergement"
   },
   "google_maps": {
     "google_maps_integration_desc": "Connectez votre compte Google Maps pour obtenir des résultats de recherche et recommandations de recherche de haute qualité.",
@@ -1065,6 +1101,9 @@
   },
   "collections": {
     "all_items": "Tous les articles",
+    "all_collections": "Toutes les collections",
+    "my_collections_tab": "Mes collections",
+    "public_collections": "Collections publiques",
     "currencies": "Devises",
     "currency": "Devise",
     "event_timezone": "Fuseau horaire de l'événement",
@@ -1139,5 +1178,21 @@
     "unscheduled_items": "Éléments non planifiés",
     "unscheduled_items_desc": "Ces éléments sont liés à ce voyage mais n'ont pas encore été ajoutés à un jour spécifique.",
     "link_existing_item": "Lier un élément existant"
+  },
+  "history": {
+    "title": "Historique",
+    "created": "Créé",
+    "updated": "Modifié",
+    "deleted": "Supprimé",
+    "by": "par",
+    "no_history": "Aucun historique",
+    "view_history": "Voir l'historique",
+    "changes": "Modifications",
+    "revert": "Annuler"
+  },
+  "collaborative": {
+    "mode_enabled": "Mode collaboratif",
+    "public_content": "Contenu public",
+    "can_edit": "Vous pouvez modifier"
   }
 }

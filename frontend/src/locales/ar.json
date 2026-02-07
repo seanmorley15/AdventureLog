@@ -20,6 +20,13 @@
     "add": "يضيف",
     "add_a_tag": "إضافة علامة",
     "add_new": "أضف جديد ...",
+    "link_transportation": "ربط النقل",
+    "link_lodging": "ربط الإقامة",
+    "unlinked": "غير مرتبط",
+    "no_transportations_available": "لا يوجد وسائل نقل متاحة",
+    "all_transportations_linked": "جميع وسائل النقل مرتبطة بالفعل بالمجموعات.",
+    "no_lodging_available": "لا يوجد إقامة متاحة",
+    "all_lodging_linked": "جميع الإقامات مرتبطة بالفعل بالمجموعات.",
     "add_to_collection": "إضافة إلى المجموعة",
     "adventure_not_found": "لا توجد مغامرات لعرضها. \nأضف بعضًا باستخدام الزر Plus في أسفل اليمين أو حاول تغيير المرشحات!",
     "all": "الجميع",
@@ -40,6 +47,7 @@
     "cancel": "يلغي",
     "category": "فئة",
     "category_filter": "مرشح فئة",
+    "filter_by_type": "تصفية حسب النوع",
     "check_in": "تحقق في",
     "check_out": "الدفع",
     "checklist": "قائمة المراجعة",
@@ -124,6 +132,8 @@
     "mark_visited": "مارك زار",
     "md_instructions": "اكتب تخفيضك هنا ...",
     "my_collections": "مجموعاتي",
+    "ownership_filter": "المالك",
+    "visibility": "الرؤية",
     "name": "اسم",
     "name_location": "الاسم ، الموقع",
     "new_location": "موقع جديد",
@@ -184,6 +194,9 @@
     "visit_calendar": "زيارة التقويم",
     "visited": "زار",
     "visits": "زيارات",
+    "last_edited_by": "آخر تعديل بواسطة",
+    "contributors": "المساهمون",
+    "added_by": "أضافه",
     "wiki_image_error": "خطأ جلب الصورة من ويكيبيديا",
     "wikipedia": "ويكيبيديا",
     "copy_link": "نسخ الوصلة",
@@ -563,7 +576,9 @@
     "welcome_back": "مرحبًا بعودتك",
     "welcome_text_1": "لقد كنت على",
     "welcome_text_2": "مغامرات حتى الآن",
-    "welcome_text_3": "استمر في استكشاف وتوثيق رحلاتك!"
+    "welcome_text_3": "استمر في استكشاف وتوثيق رحلاتك!",
+    "recent_travel_plans": "خطط سفرك الأخيرة",
+    "recent_accommodations": "أماكن إقامتك الأخيرة"
   },
   "google_maps": {
     "google_maps_integration_desc": "قم بتوصيل حساب خرائط Google الخاص بك للحصول على نتائج وتوصيات بحث عالية الجودة.",
@@ -649,6 +664,9 @@
     "campground": "المخيم",
     "edit": "يحرر",
     "edit_lodging": "تحرير الإقامة",
+    "my_lodging": "إقامتي",
+    "no_lodging_found": "لم يتم العثور على إقامة",
+    "create_lodging": "إنشاء إقامة",
     "hostel": "بيت الشباب",
     "hotel": "الفندق",
     "house": "منزل",
@@ -663,7 +681,12 @@
     "enter_reservation_number": "أدخل رقم الحجز",
     "update_lodging_details": "تحديث تفاصيل الإقامة",
     "invalid_link": "الرجاء إدخال عنوان URL صالح (مثل https://example.com).",
-    "save_failed": "فشل حفظ السكن. \nيرجى المحاولة مرة أخرى."
+    "save_failed": "فشل حفظ السكن. \nيرجى المحاولة مرة أخرى.",
+    "public_lodging": "الإقامة العامة",
+    "public_lodging_description": "السماح للمستخدمين الآخرين بمشاهدة هذه الإقامة",
+    "move_to_collection_confirm": "هذه الإقامة موجودة بالفعل في مجموعة أخرى. هل تريد نقلها إلى هذه المجموعة؟",
+    "linked_success": "تم ربط الإقامة بنجاح",
+    "linked_error": "فشل ربط الإقامة"
   },
   "map": {
     "add_location": "أضف موقعًا جديدًا",
@@ -971,6 +994,9 @@
       "walking": "المشي"
     },
     "new_transportation": "نقل جديد",
+    "my_transportations": "وسائل النقل الخاصة بي",
+    "no_transportations_found": "لم يتم العثور على وسائل نقل",
+    "create_transportation": "إنشاء وسيلة نقل",
     "to_location": "إلى الموقع",
     "transportation_delete_error": "خطأ حذف النقل",
     "transportation_deleted": "تم حذف النقل بنجاح!",
@@ -988,7 +1014,12 @@
     "arrival_timezone": "المنطقة الزمنية للوصول",
     "departure_code": "رمز المغادرة",
     "departure_date": "تاريخ المغادرة",
-    "departure_timezone": "منطقة المغادرة الزمنية"
+    "departure_timezone": "منطقة المغادرة الزمنية",
+    "public_transportation": "النقل العام",
+    "public_transportation_description": "السماح للمستخدمين الآخرين بمشاهدة هذا النقل",
+    "move_to_collection_confirm": "هذا النقل موجود بالفعل في مجموعة أخرى. هل تريد نقله إلى هذه المجموعة؟",
+    "linked_success": "تم ربط النقل بنجاح",
+    "linked_error": "فشل ربط النقل"
   },
   "users": {
     "no_users_found": "لم يتم العثور على مستخدمين مع ملفات تعريف عامة."
@@ -1139,5 +1170,21 @@
     "trip_context_info": "تنطبق عناصر سياق الرحلة على الرحلة بأكملها — على سبيل المثال المواقع التي تمثل الوجهة نفسها، أو الملاحظات العامة، أو قوائم التعبئة المهمة للرحلة بأكملها.",
     "unscheduled_items": "العناصر غير المجدولة",
     "unscheduled_items_desc": "ترتبط هذه العناصر بهذه الرحلة ولكن لم تتم إضافتها إلى يوم محدد بعد."
+  },
+  "history": {
+    "title": "السجل",
+    "created": "تم الإنشاء",
+    "updated": "تم التحديث",
+    "deleted": "تم الحذف",
+    "by": "بواسطة",
+    "no_history": "لا يوجد سجل",
+    "view_history": "عرض السجل",
+    "changes": "التغييرات",
+    "revert": "تراجع"
+  },
+  "collaborative": {
+    "mode_enabled": "الوضع التعاوني",
+    "public_content": "محتوى عام",
+    "can_edit": "يمكنك التعديل"
   }
 }

@@ -84,6 +84,9 @@
     "latitude": "纬度",
     "visit": "访问",
     "visits": "访问次数",
+    "last_edited_by": "最后编辑者",
+    "contributors": "贡献者",
+    "added_by": "添加者",
     "create_new": "创建新的...",
     "sort": "排序",
     "order_by": "排序依据",
@@ -118,9 +121,12 @@
     "sources": "来源",
     "filter": "过滤",
     "category_filter": "类别过滤器",
+    "filter_by_type": "按类型筛选",
     "category": "类别",
     "clear": "清除",
     "my_collections": "我的合集",
+    "ownership_filter": "所有者",
+    "visibility": "可见性",
     "archived_collections": "已归档合集",
     "share": "分享",
     "private": "私密",
@@ -156,6 +162,13 @@
     "update_visited_regions": "更新已访问地区",
     "link_new": "链接新...",
     "add_new": "添加新...",
+    "link_transportation": "链接交通",
+    "link_lodging": "链接住宿",
+    "unlinked": "未链接",
+    "no_transportations_available": "没有可用的交通",
+    "all_transportations_linked": "所有交通已链接到收藏。",
+    "no_lodging_available": "没有可用的住宿",
+    "all_lodging_linked": "所有住宿已链接到收藏。",
     "transportation": "交通",
     "note": "笔记",
     "checklist": "检查清单",
@@ -824,6 +837,9 @@
       "walking": "步行"
     },
     "new_transportation": "新交通信息",
+    "my_transportations": "我的交通",
+    "no_transportations_found": "未找到交通信息",
+    "create_transportation": "创建交通",
     "to_location": "目的地",
     "transportation_delete_error": "删除交通信息时出错",
     "transportation_deleted": "交通信息删除成功！",
@@ -841,7 +857,12 @@
     "arrival_date": "抵达日期",
     "arrival_timezone": "到达时区",
     "departure_date": "出发日期",
-    "departure_timezone": "出发时区"
+    "departure_timezone": "出发时区",
+    "public_transportation": "公开交通",
+    "public_transportation_description": "允许其他用户查看此交通",
+    "move_to_collection_confirm": "此交通已在另一个收藏夹中。是否移动到此收藏夹？",
+    "linked_success": "交通链接成功",
+    "linked_error": "链接交通失败"
   },
   "search": {
     "cities": "城市",
@@ -923,7 +944,9 @@
     "view_all": "查看全部",
     "welcome_text_1": "你去过",
     "welcome_text_2": "到目前为止的冒险",
-    "welcome_text_3": "继续探索和记录您的旅行！"
+    "welcome_text_3": "继续探索和记录您的旅行！",
+    "recent_travel_plans": "您最近的旅行计划",
+    "recent_accommodations": "您最近的住宿"
   },
   "immich": {
     "api_key": "Immich API 密钥",
@@ -992,6 +1015,9 @@
     "campground": "露营地",
     "edit": "编辑",
     "edit_lodging": "编辑住宿",
+    "my_lodging": "我的住宿",
+    "no_lodging_found": "未找到住宿",
+    "create_lodging": "创建住宿",
     "hostel": "旅馆",
     "hotel": "酒店",
     "house": "房子",
@@ -1009,7 +1035,12 @@
     "enter_reservation_number": "输入预订号",
     "update_lodging_details": "更新住宿详细信息",
     "invalid_link": "请输入有效的 URL（例如 https://example.com）。",
-    "save_failed": "未能保存住宿。\n请再试一次。"
+    "save_failed": "未能保存住宿。\n请再试一次。",
+    "public_lodging": "公开住宿",
+    "public_lodging_description": "允许其他用户查看此住宿",
+    "move_to_collection_confirm": "此住宿已在另一个收藏夹中。是否移动到此收藏夹？",
+    "linked_success": "住宿链接成功",
+    "linked_error": "链接住宿失败"
   },
   "google_maps": {
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的地点搜索结果和建议。",
@@ -1139,5 +1170,21 @@
     "no_matches": "没有匹配项",
     "search": "搜索货币",
     "select_currency": "选择货币"
+  },
+  "history": {
+    "title": "历史记录",
+    "created": "已创建",
+    "updated": "已更新",
+    "deleted": "已删除",
+    "by": "由",
+    "no_history": "暂无历史记录",
+    "view_history": "查看历史",
+    "changes": "更改",
+    "revert": "撤销"
+  },
+  "collaborative": {
+    "mode_enabled": "协作模式",
+    "public_content": "公开内容",
+    "can_edit": "您可以编辑"
   }
 }

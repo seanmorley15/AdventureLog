@@ -20,6 +20,13 @@
     "add": "Adicionar",
     "add_a_tag": "Adicione um Marcador",
     "add_new": "Adicionar Novo ...",
+    "link_transportation": "Vincular transporte",
+    "link_lodging": "Vincular hospedagem",
+    "unlinked": "Não vinculado",
+    "no_transportations_available": "Nenhum transporte disponível",
+    "all_transportations_linked": "Todos os transportes já estão vinculados a coleções.",
+    "no_lodging_available": "Nenhuma hospedagem disponível",
+    "all_lodging_linked": "Todas as hospedagens já estão vinculadas a coleções.",
     "add_to_collection": "Adicione à Coleção",
     "adventure_not_found": "Nenhuma aventura para exibir. Toque no botão + no canto inferior direito para adicionar uma nova ou tente ajustar os filtros!",
     "all": "Todos",
@@ -41,6 +48,7 @@
     "cancel": "Cancelar",
     "category": "Categoria",
     "category_filter": "Filtro de Categoria",
+    "filter_by_type": "Filtrar por Tipo",
     "check_in": "Check-in",
     "check_out": "Check Out",
     "checklist": "Lista de Verificação",
@@ -135,6 +143,8 @@
     "mark_visited": "Marcar como Visitado",
     "md_instructions": "Escreva suas notas aqui...",
     "my_collections": "Minhas Coleções",
+    "ownership_filter": "Proprietário",
+    "visibility": "Visibilidade",
     "name": "Nome",
     "name_location": "nome, local",
     "new_location": "Nova Localização",
@@ -201,6 +211,9 @@
     "visit_calendar": "Calendário de visitas",
     "visited": "Visitado",
     "visits": "Visitas",
+    "last_edited_by": "Última edição por",
+    "contributors": "Colaboradores",
+    "added_by": "Adicionado por",
     "wiki_image_error": "Erro ao baixar a imagem da Wikipedia",
     "wikipedia": "Wikipedia",
     "wikipedia_error": "Falha ao gerar descrição da Wikipédia",
@@ -563,7 +576,9 @@
     "welcome_back": "Bem-vindo de volta",
     "welcome_text_1": "Você esteve em",
     "welcome_text_2": "aventuras até agora",
-    "welcome_text_3": "Continue explorando e registrando suas viagens!"
+    "welcome_text_3": "Continue explorando e registrando suas viagens!",
+    "recent_travel_plans": "Seus planos de viagem recentes",
+    "recent_accommodations": "Suas acomodações recentes"
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte sua conta do Google Maps para obter resultados de pesquisa de localização e recomendações de melhor qualidade.",
@@ -649,6 +664,9 @@
     "campground": "Área de acampamento",
     "edit": "Editar",
     "edit_lodging": "Editar Hospedagem",
+    "my_lodging": "Minha Hospedagem",
+    "no_lodging_found": "Nenhuma hospedagem encontrada",
+    "create_lodging": "Criar Hospedagem",
     "hostel": "Hostel",
     "hotel": "Hotel",
     "house": "Casa",
@@ -663,7 +681,12 @@
     "enter_reservation_number": "Digite o número de Reserva",
     "update_lodging_details": "Atualizar detalhes da Hospedagem",
     "invalid_link": "Insira um URL válido (por exemplo, https://example.com).",
-    "save_failed": "Falha ao salvar hospedagem. \nPor favor, tente novamente."
+    "save_failed": "Falha ao salvar hospedagem. \nPor favor, tente novamente.",
+    "public_lodging": "Hospedagem pública",
+    "public_lodging_description": "Permitir que outros usuários vejam esta hospedagem",
+    "move_to_collection_confirm": "Esta hospedagem já está em outra coleção. Mover para esta coleção?",
+    "linked_success": "Hospedagem vinculada com sucesso",
+    "linked_error": "Falha ao vincular hospedagem"
   },
   "map": {
     "add_location": "Adicionar Nova Localização",
@@ -971,6 +994,9 @@
       "walking": "Andando"
     },
     "new_transportation": "Novo Transporte",
+    "my_transportations": "Meus Transportes",
+    "no_transportations_found": "Nenhum transporte encontrado",
+    "create_transportation": "Criar Transporte",
     "to_location": "Para",
     "transportation_delete_error": "Erro ao excluir o transporte",
     "transportation_deleted": "Transporte excluído com sucesso!",
@@ -988,7 +1014,12 @@
     "arrival_timezone": "Fuso horário de chegada",
     "departure_code": "Código de partida",
     "departure_date": "Data de partida",
-    "departure_timezone": "Fuso horário de partida"
+    "departure_timezone": "Fuso horário de partida",
+    "public_transportation": "Transporte público",
+    "public_transportation_description": "Permitir que outros usuários vejam este transporte",
+    "move_to_collection_confirm": "Este transporte já está em outra coleção. Mover para esta coleção?",
+    "linked_success": "Transporte vinculado com sucesso",
+    "linked_error": "Falha ao vincular transporte"
   },
   "users": {
     "no_users_found": "Não foram encontrados usuários com perfis públicos."
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Os itens de contexto da viagem aplicam-se a toda a viagem — por exemplo, locais que são o próprio destino, notas gerais ou listas de embalagem que são importantes para toda a viagem.",
     "unscheduled_items": "Itens não programados",
     "unscheduled_items_desc": "Esses itens estão vinculados a esta viagem, mas ainda não foram adicionados a um dia específico."
+  },
+  "history": {
+    "title": "Histórico",
+    "created": "Criado",
+    "updated": "Atualizado",
+    "deleted": "Excluído",
+    "by": "por",
+    "no_history": "Nenhum histórico disponível",
+    "view_history": "Ver histórico",
+    "changes": "Alterações",
+    "revert": "Reverter"
+  },
+  "collaborative": {
+    "mode_enabled": "Modo colaborativo",
+    "public_content": "Conteúdo público",
+    "can_edit": "Você pode editar isso"
   }
 }

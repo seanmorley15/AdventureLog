@@ -110,9 +110,29 @@ class ContentImageImageAdmin(admin.ModelAdmin):
 
 
 class VisitAdmin(admin.ModelAdmin):
-    list_display = ('location', 'start_date', 'end_date', 'notes')
+    list_display = ('get_parent', 'get_parent_type', 'start_date', 'end_date', 'user', 'notes')
     list_filter = ('start_date', 'end_date')
-    search_fields = ('notes',)
+    search_fields = ('notes', 'location__name', 'transportation__name', 'lodging__name')
+
+    def get_parent(self, obj):
+        if obj.location:
+            return obj.location.name
+        elif obj.transportation:
+            return obj.transportation.name
+        elif obj.lodging:
+            return obj.lodging.name
+        return 'Unknown'
+    get_parent.short_description = 'Parent'
+
+    def get_parent_type(self, obj):
+        if obj.location:
+            return 'Location'
+        elif obj.transportation:
+            return 'Transportation'
+        elif obj.lodging:
+            return 'Lodging'
+        return 'Unknown'
+    get_parent_type.short_description = 'Type'
 
 
     def image_display(self, obj):

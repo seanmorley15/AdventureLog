@@ -90,6 +90,9 @@
     "coordinates": "Координаты",
     "copy_coordinates": "Копировать координаты",
     "visits": "Посещения",
+    "last_edited_by": "Последнее изменение",
+    "contributors": "Участники",
+    "added_by": "Добавлено",
     "create_new": "Создать новое...",
     "sort": "Сортировка",
     "order_by": "Сортировать по",
@@ -130,9 +133,12 @@
     "sources": "Источники",
     "filter": "Фильтр",
     "category_filter": "Фильтр категории",
+    "filter_by_type": "Фильтр по Типу",
     "category": "Категория",
     "clear": "Очистить",
     "my_collections": "Мои коллекции",
+    "ownership_filter": "Владелец",
+    "visibility": "Видимость",
     "archived_collections": "Архивные коллекции",
     "share": "Поделиться",
     "private": "Приватное",
@@ -168,6 +174,13 @@
     "update_visited_regions": "Обновить посещённые регионы",
     "link_new": "Связать новое...",
     "add_new": "Добавить новое...",
+    "link_transportation": "Связать транспорт",
+    "link_lodging": "Связать жильё",
+    "unlinked": "Не связано",
+    "no_transportations_available": "Нет доступного транспорта",
+    "all_transportations_linked": "Весь транспорт уже связан с коллекциями.",
+    "no_lodging_available": "Нет доступного жилья",
+    "all_lodging_linked": "Всё жильё уже связано с коллекциями.",
     "transportation": "Транспорт",
     "note": "Заметка",
     "checklist": "Контрольный список",
@@ -813,6 +826,9 @@
     "transportation_delete_error": "Ошибка удаления транспорта",
     "type": "Тип",
     "new_transportation": "Новый транспорт",
+    "my_transportations": "Мой Транспорт",
+    "no_transportations_found": "Транспорт не найден",
+    "create_transportation": "Создать Транспорт",
     "flight_number": "Номер рейса",
     "from_location": "Откуда",
     "to_location": "Куда",
@@ -841,12 +857,20 @@
     "arrival_timezone": "Часовой пояс прибытия",
     "departure_code": "Код отправления",
     "departure_date": "Дата отъезда",
-    "departure_timezone": "Часовой пояс отправления"
+    "departure_timezone": "Часовой пояс отправления",
+    "public_transportation": "Публичный транспорт",
+    "public_transportation_description": "Разрешить другим пользователям видеть этот транспорт",
+    "move_to_collection_confirm": "Этот транспорт уже находится в другой коллекции. Переместить в эту коллекцию?",
+    "linked_success": "Транспорт успешно связан",
+    "linked_error": "Не удалось связать транспорт"
   },
   "lodging": {
     "new_lodging": "Новое жилье",
     "edit": "Редактировать",
     "edit_lodging": "Редактировать жилье",
+    "my_lodging": "Мое Жилье",
+    "no_lodging_found": "Жилье не найдено",
+    "create_lodging": "Создать Жилье",
     "hotel": "Отель",
     "hostel": "Хостел",
     "resort": "Курорт",
@@ -864,7 +888,12 @@
     "enter_reservation_number": "Введите номер бронирования",
     "update_lodging_details": "Обновить детали жилья",
     "invalid_link": "Введите действительный URL-адрес (например, https://example.com).",
-    "save_failed": "Не удалось сохранить жилье. \nПожалуйста, попробуйте еще раз."
+    "save_failed": "Не удалось сохранить жилье. \nПожалуйста, попробуйте еще раз.",
+    "public_lodging": "Публичное жильё",
+    "public_lodging_description": "Разрешить другим пользователям видеть это жильё",
+    "move_to_collection_confirm": "Это жильё уже находится в другой коллекции. Переместить в эту коллекцию?",
+    "linked_success": "Жильё успешно связано",
+    "linked_error": "Не удалось связать жильё"
   },
   "search": {
     "cities": "Города",
@@ -946,7 +975,9 @@
     "view_all": "Просмотреть все",
     "welcome_text_1": "Вы были на",
     "welcome_text_2": "Приключения пока",
-    "welcome_text_3": "Продолжайте исследовать и документировать ваши путешествия!"
+    "welcome_text_3": "Продолжайте исследовать и документировать ваши путешествия!",
+    "recent_travel_plans": "Ваши последние планы поездок",
+    "recent_accommodations": "Ваше последнее жилье"
   },
   "immich": {
     "immich": "Immich",
@@ -1139,5 +1170,21 @@
     "unscheduled_items": "Незапланированные предметы",
     "unscheduled_items_desc": "Эти элементы связаны с этой поездкой, но еще не добавлены к определенному дню.",
     "link_existing_item": "Связать существующий элемент"
+  },
+  "history": {
+    "title": "История",
+    "created": "Создано",
+    "updated": "Обновлено",
+    "deleted": "Удалено",
+    "by": "от",
+    "no_history": "История недоступна",
+    "view_history": "Посмотреть историю",
+    "changes": "Изменения",
+    "revert": "Отменить"
+  },
+  "collaborative": {
+    "mode_enabled": "Совместный режим",
+    "public_content": "Публичный контент",
+    "can_edit": "Вы можете редактировать"
   }
 }

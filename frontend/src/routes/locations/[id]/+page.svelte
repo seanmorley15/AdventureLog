@@ -24,6 +24,7 @@
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
+	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 
 	let geojson: any;
@@ -58,6 +59,7 @@
 	let adventure_images: { image: string; adventure: AdditionalLocation | null }[] = [];
 	let modalInitialIndex: number = 0;
 	let isImageModalOpen: boolean = false;
+	let history: any[] = [];
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -79,6 +81,18 @@
 					const bTs = DateTime.fromISO(b.start_date || b.created_at || '').toMillis() || 0;
 					return aTs - bTs; // oldest first (chronological)
 				});
+			}
+
+			// Fetch history in collaborative mode
+			if (data.collaborativeMode) {
+				try {
+					const res = await fetch(`/api/locations/${adventure.id}/history/`);
+					if (res.ok) {
+						history = await res.json();
+					}
+				} catch (e) {
+					console.error('Failed to fetch history:', e);
+				}
 			}
 		} else {
 			notFound = true;
@@ -210,7 +224,7 @@
 {/if}
 
 {#if adventure}
-	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
+	{#if (data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid) || (data.collaborativeMode && adventure.is_public)}
 		<div class="fixed bottom-6 right-6 z-50">
 			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
 				<button
@@ -454,6 +468,49 @@
 											</div>
 										{/if}
 									</div>
+									<!-- Last Modified By -->
+									{#if adventure.last_modified_by}
+										<div class="text-xs opacity-60 mt-2">
+											{$t('adventures.last_edited_by')}
+											<a href="/profile/{adventure.last_modified_by.username}" class="link link-hover link-primary font-semibold">{adventure.last_modified_by.username}</a>
+											• {new Date(adventure.last_modified_by.timestamp).toLocaleDateString()}
+										</div>
+									{/if}
+								</div>
+							</div>
+						</div>
+					</div>
+				{/if}
+
+				<!-- Contributors (Collaborative Mode) -->
+				{#if adventure.contributors && adventure.contributors.length > 1}
+					<div class="card bg-base-200 shadow-xl">
+						<div class="card-body py-4">
+							<div class="flex items-center justify-between">
+								<h3 class="text-sm font-semibold opacity-70">{$t('adventures.contributors')}</h3>
+								<div class="avatar-group -space-x-3 rtl:space-x-reverse">
+									{#each adventure.contributors.slice(0, 8) as contributor}
+										<a href="/profile/{contributor.username}" class="tooltip" data-tip={contributor.username}>
+											<div class="avatar border-2 border-base-200">
+												{#if contributor.profile_pic}
+													<div class="w-8">
+														<img src={contributor.profile_pic} alt={contributor.username} />
+													</div>
+												{:else}
+													<div class="bg-primary text-primary-content w-8">
+														<span class="text-xs">{contributor.username.charAt(0).toUpperCase()}</span>
+													</div>
+												{/if}
+											</div>
+										</a>
+									{/each}
+									{#if adventure.contributors.length > 8}
+										<div class="avatar placeholder border-2 border-base-200">
+											<div class="bg-neutral text-neutral-content w-8">
+												<span class="text-xs">+{adventure.contributors.length - 8}</span>
+											</div>
+										</div>
+									{/if}
 								</div>
 							</div>
 						</div>
@@ -506,6 +563,11 @@
 										<div class="flex-1 pb-4">
 											<div class="card bg-base-100 shadow">
 												<div class="card-body p-4">
+													{#if visit.user_username}
+														<div class="text-xs opacity-60 mb-2">
+															{$t('adventures.added_by')} <a href="/profile/{visit.user_username}" class="font-semibold link link-hover link-primary">{visit.user_username}</a>
+														</div>
+													{/if}
 													{#if isAllDay(visit.start_date)}
 														<div class="flex items-center gap-2 mb-2">
 															<span class="badge badge-primary">All Day</span>
@@ -942,11 +1004,34 @@
 												<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
 											</div>
 										{/if}
+										{#if image.user_username}
+											<a href="/profile/{image.user_username}" class="absolute bottom-1 left-1">
+												<span class="badge badge-neutral badge-xs opacity-80 hover:badge-primary transition-colors">{image.user_username}</span>
+											</a>
+										{/if}
 									</div>
 								{/each}
 							</div>
 						</div>
 					</div>
+				{/if}
+
+				<!-- History Panel (Collaborative Mode) -->
+				{#if data.collaborativeMode && history.length > 0}
+					<HistoryPanel
+						{history}
+						locationId={adventure.id}
+						canRevert={true}
+						on:reverted={async () => {
+							// Refresh history and location data after revert
+							const historyRes = await fetch(`/api/locations/${adventure.id}/history/`);
+							if (historyRes.ok) {
+								history = await historyRes.json();
+							}
+							// Reload the page to reflect reverted changes
+							window.location.reload();
+						}}
+					/>
 				{/if}
 			</div>
 		</div>

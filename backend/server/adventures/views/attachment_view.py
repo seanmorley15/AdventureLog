@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from django.db.models import Q
+from django.conf import settings
 from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentAttachment
@@ -13,18 +14,20 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [ContentImagePermission]
 
     def get_queryset(self):
-        """Get all images the user has access to"""
+        """Get all attachments the user has access to"""
         if not self.request.user.is_authenticated:
             return ContentAttachment.objects.none()
-        
+
         # Import here to avoid circular imports
         from adventures.models import Location, Transportation, Note, Lodging, Visit
-        
+
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
         # Build a single query with all conditions
-        return ContentAttachment.objects.filter(
-            # User owns the image directly (if user field exists on ContentImage)
+        query = (
+            # User owns the attachment directly
             Q(user=self.request.user) |
-            
+
             # Or user has access to the content object
             (
                 # Locations owned by user
@@ -86,7 +89,29 @@ class AttachmentViewSet(viewsets.ModelViewSet):
                 Q(content_type=ContentType.objects.get_for_model(Visit)) &
                 Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
             )
-        ).distinct()
+        )
+
+        # In collaborative mode, also include attachments from public locations
+        if is_collaborative:
+            query |= (
+                # Public locations
+                Q(content_type=ContentType.objects.get_for_model(Location)) &
+                Q(object_id__in=Location.objects.filter(is_public=True).values_list('id', flat=True))
+            ) | (
+                # Visits from public locations
+                Q(content_type=ContentType.objects.get_for_model(Visit)) &
+                Q(object_id__in=Visit.objects.filter(location__is_public=True).values_list('id', flat=True))
+            )
+
+        # Exclude soft-deleted attachments
+        return ContentAttachment.objects.filter(query, is_deleted=False).distinct()
+
+    def perform_destroy(self, instance):
+        """Set deleted_by before soft-deleting."""
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            instance.deleted_by = self.request.user
+            instance.save(update_fields=['deleted_by'])
+        instance.delete()
 
     def create(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -181,9 +206,13 @@ class AttachmentViewSet(viewsets.ModelViewSet):
 
     def _get_attachment_user(self, content_object):
         """
-        Determine which user should own the attachment based on the content object.
-        This preserves the original logic for shared collections.
+        Determine which user should own the attachment.
+        In collaborative mode, always use the uploader (request.user).
         """
+        # In collaborative mode, attachments are always owned by the uploader
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            return self.request.user
+
         # Handle Location objects
         if isinstance(content_object, Location):
             if content_object.collections.exists():
@@ -192,14 +221,14 @@ class AttachmentViewSet(viewsets.ModelViewSet):
                 return collection.user
             else:
                 return self.request.user
-        
+
         # Handle other content types with collections
         elif hasattr(content_object, 'collection') and content_object.collection:
             return content_object.collection.user
-        
+
         # Handle content objects with a user field
         elif hasattr(content_object, 'user'):
             return content_object.user
-        
+
         # Default to request user
         return self.request.user

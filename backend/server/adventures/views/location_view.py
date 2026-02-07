@@ -5,14 +5,15 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.db.models import Q, Max, Prefetch
 from django.db.models.functions import Lower
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
-from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
+from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit, AuditLog
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
+from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer, AuditLogSerializer
 from adventures.utils import pagination
 
 logger = logging.getLogger(__name__)
@@ -32,9 +33,11 @@ class LocationViewSet(viewsets.ModelViewSet):
         """
         Returns queryset based on user authentication and action type.
         Public actions allow unauthenticated access to public locations.
+        In collaborative mode, authenticated users can access public locations for editing.
         """
         user = self.request.user
         public_allowed_actions = {'retrieve', 'additional_info'}
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:
@@ -43,7 +46,13 @@ class LocationViewSet(viewsets.ModelViewSet):
                 ).order_by('-updated_at')
             return Location.objects.none()
 
-        include_public = self.action in public_allowed_actions
+        # In collaborative mode, include public locations for all actions (except destroy)
+        # The permission class will handle fine-grained access control
+        if is_collaborative and self.action != 'destroy':
+            include_public = True
+        else:
+            include_public = self.action in public_allowed_actions
+
         return Location.objects.retrieve_locations(
             user,
             include_public=include_public,
@@ -158,37 +167,69 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     # ==================== CUSTOM ACTIONS ====================
 
+    @action(detail=False, methods=['get'], url_path='debug-collab')
+    def debug_collab(self, request):
+        """Debug endpoint to check collaborative mode status."""
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+        user_locations = Location.objects.filter(user=request.user).count()
+        public_locations = Location.objects.filter(is_public=True).count()
+        all_locations = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=is_collaborative
+        ).count()
+        return Response({
+            "collaborative_mode": is_collaborative,
+            "user": str(request.user),
+            "user_locations": user_locations,
+            "public_locations": public_locations,
+            "visible_locations": all_locations,
+        })
+
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         """Filter locations by category types and visit status."""
         types = request.query_params.get('types', '').split(',')
-        
-        # Handle 'all' types
-        if 'all' in types:
-            types = Category.objects.filter(
-                user=request.user
-            ).values_list('name', flat=True)
-        else:
-            # Validate provided types
-            if not types or not all(
-                Category.objects.filter(user=request.user, name=type_name).exists() 
-                for type_name in types
-            ):
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
+        logger.info(f"[filtered] User: {request.user}, types: {types}, collaborative: {is_collaborative}")
+
+        # Get base queryset using the same method as map_locations for consistency
+        queryset = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=is_collaborative
+        )
+
+        logger.info(f"[filtered] Base queryset count: {queryset.count()}")
+
+        # Filter by category if specific types requested (not 'all')
+        if 'all' not in types:
+            # Build category filter based on collaborative mode
+            if is_collaborative:
+                user_category_filter = Q(is_global=True) | Q(user=request.user)
+            else:
+                user_category_filter = Q(user=request.user)
+
+            # Validate provided types against user's accessible categories
+            valid_categories = Category.objects.filter(user_category_filter, name__in=types)
+            if not valid_categories.exists():
+                logger.warning(f"[filtered] No valid categories found for types: {types}")
                 return Response(
-                    {"error": "Invalid category or no types provided"}, 
+                    {"error": "Invalid category or no types provided"},
                     status=400
                 )
 
-        # Build base queryset
-        queryset = Location.objects.filter(
-            category__in=Category.objects.filter(name__in=types, user=request.user),
-            user=request.user.id
-        )
+            # Filter by category name to include all locations with matching category names
+            queryset = queryset.filter(category__name__in=types)
+            logger.info(f"[filtered] After category filter count: {queryset.count()}")
 
         # Apply visit status filtering
         queryset = self._apply_visit_filtering(queryset, request)
         queryset = self.apply_sorting(queryset)
-        
+
         return self.paginate_and_respond(queryset, request)
 
     @action(detail=False, methods=['get'])
@@ -200,17 +241,20 @@ class LocationViewSet(viewsets.ModelViewSet):
         include_collections = request.query_params.get('include_collections', 'false') == 'true'
         nested = request.query_params.get('nested', 'false') == 'true'
         allowedNestedFields = request.query_params.get('allowed_nested_fields', '').split(',')
-        
-        # Build queryset with collection filtering
-        base_filter = Q(user=request.user.id)
-        
-        if include_collections:
-            queryset = Location.objects.filter(base_filter)
-        else:
-            queryset = Location.objects.filter(base_filter, collections__isnull=True)
+
+        # Use retrieve_locations with collaborative mode support
+        queryset = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=include_collections,
+            include_public=getattr(settings, 'COLLABORATIVE_MODE', False)
+        )
+
+        if not include_collections:
+            queryset = queryset.filter(collections__isnull=True)
 
         queryset = self.apply_sorting(queryset)
-        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields})
+        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields, 'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
@@ -390,9 +434,145 @@ class LocationViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
 
-        locations = Location.objects.filter(user=request.user)
-        serializer = MapPinSerializer(locations, many=True)
+        locations = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=getattr(settings, 'COLLABORATIVE_MODE', False)
+        )
+        serializer = MapPinSerializer(locations, many=True, context={'request': request})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'], url_path='history')
+    def history(self, request, pk=None):
+        """Get audit history for a location and its related content (collaborative mode only)."""
+        if not getattr(settings, 'COLLABORATIVE_MODE', False):
+            return Response({"error": "History is only available in collaborative mode"}, status=400)
+
+        from adventures.models import ContentImage, ContentAttachment
+
+        location = self.get_object()
+
+        # Get content types for location, images, and attachments
+        location_ct = ContentType.objects.get_for_model(Location)
+        image_ct = ContentType.objects.get_for_model(ContentImage)
+        attachment_ct = ContentType.objects.get_for_model(ContentAttachment)
+
+        # Get IDs of images and attachments belonging to this location (including soft-deleted)
+        image_ids = list(location.images.all().values_list('id', flat=True))
+        attachment_ids = list(location.attachments.all().values_list('id', flat=True))
+
+        # Build query for all related logs
+        logs_query = Q(content_type=location_ct, object_id=location.pk)
+
+        if image_ids:
+            logs_query |= Q(content_type=image_ct, object_id__in=image_ids)
+
+        if attachment_ids:
+            logs_query |= Q(content_type=attachment_ct, object_id__in=attachment_ids)
+
+        logs = AuditLog.objects.filter(logs_query).select_related('user').order_by('-timestamp')[:50]
+        serializer = AuditLogSerializer(logs, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='revert/(?P<log_id>[^/.]+)')
+    def revert(self, request, pk=None, log_id=None):
+        """Revert a specific audit log entry (collaborative mode only)."""
+        if not getattr(settings, 'COLLABORATIVE_MODE', False):
+            return Response({"error": "Revert is only available in collaborative mode"}, status=400)
+
+        from adventures.models import ContentImage, ContentAttachment
+
+        location = self.get_object()
+
+        # Get the audit log entry
+        try:
+            log_entry = AuditLog.objects.get(id=log_id)
+        except AuditLog.DoesNotExist:
+            return Response({"error": "Audit log entry not found"}, status=404)
+
+        # Verify the log entry belongs to this location or its related content
+        location_ct = ContentType.objects.get_for_model(Location)
+        image_ct = ContentType.objects.get_for_model(ContentImage)
+        attachment_ct = ContentType.objects.get_for_model(ContentAttachment)
+
+        is_location_log = log_entry.content_type == location_ct and str(log_entry.object_id) == str(location.pk)
+        is_image_log = log_entry.content_type == image_ct and location.images.filter(id=log_entry.object_id).exists()
+        is_attachment_log = log_entry.content_type == attachment_ct and location.attachments.filter(id=log_entry.object_id).exists()
+
+        if not (is_location_log or is_image_log or is_attachment_log):
+            return Response({"error": "This audit log entry does not belong to this location"}, status=403)
+
+        # Check permission: only the user who made the change, the location owner, or an admin can revert
+        can_revert = (
+            log_entry.user == request.user or
+            location.user == request.user or
+            request.user.is_staff
+        )
+        if not can_revert:
+            return Response({"error": "You don't have permission to revert this change"}, status=403)
+
+        model_class = log_entry.content_type.model_class()
+
+        try:
+            if log_entry.action == 'create':
+                # Revert create = delete the object
+                obj = model_class.objects.get(pk=log_entry.object_id)
+                if model_class in [ContentImage, ContentAttachment]:
+                    obj.deleted_by = request.user
+                    obj.save(update_fields=['deleted_by'])
+                obj.delete()
+                return Response({"success": f"Reverted creation of {log_entry.object_repr}"})
+
+            elif log_entry.action == 'update':
+                # Revert update = restore old values
+                obj = model_class.objects.get(pk=log_entry.object_id)
+                changes = log_entry.changes or {}
+
+                for field_name, values in changes.items():
+                    old_value = values.get('old')
+                    if old_value is not None and hasattr(obj, field_name):
+                        field = obj._meta.get_field(field_name)
+                        # Handle different field types
+                        if field.get_internal_type() in ['FloatField', 'DecimalField']:
+                            try:
+                                setattr(obj, field_name, float(old_value) if old_value != 'None' else None)
+                            except (ValueError, TypeError):
+                                setattr(obj, field_name, None)
+                        elif field.get_internal_type() == 'IntegerField':
+                            try:
+                                setattr(obj, field_name, int(old_value) if old_value != 'None' else None)
+                            except (ValueError, TypeError):
+                                setattr(obj, field_name, None)
+                        elif field.get_internal_type() == 'BooleanField':
+                            setattr(obj, field_name, old_value.lower() == 'true')
+                        elif field.get_internal_type() in ['CharField', 'TextField']:
+                            setattr(obj, field_name, old_value if old_value != 'None' else None)
+                        # Skip ForeignKey and other complex fields for now
+
+                obj.save()
+                return Response({"success": f"Reverted update of {log_entry.object_repr}"})
+
+            elif log_entry.action == 'delete':
+                # Revert delete = restore soft-deleted object
+                if model_class == ContentImage:
+                    obj = ContentImage.objects.get(pk=log_entry.object_id)
+                    obj.restore()
+                    return Response({"success": f"Restored deleted image"})
+                elif model_class == ContentAttachment:
+                    obj = ContentAttachment.objects.get(pk=log_entry.object_id)
+                    obj.restore()
+                    return Response({"success": f"Restored deleted attachment"})
+                else:
+                    return Response({"error": "Cannot revert hard delete"}, status=400)
+
+            else:
+                return Response({"error": f"Unknown action: {log_entry.action}"}, status=400)
+
+        except model_class.DoesNotExist:
+            return Response({"error": "Object no longer exists"}, status=404)
+        except Exception as e:
+            return Response({"error": f"Failed to revert: {str(e)}"}, status=500)
 
     # ==================== HELPER METHODS ====================
 

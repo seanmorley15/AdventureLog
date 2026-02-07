@@ -84,6 +84,9 @@
     "latitude": "Breddegrad",
     "visit": "Besøk",
     "visits": "Besøk",
+    "last_edited_by": "Sist redigert av",
+    "contributors": "Bidragsytere",
+    "added_by": "Lagt til av",
     "create_new": "Opprett nytt...",
     "sort": "Sorter",
     "order_by": "Sorter etter",
@@ -119,9 +122,12 @@
     "sources": "Kilder",
     "filter": "Filter",
     "category_filter": "Kategorifilter",
+    "filter_by_type": "Filtrer etter Type",
     "category": "Kategori",
     "clear": "Tøm",
     "my_collections": "Mine samlinger",
+    "ownership_filter": "Eierskap",
+    "visibility": "Synlighet",
     "archived_collections": "Arkiverte samlinger",
     "share": "Del",
     "private": "Privat",
@@ -157,6 +163,13 @@
     "update_visited_regions": "Oppdater besøkte regioner",
     "link_new": "Lenk ny...",
     "add_new": "Legg til ny...",
+    "link_transportation": "Koble transport",
+    "link_lodging": "Koble overnatting",
+    "unlinked": "Ikke koblet",
+    "no_transportations_available": "Ingen transport tilgjengelig",
+    "all_transportations_linked": "All transport er allerede koblet til samlinger.",
+    "no_lodging_available": "Ingen overnatting tilgjengelig",
+    "all_lodging_linked": "All overnatting er allerede koblet til samlinger.",
     "transportation": "Transport",
     "note": "Notat",
     "checklist": "Sjekkliste",
@@ -813,6 +826,9 @@
     "transportation_delete_error": "Feil ved sletting av transport",
     "type": "Type",
     "new_transportation": "Ny transport",
+    "my_transportations": "Mine Transportmidler",
+    "no_transportations_found": "Ingen transportmidler funnet",
+    "create_transportation": "Opprett Transport",
     "flight_number": "Flynummer",
     "from_location": "Fra sted",
     "to_location": "Til sted",
@@ -841,12 +857,20 @@
     "arrival_timezone": "Tidssone for ankomst",
     "departure_code": "Avreisekode",
     "departure_date": "Avreisedato",
-    "departure_timezone": "Tidssone for avgang"
+    "departure_timezone": "Tidssone for avgang",
+    "public_transportation": "Offentlig transport",
+    "public_transportation_description": "Tillat andre brukere å se denne transporten",
+    "move_to_collection_confirm": "Denne transporten er allerede i en annen samling. Flytte til denne samlingen?",
+    "linked_success": "Transport koblet vellykket",
+    "linked_error": "Kunne ikke koble transport"
   },
   "lodging": {
     "new_lodging": "Ny overnatting",
     "edit": "Rediger",
     "edit_lodging": "Rediger overnatting",
+    "my_lodging": "Mitt Overnatting",
+    "no_lodging_found": "Ingen overnatting funnet",
+    "create_lodging": "Opprett Overnatting",
     "hotel": "Hotell",
     "hostel": "Hostell",
     "resort": "Resort",
@@ -864,7 +888,12 @@
     "enter_reservation_number": "Angi reservasjonsnummer",
     "update_lodging_details": "Oppdater innleveringsdetaljer",
     "invalid_link": "Skriv inn en gyldig URL (f.eks. https://example.com).",
-    "save_failed": "Kunne ikke lagre overnatting. \nVennligst prøv igjen."
+    "save_failed": "Kunne ikke lagre overnatting. \nVennligst prøv igjen.",
+    "public_lodging": "Offentlig overnatting",
+    "public_lodging_description": "Tillat andre brukere å se denne overnattingen",
+    "move_to_collection_confirm": "Denne overnattingen er allerede i en annen samling. Flytte til denne samlingen?",
+    "linked_success": "Overnatting koblet vellykket",
+    "linked_error": "Kunne ikke koble overnatting"
   },
   "search": {
     "cities": "Byer",
@@ -946,7 +975,9 @@
     "view_all": "Se alle",
     "welcome_text_1": "Du har vært på",
     "welcome_text_2": "Eventyr så langt",
-    "welcome_text_3": "Fortsett å utforske og dokumentere dine reiser!"
+    "welcome_text_3": "Fortsett å utforske og dokumentere dine reiser!",
+    "recent_travel_plans": "Dine nylige reiseplaner",
+    "recent_accommodations": "Dine nylige overnattingssteder"
   },
   "immich": {
     "immich": "Immich",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Turkontekstelementer gjelder for hele turen – for eksempel steder som er selve destinasjonen, generelle notater eller pakkelister som er viktige for hele turen.",
     "unscheduled_items": "Ikke-planlagte elementer",
     "unscheduled_items_desc": "Disse elementene er knyttet til denne turen, men har ikke blitt lagt til en bestemt dag ennå."
+  },
+  "history": {
+    "title": "Historikk",
+    "created": "Opprettet",
+    "updated": "Oppdatert",
+    "deleted": "Slettet",
+    "by": "av",
+    "no_history": "Ingen historikk tilgjengelig",
+    "view_history": "Vis historikk",
+    "changes": "Endringer",
+    "revert": "Angre"
+  },
+  "collaborative": {
+    "mode_enabled": "Samarbeidsmodus",
+    "public_content": "Offentlig innhold",
+    "can_edit": "Du kan redigere dette"
   }
 }

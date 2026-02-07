@@ -25,6 +25,7 @@
     "ascending": "Oplopend",
     "cancel": "Annuleren",
     "category_filter": "Categoriefilter",
+    "filter_by_type": "Filteren op Type",
     "clear": "Leegmaken",
     "collection": "Collectie",
     "create_new": "Maak nieuw...",
@@ -39,6 +40,8 @@
     "latitude": "Breedtegraad",
     "longitude": "Lengtegraad",
     "my_collections": "Mijn collecties",
+    "ownership_filter": "Eigenaar",
+    "visibility": "Zichtbaarheid",
     "name": "Naam",
     "open_details": "Details openen",
     "order_by": "Sorteer op",
@@ -55,6 +58,9 @@
     "updated": "Gewijzigd",
     "visit": "Bezoek",
     "visits": "Bezoeken",
+    "last_edited_by": "Laatst bewerkt door",
+    "contributors": "Bijdragers",
+    "added_by": "Toegevoegd door",
     "dates": "Datums",
     "duration": "Duur",
     "image_upload_error": "Fout bij het uploaden van de afbeelding",
@@ -90,6 +96,13 @@
     "regions_updated": "regio's bijgewerkt",
     "update_visited_regions": "Werk bezochte regio's bij",
     "add_new": "Nieuw toevoegen...",
+    "link_transportation": "Vervoer koppelen",
+    "link_lodging": "Accommodatie koppelen",
+    "unlinked": "Niet gekoppeld",
+    "no_transportations_available": "Geen vervoer beschikbaar",
+    "all_transportations_linked": "Alle vervoer is al gekoppeld aan collecties.",
+    "no_lodging_available": "Geen accommodatie beschikbaar",
+    "all_lodging_linked": "Alle accommodaties zijn al gekoppeld aan collecties.",
     "checklist": "Checklist",
     "checklists": "Checklists",
     "days": "dagen",
@@ -826,6 +839,9 @@
     "to_location": "Aankomstlocatie",
     "type": "Type",
     "new_transportation": "Nieuw vervoer",
+    "my_transportations": "Mijn Vervoer",
+    "no_transportations_found": "Geen vervoer gevonden",
+    "create_transportation": "Vervoer Aanmaken",
     "transportation_delete_error": "Fout bij verwijderen vervoer",
     "transportation_deleted": "Vervoer succesvol verwijderd!",
     "create_new_transportation": "Nieuw transport",
@@ -841,7 +857,12 @@
     "arrival_timezone": "Aankomst tijdzone",
     "departure_code": "Vertrekcode",
     "departure_date": "Vertrekdatum",
-    "departure_timezone": "Vertrektijdzone"
+    "departure_timezone": "Vertrektijdzone",
+    "public_transportation": "Openbaar vervoer",
+    "public_transportation_description": "Andere gebruikers toestaan dit vervoer te bekijken",
+    "move_to_collection_confirm": "Dit vervoer zit al in een andere collectie. Naar deze collectie verplaatsen?",
+    "linked_success": "Vervoer succesvol gekoppeld",
+    "linked_error": "Koppelen van vervoer mislukt"
   },
   "search": {
     "cities": "Steden",
@@ -923,7 +944,9 @@
     "view_all": "Bekijk alles",
     "welcome_text_1": "Je bent op",
     "welcome_text_2": "Avonturen tot nu toe",
-    "welcome_text_3": "Blijf je reizen verkennen en documenteren!"
+    "welcome_text_3": "Blijf je reizen verkennen en documenteren!",
+    "recent_travel_plans": "Je recente reisplannen",
+    "recent_accommodations": "Je recente accommodaties"
   },
   "immich": {
     "api_key": "Immich API-sleutel",
@@ -995,6 +1018,9 @@
     "campground": "Camping",
     "edit": "Bewerking",
     "edit_lodging": "Bewerk accomodatie",
+    "my_lodging": "Mijn Accommodatie",
+    "no_lodging_found": "Geen accommodatie gevonden",
+    "create_lodging": "Accommodatie Aanmaken",
     "hostel": "Hostel",
     "hotel": "Hotel",
     "house": "Huis",
@@ -1009,7 +1035,12 @@
     "enter_reservation_number": "Voer het reserveringsnummer in",
     "update_lodging_details": "Update Lodging -details",
     "invalid_link": "Voer een geldige URL in (bijvoorbeeld https://example.com).",
-    "save_failed": "Kan accommodatie niet opslaan. \nProbeer het opnieuw."
+    "save_failed": "Kan accommodatie niet opslaan. \nProbeer het opnieuw.",
+    "public_lodging": "Openbare accommodatie",
+    "public_lodging_description": "Andere gebruikers toestaan deze accommodatie te bekijken",
+    "move_to_collection_confirm": "Deze accommodatie zit al in een andere collectie. Naar deze collectie verplaatsen?",
+    "linked_success": "Accommodatie succesvol gekoppeld",
+    "linked_error": "Koppelen van accommodatie mislukt"
   },
   "google_maps": {
     "google_maps_integration_desc": "Sluit uw Google Maps-account aan om zoekresultaten en aanbevelingen van hoge kwaliteit te krijgen.",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Reiscontextitems zijn van toepassing op de hele reis, bijvoorbeeld locaties die de bestemming zelf vormen, algemene opmerkingen of paklijsten die belangrijk zijn voor de hele reis.",
     "unscheduled_items": "Niet-geplande items",
     "unscheduled_items_desc": "Deze items zijn gekoppeld aan deze reis, maar nog niet toegevoegd aan een specifieke dag."
+  },
+  "history": {
+    "title": "Geschiedenis",
+    "created": "Aangemaakt",
+    "updated": "Bijgewerkt",
+    "deleted": "Verwijderd",
+    "by": "door",
+    "no_history": "Geen geschiedenis beschikbaar",
+    "view_history": "Geschiedenis bekijken",
+    "changes": "Wijzigingen",
+    "revert": "Ongedaan maken"
+  },
+  "collaborative": {
+    "mode_enabled": "Samenwerkingsmodus",
+    "public_content": "Openbare inhoud",
+    "can_edit": "Je kunt dit bewerken"
   }
 }

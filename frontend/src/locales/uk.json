@@ -32,6 +32,13 @@
     "add_activity": "Додати активність",
     "add_first_trail": "Додайте свій перший трейл за допомогою кнопки вище",
     "add_new": "Додати новий...",
+    "link_transportation": "Зв'язати транспорт",
+    "link_lodging": "Зв'язати житло",
+    "unlinked": "Не зв'язано",
+    "no_transportations_available": "Немає доступного транспорту",
+    "all_transportations_linked": "Весь транспорт вже зв'язаний з колекціями.",
+    "no_lodging_available": "Немає доступного житла",
+    "all_lodging_linked": "Все житло вже зв'язано з колекціями.",
     "add_new_activity": "Додати нову діяльність",
     "add_new_trail": "Додати новий слід",
     "add_to_collection": "Додати до колекції",
@@ -68,6 +75,7 @@
     "cancel": "Скасувати",
     "category": "Категорія",
     "category_filter": "Фільтр категорій",
+    "filter_by_type": "Фільтр за Типом",
     "check_in": "Заїзд",
     "checklists": "Контрольні списки",
     "cities_updated": "міст оновлено",
@@ -192,6 +200,8 @@
     "md_instructions": "Напишіть свою уцінку тут...",
     "moving_time": "Переміщення часу",
     "my_collections": "Мої колекції",
+    "ownership_filter": "Власник",
+    "visibility": "Видимість",
     "name": "Ім'я",
     "name_location": "назва, місцезнаходження",
     "new_location": "Нова локація",
@@ -320,6 +330,9 @@
     "visit_calendar": "Відвідайте Календар",
     "visited": "Відвідали",
     "visits": "Відвідування",
+    "last_edited_by": "Останнє редагування",
+    "contributors": "Учасники",
+    "added_by": "Додано",
     "wanderer_integration_error": "Інтеграцію Wanderer не ввімкнено або її термін дії минув.",
     "wiki_image_error": "Помилка отримання зображення з Вікіпедії",
     "wikipedia": "Вікіпедія",
@@ -563,7 +576,9 @@
     "welcome_back": "Ласкаво просимо назад",
     "welcome_text_1": "Ви були на",
     "welcome_text_2": "пригоди досі",
-    "welcome_text_3": "Продовжуйте досліджувати та документувати свої подорожі!"
+    "welcome_text_3": "Продовжуйте досліджувати та документувати свої подорожі!",
+    "recent_travel_plans": "Ваші останні плани подорожей",
+    "recent_accommodations": "Ваші останні місця проживання"
   },
   "google_maps": {
     "google_maps_integration_desc": "Підключіть свій обліковий запис Карт Google, щоб отримувати високоякісні результати пошуку місцезнаходження та рекомендації.",
@@ -650,6 +665,9 @@
     "create_new_lodging": "Нове житло",
     "edit": "Редагувати",
     "edit_lodging": "Редагувати розміщення",
+    "my_lodging": "Моє Житло",
+    "no_lodging_found": "Житло не знайдено",
+    "create_lodging": "Створити Житло",
     "enter_lodging_name": "Введіть назву помешкання",
     "enter_reservation_number": "Введіть номер резервації",
     "hostel": "Хостел",
@@ -663,7 +681,12 @@
     "update_lodging_details": "Оновити дані про проживання",
     "villa": "Вілла",
     "invalid_link": "Введіть дійсну URL-адресу (наприклад, https://example.com).",
-    "save_failed": "Не вдалося зберегти житло. \nСпробуйте ще раз."
+    "save_failed": "Не вдалося зберегти житло. \nСпробуйте ще раз.",
+    "public_lodging": "Публічне житло",
+    "public_lodging_description": "Дозволити іншим користувачам переглядати це житло",
+    "move_to_collection_confirm": "Це житло вже знаходиться в іншій колекції. Перемістити до цієї колекції?",
+    "linked_success": "Житло успішно зв'язано",
+    "linked_error": "Не вдалося зв'язати житло"
   },
   "map": {
     "add_location": "Додати нове місце",
@@ -977,6 +1000,9 @@
       "walking": "ходьба"
     },
     "new_transportation": "Новий транспорт",
+    "my_transportations": "Мій Транспорт",
+    "no_transportations_found": "Транспорт не знайдено",
+    "create_transportation": "Створити Транспорт",
     "select_type": "Виберіть Тип",
     "to_location": "До розташування",
     "transportation_delete_error": "Помилка видалення транспорту",
@@ -988,7 +1014,12 @@
     "arrival_timezone": "Часовий пояс прибуття",
     "departure_code": "Код відправлення",
     "departure_date": "Дата відправлення",
-    "departure_timezone": "Часовий пояс відправлення"
+    "departure_timezone": "Часовий пояс відправлення",
+    "public_transportation": "Публічний транспорт",
+    "public_transportation_description": "Дозволити іншим користувачам переглядати цей транспорт",
+    "move_to_collection_confirm": "Цей транспорт вже знаходиться в іншій колекції. Перемістити до цієї колекції?",
+    "linked_success": "Транспорт успішно зв'язано",
+    "linked_error": "Не вдалося зв'язати транспорт"
   },
   "users": {
     "no_users_found": "Не знайдено користувачів із загальнодоступними профілями."
@@ -1138,6 +1169,22 @@
     "trip_context": "Контекст поїздки",
     "trip_context_info": "Елементи контексту подорожі застосовуються до всієї подорожі — наприклад, місця, які є самим пунктом призначення, загальні примітки або пакувальні листи, важливі для всієї подорожі.",
     "unscheduled_items": "Позапланові пункти",
-    "unscheduled_items_desc": "Ці елементи пов’язані з цією поїздкою, але ще не додані до певного дня."
+    "unscheduled_items_desc": "Ці елементи пов'язані з цією поїздкою, але ще не додані до певного дня."
+  },
+  "history": {
+    "title": "Історія",
+    "created": "Створено",
+    "updated": "Оновлено",
+    "deleted": "Видалено",
+    "by": "від",
+    "no_history": "Історія недоступна",
+    "view_history": "Переглянути історію",
+    "changes": "Зміни",
+    "revert": "Скасувати"
+  },
+  "collaborative": {
+    "mode_enabled": "Режим співпраці",
+    "public_content": "Публічний вміст",
+    "can_edit": "Ви можете редагувати"
   }
 }

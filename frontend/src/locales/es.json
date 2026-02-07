@@ -76,6 +76,9 @@
     "longitude": "Longitud",
     "visit": "Visita",
     "visits": "Visitas",
+    "last_edited_by": "Última edición por",
+    "contributors": "Colaboradores",
+    "added_by": "Añadido por",
     "create_new": "Crear nuevo...",
     "ascending": "Ascendente",
     "date": "Fecha",
@@ -89,9 +92,12 @@
     "sources": "Fuentes",
     "updated": "Actualizado",
     "category_filter": "Filtro de categoría",
+    "filter_by_type": "Filtrar por Tipo",
     "clear": "Limpiar",
     "archived_collections": "Colecciones archivadas",
     "my_collections": "Mis colecciones",
+    "ownership_filter": "Propietario",
+    "visibility": "Visibilidad",
     "private": "Privado",
     "public": "Público",
     "archived_collection_message": "¡Colección archivada exitosamente!",
@@ -139,6 +145,13 @@
     "regions_updated": "regiones actualizadas",
     "update_visited_regions": "Actualizar regiones visitadas",
     "add_new": "Agregar nuevo...",
+    "link_transportation": "Vincular transporte",
+    "link_lodging": "Vincular alojamiento",
+    "unlinked": "Sin vincular",
+    "no_transportations_available": "No hay transportes disponibles",
+    "all_transportations_linked": "Todos los transportes ya están vinculados a colecciones.",
+    "no_lodging_available": "No hay alojamientos disponibles",
+    "all_lodging_linked": "Todos los alojamientos ya están vinculados a colecciones.",
     "checklist": "Lista de tareas",
     "checklists": "Listas de tareas",
     "days": "días",
@@ -820,6 +833,9 @@
       "walking": "Caminando"
     },
     "new_transportation": "Nuevo transporte",
+    "my_transportations": "Mis Transportes",
+    "no_transportations_found": "No se encontraron transportes",
+    "create_transportation": "Crear Transporte",
     "to_location": "A la ubicación",
     "transportation_deleted": "¡Transporte eliminado exitosamente!",
     "type": "Tipo",
@@ -841,7 +857,12 @@
     "arrival_timezone": "Zona horaria de llegada",
     "departure_code": "Código de salida",
     "departure_date": "Fecha de salida",
-    "departure_timezone": "Zona horaria de salida"
+    "departure_timezone": "Zona horaria de salida",
+    "public_transportation": "Transporte público",
+    "public_transportation_description": "Permitir que otros usuarios vean este transporte",
+    "move_to_collection_confirm": "Este transporte ya está en otra colección. ¿Moverlo a esta colección?",
+    "linked_success": "Transporte vinculado con éxito",
+    "linked_error": "Error al vincular transporte"
   },
   "search": {
     "cities": "Ciudades",
@@ -923,7 +944,9 @@
     "view_all": "Ver todo",
     "welcome_text_1": "Has estado en",
     "welcome_text_2": "Aventuras hasta ahora",
-    "welcome_text_3": "¡Sigue explorando y documentando tus viajes!"
+    "welcome_text_3": "¡Sigue explorando y documentando tus viajes!",
+    "recent_travel_plans": "Tus planes de viaje recientes",
+    "recent_accommodations": "Tus alojamientos recientes"
   },
   "immich": {
     "api_key": "Clave API de Immich",
@@ -1004,12 +1027,20 @@
     "resort": "Complejo",
     "villa": "Villa",
     "edit_lodging": "Editar alojamiento",
+    "my_lodging": "Mi Alojamiento",
+    "no_lodging_found": "No se encontró alojamiento",
+    "create_lodging": "Crear Alojamiento",
     "create_new_lodging": "Nuevo alojamiento",
     "enter_lodging_name": "Ingrese el nombre de alojamiento",
     "enter_reservation_number": "Ingrese el número de reserva",
     "update_lodging_details": "Actualizar detalles de alojamiento",
     "invalid_link": "Introduzca una URL válida (por ejemplo, https://example.com).",
-    "save_failed": "No se pudo guardar el alojamiento. \nPor favor inténtalo de nuevo."
+    "save_failed": "No se pudo guardar el alojamiento. \nPor favor inténtalo de nuevo.",
+    "public_lodging": "Alojamiento público",
+    "public_lodging_description": "Permitir que otros usuarios vean este alojamiento",
+    "move_to_collection_confirm": "Este alojamiento ya está en otra colección. ¿Moverlo a esta colección?",
+    "linked_success": "Alojamiento vinculado con éxito",
+    "linked_error": "Error al vincular alojamiento"
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad.",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Los elementos del contexto del viaje se aplican a todo el viaje; por ejemplo, ubicaciones que son el destino en sí, notas generales o listas de equipaje que son importantes para todo el viaje.",
     "unscheduled_items": "Artículos no programados",
     "unscheduled_items_desc": "Estos elementos están vinculados a este viaje pero aún no se han agregado a un día específico."
+  },
+  "history": {
+    "title": "Historial",
+    "created": "Creado",
+    "updated": "Actualizado",
+    "deleted": "Eliminado",
+    "by": "por",
+    "no_history": "Sin historial disponible",
+    "view_history": "Ver historial",
+    "changes": "Cambios",
+    "revert": "Revertir"
+  },
+  "collaborative": {
+    "mode_enabled": "Modo colaborativo",
+    "public_content": "Contenido público",
+    "can_edit": "Puedes editar esto"
   }
 }

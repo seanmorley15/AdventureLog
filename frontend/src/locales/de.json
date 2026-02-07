@@ -28,6 +28,7 @@
     "ascending": "Aufsteigend",
     "cancel": "Abbrechen",
     "category_filter": "Kategoriefilter",
+    "filter_by_type": "Nach Typ filtern",
     "clear": "Zurücksetzen",
     "collection": "Sammlung",
     "date": "Datum",
@@ -44,6 +45,8 @@
     "latitude": "Breitengrad",
     "longitude": "Längengrad",
     "my_collections": "Meine Sammlungen",
+    "ownership_filter": "Eigentümer",
+    "visibility": "Sichtbarkeit",
     "name": "Name",
     "no_image_url": "Unter dieser URL wurde kein Bild gefunden.",
     "order_by": "Sortieren nach",
@@ -62,6 +65,9 @@
     "visit": "Besuch",
     "visited": "Besucht",
     "visits": "Besuche",
+    "last_edited_by": "Zuletzt bearbeitet von",
+    "contributors": "Mitwirkende",
+    "added_by": "Hinzugefügt von",
     "wiki_image_error": "Fehler beim Abrufen des Bildes aus Wikipedia",
     "add": "Hinzufügen",
     "basic_information": "Basisdaten",
@@ -90,6 +96,13 @@
     "regions_updated": "Regionen aktualisiert",
     "update_visited_regions": "Besuchte Regionen aktualisieren",
     "add_new": "Neu...",
+    "link_transportation": "Transport verknüpfen",
+    "link_lodging": "Unterkunft verknüpfen",
+    "unlinked": "Nicht verknüpft",
+    "no_transportations_available": "Keine Transporte verfügbar",
+    "all_transportations_linked": "Alle Transporte sind bereits mit Sammlungen verknüpft.",
+    "no_lodging_available": "Keine Unterkünfte verfügbar",
+    "all_lodging_linked": "Alle Unterkünfte sind bereits mit Sammlungen verknüpft.",
     "checklist": "Checkliste",
     "checklists": "Checklisten",
     "days": "Tage",
@@ -827,6 +840,9 @@
     "transportation_deleted": "Verkehrsmittel erfolgreich gelöscht!",
     "type": "Typ",
     "new_transportation": "Neues Verkehrsmittel",
+    "my_transportations": "Meine Verkehrsmittel",
+    "no_transportations_found": "Keine Verkehrsmittel gefunden",
+    "create_transportation": "Verkehrsmittel erstellen",
     "to_location": "End-Standort",
     "create_new_transportation": "Neuer Transport",
     "enter_flight_number": "Flugnummer eingeben",
@@ -841,7 +857,12 @@
     "arrival_timezone": "Ankunftszeitzone",
     "departure_code": "Abflugcode",
     "departure_date": "Abreisedatum",
-    "departure_timezone": "Abreisezeitzone"
+    "departure_timezone": "Abreisezeitzone",
+    "public_transportation": "Öffentlicher Transport",
+    "public_transportation_description": "Anderen Benutzern erlauben, diesen Transport zu sehen",
+    "move_to_collection_confirm": "Dieser Transport ist bereits in einer anderen Sammlung. Zur dieser Sammlung verschieben?",
+    "linked_success": "Transport erfolgreich verknüpft",
+    "linked_error": "Transport konnte nicht verknüpft werden"
   },
   "search": {
     "cities": "Städte",
@@ -923,7 +944,9 @@
     "view_all": "Alle anzeigen",
     "welcome_text_1": "Du warst auf",
     "welcome_text_2": "Abenteuern bisher",
-    "welcome_text_3": "Erkunden und dokumentieren Sie Ihre Reisen!"
+    "welcome_text_3": "Erkunden und dokumentieren Sie Ihre Reisen!",
+    "recent_travel_plans": "Ihre letzten Reisepläne",
+    "recent_accommodations": "Ihre letzten Unterkünfte"
   },
   "immich": {
     "api_key": "Immich-API-Schlüssel",
@@ -995,6 +1018,9 @@
     "campground": "Campingplatz",
     "edit": "Bearbeiten",
     "edit_lodging": "Unterkunft bearbeiten",
+    "my_lodging": "Meine Unterkünfte",
+    "no_lodging_found": "Keine Unterkünfte gefunden",
+    "create_lodging": "Unterkunft erstellen",
     "hostel": "Hostel",
     "hotel": "Hotel",
     "house": "Haus",
@@ -1009,7 +1035,12 @@
     "enter_reservation_number": "Reservierungsnummer eingeben",
     "update_lodging_details": "Aktualisieren der Unterkunftsdetails",
     "invalid_link": "Bitte geben Sie eine gültige URL ein (z.B. https://example.com).",
-    "save_failed": "Unterkunft konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
+    "save_failed": "Unterkunft konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+    "public_lodging": "Öffentliche Unterkunft",
+    "public_lodging_description": "Anderen Benutzern erlauben, diese Unterkunft zu sehen",
+    "move_to_collection_confirm": "Diese Unterkunft ist bereits in einer anderen Sammlung. Zur dieser Sammlung verschieben?",
+    "linked_success": "Unterkunft erfolgreich verknüpft",
+    "linked_error": "Unterkunft konnte nicht verknüpft werden"
   },
   "google_maps": {
     "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten.",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Reisekontextelemente gelten für die gesamte Reise – zum Beispiel Orte, die das Ziel selbst darstellen, allgemeine Notizen oder Packlisten, die für die gesamte Reise wichtig sind.",
     "unscheduled_items": "Ungeplante Einträge",
     "unscheduled_items_desc": "Diese Einträge sind mit dieser Reise verknüpft, wurden aber noch keinem bestimmten Tag hinzugefügt."
+  },
+  "history": {
+    "title": "Verlauf",
+    "created": "Erstellt",
+    "updated": "Aktualisiert",
+    "deleted": "Gelöscht",
+    "by": "von",
+    "no_history": "Kein Verlauf verfügbar",
+    "view_history": "Verlauf anzeigen",
+    "changes": "Änderungen",
+    "revert": "Rückgängig"
+  },
+  "collaborative": {
+    "mode_enabled": "Kollaborativer Modus",
+    "public_content": "Öffentlicher Inhalt",
+    "can_edit": "Sie können dies bearbeiten"
   }
 }

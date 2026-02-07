@@ -1,5 +1,6 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const COLLABORATIVE_MODE = process.env['COLLABORATIVE_MODE'] === 'true';
 import type { AdditionalLocation, Location, Collection } from '$lib/types';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -16,7 +17,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure: null
-			}
+			},
+			collaborativeMode: COLLABORATIVE_MODE
 		};
 	} else {
 		let adventure = (await request.json()) as AdditionalLocation;
@@ -24,7 +26,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure
-			}
+			},
+			collaborativeMode: COLLABORATIVE_MODE
 		};
 	}
 }) satisfies PageServerLoad;
