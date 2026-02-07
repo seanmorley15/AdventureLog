@@ -591,3 +591,39 @@ export type CollectionItineraryItem = {
 	start_datetime: string | null; // Computed property - ISO 8601 date string
 	end_datetime: string | null; // Computed property - ISO 8601 date string
 };
+
+export type CollectionTemplateData = {
+	notes: Array<{
+		name: string;
+		content: string | null;
+		links: string[];
+	}>;
+	checklists: Array<{
+		name: string;
+		items: Array<{ name: string }>;
+	}>;
+	transportations: Array<{
+		type: string;
+		name: string;
+		description: string | null;
+		from_location: string | null;
+		to_location: string | null;
+	}>;
+	lodgings: Array<{
+		type: string;
+		name: string;
+		description: string | null;
+		location: string | null;
+	}>;
+};
+
+export type CollectionTemplate = {
+	id: string;
+	name: string;
+	description: string | null;
+	template_data: CollectionTemplateData;
+	is_public: boolean;
+	user: string; // UUID of the owner
+	created_at: string; // ISO 8601 date string
+	updated_at: string; // ISO 8601 date string
+};

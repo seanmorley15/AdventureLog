@@ -25,6 +25,7 @@ router.register(r'activities', ActivityViewSet, basename='activities')
 router.register(r'visits', VisitViewSet, basename='visits')
 router.register(r'itineraries', ItineraryViewSet, basename='itineraries')
 router.register(r'itinerary-days', ItineraryDayViewSet, basename='itinerary-days')
+router.register(r'collection-templates', CollectionTemplateViewSet, basename='collection-templates')
 
 urlpatterns = [
     # Include the router under the 'api/' prefix

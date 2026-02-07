@@ -1,5 +1,5 @@
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay, CollectionTemplate
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -1058,9 +1058,25 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         """Return id and type for the linked item"""
         if not obj.item:
             return None
-            
+
         return {
             'id': str(obj.item.id),
             'type': obj.content_type.model,
         }
+
+
+class CollectionTemplateSerializer(CustomModelSerializer):
+    class Meta:
+        model = CollectionTemplate
+        fields = [
+            'id', 'name', 'description', 'template_data', 'is_public',
+            'user', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Convert user to UUID string for consistency
+        representation['user'] = str(instance.user.uuid)
+        return representation
         
