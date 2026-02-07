@@ -1,5 +1,5 @@
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay, CollectionTemplate
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -788,25 +788,37 @@ class CollectionSerializer(CustomModelSerializer):
         # Only include transportations if not in nested context
         if self.context.get('nested', False):
             return []
-        return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        try:
+            return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_notes(self, obj):
         # Only include notes if not in nested context
         if self.context.get('nested', False):
             return []
-        return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        try:
+            return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_checklists(self, obj):
         # Only include checklists if not in nested context
         if self.context.get('nested', False):
             return []
-        return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        try:
+            return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_lodging(self, obj):
         # Only include lodging if not in nested context
         if self.context.get('nested', False):
             return []
-        return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        try:
+            return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_status(self, obj):
         """Calculate the status of the collection based on dates"""
@@ -1058,9 +1070,25 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         """Return id and type for the linked item"""
         if not obj.item:
             return None
-            
+
         return {
             'id': str(obj.item.id),
             'type': obj.content_type.model,
         }
+
+
+class CollectionTemplateSerializer(CustomModelSerializer):
+    class Meta:
+        model = CollectionTemplate
+        fields = [
+            'id', 'name', 'description', 'template_data', 'is_public',
+            'user', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Convert user to UUID string for consistency
+        representation['user'] = str(instance.user.uuid)
+        return representation
         

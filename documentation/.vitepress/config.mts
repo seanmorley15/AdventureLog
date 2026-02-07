@@ -138,6 +138,7 @@ export default defineConfig({
             link: "/docs/install/kustomize",
           },
           { text: "Unraid 🧡", link: "/docs/install/unraid" },
+          { text: "Clever Cloud ☁️", link: "/docs/install/clever_cloud" },
           {
             text: "Dev Container + WSL 🧰",
             link: "/docs/install/dev_container_wsl",

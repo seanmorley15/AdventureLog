@@ -540,7 +540,12 @@
     "no_images_available": "リンクされた場所から利用できる画像はまだありません。",
     "public_collection_description": "リンクを知っている人なら誰でも閲覧できるようにする",
     "set_cover": "セットカバー",
-    "update_collection_details": "コレクションの詳細を更新"
+    "update_collection_details": "コレクションの詳細を更新",
+    "duplicate": "Duplicate",
+    "duplicated_success": "Collection duplicated successfully",
+    "duplicate_error": "Error duplicating collection",
+    "save_as_template": "Save as Template",
+    "template_saved_success": "Template saved successfully"
   },
   "dashboard": {
     "countries_visited": "訪問した国",
@@ -1128,5 +1133,36 @@
     "trip_context_info": "旅行コンテキスト項目は、旅行全体に適用されます。たとえば、目的地そのものである場所、一般的なメモ、旅行全体にとって重要な持ち物リストなどです。",
     "unscheduled_items": "予定外の項目",
     "unscheduled_items_desc": "これらのアイテムはこの旅行にリンクされていますが、まだ特定の日に追加されていません。"
+  },
+  "templates": {
+    "title": "Collection Templates",
+    "my_templates": "My Templates",
+    "public_templates": "Public Templates",
+    "create_from_template": "Create Collection",
+    "template_name": "Template Name",
+    "make_public": "Make Public",
+    "make_public_description": "Allow other users to use this template",
+    "no_templates": "No templates found",
+    "deleted_success": "Template deleted successfully",
+    "collection_created": "Collection created from template",
+    "save_template_desc": "Create a reusable template from this collection",
+    "enter_template_name": "Enter template name",
+    "enter_description": "Enter description (optional)",
+    "whats_included": "What's included",
+    "not_included_info": "日付はテンプレートに含まれません。場所はアクセス可能な場合にリンクされます。",
+    "name_required": "Template name is required",
+    "save_error": "Error saving template",
+    "create_error": "Error creating collection from template",
+    "delete_error": "Error deleting template",
+    "delete_template": "Delete Template",
+    "delete_warning": "Are you sure you want to delete this template? This action cannot be undone.",
+    "no_my_templates_desc": "Create templates from your collections to reuse their structure.",
+    "no_public_templates_desc": "No public templates available from other users yet.",
+    "go_to_collections": "Go to Collections",
+    "empty_template": "Empty template",
+    "made_public": "テンプレートが公開されました",
+    "made_private": "テンプレートが非公開になりました",
+    "make_private": "非公開にする",
+    "update_error": "テンプレートの更新エラー"
   }
 }

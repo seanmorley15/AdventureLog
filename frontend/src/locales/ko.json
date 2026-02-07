@@ -527,7 +527,12 @@
     "no_images_available": "아직 연결된 위치에서 사용할 수 있는 이미지가 없습니다.",
     "public_collection_description": "링크가 있는 모든 사람이 볼 수 있도록 허용",
     "set_cover": "커버 세트",
-    "update_collection_details": "업데이트 컬렉션 세부정보"
+    "update_collection_details": "업데이트 컬렉션 세부정보",
+    "duplicate": "Duplicate",
+    "duplicated_success": "Collection duplicated successfully",
+    "duplicate_error": "Error duplicating collection",
+    "save_as_template": "Save as Template",
+    "template_saved_success": "Template saved successfully"
   },
   "dashboard": {
     "countries_visited": "방문한 국가",
@@ -1128,5 +1133,36 @@
     "trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
     "unscheduled_items": "예정되지 않은 품목",
     "unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+  },
+  "templates": {
+    "title": "Collection Templates",
+    "my_templates": "My Templates",
+    "public_templates": "Public Templates",
+    "create_from_template": "Create Collection",
+    "template_name": "Template Name",
+    "make_public": "Make Public",
+    "make_public_description": "Allow other users to use this template",
+    "no_templates": "No templates found",
+    "deleted_success": "Template deleted successfully",
+    "collection_created": "Collection created from template",
+    "save_template_desc": "Create a reusable template from this collection",
+    "enter_template_name": "Enter template name",
+    "enter_description": "Enter description (optional)",
+    "whats_included": "What's included",
+    "not_included_info": "날짜는 템플릿에 포함되지 않습니다. 접근 가능한 경우 장소가 연결됩니다.",
+    "name_required": "Template name is required",
+    "save_error": "Error saving template",
+    "create_error": "Error creating collection from template",
+    "delete_error": "Error deleting template",
+    "delete_template": "Delete Template",
+    "delete_warning": "Are you sure you want to delete this template? This action cannot be undone.",
+    "no_my_templates_desc": "Create templates from your collections to reuse their structure.",
+    "no_public_templates_desc": "No public templates available from other users yet.",
+    "go_to_collections": "Go to Collections",
+    "empty_template": "Empty template",
+    "made_public": "템플릿이 공개되었습니다",
+    "made_private": "템플릿이 비공개되었습니다",
+    "make_private": "비공개로 설정",
+    "update_error": "템플릿 업데이트 오류"
   }
 }

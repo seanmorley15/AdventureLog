@@ -758,7 +758,12 @@
     "no_images_available": "Nie są jeszcze dostępne żadne obrazy z połączonych lokalizacji.",
     "public_collection_description": "Zezwól na oglądanie każdemu, kto ma link",
     "set_cover": "Ustaw osłonę",
-    "update_collection_details": "Zaktualizuj szczegóły kolekcji"
+    "update_collection_details": "Zaktualizuj szczegóły kolekcji",
+    "duplicate": "Duplicate",
+    "duplicated_success": "Collection duplicated successfully",
+    "duplicate_error": "Error duplicating collection",
+    "save_as_template": "Save as Template",
+    "template_saved_success": "Template saved successfully"
   },
   "notes": {
     "note_deleted": "Notatka została pomyślnie usunięta!",
@@ -1128,5 +1133,36 @@
     "trip_context_info": "Elementy kontekstu podróży dotyczą całej podróży — na przykład lokalizacje będące samym celem podróży, uwagi ogólne lub listy rzeczy do spakowania ważne dla całej podróży.",
     "unscheduled_items": "Niezaplanowane pozycje",
     "unscheduled_items_desc": "Te elementy są powiązane z tą podróżą, ale nie zostały jeszcze dodane do konkretnego dnia."
+  },
+  "templates": {
+    "title": "Collection Templates",
+    "my_templates": "My Templates",
+    "public_templates": "Public Templates",
+    "create_from_template": "Create Collection",
+    "template_name": "Template Name",
+    "make_public": "Make Public",
+    "make_public_description": "Allow other users to use this template",
+    "no_templates": "No templates found",
+    "deleted_success": "Template deleted successfully",
+    "collection_created": "Collection created from template",
+    "save_template_desc": "Create a reusable template from this collection",
+    "enter_template_name": "Enter template name",
+    "enter_description": "Enter description (optional)",
+    "whats_included": "What's included",
+    "not_included_info": "Daty nie są zawarte w szablonach. Lokalizacje zostaną połączone, jeśli są dostępne.",
+    "name_required": "Template name is required",
+    "save_error": "Error saving template",
+    "create_error": "Error creating collection from template",
+    "delete_error": "Error deleting template",
+    "delete_template": "Delete Template",
+    "delete_warning": "Are you sure you want to delete this template? This action cannot be undone.",
+    "no_my_templates_desc": "Create templates from your collections to reuse their structure.",
+    "no_public_templates_desc": "No public templates available from other users yet.",
+    "go_to_collections": "Go to Collections",
+    "empty_template": "Empty template",
+    "made_public": "Szablon jest teraz publiczny",
+    "made_private": "Szablon jest teraz prywatny",
+    "make_private": "Ustaw jako prywatny",
+    "update_error": "Błąd podczas aktualizacji szablonu"
   }
 }

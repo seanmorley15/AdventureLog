@@ -7,6 +7,8 @@
 	import ArchiveArrowDown from '~icons/mdi/archive-arrow-down';
 	import ArchiveArrowUp from '~icons/mdi/archive-arrow-up';
 	import ShareVariant from '~icons/mdi/share-variant';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import FileDocumentPlus from '~icons/mdi/file-document-plus';
 
 	import { goto } from '$app/navigation';
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '$lib/types';
@@ -20,6 +22,7 @@
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import ShareModal from '../ShareModal.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
+	import TemplateModal from '../TemplateModal.svelte';
 	import ExitRun from '~icons/mdi/exit-run';
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
@@ -34,7 +37,9 @@
 	export let linkedCollectionList: string[] | null = null;
 	export let user: User | null;
 	let isShareModalOpen: boolean = false;
+	let isTemplateModalOpen: boolean = false;
 	let copied: boolean = false;
+	let isDuplicating: boolean = false;
 
 	async function copyLink() {
 		try {
@@ -68,6 +73,30 @@
 			addToast('success', $t('adventures.export_success') || 'Exported collection');
 		} catch (e) {
 			addToast('error', $t('adventures.export_failed') || 'Export failed');
+		}
+	}
+
+	async function duplicateCollection() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		try {
+			const res = await fetch(`/api/collections/${collection.id}/duplicate/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (res.ok) {
+				const newCollection = await res.json();
+				addToast('success', $t('collection.duplicated_success') || 'Collection duplicated successfully');
+				dispatch('duplicate', newCollection);
+			} else {
+				addToast('error', $t('collection.duplicate_error') || 'Error duplicating collection');
+			}
+		} catch (e) {
+			addToast('error', $t('collection.duplicate_error') || 'Error duplicating collection');
+		} finally {
+			isDuplicating = false;
 		}
 	}
 
@@ -148,6 +177,10 @@
 
 {#if isShareModalOpen}
 	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
+{/if}
+
+{#if isTemplateModalOpen}
+	<TemplateModal {collection} on:close={() => (isTemplateModalOpen = false)} />
 {/if}
 
 <div
@@ -366,6 +399,27 @@
 										<button class="flex items-center gap-2" on:click={exportCollectionZip}>
 											<DownloadIcon class="w-4 h-4" />
 											{$t('adventures.export_zip')}
+										</button>
+									</li>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={duplicateCollection}
+											disabled={isDuplicating}
+										>
+											<ContentCopy class="w-4 h-4" />
+											{isDuplicating
+												? $t('adventures.processing') || 'Processing...'
+												: $t('collection.duplicate') || 'Duplicate'}
+										</button>
+									</li>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => (isTemplateModalOpen = true)}
+										>
+											<FileDocumentPlus class="w-4 h-4" />
+											{$t('collection.save_as_template') || 'Save as Template'}
 										</button>
 									</li>
 									<div class="divider my-1"></div>

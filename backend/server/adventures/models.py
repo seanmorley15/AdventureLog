@@ -707,6 +707,25 @@ class CollectionItineraryDay(models.Model):
             self.collection.name} - {self.date} - {self.name or 'Unnamed Day'}"
 
 
+class CollectionTemplate(models.Model):
+    """Reusable template for creating new collections with pre-defined structure"""
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    template_data = models.JSONField(default=dict)
+    # Structure: {notes: [...], checklists: [...], transportations: [...], lodgings: [...]}
+    is_public = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collection_templates')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({'Public' if self.is_public else 'Private'})"
+
+
 class CollectionItineraryItem(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 

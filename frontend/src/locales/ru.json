@@ -758,7 +758,12 @@
     "no_images_available": "Из связанных мест пока нет доступных изображений.",
     "public_collection_description": "Разрешить всем, у кого есть ссылка, просматривать",
     "set_cover": "Установить крышку",
-    "update_collection_details": "Обновить информацию о коллекции"
+    "update_collection_details": "Обновить информацию о коллекции",
+    "duplicate": "Duplicate",
+    "duplicated_success": "Collection duplicated successfully",
+    "duplicate_error": "Error duplicating collection",
+    "save_as_template": "Save as Template",
+    "template_saved_success": "Template saved successfully"
   },
   "notes": {
     "note_deleted": "Заметка успешно удалена!",
@@ -1128,5 +1133,36 @@
     "unscheduled_items": "Незапланированные предметы",
     "unscheduled_items_desc": "Эти элементы связаны с этой поездкой, но еще не добавлены к определенному дню.",
     "link_existing_item": "Связать существующий элемент"
+  },
+  "templates": {
+    "title": "Collection Templates",
+    "my_templates": "My Templates",
+    "public_templates": "Public Templates",
+    "create_from_template": "Create Collection",
+    "template_name": "Template Name",
+    "make_public": "Make Public",
+    "make_public_description": "Allow other users to use this template",
+    "no_templates": "No templates found",
+    "deleted_success": "Template deleted successfully",
+    "collection_created": "Collection created from template",
+    "save_template_desc": "Create a reusable template from this collection",
+    "enter_template_name": "Enter template name",
+    "enter_description": "Enter description (optional)",
+    "whats_included": "What's included",
+    "not_included_info": "Даты не включены в шаблоны. Места будут связаны, если доступны.",
+    "name_required": "Template name is required",
+    "save_error": "Error saving template",
+    "create_error": "Error creating collection from template",
+    "delete_error": "Error deleting template",
+    "delete_template": "Delete Template",
+    "delete_warning": "Are you sure you want to delete this template? This action cannot be undone.",
+    "no_my_templates_desc": "Create templates from your collections to reuse their structure.",
+    "no_public_templates_desc": "No public templates available from other users yet.",
+    "go_to_collections": "Go to Collections",
+    "empty_template": "Empty template",
+    "made_public": "Шаблон теперь публичный",
+    "made_private": "Шаблон теперь приватный",
+    "make_private": "Сделать приватным",
+    "update_error": "Ошибка при обновлении шаблона"
   }
 }

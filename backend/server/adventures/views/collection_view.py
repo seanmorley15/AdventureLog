@@ -13,9 +13,9 @@ import os
 import json
 import zipfile
 import tempfile
-from adventures.models import Collection, Location, Transportation, Note, Checklist, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
+from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category, CollectionTemplate
 from adventures.permissions import CollectionShared
-from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
+from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer, CollectionTemplateSerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
@@ -790,6 +790,214 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """
+        Duplicate a collection with all its content.
+        Creates deep copies of: Transportation, Lodging, Notes, Checklists, ChecklistItems.
+        Locations are linked (M2M) but not duplicated.
+        """
+        collection = self.get_object()
+
+        # Ensure user has permission (owner or shared with)
+        if collection.user != request.user and not collection.shared_with.filter(id=request.user.id).exists():
+            return Response(
+                {"error": "You do not have permission to duplicate this collection"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Create new collection with date/time in name for uniqueness
+        from django.utils import timezone
+        copy_time = timezone.now().strftime('%Y-%m-%d %H:%M')
+        new_collection = Collection.objects.create(
+            name=f"{collection.name} - Copy {copy_time}",
+            description=collection.description,
+            start_date=collection.start_date,
+            end_date=collection.end_date,
+            is_public=False,  # Always private for duplicates
+            user=request.user,
+            link=collection.link,
+        )
+
+        # Link same locations (M2M - shared reference)
+        new_collection.locations.set(collection.locations.all())
+
+        # Deep copy Transportation (wrapped in try/except for migration compatibility)
+        try:
+            for transport in collection.transportation_set.all():
+                Transportation.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    type=transport.type,
+                    name=transport.name,
+                    description=transport.description,
+                    rating=transport.rating,
+                    link=transport.link,
+                    date=transport.date,
+                    end_date=transport.end_date,
+                    start_timezone=transport.start_timezone,
+                    end_timezone=transport.end_timezone,
+                    flight_number=transport.flight_number,
+                    from_location=transport.from_location,
+                    to_location=transport.to_location,
+                    origin_latitude=transport.origin_latitude,
+                    origin_longitude=transport.origin_longitude,
+                    destination_latitude=transport.destination_latitude,
+                    destination_longitude=transport.destination_longitude,
+                    start_code=transport.start_code,
+                    end_code=transport.end_code,
+                    is_public=False,
+                )
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Deep copy Lodging (wrapped in try/except for migration compatibility)
+        try:
+            for lodging in collection.lodging_set.all():
+                Lodging.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    type=lodging.type,
+                    name=lodging.name,
+                    description=lodging.description,
+                    rating=lodging.rating,
+                    link=lodging.link,
+                    check_in=lodging.check_in,
+                    check_out=lodging.check_out,
+                    timezone=lodging.timezone,
+                    reservation_number=lodging.reservation_number,
+                    latitude=lodging.latitude,
+                    longitude=lodging.longitude,
+                    location=lodging.location,
+                    is_public=False,
+                )
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Deep copy Notes (use reverse relation)
+        for note in collection.note_set.all():
+            Note.objects.create(
+                user=request.user,
+                collection=new_collection,
+                name=note.name,
+                content=note.content,
+                links=note.links,
+                date=note.date,
+                is_public=False,
+            )
+
+        # Deep copy Checklists with their items (use reverse relation)
+        for checklist in collection.checklist_set.all():
+            new_checklist = Checklist.objects.create(
+                user=request.user,
+                collection=new_collection,
+                name=checklist.name,
+                date=checklist.date,
+                is_public=False,
+            )
+            # Copy checklist items
+            for item in checklist.checklistitem_set.all():
+                ChecklistItem.objects.create(
+                    user=request.user,
+                    checklist=new_checklist,
+                    name=item.name,
+                    is_checked=item.is_checked,
+                )
+
+        serializer = CollectionSerializer(new_collection, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], url_path='save-as-template')
+    def save_as_template(self, request, pk=None):
+        """
+        Save a collection's structure as a reusable template.
+        Template includes: notes, checklists, transportations, lodgings.
+        Does NOT include: locations, dates, images, attachments.
+        """
+        collection = self.get_object()
+
+        # Ensure user has permission (owner only for templates)
+        if collection.user != request.user:
+            return Response(
+                {"error": "Only the collection owner can save it as a template"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get template name and description from request or use collection's
+        template_name = request.data.get('name', collection.name)
+        template_description = request.data.get('description', collection.description)
+        is_public = request.data.get('is_public', False)
+
+        # Build template data structure (includes locations, excludes dates)
+        template_data = {
+            'notes': [],
+            'checklists': [],
+            'transportations': [],
+            'lodgings': [],
+            'locations': [],  # Store location IDs
+        }
+
+        # Extract location IDs
+        for location in collection.locations.all():
+            template_data['locations'].append(str(location.id))
+
+        # Extract notes structure (use reverse relation)
+        for note in collection.note_set.all():
+            template_data['notes'].append({
+                'name': note.name,
+                'content': note.content,
+                'links': note.links or [],
+            })
+
+        # Extract checklists with items (use reverse relation)
+        for checklist in collection.checklist_set.all():
+            checklist_data = {
+                'name': checklist.name,
+                'items': [],
+            }
+            for item in checklist.checklistitem_set.all():
+                checklist_data['items'].append({
+                    'name': item.name,
+                })
+            template_data['checklists'].append(checklist_data)
+
+        # Extract transportations structure (wrapped in try/except for migration compatibility)
+        try:
+            for transport in collection.transportation_set.all():
+                template_data['transportations'].append({
+                    'type': transport.type,
+                    'name': transport.name,
+                    'description': transport.description,
+                    'from_location': transport.from_location,
+                    'to_location': transport.to_location,
+                })
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Extract lodgings structure (wrapped in try/except for migration compatibility)
+        try:
+            for lodging in collection.lodging_set.all():
+                template_data['lodgings'].append({
+                    'type': lodging.type,
+                    'name': lodging.name,
+                    'description': lodging.description,
+                    'location': lodging.location,
+                })
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Create the template
+        template = CollectionTemplate.objects.create(
+            name=template_name,
+            description=template_description,
+            template_data=template_data,
+            is_public=is_public,
+            user=request.user,
+        )
+
+        serializer = CollectionTemplateSerializer(template, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it

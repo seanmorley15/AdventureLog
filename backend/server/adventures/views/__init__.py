@@ -19,3 +19,4 @@ from .trail_view import *
 from .activity_view import *
 from .visit_view import *
 from .itinerary_view import *
+from .template_view import *
