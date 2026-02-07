@@ -1149,7 +1149,7 @@
     "enter_template_name": "Enter template name",
     "enter_description": "Enter description (optional)",
     "whats_included": "What's included",
-    "not_included_info": "Dates are not included in templates. Locations will be linked if accessible.",
+    "not_included_info": "التواريخ غير مضمنة في القوالب. سيتم ربط المواقع إذا كانت متاحة.",
     "name_required": "Template name is required",
     "save_error": "Error saving template",
     "create_error": "Error creating collection from template",
@@ -1160,9 +1160,9 @@
     "no_public_templates_desc": "No public templates available from other users yet.",
     "go_to_collections": "Go to Collections",
     "empty_template": "Empty template",
-    "made_public": "Template is now public",
-    "made_private": "Template is now private",
-    "make_private": "Make Private",
-    "update_error": "Error updating template"
+    "made_public": "القالب الآن عام",
+    "made_private": "القالب الآن خاص",
+    "make_private": "جعله خاصًا",
+    "update_error": "خطأ في تحديث القالب"
   }
 }

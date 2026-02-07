@@ -1149,7 +1149,7 @@
     "enter_template_name": "Enter template name",
     "enter_description": "Enter description (optional)",
     "whats_included": "What's included",
-    "not_included_info": "Dates are not included in templates. Locations will be linked if accessible.",
+    "not_included_info": "날짜는 템플릿에 포함되지 않습니다. 접근 가능한 경우 장소가 연결됩니다.",
     "name_required": "Template name is required",
     "save_error": "Error saving template",
     "create_error": "Error creating collection from template",
@@ -1160,9 +1160,9 @@
     "no_public_templates_desc": "No public templates available from other users yet.",
     "go_to_collections": "Go to Collections",
     "empty_template": "Empty template",
-    "made_public": "Template is now public",
-    "made_private": "Template is now private",
-    "make_private": "Make Private",
-    "update_error": "Error updating template"
+    "made_public": "템플릿이 공개되었습니다",
+    "made_private": "템플릿이 비공개되었습니다",
+    "make_private": "비공개로 설정",
+    "update_error": "템플릿 업데이트 오류"
   }
 }
