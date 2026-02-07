@@ -13,6 +13,7 @@
 	import ChecklistIcon from '~icons/mdi/checkbox-marked-outline';
 	import TransportIcon from '~icons/mdi/airplane';
 	import LodgingIcon from '~icons/mdi/bed';
+	import LocationIcon from '~icons/mdi/map-marker';
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
 
 	export let data: any;
@@ -75,9 +76,10 @@
 		}
 	}
 
-	function getItemCount(template: CollectionTemplate): { notes: number; checklists: number; transportations: number; lodgings: number } {
+	function getItemCount(template: CollectionTemplate): { locations: number; notes: number; checklists: number; transportations: number; lodgings: number } {
 		const data = template.template_data || {};
 		return {
+			locations: (data.locations || []).length,
 			notes: (data.notes || []).length,
 			checklists: (data.checklists || []).length,
 			transportations: (data.transportations || []).length,
@@ -230,6 +232,12 @@
 
 							<!-- Content Summary -->
 							<div class="flex flex-wrap gap-2 mb-4">
+								{#if counts.locations > 0}
+									<div class="badge badge-outline gap-1">
+										<LocationIcon class="w-3 h-3" />
+										{counts.locations}
+									</div>
+								{/if}
 								{#if counts.notes > 0}
 									<div class="badge badge-outline gap-1">
 										<NoteIcon class="w-3 h-3" />
@@ -254,7 +262,7 @@
 										{counts.lodgings}
 									</div>
 								{/if}
-								{#if counts.notes === 0 && counts.checklists === 0 && counts.transportations === 0 && counts.lodgings === 0}
+								{#if counts.locations === 0 && counts.notes === 0 && counts.checklists === 0 && counts.transportations === 0 && counts.lodgings === 0}
 									<span class="text-xs text-base-content/50 italic">
 										{$t('templates.empty_template') || 'Empty template'}
 									</span>
@@ -273,7 +281,7 @@
 									{:else}
 										<Plus class="w-4 h-4" />
 									{/if}
-									{$t('templates.create_from_template') || 'Create Collection'}
+									{$t('templates.create_from_template')}
 								</button>
 								{#if template.user === data.user?.uuid}
 									<button
