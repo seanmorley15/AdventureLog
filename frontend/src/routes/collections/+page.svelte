@@ -178,6 +178,11 @@
 		}
 	}
 
+	function handleDuplicate(event: CustomEvent<SlimCollection>) {
+		// Add the duplicated collection to the list
+		collections = [event.detail, ...collections];
+	}
+
 	function saveOrCreate(event: CustomEvent<SlimCollection>) {
 		if (collections.find((collection) => collection.id === event.detail.id)) {
 			collections = collections.map((collection) => {
@@ -585,6 +590,7 @@
 								on:edit={editCollection}
 								on:archive={archiveCollection}
 								on:unarchive={unarchiveCollection}
+								on:duplicate={handleDuplicate}
 								user={data.user}
 								on:leave={(e) => {
 									collectionIdToLeave = e.detail;

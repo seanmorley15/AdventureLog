@@ -147,15 +147,12 @@
 				<div>
 					<h4 class="font-medium text-sm mb-1">{$t('templates.whats_included') || "What's included"}</h4>
 					<ul class="text-xs text-base-content/70 list-disc list-inside space-y-0.5">
-						<li>{$t('navbar.locations') || 'Locations'}</li>
+						<li>{$t('locations.locations') || 'Locations'}</li>
 						<li>{$t('adventures.notes') || 'Notes'}</li>
 						<li>{$t('adventures.checklists') || 'Checklists'}</li>
 						<li>{$t('adventures.transportations') || 'Transportations'}</li>
 						<li>{$t('adventures.lodging') || 'Lodging'}</li>
 					</ul>
-					<p class="text-xs text-base-content/50 mt-2 italic">
-						{$t('templates.not_included_info')}
-					</p>
 				</div>
 			</div>
 		</div>

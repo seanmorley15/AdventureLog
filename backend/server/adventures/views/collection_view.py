@@ -807,9 +807,11 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Create new collection
+        # Create new collection with date/time in name for uniqueness
+        from django.utils import timezone
+        copy_time = timezone.now().strftime('%Y-%m-%d %H:%M')
         new_collection = Collection.objects.create(
-            name=f"{collection.name} (Copy)",
+            name=f"{collection.name} - Copy {copy_time}",
             description=collection.description,
             start_date=collection.start_date,
             end_date=collection.end_date,
