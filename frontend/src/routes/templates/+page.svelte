@@ -23,6 +23,7 @@
 	let isCreating: string | null = null;
 	let isDeleting: boolean = false;
 	let templateToDelete: CollectionTemplate | null = null;
+	let isTogglingPublic: string | null = null;
 
 	$: myTemplates = templates.filter((t) => t.user === data.user?.uuid);
 	$: publicTemplates = templates.filter((t) => t.is_public && t.user !== data.user?.uuid);
@@ -73,6 +74,39 @@
 		} finally {
 			templateToDelete = null;
 			isDeleting = false;
+		}
+	}
+
+	async function togglePublic(template: CollectionTemplate) {
+		isTogglingPublic = template.id;
+		try {
+			const res = await fetch(`/api/collection-templates/${template.id}/`, {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					is_public: !template.is_public
+				})
+			});
+
+			if (res.ok) {
+				const updated = await res.json();
+				templates = templates.map((t) => (t.id === template.id ? updated : t));
+				addToast(
+					'success',
+					updated.is_public
+						? $t('templates.made_public') || 'Template is now public'
+						: $t('templates.made_private') || 'Template is now private'
+				);
+			} else {
+				const error = await res.json();
+				addToast('error', error.error || $t('templates.update_error') || 'Error updating template');
+			}
+		} catch (e) {
+			addToast('error', $t('templates.update_error') || 'Error updating template');
+		} finally {
+			isTogglingPublic = null;
 		}
 	}
 
@@ -284,6 +318,23 @@
 									{$t('templates.create_from_template')}
 								</button>
 								{#if template.user === data.user?.uuid}
+									<button
+										class="btn btn-ghost btn-sm btn-square"
+										class:text-secondary={template.is_public}
+										on:click={() => togglePublic(template)}
+										disabled={isTogglingPublic === template.id}
+										title={template.is_public
+											? $t('templates.make_private') || 'Make Private'
+											: $t('templates.make_public') || 'Make Public'}
+									>
+										{#if isTogglingPublic === template.id}
+											<span class="loading loading-spinner loading-xs"></span>
+										{:else if template.is_public}
+											<Eye class="w-4 h-4" />
+										{:else}
+											<EyeOff class="w-4 h-4" />
+										{/if}
+									</button>
 									<button
 										class="btn btn-ghost btn-sm btn-square text-error"
 										on:click={() => {

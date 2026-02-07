@@ -1161,6 +1161,10 @@
     "no_my_templates_desc": "Create templates from your collections to reuse their structure.",
     "no_public_templates_desc": "No public templates available from other users yet.",
     "go_to_collections": "Go to Collections",
-    "empty_template": "Empty template"
+    "empty_template": "Empty template",
+    "made_public": "Template is now public",
+    "made_private": "Template is now private",
+    "make_private": "Make Private",
+    "update_error": "Error updating template"
   }
 }

@@ -44,6 +44,26 @@ class CollectionTemplateViewSet(viewsets.ModelViewSet):
             )
         return super().destroy(request, *args, **kwargs)
 
+    def update(self, request, *args, **kwargs):
+        """Only allow update of own templates"""
+        instance = self.get_object()
+        if instance.user != request.user:
+            return Response(
+                {"error": "You can only update your own templates"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
+    def partial_update(self, request, *args, **kwargs):
+        """Only allow partial update of own templates"""
+        instance = self.get_object()
+        if instance.user != request.user:
+            return Response(
+                {"error": "You can only update your own templates"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().partial_update(request, *args, **kwargs)
+
     @action(detail=True, methods=['post'], url_path='create-collection')
     def create_collection(self, request, pk=None):
         """
