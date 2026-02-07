@@ -788,25 +788,37 @@ class CollectionSerializer(CustomModelSerializer):
         # Only include transportations if not in nested context
         if self.context.get('nested', False):
             return []
-        return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        try:
+            return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_notes(self, obj):
         # Only include notes if not in nested context
         if self.context.get('nested', False):
             return []
-        return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        try:
+            return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_checklists(self, obj):
         # Only include checklists if not in nested context
         if self.context.get('nested', False):
             return []
-        return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        try:
+            return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_lodging(self, obj):
         # Only include lodging if not in nested context
         if self.context.get('nested', False):
             return []
-        return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        try:
+            return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_status(self, obj):
         """Calculate the status of the collection based on dates"""
