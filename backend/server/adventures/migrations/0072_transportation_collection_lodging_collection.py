@@ -21,14 +21,5 @@ class Migration(migrations.Migration):
             name='collection',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='adventures.collection'),
         ),
-        migrations.AddField(
-            model_name='note',
-            name='collection',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='adventures.collection'),
-        ),
-        migrations.AddField(
-            model_name='checklist',
-            name='collection',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='adventures.collection'),
-        ),
+        # Note: note.collection and checklist.collection already exist in database
     ]
