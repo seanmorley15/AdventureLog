@@ -18,6 +18,7 @@
 	import MailIcon from '~icons/mdi/email';
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
+	import FileDocumentPlus from '~icons/mdi/file-document-plus';
 	import { addToast } from '$lib/toasts';
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
 
@@ -797,6 +798,11 @@
 						<CollectionIcon class="w-5 h-5" />
 						{$t(`adventures.collection`)}
 					</button>
+					<div class="divider my-2"></div>
+					<a href="/templates" class="btn btn-secondary gap-2 w-full">
+						<FileDocumentPlus class="w-5 h-5" />
+						{$t('templates.create_from_template')}
+					</a>
 					<div class="divider my-2"></div>
 					<button class="btn btn-neutral gap-2 w-full" on:click={triggerImport}>
 						<Archive class="w-5 h-5" />

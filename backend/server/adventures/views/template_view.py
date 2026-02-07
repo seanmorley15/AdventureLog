@@ -6,7 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from adventures.models import (
     CollectionTemplate, Collection, Transportation, Note, Checklist,
-    ChecklistItem, Lodging
+    ChecklistItem, Lodging, Location
 )
 from adventures.serializers import CollectionTemplateSerializer, CollectionSerializer
 
@@ -68,6 +68,15 @@ class CollectionTemplateViewSet(viewsets.ModelViewSet):
         )
 
         template_data = template.template_data or {}
+
+        # Link locations from template (only those the user has access to)
+        location_ids = template_data.get('locations', [])
+        if location_ids:
+            # Get locations that the user owns or are public
+            accessible_locations = Location.objects.filter(
+                Q(id__in=location_ids) & (Q(user=user) | Q(is_public=True))
+            )
+            new_collection.locations.set(accessible_locations)
 
         # Create notes from template
         for note_data in template_data.get('notes', []):

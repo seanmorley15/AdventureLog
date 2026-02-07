@@ -821,8 +821,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
         # Link same locations (M2M - shared reference)
         new_collection.locations.set(collection.locations.all())
 
-        # Deep copy Transportation
-        for transport in Transportation.objects.filter(collection=collection):
+        # Deep copy Transportation (use reverse relation to avoid DB column issues)
+        for transport in collection.transportation_set.all():
             Transportation.objects.create(
                 user=request.user,
                 collection=new_collection,
@@ -847,8 +847,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 is_public=False,
             )
 
-        # Deep copy Lodging
-        for lodging in Lodging.objects.filter(collection=collection):
+        # Deep copy Lodging (use reverse relation)
+        for lodging in collection.lodging_set.all():
             Lodging.objects.create(
                 user=request.user,
                 collection=new_collection,
@@ -867,8 +867,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 is_public=False,
             )
 
-        # Deep copy Notes
-        for note in Note.objects.filter(collection=collection):
+        # Deep copy Notes (use reverse relation)
+        for note in collection.note_set.all():
             Note.objects.create(
                 user=request.user,
                 collection=new_collection,
@@ -879,8 +879,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 is_public=False,
             )
 
-        # Deep copy Checklists with their items
-        for checklist in Checklist.objects.filter(collection=collection):
+        # Deep copy Checklists with their items (use reverse relation)
+        for checklist in collection.checklist_set.all():
             new_checklist = Checklist.objects.create(
                 user=request.user,
                 collection=new_collection,
@@ -889,7 +889,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 is_public=False,
             )
             # Copy checklist items
-            for item in ChecklistItem.objects.filter(checklist=checklist):
+            for item in checklist.checklistitem_set.all():
                 ChecklistItem.objects.create(
                     user=request.user,
                     checklist=new_checklist,
@@ -921,36 +921,41 @@ class CollectionViewSet(viewsets.ModelViewSet):
         template_description = request.data.get('description', collection.description)
         is_public = request.data.get('is_public', False)
 
-        # Build template data structure
+        # Build template data structure (includes locations, excludes dates)
         template_data = {
             'notes': [],
             'checklists': [],
             'transportations': [],
             'lodgings': [],
+            'locations': [],  # Store location IDs
         }
 
-        # Extract notes structure
-        for note in Note.objects.filter(collection=collection):
+        # Extract location IDs
+        for location in collection.locations.all():
+            template_data['locations'].append(str(location.id))
+
+        # Extract notes structure (use reverse relation)
+        for note in collection.note_set.all():
             template_data['notes'].append({
                 'name': note.name,
                 'content': note.content,
                 'links': note.links or [],
             })
 
-        # Extract checklists with items
-        for checklist in Checklist.objects.filter(collection=collection):
+        # Extract checklists with items (use reverse relation)
+        for checklist in collection.checklist_set.all():
             checklist_data = {
                 'name': checklist.name,
                 'items': [],
             }
-            for item in ChecklistItem.objects.filter(checklist=checklist):
+            for item in checklist.checklistitem_set.all():
                 checklist_data['items'].append({
                     'name': item.name,
                 })
             template_data['checklists'].append(checklist_data)
 
-        # Extract transportations structure (without dates/coordinates)
-        for transport in Transportation.objects.filter(collection=collection):
+        # Extract transportations structure (without dates, use reverse relation)
+        for transport in collection.transportation_set.all():
             template_data['transportations'].append({
                 'type': transport.type,
                 'name': transport.name,
@@ -959,8 +964,8 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 'to_location': transport.to_location,
             })
 
-        # Extract lodgings structure (without dates/coordinates)
-        for lodging in Lodging.objects.filter(collection=collection):
+        # Extract lodgings structure (without dates, use reverse relation)
+        for lodging in collection.lodging_set.all():
             template_data['lodgings'].append({
                 'type': lodging.type,
                 'name': lodging.name,
