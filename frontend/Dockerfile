@@ -45,5 +45,8 @@ USER node:node
 # Expose the port that the app is listening on
 EXPOSE 3000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+  CMD ["node", "/app/healthcheck.mjs"]
+
 # Run startup.sh instead of the default command
 CMD ["./startup.sh"]

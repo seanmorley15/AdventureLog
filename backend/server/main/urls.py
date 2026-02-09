@@ -2,7 +2,7 @@ from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
 from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView, DisablePasswordAuthenticationView
-from .views import get_csrf_token, get_public_url, serve_protected_media
+from .views import get_csrf_token, get_public_url, healthz, serve_protected_media
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -13,6 +13,7 @@ schema_view = get_schema_view(
     )
 )
 urlpatterns = [
+    path('healthz/', healthz, name='healthz'),
     path('api/', include('adventures.urls')),
     path('api/', include('worldtravel.urls')),
     path("auth/", include("allauth.headless.urls")),
