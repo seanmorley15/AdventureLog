@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
 	import MoneyInput from '../shared/MoneyInput.svelte';
@@ -117,7 +117,7 @@
 		wikiError = '';
 
 		try {
-			const response = await fetch(`/api/generate/desc/?name=${encodeURIComponent(location.name)}`);
+			const response = await fetch(`/api/generate/desc/?name=${encodeURIComponent(location.name)}&lang=${$locale || 'en'}`);
 			if (response.ok) {
 				const data = await response.json();
 				location.description = data.extract || '';

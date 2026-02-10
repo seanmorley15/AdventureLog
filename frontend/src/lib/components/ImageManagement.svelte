@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ContentImage } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
 
 	// Icons
@@ -238,7 +238,7 @@
 		wikiImageError = '';
 
 		try {
-			const res = await fetch(`/api/generate/img/?name=${encodeURIComponent(imageSearch)}`);
+			const res = await fetch(`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`);
 			const data = await res.json();
 
 			if (!res.ok || !data.images || data.images.length === 0) {

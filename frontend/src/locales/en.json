@@ -425,6 +425,8 @@
     "complete_import": "Complete Import",
     "loading_activities": "Loading activities",
     "no_strava_activities": "No Strava activities found during this visit",
+    "show_strava_activities": "Show Strava Activities",
+    "hide_strava_activities": "Hide Strava Activities",
     "current_attachments": "Current Attachments",
     "connect_to_wanderer": "Connect to Wanderer",
     "activity_statistics": "Activity Statistics",
@@ -861,7 +863,9 @@
     "update_lodging_details": "Update Lodging Details",
     "create_new_lodging": "New Lodging",
     "enter_lodging_name": "Enter lodging name",
-    "enter_reservation_number": "Enter reservation number"
+    "enter_reservation_number": "Enter reservation number",
+    "invalid_link": "Please enter a valid URL (e.g. https://example.com).",
+    "save_failed": "Failed to save lodging. Please try again."
   },
   "search": {
     "result": "Result",

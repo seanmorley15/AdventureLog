@@ -259,7 +259,9 @@
     "no_external_link": "Kein externer Link verfügbar",
     "no_file_selected": "Keine Datei ausgewählt",
     "no_images_uploaded_yet": "Noch keine Bilder hochgeladen",
-    "no_strava_activities": "Keine Strava -Aktivitäten bei diesem Besuch gefunden",
+    "no_strava_activities": "Keine Strava-Aktivitäten bei diesem Besuch gefunden",
+    "show_strava_activities": "Strava-Aktivitäten anzeigen",
+    "hide_strava_activities": "Strava-Aktivitäten ausblenden",
     "no_trails_added": "Noch keine Wege hinzugefügt",
     "no_trails_available": "Keine Wanderwege verfügbar",
     "no_trails_found_matching": "Keine passenden Pfade gefunden",
@@ -1005,7 +1007,9 @@
     "create_new_lodging": "Neue Unterkunft",
     "enter_lodging_name": "Unterkunftsnamen eingeben",
     "enter_reservation_number": "Reservierungsnummer eingeben",
-    "update_lodging_details": "Aktualisieren der Unterkunftsdetails"
+    "update_lodging_details": "Aktualisieren der Unterkunftsdetails",
+    "invalid_link": "Bitte geben Sie eine gültige URL ein (z.B. https://example.com).",
+    "save_failed": "Unterkunft konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
   },
   "google_maps": {
     "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten.",
