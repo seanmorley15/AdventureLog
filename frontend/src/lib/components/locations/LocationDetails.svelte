@@ -7,6 +7,7 @@
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TagComplete from '../TagComplete.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
+	import { addToast } from '$lib/toasts';
 	import type { Category, Collection, Location, MoneyValue, User } from '$lib/types';
 	import MapIcon from '~icons/mdi/map';
 	import InfoIcon from '~icons/mdi/information';
@@ -146,6 +147,22 @@
 		}
 
 		let payload: any = { ...location };
+
+		// Clean up link: empty/whitespace → null, invalid URL → null
+		if (!payload.link || !payload.link.trim()) {
+			payload.link = null;
+		} else {
+			try {
+				new URL(payload.link);
+			} catch {
+				// Not a valid URL — clear it so Django doesn't reject it
+				payload.link = null;
+			}
+		}
+		if (!payload.description || !payload.description.trim()) {
+			payload.description = null;
+		}
+
 		if (location.price === null) {
 			payload.price = null;
 			payload.price_currency = null;
@@ -153,6 +170,7 @@
 			payload = normalizeMoneyPayload(payload, 'price', 'price_currency', defaultCurrency);
 		}
 
+		let res: Response;
 		if (locationToEdit && locationToEdit.id) {
 			if (
 				(!payload.collections || payload.collections.length === 0) &&
@@ -162,24 +180,39 @@
 				delete payload.collections;
 			}
 
-			const res = await fetch(`/api/locations/${locationToEdit.id}`, {
+			res = await fetch(`/api/locations/${locationToEdit.id}`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(payload)
 			});
-			location = await res.json();
 		} else {
-			const res = await fetch(`/api/locations`, {
+			res = await fetch(`/api/locations`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
 				body: JSON.stringify(payload)
 			});
-			location = await res.json();
 		}
+
+		if (!res.ok) {
+			const errorData = await res.json().catch(() => ({}));
+			// Extract error message from Django field errors (e.g. {"link": ["Enter a valid URL."]})
+			let errorMsg = errorData?.detail || errorData?.name?.[0] || '';
+			if (!errorMsg) {
+				const fieldErrors = Object.entries(errorData)
+					.filter(([_, v]) => Array.isArray(v))
+					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
+					.join('; ');
+				errorMsg = fieldErrors || 'Failed to save location';
+			}
+			addToast('error', String(errorMsg));
+			return;
+		}
+
+		location = await res.json();
 
 		dispatch('save', {
 			...location

@@ -74,6 +74,15 @@ export const actions: Actions = {
 			},
 			body: formData
 		});
+
+		// Handle non-JSON responses gracefully (e.g. HTML error pages from backend)
+		const contentType = res.headers.get('content-type') || '';
+		if (!contentType.includes('application/json')) {
+			const text = await res.text();
+			console.error(`Image upload failed with status ${res.status}:`, text.substring(0, 200));
+			return { error: `Image upload failed (status ${res.status})` };
+		}
+
 		let data = await res.json();
 		return data;
 	},
