@@ -434,7 +434,14 @@
     "export_zip": "ZIP exporteren",
     "import_failed": "Importeren mislukt",
     "import_from_file": "Importeren uit bestand",
-    "import_success": "Succes importeren"
+    "import_success": "Succes importeren",
+    "duplicate": "Dupliceren",
+    "duplicate_location": "Locatie dupliceren",
+    "location_duplicate_success": "Locatie succesvol gedupliceerd! Doorsturen naar bewerken...",
+    "location_duplicate_error": "Kan locatie niet dupliceren.",
+    "location_actions": "Locatie-acties",
+    "collection_duplicate_success": "Collectie succesvol gedupliceerd! Doorverwijzen...",
+    "collection_duplicate_error": "Kan collectie niet dupliceren."
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",

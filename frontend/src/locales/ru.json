@@ -483,7 +483,14 @@
     "export_zip": "Экспортировать ZIP-файл",
     "import_failed": "Импорт не выполнен",
     "import_from_file": "Импорт из файла",
-    "import_success": "Импортировать успех"
+    "import_success": "Импортировать успех",
+    "duplicate": "Дублировать",
+    "duplicate_location": "Дублировать место",
+    "location_duplicate_success": "Место успешно дублировано! Перенаправление на редактирование...",
+    "location_duplicate_error": "Не удалось дублировать место.",
+    "location_actions": "Действия с местом",
+    "collection_duplicate_success": "Коллекция успешно дублирована! Перенаправление...",
+    "collection_duplicate_error": "Не удалось дублировать коллекцию."
   },
   "worldtravel": {
     "country_list": "Список стран",

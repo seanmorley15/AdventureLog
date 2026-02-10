@@ -116,11 +116,11 @@
 	function getVisitStatusClass(status: VisitStatus): string {
 		switch (status) {
 			case 'not_visited':
-				return 'bg-red-200';
+				return 'bg-red-400';
 			case 'complete':
-				return 'bg-green-200';
+				return 'bg-green-400';
 			default:
-				return 'bg-blue-200';
+				return 'bg-blue-400';
 		}
 	}
 

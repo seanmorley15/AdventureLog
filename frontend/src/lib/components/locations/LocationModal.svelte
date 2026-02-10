@@ -312,7 +312,12 @@
 					didSave = true;
 
 					steps[1].selected = false;
-					steps[2].selected = true;
+					if (location.id) {
+						steps[2].selected = true;
+					} else {
+						// Stay on details if save failed (no ID returned)
+						steps[1].selected = true;
+					}
 				}}
 			/>
 		{/if}

@@ -483,7 +483,14 @@
     "export_zip": "ZIP'i dışa aktar",
     "import_failed": "İçe Aktarma Başarısız",
     "import_from_file": "Dosyadan içe aktar",
-    "import_success": "İçe Aktarma Başarısı"
+    "import_success": "İçe Aktarma Başarısı",
+    "duplicate": "Çoğalt",
+    "duplicate_location": "Konumu çoğalt",
+    "location_duplicate_success": "Konum başarıyla çoğaltıldı! Düzenlemeye yönlendiriliyor...",
+    "location_duplicate_error": "Konum çoğaltılamadı.",
+    "location_actions": "Konum işlemleri",
+    "collection_duplicate_success": "Koleksiyon başarıyla kopyalandı! Yönlendiriliyor...",
+    "collection_duplicate_error": "Koleksiyon kopyalanamadı."
   },
   "worldtravel": {
     "country_list": "Ülke Listesi",

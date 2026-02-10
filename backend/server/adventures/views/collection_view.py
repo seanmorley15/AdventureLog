@@ -791,6 +791,49 @@ class CollectionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Create a duplicate of an existing collection.
+
+        Copies name (with 'Copy of' prefix), description, and link.
+        Resets: dates, is_public, is_archived, shared_with, locations,
+        itinerary, and primary_image.
+        """
+        original = self.get_object()
+
+        # Only the owner can duplicate
+        if original.user != request.user:
+            return Response(
+                {"error": "You do not have permission to duplicate this collection."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            with transaction.atomic():
+                new_collection = Collection.objects.create(
+                    user=request.user,
+                    name=f"Copy of {original.name}",
+                    description=original.description,
+                    link=original.link,
+                    is_public=False,
+                    is_archived=False,
+                    start_date=None,
+                    end_date=None,
+                )
+                # Do NOT copy: locations, shared_with, itinerary, primary_image
+
+            serializer = self.get_serializer(new_collection)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Failed to duplicate collection %s", pk)
+            return Response(
+                {"error": "An error occurred while duplicating the collection."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it
         serializer.save(user=self.request.user)

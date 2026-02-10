@@ -483,7 +483,14 @@
     "export_zip": "导出邮政编码",
     "import_failed": "导入失败",
     "import_from_file": "从文件导入",
-    "import_success": "导入成功"
+    "import_success": "导入成功",
+    "duplicate": "复制",
+    "duplicate_location": "复制位置",
+    "location_duplicate_success": "位置复制成功！正在跳转到编辑页面...",
+    "location_duplicate_error": "复制位置失败。",
+    "location_actions": "位置操作",
+    "collection_duplicate_success": "集合复制成功！正在跳转...",
+    "collection_duplicate_error": "集合复制失败。"
   },
   "auth": {
     "forgot_password": "忘记密码？",

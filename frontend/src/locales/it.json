@@ -434,7 +434,14 @@
     "export_zip": "Esporta CAP",
     "import_failed": "Importazione non riuscita",
     "import_from_file": "Importa da file",
-    "import_success": "Importazione riuscita"
+    "import_success": "Importazione riuscita",
+    "duplicate": "Duplica",
+    "duplicate_location": "Duplica posizione",
+    "location_duplicate_success": "Posizione duplicata con successo! Reindirizzamento alla modifica...",
+    "location_duplicate_error": "Impossibile duplicare la posizione.",
+    "location_actions": "Azioni posizione",
+    "collection_duplicate_success": "Collezione duplicata con successo! Reindirizzamento...",
+    "collection_duplicate_error": "Impossibile duplicare la collezione."
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",

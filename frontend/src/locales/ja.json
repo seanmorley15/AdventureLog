@@ -434,7 +434,14 @@
     "export_zip": "ZIP をエクスポート",
     "import_failed": "インポートに失敗しました",
     "import_from_file": "ファイルからインポート",
-    "import_success": "インポート成功"
+    "import_success": "インポート成功",
+    "duplicate": "複製",
+    "duplicate_location": "ロケーションを複製",
+    "location_duplicate_success": "ロケーションが正常に複製されました！編集ページに移動中...",
+    "location_duplicate_error": "ロケーションの複製に失敗しました。",
+    "location_actions": "ロケーション操作",
+    "collection_duplicate_success": "コレクションが正常に複製されました！リダイレクト中...",
+    "collection_duplicate_error": "コレクションの複製に失敗しました。"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",

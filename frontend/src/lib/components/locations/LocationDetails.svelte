@@ -133,6 +133,7 @@
 
 	async function handleSave() {
 		if (!location.name || !location.category) {
+			addToast('warning', 'Name and category are required');
 			return;
 		}
 
@@ -172,11 +173,10 @@
 
 		let res: Response;
 		if (locationToEdit && locationToEdit.id) {
-			if (
-				(!payload.collections || payload.collections.length === 0) &&
-				locationToEdit.collections &&
-				locationToEdit.collections.length > 0
-			) {
+			// Only include collections if explicitly set via a collection context;
+			// otherwise remove them from the PATCH payload to avoid triggering the
+			// m2m_changed signal which can override is_public.
+			if (!collection || !collection.id) {
 				delete payload.collections;
 			}
 

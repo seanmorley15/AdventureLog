@@ -483,7 +483,14 @@
     "export_zip": "Eksportuj ZIP",
     "import_failed": "Import nie powiódł się",
     "import_from_file": "Importuj z pliku",
-    "import_success": "Sukces importu"
+    "import_success": "Sukces importu",
+    "duplicate": "Duplikuj",
+    "duplicate_location": "Duplikuj lokalizację",
+    "location_duplicate_success": "Lokalizacja zduplikowana pomyślnie! Przekierowanie do edycji...",
+    "location_duplicate_error": "Nie udało się zduplikować lokalizacji.",
+    "location_actions": "Akcje lokalizacji",
+    "collection_duplicate_success": "Kolekcja zduplikowana pomyślnie! Przekierowywanie...",
+    "collection_duplicate_error": "Nie udało się zduplikować kolekcji."
   },
   "worldtravel": {
     "country_list": "Lista krajów",

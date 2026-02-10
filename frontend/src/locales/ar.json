@@ -434,7 +434,14 @@
     "export_zip": "تصدير الرمز البريدي",
     "import_failed": "فشل الاستيراد",
     "import_from_file": "استيراد من ملف",
-    "import_success": "نجاح الاستيراد"
+    "import_success": "نجاح الاستيراد",
+    "duplicate": "تكرار",
+    "duplicate_location": "تكرار الموقع",
+    "location_duplicate_success": "تم تكرار الموقع بنجاح! جارٍ إعادة التوجيه إلى التحرير...",
+    "location_duplicate_error": "فشل في تكرار الموقع.",
+    "location_actions": "إجراءات الموقع",
+    "collection_duplicate_success": "تم تكرار المجموعة بنجاح! جارٍ إعادة التوجيه...",
+    "collection_duplicate_error": "فشل في تكرار المجموعة."
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",

@@ -6,6 +6,7 @@
 
 	import Launch from '~icons/mdi/launch';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import ContentCopy from '~icons/mdi/content-copy';
 	import TrashCan from '~icons/mdi/trash-can-outline';
 	import Calendar from '~icons/mdi/calendar';
 	import Clock from '~icons/mdi/clock-outline';
@@ -13,6 +14,7 @@
 	import LinkIcon from '~icons/mdi/link-variant';
 	import Check from '~icons/mdi/check';
 	import { addToast } from '$lib/toasts';
+	import { copyToClipboard } from '$lib/index';
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
@@ -69,7 +71,7 @@
 	async function copyLink() {
 		try {
 			const url = `${location.origin}/locations/${adventure.id}`;
-			await navigator.clipboard.writeText(url);
+			await copyToClipboard(url);
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		} catch (e) {
@@ -203,6 +205,30 @@
 			} else {
 				addToast('error', `${$t('adventures.collection_remove_location_error')}`);
 			}
+		}
+	}
+
+	let isDuplicating = false;
+
+	async function duplicateAdventure() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		try {
+			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (res.ok) {
+				const newLocation = await res.json();
+				addToast('success', $t('adventures.location_duplicate_success'));
+				goto(`/locations/${newLocation.id}`);
+			} else {
+				addToast('error', $t('adventures.location_duplicate_error'));
+			}
+		} catch (e) {
+			addToast('error', $t('adventures.location_duplicate_error'));
+		} finally {
+			isDuplicating = false;
 		}
 	}
 
@@ -376,19 +402,34 @@
 								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
 							>
+							<li>
+								<button
+									on:click={() => {
+										isActionsMenuOpen = false;
+										editAdventure();
+									}}
+									class="flex items-center gap-2"
+								>
+									<FileDocumentEdit class="w-4 h-4" />
+									{$t('adventures.edit_location')}
+								</button>
+							</li>
+							{#if user?.uuid == adventure.user?.uuid}
 								<li>
 									<button
 										on:click={() => {
 											isActionsMenuOpen = false;
-											editAdventure();
+											duplicateAdventure();
 										}}
 										class="flex items-center gap-2"
+										disabled={isDuplicating}
 									>
-										<FileDocumentEdit class="w-4 h-4" />
-										{$t('adventures.edit_location')}
+										<ContentCopy class="w-4 h-4" />
+										{isDuplicating ? '...' : $t('adventures.duplicate')}
 									</button>
 								</li>
-								{#if user?.uuid == adventure.user?.uuid}
+							{/if}
+							{#if user?.uuid == adventure.user?.uuid}
 									<li>
 										<button
 											on:click={() => {

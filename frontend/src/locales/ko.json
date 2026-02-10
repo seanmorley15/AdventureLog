@@ -434,7 +434,14 @@
     "export_zip": "우편번호 내보내기",
     "import_failed": "가져오기 실패",
     "import_from_file": "파일에서 가져오기",
-    "import_success": "가져오기 성공"
+    "import_success": "가져오기 성공",
+    "duplicate": "복제",
+    "duplicate_location": "위치 복제",
+    "location_duplicate_success": "위치가 성공적으로 복제되었습니다! 편집 페이지로 이동 중...",
+    "location_duplicate_error": "위치 복제에 실패했습니다.",
+    "location_actions": "위치 작업",
+    "collection_duplicate_success": "컬렉션이 성공적으로 복제되었습니다! 리디렉션 중...",
+    "collection_duplicate_error": "컬렉션 복제에 실패했습니다."
   },
   "auth": {
     "confirm_password": "비밀번호 확인",

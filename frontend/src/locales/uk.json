@@ -434,7 +434,14 @@
     "export_zip": "Експорт ZIP",
     "import_failed": "Помилка імпорту",
     "import_from_file": "Імпортувати з файлу",
-    "import_success": "Успішний імпорт"
+    "import_success": "Успішний імпорт",
+    "duplicate": "Дублювати",
+    "duplicate_location": "Дублювати місце",
+    "location_duplicate_success": "Місце успішно дубльовано! Перенаправлення на редагування...",
+    "location_duplicate_error": "Не вдалося дублювати місце.",
+    "location_actions": "Дії з місцем",
+    "collection_duplicate_success": "Колекцію успішно дубльовано! Перенаправлення...",
+    "collection_duplicate_error": "Не вдалося дублювати колекцію."
   },
   "auth": {
     "confirm_password": "Підтвердьте пароль",

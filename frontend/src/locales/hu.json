@@ -483,7 +483,14 @@
     "export_zip": "ZIP exportálása",
     "import_failed": "Az importálás sikertelen",
     "import_from_file": "Importálás fájlból",
-    "import_success": "Sikeres importálás"
+    "import_success": "Sikeres importálás",
+    "duplicate": "Másolás",
+    "duplicate_location": "Helyszín másolása",
+    "location_duplicate_success": "Helyszín sikeresen másolva! Átirányítás a szerkesztéshez...",
+    "location_duplicate_error": "Nem sikerült a helyszín másolása.",
+    "location_actions": "Helyszín műveletek",
+    "collection_duplicate_success": "Gyűjtemény sikeresen megkettőzve! Átirányítás...",
+    "collection_duplicate_error": "A gyűjtemény másolása sikertelen."
   },
   "worldtravel": {
     "country_list": "Országlista",

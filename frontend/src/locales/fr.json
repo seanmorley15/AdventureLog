@@ -434,7 +434,14 @@
     "export_zip": "Exporter le code postal",
     "import_failed": "Échec de l'importation",
     "import_success": "Succès de l'importation",
-    "import_from_file": "Importer à partir d'un fichier"
+    "import_from_file": "Importer à partir d'un fichier",
+    "duplicate": "Dupliquer",
+    "duplicate_location": "Dupliquer le lieu",
+    "location_duplicate_success": "Lieu dupliqué avec succès ! Redirection vers l'édition...",
+    "location_duplicate_error": "Échec de la duplication du lieu.",
+    "location_actions": "Actions du lieu",
+    "collection_duplicate_success": "Collection dupliquée avec succès ! Redirection...",
+    "collection_duplicate_error": "Échec de la duplication de la collection."
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",

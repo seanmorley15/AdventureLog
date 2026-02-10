@@ -66,16 +66,27 @@ export const authHook: Handle = async ({ event, resolve }) => {
 	return await resolve(event);
 };
 
+// Clipboard polyfill for non-secure (HTTP) contexts.
+// navigator.clipboard.writeText requires HTTPS or localhost.
+// This polyfill injects a <script> that overrides writeText with
+// a document.execCommand('copy') fallback when running over plain HTTP.
+const clipboardPolyfillScript = `<script>!function(){if(!window.isSecureContext){navigator.clipboard||(navigator.clipboard={}),navigator.clipboard.writeText=function(t){return new Promise(function(r){var a=document.createElement("textarea");a.value=t,a.style.position="fixed",a.style.left="-9999px",a.style.top="-9999px",document.body.appendChild(a),a.focus(),a.select();try{document.execCommand("copy")}catch(e){}document.body.removeChild(a),r()})}}}();</script>`;
+
 export const themeHook: Handle = async ({ event, resolve }) => {
 	let theme = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
 
 	if (theme) {
 		return await resolve(event, {
-			transformPageChunk: ({ html }) => html.replace('data-theme=""', `data-theme="${theme}"`)
+			transformPageChunk: ({ html }) =>
+				html
+					.replace('data-theme=""', `data-theme="${theme}"`)
+					.replace('</head>', clipboardPolyfillScript + '</head>')
 		});
 	}
 
-	return await resolve(event);
+	return await resolve(event, {
+		transformPageChunk: ({ html }) => html.replace('</head>', clipboardPolyfillScript + '</head>')
+	});
 };
 
 // hook to get the langauge cookie and set the locale

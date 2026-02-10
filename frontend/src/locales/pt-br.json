@@ -434,7 +434,14 @@
     "export_zip": "Exportar ZIP",
     "import_failed": "Falha na importação",
     "import_from_file": "Importar do arquivo",
-    "import_success": "Sucesso na importação"
+    "import_success": "Sucesso na importação",
+    "duplicate": "Duplicar",
+    "duplicate_location": "Duplicar localização",
+    "location_duplicate_success": "Localização duplicada com sucesso! Redirecionando para edição...",
+    "location_duplicate_error": "Falha ao duplicar localização.",
+    "location_actions": "Ações da localização",
+    "collection_duplicate_success": "Coleção duplicada com sucesso! Redirecionando...",
+    "collection_duplicate_error": "Falha ao duplicar a coleção."
   },
   "auth": {
     "confirm_password": "Confirme a sua senha",
