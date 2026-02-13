@@ -492,7 +492,23 @@
     "collection_duplicate_success": "Коллекция успешно дублирована! Перенаправление...",
     "collection_duplicate_error": "Не удалось дублировать коллекцию.",
     "hide_strava_activities": "Скрыть действия Strava",
-    "show_strava_activities": "Показать действия Strava"
+    "show_strava_activities": "Показать действия Strava",
+    "activities": "Активности",
+    "failed_to_fetch_activities": "Не удалось загрузить активности",
+    "found_activities": "Найдено {count} активностей",
+    "local": "Местное",
+    "local_time": "Местное время",
+    "no_strava_activities_found": "Активности Strava не найдены",
+    "strava_not_connected": "Strava не подключена",
+    "transport_end": "Конец маршрута",
+    "transport_start": "Начало маршрута",
+    "trip_timezone": "Часовой пояс поездки",
+    "your_time": "Ваше время",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -806,7 +822,8 @@
     "enter_checklist_title": "Введите заголовок контрольного списка",
     "no_items_yet": "Пока нет предметов",
     "update_checklist_details": "Редактирование контрольного списка",
-    "viewing_checklist": "Просмотр контрольного списка"
+    "viewing_checklist": "Просмотр контрольного списка",
+    "more_items": "ещё элементов"
   },
   "transportation": {
     "transportation_deleted": "Транспорт успешно удален!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Часовой пояс прибытия",
     "departure_code": "Код отправления",
     "departure_date": "Дата отъезда",
-    "departure_timezone": "Часовой пояс отправления"
+    "departure_timezone": "Часовой пояс отправления",
+    "codes": "Коды"
   },
   "lodging": {
     "new_lodging": "Новое жилье",
@@ -907,7 +925,8 @@
     "invite_revoked": "Пригласить отменен",
     "invite_sent": "Пригласить отправлено",
     "revoke_failed": "Отмена не удалась",
-    "unshare_failed": "UNSHARE не удалось"
+    "unshare_failed": "UNSHARE не удалось",
+    "no_available_users": "Нет доступных пользователей"
   },
   "profile": {
     "member_since": "Участник с",
@@ -932,7 +951,8 @@
     "category_name": "Название категории",
     "add_new_category": "Добавить новую категорию",
     "name_required": "Требуется название категории",
-    "location_update_after_refresh": "Карты местоположения будут обновлены после обновления страницы."
+    "location_update_after_refresh": "Карты местоположения будут обновлены после обновления страницы.",
+    "no_categories_yet": "Категорий пока нет"
   },
   "dashboard": {
     "welcome_back": "Добро пожаловать обратно",
@@ -1046,7 +1066,8 @@
     "no_invites": "Нет приглашений",
     "no_invites_desc": "Убедитесь, что ваш профиль является общедоступным, чтобы пользователи могли пригласить вас.",
     "pending_invites": "В ожидании приглашений",
-    "title": "Приглашения"
+    "title": "Приглашения",
+    "fetch_failed": "Не удалось загрузить приглашения"
   },
   "strava": {
     "authorization_error": "Перенаправление ошибки на URL авторизации Strava",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Успешно связанный с Wanderer",
     "connection_error": "Ошибка подключения к Wanderer",
-    "wanderer_integration_desc": "Подключитесь к Wanderer, чтобы легко импортировать и просмотреть ваши маршруты в локациях"
+    "wanderer_integration_desc": "Подключитесь к Wanderer, чтобы легко импортировать и просмотреть ваши маршруты в локациях",
+    "disconnected": "Успешно отключено от Wanderer",
+    "disconnect_error": "Ошибка при отключении от Wanderer",
+    "refreshed": "Wanderer успешно обновлён",
+    "refresh_error": "Ошибка при обновлении Wanderer"
   },
   "collections": {
     "all_items": "Все предметы",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Скрыть детали",
-    "show_more": "Показать больше"
+    "show_more": "Показать больше",
+    "refresh": "Обновить"
   },
   "currencies": {
     "AED": "Дирхам ОАЭ",
@@ -1139,5 +1165,8 @@
     "unscheduled_items": "Незапланированные предметы",
     "unscheduled_items_desc": "Эти элементы связаны с этой поездкой, но еще не добавлены к определенному дню.",
     "link_existing_item": "Связать существующий элемент"
+  },
+  "errors": {
+    "generic_error": "Не удалось загрузить детали"
   }
 }

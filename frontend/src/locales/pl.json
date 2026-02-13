@@ -492,7 +492,23 @@
     "collection_duplicate_success": "Kolekcja zduplikowana pomyślnie! Przekierowywanie...",
     "collection_duplicate_error": "Nie udało się zduplikować kolekcji.",
     "show_strava_activities": "Pokaż aktywności Strava",
-    "hide_strava_activities": "Ukryj aktywności Strava"
+    "hide_strava_activities": "Ukryj aktywności Strava",
+    "activities": "Aktywności",
+    "failed_to_fetch_activities": "Nie udało się pobrać aktywności",
+    "found_activities": "Znaleziono {count} aktywności",
+    "local": "Lokalny",
+    "local_time": "Czas lokalny",
+    "no_strava_activities_found": "Nie znaleziono aktywności Strava",
+    "strava_not_connected": "Strava nie jest połączona",
+    "transport_end": "Koniec transportu",
+    "transport_start": "Początek transportu",
+    "trip_timezone": "Strefa czasowa podróży",
+    "your_time": "Twój czas",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -806,7 +822,8 @@
     "enter_checklist_title": "Wprowadź tytuł listy kontrolnej",
     "no_items_yet": "Nie ma jeszcze przedmiotów",
     "update_checklist_details": "Edycja listy kontrolnej",
-    "viewing_checklist": "Przeglądanie listy kontrolnej"
+    "viewing_checklist": "Przeglądanie listy kontrolnej",
+    "more_items": "więcej elementów"
   },
   "transportation": {
     "transportation_deleted": "Transport został pomyślnie usunięty!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Strefa czasowa przybycia",
     "departure_code": "Kod wyjazdu",
     "departure_date": "Data wyjazdu",
-    "departure_timezone": "Strefa czasowa wyjazdu"
+    "departure_timezone": "Strefa czasowa wyjazdu",
+    "codes": "Kody"
   },
   "search": {
     "cities": "Miasta",
@@ -884,7 +902,8 @@
     "invite_revoked": "Zaproś cofnięte",
     "invite_sent": "Zaproś wysłane",
     "revoke_failed": "Revoke nie powiodło się",
-    "unshare_failed": "Unhare nie powiodło się"
+    "unshare_failed": "Unhare nie powiodło się",
+    "no_available_users": "Brak dostępnych użytkowników"
   },
   "profile": {
     "member_since": "Użytkownik od",
@@ -909,7 +928,8 @@
     "category_name": "Nazwa kategorii",
     "add_new_category": "Dodaj nową kategorię",
     "name_required": "Nazwa kategorii jest wymagana",
-    "location_update_after_refresh": "Karty lokalizacji zostaną zaktualizowane po odświeżeniu strony."
+    "location_update_after_refresh": "Karty lokalizacji zostaną zaktualizowane po odświeżeniu strony.",
+    "no_categories_yet": "Brak kategorii"
   },
   "dashboard": {
     "countries_visited": "Odwiedzone kraje",
@@ -1046,7 +1066,8 @@
     "no_invites": "Żadnych zaproszeń",
     "no_invites_desc": "Upewnij się, że Twój profil jest publiczny, aby użytkownicy mogli Cię zaprosić.",
     "pending_invites": "Oczekujące zaproszenia",
-    "title": "Zaprasza"
+    "title": "Zaprasza",
+    "fetch_failed": "Nie udało się pobrać zaproszeń"
   },
   "strava": {
     "authorization_error": "Przekierowanie błędów do URL autoryzacji Strava",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Pomyślnie związany z Wandererem",
     "connection_error": "Błąd łączący się z Wandererem",
-    "wanderer_integration_desc": "Połącz się z Wandererem, aby łatwo importować i przeglądać szlaki w lokalizacjach"
+    "wanderer_integration_desc": "Połącz się z Wandererem, aby łatwo importować i przeglądać szlaki w lokalizacjach",
+    "disconnected": "Pomyślnie odłączono od Wanderer",
+    "disconnect_error": "Błąd podczas odłączania od Wanderer",
+    "refreshed": "Wanderer pomyślnie odświeżony",
+    "refresh_error": "Błąd podczas odświeżania Wanderer"
   },
   "collections": {
     "all_items": "Wszystkie przedmioty",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Ukryj szczegóły",
-    "show_more": "Pokaż więcej"
+    "show_more": "Pokaż więcej",
+    "refresh": "Odśwież"
   },
   "currencies": {
     "AED": "Dirham Zjednoczonych Emiratów Arabskich",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Elementy kontekstu podróży dotyczą całej podróży — na przykład lokalizacje będące samym celem podróży, uwagi ogólne lub listy rzeczy do spakowania ważne dla całej podróży.",
     "unscheduled_items": "Niezaplanowane pozycje",
     "unscheduled_items_desc": "Te elementy są powiązane z tą podróżą, ale nie zostały jeszcze dodane do konkretnego dnia."
+  },
+  "errors": {
+    "generic_error": "Nie udało się załadować szczegółów"
   }
 }

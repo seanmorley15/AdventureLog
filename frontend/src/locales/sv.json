@@ -443,7 +443,23 @@
     "collection_duplicate_success": "Samlingen har duplicerats! Omdirigerar...",
     "collection_duplicate_error": "Misslyckades med att duplicera samlingen.",
     "hide_strava_activities": "Göm Strava-aktiviteter",
-    "show_strava_activities": "Visa Strava-aktiviteter"
+    "show_strava_activities": "Visa Strava-aktiviteter",
+    "activities": "Aktiviteter",
+    "failed_to_fetch_activities": "Kunde inte hämta aktiviteter",
+    "found_activities": "Hittade {count} aktiviteter",
+    "local": "Lokal",
+    "local_time": "Lokal tid",
+    "no_strava_activities_found": "Inga Strava-aktiviteter hittades",
+    "strava_not_connected": "Strava inte ansluten",
+    "transport_end": "Transportslut",
+    "transport_start": "Transportstart",
+    "trip_timezone": "Resans tidszon",
+    "your_time": "Din tid",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "home": {
     "desc_1": "Upptäck, planera och utforska med lätthet",
@@ -755,7 +771,8 @@
     "enter_checklist_title": "Ange checklista -titel",
     "no_items_yet": "Inga artiklar än",
     "update_checklist_details": "Redigera checklista",
-    "viewing_checklist": "Visa checklista"
+    "viewing_checklist": "Visa checklista",
+    "more_items": "fler objekt"
   },
   "collection": {
     "collection_created": "Samlingen har skapats!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Tidszon för ankomst",
     "departure_code": "Avgångskod",
     "departure_date": "Avresedatum",
-    "departure_timezone": "Tidszon för avgång"
+    "departure_timezone": "Tidszon för avgång",
+    "codes": "Koder"
   },
   "search": {
     "cities": "Städer",
@@ -884,7 +902,8 @@
     "invite_revoked": "Bjuda återkallad",
     "invite_sent": "Inbjudan skickad",
     "revoke_failed": "Återkallad misslyckades",
-    "unshare_failed": "Unshare misslyckades"
+    "unshare_failed": "Unshare misslyckades",
+    "no_available_users": "Inga tillgängliga användare"
   },
   "profile": {
     "member_since": "Medlem sedan",
@@ -909,7 +928,8 @@
     "select_category": "Välj Kategori",
     "add_new_category": "Lägg till en ny kategori",
     "name_required": "Kategorinamn krävs",
-    "location_update_after_refresh": "Platskorten kommer att uppdateras när du uppdaterar sidan."
+    "location_update_after_refresh": "Platskorten kommer att uppdateras när du uppdaterar sidan.",
+    "no_categories_yet": "Inga kategorier ännu"
   },
   "dashboard": {
     "countries_visited": "Besökta länder",
@@ -1046,7 +1066,8 @@
     "no_invites": "Inga inbjudningar",
     "no_invites_desc": "Se till att din profil är offentlig så att användare kan bjuda in dig.",
     "pending_invites": "Väntande inbjudningar",
-    "title": "Inbjudning"
+    "title": "Inbjudning",
+    "fetch_failed": "Kunde inte hämta inbjudningar"
   },
   "strava": {
     "authorization_error": "Fel omdirigering till STRAVA -auktorisation URL",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Framgångsrikt ansluten till vandrare",
     "connection_error": "Fel som ansluter till vandrare",
-    "wanderer_integration_desc": "Anslut till Wanderer för att enkelt importera och se dina spår på platser"
+    "wanderer_integration_desc": "Anslut till Wanderer för att enkelt importera och se dina spår på platser",
+    "disconnected": "Frånkopplad från Wanderer",
+    "disconnect_error": "Fel vid frånkoppling från Wanderer",
+    "refreshed": "Wanderer uppdaterad",
+    "refresh_error": "Fel vid uppdatering av Wanderer"
   },
   "collections": {
     "all_items": "Alla föremål",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Dölj detaljer",
-    "show_more": "Visa mer"
+    "show_more": "Visa mer",
+    "refresh": "Uppdatera"
   },
   "currencies": {
     "AED": "UAE Dirham",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Resans kontextobjekt gäller för hela resan – till exempel platser som är själva destinationen, allmänna anteckningar eller packlistor som är viktiga för hela resan.",
     "unscheduled_items": "Oschemalagda objekt",
     "unscheduled_items_desc": "Dessa objekt är länkade till denna resa men har inte lagts till en specifik dag än."
+  },
+  "errors": {
+    "generic_error": "Kunde inte ladda detaljer"
   }
 }

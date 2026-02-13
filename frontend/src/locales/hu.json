@@ -492,7 +492,23 @@
     "collection_duplicate_success": "Gyűjtemény sikeresen megkettőzve! Átirányítás...",
     "collection_duplicate_error": "A gyűjtemény másolása sikertelen.",
     "hide_strava_activities": "A Strava-tevékenységek elrejtése",
-    "show_strava_activities": "Mutasd a Strava-tevékenységeket"
+    "show_strava_activities": "Mutasd a Strava-tevékenységeket",
+    "activities": "Tevékenységek",
+    "failed_to_fetch_activities": "Nem sikerült betölteni a tevékenységeket",
+    "found_activities": "{count} tevékenység található",
+    "local": "Helyi",
+    "local_time": "Helyi idő",
+    "no_strava_activities_found": "Nem található Strava tevékenység",
+    "strava_not_connected": "Strava nincs csatlakoztatva",
+    "transport_end": "Szállítás vége",
+    "transport_start": "Szállítás kezdete",
+    "trip_timezone": "Utazás időzónája",
+    "your_time": "Az Ön ideje",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Országlista",
@@ -806,7 +822,8 @@
     "current_items": "Jelenlegi elemek",
     "completed": "Befejezve",
     "no_items_yet": "Még nincsenek elemek",
-    "add_your_first_item": "Add hozzá az első elemedet"
+    "add_your_first_item": "Add hozzá az első elemedet",
+    "more_items": "további elemek"
   },
   "transportation": {
     "transportation_deleted": "Szállítás sikeresen törölve!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Érkezési időzóna",
     "departure_code": "Indulási kód",
     "departure_date": "Indulás dátuma",
-    "departure_timezone": "Indulási időzóna"
+    "departure_timezone": "Indulási időzóna",
+    "codes": "Kódok"
   },
   "lodging": {
     "new_lodging": "Új szállás",
@@ -907,7 +925,8 @@
     "invite_revoked": "A meghívás visszavonva",
     "unshare_failed": "A megosztás visszavonása sikertelen",
     "invite_failed": "Meghívás sikertelen",
-    "invite_sent": "Meghívás elküldve"
+    "invite_sent": "Meghívás elküldve",
+    "no_available_users": "Nincsenek elérhető felhasználók"
   },
   "profile": {
     "member_since": "Tagja óta",
@@ -932,7 +951,8 @@
     "select_category": "Kategória kiválasztása",
     "category_name": "Kategória neve",
     "add_new_category": "Új kategória hozzáadása",
-    "name_required": "A kategória neve kötelező"
+    "name_required": "A kategória neve kötelező",
+    "no_categories_yet": "Még nincsenek kategóriák"
   },
   "dashboard": {
     "welcome_back": "Üdv újra",
@@ -1046,7 +1066,8 @@
     "accept": "Elfogadás",
     "invited_on": "Meghívva ekkor",
     "no_invites_desc": "Győződj meg róla, hogy a profilod nyilvános, hogy a felhasználók meghívhassanak.",
-    "by": "által"
+    "by": "által",
+    "fetch_failed": "Nem sikerült betölteni a meghívókat"
   },
   "strava": {
     "strava_integration_desc": "Csatlakozz a Stravához, hogy könnyedén importáld az aktivitásaidat helyszínekhez és látogatásokhoz.",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "wanderer_integration_desc": "Csatlakozz a Wandererhez, hogy könnyedén importáld és megtekinthesd a túraútvonalakat a helyszíneken.",
     "connection_error": "Hiba a Wandererhez való csatlakozáskor",
-    "connected": "Sikeresen csatlakozva a Wandererhez"
+    "connected": "Sikeresen csatlakozva a Wandererhez",
+    "disconnected": "Sikeresen leválasztva a Wandererről",
+    "disconnect_error": "Hiba a Wanderer leválasztásakor",
+    "refreshed": "Wanderer sikeresen frissítve",
+    "refresh_error": "Hiba a Wanderer frissítésekor"
   },
   "collections": {
     "all_items": "Minden elem",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Részletek elrejtése",
-    "show_more": "Mutasson többet"
+    "show_more": "Mutasson többet",
+    "refresh": "Frissítés"
   },
   "currencies": {
     "AED": "Egyesült Arab Emírségek dirham",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Az utazási kontextus elemei az egész utazásra vonatkoznak – például olyan helyek, amelyek maga az úti cél, általános megjegyzések vagy csomaglisták, amelyek az egész utazás szempontjából fontosak.",
     "unscheduled_items": "Nem ütemezett tételek",
     "unscheduled_items_desc": "Ezek az elemek ehhez az utazáshoz kapcsolódnak, de még nem adták hozzá egy adott naphoz."
+  },
+  "errors": {
+    "generic_error": "Nem sikerült betölteni a részleteket"
   }
 }

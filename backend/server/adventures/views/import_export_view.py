@@ -127,6 +127,7 @@ class BackupViewSet(viewsets.ViewSet):
                     'export_id': visit_idx,  # Add unique identifier for this visit
                     'start_date': visit.start_date.isoformat() if visit.start_date else None,
                     'end_date': visit.end_date.isoformat() if visit.end_date else None,
+                    'date_precision': visit.date_precision,
                     'timezone': visit.timezone,
                     'notes': visit.notes,
                     'activities': []
@@ -637,6 +638,7 @@ class BackupViewSet(viewsets.ViewSet):
                     location=location,
                     start_date=visit_data.get('start_date'),
                     end_date=visit_data.get('end_date'),
+                    date_precision=visit_data.get('date_precision', 'full'),
                     timezone=visit_data.get('timezone'),
                     notes=visit_data.get('notes')
                 )

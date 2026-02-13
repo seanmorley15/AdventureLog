@@ -225,8 +225,24 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
+        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone', 'notes', 'activities', 'location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_date_precision(self, value):
+        """Validate that date_precision is one of the allowed choices."""
+        allowed = ['full', 'month', 'year']
+        if value not in allowed:
+            raise serializers.ValidationError(
+                f"Invalid date precision '{value}'. Must be one of: {', '.join(allowed)}"
+            )
+        return value
+
+    def validate(self, data):
+        """Ensure start_date is provided when creating a visit."""
+        # On create (no instance), start_date is required
+        if not self.instance and not data.get('start_date'):
+            raise serializers.ValidationError({'start_date': 'Start date is required.'})
+        return data
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):
@@ -237,7 +253,7 @@ class VisitSerializer(serializers.ModelSerializer):
 class CalendarVisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone']
+        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone']
 
 
 class CalendarLocationSerializer(serializers.ModelSerializer):

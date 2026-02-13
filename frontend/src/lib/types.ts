@@ -467,10 +467,13 @@ export type Activity = {
 	external_service_id: string | null;
 };
 
+export type DatePrecision = 'full' | 'month' | 'year';
+
 export type Visit = {
 	id: string;
 	start_date: string;
 	end_date: string;
+	date_precision: DatePrecision;
 	notes: string;
 	timezone: string | null;
 	activities: Activity[];

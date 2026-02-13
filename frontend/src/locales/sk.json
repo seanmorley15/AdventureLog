@@ -492,7 +492,23 @@
     "collection_duplicate_success": "Zbierka bola úspešne zduplikovaná! Presmerovanie...",
     "collection_duplicate_error": "Nepodarilo sa zduplikovať zbierku.",
     "hide_strava_activities": "Skryť Strava aktivity",
-    "show_strava_activities": "Zobraziť Strava Activities"
+    "show_strava_activities": "Zobraziť Strava Activities",
+    "activities": "Aktivity",
+    "failed_to_fetch_activities": "Nepodarilo sa načítať aktivity",
+    "found_activities": "Nájdených {count} aktivít",
+    "local": "Miestny",
+    "local_time": "Miestny čas",
+    "no_strava_activities_found": "Nenašli sa žiadne aktivity Strava",
+    "strava_not_connected": "Strava nie je pripojená",
+    "transport_end": "Koniec prepravy",
+    "transport_start": "Začiatok prepravy",
+    "trip_timezone": "Časové pásmo cesty",
+    "your_time": "Váš čas",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Zoznam krajín",
@@ -806,7 +822,8 @@
     "current_items": "Aktuálne položky",
     "completed": "Dokončené",
     "no_items_yet": "Zatiaľ žiadne položky",
-    "add_your_first_item": "Pridajte svoju prvú položku"
+    "add_your_first_item": "Pridajte svoju prvú položku",
+    "more_items": "ďalších položiek"
   },
   "transportation": {
     "transportation_deleted": "Doprava bola úspešne odstránená!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Časové pásmo príchodu",
     "departure_code": "Kód odchodu",
     "departure_date": "Dátum odchodu",
-    "departure_timezone": "Časové pásmo odletu"
+    "departure_timezone": "Časové pásmo odletu",
+    "codes": "Kódy"
   },
   "lodging": {
     "new_lodging": "Nové ubytovanie",
@@ -907,7 +925,8 @@
     "invite_revoked": "Pozvánka odvolaná",
     "invite_sent": "Pozvánka odoslaná",
     "revoke_failed": "Odvolanie pozvánky neúspešné",
-    "unshare_failed": "Zrušenie zdieľania neúspešné"
+    "unshare_failed": "Zrušenie zdieľania neúspešné",
+    "no_available_users": "Žiadni dostupní používatelia"
   },
   "profile": {
     "member_since": "Člen od",
@@ -932,7 +951,8 @@
     "select_category": "Vyberte kategóriu",
     "category_name": "Názov kategórie",
     "add_new_category": "Pridať novú kategóriu",
-    "name_required": "Názov kategórie je povinný"
+    "name_required": "Názov kategórie je povinný",
+    "no_categories_yet": "Zatiaľ žiadne kategórie"
   },
   "dashboard": {
     "welcome_back": "Vitajte späť",
@@ -1046,7 +1066,8 @@
     "accept": "Prijať",
     "invited_on": "Pozvaný dňa",
     "no_invites_desc": "Uistite sa, že váš profil je verejný, aby vás mohli ostatní používatelia pozvať.",
-    "by": "cez"
+    "by": "cez",
+    "fetch_failed": "Nepodarilo sa načítať pozvánky"
   },
   "strava": {
     "strava_integration_desc": "Pripojte sa k Strava pre jednoduchý import vašich aktivít do miest a návštev",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "wanderer_integration_desc": "Pripojte sa k Wanderer pre jednoduchý import a zobrazenie vašich trás v miestach",
     "connection_error": "Chyba pri pripájaní k Wanderer",
-    "connected": "Úspešne pripojené k Wanderer"
+    "connected": "Úspešne pripojené k Wanderer",
+    "disconnected": "Úspešne odpojené od Wanderer",
+    "disconnect_error": "Chyba pri odpájaní od Wanderer",
+    "refreshed": "Wanderer úspešne obnovený",
+    "refresh_error": "Chyba pri obnovovaní Wanderer"
   },
   "collections": {
     "all_items": "Všetky položky",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Skryť podrobnosti",
-    "show_more": "Ukáž viac"
+    "show_more": "Ukáž viac",
+    "refresh": "Obnoviť"
   },
   "currencies": {
     "AED": "Dirham SAE",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Kontextové položky cesty sa vzťahujú na celú cestu – napríklad miesta, ktoré sú samotným cieľom, všeobecné poznámky alebo zoznamy balíkov, ktoré sú dôležité pre celú cestu.",
     "unscheduled_items": "Neplánované položky",
     "unscheduled_items_desc": "Tieto položky sú spojené s touto cestou, ale zatiaľ neboli pridané ku konkrétnemu dňu."
+  },
+  "errors": {
+    "generic_error": "Nepodarilo sa načítať podrobnosti"
   }
 }

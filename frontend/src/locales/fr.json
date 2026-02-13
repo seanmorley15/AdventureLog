@@ -443,7 +443,23 @@
     "collection_duplicate_success": "Collection dupliquée avec succès ! Redirection...",
     "collection_duplicate_error": "Échec de la duplication de la collection.",
     "hide_strava_activities": "Masquer les activités Strava",
-    "show_strava_activities": "Afficher les activités Strava"
+    "show_strava_activities": "Afficher les activités Strava",
+    "activities": "Activités",
+    "failed_to_fetch_activities": "Échec du chargement des activités",
+    "found_activities": "{count} activités trouvées",
+    "local": "Local",
+    "local_time": "Heure locale",
+    "no_strava_activities_found": "Aucune activité Strava trouvée",
+    "strava_not_connected": "Strava non connecté",
+    "transport_end": "Fin du transport",
+    "transport_start": "Début du transport",
+    "trip_timezone": "Fuseau horaire du voyage",
+    "your_time": "Votre heure",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "home": {
     "desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -755,7 +771,8 @@
     "enter_checklist_title": "Entrez le titre de la liste de contrôle",
     "no_items_yet": "Pas encore d'articles",
     "update_checklist_details": "Liste de contrôle d'édition",
-    "viewing_checklist": "Affichage de la liste de contrôle"
+    "viewing_checklist": "Affichage de la liste de contrôle",
+    "more_items": "éléments supplémentaires"
   },
   "collection": {
     "collection_created": "Collection créée avec succès !",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Fuseau horaire d'arrivée",
     "departure_code": "Code de départ",
     "departure_date": "Date de départ",
-    "departure_timezone": "Fuseau horaire de départ"
+    "departure_timezone": "Fuseau horaire de départ",
+    "codes": "Codes"
   },
   "search": {
     "cities": "Villes",
@@ -884,7 +902,8 @@
     "invite_revoked": "Inviter révoqué",
     "invite_sent": "Inviter envoyé",
     "revoke_failed": "Revoke a échoué",
-    "unshare_failed": "Sans partage a échoué"
+    "unshare_failed": "Sans partage a échoué",
+    "no_available_users": "Aucun utilisateur disponible"
   },
   "profile": {
     "member_since": "Membre depuis",
@@ -909,7 +928,8 @@
     "select_category": "Sélectionnez une catégorie",
     "add_new_category": "Ajouter une nouvelle catégorie",
     "name_required": "Le nom de catégorie est requis",
-    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page."
+    "location_update_after_refresh": "Les cartes de localisation seront mises à jour une fois que vous avez actualisé la page.",
+    "no_categories_yet": "Aucune catégorie pour le moment"
   },
   "dashboard": {
     "countries_visited": "Pays visités",
@@ -1046,7 +1066,8 @@
     "no_invites_desc": "Assurez-vous que votre profil est public afin que les utilisateurs puissent vous inviter.",
     "pending_invites": "Invitations en attente",
     "title": "Invitations",
-    "accept": "Accepter"
+    "accept": "Accepter",
+    "fetch_failed": "Échec du chargement des invitations"
   },
   "strava": {
     "authorization_error": "Redirection d'erreur vers l'URL de l'autorisation Strava",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Connecté avec succès à Wanderer",
     "connection_error": "Erreur de connexion à Wanderer",
-    "wanderer_integration_desc": "Connectez-vous à Wanderer pour importer facilement et afficher vos sentiers dans les endroits"
+    "wanderer_integration_desc": "Connectez-vous à Wanderer pour importer facilement et afficher vos sentiers dans les endroits",
+    "disconnected": "Déconnecté de Wanderer avec succès",
+    "disconnect_error": "Erreur lors de la déconnexion de Wanderer",
+    "refreshed": "Wanderer actualisé avec succès",
+    "refresh_error": "Erreur lors de l'actualisation de Wanderer"
   },
   "collections": {
     "all_items": "Tous les articles",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Masquer les détails",
-    "show_more": "Afficher plus"
+    "show_more": "Afficher plus",
+    "refresh": "Actualiser"
   },
   "currencies": {
     "AED": "Dirham des Émirats Arabes Unis",
@@ -1139,5 +1165,8 @@
     "unscheduled_items": "Éléments non planifiés",
     "unscheduled_items_desc": "Ces éléments sont liés à ce voyage mais n'ont pas encore été ajoutés à un jour spécifique.",
     "link_existing_item": "Lier un élément existant"
+  },
+  "errors": {
+    "generic_error": "Échec du chargement des détails"
   }
 }

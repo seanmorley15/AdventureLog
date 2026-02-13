@@ -122,10 +122,22 @@ default_user = 1  # Replace with an actual user ID
 User = get_user_model()
 
 class Visit(models.Model):
+    DATE_PRECISION_CHOICES = [
+        ('full', 'Full date (day-month-year)'),
+        ('month', 'Month and year only'),
+        ('year', 'Year only'),
+    ]
+
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     location = models.ForeignKey('Location', on_delete=models.CASCADE, related_name='visits')
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
+    date_precision = models.CharField(
+        max_length=10,
+        choices=DATE_PRECISION_CHOICES,
+        default='full',
+        help_text='Precision level of the visit date: full, month, or year'
+    )
     timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -136,7 +148,7 @@ class Visit(models.Model):
     attachments = GenericRelation('ContentAttachment', related_query_name='visit')
 
     def clean(self):
-        if self.start_date > self.end_date:
+        if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError('The start date must be before or equal to the end date.')
 
     def delete(self, *args, **kwargs):

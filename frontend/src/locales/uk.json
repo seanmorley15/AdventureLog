@@ -443,7 +443,23 @@
     "collection_duplicate_success": "Колекцію успішно дубльовано! Перенаправлення...",
     "collection_duplicate_error": "Не вдалося дублювати колекцію.",
     "hide_strava_activities": "Приховати дії Strava",
-    "show_strava_activities": "Показати діяльність Strava"
+    "show_strava_activities": "Показати діяльність Strava",
+    "activities": "Активності",
+    "failed_to_fetch_activities": "Не вдалося завантажити активності",
+    "found_activities": "Знайдено {count} активностей",
+    "local": "Місцевий",
+    "local_time": "Місцевий час",
+    "no_strava_activities_found": "Активності Strava не знайдено",
+    "strava_not_connected": "Strava не підключена",
+    "transport_end": "Кінець маршруту",
+    "transport_start": "Початок маршруту",
+    "trip_timezone": "Часовий пояс подорожі",
+    "your_time": "Ваш час",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "Підтвердьте пароль",
@@ -493,7 +509,8 @@
     "manage_categories": "Керування категоріями",
     "name_required": "Необхідно вказати назву категорії",
     "no_categories_found": "Категорії не знайдено.",
-    "select_category": "Виберіть категорію"
+    "select_category": "Виберіть категорію",
+    "no_categories_yet": "Категорій поки немає"
   },
   "checklist": {
     "add_new_item": "Додати новий елемент",
@@ -515,7 +532,8 @@
     "new_item": "Новий товар",
     "no_items_yet": "Поки немає предметів",
     "update_checklist_details": "Контрольний список редагування",
-    "viewing_checklist": "Перегляд контрольного списку"
+    "viewing_checklist": "Перегляд контрольного списку",
+    "more_items": "ще елементів"
   },
   "collection": {
     "archived_appear_here": "Архівні колекції з’являться тут.",
@@ -635,7 +653,8 @@
     "no_invites": "Немає запрошень",
     "no_invites_desc": "Переконайтеся, що ваш профіль загальнодоступний, щоб користувачі могли запросити вас.",
     "pending_invites": "Запрошення в очікуванні",
-    "title": "Запрошує"
+    "title": "Запрошує",
+    "fetch_failed": "Не вдалося завантажити запрошення"
   },
   "locations": {
     "location": "Розташування",
@@ -943,7 +962,8 @@
     "shared_with": "Спільно з",
     "unshare_failed": "Не вдалося скасувати спільний доступ",
     "unshared": "Не доступний",
-    "with": "з"
+    "with": "з",
+    "no_available_users": "Немає доступних користувачів"
   },
   "strava": {
     "authorization_error": "Помилка переспрямування на URL-адресу авторизації strava",
@@ -988,7 +1008,8 @@
     "arrival_timezone": "Часовий пояс прибуття",
     "departure_code": "Код відправлення",
     "departure_date": "Дата відправлення",
-    "departure_timezone": "Часовий пояс відправлення"
+    "departure_timezone": "Часовий пояс відправлення",
+    "codes": "Коди"
   },
   "users": {
     "no_users_found": "Не знайдено користувачів із загальнодоступними профілями."
@@ -996,7 +1017,11 @@
   "wanderer": {
     "connected": "Успішно підключено до Wanderer",
     "connection_error": "Помилка підключення до Wanderer",
-    "wanderer_integration_desc": "Підключіться до Wanderer, щоб легко імпортувати та переглядати свої стежки в місцях"
+    "wanderer_integration_desc": "Підключіться до Wanderer, щоб легко імпортувати та переглядати свої стежки в місцях",
+    "disconnected": "Успішно від'єднано від Wanderer",
+    "disconnect_error": "Помилка при від'єднанні від Wanderer",
+    "refreshed": "Wanderer успішно оновлено",
+    "refresh_error": "Помилка при оновленні Wanderer"
   },
   "worldtravel": {
     "about_country": "Про країну",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Приховати деталі",
-    "show_more": "Показати більше"
+    "show_more": "Показати більше",
+    "refresh": "Оновити"
   },
   "currencies": {
     "AED": "дирхам ОАЕ",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Елементи контексту подорожі застосовуються до всієї подорожі — наприклад, місця, які є самим пунктом призначення, загальні примітки або пакувальні листи, важливі для всієї подорожі.",
     "unscheduled_items": "Позапланові пункти",
     "unscheduled_items_desc": "Ці елементи пов’язані з цією поїздкою, але ще не додані до певного дня."
+  },
+  "errors": {
+    "generic_error": "Не вдалося завантажити деталі"
   }
 }

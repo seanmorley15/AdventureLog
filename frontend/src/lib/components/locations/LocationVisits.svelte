@@ -9,8 +9,9 @@
 	} from '$lib/types';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { t } from 'svelte-i18n';
-	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
-	import { onMount } from 'svelte';
+	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate, formatPartialDate, formatPartialDateRange } from '$lib/dateUtils';
+	import type { DatePrecision } from '$lib/types';
+	import { onMount, tick } from 'svelte';
 	import { isAllDay, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
@@ -53,6 +54,7 @@
 
 	// Component state
 	let allDay: boolean = false;
+	let datePrecision: DatePrecision = 'full';
 	let localStartDate: string = '';
 	let localEndDate: string = '';
 	let fullStartDate: string = '';
@@ -60,6 +62,24 @@
 	let constrainDates: boolean = false;
 	let isEditing = false;
 	let visitIdEditing: string | null = null;
+
+	// Date input focus state (for placeholder-to-native-picker swap)
+	let startInputActive = false;
+	let endInputActive = false;
+
+	/**
+	 * Svelte action: auto-focus the node after mount.
+	 * Used when swapping from placeholder text input to native date picker.
+	 */
+	function autoFocus(node: HTMLInputElement) {
+		tick().then(() => {
+			node.focus();
+			// Try to open the native picker on supported browsers
+			if (typeof node.showPicker === 'function') {
+				try { node.showPicker(); } catch (_) { /* ignore */ }
+			}
+		});
+	}
 
 	// Activity management state
 	let stravaEnabled: boolean = false;
@@ -125,7 +145,21 @@
 
 	// Update local display dates whenever timezone or UTC dates change
 	$: if (!isEditing) {
-		if (allDay) {
+		if (datePrecision === 'year') {
+			// For year-only: extract year from UTC date
+			localStartDate = utcStartDate ? utcStartDate.substring(0, 4) : '';
+			localEndDate = '';
+		} else if (datePrecision === 'month') {
+			// For month-year: extract MM/YYYY from UTC date
+			if (utcStartDate) {
+				const yyyy = utcStartDate.substring(0, 4);
+				const mm = utcStartDate.substring(5, 7);
+				localStartDate = `${mm}/${yyyy}`;
+			} else {
+				localStartDate = '';
+			}
+			localEndDate = '';
+		} else if (allDay) {
 			localStartDate = utcStartDate?.substring(0, 10) ?? '';
 			localEndDate = utcEndDate?.substring(0, 10) ?? '';
 		} else {
@@ -184,17 +218,57 @@
 
 	// Event handlers
 	function handleLocalDateChange() {
-		utcStartDate = updateUTCDate({
-			localDate: localStartDate,
-			timezone: selectedStartTimezone,
-			allDay
-		}).utcDate;
+		if (datePrecision === 'year') {
+			// For year-only: store as Jan 1 of that year
+			const year = localStartDate;
+			if (year && !isNaN(Number(year))) {
+				utcStartDate = `${year}-01-01T00:00:00Z`;
+				utcEndDate = `${year}-12-31T00:00:00Z`;
+			}
+		} else if (datePrecision === 'month') {
+			// For month-year: localStartDate should be "MM/YYYY" format from text input
+			// Also handle partial input gracefully
+			let monthNum: number | null = null;
+			let yearNum: number | null = null;
 
-		utcEndDate = updateUTCDate({
-			localDate: localEndDate,
-			timezone: selectedStartTimezone,
-			allDay
-		}).utcDate;
+			if (localStartDate) {
+				if (localStartDate.includes('/')) {
+					const parts = localStartDate.split('/');
+					monthNum = parseInt(parts[0], 10);
+					yearNum = parseInt(parts[1], 10);
+				} else if (localStartDate.includes('-')) {
+					// Handle YYYY-MM format too
+					const parts = localStartDate.split('-');
+					yearNum = parseInt(parts[0], 10);
+					monthNum = parseInt(parts[1], 10);
+				}
+			}
+
+			if (monthNum && yearNum && !isNaN(monthNum) && !isNaN(yearNum) && monthNum >= 1 && monthNum <= 12 && yearNum >= 1 && yearNum <= 9999) {
+				const mm = String(monthNum).padStart(2, '0');
+				const ym = `${yearNum}-${mm}`;
+				utcStartDate = `${ym}-01T00:00:00Z`;
+				// Set end date to last day of month
+				const lastDay = new Date(yearNum, monthNum, 0).getDate();
+				utcEndDate = `${ym}-${String(lastDay).padStart(2, '0')}T00:00:00Z`;
+			} else {
+				// Invalid input - clear UTC dates to prevent saving broken data
+				utcStartDate = null;
+				utcEndDate = null;
+			}
+		} else {
+			utcStartDate = updateUTCDate({
+				localDate: localStartDate,
+				timezone: selectedStartTimezone,
+				allDay
+			}).utcDate;
+
+			utcEndDate = updateUTCDate({
+				localDate: localEndDate,
+				timezone: selectedStartTimezone,
+				allDay
+			}).utcDate;
+		}
 	}
 
 	function handleAllDayToggle() {
@@ -240,6 +314,7 @@
 				body: JSON.stringify({
 					start_date: utcStartDate,
 					end_date: utcEndDate,
+					date_precision: datePrecision,
 					notes: note,
 					timezone: selectedStartTimezone
 				})
@@ -264,6 +339,7 @@
 					object_id: objectId,
 					start_date: utcStartDate,
 					end_date: utcEndDate,
+					date_precision: datePrecision,
 					notes: note,
 					timezone: selectedStartTimezone,
 					location: objectId
@@ -287,6 +363,9 @@
 			localEndDate = '';
 			utcStartDate = null;
 			utcEndDate = null;
+		datePrecision = 'full';
+		startInputActive = false;
+		endInputActive = false;
 		}
 	}
 
@@ -583,8 +662,11 @@
 	function editVisit(visit: Visit) {
 		isEditing = true;
 		visitIdEditing = visit.id;
+		startInputActive = false;
+		endInputActive = false;
 		const isAllDayEvent = isAllDay(visit.start_date);
 		allDay = isAllDayEvent;
+		datePrecision = visit.date_precision || 'full';
 
 		if ('start_timezone' in visit && typeof visit.start_timezone === 'string') {
 			selectedStartTimezone = visit.start_timezone;
@@ -595,7 +677,15 @@
 			selectedStartTimezone = visit.timezone;
 		}
 
-		if (isAllDayEvent) {
+		if (datePrecision === 'year') {
+			localStartDate = visit.start_date.substring(0, 4);
+			localEndDate = '';
+		} else if (datePrecision === 'month') {
+			const yyyy = visit.start_date.substring(0, 4);
+			const mm = visit.start_date.substring(5, 7);
+			localStartDate = `${mm}/${yyyy}`;
+			localEndDate = '';
+		} else if (isAllDayEvent) {
 			localStartDate = visit.start_date.split('T')[0];
 			localEndDate = visit.end_date.split('T')[0];
 		} else {
@@ -775,6 +865,7 @@
 
 						<!-- Toggles -->
 						<div class="flex flex-wrap gap-6">
+							{#if datePrecision === 'full'}
 							<div class="flex items-center gap-3">
 								<ClockIcon class="w-4 h-4 text-base-content/70" />
 								<label class="label-text text-sm font-medium" for="all-day-toggle"
@@ -788,6 +879,7 @@
 									on:change={handleAllDayToggle}
 								/>
 							</div>
+						{/if}
 
 							{#if collection?.start_date && collection?.end_date}
 								<div class="flex items-center gap-3">
@@ -803,6 +895,17 @@
 									/>
 								</div>
 							{/if}
+
+							<!-- Date Precision Selector -->
+							<div class="flex items-center gap-3">
+								<CalendarIcon class="w-4 h-4 text-base-content/70" />
+								<label class="label-text text-sm font-medium" for="date-precision-select">{$t('adventures.date_precision')}</label>
+								<select id="date-precision-select" class="select select-bordered select-sm" bind:value={datePrecision}>
+									<option value="full">{$t('adventures.date_precision_full')}</option>
+									<option value="month">{$t('adventures.date_precision_month')}</option>
+									<option value="year">{$t('adventures.date_precision_year')}</option>
+								</select>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -817,55 +920,130 @@
 							<label class="label-text text-sm font-medium" for="start-date-input">
 								{typeConfig.startLabel}
 							</label>
-							{#if allDay}
+							{#if datePrecision === 'year'}
 								<input
 									id="start-date-input"
-									type="date"
+									type="number"
 									class="input input-bordered w-full mt-1"
+									placeholder="YYYY"
+									min="1"
+									max="9999"
 									bind:value={localStartDate}
 									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
 								/>
+							{:else if datePrecision === 'month'}
+								<input
+									id="start-date-input"
+									type="text"
+									class="input input-bordered w-full mt-1"
+									placeholder="MM/YYYY"
+									pattern="\d{2}/\d{4}"
+									bind:value={localStartDate}
+									on:change={handleLocalDateChange}
+								/>
+							{:else if allDay}
+								{#if !localStartDate && !startInputActive}
+									<input
+										id="start-date-input"
+										type="text"
+										class="input input-bordered w-full mt-1"
+										placeholder="MM/DD/YYYY"
+										on:click={() => (startInputActive = true)}
+										on:focus={() => (startInputActive = true)}
+									/>
+								{:else}
+									<input
+										id="start-date-input"
+										type="date"
+										class="input input-bordered w-full mt-1"
+										use:autoFocus
+										bind:value={localStartDate}
+										on:change={handleLocalDateChange}
+										on:blur={() => { if (!localStartDate) startInputActive = false; }}
+										min={constrainDates ? constraintStartDate : ''}
+										max={constrainDates ? constraintEndDate : ''}
+									/>
+								{/if}
 							{:else}
-								<input
-									id="start-date-input"
-									type="datetime-local"
-									class="input input-bordered w-full mt-1"
-									bind:value={localStartDate}
-									on:change={handleLocalDateChange}
-									min={constrainDates ? constraintStartDate : ''}
-									max={constrainDates ? constraintEndDate : ''}
-								/>
+								{#if !localStartDate && !startInputActive}
+									<input
+										id="start-date-input"
+										type="text"
+										class="input input-bordered w-full mt-1"
+										placeholder="MM/DD/YYYY HH:MM"
+										on:click={() => (startInputActive = true)}
+										on:focus={() => (startInputActive = true)}
+									/>
+								{:else}
+									<input
+										id="start-date-input"
+										type="datetime-local"
+										class="input input-bordered w-full mt-1"
+										step="60"
+										use:autoFocus
+										bind:value={localStartDate}
+										on:change={handleLocalDateChange}
+										on:blur={() => { if (!localStartDate) startInputActive = false; }}
+										min={constrainDates ? constraintStartDate : ''}
+										max={constrainDates ? constraintEndDate : ''}
+									/>
+								{/if}
 							{/if}
 						</div>
 
 						<!-- End Date -->
-						{#if localStartDate}
+						{#if localStartDate && datePrecision === 'full'}
 							<div>
 								<label class="label-text text-sm font-medium" for="end-date-input">
 									{typeConfig.endLabel}
 								</label>
 								{#if allDay}
-									<input
-										id="end-date-input"
-										type="date"
-										class="input input-bordered w-full mt-1"
-										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
+									{#if !localEndDate && !endInputActive}
+										<input
+											id="end-date-input"
+											type="text"
+											class="input input-bordered w-full mt-1"
+											placeholder="MM/DD/YYYY"
+											on:click={() => (endInputActive = true)}
+											on:focus={() => (endInputActive = true)}
+										/>
+									{:else}
+										<input
+											id="end-date-input"
+											type="date"
+											class="input input-bordered w-full mt-1"
+											use:autoFocus
+											bind:value={localEndDate}
+											on:change={handleLocalDateChange}
+											on:blur={() => { if (!localEndDate) endInputActive = false; }}
+											min={constrainDates ? localStartDate : ''}
+											max={constrainDates ? constraintEndDate : ''}
+										/>
+									{/if}
 								{:else}
-									<input
-										id="end-date-input"
-										type="datetime-local"
-										class="input input-bordered w-full mt-1"
-										bind:value={localEndDate}
-										on:change={handleLocalDateChange}
-										min={constrainDates ? localStartDate : ''}
-										max={constrainDates ? constraintEndDate : ''}
-									/>
+									{#if !localEndDate && !endInputActive}
+										<input
+											id="end-date-input"
+											type="text"
+											class="input input-bordered w-full mt-1"
+											placeholder="MM/DD/YYYY HH:MM"
+											on:click={() => (endInputActive = true)}
+											on:focus={() => (endInputActive = true)}
+										/>
+									{:else}
+										<input
+											id="end-date-input"
+											type="datetime-local"
+											class="input input-bordered w-full mt-1"
+											step="60"
+											use:autoFocus
+											bind:value={localEndDate}
+											on:change={handleLocalDateChange}
+											on:blur={() => { if (!localEndDate) endInputActive = false; }}
+											min={constrainDates ? localStartDate : ''}
+											max={constrainDates ? constraintEndDate : ''}
+										/>
+									{/if}
 								{/if}
 							</div>
 						{/if}
@@ -891,7 +1069,7 @@
 						<button
 							class="btn btn-{typeConfig.color} btn-sm gap-2"
 							type="button"
-							disabled={!localStartDate || !isDateValid}
+							disabled={!localStartDate || !utcStartDate || !isDateValid}
 							on:click={() => addVisit(false)}
 						>
 							<PlusIcon class="w-4 h-4" />
@@ -932,7 +1110,9 @@
 									<div class="flex items-start justify-between">
 										<div class="flex-1 min-w-0">
 											<div class="flex items-center gap-2 mb-2">
-												{#if isAllDay(visit.start_date)}
+																								{#if visit.date_precision && visit.date_precision !== 'full'}
+													<span class="badge badge-outline badge-sm">{visit.date_precision === 'year' ? $t('adventures.date_precision_year') : $t('adventures.date_precision_month')}</span>
+												{:else if isAllDay(visit.start_date)}
 													<span class="badge badge-outline badge-sm"
 														>{$t('adventures.all_day')}</span
 													>
@@ -943,7 +1123,9 @@
 													<span class="badge badge-outline badge-sm">{visit.timezone}</span>
 												{/if}
 												<div class="text-sm font-medium truncate">
-													{#if isAllDay(visit.start_date)}
+																										{#if visit.date_precision && visit.date_precision !== 'full'}
+														{formatPartialDateRange(visit.start_date, visit.end_date, visit.date_precision, visit.timezone)}
+													{:else if isAllDay(visit.start_date)}
 														{visit.start_date && typeof visit.start_date === 'string'
 															? visit.start_date.split('T')[0]
 															: ''}

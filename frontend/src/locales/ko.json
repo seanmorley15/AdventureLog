@@ -443,7 +443,23 @@
     "collection_duplicate_success": "컬렉션이 성공적으로 복제되었습니다! 리디렉션 중...",
     "collection_duplicate_error": "컬렉션 복제에 실패했습니다.",
     "hide_strava_activities": "Strava 활동 숨기기",
-    "show_strava_activities": "Strava 활동 표시"
+    "show_strava_activities": "Strava 활동 표시",
+    "activities": "활동",
+    "failed_to_fetch_activities": "활동을 불러오지 못했습니다",
+    "found_activities": "{count}개의 활동을 찾았습니다",
+    "local": "현지",
+    "local_time": "현지 시간",
+    "no_strava_activities_found": "Strava 활동을 찾을 수 없습니다",
+    "strava_not_connected": "Strava가 연결되지 않았습니다",
+    "transport_end": "교통 종점",
+    "transport_start": "교통 시작점",
+    "trip_timezone": "여행 시간대",
+    "your_time": "내 시간",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -480,7 +496,8 @@
     "select_category": "카테고리 선택",
     "add_new_category": "새 카테고리를 추가하십시오",
     "name_required": "카테고리 이름이 필요합니다",
-    "location_update_after_refresh": "페이지를 새로 고치면 위치 카드가 업데이트됩니다."
+    "location_update_after_refresh": "페이지를 새로 고치면 위치 카드가 업데이트됩니다.",
+    "no_categories_yet": "아직 카테고리가 없습니다"
   },
   "checklist": {
     "checklist_delete_error": "체크리스트 삭제 오류",
@@ -502,7 +519,8 @@
     "update_checklist_details": "체크리스트 편집",
     "viewing_checklist": "체크리스트보기",
     "add_new_item": "새 항목을 추가하십시오",
-    "checklist_viewer": "점검표 뷰어"
+    "checklist_viewer": "점검표 뷰어",
+    "more_items": "개 더"
   },
   "collection": {
     "collection_created": "컬렉션이 성공적으로 생성되었습니다!",
@@ -883,7 +901,8 @@
     "invite_revoked": "취소 된 초대",
     "invite_sent": "초대장",
     "revoke_failed": "취소가 실패했습니다",
-    "unshare_failed": "공해를 실패했습니다"
+    "unshare_failed": "공해를 실패했습니다",
+    "no_available_users": "사용 가능한 사용자가 없습니다"
   },
   "transportation": {
     "edit": "편집",
@@ -918,7 +937,8 @@
     "arrival_timezone": "도착 시간대",
     "departure_code": "출발 코드",
     "departure_date": "출발 날짜",
-    "departure_timezone": "출발 시간대"
+    "departure_timezone": "출발 시간대",
+    "codes": "코드"
   },
   "users": {
     "no_users_found": "공개 프로필인 사용자가 없습니다."
@@ -1046,7 +1066,8 @@
     "no_invites": "초대하지 않습니다",
     "no_invites_desc": "사용자가 귀하를 초대 할 수 있도록 프로필이 공개되어 있는지 확인하십시오.",
     "pending_invites": "보류중인 초대",
-    "title": "초대"
+    "title": "초대",
+    "fetch_failed": "초대를 불러오지 못했습니다"
   },
   "strava": {
     "authorization_error": "Strava Authorization URL로 오류를 방향으로 리디렉션합니다",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Wanderer에 성공적으로 연결되었습니다",
     "connection_error": "방랑자에 연결하는 오류",
-    "wanderer_integration_desc": "Wanderer에 연결하여 위치에서 트레일을 쉽게 가져오고 볼 수 있습니다."
+    "wanderer_integration_desc": "Wanderer에 연결하여 위치에서 트레일을 쉽게 가져오고 볼 수 있습니다.",
+    "disconnected": "Wanderer에서 성공적으로 연결 해제되었습니다",
+    "disconnect_error": "Wanderer 연결 해제 중 오류가 발생했습니다",
+    "refreshed": "Wanderer가 성공적으로 새로고침되었습니다",
+    "refresh_error": "Wanderer 새로고침 중 오류가 발생했습니다"
   },
   "collections": {
     "all_items": "모든 품목",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "세부정보 숨기기",
-    "show_more": "더 보기"
+    "show_more": "더 보기",
+    "refresh": "새로고침"
   },
   "currencies": {
     "AED": "UAE 디르함",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
     "unscheduled_items": "예정되지 않은 품목",
     "unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+  },
+  "errors": {
+    "generic_error": "세부 정보를 불러오지 못했습니다"
   }
 }

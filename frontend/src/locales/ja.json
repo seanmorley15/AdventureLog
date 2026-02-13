@@ -443,7 +443,23 @@
     "collection_duplicate_success": "コレクションが正常に複製されました！リダイレクト中...",
     "collection_duplicate_error": "コレクションの複製に失敗しました。",
     "hide_strava_activities": "Strava アクティビティを非表示にする",
-    "show_strava_activities": "Strava アクティビティを表示する"
+    "show_strava_activities": "Strava アクティビティを表示する",
+    "activities": "アクティビティ",
+    "failed_to_fetch_activities": "アクティビティの取得に失敗しました",
+    "found_activities": "{count}件のアクティビティが見つかりました",
+    "local": "現地",
+    "local_time": "現地時間",
+    "no_strava_activities_found": "Stravaアクティビティが見つかりません",
+    "strava_not_connected": "Stravaが接続されていません",
+    "transport_end": "交通機関終点",
+    "transport_start": "交通機関始点",
+    "trip_timezone": "旅行のタイムゾーン",
+    "your_time": "あなたの時間",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "パスワードを認証する",
@@ -493,7 +509,8 @@
     "manage_categories": "カテゴリを管理します",
     "name_required": "カテゴリ名が必要です",
     "no_categories_found": "カテゴリは見つかりません。",
-    "select_category": "カテゴリを選択します"
+    "select_category": "カテゴリを選択します",
+    "no_categories_yet": "カテゴリーはまだありません"
   },
   "checklist": {
     "checklist_delete_error": "チェックリストを削除するエラー",
@@ -515,7 +532,8 @@
     "enter_checklist_title": "チェックリストのタイトルを入力します",
     "no_items_yet": "まだアイテムはありません",
     "update_checklist_details": "編集チェックリスト",
-    "viewing_checklist": "チェックリストの表示"
+    "viewing_checklist": "チェックリストの表示",
+    "more_items": "件以上"
   },
   "collection": {
     "archived_appear_here": "アーカイブコレクションがここに表示されます。",
@@ -635,7 +653,8 @@
     "no_invites": "招待状はありません",
     "no_invites_desc": "ユーザーがあなたを招待できるように、あなたのプロフィールが公開されていることを確認してください。",
     "pending_invites": "保留中の招待状",
-    "title": "招待します"
+    "title": "招待します",
+    "fetch_failed": "招待の取得に失敗しました"
   },
   "locations": {
     "location": "位置",
@@ -943,7 +962,8 @@
     "invite_revoked": "招待された招待",
     "invite_sent": "送信招待",
     "revoke_failed": "取り消しは失敗しました",
-    "unshare_failed": "UNSHAREは失敗しました"
+    "unshare_failed": "UNSHAREは失敗しました",
+    "no_available_users": "利用可能なユーザーがいません"
   },
   "strava": {
     "authorization_error": "STRAVA Authorization URLへのエラーリダイレクト",
@@ -988,7 +1008,8 @@
     "arrival_timezone": "到着時間帯",
     "departure_code": "出発コード",
     "departure_date": "出発日",
-    "departure_timezone": "出発時間帯"
+    "departure_timezone": "出発時間帯",
+    "codes": "コード"
   },
   "users": {
     "no_users_found": "パブリックプロファイルで見つかったユーザーは見つかりませんでした。"
@@ -996,7 +1017,11 @@
   "wanderer": {
     "connected": "ワンダラーに正常に接続されています",
     "connection_error": "ワンダラーに接続するエラー",
-    "wanderer_integration_desc": "ワンダラーに接続して、簡単にインポートしてトレイルを場所に表示します"
+    "wanderer_integration_desc": "ワンダラーに接続して、簡単にインポートしてトレイルを場所に表示します",
+    "disconnected": "Wandererから正常に切断されました",
+    "disconnect_error": "Wandererの切断中にエラーが発生しました",
+    "refreshed": "Wandererが正常に更新されました",
+    "refresh_error": "Wandererの更新中にエラーが発生しました"
   },
   "worldtravel": {
     "all_regions": "すべての地域",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "詳細を隠す",
-    "show_more": "もっと見る"
+    "show_more": "もっと見る",
+    "refresh": "更新"
   },
   "currencies": {
     "AED": "アラブ首長国連邦ディルハム",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "旅行コンテキスト項目は、旅行全体に適用されます。たとえば、目的地そのものである場所、一般的なメモ、旅行全体にとって重要な持ち物リストなどです。",
     "unscheduled_items": "予定外の項目",
     "unscheduled_items_desc": "これらのアイテムはこの旅行にリンクされていますが、まだ特定の日に追加されていません。"
+  },
+  "errors": {
+    "generic_error": "詳細の読み込みに失敗しました"
   }
 }

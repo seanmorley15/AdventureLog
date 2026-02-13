@@ -20,6 +20,7 @@
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
 	import { getActivityColor, getBasemapUrl, isAllDay, copyToClipboard } from '$lib';
+	import { formatPartialDateRange } from '$lib/dateUtils';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -506,16 +507,23 @@
 										<div class="flex-1 pb-4">
 											<div class="card bg-base-100 shadow">
 												<div class="card-body p-4">
-													{#if isAllDay(visit.start_date)}
-														<div class="flex items-center gap-2 mb-2">
-															<span class="badge badge-primary">All Day</span>
-															<span class="font-semibold">
-																{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
-																	? visit.end_date.split('T')[0]
-																	: ''}
-															</span>
-														</div>
-													{:else}
+												{#if visit.date_precision && visit.date_precision !== 'full'}
+													<div class="flex items-center gap-2 mb-2">
+														<span class="badge badge-primary">{visit.date_precision === 'year' ? $t('adventures.date_precision_year') : $t('adventures.date_precision_month')}</span>
+														<span class="font-semibold">
+															{formatPartialDateRange(visit.start_date, visit.end_date, visit.date_precision, visit.timezone)}
+														</span>
+													</div>
+												{:else if isAllDay(visit.start_date)}
+													<div class="flex items-center gap-2 mb-2">
+														<span class="badge badge-primary">All Day</span>
+														<span class="font-semibold">
+															{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+																? visit.end_date.split('T')[0]
+																: ''}
+														</span>
+													</div>
+												{:else}
 														<div class="space-y-2">
 															<div class="flex items-center gap-2">
 																<span class="badge badge-primary">🕓 {$t('adventures.timed')}</span>

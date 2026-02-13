@@ -443,7 +443,23 @@
     "collection_duplicate_success": "تم تكرار المجموعة بنجاح! جارٍ إعادة التوجيه...",
     "collection_duplicate_error": "فشل في تكرار المجموعة.",
     "hide_strava_activities": "إخفاء أنشطة Strava",
-    "show_strava_activities": "عرض أنشطة Strava"
+    "show_strava_activities": "عرض أنشطة Strava",
+    "activities": "الأنشطة",
+    "failed_to_fetch_activities": "فشل في جلب الأنشطة",
+    "found_activities": "تم العثور على {count} أنشطة",
+    "local": "محلي",
+    "local_time": "التوقيت المحلي",
+    "no_strava_activities_found": "لم يتم العثور على أنشطة Strava",
+    "strava_not_connected": "Strava غير متصل",
+    "transport_end": "نهاية النقل",
+    "transport_start": "بداية النقل",
+    "trip_timezone": "المنطقة الزمنية للرحلة",
+    "your_time": "وقتك",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",
@@ -493,7 +509,8 @@
     "manage_categories": "إدارة الفئات",
     "name_required": "اسم الفئة مطلوب",
     "no_categories_found": "لم يتم العثور على فئات.",
-    "select_category": "حدد الفئة"
+    "select_category": "حدد الفئة",
+    "no_categories_yet": "لا توجد فئات بعد"
   },
   "checklist": {
     "checklist_delete_error": "خطأ حذف قائمة المراجعة",
@@ -515,7 +532,8 @@
     "enter_checklist_title": "أدخل عنوان قائمة المراجعة",
     "no_items_yet": "لا توجد عناصر حتى الآن",
     "update_checklist_details": "قائمة التحقق من التحرير",
-    "viewing_checklist": "عرض قائمة المراجعة"
+    "viewing_checklist": "عرض قائمة المراجعة",
+    "more_items": "عناصر إضافية"
   },
   "collection": {
     "archived_appear_here": "سوف تظهر مجموعات أرشفة هنا.",
@@ -635,7 +653,8 @@
     "no_invites": "لا دعوات",
     "no_invites_desc": "تأكد من أن ملفك الشخصي عام حتى يتمكن المستخدمون من دعوتك.",
     "pending_invites": "دعوات معلقة",
-    "title": "يدعو"
+    "title": "يدعو",
+    "fetch_failed": "فشل في جلب الدعوات"
   },
   "locations": {
     "location": "موقع",
@@ -943,7 +962,8 @@
     "invite_revoked": "دعوة إلغاء",
     "invite_sent": "دعوة إرسال",
     "revoke_failed": "فشل الإلغاء",
-    "unshare_failed": "فشل Unshare"
+    "unshare_failed": "فشل Unshare",
+    "no_available_users": "لا يوجد مستخدمون متاحون"
   },
   "strava": {
     "authorization_error": "خطأ إعادة توجيه إلى عنوان URL لترخيص Strava",
@@ -988,7 +1008,8 @@
     "arrival_timezone": "المنطقة الزمنية للوصول",
     "departure_code": "رمز المغادرة",
     "departure_date": "تاريخ المغادرة",
-    "departure_timezone": "منطقة المغادرة الزمنية"
+    "departure_timezone": "منطقة المغادرة الزمنية",
+    "codes": "الرموز"
   },
   "users": {
     "no_users_found": "لم يتم العثور على مستخدمين مع ملفات تعريف عامة."
@@ -996,7 +1017,11 @@
   "wanderer": {
     "connected": "متصل بنجاح بالتجول",
     "connection_error": "خطأ في الاتصال بالتجول",
-    "wanderer_integration_desc": "اتصل بـ Wanderer لاستيراد مساراتك بسهولة وعرضها في المواقع"
+    "wanderer_integration_desc": "اتصل بـ Wanderer لاستيراد مساراتك بسهولة وعرضها في المواقع",
+    "disconnected": "تم قطع الاتصال بـ Wanderer بنجاح",
+    "disconnect_error": "خطأ في قطع الاتصال بـ Wanderer",
+    "refreshed": "تم تحديث Wanderer بنجاح",
+    "refresh_error": "خطأ في تحديث Wanderer"
   },
   "worldtravel": {
     "all_regions": "جميع المناطق",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "إخفاء التفاصيل",
-    "show_more": "عرض المزيد"
+    "show_more": "عرض المزيد",
+    "refresh": "تحديث"
   },
   "currencies": {
     "AED": "درهم اماراتي",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "تنطبق عناصر سياق الرحلة على الرحلة بأكملها — على سبيل المثال المواقع التي تمثل الوجهة نفسها، أو الملاحظات العامة، أو قوائم التعبئة المهمة للرحلة بأكملها.",
     "unscheduled_items": "العناصر غير المجدولة",
     "unscheduled_items_desc": "ترتبط هذه العناصر بهذه الرحلة ولكن لم تتم إضافتها إلى يوم محدد بعد."
+  },
+  "errors": {
+    "generic_error": "فشل في تحميل التفاصيل"
   }
 }

@@ -245,7 +245,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         # Validate access permissions
         if not self._has_adventure_access(adventure, user):
             return Response(
-                {"error": "User does not have permission to access this adventure"},
+                {"error": "User does not have permission to access this location"},
                 status=status.HTTP_403_FORBIDDEN
             )
 

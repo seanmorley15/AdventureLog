@@ -1144,3 +1144,26 @@ export async function copyToClipboard(text: string): Promise<void> {
 		if (!ok) throw new Error('execCommand copy failed');
 	}
 }
+
+/**
+ * Localize a country name using the browser's Intl.DisplayNames API.
+ * Falls back to the original name if the locale or code is unavailable.
+ *
+ * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., "DE", "US")
+ * @param fallbackName - The original English name to use as fallback
+ * @param locale - The current UI locale (e.g., "de", "fr", "en")
+ * @returns The localized country name, or the fallback if localization fails
+ */
+export function localizeCountryName(
+	countryCode: string,
+	fallbackName: string,
+	locale?: string | null
+): string {
+	if (!countryCode) return fallbackName;
+	try {
+		const displayNames = new Intl.DisplayNames([locale || 'en'], { type: 'region' });
+		return displayNames.of(countryCode.toUpperCase()) || fallbackName;
+	} catch {
+		return fallbackName;
+	}
+}

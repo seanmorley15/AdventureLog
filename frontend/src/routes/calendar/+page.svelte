@@ -124,7 +124,7 @@
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement('a');
 			link.href = url;
-			link.download = 'adventures.ics';
+			link.download = 'locations.ics';
 			link.click();
 			URL.revokeObjectURL(url);
 		} catch (error) {

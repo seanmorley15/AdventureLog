@@ -492,7 +492,23 @@
     "collection_duplicate_success": "Samlingen ble duplisert! Omdirigerer...",
     "collection_duplicate_error": "Kunne ikke duplisere samlingen.",
     "hide_strava_activities": "Skjul Strava-aktiviteter",
-    "show_strava_activities": "Vis Strava-aktiviteter"
+    "show_strava_activities": "Vis Strava-aktiviteter",
+    "activities": "Aktiviteter",
+    "failed_to_fetch_activities": "Kunne ikke hente aktiviteter",
+    "found_activities": "Fant {count} aktiviteter",
+    "local": "Lokal",
+    "local_time": "Lokal tid",
+    "no_strava_activities_found": "Ingen Strava-aktiviteter funnet",
+    "strava_not_connected": "Strava ikke tilkoblet",
+    "transport_end": "Transportslutt",
+    "transport_start": "Transportstart",
+    "trip_timezone": "Reisens tidssone",
+    "your_time": "Din tid",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -806,7 +822,8 @@
     "enter_checklist_title": "Skriv inn sjekklistetittel",
     "no_items_yet": "Ingen ting ennå",
     "update_checklist_details": "Redigering av sjekkliste",
-    "viewing_checklist": "Viser sjekkliste"
+    "viewing_checklist": "Viser sjekkliste",
+    "more_items": "flere elementer"
   },
   "transportation": {
     "transportation_deleted": "Transport slettet!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Tidssone for ankomst",
     "departure_code": "Avreisekode",
     "departure_date": "Avreisedato",
-    "departure_timezone": "Tidssone for avgang"
+    "departure_timezone": "Tidssone for avgang",
+    "codes": "Koder"
   },
   "lodging": {
     "new_lodging": "Ny overnatting",
@@ -907,7 +925,8 @@
     "invite_revoked": "Inviter tilbakekalt",
     "invite_sent": "Inviter sendt",
     "revoke_failed": "Revoke mislyktes",
-    "unshare_failed": "Unshare mislyktes"
+    "unshare_failed": "Unshare mislyktes",
+    "no_available_users": "Ingen tilgjengelige brukere"
   },
   "profile": {
     "member_since": "Medlem siden",
@@ -932,7 +951,8 @@
     "category_name": "Kategorinavn",
     "add_new_category": "Legg til ny kategori",
     "name_required": "Kategorinavnet er påkrevd",
-    "location_update_after_refresh": "Stedskortene vil bli oppdatert når du oppdaterer siden."
+    "location_update_after_refresh": "Stedskortene vil bli oppdatert når du oppdaterer siden.",
+    "no_categories_yet": "Ingen kategorier ennå"
   },
   "dashboard": {
     "welcome_back": "Velkommen tilbake",
@@ -1046,7 +1066,8 @@
     "no_invites": "Ingen invitasjoner",
     "no_invites_desc": "Forsikre deg om at profilen din er offentlig slik at brukere kan invitere deg.",
     "pending_invites": "I påvente av invitasjoner",
-    "title": "Inviterer"
+    "title": "Inviterer",
+    "fetch_failed": "Kunne ikke hente invitasjoner"
   },
   "strava": {
     "authorization_error": "Feil omdirigere til URL -URL for Strava",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Vellykket koblet til vandrer",
     "connection_error": "Feil tilkobling til vandrer",
-    "wanderer_integration_desc": "Koble til Wanderer for enkelt å importere og se løypene dine på steder"
+    "wanderer_integration_desc": "Koble til Wanderer for enkelt å importere og se løypene dine på steder",
+    "disconnected": "Koblet fra Wanderer",
+    "disconnect_error": "Feil ved frakobling fra Wanderer",
+    "refreshed": "Wanderer oppdatert",
+    "refresh_error": "Feil ved oppdatering av Wanderer"
   },
   "collections": {
     "all_items": "Alle varer",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Skjul detaljer",
-    "show_more": "Vis mer"
+    "show_more": "Vis mer",
+    "refresh": "Oppdater"
   },
   "currencies": {
     "AED": "UAE Dirham",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Turkontekstelementer gjelder for hele turen – for eksempel steder som er selve destinasjonen, generelle notater eller pakkelister som er viktige for hele turen.",
     "unscheduled_items": "Ikke-planlagte elementer",
     "unscheduled_items_desc": "Disse elementene er knyttet til denne turen, men har ikke blitt lagt til en bestemt dag ennå."
+  },
+  "errors": {
+    "generic_error": "Kunne ikke laste detaljer"
   }
 }

@@ -443,7 +443,23 @@
     "collection_duplicate_success": "Collectie succesvol gedupliceerd! Doorverwijzen...",
     "collection_duplicate_error": "Kan collectie niet dupliceren.",
     "hide_strava_activities": "Strava-activiteiten verbergen",
-    "show_strava_activities": "Strava-activiteiten weergeven"
+    "show_strava_activities": "Strava-activiteiten weergeven",
+    "activities": "Activiteiten",
+    "failed_to_fetch_activities": "Kan activiteiten niet ophalen",
+    "found_activities": "{count} activiteiten gevonden",
+    "local": "Lokaal",
+    "local_time": "Lokale tijd",
+    "no_strava_activities_found": "Geen Strava-activiteiten gevonden",
+    "strava_not_connected": "Strava niet verbonden",
+    "transport_end": "Transporteinde",
+    "transport_start": "Transportbegin",
+    "trip_timezone": "Tijdzone van de reis",
+    "your_time": "Jouw tijd",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -755,7 +771,8 @@
     "enter_checklist_title": "Voer de titel van de checklist in",
     "no_items_yet": "Nog geen items",
     "update_checklist_details": "Bewerkingshoofdlijst",
-    "viewing_checklist": "Checklist bekijken"
+    "viewing_checklist": "Checklist bekijken",
+    "more_items": "meer items"
   },
   "collection": {
     "collection_created": "Collectie succesvol aangemaakt!",
@@ -841,7 +858,8 @@
     "arrival_timezone": "Aankomst tijdzone",
     "departure_code": "Vertrekcode",
     "departure_date": "Vertrekdatum",
-    "departure_timezone": "Vertrektijdzone"
+    "departure_timezone": "Vertrektijdzone",
+    "codes": "Codes"
   },
   "search": {
     "cities": "Steden",
@@ -884,7 +902,8 @@
     "invite_revoked": "Uitnodigen ingetrokken",
     "invite_sent": "Uitnodigen verzonden",
     "revoke_failed": "Revoke mislukt",
-    "unshare_failed": "Onverschuiving mislukt"
+    "unshare_failed": "Onverschuiving mislukt",
+    "no_available_users": "Geen beschikbare gebruikers"
   },
   "profile": {
     "member_since": "Lid sinds",
@@ -909,7 +928,8 @@
     "select_category": "Selecteer een categorie",
     "add_new_category": "Voeg een nieuwe categorie toe",
     "name_required": "Categorienaam is vereist",
-    "location_update_after_refresh": "De locatiekaarten worden bijgewerkt zodra u de pagina vernieuwt."
+    "location_update_after_refresh": "De locatiekaarten worden bijgewerkt zodra u de pagina vernieuwt.",
+    "no_categories_yet": "Nog geen categorieën"
   },
   "dashboard": {
     "countries_visited": "Bezochte landen",
@@ -1046,7 +1066,8 @@
     "no_invites": "Geen uitnodigingen",
     "no_invites_desc": "Zorg ervoor dat uw profiel openbaar is, zodat gebruikers u kunnen uitnodigen.",
     "pending_invites": "In afwachting van uitnodigingen",
-    "title": "Uitnodigen"
+    "title": "Uitnodigen",
+    "fetch_failed": "Kan uitnodigingen niet ophalen"
   },
   "strava": {
     "authorization_error": "Fout omleidend naar Strava Authorization URL",
@@ -1061,7 +1082,11 @@
   "wanderer": {
     "connected": "Succesvol verbonden met Wanderer",
     "connection_error": "Fout die verbinding maakt met Wanderer",
-    "wanderer_integration_desc": "Maak verbinding met Wanderer om eenvoudig uw paden op locaties te importeren en te bekijken"
+    "wanderer_integration_desc": "Maak verbinding met Wanderer om eenvoudig uw paden op locaties te importeren en te bekijken",
+    "disconnected": "Succesvol losgekoppeld van Wanderer",
+    "disconnect_error": "Fout bij het loskoppelen van Wanderer",
+    "refreshed": "Wanderer succesvol vernieuwd",
+    "refresh_error": "Fout bij het vernieuwen van Wanderer"
   },
   "collections": {
     "all_items": "Alle artikelen",
@@ -1080,7 +1105,8 @@
   },
   "common": {
     "show_less": "Details verbergen",
-    "show_more": "Laat meer zien"
+    "show_more": "Laat meer zien",
+    "refresh": "Vernieuwen"
   },
   "currencies": {
     "AED": "VAE Dirham",
@@ -1139,5 +1165,8 @@
     "trip_context_info": "Reiscontextitems zijn van toepassing op de hele reis, bijvoorbeeld locaties die de bestemming zelf vormen, algemene opmerkingen of paklijsten die belangrijk zijn voor de hele reis.",
     "unscheduled_items": "Niet-geplande items",
     "unscheduled_items_desc": "Deze items zijn gekoppeld aan deze reis, maar nog niet toegevoegd aan een specifieke dag."
+  },
+  "errors": {
+    "generic_error": "Kan details niet laden"
   }
 }

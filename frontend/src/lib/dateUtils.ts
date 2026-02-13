@@ -1,8 +1,7 @@
 // @ts-ignore
 import { DateTime } from 'luxon';
-import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
+import type { Checklist, Collection, DatePrecision, Lodging, Note, Transportation, Visit } from './types';
 import { isAllDay } from '$lib';
-
 /**
  * Convert a UTC ISO date to a datetime-local value in the specified timezone
  */
@@ -122,6 +121,65 @@ export function formatAllDayDate(dateString: string): string {
 		month: 'short',
 		day: 'numeric'
 	}).format(new Date(dateWithMidday));
+}
+
+/**
+ * Format a visit date based on its precision level.
+ * - 'full': shows full date (e.g., "Jan 15, 2024")
+ * - 'month': shows month and year (e.g., "Sep 2023")
+ * - 'year': shows year only (e.g., "2024")
+ */
+export function formatPartialDate(
+	dateString: string,
+	precision: DatePrecision = 'full',
+	timezone?: string | null
+): string {
+	if (!dateString) return '';
+	try {
+		const datePart = dateString.split('T')[0];
+		const dateWithMidday = `${datePart}T12:00:00`;
+		const date = new Date(dateWithMidday);
+
+		switch (precision) {
+			case 'year':
+				return new Intl.DateTimeFormat(undefined, {
+					year: 'numeric'
+				}).format(date);
+			case 'month':
+				return new Intl.DateTimeFormat(undefined, {
+					year: 'numeric',
+					month: 'long'
+				}).format(date);
+			case 'full':
+			default:
+				return new Intl.DateTimeFormat(undefined, {
+					year: 'numeric',
+					month: 'short',
+					day: 'numeric'
+				}).format(date);
+		}
+	} catch {
+		return dateString;
+	}
+}
+
+/**
+ * Format a visit date range based on precision.
+ * Shows appropriate format for partial dates and avoids redundant info.
+ */
+export function formatPartialDateRange(
+	startDate: string,
+	endDate: string,
+	precision: DatePrecision = 'full',
+	timezone?: string | null
+): string {
+	if (!startDate) return '';
+	const start = formatPartialDate(startDate, precision, timezone);
+	if (!endDate || startDate === endDate) return start;
+
+	const end = formatPartialDate(endDate, precision, timezone);
+	if (start === end) return start;
+	return `${start} – ${end}`;
 }
 
 // ==== FIXED TIMEZONE-AWARE DATE RANGE LOGIC ====
