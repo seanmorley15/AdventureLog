@@ -434,7 +434,16 @@
     "export_zip": "Exportar ZIP",
     "import_failed": "Falha na importação",
     "import_from_file": "Importar do arquivo",
-    "import_success": "Sucesso na importação"
+    "import_success": "Sucesso na importação",
+    "duplicate": "Duplicar",
+    "duplicate_location": "Duplicar localização",
+    "location_duplicate_success": "Localização duplicada com sucesso!",
+    "location_duplicate_error": "Falha ao duplicar localização.",
+    "location_actions": "Ações da localização",
+    "collection_duplicate_success": "Coleção duplicada com sucesso! Redirecionando...",
+    "collection_duplicate_error": "Falha ao duplicar a coleção.",
+    "hide_strava_activities": "Ocultar atividades do Strava",
+    "show_strava_activities": "Mostrar atividades do Strava"
   },
   "auth": {
     "confirm_password": "Confirme a sua senha",
@@ -652,7 +661,9 @@
     "create_new_lodging": "Nova Hospedagem",
     "enter_lodging_name": "Digite o nome da Hospedagem",
     "enter_reservation_number": "Digite o número de Reserva",
-    "update_lodging_details": "Atualizar detalhes da Hospedagem"
+    "update_lodging_details": "Atualizar detalhes da Hospedagem",
+    "invalid_link": "Insira um URL válido (por exemplo, https://example.com).",
+    "save_failed": "Falha ao salvar hospedagem. \nPor favor, tente novamente."
   },
   "map": {
     "add_location": "Adicionar Nova Localização",

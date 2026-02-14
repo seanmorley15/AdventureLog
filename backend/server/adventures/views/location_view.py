@@ -1,3 +1,4 @@
+import logging
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
@@ -7,11 +8,13 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
-from adventures.models import Location, Category, CollectionItineraryItem, Visit
+from adventures.models import Location, Category, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
 from adventures.utils import pagination
+
+logger = logging.getLogger(__name__)
 
 class LocationViewSet(viewsets.ModelViewSet):
     """
@@ -254,6 +257,84 @@ class LocationViewSet(viewsets.ModelViewSet):
         
         return Response(response_data)
     
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Create a duplicate of an existing location.
+
+        Copies all fields except collections and visits. Image references are
+        duplicated (new ContentImage rows pointing to the same files). The name
+        is prefixed with "Copy of " and is_public is reset to False.
+        """
+        original = self.get_object()
+
+        # Verify the requesting user owns the location or has access
+        if not self._has_adventure_access(original, request.user):
+            return Response(
+                {"error": "You do not have permission to duplicate this location."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            with transaction.atomic():
+                # Snapshot original images before creating the copy
+                original_images = list(original.images.all())
+
+                # Build the new location
+                new_location = Location(
+                    user=request.user,
+                    name=f"Copy of {original.name}",
+                    description=original.description,
+                    rating=original.rating,
+                    link=original.link,
+                    location=original.location,
+                    tags=list(original.tags) if original.tags else None,
+                    is_public=False,
+                    longitude=original.longitude,
+                    latitude=original.latitude,
+                    city=original.city,
+                    region=original.region,
+                    country=original.country,
+                    price=original.price,
+                    price_currency=original.price_currency,
+                )
+
+                # Handle category: reuse the user's own matching category or
+                # create one if necessary.
+                if original.category:
+                    category, _ = Category.objects.get_or_create(
+                        user=request.user,
+                        name=original.category.name,
+                        defaults={
+                            'display_name': original.category.display_name,
+                            'icon': original.category.icon,
+                        },
+                    )
+                    new_location.category = category
+
+                new_location.save()
+
+                # Duplicate image references (same file, new DB row)
+                location_ct = ContentType.objects.get_for_model(Location)
+                for img in original_images:
+                    ContentImage.objects.create(
+                        content_type=location_ct,
+                        object_id=str(new_location.id),
+                        image=img.image.name if img.image else None,
+                        immich_id=img.immich_id,
+                        is_primary=img.is_primary,
+                        user=request.user,
+                    )
+
+            serializer = self.get_serializer(new_location)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception:
+            logger.exception("Failed to duplicate location %s", pk)
+            return Response(
+                {"error": "An error occurred while duplicating the location."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
     # view to return location name and lat/lon for all locations a user owns for the golobal map
     @action(detail=False, methods=['get'], url_path='pins')
     def map_locations(self, request):

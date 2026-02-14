@@ -483,7 +483,16 @@
     "export_zip": "Экспортировать ZIP-файл",
     "import_failed": "Импорт не выполнен",
     "import_from_file": "Импорт из файла",
-    "import_success": "Импортировать успех"
+    "import_success": "Импортировать успех",
+    "duplicate": "Дублировать",
+    "duplicate_location": "Дублировать место",
+    "location_duplicate_success": "Местоположение успешно продублировано!",
+    "location_duplicate_error": "Не удалось дублировать место.",
+    "location_actions": "Действия с местом",
+    "collection_duplicate_success": "Коллекция успешно дублирована! Перенаправление...",
+    "collection_duplicate_error": "Не удалось дублировать коллекцию.",
+    "hide_strava_activities": "Скрыть действия Strava",
+    "show_strava_activities": "Показать действия Strava"
   },
   "worldtravel": {
     "country_list": "Список стран",
@@ -853,7 +862,9 @@
     "create_new_lodging": "Новое жилье",
     "enter_lodging_name": "Введите имя жилья",
     "enter_reservation_number": "Введите номер бронирования",
-    "update_lodging_details": "Обновить детали жилья"
+    "update_lodging_details": "Обновить детали жилья",
+    "invalid_link": "Введите действительный URL-адрес (например, https://example.com).",
+    "save_failed": "Не удалось сохранить жилье. \nПожалуйста, попробуйте еще раз."
   },
   "search": {
     "cities": "Города",

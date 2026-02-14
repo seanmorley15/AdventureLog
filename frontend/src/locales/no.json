@@ -483,7 +483,16 @@
     "export_zip": "Eksporter ZIP",
     "import_failed": "Import mislyktes",
     "import_from_file": "Importer fra fil",
-    "import_success": "Import suksess"
+    "import_success": "Import suksess",
+    "duplicate": "Dupliser",
+    "duplicate_location": "Dupliser sted",
+    "location_duplicate_success": "Stedet er duplisert!",
+    "location_duplicate_error": "Kunne ikke duplisere stedet.",
+    "location_actions": "Stedshandlinger",
+    "collection_duplicate_success": "Samlingen ble duplisert! Omdirigerer...",
+    "collection_duplicate_error": "Kunne ikke duplisere samlingen.",
+    "hide_strava_activities": "Skjul Strava-aktiviteter",
+    "show_strava_activities": "Vis Strava-aktiviteter"
   },
   "worldtravel": {
     "country_list": "Liste over land",
@@ -853,7 +862,9 @@
     "create_new_lodging": "Ny losji",
     "enter_lodging_name": "Skriv inn losji -navn",
     "enter_reservation_number": "Angi reservasjonsnummer",
-    "update_lodging_details": "Oppdater innleveringsdetaljer"
+    "update_lodging_details": "Oppdater innleveringsdetaljer",
+    "invalid_link": "Skriv inn en gyldig URL (f.eks. https://example.com).",
+    "save_failed": "Kunne ikke lagre overnatting. \nVennligst prøv igjen."
   },
   "search": {
     "cities": "Byer",

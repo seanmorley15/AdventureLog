@@ -434,7 +434,16 @@
     "export_zip": "Esporta CAP",
     "import_failed": "Importazione non riuscita",
     "import_from_file": "Importa da file",
-    "import_success": "Importazione riuscita"
+    "import_success": "Importazione riuscita",
+    "duplicate": "Duplica",
+    "duplicate_location": "Duplica posizione",
+    "location_duplicate_success": "Posizione duplicata con successo!",
+    "location_duplicate_error": "Impossibile duplicare la posizione.",
+    "location_actions": "Azioni posizione",
+    "collection_duplicate_success": "Collezione duplicata con successo! Reindirizzamento...",
+    "collection_duplicate_error": "Impossibile duplicare la collezione.",
+    "hide_strava_activities": "Nascondi attività Strava",
+    "show_strava_activities": "Mostra attività Strava"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -998,7 +1007,9 @@
     "create_new_lodging": "Nuovo alloggio",
     "enter_lodging_name": "Immettere il nome di alloggio",
     "enter_reservation_number": "Immettere il numero di prenotazione",
-    "update_lodging_details": "Aggiorna i dettagli di alloggio"
+    "update_lodging_details": "Aggiorna i dettagli di alloggio",
+    "invalid_link": "Inserisci un URL valido (ad esempio https://example.com).",
+    "save_failed": "Impossibile salvare l'alloggio. \nPer favore riprova."
   },
   "google_maps": {
     "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità.",

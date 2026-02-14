@@ -434,7 +434,16 @@
     "export_zip": "تصدير الرمز البريدي",
     "import_failed": "فشل الاستيراد",
     "import_from_file": "استيراد من ملف",
-    "import_success": "نجاح الاستيراد"
+    "import_success": "نجاح الاستيراد",
+    "duplicate": "تكرار",
+    "duplicate_location": "تكرار الموقع",
+    "location_duplicate_success": "تم تكرار الموقع بنجاح!",
+    "location_duplicate_error": "فشل في تكرار الموقع.",
+    "location_actions": "إجراءات الموقع",
+    "collection_duplicate_success": "تم تكرار المجموعة بنجاح! جارٍ إعادة التوجيه...",
+    "collection_duplicate_error": "فشل في تكرار المجموعة.",
+    "hide_strava_activities": "إخفاء أنشطة Strava",
+    "show_strava_activities": "عرض أنشطة Strava"
   },
   "auth": {
     "confirm_password": "تأكيد كلمة المرور",
@@ -652,7 +661,9 @@
     "create_new_lodging": "سكن جديد",
     "enter_lodging_name": "أدخل اسم الإقامة",
     "enter_reservation_number": "أدخل رقم الحجز",
-    "update_lodging_details": "تحديث تفاصيل الإقامة"
+    "update_lodging_details": "تحديث تفاصيل الإقامة",
+    "invalid_link": "الرجاء إدخال عنوان URL صالح (مثل https://example.com).",
+    "save_failed": "فشل حفظ السكن. \nيرجى المحاولة مرة أخرى."
   },
   "map": {
     "add_location": "أضف موقعًا جديدًا",

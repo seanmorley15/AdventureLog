@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { addToast } from '$lib/toasts';
+	import { copyToClipboard as clipboardCopy } from '$lib/index';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 	import { onMount } from 'svelte';
@@ -111,16 +112,14 @@
 		}
 	}
 
-	function copyToClipboard(copyText: string | null) {
+	async function copyToClipboard(copyText: string | null) {
 		if (copyText) {
-			navigator.clipboard.writeText(copyText).then(
-				() => {
-					addToast('success', $t('adventures.copied_to_clipboard'));
-				},
-				() => {
-					addToast('error', $t('adventures.copy_failed'));
-				}
-			);
+			try {
+				await clipboardCopy(copyText);
+				addToast('success', $t('adventures.copied_to_clipboard'));
+			} catch {
+				addToast('error', $t('adventures.copy_failed'));
+			}
 		}
 	}
 </script>
