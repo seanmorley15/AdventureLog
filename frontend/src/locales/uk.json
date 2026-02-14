@@ -437,11 +437,13 @@
     "import_success": "Успішний імпорт",
     "duplicate": "Дублювати",
     "duplicate_location": "Дублювати місце",
-    "location_duplicate_success": "Місце успішно дубльовано! Перенаправлення на редагування...",
+    "location_duplicate_success": "Розташування успішно скопійовано!",
     "location_duplicate_error": "Не вдалося дублювати місце.",
     "location_actions": "Дії з місцем",
     "collection_duplicate_success": "Колекцію успішно дубльовано! Перенаправлення...",
-    "collection_duplicate_error": "Не вдалося дублювати колекцію."
+    "collection_duplicate_error": "Не вдалося дублювати колекцію.",
+    "hide_strava_activities": "Приховати дії Strava",
+    "show_strava_activities": "Показати діяльність Strava"
   },
   "auth": {
     "confirm_password": "Підтвердьте пароль",
@@ -659,7 +661,9 @@
     "reservation_number": "Номер бронювання",
     "resort": "курорт",
     "update_lodging_details": "Оновити дані про проживання",
-    "villa": "Вілла"
+    "villa": "Вілла",
+    "invalid_link": "Введіть дійсну URL-адресу (наприклад, https://example.com).",
+    "save_failed": "Не вдалося зберегти житло. \nСпробуйте ще раз."
   },
   "map": {
     "add_location": "Додати нове місце",

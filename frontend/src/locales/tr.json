@@ -486,11 +486,13 @@
     "import_success": "İçe Aktarma Başarısı",
     "duplicate": "Çoğalt",
     "duplicate_location": "Konumu çoğalt",
-    "location_duplicate_success": "Konum başarıyla çoğaltıldı! Düzenlemeye yönlendiriliyor...",
+    "location_duplicate_success": "Konum başarıyla kopyalandı!",
     "location_duplicate_error": "Konum çoğaltılamadı.",
     "location_actions": "Konum işlemleri",
     "collection_duplicate_success": "Koleksiyon başarıyla kopyalandı! Yönlendiriliyor...",
-    "collection_duplicate_error": "Koleksiyon kopyalanamadı."
+    "collection_duplicate_error": "Koleksiyon kopyalanamadı.",
+    "hide_strava_activities": "Strava Faaliyetlerini Gizle",
+    "show_strava_activities": "Strava Aktivitelerini Göster"
   },
   "worldtravel": {
     "country_list": "Ülke Listesi",
@@ -860,7 +862,9 @@
     "update_lodging_details": "Konaklama Detaylarını Güncelle",
     "create_new_lodging": "Yeni Konaklama",
     "enter_lodging_name": "Konaklama adını girin",
-    "enter_reservation_number": "Rezervasyon numarası girin"
+    "enter_reservation_number": "Rezervasyon numarası girin",
+    "invalid_link": "Lütfen geçerli bir URL girin (ör. https://example.com).",
+    "save_failed": "Konaklama kaydedilemedi. \nLütfen tekrar deneyin."
   },
   "search": {
     "result": "Sonuç",

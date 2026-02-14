@@ -486,11 +486,13 @@
     "import_success": "导入成功",
     "duplicate": "复制",
     "duplicate_location": "复制位置",
-    "location_duplicate_success": "位置复制成功！正在跳转到编辑页面...",
+    "location_duplicate_success": "位置复制成功！",
     "location_duplicate_error": "复制位置失败。",
     "location_actions": "位置操作",
     "collection_duplicate_success": "集合复制成功！正在跳转...",
-    "collection_duplicate_error": "集合复制失败。"
+    "collection_duplicate_error": "集合复制失败。",
+    "hide_strava_activities": "隐藏 Strava 活动",
+    "show_strava_activities": "显示 Strava 活动"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -1005,7 +1007,9 @@
     "create_new_lodging": "新住宿",
     "enter_lodging_name": "输入住宿名称",
     "enter_reservation_number": "输入预订号",
-    "update_lodging_details": "更新住宿详细信息"
+    "update_lodging_details": "更新住宿详细信息",
+    "invalid_link": "请输入有效的 URL（例如 https://example.com）。",
+    "save_failed": "未能保存住宿。\n请再试一次。"
   },
   "google_maps": {
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的地点搜索结果和建议。",

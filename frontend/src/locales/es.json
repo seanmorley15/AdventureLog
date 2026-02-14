@@ -486,11 +486,13 @@
     "import_success": "Importación exitosa",
     "duplicate": "Duplicar",
     "duplicate_location": "Duplicar ubicación",
-    "location_duplicate_success": "Ubicación duplicada con éxito. Redirigiendo a editar...",
+    "location_duplicate_success": "¡Ubicación duplicada exitosamente!",
     "location_duplicate_error": "Error al duplicar la ubicación.",
     "location_actions": "Acciones de ubicación",
     "collection_duplicate_success": "Colección duplicada con éxito. Redirigiendo...",
-    "collection_duplicate_error": "No se pudo duplicar la colección."
+    "collection_duplicate_error": "No se pudo duplicar la colección.",
+    "hide_strava_activities": "Ocultar actividades de Strava",
+    "show_strava_activities": "Mostrar actividades de Strava"
   },
   "worldtravel": {
     "no_countries_found": "No se encontraron países",
@@ -1005,7 +1007,9 @@
     "create_new_lodging": "Nuevo alojamiento",
     "enter_lodging_name": "Ingrese el nombre de alojamiento",
     "enter_reservation_number": "Ingrese el número de reserva",
-    "update_lodging_details": "Actualizar detalles de alojamiento"
+    "update_lodging_details": "Actualizar detalles de alojamiento",
+    "invalid_link": "Introduzca una URL válida (por ejemplo, https://example.com).",
+    "save_failed": "No se pudo guardar el alojamiento. \nPor favor inténtalo de nuevo."
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad.",

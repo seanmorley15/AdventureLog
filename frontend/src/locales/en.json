@@ -121,7 +121,7 @@
     "delete": "Delete",
     "duplicate": "Duplicate",
     "duplicate_location": "Duplicate Location",
-    "location_duplicate_success": "Location duplicated successfully! Redirecting to edit...",
+    "location_duplicate_success": "Location duplicated successfully!",
     "location_duplicate_error": "Failed to duplicate location.",
     "location_not_found": "Location not found",
     "location_not_found_desc": "The location you were looking for could not be found. Please try a different location or check back later.",

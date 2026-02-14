@@ -437,11 +437,13 @@
     "import_success": "가져오기 성공",
     "duplicate": "복제",
     "duplicate_location": "위치 복제",
-    "location_duplicate_success": "위치가 성공적으로 복제되었습니다! 편집 페이지로 이동 중...",
+    "location_duplicate_success": "위치가 복제되었습니다!",
     "location_duplicate_error": "위치 복제에 실패했습니다.",
     "location_actions": "위치 작업",
     "collection_duplicate_success": "컬렉션이 성공적으로 복제되었습니다! 리디렉션 중...",
-    "collection_duplicate_error": "컬렉션 복제에 실패했습니다."
+    "collection_duplicate_error": "컬렉션 복제에 실패했습니다.",
+    "hide_strava_activities": "Strava 활동 숨기기",
+    "show_strava_activities": "Strava 활동 표시"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -1005,7 +1007,9 @@
     "create_new_lodging": "새로운 숙박",
     "enter_lodging_name": "숙박 이름을 입력하십시오",
     "enter_reservation_number": "예약 번호를 입력하십시오",
-    "update_lodging_details": "숙박 세부 사항을 업데이트하십시오"
+    "update_lodging_details": "숙박 세부 사항을 업데이트하십시오",
+    "invalid_link": "유효한 URL(예: https://example.com)을 입력하세요.",
+    "save_failed": "숙박 시설을 저장하지 못했습니다. \n다시 시도해 주세요."
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오.",

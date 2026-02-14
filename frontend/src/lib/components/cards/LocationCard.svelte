@@ -221,7 +221,7 @@
 			if (res.ok) {
 				const newLocation = await res.json();
 				addToast('success', $t('adventures.location_duplicate_success'));
-				goto(`/locations/${newLocation.id}`);
+				dispatch('duplicate', newLocation);
 			} else {
 				addToast('error', $t('adventures.location_duplicate_error'));
 			}
@@ -402,34 +402,34 @@
 								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
 							>
-							<li>
-								<button
-									on:click={() => {
-										isActionsMenuOpen = false;
-										editAdventure();
-									}}
-									class="flex items-center gap-2"
-								>
-									<FileDocumentEdit class="w-4 h-4" />
-									{$t('adventures.edit_location')}
-								</button>
-							</li>
-							{#if user?.uuid == adventure.user?.uuid}
 								<li>
 									<button
 										on:click={() => {
 											isActionsMenuOpen = false;
-											duplicateAdventure();
+											editAdventure();
 										}}
 										class="flex items-center gap-2"
-										disabled={isDuplicating}
 									>
-										<ContentCopy class="w-4 h-4" />
-										{isDuplicating ? '...' : $t('adventures.duplicate')}
+										<FileDocumentEdit class="w-4 h-4" />
+										{$t('adventures.edit_location')}
 									</button>
 								</li>
-							{/if}
-							{#if user?.uuid == adventure.user?.uuid}
+								{#if user?.uuid == adventure.user?.uuid}
+									<li>
+										<button
+											on:click={() => {
+												isActionsMenuOpen = false;
+												duplicateAdventure();
+											}}
+											class="flex items-center gap-2"
+											disabled={isDuplicating}
+										>
+											<ContentCopy class="w-4 h-4" />
+											{isDuplicating ? '...' : $t('adventures.duplicate')}
+										</button>
+									</li>
+								{/if}
+								{#if user?.uuid == adventure.user?.uuid}
 									<li>
 										<button
 											on:click={() => {

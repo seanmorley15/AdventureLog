@@ -486,11 +486,13 @@
     "import_success": "Sukces importu",
     "duplicate": "Duplikuj",
     "duplicate_location": "Duplikuj lokalizację",
-    "location_duplicate_success": "Lokalizacja zduplikowana pomyślnie! Przekierowanie do edycji...",
+    "location_duplicate_success": "Lokalizacja została pomyślnie zduplikowana!",
     "location_duplicate_error": "Nie udało się zduplikować lokalizacji.",
     "location_actions": "Akcje lokalizacji",
     "collection_duplicate_success": "Kolekcja zduplikowana pomyślnie! Przekierowywanie...",
-    "collection_duplicate_error": "Nie udało się zduplikować kolekcji."
+    "collection_duplicate_error": "Nie udało się zduplikować kolekcji.",
+    "show_strava_activities": "Pokaż aktywności Strava",
+    "hide_strava_activities": "Ukryj aktywności Strava"
   },
   "worldtravel": {
     "country_list": "Lista krajów",
@@ -1005,7 +1007,9 @@
     "create_new_lodging": "Nowe zakwaterowanie",
     "enter_lodging_name": "Wprowadź nazwę lodowania",
     "enter_reservation_number": "Wprowadź numer rezerwacji",
-    "update_lodging_details": "Zaktualizuj szczegóły lodowania"
+    "update_lodging_details": "Zaktualizuj szczegóły lodowania",
+    "invalid_link": "Wprowadź prawidłowy adres URL (np. https://example.com).",
+    "save_failed": "Nie udało się zapisać zakwaterowania. \nSpróbuj ponownie."
   },
   "google_maps": {
     "google_maps_integration_desc": "Połącz swoje konto Google Maps, aby uzyskać wysokiej jakości wyniki wyszukiwania i zalecenia dotyczące lokalizacji.",

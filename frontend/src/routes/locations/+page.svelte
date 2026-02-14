@@ -253,7 +253,7 @@
 				{:else}
 					<!-- Adventures Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
 					>
 						{#each adventures as adventure}
 							<LocationCard
@@ -261,6 +261,10 @@
 								{adventure}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
+								on:duplicate={(e) => {
+									// Add the new location to the beginning of the list
+									adventures = [e.detail, ...adventures];
+								}}
 							/>
 						{/each}
 					</div>

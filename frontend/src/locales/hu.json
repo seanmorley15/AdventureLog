@@ -486,11 +486,13 @@
     "import_success": "Sikeres importálás",
     "duplicate": "Másolás",
     "duplicate_location": "Helyszín másolása",
-    "location_duplicate_success": "Helyszín sikeresen másolva! Átirányítás a szerkesztéshez...",
+    "location_duplicate_success": "A hely sikeresen megkettőzve!",
     "location_duplicate_error": "Nem sikerült a helyszín másolása.",
     "location_actions": "Helyszín műveletek",
     "collection_duplicate_success": "Gyűjtemény sikeresen megkettőzve! Átirányítás...",
-    "collection_duplicate_error": "A gyűjtemény másolása sikertelen."
+    "collection_duplicate_error": "A gyűjtemény másolása sikertelen.",
+    "hide_strava_activities": "A Strava-tevékenységek elrejtése",
+    "show_strava_activities": "Mutasd a Strava-tevékenységeket"
   },
   "worldtravel": {
     "country_list": "Országlista",
@@ -860,7 +862,9 @@
     "update_lodging_details": "Szállásadatok frissítése",
     "create_new_lodging": "Új szállás létrehozása",
     "enter_lodging_name": "Add meg a szállás nevét",
-    "enter_reservation_number": "Add meg a foglalási számot"
+    "enter_reservation_number": "Add meg a foglalási számot",
+    "invalid_link": "Adjon meg egy érvényes URL-t (pl. https://example.com).",
+    "save_failed": "Nem sikerült a szállás mentése. \nKérjük, próbálja újra."
   },
   "search": {
     "result": "Találat",

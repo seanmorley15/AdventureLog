@@ -439,7 +439,7 @@
     "import_success": "Erfolg importieren",
     "duplicate": "Duplizieren",
     "duplicate_location": "Standort duplizieren",
-    "location_duplicate_success": "Standort erfolgreich dupliziert! Weiterleitung zur Bearbeitung...",
+    "location_duplicate_success": "Standort erfolgreich dupliziert!",
     "location_duplicate_error": "Standort konnte nicht dupliziert werden.",
     "location_actions": "Standort-Aktionen",
     "collection_duplicate_success": "Sammlung erfolgreich dupliziert! Weiterleitung...",
