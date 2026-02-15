@@ -88,5 +88,5 @@ class IcsCalendarGeneratorViewSet(viewsets.ViewSet):
                 cal.add_component(event)
 
         response = HttpResponse(cal.to_ical(), content_type='text/calendar')
-        response['Content-Disposition'] = 'attachment; filename=adventures.ics'
+        response['Content-Disposition'] = 'attachment; filename=locations.ics'
         return response

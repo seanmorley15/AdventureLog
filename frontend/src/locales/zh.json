@@ -351,7 +351,7 @@
     "trails_found_for": "找到的路径",
     "trails_management": "跟踪管理",
     "trails_management_description": "管理与此地点相关的路径。\n路径可以链接到外部服务，例如Alltrails或链接到Wanderer Trails。",
-    "update_location_details": "更新地点详细信息",
+    "update_location_details": "更新地点详情",
     "update_visit": "更新访问",
     "upload_activity": "上传活动",
     "upload_attachment": "上传附件",
@@ -483,7 +483,32 @@
     "export_zip": "导出邮政编码",
     "import_failed": "导入失败",
     "import_from_file": "从文件导入",
-    "import_success": "导入成功"
+    "import_success": "导入成功",
+    "duplicate": "复制",
+    "duplicate_location": "复制位置",
+    "location_duplicate_success": "位置复制成功！",
+    "location_duplicate_error": "复制位置失败。",
+    "location_actions": "位置操作",
+    "collection_duplicate_success": "集合复制成功！正在跳转...",
+    "collection_duplicate_error": "集合复制失败。",
+    "hide_strava_activities": "隐藏 Strava 活动",
+    "show_strava_activities": "显示 Strava 活动",
+    "activities": "活动",
+    "failed_to_fetch_activities": "获取活动失败",
+    "found_activities": "找到 {count} 个活动",
+    "local": "当地",
+    "local_time": "当地时间",
+    "no_strava_activities_found": "未找到 Strava 活动",
+    "strava_not_connected": "Strava 未连接",
+    "transport_end": "交通终点",
+    "transport_start": "交通起点",
+    "trip_timezone": "旅行时区",
+    "your_time": "您的时间",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "forgot_password": "忘记密码？",
@@ -746,7 +771,8 @@
     "enter_checklist_title": "输入清单标题",
     "no_items_yet": "还没有物品",
     "update_checklist_details": "编辑清单",
-    "viewing_checklist": "查看清单"
+    "viewing_checklist": "查看清单",
+    "more_items": "更多项目"
   },
   "collection": {
     "collection_created": "合集创建成功！",
@@ -832,7 +858,8 @@
     "arrival_date": "抵达日期",
     "arrival_timezone": "到达时区",
     "departure_date": "出发日期",
-    "departure_timezone": "出发时区"
+    "departure_timezone": "出发时区",
+    "codes": "代码"
   },
   "search": {
     "cities": "城市",
@@ -875,7 +902,8 @@
     "invite_revoked": "邀请被撤销",
     "invite_sent": "邀请发送",
     "revoke_failed": "撤销失败",
-    "unshare_failed": "没有共享失败"
+    "unshare_failed": "没有共享失败",
+    "no_available_users": "没有可用的用户"
   },
   "profile": {
     "member_since": "会员自",
@@ -900,7 +928,8 @@
     "select_category": "选择类别",
     "add_new_category": "添加新类别",
     "name_required": "需要类别名称",
-    "location_update_after_refresh": "刷新页面后，将更新地点卡。"
+    "location_update_after_refresh": "刷新页面后，将更新地点卡。",
+    "no_categories_yet": "暂无分类"
   },
   "dashboard": {
     "countries_visited": "已访问国家数量",
@@ -998,7 +1027,9 @@
     "create_new_lodging": "新住宿",
     "enter_lodging_name": "输入住宿名称",
     "enter_reservation_number": "输入预订号",
-    "update_lodging_details": "更新住宿详细信息"
+    "update_lodging_details": "更新住宿详细信息",
+    "invalid_link": "请输入有效的 URL（例如 https://example.com）。",
+    "save_failed": "未能保存住宿。\n请再试一次。"
   },
   "google_maps": {
     "google_maps_integration_desc": "连接您的Google Maps帐户以获取高质量的地点搜索结果和建议。",
@@ -1035,7 +1066,8 @@
     "no_invites": "没有邀请",
     "no_invites_desc": "确保您的个人资料是公开的，以便用户可以邀请您。",
     "pending_invites": "等待邀请",
-    "title": "邀请"
+    "title": "邀请",
+    "fetch_failed": "获取邀请失败"
   },
   "strava": {
     "authorization_error": "错误将重定向到Strava授权URL",
@@ -1050,11 +1082,16 @@
   "wanderer": {
     "connected": "已成功连接 Wanderer",
     "connection_error": "连接 Wanderer 时出错",
-    "wanderer_integration_desc": "连接 Wanderer，可便捷导入轨迹并在地点页面查看"
+    "wanderer_integration_desc": "连接 Wanderer，可便捷导入轨迹并在地点页面查看",
+    "disconnected": "已成功断开与 Wanderer 的连接",
+    "disconnect_error": "断开 Wanderer 连接时出错",
+    "refreshed": "Wanderer 刷新成功",
+    "refresh_error": "刷新 Wanderer 时出错"
   },
   "common": {
     "show_less": "隐藏详细信息",
-    "show_more": "显示更多"
+    "show_more": "显示更多",
+    "refresh": "刷新"
   },
   "itinerary": {
     "item_remove_error": "从行程中删除项目时出错",
@@ -1128,5 +1165,8 @@
     "no_matches": "没有匹配项",
     "search": "搜索货币",
     "select_currency": "选择货币"
+  },
+  "errors": {
+    "generic_error": "加载详情失败"
   }
 }

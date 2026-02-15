@@ -3,3 +3,13 @@
 .vscode/settings.json
 .pnpm-store/
 .env
+
+# Cursor IDE configuration
+.cursor/
+.cursorrules
+
+# Internal development documentation (not for public repo)
+docs/cursor-prompts/
+docs/FIX_PACKAGE_PLAN.md
+docs/GITHUB_COMMENTS.md
+BUGFIX_DOCUMENTATION.md

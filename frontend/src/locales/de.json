@@ -82,7 +82,7 @@
     "search_results": "Suchergebnisse",
     "start_date": "Startdatum",
     "wikipedia": "Wikipedia",
-    "adventure_not_found": "Keine Abenteuer vorhanden. \nFügen Sie welche über die Plus-Schaltfläche unten rechts hinzu oder versuchen Sie, die Filter zu ändern!",
+    "adventure_not_found": "Keine Orte vorhanden. Fügen Sie welche über die Plus-Schaltfläche unten rechts hinzu oder ändern Sie die Filter!",
     "all": "Alle",
     "error_updating_regions": "Fehler beim Aktualisieren der Regionen",
     "mark_visited": "als besucht markieren",
@@ -155,10 +155,10 @@
     "share_collection": "Teilen Sie diese Sammlung!",
     "filters_and_sort": "Filter & Sortierung",
     "filters_and_stats": "Filter & Statistiken",
-    "no_adventures_message": "Dokumentieren Sie Ihre Abenteuer und planen Sie neue. \nJede Reise hat eine Geschichte, die es wert ist, erzählt zu werden.",
+    "no_adventures_message": "Dokumentieren Sie Ihre Orte und planen Sie neue. Jede Reise hat eine Geschichte, die es wert ist, erzählt zu werden.",
     "travel_progress": "Reisefortschritt",
     "collections_linked": "Kollektionen verknüpft",
-    "create_collection_first": "Erstellen Sie zuerst eine Sammlung, um Ihre Abenteuer und Erinnerungen zu organisieren.",
+    "create_collection_first": "Erstellen Sie zuerst eine Sammlung, um Ihre Orte und Erinnerungen zu organisieren",
     "delete_collection_warning": "Sind Sie sicher, dass Sie diese Sammlung löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "done": "Erledigt",
     "name_location": "Name, Ort",
@@ -171,7 +171,7 @@
     "collection_remove_location_success": "Standort erfolgreich aus der Sammlung entfernt!",
     "create_location": "Standort erstellen",
     "delete_location": "Standort löschen",
-    "edit_location": "Standort bearbeiten",
+    "edit_location": "Ort bearbeiten",
     "location_delete_confirm": "Sind Sie sicher, dass Sie diesen Ort löschen möchten? \nDiese Aktion kann nicht rückgängig gemacht werden.",
     "location_delete_success": "Standort erfolgreich gelöscht!",
     "location_not_found": "Ort nicht gefunden",
@@ -259,7 +259,9 @@
     "no_external_link": "Kein externer Link verfügbar",
     "no_file_selected": "Keine Datei ausgewählt",
     "no_images_uploaded_yet": "Noch keine Bilder hochgeladen",
-    "no_strava_activities": "Keine Strava -Aktivitäten bei diesem Besuch gefunden",
+    "no_strava_activities": "Keine Strava-Aktivitäten bei diesem Besuch gefunden",
+    "show_strava_activities": "Strava-Aktivitäten anzeigen",
+    "hide_strava_activities": "Strava-Aktivitäten ausblenden",
     "no_trails_added": "Noch keine Wege hinzugefügt",
     "no_trails_available": "Keine Wanderwege verfügbar",
     "no_trails_found_matching": "Keine passenden Pfade gefunden",
@@ -315,7 +317,7 @@
     "wikipedia_error": "Fehler beim Generieren einer Beschreibung von Wikipedia",
     "add_new_trail": "Fügen Sie einen neuen Trail hinzu",
     "trails_management_description": "Verwalten Sie mit diesem Ort verbundene Trails. \nTrails können mit externen Diensten wie AllTrails verknüpft werden oder mit Wanderer -Trails verknüpfen.",
-    "update_location_details": "Standortdetails aktualisieren",
+    "update_location_details": "Ortsdetails aktualisieren",
     "update_visit": "Besuch aktualisieren",
     "upload_activity": "Aktivität hochladen",
     "upload_attachment": "Anhang hochladen",
@@ -390,7 +392,7 @@
     "lodging_not_found": "Unterkunft nicht gefunden",
     "lodging_types": "Unterkunftsarten",
     "more_details": "Mehr Details",
-    "my_locations": "Meine Standorte",
+    "my_locations": "Meine Orte",
     "nights": "Nächte",
     "no_linkable_locations": "Es wurden keine Orte gefunden, die mit dieser Sammlung verknüpft werden können.",
     "of_locations": "von Standorten",
@@ -434,19 +436,42 @@
     "export_zip": "ZIP exportieren",
     "import_failed": "Import fehlgeschlagen",
     "import_from_file": "Aus Datei importieren",
-    "import_success": "Erfolg importieren"
+    "import_success": "Erfolg importieren",
+    "duplicate": "Duplizieren",
+    "duplicate_location": "Standort duplizieren",
+    "location_duplicate_success": "Standort erfolgreich dupliziert!",
+    "location_duplicate_error": "Standort konnte nicht dupliziert werden.",
+    "location_actions": "Standort-Aktionen",
+    "collection_duplicate_success": "Sammlung erfolgreich dupliziert! Weiterleitung...",
+    "collection_duplicate_error": "Sammlung konnte nicht dupliziert werden.",
+    "activities": "Aktivitäten",
+    "failed_to_fetch_activities": "Aktivitäten konnten nicht abgerufen werden",
+    "found_activities": "{count} Aktivitäten gefunden",
+    "local": "Lokal",
+    "local_time": "Ortszeit",
+    "no_strava_activities_found": "Keine Strava-Aktivitäten gefunden",
+    "strava_not_connected": "Strava nicht verbunden",
+    "transport_end": "Transportende",
+    "transport_start": "Transportbeginn",
+    "trip_timezone": "Reisezeitzone",
+    "your_time": "Ihre Zeit",
+    "date_precision": "Datumsgenauigkeit",
+    "date_precision_full": "Volles Datum",
+    "date_precision_month": "Monat & Jahr",
+    "date_precision_year": "Nur Jahr",
+    "date_precision_help": "Wie genau ist das Besuchsdatum?"
   },
   "home": {
     "desc_1": "Entdecken, planen und erkunden Sie mühelos",
-    "desc_2": "AdventureLog wurde entwickelt, um Ihre Reise zu vereinfachen und stellt Ihnen alle nötigen Werkzeuge und Ressourcen zur Verfügung, mit denen Sie Ihr nächstes unvergessliches Abenteuer planen, packen und erleben können.",
+    "desc_2": "AdventureLog wurde entwickelt, um Ihre Reise zu vereinfachen.",
     "feature_1": "Reisetagebuch",
-    "feature_1_desc": "Dokumentieren Sie Ihre Abenteuer mit einem persönlichen Reisetagebuch und teilen Sie Ihre Erlebnisse mit Freunden und Familie.",
+    "feature_1_desc": "Behalten Sie Ihre Orte in einem persönlichen Reisetagebuch im Blick",
     "feature_2": "Reiseplanung",
     "feature_3": "Reisekarte",
     "feature_3_desc": "Betrachten Sie Ihre Reisen rund um die Welt auf einer interaktiven Karte und entdecken Sie neue Ziele.",
     "go_to": "AdventureLog öffnen",
-    "hero_1": "Entdecken Sie die aufregendsten Abenteuer der Welt",
-    "hero_2": "Entdecken und planen Sie Ihr nächstes Abenteuer mit AdventureLog. Erkunden Sie atemberaubende Reiseziele, erstellen Sie individuelle Reisepläne und bleiben Sie unterwegs stets verbunden.",
+    "hero_1": "Entdecken Sie die aufregendsten Reiseziele der Welt",
+    "hero_2": "Entdecken und planen Sie Ihr nächstes Reiseziel mit AdventureLog.",
     "key_features": "Hauptmerkmale",
     "feature_2_desc": "Erstellen Sie mühelos individuelle Reisepläne und erhalten Sie eine detaillierte Tagesübersicht Ihrer Reise.",
     "explore_world": "Welt erkunden",
@@ -572,7 +597,7 @@
     "spin_again": "Nochmal drehen",
     "spinning_globe": "Drehender Globus",
     "try_again": "Versuchen Sie es erneut",
-    "your_random_adventure_awaits": "Ihr zufälliges Abenteuer wartet!",
+    "your_random_adventure_awaits": "Ihr zufälliges Reiseziel wartet!",
     "about_country": "Über Land",
     "about_region": "Über die Region",
     "show_less": "Weniger anzeigen",
@@ -746,7 +771,8 @@
     "enter_checklist_title": "Geben Sie den Checklisten -Titel ein",
     "no_items_yet": "Noch keine Einträge",
     "update_checklist_details": "Bearbeiten der Checkliste",
-    "viewing_checklist": "Betrachten der Checkliste"
+    "viewing_checklist": "Betrachten der Checkliste",
+    "more_items": "weitere Einträge"
   },
   "collection": {
     "collection_created": "Sammlung erfolgreich erstellt!",
@@ -758,7 +784,7 @@
     "public_collection": "Öffentliche Sammlung",
     "manage_collections": "Sammlungen verwalten",
     "archived_appear_here": "Archivierte Sammlungen werden hier erscheinen.",
-    "create_first": "Erstellen Sie Ihre erste Sammlung, um Ihre Abenteuer und Erinnerungen zu organisieren.",
+    "create_first": "Erstellen Sie Ihre erste Sammlung, um Ihre Orte und Erinnerungen zu organisieren",
     "make_sure_public": "Stellen Sie sicher, dass Ihr Profil öffentlich ist, damit andere mit Ihnen teilen können.",
     "no_archived_collections": "Keine archivierten Sammlungen.",
     "no_collections_yet": "Noch keine Sammlungen",
@@ -832,7 +858,8 @@
     "arrival_timezone": "Ankunftszeitzone",
     "departure_code": "Abflugcode",
     "departure_date": "Abreisedatum",
-    "departure_timezone": "Abreisezeitzone"
+    "departure_timezone": "Abreisezeitzone",
+    "codes": "Codes"
   },
   "search": {
     "cities": "Städte",
@@ -840,12 +867,12 @@
     "found": "gefunden",
     "result": "Ergebnis",
     "results": "Ergebnisse",
-    "try_searching_desc": "Versuchen Sie, nach Abenteuern, Sammlungen, Ländern, Regionen, Städten oder Nutzern zu suchen."
+    "try_searching_desc": "Versuchen Sie, nach Orten, Sammlungen, Ländern, Regionen, Städten oder Benutzern zu suchen."
   },
   "map": {
     "clear_marker": "Markierung löschen",
     "view_details": "Details anzeigen",
-    "adventure_stats": "Abenteuerstatistiken",
+    "adventure_stats": "Ortsstatistiken",
     "completion": "Fertigstellung",
     "display_options": "Anzeigenoptionen",
     "map_controls": "Karten-Bedienelemente",
@@ -853,11 +880,11 @@
     "regions": "Regionen",
     "add_location": "Neuen Standort hinzufügen",
     "add_location_at_marker": "Neuen Standort bei Marker hinzufügen",
-    "location_map": "Standortkarte",
-    "locations_shown": "Standorte angezeigt",
+    "location_map": "Lagekarte",
+    "locations_shown": "Orte angezeigt",
     "place_marker_desc_location": "Klicken Sie auf die Karte, um einen Marker zu platzieren.",
     "show_visited_cities": "Besuchte Städte",
-    "search_locations": "Standorte suchen..."
+    "search_locations": "Orte suchen..."
   },
   "share": {
     "no_users_shared": "Mit keinen Benutzern geteilt",
@@ -875,7 +902,8 @@
     "invite_revoked": "Einladung widerrufen",
     "invite_sent": "Einladung gesendet",
     "revoke_failed": "Widerrufen fehlgeschlagen",
-    "unshare_failed": "Aufheben des Teilens fehlgeschlagen"
+    "unshare_failed": "Aufheben des Teilens fehlgeschlagen",
+    "no_available_users": "Keine verfügbaren Benutzer"
   },
   "profile": {
     "member_since": "Mitglied seit",
@@ -884,11 +912,11 @@
     "visited_cities": "Besuchte Städte",
     "discovered": "entdeckt",
     "explored": "erkundet",
-    "no_shared_adventures": "Dieser Benutzer hat noch keine öffentlichen Abenteuer geteilt.",
+    "no_shared_adventures": "Dieser Benutzer hat noch keine öffentlichen Orte geteilt.",
     "no_shared_collections": "Dieser Benutzer hat noch keine öffentlichen Sammlungen geteilt.",
     "planned_trips": "Geplante Reisen",
     "travel_statistics": "Reisestatistik",
-    "your_journey_at_a_glance": "Ihre Abenteuerreise auf einen Blick",
+    "your_journey_at_a_glance": "Ihre Reise auf einen Blick",
     "public_location_experiences": "Öffentliche Standortlebnisse"
   },
   "categories": {
@@ -900,20 +928,21 @@
     "select_category": "Kategorie wählen",
     "add_new_category": "Neue Kategorie hinzufügen",
     "name_required": "Der Kategorienname ist erforderlich",
-    "location_update_after_refresh": "Die Standortkarten werden aktualisiert, sobald Sie die Seite aktualisiert haben."
+    "location_update_after_refresh": "Die Standortkarten werden aktualisiert, sobald Sie die Seite aktualisiert haben.",
+    "no_categories_yet": "Noch keine Kategorien"
   },
   "dashboard": {
     "countries_visited": "Besuchte Länder",
-    "no_recent_adventures": "Keine aktuellen Abenteuer?",
-    "recent_adventures": "Kürzliche Abenteuer",
-    "total_adventures": "Abenteuer insgesamt",
+    "no_recent_adventures": "Keine aktuellen Orte?",
+    "recent_adventures": "Kürzliche Orte",
+    "total_adventures": "Orte insgesamt",
     "total_visited_regions": "Insgesamt besuchte Regionen",
     "welcome_back": "Willkommen zurück",
     "total_visited_cities": "Insgesamt besuchte Städte",
-    "document_some_adventures": "Dokumentieren Sie Ihre Reisen und bauen Sie Ihre persönliche Abenteuerkarte auf!",
+    "document_some_adventures": "Dokumentieren Sie Ihre Reisen und bauen Sie Ihre persönliche Ortskarte auf!",
     "view_all": "Alle anzeigen",
-    "welcome_text_1": "Du warst auf",
-    "welcome_text_2": "Abenteuern bisher",
+    "welcome_text_1": "Du hast bisher",
+    "welcome_text_2": "Orte besucht",
     "welcome_text_3": "Erkunden und dokumentieren Sie Ihre Reisen!"
   },
   "immich": {
@@ -998,7 +1027,9 @@
     "create_new_lodging": "Neue Unterkunft",
     "enter_lodging_name": "Unterkunftsnamen eingeben",
     "enter_reservation_number": "Reservierungsnummer eingeben",
-    "update_lodging_details": "Aktualisieren der Unterkunftsdetails"
+    "update_lodging_details": "Aktualisieren der Unterkunftsdetails",
+    "invalid_link": "Bitte geben Sie eine gültige URL ein (z.B. https://example.com).",
+    "save_failed": "Unterkunft konnte nicht gespeichert werden. Bitte versuchen Sie es erneut."
   },
   "google_maps": {
     "google_maps_integration_desc": "Verbinden Sie Ihr Google Maps-Konto, um hochwertige Suchergebnisse und Empfehlungen für Standort zu erhalten.",
@@ -1018,9 +1049,9 @@
     "your timezone": "Ihre Zeitzone"
   },
   "locations": {
-    "location": "Standort",
-    "locations": "Standorte",
-    "my_locations": "Meine Standorte"
+    "location": "Ort",
+    "locations": "Orte",
+    "my_locations": "Meine Orte"
   },
   "settings_download_backup": "Sicherung herunterladen",
   "invites": {
@@ -1035,7 +1066,8 @@
     "no_invites": "Keine Einladungen",
     "no_invites_desc": "Stellen Sie sicher, dass Ihr Profil öffentlich ist, damit Benutzer Sie einladen können.",
     "pending_invites": "Ausstehende Einladungen",
-    "title": "Einladungen"
+    "title": "Einladungen",
+    "fetch_failed": "Einladungen konnten nicht abgerufen werden"
   },
   "strava": {
     "authorization_error": "Fehler beim Umleiten zur Strava-Autorisierungs-URL",
@@ -1050,7 +1082,11 @@
   "wanderer": {
     "connected": "Erfolgreich mit Wanderer verbunden",
     "connection_error": "Fehler beim Verbinden zu Wanderer",
-    "wanderer_integration_desc": "Stellen Sie eine Verbindung zu Wanderer her, um Ihre Trails einfach in Standorten zu importieren und anzusehen"
+    "wanderer_integration_desc": "Stellen Sie eine Verbindung zu Wanderer her, um Ihre Trails einfach in Standorten zu importieren und anzusehen",
+    "disconnected": "Erfolgreich von Wanderer getrennt",
+    "disconnect_error": "Fehler beim Trennen von Wanderer",
+    "refreshed": "Wanderer erfolgreich aktualisiert",
+    "refresh_error": "Fehler beim Aktualisieren von Wanderer"
   },
   "collections": {
     "all_items": "Alle Einträge",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "Details ausblenden",
-    "show_more": "Mehr anzeigen"
+    "show_more": "Mehr anzeigen",
+    "refresh": "Aktualisieren"
   },
   "currencies": {
     "AED": "VAE-Dirham",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "Reisekontextelemente gelten für die gesamte Reise – zum Beispiel Orte, die das Ziel selbst darstellen, allgemeine Notizen oder Packlisten, die für die gesamte Reise wichtig sind.",
     "unscheduled_items": "Ungeplante Einträge",
     "unscheduled_items_desc": "Diese Einträge sind mit dieser Reise verknüpft, wurden aber noch keinem bestimmten Tag hinzugefügt."
+  },
+  "errors": {
+    "generic_error": "Details konnten nicht geladen werden"
   }
 }

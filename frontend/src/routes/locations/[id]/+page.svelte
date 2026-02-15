@@ -14,9 +14,13 @@
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import DotsVertical from '~icons/mdi/dots-vertical';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { getActivityColor, getBasemapUrl, isAllDay } from '$lib';
+	import { addToast } from '$lib/toasts';
+	import { getActivityColor, getBasemapUrl, isAllDay, copyToClipboard } from '$lib';
+	import { formatPartialDateRange } from '$lib/dateUtils';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -126,6 +130,32 @@
 		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
 	}
 
+	let isDuplicating = false;
+	let isFabMenuOpen = false;
+
+	async function duplicateAdventure() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		isFabMenuOpen = false;
+		try {
+			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (res.ok) {
+				const newLocation = await res.json();
+				addToast('success', $t('adventures.location_duplicate_success'));
+				goto(`/locations/${newLocation.id}`);
+			} else {
+				addToast('error', $t('adventures.location_duplicate_error'));
+			}
+		} catch (e) {
+			addToast('error', $t('adventures.location_duplicate_error'));
+		} finally {
+			isDuplicating = false;
+		}
+	}
+
 	function closeImageModal() {
 		isImageModalOpen = false;
 	}
@@ -183,12 +213,38 @@
 {#if adventure}
 	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
 		<div class="fixed bottom-6 right-6 z-50">
-			<button
-				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				on:click={() => (isEditModalOpen = true)}
-			>
-				<ClipboardList class="w-8 h-8" />
-			</button>
+			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
+				<button
+					class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+					on:click={() => (isFabMenuOpen = !isFabMenuOpen)}
+				>
+					<DotsVertical class="w-8 h-8" />
+				</button>
+				<ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2">
+					<li>
+						<button
+							on:click={() => {
+								isFabMenuOpen = false;
+								isEditModalOpen = true;
+							}}
+							class="flex items-center gap-2"
+						>
+							<ClipboardList class="w-5 h-5" />
+							{$t('adventures.edit_location')}
+						</button>
+					</li>
+					<li>
+						<button
+							on:click={duplicateAdventure}
+							class="flex items-center gap-2"
+							disabled={isDuplicating}
+						>
+							<ContentCopy class="w-5 h-5" />
+							{isDuplicating ? '...' : $t('adventures.duplicate_location')}
+						</button>
+					</li>
+				</ul>
+			</div>
 		</div>
 	{/if}
 
@@ -451,16 +507,23 @@
 										<div class="flex-1 pb-4">
 											<div class="card bg-base-100 shadow">
 												<div class="card-body p-4">
-													{#if isAllDay(visit.start_date)}
-														<div class="flex items-center gap-2 mb-2">
-															<span class="badge badge-primary">All Day</span>
-															<span class="font-semibold">
-																{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
-																	? visit.end_date.split('T')[0]
-																	: ''}
-															</span>
-														</div>
-													{:else}
+												{#if visit.date_precision && visit.date_precision !== 'full'}
+													<div class="flex items-center gap-2 mb-2">
+														<span class="badge badge-primary">{visit.date_precision === 'year' ? $t('adventures.date_precision_year') : $t('adventures.date_precision_month')}</span>
+														<span class="font-semibold">
+															{formatPartialDateRange(visit.start_date, visit.end_date, visit.date_precision, visit.timezone)}
+														</span>
+													</div>
+												{:else if isAllDay(visit.start_date)}
+													<div class="flex items-center gap-2 mb-2">
+														<span class="badge badge-primary">All Day</span>
+														<span class="font-semibold">
+															{visit.start_date ? visit.start_date.split('T')[0] : ''} – {visit.end_date
+																? visit.end_date.split('T')[0]
+																: ''}
+														</span>
+													</div>
+												{:else}
 														<div class="space-y-2">
 															<div class="flex items-center gap-2">
 																<span class="badge badge-primary">🕓 {$t('adventures.timed')}</span>
@@ -495,6 +558,16 @@
 														<div class="mt-3 p-3 bg-base-200 rounded-lg">
 															<p class="text-sm italic">"{visit.notes}"</p>
 														</div>
+													{/if}
+
+													{#if visit.price !== null && visit.price !== undefined}
+														{@const visitPriceLabel = formatMoney(toMoneyValue(visit.price, visit.price_currency, data.user?.default_currency || DEFAULT_CURRENCY))}
+														{#if visitPriceLabel}
+															<div class="mt-2 flex items-center gap-2">
+																<CashMultiple class="w-4 h-4 text-accent" />
+																<span class="text-sm font-semibold text-accent">{visitPriceLabel}</span>
+															</div>
+														{/if}
 													{/if}
 
 													<!-- Activities Section -->
@@ -648,19 +721,19 @@
 										<div class="flex gap-2">
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={() =>
-													navigator.clipboard.writeText(
-														`${adventure.latitude}, ${adventure.longitude}`
-													)}
+											on:click={() =>
+												copyToClipboard(
+													`${adventure.latitude}, ${adventure.longitude}`
+												)}
 											>
 												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
 												on:click={() =>
-													navigator.clipboard.writeText(
-														`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
-													)}
+												copyToClipboard(
+													`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
+												)}
 											>
 												🔗 {$t('adventures.copy_link')}
 											</button>

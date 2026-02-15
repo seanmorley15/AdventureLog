@@ -171,7 +171,7 @@
     "collection_remove_location_success": "컬렉션에서 제거 된 위치는 성공적으로!",
     "create_location": "위치를 만듭니다",
     "delete_location": "위치 삭제",
-    "edit_location": "위치 편집",
+    "edit_location": "장소 편집",
     "location_delete_confirm": "이 위치를 삭제 하시겠습니까? \n이 조치는 취소 할 수 없습니다.",
     "location_delete_success": "위치가 성공적으로 삭제되었습니다!",
     "location_not_found": "위치를 찾을 수 없습니다",
@@ -302,7 +302,7 @@
     "trails_found_for": "발견 된 트레일",
     "trails_management": "트레일 관리",
     "trails_management_description": "이 위치와 관련된 트레일을 관리하십시오. \n트레일은 AllTrails 또는 Wanderer Trails 링크와 같은 외부 서비스에 연결될 수 있습니다.",
-    "update_location_details": "위치 세부 사항을 업데이트합니다",
+    "update_location_details": "장소 세부정보 업데이트",
     "update_visit": "업데이트 방문",
     "upload_activity": "활동 업로드 활동",
     "upload_attachment": "첨부 파일 업로드",
@@ -434,7 +434,32 @@
     "export_zip": "우편번호 내보내기",
     "import_failed": "가져오기 실패",
     "import_from_file": "파일에서 가져오기",
-    "import_success": "가져오기 성공"
+    "import_success": "가져오기 성공",
+    "duplicate": "복제",
+    "duplicate_location": "위치 복제",
+    "location_duplicate_success": "위치가 복제되었습니다!",
+    "location_duplicate_error": "위치 복제에 실패했습니다.",
+    "location_actions": "위치 작업",
+    "collection_duplicate_success": "컬렉션이 성공적으로 복제되었습니다! 리디렉션 중...",
+    "collection_duplicate_error": "컬렉션 복제에 실패했습니다.",
+    "hide_strava_activities": "Strava 활동 숨기기",
+    "show_strava_activities": "Strava 활동 표시",
+    "activities": "활동",
+    "failed_to_fetch_activities": "활동을 불러오지 못했습니다",
+    "found_activities": "{count}개의 활동을 찾았습니다",
+    "local": "현지",
+    "local_time": "현지 시간",
+    "no_strava_activities_found": "Strava 활동을 찾을 수 없습니다",
+    "strava_not_connected": "Strava가 연결되지 않았습니다",
+    "transport_end": "교통 종점",
+    "transport_start": "교통 시작점",
+    "trip_timezone": "여행 시간대",
+    "your_time": "내 시간",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "비밀번호 확인",
@@ -471,7 +496,8 @@
     "select_category": "카테고리 선택",
     "add_new_category": "새 카테고리를 추가하십시오",
     "name_required": "카테고리 이름이 필요합니다",
-    "location_update_after_refresh": "페이지를 새로 고치면 위치 카드가 업데이트됩니다."
+    "location_update_after_refresh": "페이지를 새로 고치면 위치 카드가 업데이트됩니다.",
+    "no_categories_yet": "아직 카테고리가 없습니다"
   },
   "checklist": {
     "checklist_delete_error": "체크리스트 삭제 오류",
@@ -493,7 +519,8 @@
     "update_checklist_details": "체크리스트 편집",
     "viewing_checklist": "체크리스트보기",
     "add_new_item": "새 항목을 추가하십시오",
-    "checklist_viewer": "점검표 뷰어"
+    "checklist_viewer": "점검표 뷰어",
+    "more_items": "개 더"
   },
   "collection": {
     "collection_created": "컬렉션이 성공적으로 생성되었습니다!",
@@ -874,7 +901,8 @@
     "invite_revoked": "취소 된 초대",
     "invite_sent": "초대장",
     "revoke_failed": "취소가 실패했습니다",
-    "unshare_failed": "공해를 실패했습니다"
+    "unshare_failed": "공해를 실패했습니다",
+    "no_available_users": "사용 가능한 사용자가 없습니다"
   },
   "transportation": {
     "edit": "편집",
@@ -909,7 +937,8 @@
     "arrival_timezone": "도착 시간대",
     "departure_code": "출발 코드",
     "departure_date": "출발 날짜",
-    "departure_timezone": "출발 시간대"
+    "departure_timezone": "출발 시간대",
+    "codes": "코드"
   },
   "users": {
     "no_users_found": "공개 프로필인 사용자가 없습니다."
@@ -998,7 +1027,9 @@
     "create_new_lodging": "새로운 숙박",
     "enter_lodging_name": "숙박 이름을 입력하십시오",
     "enter_reservation_number": "예약 번호를 입력하십시오",
-    "update_lodging_details": "숙박 세부 사항을 업데이트하십시오"
+    "update_lodging_details": "숙박 세부 사항을 업데이트하십시오",
+    "invalid_link": "유효한 URL(예: https://example.com)을 입력하세요.",
+    "save_failed": "숙박 시설을 저장하지 못했습니다. \n다시 시도해 주세요."
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오.",
@@ -1035,7 +1066,8 @@
     "no_invites": "초대하지 않습니다",
     "no_invites_desc": "사용자가 귀하를 초대 할 수 있도록 프로필이 공개되어 있는지 확인하십시오.",
     "pending_invites": "보류중인 초대",
-    "title": "초대"
+    "title": "초대",
+    "fetch_failed": "초대를 불러오지 못했습니다"
   },
   "strava": {
     "authorization_error": "Strava Authorization URL로 오류를 방향으로 리디렉션합니다",
@@ -1050,7 +1082,11 @@
   "wanderer": {
     "connected": "Wanderer에 성공적으로 연결되었습니다",
     "connection_error": "방랑자에 연결하는 오류",
-    "wanderer_integration_desc": "Wanderer에 연결하여 위치에서 트레일을 쉽게 가져오고 볼 수 있습니다."
+    "wanderer_integration_desc": "Wanderer에 연결하여 위치에서 트레일을 쉽게 가져오고 볼 수 있습니다.",
+    "disconnected": "Wanderer에서 성공적으로 연결 해제되었습니다",
+    "disconnect_error": "Wanderer 연결 해제 중 오류가 발생했습니다",
+    "refreshed": "Wanderer가 성공적으로 새로고침되었습니다",
+    "refresh_error": "Wanderer 새로고침 중 오류가 발생했습니다"
   },
   "collections": {
     "all_items": "모든 품목",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "세부정보 숨기기",
-    "show_more": "더 보기"
+    "show_more": "더 보기",
+    "refresh": "새로고침"
   },
   "currencies": {
     "AED": "UAE 디르함",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
     "unscheduled_items": "예정되지 않은 품목",
     "unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+  },
+  "errors": {
+    "generic_error": "세부 정보를 불러오지 못했습니다"
   }
 }

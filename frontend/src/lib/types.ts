@@ -80,6 +80,7 @@ export type Country = {
 	id: number;
 	name: string;
 	country_code: string;
+	subregion: string;
 	flag_url: string;
 	capital: string;
 	num_regions: number;
@@ -466,12 +467,17 @@ export type Activity = {
 	external_service_id: string | null;
 };
 
+export type DatePrecision = 'full' | 'month' | 'year';
+
 export type Visit = {
 	id: string;
 	start_date: string;
 	end_date: string;
+	date_precision: DatePrecision;
 	notes: string;
 	timezone: string | null;
+	price: number | null;
+	price_currency: string | null;
 	activities: Activity[];
 	location: string;
 	created_at: string;

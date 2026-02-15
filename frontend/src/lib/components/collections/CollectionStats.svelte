@@ -11,10 +11,10 @@
 	} from '$lib/types';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { get } from 'svelte/store';
 	// lodging icons and helpers
-	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
+	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES, localizeCountryName } from '$lib';
 
 	export let collection: Collection;
 	export let user: User | null = null;
@@ -170,13 +170,18 @@
 	})();
 
 	$: regionsVisited = (() => {
-		const map = new Map<string, { name: string; country: string }>();
+		const map = new Map<string, { name: string; country: string; countryCode: string }>();
 		visitedLocations.forEach((loc) => {
 			const region = loc.region;
 			if (!region) return;
 			const key = String(region.id || region.name);
 			if (!key) return;
-			if (!map.has(key)) map.set(key, { name: region.name, country: region.country_name || '' });
+			if (!map.has(key))
+				map.set(key, {
+					name: region.name,
+					country: region.country_name || '',
+					countryCode: loc.country?.country_code || ''
+				});
 		});
 		return Array.from(map.values());
 	})();
@@ -486,7 +491,7 @@
 								{#if country.flag}
 									<img src={country.flag} alt={country.name} class="w-6 h-4 rounded" />
 								{/if}
-								<span class="font-medium">{country.name}</span>
+								<span class="font-medium">{localizeCountryName(country.code, country.name, $locale)}</span>
 							</div>
 						{/each}
 					</div>
@@ -502,7 +507,7 @@
 					<div class="flex flex-wrap gap-2">
 						{#each regionsVisited.slice(0, 15) as region}
 							<span class="badge badge-lg badge-secondary badge-outline">
-								{region.name}{#if region.country}, {region.country}{/if}
+								{region.name}{#if region.countryCode}, {localizeCountryName(region.countryCode, region.country, $locale)}{:else if region.country}, {region.country}{/if}
 							</span>
 						{/each}
 						{#if regionsVisited.length > 15}

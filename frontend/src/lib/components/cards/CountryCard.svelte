@@ -2,12 +2,15 @@
 	import { goto } from '$app/navigation';
 	import type { Country } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
+	import { localizeCountryName } from '$lib';
 
 	import MapMarkerStar from '~icons/mdi/map-marker-star';
 	import Launch from '~icons/mdi/launch';
 
 	export let country: Country;
+
+	$: displayName = localizeCountryName(country.country_code, country.name, $locale);
 
 	async function nav() {
 		goto(`/worldtravel/${country.country_code}`);
@@ -19,7 +22,7 @@
 >
 	<!-- Flag Image -->
 	<figure>
-		<img src={country.flag_url} alt={`Flag of ${country.name}`} class="w-full h-48 object-cover" />
+		<img src={country.flag_url} alt={`Flag of ${displayName}`} class="w-full h-48 object-cover" />
 	</figure>
 
 	<!-- Content -->
@@ -29,7 +32,7 @@
 			href="/worldtravel/{country.country_code}"
 			class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline block"
 		>
-			{country.name}
+			{displayName}
 		</a>
 
 		<!-- Info Badges -->

@@ -91,7 +91,7 @@
     "download_calendar": "Baixar Calendário",
     "duration": "Duração",
     "edit_collection": "Editar Coleção",
-    "edit_location": "Editar Local",
+    "edit_location": "Editar local",
     "end": "Final",
     "end_date": "Data Final",
     "error_updating_regions": "Erro ao atualizar as regiões",
@@ -191,7 +191,7 @@
     "travel_progress": "Progresso da Viagem",
     "unarchive": "Desarquivar",
     "unarchived_collection_message": "Coleção desarquivada com sucesso!",
-    "update_location_details": "Atualizar detalhes da localização",
+    "update_location_details": "Atualizar detalhes do local",
     "update_visited_regions": "Atualizar Regiões Visitadas",
     "updated": "Atualizado",
     "upload": "Inserir",
@@ -434,7 +434,32 @@
     "export_zip": "Exportar ZIP",
     "import_failed": "Falha na importação",
     "import_from_file": "Importar do arquivo",
-    "import_success": "Sucesso na importação"
+    "import_success": "Sucesso na importação",
+    "duplicate": "Duplicar",
+    "duplicate_location": "Duplicar localização",
+    "location_duplicate_success": "Localização duplicada com sucesso!",
+    "location_duplicate_error": "Falha ao duplicar localização.",
+    "location_actions": "Ações da localização",
+    "collection_duplicate_success": "Coleção duplicada com sucesso! Redirecionando...",
+    "collection_duplicate_error": "Falha ao duplicar a coleção.",
+    "hide_strava_activities": "Ocultar atividades do Strava",
+    "show_strava_activities": "Mostrar atividades do Strava",
+    "activities": "Atividades",
+    "failed_to_fetch_activities": "Falha ao buscar atividades",
+    "found_activities": "{count} atividades encontradas",
+    "local": "Local",
+    "local_time": "Hora local",
+    "no_strava_activities_found": "Nenhuma atividade do Strava encontrada",
+    "strava_not_connected": "Strava não conectado",
+    "transport_end": "Fim do transporte",
+    "transport_start": "Início do transporte",
+    "trip_timezone": "Fuso horário da viagem",
+    "your_time": "Seu horário",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "auth": {
     "confirm_password": "Confirme a sua senha",
@@ -484,7 +509,8 @@
     "manage_categories": "Gerenciar Categorias",
     "name_required": "O nome da categoria é obrigatório",
     "no_categories_found": "Nenhuma categoria encontrada.",
-    "select_category": "Selecione a Categoria"
+    "select_category": "Selecione a Categoria",
+    "no_categories_yet": "Nenhuma categoria ainda"
   },
   "checklist": {
     "checklist_delete_error": "Erro ao excluir a lista de verificação",
@@ -506,7 +532,8 @@
     "enter_checklist_title": "Digite o título da lista de verificação",
     "no_items_yet": "Ainda não há itens",
     "update_checklist_details": "Editando a lista de verificação",
-    "viewing_checklist": "Visualizando a lista de verificação"
+    "viewing_checklist": "Visualizando a lista de verificação",
+    "more_items": "mais itens"
   },
   "collection": {
     "archived_appear_here": "As coleções arquivadas aparecerão aqui.",
@@ -626,7 +653,8 @@
     "no_invites": "Sem convites",
     "no_invites_desc": "Certifique-se de que seu perfil seja público para que os usuários possam convidá-lo.",
     "pending_invites": "Convites pendentes",
-    "title": "Convites"
+    "title": "Convites",
+    "fetch_failed": "Falha ao buscar convites"
   },
   "locations": {
     "location": "Localização",
@@ -652,7 +680,9 @@
     "create_new_lodging": "Nova Hospedagem",
     "enter_lodging_name": "Digite o nome da Hospedagem",
     "enter_reservation_number": "Digite o número de Reserva",
-    "update_lodging_details": "Atualizar detalhes da Hospedagem"
+    "update_lodging_details": "Atualizar detalhes da Hospedagem",
+    "invalid_link": "Insira um URL válido (por exemplo, https://example.com).",
+    "save_failed": "Falha ao salvar hospedagem. \nPor favor, tente novamente."
   },
   "map": {
     "add_location": "Adicionar Nova Localização",
@@ -932,7 +962,8 @@
     "invite_revoked": "Convite revogado",
     "invite_sent": "Convite enviado",
     "revoke_failed": "Falha na revogação",
-    "unshare_failed": "Falha ao cancelar compartilhamento"
+    "unshare_failed": "Falha ao cancelar compartilhamento",
+    "no_available_users": "Nenhum usuário disponível"
   },
   "strava": {
     "authorization_error": "Erro ao redirecionar para a URL de autorização do Strava",
@@ -977,7 +1008,8 @@
     "arrival_timezone": "Fuso horário de chegada",
     "departure_code": "Código de partida",
     "departure_date": "Data de partida",
-    "departure_timezone": "Fuso horário de partida"
+    "departure_timezone": "Fuso horário de partida",
+    "codes": "Códigos"
   },
   "users": {
     "no_users_found": "Não foram encontrados usuários com perfis públicos."
@@ -985,7 +1017,11 @@
   "wanderer": {
     "connected": "Conectado com sucesso ao Wanderer",
     "connection_error": "Erro ao conectar-se ao Wanderer",
-    "wanderer_integration_desc": "Conecte-se ao Wanderer para importar e visualizar facilmente suas trilhas em locais"
+    "wanderer_integration_desc": "Conecte-se ao Wanderer para importar e visualizar facilmente suas trilhas em locais",
+    "disconnected": "Desconectado do Wanderer com sucesso",
+    "disconnect_error": "Erro ao desconectar do Wanderer",
+    "refreshed": "Wanderer atualizado com sucesso",
+    "refresh_error": "Erro ao atualizar o Wanderer"
   },
   "worldtravel": {
     "all_regions": "Todas as Regiões",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "Ocultar detalhes",
-    "show_more": "Mostrar mais"
+    "show_more": "Mostrar mais",
+    "refresh": "Atualizar"
   },
   "currencies": {
     "AED": "Dirham dos Emirados Árabes Unidos",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "Os itens de contexto da viagem aplicam-se a toda a viagem — por exemplo, locais que são o próprio destino, notas gerais ou listas de embalagem que são importantes para toda a viagem.",
     "unscheduled_items": "Itens não programados",
     "unscheduled_items_desc": "Esses itens estão vinculados a esta viagem, mas ainda não foram adicionados a um dia específico."
+  },
+  "errors": {
+    "generic_error": "Falha ao carregar detalhes"
   }
 }

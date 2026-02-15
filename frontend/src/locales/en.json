@@ -48,14 +48,14 @@
     "sponsor": "Sponsor"
   },
   "home": {
-    "hero_1": "Discover the World's Most Thrilling Adventures",
-    "hero_2": "Discover and plan your next adventure with AdventureLog. Explore breathtaking destinations, create custom itineraries, and stay connected on the go.",
+    "hero_1": "Discover the World's Most Thrilling Destinations",
+    "hero_2": "Discover and plan your next destination with AdventureLog. Explore breathtaking places, create custom itineraries, and stay connected on the go.",
     "go_to": "Go To AdventureLog",
     "key_features": "Key Features",
     "desc_1": "Discover, Plan, and Explore with Ease",
-    "desc_2": "AdventureLog is designed to simplify your journey, providing you with the tools and resources to plan, pack, and navigate your next unforgettable adventure.",
+    "desc_2": "AdventureLog is designed to simplify your journey, providing you with the tools and resources to plan, pack, and navigate your next unforgettable destination.",
     "feature_1": "Travel Log",
-    "feature_1_desc": "Keep track of your adventures with a personalized travel log and share your experiences with friends and family.",
+    "feature_1_desc": "Keep track of your locations with a personalized travel log and share your experiences with friends and family.",
     "feature_2": "Trip Planning",
     "feature_2_desc": "Easily create custom itineraries and get a day-by-day breakdown of your trip.",
     "feature_3": "Travel Map",
@@ -83,7 +83,7 @@
     "delete_transportation": "Delete Transportation",
     "delete_lodging": "Delete Lodging",
     "open_details": "Open Details",
-    "edit_location": "Edit Location",
+    "edit_location": "Edit Place",
     "remove_from_collection": "Remove from Collection",
     "add_to_collection": "Add to Collection",
     "click_map_add_marker": "Click the map to drop a marker, then add it here.",
@@ -119,6 +119,10 @@
     "items": "items",
     "lodging_types": "Lodging Types",
     "delete": "Delete",
+    "duplicate": "Duplicate",
+    "duplicate_location": "Duplicate Location",
+    "location_duplicate_success": "Location duplicated successfully!",
+    "location_duplicate_error": "Failed to duplicate location.",
     "location_not_found": "Location not found",
     "location_not_found_desc": "The location you were looking for could not be found. Please try a different location or check back later.",
     "homepage": "Homepage",
@@ -198,7 +202,7 @@
     "unarchive": "Unarchive",
     "archive": "Archive",
     "no_collections_to_add_location": "No collections found to add this location to.",
-    "create_collection_first": "Create a collection first to organize your adventures and memories.",
+    "create_collection_first": "Create a collection first to organize your locations and memories.",
     "done": "Done",
     "collections_linked": "Collections Linked",
     "not_visited": "Not Visited",
@@ -235,9 +239,9 @@
     "create_location": "Create Location",
     "new_location": "New Location",
     "basic_information": "Basic Information",
-    "adventure_not_found": "There are no adventures to display. Add some using the plus button at the bottom right or try changing filters!",
+    "adventure_not_found": "There are no locations to display. Add some using the plus button at the bottom right or try changing filters!",
     "no_locations_found": "No locations found",
-    "no_adventures_message": "Start documenting your adventures and planning new ones. Every journey has a story worth telling.",
+    "no_adventures_message": "Start documenting your locations and planning new ones. Every journey has a story worth telling.",
     "mark_visited": "Mark Visited",
     "error_updating_regions": "Error updating regions",
     "regions_updated": "regions updated",
@@ -262,6 +266,16 @@
     "end": "End",
     "download_calendar": "Download Calendar",
     "all_day": "All Day",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is",
     "itinerary": "Itinerary",
     "itinerary_link_modal": {
       "title": "Link Items to {date}",
@@ -293,7 +307,7 @@
     "attachment_name": "Attachment Name",
     "gpx_tip": "Upload GPX files to attachments to view them on the map!",
     "attachment_update_error": "Error updating attachment",
-    "activities": {},
+    "activities": "Activities",
     "price": "Price",
     "filters_and_stats": "Filters & Stats",
     "travel_progress": "Travel Progress",
@@ -313,7 +327,7 @@
     "getting_location_details": "Getting location details",
     "location_selected": "Location Selected",
     "continue": "Continue",
-    "update_location_details": "Update location details",
+    "update_location_details": "Update place details",
     "create_new_location": "Create new location",
     "wikipedia_error": "Failed to generate description from Wikipedia",
     "public_location_description": "Make this location visible to other users",
@@ -421,6 +435,8 @@
     "complete_import": "Complete Import",
     "loading_activities": "Loading activities",
     "no_strava_activities": "No Strava activities found during this visit",
+    "show_strava_activities": "Show Strava Activities",
+    "hide_strava_activities": "Hide Strava Activities",
     "current_attachments": "Current Attachments",
     "connect_to_wanderer": "Connect to Wanderer",
     "activity_statistics": "Activity Statistics",
@@ -484,7 +500,20 @@
     "import_from_file": "Import from file",
     "export_zip": "Export ZIP",
     "export_failed": "Export failed",
-    "export_success": "Exported collection"
+    "export_success": "Exported collection",
+    "location_actions": "Location actions",
+    "collection_duplicate_success": "Collection duplicated successfully! Redirecting...",
+    "collection_duplicate_error": "Failed to duplicate collection.",
+    "failed_to_fetch_activities": "Failed to fetch activities",
+    "found_activities": "Found {count} activities",
+    "local": "Local",
+    "local_time": "Local time",
+    "no_strava_activities_found": "No Strava activities found",
+    "strava_not_connected": "Strava not connected",
+    "transport_end": "Transport end",
+    "transport_start": "Transport start",
+    "trip_timezone": "Trip timezone",
+    "your_time": "Your time"
   },
   "worldtravel": {
     "country_list": "Country List",
@@ -535,7 +564,7 @@
     "loading_globe_spin": "Loading Globe Spin",
     "spinning_globe": "Spinning Globe",
     "destination_revealed": "Destination Revealed!",
-    "your_random_adventure_awaits": "Your Random Adventure Awaits!",
+    "your_random_adventure_awaits": "Your Random Destination Awaits!",
     "exploration_progress": "Exploration Progress",
     "dive_deeper": "Dive Deeper",
     "cities_available": "Cities Available",
@@ -740,7 +769,7 @@
     "no_shared_collections": "No shared collections.",
     "shared_collections": "Shared Collections",
     "no_archived_collections": "No archived collections.",
-    "create_first": "Create your first collection to organize your adventures and memories.",
+    "create_first": "Create your first collection to organize your locations and memories.",
     "make_sure_public": "Make sure your profile is public so others can share with you.",
     "archived_appear_here": "Archived collections will appear here.",
     "linked": "Linked",
@@ -798,7 +827,8 @@
     "current_items": "Current Items",
     "completed": "Completed",
     "no_items_yet": "No Items Yet",
-    "add_your_first_item": "Add your first item"
+    "add_your_first_item": "Add your first item",
+    "more_items": "more items"
   },
   "transportation": {
     "transportation_deleted": "Transportation deleted successfully!",
@@ -833,7 +863,8 @@
     "arrival_date": "Arrival Date",
     "departure_timezone": "Departure Timezone",
     "arrival_timezone": "Arrival Timezone",
-    "departure_date": "Departure Date"
+    "departure_date": "Departure Date",
+    "codes": "Codes"
   },
   "lodging": {
     "new_lodging": "New Lodging",
@@ -854,13 +885,15 @@
     "update_lodging_details": "Update Lodging Details",
     "create_new_lodging": "New Lodging",
     "enter_lodging_name": "Enter lodging name",
-    "enter_reservation_number": "Enter reservation number"
+    "enter_reservation_number": "Enter reservation number",
+    "invalid_link": "Please enter a valid URL (e.g. https://example.com).",
+    "save_failed": "Failed to save lodging. Please try again."
   },
   "search": {
     "result": "Result",
     "results": "Results",
     "found": "found",
-    "try_searching_desc": "Try searching for adventures, collections, countries, regions, cities, or users.",
+    "try_searching_desc": "Try searching for locations, collections, countries, regions, cities, or users.",
     "countries": "Countries",
     "cities": "Cities"
   },
@@ -870,7 +903,7 @@
     "add_location_at_marker": "Add New Location at Marker",
     "clear_marker": "Clear Marker",
     "add_location": "Add New Location",
-    "adventure_stats": "Adventure Stats",
+    "adventure_stats": "Location Stats",
     "map_controls": "Map Controls",
     "regions": "Regions",
     "completion": "Completion",
@@ -897,7 +930,8 @@
     "invite_revoked": "Invite Revoked",
     "unshare_failed": "Unshare Failed",
     "invite_failed": "Invite Failed",
-    "invite_sent": "Invite Sent"
+    "invite_sent": "Invite Sent",
+    "no_available_users": "No available users"
   },
   "languages": {},
   "profile": {
@@ -906,12 +940,12 @@
     "visited_regions": "Visited Regions",
     "visited_cities": "Visited Cities",
     "travel_statistics": "Travel Statistics",
-    "your_journey_at_a_glance": "Your adventure journey at a glance",
+    "your_journey_at_a_glance": "Your travel journey at a glance",
     "planned_trips": "Planned trips",
     "discovered": "discovered",
     "explored": "explored",
     "public_location_experiences": "Public location experiences",
-    "no_shared_adventures": "This user hasn't shared any public adventures yet.",
+    "no_shared_adventures": "This user hasn't shared any public locations yet.",
     "no_shared_collections": "This user hasn't shared any public collections yet."
   },
   "categories": {
@@ -923,20 +957,21 @@
     "select_category": "Select Category",
     "category_name": "Category Name",
     "add_new_category": "Add New Category",
-    "name_required": "Category name is required"
+    "name_required": "Category name is required",
+    "no_categories_yet": "No categories yet"
   },
   "dashboard": {
     "welcome_back": "Welcome back",
     "countries_visited": "Countries Visited",
-    "total_adventures": "Total Adventures",
+    "total_adventures": "Total Locations",
     "total_visited_regions": "Total Visited Regions",
     "total_visited_cities": "Total Visited Cities",
-    "recent_adventures": "Recent Adventures",
-    "no_recent_adventures": "No recent adventures?",
-    "document_some_adventures": "Start documenting your travels and build your personal adventure map!",
+    "recent_adventures": "Recent Locations",
+    "no_recent_adventures": "No recent locations?",
+    "document_some_adventures": "Start documenting your travels and build your personal location map!",
     "view_all": "View All",
-    "welcome_text_1": "You've been on",
-    "welcome_text_2": "adventures so far",
+    "welcome_text_1": "You've visited",
+    "welcome_text_2": "locations so far",
     "welcome_text_3": "Keep exploring and documenting your travels!"
   },
   "immich": {
@@ -1037,7 +1072,8 @@
     "accept": "Accept",
     "invited_on": "Invited on",
     "no_invites_desc": "Make sure your profile is public so users can invite you.",
-    "by": "by"
+    "by": "by",
+    "fetch_failed": "Failed to fetch invites"
   },
   "strava": {
     "strava_integration_desc": "Connect to Strava to easily import your activties into locations and visits",
@@ -1052,7 +1088,11 @@
   "wanderer": {
     "wanderer_integration_desc": "Connect to Wanderer to easily import and view your trails in locations",
     "connection_error": "Error connecting to Wanderer",
-    "connected": "Successfully connected to Wanderer"
+    "connected": "Successfully connected to Wanderer",
+    "disconnected": "Successfully disconnected from Wanderer",
+    "disconnect_error": "Error disconnecting from Wanderer",
+    "refreshed": "Wanderer refreshed successfully",
+    "refresh_error": "Error refreshing Wanderer"
   },
   "itinerary": {
     "remove_from_itinerary": "Remove from Day",
@@ -1089,7 +1129,8 @@
   },
   "common": {
     "show_less": "Hide details",
-    "show_more": "Show more"
+    "show_more": "Show more",
+    "refresh": "Refresh"
   },
   "collections": {
     "not_found": "Collection Not Found",
@@ -1130,5 +1171,8 @@
     "select_currency": "Select currency",
     "search": "Search currency",
     "no_matches": "No matches"
+  },
+  "errors": {
+    "generic_error": "Failed to load details"
   }
 }

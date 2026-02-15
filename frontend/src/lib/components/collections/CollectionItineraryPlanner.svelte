@@ -135,6 +135,32 @@
 		isLocationModalOpen = true;
 	}
 
+	function handleDuplicateLocation(event: CustomEvent<Location>) {
+		const duplicated = event.detail;
+		if (!duplicated || !duplicated.id) return;
+
+		const collectionId = collection?.id ? String(collection.id) : null;
+		if (collectionId) {
+			const existingCollections = Array.isArray((duplicated as any).collections)
+				? (duplicated as any).collections.map((id: string) => String(id))
+				: [];
+			if (!existingCollections.includes(collectionId)) {
+				(duplicated as any).collections = [...existingCollections, collectionId];
+			}
+		}
+
+		collection = {
+			...collection,
+			locations: [
+				duplicated,
+				...(collection.locations || []).filter((loc) => String(loc.id) !== String(duplicated.id))
+			]
+		};
+
+		days = groupItemsByDay(collection);
+		unscheduledItems = getUnscheduledItems(collection);
+	}
+
 	let lodgingToEdit: Lodging | null = null;
 	let isLodgingModalOpen: boolean = false;
 	function handleEditLodging(event: CustomEvent<Lodging>) {
@@ -1731,6 +1757,7 @@
 												adventure={resolvedObj}
 												on:edit={handleEditLocation}
 												on:delete={handleItemDelete}
+												on:duplicate={handleDuplicateLocation}
 												itineraryItem={item}
 												on:removeFromItinerary={handleRemoveItineraryItem}
 												on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
@@ -2141,6 +2168,7 @@
 														adventure={resolvedObj}
 														on:edit={handleEditLocation}
 														on:delete={handleItemDelete}
+														on:duplicate={handleDuplicateLocation}
 														itineraryItem={item}
 														on:removeFromItinerary={handleRemoveItineraryItem}
 														on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
@@ -2450,6 +2478,7 @@
 										adventure={item}
 										on:edit={handleEditLocation}
 										on:delete={handleItemDelete}
+										on:duplicate={handleDuplicateLocation}
 										{user}
 										{collection}
 										compact={true}

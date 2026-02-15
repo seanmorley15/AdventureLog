@@ -12,6 +12,7 @@
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
+	import { copyToClipboard } from '$lib/index';
 
 	import Plus from '~icons/mdi/plus';
 	import Minus from '~icons/mdi/minus';
@@ -27,6 +28,7 @@
 	import MapMarker from '~icons/mdi/map-marker-multiple';
 	import LinkIcon from '~icons/mdi/link';
 	import DownloadIcon from '~icons/mdi/download';
+	import ContentCopy from '~icons/mdi/content-copy';
 
 	const dispatch = createEventDispatcher();
 
@@ -39,11 +41,35 @@
 	async function copyLink() {
 		try {
 			const url = `${location.origin}/collections/${collection.id}`;
-			await navigator.clipboard.writeText(url);
+			await copyToClipboard(url);
 			copied = true;
 			setTimeout(() => (copied = false), 2000);
 		} catch (e) {
 			addToast('error', $t('adventures.copy_failed') || 'Copy failed');
+		}
+	}
+
+	let isDuplicating = false;
+
+	async function duplicateCollection() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		try {
+			const res = await fetch(`/api/collections/${collection.id}/duplicate/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (res.ok) {
+				const newCollection = await res.json();
+				addToast('success', $t('adventures.collection_duplicate_success'));
+				dispatch('duplicate', newCollection);
+			} else {
+				addToast('error', $t('adventures.collection_duplicate_error'));
+			}
+		} catch (e) {
+			addToast('error', $t('adventures.collection_duplicate_error'));
+		} finally {
+			isDuplicating = false;
 		}
 	}
 
@@ -366,6 +392,16 @@
 										<button class="flex items-center gap-2" on:click={exportCollectionZip}>
 											<DownloadIcon class="w-4 h-4" />
 											{$t('adventures.export_zip')}
+										</button>
+									</li>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={duplicateCollection}
+											disabled={isDuplicating}
+										>
+											<ContentCopy class="w-4 h-4" />
+											{isDuplicating ? '...' : $t('adventures.duplicate')}
 										</button>
 									</li>
 									<div class="divider my-1"></div>

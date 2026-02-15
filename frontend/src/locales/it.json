@@ -171,7 +171,7 @@
     "collection_remove_location_success": "Posizione rimossa dalla raccolta con successo!",
     "create_location": "Crea posizione",
     "delete_location": "Elimina posizione",
-    "edit_location": "Modifica posizione",
+    "edit_location": "Modifica luogo",
     "location_delete_confirm": "Sei sicuro di voler eliminare questa posizione? \nQuesta azione non può essere annullata.",
     "location_delete_success": "Posizione eliminata con successo!",
     "location_not_found": "Posizione non trovata",
@@ -302,7 +302,7 @@
     "trails_found_for": "Trails trovati per",
     "trails_management": "Gestione dei sentieri",
     "trails_management_description": "Gestisci percorsi associati a questa posizione. \nI percorsi possono essere collegati a servizi esterni come Alltrails o Link a Wanderer Trails.",
-    "update_location_details": "Aggiorna i dettagli della posizione",
+    "update_location_details": "Aggiorna dettagli del luogo",
     "update_visit": "Aggiornamento Visita",
     "upload_activity": "Carica attività",
     "upload_attachment": "Allegato di caricamento",
@@ -434,7 +434,32 @@
     "export_zip": "Esporta CAP",
     "import_failed": "Importazione non riuscita",
     "import_from_file": "Importa da file",
-    "import_success": "Importazione riuscita"
+    "import_success": "Importazione riuscita",
+    "duplicate": "Duplica",
+    "duplicate_location": "Duplica posizione",
+    "location_duplicate_success": "Posizione duplicata con successo!",
+    "location_duplicate_error": "Impossibile duplicare la posizione.",
+    "location_actions": "Azioni posizione",
+    "collection_duplicate_success": "Collezione duplicata con successo! Reindirizzamento...",
+    "collection_duplicate_error": "Impossibile duplicare la collezione.",
+    "hide_strava_activities": "Nascondi attività Strava",
+    "show_strava_activities": "Mostra attività Strava",
+    "activities": "Attività",
+    "failed_to_fetch_activities": "Impossibile recuperare le attività",
+    "found_activities": "{count} attività trovate",
+    "local": "Locale",
+    "local_time": "Ora locale",
+    "no_strava_activities_found": "Nessuna attività Strava trovata",
+    "strava_not_connected": "Strava non connesso",
+    "transport_end": "Fine trasporto",
+    "transport_start": "Inizio trasporto",
+    "trip_timezone": "Fuso orario del viaggio",
+    "your_time": "Il tuo orario",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "home": {
     "desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -746,7 +771,8 @@
     "enter_checklist_title": "Inserisci il titolo dell'elenco di controllo",
     "no_items_yet": "Nessun oggetto ancora",
     "update_checklist_details": "Elenco di controllo della modifica",
-    "viewing_checklist": "Visualizzazione della lista di controllo"
+    "viewing_checklist": "Visualizzazione della lista di controllo",
+    "more_items": "altri elementi"
   },
   "collection": {
     "error_creating_collection": "Errore durante la creazione della collezione",
@@ -832,7 +858,8 @@
     "arrival_timezone": "Fuso orario di arrivo",
     "departure_code": "Codice di partenza",
     "departure_date": "Data di partenza",
-    "departure_timezone": "Fuso orario di partenza"
+    "departure_timezone": "Fuso orario di partenza",
+    "codes": "Codici"
   },
   "search": {
     "cities": "Città",
@@ -875,7 +902,8 @@
     "invite_revoked": "Invita revocato",
     "invite_sent": "Invito inviato",
     "revoke_failed": "Revoca fallita",
-    "unshare_failed": "Unshare non è riuscito"
+    "unshare_failed": "Unshare non è riuscito",
+    "no_available_users": "Nessun utente disponibile"
   },
   "profile": {
     "member_since": "Membro da",
@@ -900,7 +928,8 @@
     "select_category": "Seleziona Categoria",
     "add_new_category": "Aggiungi nuova categoria",
     "name_required": "È richiesto il nome della categoria",
-    "location_update_after_refresh": "Le schede di posizione verranno aggiornate dopo aver aggiornato la pagina."
+    "location_update_after_refresh": "Le schede di posizione verranno aggiornate dopo aver aggiornato la pagina.",
+    "no_categories_yet": "Nessuna categoria ancora"
   },
   "dashboard": {
     "countries_visited": "Paesi visitati",
@@ -998,7 +1027,9 @@
     "create_new_lodging": "Nuovo alloggio",
     "enter_lodging_name": "Immettere il nome di alloggio",
     "enter_reservation_number": "Immettere il numero di prenotazione",
-    "update_lodging_details": "Aggiorna i dettagli di alloggio"
+    "update_lodging_details": "Aggiorna i dettagli di alloggio",
+    "invalid_link": "Inserisci un URL valido (ad esempio https://example.com).",
+    "save_failed": "Impossibile salvare l'alloggio. \nPer favore riprova."
   },
   "google_maps": {
     "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità.",
@@ -1035,7 +1066,8 @@
     "no_invites": "Nessun invito",
     "no_invites_desc": "Assicurati che il tuo profilo sia pubblico in modo che gli utenti possano invitarti.",
     "pending_invites": "In sospeso inviti",
-    "title": "Inviti"
+    "title": "Inviti",
+    "fetch_failed": "Impossibile recuperare gli inviti"
   },
   "strava": {
     "authorization_error": "Reindirizzamento dell'errore all'URL di autorizzazione Strava",
@@ -1050,7 +1082,11 @@
   "wanderer": {
     "connected": "Collegato con successo a Wanderer",
     "connection_error": "Errore che si collega a Wanderer",
-    "wanderer_integration_desc": "Connettiti a Wanderer per importare facilmente e visualizzare i tuoi sentieri in luoghi"
+    "wanderer_integration_desc": "Connettiti a Wanderer per importare facilmente e visualizzare i tuoi sentieri in luoghi",
+    "disconnected": "Disconnesso da Wanderer con successo",
+    "disconnect_error": "Errore durante la disconnessione da Wanderer",
+    "refreshed": "Wanderer aggiornato con successo",
+    "refresh_error": "Errore durante l'aggiornamento di Wanderer"
   },
   "collections": {
     "all_items": "Tutti gli articoli",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "Nascondi dettagli",
-    "show_more": "Mostra di più"
+    "show_more": "Mostra di più",
+    "refresh": "Aggiorna"
   },
   "currencies": {
     "AED": "Dirham degli Emirati Arabi Uniti",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "Gli elementi contestuali del viaggio si applicano all'intero viaggio, ad esempio luoghi che rappresentano la destinazione stessa, note generali o liste di cose da portare importanti per l'intero viaggio.",
     "unscheduled_items": "Elementi non pianificati",
     "unscheduled_items_desc": "Questi elementi sono collegati a questo viaggio ma non sono ancora stati aggiunti a un giorno specifico."
+  },
+  "errors": {
+    "generic_error": "Impossibile caricare i dettagli"
   }
 }

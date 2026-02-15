@@ -220,7 +220,7 @@
     "collection_remove_location_success": "¡Ubicación eliminada de la colección con éxito!",
     "create_location": "Crear ubicación",
     "delete_location": "Eliminar la ubicación",
-    "edit_location": "Editar ubicación",
+    "edit_location": "Editar lugar",
     "location_delete_confirm": "¿Estás seguro de que quieres eliminar esta ubicación? Esta acción no se puede deshacer.",
     "location_delete_success": "Ubicación eliminada con éxito!",
     "location_not_found": "Ubicación no encontrada",
@@ -248,7 +248,7 @@
     "select_on_map": "Seleccionar en el mapa",
     "use_current_location": "Utilice la ubicación actual",
     "create_new_location": "Crear nueva ubicación",
-    "update_location_details": "Actualizar detalles de ubicación",
+    "update_location_details": "Actualizar detalles del lugar",
     "back": "Atrás",
     "click_on_map": "Haga clic en el mapa para seleccionar una ubicación",
     "location_display_name": "Nombre de la pantalla de ubicación",
@@ -483,7 +483,32 @@
     "export_zip": "Exportar ZIP",
     "import_failed": "Importación fallida",
     "import_from_file": "Importar desde archivo",
-    "import_success": "Importación exitosa"
+    "import_success": "Importación exitosa",
+    "duplicate": "Duplicar",
+    "duplicate_location": "Duplicar ubicación",
+    "location_duplicate_success": "¡Ubicación duplicada exitosamente!",
+    "location_duplicate_error": "Error al duplicar la ubicación.",
+    "location_actions": "Acciones de ubicación",
+    "collection_duplicate_success": "Colección duplicada con éxito. Redirigiendo...",
+    "collection_duplicate_error": "No se pudo duplicar la colección.",
+    "hide_strava_activities": "Ocultar actividades de Strava",
+    "show_strava_activities": "Mostrar actividades de Strava",
+    "activities": "Actividades",
+    "failed_to_fetch_activities": "Error al obtener actividades",
+    "found_activities": "{count} actividades encontradas",
+    "local": "Local",
+    "local_time": "Hora local",
+    "no_strava_activities_found": "No se encontraron actividades de Strava",
+    "strava_not_connected": "Strava no conectado",
+    "transport_end": "Fin del transporte",
+    "transport_start": "Inicio del transporte",
+    "trip_timezone": "Zona horaria del viaje",
+    "your_time": "Tu hora",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "no_countries_found": "No se encontraron países",
@@ -746,7 +771,8 @@
     "enter_checklist_title": "Ingrese el título de la lista de verificación",
     "no_items_yet": "No hay artículos todavía",
     "update_checklist_details": "Lista de verificación de edición",
-    "viewing_checklist": "Visualización de la lista de verificación"
+    "viewing_checklist": "Visualización de la lista de verificación",
+    "more_items": "más elementos"
   },
   "collection": {
     "collection_created": "¡Colección creada con éxito!",
@@ -832,7 +858,8 @@
     "arrival_timezone": "Zona horaria de llegada",
     "departure_code": "Código de salida",
     "departure_date": "Fecha de salida",
-    "departure_timezone": "Zona horaria de salida"
+    "departure_timezone": "Zona horaria de salida",
+    "codes": "Códigos"
   },
   "search": {
     "cities": "Ciudades",
@@ -875,7 +902,8 @@
     "invite_revoked": "Invitar revocado",
     "invite_sent": "Invitación enviada",
     "revoke_failed": "Revocar falló",
-    "unshare_failed": "Falló el desastre"
+    "unshare_failed": "Falló el desastre",
+    "no_available_users": "No hay usuarios disponibles"
   },
   "profile": {
     "member_since": "Miembro desde",
@@ -900,7 +928,8 @@
     "select_category": "Seleccionar categoría",
     "add_new_category": "Agregar nueva categoría",
     "name_required": "Se requiere el nombre de la categoría",
-    "location_update_after_refresh": "Las tarjetas de ubicación se actualizarán una vez que actualice la página."
+    "location_update_after_refresh": "Las tarjetas de ubicación se actualizarán una vez que actualice la página.",
+    "no_categories_yet": "Aún no hay categorías"
   },
   "dashboard": {
     "countries_visited": "Países visitados",
@@ -998,7 +1027,9 @@
     "create_new_lodging": "Nuevo alojamiento",
     "enter_lodging_name": "Ingrese el nombre de alojamiento",
     "enter_reservation_number": "Ingrese el número de reserva",
-    "update_lodging_details": "Actualizar detalles de alojamiento"
+    "update_lodging_details": "Actualizar detalles de alojamiento",
+    "invalid_link": "Introduzca una URL válida (por ejemplo, https://example.com).",
+    "save_failed": "No se pudo guardar el alojamiento. \nPor favor inténtalo de nuevo."
   },
   "google_maps": {
     "google_maps_integration_desc": "Conecte su cuenta de Google Maps para obtener resultados y recomendaciones de búsqueda de ubicación de alta calidad.",
@@ -1035,7 +1066,8 @@
     "no_invites": "Sin invitaciones",
     "no_invites_desc": "Asegúrese de que su perfil sea público para que los usuarios puedan invitarlo.",
     "pending_invites": "Invitaciones pendientes",
-    "title": "Invitaciones"
+    "title": "Invitaciones",
+    "fetch_failed": "Error al obtener las invitaciones"
   },
   "strava": {
     "authorization_error": "Redirección de errores a la URL de autorización de Strava",
@@ -1050,7 +1082,11 @@
   "wanderer": {
     "connected": "Conectado con éxito a Wanderer",
     "connection_error": "Error conectándose a Wanderer",
-    "wanderer_integration_desc": "Conéctese a Wanderer para importar y ver fácilmente sus senderos en ubicaciones"
+    "wanderer_integration_desc": "Conéctese a Wanderer para importar y ver fácilmente sus senderos en ubicaciones",
+    "disconnected": "Desconectado de Wanderer exitosamente",
+    "disconnect_error": "Error al desconectar de Wanderer",
+    "refreshed": "Wanderer actualizado exitosamente",
+    "refresh_error": "Error al actualizar Wanderer"
   },
   "collections": {
     "all_items": "Todos los artículos",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "Ocultar detalles",
-    "show_more": "Mostrar más"
+    "show_more": "Mostrar más",
+    "refresh": "Actualizar"
   },
   "currencies": {
     "AED": "Dírham de los Emiratos Árabes Unidos",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "Los elementos del contexto del viaje se aplican a todo el viaje; por ejemplo, ubicaciones que son el destino en sí, notas generales o listas de equipaje que son importantes para todo el viaje.",
     "unscheduled_items": "Artículos no programados",
     "unscheduled_items_desc": "Estos elementos están vinculados a este viaje pero aún no se han agregado a un día específico."
+  },
+  "errors": {
+    "generic_error": "Error al cargar los detalles"
   }
 }

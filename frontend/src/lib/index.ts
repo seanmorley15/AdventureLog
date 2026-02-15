@@ -1120,3 +1120,50 @@ export function getActivityIcon(activityType: string) {
 	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
 	return activity ? activity.icon : '🏅'; // Default medal if not found
 }
+
+/**
+ * Copy text to clipboard with fallback for non-HTTPS contexts.
+ * navigator.clipboard.writeText() requires a secure context (HTTPS or localhost).
+ * On plain HTTP (e.g. LAN IP), we fall back to the legacy execCommand approach.
+ */
+export async function copyToClipboard(text: string): Promise<void> {
+	if (navigator.clipboard && window.isSecureContext) {
+		await navigator.clipboard.writeText(text);
+	} else {
+		// Fallback for non-secure contexts (HTTP on LAN, etc.)
+		const textarea = document.createElement('textarea');
+		textarea.value = text;
+		textarea.style.position = 'fixed';
+		textarea.style.left = '-9999px';
+		textarea.style.top = '-9999px';
+		document.body.appendChild(textarea);
+		textarea.focus();
+		textarea.select();
+		const ok = document.execCommand('copy');
+		document.body.removeChild(textarea);
+		if (!ok) throw new Error('execCommand copy failed');
+	}
+}
+
+/**
+ * Localize a country name using the browser's Intl.DisplayNames API.
+ * Falls back to the original name if the locale or code is unavailable.
+ *
+ * @param countryCode - ISO 3166-1 alpha-2 country code (e.g., "DE", "US")
+ * @param fallbackName - The original English name to use as fallback
+ * @param locale - The current UI locale (e.g., "de", "fr", "en")
+ * @returns The localized country name, or the fallback if localization fails
+ */
+export function localizeCountryName(
+	countryCode: string,
+	fallbackName: string,
+	locale?: string | null
+): string {
+	if (!countryCode) return fallbackName;
+	try {
+		const displayNames = new Intl.DisplayNames([locale || 'en'], { type: 'region' });
+		return displayNames.of(countryCode.toUpperCase()) || fallbackName;
+	} catch {
+		return fallbackName;
+	}
+}

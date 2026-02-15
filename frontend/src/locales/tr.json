@@ -83,7 +83,7 @@
     "delete_transportation": "Ulaşım Kaydınız Sil",
     "delete_lodging": "Konaklamayı sil",
     "open_details": "Ayrıntıları Aç",
-    "edit_location": "Konumu Düzenle",
+    "edit_location": "Yeri düzenle",
     "remove_from_collection": "Koleksiyondan Kaldır",
     "add_to_collection": "Koleksiyona Ekle",
     "delete": "Sil",
@@ -247,7 +247,7 @@
     "getting_location_details": "Konum detayları alınıyor",
     "location_selected": "Konum Seçildi",
     "continue": "Devam Et",
-    "update_location_details": "Konum detaylarını güncelle",
+    "update_location_details": "Yer ayrıntılarını güncelle",
     "create_new_location": "Yeni konum oluştur",
     "wikipedia_error": "Vikipedi'den açıklama oluşturulamadı",
     "public_location_description": "Bu konumu diğer kullanıcılara görünür yap",
@@ -483,7 +483,32 @@
     "export_zip": "ZIP'i dışa aktar",
     "import_failed": "İçe Aktarma Başarısız",
     "import_from_file": "Dosyadan içe aktar",
-    "import_success": "İçe Aktarma Başarısı"
+    "import_success": "İçe Aktarma Başarısı",
+    "duplicate": "Çoğalt",
+    "duplicate_location": "Konumu çoğalt",
+    "location_duplicate_success": "Konum başarıyla kopyalandı!",
+    "location_duplicate_error": "Konum çoğaltılamadı.",
+    "location_actions": "Konum işlemleri",
+    "collection_duplicate_success": "Koleksiyon başarıyla kopyalandı! Yönlendiriliyor...",
+    "collection_duplicate_error": "Koleksiyon kopyalanamadı.",
+    "hide_strava_activities": "Strava Faaliyetlerini Gizle",
+    "show_strava_activities": "Strava Aktivitelerini Göster",
+    "activities": "Aktiviteler",
+    "failed_to_fetch_activities": "Aktiviteler yüklenemedi",
+    "found_activities": "{count} aktivite bulundu",
+    "local": "Yerel",
+    "local_time": "Yerel saat",
+    "no_strava_activities_found": "Strava aktivitesi bulunamadı",
+    "strava_not_connected": "Strava bağlı değil",
+    "transport_end": "Ulaşım bitişi",
+    "transport_start": "Ulaşım başlangıcı",
+    "trip_timezone": "Seyahat saat dilimi",
+    "your_time": "Sizin saatiniz",
+    "date_precision": "Date Precision",
+    "date_precision_full": "Full Date",
+    "date_precision_month": "Month & Year",
+    "date_precision_year": "Year Only",
+    "date_precision_help": "Choose how precise the visit date is"
   },
   "worldtravel": {
     "country_list": "Ülke Listesi",
@@ -797,7 +822,8 @@
     "current_items": "Mevcut Öğeler",
     "completed": "Tamamlandı",
     "no_items_yet": "Henüz Öğe Yok",
-    "add_your_first_item": "İlk öğenizi ekleyin"
+    "add_your_first_item": "İlk öğenizi ekleyin",
+    "more_items": "daha fazla öğe"
   },
   "transportation": {
     "transportation_deleted": "Ulaşım başarıyla silindi!",
@@ -832,7 +858,8 @@
     "arrival_timezone": "Varış Saat Dilimi",
     "departure_code": "Kalkış Kodu",
     "departure_date": "Ayrılış Tarihi",
-    "departure_timezone": "Kalkış Saat Dilimi"
+    "departure_timezone": "Kalkış Saat Dilimi",
+    "codes": "Kodlar"
   },
   "lodging": {
     "new_lodging": "Yeni Konaklama",
@@ -853,7 +880,9 @@
     "update_lodging_details": "Konaklama Detaylarını Güncelle",
     "create_new_lodging": "Yeni Konaklama",
     "enter_lodging_name": "Konaklama adını girin",
-    "enter_reservation_number": "Rezervasyon numarası girin"
+    "enter_reservation_number": "Rezervasyon numarası girin",
+    "invalid_link": "Lütfen geçerli bir URL girin (ör. https://example.com).",
+    "save_failed": "Konaklama kaydedilemedi. \nLütfen tekrar deneyin."
   },
   "search": {
     "result": "Sonuç",
@@ -896,7 +925,8 @@
     "invite_revoked": "Davet İptal Edildi",
     "unshare_failed": "Paylaşım İptali Başarısız",
     "invite_failed": "Davet Gönderilemedi",
-    "invite_sent": "Davet Edildi"
+    "invite_sent": "Davet Edildi",
+    "no_available_users": "Kullanılabilir kullanıcı yok"
   },
   "profile": {
     "member_since": "Üyelik tarihi",
@@ -921,7 +951,8 @@
     "select_category": "Kategori Seçin",
     "category_name": "Kategori Adı",
     "add_new_category": "Yeni Kategori Ekle",
-    "name_required": "Kategori adı gereklidir"
+    "name_required": "Kategori adı gereklidir",
+    "no_categories_yet": "Henüz kategori yok"
   },
   "dashboard": {
     "welcome_back": "Tekrar hoş geldiniz",
@@ -1035,7 +1066,8 @@
     "accept": "Kabul Et",
     "invited_on": "Davet Tarihi",
     "no_invites_desc": "Kullanıcıların sizi davet edebilmesi için profilinizin herkese açık olduğundan emin olun.",
-    "by": "tarafından"
+    "by": "tarafından",
+    "fetch_failed": "Davetler yüklenemedi"
   },
   "strava": {
     "strava_integration_desc": "Konum ve ziyaret bilgilerinize kolayca aktivite aktarmak için Strava'ya bağlanın",
@@ -1050,7 +1082,11 @@
   "wanderer": {
     "wanderer_integration_desc": "Wanderer’a bağlanarak patikalarınızı konumlarda kolayca aktarabilir ve görüntüleyebilirsiniz",
     "connection_error": "Wanderer'a bağlanırken hata oluştu",
-    "connected": "Wanderer'a başarıyla bağlandı"
+    "connected": "Wanderer'a başarıyla bağlandı",
+    "disconnected": "Wanderer bağlantısı başarıyla kesildi",
+    "disconnect_error": "Wanderer bağlantısı kesilirken hata oluştu",
+    "refreshed": "Wanderer başarıyla yenilendi",
+    "refresh_error": "Wanderer yenilenirken hata oluştu"
   },
   "collections": {
     "all_items": "Tüm Ürünler",
@@ -1069,7 +1105,8 @@
   },
   "common": {
     "show_less": "Ayrıntıları gizle",
-    "show_more": "Daha fazlasını göster"
+    "show_more": "Daha fazlasını göster",
+    "refresh": "Yenile"
   },
   "currencies": {
     "AED": "BAE Dirhemi",
@@ -1128,5 +1165,8 @@
     "trip_context_info": "Seyahat bağlamı öğeleri seyahatin tamamı için geçerlidir; örneğin varış noktasının kendisi olan konumlar, genel notlar veya seyahatin tamamı için önemli olan paket listeleri.",
     "unscheduled_items": "Planlanmamış Öğeler",
     "unscheduled_items_desc": "Bu öğeler bu geziye bağlı ancak henüz belirli bir güne eklenmedi."
+  },
+  "errors": {
+    "generic_error": "Ayrıntılar yüklenemedi"
   }
 }

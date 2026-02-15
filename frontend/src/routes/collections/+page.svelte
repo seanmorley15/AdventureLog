@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
 	import CollectionLink from '$lib/components/CollectionLink.svelte';
@@ -22,7 +22,6 @@
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
 
 	export let data: any;
-	console.log('Collections page data:', data);
 
 	let collections: SlimCollection[] = data.props.adventures || [];
 	let sharedCollections: SlimCollection[] = data.props.sharedCollections || [];
@@ -39,13 +38,35 @@
 	let totalPages = Math.ceil(count / resultsPerPage);
 	let currentPage: number = data.props.currentPage || 1;
 	let orderBy = data.props.order_by || 'updated_at';
-	let orderDirection = data.props.order_direction || 'asc';
+	let orderDirection = data.props.order_direction || 'desc';
 	let statusFilter = data.props.status || '';
 
 	let invites: CollectionInvite[] = data.props.invites || [];
 
 	let sidebarOpen = false;
 	let collectionToEdit: Collection | null = null;
+
+	// Sync local state from data.props after every navigation event.
+	// This ensures browser back/forward, deep links, and internal goto() calls
+	// all produce consistent UI state. Follows the same pattern as the #990 fix
+	// for the locations page.
+	afterNavigate(() => {
+		// Sync data arrays from the latest server response
+		collections = data.props.adventures || [];
+		sharedCollections = data.props.sharedCollections || [];
+		archivedCollections = data.props.archivedCollections || [];
+		next = data.props.next || null;
+		previous = data.props.previous || null;
+		count = data.props.count || 0;
+		totalPages = Math.ceil(count / resultsPerPage);
+		currentPage = data.props.currentPage || 1;
+		invites = data.props.invites || [];
+
+		// Sync filter/sort state from server props (which mirror URL params)
+		orderBy = data.props.order_by || 'updated_at';
+		orderDirection = data.props.order_direction || 'desc';
+		statusFilter = data.props.status || '';
+	});
 
 	$: currentCollections =
 		activeView === 'owned'
@@ -77,31 +98,20 @@
 	async function goToPage(pageNum: number) {
 		const url = new URL($page.url);
 		url.searchParams.set('page', pageNum.toString());
+		// afterNavigate() handles syncing all local state from data.props
 		await goto(url.toString(), { invalidateAll: true, replaceState: true });
-		if (data.props.adventures) {
-			collections = data.props.adventures;
-		}
-		if (data.props.archivedCollections) {
-			archivedCollections = data.props.archivedCollections;
-		}
-		currentPage = pageNum;
 	}
 
 	async function updateSort(by: string, direction: string) {
 		const url = new URL($page.url);
 		url.searchParams.set('order_by', by);
 		url.searchParams.set('order_direction', direction);
-		url.searchParams.set('page', '1'); // Reset to first page when sorting changes
-		currentPage = 1;
+		url.searchParams.set('page', '1');
+		// Set optimistically for immediate UI feedback
 		orderBy = by;
 		orderDirection = direction;
+		// afterNavigate() handles full state sync after navigation completes
 		await goto(url.toString(), { invalidateAll: true, replaceState: true });
-		if (data.props.adventures) {
-			collections = data.props.adventures;
-		}
-		if (data.props.archivedCollections) {
-			archivedCollections = data.props.archivedCollections;
-		}
 	}
 
 	async function updateStatusFilter(status: string) {
@@ -111,13 +121,11 @@
 		} else {
 			url.searchParams.delete('status');
 		}
-		url.searchParams.set('page', '1'); // Reset to first page when filter changes
-		currentPage = 1;
+		url.searchParams.set('page', '1');
+		// Set optimistically for immediate UI feedback
 		statusFilter = status;
+		// afterNavigate() handles full state sync after navigation completes
 		await goto(url.toString(), { invalidateAll: true, replaceState: true });
-		if (data.props.adventures) {
-			collections = data.props.adventures;
-		}
 	}
 
 	let importInputEl: HTMLInputElement | null = null;
@@ -189,6 +197,21 @@
 			collections = [event.detail, ...collections];
 		}
 		isShowingCollectionModal = false;
+	}
+
+	function duplicateCollectionInList(event: CustomEvent<SlimCollection | Collection>) {
+		const duplicatedCollection = event.detail as SlimCollection;
+
+		collections = [
+			duplicatedCollection,
+			...collections.filter((collection) => collection.id !== duplicatedCollection.id)
+		];
+
+		archivedCollections = archivedCollections.filter(
+			(collection) => collection.id !== duplicatedCollection.id
+		);
+
+		activeView = 'owned';
 	}
 
 	async function editCollection(event: CustomEvent<SlimCollection>) {
@@ -373,7 +396,12 @@
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-4">
 							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
-								<Filter class="w-5 h-5" />
+								<div class="indicator">
+									<Filter class="w-5 h-5" />
+									{#if statusFilter}
+										<span class="indicator-item badge badge-xs badge-primary"></span>
+									{/if}
+								</div>
 							</button>
 							<div class="flex items-center gap-3">
 								<div class="p-2 bg-primary/10 rounded-xl">
@@ -574,7 +602,7 @@
 				{:else}
 					<!-- Collections Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
 					>
 						{#each currentCollections as collection (collection.id)}
 							<CollectionCard
@@ -584,6 +612,7 @@
 								on:edit={editCollection}
 								on:archive={archiveCollection}
 								on:unarchive={unarchiveCollection}
+								on:duplicate={duplicateCollectionInList}
 								user={data.user}
 								on:leave={(e) => {
 									collectionIdToLeave = e.detail;
@@ -625,6 +654,9 @@
 							<Sort class="w-6 h-6 text-primary" />
 						</div>
 						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
+						{#if statusFilter}
+							<div class="badge badge-primary badge-sm">{$t('adventures.active')}</div>
+						{/if}
 					</div>
 
 					<!-- Only show sort options for collection views, not invites -->

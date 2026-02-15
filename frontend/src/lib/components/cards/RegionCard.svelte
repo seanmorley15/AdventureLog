@@ -4,9 +4,14 @@
 	import type { Region, VisitedRegion } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
+	import { localizeCountryName } from '$lib';
 
 	export let region: Region;
+
+	// Localize country name using ISO2 code extracted from region id (e.g., "DE-SN" -> "DE")
+	$: countryCode = region.id ? region.id.split('-')[0] : '';
+	$: localizedCountryName = localizeCountryName(countryCode, region.country_name, $locale);
 	export let visited: boolean | undefined;
 
 	function goToCity() {
@@ -63,7 +68,7 @@
 
 		<!-- Metadata Badges -->
 		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-primary">{region.country_name}</div>
+			<div class="badge badge-primary">{localizedCountryName}</div>
 			<div class="badge badge-neutral">
 				{region.num_cities}
 				{$t('worldtravel.cities')}

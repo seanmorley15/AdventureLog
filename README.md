@@ -157,7 +157,7 @@ Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software de
 
 ### Top Supporters 💖
 
-- [Veymax](https://x.com/veymax)
+- Veymax
 - [nebriv](https://github.com/nebriv)
 - [Miguel Cruz](https://github.com/Tokynet)
 - [Victor Butler](https://x.com/victor_butler)

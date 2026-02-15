@@ -225,8 +225,24 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
+        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone', 'notes', 'price', 'price_currency', 'activities', 'location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_date_precision(self, value):
+        """Validate that date_precision is one of the allowed choices."""
+        allowed = ['full', 'month', 'year']
+        if value not in allowed:
+            raise serializers.ValidationError(
+                f"Invalid date precision '{value}'. Must be one of: {', '.join(allowed)}"
+            )
+        return value
+
+    def validate(self, data):
+        """Ensure start_date is provided when creating a visit."""
+        # On create (no instance), start_date is required
+        if not self.instance and not data.get('start_date'):
+            raise serializers.ValidationError({'start_date': 'Start date is required.'})
+        return data
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):
@@ -237,7 +253,7 @@ class VisitSerializer(serializers.ModelSerializer):
 class CalendarVisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone']
+        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone']
 
 
 class CalendarLocationSerializer(serializers.ModelSerializer):
@@ -435,9 +451,8 @@ class LocationSerializer(CustomModelSerializer):
         return location
 
     def update(self, instance, validated_data):
-        has_visits = 'visits' in validated_data
         category_data = validated_data.pop('category', None)
-
+        visits_data = validated_data.pop('visits', None)
         collections_data = validated_data.pop('collections', None)
 
         # Update regular fields
@@ -452,12 +467,22 @@ class LocationSerializer(CustomModelSerializer):
             instance.category = category
         # If not the owner, ignore category changes
 
-        # Handle collections - only update if collections were provided
+        # Save the location first so that user-supplied field values (including
+        # is_public) are persisted before the m2m_changed signal fires.
+        instance.save()
+
+        # Handle collections - only update if collections were provided.
+        # NOTE: .set() triggers the m2m_changed signal which may override
+        # is_public based on collection publicity.  By saving first we ensure
+        # the user's explicit value reaches the DB before the signal runs.
         if collections_data is not None:
             instance.collections.set(collections_data)
 
-        # call save on the location to update the updated_at field and trigger any geocoding
-        instance.save()
+        # Handle visits - replace all visits if provided
+        if visits_data is not None:
+            instance.visits.all().delete()
+            for visit_data in visits_data:
+                Visit.objects.create(location=instance, **visit_data)
 
         return instance
     
@@ -720,6 +745,9 @@ class CollectionSerializer(CustomModelSerializer):
         required=False,
         allow_null=True,
     )
+    # Override link as CharField so DRF's URLField doesn't reject invalid
+    # values before validate_link() can clean them up.
+    link = serializers.CharField(required=False, allow_blank=True, allow_null=True)
 
     class Meta:
         model = Collection
@@ -748,6 +776,19 @@ class CollectionSerializer(CustomModelSerializer):
             'primary_image_id',
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with', 'status', 'days_until_start', 'primary_image']
+
+    def validate_link(self, value):
+        """Convert empty or invalid URLs to None so Django doesn't reject them."""
+        if not value or not value.strip():
+            return None
+        from django.core.validators import URLValidator
+        from django.core.exceptions import ValidationError as DjangoValidationError
+        validator = URLValidator()
+        try:
+            validator(value)
+        except DjangoValidationError:
+            return None
+        return value
 
     def get_collaborators(self, obj):
         request = self.context.get('request')
