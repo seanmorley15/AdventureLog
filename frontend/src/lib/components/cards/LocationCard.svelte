@@ -214,12 +214,25 @@
 		if (isDuplicating) return;
 		isDuplicating = true;
 		try {
+			const duplicatePayload = collection?.id ? { collection_id: collection.id } : null;
 			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(duplicatePayload ?? {})
 			});
 			if (res.ok) {
 				const newLocation = await res.json();
+
+				// Keep local UI in sync immediately in collection context.
+				if (collection?.id) {
+					const nextCollections = Array.isArray(newLocation.collections)
+						? newLocation.collections
+						: [];
+					if (!nextCollections.includes(collection.id)) {
+						newLocation.collections = [...nextCollections, collection.id];
+					}
+				}
+
 				addToast('success', $t('adventures.location_duplicate_success'));
 				dispatch('duplicate', newLocation);
 			} else {

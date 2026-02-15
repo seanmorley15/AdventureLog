@@ -1179,7 +1179,7 @@
 				<!-- Itinerary View -->
 				{#if currentView === 'itinerary'}
 					<CollectionItineraryPlanner
-						{collection}
+						bind:collection
 						user={data.user}
 						canModify={canModifyCollection}
 					/>

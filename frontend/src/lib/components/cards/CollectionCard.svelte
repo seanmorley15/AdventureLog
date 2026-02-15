@@ -62,7 +62,7 @@
 			if (res.ok) {
 				const newCollection = await res.json();
 				addToast('success', $t('adventures.collection_duplicate_success'));
-				goto(`/collections/${newCollection.id}`);
+				dispatch('duplicate', newCollection);
 			} else {
 				addToast('error', $t('adventures.collection_duplicate_error'));
 			}
