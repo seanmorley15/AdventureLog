@@ -140,6 +140,7 @@ class Visit(models.Model):
     )
     timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
+    price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

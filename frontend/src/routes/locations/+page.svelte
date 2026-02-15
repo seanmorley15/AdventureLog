@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { goto, afterNavigate } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { tick } from 'svelte';
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
@@ -58,18 +59,15 @@
 	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
 
-	// Reactive statements - Only read from URL, don't write
-	$: {
-		if (typeof window !== 'undefined') {
-			let url = new URL(window.location.href);
-			let types = url.searchParams.get('types');
-			if (types) {
-				typeString = types;
-			} else {
-				typeString = '';
-			}
+	// Sync typeString from URL only during actual navigation events.
+	// A $: reactive block would re-run whenever typeString changes (because Svelte
+	// tracks it as a dependency), resetting it to '' before the user can submit. (#990)
+	afterNavigate(() => {
+		let typesParam = $page.url.searchParams.get('types');
+		if (typesParam !== null) {
+			typeString = typesParam;
 		}
-	}
+	});
 
 	$: {
 		let url = new URL($page.url);
@@ -151,6 +149,52 @@
 
 	function getPlannedCount() {
 		return adventures.filter((a) => !a.is_visited).length;
+	}
+
+	/**
+	 * Core filter logic: reads current form state + typeString and navigates
+	 * via goto(). Extracted so it can be called from both form submit and
+	 * automatic category change events. (#990)
+	 */
+	function doApplyFilters() {
+		let form = document.getElementById('filter-form') as HTMLFormElement | null;
+		let url = new URL(window.location.href);
+
+		// Use typeString from Svelte binding (reliable, not from hidden input)
+		url.searchParams.set('types', typeString);
+
+		if (form) {
+			let formData = new FormData(form);
+			url.searchParams.set(
+				'order_direction',
+				formData.get('order_direction')?.toString() || 'asc'
+			);
+			url.searchParams.set('order_by', formData.get('order_by')?.toString() || 'updated_at');
+			url.searchParams.set('is_visited', formData.get('is_visited')?.toString() || 'all');
+
+			if (formData.has('include_collections')) {
+				url.searchParams.set('include_collections', 'true');
+			} else {
+				url.searchParams.set('include_collections', 'false');
+			}
+		}
+
+		// Reset to page 1 when changing filters
+		url.searchParams.delete('page');
+
+		goto(url.toString(), { invalidateAll: true });
+	}
+
+	/** Form submit handler — prevents default and applies filters. */
+	function applyFilters(event: SubmitEvent) {
+		doApplyFilters();
+	}
+
+	/** Called when CategoryFilterDropdown emits a change event (checkbox toggled). */
+	async function onCategoryChange() {
+		// Wait for Svelte binding (typeString) to propagate before reading it
+		await tick();
+		doApplyFilters();
 	}
 </script>
 
@@ -303,16 +347,16 @@
 						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
-					<!-- Filters Form -->
-					<form method="get" class="space-y-6">
+					<!-- Filters Form (submit intercepted by applyFilters for reliable category filtering, #990) -->
+					<form id="filter-form" on:submit|preventDefault={applyFilters} class="space-y-6">
 						<!-- Category Filter -->
 						<div class="card bg-base-200/50 p-4">
 							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 								<Tag class="w-5 h-5" />
 								Categories
 							</h3>
-							<CategoryFilterDropdown bind:types={typeString} />
-							<button
+					<CategoryFilterDropdown bind:types={typeString} on:change={onCategoryChange} />
+						<button
 								type="button"
 								on:click={() => (is_category_modal_open = true)}
 								class="btn btn-outline btn-sm w-full mt-3 gap-2"

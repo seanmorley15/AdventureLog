@@ -225,7 +225,7 @@ class VisitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone', 'notes', 'activities', 'location', 'created_at', 'updated_at']
+        fields = ['id', 'start_date', 'end_date', 'date_precision', 'timezone', 'notes', 'price', 'price_currency', 'activities', 'location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def validate_date_precision(self, value):

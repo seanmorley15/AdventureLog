@@ -476,6 +476,8 @@ export type Visit = {
 	date_precision: DatePrecision;
 	notes: string;
 	timezone: string | null;
+	price: number | null;
+	price_currency: string | null;
 	activities: Activity[];
 	location: string;
 	created_at: string;

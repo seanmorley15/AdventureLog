@@ -560,6 +560,16 @@
 														</div>
 													{/if}
 
+													{#if visit.price !== null && visit.price !== undefined}
+														{@const visitPriceLabel = formatMoney(toMoneyValue(visit.price, visit.price_currency, data.user?.default_currency || DEFAULT_CURRENCY))}
+														{#if visitPriceLabel}
+															<div class="mt-2 flex items-center gap-2">
+																<CashMultiple class="w-4 h-4 text-accent" />
+																<span class="text-sm font-semibold text-accent">{visitPriceLabel}</span>
+															</div>
+														{/if}
+													{/if}
+
 													<!-- Activities Section -->
 													{#if visit.activities && visit.activities.length > 0}
 														<div class="mt-4">

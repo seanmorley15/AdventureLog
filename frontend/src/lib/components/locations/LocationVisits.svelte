@@ -8,13 +8,15 @@
 		TransportationVisit
 	} from '$lib/types';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
+	import MoneyInput from '../shared/MoneyInput.svelte';
 	import { t } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate, formatPartialDate, formatPartialDateRange } from '$lib/dateUtils';
-	import type { DatePrecision } from '$lib/types';
+	import type { DatePrecision, MoneyValue } from '$lib/types';
 	import { onMount, tick } from 'svelte';
 	import { isAllDay, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
+	import { DEFAULT_CURRENCY, toMoneyValue, normalizeMoneyPayload, formatMoney } from '$lib/money';
 
 	// Icons
 	import CalendarIcon from '~icons/mdi/calendar';
@@ -62,6 +64,11 @@
 	let constrainDates: boolean = false;
 	let isEditing = false;
 	let visitIdEditing: string | null = null;
+
+	// Price state for visit form
+	let visitPrice: number | null = null;
+	let visitPriceCurrency: string | null = null;
+	$: visitMoneyValue = toMoneyValue(visitPrice, visitPriceCurrency, DEFAULT_CURRENCY) as MoneyValue;
 
 	// Date input focus state (for placeholder-to-native-picker swap)
 	let startInputActive = false;
@@ -306,18 +313,27 @@
 	async function addVisit(isAuto: boolean = false) {
 		// If editing an existing visit, patch instead of creating new
 		if (visitIdEditing) {
+			let patchPayload: Record<string, any> = {
+				start_date: utcStartDate,
+				end_date: utcEndDate,
+				date_precision: datePrecision,
+				notes: note,
+				timezone: selectedStartTimezone,
+				price: visitPrice,
+				price_currency: visitPriceCurrency
+			};
+			if (visitPrice !== null) {
+				patchPayload = normalizeMoneyPayload(patchPayload, 'price', 'price_currency', DEFAULT_CURRENCY);
+			} else {
+				patchPayload.price = null;
+				patchPayload.price_currency = null;
+			}
 			const response = await fetch(`/api/visits/${visitIdEditing}/`, {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					date_precision: datePrecision,
-					notes: note,
-					timezone: selectedStartTimezone
-				})
+				body: JSON.stringify(patchPayload)
 			});
 
 			if (response.ok) {
@@ -330,20 +346,29 @@
 			}
 		} else {
 			// post to /api/visits for new visit
+			let postPayload: Record<string, any> = {
+				object_id: objectId,
+				start_date: utcStartDate,
+				end_date: utcEndDate,
+				date_precision: datePrecision,
+				notes: note,
+				timezone: selectedStartTimezone,
+				location: objectId,
+				price: visitPrice,
+				price_currency: visitPriceCurrency
+			};
+			if (visitPrice !== null) {
+				postPayload = normalizeMoneyPayload(postPayload, 'price', 'price_currency', DEFAULT_CURRENCY);
+			} else {
+				delete postPayload.price;
+				delete postPayload.price_currency;
+			}
 			const response = await fetch('/api/visits/', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
-				body: JSON.stringify({
-					object_id: objectId,
-					start_date: utcStartDate,
-					end_date: utcEndDate,
-					date_precision: datePrecision,
-					notes: note,
-					timezone: selectedStartTimezone,
-					location: objectId
-				})
+				body: JSON.stringify(postPayload)
 			});
 
 			if (response.ok) {
@@ -366,6 +391,8 @@
 		datePrecision = 'full';
 		startInputActive = false;
 		endInputActive = false;
+		visitPrice = null;
+		visitPriceCurrency = null;
 		}
 	}
 
@@ -715,6 +742,14 @@
 		delete showActivityUpload[visit.id];
 
 		note = visit.notes;
+		// Load price data for editing (only available on Visit, not TransportationVisit)
+		if ('price' in visit) {
+			visitPrice = (visit as Visit).price;
+			visitPriceCurrency = (visit as Visit).price_currency;
+		} else {
+			visitPrice = null;
+			visitPriceCurrency = null;
+		}
 		constrainDates = true;
 		utcStartDate = visit.start_date;
 		utcEndDate = visit.end_date;
@@ -1064,6 +1099,18 @@
 						></textarea>
 					</div>
 
+					<!-- Price per Visit -->
+					<div class="mt-4">
+						<MoneyInput
+							label={$t('adventures.price')}
+							value={visitMoneyValue}
+							on:change={(event) => {
+								visitPrice = event.detail.amount;
+								visitPriceCurrency = event.detail.currency;
+							}}
+						/>
+					</div>
+
 					<!-- Add Visit Button -->
 					<div class="flex justify-end mt-4">
 						<button
@@ -1149,6 +1196,15 @@
 												<p class="text-xs text-base-content/70 bg-base-200/50 p-2 rounded">
 													"{visit.notes}"
 												</p>
+											{/if}
+
+											{#if 'price' in visit && visit.price !== null && visit.price !== undefined}
+												{@const priceFormatted = formatMoney(toMoneyValue(visit.price, visit.price_currency, DEFAULT_CURRENCY))}
+												{#if priceFormatted}
+													<div class="flex items-center gap-1 mt-1">
+														<span class="text-xs font-medium text-accent">💰 {priceFormatted}</span>
+													</div>
+												{/if}
 											{/if}
 
 											{#if visit.activities && visit.activities.length > 0}
