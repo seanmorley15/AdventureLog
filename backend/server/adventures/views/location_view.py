@@ -2,30 +2,39 @@ import logging
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
-from django.core.files.base import ContentFile
-from django.db.models import Q, Max, Prefetch
-from django.db.models.functions import Lower
+from django.db.models import Q, Prefetch
 from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
-from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit, AuditLog
-from django.contrib.contenttypes.models import ContentType
-from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer, AuditLogSerializer
-from adventures.utils import pagination
+from adventures.models import Location, Category, CollectionItineraryItem, Visit
 
 logger = logging.getLogger(__name__)
+from django.contrib.contenttypes.models import ContentType
+from adventures.permissions import IsOwnerOrSharedWithFullAccess
+from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
+from adventures.utils import pagination
+from adventures.utils.filtering import FilteringMixin
+from adventures.utils.viewset_mixins import SortingMixin
+from adventures.utils.history_mixin import HistoryRevertMixin
 
-class LocationViewSet(viewsets.ModelViewSet):
+class LocationViewSet(HistoryRevertMixin, FilteringMixin, SortingMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing Adventure objects with support for filtering, sorting,
     and sharing functionality.
+
+    Inherits filtering and sorting from mixins:
+    - FilteringMixin: _apply_visit_filtering, _apply_public_filtering,
+                      _apply_ownership_filtering, _apply_rating_filtering
+    - SortingMixin: _apply_ordering (apply_sorting is overridden for location-specific logic)
     """
     serializer_class = LocationSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
     pagination_class = pagination.StandardResultsSetPagination
+
+    # Override valid_order_fields from SortingMixin
+    valid_order_fields = ['name', 'type', 'last_visit', 'rating', 'updated_at', 'created_at']
 
     # ==================== QUERYSET & PERMISSIONS ====================
 
@@ -63,53 +72,21 @@ class LocationViewSet(viewsets.ModelViewSet):
     # ==================== SORTING & FILTERING ====================
 
     def apply_sorting(self, queryset):
-        """Apply sorting and collection filtering to queryset."""
-        order_by = self.request.query_params.get('order_by', 'updated_at')
-        order_direction = self.request.query_params.get('order_direction', 'asc')
+        """
+        Apply sorting and collection filtering to queryset.
+
+        Extends SortingMixin.apply_sorting with location-specific
+        include_collections filter.
+        """
+        # Use parent sorting logic from SortingMixin
+        queryset = super().apply_sorting(queryset)
+
+        # Location-specific: filter by collection membership
         include_collections = self.request.query_params.get('include_collections', 'true')
-
-        # Validate parameters
-        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
-        if order_by not in valid_order_by:
-            order_by = 'name'
-
-        if order_direction not in ['asc', 'desc']:
-            order_direction = 'asc'
-
-        # Apply sorting logic
-        queryset = self._apply_ordering(queryset, order_by, order_direction)
-
-        # Filter locations without collections if requested
         if include_collections == 'false':
             queryset = queryset.filter(collections__isnull=True)
 
         return queryset
-
-    def _apply_ordering(self, queryset, order_by, order_direction):
-        """Apply ordering to queryset based on field type."""
-        if order_by == 'date':
-            queryset = queryset.annotate(
-                latest_visit=Max('visits__start_date')
-            ).filter(latest_visit__isnull=False)
-            ordering = 'latest_visit'
-        elif order_by == 'name':
-            queryset = queryset.annotate(lower_name=Lower('name'))
-            ordering = 'lower_name'
-        elif order_by == 'rating':
-            queryset = queryset.filter(rating__isnull=False)
-            ordering = 'rating'
-        elif order_by == 'updated_at':
-            # Special handling for updated_at (reverse default order)
-            ordering = '-updated_at' if order_direction == 'asc' else 'updated_at'
-            return queryset.order_by(ordering)
-        else:
-            ordering = order_by
-
-        # Apply direction
-        if order_direction == 'desc':
-            ordering = f'-{ordering}'
-
-        return queryset.order_by(ordering)
 
     # ==================== CRUD OPERATIONS ====================
 
@@ -228,6 +205,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         # Apply visit status filtering
         queryset = self._apply_visit_filtering(queryset, request)
+        # Apply visibility filtering
+        queryset = self._apply_public_filtering(queryset, request)
+        # Apply ownership filtering
+        queryset = self._apply_ownership_filtering(queryset, request)
+        # Apply rating filtering
+        queryset = self._apply_rating_filtering(queryset, request)
         queryset = self.apply_sorting(queryset)
 
         return self.paginate_and_respond(queryset, request)
@@ -302,131 +285,6 @@ class LocationViewSet(viewsets.ModelViewSet):
         
         return Response(response_data)
     
-    @action(detail=True, methods=['post'])
-    def duplicate(self, request, pk=None):
-        """Create a duplicate of an existing location.
-
-        Copies all fields except collections and visits. Images are duplicated as
-        independent files (not shared references). The name is prefixed with
-        "Copy of " and is_public is reset to False.
-        """
-        original = self.get_object()
-
-        # Verify the requesting user owns the location or has access
-        if not self._has_adventure_access(original, request.user):
-            return Response(
-                {"error": "You do not have permission to duplicate this location."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        try:
-            with transaction.atomic():
-                target_collection = None
-                target_collection_id = request.data.get('collection_id')
-
-                if target_collection_id:
-                    try:
-                        target_collection = Collection.objects.get(id=target_collection_id)
-                    except Collection.DoesNotExist:
-                        return Response(
-                            {"error": "Collection not found."},
-                            status=status.HTTP_404_NOT_FOUND,
-                        )
-
-                    user_can_link_to_collection = (
-                        target_collection.user == request.user
-                        or target_collection.shared_with.filter(uuid=request.user.uuid).exists()
-                    )
-                    if not user_can_link_to_collection:
-                        return Response(
-                            {"error": "You do not have permission to add locations to this collection."},
-                            status=status.HTTP_403_FORBIDDEN,
-                        )
-
-                # Snapshot original images before creating the copy
-                original_images = list(original.images.all())
-
-                # Build the new location
-                new_location = Location(
-                    user=request.user,
-                    name=f"Copy of {original.name}",
-                    description=original.description,
-                    rating=original.rating,
-                    link=original.link,
-                    location=original.location,
-                    tags=list(original.tags) if original.tags else None,
-                    is_public=False,
-                    longitude=original.longitude,
-                    latitude=original.latitude,
-                    city=original.city,
-                    region=original.region,
-                    country=original.country,
-                    price=original.price,
-                    price_currency=original.price_currency,
-                )
-
-                # Handle category: reuse the user's own matching category or
-                # create one if necessary.
-                if original.category:
-                    category, _ = Category.objects.get_or_create(
-                        user=request.user,
-                        name=original.category.name,
-                        defaults={
-                            'display_name': original.category.display_name,
-                            'icon': original.category.icon,
-                        },
-                    )
-                    new_location.category = category
-
-                new_location.save()
-
-                # If requested, link the duplicate only to the current collection.
-                # This avoids accidentally inheriting all source collections.
-                if target_collection:
-                    new_location.collections.set([target_collection])
-
-                # Duplicate images as independent files/new records
-                location_ct = ContentType.objects.get_for_model(Location)
-                for img in original_images:
-                    if img.image:
-                        try:
-                            img.image.open('rb')
-                            image_bytes = img.image.read()
-                        finally:
-                            try:
-                                img.image.close()
-                            except Exception:
-                                pass
-
-                        file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
-
-                        ContentImage.objects.create(
-                            content_type=location_ct,
-                            object_id=str(new_location.id),
-                            image=ContentFile(image_bytes, name=file_name),
-                            immich_id=None,
-                            is_primary=img.is_primary,
-                            user=request.user,
-                        )
-                    else:
-                        ContentImage.objects.create(
-                            content_type=location_ct,
-                            object_id=str(new_location.id),
-                            immich_id=img.immich_id,
-                            is_primary=img.is_primary,
-                            user=request.user,
-                        )
-
-            serializer = self.get_serializer(new_location)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        except Exception:
-            logger.exception("Failed to duplicate location %s", pk)
-            return Response(
-                {"error": "An error occurred while duplicating the location."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
     # view to return location name and lat/lon for all locations a user owns for the golobal map
     @action(detail=False, methods=['get'], url_path='pins')
     def map_locations(self, request):
@@ -442,137 +300,6 @@ class LocationViewSet(viewsets.ModelViewSet):
         )
         serializer = MapPinSerializer(locations, many=True, context={'request': request})
         return Response(serializer.data)
-
-    @action(detail=True, methods=['get'], url_path='history')
-    def history(self, request, pk=None):
-        """Get audit history for a location and its related content (collaborative mode only)."""
-        if not getattr(settings, 'COLLABORATIVE_MODE', False):
-            return Response({"error": "History is only available in collaborative mode"}, status=400)
-
-        from adventures.models import ContentImage, ContentAttachment
-
-        location = self.get_object()
-
-        # Get content types for location, images, and attachments
-        location_ct = ContentType.objects.get_for_model(Location)
-        image_ct = ContentType.objects.get_for_model(ContentImage)
-        attachment_ct = ContentType.objects.get_for_model(ContentAttachment)
-
-        # Get IDs of images and attachments belonging to this location (including soft-deleted)
-        image_ids = list(location.images.all().values_list('id', flat=True))
-        attachment_ids = list(location.attachments.all().values_list('id', flat=True))
-
-        # Build query for all related logs
-        logs_query = Q(content_type=location_ct, object_id=location.pk)
-
-        if image_ids:
-            logs_query |= Q(content_type=image_ct, object_id__in=image_ids)
-
-        if attachment_ids:
-            logs_query |= Q(content_type=attachment_ct, object_id__in=attachment_ids)
-
-        logs = AuditLog.objects.filter(logs_query).select_related('user').order_by('-timestamp')[:50]
-        serializer = AuditLogSerializer(logs, many=True)
-        return Response(serializer.data)
-
-    @action(detail=True, methods=['post'], url_path='revert/(?P<log_id>[^/.]+)')
-    def revert(self, request, pk=None, log_id=None):
-        """Revert a specific audit log entry (collaborative mode only)."""
-        if not getattr(settings, 'COLLABORATIVE_MODE', False):
-            return Response({"error": "Revert is only available in collaborative mode"}, status=400)
-
-        from adventures.models import ContentImage, ContentAttachment
-
-        location = self.get_object()
-
-        # Get the audit log entry
-        try:
-            log_entry = AuditLog.objects.get(id=log_id)
-        except AuditLog.DoesNotExist:
-            return Response({"error": "Audit log entry not found"}, status=404)
-
-        # Verify the log entry belongs to this location or its related content
-        location_ct = ContentType.objects.get_for_model(Location)
-        image_ct = ContentType.objects.get_for_model(ContentImage)
-        attachment_ct = ContentType.objects.get_for_model(ContentAttachment)
-
-        is_location_log = log_entry.content_type == location_ct and str(log_entry.object_id) == str(location.pk)
-        is_image_log = log_entry.content_type == image_ct and location.images.filter(id=log_entry.object_id).exists()
-        is_attachment_log = log_entry.content_type == attachment_ct and location.attachments.filter(id=log_entry.object_id).exists()
-
-        if not (is_location_log or is_image_log or is_attachment_log):
-            return Response({"error": "This audit log entry does not belong to this location"}, status=403)
-
-        # Check permission: only the user who made the change, the location owner, or an admin can revert
-        can_revert = (
-            log_entry.user == request.user or
-            location.user == request.user or
-            request.user.is_staff
-        )
-        if not can_revert:
-            return Response({"error": "You don't have permission to revert this change"}, status=403)
-
-        model_class = log_entry.content_type.model_class()
-
-        try:
-            if log_entry.action == 'create':
-                # Revert create = delete the object
-                obj = model_class.objects.get(pk=log_entry.object_id)
-                if model_class in [ContentImage, ContentAttachment]:
-                    obj.deleted_by = request.user
-                    obj.save(update_fields=['deleted_by'])
-                obj.delete()
-                return Response({"success": f"Reverted creation of {log_entry.object_repr}"})
-
-            elif log_entry.action == 'update':
-                # Revert update = restore old values
-                obj = model_class.objects.get(pk=log_entry.object_id)
-                changes = log_entry.changes or {}
-
-                for field_name, values in changes.items():
-                    old_value = values.get('old')
-                    if old_value is not None and hasattr(obj, field_name):
-                        field = obj._meta.get_field(field_name)
-                        # Handle different field types
-                        if field.get_internal_type() in ['FloatField', 'DecimalField']:
-                            try:
-                                setattr(obj, field_name, float(old_value) if old_value != 'None' else None)
-                            except (ValueError, TypeError):
-                                setattr(obj, field_name, None)
-                        elif field.get_internal_type() == 'IntegerField':
-                            try:
-                                setattr(obj, field_name, int(old_value) if old_value != 'None' else None)
-                            except (ValueError, TypeError):
-                                setattr(obj, field_name, None)
-                        elif field.get_internal_type() == 'BooleanField':
-                            setattr(obj, field_name, old_value.lower() == 'true')
-                        elif field.get_internal_type() in ['CharField', 'TextField']:
-                            setattr(obj, field_name, old_value if old_value != 'None' else None)
-                        # Skip ForeignKey and other complex fields for now
-
-                obj.save()
-                return Response({"success": f"Reverted update of {log_entry.object_repr}"})
-
-            elif log_entry.action == 'delete':
-                # Revert delete = restore soft-deleted object
-                if model_class == ContentImage:
-                    obj = ContentImage.objects.get(pk=log_entry.object_id)
-                    obj.restore()
-                    return Response({"success": f"Restored deleted image"})
-                elif model_class == ContentAttachment:
-                    obj = ContentAttachment.objects.get(pk=log_entry.object_id)
-                    obj.restore()
-                    return Response({"success": f"Restored deleted attachment"})
-                else:
-                    return Response({"error": "Cannot revert hard delete"}, status=400)
-
-            else:
-                return Response({"error": f"Unknown action: {log_entry.action}"}, status=400)
-
-        except model_class.DoesNotExist:
-            return Response({"error": "Object no longer exists"}, status=404)
-        except Exception as e:
-            return Response({"error": f"Failed to revert: {str(e)}"}, status=500)
 
     # ==================== HELPER METHODS ====================
 
@@ -640,28 +367,11 @@ class LocationViewSet(viewsets.ModelViewSet):
                         f"You don't have permission to add location to collection '{collection.name}'"
                     )
 
-    def _apply_visit_filtering(self, queryset, request):
-        """Apply visit status filtering to queryset."""
-        is_visited_param = request.query_params.get('is_visited')
-        if is_visited_param is None:
-            return queryset
-
-        # Convert parameter to boolean
-        if is_visited_param.lower() == 'true':
-            is_visited_bool = True
-        elif is_visited_param.lower() == 'false':
-            is_visited_bool = False
-        else:
-            return queryset
-
-        # Apply visit filtering
-        now = timezone.now().date()
-        if is_visited_bool:
-            queryset = queryset.filter(visits__start_date__lte=now).distinct()
-        else:
-            queryset = queryset.exclude(visits__start_date__lte=now).distinct()
-
-        return queryset
+    # Filter methods inherited from FilteringMixin:
+    # - _apply_visit_filtering
+    # - _apply_public_filtering
+    # - _apply_ownership_filtering
+    # - _apply_rating_filtering
 
     def _has_adventure_access(self, adventure, user):
         """Check if user has access to adventure."""

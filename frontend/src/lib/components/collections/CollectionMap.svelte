@@ -2,7 +2,8 @@
 	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { LODGING_TYPES_ICONS, getActivityColor } from '$lib';
+	import { getActivityColor } from '$lib';
+	import { getTransportationIcon, getLodgingIcon } from '$lib/stores/entityTypes';
 	import SearchIcon from '~icons/mdi/magnify';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import ChevronDown from '~icons/mdi/chevron-down';
@@ -136,27 +137,6 @@
 		return t?.date || t?.start_date || t?.end_date || null;
 	}
 
-	function getLodgingIcon(type?: string | null): string {
-		if (!type) return '🏨';
-		const key = String(type).toLowerCase().trim();
-		if (key in LODGING_TYPES_ICONS) {
-			return LODGING_TYPES_ICONS[key as keyof typeof LODGING_TYPES_ICONS];
-		}
-		return '🏨';
-	}
-
-	function getTransportIcon(type?: string | null): string {
-		if (!type) return '✈️';
-		const normalized = String(type).toLowerCase();
-		if (normalized.includes('flight') || normalized.includes('plane') || normalized.includes('air'))
-			return '✈️';
-		if (normalized.includes('train')) return '🚆';
-		if (normalized.includes('bus')) return '🚌';
-		if (normalized.includes('car') || normalized.includes('drive') || normalized.includes('taxi'))
-			return '🚗';
-		if (normalized.includes('boat') || normalized.includes('ferry')) return '⛴️';
-		return '🚐';
-	}
 
 	function locationToFeature(loc: any): MarkerFeature | null {
 		const lat = parseNumber(loc?.latitude);
@@ -197,7 +177,7 @@
 
 	function transportationToFeatures(t: any): MarkerFeature[] {
 		const features: MarkerFeature[] = [];
-		const icon = getTransportIcon(t?.type || t?.name);
+		const icon = getTransportationIcon(t?.type || t?.name);
 		const date = getTransportationDate(t);
 		const baseName = t?.name || t?.type || 'Transportation';
 

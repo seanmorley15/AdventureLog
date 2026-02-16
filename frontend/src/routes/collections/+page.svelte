@@ -2,12 +2,15 @@
 	import { enhance } from '$app/forms';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { onMount } from 'svelte';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
 	import CollectionLink from '$lib/components/CollectionLink.svelte';
 	import CollectionModal from '$lib/components/CollectionModal.svelte';
 	import NotFound from '$lib/components/NotFound.svelte';
+	import TypeFilterDropdown from '$lib/components/TypeFilterDropdown.svelte';
 	import type { Collection, CollectionInvite, SlimCollection } from '$lib/types';
 	import { t } from 'svelte-i18n';
+	import { adventureTypes, fetchEntityTypes } from '$lib/stores/entityTypes';
 
 	import Plus from '~icons/mdi/plus';
 	import Filter from '~icons/mdi/filter-variant';
@@ -18,6 +21,9 @@
 	import MailIcon from '~icons/mdi/email';
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
+	import FileDocumentPlus from '~icons/mdi/file-document-plus';
+	import TagIcon from '~icons/mdi/tag';
+	import GlobeIcon from '~icons/mdi/earth';
 	import { addToast } from '$lib/toasts';
 	import DeleteWarning from '$lib/components/DeleteWarning.svelte';
 
@@ -27,11 +33,12 @@
 	let collections: SlimCollection[] = data.props.adventures || [];
 	let sharedCollections: SlimCollection[] = data.props.sharedCollections || [];
 	let archivedCollections: SlimCollection[] = data.props.archivedCollections || [];
+	let publicCollections: SlimCollection[] = data.props.publicCollections || [];
 
 	let newType: string = '';
 	let resultsPerPage: number = 25;
 	let isShowingCollectionModal: boolean = false;
-	let activeView: 'owned' | 'shared' | 'archived' | 'invites' = 'owned';
+	let activeView: 'owned' | 'shared' | 'archived' | 'invites' | 'public' = 'owned';
 
 	let next: string | null = data.props.next || null;
 	let previous: string | null = data.props.previous || null;
@@ -41,8 +48,35 @@
 	let orderBy = data.props.order_by || 'updated_at';
 	let orderDirection = data.props.order_direction || 'asc';
 	let statusFilter = data.props.status || '';
+	let isPublicFilter = data.props.is_public || 'all';
+	let sharingFilter = data.props.sharing || 'all';
+	let adventureTypeString = data.props.adventure_type || '';
 
 	let invites: CollectionInvite[] = data.props.invites || [];
+
+	onMount(() => {
+		fetchEntityTypes();
+	});
+
+	// Read adventure_type from URL reactively (for badge link clicks)
+	$: {
+		if (typeof window !== 'undefined') {
+			let url = new URL(window.location.href);
+			let types = url.searchParams.get('adventure_type');
+			if (types && types !== 'all') {
+				adventureTypeString = types;
+			} else {
+				adventureTypeString = '';
+			}
+		}
+	}
+
+	// Get type options from store for the TypeFilterDropdown
+	$: adventureTypeOptions = $adventureTypes.map((type) => ({
+		value: String(type.id),
+		label: type.name,
+		icon: type.icon
+	}));
 
 	let sidebarOpen = false;
 	let collectionToEdit: Collection | null = null;
@@ -54,7 +88,9 @@
 				? sharedCollections
 				: activeView === 'archived'
 					? archivedCollections
-					: [];
+					: activeView === 'public'
+						? publicCollections
+						: [];
 
 	$: currentCount =
 		activeView === 'owned'
@@ -65,7 +101,9 @@
 					? archivedCollections.length
 					: activeView === 'invites'
 						? invites.length
-						: 0;
+						: activeView === 'public'
+							? publicCollections.length
+							: 0;
 
 	// Optionally, keep count in sync with collections only for owned view
 	$: {
@@ -114,6 +152,54 @@
 		url.searchParams.set('page', '1'); // Reset to first page when filter changes
 		currentPage = 1;
 		statusFilter = status;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			collections = data.props.adventures;
+		}
+	}
+
+	async function updateVisibilityFilter(visibility: string) {
+		const url = new URL($page.url);
+		if (visibility && visibility !== 'all') {
+			url.searchParams.set('is_public', visibility);
+		} else {
+			url.searchParams.delete('is_public');
+		}
+		url.searchParams.set('page', '1'); // Reset to first page when filter changes
+		currentPage = 1;
+		isPublicFilter = visibility;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			collections = data.props.adventures;
+		}
+	}
+
+	async function updateSharingFilter(sharing: string) {
+		const url = new URL($page.url);
+		if (sharing && sharing !== 'all') {
+			url.searchParams.set('sharing', sharing);
+		} else {
+			url.searchParams.delete('sharing');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		sharingFilter = sharing;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			collections = data.props.adventures;
+		}
+	}
+
+	async function updateAdventureTypeFilter(types: string) {
+		const url = new URL($page.url);
+		if (types && types.trim() !== '') {
+			url.searchParams.set('adventure_type', types);
+		} else {
+			url.searchParams.delete('adventure_type');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		adventureTypeString = types;
 		await goto(url.toString(), { invalidateAll: true, replaceState: true });
 		if (data.props.adventures) {
 			collections = data.props.adventures;
@@ -177,6 +263,11 @@
 		}
 	}
 
+	function handleDuplicate(event: CustomEvent<SlimCollection>) {
+		// Add the duplicated collection to the list
+		collections = [event.detail, ...collections];
+	}
+
 	function saveOrCreate(event: CustomEvent<SlimCollection>) {
 		if (collections.find((collection) => collection.id === event.detail.id)) {
 			collections = collections.map((collection) => {
@@ -189,21 +280,6 @@
 			collections = [event.detail, ...collections];
 		}
 		isShowingCollectionModal = false;
-	}
-
-	function duplicateCollectionInList(event: CustomEvent<SlimCollection | Collection>) {
-		const duplicatedCollection = event.detail as SlimCollection;
-
-		collections = [
-			duplicatedCollection,
-			...collections.filter((collection) => collection.id !== duplicatedCollection.id)
-		];
-
-		archivedCollections = archivedCollections.filter(
-			(collection) => collection.id !== duplicatedCollection.id
-		);
-
-		activeView = 'owned';
 	}
 
 	async function editCollection(event: CustomEvent<SlimCollection>) {
@@ -255,7 +331,7 @@
 		sidebarOpen = !sidebarOpen;
 	}
 
-	function switchView(view: 'owned' | 'shared' | 'archived' | 'invites') {
+	function switchView(view: 'owned' | 'shared' | 'archived' | 'invites' | 'public') {
 		activeView = view;
 	}
 
@@ -408,7 +484,9 @@
 												? $t('collection.shared_collections')
 												: activeView === 'archived'
 													? $t('adventures.archived_collections')
-													: $t('invites.pending_invites')}
+													: activeView === 'public'
+														? $t('collection.public_collections')
+														: $t('invites.pending_invites')}
 									</p>
 								</div>
 							</div>
@@ -455,6 +533,20 @@
 								</div>
 							</button>
 							<button
+								class="tab gap-2 {activeView === 'public' ? 'tab-active' : ''}"
+								on:click={() => switchView('public')}
+							>
+								<GlobeIcon class="w-4 h-4" />
+								<span class="hidden sm:inline">{$t('adventures.public')}</span>
+								<div
+									class="badge badge-sm {activeView === 'public'
+										? 'badge-primary'
+										: 'badge-ghost'}"
+								>
+									{publicCollections.length}
+								</div>
+							</button>
+							<button
 								class="tab gap-2 {activeView === 'invites' ? 'tab-active' : ''}"
 								on:click={() => switchView('invites')}
 							>
@@ -497,7 +589,7 @@
 							</p>
 						</div>
 					{:else}
-						<div class="space-y-4">
+						<div class="space-y-2">
 							{#each invites as invite}
 								<div
 									class="card bg-base-100 shadow-lg border border-base-300 hover:shadow-xl transition-shadow"
@@ -554,6 +646,8 @@
 								<CollectionIcon class="w-16 h-16 text-base-content/30" />
 							{:else if activeView === 'shared'}
 								<Share class="w-16 h-16 text-base-content/30" />
+							{:else if activeView === 'public'}
+								<GlobeIcon class="w-16 h-16 text-base-content/30" />
 							{:else}
 								<Archive class="w-16 h-16 text-base-content/30" />
 							{/if}
@@ -563,14 +657,18 @@
 								? $t('collection.no_collections_yet')
 								: activeView === 'shared'
 									? $t('collection.no_shared_collections')
-									: $t('collection.no_archived_collections')}
+									: activeView === 'public'
+										? $t('collection.no_public_collections')
+										: $t('collection.no_archived_collections')}
 						</h3>
 						<p class="text-base-content/50 text-center max-w-md">
 							{activeView === 'owned'
 								? $t('collection.create_first')
 								: activeView === 'shared'
 									? $t('collection.make_sure_public')
-									: $t('collection.archived_appear_here')}
+									: activeView === 'public'
+										? $t('collection.no_public_collections_desc')
+										: $t('collection.archived_appear_here')}
 						</p>
 						{#if activeView === 'owned'}
 							<button
@@ -589,7 +687,7 @@
 				{:else}
 					<!-- Collections Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
 						{#each currentCollections as collection (collection.id)}
 							<CollectionCard
@@ -599,7 +697,7 @@
 								on:edit={editCollection}
 								on:archive={archiveCollection}
 								on:unarchive={unarchiveCollection}
-								on:duplicate={duplicateCollectionInList}
+								on:duplicate={handleDuplicate}
 								user={data.user}
 								on:leave={(e) => {
 									collectionIdToLeave = e.detail;
@@ -645,136 +743,240 @@
 
 					<!-- Only show sort options for collection views, not invites -->
 					{#if activeView !== 'invites'}
-						<!-- Status Filter -->
-						<div class="card bg-base-200/50 p-4 mb-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Filter class="w-5 h-5" />
-								{$t('adventures.status_filter')}
-							</h3>
+						<div class="space-y-2">
+							<!-- Adventure Type Filter -->
+							{#if adventureTypeOptions.length > 0}
+								<TypeFilterDropdown
+									bind:types={adventureTypeString}
+									typeOptions={adventureTypeOptions}
+									on:change={(e) => updateAdventureTypeFilter(e.detail)}
+									title={$t('collection.adventure_type') ?? 'Type'}
+									icon={TagIcon}
+								/>
+							{/if}
 
-							<div class="space-y-2">
-								<label class="label cursor-pointer justify-start gap-3">
-									<input
-										type="radio"
-										name="status_filter"
-										class="radio radio-primary radio-sm"
-										checked={statusFilter === ''}
-										on:change={() => updateStatusFilter('')}
-									/>
-									<span class="label-text">{$t('adventures.all')}</span>
-								</label>
-								<label class="label cursor-pointer justify-start gap-3">
-									<input
-										type="radio"
-										name="status_filter"
-										class="radio radio-primary radio-sm"
-										checked={statusFilter === 'folder'}
-										on:change={() => updateStatusFilter('folder')}
-									/>
-									<span class="label-text">📁 {$t('adventures.folder')}</span>
-								</label>
-								<label class="label cursor-pointer justify-start gap-3">
-									<input
-										type="radio"
-										name="status_filter"
-										class="radio radio-primary radio-sm"
-										checked={statusFilter === 'upcoming'}
-										on:change={() => updateStatusFilter('upcoming')}
-									/>
-									<span class="label-text">🚀 {$t('adventures.upcoming')}</span>
-								</label>
-								<label class="label cursor-pointer justify-start gap-3">
-									<input
-										type="radio"
-										name="status_filter"
-										class="radio radio-primary radio-sm"
-										checked={statusFilter === 'in_progress'}
-										on:change={() => updateStatusFilter('in_progress')}
-									/>
-									<span class="label-text">🎯 {$t('adventures.in_progress')}</span>
-								</label>
-								<label class="label cursor-pointer justify-start gap-3">
-									<input
-										type="radio"
-										name="status_filter"
-										class="radio radio-primary radio-sm"
-										checked={statusFilter === 'completed'}
-										on:change={() => updateStatusFilter('completed')}
-									/>
-									<span class="label-text">✓ {$t('adventures.completed')}</span>
-								</label>
-							</div>
-						</div>
-
-						<!-- Sort Form - Updated to use URL navigation -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Sort class="w-5 h-5" />
-								{$t(`adventures.sort`)}
-							</h3>
-
-							<div class="space-y-4">
-								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t(`adventures.order_direction`)}</span>
-									</label>
-									<div class="join w-full">
-										<button
-											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
-												? 'btn-active'
-												: ''}"
-											on:click={() => updateSort(orderBy, 'asc')}
-										>
-											{$t(`adventures.ascending`)}
-										</button>
-										<button
-											class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
-												? 'btn-active'
-												: ''}"
-											on:click={() => updateSort(orderBy, 'desc')}
-										>
-											{$t(`adventures.descending`)}
-										</button>
+							<!-- Status Filter -->
+							<div class="collapse collapse-arrow bg-base-200/50 rounded-box">
+								<input type="checkbox" checked />
+								<div class="collapse-title font-medium flex items-center gap-2 py-2 min-h-0">
+									<Filter class="w-5 h-5" />
+									{$t('adventures.status_filter')}
+									{#if statusFilter}
+										<span class="badge badge-primary badge-sm">{statusFilter}</span>
+									{/if}
+								</div>
+								<div class="collapse-content !pb-2">
+									<div class="space-y-0">
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="status_filter"
+												class="radio radio-primary radio-sm"
+												checked={statusFilter === ''}
+												on:change={() => updateStatusFilter('')}
+											/>
+											<span>{$t('adventures.all')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="status_filter"
+												class="radio radio-primary radio-sm"
+												checked={statusFilter === 'folder'}
+												on:change={() => updateStatusFilter('folder')}
+											/>
+											<span>📁 {$t('adventures.folder')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="status_filter"
+												class="radio radio-primary radio-sm"
+												checked={statusFilter === 'upcoming'}
+												on:change={() => updateStatusFilter('upcoming')}
+											/>
+											<span>🚀 {$t('adventures.upcoming')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="status_filter"
+												class="radio radio-primary radio-sm"
+												checked={statusFilter === 'in_progress'}
+												on:change={() => updateStatusFilter('in_progress')}
+											/>
+											<span>🎯 {$t('adventures.in_progress')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="status_filter"
+												class="radio radio-primary radio-sm"
+												checked={statusFilter === 'completed'}
+												on:change={() => updateStatusFilter('completed')}
+											/>
+											<span>✓ {$t('adventures.completed')}</span>
+										</label>
 									</div>
 								</div>
+							</div>
 
-								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-									</label>
+							<!-- Visibility Filter -->
+							<div class="collapse collapse-arrow bg-base-200/50 rounded-box">
+								<input type="checkbox" checked />
+								<div class="collapse-title font-medium flex items-center gap-2 py-2 min-h-0">
+									<Filter class="w-5 h-5" />
+									{$t('adventures.visibility')}
+									{#if isPublicFilter !== 'all'}
+										<span class="badge badge-primary badge-sm">{isPublicFilter === 'true' ? $t('adventures.public') : $t('adventures.private')}</span>
+									{/if}
+								</div>
+								<div class="collapse-content !pb-2">
+									<div class="space-y-0">
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="visibility_filter"
+												class="radio radio-primary radio-sm"
+												checked={isPublicFilter === 'all'}
+												on:change={() => updateVisibilityFilter('all')}
+											/>
+											<span>{$t('adventures.all')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="visibility_filter"
+												class="radio radio-primary radio-sm"
+												checked={isPublicFilter === 'true'}
+												on:change={() => updateVisibilityFilter('true')}
+											/>
+											<span>{$t('adventures.public')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="visibility_filter"
+												class="radio radio-primary radio-sm"
+												checked={isPublicFilter === 'false'}
+												on:change={() => updateVisibilityFilter('false')}
+											/>
+											<span>{$t('adventures.private')}</span>
+										</label>
+									</div>
+								</div>
+							</div>
+
+							<!-- Sharing Filter -->
+							<div class="collapse collapse-arrow bg-base-200/50 rounded-box">
+								<input type="checkbox" checked />
+								<div class="collapse-title font-medium flex items-center gap-2 py-2 min-h-0">
+									<Share class="w-5 h-5" />
+									{$t('share.shared')}
+									{#if sharingFilter !== 'all'}
+										<span class="badge badge-primary badge-sm">{sharingFilter === 'shared' ? $t('share.shared') : $t('adventures.private')}</span>
+									{/if}
+								</div>
+								<div class="collapse-content !pb-2">
+									<div class="space-y-0">
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="sharing_filter"
+												class="radio radio-primary radio-sm"
+												checked={sharingFilter === 'all'}
+												on:change={() => updateSharingFilter('all')}
+											/>
+											<span>{$t('adventures.all')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="sharing_filter"
+												class="radio radio-primary radio-sm"
+												checked={sharingFilter === 'shared'}
+												on:change={() => updateSharingFilter('shared')}
+											/>
+											<span>{$t('share.shared')}</span>
+										</label>
+										<label class="flex items-center gap-2 cursor-pointer py-0.5">
+											<input
+												type="radio"
+												name="sharing_filter"
+												class="radio radio-primary radio-sm"
+												checked={sharingFilter === 'not_shared'}
+												on:change={() => updateSharingFilter('not_shared')}
+											/>
+											<span>{$t('adventures.private')}</span>
+										</label>
+									</div>
+								</div>
+							</div>
+
+							<!-- Sort Form - Updated to use URL navigation -->
+							<div class="collapse collapse-arrow bg-base-200/50 rounded-box">
+								<input type="checkbox" checked />
+								<div class="collapse-title font-medium flex items-center gap-2 py-2 min-h-0">
+									<Sort class="w-5 h-5" />
+									{$t(`adventures.sort`)}
+									<span class="badge badge-ghost badge-sm">
+										{orderBy === 'updated_at' ? $t('adventures.updated') : orderBy === 'start_date' ? $t('adventures.start_date') : $t('adventures.name')}
+										{orderDirection === 'asc' ? '↑' : '↓'}
+									</span>
+								</div>
+								<div class="collapse-content !pb-2">
 									<div class="space-y-2">
-										<label class="label cursor-pointer justify-start gap-3">
-											<input
-												type="radio"
-												name="order_by_radio"
-												class="radio radio-primary radio-sm"
-												checked={orderBy === 'updated_at'}
-												on:change={() => updateSort('updated_at', orderDirection)}
-											/>
-											<span class="label-text">{$t('adventures.updated')}</span>
-										</label>
-										<label class="label cursor-pointer justify-start gap-3">
-											<input
-												type="radio"
-												name="order_by_radio"
-												class="radio radio-primary radio-sm"
-												checked={orderBy === 'start_date'}
-												on:change={() => updateSort('start_date', orderDirection)}
-											/>
-											<span class="label-text">{$t('adventures.start_date')}</span>
-										</label>
-										<label class="label cursor-pointer justify-start gap-3">
-											<input
-												type="radio"
-												name="order_by_radio"
-												class="radio radio-primary radio-sm"
-												checked={orderBy === 'name'}
-												on:change={() => updateSort('name', orderDirection)}
-											/>
-											<span class="label-text">{$t('adventures.name')}</span>
-										</label>
+										<div class="join w-full">
+											<button
+												class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
+													? 'btn-active'
+													: ''}"
+												on:click={() => updateSort(orderBy, 'asc')}
+											>
+												{$t(`adventures.ascending`)}
+											</button>
+											<button
+												class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
+													? 'btn-active'
+													: ''}"
+												on:click={() => updateSort(orderBy, 'desc')}
+											>
+												{$t(`adventures.descending`)}
+											</button>
+										</div>
+
+										<div class="space-y-0">
+											<label class="flex items-center gap-2 cursor-pointer py-0.5">
+												<input
+													type="radio"
+													name="order_by_radio"
+													class="radio radio-primary radio-sm"
+													checked={orderBy === 'updated_at'}
+													on:change={() => updateSort('updated_at', orderDirection)}
+												/>
+												<span>{$t('adventures.updated')}</span>
+											</label>
+											<label class="flex items-center gap-2 cursor-pointer py-0.5">
+												<input
+													type="radio"
+													name="order_by_radio"
+													class="radio radio-primary radio-sm"
+													checked={orderBy === 'start_date'}
+													on:change={() => updateSort('start_date', orderDirection)}
+												/>
+												<span>{$t('adventures.start_date')}</span>
+											</label>
+											<label class="flex items-center gap-2 cursor-pointer py-0.5">
+												<input
+													type="radio"
+													name="order_by_radio"
+													class="radio radio-primary radio-sm"
+													checked={orderBy === 'name'}
+													on:change={() => updateSort('name', orderDirection)}
+												/>
+												<span>{$t('adventures.name')}</span>
+											</label>
+										</div>
 									</div>
 								</div>
 							</div>
@@ -813,6 +1015,11 @@
 						<CollectionIcon class="w-5 h-5" />
 						{$t(`adventures.collection`)}
 					</button>
+					<div class="divider my-2"></div>
+					<a href="/templates" class="btn btn-secondary gap-2 w-full">
+						<FileDocumentPlus class="w-5 h-5" />
+						{$t('templates.create_from_template')}
+					</a>
 					<div class="divider my-2"></div>
 					<button class="btn btn-neutral gap-2 w-full" on:click={triggerImport}>
 						<Archive class="w-5 h-5" />

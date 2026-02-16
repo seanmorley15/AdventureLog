@@ -34,6 +34,7 @@
 	export let itemId: string = '';
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	export let userIsOwner: boolean = false;
+	export let collaborativeMode: boolean = false;
 
 	// Component state
 	let immichIntegration: boolean = false;
@@ -355,6 +356,7 @@
 			defaultSearchTerm={itemName}
 			{immichIntegration}
 			{copyImmichLocally}
+			{collaborativeMode}
 			on:imagesUpdated={handleImagesUpdated}
 			bind:importInProgress
 		/>

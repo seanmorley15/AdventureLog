@@ -8,15 +8,14 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework import status
 from django.http import HttpResponse
 from django.conf import settings
-from django.core.files.base import ContentFile
 import io
 import os
 import json
 import zipfile
 import tempfile
-from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
+from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category, CollectionTemplate
 from adventures.permissions import CollectionShared
-from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
+from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer, CollectionTemplateSerializer
 from users.models import CustomUser as User
 from adventures.utils import pagination
 from users.serializers import CustomUserDetailsSerializer as UserSerializer
@@ -29,7 +28,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
     def get_serializer_class(self):
         """Return different serializers based on the action"""
-        if self.action in ['list', 'all', 'archived', 'shared']:
+        if self.action in ['list', 'all', 'archived', 'shared', 'public']:
             return UltraSlimCollectionSerializer
         return CollectionSerializer
 
@@ -68,12 +67,12 @@ class CollectionViewSet(viewsets.ModelViewSet):
         """Apply status filtering based on query parameter"""
         from datetime import date
         status_filter = self.request.query_params.get('status', None)
-        
+
         if not status_filter:
             return queryset
-        
+
         today = date.today()
-        
+
         if status_filter == 'folder':
             # Collections without dates
             return queryset.filter(Q(start_date__isnull=True) | Q(end_date__isnull=True))
@@ -86,9 +85,58 @@ class CollectionViewSet(viewsets.ModelViewSet):
         elif status_filter == 'completed':
             # End date in the past
             return queryset.filter(end_date__lt=today)
-        
+
         return queryset
-    
+
+    def _apply_public_filtering(self, queryset, request):
+        """Apply public/private filtering to queryset."""
+        is_public_param = request.query_params.get('is_public')
+        if is_public_param is None or is_public_param == 'all':
+            return queryset
+
+        if is_public_param.lower() == 'true':
+            queryset = queryset.filter(is_public=True)
+        elif is_public_param.lower() == 'false':
+            queryset = queryset.filter(is_public=False)
+
+        return queryset
+
+    def _apply_sharing_filter(self, queryset, request):
+        """Apply sharing filter to queryset (all, shared_with_others, not_shared)."""
+        sharing_param = request.query_params.get('sharing')
+        if sharing_param is None or sharing_param == 'all':
+            return queryset
+
+        if sharing_param.lower() == 'shared':
+            # Collections that are shared with at least one person
+            queryset = queryset.filter(shared_with__isnull=False).distinct()
+        elif sharing_param.lower() == 'not_shared':
+            # Collections not shared with anyone
+            queryset = queryset.filter(shared_with__isnull=True)
+
+        return queryset
+
+    def _apply_adventure_type_filter(self, queryset, request):
+        """Apply adventure type filtering to queryset. Supports comma-separated type IDs."""
+        adventure_type_param = request.query_params.get('adventure_type')
+        if adventure_type_param is None or adventure_type_param == '' or adventure_type_param == 'all':
+            return queryset
+
+        # Support comma-separated type IDs (like transportation/lodging filters)
+        type_ids = []
+        for type_id in adventure_type_param.split(','):
+            type_id = type_id.strip()
+            if type_id:
+                try:
+                    type_ids.append(int(type_id))
+                except (ValueError, TypeError):
+                    pass
+
+        if type_ids:
+            queryset = queryset.filter(adventure_type_id__in=type_ids)
+
+        return queryset
+
     def get_serializer_context(self):
         """Override to add nested and exclusion contexts based on query parameters"""
         context = super().get_serializer_context()
@@ -161,7 +209,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         """Get queryset with optimizations for list actions"""
-        if self.action in ['list', 'all', 'archived', 'shared']:
+        if self.action in ['list', 'all', 'archived', 'shared', 'public']:
             return self.get_optimized_queryset_for_listing()
         return self.get_base_queryset()
     
@@ -183,6 +231,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         )
         
         queryset = self.apply_status_filter(queryset)
+        queryset = self._apply_public_filtering(queryset, request)
+        queryset = self._apply_sharing_filter(queryset, request)
+        queryset = self._apply_adventure_type_filter(queryset, request)
         queryset = self.apply_sorting(queryset)
         return self.paginate_and_respond(queryset, request)
     
@@ -249,7 +300,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def shared(self, request):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
-        
+
         queryset = Collection.objects.filter(
             shared_with=request.user
         ).select_related('user').prefetch_related(
@@ -259,7 +310,31 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 to_attr='primary_images'
             )
         )
-        
+
+        queryset = self.apply_sorting(queryset)
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def public(self, request):
+        """Return public collections from other users (not owned by the current user)."""
+        if not request.user.is_authenticated:
+            return Response({"error": "User is not authenticated"}, status=400)
+
+        queryset = Collection.objects.filter(
+            is_public=True
+        ).exclude(
+            user=request.user
+        ).select_related('user', 'primary_image').prefetch_related(
+            Prefetch(
+                'locations__images',
+                queryset=ContentImage.objects.filter(is_primary=True).select_related('user'),
+                to_attr='primary_images'
+            )
+        )
+
+        queryset = self.apply_status_filter(queryset)
+        queryset = self._apply_adventure_type_filter(queryset, request)
         queryset = self.apply_sorting(queryset)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
@@ -792,213 +867,213 @@ class CollectionViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
-        """Create a duplicate of an existing collection.
-
-        Copies collection metadata and linked content:
-        - locations (linked, not cloned)
-        - transportation, notes, checklists (with items), lodging
-        - itinerary days and itinerary items
-        Shared users are not copied and the new collection is private.
         """
-        original = self.get_object()
+        Duplicate a collection with all its content.
+        Creates deep copies of: Transportation, Lodging, Notes, Checklists, ChecklistItems.
+        Locations are linked (M2M) but not duplicated.
+        """
+        collection = self.get_object()
 
-        # Only the owner can duplicate
-        if original.user != request.user:
+        # Ensure user has permission (owner or shared with)
+        if collection.user != request.user and not collection.shared_with.filter(id=request.user.id).exists():
             return Response(
-                {"error": "You do not have permission to duplicate this collection."},
-                status=status.HTTP_403_FORBIDDEN,
+                {"error": "You do not have permission to duplicate this collection"},
+                status=status.HTTP_403_FORBIDDEN
             )
 
+        # Create new collection with date/time in name for uniqueness
+        from django.utils import timezone
+        copy_time = timezone.now().strftime('%Y-%m-%d %H:%M')
+        new_collection = Collection.objects.create(
+            name=f"{collection.name} - Copy {copy_time}",
+            description=collection.description,
+            start_date=collection.start_date,
+            end_date=collection.end_date,
+            is_public=False,  # Always private for duplicates
+            user=request.user,
+            link=collection.link,
+        )
+
+        # Link same locations (M2M - shared reference)
+        new_collection.locations.set(collection.locations.all())
+
+        # Deep copy Transportation (wrapped in try/except for migration compatibility)
         try:
-            with transaction.atomic():
-                new_collection = Collection.objects.create(
+            for transport in collection.transportations.all():
+                Transportation.objects.create(
                     user=request.user,
-                    name=f"Copy of {original.name}",
-                    description=original.description,
-                    link=original.link,
+                    collection=new_collection,
+                    type=transport.type,
+                    name=transport.name,
+                    description=transport.description,
+                    rating=transport.rating,
+                    link=transport.link,
+                    date=transport.date,
+                    end_date=transport.end_date,
+                    start_timezone=transport.start_timezone,
+                    end_timezone=transport.end_timezone,
+                    flight_number=transport.flight_number,
+                    from_location=transport.from_location,
+                    to_location=transport.to_location,
+                    origin_latitude=transport.origin_latitude,
+                    origin_longitude=transport.origin_longitude,
+                    destination_latitude=transport.destination_latitude,
+                    destination_longitude=transport.destination_longitude,
+                    start_code=transport.start_code,
+                    end_code=transport.end_code,
                     is_public=False,
-                    is_archived=False,
-                    start_date=original.start_date,
-                    end_date=original.end_date,
+                )
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Deep copy Lodging (wrapped in try/except for migration compatibility)
+        try:
+            for lodging in collection.lodgings.all():
+                Lodging.objects.create(
+                    user=request.user,
+                    collection=new_collection,
+                    type=lodging.type,
+                    name=lodging.name,
+                    description=lodging.description,
+                    rating=lodging.rating,
+                    link=lodging.link,
+                    check_in=lodging.check_in,
+                    check_out=lodging.check_out,
+                    timezone=lodging.timezone,
+                    reservation_number=lodging.reservation_number,
+                    latitude=lodging.latitude,
+                    longitude=lodging.longitude,
+                    location=lodging.location,
+                    is_public=False,
+                )
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Deep copy Notes (use reverse relation)
+        for note in collection.note_set.all():
+            Note.objects.create(
+                user=request.user,
+                collection=new_collection,
+                name=note.name,
+                content=note.content,
+                links=note.links,
+                date=note.date,
+                is_public=False,
+            )
+
+        # Deep copy Checklists with their items (use reverse relation)
+        for checklist in collection.checklist_set.all():
+            new_checklist = Checklist.objects.create(
+                user=request.user,
+                collection=new_collection,
+                name=checklist.name,
+                date=checklist.date,
+                is_public=False,
+            )
+            # Copy checklist items
+            for item in checklist.checklistitem_set.all():
+                ChecklistItem.objects.create(
+                    user=request.user,
+                    checklist=new_checklist,
+                    name=item.name,
+                    is_checked=item.is_checked,
                 )
 
-                # Link existing locations to the new collection
-                linked_locations = list(original.locations.all())
-                if linked_locations:
-                    new_collection.locations.set(linked_locations)
+        serializer = CollectionSerializer(new_collection, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-                # Keep the same primary image reference if it exists
-                if original.primary_image:
-                    new_collection.primary_image = original.primary_image
-                    new_collection.save(update_fields=['primary_image'])
+    @action(detail=True, methods=['post'], url_path='save-as-template')
+    def save_as_template(self, request, pk=None):
+        """
+        Save a collection's structure as a reusable template.
+        Template includes: notes, checklists, transportations, lodgings.
+        Does NOT include: locations, dates, images, attachments.
+        """
+        collection = self.get_object()
 
-                def _copy_generic_media(source_obj, target_obj):
-                    # Images
-                    for img in source_obj.images.all():
-                        if img.image:
-                            try:
-                                img.image.open('rb')
-                                image_bytes = img.image.read()
-                            finally:
-                                try:
-                                    img.image.close()
-                                except Exception:
-                                    pass
-
-                            file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
-                            media = ContentImage(
-                                user=request.user,
-                                image=ContentFile(image_bytes, name=file_name),
-                                immich_id=None,
-                                is_primary=img.is_primary,
-                            )
-                        else:
-                            media = ContentImage(
-                                user=request.user,
-                                immich_id=img.immich_id,
-                                is_primary=img.is_primary,
-                            )
-
-                        media.content_object = target_obj
-                        media.save()
-
-                    # Attachments
-                    for attachment in source_obj.attachments.all():
-                        try:
-                            attachment.file.open('rb')
-                            file_bytes = attachment.file.read()
-                        finally:
-                            try:
-                                attachment.file.close()
-                            except Exception:
-                                pass
-
-                        file_name = (attachment.file.name or '').split('/')[-1] or 'attachment'
-                        new_attachment = ContentAttachment(
-                            user=request.user,
-                            file=ContentFile(file_bytes, name=file_name),
-                            name=attachment.name,
-                        )
-                        new_attachment.content_object = target_obj
-                        new_attachment.save()
-
-                # Copy FK-based related content and track ID mapping for itinerary relinks
-                object_id_map = {}
-
-                for item in Transportation.objects.filter(collection=original):
-                    new_item = Transportation.objects.create(
-                        user=request.user,
-                        collection=new_collection,
-                        type=item.type,
-                        name=item.name,
-                        description=item.description,
-                        rating=item.rating,
-                        price=item.price,
-                        link=item.link,
-                        date=item.date,
-                        end_date=item.end_date,
-                        start_timezone=item.start_timezone,
-                        end_timezone=item.end_timezone,
-                        flight_number=item.flight_number,
-                        from_location=item.from_location,
-                        origin_latitude=item.origin_latitude,
-                        origin_longitude=item.origin_longitude,
-                        destination_latitude=item.destination_latitude,
-                        destination_longitude=item.destination_longitude,
-                        start_code=item.start_code,
-                        end_code=item.end_code,
-                        to_location=item.to_location,
-                        is_public=item.is_public,
-                    )
-                    object_id_map[item.id] = new_item.id
-                    _copy_generic_media(item, new_item)
-
-                for item in Note.objects.filter(collection=original):
-                    new_item = Note.objects.create(
-                        user=request.user,
-                        collection=new_collection,
-                        name=item.name,
-                        content=item.content,
-                        links=item.links,
-                        date=item.date,
-                        is_public=item.is_public,
-                    )
-                    object_id_map[item.id] = new_item.id
-                    _copy_generic_media(item, new_item)
-
-                for item in Lodging.objects.filter(collection=original):
-                    new_item = Lodging.objects.create(
-                        user=request.user,
-                        collection=new_collection,
-                        name=item.name,
-                        type=item.type,
-                        description=item.description,
-                        rating=item.rating,
-                        link=item.link,
-                        check_in=item.check_in,
-                        check_out=item.check_out,
-                        timezone=item.timezone,
-                        reservation_number=item.reservation_number,
-                        price=item.price,
-                        latitude=item.latitude,
-                        longitude=item.longitude,
-                        location=item.location,
-                        is_public=item.is_public,
-                    )
-                    object_id_map[item.id] = new_item.id
-                    _copy_generic_media(item, new_item)
-
-                for checklist in Checklist.objects.filter(collection=original):
-                    new_checklist = Checklist.objects.create(
-                        user=request.user,
-                        collection=new_collection,
-                        name=checklist.name,
-                        date=checklist.date,
-                        is_public=checklist.is_public,
-                    )
-                    object_id_map[checklist.id] = new_checklist.id
-
-                    for checklist_item in checklist.checklistitem_set.all():
-                        ChecklistItem.objects.create(
-                            user=request.user,
-                            checklist=new_checklist,
-                            name=checklist_item.name,
-                            is_checked=checklist_item.is_checked,
-                        )
-
-                # Copy itinerary day metadata
-                for day in CollectionItineraryDay.objects.filter(collection=original):
-                    CollectionItineraryDay.objects.create(
-                        collection=new_collection,
-                        date=day.date,
-                        name=day.name,
-                        description=day.description,
-                    )
-
-                # Copy itinerary items and relink to duplicated FK-based content where applicable
-                for item in CollectionItineraryItem.objects.filter(collection=original):
-                    CollectionItineraryItem.objects.create(
-                        collection=new_collection,
-                        content_type=item.content_type,
-                        object_id=object_id_map.get(item.object_id, item.object_id),
-                        date=item.date,
-                        is_global=item.is_global,
-                        order=item.order,
-                    )
-
-            serializer = self.get_serializer(new_collection)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception("Failed to duplicate collection %s", pk)
+        # Ensure user has permission (owner only for templates)
+        if collection.user != request.user:
             return Response(
-                {"error": "An error occurred while duplicating the collection."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                {"error": "Only the collection owner can save it as a template"},
+                status=status.HTTP_403_FORBIDDEN
             )
+
+        # Get template name and description from request or use collection's
+        template_name = request.data.get('name', collection.name)
+        template_description = request.data.get('description', collection.description)
+        is_public = request.data.get('is_public', False)
+
+        # Build template data structure (includes locations, excludes dates)
+        template_data = {
+            'notes': [],
+            'checklists': [],
+            'transportations': [],
+            'lodgings': [],
+            'locations': [],  # Store location IDs
+        }
+
+        # Extract location IDs
+        for location in collection.locations.all():
+            template_data['locations'].append(str(location.id))
+
+        # Extract notes structure (use reverse relation)
+        for note in collection.note_set.all():
+            template_data['notes'].append({
+                'name': note.name,
+                'content': note.content,
+                'links': note.links or [],
+            })
+
+        # Extract checklists with items (use reverse relation)
+        for checklist in collection.checklist_set.all():
+            checklist_data = {
+                'name': checklist.name,
+                'items': [],
+            }
+            for item in checklist.checklistitem_set.all():
+                checklist_data['items'].append({
+                    'name': item.name,
+                })
+            template_data['checklists'].append(checklist_data)
+
+        # Extract transportations structure (wrapped in try/except for migration compatibility)
+        try:
+            for transport in collection.transportations.all():
+                template_data['transportations'].append({
+                    'type': transport.type,
+                    'name': transport.name,
+                    'description': transport.description,
+                    'from_location': transport.from_location,
+                    'to_location': transport.to_location,
+                })
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Extract lodgings structure (wrapped in try/except for migration compatibility)
+        try:
+            for lodging in collection.lodgings.all():
+                template_data['lodgings'].append({
+                    'type': lodging.type,
+                    'name': lodging.name,
+                    'description': lodging.description,
+                    'location': lodging.location,
+                })
+        except Exception:
+            pass  # Skip if collection field not yet migrated
+
+        # Create the template
+        template = CollectionTemplate.objects.create(
+            name=template_name,
+            description=template_description,
+            template_data=template_data,
+            is_public=is_public,
+            user=request.user,
+        )
+
+        serializer = CollectionTemplateSerializer(template, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it
@@ -1049,10 +1124,10 @@ class CollectionViewSet(viewsets.ModelViewSet):
             if new_is_public:
                 # Collection is being made public, update all linked items to public
                 serializer.instance.locations.filter(is_public=False).update(is_public=True)
-                serializer.instance.transportation_set.filter(is_public=False).update(is_public=True)
+                serializer.instance.transportations.filter(is_public=False).update(is_public=True)
                 serializer.instance.note_set.filter(is_public=False).update(is_public=True)
                 serializer.instance.checklist_set.filter(is_public=False).update(is_public=True)
-                serializer.instance.lodging_set.filter(is_public=False).update(is_public=True)
+                serializer.instance.lodgings.filter(is_public=False).update(is_public=True)
             else:
                 # Collection is being made private, check each linked item
                 # Only set an item to private if it doesn't belong to any other public collection
@@ -1070,7 +1145,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 
                 # Handle transportations, notes, checklists, lodging (foreign key relationships)
                 # Transportation
-                transportations_to_check = serializer.instance.transportation_set.filter(is_public=True)
+                transportations_to_check = serializer.instance.transportations.filter(is_public=True)
                 for transportation in transportations_to_check:
                     transportation.is_public = False
                     transportation.save(update_fields=['is_public'])
@@ -1088,7 +1163,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     checklist.save(update_fields=['is_public'])
                 
                 # Lodging
-                lodging_to_check = serializer.instance.lodging_set.filter(is_public=True)
+                lodging_to_check = serializer.instance.lodgings.filter(is_public=True)
                 for lodging in lodging_to_check:
                     lodging.is_public = False
                     lodging.save(update_fields=['is_public'])

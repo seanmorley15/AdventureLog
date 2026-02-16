@@ -91,18 +91,9 @@
 </svelte:head>
 
 <style>
-	/* Prevent unwanted horizontal scroll and ensure single scrollbar */
-	:global(html) {
-		overflow-x: hidden;
-		overflow-y: auto;
-	}
-
+	/* Prevent unwanted horizontal scroll caused by positioned dropdowns or transformed ancestors on small screens */
+	:global(html),
 	:global(body) {
-		overflow: hidden;
-	}
-
-	/* Ensure slot content doesn't create nested scrollbars */
-	:global(body > div) {
-		overflow: visible;
+		overflow-x: hidden;
 	}
 </style>

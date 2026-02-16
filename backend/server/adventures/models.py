@@ -8,7 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
 from django_resized import ResizedImageField
 from djmoney.models.fields import MoneyField
-from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
+from worldtravel.models import City, Country, Region
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from adventures.utils.timezones import TIMEZONES
@@ -18,44 +18,9 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.db.models import Q
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericRelation
+from adventures.utils.model_mixins import MediaDeletionMixin, SoftDeletableMixin
 
-def background_geocode_and_assign(location_id: str):
-    print(f"[Location Geocode Thread] Starting geocode for location {location_id}")
-    try:
-        location = Location.objects.get(id=location_id)
-        if not (location.latitude and location.longitude):
-            return
-        
-        from adventures.geocoding import reverse_geocode  # or wherever you defined it
-        is_visited = location.is_visited_status()
-        result = reverse_geocode(location.latitude, location.longitude, location.user)
-
-        if 'region_id' in result:
-            region = Region.objects.filter(id=result['region_id']).first()
-            if region:
-                location.region = region
-                if is_visited:
-                    VisitedRegion.objects.get_or_create(user=location.user, region=region)
-
-        if 'city_id' in result:
-            city = City.objects.filter(id=result['city_id']).first()
-            if city:
-                location.city = city
-                if is_visited:
-                    VisitedCity.objects.get_or_create(user=location.user, city=city)
-
-        if 'country_id' in result:
-            country = Country.objects.filter(country_code=result['country_id']).first()
-            if country:
-                location.country = country
-
-        # Save updated location info
-        # Save updated location info, skip geocode threading
-        location.save(update_fields=["region", "city", "country"], _skip_geocode=True)
-
-    except Exception as e:
-        # Optional: log or print the error
-        print(f"[Location Geocode Thread] Error processing {location_id}: {e}")
+from adventures.utils.geocoding_tasks import background_geocode
 
 def validate_file_extension(value):
     import os
@@ -113,6 +78,8 @@ TRANSPORTATION_TYPES = [
     ('boat', 'Boat'),
     ('bike', 'Bike'),
     ('walking', 'Walking'),
+    ('cab', 'Cab'),
+    ('vtc', 'VTC'),
     ('other', 'Other')
 ]
 
@@ -121,14 +88,92 @@ default_user = 1  # Replace with an actual user ID
 
 User = get_user_model()
 
-class Visit(models.Model):
+
+class TransportationType(models.Model):
+    """Admin-managed transportation types with icons."""
+    key = models.CharField(max_length=50, unique=True, help_text="Unique identifier (e.g., 'plane', 'train')")
+    name = models.CharField(max_length=100, help_text="Display name (e.g., 'Plane', 'Train')")
+    icon = models.CharField(max_length=10, help_text="Emoji icon (e.g., '✈️', '🚆')")
+    display_order = models.IntegerField(default=0, help_text="Order in dropdown lists")
+    is_active = models.BooleanField(default=True, help_text="Whether this type is available for selection")
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = "Transportation Type"
+        verbose_name_plural = "Transportation Types"
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class LodgingType(models.Model):
+    """Admin-managed lodging types with icons."""
+    key = models.CharField(max_length=50, unique=True, help_text="Unique identifier (e.g., 'hotel', 'hostel')")
+    name = models.CharField(max_length=100, help_text="Display name (e.g., 'Hotel', 'Hostel')")
+    icon = models.CharField(max_length=10, help_text="Emoji icon (e.g., '🏨', '🛏️')")
+    display_order = models.IntegerField(default=0, help_text="Order in dropdown lists")
+    is_active = models.BooleanField(default=True, help_text="Whether this type is available for selection")
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = "Lodging Type"
+        verbose_name_plural = "Lodging Types"
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class AdventureType(models.Model):
+    """Admin-managed adventure/location category types with icons."""
+    key = models.CharField(max_length=50, unique=True, help_text="Unique identifier (e.g., 'hiking', 'dining')")
+    name = models.CharField(max_length=100, help_text="Display name (e.g., 'Hiking', 'Dining')")
+    icon = models.CharField(max_length=10, help_text="Emoji icon (e.g., '🥾', '🍽️')")
+    display_order = models.IntegerField(default=0, help_text="Order in dropdown lists")
+    is_active = models.BooleanField(default=True, help_text="Whether this type is available for selection")
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = "Adventure Type"
+        verbose_name_plural = "Adventure Types"
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+
+class ActivityType(models.Model):
+    """Admin-managed activity/sport types with icons and colors."""
+    key = models.CharField(max_length=50, unique=True, help_text="Unique identifier (e.g., 'Run', 'Hike')")
+    name = models.CharField(max_length=100, help_text="Display name (e.g., 'Run', 'Hike')")
+    icon = models.CharField(max_length=10, help_text="Emoji icon (e.g., '🏃', '🥾')")
+    color = models.CharField(max_length=20, default='#6B7280', help_text="Color code (e.g., '#F59E0B')")
+    display_order = models.IntegerField(default=0, help_text="Order in dropdown lists")
+    is_active = models.BooleanField(default=True, help_text="Whether this type is available for selection")
+
+    class Meta:
+        ordering = ['display_order', 'name']
+        verbose_name = "Activity Type"
+        verbose_name_plural = "Activity Types"
+
+    def __str__(self):
+        return f"{self.icon} {self.name}"
+
+class Visit(MediaDeletionMixin, models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
-    location = models.ForeignKey('Location', on_delete=models.CASCADE, related_name='visits')
+    # A visit must be associated with exactly one of: Location, Transportation, or Lodging
+    location = models.ForeignKey('Location', on_delete=models.CASCADE, related_name='visits', null=True, blank=True)
+    transportation = models.ForeignKey('Transportation', on_delete=models.CASCADE, related_name='visits', null=True, blank=True)
+    lodging = models.ForeignKey('Lodging', on_delete=models.CASCADE, related_name='visits', null=True, blank=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True, related_name='visits')
+    # Optional: collection this visit was created from (for itinerary planning)
+    collection = models.ForeignKey('Collection', on_delete=models.SET_NULL, null=True, blank=True, related_name='planned_visits')
     start_date = models.DateTimeField(null=True, blank=True)
     end_date = models.DateTimeField(null=True, blank=True)
     timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
     notes = models.TextField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)  # User's rating for this visit
+    # Price tracking for this visit
+    total_price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
+    number_of_people = models.PositiveIntegerField(null=True, blank=True)  # Number of people this price covers
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -137,21 +182,33 @@ class Visit(models.Model):
     attachments = GenericRelation('ContentAttachment', related_query_name='visit')
 
     def clean(self):
+        # Validation: exactly one parent must be set
+        parent_count = sum([
+            self.location is not None,
+            self.transportation is not None,
+            self.lodging is not None
+        ])
+        if parent_count != 1:
+            raise ValidationError('Visit must be associated with exactly one of: Location, Transportation, or Lodging.')
+
         if self.start_date and self.end_date and self.start_date > self.end_date:
             raise ValidationError('The start date must be before or equal to the end date.')
 
-    def delete(self, *args, **kwargs):
-        # Delete all associated images and attachments
-        for image in self.images.all():
-            image.delete()
-        for attachment in self.attachments.all():
-            attachment.delete()
-        super().delete(*args, **kwargs)
-
     def __str__(self):
-        return f"{self.location.name} - {self.start_date} to {self.end_date}"
+        try:
+            if self.location_id and self.location:
+                parent_name = self.location.name
+            elif self.transportation_id and self.transportation:
+                parent_name = self.transportation.name
+            elif self.lodging_id and self.lodging:
+                parent_name = self.lodging.name
+            else:
+                parent_name = "Unknown"
+        except (Location.DoesNotExist, Transportation.DoesNotExist, Lodging.DoesNotExist):
+            parent_name = "Deleted"
+        return f"{parent_name} - {self.start_date} to {self.end_date}"
 
-class Location(models.Model):
+class Location(MediaDeletionMixin, models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     category = models.ForeignKey('Category', on_delete=models.SET_NULL, blank=True, null=True)
@@ -159,10 +216,11 @@ class Location(models.Model):
     location = models.CharField(max_length=200, blank=True, null=True)
     tags = ArrayField(models.CharField(max_length=100), blank=True, null=True)
     description = models.TextField(blank=True, null=True)
-    rating = models.FloatField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)  # Deprecated: use average_rating from visits
+    average_rating = models.FloatField(blank=True, null=True)  # Cached average from visit ratings
     price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True)
@@ -198,13 +256,23 @@ class Location(models.Model):
                 
                 # Only enforce same-user constraint for non-shared collections
                 if self.user != collection.user:
+                    # In collaborative mode, allow adding public locations to any collection
+                    from django.conf import settings
+                    is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+                    if is_collaborative and self.is_public:
+                        continue  # Allow public locations in collaborative mode
+
                     # Check if this is a shared collection scenario
                     # Allow if the location owner has access to the collection through sharing
                     if not collection.shared_with.filter(uuid=self.user.uuid).exists():
                         raise ValidationError(f'Locations must be associated with collections owned by the same user or shared collections. Collection owner: {collection.user.username} Location owner: {self.user.username}')
         
         if self.category:
-            if self.user != self.category.user:
+            # In collaborative mode, skip category owner validation for public locations
+            # This allows any authenticated user to use any category on public content
+            from django.conf import settings
+            is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+            if not is_collaborative and self.user != self.category.user:
                 raise ValidationError(f'Locations must be associated with categories owned by the same user. Category owner: {self.category.user.username} Location owner: {self.user.username}')
             
     def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False, _skip_shared_validation=False):
@@ -221,8 +289,11 @@ class Location(models.Model):
 
         result = super().save(force_insert, force_update, using, update_fields)
 
+        # Skip validation when only updating computed fields like average_rating
+        skip_validation = update_fields and set(update_fields) <= {'average_rating', 'updated_at'}
+
         # Validate collections after saving (since M2M relationships require saved instance)
-        if self.pk:
+        if self.pk and not skip_validation:
             try:
                 self.clean(skip_shared_validation=_skip_shared_validation)
             except ValidationError as e:
@@ -235,23 +306,15 @@ class Location(models.Model):
             return result
 
         if self.latitude and self.longitude:
-            thread = threading.Thread(target=background_geocode_and_assign, args=(str(self.id),))
-            thread.daemon = True  # Allows the thread to exit when the main program ends
+            thread = threading.Thread(target=background_geocode, args=(Location, str(self.id)))
+            thread.daemon = True
             thread.start()
 
         return result
 
-    def delete(self, *args, **kwargs):
-        # Delete all associated images and attachments (handled by GenericRelation)
-        for image in self.images.all():
-            image.delete()
-        for attachment in self.attachments.all():
-            attachment.delete()
-        super().delete(*args, **kwargs)
-
     def __str__(self):
         return self.name
-    
+
 class CollectionInvite(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     collection = models.ForeignKey('Collection', on_delete=models.CASCADE, related_name='invites')
@@ -280,7 +343,7 @@ class Collection(models.Model):
         User, on_delete=models.CASCADE, default=default_user)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
@@ -295,6 +358,14 @@ class Collection(models.Model):
         null=True,
         blank=True,
     )
+    adventure_type = models.ForeignKey(
+        'AdventureType',
+        on_delete=models.SET_NULL,
+        related_name='collections',
+        null=True,
+        blank=True,
+        help_text="Category/type of this collection"
+    )
 
     # if connected locations are private and collection is public, raise an error
     def clean(self):
@@ -307,30 +378,30 @@ class Collection(models.Model):
     def __str__(self):
         return self.name
     
-class Transportation(models.Model):
+class Transportation(MediaDeletionMixin, models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     type = models.CharField(max_length=100, choices=TRANSPORTATION_TYPES)
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True, null=True)
-    rating = models.FloatField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)  # Deprecated: use average_rating from visits
+    average_rating = models.FloatField(blank=True, null=True)  # Cached average from visit ratings
     price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
     link = models.URLField(blank=True, null=True, max_length=2083)
-    date = models.DateTimeField(blank=True, null=True)
-    end_date = models.DateTimeField(blank=True, null=True)
-    start_timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
-    end_timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
+    # Date fields removed - now handled by Visit model
     flight_number = models.CharField(max_length=100, blank=True, null=True)
     from_location = models.CharField(max_length=200, blank=True, null=True)
     origin_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     origin_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     destination_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     destination_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    origin_country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, related_name='transportation_origins')
+    destination_country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, related_name='transportation_destinations')
     start_code = models.CharField(max_length=100, blank=True, null=True) # Could be airport code, station code, etc.
     end_code = models.CharField(max_length=100, blank=True, null=True)   # Could be airport code, station code, etc.
     to_location = models.CharField(max_length=200, blank=True, null=True)
     tags = ArrayField(models.CharField(max_length=100), blank=True, null=True)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     collections = models.ManyToManyField('Collection', blank=True, related_name='transportations')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -339,22 +410,28 @@ class Transportation(models.Model):
     images = GenericRelation('ContentImage', related_query_name='transportation')
     attachments = GenericRelation('ContentAttachment', related_query_name='transportation')
 
-    def clean(self):
-        if self.date and self.end_date and self.date > self.end_date:
-            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.date) + ' End date: ' + str(self.end_date))
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False):
+        if force_insert and force_update:
+            raise ValueError("Cannot force both insert and updating in model saving.")
 
-    def delete(self, *args, **kwargs):
-        # Delete all associated images and attachments
-        for image in self.images.all():
-            image.delete()
-        for attachment in self.attachments.all():
-            attachment.delete()
-        super().delete(*args, **kwargs)
+        result = super().save(force_insert, force_update, using, update_fields)
+
+        # Skip threading if called from geocode background thread
+        if _skip_geocode:
+            return result
+
+        # Trigger geocoding if origin or destination coordinates are set
+        if (self.origin_latitude and self.origin_longitude) or (self.destination_latitude and self.destination_longitude):
+            thread = threading.Thread(target=background_geocode, args=(Transportation, str(self.id)))
+            thread.daemon = True
+            thread.start()
+
+        return result
 
     def __str__(self):
         return self.name
 
-class Note(models.Model):
+class Note(MediaDeletionMixin, models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     name = models.CharField(max_length=200)
@@ -377,17 +454,9 @@ class Note(models.Model):
             if self.user != self.collection.user:
                 raise ValidationError('Notes must be associated with collections owned by the same user. Collection owner: ' + self.collection.user.username + ' Note owner: ' + self.user.username)
 
-    def delete(self, *args, **kwargs):
-        # Delete all associated images and attachments
-        for image in self.images.all():
-            image.delete()
-        for attachment in self.attachments.all():
-            attachment.delete()
-        super().delete(*args, **kwargs)
-
     def __str__(self):
         return self.name
-    
+
 class Checklist(models.Model):
     # id = models.AutoField(primary_key=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
@@ -441,7 +510,7 @@ class PathAndRename:
         filename = f"{uuid.uuid4()}.{ext}"
         return os.path.join(self.path, filename)
 
-class ContentImage(models.Model):
+class ContentImage(SoftDeletableMixin, models.Model):
     """Generic image model that can be attached to any content type"""
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
@@ -495,41 +564,14 @@ class ContentImage(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
-    def delete(self, *args, **kwargs):
-        from django.conf import settings
-        from django.utils import timezone
-
-        # In collaborative mode, soft-delete instead of hard delete
-        if getattr(settings, 'COLLABORATIVE_MODE', False):
-            self.is_deleted = True
-            self.deleted_at = timezone.now()
-            # deleted_by is set by the view
-            self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
-            return
-
-        # Hard delete: remove file from disk
-        if self.image and os.path.isfile(self.image.path):
-            os.remove(self.image.path)
-        super().delete(*args, **kwargs)
-
-    def hard_delete(self, *args, **kwargs):
-        """Permanently delete the image and its file."""
-        if self.image and os.path.isfile(self.image.path):
-            os.remove(self.image.path)
-        super().delete(*args, **kwargs)
-
-    def restore(self):
-        """Restore a soft-deleted image."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+    def _get_file_field(self):
+        return self.image
 
     def __str__(self):
         content_name = getattr(self.content_object, 'name', 'Unknown')
         return f"Image for {self.content_type.model}: {content_name}"
 
-class ContentAttachment(models.Model):
+class ContentAttachment(SoftDeletableMixin, models.Model):
     """Generic attachment model that can be attached to any content type"""
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
@@ -556,35 +598,8 @@ class ContentAttachment(models.Model):
             models.Index(fields=["content_type", "object_id"]),
         ]
 
-    def delete(self, *args, **kwargs):
-        from django.conf import settings
-        from django.utils import timezone
-
-        # In collaborative mode, soft-delete instead of hard delete
-        if getattr(settings, 'COLLABORATIVE_MODE', False):
-            self.is_deleted = True
-            self.deleted_at = timezone.now()
-            # deleted_by is set by the view
-            self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
-            return
-
-        # Hard delete: remove file from disk
-        if self.file and os.path.isfile(self.file.path):
-            os.remove(self.file.path)
-        super().delete(*args, **kwargs)
-
-    def hard_delete(self, *args, **kwargs):
-        """Permanently delete the attachment and its file."""
-        if self.file and os.path.isfile(self.file.path):
-            os.remove(self.file.path)
-        super().delete(*args, **kwargs)
-
-    def restore(self):
-        """Restore a soft-deleted attachment."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.deleted_by = None
-        self.save(update_fields=['is_deleted', 'deleted_at', 'deleted_by'])
+    def _get_file_field(self):
+        return self.file
 
     def __str__(self):
         content_name = getattr(self.content_object, 'name', 'Unknown')
@@ -612,24 +627,26 @@ class Category(models.Model):
     def __str__(self):
         return self.name + ' - ' + self.display_name + ' - ' + self.icon
     
-class Lodging(models.Model):
+class Lodging(MediaDeletionMixin, models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=100, choices=LODGING_TYPES, default='other')
     description = models.TextField(blank=True, null=True)
-    rating = models.FloatField(blank=True, null=True)
+    rating = models.FloatField(blank=True, null=True)  # Deprecated: use average_rating from visits
+    average_rating = models.FloatField(blank=True, null=True)  # Cached average from visit ratings
     link = models.URLField(blank=True, null=True, max_length=2083)
-    check_in = models.DateTimeField(blank=True, null=True)
-    check_out = models.DateTimeField(blank=True, null=True)
-    timezone = models.CharField(max_length=50, choices=[(tz, tz) for tz in TIMEZONES], null=True, blank=True)
+    # Date fields removed - now handled by Visit model
     reservation_number = models.CharField(max_length=100, blank=True, null=True)
     price = MoneyField(max_digits=12, decimal_places=2, default_currency='USD', null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     location = models.CharField(max_length=200, blank=True, null=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, blank=True, null=True, related_name='lodgings')
+    region = models.ForeignKey(Region, on_delete=models.SET_NULL, blank=True, null=True, related_name='lodgings')
+    city = models.ForeignKey(City, on_delete=models.SET_NULL, blank=True, null=True, related_name='lodgings')
     tags = ArrayField(models.CharField(max_length=100), blank=True, null=True)
-    is_public = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     collections = models.ManyToManyField('Collection', blank=True, related_name='lodgings')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -638,21 +655,26 @@ class Lodging(models.Model):
     images = GenericRelation('ContentImage', related_query_name='lodging')
     attachments = GenericRelation('ContentAttachment', related_query_name='lodging')
 
-    def clean(self):
-        if self.check_in and self.check_out and self.check_in > self.check_out:
-            raise ValidationError('The start date must be before the end date. Start date: ' + str(self.check_in) + ' End date: ' + str(self.check_out))
+    def save(self, force_insert=False, force_update=False, using=None, update_fields=None, _skip_geocode=False):
+        if force_insert and force_update:
+            raise ValueError("Cannot force both insert and updating in model saving.")
 
-    def delete(self, *args, **kwargs):
-        # Delete all associated images and attachments
-        for image in self.images.all():
-            image.delete()
-        for attachment in self.attachments.all():
-            attachment.delete()
-        super().delete(*args, **kwargs)
+        result = super().save(force_insert, force_update, using, update_fields)
+
+        # Skip threading if called from geocode background thread
+        if _skip_geocode:
+            return result
+
+        if self.latitude and self.longitude:
+            thread = threading.Thread(target=background_geocode, args=(Lodging, str(self.id)))
+            thread.daemon = True
+            thread.start()
+
+        return result
 
     def __str__(self):
         return self.name
-    
+
 class Trail(models.Model):
     """
     Represents a trail associated with a user.
@@ -762,6 +784,25 @@ class CollectionItineraryDay(models.Model):
     def __str__(self):
         return f"{
             self.collection.name} - {self.date} - {self.name or 'Unnamed Day'}"
+
+
+class CollectionTemplate(models.Model):
+    """Reusable template for creating new collections with pre-defined structure"""
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    template_data = models.JSONField(default=dict)
+    # Structure: {notes: [...], checklists: [...], transportations: [...], lodgings: [...]}
+    is_public = models.BooleanField(default=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='collection_templates')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.name} ({'Public' if self.is_public else 'Private'})"
 
 
 class CollectionItineraryItem(models.Model):

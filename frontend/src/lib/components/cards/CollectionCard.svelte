@@ -7,12 +7,13 @@
 	import ArchiveArrowDown from '~icons/mdi/archive-arrow-down';
 	import ArchiveArrowUp from '~icons/mdi/archive-arrow-up';
 	import ShareVariant from '~icons/mdi/share-variant';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import FileDocumentPlus from '~icons/mdi/file-document-plus';
 
 	import { goto } from '$app/navigation';
 	import type { Location, Collection, User, SlimCollection, ContentImage } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
-	import { copyToClipboard } from '$lib/index';
 
 	import Plus from '~icons/mdi/plus';
 	import Minus from '~icons/mdi/minus';
@@ -21,14 +22,14 @@
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import ShareModal from '../ShareModal.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
+	import TemplateModal from '../TemplateModal.svelte';
 	import ExitRun from '~icons/mdi/exit-run';
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
 	import Check from '~icons/mdi/check';
 	import MapMarker from '~icons/mdi/map-marker-multiple';
-	import LinkIcon from '~icons/mdi/link';
 	import DownloadIcon from '~icons/mdi/download';
-	import ContentCopy from '~icons/mdi/content-copy';
+	import { CopyLinkButton } from '../shared/cards';
 
 	const dispatch = createEventDispatcher();
 
@@ -36,42 +37,8 @@
 	export let linkedCollectionList: string[] | null = null;
 	export let user: User | null;
 	let isShareModalOpen: boolean = false;
-	let copied: boolean = false;
-
-	async function copyLink() {
-		try {
-			const url = `${location.origin}/collections/${collection.id}`;
-			await copyToClipboard(url);
-			copied = true;
-			setTimeout(() => (copied = false), 2000);
-		} catch (e) {
-			addToast('error', $t('adventures.copy_failed') || 'Copy failed');
-		}
-	}
-
-	let isDuplicating = false;
-
-	async function duplicateCollection() {
-		if (isDuplicating) return;
-		isDuplicating = true;
-		try {
-			const res = await fetch(`/api/collections/${collection.id}/duplicate/`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' }
-			});
-			if (res.ok) {
-				const newCollection = await res.json();
-				addToast('success', $t('adventures.collection_duplicate_success'));
-				dispatch('duplicate', newCollection);
-			} else {
-				addToast('error', $t('adventures.collection_duplicate_error'));
-			}
-		} catch (e) {
-			addToast('error', $t('adventures.collection_duplicate_error'));
-		} finally {
-			isDuplicating = false;
-		}
-	}
+	let isTemplateModalOpen: boolean = false;
+	let isDuplicating: boolean = false;
 
 	function editAdventure() {
 		dispatch('edit', collection);
@@ -94,6 +61,30 @@
 			addToast('success', $t('adventures.export_success') || 'Exported collection');
 		} catch (e) {
 			addToast('error', $t('adventures.export_failed') || 'Export failed');
+		}
+	}
+
+	async function duplicateCollection() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		try {
+			const res = await fetch(`/api/collections/${collection.id}/duplicate/`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			});
+			if (res.ok) {
+				const newCollection = await res.json();
+				addToast('success', $t('collection.duplicated_success') || 'Collection duplicated successfully');
+				dispatch('duplicate', newCollection);
+			} else {
+				addToast('error', $t('collection.duplicate_error') || 'Error duplicating collection');
+			}
+		} catch (e) {
+			addToast('error', $t('collection.duplicate_error') || 'Error duplicating collection');
+		} finally {
+			isDuplicating = false;
 		}
 	}
 
@@ -176,6 +167,10 @@
 	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
 {/if}
 
+{#if isTemplateModalOpen}
+	<TemplateModal {collection} on:close={() => (isTemplateModalOpen = false)} />
+{/if}
+
 <div
 	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
 >
@@ -184,7 +179,7 @@
 		<CardCarousel images={location_images} name={collection.name} icon="📚" />
 
 		<!-- Status Badge Overlay -->
-		<div class="absolute top-2 left-4 flex items-center gap-2">
+		<div class="absolute top-2 left-4 flex items-center gap-2 flex-wrap">
 			{#if collection.status === 'folder'}
 				<div class="badge badge-sm badge-neutral shadow-sm">
 					📁 {$t('adventures.folder')}
@@ -224,7 +219,7 @@
 			>
 				<div
 					class="badge badge-sm {collection.is_public
-						? 'badge-secondary'
+						? 'badge-info'
 						: 'badge-ghost'} shadow-lg"
 					aria-label={collection.is_public ? $t('adventures.public') : $t('adventures.private')}
 				>
@@ -236,6 +231,18 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Adventure Type Badge (bottom-left like other cards) -->
+		{#if collection.adventure_type}
+			<div class="absolute bottom-4 left-4">
+				<a
+					href="/collections?adventure_type={collection.adventure_type.id}"
+					class="badge badge-primary shadow-lg font-medium cursor-pointer hover:brightness-110 transition-all"
+				>
+					{collection.adventure_type.icon} {collection.adventure_type.name}
+				</a>
+			</div>
+		{/if}
 	</div>
 
 	<!-- Content -->
@@ -356,15 +363,7 @@
 									</li>
 									{#if collection.is_public}
 										<li>
-											<button on:click={copyLink} class="flex items-center gap-2">
-												{#if copied}
-													<Check class="w-4 h-4 text-success" />
-													<span>{$t('adventures.link_copied')}</span>
-												{:else}
-													<LinkIcon class="w-4 h-4" />
-													{$t('adventures.copy_link')}
-												{/if}
-											</button>
+											<CopyLinkButton url={`${typeof window !== 'undefined' ? window.location.origin : ''}/collections/${collection.id}`} />
 										</li>
 									{/if}
 									{#if collection.is_archived}
@@ -401,7 +400,18 @@
 											disabled={isDuplicating}
 										>
 											<ContentCopy class="w-4 h-4" />
-											{isDuplicating ? '...' : $t('adventures.duplicate')}
+											{isDuplicating
+												? $t('adventures.processing') || 'Processing...'
+												: $t('collection.duplicate') || 'Duplicate'}
+										</button>
+									</li>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => (isTemplateModalOpen = true)}
+										>
+											<FileDocumentPlus class="w-4 h-4" />
+											{$t('collection.save_as_template') || 'Save as Template'}
 										</button>
 									</li>
 									<div class="divider my-1"></div>

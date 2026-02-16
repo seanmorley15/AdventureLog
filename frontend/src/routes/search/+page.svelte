@@ -4,6 +4,8 @@
 	import CityCard from '$lib/components/cards/CityCard.svelte';
 	import CountryCard from '$lib/components/cards/CountryCard.svelte';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
+	import TransportationCard from '$lib/components/cards/TransportationCard.svelte';
+	import LodgingCard from '$lib/components/cards/LodgingCard.svelte';
 	import UserCard from '$lib/components/cards/UserCard.svelte';
 	import { page } from '$app/stores';
 	import type { PageData } from './$types';
@@ -11,6 +13,8 @@
 	import type {
 		Location,
 		Collection,
+		Transportation,
+		Lodging,
 		User,
 		Country,
 		Region,
@@ -19,6 +23,8 @@
 		VisitedCity
 	} from '$lib/types';
 	import SearchIcon from '~icons/mdi/magnify';
+	import PlaneIcon from '~icons/mdi/airplane';
+	import HotelIcon from '~icons/mdi/bed';
 
 	export let data: PageData;
 
@@ -29,6 +35,8 @@
 	// Assign updated results from data, so when data changes, the displayed items update:
 	$: locations = data.locations as Location[];
 	$: collections = data.collections as Collection[];
+	$: transportations = data.transportations as Transportation[];
+	$: lodging = data.lodging as Lodging[];
 	$: users = data.users as User[];
 	$: countries = data.countries as Country[];
 	$: regions = data.regions as Region[];
@@ -40,6 +48,8 @@
 	$: totalResults =
 		locations.length +
 		collections.length +
+		transportations.length +
+		lodging.length +
 		users.length +
 		countries.length +
 		regions.length +
@@ -128,6 +138,40 @@
 				</div>
 			{/if}
 
+			{#if transportations.length > 0}
+				<div class="mb-12">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-amber-500/10 rounded-lg">
+							<PlaneIcon class="w-6 h-6 text-amber-500" />
+						</div>
+						<h2 class="text-2xl font-bold">{$t('navbar.transportation')}</h2>
+						<div class="badge badge-warning">{transportations.length}</div>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+						{#each transportations as transportation}
+							<TransportationCard {transportation} user={null} />
+						{/each}
+					</div>
+				</div>
+			{/if}
+
+			{#if lodging.length > 0}
+				<div class="mb-12">
+					<div class="flex items-center gap-3 mb-6">
+						<div class="p-2 bg-pink-500/10 rounded-lg">
+							<HotelIcon class="w-6 h-6 text-pink-500" />
+						</div>
+						<h2 class="text-2xl font-bold">{$t('navbar.lodging')}</h2>
+						<div class="badge badge-secondary">{lodging.length}</div>
+					</div>
+					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+						{#each lodging as lodgingItem}
+							<LodgingCard lodging={lodgingItem} user={null} />
+						{/each}
+					</div>
+				</div>
+			{/if}
+
 			{#if countries.length > 0}
 				<div class="mb-12">
 					<div class="flex items-center gap-3 mb-6">
@@ -170,12 +214,12 @@
 			{#if cities.length > 0}
 				<div class="mb-12">
 					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-warning/10 rounded-lg">
+						<div class="p-2 bg-error/10 rounded-lg">
 							<!-- CityIcon -->
-							<SearchIcon class="w-6 h-6 text-warning" />
+							<SearchIcon class="w-6 h-6 text-error" />
 						</div>
 						<h2 class="text-2xl font-bold">{$t('search.cities')}</h2>
-						<div class="badge badge-warning">{cities.length}</div>
+						<div class="badge badge-error">{cities.length}</div>
 					</div>
 					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
 						{#each cities as city}

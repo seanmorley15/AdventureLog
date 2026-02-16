@@ -1,118 +1,26 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from django.http import HttpResponse
-import ipaddress
-from urllib.parse import urlparse
-from django.db.models import Q
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
 from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
 from adventures.serializers import ContentImageSerializer
 from integrations.models import ImmichIntegration
-from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existing permission class
+from adventures.permissions import IsOwnerOrSharedWithFullAccess
 import requests
 from adventures.permissions import ContentImagePermission
+from adventures.utils.content_access import ContentAccessMixin
 
 
-class ContentImageViewSet(viewsets.ModelViewSet):
+class ContentImageViewSet(ContentAccessMixin, viewsets.ModelViewSet):
     serializer_class = ContentImageSerializer
     permission_classes = [ContentImagePermission]
+    model_class = ContentImage
 
     def get_queryset(self):
         """Get all images the user has access to"""
-        if not self.request.user.is_authenticated:
-            return ContentImage.objects.none()
-
-        # Import here to avoid circular imports
-        from adventures.models import Location, Transportation, Note, Lodging, Visit
-
-        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
-
-        # Build a single query with all conditions
-        query = (
-            # User owns the image directly (if user field exists on ContentImage)
-            Q(user=self.request.user) |
-
-            # Or user has access to the content object
-            (
-                # Locations owned by user
-                Q(content_type=ContentType.objects.get_for_model(Location)) &
-                Q(object_id__in=Location.objects.filter(user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Shared locations
-                Q(content_type=ContentType.objects.get_for_model(Location)) &
-                Q(object_id__in=Location.objects.filter(collections__shared_with=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Collections owned by user containing locations
-                Q(content_type=ContentType.objects.get_for_model(Location)) &
-                Q(object_id__in=Location.objects.filter(collections__user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Transportation owned by user
-                Q(content_type=ContentType.objects.get_for_model(Transportation)) &
-                Q(object_id__in=Transportation.objects.filter(user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Notes owned by user
-                Q(content_type=ContentType.objects.get_for_model(Note)) &
-                Q(object_id__in=Note.objects.filter(user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Lodging owned by user
-                Q(content_type=ContentType.objects.get_for_model(Lodging)) &
-                Q(object_id__in=Lodging.objects.filter(user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Notes shared with user
-                Q(content_type=ContentType.objects.get_for_model(Note)) &
-                Q(object_id__in=Note.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Lodging shared with user
-                Q(content_type=ContentType.objects.get_for_model(Lodging)) &
-                Q(object_id__in=Lodging.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Transportation shared with user
-                Q(content_type=ContentType.objects.get_for_model(Transportation)) &
-                Q(object_id__in=Transportation.objects.filter(collection__shared_with=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Visits - access through location's user
-                Q(content_type=ContentType.objects.get_for_model(Visit)) &
-                Q(object_id__in=Visit.objects.filter(location__user=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Visits - access through shared locations
-                Q(content_type=ContentType.objects.get_for_model(Visit)) &
-                Q(object_id__in=Visit.objects.filter(location__collections__shared_with=self.request.user).values_list('id', flat=True))
-            ) |
-            (
-                # Visits - access through collections owned by user
-                Q(content_type=ContentType.objects.get_for_model(Visit)) &
-                Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
-            )
-        )
-
-        # In collaborative mode, also include images from public locations
-        if is_collaborative:
-            query |= (
-                # Public locations
-                Q(content_type=ContentType.objects.get_for_model(Location)) &
-                Q(object_id__in=Location.objects.filter(is_public=True).values_list('id', flat=True))
-            ) | (
-                # Visits from public locations
-                Q(content_type=ContentType.objects.get_for_model(Visit)) &
-                Q(object_id__in=Visit.objects.filter(location__is_public=True).values_list('id', flat=True))
-            )
-
-        # Exclude soft-deleted images
-        return ContentImage.objects.filter(query, is_deleted=False).distinct()
+        return self.get_accessible_content()
 
     @action(detail=True, methods=['post'])
     def image_delete(self, request, *args, **kwargs):
@@ -147,96 +55,6 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         instance.is_primary = True
         instance.save()
         return Response({"success": "Image set as primary image"})
-
-
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
-    def fetch_from_url(self, request):
-        """
-        Proxy endpoint to fetch images from external URLs (Wikipedia, etc.).
-        This avoids CORS issues when the frontend tries to download images
-        from third-party servers like wikimedia.org.
-        """
-        image_url = request.data.get('url')
-        if not image_url:
-            return Response(
-                {"error": "URL is required"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # Validate URL scheme
-        if not image_url.startswith(('http://', 'https://')):
-            return Response(
-                {"error": "Invalid URL scheme. Only http and https are allowed."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        # SSRF protection: block private/internal IPs
-        try:
-            import socket
-            hostname = urlparse(image_url).hostname
-            if hostname:
-                resolved_ip = socket.getaddrinfo(hostname, None)[0][4][0]
-                ip = ipaddress.ip_address(resolved_ip)
-                if ip.is_private or ip.is_loopback or ip.is_reserved:
-                    return Response(
-                        {"error": "Access to internal networks is not allowed"},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-        except (socket.gaierror, ValueError):
-            return Response(
-                {"error": "Could not resolve hostname"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-        try:
-            # Download image server-side with a User-Agent to avoid blocks
-            headers = {
-                'User-Agent': 'AdventureLog/1.0 (Image Proxy)'
-            }
-            response = requests.get(
-                image_url,
-                timeout=30,
-                headers=headers,
-                stream=True
-            )
-            response.raise_for_status()
-
-            # Verify content type is an image
-            content_type = response.headers.get('Content-Type', '')
-            if not content_type.startswith('image/'):
-                return Response(
-                    {"error": "URL does not point to an image"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Limit size to 20MB to prevent abuse
-            content_length = response.headers.get('Content-Length')
-            if content_length and int(content_length) > 20 * 1024 * 1024:
-                return Response(
-                    {"error": "Image too large (max 20MB)"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Read the full content (stream=True means we need to read explicitly)
-            image_data = response.content
-
-            # Return the raw image bytes with the original content type
-            return HttpResponse(
-                image_data,
-                content_type=content_type,
-                status=200
-            )
-
-        except requests.exceptions.Timeout:
-            return Response(
-                {"error": "Download timeout - image may be too large or server too slow"},
-                status=status.HTTP_504_GATEWAY_TIMEOUT
-            )
-        except requests.exceptions.RequestException as e:
-            return Response(
-                {"error": f"Failed to fetch image: {str(e)}"},
-                status=status.HTTP_502_BAD_GATEWAY
-            )
 
     def create(self, request, *args, **kwargs):
         # Get content type and object ID from request
@@ -280,20 +98,6 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         if content_type_name not in content_type_map:
             return Response({
                 "error": f"Invalid content_type. Must be one of: {', '.join(content_type_map.keys())}"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Validate object_id format (must be a valid UUID, not "undefined" or empty)
-        if not object_id or object_id == 'undefined':
-            return Response({
-                "error": "object_id is required and must be a valid UUID"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        
-        import uuid as uuid_module
-        try:
-            uuid_module.UUID(str(object_id))
-        except (ValueError, AttributeError):
-            return Response({
-                "error": f"Invalid object_id format: {object_id}"
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Get the content object

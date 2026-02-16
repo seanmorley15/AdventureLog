@@ -2,8 +2,8 @@ import os
 from django.contrib import admin
 from django.utils.html import mark_safe, format_html
 from django.urls import reverse
-from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
-from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity
+from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay, TransportationType, LodgingType, AdventureType, ActivityType
+# worldtravel models are now registered in worldtravel/admin.py
 from allauth.account.decorators import secure_admin_login
 
 admin.autodiscover()
@@ -44,38 +44,6 @@ class LocationAdmin(admin.ModelAdmin):
     
     get_visit_count.short_description = 'Visit Count'
 
-
-class CountryAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country_code', 'number_of_regions')
-    list_filter = ('subregion',)
-    search_fields = ('name', 'country_code')
-
-    def number_of_regions(self, obj):
-        return Region.objects.filter(country=obj).count()
-
-    number_of_regions.short_description = 'Number of Regions'
-
-
-class RegionAdmin(admin.ModelAdmin):
-    list_display = ('name', 'country', 'number_of_visits')
-    list_filter = ('country',)
-    search_fields = ('name', 'country__name')
-    # list_filter = ('country', 'number_of_visits')
-
-    def number_of_visits(self, obj):
-        return VisitedRegion.objects.filter(region=obj).count()
-    
-    number_of_visits.short_description = 'Number of Visits'
-
-class CityAdmin(admin.ModelAdmin):
-    list_display = ('name', 'region', 'country')
-    list_filter = ('region', 'region__country')
-    search_fields = ('name', 'region__name', 'region__country__name')
-
-    def country(self, obj):
-        return obj.region.country.name
-
-    country.short_description = 'Country'
 
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
@@ -193,21 +161,44 @@ class CollectionItineraryItemAdmin(admin.ModelAdmin):
 
     object_link.short_description = 'Item'
 
+class TransportationTypeAdmin(admin.ModelAdmin):
+    list_display = ('key', 'name', 'icon', 'display_order', 'is_active')
+    list_editable = ('name', 'icon', 'display_order', 'is_active')
+    search_fields = ('key', 'name')
+    ordering = ('display_order', 'name')
+
+
+class LodgingTypeAdmin(admin.ModelAdmin):
+    list_display = ('key', 'name', 'icon', 'display_order', 'is_active')
+    list_editable = ('name', 'icon', 'display_order', 'is_active')
+    search_fields = ('key', 'name')
+    ordering = ('display_order', 'name')
+
+
+class AdventureTypeAdmin(admin.ModelAdmin):
+    list_display = ('key', 'name', 'icon', 'display_order', 'is_active')
+    list_editable = ('name', 'icon', 'display_order', 'is_active')
+    search_fields = ('key', 'name')
+    ordering = ('display_order', 'name')
+
+
+class ActivityTypeAdmin(admin.ModelAdmin):
+    list_display = ('key', 'name', 'icon', 'color', 'display_order', 'is_active')
+    list_editable = ('name', 'icon', 'color', 'display_order', 'is_active')
+    search_fields = ('key', 'name')
+    ordering = ('display_order', 'name')
+
+
 admin.site.register(CustomUser, CustomUserAdmin)
 admin.site.register(Location, LocationAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(Visit, VisitAdmin)
-admin.site.register(Country, CountryAdmin)
-admin.site.register(Region, RegionAdmin)
-admin.site.register(VisitedRegion)
 admin.site.register(Transportation)
 admin.site.register(Note)
 admin.site.register(Checklist)
 admin.site.register(ChecklistItem)
 admin.site.register(ContentImage, ContentImageImageAdmin)
 admin.site.register(Category, CategoryAdmin)
-admin.site.register(City, CityAdmin)
-admin.site.register(VisitedCity)
 admin.site.register(ContentAttachment)
 admin.site.register(Lodging)
 admin.site.register(CollectionInvite, CollectionInviteAdmin)
@@ -215,6 +206,10 @@ admin.site.register(Trail)
 admin.site.register(Activity, ActivityAdmin)
 admin.site.register(CollectionItineraryItem, CollectionItineraryItemAdmin)
 admin.site.register(CollectionItineraryDay)
+admin.site.register(TransportationType, TransportationTypeAdmin)
+admin.site.register(LodgingType, LodgingTypeAdmin)
+admin.site.register(AdventureType, AdventureTypeAdmin)
+admin.site.register(ActivityType, ActivityTypeAdmin)
 
 admin.site.site_header = 'AdventureLog Admin'
 admin.site.site_title = 'AdventureLog Admin Site'

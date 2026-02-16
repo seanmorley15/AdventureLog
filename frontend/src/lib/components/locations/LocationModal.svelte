@@ -1,49 +1,35 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Collection, Location, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
 	import LocationVisits from './LocationVisits.svelte';
+	import { EntityModal, type ModalStep, navigateToStep } from '../shared/modal';
+	import MapMarkerIcon from '~icons/mdi/map-marker';
 
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
-	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
-	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	export let initialLatLng: { lat: number; lng: number } | null = null;
+	export let initialVisitDate: string | null = null;
+	export let collaborativeMode: boolean = false;
 
 	const dispatch = createEventDispatcher();
 
 	// Store the initial visit date internally so it persists even if parent clears it
 	let storedInitialVisitDate: string | null = initialVisitDate;
 
-	let modal: HTMLDialogElement;
-
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
 
-	let steps = [
-		{
-			name: $t('adventures.quick_start'),
-			selected: true,
-			requires_id: false
-		},
-		{
-			name: $t('adventures.details'),
-			selected: false,
-			requires_id: false
-		},
-		{
-			name: $t('settings.media'),
-			selected: false,
-			requires_id: true
-		},
-		{
-			name: $t('adventures.visits'),
-			selected: false,
-			requires_id: true
-		}
+	let entityModal: EntityModal;
+
+	let steps: ModalStep[] = [
+		{ name: $t('adventures.quick_start'), selected: true, requires_id: false },
+		{ name: $t('adventures.details'), selected: false, requires_id: false },
+		{ name: $t('adventures.visits'), selected: false, requires_id: true },
+		{ name: $t('settings.media'), selected: false, requires_id: true }
 	];
 
 	export let location: Location = {
@@ -53,10 +39,9 @@
 		link: null,
 		description: null,
 		tags: [],
-		rating: NaN,
 		price: null,
 		price_currency: null,
-		is_public: false,
+		is_public: true,
 		latitude: NaN,
 		longitude: NaN,
 		location: null,
@@ -81,10 +66,9 @@
 		link: locationToEdit?.link || null,
 		description: locationToEdit?.description || null,
 		tags: locationToEdit?.tags || [],
-		rating: locationToEdit?.rating || NaN,
 		price: locationToEdit?.price ?? null,
 		price_currency: locationToEdit?.price_currency ?? null,
-		is_public: locationToEdit?.is_public || false,
+		is_public: locationToEdit?.is_public ?? true,
 		latitude: locationToEdit?.latitude || NaN,
 		longitude: locationToEdit?.longitude || NaN,
 		location: locationToEdit?.location || null,
@@ -104,257 +88,131 @@
 		attachments: locationToEdit?.attachments || []
 	};
 
-	onMount(async () => {
-		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
-		modal.showModal();
+	onMount(() => {
 		// Skip the quick start step if editing an existing location
 		if (!locationToEdit) {
-			steps[0].selected = true;
-			steps[1].selected = false;
+			steps = navigateToStep(steps, 0);
 		} else {
-			steps[0].selected = false;
-			steps[1].selected = true;
+			steps = navigateToStep(steps, 1);
 		}
 		if (initialLatLng) {
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
-			steps[1].selected = true;
-			steps[0].selected = false;
+			steps = navigateToStep(steps, 1);
 		}
 	});
 
 	function close() {
-		// If a save occurred, notify the parent with appropriate event
 		if (didSave) {
-			if (locationToEdit) {
-				dispatch('save', location);
-			} else {
-				dispatch('create', location);
-			}
+			dispatch(locationToEdit ? 'save' : 'create', location);
 		}
-
 		dispatch('close');
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			close();
-		}
+	function handleStepsChange(e: CustomEvent<ModalStep[]>) {
+		steps = e.detail;
 	}
+
+	$: modalTitle = locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location');
+	$: modalSubtitle = locationToEdit
+		? $t('adventures.update_location_details')
+		: $t('adventures.create_new_location');
 </script>
 
-<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-<dialog id="my_modal_1" class="modal backdrop-blur-sm">
-	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-	<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
-	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
-		role="dialog"
-		on:keydown={handleKeydown}
-		tabindex="0"
-	>
-		<!-- Header Section - Following adventurelog pattern -->
-		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
-		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
-					<div class="p-2 bg-primary/10 rounded-xl">
-						<svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-							/>
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-							/>
-						</svg>
-					</div>
-					<div>
-						<h1 class="text-3xl font-bold text-primary bg-clip-text">
-							{locationToEdit ? $t('adventures.edit_location') : $t('adventures.new_location')}
-						</h1>
-						<p class="text-sm text-base-content/60">
-							{locationToEdit
-								? $t('adventures.update_location_details')
-								: $t('adventures.create_new_location')}
-						</p>
-					</div>
-				</div>
+<EntityModal
+	bind:this={entityModal}
+	modalId="location_modal"
+	icon={MapMarkerIcon}
+	title={modalTitle}
+	subtitle={modalSubtitle}
+	{steps}
+	entityId={location.id}
+	{didSave}
+	isEditing={!!locationToEdit}
+	on:close={close}
+	on:save={() => dispatch('save', location)}
+	on:create={() => dispatch('create', location)}
+	on:stepsChange={handleStepsChange}
+>
+	{#if steps[0].selected}
+		<LocationQuickStart
+			on:locationSelected={(e) => {
+				location.name = e.detail.name;
+				location.location = e.detail.location;
+				location.latitude = e.detail.latitude;
+				location.longitude = e.detail.longitude;
+				steps = navigateToStep(steps, 1);
+			}}
+			on:cancel={close}
+			on:next={() => {
+				steps = navigateToStep(steps, 1);
+			}}
+		/>
+	{/if}
+	{#if steps[1].selected}
+		{#key `${location.latitude}-${location.longitude}-${location.name}`}
+		<LocationDetails
+			currentUser={user}
+			initialLocation={location}
+			{collection}
+			bind:editingLocation={location}
+			on:back={() => {
+				steps = navigateToStep(steps, 0);
+			}}
+			on:save={(e) => {
+				location.name = e.detail.name;
+				location.category = e.detail.category;
+				location.is_public = e.detail.is_public;
+				location.link = e.detail.link;
+				location.description = e.detail.description;
+				location.latitude = e.detail.latitude;
+				location.longitude = e.detail.longitude;
+				location.location = e.detail.location;
+				location.tags = e.detail.tags;
+				location.user = e.detail.user;
+				location.id = e.detail.id;
+				location.price = e.detail.price;
+				location.price_currency = e.detail.price_currency;
 
-				<ul
-					class="timeline timeline-vertical timeline-compact sm:timeline-horizontal sm:timeline-normal"
-				>
-					{#each steps as step, index}
-						<li>
-							{#if index > 0}
-								<hr class="bg-base-300" />
-							{/if}
-							<div class="timeline-middle">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="h-4 w-4 sm:h-5 sm:w-5 {step.selected
-										? 'text-primary'
-										: 'text-base-content/40'}"
-								>
-									<path
-										fill-rule="evenodd"
-										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-0.089l4-5-5z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</div>
-							<button
-								class="timeline-end timeline-box text-xs sm:text-sm px-2 py-1 sm:px-3 sm:py-2 {step.selected
-									? 'bg-primary text-primary-content'
-									: 'bg-base-200'} {step.requires_id && !location.id
-									? 'opacity-50 cursor-not-allowed'
-									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => {
-									// Reset all steps
-									steps.forEach((s) => (s.selected = false));
-									// Select clicked step
-									steps[index].selected = true;
-								}}
-								disabled={step.requires_id && !location.id}
-							>
-								<span class="hidden sm:inline">{step.name}</span>
-								<span class="sm:hidden"
-									>{step.name.substring(0, 8)}{step.name.length > 8 ? '...' : ''}</span
-								>
-							</button>
-							{#if index < steps.length - 1}
-								<hr class="bg-base-300" />
-							{/if}
-						</li>
-					{/each}
-				</ul>
-
-				<!-- Close Button -->
-				{#if !location.id}
-					<button class="btn btn-ghost btn-square" on:click={close}>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{:else}
-					<button class="btn btn-ghost btn-square" on:click={close}>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-								d="M6 18L18 6M6 6l12 12"
-							/>
-						</svg>
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		{#if steps[0].selected}
-			<!-- Main Content -->
-			<LocationQuickStart
-				on:locationSelected={(e) => {
-					location.name = e.detail.name;
-					location.location = e.detail.location;
-					location.latitude = e.detail.latitude;
-					location.longitude = e.detail.longitude;
-					steps[0].selected = false;
-					steps[1].selected = true;
-				}}
-				on:cancel={() => close()}
-				on:next={() => {
-					steps[0].selected = false;
-					steps[1].selected = true;
-				}}
-			/>
-		{/if}
-		{#if steps[1].selected}
-			<LocationDetails
-				currentUser={user}
-				initialLocation={location}
-				{collection}
-				bind:editingLocation={location}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:save={(e) => {
-					location.name = e.detail.name;
-					location.category = e.detail.category;
-					location.rating = e.detail.rating;
-					location.is_public = e.detail.is_public;
-					location.link = e.detail.link;
-					location.description = e.detail.description;
-					location.latitude = e.detail.latitude;
-					location.longitude = e.detail.longitude;
-					location.location = e.detail.location;
-					location.tags = e.detail.tags;
-					location.user = e.detail.user;
-					location.id = e.detail.id;
-					location.price = e.detail.price;
-					location.price_currency = e.detail.price_currency;
-
-					// Mark that a save occurred so close() will notify parent
-					didSave = true;
-
-					steps[1].selected = false;
-					if (location.id) {
-						steps[2].selected = true;
-					} else {
-						// Stay on details if save failed (no ID returned)
-						steps[1].selected = true;
-					}
-				}}
-			/>
-		{/if}
-		{#if steps[2].selected}
-			<LocationMedia
-				bind:images={location.images}
-				bind:attachments={location.attachments}
-				bind:trails={location.trails}
-				itemName={location.name}
-				userIsOwner={user?.uuid === location.user?.uuid}
-				on:back={() => {
-					steps[2].selected = false;
-					steps[1].selected = true;
-				}}
-				itemId={location.id}
-				on:next={() => {
-					steps[2].selected = false;
-					steps[3].selected = true;
-				}}
-				measurementSystem={user?.measurement_system || 'metric'}
-			/>
-		{/if}
-		{#if steps[3].selected}
-			<LocationVisits
-				bind:visits={location.visits}
-				bind:trails={location.trails}
-				objectId={location.id}
-				on:back={() => {
-					steps[3].selected = false;
-					steps[2].selected = true;
-				}}
-				on:close={() => close()}
-				measurementSystem={user?.measurement_system || 'metric'}
-				{collection}
-				initialVisitDate={storedInitialVisitDate}
-				currentUserUsername={user?.username || null}
-			/>
-		{/if}
-	</div>
-</dialog>
+				didSave = true;
+				steps = navigateToStep(steps, 2);
+			}}
+		/>
+		{/key}
+	{/if}
+	{#if steps[2].selected}
+		<LocationVisits
+			bind:visits={location.visits}
+			bind:trails={location.trails}
+			objectId={location.id}
+			on:back={() => {
+				steps = navigateToStep(steps, 1);
+			}}
+			on:close={() => {
+				steps = navigateToStep(steps, 3);
+			}}
+			measurementSystem={user?.measurement_system || 'metric'}
+			{collection}
+			initialVisitDate={storedInitialVisitDate}
+			currentUserUsername={user?.username || null}
+			countryCurrency={location.country?.currency_code || null}
+			userCurrency={user?.default_currency || null}
+		/>
+	{/if}
+	{#if steps[3].selected}
+		<LocationMedia
+			bind:images={location.images}
+			bind:attachments={location.attachments}
+			bind:trails={location.trails}
+			itemName={location.name}
+			userIsOwner={user?.uuid === location.user?.uuid}
+			on:back={() => {
+				steps = navigateToStep(steps, 2);
+			}}
+			itemId={location.id}
+			on:next={close}
+			measurementSystem={user?.measurement_system || 'metric'}
+			{collaborativeMode}
+		/>
+	{/if}
+</EntityModal>
