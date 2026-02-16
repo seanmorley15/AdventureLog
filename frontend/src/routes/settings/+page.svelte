@@ -74,6 +74,12 @@
 		password: ''
 	};
 
+	// MCP/API Token state
+	let mcpToken: { token: string; created: string; mcp_endpoint: string } | null = null;
+	let mcpTokenLoading: boolean = false;
+	let mcpTokenError: string | null = null;
+	let mcpTokenFetched: boolean = false;
+
 	let isMFAModalOpen: boolean = false;
 
 	const sections = [
@@ -110,6 +116,11 @@
 		if (browser && $page.form) {
 			isRestoring = false;
 		}
+	}
+
+	// Fetch MCP token when integrations tab becomes active
+	$: if (browser && activeSection === 'integrations' && !mcpTokenFetched && !mcpTokenLoading) {
+		fetchMcpToken();
 	}
 
 	async function checkVisitedRegions() {
@@ -399,6 +410,69 @@
 			}
 			newWandererIntegration.password = '';
 		}
+	}
+
+	// MCP/API Token functions
+	async function fetchMcpToken() {
+		mcpTokenLoading = true;
+		mcpTokenError = null;
+		try {
+			const res = await fetch('/api/user/api-token/');
+			if (res.ok) {
+				mcpToken = await res.json();
+			} else if (res.status === 404) {
+				mcpToken = null;
+			} else {
+				mcpTokenError = 'Failed to fetch token';
+			}
+		} catch (e) {
+			mcpTokenError = 'Network error';
+		}
+		mcpTokenLoading = false;
+		mcpTokenFetched = true;
+	}
+
+	async function createMcpToken() {
+		mcpTokenLoading = true;
+		mcpTokenError = null;
+		try {
+			const res = await fetch('/api/user/api-token/', { method: 'POST' });
+			if (res.ok) {
+				mcpToken = await res.json();
+				addToast('success', $t('settings.mcp_token_created') || 'API token created');
+			} else {
+				mcpTokenError = 'Failed to create token';
+				addToast('error', $t('settings.mcp_token_error') || 'Failed to create token');
+			}
+		} catch (e) {
+			mcpTokenError = 'Network error';
+			addToast('error', $t('settings.mcp_token_error') || 'Network error');
+		}
+		mcpTokenLoading = false;
+	}
+
+	async function deleteMcpToken() {
+		mcpTokenLoading = true;
+		mcpTokenError = null;
+		try {
+			const res = await fetch('/api/user/api-token/', { method: 'DELETE' });
+			if (res.ok) {
+				mcpToken = null;
+				addToast('success', $t('settings.mcp_token_deleted') || 'API token deleted');
+			} else {
+				mcpTokenError = 'Failed to delete token';
+				addToast('error', $t('settings.mcp_token_error') || 'Failed to delete token');
+			}
+		} catch (e) {
+			mcpTokenError = 'Network error';
+			addToast('error', $t('settings.mcp_token_error') || 'Network error');
+		}
+		mcpTokenLoading = false;
+	}
+
+	function copyToClipboard(text: string) {
+		navigator.clipboard.writeText(text);
+		addToast('success', $t('settings.copied_to_clipboard') || 'Copied to clipboard');
 	}
 </script>
 
@@ -1287,6 +1361,106 @@
 										</p>
 									</div>
 								{/if}
+							</div>
+
+							<!-- MCP/API Token Integration -->
+							<div class="p-6 bg-base-200 rounded-xl mb-4">
+								<div class="flex items-center gap-4 mb-4">
+									<div class="text-2xl">🤖</div>
+									<div>
+										<h3 class="text-xl font-bold">{$t('settings.mcp_title') || 'AI Assistant (MCP)'}</h3>
+										<p class="text-sm text-base-content/70">
+											{$t('settings.mcp_desc') || 'Connect Claude or other AI assistants to manage your adventures'}
+										</p>
+									</div>
+									{#if mcpToken}
+										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
+									{:else}
+										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
+									{/if}
+								</div>
+
+								{#if mcpTokenLoading}
+									<div class="flex justify-center py-4">
+										<span class="loading loading-spinner loading-md"></span>
+									</div>
+								{:else if mcpToken}
+									<!-- Token exists - show it -->
+									<div class="space-y-4">
+										<div class="form-control">
+											<label class="label">
+												<span class="label-text font-medium">{$t('settings.api_token') || 'API Token'}</span>
+											</label>
+											<div class="join w-full">
+												<input
+													type="password"
+													value={mcpToken.token}
+													class="input input-bordered join-item flex-1 font-mono text-sm"
+													readonly
+												/>
+												<button
+													class="btn btn-primary join-item"
+													on:click={() => copyToClipboard(mcpToken?.token || '')}
+												>
+													📋 {$t('settings.copy') || 'Copy'}
+												</button>
+											</div>
+										</div>
+
+										<div class="form-control">
+											<label class="label">
+												<span class="label-text font-medium">{$t('settings.mcp_endpoint') || 'MCP Endpoint'}</span>
+											</label>
+											<div class="join w-full">
+												<input
+													type="text"
+													value={mcpToken.mcp_endpoint}
+													class="input input-bordered join-item flex-1 font-mono text-sm"
+													readonly
+												/>
+												<button
+													class="btn btn-secondary join-item"
+													on:click={() => copyToClipboard(mcpToken?.mcp_endpoint || '')}
+												>
+													📋 {$t('settings.copy') || 'Copy'}
+												</button>
+											</div>
+										</div>
+
+										<div class="text-sm text-base-content/70">
+											{$t('settings.token_created') || 'Created'}: {new Date(mcpToken.created).toLocaleString()}
+										</div>
+
+										<div class="flex gap-4 justify-center">
+											<button class="btn btn-warning" on:click={createMcpToken}>
+												🔄 {$t('settings.regenerate_token') || 'Regenerate Token'}
+											</button>
+											<button class="btn btn-error" on:click={deleteMcpToken}>
+												❌ {$t('settings.revoke_token') || 'Revoke Token'}
+											</button>
+										</div>
+									</div>
+								{:else}
+									<!-- No token - show create button -->
+									<div class="text-center py-4">
+										<p class="text-base-content/70 mb-4">
+											{$t('settings.no_mcp_token') || 'No API token exists. Create one to connect AI assistants.'}
+										</p>
+										<button class="btn btn-primary" on:click={createMcpToken}>
+											🔗 {$t('settings.create_token') || 'Create API Token'}
+										</button>
+									</div>
+								{/if}
+
+								<div class="mt-4 p-4 bg-info/10 rounded-lg">
+									<p class="text-sm">
+										📖 {$t('settings.mcp_help') || 'Use this token to connect Claude Desktop or Claude Code to AdventureLog.'}
+										<br />
+										<span class="text-base-content/70">
+											{$t('settings.mcp_instructions') || 'Add the MCP endpoint URL and use the token for authentication.'}
+										</span>
+									</p>
+								</div>
 							</div>
 						</div>
 					{/if}
