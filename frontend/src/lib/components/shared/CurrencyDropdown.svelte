@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { tick } from 'svelte';
+	import { tick, onMount } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
+	import { availableCurrencies, fetchExchangeRates, ratesLoaded } from '$lib/stores/exchangeRates';
 	import { t } from 'svelte-i18n';
 
 	type CurrencyOption = { code: string; label?: string };
@@ -9,16 +10,19 @@
 	type Props = {
 		value?: string | null;
 		options?: string[];
+		priorityCurrencies?: string[];
 		placeholder?: string;
 		disabled?: boolean;
 		id?: string;
 	};
 
 	export let value: Props['value'] = null;
-	export let options: string[] = CURRENCY_OPTIONS;
+	export let options: string[] | undefined = undefined; // If provided, use these; otherwise use API
+	export let priorityCurrencies: string[] = []; // Currencies to show first in dropdown
 	export let placeholder = '';
 	export let disabled = false;
 	export let id: string | undefined;
+	export let compact = false;
 
 	const dispatch = createEventDispatcher<{ change: string | null }>();
 
@@ -28,9 +32,26 @@
 	let searchInput: HTMLInputElement | null = null;
 	let normalizedOptions: CurrencyOption[] = [];
 
-	$: normalizedOptions = options.map((code) => ({
+	// Fetch exchange rates on mount to populate currency list
+	onMount(() => {
+		fetchExchangeRates();
+	});
+
+	// Use provided options, or API currencies, or fallback to hardcoded list
+	$: baseOptions = options ?? ($ratesLoaded && $availableCurrencies.length > 0 ? $availableCurrencies : CURRENCY_OPTIONS);
+
+	// Reorder options to put priority currencies first
+	$: effectiveOptions = (() => {
+		if (priorityCurrencies.length === 0) return baseOptions;
+		const prioritySet = new Set(priorityCurrencies);
+		const priority = priorityCurrencies.filter((c) => baseOptions.includes(c));
+		const rest = baseOptions.filter((c) => !prioritySet.has(c));
+		return [...priority, ...rest];
+	})();
+
+	$: normalizedOptions = effectiveOptions.map((code) => ({
 		code,
-		label: $t(`currencies.${code}`) || CURRENCY_LABELS[code]
+		label: $t(`currencies.${code}`) || CURRENCY_LABELS[code] || code
 	}));
 
 	$: filteredOptions = normalizedOptions.filter((option) => {
@@ -89,13 +110,13 @@
 </script>
 
 <div
-	class={`dropdown dropdown-bottom w-full ${open ? 'dropdown-open' : ''}`}
+	class={`dropdown dropdown-bottom ${compact ? 'w-auto' : 'w-full'} ${open ? 'dropdown-open' : ''}`}
 	bind:this={container}
 	on:focusout={handleFocusOut}
 >
 	<button
 		type="button"
-		class="input input-bordered w-full justify-between gap-3 bg-base-100/80 focus:bg-base-100 flex items-center"
+		class="input input-bordered {compact ? 'input-sm w-auto min-w-[80px]' : 'w-full'} justify-between gap-2 bg-base-100/80 focus:bg-base-100 flex items-center"
 		aria-haspopup="listbox"
 		aria-expanded={open}
 		aria-controls={id ? `${id}-listbox` : undefined}
@@ -108,7 +129,7 @@
 			<span class="font-mono text-sm"
 				>{value || $t('currencies.select_currency') || placeholder}</span
 			>
-			{#if value}
+			{#if value && !compact}
 				<span class="text-xs text-base-content/70 truncate"
 					>{$t(`currencies.${value}`) || CURRENCY_LABELS[value]}</span
 				>

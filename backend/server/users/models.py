@@ -31,7 +31,7 @@ class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)  # Override the email field with unique constraint
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
     uuid = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    public_profile = models.BooleanField(default=False)
+    public_profile = models.BooleanField(default=True)
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     default_currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='USD')

@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
-from .models import Country, Region, VisitedRegion, City, VisitedCity
-from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer
+from .models import Country, Region, VisitedRegion, City, VisitedCity, ExchangeRate
+from .serializers import CitySerializer, CountrySerializer, RegionSerializer, VisitedRegionSerializer, VisitedCitySerializer, ExchangeRateSerializer
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -159,3 +159,71 @@ class VisitedCityViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({"error": "Visited city not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+class ExchangeRateViewSet(viewsets.ReadOnlyModelViewSet):
+    """API endpoint for exchange rates (base currency: USD)"""
+    queryset = ExchangeRate.objects.all().order_by('currency_code')
+    serializer_class = ExchangeRateSerializer
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def convert(self, request):
+        """Convert amount between currencies.
+
+        Query params:
+        - amount: Amount to convert (required)
+        - from: Source currency code (required)
+        - to: Target currency code (required)
+        """
+        try:
+            amount = float(request.query_params.get('amount', 0))
+            from_currency = request.query_params.get('from', 'USD').upper()
+            to_currency = request.query_params.get('to', 'USD').upper()
+
+            if from_currency == to_currency:
+                return Response({
+                    'amount': amount,
+                    'from': from_currency,
+                    'to': to_currency,
+                    'converted': amount,
+                    'rate': 1.0
+                })
+
+            # Get rates (USD is base currency with rate 1.0)
+            from_rate = 1.0
+            to_rate = 1.0
+
+            if from_currency != 'USD':
+                try:
+                    from_rate = float(ExchangeRate.objects.get(currency_code=from_currency).rate)
+                except ExchangeRate.DoesNotExist:
+                    return Response({'error': f'Unknown currency: {from_currency}'}, status=400)
+
+            if to_currency != 'USD':
+                try:
+                    to_rate = float(ExchangeRate.objects.get(currency_code=to_currency).rate)
+                except ExchangeRate.DoesNotExist:
+                    return Response({'error': f'Unknown currency: {to_currency}'}, status=400)
+
+            # Convert: amount in FROM -> USD -> TO
+            amount_in_usd = amount / from_rate
+            converted = amount_in_usd * to_rate
+            rate = to_rate / from_rate
+
+            return Response({
+                'amount': amount,
+                'from': from_currency,
+                'to': to_currency,
+                'converted': round(converted, 2),
+                'rate': round(rate, 6)
+            })
+        except ValueError:
+            return Response({'error': 'Invalid amount'}, status=400)
+
+    @action(detail=False, methods=['get'])
+    def all_rates(self, request):
+        """Get all exchange rates as a simple dict."""
+        rates = {er.currency_code: float(er.rate) for er in ExchangeRate.objects.all()}
+        rates['USD'] = 1.0  # Always include USD
+        return Response(rates)

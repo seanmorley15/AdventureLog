@@ -3,26 +3,59 @@ import type { MoneyValue } from './types';
 export const DEFAULT_CURRENCY = 'USD';
 
 export const CURRENCY_METADATA: { code: string; label: string }[] = [
+	// Major currencies
 	{ code: 'USD', label: 'US Dollar' },
 	{ code: 'EUR', label: 'Euro' },
 	{ code: 'GBP', label: 'British Pound' },
 	{ code: 'JPY', label: 'Japanese Yen' },
-	{ code: 'AUD', label: 'Australian Dollar' },
-	{ code: 'CAD', label: 'Canadian Dollar' },
 	{ code: 'CHF', label: 'Swiss Franc' },
+	// Americas
+	{ code: 'CAD', label: 'Canadian Dollar' },
+	{ code: 'MXN', label: 'Mexican Peso' },
+	{ code: 'BRL', label: 'Brazilian Real' },
+	{ code: 'ARS', label: 'Argentine Peso' },
+	{ code: 'CLP', label: 'Chilean Peso' },
+	{ code: 'COP', label: 'Colombian Peso' },
+	{ code: 'PEN', label: 'Peruvian Sol' },
+	// Asia-Pacific
 	{ code: 'CNY', label: 'Chinese Yuan' },
 	{ code: 'HKD', label: 'Hong Kong Dollar' },
 	{ code: 'SGD', label: 'Singapore Dollar' },
+	{ code: 'AUD', label: 'Australian Dollar' },
+	{ code: 'NZD', label: 'New Zealand Dollar' },
+	{ code: 'INR', label: 'Indian Rupee' },
+	{ code: 'KRW', label: 'South Korean Won' },
+	{ code: 'THB', label: 'Thai Baht' },
+	{ code: 'IDR', label: 'Indonesian Rupiah' },
+	{ code: 'MYR', label: 'Malaysian Ringgit' },
+	{ code: 'PHP', label: 'Philippine Peso' },
+	{ code: 'VND', label: 'Vietnamese Dong' },
+	{ code: 'TWD', label: 'Taiwan Dollar' },
+	// Europe
 	{ code: 'SEK', label: 'Swedish Krona' },
 	{ code: 'NOK', label: 'Norwegian Krone' },
 	{ code: 'DKK', label: 'Danish Krone' },
-	{ code: 'NZD', label: 'New Zealand Dollar' },
-	{ code: 'INR', label: 'Indian Rupee' },
-	{ code: 'MXN', label: 'Mexican Peso' },
-	{ code: 'BRL', label: 'Brazilian Real' },
-	{ code: 'ZAR', label: 'South African Rand' },
+	{ code: 'PLN', label: 'Polish Zloty' },
+	{ code: 'CZK', label: 'Czech Koruna' },
+	{ code: 'HUF', label: 'Hungarian Forint' },
+	{ code: 'RON', label: 'Romanian Leu' },
+	{ code: 'ISK', label: 'Icelandic Krona' },
+	{ code: 'TRY', label: 'Turkish Lira' },
+	{ code: 'RUB', label: 'Russian Ruble' },
+	{ code: 'UAH', label: 'Ukrainian Hryvnia' },
+	// Middle East & Africa
 	{ code: 'AED', label: 'UAE Dirham' },
-	{ code: 'TRY', label: 'Turkish Lira' }
+	{ code: 'SAR', label: 'Saudi Riyal' },
+	{ code: 'ILS', label: 'Israeli Shekel' },
+	{ code: 'ZAR', label: 'South African Rand' },
+	{ code: 'EGP', label: 'Egyptian Pound' },
+	{ code: 'MAD', label: 'Moroccan Dirham' },
+	{ code: 'KES', label: 'Kenyan Shilling' },
+	{ code: 'NGN', label: 'Nigerian Naira' },
+	// Others
+	{ code: 'XPF', label: 'CFP Franc' },
+	{ code: 'XOF', label: 'West African CFA' },
+	{ code: 'XAF', label: 'Central African CFA' }
 ];
 
 export const CURRENCY_OPTIONS = CURRENCY_METADATA.map(({ code }) => code);
