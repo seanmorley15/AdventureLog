@@ -3,8 +3,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.db.models import Q
 from django.contrib.postgres.search import SearchVector, SearchQuery
-from adventures.models import Location, Collection
-from adventures.serializers import LocationSerializer, CollectionSerializer
+from adventures.models import Location, Collection, Transportation, Lodging
+from adventures.serializers import LocationSerializer, CollectionSerializer, TransportationSerializer, LodgingSerializer
 from worldtravel.models import Country, Region, City, VisitedCity, VisitedRegion
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer, VisitedCitySerializer, VisitedRegionSerializer
 from users.models import CustomUser as User
@@ -22,6 +22,8 @@ class GlobalSearchView(viewsets.ViewSet):
         results = {
             "locations": [],
             "collections": [],
+            "transportations": [],
+            "lodging": [],
             "users": [],
             "countries": [],
             "regions": [],
@@ -41,6 +43,18 @@ class GlobalSearchView(viewsets.ViewSet):
             Q(name__icontains=search_term) & Q(user=request.user)
         )
         results["collections"] = CollectionSerializer(collections, many=True).data
+
+        # Transportations: Full-Text Search on name, description, from/to locations
+        transportations = Transportation.objects.annotate(
+            search=SearchVector('name', 'description', 'from_location', 'to_location', 'flight_number')
+        ).filter(search=SearchQuery(search_term), user=request.user)
+        results["transportations"] = TransportationSerializer(transportations, many=True, context={'request': request}).data
+
+        # Lodging: Full-Text Search on name, description, location
+        lodging = Lodging.objects.annotate(
+            search=SearchVector('name', 'description', 'location', 'reservation_number')
+        ).filter(search=SearchQuery(search_term), user=request.user)
+        results["lodging"] = LodgingSerializer(lodging, many=True, context={'request': request}).data
 
         # Users: Public Profiles Only
         users = User.objects.filter(

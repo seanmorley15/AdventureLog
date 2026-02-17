@@ -93,6 +93,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'adventures.middleware.AuditUserMiddleware',
 )
 
 # ---------------------------------------------------------------------------
@@ -273,6 +274,9 @@ SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
+# Collaborative mode: when enabled, public content is visible and editable by all authenticated users
+COLLABORATIVE_MODE = getenv('COLLABORATIVE_MODE', 'false').lower() == 'true'
+
 if getenv('EMAIL_BACKEND', 'console') == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
@@ -370,3 +374,4 @@ COUNTRY_REGION_JSON_VERSION = 'v3.0'
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
 STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
 STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')
+

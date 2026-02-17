@@ -116,135 +116,8 @@ function getLocalDateString(date: Date): string {
 	return `${year}-${month}-${day}`;
 }
 
-export function groupTransportationsByDate(
-	transportations: Transportation[],
-	startDate: Date,
-	numberOfDays: number
-): Record<string, Transportation[]> {
-	const groupedTransportations: Record<string, Transportation[]> = {};
-
-	// Initialize days
-	for (let i = 0; i < numberOfDays; i++) {
-		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
-		groupedTransportations[dateString] = [];
-	}
-
-	transportations.forEach((transportation) => {
-		if (transportation.date) {
-			// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
-			const startHasZeros = transportation.date.includes('T00:00:00');
-			const endHasZeros = transportation.end_date
-				? transportation.end_date.includes('T00:00:00')
-				: true;
-			const isTranspoAllDay = startHasZeros && endHasZeros;
-
-			let startDT: DateTime;
-			let endDT: DateTime;
-
-			if (isTranspoAllDay) {
-				// For all-day events, extract just the date part and ignore timezone
-				const dateOnly = transportation.date.split('T')[0]; // Get 'YYYY-MM-DD'
-				startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
-
-				endDT = transportation.end_date
-					? DateTime.fromISO(transportation.end_date.split('T')[0])
-					: startDT;
-			} else {
-				// For timed events, use timezone conversion
-				startDT = DateTime.fromISO(transportation.date, {
-					zone: transportation.start_timezone ?? 'UTC'
-				});
-
-				endDT = transportation.end_date
-					? DateTime.fromISO(transportation.end_date, {
-							zone: transportation.end_timezone ?? transportation.start_timezone ?? 'UTC'
-						})
-					: startDT;
-			}
-
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
-
-			// Loop through all days in range
-			for (let i = 0; i < numberOfDays; i++) {
-				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
-
-				if (currentDateStr >= startDateStr && currentDateStr <= endDateStr) {
-					groupedTransportations[currentDateStr]?.push(transportation);
-				}
-			}
-		}
-	});
-
-	return groupedTransportations;
-}
-export function groupLodgingByDate(
-	lodging: Lodging[],
-	startDate: Date,
-	numberOfDays: number
-): Record<string, Lodging[]> {
-	const groupedLodging: Record<string, Lodging[]> = {};
-
-	// Initialize days (excluding last day for lodging)
-	// If trip is 7/1 to 7/4 (4 days), show lodging only on 7/1, 7/2, 7/3
-	const lodgingDays = numberOfDays - 1;
-
-	for (let i = 0; i < lodgingDays; i++) {
-		const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-		const dateString = currentDate.toISODate(); // 'YYYY-MM-DD'
-		groupedLodging[dateString] = [];
-	}
-
-	lodging.forEach((hotel) => {
-		if (hotel.check_in) {
-			// Check if it's all-day: start has 00:00:00 AND (no end OR end also has 00:00:00)
-			const startHasZeros = hotel.check_in.includes('T00:00:00');
-			const endHasZeros = hotel.check_out ? hotel.check_out.includes('T00:00:00') : true;
-			const isAllDay = startHasZeros && endHasZeros;
-
-			let startDT: DateTime;
-			let endDT: DateTime;
-
-			if (isAllDay) {
-				// For all-day events, extract just the date part and ignore timezone
-				const dateOnly = hotel.check_in.split('T')[0]; // Get 'YYYY-MM-DD'
-				startDT = DateTime.fromISO(dateOnly); // This creates a date without time/timezone
-
-				endDT = hotel.check_out ? DateTime.fromISO(hotel.check_out.split('T')[0]) : startDT;
-			} else {
-				// For timed events, use timezone conversion
-				startDT = DateTime.fromISO(hotel.check_in, {
-					zone: hotel.timezone ?? 'UTC'
-				});
-
-				endDT = hotel.check_out
-					? DateTime.fromISO(hotel.check_out, {
-							zone: hotel.timezone ?? 'UTC'
-						})
-					: startDT;
-			}
-
-			const startDateStr = startDT.toISODate();
-			const endDateStr = endDT.toISODate();
-
-			// Loop through lodging days only (excluding last day)
-			for (let i = 0; i < lodgingDays; i++) {
-				const currentDate = DateTime.fromJSDate(startDate).plus({ days: i });
-				const currentDateStr = currentDate.toISODate();
-
-				// Show lodging on days where check-in occurs through the day before check-out
-				// For lodging, we typically want to show it on the nights you're staying
-				if (currentDateStr >= startDateStr && currentDateStr < endDateStr) {
-					groupedLodging[currentDateStr]?.push(hotel);
-				}
-			}
-		}
-	});
-
-	return groupedLodging;
-}
+// NOTE: groupTransportationsByDate and groupLodgingByDate were removed
+// Transportation and Lodging now use Visit dates instead of their own date fields
 
 export function groupNotesByDate(
 	notes: Note[],
@@ -403,6 +276,8 @@ export let TRANSPORTATION_TYPES_ICONS = {
 	boat: '⛵',
 	bike: '🚲',
 	walking: '🚶',
+	cab: '🚕',
+	vtc: '🚙',
 	other: '❓'
 };
 
@@ -1119,28 +994,4 @@ export function getActivityColor(activityType: string) {
 export function getActivityIcon(activityType: string) {
 	const activity = SPORT_TYPE_CHOICES.find((a) => a.key === activityType);
 	return activity ? activity.icon : '🏅'; // Default medal if not found
-}
-
-/**
- * Copy text to clipboard with fallback for non-HTTPS contexts.
- * navigator.clipboard.writeText() requires a secure context (HTTPS or localhost).
- * On plain HTTP (e.g. LAN IP), we fall back to the legacy execCommand approach.
- */
-export async function copyToClipboard(text: string): Promise<void> {
-	if (navigator.clipboard && window.isSecureContext) {
-		await navigator.clipboard.writeText(text);
-	} else {
-		// Fallback for non-secure contexts (HTTP on LAN, etc.)
-		const textarea = document.createElement('textarea');
-		textarea.value = text;
-		textarea.style.position = 'fixed';
-		textarea.style.left = '-9999px';
-		textarea.style.top = '-9999px';
-		document.body.appendChild(textarea);
-		textarea.focus();
-		textarea.select();
-		const ok = document.execCommand('copy');
-		document.body.removeChild(textarea);
-		if (!ok) throw new Error('execCommand copy failed');
-	}
 }

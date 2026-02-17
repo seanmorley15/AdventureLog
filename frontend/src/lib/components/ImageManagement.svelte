@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { ContentImage } from '$lib/types';
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { t, locale } from 'svelte-i18n';
+	import { t } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
 
 	// Icons
@@ -22,6 +22,13 @@
 	export let defaultSearchTerm: string = '';
 	export let immichIntegration: boolean = false;
 	export let copyImmichLocally: boolean = false;
+	export let collaborativeMode: boolean = false;
+
+	// In collaborative mode, only show delete button for images the user owns
+	function canDeleteImage(image: ContentImage): boolean {
+		if (!collaborativeMode) return true; // Non-collab: anyone with access can delete
+		return image.is_owner === true; // Collab: only owner can delete
+	}
 
 	// Component state
 	let fileInput: HTMLInputElement;
@@ -65,12 +72,6 @@
 
 	// API calls
 	async function uploadImageToServer(file: File) {
-		if (!objectId) {
-			console.error('Cannot upload image: objectId is not set');
-			addToast('error', 'Cannot upload image: location must be saved first');
-			return null;
-		}
-
 		const formData = new FormData();
 		formData.append('image', file);
 		formData.append('object_id', objectId);
@@ -84,18 +85,7 @@
 			});
 
 			if (res.ok) {
-				const newData = deserialize(await res.text()) as { data: { id: string; image: string; error?: string } };
-				// Check if the server action returned an error
-				if (newData.data && newData.data.error) {
-					console.error('Image upload server error:', newData.data.error);
-					addToast('error', String(newData.data.error));
-					return null;
-				}
-				if (!newData.data || !newData.data.id || !newData.data.image) {
-					console.error('Image upload returned incomplete data:', newData.data);
-					addToast('error', 'Image upload failed - incomplete response');
-					return null;
-				}
+				const newData = deserialize(await res.text()) as { data: { id: string; image: string } };
 				return createImageFromData(newData.data);
 			} else {
 				throw new Error('Upload failed');
@@ -150,24 +140,8 @@
 
 	async function fetchImageFromUrl(imageUrl: string): Promise<Blob | null> {
 		try {
-			// Use backend proxy to avoid CORS issues with external URLs (Wikipedia, etc.)
-			const res = await fetch('/api/images/fetch_from_url/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({ url: imageUrl })
-			});
-			if (!res.ok) {
-				let errorMsg = 'Failed to fetch image';
-				try {
-					const errorData = await res.json();
-					errorMsg = errorData.error || errorMsg;
-				} catch {
-					// Response wasn't JSON (e.g. timeout), use default message
-				}
-				throw new Error(errorMsg);
-			}
+			const res = await fetch(imageUrl);
+			if (!res.ok) throw new Error('Failed to fetch image');
 			return await res.blob();
 		} catch (error) {
 			console.error('Fetch error:', error);
@@ -238,7 +212,7 @@
 		wikiImageError = '';
 
 		try {
-			const res = await fetch(`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`);
+			const res = await fetch(`/api/generate/img/?name=${encodeURIComponent(imageSearch)}`);
 			const data = await res.json();
 
 			if (!res.ok || !data.images || data.images.length === 0) {
@@ -544,15 +518,17 @@
 								</button>
 							{/if}
 
-							<button
-								type="button"
-								class="btn btn-error btn-sm tooltip tooltip-top"
-								data-tip="Remove Image"
-								on:click={() => image.id && removeImage(image.id)}
-								disabled={!image.id}
-							>
-								<TrashIcon class="h-4 w-4" />
-							</button>
+							{#if canDeleteImage(image)}
+								<button
+									type="button"
+									class="btn btn-error btn-sm tooltip tooltip-top"
+									data-tip="Remove Image"
+									on:click={() => image.id && removeImage(image.id)}
+									disabled={!image.id}
+								>
+									<TrashIcon class="h-4 w-4" />
+								</button>
+							{/if}
 						</div>
 
 						<!-- Primary Badge -->

@@ -2,83 +2,93 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db.models import Q
-from adventures.models import Lodging
-from adventures.serializers import LodgingSerializer
-from rest_framework.exceptions import PermissionDenied
+from django.conf import settings
+from adventures.models import Lodging, LODGING_TYPES
+from adventures.serializers import LodgingSerializer, LodgingMapPinSerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from rest_framework.permissions import IsAuthenticated
+from adventures.utils import pagination
+from adventures.utils.filtering import FilteringMixin
+from adventures.utils.viewset_mixins import ViewsetUtilsMixin
+from adventures.utils.history_mixin import HistoryRevertMixin
+from adventures.utils.collaborative_mixin import (
+    CollaborativeQuerySetMixin, EntityCRUDMixin, SunTimesMixin, TypeFilteredMixin
+)
 
-class LodgingViewSet(viewsets.ModelViewSet):
+class LodgingViewSet(
+    HistoryRevertMixin,
+    CollaborativeQuerySetMixin,
+    EntityCRUDMixin,
+    SunTimesMixin,
+    TypeFilteredMixin,
+    FilteringMixin,
+    ViewsetUtilsMixin,
+    viewsets.ModelViewSet
+):
+    """
+    ViewSet for managing Lodging objects.
+
+    Inherits filtering and sorting from mixins:
+    - FilteringMixin: _apply_visit_filtering, _apply_public_filtering,
+                      _apply_ownership_filtering, _apply_rating_filtering
+    - ViewsetUtilsMixin: apply_sorting, paginate_and_respond
+    - HistoryRevertMixin: history, revert
+    - CollaborativeQuerySetMixin: get_queryset, list
+    - EntityCRUDMixin: partial_update, perform_create, perform_update
+    - SunTimesMixin: additional_info, _get_sun_times
+    - TypeFilteredMixin: filtered
+    """
     queryset = Lodging.objects.all()
     serializer_class = LodgingSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
+    pagination_class = pagination.StandardResultsSetPagination
 
-    def list(self, request, *args, **kwargs):
+    # Override valid_order_fields from SortingMixin
+    valid_order_fields = ['name', 'last_visit', 'rating', 'updated_at', 'created_at']
+
+    # SunTimesMixin config (uses standard latitude/longitude)
+    lat_field = 'latitude'
+    lng_field = 'longitude'
+
+    # TypeFilteredMixin config
+    type_choices = LODGING_TYPES
+    entity_type_label = 'lodging'
+
+    # ==================== SORTING ====================
+
+    def apply_sorting(self, queryset):
+        """
+        Apply sorting and collection filtering to queryset.
+        Extends SortingMixin.apply_sorting with include_collections filter.
+        """
+        queryset = super().apply_sorting(queryset)
+
+        include_collections = self.request.query_params.get('include_collections', 'true')
+        if include_collections == 'false':
+            queryset = queryset.filter(collections__isnull=True)
+
+        return queryset
+
+    # ==================== CUSTOM ACTIONS ====================
+
+    @action(detail=False, methods=['get'], url_path='pins')
+    def pins(self, request):
+        """Get all lodging with coordinates for map display."""
         if not request.user.is_authenticated:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        queryset = Lodging.objects.filter(
-            Q(user=request.user.id)
-        )
-        serializer = self.get_serializer(queryset, many=True)
+            return Response({"error": "User is not authenticated"}, status=400)
+
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
+        if is_collaborative:
+            base_filter = Q(user=request.user) | Q(is_public=True) | Q(collections__shared_with=request.user)
+        else:
+            base_filter = Q(user=request.user) | Q(collections__shared_with=request.user)
+
+        # Only get lodging with coordinates
+        lodgings = Lodging.objects.filter(
+            base_filter,
+            latitude__isnull=False,
+            longitude__isnull=False
+        ).distinct()
+
+        serializer = LodgingMapPinSerializer(lodgings, many=True, context={'request': request})
         return Response(serializer.data)
-
-    def get_queryset(self):
-        user = self.request.user
-        if self.action == 'retrieve':
-            # For individual adventure retrieval, include public locations, user's own locations and shared locations
-            return Lodging.objects.filter(
-                Q(is_public=True) | Q(user=user.id) | Q(collection__shared_with=user.id)
-            ).distinct().order_by('-updated_at')
-        # For other actions, include user's own locations and shared locations
-        return Lodging.objects.filter(
-            Q(user=user.id) | Q(collection__shared_with=user.id)
-        ).distinct().order_by('-updated_at')
-
-    def partial_update(self, request, *args, **kwargs):
-        # Retrieve the current object
-        instance = self.get_object()
-        user = request.user
-
-        # Partially update the instance with the request data
-        serializer = self.get_serializer(instance, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-
-        # Retrieve the collection from the validated data
-        new_collection = serializer.validated_data.get('collection')
-
-        if new_collection is not None and new_collection != instance.collection:
-            # Check if the user is the owner of the new collection
-            if new_collection.user != user or instance.user != user:
-                raise PermissionDenied("You do not have permission to use this collection.")
-        elif new_collection is None:
-            # Handle the case where the user is trying to set the collection to None
-            if instance.collection is not None and instance.collection.user != user:
-                raise PermissionDenied("You cannot remove the collection as you are not the owner.")
-        
-        # Perform the update
-        self.perform_update(serializer)
-        
-        # Return the updated instance
-        return Response(serializer.data)
-
-    def perform_update(self, serializer):
-        serializer.save()
-    
-    # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
-    def perform_create(self, serializer):
-        # Retrieve the collection from the validated data
-        collection = serializer.validated_data.get('collection')
-
-        # Check if a collection is provided
-        if collection:
-            user = self.request.user
-            # Check if the user is the owner or is in the shared_with list
-            if collection.user != user and not collection.shared_with.filter(id=user.id).exists():
-                # Return an error response if the user does not have permission
-                raise PermissionDenied("You do not have permission to use this collection.")
-            # if collection the owner of the adventure is the owner of the collection
-            serializer.save(user=collection.user)
-            return
-
-        # Save the adventure with the current user as the owner
-        serializer.save(user=self.request.user)

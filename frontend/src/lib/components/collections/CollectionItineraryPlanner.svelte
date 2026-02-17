@@ -30,8 +30,13 @@
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
 	import ItineraryLinkModal from '$lib/components/collections/ItineraryLinkModal.svelte';
 	import ItineraryDayPickModal from '$lib/components/collections/ItineraryDayPickModal.svelte';
+	import LocationLink from '$lib/components/LocationLink.svelte';
+	import TransportationLink from '$lib/components/TransportationLink.svelte';
+	import LodgingLink from '$lib/components/LodgingLink.svelte';
 	import Car from '~icons/mdi/car';
 	import LocationMarker from '~icons/mdi/map-marker';
+	import TrashCan from '~icons/mdi/trash-can';
+	import AlertCircle from '~icons/mdi/alert-circle';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
 	import Globe from '~icons/mdi/globe';
@@ -128,37 +133,71 @@
 		days = groupItemsByDay(collection);
 	}
 
+	// Broken item removal state
+	let brokenItemToRemove: ResolvedItineraryItem | null = null;
+	let showBrokenItemConfirmModal = false;
+	let isRemovingBrokenItem = false;
+
+	function promptRemoveBrokenItem(item: ResolvedItineraryItem) {
+		brokenItemToRemove = item;
+		showBrokenItemConfirmModal = true;
+	}
+
+	function cancelRemoveBrokenItem() {
+		brokenItemToRemove = null;
+		showBrokenItemConfirmModal = false;
+	}
+
+	async function confirmRemoveBrokenItem() {
+		if (!brokenItemToRemove) return;
+
+		isRemovingBrokenItem = true;
+
+		try {
+			const response = await fetch(`/api/itineraries/${brokenItemToRemove.id}/`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to remove broken item');
+			}
+
+			// Update local state
+			collection.itinerary = collection.itinerary?.filter((it) => it.id !== brokenItemToRemove!.id);
+			days = groupItemsByDay(collection);
+			globalItems = (collection.itinerary || [])
+				.filter((it) => it.is_global)
+				.map((it) => resolveItineraryItem(it, collection))
+				.sort((a, b) => a.order - b.order);
+
+			addToast('success', $t('itinerary.broken_item_removed'));
+		} catch (error) {
+			console.error('Error removing broken item:', error);
+			addToast('error', $t('itinerary.broken_item_remove_error'));
+		} finally {
+			isRemovingBrokenItem = false;
+			brokenItemToRemove = null;
+			showBrokenItemConfirmModal = false;
+		}
+	}
+
+	// Helper to get a human-readable type name for broken items
+	function getBrokenItemTypeName(objectType: string): string {
+		const typeMap: Record<string, string> = {
+			location: $t('navbar.locations'),
+			transportation: $t('navbar.transportations'),
+			lodging: $t('navbar.lodging'),
+			note: $t('adventures.note'),
+			checklist: $t('adventures.checklist')
+		};
+		return typeMap[objectType] || objectType;
+	}
+
 	let locationToEdit: Location | null = null;
 	let isLocationModalOpen: boolean = false;
 	function handleEditLocation(event: CustomEvent<Location>) {
 		locationToEdit = event.detail;
 		isLocationModalOpen = true;
-	}
-
-	function handleDuplicateLocation(event: CustomEvent<Location>) {
-		const duplicated = event.detail;
-		if (!duplicated || !duplicated.id) return;
-
-		const collectionId = collection?.id ? String(collection.id) : null;
-		if (collectionId) {
-			const existingCollections = Array.isArray((duplicated as any).collections)
-				? (duplicated as any).collections.map((id: string) => String(id))
-				: [];
-			if (!existingCollections.includes(collectionId)) {
-				(duplicated as any).collections = [...existingCollections, collectionId];
-			}
-		}
-
-		collection = {
-			...collection,
-			locations: [
-				duplicated,
-				...(collection.locations || []).filter((loc) => String(loc.id) !== String(duplicated.id))
-			]
-		};
-
-		days = groupItemsByDay(collection);
-		unscheduledItems = getUnscheduledItems(collection);
 	}
 
 	let lodgingToEdit: Lodging | null = null;
@@ -371,6 +410,13 @@
 	let isNoteModalOpen = false;
 	let isChecklistModalOpen = false;
 	let isItineraryLinkModalOpen = false;
+
+	// Import modals for linking items from outside the collection
+	let isLocationImportModalOpen = false;
+	let isTransportationImportModalOpen = false;
+	let isLodgingImportModalOpen = false;
+	// Target date for imported items (set when opening import modal from a day)
+	let importTargetDate: string | null = null;
 
 	let noteToEdit: Note | null = null;
 	let checklistToEdit: Checklist | null = null;
@@ -1508,6 +1554,108 @@
 			console.error('Error saving day metadata:', err);
 		}
 	}
+
+	// Handler for imported location (from LocationLink modal)
+	async function handleLocationImported(event: CustomEvent<Location>) {
+		const location = event.detail;
+
+		// Link the location to this collection on the backend
+		try {
+			const existingCollections = location.collections?.map((c: any) => c.id || c) || [];
+			if (!existingCollections.includes(collection.id)) {
+				const res = await fetch(`/api/locations/${location.id}/`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ collections: [...existingCollections, collection.id] })
+				});
+				if (!res.ok) {
+					console.error('Failed to link location to collection');
+				}
+			}
+		} catch (e) {
+			console.error('Error linking location to collection:', e);
+		}
+
+		// Add to collection.locations if not already present
+		if (!collection.locations) collection.locations = [];
+		const exists = collection.locations.some((l) => String(l.id) === String(location.id));
+		if (!exists) {
+			collection.locations = [...collection.locations, location];
+		}
+		// If we have a target date, add to itinerary
+		if (importTargetDate) {
+			await addItineraryItemForObject('location', location.id, importTargetDate, false);
+		}
+		addToast('success', $t('adventures.collection_link_location_success') || 'Location added successfully');
+	}
+
+	// Handler for imported transportation (from TransportationLink modal)
+	async function handleTransportationImported(event: CustomEvent<Transportation>) {
+		const transportation = event.detail;
+
+		// Link the transportation to this collection on the backend
+		try {
+			const existingCollections = transportation.collections?.map((c: any) => c.id || c) || [];
+			if (!existingCollections.includes(collection.id)) {
+				const res = await fetch(`/api/transportations/${transportation.id}/`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ collections: [...existingCollections, collection.id] })
+				});
+				if (!res.ok) {
+					console.error('Failed to link transportation to collection');
+				}
+			}
+		} catch (e) {
+			console.error('Error linking transportation to collection:', e);
+		}
+
+		// Add to collection.transportations if not already present
+		if (!collection.transportations) collection.transportations = [];
+		const exists = collection.transportations.some((t) => String(t.id) === String(transportation.id));
+		if (!exists) {
+			collection.transportations = [...collection.transportations, transportation];
+		}
+		// If we have a target date, add to itinerary
+		if (importTargetDate) {
+			await addItineraryItemForObject('transportation', transportation.id, importTargetDate, false);
+		}
+		addToast('success', $t('transportation.linked_success') || 'Transportation linked successfully');
+	}
+
+	// Handler for imported lodging (from LodgingLink modal)
+	async function handleLodgingImported(event: CustomEvent<Lodging>) {
+		const lodging = event.detail;
+
+		// Link the lodging to this collection on the backend
+		try {
+			const existingCollections = lodging.collections?.map((c: any) => c.id || c) || [];
+			if (!existingCollections.includes(collection.id)) {
+				const res = await fetch(`/api/lodging/${lodging.id}/`, {
+					method: 'PATCH',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({ collections: [...existingCollections, collection.id] })
+				});
+				if (!res.ok) {
+					console.error('Failed to link lodging to collection');
+				}
+			}
+		} catch (e) {
+			console.error('Error linking lodging to collection:', e);
+		}
+
+		// Add to collection.lodging if not already present
+		if (!collection.lodging) collection.lodging = [];
+		const exists = collection.lodging.some((l) => String(l.id) === String(lodging.id));
+		if (!exists) {
+			collection.lodging = [...collection.lodging, lodging];
+		}
+		// If we have a target date, add to itinerary
+		if (importTargetDate) {
+			await addItineraryItemForObject('lodging', lodging.id, importTargetDate, false);
+		}
+		addToast('success', $t('lodging.linked_success') || 'Lodging linked successfully');
+	}
 </script>
 
 {#if isLocationModalOpen}
@@ -1607,6 +1755,42 @@
 			const { type, itemId, updateDate } = e.detail;
 			addItineraryItemForObject(type, itemId, linkModalTargetDate, updateDate);
 		}}
+	/>
+{/if}
+
+{#if isLocationImportModalOpen && collection}
+	<LocationLink
+		{user}
+		collectionId={collection.id}
+		on:close={() => {
+			isLocationImportModalOpen = false;
+			importTargetDate = null;
+		}}
+		on:add={handleLocationImported}
+	/>
+{/if}
+
+{#if isTransportationImportModalOpen && collection}
+	<TransportationLink
+		{user}
+		collectionId={collection.id}
+		on:close={() => {
+			isTransportationImportModalOpen = false;
+			importTargetDate = null;
+		}}
+		on:add={handleTransportationImported}
+	/>
+{/if}
+
+{#if isLodgingImportModalOpen && collection}
+	<LodgingLink
+		{user}
+		collectionId={collection.id}
+		on:close={() => {
+			isLodgingImportModalOpen = false;
+			importTargetDate = null;
+		}}
+		on:add={handleLodgingImported}
 	/>
 {/if}
 
@@ -1757,7 +1941,6 @@
 												adventure={resolvedObj}
 												on:edit={handleEditLocation}
 												on:delete={handleItemDelete}
-												on:duplicate={handleDuplicateLocation}
 												itineraryItem={item}
 												on:removeFromItinerary={handleRemoveItineraryItem}
 												on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
@@ -1770,6 +1953,7 @@
 												transportation={resolvedObj}
 												{user}
 												{collection}
+												compact={true}
 												on:delete={handleItemDelete}
 												itineraryItem={item}
 												on:removeFromItinerary={handleRemoveItineraryItem}
@@ -1781,6 +1965,7 @@
 												lodging={resolvedObj}
 												{user}
 												{collection}
+												compact={true}
 												itineraryItem={item}
 												on:delete={handleItemDelete}
 												on:removeFromItinerary={handleRemoveItineraryItem}
@@ -1811,8 +1996,33 @@
 											/>
 										{/if}
 									{:else}
-										<div class="alert alert-warning">
-											<span>⚠️ {$t('itinerary.item_not_found')} (ID: {item.object_id})</span>
+										<!-- Broken/missing item card -->
+										<div class="card bg-warning/10 border border-warning/30 shadow-sm h-full">
+											<div class="card-body p-4 flex flex-col justify-between h-full">
+												<div class="flex items-start gap-3">
+													<div class="flex-shrink-0">
+														<AlertCircle class="w-6 h-6 text-warning" />
+													</div>
+													<div class="flex-1 min-w-0">
+														<h3 class="font-semibold text-warning-content">{$t('itinerary.broken_item')}</h3>
+														<p class="text-sm opacity-70 mt-1">
+															{$t('itinerary.broken_item_desc', { values: { type: getBrokenItemTypeName(objectType) } })}
+														</p>
+														<p class="text-xs opacity-50 mt-2 font-mono truncate">ID: {item.object_id}</p>
+													</div>
+												</div>
+												{#if canModify}
+													<div class="mt-4">
+														<button
+															class="btn btn-warning btn-sm w-full gap-2"
+															on:click={() => promptRemoveBrokenItem(item)}
+														>
+															<TrashCan class="w-4 h-4" />
+															{$t('itinerary.remove_broken_item')}
+														</button>
+													</div>
+												{/if}
+											</div>
 										</div>
 									{/if}
 								</div>
@@ -1982,6 +2192,46 @@
 												}}
 											>
 												{$t('itinerary.link_existing_item')}
+											</button>
+										</li>
+										<li class="menu-title">{$t('adventures.import_existing')}</li>
+										<li>
+											<button
+												type="button"
+												role="menuitem"
+												class="w-full text-left"
+												on:click={() => {
+													importTargetDate = day.date;
+													isLocationImportModalOpen = true;
+												}}
+											>
+												{$t('locations.location')}
+											</button>
+										</li>
+										<li>
+											<button
+												type="button"
+												role="menuitem"
+												class="w-full text-left"
+												on:click={() => {
+													importTargetDate = day.date;
+													isTransportationImportModalOpen = true;
+												}}
+											>
+												{$t('adventures.transportation')}
+											</button>
+										</li>
+										<li>
+											<button
+												type="button"
+												role="menuitem"
+												class="w-full text-left"
+												on:click={() => {
+													importTargetDate = day.date;
+													isLodgingImportModalOpen = true;
+												}}
+											>
+												{$t('adventures.lodging')}
 											</button>
 										</li>
 										<li class="menu-title">{$t('adventures.create_new')}</li>
@@ -2168,7 +2418,6 @@
 														adventure={resolvedObj}
 														on:edit={handleEditLocation}
 														on:delete={handleItemDelete}
-														on:duplicate={handleDuplicateLocation}
 														itineraryItem={item}
 														on:removeFromItinerary={handleRemoveItineraryItem}
 														on:moveToGlobal={(e) => moveItemToGlobal(e.detail.type, e.detail.id)}
@@ -2188,6 +2437,7 @@
 														transportation={resolvedObj}
 														{user}
 														{collection}
+														compact={true}
 														on:delete={handleItemDelete}
 														itineraryItem={item}
 														on:removeFromItinerary={handleRemoveItineraryItem}
@@ -2206,6 +2456,7 @@
 														lodging={resolvedObj}
 														{user}
 														{collection}
+														compact={true}
 														itineraryItem={item}
 														on:delete={handleItemDelete}
 														on:removeFromItinerary={handleRemoveItineraryItem}
@@ -2260,9 +2511,33 @@
 												{/if}
 											</div>
 										{:else}
-											<!-- Fallback for unresolved items -->
-											<div class="alert alert-warning">
-												<span>⚠️ {$t('itinerary.item_not_found')} (ID: {item.object_id})</span>
+											<!-- Broken/missing item card -->
+											<div class="card bg-warning/10 border border-warning/30 shadow-sm h-full">
+												<div class="card-body p-4 flex flex-col justify-between h-full">
+													<div class="flex items-start gap-3">
+														<div class="flex-shrink-0">
+															<AlertCircle class="w-6 h-6 text-warning" />
+														</div>
+														<div class="flex-1 min-w-0">
+															<h3 class="font-semibold text-warning-content">{$t('itinerary.broken_item')}</h3>
+															<p class="text-sm opacity-70 mt-1">
+																{$t('itinerary.broken_item_desc', { values: { type: getBrokenItemTypeName(objectType) } })}
+															</p>
+															<p class="text-xs opacity-50 mt-2 font-mono truncate">ID: {item.object_id}</p>
+														</div>
+													</div>
+													{#if canModify}
+														<div class="mt-4">
+															<button
+																class="btn btn-warning btn-sm w-full gap-2"
+																on:click={() => promptRemoveBrokenItem(item)}
+															>
+																<TrashCan class="w-4 h-4" />
+																{$t('itinerary.remove_broken_item')}
+															</button>
+														</div>
+													{/if}
+												</div>
 											</div>
 										{/if}
 									</div>
@@ -2478,7 +2753,6 @@
 										adventure={item}
 										on:edit={handleEditLocation}
 										on:delete={handleItemDelete}
-										on:duplicate={handleDuplicateLocation}
 										{user}
 										{collection}
 										compact={true}
@@ -2488,6 +2762,7 @@
 										transportation={item}
 										{user}
 										{collection}
+										compact={true}
 										on:delete={handleItemDelete}
 										on:edit={handleEditTransportation}
 									/>
@@ -2496,6 +2771,7 @@
 										lodging={item}
 										{user}
 										{collection}
+										compact={true}
 										on:delete={handleItemDelete}
 										on:edit={handleEditLodging}
 									/>
@@ -2522,5 +2798,42 @@
 				</div>
 			</div>
 		{/if}
+	</div>
+{/if}
+
+<!-- Broken Item Removal Confirmation Modal -->
+{#if showBrokenItemConfirmModal}
+	<div class="modal modal-open">
+		<div class="modal-box">
+			<h3 class="font-bold text-lg flex items-center gap-2">
+				<AlertCircle class="w-5 h-5 text-warning" />
+				{$t('itinerary.remove_broken_item')}
+			</h3>
+			<p class="py-4">{$t('itinerary.remove_broken_item_confirm')}</p>
+			{#if brokenItemToRemove}
+				<div class="bg-base-200 rounded-lg p-3 text-sm">
+					<p><strong>{$t('adventures.type')}:</strong> {getBrokenItemTypeName(brokenItemToRemove.item?.type || '')}</p>
+					<p class="font-mono text-xs mt-1 opacity-60">ID: {brokenItemToRemove.object_id}</p>
+				</div>
+			{/if}
+			<div class="modal-action">
+				<button class="btn" on:click={cancelRemoveBrokenItem} disabled={isRemovingBrokenItem}>
+					{$t('about.close')}
+				</button>
+				<button
+					class="btn btn-warning"
+					on:click={confirmRemoveBrokenItem}
+					disabled={isRemovingBrokenItem}
+				>
+					{#if isRemovingBrokenItem}
+						<span class="loading loading-spinner loading-sm"></span>
+					{:else}
+						<TrashCan class="w-4 h-4" />
+					{/if}
+					{$t('adventures.delete')}
+				</button>
+			</div>
+		</div>
+		<div class="modal-backdrop" on:click={cancelRemoveBrokenItem}></div>
 	</div>
 {/if}

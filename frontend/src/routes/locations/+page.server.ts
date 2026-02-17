@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const COLLABORATIVE_MODE = process.env['COLLABORATIVE_MODE'] === 'true';
 import type { Location } from '$lib/types';
 
 import type { Actions } from '@sveltejs/kit';
@@ -27,9 +28,12 @@ export const load = (async (event) => {
 		const order_direction = event.url.searchParams.get('order_direction') || 'asc';
 		const page = event.url.searchParams.get('page') || '1';
 		const is_visited = event.url.searchParams.get('is_visited') || 'all';
+		const is_public = event.url.searchParams.get('is_public') || 'all';
+		const ownership = event.url.searchParams.get('ownership') || 'all';
+		const min_rating = event.url.searchParams.get('min_rating') || 'all';
 
 		let initialFetch = await event.fetch(
-			`${serverEndpoint}/api/locations/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}`,
+			`${serverEndpoint}/api/locations/filtered?types=${typeString}&order_by=${order_by}&order_direction=${order_direction}&include_collections=${include_collections}&page=${page}&is_visited=${is_visited}&is_public=${is_public}&ownership=${ownership}&min_rating=${min_rating}`,
 			{
 				headers: {
 					Cookie: `sessionid=${event.cookies.get('sessionid')}`
@@ -40,9 +44,21 @@ export const load = (async (event) => {
 
 		if (!initialFetch.ok) {
 			let error_message = await initialFetch.json();
-			console.error(error_message);
-			console.error('Failed to fetch visited adventures');
-			return redirect(302, '/login');
+			console.error('Locations fetch error:', error_message);
+			console.error('Status:', initialFetch.status);
+			// Only redirect to login on 401/403, not on other errors
+			if (initialFetch.status === 401 || initialFetch.status === 403) {
+				return redirect(302, '/login');
+			}
+			// For other errors, return empty list
+			return {
+				props: {
+					adventures: [],
+					count: 0
+				},
+				collaborativeMode: COLLABORATIVE_MODE,
+				error: error_message
+			};
 		} else {
 			let res = await initialFetch.json();
 			let visited = res.results as Location[];
@@ -55,7 +71,8 @@ export const load = (async (event) => {
 			props: {
 				adventures,
 				count
-			}
+			},
+			collaborativeMode: COLLABORATIVE_MODE
 		};
 	}
 }) satisfies PageServerLoad;
@@ -74,15 +91,6 @@ export const actions: Actions = {
 			},
 			body: formData
 		});
-
-		// Handle non-JSON responses gracefully (e.g. HTML error pages from backend)
-		const contentType = res.headers.get('content-type') || '';
-		if (!contentType.includes('application/json')) {
-			const text = await res.text();
-			console.error(`Image upload failed with status ${res.status}:`, text.substring(0, 200));
-			return { error: `Image upload failed (status ${res.status})` };
-		}
-
 		let data = await res.json();
 		return data;
 	},

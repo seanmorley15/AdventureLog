@@ -18,6 +18,7 @@
 	export let itemId: string = '';
 	export let contentType: 'location' | 'lodging' | 'transportation' | '' = 'location';
 	export let user: User | null = null;
+	export let collaborativeMode: boolean = false;
 
 	export let start_date: string | null = null;
 	export let end_date: string | null = null;
@@ -84,6 +85,7 @@
 			defaultSearchTerm={itemName}
 			{immichIntegration}
 			{copyImmichLocally}
+			{collaborativeMode}
 			on:imagesUpdated={handleImagesUpdated}
 			bind:importInProgress
 		/>

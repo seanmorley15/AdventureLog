@@ -6,8 +6,9 @@ from adventures.utils.sports_types import SPORT_CATEGORIES
 from adventures.utils.get_is_visited import is_location_visited
 from django.db.models import Sum, Avg, Max, Count
 from worldtravel.models import City, Region, Country, VisitedCity, VisitedRegion
-from adventures.models import Location, Collection, Activity
+from adventures.models import Location, Collection, Activity, Transportation, Lodging, Visit
 from django.contrib.auth import get_user_model
+from math import radians, sin, cos, sqrt, atan2
 
 User = get_user_model()
 
@@ -16,17 +17,68 @@ class StatsViewSet(viewsets.ViewSet):
     A simple ViewSet for listing the stats of a user.
     """
 
+    def _haversine_distance(self, lat1, lon1, lat2, lon2):
+        """Calculate the great circle distance between two points in km"""
+        if lat1 is None or lon1 is None or lat2 is None or lon2 is None:
+            return 0
+
+        R = 6371  # Radius of the earth in km
+
+        lat1_rad = radians(float(lat1))
+        lat2_rad = radians(float(lat2))
+        dlat = radians(float(lat2) - float(lat1))
+        dlon = radians(float(lon2) - float(lon1))
+
+        a = sin(dlat/2)**2 + cos(lat1_rad) * cos(lat2_rad) * sin(dlon/2)**2
+        c = 2 * atan2(sqrt(a), sqrt(1-a))
+
+        return R * c
+
+    def _get_total_transportation_distance(self, user):
+        """Calculate total distance traveled via transportation in km (based on visits)"""
+        # Get all transportation visits for this user
+        transport_visits = Visit.objects.filter(
+            user=user,
+            transportation__isnull=False
+        ).select_related('transportation')
+
+        total_distance = 0
+        for visit in transport_visits:
+            transport = visit.transportation
+            distance = self._haversine_distance(
+                transport.origin_latitude, transport.origin_longitude,
+                transport.destination_latitude, transport.destination_longitude
+            )
+            total_distance += distance
+
+        return round(total_distance, 2)
+
+    def _get_total_lodging_nights(self, user):
+        """Calculate total nights stayed in lodging (based on visits)"""
+        # Get all lodging visits for this user
+        lodging_visits = Visit.objects.filter(
+            user=user,
+            lodging__isnull=False
+        )
+
+        total_nights = 0
+        for visit in lodging_visits:
+            if visit.start_date and visit.end_date:
+                delta = visit.end_date - visit.start_date
+                nights = delta.days
+                if nights > 0:
+                    total_nights += nights
+
+        return total_nights
+
     def _get_visited_locations_count(self, user):
-        """Calculate count of visited locations for a user"""
-        visited_count = 0
-        
-        # Get all locations for this user
-        user_locations = Location.objects.filter(user=user).prefetch_related('visits')
-        
-        for location in user_locations:
-            if is_location_visited(location):
-                visited_count += 1
-        
+        """Calculate count of distinct locations visited by user (based on visits)"""
+        # Count distinct locations that have at least one visit by this user
+        visited_count = Visit.objects.filter(
+            user=user,
+            location__isnull=False
+        ).values('location').distinct().count()
+
         return visited_count
 
     def _get_activity_stats_by_category(self, user_activities):
@@ -151,11 +203,17 @@ class StatsViewSet(viewsets.ViewSet):
         
         # get activity data
         user_activities = Activity.objects.filter(user=user.id)
-        
+
         # Get enhanced activity statistics
         overall_activity_stats = self._get_overall_activity_stats(user_activities)
         activity_stats_by_category = self._get_activity_stats_by_category(user_activities)
-        
+
+        # Transportation and lodging stats
+        transportation_count = Transportation.objects.filter(user=user.id).count()
+        lodging_count = Lodging.objects.filter(user=user.id).count()
+        total_transportation_km = self._get_total_transportation_distance(user)
+        total_lodging_nights = self._get_total_lodging_nights(user)
+
         return Response({
             # Travel stats
             'location_count': location_count,
@@ -167,13 +225,19 @@ class StatsViewSet(viewsets.ViewSet):
             'total_regions': total_regions,
             'visited_country_count': visited_country_count,
             'total_countries': total_countries,
-            
+
+            # Transportation and lodging stats
+            'transportation_count': transportation_count,
+            'lodging_count': lodging_count,
+            'total_transportation_km': total_transportation_km,
+            'total_lodging_nights': total_lodging_nights,
+
             # Overall activity stats
             'activities_overall': overall_activity_stats,
-            
+
             # Detailed activity stats by category
             'activities_by_category': activity_stats_by_category,
-            
+
             # Legacy fields (for backward compatibility)
             'activity_distance': overall_activity_stats['total_distance'],
             'activity_moving_time': overall_activity_stats['total_moving_time'],
