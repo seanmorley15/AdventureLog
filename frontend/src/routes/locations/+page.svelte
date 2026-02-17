@@ -6,16 +6,23 @@
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import type { Location } from '$lib/types';
 	import { t } from 'svelte-i18n';
+	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import {
+		Pagination,
+		EntityListHeader,
+		SortOptions,
+		RadioFilter,
+		RatingFilter,
+		EmptyState,
+		FloatingActionButton
+	} from '$lib/components/shared/list';
 
 	import Plus from '~icons/mdi/plus';
 	import Filter from '~icons/mdi/filter-variant';
-	import Sort from '~icons/mdi/sort';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Eye from '~icons/mdi/eye';
-	import Calendar from '~icons/mdi/calendar';
 	import Tag from '~icons/mdi/tag';
 	import Compass from '~icons/mdi/compass';
-	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 
 	export let data: any;
 
@@ -27,7 +34,10 @@
 		visited: true,
 		planned: true,
 		includeCollections: true,
-		is_visited: 'all'
+		is_visited: 'all',
+		is_public: 'all',
+		ownership: 'all',
+		min_rating: 'all'
 	};
 
 	let locationBeingUpdated: Location | undefined = undefined;
@@ -57,6 +67,7 @@
 	let adventureToEdit: Location | null = null;
 	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
+
 
 	// Reactive statements - Only read from URL, don't write
 	$: {
@@ -121,6 +132,9 @@
 		if (url.searchParams.get('is_visited')) {
 			currentSort.is_visited = url.searchParams.get('is_visited') || 'all';
 		}
+		currentSort.is_public = url.searchParams.get('is_public') || 'all';
+		currentSort.ownership = url.searchParams.get('ownership') || 'all';
+		currentSort.min_rating = url.searchParams.get('min_rating') || 'all';
 	}
 
 	function handleChangePage(pageNumber: number) {
@@ -134,6 +148,10 @@
 
 	function deleteAdventure(event: CustomEvent<string>) {
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
+		data.props.adventures = adventures;
+		count = count - 1;
+		data.props.count = count;
+		totalPages = Math.ceil(count / resultsPerPage);
 	}
 
 	function editAdventure(event: CustomEvent<Location>) {
@@ -152,6 +170,117 @@
 	function getPlannedCount() {
 		return adventures.filter((a) => !a.is_visited).length;
 	}
+
+	// Dynamic filter functions (like collections)
+	async function updateSort(orderBy: string, orderDirection: string) {
+		const url = new URL($page.url);
+		url.searchParams.set('order_by', orderBy);
+		url.searchParams.set('order_direction', orderDirection);
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.order_by = orderBy;
+		currentSort.order = orderDirection;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateVisitedFilter(isVisited: string) {
+		const url = new URL($page.url);
+		url.searchParams.set('is_visited', isVisited);
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.is_visited = isVisited;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateVisibilityFilter(visibility: string) {
+		const url = new URL($page.url);
+		if (visibility && visibility !== 'all') {
+			url.searchParams.set('is_public', visibility);
+		} else {
+			url.searchParams.delete('is_public');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.is_public = visibility;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateOwnershipFilter(ownership: string) {
+		const url = new URL($page.url);
+		if (ownership && ownership !== 'all') {
+			url.searchParams.set('ownership', ownership);
+		} else {
+			url.searchParams.delete('ownership');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.ownership = ownership;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateRatingFilter(minRating: string) {
+		const url = new URL($page.url);
+		if (minRating && minRating !== 'all') {
+			url.searchParams.set('min_rating', minRating);
+		} else {
+			url.searchParams.delete('min_rating');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.min_rating = minRating;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateIncludeCollections(include: boolean) {
+		const url = new URL($page.url);
+		url.searchParams.set('include_collections', include.toString());
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		currentSort.includeCollections = include;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
+
+	async function updateCategoryFilter(event: CustomEvent<string>) {
+		const types = event.detail;
+		const url = new URL($page.url);
+		if (types) {
+			url.searchParams.set('types', types);
+		} else {
+			url.searchParams.delete('types');
+		}
+		url.searchParams.set('page', '1');
+		currentPage = 1;
+		typeString = types;
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+		if (data.props.adventures) {
+			adventures = data.props.adventures;
+			count = data.props.count;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -165,11 +294,15 @@
 		user={data.user}
 		locationToEdit={adventureToEdit}
 		bind:location={locationBeingUpdated}
+		collaborativeMode={data.collaborativeMode}
 	/>
 {/if}
 
 {#if is_category_modal_open}
-	<CategoryModal on:close={() => (is_category_modal_open = false)} />
+	<CategoryModal
+		on:close={() => (is_category_modal_open = false)}
+		collaborativeMode={data.collaborativeMode}
+	/>
 {/if}
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
@@ -177,83 +310,33 @@
 		<input id="my-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
 		<div class="drawer-content">
-			<!-- Header Section -->
-			<div class="sticky top-0 z-30 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
-				<div class="container mx-auto px-6 py-4">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-4">
-							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
-								<Filter class="w-5 h-5" />
-							</button>
-							<div class="flex items-center gap-3">
-								<div class="p-2 bg-primary/10 rounded-xl">
-									<Compass class="w-8 h-8 text-primary" />
-								</div>
-								<div>
-									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('locations.my_locations')}
-									</h1>
-									<p class="text-sm text-base-content/60">
-										{count}
-										{$t('locations.locations')} • {getVisitedCount()}
-										{$t('adventures.visited')} • {getPlannedCount()}
-										{$t('adventures.planned')}
-									</p>
-								</div>
-							</div>
-						</div>
-
-						<!-- Quick Stats -->
-						<div class="hidden md:flex items-center gap-3">
-							<div class="stats stats-horizontal bg-base-200/50 border border-base-300/50">
-								<div class="stat py-2 px-4">
-									<div class="stat-figure text-primary">
-										<Eye class="w-5 h-5" />
-									</div>
-									<div class="stat-title text-xs">{$t('adventures.visited')}</div>
-									<div class="stat-value text-lg">{getVisitedCount()}</div>
-								</div>
-								<div class="stat py-2 px-4">
-									<div class="stat-figure text-secondary">
-										<Calendar class="w-5 h-5" />
-									</div>
-									<div class="stat-title text-xs">{$t('adventures.planned')}</div>
-									<div class="stat-value text-lg">{getPlannedCount()}</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+			<EntityListHeader
+				title={$t('locations.my_locations')}
+				subtitle="{count} {$t('locations.locations')} • {getVisitedCount()} {$t('adventures.visited')} • {getPlannedCount()} {$t('adventures.planned')}"
+				icon={Compass}
+				{count}
+				visitedCount={getVisitedCount()}
+				plannedCount={getPlannedCount()}
+				onToggleSidebar={toggleSidebar}
+			/>
 
 			<!-- Main Content -->
 			<div class="container mx-auto px-6 py-8">
 				{#if adventures.length === 0}
-					<div class="flex flex-col items-center justify-center py-16">
-						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
-							<Compass class="w-16 h-16 text-base-content/30" />
-						</div>
-						<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-							{$t('adventures.no_locations_found')}
-						</h3>
-						<p class="text-base-content/50 text-center max-w-md">
-							{$t('adventures.no_adventures_message')}
-						</p>
-						<button
-							class="btn btn-primary btn-wide mt-6 gap-2"
-							on:click={() => {
-								adventureToEdit = null;
-								isLocationModalOpen = true;
-							}}
-						>
-							<Plus class="w-5 h-5" />
-							{$t('adventures.create_location')}
-						</button>
-					</div>
+					<EmptyState
+						icon={Compass}
+						title={$t('adventures.no_locations_found')}
+						message={$t('adventures.no_adventures_message')}
+						buttonText={$t('adventures.create_location')}
+						on:create={() => {
+							adventureToEdit = null;
+							isLocationModalOpen = true;
+						}}
+					/>
 				{:else}
 					<!-- Adventures Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
 					>
 						{#each adventures as adventure}
 							<LocationCard
@@ -261,31 +344,12 @@
 								{adventure}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
-								on:duplicate={(e) => {
-									// Add the new location to the beginning of the list
-									adventures = [e.detail, ...adventures];
-								}}
 							/>
 						{/each}
 					</div>
 
 					<!-- Pagination -->
-					{#if totalPages > 1}
-						<div class="flex justify-center mt-12">
-							<div class="join bg-base-100 shadow-lg rounded-2xl p-2">
-								{#each Array.from({ length: totalPages }, (_, i) => i + 1) as page}
-									<button
-										class="join-item btn btn-sm {currentPage === page
-											? 'btn-primary'
-											: 'btn-ghost'}"
-										on:click={() => handleChangePage(page)}
-									>
-										{page}
-									</button>
-								{/each}
-							</div>
-						</div>
-					{/if}
+					<Pagination {currentPage} {totalPages} on:changePage={(e) => handleChangePage(e.detail)} />
 				{/if}
 			</div>
 		</div>
@@ -303,15 +367,15 @@
 						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
-					<!-- Filters Form -->
-					<form method="get" class="space-y-6">
+					<!-- Filters (Dynamic like collections) -->
+					<div class="space-y-2">
 						<!-- Category Filter -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Tag class="w-5 h-5" />
-								Categories
-							</h3>
-							<CategoryFilterDropdown bind:types={typeString} />
+						<CategoryFilterDropdown
+							bind:types={typeString}
+							on:change={updateCategoryFilter}
+							title={$t('adventures.categories')}
+							icon={Tag}
+						>
 							<button
 								type="button"
 								on:click={() => (is_category_modal_open = true)}
@@ -320,206 +384,97 @@
 								<Tag class="w-4 h-4" />
 								{$t('categories.manage_categories')}
 							</button>
-						</div>
+						</CategoryFilterDropdown>
 
-						<!-- Sort Options -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Sort class="w-5 h-5" />
-								{$t('adventures.sort')}
-							</h3>
+						<SortOptions
+							orderBy={currentSort.order_by}
+							orderDirection={currentSort.order}
+							orderByOptions={[
+								{ value: 'updated_at', label: $t('adventures.updated') },
+								{ value: 'name', label: $t('adventures.name') },
+								{ value: 'last_visit', label: $t('adventures.last_visit') },
+								{ value: 'created_at', label: $t('adventures.created_at') },
+								{ value: 'rating', label: $t('adventures.rating') }
+							]}
+							on:change={(e) => updateSort(e.detail.orderBy, e.detail.orderDirection)}
+						/>
 
-							<div class="space-y-4">
-								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_direction')}</span>
-									</label>
-									<div class="join w-full">
-										<input
-											class="join-item btn btn-sm flex-1"
-											type="radio"
-											name="order_direction"
-											id="asc"
-											value="asc"
-											aria-label={$t('adventures.ascending')}
-											checked={currentSort.order === 'asc'}
-										/>
-										<input
-											class="join-item btn btn-sm flex-1"
-											type="radio"
-											name="order_direction"
-											id="desc"
-											value="desc"
-											aria-label={$t('adventures.descending')}
-											checked={currentSort.order === 'desc'}
-										/>
-									</div>
-								</div>
-
-								<div>
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
-									</label>
-									<div class="grid grid-cols-2 gap-2">
-										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
-										>
-											<input
-												type="radio"
-												name="order_by"
-												value="updated_at"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'updated_at'}
-											/>
-											<span class="label-text text-sm">{$t('adventures.updated')}</span>
-										</label>
-										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
-										>
-											<input
-												type="radio"
-												name="order_by"
-												value="name"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'name'}
-											/>
-											<span class="label-text text-sm">{$t('adventures.name')}</span>
-										</label>
-										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
-										>
-											<input
-												type="radio"
-												name="order_by"
-												value="date"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'date'}
-											/>
-											<span class="label-text text-sm">{$t('adventures.date')}</span>
-										</label>
-										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
-										>
-											<input
-												type="radio"
-												name="order_by"
-												value="rating"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'rating'}
-											/>
-											<span class="label-text text-sm">{$t('adventures.rating')}</span>
-										</label>
-									</div>
-								</div>
-							</div>
-						</div>
-
-						<!-- Visit Status Filter -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Eye class="w-5 h-5" />
-								{$t('adventures.visited')}
-							</h3>
-							<div class="join w-full">
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="all"
-									value="all"
-									aria-label={$t('adventures.all')}
-									checked={currentSort.is_visited === 'all'}
-								/>
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="true"
-									value="true"
-									aria-label={$t('adventures.visited')}
-									checked={currentSort.is_visited === 'true'}
-								/>
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="false"
-									value="false"
-									aria-label={$t('adventures.not_visited')}
-									checked={currentSort.is_visited === 'false'}
-								/>
-							</div>
-						</div>
+						<RadioFilter
+							title={$t('adventures.visited')}
+							icon={Eye}
+							value={currentSort.is_visited}
+							name="visited_filter"
+							options={[
+								{ value: 'all', label: $t('adventures.all') },
+								{ value: 'true', label: $t('adventures.visited') },
+								{ value: 'false', label: $t('adventures.not_visited') }
+							]}
+							on:change={(e) => updateVisitedFilter(e.detail)}
+						/>
 
 						<!-- Sources Filter -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+						<div class="collapse collapse-arrow bg-base-200/50 rounded-box">
+							<input type="checkbox" checked />
+							<div class="collapse-title font-medium flex items-center gap-2 py-2 min-h-0">
 								<MapMarker class="w-5 h-5" />
 								{$t('adventures.sources')}
-							</h3>
-							<label class="label cursor-pointer justify-start gap-3">
-								<input
-									type="checkbox"
-									name="include_collections"
-									id="include_collections"
-									class="checkbox checkbox-primary"
-									checked={currentSort.includeCollections}
-									on:change={(e) => {
-										const target = e.currentTarget;
-										currentSort.includeCollections = target.checked;
-										// Immediately update the URL to reflect the change
-										let url = new URL(window.location.href);
-										if (target.checked) {
-											url.searchParams.set('include_collections', 'true');
-										} else {
-											url.searchParams.set('include_collections', 'false');
-										}
-										goto(url.toString(), { invalidateAll: true, replaceState: true });
-									}}
-								/>
-								<span class="label-text">{$t('adventures.collection_locations')}</span>
-							</label>
+							</div>
+							<div class="collapse-content !pb-2">
+								<label class="flex items-center gap-2 cursor-pointer py-0.5">
+									<input
+										type="checkbox"
+										class="checkbox checkbox-primary checkbox-sm"
+										checked={currentSort.includeCollections}
+										on:change={(e) => updateIncludeCollections(e.currentTarget.checked)}
+									/>
+									<span>{$t('adventures.collection_locations')}</span>
+								</label>
+							</div>
 						</div>
 
-						<button type="submit" class="btn btn-primary w-full gap-2">
-							<Filter class="w-4 h-4" />
-							{$t('adventures.filter')}
-						</button>
-					</form>
+						<RatingFilter
+							minRating={currentSort.min_rating}
+							on:change={(e) => updateRatingFilter(e.detail)}
+						/>
+
+						<!-- Visibility and Ownership Filters (collaborative mode only) -->
+						{#if data.collaborativeMode}
+							<RadioFilter
+								title={$t('adventures.visibility')}
+								icon={Eye}
+								value={currentSort.is_public}
+								name="visibility_filter"
+								options={[
+									{ value: 'all', label: $t('adventures.all') },
+									{ value: 'true', label: $t('adventures.public') },
+									{ value: 'false', label: $t('adventures.private') }
+								]}
+								on:change={(e) => updateVisibilityFilter(e.detail)}
+							/>
+
+							<RadioFilter
+								title={$t('adventures.ownership_filter')}
+								icon={Eye}
+								value={currentSort.ownership}
+								name="ownership_filter"
+								options={[
+									{ value: 'all', label: $t('adventures.all') },
+									{ value: 'mine', label: $t('adventures.my_locations') },
+									{ value: 'public', label: $t('adventures.public_locations') }
+								]}
+								on:change={(e) => updateOwnershipFilter(e.detail)}
+							/>
+						{/if}
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
 
-	<!-- Floating Action Button -->
-	<div class="fixed bottom-6 right-6 z-[999]">
-		<div class="dropdown dropdown-top dropdown-end">
-			<div
-				tabindex="0"
-				role="button"
-				class="btn btn-primary btn-circle w-16 h-16 shadow-2xl hover:shadow-primary/25 transition-all duration-200"
-			>
-				<Plus class="w-8 h-8" />
-			</div>
-			<ul
-				class="dropdown-content z-[40] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
-			>
-				<div class="text-center mb-4">
-					<h3 class="font-bold text-lg">{$t('adventures.create_new')}</h3>
-				</div>
-				<button
-					class="btn btn-primary gap-2 w-full"
-					on:click={() => {
-						isLocationModalOpen = true;
-						adventureToEdit = null;
-					}}
-				>
-					<Compass class="w-5 h-5" />
-					{$t('locations.location')}
-				</button>
-			</ul>
-		</div>
-	</div>
+	<FloatingActionButton
+		on:click={() => {
+			isLocationModalOpen = true;
+			adventureToEdit = null;
+		}}
+	/>
 </div>

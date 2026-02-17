@@ -11,40 +11,62 @@ class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = ActivitySerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
 
+    def _get_parent_entity(self, visit):
+        """
+        Get the parent entity (location, transportation, or lodging) from a visit.
+        Returns (entity, entity_type) tuple.
+        """
+        if visit.location:
+            return visit.location, 'location'
+        elif visit.transportation:
+            return visit.transportation, 'transportation'
+        elif visit.lodging:
+            return visit.lodging, 'lodging'
+        return None, None
+
     def get_queryset(self):
         """
-        Returns activities based on location permissions.
-        Users can only see activities in locations they have access to for editing/updating/deleting.
+        Returns activities based on entity permissions.
+        Users can only see activities in entities they have access to for editing/updating/deleting.
         This means they are either:
-        - The owner of the location
-        - The location is in a collection that is shared with the user
-        - The location is in a collection that the user owns
+        - The owner of the entity
+        - The entity is in a collection that is shared with the user
+        - The entity is in a collection that the user owns
         """
         user = self.request.user
-        
+
         if not user or not user.is_authenticated:
             return Activity.objects.none()
-        
+
         # Build the filter for accessible locations
-        location_filter = Q(visit__location__user=user)  # User owns the location
-        
-        # Location is in collections (many-to-many) that are shared with user
+        location_filter = Q(visit__location__user=user)
         location_filter |= Q(visit__location__collections__shared_with=user)
-        
-        # Location is in collections (many-to-many) that user owns
         location_filter |= Q(visit__location__collections__user=user)
-        
-        return Activity.objects.filter(location_filter).distinct()
+
+        # Build the filter for accessible transportations
+        transportation_filter = Q(visit__transportation__user=user)
+        transportation_filter |= Q(visit__transportation__collections__shared_with=user)
+        transportation_filter |= Q(visit__transportation__collections__user=user)
+
+        # Build the filter for accessible lodgings
+        lodging_filter = Q(visit__lodging__user=user)
+        lodging_filter |= Q(visit__lodging__collections__shared_with=user)
+        lodging_filter |= Q(visit__lodging__collections__user=user)
+
+        return Activity.objects.filter(location_filter | transportation_filter | lodging_filter).distinct()
 
     def perform_create(self, serializer):
         """
         Set the user when creating an activity.
         """
         visit = serializer.validated_data.get('visit')
-        location = visit.location
+        entity, entity_type = self._get_parent_entity(visit)
 
-        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
-            raise PermissionDenied("You do not have permission to add an activity to this location.")
+        if not entity:
+            raise PermissionDenied("Visit must be associated with a location, transportation, or lodging.")
+
+        if not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, entity):
+            raise PermissionDenied(f"You do not have permission to add an activity to this {entity_type}.")
 
         # if there is a GPX file, use it to get elevation data
         gpx_file = serializer.validated_data.get('gpx_file')
@@ -55,26 +77,26 @@ class ActivityViewSet(viewsets.ModelViewSet):
             serializer.validated_data['elev_high'] = elevation_high
             serializer.validated_data['elev_low'] = elevation_low
 
-        serializer.save(user=location.user)
+        serializer.save(user=entity.user)
 
     def perform_update(self, serializer):
         instance = serializer.instance
         new_visit = serializer.validated_data.get('visit')
-        
-        # Prevent changing visit/location after creation
+
+        # Prevent changing visit after creation
         if new_visit and new_visit != instance.visit:
             raise PermissionDenied("Cannot change activity visit after creation. Create a new activity instead.")
-        
-        # Check permission for updates to the existing location
-        location = instance.visit.location if instance.visit else None
-        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
-            raise PermissionDenied("You do not have permission to update this activity.")
+
+        # Check permission for updates to the existing entity
+        entity, entity_type = self._get_parent_entity(instance.visit) if instance.visit else (None, None)
+        if entity and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, entity):
+            raise PermissionDenied(f"You do not have permission to update this activity.")
 
         serializer.save()
 
     def perform_destroy(self, instance):
-        location = instance.visit.location if instance.visit else None
-        if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
+        entity, entity_type = self._get_parent_entity(instance.visit) if instance.visit else (None, None)
+        if entity and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, entity):
             raise PermissionDenied("You do not have permission to delete this activity.")
 
         instance.delete()

@@ -22,6 +22,8 @@
 	import CollectionMap from '$lib/components/collections/CollectionMap.svelte';
 	import CollectionStats from '$lib/components/collections/CollectionStats.svelte';
 	import LocationLink from '$lib/components/LocationLink.svelte';
+	import TransportationLink from '$lib/components/TransportationLink.svelte';
+	import LodgingLink from '$lib/components/LodgingLink.svelte';
 	import { getBasemapUrl } from '$lib';
 	import { formatMoney, toMoneyValue, DEFAULT_CURRENCY } from '$lib/money';
 	import FolderMultiple from '~icons/mdi/folder-multiple';
@@ -37,6 +39,8 @@
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import LocationModal from '$lib/components/locations/LocationModal.svelte';
+	import ShareModal from '$lib/components/ShareModal.svelte';
+	import ShareVariant from '~icons/mdi/share-variant';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -63,10 +67,13 @@
 	let modalInitialIndex: number = 0;
 	let isImageModalOpen: boolean = false;
 	let isLocationLinkModalOpen: boolean = false;
+	let isTransportationLinkModalOpen: boolean = false;
+	let isLodgingLinkModalOpen: boolean = false;
 	let showCalendarModal = false;
 	let selectedCalendarEvent: any = null;
 	let calendarLocation = '';
 	let calendarDescription = '';
+	let isShareModalOpen = false;
 
 	// Shared helpers for keeping collection sub-items in sync after modal actions
 	type CollectionArrayKey = 'locations' | 'transportations' | 'lodging' | 'notes' | 'checklists';
@@ -254,6 +261,20 @@
 
 	// Enforce recommendations visibility only for owner/shared users
 	$: availableViews.recommendations = !!canModifyCollection;
+
+	// Check if user is the owner (for sharing functionality)
+	$: isOwner = (() => {
+		const u = data.user as any;
+		if (!u || !collection) return false;
+		const userUuid = u.uuid || null;
+		const username = u.username || null;
+		const pk = u.pk !== undefined && u.pk !== null ? String(u.pk) : null;
+		const owner = collection.user;
+		return (userUuid && owner === userUuid) || (username && owner === username) || (pk && owner === pk);
+	})();
+
+	// Check if collection is shared with others
+	$: isShared = collection?.shared_with && collection.shared_with.length > 0;
 
 	// Build calendar events from collection visits
 	type TimezoneMode = 'event' | 'local';
@@ -713,6 +734,14 @@
 		isLocationLinkModalOpen = false;
 	}
 
+	function closeTransportationLinkModal() {
+		isTransportationLinkModalOpen = false;
+	}
+
+	function closeLodgingLinkModal() {
+		isLodgingLinkModalOpen = false;
+	}
+
 	function handleOpenEdit(event: CustomEvent<{ type: CollectionArrayKey; item: any }>) {
 		const { type, item } = event.detail;
 
@@ -791,6 +820,28 @@
 			);
 		}
 	}
+
+	function handleTransportationAdded(event: CustomEvent<any>) {
+		const transportation = event.detail;
+		// Update local collection state
+		if (!collection.transportations) collection.transportations = [];
+		const exists = collection.transportations.some((t) => String(t.id) === String(transportation.id));
+		if (!exists) {
+			collection.transportations = [...collection.transportations, transportation];
+		}
+		addToast('success', $t('transportation.linked_success') || 'Transportation linked successfully');
+	}
+
+	function handleLodgingAdded(event: CustomEvent<any>) {
+		const lodging = event.detail;
+		// Update local collection state
+		if (!collection.lodging) collection.lodging = [];
+		const exists = collection.lodging.some((l) => String(l.id) === String(lodging.id));
+		if (!exists) {
+			collection.lodging = [...collection.lodging, lodging];
+		}
+		addToast('success', $t('lodging.linked_success') || 'Lodging linked successfully');
+	}
 </script>
 
 {#if notFound}
@@ -822,6 +873,24 @@
 		collectionId={collection.id}
 		on:close={closeLocationLinkModal}
 		on:add={handleLocationAdded}
+	/>
+{/if}
+
+{#if isTransportationLinkModalOpen && collection}
+	<TransportationLink
+		user={data.user}
+		collectionId={collection.id}
+		on:close={closeTransportationLinkModal}
+		on:add={handleTransportationAdded}
+	/>
+{/if}
+
+{#if isLodgingLinkModalOpen && collection}
+	<LodgingLink
+		user={data.user}
+		collectionId={collection.id}
+		on:close={closeLodgingLinkModal}
+		on:add={handleLodgingAdded}
 	/>
 {/if}
 
@@ -935,6 +1004,22 @@
 	/>
 {/if}
 
+{#if isShareModalOpen && collection}
+	<ShareModal
+		{collection}
+		on:close={() => {
+			isShareModalOpen = false;
+		}}
+		on:share={(e) => {
+			collection.shared_with = e.detail.shared_with || [];
+			if (e.detail.collaborators) {
+				collection.collaborators = e.detail.collaborators;
+			}
+			isShareModalOpen = false;
+		}}
+	/>
+{/if}
+
 <EventDetailsModal
 	show={showCalendarModal}
 	event={selectedCalendarEvent}
@@ -996,6 +1081,11 @@
 
 					<!-- Quick Info Badges -->
 					<div class="flex flex-wrap justify-center gap-4 mb-6">
+						{#if collection.adventure_type}
+							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
+								{collection.adventure_type.icon} {collection.adventure_type.name}
+							</div>
+						{/if}
 						{#if collection.is_public}
 							<div class="badge badge-lg badge-success font-semibold px-4 py-3">
 								🌍 {$t('adventures.public')}
@@ -1028,6 +1118,12 @@
 						{#if collection.is_archived}
 							<div class="badge badge-lg badge-neutral font-semibold px-4 py-3">
 								📦 {$t('adventures.archived')}
+							</div>
+						{/if}
+						{#if isShared}
+							<div class="badge badge-lg badge-info font-semibold px-4 py-3">
+								<ShareVariant class="w-4 h-4 mr-1" />
+								{$t('share.shared')}
 							</div>
 						{/if}
 					</div>
@@ -1179,7 +1275,7 @@
 				<!-- Itinerary View -->
 				{#if currentView === 'itinerary'}
 					<CollectionItineraryPlanner
-						bind:collection
+						{collection}
 						user={data.user}
 						canModify={canModifyCollection}
 					/>
@@ -1346,7 +1442,18 @@
 							{/if}
 							{#if collection.collaborators && collection.collaborators.length > 0}
 								<div>
-									<div class="text-sm opacity-70 mb-1">{$t('collection.collaborators')}</div>
+									<div class="flex items-center justify-between mb-1">
+										<div class="text-sm opacity-70">{$t('collection.collaborators')}</div>
+										{#if isOwner}
+											<button
+												class="btn btn-xs btn-ghost"
+												on:click={() => (isShareModalOpen = true)}
+												title={$t('adventures.share')}
+											>
+												<ShareVariant class="w-4 h-4" />
+											</button>
+										{/if}
+									</div>
 									<div class="avatar-group -space-x-3">
 										{#each collection.collaborators as person (person.uuid)}
 											{#if person.public_profile}
@@ -1393,12 +1500,37 @@
 								</div>
 							{:else if collection.shared_with && collection.shared_with.length > 0}
 								<div>
-									<div class="text-sm opacity-70 mb-1">{$t('share.shared_with')}</div>
+									<div class="flex items-center justify-between mb-1">
+										<div class="text-sm opacity-70">{$t('share.shared_with')}</div>
+										{#if isOwner}
+											<button
+												class="btn btn-xs btn-ghost"
+												on:click={() => (isShareModalOpen = true)}
+												title={$t('adventures.share')}
+											>
+												<ShareVariant class="w-4 h-4" />
+											</button>
+										{/if}
+									</div>
 									<div class="flex flex-wrap gap-1">
 										{#each collection.shared_with as username}
 											<span class="badge badge-sm badge-outline">{username}</span>
 										{/each}
 									</div>
+								</div>
+							{:else if isOwner}
+								<div>
+									<div class="flex items-center justify-between mb-1">
+										<div class="text-sm opacity-70">{$t('collection.collaborators')}</div>
+										<button
+											class="btn btn-xs btn-ghost"
+											on:click={() => (isShareModalOpen = true)}
+											title={$t('adventures.share')}
+										>
+											<ShareVariant class="w-4 h-4" />
+										</button>
+									</div>
+									<div class="text-sm opacity-50">{$t('share.no_users_shared')}</div>
 								</div>
 							{/if}
 						</div>
@@ -1547,6 +1679,22 @@
 					}}
 				>
 					{$t('locations.location')}
+				</button>
+				<button
+					class="btn btn-primary"
+					on:click={() => {
+						isTransportationLinkModalOpen = true;
+					}}
+				>
+					{$t('adventures.transportation')}
+				</button>
+				<button
+					class="btn btn-primary"
+					on:click={() => {
+						isLodgingLinkModalOpen = true;
+					}}
+				>
+					{$t('adventures.lodging')}
 				</button>
 
 				<p class="text-center font-bold text-lg">{$t('adventures.add_new')}</p>

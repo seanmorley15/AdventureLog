@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { MoneyValue } from '$lib/types';
-	import { CURRENCY_OPTIONS } from '$lib/money';
 	import { createEventDispatcher } from 'svelte';
 	import CurrencyDropdown from './CurrencyDropdown.svelte';
 
@@ -8,17 +7,21 @@
 		label?: string;
 		value: MoneyValue;
 		currencyOptions?: string[];
+		priorityCurrencies?: string[];
 		placeholder?: string;
 		min?: number;
 		step?: number;
 	};
 
-	export let label: string | undefined;
+	export let label: string | undefined = undefined;
 	export let value: MoneyValue;
-	export let currencyOptions: string[] = CURRENCY_OPTIONS;
+	export let currencyOptions: string[] | undefined = undefined; // Use API currencies by default
+	export let priorityCurrencies: string[] = []; // Currencies to show first in dropdown
 	export let placeholder = '0.00';
 	export let min: number | undefined = 0;
 	export let step: number | undefined = 0.01;
+	export let showClear: boolean = true;
+	export let compact: boolean = false;
 
 	const dispatch = createEventDispatcher<{ change: MoneyValue }>();
 	const currencyId = `money-currency-${Math.random().toString(36).slice(2, 8)}`;
@@ -26,23 +29,24 @@
 	function updateAmount(event: Event) {
 		const target = event.target as HTMLInputElement;
 		const amount = target.value === '' ? null : Number(target.value);
-		const next: MoneyValue = {
+		value = {
 			amount: Number.isNaN(amount) ? null : amount,
 			currency: value.currency
 		};
-		dispatch('change', next);
+		dispatch('change', value);
 	}
 
 	function updateCurrency(event: CustomEvent<string | null>) {
-		const next: MoneyValue = {
+		value = {
 			amount: value.amount,
 			currency: event.detail || null
 		};
-		dispatch('change', next);
+		dispatch('change', value);
 	}
 
 	function clearValue() {
-		dispatch('change', { amount: null, currency: null });
+		value = { amount: null, currency: null };
+		dispatch('change', value);
 	}
 </script>
 
@@ -52,11 +56,11 @@
 			<span class="label-text font-medium">{label}</span>
 		</label>
 	{/if}
-	<div class="flex gap-3 flex-col sm:flex-row">
+	<div class="flex gap-2 {compact ? 'flex-row items-center' : 'flex-col sm:flex-row gap-3'}">
 		<input
 			id="money-input"
 			type="number"
-			class="input input-bordered bg-base-100/80 focus:bg-base-100 flex-1"
+			class="input input-bordered bg-base-100/80 focus:bg-base-100 {compact ? 'input-sm flex-1 min-w-0' : 'flex-1'}"
 			{placeholder}
 			bind:value={value.amount}
 			{min}
@@ -66,9 +70,13 @@
 		<CurrencyDropdown
 			id={currencyId}
 			value={value.currency}
-			options={currencyOptions}
+			options={currencyOptions || undefined}
+			{priorityCurrencies}
+			{compact}
 			on:change={updateCurrency}
 		/>
-		<button type="button" class="btn btn-neutral-200" on:click={clearValue}> Clear </button>
+		{#if showClear}
+			<button type="button" class="btn btn-neutral-200 {compact ? 'btn-sm' : ''}" on:click={clearValue}> Clear </button>
+		{/if}
 	</div>
 </div>

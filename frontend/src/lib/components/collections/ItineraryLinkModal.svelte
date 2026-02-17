@@ -230,10 +230,11 @@
 												transportation={item}
 												{user}
 												{collection}
+												compact={true}
 												readOnly={true}
 											/>
 										{:else if type === 'lodging'}
-											<LodgingCard lodging={item} {user} {collection} readOnly={true} />
+											<LodgingCard lodging={item} {user} {collection} compact={true} readOnly={true} />
 										{:else if type === 'note'}
 											<NoteCard note={item} {user} {collection} readOnly={true} />
 										{:else if type === 'checklist'}
@@ -280,10 +281,11 @@
 												transportation={item}
 												{user}
 												{collection}
+												compact={true}
 												readOnly={true}
 											/>
 										{:else if type === 'lodging'}
-											<LodgingCard lodging={item} {user} {collection} readOnly={true} />
+											<LodgingCard lodging={item} {user} {collection} compact={true} readOnly={true} />
 										{:else if type === 'note'}
 											<NoteCard note={item} {user} {collection} readOnly={true} />
 										{:else if type === 'checklist'}
@@ -333,10 +335,11 @@
 												transportation={item}
 												{user}
 												{collection}
+												compact={true}
 												readOnly={true}
 											/>
 										{:else if type === 'lodging'}
-											<LodgingCard lodging={item} {user} {collection} readOnly={true} />
+											<LodgingCard lodging={item} {user} {collection} compact={true} readOnly={true} />
 										{:else if type === 'note'}
 											<NoteCard note={item} {user} {collection} readOnly={true} />
 										{:else if type === 'checklist'}
@@ -389,10 +392,11 @@
 												transportation={item}
 												{user}
 												{collection}
+												compact={true}
 												readOnly={true}
 											/>
 										{:else if type === 'lodging'}
-											<LodgingCard lodging={item} {user} {collection} readOnly={true} />
+											<LodgingCard lodging={item} {user} {collection} compact={true} readOnly={true} />
 										{:else if type === 'note'}
 											<NoteCard note={item} {user} {collection} readOnly={true} />
 										{:else if type === 'checklist'}

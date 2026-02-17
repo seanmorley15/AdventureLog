@@ -1,20 +1,17 @@
 <script lang="ts">
-	import type { Transportation } from '$lib/types';
+	import type { AdditionalTransportation } from '$lib/types';
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
-	import Lost from '$lib/assets/undraw_lost.svg';
 	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { marked } from 'marked';
-	import DOMPurify from 'dompurify';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 
-	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { getBasemapUrl, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import { getBasemapUrl, isAllDay } from '$lib';
+	import { getTransportationIcon } from '$lib/stores/entityTypes';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -22,25 +19,34 @@
 	import OpenInNew from '~icons/mdi/open-in-new';
 	import MapMarkerDistanceIcon from '~icons/mdi/map-marker-distance';
 	import CardAccountDetails from '~icons/mdi/card-account-details';
+	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { formatDateInTimezone, formatAllDayDate } from '$lib/dateUtils';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
-	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+import { fetchExchangeRates, formatConvertedPrice, ratesLoaded } from '$lib/stores/exchangeRates';
+	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
 
-	const renderMarkdown = (markdown: string) => {
-		return marked(markdown) as string;
-	};
+	// Shared components
+	import {
+		EntityNotFound,
+		EntityLoading,
+		EntityHeroSection,
+		EntityDescriptionCard,
+		EntityVisitsTimeline,
+		EntityEditFab,
+		EntityAttachmentsCard,
+		EntityImagesCard,
+		sortImagesByPrimary,
+		sortVisitsChronologically,
+		getTotalActivities,
+		getTotalDistance,
+		getTotalElevationGain,
+		renderStars
+	} from '$lib/components/shared/detail';
 
 	export let data: PageData;
-	console.log(data);
 
-	let transportation: Transportation;
-	let currentSlide = 0;
-
-	function goToSlide(index: number) {
-		currentSlide = index;
-	}
-
+	let transportation: AdditionalTransportation;
 	let notFound: boolean = false;
 	let mapCenter: [number, number] | null = null;
 	let attachmentGeojson: any = null;
@@ -49,6 +55,12 @@
 	let isEditModalOpen: boolean = false;
 	let localTravelWindow: string | null = null;
 	let showLocalTripTime: boolean = false;
+	let history: any[] = [];
+	let ratingRefreshKey: number = 0;
+
+	// Note: is_visited is computed by the backend (VisitStatusMixin)
+	// It checks: visit date is in the past AND (in collab mode) only current user's visits
+	$: userHasVisited = transportation?.is_visited ?? false;
 
 	$: transportationPriceLabel = transportation
 		? formatMoney(
@@ -60,49 +72,81 @@
 			)
 		: null;
 
-	function getTransportationIcon(type: string) {
-		if (type in TRANSPORTATION_TYPES_ICONS) {
-			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
-		}
-		return '🚗';
-	}
+	$: canEdit = (data.user?.uuid && transportation?.user && data.user.uuid === transportation.user) ||
+		(data.collaborativeMode && transportation?.is_public);
 
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
-	}
+	// Build hero badges
+	$: heroBadges = transportation ? buildHeroBadges(transportation) : [];
 
-	onMount(async () => {
-		if (data.props.transportation) {
-			transportation = data.props.transportation;
-			transportation.images.sort((a, b) => {
-				if (a.is_primary && !b.is_primary) {
-					return -1;
-				} else if (!a.is_primary && b.is_primary) {
-					return 1;
-				} else {
-					return 0;
-				}
+	function buildHeroBadges(t: Transportation) {
+		const badges: { label: string; class: string; href?: string }[] = [];
+
+		if (t.type) {
+			badges.push({
+				label: $t(`transportation.modes.${t.type}`),
+				class: 'badge-primary'
+			});
+		}
+		if (t.from_location) {
+			badges.push({
+				label: `🚩 ${t.from_location}`,
+				class: 'badge-secondary'
+			});
+		}
+		if (t.to_location) {
+			badges.push({
+				label: `🏁 ${t.to_location}`,
+				class: 'badge-secondary'
+			});
+		}
+		if (getRouteCodes(t)) {
+			badges.push({
+				label: `${getTransportationIcon(t.type)} ${getRouteCodes(t)}`,
+				class: 'badge-outline'
+			});
+		}
+		if (t.visits && t.visits.length > 0) {
+			badges.push({
+				label: `🎯 ${t.visits.length} ${t.visits.length === 1 ? $t('adventures.visit') : $t('adventures.visits')}`,
+				class: 'badge-accent'
+			});
+		}
+		if (userHasVisited) {
+			badges.push({
+				label: `✅ ${$t('adventures.visited')}`,
+				class: 'badge-success'
 			});
 		} else {
-			notFound = true;
+			badges.push({
+				label: `⏳ ${$t('adventures.not_visited')}`,
+				class: 'badge-warning'
+			});
 		}
-	});
+		if (t.is_public) {
+			badges.push({
+				label: `👁️ ${$t('adventures.public')}`,
+				class: 'badge-info'
+			});
+		} else {
+			badges.push({
+				label: `🔒 ${$t('adventures.private')}`,
+				class: 'badge-ghost'
+			});
+		}
 
-	$: mapCenter = transportation ? getMapCenter(transportation) : null;
-	$: attachmentGeojson = transportation ? collectAttachmentGeojson(transportation) : null;
-
-	function closeImageModal() {
-		isImageModalOpen = false;
+		return badges;
 	}
 
-	function openImageModal(imageIndex: number) {
-		modalInitialIndex = imageIndex;
-		isImageModalOpen = true;
-	}
+	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
+	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
+	const getTimezoneTip = (zone?: string | null) => {
+		const label = getTimezoneLabel(zone);
+		return label === localTimeZone
+			? null
+			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${$t('adventures.your_time') ?? 'Your time'}: ${localTimeZone}.`;
+	};
+	const shouldShowTzBadge = (zone?: string | null) =>
+		!!zone && getTimezoneLabel(zone) !== localTimeZone;
 
 	function getRouteLabel() {
 		if (!transportation) return '';
@@ -112,32 +156,6 @@
 		return transportation.from_location ?? transportation.to_location ?? '';
 	}
 
-	function formatTravelWindow(
-		start: string | null,
-		end: string | null,
-		startTimezone: string | null,
-		endTimezone: string | null
-	) {
-		if (!start && !end) return null;
-
-		const formatDate = (date: string | null, timezone: string | null) => {
-			if (!date) return '';
-			if (isAllDay(date)) {
-				return formatAllDayDate(date);
-			}
-			return formatDateInTimezone(date, timezone);
-		};
-
-		if (start && end) {
-			return `${formatDate(start, startTimezone)} → ${formatDate(end, endTimezone ?? startTimezone)}`;
-		} else if (start) {
-			return `${$t('adventures.start') ?? 'Start'}: ${formatDate(start, startTimezone)}`;
-		} else if (end) {
-			return `${$t('adventures.end') ?? 'End'}: ${formatDate(end, endTimezone)}`;
-		}
-		return null;
-	}
-
 	function calculateDuration(
 		start: string | null,
 		end: string | null,
@@ -145,24 +163,18 @@
 		endTimezone: string | null
 	): string | null {
 		if (!start || !end) return null;
-
 		const startDT = DateTime.fromISO(start, { zone: startTimezone ?? 'UTC' });
 		const endDT = DateTime.fromISO(end, { zone: endTimezone ?? startTimezone ?? 'UTC' });
-
 		if (!startDT.isValid || !endDT.isValid) return null;
-
 		const totalMinutes = Math.round(endDT.diff(startDT, 'minutes').minutes ?? 0);
 		if (totalMinutes <= 0) return null;
-
 		const days = Math.floor(totalMinutes / (60 * 24));
 		const hours = Math.floor((totalMinutes % (60 * 24)) / 60);
 		const minutes = totalMinutes % 60;
-
 		const parts: string[] = [];
 		if (days) parts.push(`${days}d`);
 		if (hours) parts.push(`${hours}h`);
 		if (minutes) parts.push(`${minutes}m`);
-
 		return parts.join(' ');
 	}
 
@@ -191,30 +203,16 @@
 		return null;
 	}
 
-	/**
-	 * Format a distance given in kilometers according to the current user's
-	 * measurement system (metric or imperial). For metric show meters for <1km,
-	 * otherwise km; for imperial show feet for very small distances, otherwise miles.
-	 */
 	function formatDistance(distanceKm: number | null): string | null {
 		if (distanceKm === null || distanceKm === undefined) return null;
 		const ms = data.user?.measurement_system ?? 'metric';
-
 		if (ms === 'imperial') {
 			const miles = distanceKm * 0.621371;
-			// show miles if at least 0.1 mi, otherwise show feet
-			if (miles >= 0.1) {
-				return `${miles.toFixed(1)} mi`;
-			}
-			const feet = Math.round(miles * 5280);
-			return `${feet} ft`;
+			if (miles >= 0.1) return `${miles.toFixed(1)} mi`;
+			return `${Math.round(miles * 5280)} ft`;
 		} else {
-			// metric
-			if (distanceKm >= 1) {
-				return `${distanceKm.toFixed(1)} km`;
-			}
-			const meters = Math.round(distanceKm * 1000);
-			return `${meters} m`;
+			if (distanceKm >= 1) return `${distanceKm.toFixed(1)} km`;
+			return `${Math.round(distanceKm * 1000)} m`;
 		}
 	}
 
@@ -223,7 +221,6 @@
 		const features: any[] = [];
 		for (const a of item.attachments) {
 			if (a && a.geojson && a.geojson.features) {
-				// If it's a FeatureCollection
 				if (a.geojson.type === 'FeatureCollection' && Array.isArray(a.geojson.features)) {
 					features.push(...a.geojson.features);
 				} else if (a.geojson.type === 'Feature') {
@@ -232,24 +229,8 @@
 			}
 		}
 		if (features.length === 0) return null;
-		return {
-			type: 'FeatureCollection',
-			features
-		};
+		return { type: 'FeatureCollection', features };
 	}
-
-	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
-	const getTimezoneTip = (zone?: string | null) => {
-		const label = getTimezoneLabel(zone);
-		return label === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`;
-	};
-	const shouldShowTzBadge = (zone?: string | null) =>
-		!!zone && getTimezoneLabel(zone) !== localTimeZone;
 
 	function formatLocalTravelWindow(
 		start: string | null,
@@ -258,17 +239,14 @@
 		endTimezone: string | null
 	): string | null {
 		if (!start && !end) return null;
-
 		const formatLocal = (dateStr: string | null, zone: string | null) => {
 			if (!dateStr || isAllDay(dateStr)) return null;
 			const dt = DateTime.fromISO(dateStr, { zone: zone ?? 'UTC' });
 			if (!dt.isValid) return null;
 			return dt.setZone(localTimeZone).toLocaleString(DateTime.DATETIME_MED);
 		};
-
 		const startLocal = formatLocal(start, startTimezone);
 		const endLocal = formatLocal(end, endTimezone ?? startTimezone);
-
 		if (!startLocal && !endLocal) return null;
 		if (startLocal && endLocal) return `${startLocal} → ${endLocal}`;
 		return startLocal ?? endLocal ?? null;
@@ -276,12 +254,6 @@
 
 	const primaryTripTimezone = (startTimezone: string | null, endTimezone: string | null) =>
 		startTimezone ?? endTimezone ?? null;
-
-	function shouldShowTripTimezone(startTimezone: string | null, endTimezone: string | null) {
-		const tz = primaryTripTimezone(startTimezone, endTimezone);
-		if (!tz) return false;
-		return tz !== localTimeZone;
-	}
 
 	$: localTravelWindow = transportation
 		? formatLocalTravelWindow(
@@ -299,29 +271,81 @@
 				transportation?.end_timezone ?? null
 			) !== localTimeZone
 	);
+
+	$: mapCenter = transportation ? getMapCenter(transportation) : null;
+	$: attachmentGeojson = transportation ? collectAttachmentGeojson(transportation) : null;
+
+	onMount(async () => {
+		// Fetch exchange rates for currency conversion
+		fetchExchangeRates();
+
+		if (data.props.transportation) {
+			transportation = data.props.transportation;
+			transportation.images = sortImagesByPrimary(transportation.images || []);
+			if (transportation.visits) {
+				transportation.visits = sortVisitsChronologically(transportation.visits);
+			}
+
+			// Fetch history in collaborative mode
+			if (data.collaborativeMode) {
+				try {
+					const res = await fetch(`/api/transportations/${transportation.id}/history/`);
+					if (res.ok) {
+						history = await res.json();
+					}
+				} catch (e) {
+					console.error('Failed to fetch history:', e);
+				}
+			}
+		} else {
+			notFound = true;
+		}
+	});
+
+	function closeImageModal() {
+		isImageModalOpen = false;
+	}
+
+	function openImageModal(index: number) {
+		modalInitialIndex = index;
+		isImageModalOpen = true;
+	}
+
+	async function handleEditModalClose() {
+		try {
+			const res = await fetch(`/api/transportations/${transportation.id}`);
+			if (res.ok) {
+				transportation = await res.json();
+				ratingRefreshKey++;
+			}
+		} catch (e) {
+			console.error('Failed to refresh transportation:', e);
+		}
+		// Refresh history after save in collaborative mode
+		if (data.collaborativeMode && transportation.id) {
+			try {
+				const res = await fetch(`/api/transportations/${transportation.id}/history/`);
+				if (res.ok) {
+					history = await res.json();
+				}
+			} catch (e) {
+				console.error('Failed to refresh history:', e);
+			}
+		}
+		isEditModalOpen = false;
+	}
 </script>
 
 {#if notFound}
-	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
-		<div class="hero-content text-center">
-			<div class="max-w-md">
-				<img src={Lost} alt="Lost" class="w-64 mx-auto mb-8 opacity-80" />
-				<h1 class="text-5xl font-bold text-primary mb-4">Transportation not found</h1>
-				<p class="text-lg opacity-70 mb-8">{$t('adventures.location_not_found_desc')}</p>
-				<button class="btn btn-primary btn-lg" on:click={() => goto('/')}>
-					{$t('adventures.homepage')}
-				</button>
-			</div>
-		</div>
-	</div>
+	<EntityNotFound title="Transportation not found" />
 {/if}
 
 {#if isEditModalOpen}
 	<TransportationModal
-		on:close={() => (isEditModalOpen = false)}
+		on:close={handleEditModalClose}
 		user={data.user}
 		transportationToEdit={transportation}
-		bind:transportation
+		collaborativeMode={data.collaborativeMode}
 	/>
 {/if}
 
@@ -335,194 +359,38 @@
 {/if}
 
 {#if !transportation && !notFound}
-	<div class="hero min-h-screen overflow-x-hidden">
-		<div class="hero-content">
-			<span class="loading loading-spinner w-24 h-24 text-primary"></span>
-		</div>
-	</div>
+	<EntityLoading />
 {/if}
 
 {#if transportation}
-	{#if data.user?.uuid && transportation.user && data.user.uuid === transportation.user}
-		<div class="fixed bottom-6 right-6 z-50">
-			<button
-				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				on:click={() => (isEditModalOpen = true)}
-			>
-				<ClipboardList class="w-8 h-8" />
-			</button>
-		</div>
-	{/if}
+	<EntityEditFab show={canEdit} onClick={() => (isEditModalOpen = true)} />
 
 	<!-- Hero Section -->
-	<div class="relative">
-		<div
-			class="hero min-h-[60vh] relative overflow-hidden"
-			class:min-h-[30vh]={!transportation.images || transportation.images.length === 0}
-		>
-			<!-- Background: Images or Gradient -->
-			{#if transportation.images && transportation.images.length > 0}
-				<div class="hero-overlay bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-				{#each transportation.images as image, i}
-					<div
-						class="absolute inset-0 transition-opacity duration-500"
-						class:opacity-100={i === currentSlide}
-						class:opacity-0={i !== currentSlide}
-					>
-						<button
-							class="w-full h-full p-0 bg-transparent border-0"
-							on:click={() => openImageModal(i)}
-							aria-label={`View full image of ${transportation.name}`}
-						>
-							<img src={image.image} class="w-full h-full object-cover" alt={transportation.name} />
-						</button>
-					</div>
-				{/each}
-			{:else}
-				<div class="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20"></div>
-			{/if}
-
-			<!-- Content -->
-			<div
-				class="hero-content relative z-10 text-center"
-				class:text-white={transportation.images?.length > 0}
-			>
-				<div class="max-w-4xl">
-					<div class="flex justify-center items-center gap-3 mb-4">
-						<span class="text-5xl">{getTransportationIcon(transportation.type)}</span>
-						<h1 class="text-6xl font-bold drop-shadow-lg">{transportation.name}</h1>
-					</div>
-
-					<!-- Rating -->
-					{#if transportation.rating !== undefined && transportation.rating !== null}
-						<div class="flex justify-center mb-6">
-							<div class="rating rating-lg">
-								{#each Array.from({ length: 5 }, (_, i) => i + 1) as star}
-									<input
-										type="radio"
-										name="rating-hero"
-										class="mask mask-star-2 bg-warning"
-										checked={star <= transportation.rating}
-										disabled
-									/>
-								{/each}
-							</div>
-						</div>
-					{/if}
-
-					<!-- Quick Info Badges -->
-					<div class="flex flex-wrap justify-center gap-4 mb-6">
-						{#if transportation.type}
-							<div class="badge badge-lg badge-primary font-semibold px-4 py-3">
-								{$t(`transportation.modes.${transportation.type}`)}
-							</div>
-						{/if}
-						{#if transportation.from_location}
-							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-								🚩 {transportation.from_location}
-							</div>
-						{/if}
-						{#if transportation.to_location}
-							<div class="badge badge-lg badge-secondary font-semibold px-4 py-3">
-								🏁 {transportation.to_location}
-							</div>
-						{/if}
-						{#if getRouteCodes(transportation)}
-							<div class="badge badge-lg badge-outline font-semibold px-4 py-3 gap-2">
-								✈️ {getRouteCodes(transportation)}
-							</div>
-						{/if}
-						{#if transportation.is_public}
-							<div class="badge badge-lg badge-accent font-semibold px-4 py-3">
-								👁️ {$t('adventures.public')}
-							</div>
-						{:else}
-							<div class="badge badge-lg badge-ghost font-semibold px-4 py-3">
-								🔒 {$t('adventures.private')}
-							</div>
-						{/if}
-					</div>
-
-					<!-- Image Navigation (only shown when multiple images exist) -->
-					{#if transportation.images && transportation.images.length > 1}
-						<div class="w-full max-w-md mx-auto">
-							<!-- Navigation arrows and current position -->
-							<div class="flex items-center justify-center gap-4 mb-3">
-								<button
-									on:click={() =>
-										goToSlide(
-											currentSlide > 0 ? currentSlide - 1 : transportation.images.length - 1
-										)}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.previous_image')}
-								>
-									❮
-								</button>
-
-								<div class="text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
-									{currentSlide + 1} / {transportation.images.length}
-								</div>
-
-								<button
-									on:click={() =>
-										goToSlide(
-											currentSlide < transportation.images.length - 1 ? currentSlide + 1 : 0
-										)}
-									class="btn btn-circle btn-sm btn-primary"
-									aria-label={$t('adventures.next_image')}
-								>
-									❯
-								</button>
-							</div>
-
-							<!-- Dot navigation -->
-							{#if transportation.images.length <= 12}
-								<div class="flex justify-center gap-2 flex-wrap">
-									{#each transportation.images as _, i}
-										<button
-											on:click={() => goToSlide(i)}
-											class="btn btn-circle btn-xs transition-all duration-200"
-											class:btn-primary={i === currentSlide}
-											class:btn-outline={i !== currentSlide}
-											class:opacity-50={i !== currentSlide}
-										>
-											{i + 1}
-										</button>
-									{/each}
-								</div>
-							{:else}
-								<div class="relative">
-									<div
-										class="absolute left-0 top-0 bottom-2 w-4 bg-gradient-to-r from-black/30 to-transparent pointer-events-none"
-									></div>
-									<div
-										class="absolute right-0 top-0 bottom-2 w-4 bg-gradient-to-l from-black/30 to-transparent pointer-events-none"
-									></div>
-								</div>
-							{/if}
-						</div>
-					{/if}
-				</div>
-			</div>
-		</div>
-	</div>
+	<EntityHeroSection
+		name={transportation.name}
+		icon={getTransportationIcon(transportation.type)}
+		images={transportation.images || []}
+		averageRating={transportation.average_rating}
+		rating={transportation.rating}
+		ratingCount={transportation.rating_count}
+		{ratingRefreshKey}
+		badges={heroBadges}
+		on:openImage={(e) => openImageModal(e.detail)}
+	/>
 
 	<!-- Main Content -->
 	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-8">
 			<!-- Left Column - Main Content -->
 			<div class="lg:col-span-2 space-y-6 sm:space-y-8">
-				<!-- Description Card -->
-				{#if transportation.description}
-					<div class="card bg-base-200 shadow-xl">
-						<div class="card-body">
-							<h2 class="card-title text-2xl mb-4">📝 {$t('adventures.description')}</h2>
-							<article class="prose max-w-none">
-								{@html DOMPurify.sanitize(renderMarkdown(transportation.description))}
-							</article>
-						</div>
-					</div>
-				{/if}
+				<EntityDescriptionCard description={transportation.description} />
+
+				<EntityVisitsTimeline
+					visits={transportation.visits || []}
+					measurementSystem={data.user?.measurement_system || 'metric'}
+					sunTimes={transportation.sun_times || []}
+					countryCurrency={transportation.origin_country?.currency_code || null}
+				/>
 
 				<!-- Map Section -->
 				{#if mapCenter}
@@ -560,15 +428,11 @@
 																	<StarOutline class="w-4 h-4 text-gray-400" />
 																{/if}
 															{/each}
-															<span class="text-xs text-black ml-1">
-																({transportation.rating}/5)
-															</span>
+															<span class="text-xs text-black ml-1">({transportation.rating}/5)</span>
 														</div>
 													{/if}
 													{#if transportation.from_location}
-														<div class="text-xs text-black">
-															📍 {transportation.from_location}
-														</div>
+														<div class="text-xs text-black">📍 {transportation.from_location}</div>
 													{/if}
 												</div>
 											</Popup>
@@ -598,15 +462,11 @@
 																	<StarOutline class="w-4 h-4 text-gray-400" />
 																{/if}
 															{/each}
-															<span class="text-xs text-black ml-1">
-																({transportation.rating}/5)
-															</span>
+															<span class="text-xs text-black ml-1">({transportation.rating}/5)</span>
 														</div>
 													{/if}
 													{#if transportation.to_location}
-														<div class="text-xs text-black">
-															📍 {transportation.to_location}
-														</div>
+														<div class="text-xs text-black">📍 {transportation.to_location}</div>
 													{/if}
 												</div>
 											</Popup>
@@ -614,7 +474,6 @@
 									{/if}
 
 									{#if attachmentGeojson}
-										<!-- Render attachment GeoJSON (e.g., GPX converted to GeoJSON) -->
 										<GeoJSON data={attachmentGeojson}>
 											<LineLayer
 												id="transportation-route"
@@ -731,10 +590,7 @@
 															{#if isAllDay(transportation.date)}
 																{formatAllDayDate(transportation.date)}
 															{:else}
-																{formatDateInTimezone(
-																	transportation.date,
-																	transportation.start_timezone
-																)}
+																{formatDateInTimezone(transportation.date, transportation.start_timezone)}
 															{/if}
 														</p>
 													</div>
@@ -775,18 +631,12 @@
 														<span
 															class="badge badge-ghost badge-xs"
 															class:tooltip={Boolean(
-																getTimezoneTip(
-																	transportation.end_timezone ?? transportation.start_timezone
-																)
+																getTimezoneTip(transportation.end_timezone ?? transportation.start_timezone)
 															)}
-															data-tip={getTimezoneTip(
-																transportation.end_timezone ?? transportation.start_timezone
-															) ?? undefined}
+															data-tip={getTimezoneTip(transportation.end_timezone ?? transportation.start_timezone) ?? undefined}
 														>
 															{#if shouldShowTzBadge(transportation.end_timezone ?? transportation.start_timezone)}
-																{getTimezoneLabel(
-																	transportation.end_timezone ?? transportation.start_timezone
-																)}
+																{getTimezoneLabel(transportation.end_timezone ?? transportation.start_timezone)}
 															{:else}
 																{$t('adventures.local') ?? 'Local'}
 															{/if}
@@ -817,9 +667,7 @@
 
 							<!-- Type -->
 							<div class="flex items-start gap-3">
-								<span class="text-xl mt-1 flex-shrink-0"
-									>{getTransportationIcon(transportation.type)}</span
-								>
+								<span class="text-xl mt-1 flex-shrink-0">{getTransportationIcon(transportation.type)}</span>
 								<div>
 									<p class="font-semibold text-sm opacity-70">{$t('transportation.type')}</p>
 									<p class="text-base">{$t(`transportation.modes.${transportation.type}`)}</p>
@@ -831,9 +679,7 @@
 								<div class="flex items-start gap-3">
 									<CardAccountDetails class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
 									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('transportation.flight_number')}
-										</p>
+										<p class="font-semibold text-sm opacity-70">{$t('transportation.flight_number')}</p>
 										<p class="text-base font-mono">{transportation.flight_number}</p>
 									</div>
 								</div>
@@ -844,9 +690,7 @@
 								<div class="flex items-start gap-3">
 									<MapMarker class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
 									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('transportation.codes') ?? 'Codes'}
-										</p>
+										<p class="font-semibold text-sm opacity-70">{$t('transportation.codes') ?? 'Codes'}</p>
 										<p class="text-base font-mono">{getRouteCodes(transportation)}</p>
 									</div>
 								</div>
@@ -857,9 +701,7 @@
 								<div class="flex items-start gap-3">
 									<MapMarkerDistanceIcon class="w-5 h-5 text-primary mt-1 flex-shrink-0" />
 									<div>
-										<p class="font-semibold text-sm opacity-70">
-											{$t('adventures.distance') ?? 'Distance'}
-										</p>
+										<p class="font-semibold text-sm opacity-70">{$t('adventures.distance') ?? 'Distance'}</p>
 										<p class="text-base">{formatDistance(transportation.distance)}</p>
 									</div>
 								</div>
@@ -893,45 +735,142 @@
 									</div>
 								</div>
 							{/if}
+
+							<!-- Tags -->
+							{#if transportation.tags && transportation.tags.length > 0}
+								<div>
+									<p class="font-semibold text-sm opacity-70 mb-2">🏷️ {$t('adventures.tags')}</p>
+									<div class="flex flex-wrap gap-1">
+										{#each transportation.tags as tag}
+											<span class="badge badge-sm badge-outline">{tag}</span>
+										{/each}
+									</div>
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>
 
-				<!-- Additional Images -->
-				{#if transportation.images && transportation.images.length > 0}
+				<!-- Average Price -->
+				{#if transportation.average_price_per_user}
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title text-xl mb-4">🖼️ {$t('adventures.images')}</h2>
-							<div class="grid grid-cols-2 gap-2">
-								{#each transportation.images as image, i}
-									<button
-										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
-										on:click={() => openImageModal(i)}
-									>
-										<img
-											src={image.image}
-											alt={`${transportation.name} - ${i + 1}`}
-											class="w-full h-full object-cover"
-										/>
-									</button>
-								{/each}
+							<h3 class="card-title text-lg mb-3">💰 {$t('adventures.price')}</h3>
+							<div class="space-y-4">
+								{#if transportation.average_price_per_user}
+									{@const avgPrice = transportation.average_price_per_user}
+									{@const userCurrency = data.user?.default_currency || DEFAULT_CURRENCY}
+									{@const countryCurrency = transportation.origin_country?.currency_code}
+									<div class="border-t border-base-300 pt-3">
+										<div class="text-sm opacity-70 mb-1">{$t('adventures.avg_price')}</div>
+										<!-- Main price in country's currency (or original if no country) -->
+										{#if $ratesLoaded && countryCurrency && avgPrice.currency !== countryCurrency}
+											{@const countryConverted = formatConvertedPrice(avgPrice.amount, avgPrice.currency, countryCurrency)}
+											{#if countryConverted}
+												<div class="text-xl font-bold text-success">
+													{countryConverted}
+												</div>
+											{:else}
+												<div class="text-xl font-bold text-success">
+													{formatMoney({ amount: avgPrice.amount, currency: avgPrice.currency })}
+												</div>
+											{/if}
+										{:else}
+											<div class="text-xl font-bold text-success">
+												{formatMoney({ amount: avgPrice.amount, currency: avgPrice.currency })}
+											</div>
+										{/if}
+										<div class="text-xs opacity-70">
+											{$t('adventures.avg_per_user')}
+										</div>
+
+										<!-- Converted price in user's currency (if different from country currency) -->
+										{#if $ratesLoaded && countryCurrency && userCurrency !== countryCurrency}
+											{@const userConverted = formatConvertedPrice(avgPrice.amount, avgPrice.currency, userCurrency)}
+											{#if userConverted}
+												<div class="text-sm text-base-content/70">
+													{userConverted}
+												</div>
+											{/if}
+										{:else if $ratesLoaded && !countryCurrency && avgPrice.currency !== userCurrency}
+											{@const userConverted = formatConvertedPrice(avgPrice.amount, avgPrice.currency, userCurrency)}
+											{#if userConverted}
+												<div class="text-sm text-base-content/70">
+													{userConverted}
+												</div>
+											{/if}
+										{/if}
+
+										{#if avgPrice.visit_count > 0}
+											<div class="text-xs opacity-50 mt-1">
+												{$t('adventures.based_on_visits', { values: { count: avgPrice.visit_count } })}
+											</div>
+										{/if}
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>
 				{/if}
 
-				<!-- Attachments -->
-				{#if transportation.attachments && transportation.attachments.length > 0}
+				<!-- Activity Summary -->
+				{#if getTotalActivities(transportation) > 0}
+					{@const ms = data.user?.measurement_system ?? 'metric'}
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
-							<h2 class="card-title text-xl mb-4">📎 {$t('adventures.attachments')}</h2>
+							<h3 class="card-title text-lg mb-4">🏃‍♂️ Activity Summary</h3>
 							<div class="space-y-2">
-								{#each transportation.attachments as attachment}
-									<AttachmentCard {attachment} />
-								{/each}
+								<div class="stat">
+									<div class="stat-title">Total Activities</div>
+									<div class="stat-value text-2xl">{getTotalActivities(transportation)}</div>
+								</div>
+								{#if getTotalDistance(transportation, ms) > 0}
+									<div class="stat">
+										<div class="stat-title">Total Distance</div>
+										<div class="stat-value text-xl">
+											{getTotalDistance(transportation, ms).toFixed(1)}
+											{ms === 'imperial' ? 'mi' : 'km'}
+										</div>
+									</div>
+								{/if}
+								{#if getTotalElevationGain(transportation, ms) > 0}
+									<div class="stat">
+										<div class="stat-title">Total Elevation</div>
+										<div class="stat-value text-xl">
+											{getTotalElevationGain(transportation, ms).toFixed(0)}
+											{ms === 'imperial' ? 'ft' : 'm'}
+										</div>
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>
+				{/if}
+
+				<EntityImagesCard
+					images={transportation.images || []}
+					showPrimaryBadge={false}
+					showUserBadge={false}
+					on:openImage={(e) => openImageModal(e.detail)}
+				/>
+
+				<EntityAttachmentsCard attachments={transportation.attachments || []} />
+
+				<!-- History Panel (Collaborative Mode) -->
+				{#if data.collaborativeMode && history.length > 0}
+					<HistoryPanel
+						{history}
+						itemId={transportation.id}
+						apiEndpoint="transportations"
+						canRevert={true}
+						on:reverted={async () => {
+							const historyRes = await fetch(`/api/transportations/${transportation.id}/history/`);
+							if (historyRes.ok) {
+								history = await historyRes.json();
+							}
+							window.location.reload();
+						}}
+					/>
 				{/if}
 			</div>
 		</div>

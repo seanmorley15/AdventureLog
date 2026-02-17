@@ -73,6 +73,7 @@ INSTALLED_APPS = (
     # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
     'slippers',
+    'mcp_server',  # MCP Server for AI Agent integration
 
 )
 
@@ -93,6 +94,7 @@ MIDDLEWARE = (
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
+    'adventures.middleware.AuditUserMiddleware',
 )
 
 # ---------------------------------------------------------------------------
@@ -273,6 +275,9 @@ SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
+# Collaborative mode: when enabled, public content is visible and editable by all authenticated users
+COLLABORATIVE_MODE = getenv('COLLABORATIVE_MODE', 'false').lower() == 'true'
+
 if getenv('EMAIL_BACKEND', 'console') == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:
@@ -370,3 +375,52 @@ COUNTRY_REGION_JSON_VERSION = 'v3.0'
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
 STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
 STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')
+
+# ---------------------------------------------------------------------------
+# MCP Server Configuration (Model Context Protocol for AI Agents)
+# ---------------------------------------------------------------------------
+DJANGO_MCP_AUTHENTICATION_CLASSES = [
+    'rest_framework.authentication.TokenAuthentication',
+    'rest_framework.authentication.SessionAuthentication',
+]
+
+DJANGO_MCP_GLOBAL_SERVER_CONFIG = {
+    'name': 'AdventureLog',
+    'instructions': (
+        'AdventureLog travel planning assistant. '
+        'Available tools:\n'
+        '- search_items: Search locations, transportations, or lodging by text (includes public items)\n'
+        '- get_item: Get full details of a location, transportation, or lodging\n'
+        '- list_items: List items by type (includes your own and public items)\n'
+        '- create_location: Create a new location with coordinates and tags\n'
+        '- create_transportation: Create a transportation (car/plane/train/bus/boat/bike/walking/cab/vtc/other)\n'
+        '- create_lodging: Create a lodging (hotel/hostel/resort/bnb/campground/cabin/apartment/house/villa/motel/other)\n'
+        '- edit_location: Edit an existing location (supports collaborative mode for public items)\n'
+        '- edit_transportation: Edit an existing transportation (supports collaborative mode)\n'
+        '- edit_lodging: Edit an existing lodging (supports collaborative mode)\n'
+        '- create_visit: Record a visit with dates, rating, price, and people count\n'
+        '- edit_visit: Edit a visit (dates, notes, rating, price)\n'
+        '- delete_visit: Delete a visit\n'
+        '- list_visits: List visits, optionally filtered by parent item\n'
+        '- create_activity: Add an activity to a visit (type, name, distance, elevation)\n'
+        '- create_collection: Create a trip collection with optional date range\n'
+        '- edit_collection: Edit a collection\n'
+        '- list_collections: List trip collections by status (all/upcoming/in_progress/completed/folder)\n'
+        '- get_collection: Get full collection details with items and itinerary\n'
+        '- add_to_collection: Add a location, transportation, or lodging to a collection\n'
+        '- share_collection: Share a collection with another user by user ID\n'
+        '- unshare_collection: Remove a user from a shared collection\n'
+        '- create_note: Create a note in a collection\n'
+        '- edit_note: Edit an existing note\n'
+        '- delete_note: Delete a note\n'
+        '- list_notes: List notes in a collection\n'
+        '- create_checklist: Create a checklist with items in a collection\n'
+        '- edit_checklist: Edit a checklist (title, items, checked state)\n'
+        '- delete_checklist: Delete a checklist\n'
+        '- list_checklists: List checklists in a collection\n'
+        '- list_templates: List available collection templates\n'
+        '- apply_template: Apply a template to create a new collection with structure\n'
+        '- reverse_geocode: Get address details from latitude/longitude coordinates\n'
+        '- list_reference_types: List all available types (transportation, lodging, adventure, activity)'
+    ),
+}

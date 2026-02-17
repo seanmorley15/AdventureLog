@@ -24,13 +24,40 @@
 		}
 	});
 
+	/**
+	 * Parse input string and split on common separators (comma, semicolon).
+	 * Handles repeated separators, trims whitespace, and deduplicates.
+	 */
+	function parseTagInput(input: string): string[] {
+		// Split on comma or semicolon (handles repeated separators like ,, or ;;)
+		const rawTags = input.split(/[,;]+/);
+
+		// Trim, lowercase, filter empty, and deduplicate
+		const seen = new Set<string>();
+		const result: string[] = [];
+
+		for (const tag of rawTags) {
+			const trimmed = tag.trim().toLocaleLowerCase();
+			if (trimmed && !seen.has(trimmed)) {
+				seen.add(trimmed);
+				result.push(trimmed);
+			}
+		}
+
+		return result;
+	}
+
 	function addActivity() {
 		if (inputVal && tags) {
-			const trimmedInput = inputVal.trim().toLocaleLowerCase();
-			if (trimmedInput && !tags.includes(trimmedInput)) {
-				tags = [...tags, trimmedInput];
-				inputVal = '';
+			const newTags = parseTagInput(inputVal);
+
+			// Filter out tags that already exist
+			const tagsToAdd = newTags.filter((tag) => !tags!.includes(tag));
+
+			if (tagsToAdd.length > 0) {
+				tags = [...tags, ...tagsToAdd];
 			}
+			inputVal = '';
 		}
 	}
 

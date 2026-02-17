@@ -3,6 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.authtoken.models import Token
 from .serializers import ChangeEmailSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -205,4 +206,73 @@ class DisablePasswordAuthenticationView(APIView):
         user.disable_password = False
         user.save()
         return Response({"detail": "Password authentication enabled."}, status=status.HTTP_200_OK)
-    
+
+
+class APITokenView(APIView):
+    """
+    Manage API token for MCP (Model Context Protocol) access.
+    Users can view, create, regenerate, or delete their API token.
+    This token is used to authenticate with the MCP endpoint for AI agent integration.
+    """
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('API token details'),
+            404: 'No token exists'
+        },
+        operation_description="Get the current API token for MCP access."
+    )
+    def get(self, request):
+        """Get the user's current API token."""
+        try:
+            token = Token.objects.get(user=request.user)
+            return Response({
+                "token": token.key,
+                "created": token.created,
+                "mcp_endpoint": f"{getenv('PUBLIC_URL', 'http://localhost:8000')}/api/mcp"
+            }, status=status.HTTP_200_OK)
+        except Token.DoesNotExist:
+            return Response({
+                "detail": "No API token exists. Use POST to create one.",
+                "mcp_endpoint": f"{getenv('PUBLIC_URL', 'http://localhost:8000')}/api/mcp"
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    @swagger_auto_schema(
+        responses={
+            201: openapi.Response('API token created'),
+            200: openapi.Response('API token regenerated')
+        },
+        operation_description="Create or regenerate API token for MCP access."
+    )
+    def post(self, request):
+        """Create a new API token or regenerate existing one."""
+        # Delete existing token if it exists
+        Token.objects.filter(user=request.user).delete()
+        # Create new token
+        token = Token.objects.create(user=request.user)
+        return Response({
+            "token": token.key,
+            "created": token.created,
+            "mcp_endpoint": f"{getenv('PUBLIC_URL', 'http://localhost:8000')}/api/mcp",
+            "detail": "API token created. Use this token to authenticate with the MCP endpoint."
+        }, status=status.HTTP_201_CREATED)
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('API token deleted'),
+            404: 'No token to delete'
+        },
+        operation_description="Delete the API token, revoking MCP access."
+    )
+    def delete(self, request):
+        """Delete the user's API token."""
+        deleted_count, _ = Token.objects.filter(user=request.user).delete()
+        if deleted_count > 0:
+            return Response({
+                "detail": "API token deleted. MCP access has been revoked."
+            }, status=status.HTTP_200_OK)
+        return Response({
+            "detail": "No API token to delete."
+        }, status=status.HTTP_404_NOT_FOUND)
+

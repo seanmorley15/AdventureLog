@@ -1,5 +1,7 @@
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
+from django.conf import settings
+from django.db.models import Q
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay, CollectionTemplate, AuditLog, TransportationType, LodgingType, AdventureType, ActivityType
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -7,6 +9,8 @@ from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
+from adventures.utils.visit_status import VisitStatusMixin
+from adventures.utils.serializer_mixins import OwnershipSerializerMixin, MediaSerializerMixin, RatingCountMixin
 import gpxpy
 import logging
 
@@ -39,11 +43,231 @@ def _serialize_collaborator(user, owner_id=None, request_user=None):
     }
 
 
-class ContentImageSerializer(CustomModelSerializer):
+def _convert_to_usd(amount, currency_code):
+    """
+    Convert an amount from any currency to USD using stored exchange rates.
+    Returns the amount in USD, or the original amount if no rate is found.
+    ExchangeRate.rate stores "1 USD = X currency", so USD = amount / rate.
+    """
+    if not amount or not currency_code:
+        return float(amount) if amount else 0.0
+
+    currency_code = str(currency_code).upper()
+    if currency_code == 'USD':
+        return float(amount)
+
+    from worldtravel.models import ExchangeRate
+    try:
+        rate = ExchangeRate.objects.get(currency_code=currency_code)
+        if rate.rate and rate.rate > 0:
+            return float(amount) / float(rate.rate)
+    except ExchangeRate.DoesNotExist:
+        pass
+
+    # Fallback: return original amount (treat as USD)
+    return float(amount)
+
+
+def _convert_from_usd(amount_usd, target_currency_code):
+    """
+    Convert an amount from USD to a target currency.
+    ExchangeRate.rate stores "1 USD = X currency", so target = amount_usd * rate.
+    """
+    if not amount_usd or not target_currency_code:
+        return float(amount_usd) if amount_usd else 0.0
+
+    target_currency_code = str(target_currency_code).upper()
+    if target_currency_code == 'USD':
+        return float(amount_usd)
+
+    from worldtravel.models import ExchangeRate
+    try:
+        rate = ExchangeRate.objects.get(currency_code=target_currency_code)
+        if rate.rate and rate.rate > 0:
+            return float(amount_usd) * float(rate.rate)
+    except ExchangeRate.DoesNotExist:
+        pass
+
+    # Fallback: return USD amount
+    return float(amount_usd)
+
+
+def _get_entity_currency(entity, entity_type):
+    """
+    Get the display currency for an entity.
+    Priority: country currency > most common visit currency > USD.
+    """
+    # 1. Try country currency
+    candidates = []
+    if entity_type == 'transportation':
+        candidates = [
+            getattr(entity, 'origin_country', None),
+            getattr(entity, 'destination_country', None),
+        ]
+    else:
+        candidates = [getattr(entity, 'country', None)]
+
+    for country in candidates:
+        if country:
+            code = getattr(country, 'currency_code', None)
+            if code and str(code).strip():
+                return str(code).strip()
+
+    # 2. Fallback: most common currency across visits
+    visits_rel = getattr(entity, 'visits', None)
+    if visits_rel:
+        visits_with_price = visits_rel.filter(total_price__isnull=False)
+        if visits_with_price.exists():
+            from collections import Counter
+            currencies = Counter(
+                str(v.total_price_currency) for v in visits_with_price
+                if v.total_price_currency and str(v.total_price_currency) != 'USD'
+            )
+            if currencies:
+                return currencies.most_common(1)[0][0]
+
+    return 'USD'
+
+
+def _calculate_price_tier(entity, entity_type='location'):
+    """
+    Calculate price tier (1-4) based on local comparison within same country.
+
+    💰      = budget-friendly (bottom 25%)
+    💰💰     = moderate (25-50%)
+    💰💰💰   = expensive (50-75%)
+    💰💰💰💰   = premium (top 25%)
+
+    Returns dict with tier and context, or None if insufficient data.
+    """
+    from django.db.models import Avg, F, FloatField
+    from django.db.models.functions import Cast
+
+    # Get the entity's average price per user
+    if entity_type == 'location':
+        country = entity.country
+        model_class = Location
+        visits_relation = 'visits'
+    elif entity_type == 'transportation':
+        country = entity.origin_country
+        model_class = Transportation
+        visits_relation = 'visits'
+    elif entity_type == 'lodging':
+        country = entity.country
+        model_class = Lodging
+        visits_relation = 'visits'
+    else:
+        return None
+
+    # Get this entity's average price per user (only require total_price)
+    entity_visits = entity.visits.filter(total_price__isnull=False)
+
+    if not entity_visits.exists():
+        return None
+
+    # Calculate this entity's price per user in USD (default number_of_people to 1)
+    total_price_usd = sum(_convert_to_usd(v.total_price.amount, v.total_price_currency) for v in entity_visits)
+    total_people = sum(v.number_of_people or 1 for v in entity_visits)
+
+    if total_people == 0:
+        return None
+
+    entity_price = total_price_usd / total_people
+
+    # If no country, show fallback tier with "Global" label
+    if not country:
+        return {
+            'tier': 2,  # Default to moderate
+            'country_code': None,
+            'country_name': 'Global',
+            'sample_size': 1,
+            'percentile': 50.0
+        }
+
+    # Get all entities of same type in same country with pricing data
+    if entity_type == 'location':
+        same_country = model_class.objects.filter(country=country)
+    elif entity_type == 'transportation':
+        same_country = model_class.objects.filter(origin_country=country)
+    else:  # lodging
+        same_country = model_class.objects.filter(country=country)
+
+    # Calculate prices for all entities in same country in USD (only require total_price)
+    all_prices = []
+    for e in same_country.prefetch_related('visits'):
+        visits = e.visits.filter(total_price__isnull=False)
+        if visits.exists():
+            t_price_usd = sum(_convert_to_usd(v.total_price.amount, v.total_price_currency) for v in visits)
+            t_people = sum(v.number_of_people or 1 for v in visits)  # Default to 1
+            if t_people > 0:
+                all_prices.append(t_price_usd / t_people)
+
+    if len(all_prices) < 2:
+        # Not enough data for comparison, show fallback tier with country info
+        return {
+            'tier': 2,  # Default to moderate
+            'country_code': country.country_code,
+            'country_name': country.name,
+            'sample_size': 1,
+            'percentile': 50.0
+        }
+
+    # Calculate percentile rank
+    all_prices.sort()
+    rank = sum(1 for p in all_prices if p <= entity_price)
+    percentile = (rank / len(all_prices)) * 100
+
+    # Determine tier based on percentile
+    if percentile <= 25:
+        tier = 1  # 💰 budget
+    elif percentile <= 50:
+        tier = 2  # 💰💰 moderate
+    elif percentile <= 75:
+        tier = 3  # 💰💰💰 expensive
+    else:
+        tier = 4  # 💰💰💰💰 premium
+
+    return {
+        'tier': tier,
+        'country_code': country.country_code,
+        'country_name': country.name,
+        'sample_size': len(all_prices),
+        'percentile': round(percentile, 1)
+    }
+
+
+class TransportationTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TransportationType
+        fields = ['id', 'key', 'name', 'icon', 'display_order']
+
+
+class LodgingTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LodgingType
+        fields = ['id', 'key', 'name', 'icon', 'display_order']
+
+
+class AdventureTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AdventureType
+        fields = ['id', 'key', 'name', 'icon', 'display_order']
+
+
+class ActivityTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ActivityType
+        fields = ['id', 'key', 'name', 'icon', 'color', 'display_order']
+
+
+class ContentImageSerializer(OwnershipSerializerMixin, CustomModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
+    is_owner = serializers.SerializerMethodField()
+
     class Meta:
         model = ContentImage
-        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
-        read_only_fields = ['id', 'user']
+        fields = ['id', 'image', 'is_primary', 'user', 'immich_id', 'user_username', 'is_owner']
+        read_only_fields = ['id', 'user', 'user_username', 'is_owner']
 
     def to_representation(self, instance):
         # If immich_id is set, check for user integration once
@@ -68,13 +292,16 @@ class ContentImageSerializer(CustomModelSerializer):
 
         return representation
     
-class AttachmentSerializer(CustomModelSerializer):
+class AttachmentSerializer(OwnershipSerializerMixin, CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     geojson = serializers.SerializerMethodField()
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
+    is_owner = serializers.SerializerMethodField()
+
     class Meta:
         model = ContentAttachment
-        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson']
-        read_only_fields = ['id', 'user']
+        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson', 'user_username', 'is_owner']
+        read_only_fields = ['id', 'user', 'user_username', 'is_owner']
 
     def get_extension(self, obj):
         return obj.file.name.split('.')[-1]
@@ -94,20 +321,23 @@ class AttachmentSerializer(CustomModelSerializer):
             return gpx_to_geojson(obj.file)
         return None
     
-class CategorySerializer(serializers.ModelSerializer):
+class CategorySerializer(OwnershipSerializerMixin, serializers.ModelSerializer):
     num_locations = serializers.SerializerMethodField()
+    is_public = serializers.BooleanField(source='is_global', default=True)
+    is_owned = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'display_name', 'icon', 'num_locations']
-        read_only_fields = ['id', 'num_locations']
+        fields = ['id', 'name', 'display_name', 'icon', 'num_locations', 'is_public', 'is_owned']
+        read_only_fields = ['id', 'num_locations', 'is_owned']
 
     def validate_name(self, value):
         return value.lower()
 
     def create(self, validated_data):
-        user = self.context['request'].user
         validated_data['name'] = validated_data['name'].lower()
-        return Category.objects.create(user=user, **validated_data)
+        # User is set by perform_create in the view
+        return Category.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -116,10 +346,84 @@ class CategorySerializer(serializers.ModelSerializer):
             instance.name = validated_data['name'].lower()
         instance.save()
         return instance
-    
+
     def get_num_locations(self, obj):
-        return Location.objects.filter(category=obj, user=obj.user).count()
-    
+        request = self.context.get('request')
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            # In collaborative mode: count user's locations + public locations using this category
+            if request and request.user.is_authenticated:
+                return Location.objects.filter(
+                    Q(user=request.user) | Q(is_public=True),
+                    category=obj
+                ).distinct().count()
+            return Location.objects.filter(category=obj, is_public=True).count()
+        # In normal mode, count only user's locations
+        if obj.user:
+            return Location.objects.filter(category=obj, user=obj.user).count()
+        return 0
+
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    """Serializer for audit log entries in collaborative mode."""
+    user_username = serializers.CharField(source='user.username', read_only=True, default='Unknown')
+    content_type_name = serializers.SerializerMethodField()
+    is_revertible = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'user_username', 'action', 'object_repr', 'changes', 'timestamp', 'content_type_name', 'is_revertible']
+        read_only_fields = fields
+
+    def get_content_type_name(self, obj):
+        return obj.content_type.model if obj.content_type else None
+
+    def get_is_revertible(self, obj):
+        """Determine if this audit log entry can be reverted."""
+        from adventures.models import Location, ContentImage, ContentAttachment
+
+        # Can't revert if no object_id
+        if not obj.object_id:
+            return False
+
+        model_class = obj.content_type.model_class()
+
+        if obj.action == 'create':
+            # Can revert create by deleting the object (if it still exists)
+            try:
+                if model_class == ContentImage:
+                    return ContentImage.objects.filter(id=obj.object_id, is_deleted=False).exists()
+                elif model_class == ContentAttachment:
+                    return ContentAttachment.objects.filter(id=obj.object_id, is_deleted=False).exists()
+                else:
+                    return model_class.objects.filter(pk=obj.object_id).exists()
+            except Exception:
+                return False
+
+        elif obj.action == 'update':
+            # Can revert update if object exists and we have old values
+            if not obj.changes:
+                return False
+            try:
+                return model_class.objects.filter(pk=obj.object_id).exists()
+            except Exception:
+                return False
+
+        elif obj.action == 'delete':
+            # Can revert delete if object is soft-deleted (images/attachments only)
+            try:
+                if model_class == ContentImage:
+                    return ContentImage.objects.filter(id=obj.object_id, is_deleted=True).exists()
+                elif model_class == ContentAttachment:
+                    return ContentAttachment.objects.filter(id=obj.object_id, is_deleted=True).exists()
+                else:
+                    return False  # Can't revert hard deletes
+            except Exception:
+                return False
+
+        return False
+
+
 class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
     wanderer_data = serializers.SerializerMethodField()
@@ -222,15 +526,35 @@ class ActivitySerializer(CustomModelSerializer):
 class VisitSerializer(serializers.ModelSerializer):
 
     activities = ActivitySerializer(many=True, read_only=True, required=False)
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
+    collection_info = serializers.SerializerMethodField()
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = [
+            'id', 'start_date', 'end_date', 'timezone', 'notes', 'rating',
+            'total_price', 'total_price_currency', 'number_of_people',
+            'activities', 'location', 'transportation', 'lodging',
+            'created_at', 'updated_at', 'user', 'user_username', 'collection', 'collection_info'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'user_username', 'collection_info']
+
+    def get_collection_info(self, obj):
+        """Return collection name and id if visit was created from a collection."""
+        if obj.collection:
+            return {
+                'id': str(obj.collection.id),
+                'name': obj.collection.name
+            }
+        return None
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):
             validated_data['end_date'] = validated_data['start_date']
+        # Set the user from the request context
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['user'] = request.user
         return super().create(validated_data)
 
 
@@ -258,18 +582,31 @@ class CalendarLocationSerializer(serializers.ModelSerializer):
         }
 
                                    
-class LocationSerializer(CustomModelSerializer):
+class LocationSerializer(OwnershipSerializerMixin, MediaSerializerMixin, RatingCountMixin, VisitStatusMixin, CustomModelSerializer):
+    """
+    Serializer for Location objects.
+
+    Inherits get_is_visited from VisitStatusMixin.
+    """
     images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
+    contributors = serializers.SerializerMethodField()
+    last_modified_by = serializers.SerializerMethodField()
+    # average_rating is now a stored field, not calculated
+    rating_count = serializers.SerializerMethodField()
+    # Derived price metrics computed from visits
+    average_price_per_user = serializers.SerializerMethodField()
+    price_tier = serializers.SerializerMethodField()
     country = CountrySerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     city = CitySerializer(read_only=True)
     collections = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Collection.objects.all(), 
+        many=True,
+        queryset=Collection.objects.all(),
         required=False
     )
     trails = TrailSerializer(many=True, read_only=True, required=False)
@@ -277,12 +614,133 @@ class LocationSerializer(CustomModelSerializer):
     class Meta:
         model = Location
         fields = [
-            'id', 'name', 'description', 'rating', 'tags', 'location', 
-            'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails',
-            'price', 'price_currency'
+            'id', 'name', 'description', 'rating', 'average_rating', 'rating_count', 'tags', 'location',
+            'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude',
+            'latitude', 'visits', 'is_visited', 'is_owned', 'contributors', 'last_modified_by', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails',
+            'price', 'price_currency', 'average_price_per_user', 'price_tier'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited', 'is_owned', 'contributors', 'last_modified_by', 'average_rating', 'rating_count', 'average_price_per_user', 'price_tier']
+
+    def get_average_price_per_user(self, obj):
+        """
+        Calculate average price per user from visit-level costs.
+        All prices are converted to USD for computation, then converted
+        to the entity's country currency for display.
+        """
+        visits_with_price = obj.visits.filter(total_price__isnull=False)
+
+        if not visits_with_price.exists():
+            return None
+
+        total_price_usd = 0
+        total_people = 0
+        count = 0
+
+        for visit in visits_with_price:
+            total_price_usd += _convert_to_usd(visit.total_price.amount, visit.total_price_currency)
+            total_people += visit.number_of_people or 1
+            count += 1
+
+        if total_people == 0:
+            return None
+
+        avg_usd = total_price_usd / total_people
+        display_currency = _get_entity_currency(obj, 'location')
+        display_amount = _convert_from_usd(avg_usd, display_currency)
+
+        return {
+            'amount': round(display_amount, 2),
+            'currency': display_currency,
+            'visit_count': count
+        }
+
+    def get_price_tier(self, obj):
+        """Calculate local price tier (1-4) based on country comparison."""
+        return _calculate_price_tier(obj, entity_type='location')
+
+    def get_contributors(self, obj):
+        """
+        Get unique users who have contributed to this location.
+        Contributors include: owner, users who added visits, images, or attachments.
+        Owner is always listed first. Limited to 10 contributors.
+        """
+        MAX_CONTRIBUTORS = 10
+        seen_ids = set()
+        contributors = []
+
+        # Add owner first (if exists)
+        if obj.user:
+            seen_ids.add(obj.user.id)
+            contributors.append({
+                'uuid': str(obj.user.uuid),
+                'username': obj.user.username,
+                'profile_pic': _build_profile_pic_url(obj.user),
+            })
+
+        # Collect users from visits
+        for visit in obj.visits.select_related('user').all():
+            if visit.user and visit.user.id not in seen_ids:
+                seen_ids.add(visit.user.id)
+                contributors.append({
+                    'uuid': str(visit.user.uuid),
+                    'username': visit.user.username,
+                    'profile_pic': _build_profile_pic_url(visit.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        # Collect users from images (non-deleted only)
+        for image in obj.images.filter(is_deleted=False).select_related('user').all():
+            if image.user and image.user.id not in seen_ids:
+                seen_ids.add(image.user.id)
+                contributors.append({
+                    'uuid': str(image.user.uuid),
+                    'username': image.user.username,
+                    'profile_pic': _build_profile_pic_url(image.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        # Collect users from attachments (non-deleted only)
+        for attachment in obj.attachments.filter(is_deleted=False).select_related('user').all():
+            if attachment.user and attachment.user.id not in seen_ids:
+                seen_ids.add(attachment.user.id)
+                contributors.append({
+                    'uuid': str(attachment.user.uuid),
+                    'username': attachment.user.username,
+                    'profile_pic': _build_profile_pic_url(attachment.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        return contributors
+
+    def get_last_modified_by(self, obj):
+        """
+        Get the user who last modified this location (from audit logs).
+        Returns dict with username, timestamp, and profile_pic, or None.
+        """
+        if not getattr(settings, 'COLLABORATIVE_MODE', False):
+            return None
+
+        from django.contrib.contenttypes.models import ContentType
+
+        ct = ContentType.objects.get_for_model(Location)
+        latest_log = AuditLog.objects.filter(
+            content_type=ct,
+            object_id=obj.pk,
+            action='update'
+        ).select_related('user').order_by('-timestamp').first()
+
+        if not latest_log or not latest_log.user:
+            return None
+
+        return {
+            'uuid': str(latest_log.user.uuid),
+            'username': latest_log.user.username,
+            'profile_pic': _build_profile_pic_url(latest_log.user),
+            'timestamp': latest_log.timestamp.isoformat(),
+        }
 
     # Makes it so the whole user object is returned in the serializer instead of just the user uuid
     def to_representation(self, instance):
@@ -305,12 +763,6 @@ class LocationSerializer(CustomModelSerializer):
                     representation.pop(field, None)
 
         return representation
-
-
-    def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
-        # Filter out None values from the serialized data
-        return [image for image in serializer.data if image is not None]
 
     def validate_collections(self, collections):
         """Validate that collections are compatible with the location being created/updated"""
@@ -343,20 +795,27 @@ class LocationSerializer(CustomModelSerializer):
             
             # Check location owner compatibility - both directions
             if collection.user != location_owner:
-                
+                # In collaborative mode, allow public locations to be added to any collection
+                is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+                # Check if location is public (from instance for updates, or initial data for creates)
+                is_public_location = self.instance.is_public if self.instance else self.initial_data.get('is_public', False)
+
+                if is_collaborative and is_public_location:
+                    continue  # Allow public locations in collaborative mode
+
                 # If user owns the collection but not the location, location owner must have shared access
                 if collection.user == user:
                     location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
-                    
+
                     if not location_owner_has_shared_access:
                         raise serializers.ValidationError(
                             f"Locations must be associated with collections owned by the same user or shared collections. Collection owner: {collection.user.username} Location owner: {location_owner.username if location_owner else 'None'}"
                         )
-                
+
                 # If using someone else's collection, location owner must have shared access
                 else:
                     location_owner_has_shared_access = collection.shared_with.filter(id=location_owner.id).exists() if location_owner else False
-                    
+
                     if not location_owner_has_shared_access:
                         raise serializers.ValidationError(
                             "Location cannot be added to collection unless the location owner has shared access to the collection."
@@ -381,39 +840,64 @@ class LocationSerializer(CustomModelSerializer):
         if category_data:
             user = self.context['request'].user
             name = category_data.get('name', '').lower()
-            existing_category = Category.objects.filter(user=user, name=name).first()
+            # In collaborative mode, check user's own categories first, then public ones
+            if getattr(settings, 'COLLABORATIVE_MODE', False):
+                # Prefer user's own category, then fall back to public
+                existing_category = Category.objects.filter(user=user, name=name).first()
+                if not existing_category:
+                    existing_category = Category.objects.filter(is_global=True, name=name).first()
+            else:
+                existing_category = Category.objects.filter(user=user, name=name).first()
             if existing_category:
                 return existing_category
             category_data['name'] = name
         return category_data
-    
+
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
-        
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
         if isinstance(category_data, Category):
             return category_data
-        
+
         if isinstance(category_data, dict):
-            name = category_data.get('name', '').lower()
+            name = category_data.get('name', '').lower().strip()
             display_name = category_data.get('display_name', name)
             icon = category_data.get('icon', '🌍')
         else:
-            name = category_data.name.lower()
+            name = category_data.name.lower().strip()
             display_name = category_data.display_name
             icon = category_data.icon
 
-        category, created = Category.objects.get_or_create(
-            user=user,
-            name=name,
-            defaults={
-                'display_name': display_name,
-                'icon': icon
-            }
-        )
+        if is_collaborative:
+            # In collaborative mode, check if ANY category with this name exists (public first)
+            existing = Category.objects.filter(is_global=True, name=name).first()
+            if existing:
+                return existing
+            # Then check user's own category
+            existing = Category.objects.filter(user=user, name=name).first()
+            if existing:
+                return existing
+            # Create as global public category (no duplicates)
+            category = Category.objects.create(
+                user=user,
+                is_global=True,
+                name=name,
+                display_name=display_name,
+                icon=icon
+            )
+        else:
+            category, created = Category.objects.get_or_create(
+                user=user,
+                name=name,
+                defaults={
+                    'display_name': display_name,
+                    'icon': icon
+                }
+            )
         return category
-    
-    def get_is_visited(self, obj):
-        return obj.is_visited_status()
+
+    # get_is_visited is inherited from VisitStatusMixin
 
     def create(self, validated_data):
         category_data = validated_data.pop('category', None)
@@ -435,8 +919,9 @@ class LocationSerializer(CustomModelSerializer):
         return location
 
     def update(self, instance, validated_data):
+        has_visits = 'visits' in validated_data
         category_data = validated_data.pop('category', None)
-        visits_data = validated_data.pop('visits', None)
+
         collections_data = validated_data.pop('collections', None)
 
         # Update regular fields
@@ -451,64 +936,167 @@ class LocationSerializer(CustomModelSerializer):
             instance.category = category
         # If not the owner, ignore category changes
 
-        # Save the location first so that user-supplied field values (including
-        # is_public) are persisted before the m2m_changed signal fires.
-        instance.save()
-
-        # Handle collections - only update if collections were provided.
-        # NOTE: .set() triggers the m2m_changed signal which may override
-        # is_public based on collection publicity.  By saving first we ensure
-        # the user's explicit value reaches the DB before the signal runs.
+        # Handle collections - only update if collections were provided
         if collections_data is not None:
             instance.collections.set(collections_data)
 
-        # Handle visits - replace all visits if provided
-        if visits_data is not None:
-            instance.visits.all().delete()
-            for visit_data in visits_data:
-                Visit.objects.create(location=instance, **visit_data)
+        # call save on the location to update the updated_at field and trigger any geocoding
+        instance.save()
 
         return instance
     
-class MapPinSerializer(serializers.ModelSerializer):
+class MapPinSerializer(OwnershipSerializerMixin, VisitStatusMixin, serializers.ModelSerializer):
+    """Lightweight serializer for location pins on the map. Inherits get_is_visited from VisitStatusMixin."""
     is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True, required=False)
-    
+    price_tier = serializers.SerializerMethodField()
+
     class Meta:
         model = Location
-        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
-        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
-    
-    def get_is_visited(self, obj):
-        return obj.is_visited_status()
+        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category', 'is_owned', 'average_rating', 'price_tier']
+        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category', 'is_owned', 'average_rating', 'price_tier']
 
-class TransportationSerializer(CustomModelSerializer):
-    distance = serializers.SerializerMethodField()
-    images = serializers.SerializerMethodField()
-    attachments = serializers.SerializerMethodField()
-    travel_duration_minutes = serializers.SerializerMethodField()
+    # get_is_visited is inherited from VisitStatusMixin
+
+    def get_price_tier(self, obj):
+        tier_data = _calculate_price_tier(obj, 'location')
+        return tier_data.get('tier') if tier_data else None
+
+
+class LodgingMapPinSerializer(OwnershipSerializerMixin, VisitStatusMixin, serializers.ModelSerializer):
+    """Lightweight serializer for lodging pins on the map. Inherits get_is_visited from VisitStatusMixin."""
+    is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
+    price_tier = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Lodging
+        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'type', 'is_owned', 'average_rating', 'price_tier']
+        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'type', 'is_owned', 'average_rating', 'price_tier']
+
+    # get_is_visited is inherited from VisitStatusMixin
+
+    def get_price_tier(self, obj):
+        tier_data = _calculate_price_tier(obj, 'lodging')
+        return tier_data.get('tier') if tier_data else None
+
+
+class TransportationMapPinSerializer(OwnershipSerializerMixin, VisitStatusMixin, serializers.ModelSerializer):
+    """Lightweight serializer for transportation pins on the map. Inherits get_is_visited from VisitStatusMixin."""
+    is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
+    price_tier = serializers.SerializerMethodField()
 
     class Meta:
         model = Transportation
         fields = [
-            'id', 'user', 'type', 'name', 'description', 'rating', 'price', 'price_currency',
-            'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
-            'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
-            'start_timezone', 'end_timezone', 'distance', 'images', 'attachments', 'start_code', 'end_code',
-            'travel_duration_minutes'
+            'id', 'name', 'type', 'is_visited', 'is_owned',
+            'origin_latitude', 'origin_longitude',
+            'destination_latitude', 'destination_longitude',
+            'from_location', 'to_location', 'average_rating', 'price_tier'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance', 'travel_duration_minutes']
+        read_only_fields = fields + ['average_rating', 'price_tier']
 
-    def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
-        # Filter out None values from the serialized data
-        return [image for image in serializer.data if image is not None]
+    # get_is_visited is inherited from VisitStatusMixin
 
-    def get_attachments(self, obj):
-        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
-        # Filter out None values from the serialized data
-        return [attachment for attachment in serializer.data if attachment is not None]
+    def get_price_tier(self, obj):
+        """Return average price per user for transportation (no tier comparison)."""
+        visits_with_price = obj.visits.filter(
+            total_price__isnull=False,
+            number_of_people__isnull=False,
+            number_of_people__gt=0
+        )
+        if not visits_with_price.exists():
+            return None
+
+        # Calculate average price per user
+        total_price = sum(float(v.total_price.amount) for v in visits_with_price)
+        total_people = sum(v.number_of_people for v in visits_with_price)
+        if total_people == 0:
+            return None
+
+        # Get primary currency
+        currency = str(visits_with_price.first().total_price_currency)
+
+        return {
+            'average_price': round(total_price / total_people, 2),
+            'currency': currency
+        }
+
+
+class TransportationSerializer(MediaSerializerMixin, RatingCountMixin, VisitStatusMixin, CustomModelSerializer):
+    distance = serializers.SerializerMethodField()
+    images = serializers.SerializerMethodField()
+    attachments = serializers.SerializerMethodField()
+    travel_duration_minutes = serializers.SerializerMethodField()
+    visits = VisitSerializer(many=True, read_only=True)
+    is_visited = serializers.SerializerMethodField()
+    # average_rating is now a stored field, not calculated
+    rating_count = serializers.SerializerMethodField()
+    # Derived price metrics computed from visits
+    average_price_per_user = serializers.SerializerMethodField()
+    price_tier = serializers.SerializerMethodField()
+    collections = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Collection.objects.all(),
+        required=False
+    )
+    origin_country = CountrySerializer(read_only=True)
+
+    class Meta:
+        model = Transportation
+        fields = [
+            'id', 'user', 'type', 'name', 'description', 'rating', 'average_rating', 'rating_count', 'price', 'price_currency',
+            'link', 'flight_number', 'from_location', 'to_location', 'tags',
+            'is_public', 'collections', 'created_at', 'updated_at',
+            'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
+            'origin_country', 'distance', 'images', 'attachments', 'start_code', 'end_code',
+            'travel_duration_minutes', 'visits', 'is_visited', 'average_price_per_user', 'price_tier'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance', 'travel_duration_minutes', 'is_visited', 'average_rating', 'rating_count', 'average_price_per_user', 'price_tier', 'origin_country']
+
+    def get_average_price_per_user(self, obj):
+        """
+        Calculate average price per user from visit-level costs, converted to USD.
+        Formula: SUM(visit_total_price_in_usd) / SUM(visit_people_count)
+        """
+        visits_with_price = obj.visits.filter(total_price__isnull=False)
+
+        if not visits_with_price.exists():
+            return None
+
+        total_price_usd = 0
+        total_people = 0
+        count = 0
+
+        for visit in visits_with_price:
+            total_price_usd += _convert_to_usd(visit.total_price.amount, visit.total_price_currency)
+            total_people += visit.number_of_people or 1
+            count += 1
+
+        if total_people == 0:
+            return None
+
+        avg_usd = total_price_usd / total_people
+        display_currency = _get_entity_currency(obj, 'transportation')
+        display_amount = _convert_from_usd(avg_usd, display_currency)
+
+        return {
+            'amount': round(display_amount, 2),
+            'currency': display_currency,
+            'visit_count': count
+        }
+
+    def get_price_tier(self, obj):
+        """Return average price per user for transportation (no tier comparison)."""
+        avg = self.get_average_price_per_user(obj)
+        if not avg:
+            return None
+        return {
+            'average_price': avg['amount'],
+            'currency': avg['currency']
+        }
 
     def get_distance(self, obj):
         gpx_distance = self._get_gpx_distance_km(obj)
@@ -564,14 +1152,20 @@ class TransportationSerializer(CustomModelSerializer):
         return None
 
     def get_travel_duration_minutes(self, obj):
-        if not obj.date or not obj.end_date:
+        """Calculate travel duration from the first visit's start and end dates."""
+        # Get the first visit with both start and end dates
+        visit = obj.visits.filter(start_date__isnull=False, end_date__isnull=False).first()
+        if not visit:
             return None
 
-        if self._is_all_day(obj.date) and self._is_all_day(obj.end_date):
+        start_date = visit.start_date
+        end_date = visit.end_date
+
+        if self._is_all_day(start_date) and self._is_all_day(end_date):
             return None
 
         try:
-            total_minutes = int((obj.end_date - obj.date).total_seconds() // 60)
+            total_minutes = int((end_date - start_date).total_seconds() // 60)
             return total_minutes if total_minutes >= 0 else None
         except Exception:
             logger.warning(
@@ -589,28 +1183,82 @@ class TransportationSerializer(CustomModelSerializer):
             and dt_value.time().microsecond == 0
         )
 
-class LodgingSerializer(CustomModelSerializer):
+    # get_is_visited inherited from VisitStatusMixin
+
+
+class LodgingSerializer(MediaSerializerMixin, RatingCountMixin, VisitStatusMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    visits = VisitSerializer(many=True, read_only=True)
+    is_visited = serializers.SerializerMethodField()
+    # average_rating is now a stored field, not calculated
+    rating_count = serializers.SerializerMethodField()
+    # Derived price metrics computed from visits
+    average_price_per_user_per_night = serializers.SerializerMethodField()
+    price_tier = serializers.SerializerMethodField()
+    collections = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Collection.objects.all(),
+        required=False
+    )
+    country = CountrySerializer(read_only=True)
 
     class Meta:
         model = Lodging
         fields = [
-            'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
-            'reservation_number', 'price', 'price_currency', 'latitude', 'longitude', 'location', 'is_public',
-            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images', 'attachments'
+            'id', 'user', 'name', 'description', 'rating', 'average_rating', 'rating_count', 'link',
+            'reservation_number', 'price', 'price_currency', 'latitude', 'longitude', 'location', 'country', 'tags', 'is_public',
+            'collections', 'created_at', 'updated_at', 'type', 'images', 'attachments', 'visits', 'is_visited',
+            'average_price_per_user_per_night', 'price_tier'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited', 'average_rating', 'rating_count', 'average_price_per_user_per_night', 'price_tier', 'country']
 
-    def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
-        # Filter out None values from the serialized data
-        return [image for image in serializer.data if image is not None]
+    def get_average_price_per_user_per_night(self, obj):
+        """
+        Calculate average price per user per night from visit-level costs, converted to USD.
+        Formula: SUM(visit_total_price_in_usd) / SUM(visit_people_count * visit_nights)
+        """
+        visits_with_price = obj.visits.filter(
+            total_price__isnull=False,
+            start_date__isnull=False,
+            end_date__isnull=False
+        )
 
-    def get_attachments(self, obj):
-        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
-        # Filter out None values from the serialized data
-        return [attachment for attachment in serializer.data if attachment is not None]
+        if not visits_with_price.exists():
+            return None
+
+        total_price_usd = 0
+        total_person_nights = 0
+        count = 0
+
+        for visit in visits_with_price:
+            nights = (visit.end_date.date() - visit.start_date.date()).days
+            if nights < 1:
+                nights = 1
+
+            total_price_usd += _convert_to_usd(visit.total_price.amount, visit.total_price_currency)
+            total_person_nights += (visit.number_of_people or 1) * nights
+            count += 1
+
+        if total_person_nights == 0:
+            return None
+
+        avg_usd = total_price_usd / total_person_nights
+        display_currency = _get_entity_currency(obj, 'lodging')
+        display_amount = _convert_from_usd(avg_usd, display_currency)
+
+        return {
+            'amount': round(display_amount, 2),
+            'currency': display_currency,
+            'visit_count': count
+        }
+
+    def get_price_tier(self, obj):
+        """Calculate local price tier (1-4) based on country comparison."""
+        return _calculate_price_tier(obj, entity_type='lodging')
+
+    # get_is_visited inherited from VisitStatusMixin
+
 
 class NoteSerializer(CustomModelSerializer):
 
@@ -729,9 +1377,14 @@ class CollectionSerializer(CustomModelSerializer):
         required=False,
         allow_null=True,
     )
-    # Override link as CharField so DRF's URLField doesn't reject invalid
-    # values before validate_link() can clean them up.
-    link = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    adventure_type = AdventureTypeSerializer(read_only=True)
+    adventure_type_id = serializers.PrimaryKeyRelatedField(
+        queryset=AdventureType.objects.all(),
+        source='adventure_type',
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
 
     class Meta:
         model = Collection
@@ -758,21 +1411,10 @@ class CollectionSerializer(CustomModelSerializer):
             'days_until_start',
             'primary_image',
             'primary_image_id',
+            'adventure_type',
+            'adventure_type_id',
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with', 'status', 'days_until_start', 'primary_image']
-
-    def validate_link(self, value):
-        """Convert empty or invalid URLs to None so Django doesn't reject them."""
-        if not value or not value.strip():
-            return None
-        from django.core.validators import URLValidator
-        from django.core.exceptions import ValidationError as DjangoValidationError
-        validator = URLValidator()
-        try:
-            validator(value)
-        except DjangoValidationError:
-            return None
-        return value
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'shared_with', 'status', 'days_until_start', 'primary_image', 'adventure_type']
 
     def get_collaborators(self, obj):
         request = self.context.get('request')
@@ -813,25 +1455,31 @@ class CollectionSerializer(CustomModelSerializer):
         # Only include transportations if not in nested context
         if self.context.get('nested', False):
             return []
-        return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        return TransportationSerializer(obj.transportations.all(), many=True, context=self.context).data
 
     def get_notes(self, obj):
         # Only include notes if not in nested context
         if self.context.get('nested', False):
             return []
-        return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        try:
+            return NoteSerializer(obj.note_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_checklists(self, obj):
         # Only include checklists if not in nested context
         if self.context.get('nested', False):
             return []
-        return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        try:
+            return ChecklistSerializer(obj.checklist_set.all(), many=True, context=self.context).data
+        except Exception:
+            return []  # Handle missing column gracefully
 
     def get_lodging(self, obj):
         # Only include lodging if not in nested context
         if self.context.get('nested', False):
             return []
-        return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        return LodgingSerializer(obj.lodgings.all(), many=True, context=self.context).data
 
     def get_status(self, obj):
         """Calculate the status of the collection based on dates"""
@@ -927,20 +1575,23 @@ class CollectionInviteSerializer(serializers.ModelSerializer):
         fields = ['id', 'collection', 'created_at', 'name', 'collection_owner_username', 'collection_user_first_name', 'collection_user_last_name']
         read_only_fields = ['id', 'created_at']
 
-class UltraSlimCollectionSerializer(serializers.ModelSerializer):
+class UltraSlimCollectionSerializer(OwnershipSerializerMixin, serializers.ModelSerializer):
     location_images = serializers.SerializerMethodField()
     location_count = serializers.SerializerMethodField()
     status = serializers.SerializerMethodField()
     days_until_start = serializers.SerializerMethodField()
     primary_image = ContentImageSerializer(read_only=True)
     collaborators = serializers.SerializerMethodField()
-    
+    is_owned = serializers.SerializerMethodField()
+    adventure_type = AdventureTypeSerializer(read_only=True)
+
     class Meta:
         model = Collection
         fields = [
-            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 
-            'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
-            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
+            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date',
+            'is_archived', 'link', 'created_at', 'updated_at', 'location_images',
+            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image', 'is_owned',
+            'adventure_type'
         ]
         read_only_fields = fields  # All fields are read-only for listing
 
@@ -1083,9 +1734,25 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         """Return id and type for the linked item"""
         if not obj.item:
             return None
-            
+
         return {
             'id': str(obj.item.id),
             'type': obj.content_type.model,
         }
+
+
+class CollectionTemplateSerializer(CustomModelSerializer):
+    class Meta:
+        model = CollectionTemplate
+        fields = [
+            'id', 'name', 'description', 'template_data', 'is_public',
+            'user', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        # Convert user to UUID string for consistency
+        representation['user'] = str(instance.user.uuid)
+        return representation
         

@@ -2,29 +2,39 @@ import logging
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
-from django.core.files.base import ContentFile
-from django.db.models import Q, Max, Prefetch
-from django.db.models.functions import Lower
+from django.db.models import Q, Prefetch
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 import requests
-from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
+from adventures.models import Location, Category, CollectionItineraryItem, Visit
+
+logger = logging.getLogger(__name__)
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
 from adventures.utils import pagination
+from adventures.utils.filtering import FilteringMixin
+from adventures.utils.viewset_mixins import SortingMixin
+from adventures.utils.history_mixin import HistoryRevertMixin
 
-logger = logging.getLogger(__name__)
-
-class LocationViewSet(viewsets.ModelViewSet):
+class LocationViewSet(HistoryRevertMixin, FilteringMixin, SortingMixin, viewsets.ModelViewSet):
     """
     ViewSet for managing Adventure objects with support for filtering, sorting,
     and sharing functionality.
+
+    Inherits filtering and sorting from mixins:
+    - FilteringMixin: _apply_visit_filtering, _apply_public_filtering,
+                      _apply_ownership_filtering, _apply_rating_filtering
+    - SortingMixin: _apply_ordering (apply_sorting is overridden for location-specific logic)
     """
     serializer_class = LocationSerializer
     permission_classes = [IsOwnerOrSharedWithFullAccess]
     pagination_class = pagination.StandardResultsSetPagination
+
+    # Override valid_order_fields from SortingMixin
+    valid_order_fields = ['name', 'type', 'last_visit', 'rating', 'updated_at', 'created_at']
 
     # ==================== QUERYSET & PERMISSIONS ====================
 
@@ -32,9 +42,11 @@ class LocationViewSet(viewsets.ModelViewSet):
         """
         Returns queryset based on user authentication and action type.
         Public actions allow unauthenticated access to public locations.
+        In collaborative mode, authenticated users can access public locations for editing.
         """
         user = self.request.user
         public_allowed_actions = {'retrieve', 'additional_info'}
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:
@@ -43,7 +55,13 @@ class LocationViewSet(viewsets.ModelViewSet):
                 ).order_by('-updated_at')
             return Location.objects.none()
 
-        include_public = self.action in public_allowed_actions
+        # In collaborative mode, include public locations for all actions (except destroy)
+        # The permission class will handle fine-grained access control
+        if is_collaborative and self.action != 'destroy':
+            include_public = True
+        else:
+            include_public = self.action in public_allowed_actions
+
         return Location.objects.retrieve_locations(
             user,
             include_public=include_public,
@@ -54,53 +72,21 @@ class LocationViewSet(viewsets.ModelViewSet):
     # ==================== SORTING & FILTERING ====================
 
     def apply_sorting(self, queryset):
-        """Apply sorting and collection filtering to queryset."""
-        order_by = self.request.query_params.get('order_by', 'updated_at')
-        order_direction = self.request.query_params.get('order_direction', 'asc')
+        """
+        Apply sorting and collection filtering to queryset.
+
+        Extends SortingMixin.apply_sorting with location-specific
+        include_collections filter.
+        """
+        # Use parent sorting logic from SortingMixin
+        queryset = super().apply_sorting(queryset)
+
+        # Location-specific: filter by collection membership
         include_collections = self.request.query_params.get('include_collections', 'true')
-
-        # Validate parameters
-        valid_order_by = ['name', 'type', 'date', 'rating', 'updated_at']
-        if order_by not in valid_order_by:
-            order_by = 'name'
-
-        if order_direction not in ['asc', 'desc']:
-            order_direction = 'asc'
-
-        # Apply sorting logic
-        queryset = self._apply_ordering(queryset, order_by, order_direction)
-
-        # Filter locations without collections if requested
         if include_collections == 'false':
             queryset = queryset.filter(collections__isnull=True)
 
         return queryset
-
-    def _apply_ordering(self, queryset, order_by, order_direction):
-        """Apply ordering to queryset based on field type."""
-        if order_by == 'date':
-            queryset = queryset.annotate(
-                latest_visit=Max('visits__start_date')
-            ).filter(latest_visit__isnull=False)
-            ordering = 'latest_visit'
-        elif order_by == 'name':
-            queryset = queryset.annotate(lower_name=Lower('name'))
-            ordering = 'lower_name'
-        elif order_by == 'rating':
-            queryset = queryset.filter(rating__isnull=False)
-            ordering = 'rating'
-        elif order_by == 'updated_at':
-            # Special handling for updated_at (reverse default order)
-            ordering = '-updated_at' if order_direction == 'asc' else 'updated_at'
-            return queryset.order_by(ordering)
-        else:
-            ordering = order_by
-
-        # Apply direction
-        if order_direction == 'desc':
-            ordering = f'-{ordering}'
-
-        return queryset.order_by(ordering)
 
     # ==================== CRUD OPERATIONS ====================
 
@@ -158,37 +144,75 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     # ==================== CUSTOM ACTIONS ====================
 
+    @action(detail=False, methods=['get'], url_path='debug-collab')
+    def debug_collab(self, request):
+        """Debug endpoint to check collaborative mode status."""
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+        user_locations = Location.objects.filter(user=request.user).count()
+        public_locations = Location.objects.filter(is_public=True).count()
+        all_locations = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=is_collaborative
+        ).count()
+        return Response({
+            "collaborative_mode": is_collaborative,
+            "user": str(request.user),
+            "user_locations": user_locations,
+            "public_locations": public_locations,
+            "visible_locations": all_locations,
+        })
+
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         """Filter locations by category types and visit status."""
         types = request.query_params.get('types', '').split(',')
-        
-        # Handle 'all' types
-        if 'all' in types:
-            types = Category.objects.filter(
-                user=request.user
-            ).values_list('name', flat=True)
-        else:
-            # Validate provided types
-            if not types or not all(
-                Category.objects.filter(user=request.user, name=type_name).exists() 
-                for type_name in types
-            ):
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
+        logger.info(f"[filtered] User: {request.user}, types: {types}, collaborative: {is_collaborative}")
+
+        # Get base queryset using the same method as map_locations for consistency
+        queryset = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=is_collaborative
+        )
+
+        logger.info(f"[filtered] Base queryset count: {queryset.count()}")
+
+        # Filter by category if specific types requested (not 'all')
+        if 'all' not in types:
+            # Build category filter based on collaborative mode
+            if is_collaborative:
+                user_category_filter = Q(is_global=True) | Q(user=request.user)
+            else:
+                user_category_filter = Q(user=request.user)
+
+            # Validate provided types against user's accessible categories
+            valid_categories = Category.objects.filter(user_category_filter, name__in=types)
+            if not valid_categories.exists():
+                logger.warning(f"[filtered] No valid categories found for types: {types}")
                 return Response(
-                    {"error": "Invalid category or no types provided"}, 
+                    {"error": "Invalid category or no types provided"},
                     status=400
                 )
 
-        # Build base queryset
-        queryset = Location.objects.filter(
-            category__in=Category.objects.filter(name__in=types, user=request.user),
-            user=request.user.id
-        )
+            # Filter by category name to include all locations with matching category names
+            queryset = queryset.filter(category__name__in=types)
+            logger.info(f"[filtered] After category filter count: {queryset.count()}")
 
         # Apply visit status filtering
         queryset = self._apply_visit_filtering(queryset, request)
+        # Apply visibility filtering
+        queryset = self._apply_public_filtering(queryset, request)
+        # Apply ownership filtering
+        queryset = self._apply_ownership_filtering(queryset, request)
+        # Apply rating filtering
+        queryset = self._apply_rating_filtering(queryset, request)
         queryset = self.apply_sorting(queryset)
-        
+
         return self.paginate_and_respond(queryset, request)
 
     @action(detail=False, methods=['get'])
@@ -200,17 +224,20 @@ class LocationViewSet(viewsets.ModelViewSet):
         include_collections = request.query_params.get('include_collections', 'false') == 'true'
         nested = request.query_params.get('nested', 'false') == 'true'
         allowedNestedFields = request.query_params.get('allowed_nested_fields', '').split(',')
-        
-        # Build queryset with collection filtering
-        base_filter = Q(user=request.user.id)
-        
-        if include_collections:
-            queryset = Location.objects.filter(base_filter)
-        else:
-            queryset = Location.objects.filter(base_filter, collections__isnull=True)
+
+        # Use retrieve_locations with collaborative mode support
+        queryset = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=include_collections,
+            include_public=getattr(settings, 'COLLABORATIVE_MODE', False)
+        )
+
+        if not include_collections:
+            queryset = queryset.filter(collections__isnull=True)
 
         queryset = self.apply_sorting(queryset)
-        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields})
+        serializer = self.get_serializer(queryset, many=True, context={'nested': nested, 'allowed_nested_fields': allowedNestedFields, 'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
@@ -258,131 +285,6 @@ class LocationViewSet(viewsets.ModelViewSet):
         
         return Response(response_data)
     
-    @action(detail=True, methods=['post'])
-    def duplicate(self, request, pk=None):
-        """Create a duplicate of an existing location.
-
-        Copies all fields except collections and visits. Images are duplicated as
-        independent files (not shared references). The name is prefixed with
-        "Copy of " and is_public is reset to False.
-        """
-        original = self.get_object()
-
-        # Verify the requesting user owns the location or has access
-        if not self._has_adventure_access(original, request.user):
-            return Response(
-                {"error": "You do not have permission to duplicate this location."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        try:
-            with transaction.atomic():
-                target_collection = None
-                target_collection_id = request.data.get('collection_id')
-
-                if target_collection_id:
-                    try:
-                        target_collection = Collection.objects.get(id=target_collection_id)
-                    except Collection.DoesNotExist:
-                        return Response(
-                            {"error": "Collection not found."},
-                            status=status.HTTP_404_NOT_FOUND,
-                        )
-
-                    user_can_link_to_collection = (
-                        target_collection.user == request.user
-                        or target_collection.shared_with.filter(uuid=request.user.uuid).exists()
-                    )
-                    if not user_can_link_to_collection:
-                        return Response(
-                            {"error": "You do not have permission to add locations to this collection."},
-                            status=status.HTTP_403_FORBIDDEN,
-                        )
-
-                # Snapshot original images before creating the copy
-                original_images = list(original.images.all())
-
-                # Build the new location
-                new_location = Location(
-                    user=request.user,
-                    name=f"Copy of {original.name}",
-                    description=original.description,
-                    rating=original.rating,
-                    link=original.link,
-                    location=original.location,
-                    tags=list(original.tags) if original.tags else None,
-                    is_public=False,
-                    longitude=original.longitude,
-                    latitude=original.latitude,
-                    city=original.city,
-                    region=original.region,
-                    country=original.country,
-                    price=original.price,
-                    price_currency=original.price_currency,
-                )
-
-                # Handle category: reuse the user's own matching category or
-                # create one if necessary.
-                if original.category:
-                    category, _ = Category.objects.get_or_create(
-                        user=request.user,
-                        name=original.category.name,
-                        defaults={
-                            'display_name': original.category.display_name,
-                            'icon': original.category.icon,
-                        },
-                    )
-                    new_location.category = category
-
-                new_location.save()
-
-                # If requested, link the duplicate only to the current collection.
-                # This avoids accidentally inheriting all source collections.
-                if target_collection:
-                    new_location.collections.set([target_collection])
-
-                # Duplicate images as independent files/new records
-                location_ct = ContentType.objects.get_for_model(Location)
-                for img in original_images:
-                    if img.image:
-                        try:
-                            img.image.open('rb')
-                            image_bytes = img.image.read()
-                        finally:
-                            try:
-                                img.image.close()
-                            except Exception:
-                                pass
-
-                        file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
-
-                        ContentImage.objects.create(
-                            content_type=location_ct,
-                            object_id=str(new_location.id),
-                            image=ContentFile(image_bytes, name=file_name),
-                            immich_id=None,
-                            is_primary=img.is_primary,
-                            user=request.user,
-                        )
-                    else:
-                        ContentImage.objects.create(
-                            content_type=location_ct,
-                            object_id=str(new_location.id),
-                            immich_id=img.immich_id,
-                            is_primary=img.is_primary,
-                            user=request.user,
-                        )
-
-            serializer = self.get_serializer(new_location)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        except Exception:
-            logger.exception("Failed to duplicate location %s", pk)
-            return Response(
-                {"error": "An error occurred while duplicating the location."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
     # view to return location name and lat/lon for all locations a user owns for the golobal map
     @action(detail=False, methods=['get'], url_path='pins')
     def map_locations(self, request):
@@ -390,8 +292,13 @@ class LocationViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({"error": "User is not authenticated"}, status=400)
 
-        locations = Location.objects.filter(user=request.user)
-        serializer = MapPinSerializer(locations, many=True)
+        locations = Location.objects.retrieve_locations(
+            request.user,
+            include_owned=True,
+            include_shared=True,
+            include_public=getattr(settings, 'COLLABORATIVE_MODE', False)
+        )
+        serializer = MapPinSerializer(locations, many=True, context={'request': request})
         return Response(serializer.data)
 
     # ==================== HELPER METHODS ====================
@@ -460,28 +367,11 @@ class LocationViewSet(viewsets.ModelViewSet):
                         f"You don't have permission to add location to collection '{collection.name}'"
                     )
 
-    def _apply_visit_filtering(self, queryset, request):
-        """Apply visit status filtering to queryset."""
-        is_visited_param = request.query_params.get('is_visited')
-        if is_visited_param is None:
-            return queryset
-
-        # Convert parameter to boolean
-        if is_visited_param.lower() == 'true':
-            is_visited_bool = True
-        elif is_visited_param.lower() == 'false':
-            is_visited_bool = False
-        else:
-            return queryset
-
-        # Apply visit filtering
-        now = timezone.now().date()
-        if is_visited_bool:
-            queryset = queryset.filter(visits__start_date__lte=now).distinct()
-        else:
-            queryset = queryset.exclude(visits__start_date__lte=now).distinct()
-
-        return queryset
+    # Filter methods inherited from FilteringMixin:
+    # - _apply_visit_filtering
+    # - _apply_public_filtering
+    # - _apply_ownership_filtering
+    # - _apply_rating_filtering
 
     def _has_adventure_access(self, adventure, user):
         """Check if user has access to adventure."""

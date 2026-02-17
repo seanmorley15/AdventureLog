@@ -14,6 +14,8 @@
 	import Magnify from '~icons/mdi/magnify';
 	import Map from '~icons/mdi/map';
 	import Menu from '~icons/mdi/menu';
+	import Airplane from '~icons/mdi/airplane';
+	import Bed from '~icons/mdi/bed';
 	import Avatar from './Avatar.svelte';
 	import { page } from '$app/stores';
 	import { t, locale, locales } from 'svelte-i18n';
@@ -111,6 +113,8 @@
 	// Navigation items for better organization
 	const navigationItems = [
 		{ path: '/locations', icon: MapMarker, label: 'locations.locations' },
+		{ path: '/transportations', icon: Airplane, label: 'adventures.transportations' },
+		{ path: '/lodging', icon: Bed, label: 'adventures.lodging' },
 		{ path: '/collections', icon: FormatListBulletedSquare, label: 'navbar.collections' },
 		{ path: '/worldtravel', icon: Earth, label: 'navbar.worldtravel' },
 		{ path: '/map', icon: Map, label: 'navbar.map' },
