@@ -20,6 +20,13 @@
     "add": "追加",
     "add_a_tag": "タグを追加します",
     "add_new": "新しい追加...",
+    "link_transportation": "交通機関をリンク",
+    "link_lodging": "宿泊施設をリンク",
+    "unlinked": "未リンク",
+    "no_transportations_available": "利用可能な交通手段がありません",
+    "all_transportations_linked": "すべての交通手段は既にコレクションにリンクされています。",
+    "no_lodging_available": "利用可能な宿泊施設がありません",
+    "all_lodging_linked": "すべての宿泊施設は既にコレクションにリンクされています。",
     "add_to_collection": "コレクションに追加します",
     "adventure_not_found": "展示する冒険はありません。\n右下のプラスボタンを使用していくつかを追加するか、フィルターを変更してみてください！",
     "all": "全て",
@@ -40,6 +47,7 @@
     "cancel": "キャンセル",
     "category": "カテゴリ",
     "category_filter": "カテゴリフィルター",
+    "filter_by_type": "タイプでフィルター",
     "check_in": "チェックイン",
     "check_out": "チェックアウト",
     "checklist": "チェックリスト",
@@ -126,6 +134,8 @@
     "mark_visited": "マークが訪れました",
     "md_instructions": "ここにマークダウンを書いてください...",
     "my_collections": "私のコレクション",
+    "ownership_filter": "所有者",
+    "visibility": "公開設定",
     "name": "名前",
     "name_location": "名前、場所",
     "new_location": "新しい場所",
@@ -186,6 +196,9 @@
     "visit_calendar": "カレンダーにアクセスしてください",
     "visited": "訪問",
     "visits": "訪問",
+    "last_edited_by": "最終編集者",
+    "contributors": "貢献者",
+    "added_by": "追加者",
     "wiki_image_error": "ウィキペディアからの画像の取得エラー",
     "wikipedia": "ウィキペディア",
     "collection_remove_location_success": "コレクションから正常に削除された場所！",
@@ -563,7 +576,9 @@
     "welcome_back": "おかえり",
     "welcome_text_1": "あなたはオンになっています",
     "welcome_text_2": "これまでのところ冒険",
-    "welcome_text_3": "旅行を探索し、文書化し続けてください！"
+    "welcome_text_3": "旅行を探索し、文書化し続けてください！",
+    "recent_travel_plans": "最近の旅行計画",
+    "recent_accommodations": "最近の宿泊施設"
   },
   "google_maps": {
     "google_maps_integration_desc": "Googleマップアカウントを接続して、高品質のロケーション検索結果と推奨事項を取得します。",
@@ -649,6 +664,9 @@
     "campground": "キャンプ場",
     "edit": "編集",
     "edit_lodging": "宿泊施設を編集します",
+    "my_lodging": "私の宿泊施設",
+    "no_lodging_found": "宿泊施設が見つかりません",
+    "create_lodging": "宿泊施設を作成",
     "hostel": "ホステル",
     "hotel": "ホテル",
     "house": "家",
@@ -663,7 +681,12 @@
     "enter_reservation_number": "予約番号を入力します",
     "update_lodging_details": "宿泊の詳細を更新します",
     "invalid_link": "有効な URL (例: https://example.com) を入力してください。",
-    "save_failed": "宿泊施設の保存に失敗しました。\nもう一度試してください。"
+    "save_failed": "宿泊施設の保存に失敗しました。\nもう一度試してください。",
+    "public_lodging": "公開宿泊施設",
+    "public_lodging_description": "他のユーザーがこの宿泊施設を表示できるようにする",
+    "move_to_collection_confirm": "この宿泊施設は既に別のコレクションにあります。このコレクションに移動しますか？",
+    "linked_success": "宿泊施設を正常にリンクしました",
+    "linked_error": "宿泊施設のリンクに失敗しました"
   },
   "map": {
     "add_location": "新しい場所を追加します",
@@ -971,6 +994,9 @@
       "walking": "歩く"
     },
     "new_transportation": "新しい輸送",
+    "my_transportations": "私の交通手段",
+    "no_transportations_found": "交通手段が見つかりません",
+    "create_transportation": "交通手段を作成",
     "to_location": "場所へ",
     "transportation_delete_error": "輸送を削除するエラー",
     "transportation_deleted": "輸送が正常に削除されました！",
@@ -988,7 +1014,12 @@
     "arrival_timezone": "到着時間帯",
     "departure_code": "出発コード",
     "departure_date": "出発日",
-    "departure_timezone": "出発時間帯"
+    "departure_timezone": "出発時間帯",
+    "public_transportation": "公開交通機関",
+    "public_transportation_description": "他のユーザーがこの交通機関を表示できるようにする",
+    "move_to_collection_confirm": "この交通機関は既に別のコレクションにあります。このコレクションに移動しますか？",
+    "linked_success": "交通機関を正常にリンクしました",
+    "linked_error": "交通機関のリンクに失敗しました"
   },
   "users": {
     "no_users_found": "パブリックプロファイルで見つかったユーザーは見つかりませんでした。"
@@ -1139,5 +1170,21 @@
     "trip_context_info": "旅行コンテキスト項目は、旅行全体に適用されます。たとえば、目的地そのものである場所、一般的なメモ、旅行全体にとって重要な持ち物リストなどです。",
     "unscheduled_items": "予定外の項目",
     "unscheduled_items_desc": "これらのアイテムはこの旅行にリンクされていますが、まだ特定の日に追加されていません。"
+  },
+  "history": {
+    "title": "履歴",
+    "created": "作成",
+    "updated": "更新",
+    "deleted": "削除",
+    "by": "によって",
+    "no_history": "履歴はありません",
+    "view_history": "履歴を見る",
+    "changes": "変更",
+    "revert": "元に戻す"
+  },
+  "collaborative": {
+    "mode_enabled": "コラボレーションモード",
+    "public_content": "公開コンテンツ",
+    "can_edit": "編集できます"
   }
 }

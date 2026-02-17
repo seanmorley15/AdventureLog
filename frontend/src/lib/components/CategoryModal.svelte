@@ -7,9 +7,10 @@
 	let modal: HTMLDialogElement;
 
 	export let categories: Category[] = [];
+	export let collaborativeMode: boolean = false;
 
 	let categoryToEdit: Category | null = null;
-	let newCategory = { display_name: '', icon: '' };
+	let newCategory = { display_name: '', icon: '', is_public: true };
 	let showAddForm = false;
 	let isChanged = false;
 	let hasLoaded = false;
@@ -76,7 +77,8 @@
 				.toLowerCase()
 				.replace(/\s+/g, '_')
 				.replace(/[^a-z0-9_]/g, ''),
-			icon: newCategory.icon.trim() || '🌍'
+			icon: newCategory.icon.trim() || '🌍',
+			is_public: newCategory.is_public
 		};
 
 		try {
@@ -89,7 +91,7 @@
 				const created = await res.json();
 				categories = [...categories, created];
 				isChanged = true;
-				newCategory = { display_name: '', icon: '' };
+				newCategory = { display_name: '', icon: '', is_public: true };
 				showAddForm = false;
 				showEmojiPickerAdd = false;
 			}
@@ -181,23 +183,32 @@
 							<div class="flex items-center gap-3">
 								<span class="text-lg">{category.icon || '🌍'}</span>
 								<span class="font-medium">{category.display_name}</span>
+								{#if collaborativeMode}
+									{#if category.is_public}
+										<span class="badge badge-success badge-sm">{$t('adventures.public')}</span>
+									{:else}
+										<span class="badge badge-ghost badge-sm">{$t('adventures.private')}</span>
+									{/if}
+								{/if}
 							</div>
 							<div class="flex gap-2">
-								<button
-									type="button"
-									on:click={() => startEdit(category)}
-									class="btn btn-xs btn-neutral"
-								>
-									{$t('lodging.edit')}
-								</button>
-								{#if category.name !== 'general'}
+								{#if category.is_owned !== false}
 									<button
 										type="button"
-										on:click={() => removeCategory(category)}
-										class="btn btn-xs btn-error"
+										on:click={() => startEdit(category)}
+										class="btn btn-xs btn-neutral"
 									>
-										{$t('adventures.remove')}
+										{$t('lodging.edit')}
 									</button>
+									{#if category.name !== 'general'}
+										<button
+											type="button"
+											on:click={() => removeCategory(category)}
+											class="btn btn-xs btn-error"
+										>
+											{$t('adventures.remove')}
+										</button>
+									{/if}
 								{/if}
 							</div>
 						</div>
@@ -260,6 +271,22 @@
 						</div>
 					{/if}
 
+					{#if collaborativeMode}
+						<div class="form-control">
+							<label class="label cursor-pointer justify-start gap-3">
+								<input
+									type="checkbox"
+									class="toggle toggle-primary"
+									bind:checked={categoryToEdit.is_public}
+								/>
+								<span class="label-text">{$t('categories.make_public')}</span>
+							</label>
+							<span class="text-xs text-base-content/60 ml-14">
+								{$t('categories.public_description')}
+							</span>
+						</div>
+					{/if}
+
 					<div class="flex justify-end gap-2">
 						<button type="button" class="btn btn-ghost" on:click={cancelEdit}>
 							{$t('adventures.cancel')}
@@ -316,6 +343,22 @@
 								</div>
 							{/if}
 						</div>
+
+						{#if collaborativeMode}
+							<div class="form-control">
+								<label class="label cursor-pointer justify-start gap-3">
+									<input
+										type="checkbox"
+										class="toggle toggle-primary"
+										bind:checked={newCategory.is_public}
+									/>
+									<span class="label-text">{$t('categories.make_public')}</span>
+								</label>
+								<span class="text-xs text-base-content/60 ml-14">
+									{$t('categories.public_description')}
+								</span>
+							</div>
+						{/if}
 
 						<button type="submit" class="btn btn-primary w-full">
 							{$t('collection.create')}

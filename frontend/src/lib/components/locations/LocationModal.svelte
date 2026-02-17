@@ -353,6 +353,7 @@
 				measurementSystem={user?.measurement_system || 'metric'}
 				{collection}
 				initialVisitDate={storedInitialVisitDate}
+				currentUserUsername={user?.username || null}
 			/>
 		{/if}
 	</div>

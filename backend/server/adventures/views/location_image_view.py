@@ -6,6 +6,7 @@ from django.http import HttpResponse
 import ipaddress
 from urllib.parse import urlparse
 from django.db.models import Q
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
 from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
@@ -24,15 +25,17 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         """Get all images the user has access to"""
         if not self.request.user.is_authenticated:
             return ContentImage.objects.none()
-        
+
         # Import here to avoid circular imports
         from adventures.models import Location, Transportation, Note, Lodging, Visit
-        
+
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
         # Build a single query with all conditions
-        return ContentImage.objects.filter(
+        query = (
             # User owns the image directly (if user field exists on ContentImage)
             Q(user=self.request.user) |
-            
+
             # Or user has access to the content object
             (
                 # Locations owned by user
@@ -94,11 +97,33 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 Q(content_type=ContentType.objects.get_for_model(Visit)) &
                 Q(object_id__in=Visit.objects.filter(location__collections__user=self.request.user).values_list('id', flat=True))
             )
-        ).distinct()
+        )
+
+        # In collaborative mode, also include images from public locations
+        if is_collaborative:
+            query |= (
+                # Public locations
+                Q(content_type=ContentType.objects.get_for_model(Location)) &
+                Q(object_id__in=Location.objects.filter(is_public=True).values_list('id', flat=True))
+            ) | (
+                # Visits from public locations
+                Q(content_type=ContentType.objects.get_for_model(Visit)) &
+                Q(object_id__in=Visit.objects.filter(location__is_public=True).values_list('id', flat=True))
+            )
+
+        # Exclude soft-deleted images
+        return ContentImage.objects.filter(query, is_deleted=False).distinct()
 
     @action(detail=True, methods=['post'])
     def image_delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        """Set deleted_by before soft-deleting."""
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            instance.deleted_by = self.request.user
+            instance.save(update_fields=['deleted_by'])
+        instance.delete()
     
     @action(detail=True, methods=['post'])
     def toggle_primary(self, request, *args, **kwargs):
@@ -342,9 +367,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request_data)
             serializer.is_valid(raise_exception=True)
             
-            # Save with the downloaded image
+            # Save with the downloaded image - always attribute to the uploader
             serializer.save(
-                user=content_object.user if hasattr(content_object, 'user') else request.user,
+                user=request.user,
                 image=image_file,
                 content_type=content_type,
                 object_id=object_id
@@ -392,9 +417,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(data=request_data)
         serializer.is_valid(raise_exception=True)
 
-        # Prepare save parameters
+        # Prepare save parameters - always attribute to the uploader
         save_kwargs = {
-            'user': getattr(content_object, 'user', request.user),
+            'user': request.user,
             'content_type': content_type,
             'object_id': object_id,
         }

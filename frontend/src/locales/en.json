@@ -136,6 +136,9 @@
     "coordinates": "Coordinates",
     "copy_coordinates": "Copy Coordinates",
     "visits": "Visits",
+    "added_by": "Added by",
+    "last_edited_by": "Last edited by",
+    "contributors": "Contributors",
     "create_new": "Create New",
     "sort": "Sort",
     "order_by": "Order By",
@@ -180,6 +183,7 @@
     "collection_locations": "Include Collection Locations",
     "filter": "Filter",
     "category_filter": "Category Filter",
+    "filter_by_type": "Filter by Type",
     "category": "Category",
     "categories": "Categories",
     "routes_and_activities": "Routes & Activities",
@@ -187,6 +191,11 @@
     "transport_activity_paths": "Transport & activity paths",
     "clear": "Clear",
     "my_collections": "My Collections",
+    "ownership_filter": "Ownership",
+    "visibility": "Visibility",
+    "all_locations": "All Locations",
+    "my_locations": "My Locations",
+    "public_locations": "Public Locations",
     "show_filters": "Show Filters",
     "hide_filters": "Hide Filters",
     "pins": "pins",
@@ -249,6 +258,13 @@
     "update_visited_regions": "Update Visited Regions",
     "link_new": "Link New...",
     "add_new": "Add New...",
+    "link_transportation": "Link Transportation",
+    "link_lodging": "Link Lodging",
+    "unlinked": "Unlinked",
+    "no_transportations_available": "No transportations available",
+    "all_transportations_linked": "All transportations are already linked to collections.",
+    "no_lodging_available": "No lodging available",
+    "all_lodging_linked": "All lodging is already linked to collections.",
     "transportation": "Transportation",
     "note": "Note",
     "checklist": "Checklist",
@@ -814,6 +830,9 @@
     "transportation_delete_error": "Error deleting transportation",
     "type": "Type",
     "new_transportation": "New Transportation",
+    "my_transportations": "My Transportations",
+    "no_transportations_found": "No transportations found",
+    "create_transportation": "Create Transportation",
     "flight_number": "Flight Number",
     "from_location": "From Location",
     "to_location": "To Location",
@@ -842,12 +861,20 @@
     "arrival_date": "Arrival Date",
     "departure_timezone": "Departure Timezone",
     "arrival_timezone": "Arrival Timezone",
-    "departure_date": "Departure Date"
+    "departure_date": "Departure Date",
+    "public_transportation": "Public Transportation",
+    "public_transportation_description": "Allow other users to view this transportation",
+    "move_to_collection_confirm": "This transportation is already in another collection. Move it to this collection?",
+    "linked_success": "Transportation linked successfully",
+    "linked_error": "Failed to link transportation"
   },
   "lodging": {
     "new_lodging": "New Lodging",
     "edit": "Edit",
     "edit_lodging": "Edit Lodging",
+    "my_lodging": "My Lodging",
+    "no_lodging_found": "No lodging found",
+    "create_lodging": "Create Lodging",
     "hotel": "Hotel",
     "hostel": "Hostel",
     "resort": "Resort",
@@ -865,7 +892,12 @@
     "enter_lodging_name": "Enter lodging name",
     "enter_reservation_number": "Enter reservation number",
     "invalid_link": "Please enter a valid URL (e.g. https://example.com).",
-    "save_failed": "Failed to save lodging. Please try again."
+    "save_failed": "Failed to save lodging. Please try again.",
+    "public_lodging": "Public Lodging",
+    "public_lodging_description": "Allow other users to view this lodging",
+    "move_to_collection_confirm": "This lodging is already in another collection. Move it to this collection?",
+    "linked_success": "Lodging linked successfully",
+    "linked_error": "Failed to link lodging"
   },
   "search": {
     "result": "Result",
@@ -934,7 +966,9 @@
     "select_category": "Select Category",
     "category_name": "Category Name",
     "add_new_category": "Add New Category",
-    "name_required": "Category name is required"
+    "name_required": "Category name is required",
+    "make_public": "Public",
+    "public_description": "Public categories are visible and usable by all users"
   },
   "dashboard": {
     "welcome_back": "Welcome back",
@@ -948,7 +982,9 @@
     "view_all": "View All",
     "welcome_text_1": "You've been on",
     "welcome_text_2": "adventures so far",
-    "welcome_text_3": "Keep exploring and documenting your travels!"
+    "welcome_text_3": "Keep exploring and documenting your travels!",
+    "recent_travel_plans": "Your recent travel plans",
+    "recent_accommodations": "Your recent accommodations"
   },
   "immich": {
     "immich": "Immich",
@@ -1104,6 +1140,9 @@
   },
   "collections": {
     "not_found": "Collection Not Found",
+    "all_collections": "All Collections",
+    "my_collections_tab": "My Collections",
+    "public_collections": "Public Collections",
     "all_items": "All Items",
     "no_calendar_events": "No visits are scheduled for this collection yet.",
     "events": "events",
@@ -1141,5 +1180,21 @@
     "select_currency": "Select currency",
     "search": "Search currency",
     "no_matches": "No matches"
+  },
+  "history": {
+    "title": "History",
+    "created": "Created",
+    "updated": "Updated",
+    "deleted": "Deleted",
+    "by": "by",
+    "no_history": "No history available",
+    "view_history": "View History",
+    "changes": "Changes",
+    "revert": "Revert"
+  },
+  "collaborative": {
+    "mode_enabled": "Collaborative Mode",
+    "public_content": "Public Content",
+    "can_edit": "You can edit this"
   }
 }

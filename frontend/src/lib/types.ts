@@ -32,11 +32,25 @@ export type Collaborator = {
 	is_current_user?: boolean;
 };
 
+export type Contributor = {
+	uuid: string;
+	username: string;
+	profile_pic: string | null;
+};
+
+export type LastModifiedBy = {
+	uuid: string;
+	username: string;
+	profile_pic: string | null;
+	timestamp: string; // ISO 8601 date string
+};
+
 export type ContentImage = {
 	id: string;
 	image: string;
 	is_primary: boolean;
 	immich_id: string | null;
+	user_username?: string | null;
 };
 
 export type Location = {
@@ -65,6 +79,9 @@ export type Location = {
 	region?: Region | null;
 	country?: Country | null;
 	trails: Trail[];
+	is_owned?: boolean; // For collaborative mode
+	contributors?: Contributor[]; // Users who have contributed (owner, visits, images, attachments)
+	last_modified_by?: LastModifiedBy | null; // Who last edited this location (collaborative mode)
 };
 
 export type AdditionalLocation = Location & {
@@ -162,6 +179,7 @@ export type Collection = {
 	itinerary_days: CollectionItineraryDay[]; // Day metadata (names/descriptions)
 	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
 	days_until_start: number | null;
+	is_owned?: boolean; // For collaborative mode
 };
 
 export type SlimCollection = {
@@ -183,6 +201,7 @@ export type SlimCollection = {
 	primary_image?: ContentImage | null;
 	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
 	days_until_start: number | null;
+	is_owned?: boolean; // For collaborative mode
 };
 
 export type GeocodeSearchResult = {
@@ -219,14 +238,17 @@ export type Transportation = {
 	destination_longitude: number | null;
 	start_code: string | null; // Could be airport code, station code, etc.
 	end_code: string | null; // Could be airport code, station code, etc.
+	tags: string[] | null;
 	is_public: boolean;
 	distance: number | null; // in kilometers
-	collection: Collection | null | string;
+	collections: string[]; // Array of collection IDs
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[]; // Array of images associated with the transportation
 	attachments: Attachment[]; // Array of attachments associated with the transportation
 	travel_duration_minutes?: number | null;
+	visits?: Visit[]; // Array of visits associated with the transportation
+	is_visited?: boolean; // Whether this transportation has been visited
 };
 
 export type Note = {
@@ -289,6 +311,8 @@ export type Category = {
 	icon: string;
 	user: string;
 	num_locations?: number | null;
+	is_public?: boolean;
+	is_owned?: boolean;
 };
 
 export type ImmichIntegration = {
@@ -331,6 +355,7 @@ export type Attachment = {
 	file: string;
 	extension: string;
 	user: string;
+	user_username?: string;
 	name: string;
 	geojson: any | null; // GeoJSON representation of the attachment if the file is a GPX
 };
@@ -352,12 +377,15 @@ export type Lodging = {
 	latitude: number | null;
 	longitude: number | null;
 	location: string | null;
+	tags: string[] | null;
 	is_public: boolean;
-	collection: string | null;
+	collections: string[]; // Array of collection IDs
 	created_at: string; // ISO 8601 date string
 	updated_at: string; // ISO 8601 date string
 	images: ContentImage[]; // Array of images associated with the lodging
 	attachments: Attachment[]; // Array of attachments associated with the lodging
+	visits?: Visit[]; // Array of visits associated with the lodging
+	is_visited?: boolean; // Whether this lodging has been visited
 };
 
 export type CollectionInvite = {
@@ -474,9 +502,12 @@ export type Visit = {
 	notes: string;
 	timezone: string | null;
 	activities: Activity[];
-	location: string;
+	location?: string | null;
+	transportation?: string | null;
+	lodging?: string | null;
 	created_at: string;
 	updated_at: string;
+	user_username?: string | null;
 };
 
 export type TransportationVisit = {
@@ -527,6 +558,7 @@ export type Pin = {
 	longitude: string;
 	is_visited?: boolean;
 	category: Category | null;
+	is_owned?: boolean; // For collaborative mode
 };
 
 export type Recommendation = {

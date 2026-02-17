@@ -1,5 +1,7 @@
 import os
-from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
+from django.conf import settings
+from django.db.models import Q
+from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay, AuditLog
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 from users.serializers import CustomUserDetailsSerializer
@@ -40,10 +42,12 @@ def _serialize_collaborator(user, owner_id=None, request_user=None):
 
 
 class ContentImageSerializer(CustomModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
+
     class Meta:
         model = ContentImage
-        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
-        read_only_fields = ['id', 'user']
+        fields = ['id', 'image', 'is_primary', 'user', 'immich_id', 'user_username']
+        read_only_fields = ['id', 'user', 'user_username']
 
     def to_representation(self, instance):
         # If immich_id is set, check for user integration once
@@ -71,10 +75,12 @@ class ContentImageSerializer(CustomModelSerializer):
 class AttachmentSerializer(CustomModelSerializer):
     extension = serializers.SerializerMethodField()
     geojson = serializers.SerializerMethodField()
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
+
     class Meta:
         model = ContentAttachment
-        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson']
-        read_only_fields = ['id', 'user']
+        fields = ['id', 'file', 'extension', 'name', 'user', 'geojson', 'user_username']
+        read_only_fields = ['id', 'user', 'user_username']
 
     def get_extension(self, obj):
         return obj.file.name.split('.')[-1]
@@ -96,18 +102,21 @@ class AttachmentSerializer(CustomModelSerializer):
     
 class CategorySerializer(serializers.ModelSerializer):
     num_locations = serializers.SerializerMethodField()
+    is_public = serializers.BooleanField(source='is_global', default=True)
+    is_owned = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ['id', 'name', 'display_name', 'icon', 'num_locations']
-        read_only_fields = ['id', 'num_locations']
+        fields = ['id', 'name', 'display_name', 'icon', 'num_locations', 'is_public', 'is_owned']
+        read_only_fields = ['id', 'num_locations', 'is_owned']
 
     def validate_name(self, value):
         return value.lower()
 
     def create(self, validated_data):
-        user = self.context['request'].user
         validated_data['name'] = validated_data['name'].lower()
-        return Category.objects.create(user=user, **validated_data)
+        # User is set by perform_create in the view
+        return Category.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -116,10 +125,89 @@ class CategorySerializer(serializers.ModelSerializer):
             instance.name = validated_data['name'].lower()
         instance.save()
         return instance
-    
+
     def get_num_locations(self, obj):
-        return Location.objects.filter(category=obj, user=obj.user).count()
-    
+        request = self.context.get('request')
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            # In collaborative mode: count user's locations + public locations using this category
+            if request and request.user.is_authenticated:
+                return Location.objects.filter(
+                    Q(user=request.user) | Q(is_public=True),
+                    category=obj
+                ).distinct().count()
+            return Location.objects.filter(category=obj, is_public=True).count()
+        # In normal mode, count only user's locations
+        if obj.user:
+            return Location.objects.filter(category=obj, user=obj.user).count()
+        return 0
+
+    def get_is_owned(self, obj):
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
+
+
+class AuditLogSerializer(serializers.ModelSerializer):
+    """Serializer for audit log entries in collaborative mode."""
+    user_username = serializers.CharField(source='user.username', read_only=True, default='Unknown')
+    content_type_name = serializers.SerializerMethodField()
+    is_revertible = serializers.SerializerMethodField()
+
+    class Meta:
+        model = AuditLog
+        fields = ['id', 'user_username', 'action', 'object_repr', 'changes', 'timestamp', 'content_type_name', 'is_revertible']
+        read_only_fields = fields
+
+    def get_content_type_name(self, obj):
+        return obj.content_type.model if obj.content_type else None
+
+    def get_is_revertible(self, obj):
+        """Determine if this audit log entry can be reverted."""
+        from adventures.models import Location, ContentImage, ContentAttachment
+
+        # Can't revert if no object_id
+        if not obj.object_id:
+            return False
+
+        model_class = obj.content_type.model_class()
+
+        if obj.action == 'create':
+            # Can revert create by deleting the object (if it still exists)
+            try:
+                if model_class == ContentImage:
+                    return ContentImage.objects.filter(id=obj.object_id, is_deleted=False).exists()
+                elif model_class == ContentAttachment:
+                    return ContentAttachment.objects.filter(id=obj.object_id, is_deleted=False).exists()
+                else:
+                    return model_class.objects.filter(pk=obj.object_id).exists()
+            except Exception:
+                return False
+
+        elif obj.action == 'update':
+            # Can revert update if object exists and we have old values
+            if not obj.changes:
+                return False
+            try:
+                return model_class.objects.filter(pk=obj.object_id).exists()
+            except Exception:
+                return False
+
+        elif obj.action == 'delete':
+            # Can revert delete if object is soft-deleted (images/attachments only)
+            try:
+                if model_class == ContentImage:
+                    return ContentImage.objects.filter(id=obj.object_id, is_deleted=True).exists()
+                elif model_class == ContentAttachment:
+                    return ContentAttachment.objects.filter(id=obj.object_id, is_deleted=True).exists()
+                else:
+                    return False  # Can't revert hard deletes
+            except Exception:
+                return False
+
+        return False
+
+
 class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
     wanderer_data = serializers.SerializerMethodField()
@@ -222,15 +310,20 @@ class ActivitySerializer(CustomModelSerializer):
 class VisitSerializer(serializers.ModelSerializer):
 
     activities = ActivitySerializer(many=True, read_only=True, required=False)
+    user_username = serializers.CharField(source='user.username', read_only=True, default=None)
 
     class Meta:
         model = Visit
-        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'created_at', 'updated_at']
+        fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities', 'location', 'created_at', 'updated_at', 'user', 'user_username']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'user_username']
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):
             validated_data['end_date'] = validated_data['start_date']
+        # Set the user from the request context
+        request = self.context.get('request')
+        if request and request.user.is_authenticated:
+            validated_data['user'] = request.user
         return super().create(validated_data)
 
 
@@ -264,12 +357,15 @@ class LocationSerializer(CustomModelSerializer):
     attachments = AttachmentSerializer(many=True, read_only=True)
     category = CategorySerializer(read_only=False, required=False)
     is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
+    contributors = serializers.SerializerMethodField()
+    last_modified_by = serializers.SerializerMethodField()
     country = CountrySerializer(read_only=True)
     region = RegionSerializer(read_only=True)
     city = CitySerializer(read_only=True)
     collections = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Collection.objects.all(), 
+        many=True,
+        queryset=Collection.objects.all(),
         required=False
     )
     trails = TrailSerializer(many=True, read_only=True, required=False)
@@ -277,12 +373,102 @@ class LocationSerializer(CustomModelSerializer):
     class Meta:
         model = Location
         fields = [
-            'id', 'name', 'description', 'rating', 'tags', 'location', 
-            'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude', 
-            'latitude', 'visits', 'is_visited', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails',
+            'id', 'name', 'description', 'rating', 'tags', 'location',
+            'is_public', 'collections', 'created_at', 'updated_at', 'images', 'link', 'longitude',
+            'latitude', 'visits', 'is_visited', 'is_owned', 'contributors', 'last_modified_by', 'category', 'attachments', 'user', 'city', 'country', 'region', 'trails',
             'price', 'price_currency'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited', 'is_owned', 'contributors', 'last_modified_by']
+
+    def get_is_owned(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
+
+    def get_contributors(self, obj):
+        """
+        Get unique users who have contributed to this location.
+        Contributors include: owner, users who added visits, images, or attachments.
+        Owner is always listed first. Limited to 10 contributors.
+        """
+        MAX_CONTRIBUTORS = 10
+        seen_ids = set()
+        contributors = []
+
+        # Add owner first (if exists)
+        if obj.user:
+            seen_ids.add(obj.user.id)
+            contributors.append({
+                'uuid': str(obj.user.uuid),
+                'username': obj.user.username,
+                'profile_pic': _build_profile_pic_url(obj.user),
+            })
+
+        # Collect users from visits
+        for visit in obj.visits.select_related('user').all():
+            if visit.user and visit.user.id not in seen_ids:
+                seen_ids.add(visit.user.id)
+                contributors.append({
+                    'uuid': str(visit.user.uuid),
+                    'username': visit.user.username,
+                    'profile_pic': _build_profile_pic_url(visit.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        # Collect users from images (non-deleted only)
+        for image in obj.images.filter(is_deleted=False).select_related('user').all():
+            if image.user and image.user.id not in seen_ids:
+                seen_ids.add(image.user.id)
+                contributors.append({
+                    'uuid': str(image.user.uuid),
+                    'username': image.user.username,
+                    'profile_pic': _build_profile_pic_url(image.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        # Collect users from attachments (non-deleted only)
+        for attachment in obj.attachments.filter(is_deleted=False).select_related('user').all():
+            if attachment.user and attachment.user.id not in seen_ids:
+                seen_ids.add(attachment.user.id)
+                contributors.append({
+                    'uuid': str(attachment.user.uuid),
+                    'username': attachment.user.username,
+                    'profile_pic': _build_profile_pic_url(attachment.user),
+                })
+                if len(contributors) >= MAX_CONTRIBUTORS:
+                    return contributors
+
+        return contributors
+
+    def get_last_modified_by(self, obj):
+        """
+        Get the user who last modified this location (from audit logs).
+        Returns dict with username, timestamp, and profile_pic, or None.
+        """
+        if not getattr(settings, 'COLLABORATIVE_MODE', False):
+            return None
+
+        from django.contrib.contenttypes.models import ContentType
+
+        ct = ContentType.objects.get_for_model(Location)
+        latest_log = AuditLog.objects.filter(
+            content_type=ct,
+            object_id=obj.pk,
+            action='update'
+        ).select_related('user').order_by('-timestamp').first()
+
+        if not latest_log or not latest_log.user:
+            return None
+
+        return {
+            'uuid': str(latest_log.user.uuid),
+            'username': latest_log.user.username,
+            'profile_pic': _build_profile_pic_url(latest_log.user),
+            'timestamp': latest_log.timestamp.isoformat(),
+        }
 
     # Makes it so the whole user object is returned in the serializer instead of just the user uuid
     def to_representation(self, instance):
@@ -308,7 +494,7 @@ class LocationSerializer(CustomModelSerializer):
 
 
     def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = ContentImageSerializer(obj.images.filter(is_deleted=False), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
@@ -381,38 +567,78 @@ class LocationSerializer(CustomModelSerializer):
         if category_data:
             user = self.context['request'].user
             name = category_data.get('name', '').lower()
-            existing_category = Category.objects.filter(user=user, name=name).first()
+            # In collaborative mode, check user's own categories first, then public ones
+            if getattr(settings, 'COLLABORATIVE_MODE', False):
+                # Prefer user's own category, then fall back to public
+                existing_category = Category.objects.filter(user=user, name=name).first()
+                if not existing_category:
+                    existing_category = Category.objects.filter(is_global=True, name=name).first()
+            else:
+                existing_category = Category.objects.filter(user=user, name=name).first()
             if existing_category:
                 return existing_category
             category_data['name'] = name
         return category_data
-    
+
     def get_or_create_category(self, category_data):
         user = self.context['request'].user
-        
+        is_collaborative = getattr(settings, 'COLLABORATIVE_MODE', False)
+
         if isinstance(category_data, Category):
             return category_data
-        
+
         if isinstance(category_data, dict):
-            name = category_data.get('name', '').lower()
+            name = category_data.get('name', '').lower().strip()
             display_name = category_data.get('display_name', name)
             icon = category_data.get('icon', '🌍')
         else:
-            name = category_data.name.lower()
+            name = category_data.name.lower().strip()
             display_name = category_data.display_name
             icon = category_data.icon
 
-        category, created = Category.objects.get_or_create(
-            user=user,
-            name=name,
-            defaults={
-                'display_name': display_name,
-                'icon': icon
-            }
-        )
+        if is_collaborative:
+            # In collaborative mode, check if ANY category with this name exists (public first)
+            existing = Category.objects.filter(is_global=True, name=name).first()
+            if existing:
+                return existing
+            # Then check user's own category
+            existing = Category.objects.filter(user=user, name=name).first()
+            if existing:
+                return existing
+            # Create as global public category (no duplicates)
+            category = Category.objects.create(
+                user=user,
+                is_global=True,
+                name=name,
+                display_name=display_name,
+                icon=icon
+            )
+        else:
+            category, created = Category.objects.get_or_create(
+                user=user,
+                name=name,
+                defaults={
+                    'display_name': display_name,
+                    'icon': icon
+                }
+            )
         return category
     
     def get_is_visited(self, obj):
+        # In collaborative mode, only count the current user's visits
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                from django.utils import timezone
+                current_date = timezone.now().date()
+                # Only check visits made by the current user
+                user_visits = obj.visits.filter(user=request.user)
+                for visit in user_visits:
+                    start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+                    if start_date and start_date <= current_date:
+                        return True
+                return False
+        # In normal mode, use the standard check
         return obj.is_visited_status()
 
     def create(self, validated_data):
@@ -472,41 +698,69 @@ class LocationSerializer(CustomModelSerializer):
     
 class MapPinSerializer(serializers.ModelSerializer):
     is_visited = serializers.SerializerMethodField()
+    is_owned = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True, required=False)
-    
+
     class Meta:
         model = Location
-        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
-        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category']
-    
+        fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category', 'is_owned']
+        read_only_fields = ['id', 'name', 'latitude', 'longitude', 'is_visited', 'category', 'is_owned']
+
     def get_is_visited(self, obj):
+        # In collaborative mode, only count the current user's visits
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                from django.utils import timezone
+                current_date = timezone.now().date()
+                # Only check visits made by the current user
+                user_visits = obj.visits.filter(user=request.user)
+                for visit in user_visits:
+                    start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+                    if start_date and start_date <= current_date:
+                        return True
+                return False
+        # In normal mode, use the standard check
         return obj.is_visited_status()
+
+    def get_is_owned(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
 
 class TransportationSerializer(CustomModelSerializer):
     distance = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
     travel_duration_minutes = serializers.SerializerMethodField()
+    visits = VisitSerializer(many=True, read_only=True)
+    is_visited = serializers.SerializerMethodField()
+    collections = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Collection.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Transportation
         fields = [
             'id', 'user', 'type', 'name', 'description', 'rating', 'price', 'price_currency',
-            'link', 'date', 'flight_number', 'from_location', 'to_location', 
-            'is_public', 'collection', 'created_at', 'updated_at', 'end_date',
+            'link', 'date', 'flight_number', 'from_location', 'to_location', 'tags',
+            'is_public', 'collections', 'created_at', 'updated_at', 'end_date',
             'origin_latitude', 'origin_longitude', 'destination_latitude', 'destination_longitude',
             'start_timezone', 'end_timezone', 'distance', 'images', 'attachments', 'start_code', 'end_code',
-            'travel_duration_minutes'
+            'travel_duration_minutes', 'visits', 'is_visited'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance', 'travel_duration_minutes']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'distance', 'travel_duration_minutes', 'is_visited']
 
     def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = ContentImageSerializer(obj.images.filter(is_deleted=False), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
     def get_attachments(self, obj):
-        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
+        serializer = AttachmentSerializer(obj.attachments.filter(is_deleted=False), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [attachment for attachment in serializer.data if attachment is not None]
 
@@ -589,28 +843,81 @@ class TransportationSerializer(CustomModelSerializer):
             and dt_value.time().microsecond == 0
         )
 
+    def get_is_visited(self, obj):
+        """Check if this transportation has any visits with a start date in the past."""
+        from django.utils import timezone
+        current_date = timezone.now().date()
+
+        # In collaborative mode, only count the current user's visits
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                user_visits = obj.visits.filter(user=request.user)
+                for visit in user_visits:
+                    start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+                    if start_date and start_date <= current_date:
+                        return True
+                return False
+
+        # Normal mode: check all visits
+        for visit in obj.visits.all():
+            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+            if start_date and start_date <= current_date:
+                return True
+        return False
+
 class LodgingSerializer(CustomModelSerializer):
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
+    visits = VisitSerializer(many=True, read_only=True)
+    is_visited = serializers.SerializerMethodField()
+    collections = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=Collection.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Lodging
         fields = [
-            'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out', 
-            'reservation_number', 'price', 'price_currency', 'latitude', 'longitude', 'location', 'is_public',
-            'collection', 'created_at', 'updated_at', 'type', 'timezone', 'images', 'attachments'
+            'id', 'user', 'name', 'description', 'rating', 'link', 'check_in', 'check_out',
+            'reservation_number', 'price', 'price_currency', 'latitude', 'longitude', 'location', 'tags', 'is_public',
+            'collections', 'created_at', 'updated_at', 'type', 'timezone', 'images', 'attachments', 'visits', 'is_visited'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at', 'user']
+        read_only_fields = ['id', 'created_at', 'updated_at', 'user', 'is_visited']
 
     def get_images(self, obj):
-        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        serializer = ContentImageSerializer(obj.images.filter(is_deleted=False), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [image for image in serializer.data if image is not None]
 
     def get_attachments(self, obj):
-        serializer = AttachmentSerializer(obj.attachments.all(), many=True, context=self.context)
+        serializer = AttachmentSerializer(obj.attachments.filter(is_deleted=False), many=True, context=self.context)
         # Filter out None values from the serialized data
         return [attachment for attachment in serializer.data if attachment is not None]
+
+    def get_is_visited(self, obj):
+        """Check if this lodging has any visits with a start date in the past."""
+        from django.utils import timezone
+        current_date = timezone.now().date()
+
+        # In collaborative mode, only count the current user's visits
+        if getattr(settings, 'COLLABORATIVE_MODE', False):
+            request = self.context.get('request')
+            if request and request.user.is_authenticated:
+                user_visits = obj.visits.filter(user=request.user)
+                for visit in user_visits:
+                    start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+                    if start_date and start_date <= current_date:
+                        return True
+                return False
+
+        # Normal mode: check all visits
+        for visit in obj.visits.all():
+            start_date = visit.start_date.date() if isinstance(visit.start_date, timezone.datetime) else visit.start_date
+            if start_date and start_date <= current_date:
+                return True
+        return False
 
 class NoteSerializer(CustomModelSerializer):
 
@@ -813,7 +1120,7 @@ class CollectionSerializer(CustomModelSerializer):
         # Only include transportations if not in nested context
         if self.context.get('nested', False):
             return []
-        return TransportationSerializer(obj.transportation_set.all(), many=True, context=self.context).data
+        return TransportationSerializer(obj.transportations.all(), many=True, context=self.context).data
 
     def get_notes(self, obj):
         # Only include notes if not in nested context
@@ -831,7 +1138,7 @@ class CollectionSerializer(CustomModelSerializer):
         # Only include lodging if not in nested context
         if self.context.get('nested', False):
             return []
-        return LodgingSerializer(obj.lodging_set.all(), many=True, context=self.context).data
+        return LodgingSerializer(obj.lodgings.all(), many=True, context=self.context).data
 
     def get_status(self, obj):
         """Calculate the status of the collection based on dates"""
@@ -934,15 +1241,22 @@ class UltraSlimCollectionSerializer(serializers.ModelSerializer):
     days_until_start = serializers.SerializerMethodField()
     primary_image = ContentImageSerializer(read_only=True)
     collaborators = serializers.SerializerMethodField()
-    
+    is_owned = serializers.SerializerMethodField()
+
     class Meta:
         model = Collection
         fields = [
-            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date', 
-            'is_archived', 'link', 'created_at', 'updated_at', 'location_images', 
-            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image'
+            'id', 'user', 'name', 'description', 'is_public', 'start_date', 'end_date',
+            'is_archived', 'link', 'created_at', 'updated_at', 'location_images',
+            'location_count', 'shared_with', 'collaborators', 'status', 'days_until_start', 'primary_image', 'is_owned'
         ]
         read_only_fields = fields  # All fields are read-only for listing
+
+    def get_is_owned(self, obj):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user') and request.user.is_authenticated:
+            return obj.user == request.user
+        return False
 
     def get_collaborators(self, obj):
         request = self.context.get('request')

@@ -20,6 +20,13 @@
     "add": "추가",
     "add_a_tag": "태그를 추가하세요",
     "add_new": "새로 추가...",
+    "link_transportation": "교통수단 연결",
+    "link_lodging": "숙박시설 연결",
+    "unlinked": "연결되지 않음",
+    "no_transportations_available": "이용 가능한 교통수단이 없습니다",
+    "all_transportations_linked": "모든 교통수단이 이미 컬렉션에 연결되어 있습니다.",
+    "no_lodging_available": "이용 가능한 숙박시설이 없습니다",
+    "all_lodging_linked": "모든 숙박시설이 이미 컬렉션에 연결되어 있습니다.",
     "add_to_collection": "컬렉션에 추가하세요",
     "adventure_not_found": "표시할 모험이 없습니다. 오른쪽 하단의 플러스 버튼을 사용하여 추가하거나 필터를 변경하세요!",
     "all": "모두",
@@ -39,6 +46,7 @@
     "cancel": "취소",
     "category": "카테고리",
     "category_filter": "카테고리 필터",
+    "filter_by_type": "유형별 필터",
     "checklist": "체크리스트",
     "checklist_delete_confirm": "이 체크리스트를 삭제 하시겠습니까? 이 행동은 취소할 수 없습니다.",
     "collection": "컬렉션",
@@ -85,6 +93,8 @@
     "mark_visited": "방문함으로 표시",
     "md_instructions": "여기에 마크다운으로 작성할 수 있습니다...",
     "my_collections": "내 컬렉션",
+    "ownership_filter": "소유자",
+    "visibility": "가시성",
     "name": "이름",
     "no_image_url": "해당 URL에 이미지가 없습니다.",
     "no_results": "결과가 없습니다",
@@ -125,6 +135,9 @@
     "visit": "방문",
     "visited": "방문함",
     "visits": "방문",
+    "last_edited_by": "마지막 수정자",
+    "contributors": "기여자",
+    "added_by": "추가한 사람",
     "wiki_image_error": "위키백과 이미지 가져오기 오류",
     "wikipedia": "위키백과",
     "checklists": "체크리스트",
@@ -550,7 +563,9 @@
     "view_all": "모두보기",
     "welcome_text_1": "당신은있었습니다",
     "welcome_text_2": "지금까지 모험",
-    "welcome_text_3": "여행을 계속 탐색하고 문서화하십시오!"
+    "welcome_text_3": "여행을 계속 탐색하고 문서화하십시오!",
+    "recent_travel_plans": "최근 여행 계획",
+    "recent_accommodations": "최근 숙소"
   },
   "home": {
     "desc_1": "쉽고 편리하게 발견하고, 계획하고, 탐험하세요",
@@ -901,6 +916,9 @@
       "walking": "도보"
     },
     "new_transportation": "새 교통수단",
+    "my_transportations": "내 교통수단",
+    "no_transportations_found": "교통수단을 찾을 수 없습니다",
+    "create_transportation": "교통수단 만들기",
     "to_location": "도착지",
     "transportation_delete_error": "교통수단 삭제 오류",
     "transportation_deleted": "교통수단이 성공적으로 삭제되었습니다!",
@@ -918,7 +936,12 @@
     "arrival_timezone": "도착 시간대",
     "departure_code": "출발 코드",
     "departure_date": "출발 날짜",
-    "departure_timezone": "출발 시간대"
+    "departure_timezone": "출발 시간대",
+    "public_transportation": "공개 교통수단",
+    "public_transportation_description": "다른 사용자가 이 교통수단을 볼 수 있도록 허용",
+    "move_to_collection_confirm": "이 교통수단은 이미 다른 컬렉션에 있습니다. 이 컬렉션으로 이동하시겠습니까?",
+    "linked_success": "교통수단이 성공적으로 연결되었습니다",
+    "linked_error": "교통수단 연결에 실패했습니다"
   },
   "users": {
     "no_users_found": "공개 프로필인 사용자가 없습니다."
@@ -995,6 +1018,9 @@
     "campground": "캠프장",
     "edit": "편집하다",
     "edit_lodging": "숙박 편집",
+    "my_lodging": "내 숙박",
+    "no_lodging_found": "숙박을 찾을 수 없습니다",
+    "create_lodging": "숙박 만들기",
     "hostel": "숙박소",
     "hotel": "호텔",
     "house": "집",
@@ -1009,7 +1035,12 @@
     "enter_reservation_number": "예약 번호를 입력하십시오",
     "update_lodging_details": "숙박 세부 사항을 업데이트하십시오",
     "invalid_link": "유효한 URL(예: https://example.com)을 입력하세요.",
-    "save_failed": "숙박 시설을 저장하지 못했습니다. \n다시 시도해 주세요."
+    "save_failed": "숙박 시설을 저장하지 못했습니다. \n다시 시도해 주세요.",
+    "public_lodging": "공개 숙박시설",
+    "public_lodging_description": "다른 사용자가 이 숙박시설을 볼 수 있도록 허용",
+    "move_to_collection_confirm": "이 숙박시설은 이미 다른 컬렉션에 있습니다. 이 컬렉션으로 이동하시겠습니까?",
+    "linked_success": "숙박시설이 성공적으로 연결되었습니다",
+    "linked_error": "숙박시설 연결에 실패했습니다"
   },
   "google_maps": {
     "google_maps_integration_desc": "Google지도 계정을 연결하여 고품질 위치 검색 결과 및 권장 사항을 얻으십시오.",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
     "unscheduled_items": "예정되지 않은 품목",
     "unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+  },
+  "history": {
+    "title": "기록",
+    "created": "생성됨",
+    "updated": "수정됨",
+    "deleted": "삭제됨",
+    "by": "작성자",
+    "no_history": "기록이 없습니다",
+    "view_history": "기록 보기",
+    "changes": "변경 사항",
+    "revert": "되돌리기"
+  },
+  "collaborative": {
+    "mode_enabled": "협업 모드",
+    "public_content": "공개 콘텐츠",
+    "can_edit": "편집할 수 있습니다"
   }
 }

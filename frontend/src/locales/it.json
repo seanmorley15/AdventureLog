@@ -25,6 +25,7 @@
     "ascending": "Ascendente",
     "cancel": "Cancellare",
     "category_filter": "Filtro categoria",
+    "filter_by_type": "Filtra per Tipo",
     "clear": "Rimuovere",
     "collection": "Collezione",
     "create_new": "Crea nuovo...",
@@ -39,6 +40,8 @@
     "latitude": "Latitudine",
     "longitude": "Longitudine",
     "my_collections": "Le mie collezioni",
+    "ownership_filter": "Proprietà",
+    "visibility": "Visibilità",
     "name": "Nome",
     "open_details": "Apri Dettagli",
     "order_by": "Ordina per",
@@ -55,6 +58,9 @@
     "updated": "Aggiornato",
     "visit": "Visita",
     "visits": "Visite",
+    "last_edited_by": "Ultima modifica di",
+    "contributors": "Collaboratori",
+    "added_by": "Aggiunto da",
     "dates": "Date",
     "duration": "Durata",
     "image_upload_error": "Errore durante il caricamento dell'immagine",
@@ -90,6 +96,13 @@
     "regions_updated": "regioni aggiornate",
     "update_visited_regions": "Aggiorna le regioni visitate",
     "add_new": "Aggiungi nuovo...",
+    "link_transportation": "Collega trasporto",
+    "link_lodging": "Collega alloggio",
+    "unlinked": "Non collegato",
+    "no_transportations_available": "Nessun trasporto disponibile",
+    "all_transportations_linked": "Tutti i trasporti sono già collegati alle collezioni.",
+    "no_lodging_available": "Nessun alloggio disponibile",
+    "all_lodging_linked": "Tutti gli alloggi sono già collegati alle collezioni.",
     "checklist": "Lista di controllo",
     "checklists": "Liste di controllo",
     "days": "giorni",
@@ -824,6 +837,9 @@
       "walking": "A piedi"
     },
     "new_transportation": "Nuovi trasporti",
+    "my_transportations": "I Miei Trasporti",
+    "no_transportations_found": "Nessun trasporto trovato",
+    "create_transportation": "Crea Trasporto",
     "to_location": "Alla posizione",
     "transportation_delete_error": "Errore durante l'eliminazione del trasporto",
     "transportation_deleted": "Trasporto eliminato con successo!",
@@ -841,7 +857,12 @@
     "arrival_timezone": "Fuso orario di arrivo",
     "departure_code": "Codice di partenza",
     "departure_date": "Data di partenza",
-    "departure_timezone": "Fuso orario di partenza"
+    "departure_timezone": "Fuso orario di partenza",
+    "public_transportation": "Trasporto pubblico",
+    "public_transportation_description": "Consenti ad altri utenti di visualizzare questo trasporto",
+    "move_to_collection_confirm": "Questo trasporto è già in un'altra collezione. Spostarlo in questa collezione?",
+    "linked_success": "Trasporto collegato con successo",
+    "linked_error": "Impossibile collegare il trasporto"
   },
   "search": {
     "cities": "Città",
@@ -923,7 +944,9 @@
     "view_all": "Visualizza tutto",
     "welcome_text_1": "Sei stato in",
     "welcome_text_2": "avventure finora",
-    "welcome_text_3": "Continua a esplorare e documentare i tuoi viaggi!"
+    "welcome_text_3": "Continua a esplorare e documentare i tuoi viaggi!",
+    "recent_travel_plans": "I tuoi piani di viaggio recenti",
+    "recent_accommodations": "I tuoi alloggi recenti"
   },
   "immich": {
     "api_key": "Chiave API Immich",
@@ -995,6 +1018,9 @@
     "campground": "Campeggio",
     "edit": "Modificare",
     "edit_lodging": "Modifica alloggio",
+    "my_lodging": "I Miei Alloggi",
+    "no_lodging_found": "Nessun alloggio trovato",
+    "create_lodging": "Crea Alloggio",
     "hostel": "Ostello",
     "hotel": "Hotel",
     "house": "Casa",
@@ -1009,7 +1035,12 @@
     "enter_reservation_number": "Immettere il numero di prenotazione",
     "update_lodging_details": "Aggiorna i dettagli di alloggio",
     "invalid_link": "Inserisci un URL valido (ad esempio https://example.com).",
-    "save_failed": "Impossibile salvare l'alloggio. \nPer favore riprova."
+    "save_failed": "Impossibile salvare l'alloggio. \nPer favore riprova.",
+    "public_lodging": "Alloggio pubblico",
+    "public_lodging_description": "Consenti ad altri utenti di visualizzare questo alloggio",
+    "move_to_collection_confirm": "Questo alloggio è già in un'altra collezione. Spostarlo in questa collezione?",
+    "linked_success": "Alloggio collegato con successo",
+    "linked_error": "Impossibile collegare l'alloggio"
   },
   "google_maps": {
     "google_maps_integration_desc": "Collega il tuo account Google Maps per ottenere risultati e consigli di ricerca sulla posizione di alta qualità.",
@@ -1139,5 +1170,21 @@
     "trip_context_info": "Gli elementi contestuali del viaggio si applicano all'intero viaggio, ad esempio luoghi che rappresentano la destinazione stessa, note generali o liste di cose da portare importanti per l'intero viaggio.",
     "unscheduled_items": "Elementi non pianificati",
     "unscheduled_items_desc": "Questi elementi sono collegati a questo viaggio ma non sono ancora stati aggiunti a un giorno specifico."
+  },
+  "history": {
+    "title": "Cronologia",
+    "created": "Creato",
+    "updated": "Aggiornato",
+    "deleted": "Eliminato",
+    "by": "da",
+    "no_history": "Nessuna cronologia disponibile",
+    "view_history": "Visualizza cronologia",
+    "changes": "Modifiche",
+    "revert": "Annulla"
+  },
+  "collaborative": {
+    "mode_enabled": "Modalità collaborativa",
+    "public_content": "Contenuto pubblico",
+    "can_edit": "Puoi modificare questo"
   }
 }
