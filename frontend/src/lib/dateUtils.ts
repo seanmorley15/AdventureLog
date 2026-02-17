@@ -1,6 +1,6 @@
 // @ts-ignore
 import { DateTime } from 'luxon';
-import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
+import type { Checklist, Collection, Note, Visit } from './types';
 import { isAllDay } from '$lib';
 
 /**
@@ -113,6 +113,14 @@ export function formatUTCDate(utcDate: string | null): string {
 	return dateTime.toISO()?.slice(0, 16).replace('T', ' ') || '';
 }
 
+export function formatVisitDate(date: string | null, timezone: string | null): string {
+	if (!date) return '';
+	if (isAllDay(date)) {
+		return formatAllDayDate(date);
+	}
+	return formatDateInTimezone(date, timezone);
+}
+
 export function formatAllDayDate(dateString: string): string {
 	if (!dateString) return '';
 	const datePart = dateString.split('T')[0];
@@ -130,7 +138,7 @@ export function formatAllDayDate(dateString: string): string {
  * Extracts start and end dates from various entity types (Luxon DateTime)
  * Returns also isAllDay flag for correct comparison logic
  */
-function getEntityDateRange(entity: Visit | Transportation | Lodging | Note | Checklist): {
+function getEntityDateRange(entity: Visit | Note | Checklist): {
 	start: DateTime | null;
 	end: DateTime | null;
 	isAllDay: boolean;
@@ -143,7 +151,6 @@ function getEntityDateRange(entity: Visit | Transportation | Lodging | Note | Ch
 		if ('start_date' in entity && 'end_date' in entity) {
 			// Check if all-day (no time portion)
 			isAllDayEvent = isAllDay(entity.start_date) && isAllDay(entity.end_date);
-			console;
 			if (isAllDayEvent) {
 				start = entity.start_date
 					? DateTime.fromISO(entity.start_date.split('T')[0], { zone: 'UTC' }).startOf('day')
@@ -154,24 +161,6 @@ function getEntityDateRange(entity: Visit | Transportation | Lodging | Note | Ch
 			} else {
 				start = DateTime.fromISO(entity.start_date, { zone: 'UTC' }).setZone(timezone);
 				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).setZone(timezone);
-			}
-		} else if ('date' in entity && 'end_date' in entity) {
-			isAllDayEvent = !!(entity.date && entity.date.length === 10);
-			if (isAllDayEvent) {
-				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).startOf('day');
-				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).endOf('day');
-			} else {
-				start = DateTime.fromISO(entity.date, { zone: 'UTC' }).setZone(timezone);
-				end = DateTime.fromISO(entity.end_date, { zone: 'UTC' }).setZone(timezone);
-			}
-		} else if ('check_in' in entity && 'check_out' in entity) {
-			isAllDayEvent = !!(entity.check_in && entity.check_in.length === 10);
-			if (isAllDayEvent) {
-				start = DateTime.fromISO(entity.check_in, { zone: 'UTC' }).startOf('day');
-				end = DateTime.fromISO(entity.check_out, { zone: 'UTC' }).endOf('day');
-			} else {
-				start = DateTime.fromISO(entity.check_in, { zone: 'UTC' }).setZone(timezone);
-				end = DateTime.fromISO(entity.check_out, { zone: 'UTC' }).setZone(timezone);
 			}
 		} else if ('date' in entity) {
 			isAllDayEvent = !!(entity.date && entity.date.length === 10);
@@ -217,7 +206,7 @@ function getCollectionDateRange(collection: Collection): {
  * Checks if an entity falls within a collection's date range (timezone-safe, all-day-aware)
  */
 export function isEntityInCollectionDateRange(
-	entity: Visit | Transportation | Lodging | Note | Checklist,
+	entity: Visit | Note | Checklist,
 	collection: Collection
 ): boolean {
 	if (!collection?.start_date || !collection.end_date) {
@@ -250,20 +239,20 @@ export function isEntityInCollectionDateRange(
 }
 
 export function isEntityOutsideCollectionDateRange(
-	entity: Visit | Transportation | Lodging | Note | Checklist,
+	entity: Visit | Note | Checklist,
 	collection: Collection
 ): boolean {
 	return !isEntityInCollectionDateRange(entity, collection);
 }
 
 export function getEntitiesInDateRange<
-	T extends Visit | Transportation | Lodging | Note | Checklist
+	T extends Visit | Note | Checklist
 >(entities: T[], collection: Collection): T[] {
 	return entities.filter((entity) => isEntityInCollectionDateRange(entity, collection));
 }
 
 export function getEntitiesOutsideDateRange<
-	T extends Visit | Transportation | Lodging | Note | Checklist
+	T extends Visit | Note | Checklist
 >(entities: T[], collection: Collection): T[] {
 	return entities.filter((entity) => isEntityOutsideCollectionDateRange(entity, collection));
 }

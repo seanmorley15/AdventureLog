@@ -205,4 +205,6 @@ class DisablePasswordAuthenticationView(APIView):
         user.disable_password = False
         user.save()
         return Response({"detail": "Password authentication enabled."}, status=status.HTTP_200_OK)
-    
+
+
+

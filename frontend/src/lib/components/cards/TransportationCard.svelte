@@ -1,90 +1,33 @@
 <script lang="ts">
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { createEventDispatcher } from 'svelte';
 	import TrashCanOutline from '~icons/mdi/trash-can-outline';
 	import FileDocumentEdit from '~icons/mdi/file-document-edit';
+	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import type { Collection, Transportation, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import DeleteWarning from '../DeleteWarning.svelte';
-	import { TRANSPORTATION_TYPES_ICONS } from '$lib';
-	import { formatAllDayDate, formatDateInTimezone } from '$lib/dateUtils';
-	import { isAllDay } from '$lib';
-	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import { formatVisitDate } from '$lib/dateUtils';
 	import CardCarousel from '../CardCarousel.svelte';
 	import TransportationRoutePreview from './TransportationRoutePreview.svelte';
-
-	import Eye from '~icons/mdi/eye';
-	import EyeOff from '~icons/mdi/eye-off';
-	import Star from '~icons/mdi/star';
-	import StarOutline from '~icons/mdi/star-outline';
 	import Calendar from '~icons/mdi/calendar';
-	import DotsHorizontal from '~icons/mdi/dots-horizontal';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Launch from '~icons/mdi/launch';
 	import Globe from '~icons/mdi/globe';
 	import { goto } from '$app/navigation';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { CardActionsMenu, CardStatusBadge, CardPrivacyBadge, RatingDisplay, AvgPriceBadge, VisitCountBadge, TagsDisplay, getVisitSummary } from '../shared/cards';
+	import { getTransportationIcon } from '$lib/stores/entityTypes';
 
-	let isActionsMenuOpen = false;
-	let actionsMenuRef: HTMLDivElement | null = null;
-	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
-
-	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
-		const target = event.target as Node | null;
-		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
-			isActionsMenuOpen = false;
-		}
-	}
-
-	function closeAllTransportationMenus() {
-		window.dispatchEvent(new CustomEvent(ACTIONS_CLOSE_EVENT));
-	}
-
-	onMount(() => {
-		document.addEventListener('click', handleDocumentClick);
-		window.addEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		return () => {
-			document.removeEventListener('click', handleDocumentClick);
-			window.removeEventListener(ACTIONS_CLOSE_EVENT, handleCloseEvent);
-		};
-	});
-
-	function getTransportationIcon(type: string) {
-		if (type in TRANSPORTATION_TYPES_ICONS) {
-			return TRANSPORTATION_TYPES_ICONS[type as keyof typeof TRANSPORTATION_TYPES_ICONS];
-		} else {
-			return '🚗';
-		}
-	}
-
-	function renderStars(rating: number) {
-		const stars = [];
-		for (let i = 1; i <= 5; i++) {
-			stars.push(i <= rating);
-		}
-		return stars;
-	}
+	let actionsMenu: { close: () => void };
 
 	const dispatch = createEventDispatcher();
-
-	const localTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC';
-
-	const getTimezoneLabel = (zone?: string | null) => zone ?? localTimeZone;
-	const getTimezoneTip = (zone?: string | null) => {
-		const label = getTimezoneLabel(zone);
-		return label === localTimeZone
-			? null
-			: `${$t('adventures.trip_timezone') ?? 'Trip TZ'}: ${label}. ${
-					$t('adventures.your_time') ?? 'Your time'
-				}: ${localTimeZone}.`;
-	};
 
 	export let transportation: Transportation;
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
 	export let readOnly: boolean = false;
+	export let compact: boolean = false; // For compact grid display in itinerary
 	export let itineraryItem: CollectionItineraryItem | null = null;
 
 	const toMiles = (km: any) => (Number(km) * 0.621371).toFixed(1);
@@ -107,8 +50,6 @@
 	let travelDurationLabel: string | null = null;
 	$: travelDurationLabel = formatTravelDuration(transportation?.travel_duration_minutes ?? null);
 
-	let showMoreDetails = false;
-
 	$: hasCodePair = Boolean(transportation?.start_code && transportation?.end_code);
 	$: routeFromLabel = hasCodePair
 		? transportation.start_code
@@ -116,11 +57,13 @@
 	$: routeToLabel = hasCodePair
 		? transportation.end_code
 		: (transportation.to_location ?? transportation.end_code ?? null);
-	$: hasExpandableDetails = Boolean(transportation?.end_date || travelDurationLabel);
-	$: if (!hasExpandableDetails) showMoreDetails = false;
-	$: transportationPriceLabel = formatMoney(
-		toMoneyValue(transportation.price, transportation.price_currency, DEFAULT_CURRENCY)
-	);
+	// Use LAST visit's dates for display (sorted by start_date desc)
+	$: visitSummary = getVisitSummary(transportation?.visits);
+	$: lastVisit = visitSummary.lastVisit;
+	$: visitCount = visitSummary.visitCount;
+	$: visitStartDate = lastVisit?.start_date ?? null;
+	$: visitEndDate = lastVisit?.end_date ?? null;
+	$: visitTimezone = lastVisit?.timezone ?? null;
 
 	$: routeGeojson =
 		transportation?.attachments?.find((attachment) => attachment?.geojson)?.geojson ?? null;
@@ -159,6 +102,31 @@
 			addToast('error', $t('itinerary.item_remove_error'));
 		}
 	}
+
+	async function removeFromCollection() {
+		if (!collection) return;
+
+		// Remove the collection from the transportation's collections array
+		const updatedCollections = (transportation.collections || []).filter(
+			(c) => String(c) !== String(collection.id)
+		);
+
+		let res = await fetch(`/api/transportations/${transportation.id}/`, {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({ collections: updatedCollections })
+		});
+
+		if (res.ok) {
+			transportation.collections = updatedCollections;
+			addToast('info', $t('adventures.collection_remove_success') || 'Removed from collection');
+			dispatch('delete', transportation.id); // This triggers UI update to remove from list
+		} else {
+			addToast('error', $t('adventures.collection_remove_error') || 'Error removing from collection');
+		}
+	}
 </script>
 
 {#if isWarningModalOpen}
@@ -192,25 +160,8 @@
 			/>
 		{/if}
 
-		<!-- Privacy Indicator -->
-		<div class="absolute top-2 right-4">
-			<div
-				class="tooltip tooltip-left"
-				data-tip={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
-			>
-				<div
-					class="badge badge-sm p-1 rounded-full text-base-content shadow-sm"
-					role="img"
-					aria-label={transportation.is_public ? $t('adventures.public') : $t('adventures.private')}
-				>
-					{#if transportation.is_public}
-						<Eye class="w-4 h-4" />
-					{:else}
-						<EyeOff class="w-4 h-4" />
-					{/if}
-				</div>
-			</div>
-		</div>
+		<CardStatusBadge isVisited={transportation.is_visited} />
+		<CardPrivacyBadge isPublic={transportation.is_public} />
 
 		<!-- Category Badge -->
 		{#if transportation.type}
@@ -223,12 +174,22 @@
 		{/if}
 	</div>
 
-	<div class="card-body p-4 space-y-3 min-w-0">
+	<div
+		class="card-body space-y-2 min-w-0"
+		class:p-3={compact}
+		class:p-4={!compact}
+		class:space-y-2={compact}
+		class:space-y-3={!compact}
+	>
 		<!-- Header -->
-		<div class="flex items-start justify-between gap-3">
+		<div class="flex items-start justify-between gap-2">
 			<a
 				href="/transportations/{transportation.id}"
-				class="hover:text-primary transition-colors duration-200 line-clamp-2 text-lg font-semibold"
+				class="hover:text-primary transition-colors duration-200 line-clamp-2"
+				class:text-base={compact}
+				class:text-lg={!compact}
+				class:font-semibold={!compact}
+				class:font-medium={compact}
 			>
 				{transportation.name}
 			</a>
@@ -243,93 +204,87 @@
 				</button>
 
 				{#if !readOnly && (transportation.user === user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
-					<div
-						class="dropdown dropdown-end relative z-50"
-						class:dropdown-open={isActionsMenuOpen}
-						bind:this={actionsMenuRef}
-					>
-						<button
-							type="button"
-							class="btn btn-square btn-sm p-1 text-base-content"
-							aria-haspopup="menu"
-							on:click|stopPropagation={() => {
-								if (isActionsMenuOpen) {
-									isActionsMenuOpen = false;
-									return;
-								}
-								closeAllTransportationMenus();
-								isActionsMenuOpen = true;
-							}}
-						>
-							<DotsHorizontal class="w-5 h-5" />
-						</button>
-						<ul
-							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
-						>
-							<li>
-								<button
-									on:click={() => {
-										isActionsMenuOpen = false;
-										editTransportation();
-									}}
-									class="flex items-center gap-2"
-								>
-									<FileDocumentEdit class="w-4 h-4" />
-									{$t('transportation.edit')}
-								</button>
-							</li>
-							{#if itineraryItem && itineraryItem.id}
-								<div class="divider my-1"></div>
-								{#if !itineraryItem.is_global}
-									<li>
-										<button
-											on:click={() => {
-												isActionsMenuOpen = false;
-												dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
-											}}
-											class=" flex items-center gap-2"
-										>
-											<Globe class="w-4 h-4 " />
-											{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
-										</button>
-									</li>
-									<li>
-										<button
-											on:click={() => {
-												isActionsMenuOpen = false;
-												changeDay();
-											}}
-											class=" flex items-center gap-2"
-										>
-											<Calendar class="w-4 h-4 text" />
-											{$t('itinerary.change_day')}
-										</button>
-									</li>
-								{/if}
+					<CardActionsMenu bind:this={actionsMenu} ariaLabel={$t('adventures.transportation_actions') || 'Transportation actions'} let:close>
+						<li>
+							<button
+								on:click={() => {
+									close();
+									editTransportation();
+								}}
+								class="flex items-center gap-2"
+							>
+								<FileDocumentEdit class="w-4 h-4" />
+								{$t('transportation.edit')}
+							</button>
+						</li>
+						{#if itineraryItem && itineraryItem.id}
+							<div class="divider my-1"></div>
+							{#if !itineraryItem.is_global}
 								<li>
 									<button
 										on:click={() => {
-											isActionsMenuOpen = false;
-											removeFromItinerary();
+											close();
+											dispatch('moveToGlobal', { type: 'transportation', id: transportation.id });
 										}}
-										class="text-error flex items-center gap-2"
+										class=" flex items-center gap-2"
 									>
-										<CalendarRemove class="w-4 h-4 text-error" />
-										{#if itineraryItem.is_global}
-											{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
-										{:else}
-											{$t('itinerary.remove_from_itinerary')}
-										{/if}
+										<Globe class="w-4 h-4 " />
+										{$t('itinerary.move_to_trip_context') || 'Move to Trip Context'}
+									</button>
+								</li>
+								<li>
+									<button
+										on:click={() => {
+											close();
+											changeDay();
+										}}
+										class=" flex items-center gap-2"
+									>
+										<Calendar class="w-4 h-4 text" />
+										{$t('itinerary.change_day')}
 									</button>
 								</li>
 							{/if}
-							<div class="divider my-1"></div>
+							<li>
+								<button
+									on:click={() => {
+										close();
+										removeFromItinerary();
+									}}
+									class="text-error flex items-center gap-2"
+								>
+									<CalendarRemove class="w-4 h-4 text-error" />
+									{#if itineraryItem.is_global}
+										{$t('itinerary.remove_from_trip_context') || 'Remove from Trip Context'}
+									{:else}
+										{$t('itinerary.remove_from_itinerary')}
+									{/if}
+								</button>
+							</li>
+						{/if}
+						<div class="divider my-1"></div>
+						{#if collection}
+							<!-- Show "Remove from collection" when in collection context -->
+							<li>
+								<button
+									class="flex items-center gap-2"
+									on:click={() => {
+										close();
+										removeFromCollection();
+									}}
+								>
+									<LinkVariantRemove class="w-4 h-4" />
+									{$t('adventures.remove_from_collection')}
+								</button>
+							</li>
+						{/if}
+						{#if transportation.user === user?.uuid}
+							<!-- Owner can delete -->
 							<li>
 								<button
 									class="text-error flex items-center gap-2"
 									on:click={() => {
-										isActionsMenuOpen = false;
+										close();
 										isWarningModalOpen = true;
 									}}
 								>
@@ -337,8 +292,8 @@
 									{$t('adventures.delete')}
 								</button>
 							</li>
-						</ul>
-					</div>
+						{/if}
+					</CardActionsMenu>
 				{/if}
 			</div>
 		</div>
@@ -368,109 +323,32 @@
 			</div>
 		{/if}
 
-		<!-- Date & Time Section -->
-		{#if transportation.date}
-			<div class="flex flex-col gap-1.5">
-				{#if isAllDay(transportation.date) && (!transportation.end_date || isAllDay(transportation.end_date))}
-					<!-- All-day event -->
-					<div class="flex items-center gap-2 text-sm">
-						<span class="font-medium text-base-content"
-							>{formatAllDayDate(transportation.date)}</span
-						>
-						{#if transportation.end_date && transportation.end_date !== transportation.date}
-							<span class="text-base-content/40">→</span>
-							<span class="font-medium text-base-content"
-								>{formatAllDayDate(transportation.end_date)}</span
-							>
-						{/if}
-					</div>
-				{:else}
-					<!-- Compact departure card with tidy layout -->
-					<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-						<div class="flex items-start justify-between gap-2">
-							<div class="flex flex-col gap-0.5 min-w-0">
-								<span class="text-xs text-base-content/60">Departure</span>
-								<span class="text-sm font-semibold text-base-content">
-									{formatDateInTimezone(transportation.date, transportation.start_timezone)}
-								</span>
-							</div>
-							{#if hasCodePair}
-								<span class="badge badge-outline badge-sm font-medium whitespace-nowrap">
-									{transportation.start_code} → {transportation.end_code}
-								</span>
-							{/if}
-						</div>
-
-						<div class="flex items-center gap-2 text-xs text-base-content/70">
-							<div
-								class="tooltip"
-								data-tip={getTimezoneTip(transportation.start_timezone) ?? undefined}
-							>
-								<span class="badge badge-ghost badge-sm">
-									{getTimezoneLabel(transportation.start_timezone)}
-								</span>
-							</div>
-						</div>
-					</div>
-
-					{#if hasExpandableDetails}
-						<div class="flex justify-end">
-							<button
-								class="btn btn-neutral-200 btn-xs"
-								aria-expanded={showMoreDetails}
-								on:click={() => (showMoreDetails = !showMoreDetails)}
-								type="button"
-							>
-								{showMoreDetails
-									? ($t('common.show_less') ?? 'Hide details')
-									: ($t('common.show_more') ?? 'Show more')}
-							</button>
-						</div>
-					{/if}
-
-					{#if showMoreDetails && hasExpandableDetails}
-						<div class="flex flex-col gap-1">
-							{#if transportation.end_date}
-								<div class="bg-base-200 rounded-lg px-3 py-2 flex flex-col gap-2">
-									<div class="flex items-center justify-between gap-2">
-										<div class="flex flex-col gap-0.5 min-w-0">
-											<span class="text-xs text-base-content/60">Arrival</span>
-											<span class="text-sm font-semibold text-base-content">
-												{formatDateInTimezone(
-													transportation.end_date,
-													transportation.end_timezone ?? transportation.start_timezone
-												)}
-											</span>
-										</div>
-									</div>
-
-									<div class="flex items-center gap-2 text-xs text-base-content/70">
-										<div
-											class="tooltip"
-											data-tip={getTimezoneTip(
-												transportation.end_timezone ?? transportation.start_timezone
-											) ?? undefined}
-										>
-											<span class="badge badge-ghost badge-sm">
-												{getTimezoneLabel(
-													transportation.end_timezone ?? transportation.start_timezone
-												)}
-											</span>
-										</div>
-									</div>
-								</div>
-							{/if}
-						</div>
-					{/if}
+		<!-- Date & Time Section (from last visit) - Simple inline format -->
+		{#if visitStartDate}
+			<div class="flex flex-col gap-1">
+				{#if visitCount > 1}
+					<span class="text-xs text-base-content/60 font-medium">{$t('adventures.last_trip')}</span>
 				{/if}
+				<div class="flex items-center gap-2 text-sm">
+					<span class="font-medium text-base-content">{formatVisitDate(visitStartDate, visitTimezone)}</span>
+					{#if visitEndDate && visitEndDate !== visitStartDate}
+						<span class="text-primary">→</span>
+						<span class="font-medium text-base-content">{formatVisitDate(visitEndDate, visitTimezone)}</span>
+					{/if}
+				</div>
 			</div>
 		{/if}
 
 		<!-- Stats & Rating -->
-		<div class="flex flex-wrap items-center gap-2 text-sm">
-			{#if transportationPriceLabel}
-				<span class="badge badge-ghost badge-sm">💰 {transportationPriceLabel}</span>
-			{/if}
+		<div
+			class="flex flex-wrap items-center text-base-content/70 min-w-0"
+			class:gap-2={compact}
+			class:gap-3={!compact}
+			class:text-xs={compact}
+			class:text-sm={!compact}
+		>
+			<AvgPriceBadge avgPricePerUser={transportation.average_price_per_user} />
+
 			{#if transportation.distance && !isNaN(+transportation.distance)}
 				<span class="badge badge-ghost badge-sm">
 					🌍 {user?.measurement_system === 'imperial'
@@ -483,21 +361,17 @@
 				<span class="badge badge-ghost badge-sm">⏱️ {travelDurationLabel}</span>
 			{/if}
 
-			{#if transportation.rating}
-				<div class="flex items-center gap-1">
-					<div class="flex -ml-1">
-						{#each renderStars(transportation.rating) as filled}
-							{#if filled}
-								<Star class="w-4 h-4 text-warning fill-current" />
-							{:else}
-								<StarOutline class="w-4 h-4 text-base-content/30" />
-							{/if}
-						{/each}
-					</div>
-					<span class="text-xs text-base-content/60">({transportation.rating}/5)</span>
-				</div>
-			{/if}
+			<RatingDisplay
+				averageRating={transportation.average_rating}
+				fallbackRating={transportation.rating}
+				ratingCount={transportation.rating_count}
+			/>
+
+			<VisitCountBadge {visitCount} />
 		</div>
+
+		<!-- Tags -->
+		<TagsDisplay tags={transportation.tags} />
 	</div>
 </div>
 

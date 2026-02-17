@@ -17,6 +17,9 @@ class Country(models.Model):
     capital = models.CharField(max_length=100, blank=True, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    currency_code = models.CharField(max_length=3, blank=True, null=True, help_text="ISO 4217 currency code (e.g., USD, EUR)")
+    currency_name = models.CharField(max_length=100, blank=True, null=True)
+    currency_symbol = models.CharField(max_length=10, blank=True, null=True)
 
     class Meta:
         verbose_name = "Country"
@@ -24,6 +27,21 @@ class Country(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class ExchangeRate(models.Model):
+    """Exchange rates with USD as base currency."""
+    currency_code = models.CharField(max_length=3, unique=True, help_text="ISO 4217 currency code")
+    rate = models.DecimalField(max_digits=18, decimal_places=8, help_text="Rate relative to 1 USD")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Exchange Rate"
+        verbose_name_plural = "Exchange Rates"
+        ordering = ['currency_code']
+
+    def __str__(self):
+        return f"1 USD = {self.rate} {self.currency_code}"
 
 class Region(models.Model):
     id = models.CharField(primary_key=True)

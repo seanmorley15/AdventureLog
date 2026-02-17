@@ -35,6 +35,8 @@ export const load = (async (event) => {
 	return {
 		locations: data.locations,
 		collections: data.collections,
+		transportations: data.transportations,
+		lodging: data.lodging,
 		users: data.users,
 		countries: data.countries,
 		regions: data.regions,

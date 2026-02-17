@@ -13,15 +13,11 @@
 	import { DateTime } from 'luxon';
 	import { t } from 'svelte-i18n';
 	import { get } from 'svelte/store';
-	// lodging icons and helpers
-	import { LODGING_TYPES_ICONS, getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
+	import { getActivityIcon, SPORT_TYPE_CHOICES } from '$lib';
+	import { getLodgingIcon } from '$lib/stores/entityTypes';
 
 	export let collection: Collection;
 	export let user: User | null = null;
-
-	function getLodgingIcon(type: string): string {
-		return (LODGING_TYPES_ICONS as Record<string, string>)[type] || '🏨';
-	}
 
 	function convertDistance(km: number): number {
 		if (user?.measurement_system === 'imperial') {

@@ -65,8 +65,7 @@ async function handleRequest(
 	}
 
 	// Set the new csrf token in both headers and cookies
-	const sessionId = cookies.get('sessionid');
-	const cookieHeader = `csrftoken=${csrfToken}` + (sessionId ? `; sessionid=${sessionId}` : '');
+	const cookieHeader = `csrftoken=${csrfToken}; Path=/; HttpOnly; SameSite=Lax`;
 
 	try {
 		const response = await fetch(targetUrl, {

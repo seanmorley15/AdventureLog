@@ -1,5 +1,5 @@
 import os
-from .models import Country, Region, VisitedRegion, City, VisitedCity
+from .models import Country, Region, VisitedRegion, City, VisitedCity, ExchangeRate
 from rest_framework import serializers
 from main.utils import CustomModelSerializer
 
@@ -32,7 +32,7 @@ class CountrySerializer(serializers.ModelSerializer):
     class Meta:
         model = Country
         fields = '__all__'
-        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital']
+        read_only_fields = ['id', 'name', 'country_code', 'subregion', 'flag_url', 'num_regions', 'num_visits', 'longitude', 'latitude', 'capital', 'currency_code', 'currency_name', 'currency_symbol']
 
 
 class RegionSerializer(serializers.ModelSerializer):
@@ -74,3 +74,10 @@ class VisitedCitySerializer(CustomModelSerializer):
         model = VisitedCity
         fields = ['id', 'user', 'city', 'longitude', 'latitude', 'name']
         read_only_fields = ['user', 'id', 'longitude', 'latitude', 'name']
+
+
+class ExchangeRateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ExchangeRate
+        fields = ['currency_code', 'rate', 'updated_at']
+        read_only_fields = ['currency_code', 'rate', 'updated_at']

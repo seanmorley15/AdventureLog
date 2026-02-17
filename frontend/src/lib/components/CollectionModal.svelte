@@ -4,8 +4,8 @@
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import { addToast } from '$lib/toasts';
-	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
+	import { adventureTypes, fetchEntityTypes } from '$lib/stores/entityTypes';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';
@@ -15,6 +15,7 @@
 	import SaveIcon from '~icons/mdi/content-save';
 	import CloseIcon from '~icons/mdi/close';
 	import ImageIcon from '~icons/mdi/image-multiple';
+	import TagIcon from '~icons/mdi/tag';
 
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
@@ -28,7 +29,7 @@
 		start_date: collectionToEdit?.start_date || null,
 		end_date: collectionToEdit?.end_date || null,
 		user: collectionToEdit?.user || '',
-		is_public: collectionToEdit?.is_public || false,
+		is_public: collectionToEdit?.is_public ?? true,
 		locations: collectionToEdit?.locations || [],
 		link: collectionToEdit?.link || '',
 		shared_with: collectionToEdit?.shared_with || [],
@@ -39,6 +40,8 @@
 		primary_image_id: collectionToEdit?.primary_image_id ?? null,
 		itinerary_days: []
 	};
+
+	let adventure_type_id: number | null = collectionToEdit?.adventure_type?.id ?? null;
 
 	let availableImages: ContentImage[] = [];
 	let coverImageId: string | null = collection.primary_image?.id || null;
@@ -89,7 +92,8 @@
 			shared_with: col.shared_with || [],
 			status: col.status ?? 'folder',
 			days_until_start: col.days_until_start ?? null,
-			primary_image: col.primary_image ?? null
+			primary_image: col.primary_image ?? null,
+			adventure_type: col.adventure_type ?? null
 		};
 	}
 
@@ -106,6 +110,7 @@
 				collection = { ...collection, ...data };
 				coverImageId = data.primary_image?.id ?? coverImageId;
 				collection.primary_image_id = coverImageId;
+				adventure_type_id = data.adventure_type?.id ?? null;
 				setImagesFromCollection(collection);
 				return;
 			}
@@ -121,7 +126,7 @@
 		if (modal) {
 			modal.showModal();
 		}
-		await loadCollectionDetails();
+		await Promise.all([loadCollectionDetails(), fetchEntityTypes()]);
 	});
 
 	function close() {
@@ -159,26 +164,16 @@
 			collection.end_date = null;
 		}
 
-		const payload: any = {
+		const payload = {
 			name: collection.name,
 			description: collection.description,
 			start_date: collection.start_date,
 			end_date: collection.end_date,
 			is_public: collection.is_public,
 			link: collection.link,
-			primary_image_id: coverImageId
+			primary_image_id: coverImageId,
+			adventure_type_id: adventure_type_id
 		};
-
-		// Clean up link: empty/whitespace → null, invalid URL → null
-		if (!payload.link || !payload.link.trim()) {
-			payload.link = null;
-		} else {
-			try {
-				new URL(payload.link);
-			} catch {
-				payload.link = null;
-			}
-		}
 
 		if (collection.id === '') {
 			let res = await fetch('/api/collections', {
@@ -198,12 +193,7 @@
 				dispatch('save', toSlimCollection(collection));
 			} else {
 				console.error(data);
-				// Extract field-level errors from Django response
-				const fieldErrors = Object.entries(data)
-					.filter(([_, v]) => Array.isArray(v))
-					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-					.join('; ');
-				addToast('error', fieldErrors || $t('collection.error_creating_collection'));
+				addToast('error', $t('collection.error_creating_collection'));
 			}
 		} else {
 			let res = await fetch(`/api/collections/${collection.id}`, {
@@ -222,12 +212,7 @@
 				addToast('success', $t('collection.collection_edit_success'));
 				dispatch('save', toSlimCollection(collection));
 			} else {
-				// Extract field-level errors from Django response
-				const fieldErrors = Object.entries(data)
-					.filter(([_, v]) => Array.isArray(v))
-					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-					.join('; ');
-				addToast('error', fieldErrors || $t('collection.error_editing_collection'));
+				addToast('error', $t('collection.error_editing_collection'));
 			}
 		}
 	}
@@ -367,6 +352,27 @@
 										bind:value={collection.end_date}
 										class="input input-bordered w-full"
 									/>
+								</div>
+
+								<!-- Adventure Type -->
+								<div class="form-control">
+									<label class="label" for="adventure_type">
+										<span class="label-text font-medium flex items-center gap-2">
+											<TagIcon class="w-4 h-4" />
+											{$t('collection.adventure_type') ?? 'Type'}
+										</span>
+									</label>
+									<select
+										id="adventure_type"
+										name="adventure_type"
+										bind:value={adventure_type_id}
+										class="select select-bordered w-full"
+									>
+										<option value={null}>{$t('collection.no_type') ?? '-- No type --'}</option>
+										{#each $adventureTypes as type (type.id)}
+											<option value={type.id}>{type.icon} {type.name}</option>
+										{/each}
+									</select>
 								</div>
 
 								<!-- Public Toggle -->
@@ -528,15 +534,11 @@
 								/>
 								<button
 									type="button"
-								on:click={async () => {
-									try {
-										await copyToClipboard(
+									on:click={() => {
+										navigator.clipboard.writeText(
 											`${window.location.origin}/collections/${collection.id}`
 										);
 										addToast('success', $t('adventures.link_copied'));
-									} catch {
-										addToast('error', $t('adventures.copy_failed') || 'Copy failed');
-									}
 									}}
 									class="btn btn-primary gap-2"
 								>

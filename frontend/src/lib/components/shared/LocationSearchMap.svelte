@@ -1,3 +1,21 @@
+<script context="module" lang="ts">
+	// Search mode type for transportation - exported for use in other components
+	export type SearchMode = 'location' | 'airport' | 'train' | 'bus' | 'cab' | 'vtc';
+
+	// Type for unified search results with source grouping
+	export type UnifiedSearchResult = {
+		id?: string;
+		name: string;
+		display_name: string;
+		lat: number;
+		lon: number;
+		type?: string;
+		category?: string;
+		code?: string | null;
+		source: 'address' | 'location' | 'lodging' | 'departure' | 'arrival';
+	};
+</script>
+
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { MapLibre, Marker, MapEvents } from 'svelte-maplibre';
@@ -11,7 +29,66 @@
 	import ClearIcon from '~icons/mdi/close';
 	import PinIcon from '~icons/mdi/map-marker';
 	import AirplaneIcon from '~icons/mdi/airplane';
+	import TrainIcon from '~icons/mdi/train';
+	import BusIcon from '~icons/mdi/bus';
+	import TaxiIcon from '~icons/mdi/taxi';
+	import LimoIcon from '~icons/mdi/car-estate';
 	import SwapIcon from '~icons/mdi/swap-horizontal';
+	import BedIcon from '~icons/mdi/bed';
+	import DepartureIcon from '~icons/mdi/arrow-top-right';
+	import ArrivalIcon from '~icons/mdi/arrow-bottom-left';
+
+	// Search mode configuration
+	const SEARCH_MODE_CONFIG: Record<SearchMode, {
+		suffix: string;
+		departureLabel: string;
+		arrivalLabel: string;
+		placeholder: string;
+		icon: any;
+	}> = {
+		location: {
+			suffix: '',
+			departureLabel: 'adventures.start_location',
+			arrivalLabel: 'adventures.end_location',
+			placeholder: 'transportation.enter_from_location',
+			icon: PinIcon
+		},
+		airport: {
+			suffix: ' Airport',
+			departureLabel: 'adventures.departure_airport',
+			arrivalLabel: 'adventures.arrival_airport',
+			placeholder: 'adventures.airport_code_examples',
+			icon: AirplaneIcon
+		},
+		train: {
+			suffix: ' Station',
+			departureLabel: 'adventures.departure_station',
+			arrivalLabel: 'adventures.arrival_station',
+			placeholder: 'adventures.station_name_examples',
+			icon: TrainIcon
+		},
+		bus: {
+			suffix: ' Bus Station',
+			departureLabel: 'adventures.departure_stop',
+			arrivalLabel: 'adventures.arrival_stop',
+			placeholder: 'adventures.bus_stop_examples',
+			icon: BusIcon
+		},
+		cab: {
+			suffix: '',
+			departureLabel: 'adventures.pickup_location',
+			arrivalLabel: 'adventures.dropoff_location',
+			placeholder: 'adventures.address_examples',
+			icon: TaxiIcon
+		},
+		vtc: {
+			suffix: '',
+			departureLabel: 'adventures.pickup_location',
+			arrivalLabel: 'adventures.dropoff_location',
+			placeholder: 'adventures.address_examples',
+			icon: LimoIcon
+		}
+	};
 
 	type GeoSelection = {
 		name: string;
@@ -41,7 +118,7 @@
 	export let displayNamePlaceholder = '';
 	export let isReverseGeocoding = false;
 	export let transportationMode = false; // New prop for transportation mode
-	export let airportMode = false; // New prop for airport-specific search
+	export let searchMode: SearchMode = 'location'; // Search mode for transportation
 	// Props for initial transportation locations when editing
 	export let initialStartLocation: {
 		name: string;
@@ -57,9 +134,19 @@
 	} | null = null;
 	export let initialStartCode: string | null = null;
 	export let initialEndCode: string | null = null;
+	// Enable unified search to include user's locations and lodgings
+	export let unifiedSearch = false;
 
 	let isSearching = false;
 	let searchResults: GeoSelection[] = [];
+	// Grouped results for unified search mode
+	let unifiedResults: {
+		addresses: UnifiedSearchResult[];
+		locations: UnifiedSearchResult[];
+		lodging: UnifiedSearchResult[];
+		departures: UnifiedSearchResult[];
+		arrivals: UnifiedSearchResult[];
+	} = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 	let selectedLocation: GeoSelection | null = null;
 	let selectedMarker: { lng: number; lat: number } | null = null;
 	let locationData: LocationMeta | null = null;
@@ -76,17 +163,17 @@
 	let startCode: string | null = null;
 	let endCode: string | null = null;
 
-	// track previous airport mode to detect toggles
-	let prevAirportMode = airportMode;
-	let airportModeInitialized = false;
+	// track previous search mode to detect toggles
+	let prevSearchMode = searchMode;
+	let searchModeInitialized = false;
 
-	// Clear inputs/selections when airportMode is toggled (but not during initial setup)
-	$: if (prevAirportMode !== airportMode) {
-		prevAirportMode = airportMode;
+	// Clear inputs/selections when searchMode is changed (but not during initial setup)
+	$: if (prevSearchMode !== searchMode) {
+		prevSearchMode = searchMode;
 
-		// Only clear if this is not the first time airportMode is being set
-		// This prevents wiping out initial location data when editing existing plane transportations
-		if (airportModeInitialized) {
+		// Only clear if this is not the first time searchMode is being set
+		// This prevents wiping out initial location data when editing existing transportations
+		if (searchModeInitialized) {
 			// clear single-location search state
 			searchQuery = '';
 			searchResults = [];
@@ -110,14 +197,34 @@
 			endLocationData = null;
 		}
 
-		airportModeInitialized = true;
+		searchModeInitialized = true;
 	}
+
+	// Helper to check if we're in a station/airport mode (not plain location)
+	// Modes that show codes/badges: airport, train, bus (not cab/vtc which behave like address)
+	$: isStationMode = searchMode === 'airport' || searchMode === 'train' || searchMode === 'bus';
+	$: isAirportMode = searchMode === 'airport';
 
 	// Transportation mode variables
 	let startSearchQuery = '';
 	let endSearchQuery = '';
-	let startSearchResults: GeoSelection[] = [];
-	let endSearchResults: GeoSelection[] = [];
+	let startSearchResults: (GeoSelection & { source?: string })[] = [];
+	let endSearchResults: (GeoSelection & { source?: string })[] = [];
+	// Grouped results for unified search in transportation mode
+	let startUnifiedResults: {
+		addresses: UnifiedSearchResult[];
+		locations: UnifiedSearchResult[];
+		lodging: UnifiedSearchResult[];
+		departures: UnifiedSearchResult[];
+		arrivals: UnifiedSearchResult[];
+	} = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
+	let endUnifiedResults: {
+		addresses: UnifiedSearchResult[];
+		locations: UnifiedSearchResult[];
+		lodging: UnifiedSearchResult[];
+		departures: UnifiedSearchResult[];
+		arrivals: UnifiedSearchResult[];
+	} = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 	let selectedStartLocation: GeoSelection | null = null;
 	let selectedEndLocation: GeoSelection | null = null;
 	let startMarker: { lng: number; lat: number } | null = null;
@@ -150,7 +257,7 @@
 				location: initialStartLocation.location
 			};
 			startMarker = { lng: initialStartLocation.lng, lat: initialStartLocation.lat };
-			if (airportMode) {
+			if (isStationMode) {
 				startCode =
 					initialStartCode || deriveCode(initialStartLocation.name, initialStartLocation.name);
 				startSearchQuery = startCode || initialStartLocation.location || initialStartLocation.name;
@@ -170,7 +277,7 @@
 				location: initialEndLocation.location
 			};
 			endMarker = { lng: initialEndLocation.lng, lat: initialEndLocation.lat };
-			if (airportMode) {
+			if (isStationMode) {
 				endCode = initialEndCode || deriveCode(initialEndLocation.name, initialEndLocation.name);
 				endSearchQuery = endCode || initialEndLocation.location || initialEndLocation.name;
 			} else {
@@ -190,34 +297,101 @@
 		}, 100);
 	}
 
+	// Helper to extract a meaningful name from geocoding result
+	function extractName(result: any): string {
+		// If name exists and is not just a number, use it
+		if (result.name && !/^\d+$/.test(result.name.trim())) {
+			return result.name;
+		}
+		// Fallback: use first part of display_name (before first comma)
+		if (result.display_name) {
+			const firstPart = result.display_name.split(',')[0].trim();
+			if (firstPart) return firstPart;
+		}
+		// Last resort: return the name or empty string
+		return result.name || '';
+	}
+
+	// Helper to convert unified search result to GeoSelection
+	function unifiedToGeoSelection(result: UnifiedSearchResult): GeoSelection & { source?: string; code?: string | null } {
+		return {
+			name: result.name,
+			lat: typeof result.lat === 'string' ? parseFloat(result.lat) : result.lat,
+			lng: typeof result.lon === 'string' ? parseFloat(result.lon) : result.lon,
+			location: result.display_name,
+			type: result.type,
+			category: result.category,
+			source: result.source,
+			code: result.code
+		};
+	}
+
+	// Build unified search URL - station modes (airport/train/bus) skip internal entity search
+	function buildUnifiedSearchUrl(query: string): string {
+		const params = new URLSearchParams({
+			query,
+			search_mode: searchMode
+		});
+		if (isStationMode) {
+			params.set('include_locations', 'false');
+			params.set('include_lodging', 'false');
+			params.set('include_transportation', 'false');
+		}
+		return `/api/reverse-geocode/unified_search/?${params.toString()}`;
+	}
+
 	async function searchLocations(query: string) {
 		if (!query.trim() || query.length < 3) {
 			searchResults = [];
+			unifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 			return;
 		}
 
 		isSearching = true;
 		try {
-			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
-			);
-			const results = await response.json();
+			if (unifiedSearch) {
+				// Use unified search endpoint - pass raw query + search_mode (suffix applied server-side to geocoding only)
+				const response = await fetch(buildUnifiedSearchUrl(query));
+				const data = await response.json();
+				unifiedResults = {
+					addresses: data.addresses || [],
+					locations: data.locations || [],
+					lodging: data.lodging || [],
+					departures: data.departures || [],
+					arrivals: data.arrivals || []
+				};
+				// Combine all results for backward compatibility
+				searchResults = [
+					...unifiedResults.locations.map(unifiedToGeoSelection),
+					...unifiedResults.lodging.map(unifiedToGeoSelection),
+					...unifiedResults.departures.map(unifiedToGeoSelection),
+					...unifiedResults.arrivals.map(unifiedToGeoSelection),
+					...unifiedResults.addresses.map(unifiedToGeoSelection)
+				];
+			} else {
+				// Original geocode-only search (suffix still useful for pure geocoding)
+				const searchTerm = `${query}${SEARCH_MODE_CONFIG[searchMode].suffix}`;
+				const response = await fetch(
+					`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				);
+				const results = await response.json();
 
-			searchResults = results.map((result: any) => ({
-				id: result.name + result.lat + result.lon,
-				name: result.name,
-				lat: parseFloat(result.lat),
-				lng: parseFloat(result.lon),
-				type: result.type,
-				category: result.category,
-				location: result.display_name,
-				importance: result.importance,
-				powered_by: result.powered_by
-			}));
+				searchResults = results.map((result: any) => ({
+					id: result.name + result.lat + result.lon,
+					name: extractName(result),
+					lat: parseFloat(result.lat),
+					lng: parseFloat(result.lon),
+					type: result.type,
+					category: result.category,
+					location: result.display_name,
+					importance: result.importance,
+					powered_by: result.powered_by
+				}));
+			}
 		} catch (error) {
 			console.error('Search error:', error);
 			searchResults = [];
+			unifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 		} finally {
 			isSearching = false;
 		}
@@ -226,31 +400,54 @@
 	async function searchStartLocation(query: string) {
 		if (!query.trim() || query.length < 3) {
 			startSearchResults = [];
+			startUnifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 			return;
 		}
 
 		isSearchingStart = true;
 		try {
-			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
-			);
-			const results = await response.json();
+			if (unifiedSearch) {
+				// Use unified search endpoint - pass raw query + search_mode (suffix applied server-side to geocoding only)
+				const response = await fetch(buildUnifiedSearchUrl(query));
+				const data = await response.json();
+				startUnifiedResults = {
+					addresses: data.addresses || [],
+					locations: data.locations || [],
+					lodging: data.lodging || [],
+					departures: data.departures || [],
+					arrivals: data.arrivals || []
+				};
+				// Combine all results for the dropdown
+				startSearchResults = [
+					...startUnifiedResults.locations.map(unifiedToGeoSelection),
+					...startUnifiedResults.lodging.map(unifiedToGeoSelection),
+					...startUnifiedResults.departures.map(unifiedToGeoSelection),
+					...startUnifiedResults.arrivals.map(unifiedToGeoSelection),
+					...startUnifiedResults.addresses.map(unifiedToGeoSelection)
+				];
+			} else {
+				const searchTerm = `${query}${SEARCH_MODE_CONFIG[searchMode].suffix}`;
+				const response = await fetch(
+					`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				);
+				const results = await response.json();
 
-			startSearchResults = results.map((result: any) => ({
-				id: result.name + result.lat + result.lon,
-				name: result.name,
-				lat: parseFloat(result.lat),
-				lng: parseFloat(result.lon),
-				type: result.type,
-				category: result.category,
-				location: result.display_name,
-				importance: result.importance,
-				powered_by: result.powered_by
-			}));
+				startSearchResults = results.map((result: any) => ({
+					id: result.name + result.lat + result.lon,
+					name: extractName(result),
+					lat: parseFloat(result.lat),
+					lng: parseFloat(result.lon),
+					type: result.type,
+					category: result.category,
+					location: result.display_name,
+					importance: result.importance,
+					powered_by: result.powered_by
+				}));
+			}
 		} catch (error) {
 			console.error('Search error:', error);
 			startSearchResults = [];
+			startUnifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 		} finally {
 			isSearchingStart = false;
 		}
@@ -259,31 +456,54 @@
 	async function searchEndLocation(query: string) {
 		if (!query.trim() || query.length < 3) {
 			endSearchResults = [];
+			endUnifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 			return;
 		}
 
 		isSearchingEnd = true;
 		try {
-			const searchTerm = airportMode ? `${query} Airport` : query;
-			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
-			);
-			const results = await response.json();
+			if (unifiedSearch) {
+				// Use unified search endpoint - pass raw query + search_mode (suffix applied server-side to geocoding only)
+				const response = await fetch(buildUnifiedSearchUrl(query));
+				const data = await response.json();
+				endUnifiedResults = {
+					addresses: data.addresses || [],
+					locations: data.locations || [],
+					lodging: data.lodging || [],
+					departures: data.departures || [],
+					arrivals: data.arrivals || []
+				};
+				// Combine all results for the dropdown
+				endSearchResults = [
+					...endUnifiedResults.locations.map(unifiedToGeoSelection),
+					...endUnifiedResults.lodging.map(unifiedToGeoSelection),
+					...endUnifiedResults.departures.map(unifiedToGeoSelection),
+					...endUnifiedResults.arrivals.map(unifiedToGeoSelection),
+					...endUnifiedResults.addresses.map(unifiedToGeoSelection)
+				];
+			} else {
+				const searchTerm = `${query}${SEARCH_MODE_CONFIG[searchMode].suffix}`;
+				const response = await fetch(
+					`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				);
+				const results = await response.json();
 
-			endSearchResults = results.map((result: any) => ({
-				id: result.name + result.lat + result.lon,
-				name: result.name,
-				lat: parseFloat(result.lat),
-				lng: parseFloat(result.lon),
-				type: result.type,
-				category: result.category,
-				location: result.display_name,
-				importance: result.importance,
-				powered_by: result.powered_by
-			}));
+				endSearchResults = results.map((result: any) => ({
+					id: result.name + result.lat + result.lon,
+					name: extractName(result),
+					lat: parseFloat(result.lat),
+					lng: parseFloat(result.lon),
+					type: result.type,
+					category: result.category,
+					location: result.display_name,
+					importance: result.importance,
+					powered_by: result.powered_by
+				}));
+			}
 		} catch (error) {
 			console.error('Search error:', error);
 			endSearchResults = [];
+			endUnifiedResults = { addresses: [], locations: [], lodging: [], departures: [], arrivals: [] };
 		} finally {
 			isSearchingEnd = false;
 		}
@@ -345,22 +565,25 @@
 	}
 
 	function emitTransportationUpdate() {
-		if (selectedStartLocation && selectedEndLocation) {
+		// Emit if we have at least one location selected
+		if (selectedStartLocation || selectedEndLocation) {
 			dispatch('transportationUpdate', {
-				start: {
+				start: selectedStartLocation ? {
 					name: selectedStartLocation.name,
 					lat: selectedStartLocation.lat,
 					lng: selectedStartLocation.lng,
 					location: selectedStartLocation.location,
+					city: startLocationData?.city?.name || null,
 					code: startCode
-				},
-				end: {
+				} : null,
+				end: selectedEndLocation ? {
 					name: selectedEndLocation.name,
 					lat: selectedEndLocation.lat,
 					lng: selectedEndLocation.lng,
 					location: selectedEndLocation.location,
+					city: endLocationData?.city?.name || null,
 					code: endCode
-				}
+				} : null
 			});
 		}
 	}
@@ -379,18 +602,21 @@
 		await performDetailedReverseGeocode(searchResult.lat, searchResult.lng);
 	}
 
-	async function selectStartSearchResult(searchResult: GeoSelection) {
+	async function selectStartSearchResult(searchResult: GeoSelection & { code?: string | null }) {
 		selectedStartLocation = searchResult;
 		startMarker = { lng: searchResult.lng, lat: searchResult.lat };
 		startSearchResults = [];
 
 		const typedQuery = startSearchQuery;
+		// Prefer backend-provided code (from departure/arrival entities)
+		const backendCode = searchResult.code || null;
 
-		// Only auto-derive and surface codes in airport mode
-		if (airportMode) {
+		// Handle codes based on mode
+		if (isAirportMode) {
+			// Airport mode: derive IATA codes
 			const airportCodeMatch = searchResult.name.match(/\(([A-Z]{3})\)/);
 			startSearchQuery = airportCodeMatch ? airportCodeMatch[1] : searchResult.name;
-			startCode = resolveCode(searchResult, typedQuery);
+			startCode = backendCode || resolveCode(searchResult, typedQuery);
 			if (!startCode) {
 				startCode =
 					deriveCode(searchResult.name, startSearchQuery) || deriveCode(searchResult.location);
@@ -398,28 +624,41 @@
 			if (startCode) {
 				startSearchQuery = startCode;
 			}
+		} else if (isStationMode) {
+			// Train/bus mode: prefer backend code, then city name after reverse geocode
+			startSearchQuery = searchResult.location || searchResult.name;
+			startCode = backendCode; // Will be set after reverse geocode if still null
 		} else {
+			// Address/cab/vtc mode: no codes
 			startSearchQuery = searchResult.location || searchResult.name;
 			startCode = null;
 		}
 
 		await performDetailedReverseGeocode(searchResult.lat, searchResult.lng, 'start');
+
+		// For train/bus, set code to city name after reverse geocode (only if not already set)
+		if (isStationMode && !isAirportMode && !startCode && startLocationData?.city?.name) {
+			startCode = startLocationData.city.name;
+		}
 		updateMapBounds();
 		emitTransportationUpdate();
 	}
 
-	async function selectEndSearchResult(searchResult: GeoSelection) {
+	async function selectEndSearchResult(searchResult: GeoSelection & { code?: string | null }) {
 		selectedEndLocation = searchResult;
 		endMarker = { lng: searchResult.lng, lat: searchResult.lat };
 		endSearchResults = [];
 
 		const typedQuery = endSearchQuery;
+		// Prefer backend-provided code (from departure/arrival entities)
+		const backendCode = searchResult.code || null;
 
-		// Only auto-derive and surface codes in airport mode
-		if (airportMode) {
+		// Handle codes based on mode
+		if (isAirportMode) {
+			// Airport mode: derive IATA codes
 			const airportCodeMatch = searchResult.name.match(/\(([A-Z]{3})\)/);
 			endSearchQuery = airportCodeMatch ? airportCodeMatch[1] : searchResult.name;
-			endCode = resolveCode(searchResult, typedQuery);
+			endCode = backendCode || resolveCode(searchResult, typedQuery);
 			if (!endCode) {
 				endCode =
 					deriveCode(searchResult.name, endSearchQuery) || deriveCode(searchResult.location);
@@ -427,12 +666,22 @@
 			if (endCode) {
 				endSearchQuery = endCode;
 			}
+		} else if (isStationMode) {
+			// Train/bus mode: prefer backend code, then city name after reverse geocode
+			endSearchQuery = searchResult.location || searchResult.name;
+			endCode = backendCode; // Will be set after reverse geocode if still null
 		} else {
+			// Address/cab/vtc mode: no codes
 			endSearchQuery = searchResult.location || searchResult.name;
 			endCode = null;
 		}
 
 		await performDetailedReverseGeocode(searchResult.lat, searchResult.lng, 'end');
+
+		// For train/bus, set code to city name after reverse geocode (only if not already set)
+		if (isStationMode && !isAirportMode && !endCode && endLocationData?.city?.name) {
+			endCode = endLocationData.city.name;
+		}
 		updateMapBounds();
 		emitTransportationUpdate();
 	}
@@ -658,20 +907,69 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 	<div class="space-y-4">
-		<!-- Transportation Mode Toggle -->
+		<!-- Transportation Mode Selector -->
 		{#if transportationMode}
-			<div class="flex items-center gap-3 p-3 bg-primary/10 rounded-lg border border-primary/30">
-				<AirplaneIcon class="w-5 h-5 text-primary" />
-				<div class="flex-1">
-					<label class="label cursor-pointer justify-start gap-3">
-						<input type="checkbox" class="toggle toggle-primary" bind:checked={airportMode} />
-						<span class="label-text font-medium">
-							{airportMode
-								? $t('adventures.airport_search_mode')
-								: $t('adventures.location_search_mode')}
-						</span>
-					</label>
-				</div>
+			<div class="flex gap-1 justify-center flex-wrap">
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'location'}
+					class:btn-ghost={searchMode !== 'location'}
+					on:click={() => (searchMode = 'location')}
+				>
+					<PinIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.address')}</span>
+				</button>
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'airport'}
+					class:btn-ghost={searchMode !== 'airport'}
+					on:click={() => (searchMode = 'airport')}
+				>
+					<AirplaneIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.airport')}</span>
+				</button>
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'train'}
+					class:btn-ghost={searchMode !== 'train'}
+					on:click={() => (searchMode = 'train')}
+				>
+					<TrainIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.train')}</span>
+				</button>
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'bus'}
+					class:btn-ghost={searchMode !== 'bus'}
+					on:click={() => (searchMode = 'bus')}
+				>
+					<BusIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.bus')}</span>
+				</button>
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'cab'}
+					class:btn-ghost={searchMode !== 'cab'}
+					on:click={() => (searchMode = 'cab')}
+				>
+					<TaxiIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.cab')}</span>
+				</button>
+				<button
+					type="button"
+					class="btn btn-xs gap-0.5 px-2"
+					class:btn-primary={searchMode === 'vtc'}
+					class:btn-ghost={searchMode !== 'vtc'}
+					on:click={() => (searchMode = 'vtc')}
+				>
+					<LimoIcon class="w-3.5 h-3.5" />
+					<span class="text-xs">{$t('adventures.vtc')}</span>
+				</button>
 			</div>
 		{/if}
 
@@ -697,8 +995,8 @@
 			<div class="form-control">
 				<label class="label" for="search-start-location">
 					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-success" />
-						{airportMode ? $t('adventures.departure_airport') : $t('adventures.start_location')}
+						<svelte:component this={SEARCH_MODE_CONFIG[searchMode].icon} class="w-4 h-4 text-success" />
+						{$t(SEARCH_MODE_CONFIG[searchMode].departureLabel)}
 					</span>
 				</label>
 				<div class="relative">
@@ -710,9 +1008,7 @@
 						id="search-start-location"
 						bind:value={startSearchQuery}
 						on:input={handleStartSearchInput}
-						placeholder={airportMode
-							? $t('adventures.airport_code_examples')
-							: $t('transportation.enter_from_location')}
+						placeholder={$t(SEARCH_MODE_CONFIG[searchMode].placeholder)}
 						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-success={selectedStartLocation}
 					/>
@@ -735,26 +1031,150 @@
 					<span class="loading loading-spinner loading-sm"></span>
 					<span class="ml-2 text-sm text-base-content/60">{$t('adventures.searching')}...</span>
 				</div>
+			{:else if startSearchQuery.length >= 3 && startSearchResults.length === 0 && !selectedStartLocation}
+				<div class="text-center py-3 text-sm text-base-content/50">
+					{$t('adventures.no_results')}
+				</div>
 			{:else if startSearchResults.length > 0}
 				<div class="space-y-2">
 					<div class="max-h-48 overflow-y-auto space-y-1">
-						{#each startSearchResults as result}
-							<button
-								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-success/50 transition-colors"
-								on:click={() => selectStartSearchResult(result)}
-							>
-								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-success mt-1 flex-shrink-0" />
-									<div class="min-w-0 flex-1">
-										<div class="font-medium text-sm truncate">{result.name}</div>
-										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
-										{#if result.category}
-											<div class="text-xs text-success/70 capitalize">{result.category}</div>
-										{/if}
-									</div>
+						{#if unifiedSearch && (startUnifiedResults.locations.length > 0 || startUnifiedResults.lodging.length > 0 || startUnifiedResults.departures.length > 0 || startUnifiedResults.arrivals.length > 0 || startUnifiedResults.addresses.length > 0)}
+							<!-- Grouped results for unified search -->
+							{#if startUnifiedResults.locations.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<PinIcon class="w-3 h-3" />
+									{$t('navbar.locations')}
 								</div>
-							</button>
-						{/each}
+								{#each startUnifiedResults.locations as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-primary/50 transition-colors"
+										on:click={() => selectStartSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.category}
+													<div class="text-xs text-primary/70 capitalize">{result.category}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if startUnifiedResults.lodging.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<BedIcon class="w-3 h-3" />
+									{$t('navbar.lodging')}
+								</div>
+								{#each startUnifiedResults.lodging as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-pink-500/50 transition-colors"
+										on:click={() => selectStartSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<BedIcon class="w-4 h-4 text-pink-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-pink-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if startUnifiedResults.departures.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<DepartureIcon class="w-3 h-3" />
+									{$t('adventures.departures')}
+								</div>
+								{#each startUnifiedResults.departures as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-amber-500/50 transition-colors"
+										on:click={() => selectStartSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<DepartureIcon class="w-4 h-4 text-amber-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-amber-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if startUnifiedResults.arrivals.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<ArrivalIcon class="w-3 h-3" />
+									{$t('adventures.arrivals')}
+								</div>
+								{#each startUnifiedResults.arrivals as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-amber-500/50 transition-colors"
+										on:click={() => selectStartSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<ArrivalIcon class="w-4 h-4 text-amber-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-amber-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if startUnifiedResults.addresses.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<MapIcon class="w-3 h-3" />
+									{$t('adventures.addresses')}
+								</div>
+								{#each startUnifiedResults.addresses as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-success/50 transition-colors"
+										on:click={() => selectStartSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<MapIcon class="w-4 h-4 text-success mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.category}
+													<div class="text-xs text-success/70 capitalize">{result.category}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+						{:else}
+							<!-- Non-grouped results (original behavior) -->
+							{#each startSearchResults as result}
+								<button
+									class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-success/50 transition-colors"
+									on:click={() => selectStartSearchResult(result)}
+								>
+									<div class="flex items-start gap-3">
+										<PinIcon class="w-4 h-4 text-success mt-1 flex-shrink-0" />
+										<div class="min-w-0 flex-1">
+											<div class="font-medium text-sm truncate">{result.name}</div>
+											<div class="text-xs text-base-content/60 truncate">{result.location}</div>
+											{#if result.category}
+												<div class="text-xs text-success/70 capitalize">{result.category}</div>
+											{/if}
+										</div>
+									</div>
+								</button>
+							{/each}
+						{/if}
 					</div>
 				</div>
 			{/if}
@@ -763,8 +1183,8 @@
 			<div class="form-control">
 				<label class="label" for="search-end-location">
 					<span class="label-text font-medium flex items-center gap-2">
-						<PinIcon class="w-4 h-4 text-error" />
-						{airportMode ? $t('adventures.arrival_airport') : $t('adventures.end_location')}
+						<svelte:component this={SEARCH_MODE_CONFIG[searchMode].icon} class="w-4 h-4 text-error" />
+						{$t(SEARCH_MODE_CONFIG[searchMode].arrivalLabel)}
 					</span>
 				</label>
 				<div class="relative">
@@ -776,9 +1196,7 @@
 						id="search-end-location"
 						bind:value={endSearchQuery}
 						on:input={handleEndSearchInput}
-						placeholder={airportMode
-							? $t('adventures.airport_code_examples')
-							: $t('transportation.enter_to_location')}
+						placeholder={$t(SEARCH_MODE_CONFIG[searchMode].placeholder)}
 						class="input input-bordered w-full pl-10 pr-4 bg-base-100/80 focus:bg-base-100"
 						class:input-error={selectedEndLocation}
 					/>
@@ -801,26 +1219,150 @@
 					<span class="loading loading-spinner loading-sm"></span>
 					<span class="ml-2 text-sm text-base-content/60">{$t('adventures.searching')}...</span>
 				</div>
+			{:else if endSearchQuery.length >= 3 && endSearchResults.length === 0 && !selectedEndLocation}
+				<div class="text-center py-3 text-sm text-base-content/50">
+					{$t('adventures.no_results')}
+				</div>
 			{:else if endSearchResults.length > 0}
 				<div class="space-y-2">
 					<div class="max-h-48 overflow-y-auto space-y-1">
-						{#each endSearchResults as result}
-							<button
-								class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-error/50 transition-colors"
-								on:click={() => selectEndSearchResult(result)}
-							>
-								<div class="flex items-start gap-3">
-									<PinIcon class="w-4 h-4 text-error mt-1 flex-shrink-0" />
-									<div class="min-w-0 flex-1">
-										<div class="font-medium text-sm truncate">{result.name}</div>
-										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
-										{#if result.category}
-											<div class="text-xs text-error/70 capitalize">{result.category}</div>
-										{/if}
-									</div>
+						{#if unifiedSearch && (endUnifiedResults.locations.length > 0 || endUnifiedResults.lodging.length > 0 || endUnifiedResults.departures.length > 0 || endUnifiedResults.arrivals.length > 0 || endUnifiedResults.addresses.length > 0)}
+							<!-- Grouped results for unified search -->
+							{#if endUnifiedResults.locations.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<PinIcon class="w-3 h-3" />
+									{$t('navbar.locations')}
 								</div>
-							</button>
-						{/each}
+								{#each endUnifiedResults.locations as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-primary/50 transition-colors"
+										on:click={() => selectEndSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<PinIcon class="w-4 h-4 text-primary mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.category}
+													<div class="text-xs text-primary/70 capitalize">{result.category}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if endUnifiedResults.lodging.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<BedIcon class="w-3 h-3" />
+									{$t('navbar.lodging')}
+								</div>
+								{#each endUnifiedResults.lodging as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-pink-500/50 transition-colors"
+										on:click={() => selectEndSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<BedIcon class="w-4 h-4 text-pink-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-pink-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if endUnifiedResults.departures.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<DepartureIcon class="w-3 h-3" />
+									{$t('adventures.departures')}
+								</div>
+								{#each endUnifiedResults.departures as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-amber-500/50 transition-colors"
+										on:click={() => selectEndSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<DepartureIcon class="w-4 h-4 text-amber-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-amber-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if endUnifiedResults.arrivals.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<ArrivalIcon class="w-3 h-3" />
+									{$t('adventures.arrivals')}
+								</div>
+								{#each endUnifiedResults.arrivals as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-amber-500/50 transition-colors"
+										on:click={() => selectEndSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<ArrivalIcon class="w-4 h-4 text-amber-500 mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.type}
+													<div class="text-xs text-amber-500/70 capitalize">{result.type}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+							{#if endUnifiedResults.addresses.length > 0}
+								<div class="text-xs font-semibold text-base-content/50 px-2 pt-1 flex items-center gap-1">
+									<MapIcon class="w-3 h-3" />
+									{$t('adventures.addresses')}
+								</div>
+								{#each endUnifiedResults.addresses as result}
+									<button
+										class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-error/50 transition-colors"
+										on:click={() => selectEndSearchResult(unifiedToGeoSelection(result))}
+									>
+										<div class="flex items-start gap-3">
+											<MapIcon class="w-4 h-4 text-error mt-1 flex-shrink-0" />
+											<div class="min-w-0 flex-1">
+												<div class="font-medium text-sm truncate">{result.name}</div>
+												<div class="text-xs text-base-content/60 truncate">{result.display_name}</div>
+												{#if result.category}
+													<div class="text-xs text-error/70 capitalize">{result.category}</div>
+												{/if}
+											</div>
+										</div>
+									</button>
+								{/each}
+							{/if}
+						{:else}
+							<!-- Non-grouped results (original behavior) -->
+							{#each endSearchResults as result}
+								<button
+									class="w-full text-left p-3 rounded-lg border border-base-300 hover:bg-base-100 hover:border-error/50 transition-colors"
+									on:click={() => selectEndSearchResult(result)}
+								>
+									<div class="flex items-start gap-3">
+										<PinIcon class="w-4 h-4 text-error mt-1 flex-shrink-0" />
+										<div class="min-w-0 flex-1">
+											<div class="font-medium text-sm truncate">{result.name}</div>
+											<div class="text-xs text-base-content/60 truncate">{result.location}</div>
+											{#if result.category}
+												<div class="text-xs text-error/70 capitalize">{result.category}</div>
+											{/if}
+										</div>
+									</div>
+								</button>
+							{/each}
+						{/if}
 					</div>
 				</div>
 			{/if}
