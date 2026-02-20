@@ -1,9 +1,11 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.throttling import UserRateThrottle
 from django.http import HttpResponse
 import ipaddress
+import socket
 from urllib.parse import urlparse
 from django.db.models import Q
 from django.core.files.base import ContentFile
@@ -17,6 +19,52 @@ from adventures.permissions import ContentImagePermission
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class ImageProxyThrottle(UserRateThrottle):
+    scope = 'image_proxy'
+
+
+def _is_safe_url(image_url):
+    """
+    Validate a URL for safe proxy use.
+    Returns (True, parsed) on success or (False, error_message) on failure.
+    Checks:
+    - Scheme is http or https
+    - No non-standard ports (only 80 and 443 allowed)
+    - All resolved IPs are public (no private/loopback/reserved/link-local/multicast)
+    """
+    parsed = urlparse(image_url)
+
+    if parsed.scheme not in ('http', 'https'):
+        return False, "Invalid URL scheme. Only http and https are allowed."
+
+    port = parsed.port
+    if port is not None and port not in (80, 443):
+        return False, "Non-standard ports are not allowed."
+
+    hostname = parsed.hostname
+    if not hostname:
+        return False, "Invalid URL: missing hostname."
+
+    try:
+        addr_infos = socket.getaddrinfo(hostname, None)
+    except socket.gaierror:
+        return False, "Could not resolve hostname."
+
+    if not addr_infos:
+        return False, "Could not resolve hostname."
+
+    for addr_info in addr_infos:
+        try:
+            ip = ipaddress.ip_address(addr_info[4][0])
+        except ValueError:
+            return False, "Invalid IP address resolved from hostname."
+        if (ip.is_private or ip.is_loopback or ip.is_reserved
+                or ip.is_link_local or ip.is_multicast):
+            return False, "Access to internal networks is not allowed."
+
+    return True, parsed
 
 
 class ContentImageViewSet(viewsets.ModelViewSet):
@@ -127,12 +175,15 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         return Response({"success": "Image set as primary image"})
 
 
-    @action(detail=False, methods=['post'], permission_classes=[AllowAny])
+    @action(detail=False, methods=['post'],
+            permission_classes=[IsAuthenticated],
+            throttle_classes=[ImageProxyThrottle])
     def fetch_from_url(self, request):
         """
-        Proxy endpoint to fetch images from external URLs (Wikipedia, etc.).
-        This avoids CORS issues when the frontend tries to download images
-        from third-party servers like wikimedia.org.
+        Authenticated proxy endpoint to fetch images from external URLs.
+        Avoids CORS issues when the frontend downloads images from third-party
+        servers (e.g. wikimedia.org). Requires a logged-in user and is
+        rate-limited to 60 requests/minute.
         """
         image_url = request.data.get('url')
         if not image_url:
@@ -141,45 +192,52 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate URL scheme
-        if not image_url.startswith(('http://', 'https://')):
-            return Response(
-                {"error": "Invalid URL scheme. Only http and https are allowed."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Validate the initial URL (scheme, port, SSRF check on all resolved IPs)
+        safe, result = _is_safe_url(image_url)
+        if not safe:
+            return Response({"error": result}, status=status.HTTP_400_BAD_REQUEST)
 
-        # SSRF protection: block private/internal IPs
         try:
-            import socket
-            hostname = urlparse(image_url).hostname
-            if hostname:
-                resolved_ip = socket.getaddrinfo(hostname, None)[0][4][0]
-                ip = ipaddress.ip_address(resolved_ip)
-                if ip.is_private or ip.is_loopback or ip.is_reserved:
+            headers = {'User-Agent': 'AdventureLog/1.0 (Image Proxy)'}
+            max_redirects = 3
+            current_url = image_url
+
+            for _ in range(max_redirects + 1):
+                response = requests.get(
+                    current_url,
+                    timeout=10,
+                    headers=headers,
+                    stream=True,
+                    allow_redirects=False,
+                )
+
+                if not response.is_redirect:
+                    break
+
+                # Re-validate every redirect destination before following
+                redirect_url = response.headers.get('Location', '')
+                if not redirect_url:
                     return Response(
-                        {"error": "Access to internal networks is not allowed"},
-                        status=status.HTTP_400_BAD_REQUEST
+                        {"error": "Redirect with missing Location header"},
+                        status=status.HTTP_502_BAD_GATEWAY,
                     )
-        except (socket.gaierror, ValueError):
-            return Response(
-                {"error": "Could not resolve hostname"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
 
-        try:
-            # Download image server-side with a User-Agent to avoid blocks
-            headers = {
-                'User-Agent': 'AdventureLog/1.0 (Image Proxy)'
-            }
-            response = requests.get(
-                image_url,
-                timeout=30,
-                headers=headers,
-                stream=True
-            )
+                safe, result = _is_safe_url(redirect_url)
+                if not safe:
+                    return Response(
+                        {"error": f"Redirect blocked: {result}"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+
+                current_url = redirect_url
+            else:
+                return Response(
+                    {"error": "Too many redirects"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
             response.raise_for_status()
 
-            # Verify content type is an image
             content_type = response.headers.get('Content-Type', '')
             if not content_type.startswith('image/'):
                 return Response(
@@ -187,7 +245,6 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Limit size to 20MB to prevent abuse
             content_length = response.headers.get('Content-Length')
             if content_length and int(content_length) > 20 * 1024 * 1024:
                 return Response(
@@ -195,23 +252,18 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Read the full content (stream=True means we need to read explicitly)
             image_data = response.content
 
-            # Return the raw image bytes with the original content type
-            return HttpResponse(
-                image_data,
-                content_type=content_type,
-                status=200
-            )
+            return HttpResponse(image_data, content_type=content_type, status=200)
 
         except requests.exceptions.Timeout:
-            logger.error("Failed to fetch image from URL %s: Timeout", image_url)
+            logger.error("Timeout fetching image from URL %s", image_url)
             return Response(
                 {"error": "Download timeout - image may be too large or server too slow"},
                 status=status.HTTP_504_GATEWAY_TIMEOUT
             )
         except requests.exceptions.RequestException as e:
+            logger.error("Failed to fetch image from URL %s: %s", image_url, str(e))
             return Response(
                 {"error": "Failed to fetch image from the remote server"},
                 status=status.HTTP_502_BAD_GATEWAY
