@@ -830,9 +830,36 @@ class CollectionViewSet(viewsets.ModelViewSet):
                 if linked_locations:
                     new_collection.locations.set(linked_locations)
 
-                # Keep the same primary image reference if it exists
+                # Duplicate primary image if it exists so permissions align with the new collection
                 if original.primary_image:
-                    new_collection.primary_image = original.primary_image
+                    original_primary = original.primary_image
+                    if original_primary.image:
+                        try:
+                            original_primary.image.open('rb')
+                            image_bytes = original_primary.image.read()
+                        finally:
+                            try:
+                                original_primary.image.close()
+                            except Exception:
+                                pass
+
+                        file_name = (original_primary.image.name or '').split('/')[-1] or 'image.webp'
+                        new_primary = ContentImage(
+                            user=request.user,
+                            image=ContentFile(image_bytes, name=file_name),
+                            immich_id=None,
+                            is_primary=original_primary.is_primary,
+                        )
+                    else:
+                        new_primary = ContentImage(
+                            user=request.user,
+                            immich_id=original_primary.immich_id,
+                            is_primary=original_primary.is_primary,
+                        )
+
+                    new_primary.content_object = new_collection
+                    new_primary.save()
+                    new_collection.primary_image = new_primary
                     new_collection.save(update_fields=['primary_image'])
 
                 def _copy_generic_media(source_obj, target_obj):
