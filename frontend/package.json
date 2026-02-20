@@ -19,7 +19,7 @@
 		"@iconify-json/mdi": "^1.2.3",
 		"@sveltejs/adapter-node": "^5.2.12",
 		"@sveltejs/adapter-vercel": "^5.7.0",
-		"@sveltejs/kit": "^2.20.7",
+		"@sveltejs/kit": "^2.49.5",
 		"@sveltejs/vite-plugin-svelte": "^3.1.2",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/node": "^22.15.2",
@@ -53,11 +53,17 @@
 		"svelte-maplibre": "^0.9.14"
 	},
 	"overrides": {
-		"esbuild": "^0.25.9"
+		"esbuild": "^0.26.0",
+		"devalue": "^5.6.2",
+		"minimatch": "^10.2.1",
+		"tar": "^7.5.8"
 	},
 	"pnpm": {
 		"overrides": {
-			"esbuild": "^0.25.9"
+			"esbuild": "^0.26.0",
+			"devalue": "^5.6.2",
+			"minimatch": "^10.2.1",
+			"tar": "^7.5.8"
 		}
 	}
 }
