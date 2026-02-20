@@ -14,6 +14,9 @@ from integrations.models import ImmichIntegration
 from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existing permission class
 import requests
 from adventures.permissions import ContentImagePermission
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ContentImageViewSet(viewsets.ModelViewSet):
@@ -206,10 +209,11 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             return Response(
                 {"error": "Download timeout - image may be too large or server too slow"},
                 status=status.HTTP_504_GATEWAY_TIMEOUT
+            logger.error("Failed to fetch image from URL %s: %s", image_url, e)
             )
         except requests.exceptions.RequestException as e:
             return Response(
-                {"error": f"Failed to fetch image: {str(e)}"},
+                {"error": "Failed to fetch image from the remote server"},
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
