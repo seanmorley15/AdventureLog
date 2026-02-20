@@ -11,3 +11,5 @@ CVE-2025-61729
 
 # jaraco.context Has a Path Traversal Vulnerability Fixed via setuptools
 GHSA-58pv-8j8x-9vj2
+CVE-2026-23949
+CVE-2026-24049
