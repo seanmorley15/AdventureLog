@@ -206,10 +206,10 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             )
 
         except requests.exceptions.Timeout:
+            logger.error("Failed to fetch image from URL %s: Timeout", image_url)
             return Response(
                 {"error": "Download timeout - image may be too large or server too slow"},
                 status=status.HTTP_504_GATEWAY_TIMEOUT
-            logger.error("Failed to fetch image from URL %s: %s", image_url, e)
             )
         except requests.exceptions.RequestException as e:
             return Response(
