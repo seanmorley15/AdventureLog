@@ -219,7 +219,9 @@
 				>
 					<DotsVertical class="w-8 h-8" />
 				</button>
-				<ul class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2">
+				<ul
+					class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2"
+				>
 					<li>
 						<button
 							on:click={() => {
@@ -703,19 +705,27 @@
 										<div class="flex gap-2">
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-											on:click={() =>
-												copyToClipboard(
-													`${adventure.latitude}, ${adventure.longitude}`
-												)}
+												on:click={async () => {
+													try {
+														await copyToClipboard(`${adventure.latitude}, ${adventure.longitude}`);
+													} catch {
+														addToast('error', $t('adventures.copy_failed'));
+													}
+												}}
 											>
 												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={() =>
-												copyToClipboard(
-													`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
-												)}
+												on:click={async () => {
+													try {
+														await copyToClipboard(
+															`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
+														);
+													} catch {
+														addToast('error', $t('adventures.copy_failed'));
+													}
+												}}
 											>
 												🔗 {$t('adventures.copy_link')}
 											</button>

@@ -528,15 +528,15 @@
 								/>
 								<button
 									type="button"
-								on:click={async () => {
-									try {
-										await copyToClipboard(
-											`${window.location.origin}/collections/${collection.id}`
-										);
-										addToast('success', $t('adventures.link_copied'));
-									} catch {
-										addToast('error', $t('adventures.copy_failed') || 'Copy failed');
-									}
+									on:click={async () => {
+										try {
+											await copyToClipboard(
+												`${window.location.origin}/collections/${collection.id}`
+											);
+											addToast('success', $t('adventures.link_copied'));
+										} catch {
+											addToast('error', $t('adventures.copy_failed') || 'Copy failed');
+										}
 									}}
 									class="btn btn-primary gap-2"
 								>

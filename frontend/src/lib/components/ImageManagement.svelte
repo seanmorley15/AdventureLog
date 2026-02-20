@@ -84,7 +84,9 @@
 			});
 
 			if (res.ok) {
-				const newData = deserialize(await res.text()) as { data: { id: string; image: string; error?: string } };
+				const newData = deserialize(await res.text()) as {
+					data: { id: string; image: string; error?: string };
+				};
 				// Check if the server action returned an error
 				if (newData.data && newData.data.error) {
 					console.error('Image upload server error:', newData.data.error);
@@ -238,7 +240,9 @@
 		wikiImageError = '';
 
 		try {
-			const res = await fetch(`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`);
+			const res = await fetch(
+				`/api/generate/img/?name=${encodeURIComponent(imageSearch)}&lang=${$locale || 'en'}`
+			);
 			const data = await res.json();
 
 			if (!res.ok || !data.images || data.images.length === 0) {

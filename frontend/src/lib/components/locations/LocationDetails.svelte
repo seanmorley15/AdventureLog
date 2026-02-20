@@ -117,7 +117,9 @@
 		wikiError = '';
 
 		try {
-			const response = await fetch(`/api/generate/desc/?name=${encodeURIComponent(location.name)}&lang=${$locale || 'en'}`);
+			const response = await fetch(
+				`/api/generate/desc/?name=${encodeURIComponent(location.name)}&lang=${$locale || 'en'}`
+			);
 			if (response.ok) {
 				const data = await response.json();
 				location.description = data.extract || '';
