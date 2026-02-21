@@ -235,7 +235,7 @@ export default defineConfig({
       },
       {
         text: "Troubleshooting",
-        collapsed: false,
+        collapsed: true,
         items: [
           {
             text: "No Images Displaying",
@@ -253,7 +253,7 @@ export default defineConfig({
       },
       {
         text: "Guides",
-        collapsed: false,
+        collapsed: true,
         items: [
           {
             text: "Admin Panel",
