@@ -34,7 +34,7 @@ What did you expect AdventureLog to do?
 
 - **Platform:** (Docker, Synology, Proxmox, TrueNAS, Unraid, etc.)
 - **Install Method:** (Docker Compose, Quick Install Script, Manual, etc.)
-- **AdventureLog Version:** (e.g., v0.11.0)
+- **AdventureLog Version:** (e.g., v0.12.0)
 - **Reverse Proxy:** (e.g., Nginx, Traefik, Caddy, etc. or None)
 
 If using Docker and the issue is related to the container, it may be helpful to include your `docker-compose.yml` or relevant variables below.  
