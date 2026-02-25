@@ -1,1 +1,55 @@
-{}
+{
+				"navbar": {
+								"collections": "Colecții",
+								"map": "Hartă",
+								"users": "Utlizatori",
+								"search": "Caută",
+								"profile": "Profil",
+								"greeting": "Salut",
+								"shared_with_me": "Partajază cu mine",
+								"settings": "Settări",
+								"logout": "Delogare",
+								"about": "Despre AdventureLog",
+								"documentation": "Documentație",
+								"language_selection": "Limbă",
+								"support": "Suport",
+								"calendar": "Calendar",
+								"theme_selection": "Selectare Temă",
+								"admin_panel": "Panou Administrator",
+								"worldtravel": "Călătorie în Lume",
+								"themes": {
+												"light": "Luminat",
+												"dark": "Întunecat",
+												"night": "Noapte",
+												"forest": "Pădure",
+												"aestheticLight": "Lumină estetică",
+												"aestheticDark": "Estetic întunecat",
+												"aqua": "Acvatic",
+												"northernLights": "Luminiile Nordului",
+												"dim": "Întunecă"
+								},
+								"navigation": "Navigație"
+				},
+				"about": {
+								"about": "Despre",
+								"license": "Licențiat sub licența GPL-3.0.",
+								"message": "Făcut cu ❤️ în the Statele Unite.",
+								"nominatim_1": "Căutarea locației și geocodificarea sunt furnizate de",
+								"other_attributions": "Atribuiri suplimentare pot fi găsite în fișierul README.",
+								"generic_attributions": "Conectați-vă la AdventureLog pentru a vizualiza atribuțiile pentru integrările și serviciile activate.",
+								"close": "Închide",
+								"thank_you": "Mulțumesc pentru că folosești AdventureLog!",
+								"version": "Versiune",
+								"view_changelog": "Vizualizați jurnalul de modificări",
+								"developer": "Dezvoltator",
+								"attributions": "Atribuții",
+								"license_info": "Licență",
+								"view_license": "Vezi Licența",
+								"sponsor": "Sponsor"
+				},
+				"home": {
+								"hero_1": "Descoperă cele mai palpitante aventuri din lume",
+								"hero_2": "Descoperă și planifică-ți următoarea aventură cu AdventureLog. Explorează destinații uluitoare, creează itinerarii personalizate și rămâne conectat oriunde te-ai afla.",
+								"go_to": "Mergi la AdventureLog"
+				}
+}
