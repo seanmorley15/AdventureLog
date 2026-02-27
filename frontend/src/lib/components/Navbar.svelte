@@ -64,6 +64,7 @@
 		ja: '日本語',
 		ar: 'العربية',
 		'pt-br': 'Português (Brasil)',
+		ro: 'Română',
 		sk: 'Slovenský',
 		tr: 'Türkçe',
 		uk: 'Українська',
