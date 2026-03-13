@@ -14,7 +14,7 @@
   <span> · </span>
     <a href="https://discord.gg/wRbQ9Egr8C">Discord</a>
   <span> · </span>
-    <a href="https://buymeacoffee.com/seanmorley15">Support 💖</a>
+    <a href="https://seanmorley.com/sponsor">Support 💖</a>
   </h4>
 </div>
 
@@ -34,6 +34,7 @@
 - [License](#-license)
 - [Contact](#-contact)
 - [Acknowledgements](#-acknowledgements)
+- [Supporters](#-supporters)
 
 <!-- About the Project -->
 
