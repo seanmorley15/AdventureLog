@@ -159,8 +159,6 @@ Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software de
 
 AdventureLog is built and maintained as an open-source project. These incredible supporters help make continued development possible.
 
----
-
 ### 🏢 Corporate Sponsors
 
 <p align="left">
@@ -169,8 +167,6 @@ AdventureLog is built and maintained as an open-source project. These incredible
     Hostinger
   </a>
 </p>
-
----
 
 ### 🌟 Individual Supporters
 
@@ -181,8 +177,6 @@ Huge thanks to these amazing people supporting the project:
 - [nebriv](https://github.com/nebriv)
 - [Miguel Cruz](https://github.com/Tokynet)
 - [Victor Butler](https://x.com/victor_butler)
-
----
 
 ### 🚀 Become a Supporter
 
