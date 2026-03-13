@@ -294,6 +294,24 @@ else:
 # EMAIL_HOST_PASSWORD = ''
 # DEFAULT_FROM_EMAIL = 'mail@mail.user.com'
 
+# ---------------------------------------------------------------------------
+# Account Rate Limits
+# ---------------------------------------------------------------------------
+# Configure rate limits for allauth authentication actions to prevent abuse
+# Format: "action": "count/period/scope"
+# Examples: "5/m/user" = 5 per minute per user, "20/m/ip" = 20 per minute per IP
+ACCOUNT_RATE_LIMITS = {
+    "change_password": "5/m/user",           # 5 password changes per minute per user
+    "change_phone": "1/m/user",              # 1 phone change per minute per user
+    "manage_email": "10/m/user",             # 10 email management actions per minute per user
+    "reset_password": "20/m/ip,5/m/key",     # 20 per minute per IP, 5 per minute per email
+    "reauthenticate": "10/m/user",           # 10 reauthentication attempts per minute per user
+    "reset_password_from_key": "20/m/ip",    # 20 password resets per minute per IP
+    "signup": "20/m/ip",                     # 20 signups per minute per IP (prevents mass registration)
+    "login": "30/m/ip",                      # 30 login attempts per minute per IP
+    "login_failed": "10/m/ip,5/5m/key",      # 10 failed logins per minute per IP, 5 per 5 min per user
+    "confirm_email": "1/3m/key",             # 1 email confirmation per 3 minutes per email
+}
 
 # ---------------------------------------------------------------------------
 # Django REST Framework
