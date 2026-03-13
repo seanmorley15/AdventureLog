@@ -155,9 +155,43 @@ Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software de
 - Logo Design by [nordtektiger](https://github.com/nordtektiger)
 - WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 
-### Top Supporters 💖
+## 💖 Supporters
+
+AdventureLog is built and maintained as an open-source project. These incredible supporters help make continued development possible.
+
+---
+
+### 🏢 Corporate Sponsors
+
+<p align="left">
+  <a href="https://www.hostinger.com/">
+    <img src="https://raw.githubusercontent.com/hostinger/logo/refs/heads/master/v3/h-icon.png" alt="Hostinger" height="60"><br />
+    Hostinger
+  </a>
+</p>
+
+---
+
+### 🌟 Individual Supporters
+
+Huge thanks to these amazing people supporting the project:
 
 - Veymax
+- [Mathias Ponnwitz](https://github.com/Solution-Partner-Mathias-Ponnwitz)
 - [nebriv](https://github.com/nebriv)
 - [Miguel Cruz](https://github.com/Tokynet)
 - [Victor Butler](https://x.com/victor_butler)
+
+---
+
+### 🚀 Become a Supporter
+
+If you enjoy AdventureLog and want to support its development, consider becoming a sponsor.
+
+Your support helps fund:
+
+- 🚀 New features and improvements
+- 🖥️ Infrastructure and hosting costs
+- 🌍 Continued open-source development
+
+[Become a Sponsor](https://seanmorley.com/sponsor) to help keep AdventureLog thriving!
