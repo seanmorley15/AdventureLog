@@ -42,6 +42,10 @@ class ChangeEmailView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class IsRegistrationDisabled(APIView):
+    # This endpoint is requested on auth pages and should not be globally throttled.
+    # A 429 here can break signup UX even for legitimate users.
+    throttle_classes = []
+
     @swagger_auto_schema(
         responses={
             200: openapi.Response('Registration is disabled'),
@@ -112,6 +116,9 @@ class PublicUserDetailView(APIView):
 
 class UserMetadataView(APIView):
     permission_classes = [IsAuthenticated]
+    # This endpoint is used by the frontend auth hook to hydrate user state.
+    # Global throttling can cause an auth loop and forced logout behavior.
+    throttle_classes = []
 
     @swagger_auto_schema(
         responses={
