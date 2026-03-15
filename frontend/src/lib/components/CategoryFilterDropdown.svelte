@@ -1,23 +1,28 @@
 <script lang="ts">
 	import type { Category } from '$lib/types';
+	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	let types_arr: string[] = [];
 	export let types: string;
 	let adventure_types: Category[] = [];
+	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
 	onMount(async () => {
 		let categoryFetch = await fetch('/api/categories');
 		let categoryData = await categoryFetch.json();
 		adventure_types = categoryData;
-		console.log(categoryData);
-		types_arr = types.split(',');
 	});
+
+	$: {
+		types_arr = types ? types.split(',').filter((item) => item !== '') : [];
+	}
 
 	function clearTypes() {
 		types = '';
 		types_arr = [];
+		dispatch('change', { types });
 	}
 
 	function toggleSelect(type: string) {
@@ -29,9 +34,7 @@
 		types_arr = types_arr.filter((item) => item !== '');
 		// turn types_arr into a comma seperated list with no spaces
 		types = types_arr.join(',');
-
-		console.log(types);
-		console.log(types_arr);
+		dispatch('change', { types });
 	}
 </script>
 
