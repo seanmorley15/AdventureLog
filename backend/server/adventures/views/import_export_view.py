@@ -3,6 +3,8 @@ import json
 import zipfile
 import tempfile
 import os
+import re
+from decimal import Decimal, InvalidOperation
 from datetime import datetime
 from django.http import HttpResponse
 from django.core.files.storage import default_storage
@@ -31,6 +33,70 @@ class BackupViewSet(viewsets.ViewSet):
     """
     Simple ViewSet for handling backup and import operations
     """
+
+    def _normalize_money_amount(self, value):
+        """Return a Decimal amount from legacy or canonical backup values."""
+        if value is None:
+            return None
+
+        if isinstance(value, Decimal):
+            return value
+
+        if isinstance(value, (int, float)):
+            try:
+                return Decimal(str(value))
+            except (InvalidOperation, ValueError):
+                return None
+
+        if not isinstance(value, str):
+            return None
+
+        text = value.strip()
+        if not text:
+            return None
+
+        # Accept values like "$1,553.59" and "USD 1,553.59".
+        cleaned = re.sub(r'[^0-9,\.\-]', '', text)
+        if not cleaned:
+            return None
+
+        if ',' in cleaned and '.' in cleaned:
+            if cleaned.rfind(',') > cleaned.rfind('.'):
+                cleaned = cleaned.replace('.', '').replace(',', '.')
+            else:
+                cleaned = cleaned.replace(',', '')
+        elif ',' in cleaned:
+            parts = cleaned.split(',')
+            if len(parts) == 2 and len(parts[-1]) in (1, 2):
+                cleaned = cleaned.replace(',', '.')
+            else:
+                cleaned = cleaned.replace(',', '')
+
+        try:
+            return Decimal(cleaned)
+        except InvalidOperation:
+            return None
+
+    def _parse_money(self, value, currency=None, default_currency='USD'):
+        """Parse a backup money value and return (amount, currency)."""
+        parsed_currency = currency
+        parsed_value = value
+
+        if isinstance(value, dict):
+            parsed_value = value.get('amount')
+            parsed_currency = parsed_currency or value.get('currency')
+
+        amount = self._normalize_money_amount(parsed_value)
+        if amount is None:
+            return None, None
+
+        normalized_currency = (parsed_currency or default_currency)
+        if isinstance(normalized_currency, str):
+            normalized_currency = normalized_currency.strip().upper() or default_currency
+        else:
+            normalized_currency = default_currency
+
+        return amount, normalized_currency
     
     @action(detail=False, methods=['get'])
     def export(self, request):
@@ -106,6 +172,8 @@ class BackupViewSet(viewsets.ViewSet):
                 'tags': location.tags,
                 'description': location.description,
                 'rating': location.rating,
+                'price': str(location.price.amount) if location.price else None,
+                'price_currency': str(location.price.currency) if location.price else None,
                 'link': location.link,
                 'is_public': location.is_public,
                 'longitude': str(location.longitude) if location.longitude else None,
@@ -227,6 +295,8 @@ class BackupViewSet(viewsets.ViewSet):
                 'name': transport.name,
                 'description': transport.description,
                 'rating': transport.rating,
+                'price': str(transport.price.amount) if transport.price else None,
+                'price_currency': str(transport.price.currency) if transport.price else None,
                 'link': transport.link,
                 'date': transport.date.isoformat() if transport.date else None,
                 'end_date': transport.end_date.isoformat() if transport.end_date else None,
@@ -300,7 +370,8 @@ class BackupViewSet(viewsets.ViewSet):
                 'check_out': lodging.check_out.isoformat() if lodging.check_out else None,
                 'timezone': lodging.timezone,
                 'reservation_number': lodging.reservation_number,
-                'price': str(lodging.price) if lodging.price else None,
+                'price': str(lodging.price.amount) if lodging.price else None,
+                'price_currency': str(lodging.price.currency) if lodging.price else None,
                 'latitude': str(lodging.latitude) if lodging.latitude else None,
                 'longitude': str(lodging.longitude) if lodging.longitude else None,
                 'location': lodging.location,
@@ -572,6 +643,11 @@ class BackupViewSet(viewsets.ViewSet):
         # Import Locations
         for adv_data in backup_data.get('locations', []):
 
+            location_price, location_price_currency = self._parse_money(
+                adv_data.get('price'),
+                adv_data.get('price_currency')
+            )
+
             city = None
             if adv_data.get('city'):
                 try:
@@ -600,6 +676,8 @@ class BackupViewSet(viewsets.ViewSet):
                 tags=adv_data.get('tags', []),
                 description=adv_data.get('description'),
                 rating=adv_data.get('rating'),
+                price=location_price,
+                price_currency=location_price_currency,
                 link=adv_data.get('link'),
                 is_public=adv_data.get('is_public', False),
                 longitude=adv_data.get('longitude'),
@@ -779,6 +857,11 @@ class BackupViewSet(viewsets.ViewSet):
             collection = None
             if trans_data.get('collection_export_id') is not None:
                 collection = collection_map.get(trans_data['collection_export_id'])
+
+            transport_price, transport_price_currency = self._parse_money(
+                trans_data.get('price'),
+                trans_data.get('price_currency')
+            )
                 
             transportation = Transportation.objects.create(
                 user=user,
@@ -786,6 +869,8 @@ class BackupViewSet(viewsets.ViewSet):
                 name=trans_data['name'],
                 description=trans_data.get('description'),
                 rating=trans_data.get('rating'),
+                price=transport_price,
+                price_currency=transport_price_currency,
                 link=trans_data.get('link'),
                 date=trans_data.get('date'),
                 end_date=trans_data.get('end_date'),
@@ -863,6 +948,11 @@ class BackupViewSet(viewsets.ViewSet):
             collection = None
             if lodg_data.get('collection_export_id') is not None:
                 collection = collection_map.get(lodg_data['collection_export_id'])
+
+            lodging_price, lodging_price_currency = self._parse_money(
+                lodg_data.get('price'),
+                lodg_data.get('price_currency')
+            )
                 
             lodging = Lodging.objects.create(
                 user=user,
@@ -875,7 +965,8 @@ class BackupViewSet(viewsets.ViewSet):
                 check_out=lodg_data.get('check_out'),
                 timezone=lodg_data.get('timezone'),
                 reservation_number=lodg_data.get('reservation_number'),
-                price=lodg_data.get('price'),
+                price=lodging_price,
+                price_currency=lodging_price_currency,
                 latitude=lodg_data.get('latitude'),
                 longitude=lodg_data.get('longitude'),
                 location=lodg_data.get('location'),
