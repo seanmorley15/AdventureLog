@@ -78,7 +78,7 @@ class BackupViewSet(viewsets.ViewSet):
             return None
 
     def _parse_money(self, value, currency=None, default_currency='USD'):
-        """Parse a backup money value and return (amount, currency)."""
+        """Parse a backup money value and return schema-safe (amount, currency)."""
         parsed_currency = currency
         parsed_value = value
 
@@ -88,7 +88,10 @@ class BackupViewSet(viewsets.ViewSet):
 
         amount = self._normalize_money_amount(parsed_value)
         if amount is None:
-            return None, None
+            # django-money stores currency in a separate non-null column even when
+            # the monetary amount itself is empty, so imports must preserve a
+            # default currency for blank legacy values.
+            return None, default_currency
 
         normalized_currency = (parsed_currency or default_currency)
         if isinstance(normalized_currency, str):

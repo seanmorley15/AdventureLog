@@ -220,15 +220,23 @@
 		}
 	}
 
+	function getPercentage(value: number, total: number): number {
+		if (!total || total <= 0) {
+			return 0;
+		}
+
+		return Math.round((value / total) * 100);
+	}
+
 	// Calculate achievements
 	$: worldExplorationPercentage = stats
-		? Math.round((stats.visited_country_count / stats.total_countries) * 100)
+		? getPercentage(stats.visited_country_count, stats.total_countries)
 		: 0;
 	$: regionExplorationPercentage = stats
-		? Math.round((stats.visited_region_count / stats.total_regions) * 100)
+		? getPercentage(stats.visited_region_count, stats.total_regions)
 		: 0;
 	$: cityExplorationPercentage = stats
-		? Math.round((stats.visited_city_count / stats.total_cities) * 100)
+		? getPercentage(stats.visited_city_count, stats.total_cities)
 		: 0;
 
 	// Achievement levels
@@ -430,7 +438,7 @@
 										<progress
 											class="progress progress-success w-full h-2"
 											value={stats.visited_country_count}
-											max={stats.total_countries}
+											max={Math.max(stats.total_countries, 1)}
 										></progress>
 									</div>
 								</div>
@@ -464,7 +472,7 @@
 										<progress
 											class="progress progress-info w-full h-2"
 											value={stats.visited_region_count}
-											max={stats.total_regions}
+											max={Math.max(stats.total_regions, 1)}
 										></progress>
 									</div>
 								</div>
@@ -494,7 +502,7 @@
 										<progress
 											class="progress progress-warning w-full h-2"
 											value={stats.visited_city_count}
-											max={stats.total_cities}
+											max={Math.max(stats.total_cities, 1)}
 										></progress>
 									</div>
 								</div>
@@ -515,7 +523,7 @@
 						</div>
 
 						<!-- Overall Activity Summary -->
-						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+						<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
 							<!-- Total Activities -->
 							<div
 								class="stat-card card bg-gradient-to-br from-accent/10 to-accent/5 shadow-xl border border-accent/20 hover:shadow-2xl transition-all duration-300"
@@ -603,6 +611,52 @@
 									</div>
 								</div>
 							</div>
+
+							<!-- Elevation Loss -->
+							<div
+								class="stat-card card bg-gradient-to-br from-info/10 to-info/5 shadow-xl border border-info/20 hover:shadow-2xl transition-all duration-300"
+							>
+								<div class="card-body p-6">
+									<div class="flex items-center justify-between">
+										<div>
+											<div class="text-info/70 font-medium text-sm uppercase tracking-wide">
+												{$t('adventures.elevation_loss')}
+											</div>
+											<div class="text-3xl font-bold text-info">
+												{getElevation(stats.activities_overall.total_elevation_loss)}
+											</div>
+											<div class="text-info/60 mt-2">Descent recorded</div>
+										</div>
+										<div class="p-3 bg-info/20 rounded-2xl">
+											<Mountain class="w-6 h-6 text-info rotate-180" />
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{#if stats.activities_overall.total_calories > 0}
+								<!-- Calories -->
+								<div
+									class="stat-card card bg-gradient-to-br from-warning/10 to-warning/5 shadow-xl border border-warning/20 hover:shadow-2xl transition-all duration-300"
+								>
+									<div class="card-body p-6">
+										<div class="flex items-center justify-between">
+											<div>
+												<div class="text-warning/70 font-medium text-sm uppercase tracking-wide">
+													{$t('adventures.calories')}
+												</div>
+												<div class="text-3xl font-bold text-warning">
+													{Math.round(stats.activities_overall.total_calories)}
+												</div>
+												<div class="text-warning/60 mt-2">Energy burned</div>
+											</div>
+											<div class="p-3 bg-warning/20 rounded-2xl">
+												<Fire class="w-6 h-6 text-warning" />
+											</div>
+										</div>
+									</div>
+								</div>
+							{/if}
 						</div>
 
 						<!-- Activity Categories -->
@@ -653,8 +707,9 @@
 														{getDistance(categoryData.total_distance)}
 													</div>
 													<div class="text-{config.color}/60 text-sm">
-														{getElevation(categoryData.total_elevation_gain)}
-														{$t('adventures.elevation')}
+														Max {getSpeed(categoryData.max_speed)}
+														<span class="mx-1">•</span>
+														{getElevation(categoryData.total_elevation_gain)} gain
 													</div>
 												</div>
 												<svelte:component
@@ -668,7 +723,7 @@
 										{#if isExpanded}
 											<div class="mt-6 space-y-6">
 												<!-- Quick Stats Grid -->
-												<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+												<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
 													<div
 														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
 													>
@@ -693,10 +748,60 @@
 														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
 													>
 														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Max Speed
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getSpeed(categoryData.max_speed)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Avg Distance
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getDistance(categoryData.avg_distance)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
 															Max Distance
 														</div>
 														<div class="text-lg font-bold text-{config.color}">
 															{getDistance(categoryData.max_distance)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Avg Gain
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getElevation(categoryData.avg_elevation_gain)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															Max Gain
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getElevation(categoryData.max_elevation_gain)}
+														</div>
+													</div>
+													<div
+														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
+													>
+														<div class="text-{config.color}/70 text-xs uppercase font-medium">
+															{$t('adventures.elevation_loss')}
+														</div>
+														<div class="text-lg font-bold text-{config.color}">
+															{getElevation(categoryData.total_elevation_loss)}
 														</div>
 													</div>
 													{#if categoryData.total_calories > 0}
