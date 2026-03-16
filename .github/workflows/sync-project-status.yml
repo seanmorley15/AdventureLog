@@ -20,19 +20,19 @@ jobs:
           script: |
 
             const labelMap = {
-              "backlog": "BACKLOG_OPTION_ID",
-              "needs discussion": "DISCUSSION_OPTION_ID",
-              "approved": "APPROVED_OPTION_ID",
-              "ready": "READY_OPTION_ID",
-              "in progress": "IN_PROGRESS_OPTION_ID",
-              "in review": "IN_REVIEW_OPTION_ID",
-              "done": "DONE_OPTION_ID"
+              "backlog": "Backlog",
+              "needs discussion": "Needs discussion",
+              "approved": "Approved",
+              "ready": "Ready",
+              "in progress": "In progress",
+              "in review": "In review",
+              "done": "Done"
             };
 
             const label = context.payload.label.name.toLowerCase();
-            const optionId = labelMap[label];
+            const targetOptionName = labelMap[label];
 
-            if (!optionId) return;
+            if (!targetOptionName) return;
 
             const issueNodeId = context.payload.issue.node_id;
 
@@ -116,6 +116,33 @@ jobs:
               return;
             }
 
+            const fieldResult = await github.graphql(`
+              query($fieldId: ID!) {
+                node(id: $fieldId) {
+                  ... on ProjectV2SingleSelectField {
+                    id
+                    options {
+                      id
+                      name
+                    }
+                  }
+                }
+              }
+            `, {
+              fieldId: fieldId
+            });
+
+            const options = fieldResult.node?.options ?? [];
+            const selectedOption = options.find(
+              (option) => option.name?.toLowerCase() === targetOptionName.toLowerCase()
+            );
+
+            if (!selectedOption?.id) {
+              const availableOptions = options.map((option) => option.name).join(", ");
+              console.log(`Could not find option '${targetOptionName}' for field ${fieldId}. Available options: ${availableOptions || "none"}`);
+              return;
+            }
+
             // update status field
             await github.graphql(`
               mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
@@ -136,5 +163,5 @@ jobs:
               projectId: projectId,
               itemId: itemId,
               fieldId: fieldId,
-              optionId: optionId
+              optionId: selectedOption.id
             });
