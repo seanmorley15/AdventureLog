@@ -1,8 +1,8 @@
 name: Bug report
 description: Found something not working as expected? File a detailed bug report so we can fix it quickly.
-title: "[BUG] "
 labels:
   - bug
+  - backlog
 body:
   - type: markdown
     attributes:
@@ -75,7 +75,7 @@ body:
     id: version
     attributes:
       label: AdventureLog Version
-      description: "Example: v0.12.0"
+      description: "To find the version, open the web app, click the 3-dot menu in the navbar, and select 'About'."
       placeholder: v0.0.0
     validations:
       required: true
