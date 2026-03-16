@@ -1,0 +1,58 @@
+name: Deployment Issue
+description: Request help deploying AdventureLog.
+title: "[DEPLOYMENT] "
+labels:
+  - deployment
+body:
+  - type: markdown
+    attributes:
+      value: |
+        GitHub issues are primarily for tracking bugs and feature requests.
+        For general deployment troubleshooting and faster community support, visit Discord: https://discord.gg/wRbQ9Egr8C
+  - type: textarea
+    id: deployment-description
+    attributes:
+      label: Describe Your Issue
+      description: A clear and concise description of the deployment problem.
+      placeholder: Explain what is failing and when it happens.
+    validations:
+      required: true
+  - type: textarea
+    id: docker-compose
+    attributes:
+      label: Docker Compose (Obfuscated)
+      description: Include your docker-compose configuration or relevant variables. Remove secrets.
+      render: yaml
+      placeholder: Paste your obfuscated configuration.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Error Output
+      description: Include relevant service logs or command output.
+      placeholder: Paste key logs here.
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: AdventureLog Version
+      description: "In the web app, click the 3-dot menu in the sidebar and select 'About' to find the version number."
+      placeholder: v0.0.0
+    validations:
+      required: false
+  - type: input
+    id: reverse-proxy
+    attributes:
+      label: Reverse Proxy
+      placeholder: Nginx, Traefik, Caddy, None
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I removed or obfuscated all sensitive data from this issue.
+          required: true

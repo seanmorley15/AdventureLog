@@ -5,6 +5,11 @@ const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 export const authHook: Handle = async ({ event, resolve }) => {
 	event.cookies.delete('csrftoken', { path: '/' });
 	try {
+		// Image proxy requests can be very high-volume and do not need locals.user.
+		if (event.url.pathname.startsWith('/immich/')) {
+			return await resolve(event);
+		}
+
 		let sessionid = event.cookies.get('sessionid');
 
 		if (!sessionid) {
@@ -23,6 +28,13 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		});
 
 		if (!userFetch.ok) {
+			// Preserve the session on transient backend failures (e.g. 429 throttling)
+			// to avoid forcing users into a logout loop.
+			if (userFetch.status === 429 || userFetch.status >= 500) {
+				event.locals.user = null;
+				return await resolve(event);
+			}
+
 			event.locals.user = null;
 			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 			return await resolve(event);

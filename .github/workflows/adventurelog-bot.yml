@@ -1,0 +1,85 @@
+name: AdventureLog Bot
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  enforce-ready:
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate linked issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Ignore specific user
+            if (context.actor === "seanmorley15") {
+              console.log("Skipping maintainer PR");
+              return;
+            }
+
+            // Ignore PRs created before enforcement date
+            const cutoff = new Date("2026-03-16T00:00:00Z");
+            const created = new Date(pr.created_at);
+
+            if (created < cutoff) {
+              console.log("Skipping PR created before enforcement date");
+              return;
+            }
+
+            const body = pr.body || "";
+            const match = body.match(/#(\d+)/);
+
+            if (!match) {
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: "🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed because it does not reference an issue.\n\nPlease link an issue using `Closes #issue-number`."
+              });
+
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: "closed"
+              });
+
+              return;
+            }
+
+            const issueNumber = match[1];
+
+            const { data: issue } = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issueNumber
+            });
+
+            const labels = issue.labels.map(l => l.name);
+
+            if (!labels.includes("ready")) {
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: "🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed.\n\nPull requests may only be opened for issues labeled **ready**."
+              });
+
+              await github.rest.pulls.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                state: "closed"
+              });
+
+            }

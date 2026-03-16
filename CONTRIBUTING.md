@@ -1,52 +1,258 @@
 # Contributing to AdventureLog
 
-We’re excited to have you contribute to AdventureLog! To ensure that this community remains welcoming and productive for all users and developers, please follow this simple Code of Conduct.
+Thank you for your interest in contributing to **AdventureLog**!
+AdventureLog is an open-source project built by and for people who love travel, exploration, and self-hosting. Contributions of all kinds are welcome — whether that’s fixing bugs, improving documentation, suggesting features, or writing code.
 
-## Pull Request Process
+Our goal is to keep the project **open, welcoming, and organized** so that contributors can collaborate effectively and the codebase remains maintainable long-term.
 
-1. **Open an Issue First**: Discuss any changes or features you plan to implement by opening an issue. This helps to clarify your idea and ensures there’s a shared understanding.
-2. **Document Changes**: If your changes impact the user interface, add new environment variables, or introduce new container configurations, make sure to update the documentation accordingly. The documentation is located in the `documentation` folder.
-3. **Pull Request**: Submit a pull request with your changes directed towards the `development` branch. Make sure to reference the issue you opened in the description. After your pull request is submitted, it will be reviewed by the maintainers.
-4. **Review Process**: The maintainers will review your pull request. They may suggest changes or improvements. Please be open to feedback and ready to make adjustments as needed.
-5. **Merge**: Once your pull request is approved, it will be merged into the `development` branch. This branch is where all new features and changes are integrated before being released to the main branch.
+This document explains how to contribute and the workflow we use.
 
-## Code of Conduct
+---
 
-### Our Pledge
+# How Contributions Work
 
-At AdventureLog, we are committed to creating a community that fosters adventure, exploration, and innovation. We encourage diverse participation and strive to maintain a space where everyone feels welcome to contribute, regardless of their background or experience level. We ask that you contribute with respect and kindness, making sure to prioritize collaboration and mutual growth.
+AdventureLog uses a structured workflow to keep development organized and to make it easier for contributors to collaborate.
 
-### Our Standards
+All development follows this process:
 
-In order to maintain a positive environment, we encourage the following behaviors:
+```
+Issue → Discussion → Approved → Ready → Development → Review → Merge
+```
 
-- **Inclusivity**: Use welcoming and inclusive language that fosters collaboration across all perspectives and experiences.
-- **Respect**: Respect differing opinions and engage with empathy, understanding that each person’s perspective is valuable.
-- **Constructive Feedback**: Offer feedback that helps improve the project and allows contributors to grow from it.
-- **Adventure Spirit**: Bring the same sense of curiosity, discovery, and positivity that drives AdventureLog into all interactions with the community.
+### 1. Open or Find an Issue
+
+Before starting work, **please open an issue or find an existing one**.
+
+Issues allow us to:
+
+- discuss ideas before development begins
+- coordinate work between contributors
+- prevent duplicate efforts
+- maintain a clear roadmap for the project
+
+If you have an idea for a new feature or improvement, feel free to open an issue describing it.
+
+---
+
+### 2. Wait for Approval / Ready Status
+
+Issues move through several stages:
+
+**Backlog**
+An idea or request that has not yet been reviewed.
+
+**Needs Discussion**
+The idea requires maintainer feedback or design discussion.
+
+**Approved**
+The concept has been accepted but may require planning.
+
+**Ready**
+The issue is ready for contributors to begin working on it.
+
+⚠️ **Pull Requests should only be opened for issues marked `Ready`.**
+
+This helps ensure contributors work on changes that are aligned with the project’s roadmap.
+
+---
+
+### 3. Start Working on the Issue
+
+Once an issue is marked **Ready**, you can begin working on it.
+
+If you plan to work on a larger issue, feel free to comment on the issue to let others know.
+
+This helps prevent duplicate work.
+
+---
+
+### 4. Create a Pull Request
+
+When your changes are ready, open a pull request targeting the **`development` branch**.
+
+Your pull request must include a reference to the issue it resolves:
+
+```
+Closes #issue-number
+```
+
+This allows the project automation to track progress and update the project board.
+
+Example PR description:
+
+```
+Closes #123
+
+Adds support for exporting trips as GPX files.
+```
+
+---
+
+### 5. Review Process
+
+Once submitted, maintainers will review your pull request.
+
+Reviews may include:
+
+- code quality improvements
+- consistency with the existing architecture
+- performance considerations
+- documentation updates
+
+Please be open to feedback — reviews are intended to **improve the project and help contributors grow**.
+
+---
+
+### 6. Merge
+
+After approval, your pull request will be merged into the **`development` branch**.
+
+From there, it will eventually be included in the next release.
+
+Thank you for helping improve AdventureLog!
+
+---
+
+# AI / LLM Assistance
+
+Using AI tools (such as ChatGPT, Copilot, or other LLMs) **is allowed** when contributing to AdventureLog.
+
+However, contributors are responsible for ensuring that generated code:
+
+- is **correct and fully understood**
+- follows the **project’s coding standards**
+- integrates properly with the existing architecture
+- does not introduce unnecessary complexity
+
+AI-generated code that does not meet these standards may be rejected or the pull request may be closed.
+
+Please review and clean up any AI-generated code before submitting it.
+
+---
+
+# Code Quality Expectations
+
+To keep the project maintainable, all contributions should:
+
+- follow the existing **code structure and architecture**
+- use clear and readable code
+- avoid unnecessary dependencies
+- include documentation updates when relevant
+- maintain compatibility with the existing system
+
+AdventureLog currently includes:
+
+- **Django** for the backend
+- **SvelteKit** for the frontend
+- **Docker-based deployments**
+
+When contributing, please try to match the **style and patterns already used in the project**.
+
+---
+
+# Documentation Changes
+
+If your changes affect:
+
+- user workflows
+- environment variables
+- deployment setup
+- API behavior
+- configuration
+
+please update the documentation in the:
+
+```
+/documentation
+```
+
+folder accordingly.
+
+Keeping documentation accurate is extremely important.
+
+---
+
+# Good Issues for New Contributors
+
+If you are new to the project, look for issues labeled:
+
+```
+good first issue
+help wanted
+```
+
+These are great starting points for new contributors.
+
+---
+
+# Code of Conduct
+
+## Our Pledge
+
+At AdventureLog, we are committed to creating a community that fosters adventure, exploration, and innovation.
+
+We welcome contributors of all experience levels and backgrounds. Everyone should feel comfortable participating and sharing ideas.
+
+---
+
+## Our Standards
+
+To maintain a positive environment, we encourage the following behaviors:
+
+- **Inclusivity** — Use welcoming and inclusive language.
+- **Respect** — Respect differing viewpoints and experiences.
+- **Constructive Feedback** — Provide helpful and actionable feedback.
+- **Collaboration** — Work together to improve the project.
 
 Examples of unacceptable behavior include:
 
-- Personal attacks, trolling, or any form of harassment.
-- Insensitive or discriminatory language, including sexualized comments or imagery.
-- Spamming or misusing project spaces for personal gain.
-- Publishing or using others’ private information without permission.
-- Anything else that could be seen as disrespectful or unprofessional in a collaborative environment.
+- Personal attacks or harassment
+- Discriminatory language
+- Spamming or promotional misuse of project spaces
+- Sharing private information without consent
 
-### Our Responsibilities
+---
 
-As maintainers of AdventureLog, we are committed to enforcing this Code of Conduct and taking corrective action when necessary. This may involve moderating comments, pulling code, or banning users who engage in harmful behaviors.
+## Maintainer Responsibilities
 
-We strive to foster a community that balances open collaboration with respect for all contributors.
+The AdventureLog maintainers are responsible for enforcing this Code of Conduct and maintaining a respectful community.
 
-### Scope
+If necessary, maintainers may:
 
-This Code of Conduct applies in all spaces related to AdventureLog. This includes our GitHub repository, discussions, documentation, social media accounts, and events—both online and in person.
+- moderate comments
+- close pull requests
+- remove contributions
+- restrict participation
 
-### Enforcement
+These actions will only be taken when necessary to protect the community and the project.
 
-If you experience or witness unacceptable behavior, please report it to the project team at `contact@adventurelog.app`. All reports will be confidential and handled swiftly. The maintainers will investigate the issue and take appropriate action as needed.
+---
 
-### Attribution
+## Scope
 
-This Code of Conduct is inspired by the [Contributor Covenant](http://contributor-covenant.org), version 1.4, and adapted to fit the unique spirit of AdventureLog.
+This Code of Conduct applies to all spaces related to AdventureLog, including:
+
+- GitHub repositories
+- GitHub Discussions
+- documentation
+- social media
+- community spaces
+
+---
+
+## Reporting Issues
+
+If you experience or witness unacceptable behavior, please contact the maintainers at:
+
+```
+contact@adventurelog.app
+```
+
+All reports will be handled confidentially.
+
+---
+
+## Attribution
+
+This Code of Conduct is inspired by the
+Contributor Covenant (v1.4) and adapted for the AdventureLog community.

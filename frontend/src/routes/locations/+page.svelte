@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import type { Location } from '$lib/types';
+	import { onMount, tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -58,17 +59,54 @@
 	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
 
-	// Reactive statements - Only read from URL, don't write
-	$: {
-		if (typeof window !== 'undefined') {
-			let url = new URL(window.location.href);
-			let types = url.searchParams.get('types');
-			if (types) {
-				typeString = types;
-			} else {
-				typeString = '';
+	function syncTypesFromUrl() {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		let url = new URL(window.location.href);
+		typeString = url.searchParams.get('types') || '';
+	}
+
+	onMount(() => {
+		syncTypesFromUrl();
+	});
+
+	afterNavigate(() => {
+		syncTypesFromUrl();
+	});
+
+	function doApplyFilters() {
+		if (typeof window === 'undefined') {
+			return;
+		}
+
+		const form = document.getElementById('location-filters-form') as HTMLFormElement | null;
+		if (!form) {
+			return;
+		}
+
+		const formData = new FormData(form);
+		const url = new URL(window.location.href);
+		url.search = '';
+
+		for (const [key, value] of formData.entries()) {
+			if (value !== '') {
+				url.searchParams.append(key, value.toString());
 			}
 		}
+
+		if (!url.searchParams.get('types')) {
+			url.searchParams.delete('types');
+		}
+
+		url.searchParams.delete('page');
+		goto(url.toString(), { invalidateAll: true, replaceState: true });
+	}
+
+	async function onCategoryChange() {
+		await tick();
+		doApplyFilters();
 	}
 
 	$: {
@@ -304,14 +342,19 @@
 					</div>
 
 					<!-- Filters Form -->
-					<form method="get" class="space-y-6">
+					<form
+						id="location-filters-form"
+						on:submit|preventDefault={doApplyFilters}
+						class="space-y-6"
+					>
+						<input type="hidden" name="types" value={typeString} />
 						<!-- Category Filter -->
 						<div class="card bg-base-200/50 p-4">
 							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 								<Tag class="w-5 h-5" />
 								Categories
 							</h3>
-							<CategoryFilterDropdown bind:types={typeString} />
+							<CategoryFilterDropdown bind:types={typeString} on:change={onCategoryChange} />
 							<button
 								type="button"
 								on:click={() => (is_category_modal_open = true)}
