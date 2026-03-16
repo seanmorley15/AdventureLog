@@ -1,8 +1,8 @@
 name: Feature request
 description: Suggest a new idea, feature, or improvement for AdventureLog.
-title: "[REQUEST] "
 labels:
   - enhancement
+  - backlog
 body:
   - type: markdown
     attributes:

@@ -1,6 +1,5 @@
 name: Deployment Issue
 description: Request help deploying AdventureLog.
-title: "[DEPLOYMENT] "
 labels:
   - deployment
 body:
@@ -38,7 +37,7 @@ body:
     id: version
     attributes:
       label: AdventureLog Version
-      description: "In the web app, click the 3-dot menu in the sidebar and select 'About' to find the version number."
+      description: "To find the version, open the web app, click the 3-dot menu in the navbar, and select 'About'."
       placeholder: v0.0.0
     validations:
       required: false
