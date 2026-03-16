@@ -38,7 +38,7 @@ jobs:
             const projectId = "PVT_kwHOBeIeKs4AfmUO";
             const fieldId = "PVTSSF_lAHOBeIeKs4AfmUOzgU5pCI";
 
-            // find project item
+            // Fast path: find project item from the issue side.
             const result = await github.graphql(`
               query($issueId: ID!) {
                 node(id: $issueId) {
@@ -62,7 +62,52 @@ jobs:
               (node) => node.project?.id === projectId
             );
 
-            const itemId = item?.id;
+            let itemId = item?.id;
+
+            // Fallback: if not found from issue.projectItems, scan the target project items with pagination.
+            if (!itemId) {
+              let hasNextPage = true;
+              let cursor = null;
+
+              while (hasNextPage && !itemId) {
+                const projectItemsResult = await github.graphql(`
+                  query($projectId: ID!, $cursor: String) {
+                    node(id: $projectId) {
+                      ... on ProjectV2 {
+                        items(first: 100, after: $cursor) {
+                          pageInfo {
+                            hasNextPage
+                            endCursor
+                          }
+                          nodes {
+                            id
+                            content {
+                              ... on Issue {
+                                id
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                `, {
+                  projectId,
+                  cursor
+                });
+
+                const items = projectItemsResult.node?.items?.nodes ?? [];
+                const match = items.find((projectItem) => projectItem.content?.id === issueNodeId);
+
+                if (match) {
+                  itemId = match.id;
+                  break;
+                }
+
+                hasNextPage = projectItemsResult.node?.items?.pageInfo?.hasNextPage ?? false;
+                cursor = projectItemsResult.node?.items?.pageInfo?.endCursor ?? null;
+              }
+            }
 
             if (!itemId) {
               console.log(`Issue not in project ${projectId}`);
