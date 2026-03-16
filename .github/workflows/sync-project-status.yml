@@ -16,6 +16,7 @@ jobs:
       - name: Update project status from label
         uses: actions/github-script@v7
         with:
+          github-token: ${{ secrets.PROJECT_AUTOMATION_TOKEN != '' && secrets.PROJECT_AUTOMATION_TOKEN || github.token }}
           script: |
 
             const labelMap = {
@@ -38,37 +39,74 @@ jobs:
             const configuredProjectId = "PVT_kwHOBeIeKs4AfmUO";
             const fieldId = "PVTSSF_lAHOBeIeKs4AfmUOzgU5pCI";
 
-            // Find project items from the issue side.
-            const result = await github.graphql(`
-              query($issueId: ID!) {
-                node(id: $issueId) {
-                  ... on Issue {
-                    projectItems(first: 100) {
-                      nodes {
-                        id
-                        project {
+            const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+            async function fetchIssueProjectItems() {
+              const result = await github.graphql(`
+                query($issueId: ID!) {
+                  node(id: $issueId) {
+                    ... on Issue {
+                      projectItems(first: 100) {
+                        nodes {
                           id
-                          title
+                          project {
+                            id
+                            title
+                          }
                         }
                       }
                     }
                   }
                 }
-              }
-            `, {
-              issueId: issueNodeId
-            });
+              `, {
+                issueId: issueNodeId
+              });
 
-            const issueProjectItems = result.node?.projectItems?.nodes ?? [];
-            const exactMatch = issueProjectItems.find(
+              return result.node?.projectItems?.nodes ?? [];
+            }
+
+            // Retry a few times in case project membership is still syncing.
+            let issueProjectItems = [];
+            for (let attempt = 1; attempt <= 4; attempt++) {
+              issueProjectItems = await fetchIssueProjectItems();
+              if (issueProjectItems.length > 0) break;
+              if (attempt < 4) await sleep(3000);
+            }
+
+            let exactMatch = issueProjectItems.find(
               (node) => node.project?.id === configuredProjectId
             );
 
-            // If configured id is wrong/unresolvable, but issue belongs to exactly one project,
-            // use that project item to keep automation working.
-            const selectedItem = exactMatch ?? (issueProjectItems.length === 1 ? issueProjectItems[0] : null);
-            const itemId = selectedItem?.id;
-            const projectId = selectedItem?.project?.id;
+            let itemId = exactMatch?.id;
+            let projectId = exactMatch?.project?.id;
+
+            // If issue is not in the configured project yet, try to add it.
+            if (!itemId) {
+              try {
+                const added = await github.graphql(`
+                  mutation($projectId: ID!, $contentId: ID!) {
+                    addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                      item {
+                        id
+                      }
+                    }
+                  }
+                `, {
+                  projectId: configuredProjectId,
+                  contentId: issueNodeId
+                });
+
+                itemId = added.addProjectV2ItemById?.item?.id;
+                projectId = configuredProjectId;
+              } catch (error) {
+                const availableProjects = issueProjectItems
+                  .map((node) => `${node.project?.title ?? "(untitled)"} [${node.project?.id ?? "no-id"}]`)
+                  .join(", ");
+                console.log(`Issue not in configured project ${configuredProjectId}. Available: ${availableProjects || "none"}`);
+                console.log(`Failed to auto-add issue to configured project: ${error.message}`);
+                return;
+              }
+            }
 
             if (!itemId || !projectId) {
               const availableProjects = issueProjectItems
