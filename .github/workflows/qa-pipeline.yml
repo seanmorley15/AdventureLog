@@ -1,0 +1,50 @@
+name: QA Test Pipeline
+
+on:
+  push:
+    branches: [ main, qa/* ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  api-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest pytest-django coverage
+
+      - name: Run Django tests
+        run: |
+          cd backend
+          python manage.py test --verbosity=2
+        env:
+          DJANGO_SETTINGS_MODULE: main.settings
+          # Add any required env vars here
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install Playwright
+        run: |
+          npm install --save-dev @playwright/test
+          npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
