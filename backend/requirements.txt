@@ -1,5 +1,6 @@
 Django>=4.2
 python-dotenv>=1.0
+publicsuffix2>=2.2023.7.17
 pytest>=7.0
 pytest-django>=4.5
 coverage>=7.2
