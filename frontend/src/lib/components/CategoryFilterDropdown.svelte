@@ -7,6 +7,7 @@
 	let types_arr: string[] = [];
 	export let types: string;
 	let adventure_types: Category[] = [];
+	let isOpen = false;
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
 	onMount(async () => {
@@ -38,36 +39,40 @@
 	}
 </script>
 
-<div class="collapse collapse-plus mb-4">
-	<input type="checkbox" />
-
-	<div class="collapse-title text-xl bg-base-300 font-medium">
+<div class="mb-4 rounded-lg bg-base-300">
+	<button
+		type="button"
+		class="w-full text-left text-xl font-medium p-4"
+		on:click={() => (isOpen = !isOpen)}
+	>
 		{$t('adventures.category_filter')}
-	</div>
+	</button>
 
-	<div class="collapse-content bg-base-300">
-		<button class="btn btn-sm btn-neutral-300 w-full mb-2" on:click={clearTypes}>
-			{$t('adventures.clear')}
-		</button>
+	{#if isOpen}
+		<div class="px-4 pb-4">
+			<button type="button" class="btn btn-sm btn-neutral-300 w-full mb-2" on:click={clearTypes}>
+				{$t('adventures.clear')}
+			</button>
 
-		<ul>
-			{#each adventure_types as type}
-				<li class="mb-1">
-					<label class="cursor-pointer flex items-center gap-2">
-						<input
-							type="checkbox"
-							class="checkbox"
-							value={type.name}
-							on:change={() => toggleSelect(type.name)}
-							checked={types.indexOf(type.name) > -1}
-						/>
-						<span>
-							{type.display_name}
-							{type.icon} ({type.num_locations})
-						</span>
-					</label>
-				</li>
-			{/each}
-		</ul>
-	</div>
+			<ul>
+				{#each adventure_types as type}
+					<li class="mb-1">
+						<label class="cursor-pointer flex items-center gap-2">
+							<input
+								type="checkbox"
+								class="checkbox"
+								value={type.name}
+								on:change={() => toggleSelect(type.name)}
+								checked={types_arr.includes(type.name)}
+							/>
+							<span>
+								{type.display_name}
+								{type.icon} ({type.num_locations})
+							</span>
+						</label>
+					</li>
+				{/each}
+			</ul>
+		</div>
+	{/if}
 </div>

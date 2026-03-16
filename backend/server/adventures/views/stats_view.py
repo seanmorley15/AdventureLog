@@ -29,7 +29,34 @@ class StatsViewSet(viewsets.ViewSet):
         
         return visited_count
 
-    def _get_activity_stats_by_category(self, user_activities):
+    def _can_view_location(self, request_user, profile_user, location):
+        if not location:
+            return False
+
+        if request_user.is_authenticated and request_user.id == profile_user.id:
+            return True
+
+        return bool(location.is_public)
+
+    def _build_activity_record(self, activity, metric_key, metric_value, profile_user, request_user):
+        if not activity:
+            return None
+
+        location = activity.visit.location if activity.visit_id and activity.visit else None
+        can_view_location = self._can_view_location(request_user, profile_user, location)
+
+        return {
+            'metric_key': metric_key,
+            'metric_value': round(float(metric_value or 0), 2),
+            'activity_id': str(activity.id),
+            'activity_name': activity.name if activity.name else None,
+            'sport_type': activity.sport_type,
+            'start_date': activity.start_date.isoformat() if activity.start_date else None,
+            'location_id': str(location.id) if (location and can_view_location) else None,
+            'location_name': location.name if (location and can_view_location) else None,
+        }
+
+    def _get_activity_stats_by_category(self, user_activities, profile_user, request_user):
         """Calculate detailed stats for each sport category"""
         category_stats = {}
         
@@ -87,12 +114,42 @@ class StatsViewSet(viewsets.ViewSet):
                     'avg_speed': round(stats['avg_speed'] or 0, 2),
                     'max_speed': round(stats['max_speed'] or 0, 2),
                     'total_calories': round(stats['total_calories'] or 0, 2),
-                    'sports': sport_breakdown
+                    'sports': sport_breakdown,
+                    'record_holders': {
+                        'max_distance': self._build_activity_record(
+                            activities.exclude(distance__isnull=True).select_related('visit__location').order_by('-distance', '-start_date').first(),
+                            'distance',
+                            stats['max_distance'],
+                            profile_user,
+                            request_user,
+                        ),
+                        'max_speed': self._build_activity_record(
+                            activities.exclude(max_speed__isnull=True).select_related('visit__location').order_by('-max_speed', '-start_date').first(),
+                            'max_speed',
+                            stats['max_speed'],
+                            profile_user,
+                            request_user,
+                        ),
+                        'max_elevation_gain': self._build_activity_record(
+                            activities.exclude(elevation_gain__isnull=True).select_related('visit__location').order_by('-elevation_gain', '-start_date').first(),
+                            'elevation_gain',
+                            stats['max_elevation_gain'],
+                            profile_user,
+                            request_user,
+                        ),
+                        'max_calories': self._build_activity_record(
+                            activities.exclude(calories__isnull=True).select_related('visit__location').order_by('-calories', '-start_date').first(),
+                            'calories',
+                            activities.exclude(calories__isnull=True).aggregate(value=Max('calories'))['value'],
+                            profile_user,
+                            request_user,
+                        ),
+                    }
                 }
         
         return category_stats
 
-    def _get_overall_activity_stats(self, user_activities):
+    def _get_overall_activity_stats(self, user_activities, profile_user, request_user):
         """Calculate overall activity statistics"""
         if not user_activities.exists():
             return {
@@ -101,7 +158,13 @@ class StatsViewSet(viewsets.ViewSet):
                 'total_moving_time': 0,
                 'total_elevation_gain': 0,
                 'total_elevation_loss': 0,
-                'total_calories': 0
+                'total_calories': 0,
+                'record_holders': {
+                    'max_distance': None,
+                    'max_speed': None,
+                    'max_elevation_gain': None,
+                    'max_calories': None,
+                },
             }
         
         stats = user_activities.aggregate(
@@ -124,7 +187,37 @@ class StatsViewSet(viewsets.ViewSet):
             'total_moving_time': total_moving_seconds,
             'total_elevation_gain': round(stats['total_elevation_gain'] or 0, 2),
             'total_elevation_loss': round(stats['total_elevation_loss'] or 0, 2),
-            'total_calories': round(stats['total_calories'] or 0, 2)
+            'total_calories': round(stats['total_calories'] or 0, 2),
+            'record_holders': {
+                'max_distance': self._build_activity_record(
+                    user_activities.exclude(distance__isnull=True).select_related('visit__location').order_by('-distance', '-start_date').first(),
+                    'distance',
+                    user_activities.exclude(distance__isnull=True).aggregate(value=Max('distance'))['value'],
+                    profile_user,
+                    request_user,
+                ),
+                'max_speed': self._build_activity_record(
+                    user_activities.exclude(max_speed__isnull=True).select_related('visit__location').order_by('-max_speed', '-start_date').first(),
+                    'max_speed',
+                    user_activities.exclude(max_speed__isnull=True).aggregate(value=Max('max_speed'))['value'],
+                    profile_user,
+                    request_user,
+                ),
+                'max_elevation_gain': self._build_activity_record(
+                    user_activities.exclude(elevation_gain__isnull=True).select_related('visit__location').order_by('-elevation_gain', '-start_date').first(),
+                    'elevation_gain',
+                    user_activities.exclude(elevation_gain__isnull=True).aggregate(value=Max('elevation_gain'))['value'],
+                    profile_user,
+                    request_user,
+                ),
+                'max_calories': self._build_activity_record(
+                    user_activities.exclude(calories__isnull=True).select_related('visit__location').order_by('-calories', '-start_date').first(),
+                    'calories',
+                    user_activities.exclude(calories__isnull=True).aggregate(value=Max('calories'))['value'],
+                    profile_user,
+                    request_user,
+                ),
+            },
         }
 
     @action(detail=False, methods=['get'], url_path=r'counts/(?P<username>[\w.@+-]+)')
@@ -153,8 +246,8 @@ class StatsViewSet(viewsets.ViewSet):
         user_activities = Activity.objects.filter(user=user.id)
         
         # Get enhanced activity statistics
-        overall_activity_stats = self._get_overall_activity_stats(user_activities)
-        activity_stats_by_category = self._get_activity_stats_by_category(user_activities)
+        overall_activity_stats = self._get_overall_activity_stats(user_activities, user, request.user)
+        activity_stats_by_category = self._get_activity_stats_by_category(user_activities, user, request.user)
         
         return Response({
             # Travel stats

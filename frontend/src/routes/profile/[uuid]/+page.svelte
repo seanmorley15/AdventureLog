@@ -34,6 +34,17 @@
 	let measurementSystem: string = 'metric';
 	let expandedCategories = new Set();
 
+	type ActivityRecord = {
+		metric_key: string;
+		metric_value: number;
+		activity_id: string;
+		activity_name: string | null;
+		sport_type: string | null;
+		start_date: string | null;
+		location_id: string | null;
+		location_name: string | null;
+	};
+
 	let stats: {
 		visited_country_count: number;
 		total_regions: number;
@@ -50,6 +61,12 @@
 			total_elevation_gain: number;
 			total_elevation_loss: number;
 			total_calories: number;
+			record_holders: {
+				max_distance: ActivityRecord | null;
+				max_speed: ActivityRecord | null;
+				max_elevation_gain: ActivityRecord | null;
+				max_calories: ActivityRecord | null;
+			};
 		};
 		activities_by_category: Record<
 			string,
@@ -66,6 +83,12 @@
 				avg_speed: number;
 				max_speed: number;
 				total_calories: number;
+				record_holders: {
+					max_distance: ActivityRecord | null;
+					max_speed: ActivityRecord | null;
+					max_elevation_gain: ActivityRecord | null;
+					max_calories: ActivityRecord | null;
+				};
 				sports: Record<
 					string,
 					{
@@ -226,6 +249,14 @@
 		}
 
 		return Math.round((value / total) * 100);
+	}
+
+	function getRecordActivityTitle(record: ActivityRecord | null): string {
+		if (!record) {
+			return 'Activity';
+		}
+
+		return record.activity_name || record.sport_type || 'Activity';
 	}
 
 	// Calculate achievements
@@ -560,6 +591,21 @@
 												{getDistance(stats.activities_overall.total_distance)}
 											</div>
 											<div class="text-error/60 mt-2">{$t('adventures.distance_covered')}</div>
+											{#if stats.activities_overall.record_holders?.max_distance}
+												{@const maxDistanceRecord =
+													stats.activities_overall.record_holders.max_distance}
+												<div class="mt-2 text-xs text-error/70">
+													Longest single activity: {getRecordActivityTitle(maxDistanceRecord)}
+												</div>
+												{#if maxDistanceRecord?.location_id}
+													<a
+														href={`/locations/${maxDistanceRecord.location_id}`}
+														class="link link-error text-xs"
+													>
+														Happened at {maxDistanceRecord.location_name || 'this location'}
+													</a>
+												{/if}
+											{/if}
 										</div>
 										<div class="p-3 bg-error/20 rounded-2xl">
 											<TrendingUpOutline class="w-6 h-6 text-error" />
@@ -604,6 +650,21 @@
 												{getElevation(stats.activities_overall.total_elevation_gain)}
 											</div>
 											<div class="text-orange-500/60 mt-2">{$t('adventures.total_climbed')}</div>
+											{#if stats.activities_overall.record_holders?.max_elevation_gain}
+												{@const maxGainRecord =
+													stats.activities_overall.record_holders.max_elevation_gain}
+												<div class="mt-2 text-xs text-orange-500/70">
+													Biggest climb: {getRecordActivityTitle(maxGainRecord)}
+												</div>
+												{#if maxGainRecord?.location_id}
+													<a
+														href={`/locations/${maxGainRecord.location_id}`}
+														class="link text-xs text-orange-500"
+													>
+														Happened at {maxGainRecord.location_name || 'this location'}
+													</a>
+												{/if}
+											{/if}
 										</div>
 										<div class="p-3 bg-orange-500/20 rounded-2xl">
 											<Mountain class="w-6 h-6 text-orange-500" />
@@ -649,6 +710,21 @@
 													{Math.round(stats.activities_overall.total_calories)}
 												</div>
 												<div class="text-warning/60 mt-2">Energy burned</div>
+												{#if stats.activities_overall.record_holders?.max_calories}
+													{@const maxCaloriesRecord =
+														stats.activities_overall.record_holders.max_calories}
+													<div class="mt-2 text-xs text-warning/70">
+														Most calories in: {getRecordActivityTitle(maxCaloriesRecord)}
+													</div>
+													{#if maxCaloriesRecord?.location_id}
+														<a
+															href={`/locations/${maxCaloriesRecord.location_id}`}
+															class="link link-warning text-xs"
+														>
+															Happened at {maxCaloriesRecord.location_name || 'this location'}
+														</a>
+													{/if}
+												{/if}
 											</div>
 											<div class="p-3 bg-warning/20 rounded-2xl">
 												<Fire class="w-6 h-6 text-warning" />
@@ -753,6 +829,16 @@
 														<div class="text-lg font-bold text-{config.color}">
 															{getSpeed(categoryData.max_speed)}
 														</div>
+														{#if categoryData.record_holders?.max_speed?.location_id}
+															<a
+																href={`/locations/${categoryData.record_holders.max_speed.location_id}`}
+																class="link text-xs text-{config.color}"
+															>
+																{$t('locations.best_happened_at')}
+																{categoryData.record_holders.max_speed.location_name ||
+																	'this location'}
+															</a>
+														{/if}
 													</div>
 													<div
 														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
@@ -773,6 +859,15 @@
 														<div class="text-lg font-bold text-{config.color}">
 															{getDistance(categoryData.max_distance)}
 														</div>
+														{#if categoryData.record_holders?.max_distance?.location_id}
+															<a
+																href={`/locations/${categoryData.record_holders.max_distance.location_id}`}
+																class="link text-xs text-{config.color}"
+															>
+																Best happened at {categoryData.record_holders.max_distance
+																	.location_name || 'this location'}
+															</a>
+														{/if}
 													</div>
 													<div
 														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
@@ -793,6 +888,15 @@
 														<div class="text-lg font-bold text-{config.color}">
 															{getElevation(categoryData.max_elevation_gain)}
 														</div>
+														{#if categoryData.record_holders?.max_elevation_gain?.location_id}
+															<a
+																href={`/locations/${categoryData.record_holders.max_elevation_gain.location_id}`}
+																class="link text-xs text-{config.color}"
+															>
+																Best happened at {categoryData.record_holders.max_elevation_gain
+																	.location_name || 'this location'}
+															</a>
+														{/if}
 													</div>
 													<div
 														class="bg-{config.color}/5 rounded-lg p-4 border {config.borderColor}"
