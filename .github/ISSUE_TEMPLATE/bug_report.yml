@@ -1,0 +1,113 @@
+name: Bug report
+description: Found something not working as expected? File a detailed bug report so we can fix it quickly.
+title: "[BUG] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before filing a new one. This helps avoid duplicates and ensures we can address your concern efficiently.
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of the issue. What went wrong?
+      placeholder: Describe what happened.
+    validations:
+      required: true
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: Provide exact steps so we can reliably reproduce the issue.
+      placeholder: |
+        1. Go to ...
+        2. Click on ...
+        3. Enter ...
+        4. Observe the error
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected Behavior
+      description: What did you expect AdventureLog to do?
+      placeholder: Describe the expected result.
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots-logs
+    attributes:
+      label: Screenshots / Logs
+      description: |
+        Attach screenshots if helpful.
+        Include relevant logs (remove sensitive information).
+      placeholder: Paste logs and add image links here.
+    validations:
+      required: false
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: Where are you running AdventureLog?
+      options:
+        - Docker
+        - Synology
+        - Proxmox
+        - TrueNAS
+        - Unraid
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install Method
+      options:
+        - Docker Compose
+        - Quick Install Script
+        - Manual
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: AdventureLog Version
+      description: "Example: v0.12.0"
+      placeholder: v0.0.0
+    validations:
+      required: true
+  - type: input
+    id: reverse-proxy
+    attributes:
+      label: Reverse Proxy
+      description: "Example: Nginx, Traefik, Caddy, or None"
+      placeholder: None
+    validations:
+      required: true
+  - type: textarea
+    id: docker-compose
+    attributes:
+      label: Docker Compose / Relevant Variables (Optional)
+      description: Include docker-compose content or environment variables if relevant. Remove sensitive data.
+      render: yaml
+      placeholder: Paste obfuscated configuration here.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Any extra information that might help us debug this issue.
+      placeholder: Network setup, custom configuration, database details, etc.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and confirmed this is not a duplicate.
+          required: true

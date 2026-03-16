@@ -1,0 +1,65 @@
+name: Feature request
+description: Suggest a new idea, feature, or improvement for AdventureLog.
+title: "[REQUEST] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before creating a new request. This helps avoid duplicates and keeps discussions focused.
+  - type: textarea
+    id: feature-summary
+    attributes:
+      label: Feature Summary
+      description: A clear and concise description of the feature or improvement you want.
+      placeholder: Summarize your request.
+    validations:
+      required: true
+  - type: textarea
+    id: problem-statement
+    attributes:
+      label: Problem Statement
+      description: Is your request related to a specific problem?
+      placeholder: "Example: I am frustrated when ..."
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you want.
+      placeholder: What should AdventureLog do differently?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: List workarounds or alternative solutions you considered.
+      placeholder: Describe alternatives and why they are not ideal.
+    validations:
+      required: false
+  - type: textarea
+    id: mockups
+    attributes:
+      label: Mockups / Examples (Optional)
+      description: Include screenshots, sketches, or links that illustrate the idea.
+      placeholder: Add links or image references.
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other details, use cases, or related features.
+      placeholder: Extra context.
+    validations:
+      required: false
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and confirmed this request is not a duplicate.
+          required: true
