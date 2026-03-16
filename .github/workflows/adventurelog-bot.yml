@@ -35,7 +35,7 @@ jobs:
             }
 
             const body = pr.body || "";
-            const match = body.match(/#(\d+)/);
+            const match = body.match(/\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)\b/i);
 
             if (!match) {
 
@@ -56,17 +56,41 @@ jobs:
               return;
             }
 
-            const issueNumber = match[1];
+            const issueNumber = Number(match[1]);
 
-            const { data: issue } = await github.rest.issues.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issueNumber
-            });
+            let issue;
+
+            try {
+              ({ data: issue } = await github.rest.issues.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issueNumber
+              }));
+            } catch (error) {
+              if (error.status === 404) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  body: `🤖 **AdventureLog Bot**\n\n🚫 This PR was automatically closed because the referenced issue #${issueNumber} was not found.\n\nPlease link a valid issue in this repository using \`Closes #issue-number\`.`
+                });
+
+                await github.rest.pulls.update({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  pull_number: pr.number,
+                  state: "closed"
+                });
+
+                return;
+              }
+
+              throw error;
+            }
 
             const labels = issue.labels.map(l => l.name);
 
-            if (!labels.includes("ready")) {
+            if (!labels.includes("ready") && !labels.includes("in progress")) {
 
               await github.rest.issues.createComment({
                 owner: context.repo.owner,
