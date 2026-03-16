@@ -35,19 +35,20 @@ jobs:
 
             const issueNodeId = context.payload.issue.node_id;
 
-            const projectId = "PVT_kwHOBeIeKs4AfmUO";
+            const configuredProjectId = "PVT_kwHOBeIeKs4AfmUO";
             const fieldId = "PVTSSF_lAHOBeIeKs4AfmUOzgU5pCI";
 
-            // Fast path: find project item from the issue side.
+            // Find project items from the issue side.
             const result = await github.graphql(`
               query($issueId: ID!) {
                 node(id: $issueId) {
                   ... on Issue {
-                    projectItems(first: 50) {
+                    projectItems(first: 100) {
                       nodes {
                         id
                         project {
                           id
+                          title
                         }
                       }
                     }
@@ -58,59 +59,22 @@ jobs:
               issueId: issueNodeId
             });
 
-            const item = result.node.projectItems.nodes.find(
-              (node) => node.project?.id === projectId
+            const issueProjectItems = result.node?.projectItems?.nodes ?? [];
+            const exactMatch = issueProjectItems.find(
+              (node) => node.project?.id === configuredProjectId
             );
 
-            let itemId = item?.id;
+            // If configured id is wrong/unresolvable, but issue belongs to exactly one project,
+            // use that project item to keep automation working.
+            const selectedItem = exactMatch ?? (issueProjectItems.length === 1 ? issueProjectItems[0] : null);
+            const itemId = selectedItem?.id;
+            const projectId = selectedItem?.project?.id;
 
-            // Fallback: if not found from issue.projectItems, scan the target project items with pagination.
-            if (!itemId) {
-              let hasNextPage = true;
-              let cursor = null;
-
-              while (hasNextPage && !itemId) {
-                const projectItemsResult = await github.graphql(`
-                  query($projectId: ID!, $cursor: String) {
-                    node(id: $projectId) {
-                      ... on ProjectV2 {
-                        items(first: 100, after: $cursor) {
-                          pageInfo {
-                            hasNextPage
-                            endCursor
-                          }
-                          nodes {
-                            id
-                            content {
-                              ... on Issue {
-                                id
-                              }
-                            }
-                          }
-                        }
-                      }
-                    }
-                  }
-                `, {
-                  projectId,
-                  cursor
-                });
-
-                const items = projectItemsResult.node?.items?.nodes ?? [];
-                const match = items.find((projectItem) => projectItem.content?.id === issueNodeId);
-
-                if (match) {
-                  itemId = match.id;
-                  break;
-                }
-
-                hasNextPage = projectItemsResult.node?.items?.pageInfo?.hasNextPage ?? false;
-                cursor = projectItemsResult.node?.items?.pageInfo?.endCursor ?? null;
-              }
-            }
-
-            if (!itemId) {
-              console.log(`Issue not in project ${projectId}`);
+            if (!itemId || !projectId) {
+              const availableProjects = issueProjectItems
+                .map((node) => `${node.project?.title ?? "(untitled)"} [${node.project?.id ?? "no-id"}]`)
+                .join(", ");
+              console.log(`Issue not in configured project ${configuredProjectId}. Available: ${availableProjects || "none"}`);
               return;
             }
 
