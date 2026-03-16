@@ -126,5 +126,27 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         representation.pop('pk', None)
         # Remove the email field
         representation.pop('email', None)
-        
+
         return representation
+
+
+from .models import APIKey
+
+
+class APIKeySerializer(serializers.ModelSerializer):
+    """
+    Read serializer for APIKey – never exposes the key_hash or the raw token.
+    The raw token is injected by the view only at creation time via an extra
+    ``key`` field that is *not* part of the model serializer.
+    """
+
+    class Meta:
+        model = APIKey
+        fields = ['id', 'name', 'key_prefix', 'created_at', 'last_used_at']
+        read_only_fields = ['id', 'key_prefix', 'created_at', 'last_used_at']
+
+
+class APIKeyCreateSerializer(serializers.Serializer):
+    """Write serializer – only accepts a ``name`` for the new key."""
+
+    name = serializers.CharField(max_length=100, required=True)

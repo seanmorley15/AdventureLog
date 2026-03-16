@@ -44,10 +44,15 @@ async function handleRequest(
 	let targetUrl = `${endpoint}/auth/${path}`;
 
 	const add_trailing_slash_list = ['disable-password'];
+	const add_trailing_slash_prefixes = ['api-keys'];
 
 	// Ensure the path ends with a trailing slash
-	if ((requreTrailingSlash && !targetUrl.endsWith('/')) || add_trailing_slash_list.includes(path)) {
-		targetUrl += '/';
+	if (
+		(requreTrailingSlash && !targetUrl.endsWith('/')) ||
+		add_trailing_slash_list.includes(path) ||
+		add_trailing_slash_prefixes.some((p) => path === p || path.startsWith(p + '/'))
+	) {
+		if (!targetUrl.endsWith('/')) targetUrl += '/';
 	}
 
 	// Append query parameters to the path correctly

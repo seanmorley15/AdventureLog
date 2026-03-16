@@ -748,7 +748,8 @@
   "locations": {
     "location": "Locaţie",
     "locations": "Locații",
-    "my_locations": "Locațiile mele"
+    "my_locations": "Locațiile mele",
+    "best_happened_at": "Cel mai bine s-a întâmplat la"
   },
   "lodging": {
     "apartment": "Apartament",
@@ -1139,5 +1140,25 @@
     "visit_remove_failed": "Nu s-a eliminat vizita",
     "visit_to": "Vizită la",
     "your_random_adventure_awaits": "Aventura ta aleatorie vă așteaptă!"
+  },
+  "api_keys": {
+    "copied": "Copiat!",
+    "copy": "Copiere cheie",
+    "create": "Creați cheia",
+    "create_error": "Nu s-a putut crea cheia API.",
+    "created": "Creat",
+    "description": "Creați chei API personale pentru acces programatic. \nCheile sunt afișate o singură dată la momentul creării.",
+    "dismiss": "Respingeți",
+    "key_created": "Cheia API creată cu succes.",
+    "key_name_placeholder": "Numele cheii (de exemplu, Asistentul de acasă)",
+    "key_revoked": "Cheia API revocată.",
+    "last_used": "Ultima utilizare",
+    "never_used": "Nu a fost folosit niciodată",
+    "new_key_title": "Salvați noua cheie API",
+    "new_key_warning": "Această cheie nu va fi afișată din nou. \nCopiați-l și depozitați-l într-un loc sigur.",
+    "no_keys": "Încă nu există chei API.",
+    "revoke": "Revoca",
+    "revoke_error": "Cheia API nu a fost revocată.",
+    "title": "Chei API"
   }
 }

@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { ImmichIntegration, User } from '$lib/types';
+import type { APIKey, ImmichIntegration, User } from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -94,6 +94,16 @@ export const load: PageServerLoad = async (event) => {
 		publicUrl = publicUrlJson.PUBLIC_URL;
 	}
 
+	let apiKeys: APIKey[] = [];
+	let apiKeysFetch = await fetch(`${endpoint}/auth/api-keys/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (apiKeysFetch.ok) {
+		apiKeys = await apiKeysFetch.json();
+	}
+
 	return {
 		props: {
 			user,
@@ -106,7 +116,8 @@ export const load: PageServerLoad = async (event) => {
 			stravaGlobalEnabled,
 			stravaUserEnabled,
 			wandererEnabled,
-			wandererExpired
+			wandererExpired,
+			apiKeys
 		}
 	};
 };

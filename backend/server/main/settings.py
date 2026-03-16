@@ -83,6 +83,7 @@ MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'adventures.middleware.XSessionTokenMiddleware',
     'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
+    'adventures.middleware.DisableCSRFForAPIKeyMiddleware',
     'adventures.middleware.DisableCSRFForMobileLoginSignup',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -318,6 +319,7 @@ ACCOUNT_RATE_LIMITS = {
 # ---------------------------------------------------------------------------
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.APIKeyAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',

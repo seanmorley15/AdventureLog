@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
-	import type { ImmichIntegration, User } from '$lib/types.js';
+	import type { ImmichIntegration, User, APIKey } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
@@ -75,6 +75,11 @@
 	};
 
 	let isMFAModalOpen: boolean = false;
+
+	let apiKeys: APIKey[] = data.props.apiKeys ?? [];
+	let newApiKeyName: string = '';
+	let newlyCreatedKey: string | null = null;
+	let keyCopied = false;
 
 	const sections = [
 		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
@@ -398,6 +403,54 @@
 				addToast('error', $t('wanderer.refresh_error'));
 			}
 			newWandererIntegration.password = '';
+		}
+	}
+
+	async function createApiKey() {
+		if (!newApiKeyName.trim()) return;
+		const res = await fetch('/auth/api-keys/', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ name: newApiKeyName.trim() })
+		});
+		if (res.ok) {
+			const created = await res.json();
+			newlyCreatedKey = created.key;
+			keyCopied = false;
+			apiKeys = [
+				...apiKeys,
+				{
+					id: created.id,
+					name: created.name,
+					key_prefix: created.key_prefix,
+					created_at: created.created_at,
+					last_used_at: created.last_used_at
+				}
+			];
+			newApiKeyName = '';
+		} else {
+			addToast('error', $t('api_keys.create_error'));
+		}
+	}
+
+	async function copyKey() {
+		if (!newlyCreatedKey) return;
+		try {
+			await navigator.clipboard.writeText(newlyCreatedKey);
+			keyCopied = true;
+			setTimeout(() => (keyCopied = false), 2000);
+		} catch {
+			addToast('error', 'Could not copy — please select the key and copy manually.');
+		}
+	}
+
+	async function deleteApiKey(id: string) {
+		const res = await fetch(`/auth/api-keys/${id}/`, { method: 'DELETE' });
+		if (res.ok) {
+			apiKeys = apiKeys.filter((k) => k.id !== id);
+			addToast('success', $t('api_keys.key_revoked'));
+		} else {
+			addToast('error', $t('api_keys.revoke_error'));
 		}
 	}
 </script>
@@ -853,6 +906,181 @@
 									</div>
 								</div>
 							{/if}
+						</div>
+
+						<!-- API Keys -->
+						<div class="bg-base-100 rounded-2xl shadow-xl p-8 mt-8">
+							<div class="flex items-center gap-4 mb-6">
+								<div class="p-3 bg-warning/10 rounded-xl">
+									<span class="text-2xl">🔑</span>
+								</div>
+								<div>
+									<h2 class="text-2xl font-bold">{$t('api_keys.title')}</h2>
+									<p class="text-base-content/70">
+										{$t('api_keys.description')}
+									</p>
+								</div>
+							</div>
+
+							<!-- Newly created key banner -->
+							{#if newlyCreatedKey}
+								<div
+									class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden"
+								>
+									<!-- Header -->
+									<div
+										class="flex items-center justify-between px-5 py-3 bg-warning/10 border-b border-warning/20"
+									>
+										<div class="flex items-center gap-2">
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-4 w-4 text-warning shrink-0"
+												viewBox="0 0 24 24"
+												fill="none"
+												stroke="currentColor"
+												stroke-width="2"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+												/>
+											</svg>
+											<span class="text-sm font-semibold text-warning"
+												>{$t('api_keys.new_key_title')}</span
+											>
+										</div>
+										<button
+											class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
+											on:click={() => {
+												newlyCreatedKey = null;
+												keyCopied = false;
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												class="h-4 w-4"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke="currentColor"
+												stroke-width="2"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M6 18L18 6M6 6l12 12"
+												/>
+											</svg>
+										</button>
+									</div>
+
+									<!-- Key body -->
+									<div class="px-5 py-4">
+										<div
+											class="flex items-center gap-2 bg-base-200 rounded-xl border border-base-300 px-4 py-3"
+										>
+											<code class="flex-1 text-sm font-mono break-all text-base-content select-all"
+												>{newlyCreatedKey}</code
+											>
+											<button
+												class="btn btn-sm shrink-0 transition-all {keyCopied
+													? 'btn-success'
+													: 'btn-ghost'}"
+												on:click={copyKey}
+												title="Copy to clipboard"
+											>
+												{#if keyCopied}
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="h-4 w-4"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+														stroke-width="2.5"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															d="M5 13l4 4L19 7"
+														/>
+													</svg>
+													{$t('api_keys.copied')}
+												{:else}
+													<svg
+														xmlns="http://www.w3.org/2000/svg"
+														class="h-4 w-4"
+														fill="none"
+														viewBox="0 0 24 24"
+														stroke="currentColor"
+														stroke-width="2"
+													>
+														<path
+															stroke-linecap="round"
+															stroke-linejoin="round"
+															d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
+														/>
+													</svg>
+													{$t('api_keys.copy')}
+												{/if}
+											</button>
+										</div>
+										<p class="text-xs text-base-content/50 mt-2 pl-1">
+											Use this key in the <code class="font-mono">X-API-Key</code> header or as
+											<code class="font-mono">Authorization: Api-Key &lt;token&gt;</code>
+										</p>
+									</div>
+								</div>
+							{/if}
+
+							<!-- Existing keys list -->
+							{#if apiKeys.length > 0}
+								<div class="space-y-3 mb-6">
+									{#each apiKeys as key (key.id)}
+										<div class="flex items-center justify-between p-4 bg-base-200 rounded-xl gap-4">
+											<div class="min-w-0">
+												<p class="font-semibold truncate">{key.name}</p>
+												<p class="text-sm text-base-content/60 font-mono">
+													{key.key_prefix}…
+												</p>
+												<p class="text-xs text-base-content/50 mt-0.5">
+													{$t('api_keys.created')} {new Date(key.created_at).toLocaleDateString()}
+													{#if key.last_used_at}
+														· {$t('api_keys.last_used')} {new Date(key.last_used_at).toLocaleDateString()}
+													{:else}
+														· {$t('api_keys.never_used')}
+													{/if}
+												</p>
+											</div>
+											<button
+												class="btn btn-error btn-sm shrink-0"
+												on:click={() => deleteApiKey(key.id)}
+											>
+												{$t('api_keys.revoke')}
+											</button>
+										</div>
+									{/each}
+								</div>
+							{:else}
+								<p class="text-base-content/50 mb-6">{$t('api_keys.no_keys')}</p>
+							{/if}
+
+							<!-- Create new key form -->
+							<div class="flex gap-3">
+								<input
+									type="text"
+									bind:value={newApiKeyName}
+									placeholder={$t('api_keys.key_name_placeholder')}
+									class="input input-bordered input-primary flex-1"
+									maxlength="100"
+								/>
+								<button
+									class="btn btn-primary"
+									on:click={createApiKey}
+									disabled={!newApiKeyName.trim()}
+								>
+									{$t('api_keys.create')}
+								</button>
+							</div>
 						</div>
 					{/if}
 

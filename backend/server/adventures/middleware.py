@@ -37,4 +37,21 @@ class DisableCSRFForMobileLoginSignup(MiddlewareMixin):
         is_login_or_signup = request.path in ['/auth/browser/v1/auth/login', '/auth/browser/v1/auth/signup']
         if is_mobile and is_login_or_signup:
             setattr(request, '_dont_enforce_csrf_checks', True)
-       
+
+class DisableCSRFForAPIKeyMiddleware(MiddlewareMixin):
+    """Exempt requests carrying an AdventureLog API key from CSRF enforcement.
+
+    DRF's own SessionAuthentication is the only built-in class that enforces
+    CSRF, so this middleware is mainly a safety net for non-DRF views and to
+    ensure the Django CSRF middleware itself doesn't reject API-key requests
+    before they reach DRF.
+    """
+
+    def process_request(self, request):
+        if request.headers.get('X-API-Key'):
+            setattr(request, '_dont_enforce_csrf_checks', True)
+            return
+
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.lower().startswith('api-key '):
+            setattr(request, '_dont_enforce_csrf_checks', True)

@@ -298,6 +298,14 @@ export type ImmichIntegration = {
 	copy_locally: boolean;
 };
 
+export type APIKey = {
+	id: string;
+	name: string;
+	key_prefix: string;
+	created_at: string;
+	last_used_at: string | null;
+};
+
 export type ImmichAlbum = {
 	albumName: string;
 	description: string;
