@@ -1,0 +1,4 @@
+Django>=4.2
+pytest>=7.0
+pytest-django>=4.5
+coverage>=7.2
