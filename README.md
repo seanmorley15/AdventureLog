@@ -1,3 +1,5 @@
+foo
+
 <div align="center">
 
   <img src="brand/adventurelog.png" alt="logo" width="200" height="auto" />
