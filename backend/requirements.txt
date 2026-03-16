@@ -1,6 +1,8 @@
 Django>=4.2
 python-dotenv>=1.0
 publicsuffix2>=2.2023.7.17
+django-allauth>=0.52.0
+allauth-ui>=0.2.0   # <-- if you are using this specific package
 pytest>=7.0
 pytest-django>=4.5
 coverage>=7.2
