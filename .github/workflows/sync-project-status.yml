@@ -1,85 +1,93 @@
 name: Sync Project Status
 
 on:
-    issues:
-        types: [labeled]
+  issues:
+    types: [labeled]
 
 jobs:
-    update-project:
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            issues: write
+  update-project:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      repository-projects: write
 
-        steps:
-            - name: Update project status from label
-              uses: actions/github-script@v7
-              with:
-                  script: |
+    steps:
+      - name: Update project status from label
+        uses: actions/github-script@v7
+        with:
+          script: |
 
-                      const labelMap = {
-                        "backlog": "BACKLOG_OPTION_ID",
-                        "needs discussion": "DISCUSSION_OPTION_ID",
-                        "approved": "APPROVED_OPTION_ID",
-                        "ready": "READY_OPTION_ID",
-                        "in progress": "IN_PROGRESS_OPTION_ID",
-                        "in review": "IN_REVIEW_OPTION_ID",
-                        "done": "DONE_OPTION_ID"
-                      };
+            const labelMap = {
+              "backlog": "BACKLOG_OPTION_ID",
+              "needs discussion": "DISCUSSION_OPTION_ID",
+              "approved": "APPROVED_OPTION_ID",
+              "ready": "READY_OPTION_ID",
+              "in progress": "IN_PROGRESS_OPTION_ID",
+              "in review": "IN_REVIEW_OPTION_ID",
+              "done": "DONE_OPTION_ID"
+            };
 
-                      const label = context.payload.label.name.toLowerCase();
-                      const optionId = labelMap[label];
+            const label = context.payload.label.name.toLowerCase();
+            const optionId = labelMap[label];
 
-                      if (!optionId) return;
+            if (!optionId) return;
 
-                      const issueNodeId = context.payload.issue.node_id;
+            const issueNodeId = context.payload.issue.node_id;
 
-                      const projectId = "PVT_kwHOBeIeKs4AfmUO";
-                      const fieldId = "PVTSSF_lAHOBeIeKs4AfmUOzgU5pCI";
+            const projectId = "PVT_kwHOBeIeKs4AfmUO";
+            const fieldId = "PVTSSF_lAHOBeIeKs4AfmUOzgU5pCI";
 
-                      // find project item
-                      const result = await github.graphql(`
-                        query($issueId: ID!) {
-                          node(id: $issueId) {
-                            ... on Issue {
-                              projectItems(first: 10) {
-                                nodes {
-                                  id
-                                }
-                              }
-                            }
-                          }
+            // find project item
+            const result = await github.graphql(`
+              query($issueId: ID!) {
+                node(id: $issueId) {
+                  ... on Issue {
+                    projectItems(first: 50) {
+                      nodes {
+                        id
+                        project {
+                          id
                         }
-                      `, {
-                        issueId: issueNodeId
-                      });
-
-                      const itemId = result.node.projectItems.nodes[0]?.id;
-
-                      if (!itemId) {
-                        console.log("Issue not in project");
-                        return;
                       }
+                    }
+                  }
+                }
+              }
+            `, {
+              issueId: issueNodeId
+            });
 
-                      // update status field
-                      await github.graphql(`
-                        mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
-                          updateProjectV2ItemFieldValue(
-                            input: {
-                              projectId: $projectId
-                              itemId: $itemId
-                              fieldId: $fieldId
-                              value: { singleSelectOptionId: $optionId }
-                            }
-                          ) {
-                            projectV2Item {
-                              id
-                            }
-                          }
-                        }
-                      `, {
-                        projectId: projectId,
-                        itemId: itemId,
-                        fieldId: fieldId,
-                        optionId: optionId
-                      });
+            const item = result.node.projectItems.nodes.find(
+              (node) => node.project?.id === projectId
+            );
+
+            const itemId = item?.id;
+
+            if (!itemId) {
+              console.log(`Issue not in project ${projectId}`);
+              return;
+            }
+
+            // update status field
+            await github.graphql(`
+              mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                updateProjectV2ItemFieldValue(
+                  input: {
+                    projectId: $projectId
+                    itemId: $itemId
+                    fieldId: $fieldId
+                    value: { singleSelectOptionId: $optionId }
+                  }
+                ) {
+                  projectV2Item {
+                    id
+                  }
+                }
+              }
+            `, {
+              projectId: projectId,
+              itemId: itemId,
+              fieldId: fieldId,
+              optionId: optionId
+            });
