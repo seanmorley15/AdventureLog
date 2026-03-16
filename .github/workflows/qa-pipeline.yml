@@ -25,7 +25,7 @@ jobs:
 
       - name: Run Django tests
         run: |
-          cd backend
+          cd backend/server
           python manage.py test --verbosity=2
         env:
           DJANGO_SETTINGS_MODULE: main.settings
