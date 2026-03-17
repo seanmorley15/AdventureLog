@@ -6,6 +6,11 @@ from django.http import HttpResponse, HttpResponseForbidden
 from django.views.static import serve
 from adventures.utils.file_permissions import checkFilePermission
 
+
+def healthz(request):
+    return HttpResponse('ok', content_type='text/plain')
+
+
 def get_csrf_token(request):
     csrf_token = get_token(request)
     return JsonResponse({'csrfToken': csrf_token})
