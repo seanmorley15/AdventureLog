@@ -19,7 +19,20 @@ def serve_protected_media(request, path):
     if any([path.startswith(protected_path) for protected_path in protected_paths]):
         image_id = path.split('/')[1]
         user = request.user
-        media_type =  path.split('/')[0] + '/'
+
+        # Session auth won't populate request.user for API key requests, so
+        # attempt API key authentication as a fallback.
+        if not user.is_authenticated:
+            from users.authentication import APIKeyAuthentication
+            from rest_framework.exceptions import AuthenticationFailed
+            try:
+                result = APIKeyAuthentication().authenticate(request)
+                if result is not None:
+                    user, _ = result
+            except AuthenticationFailed:
+                return HttpResponseForbidden()
+
+        media_type = path.split('/')[0] + '/'
         if checkFilePermission(image_id, user, media_type):
             if settings.DEBUG:
                 # In debug mode, serve the file directly
