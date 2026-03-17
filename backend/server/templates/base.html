@@ -175,7 +175,7 @@
           `<strong>API Response:</strong> ${data.status} ${data.statusText}<br/><strong>Content:</strong> ${data.responseText}`
         );
       };
-      const susccess_response = (data) => {
+      const success_response = (data) => {
         $(".api-response").html(
           `<strong>API Response:</strong> OK<br/><strong>Content:</strong> ${JSON.stringify(
             data,
@@ -190,7 +190,7 @@
           const form = $("form.ajax-post");
           $.post(form.attr("action"), form.serialize())
             .fail(error_response)
-            .done(susccess_response);
+            .done(success_response);
           return false;
         });
       });
