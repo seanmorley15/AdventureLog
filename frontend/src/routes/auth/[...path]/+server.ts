@@ -43,7 +43,7 @@ async function handleRequest(
 	const path = params.path;
 	let targetUrl = `${endpoint}/auth/${path}`;
 
-	const add_trailing_slash_list = ['disable-password'];
+	const add_trailing_slash_list = ['disable-password', 'mobile-qr'];
 	const add_trailing_slash_prefixes = ['api-keys'];
 
 	// Ensure the path ends with a trailing slash

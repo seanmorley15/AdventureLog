@@ -8,10 +8,14 @@
 	import Shield from '~icons/mdi/shield-account';
 	import Settings from '~icons/mdi/cog';
 	import Logout from '~icons/mdi/logout';
+	import Phone from '~icons/mdi/cellphone';
+
+	import MobileQR from '$lib/components/MobileQR.svelte';
 
 	export let user: any;
 
 	let letter: string = user.first_name?.[0] || user.username?.[0] || '?';
+	let showMobileQR = false;
 
 	// Get display name
 	$: displayName = user.first_name
@@ -53,6 +57,14 @@
 				section: 'secondary'
 			}
 		: null;
+
+	function openMobileQR() {
+		showMobileQR = true;
+	}
+
+	function closeMobileQR() {
+		showMobileQR = false;
+	}
 </script>
 
 <div class="dropdown dropdown-bottom dropdown-end z-[100]">
@@ -142,6 +154,17 @@
 				</li>
 			{/if}
 
+			<!-- Mobile Login -->
+			<li>
+				<button
+					class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
+					on:click={openMobileQR}
+				>
+					<Phone class="w-5 h-5 text-base-content/70" />
+					<span>{$t('navbar.mobile_login', { default: 'Mobile Login' })}</span>
+				</button>
+			</li>
+
 			{#each menuItems.filter((item) => item.section === 'secondary') as item}
 				<li>
 					<button
@@ -171,3 +194,7 @@
 		</form>
 	</ul>
 </div>
+
+{#if showMobileQR}
+	<MobileQR on:close={closeMobileQR} />
+{/if}
