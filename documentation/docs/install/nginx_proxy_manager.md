@@ -46,3 +46,20 @@ networks:
    - **Forward Port**: `80` This is the internal port of the AdventureLog **backend** container so you will not need to change it even if you change the external port.
 
 This will allow you to access AdventureLog using the domain name you specified in the Nginx Proxy Manager configuration.
+
+Given that a 500 Internal error is shown, add the following to the Nginx Proxy Manager proxy hosts.
+
+5. Edit the **frontend** proxy host
+  - **Custom Nginx Configuration**:
+    ```
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    ```
+6. Edit the **backend** proxy host
+  - **Custom Nginx Configuration**:
+    ```
+    proxy_buffer_size 128k;
+    proxy_buffers 4 256k;
+    proxy_busy_buffers_size 256k;
+    ```
