@@ -492,7 +492,8 @@
 								"calendar": "Kalender",
 								"admin_panel": "Administratör",
 								"navigation": "Navigering",
-								"worldtravel": "Världsresor"
+								"worldtravel": "Världsresor",
+								"mobile_login": "Mobil inloggning"
 				},
 				"worldtravel": {
 								"country_list": "Lista över länder",
