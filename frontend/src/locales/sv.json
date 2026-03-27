@@ -434,7 +434,16 @@
 		"export_zip": "Exportera ZIP",
 		"import_failed": "Importen misslyckades",
 		"import_from_file": "Importera från fil",
-		"import_success": "Importen lyckades"
+		"import_success": "Importen lyckades",
+		"duplicate": "Duplicera",
+		"duplicate_location": "Duplicera plats",
+		"location_duplicate_success": "Platsen har duplicerats!",
+		"location_duplicate_error": "Kunde inte duplicera platsen.",
+		"location_actions": "Platsåtgärder",
+		"collection_duplicate_success": "Samlingen har duplicerats! Omdirigerar...",
+		"collection_duplicate_error": "Misslyckades med att duplicera samlingen.",
+		"hide_strava_activities": "Göm Strava-aktiviteter",
+		"show_strava_activities": "Visa Strava-aktiviteter"
 	},
 	"home": {
 		"desc_1": "Upptäck, planera och utforska med lätthet",
@@ -998,7 +1007,9 @@
 		"create_new_lodging": "Inställning",
 		"enter_lodging_name": "Ange logi -namn",
 		"enter_reservation_number": "Ange bokningsnummer",
-		"update_lodging_details": "Uppdatera logiinformation"
+		"update_lodging_details": "Uppdatera logiinformation",
+		"invalid_link": "Ange en giltig webbadress (t.ex. https://example.com).",
+		"save_failed": "Det gick inte att spara boende. \nFörsök igen."
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Anslut ditt Google Maps-konto för att få sökresultat och rekommendationer av hög kvalitet.",

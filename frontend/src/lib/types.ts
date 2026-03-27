@@ -80,6 +80,7 @@ export type Country = {
 	id: number;
 	name: string;
 	country_code: string;
+	subregion: string | null;
 	flag_url: string;
 	capital: string;
 	num_regions: number;

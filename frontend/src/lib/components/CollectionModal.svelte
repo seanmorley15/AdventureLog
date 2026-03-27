@@ -4,6 +4,7 @@
 	import { t } from 'svelte-i18n';
 	import MarkdownEditor from './MarkdownEditor.svelte';
 	import { addToast } from '$lib/toasts';
+	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
 
 	// Icons
@@ -158,7 +159,7 @@
 			collection.end_date = null;
 		}
 
-		const payload = {
+		const payload: any = {
 			name: collection.name,
 			description: collection.description,
 			start_date: collection.start_date,
@@ -167,6 +168,17 @@
 			link: collection.link,
 			primary_image_id: coverImageId
 		};
+
+		// Clean up link: empty/whitespace → null, invalid URL → null
+		if (!payload.link || !payload.link.trim()) {
+			payload.link = null;
+		} else {
+			try {
+				new URL(payload.link);
+			} catch {
+				payload.link = null;
+			}
+		}
 
 		if (collection.id === '') {
 			let res = await fetch('/api/collections', {
@@ -186,7 +198,12 @@
 				dispatch('save', toSlimCollection(collection));
 			} else {
 				console.error(data);
-				addToast('error', $t('collection.error_creating_collection'));
+				// Extract field-level errors from Django response
+				const fieldErrors = Object.entries(data)
+					.filter(([_, v]) => Array.isArray(v))
+					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
+					.join('; ');
+				addToast('error', fieldErrors || $t('collection.error_creating_collection'));
 			}
 		} else {
 			let res = await fetch(`/api/collections/${collection.id}`, {
@@ -205,7 +222,12 @@
 				addToast('success', $t('collection.collection_edit_success'));
 				dispatch('save', toSlimCollection(collection));
 			} else {
-				addToast('error', $t('collection.error_editing_collection'));
+				// Extract field-level errors from Django response
+				const fieldErrors = Object.entries(data)
+					.filter(([_, v]) => Array.isArray(v))
+					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
+					.join('; ');
+				addToast('error', fieldErrors || $t('collection.error_editing_collection'));
 			}
 		}
 	}
@@ -506,11 +528,15 @@
 								/>
 								<button
 									type="button"
-									on:click={() => {
-										navigator.clipboard.writeText(
-											`${window.location.origin}/collections/${collection.id}`
-										);
-										addToast('success', $t('adventures.link_copied'));
+									on:click={async () => {
+										try {
+											await copyToClipboard(
+												`${window.location.origin}/collections/${collection.id}`
+											);
+											addToast('success', $t('adventures.link_copied'));
+										} catch {
+											addToast('error', $t('adventures.copy_failed') || 'Copy failed');
+										}
 									}}
 									class="btn btn-primary gap-2"
 								>

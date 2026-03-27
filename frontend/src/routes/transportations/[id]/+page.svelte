@@ -294,10 +294,10 @@
 
 	$: showLocalTripTime = Boolean(
 		localTravelWindow &&
-			primaryTripTimezone(
-				transportation?.start_timezone ?? null,
-				transportation?.end_timezone ?? null
-			) !== localTimeZone
+		primaryTripTimezone(
+			transportation?.start_timezone ?? null,
+			transportation?.end_timezone ?? null
+		) !== localTimeZone
 	);
 </script>
 

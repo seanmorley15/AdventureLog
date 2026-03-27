@@ -14,9 +14,12 @@
 	import LightbulbOn from '~icons/mdi/lightbulb-on';
 	import WeatherSunset from '~icons/mdi/weather-sunset';
 	import ClipboardList from '~icons/mdi/clipboard-list';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import DotsVertical from '~icons/mdi/dots-vertical';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { getActivityColor, getBasemapUrl, isAllDay } from '$lib';
+	import { addToast } from '$lib/toasts';
+	import { getActivityColor, getBasemapUrl, isAllDay, copyToClipboard } from '$lib';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -126,6 +129,32 @@
 		return measurementSystem === 'imperial' ? totalMeters * 3.28084 : totalMeters;
 	}
 
+	let isDuplicating = false;
+	let isFabMenuOpen = false;
+
+	async function duplicateAdventure() {
+		if (isDuplicating) return;
+		isDuplicating = true;
+		isFabMenuOpen = false;
+		try {
+			const res = await fetch(`/api/locations/${adventure.id}/duplicate/`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' }
+			});
+			if (res.ok) {
+				const newLocation = await res.json();
+				addToast('success', $t('adventures.location_duplicate_success'));
+				goto(`/locations/${newLocation.id}`);
+			} else {
+				addToast('error', $t('adventures.location_duplicate_error'));
+			}
+		} catch (e) {
+			addToast('error', $t('adventures.location_duplicate_error'));
+		} finally {
+			isDuplicating = false;
+		}
+	}
+
 	function closeImageModal() {
 		isImageModalOpen = false;
 	}
@@ -183,12 +212,40 @@
 {#if adventure}
 	{#if data.user?.uuid && adventure.user?.uuid && data.user.uuid === adventure.user.uuid}
 		<div class="fixed bottom-6 right-6 z-50">
-			<button
-				class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
-				on:click={() => (isEditModalOpen = true)}
-			>
-				<ClipboardList class="w-8 h-8" />
-			</button>
+			<div class="dropdown dropdown-top dropdown-end" class:dropdown-open={isFabMenuOpen}>
+				<button
+					class="btn btn-primary btn-circle w-16 h-16 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-110"
+					on:click={() => (isFabMenuOpen = !isFabMenuOpen)}
+				>
+					<DotsVertical class="w-8 h-8" />
+				</button>
+				<ul
+					class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2"
+				>
+					<li>
+						<button
+							on:click={() => {
+								isFabMenuOpen = false;
+								isEditModalOpen = true;
+							}}
+							class="flex items-center gap-2"
+						>
+							<ClipboardList class="w-5 h-5" />
+							{$t('adventures.edit_location')}
+						</button>
+					</li>
+					<li>
+						<button
+							on:click={duplicateAdventure}
+							class="flex items-center gap-2"
+							disabled={isDuplicating}
+						>
+							<ContentCopy class="w-5 h-5" />
+							{isDuplicating ? '...' : $t('adventures.duplicate_location')}
+						</button>
+					</li>
+				</ul>
+			</div>
 		</div>
 	{/if}
 
@@ -648,19 +705,27 @@
 										<div class="flex gap-2">
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={() =>
-													navigator.clipboard.writeText(
-														`${adventure.latitude}, ${adventure.longitude}`
-													)}
+												on:click={async () => {
+													try {
+														await copyToClipboard(`${adventure.latitude}, ${adventure.longitude}`);
+													} catch {
+														addToast('error', $t('adventures.copy_failed'));
+													}
+												}}
 											>
 												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={() =>
-													navigator.clipboard.writeText(
-														`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
-													)}
+												on:click={async () => {
+													try {
+														await copyToClipboard(
+															`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
+														);
+													} catch {
+														addToast('error', $t('adventures.copy_failed'));
+													}
+												}}
 											>
 												🔗 {$t('adventures.copy_link')}
 											</button>

@@ -483,7 +483,16 @@
 		"export_zip": "Exportovať ZIP",
 		"import_failed": "Import zlyhal",
 		"import_from_file": "Importovať zo súboru",
-		"import_success": "Import bol úspešný"
+		"import_success": "Import bol úspešný",
+		"duplicate": "Duplikovať",
+		"duplicate_location": "Duplikovať miesto",
+		"location_duplicate_success": "Miesto bolo úspešne duplikované!",
+		"location_duplicate_error": "Nepodarilo sa duplikovať miesto.",
+		"location_actions": "Akcie miesta",
+		"collection_duplicate_success": "Zbierka bola úspešne zduplikovaná! Presmerovanie...",
+		"collection_duplicate_error": "Nepodarilo sa zduplikovať zbierku.",
+		"hide_strava_activities": "Skryť Strava aktivity",
+		"show_strava_activities": "Zobraziť Strava Activities"
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
@@ -853,7 +862,9 @@
 		"update_lodging_details": "Aktualizovať detaily ubytovania",
 		"create_new_lodging": "Nové ubytovanie",
 		"enter_lodging_name": "Zadajte názov ubytovania",
-		"enter_reservation_number": "Zadajte číslo rezervácie"
+		"enter_reservation_number": "Zadajte číslo rezervácie",
+		"invalid_link": "Zadajte platnú webovú adresu (napr. https://example.com).",
+		"save_failed": "Nepodarilo sa uložiť ubytovanie. \nSkúste to znova."
 	},
 	"search": {
 		"result": "Výsledok",

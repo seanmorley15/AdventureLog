@@ -53,7 +53,7 @@ export default defineConfig({
           priceCurrency: "USD",
           description: "Open-source version available for self-hosting.",
         },
-        softwareVersion: "v0.11.0",
+        softwareVersion: "v0.12.0",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
         screenshot:
@@ -235,7 +235,7 @@ export default defineConfig({
       },
       {
         text: "Troubleshooting",
-        collapsed: false,
+        collapsed: true,
         items: [
           {
             text: "No Images Displaying",
@@ -253,7 +253,7 @@ export default defineConfig({
       },
       {
         text: "Guides",
-        collapsed: false,
+        collapsed: true,
         items: [
           {
             text: "Admin Panel",
@@ -271,11 +271,15 @@ export default defineConfig({
       },
       {
         text: "Changelogs",
-        collapsed: false,
+        collapsed: true,
         items: [
           {
             text: "Development Timeline",
             link: "/docs/changelogs/development_timeline",
+          },
+          {
+            text: "v0.12.0",
+            link: "/docs/changelogs/v0-12-0",
           },
           {
             text: "v0.11.0",

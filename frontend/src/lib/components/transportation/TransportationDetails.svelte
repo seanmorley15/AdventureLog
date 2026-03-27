@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange } from '$lib/dateUtils';
 	import type { Collection, Lodging, Transportation, MoneyValue } from '$lib/types';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
@@ -328,7 +328,7 @@
 		try {
 			// Mock Wikipedia API call - replace with actual implementation
 			const response = await fetch(
-				`/api/generate/desc/?name=${encodeURIComponent(transportation.name)}`
+				`/api/generate/desc/?name=${encodeURIComponent(transportation.name)}&lang=${$locale || 'en'}`
 			);
 			if (response.ok) {
 				const data = await response.json();
@@ -408,9 +408,16 @@
 			payload = normalizeMoneyPayload(payload, 'price', 'price_currency', preferredCurrency);
 		}
 
-		// Remove empty link to avoid URL validation errors
-		if (!payload.link || payload.link.trim() === '') {
-			delete payload.link;
+		// Clean up link: empty/whitespace → null, invalid URL → null
+		if (!payload.link || !payload.link.trim()) {
+			payload.link = null;
+		} else {
+			try {
+				new URL(payload.link);
+			} catch {
+				// Not a valid URL — clear it so Django doesn't reject it
+				payload.link = null;
+			}
 		}
 
 		// If we're editing and the original location had collection, but the form's collection

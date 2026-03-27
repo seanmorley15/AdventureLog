@@ -157,7 +157,13 @@
 		goto(`/worldtravel/${countryCode}`);
 	}
 
-	worldSubregions = [...new Set(allCountries.map((country) => country.subregion))];
+	worldSubregions = [
+		...new Set(
+			allCountries
+				.map((country) => country.subregion)
+				.filter((subregion): subregion is string => subregion !== null)
+		)
+	];
 	worldSubregions = worldSubregions.filter((subregion) => subregion !== '');
 	console.log(worldSubregions);
 

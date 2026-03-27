@@ -8,12 +8,13 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework import status
 from django.http import HttpResponse
 from django.conf import settings
+from django.core.files.base import ContentFile
 import io
 import os
 import json
 import zipfile
 import tempfile
-from adventures.models import Collection, Location, Transportation, Note, Checklist, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
+from adventures.models import Collection, Location, Transportation, Note, Checklist, ChecklistItem, CollectionInvite, ContentImage, CollectionItineraryItem, Lodging, CollectionItineraryDay, ContentAttachment, Category
 from adventures.permissions import CollectionShared
 from adventures.serializers import CollectionSerializer, CollectionInviteSerializer, UltraSlimCollectionSerializer, CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
 from users.models import CustomUser as User
@@ -790,6 +791,241 @@ class CollectionViewSet(viewsets.ModelViewSet):
 
             serializer = self.get_serializer(new_collection)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    @action(detail=True, methods=['post'])
+    def duplicate(self, request, pk=None):
+        """Create a duplicate of an existing collection.
+
+        Copies collection metadata and linked content:
+        - locations (linked, not cloned)
+        - transportation, notes, checklists (with items), lodging
+        - itinerary days and itinerary items
+        Shared users are not copied and the new collection is private.
+        """
+        original = self.get_object()
+
+        # Only the owner can duplicate
+        if original.user != request.user:
+            return Response(
+                {"error": "You do not have permission to duplicate this collection."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        try:
+            with transaction.atomic():
+                new_collection = Collection.objects.create(
+                    user=request.user,
+                    name=f"Copy of {original.name}",
+                    description=original.description,
+                    link=original.link,
+                    is_public=False,
+                    is_archived=False,
+                    start_date=original.start_date,
+                    end_date=original.end_date,
+                )
+
+                # Link existing locations to the new collection
+                linked_locations = list(original.locations.all())
+                if linked_locations:
+                    new_collection.locations.set(linked_locations)
+
+                # Duplicate primary image if it exists so permissions align with the new collection
+                if original.primary_image:
+                    original_primary = original.primary_image
+                    if original_primary.image:
+                        try:
+                            original_primary.image.open('rb')
+                            image_bytes = original_primary.image.read()
+                        finally:
+                            try:
+                                original_primary.image.close()
+                            except Exception:
+                                pass
+
+                        file_name = (original_primary.image.name or '').split('/')[-1] or 'image.webp'
+                        new_primary = ContentImage(
+                            user=request.user,
+                            image=ContentFile(image_bytes, name=file_name),
+                            immich_id=None,
+                            is_primary=original_primary.is_primary,
+                        )
+                    else:
+                        new_primary = ContentImage(
+                            user=request.user,
+                            immich_id=original_primary.immich_id,
+                            is_primary=original_primary.is_primary,
+                        )
+
+                    new_primary.content_object = new_collection
+                    new_primary.save()
+                    new_collection.primary_image = new_primary
+                    new_collection.save(update_fields=['primary_image'])
+
+                def _copy_generic_media(source_obj, target_obj):
+                    # Images
+                    for img in source_obj.images.all():
+                        if img.image:
+                            try:
+                                img.image.open('rb')
+                                image_bytes = img.image.read()
+                            finally:
+                                try:
+                                    img.image.close()
+                                except Exception:
+                                    pass
+
+                            file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
+                            media = ContentImage(
+                                user=request.user,
+                                image=ContentFile(image_bytes, name=file_name),
+                                immich_id=None,
+                                is_primary=img.is_primary,
+                            )
+                        else:
+                            media = ContentImage(
+                                user=request.user,
+                                immich_id=img.immich_id,
+                                is_primary=img.is_primary,
+                            )
+
+                        media.content_object = target_obj
+                        media.save()
+
+                    # Attachments
+                    for attachment in source_obj.attachments.all():
+                        try:
+                            attachment.file.open('rb')
+                            file_bytes = attachment.file.read()
+                        finally:
+                            try:
+                                attachment.file.close()
+                            except Exception:
+                                pass
+
+                        file_name = (attachment.file.name or '').split('/')[-1] or 'attachment'
+                        new_attachment = ContentAttachment(
+                            user=request.user,
+                            file=ContentFile(file_bytes, name=file_name),
+                            name=attachment.name,
+                        )
+                        new_attachment.content_object = target_obj
+                        new_attachment.save()
+
+                # Copy FK-based related content and track ID mapping for itinerary relinks
+                object_id_map = {}
+
+                for item in Transportation.objects.filter(collection=original):
+                    new_item = Transportation.objects.create(
+                        user=request.user,
+                        collection=new_collection,
+                        type=item.type,
+                        name=item.name,
+                        description=item.description,
+                        rating=item.rating,
+                        price=item.price,
+                        link=item.link,
+                        date=item.date,
+                        end_date=item.end_date,
+                        start_timezone=item.start_timezone,
+                        end_timezone=item.end_timezone,
+                        flight_number=item.flight_number,
+                        from_location=item.from_location,
+                        origin_latitude=item.origin_latitude,
+                        origin_longitude=item.origin_longitude,
+                        destination_latitude=item.destination_latitude,
+                        destination_longitude=item.destination_longitude,
+                        start_code=item.start_code,
+                        end_code=item.end_code,
+                        to_location=item.to_location,
+                        is_public=item.is_public,
+                    )
+                    object_id_map[item.id] = new_item.id
+                    _copy_generic_media(item, new_item)
+
+                for item in Note.objects.filter(collection=original):
+                    new_item = Note.objects.create(
+                        user=request.user,
+                        collection=new_collection,
+                        name=item.name,
+                        content=item.content,
+                        links=item.links,
+                        date=item.date,
+                        is_public=item.is_public,
+                    )
+                    object_id_map[item.id] = new_item.id
+                    _copy_generic_media(item, new_item)
+
+                for item in Lodging.objects.filter(collection=original):
+                    new_item = Lodging.objects.create(
+                        user=request.user,
+                        collection=new_collection,
+                        name=item.name,
+                        type=item.type,
+                        description=item.description,
+                        rating=item.rating,
+                        link=item.link,
+                        check_in=item.check_in,
+                        check_out=item.check_out,
+                        timezone=item.timezone,
+                        reservation_number=item.reservation_number,
+                        price=item.price,
+                        latitude=item.latitude,
+                        longitude=item.longitude,
+                        location=item.location,
+                        is_public=item.is_public,
+                    )
+                    object_id_map[item.id] = new_item.id
+                    _copy_generic_media(item, new_item)
+
+                for checklist in Checklist.objects.filter(collection=original):
+                    new_checklist = Checklist.objects.create(
+                        user=request.user,
+                        collection=new_collection,
+                        name=checklist.name,
+                        date=checklist.date,
+                        is_public=checklist.is_public,
+                    )
+                    object_id_map[checklist.id] = new_checklist.id
+
+                    for checklist_item in checklist.checklistitem_set.all():
+                        ChecklistItem.objects.create(
+                            user=request.user,
+                            checklist=new_checklist,
+                            name=checklist_item.name,
+                            is_checked=checklist_item.is_checked,
+                        )
+
+                # Copy itinerary day metadata
+                for day in CollectionItineraryDay.objects.filter(collection=original):
+                    CollectionItineraryDay.objects.create(
+                        collection=new_collection,
+                        date=day.date,
+                        name=day.name,
+                        description=day.description,
+                    )
+
+                # Copy itinerary items and relink to duplicated FK-based content where applicable
+                for item in CollectionItineraryItem.objects.filter(collection=original):
+                    CollectionItineraryItem.objects.create(
+                        collection=new_collection,
+                        content_type=item.content_type,
+                        object_id=object_id_map.get(item.object_id, item.object_id),
+                        date=item.date,
+                        is_global=item.is_global,
+                        order=item.order,
+                    )
+
+            serializer = self.get_serializer(new_collection)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception:
+            import logging
+            logging.getLogger(__name__).exception("Failed to duplicate collection %s", pk)
+            return Response(
+                {"error": "An error occurred while duplicating the collection."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
     def perform_create(self, serializer):
         # This is ok because you cannot share a collection when creating it

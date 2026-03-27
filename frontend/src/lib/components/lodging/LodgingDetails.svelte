@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { t } from 'svelte-i18n';
+	import { t, locale } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange } from '$lib/dateUtils';
 	import type { Collection, Lodging, MoneyValue } from '$lib/types';
 	import LocationSearchMap from '../shared/LocationSearchMap.svelte';
@@ -20,9 +20,11 @@
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { isAllDay } from '$lib';
+	import { addToast } from '$lib/toasts';
 
 	const dispatch = createEventDispatcher();
 
+	let isSaving = false;
 	let isReverseGeocoding = false;
 
 	let initialSelection: {
@@ -249,7 +251,9 @@
 
 		try {
 			// Mock Wikipedia API call - replace with actual implementation
-			const response = await fetch(`/api/generate/desc/?name=${encodeURIComponent(lodging.name)}`);
+			const response = await fetch(
+				`/api/generate/desc/?name=${encodeURIComponent(lodging.name)}&lang=${$locale || 'en'}`
+			);
 			if (response.ok) {
 				const data = await response.json();
 				lodging.description = data.extract || '';
@@ -267,6 +271,9 @@
 		if (!lodging.name || !lodging.type) {
 			return;
 		}
+
+		// Prevent double-clicks while saving
+		if (isSaving) return;
 
 		// Ensure timezone is only persisted for timed stays
 		lodging.timezone = allDay ? null : selectedTimezone;
@@ -297,47 +304,83 @@
 			payload = normalizeMoneyPayload(payload, 'price', 'price_currency', preferredCurrency);
 		}
 
-		// Remove empty link to avoid URL validation errors
-		if (!payload.link || payload.link.trim() === '') {
-			delete payload.link;
+		// Clean up link: empty/whitespace → null, invalid URL → null
+		if (!payload.link || !payload.link.trim()) {
+			payload.link = null;
+		} else {
+			try {
+				new URL(payload.link);
+			} catch {
+				// Not a valid URL — clear it so Django doesn't reject it
+				payload.link = null;
+			}
 		}
 
-		// If we're editing and the original location had collection, but the form's collection
-		// is empty (i.e. user didn't modify collection), omit collection from payload so the
-		// server doesn't clear them unintentionally.
-		if (lodgingToEdit && lodgingToEdit.id) {
-			if (
-				(!payload.collection || payload.collection.length === 0) &&
-				lodgingToEdit.collection &&
-				lodgingToEdit.collection.length > 0
-			) {
-				delete payload.collection;
+		isSaving = true;
+
+		try {
+			// If we're editing and the original location had collection, but the form's collection
+			// is empty (i.e. user didn't modify collection), omit collection from payload so the
+			// server doesn't clear them unintentionally.
+			if (lodgingToEdit && lodgingToEdit.id) {
+				if (
+					(!payload.collection || payload.collection.length === 0) &&
+					lodgingToEdit.collection &&
+					lodgingToEdit.collection.length > 0
+				) {
+					delete payload.collection;
+				}
+
+				let res = await fetch(`/api/lodging/${lodgingToEdit.id}`, {
+					method: 'PATCH',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(payload)
+				});
+
+				if (!res.ok) {
+					const errorData = await res.json().catch(() => null);
+					const errorMsg = errorData
+						? Object.values(errorData).flat().join(', ')
+						: `Server error (${res.status})`;
+					addToast('error', errorMsg);
+					return;
+				}
+
+				let updatedLocation = await res.json();
+				lodging = updatedLocation;
+			} else {
+				let res = await fetch(`/api/lodging`, {
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					body: JSON.stringify(payload)
+				});
+
+				if (!res.ok) {
+					const errorData = await res.json().catch(() => null);
+					const errorMsg = errorData
+						? Object.values(errorData).flat().join(', ')
+						: `Server error (${res.status})`;
+					addToast('error', errorMsg);
+					return;
+				}
+
+				let newLodging = await res.json();
+				lodging = newLodging;
 			}
 
-			let res = await fetch(`/api/lodging/${lodgingToEdit.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
+			dispatch('save', {
+				...lodging
 			});
-			let updatedLocation = await res.json();
-			lodging = updatedLocation;
-		} else {
-			let res = await fetch(`/api/lodging`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
-			});
-			let newLodging = await res.json();
-			lodging = newLodging;
+		} catch (err) {
+			console.error('Error saving lodging:', err);
+			addToast('error', $t('lodging.save_failed') || 'Failed to save lodging. Please try again.');
+		} finally {
+			isSaving = false;
 		}
-
-		dispatch('save', {
-			...lodging
-		});
 	}
 
 	function handleBack() {
@@ -753,10 +796,13 @@
 		<div class="flex gap-3 justify-end pt-4">
 			<button
 				class="btn btn-primary gap-2"
-				disabled={!lodging.name || !lodging.type || isReverseGeocoding}
+				disabled={!lodging.name || !lodging.type || isReverseGeocoding || isSaving}
 				on:click={handleSave}
 			>
-				{#if isReverseGeocoding}
+				{#if isSaving}
+					<span class="loading loading-spinner loading-sm"></span>
+					{$t('adventures.saving') || 'Saving...'}
+				{:else if isReverseGeocoding}
 					<span class="loading loading-spinner loading-sm"></span>
 					{$t('adventures.processing')}...
 				{:else}

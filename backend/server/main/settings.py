@@ -294,6 +294,24 @@ else:
 # EMAIL_HOST_PASSWORD = ''
 # DEFAULT_FROM_EMAIL = 'mail@mail.user.com'
 
+# ---------------------------------------------------------------------------
+# Account Rate Limits
+# ---------------------------------------------------------------------------
+# Configure rate limits for allauth authentication actions to prevent abuse
+# Format: "action": "count/period/scope"
+# Examples: "5/m/user" = 5 per minute per user, "20/m/ip" = 20 per minute per IP
+ACCOUNT_RATE_LIMITS = {
+    "change_password": "5/m/user",           # 5 password changes per minute per user
+    "change_phone": "1/m/user",              # 1 phone change per minute per user
+    "manage_email": "10/m/user",             # 10 email management actions per minute per user
+    "reset_password": "20/m/ip,5/m/key",     # 20 per minute per IP, 5 per minute per email
+    "reauthenticate": "10/m/user",           # 10 reauthentication attempts per minute per user
+    "reset_password_from_key": "20/m/ip",    # 20 password resets per minute per IP
+    "signup": "20/m/ip",                     # 20 signups per minute per IP (prevents mass registration)
+    "login": "30/m/ip",                      # 30 login attempts per minute per IP
+    "login_failed": "10/m/ip,5/5m/key",      # 10 failed logins per minute per IP, 5 per 5 min per user
+    "confirm_email": "1/3m/key",             # 1 email confirmation per 3 minutes per email
+}
 
 # ---------------------------------------------------------------------------
 # Django REST Framework
@@ -303,6 +321,13 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.SessionAuthentication',
     ),
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'user': '1000/day',
+        'image_proxy': '60/minute',
+    },
 }
 
 if DEBUG:
@@ -361,10 +386,10 @@ PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 
 # Major release version of AdventureLog, not including the patch version date.
-ADVENTURELOG_RELEASE_VERSION = 'v0.11.0'
+ADVENTURELOG_RELEASE_VERSION = 'v0.12.0'
 
 # https://github.com/dr5hn/countries-states-cities-database/tags
-COUNTRY_REGION_JSON_VERSION = 'v3.0'
+COUNTRY_REGION_JSON_VERSION = 'v3.1'
 
 # External service keys (do not hardcode secrets)
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')

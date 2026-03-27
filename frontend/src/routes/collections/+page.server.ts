@@ -80,7 +80,6 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 export const actions: Actions = {
-	
 	restoreData: async (event) => {
 		if (!event.locals.user) {
 			return redirect(302, '/');

@@ -20,6 +20,7 @@
 	register('ja', () => import('../locales/ja.json'));
 	register('ar', () => import('../locales/ar.json'));
 	register('pt-br', () => import('../locales/pt-br.json'));
+	register('ro', () => import('../locales/ro.json'));
 	register('sk', () => import('../locales/sk.json'));
 	register('tr', () => import('../locales/tr.json'));
 	register('uk', () => import('../locales/uk.json'));
@@ -41,6 +42,7 @@
 		'ja',
 		'ar',
 		'pt-br',
+		'ro',
 		'sk',
 		'tr',
 		'uk',
@@ -91,9 +93,18 @@
 </svelte:head>
 
 <style>
-	/* Prevent unwanted horizontal scroll caused by positioned dropdowns or transformed ancestors on small screens */
-	:global(html),
-	:global(body) {
+	/* Prevent unwanted horizontal scroll and ensure single scrollbar */
+	:global(html) {
 		overflow-x: hidden;
+		overflow-y: auto;
+	}
+
+	:global(body) {
+		overflow: hidden;
+	}
+
+	/* Ensure slot content doesn't create nested scrollbars */
+	:global(body > div) {
+		overflow: visible;
 	}
 </style>

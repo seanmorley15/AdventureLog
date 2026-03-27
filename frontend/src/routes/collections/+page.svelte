@@ -191,6 +191,21 @@
 		isShowingCollectionModal = false;
 	}
 
+	function duplicateCollectionInList(event: CustomEvent<SlimCollection | Collection>) {
+		const duplicatedCollection = event.detail as SlimCollection;
+
+		collections = [
+			duplicatedCollection,
+			...collections.filter((collection) => collection.id !== duplicatedCollection.id)
+		];
+
+		archivedCollections = archivedCollections.filter(
+			(collection) => collection.id !== duplicatedCollection.id
+		);
+
+		activeView = 'owned';
+	}
+
 	async function editCollection(event: CustomEvent<SlimCollection>) {
 		const slim = event.detail;
 		try {
@@ -574,7 +589,7 @@
 				{:else}
 					<!-- Collections Grid -->
 					<div
-						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+						class="grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6"
 					>
 						{#each currentCollections as collection (collection.id)}
 							<CollectionCard
@@ -584,6 +599,7 @@
 								on:edit={editCollection}
 								on:archive={archiveCollection}
 								on:unarchive={unarchiveCollection}
+								on:duplicate={duplicateCollectionInList}
 								user={data.user}
 								on:leave={(e) => {
 									collectionIdToLeave = e.detail;

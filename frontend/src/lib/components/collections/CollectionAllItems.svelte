@@ -128,6 +128,30 @@
 		// Bubble up so parent can open edit modals
 		dispatch('openEdit', { type, item: updated });
 	}
+
+	function handleLocationDuplicate(detail: any) {
+		if (!detail || !detail.id) return;
+
+		const collectionId = collection?.id ? String(collection.id) : null;
+		const duplicated = { ...detail };
+
+		if (collectionId) {
+			const existingCollections = Array.isArray(duplicated.collections)
+				? duplicated.collections.map((id: string) => String(id))
+				: [];
+			if (!existingCollections.includes(collectionId)) {
+				duplicated.collections = [...existingCollections, collectionId];
+			}
+		}
+
+		collection = {
+			...collection,
+			locations: [
+				duplicated,
+				...(collection.locations || []).filter((loc) => String(loc.id) !== String(duplicated.id))
+			]
+		};
+	}
 </script>
 
 <!-- Show each section as its own card so transportations and others
@@ -177,6 +201,7 @@
 							{collection}
 							on:delete={(e) => handleItemDelete('locations', e.detail)}
 							on:edit={(e) => handleItemEdit('locations', e.detail)}
+							on:duplicate={(e) => handleLocationDuplicate(e.detail)}
 						/>
 					{/each}
 				</div>
