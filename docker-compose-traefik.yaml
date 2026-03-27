@@ -43,7 +43,14 @@ services:
       - "traefik.http.routers.adventurelogweb.tls=true"
       - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
@@ -71,6 +78,12 @@ services:
       - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt"
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "python3", "/code/healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
 volumes:
   postgres-data:

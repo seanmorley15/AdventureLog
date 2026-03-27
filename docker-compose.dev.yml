@@ -12,11 +12,18 @@ services:
     ports:
       - "${FRONTEND_PORT:-8015}:3000"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     volumes:
       - ./frontend:/app
       - pnpm_store:/pnpm-store
     command: sh -c "mkdir -p /pnpm-store && chown -R node:node /pnpm-store && su node -c 'pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile && pnpm exec vite dev --host 0.0.0.0 --port 3000 --strictPort'"
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.mjs"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   db:
     image: postgis/postgis:16-3.5
@@ -52,6 +59,12 @@ services:
         python manage.py createsuperuser --noinput --username \"$$DJANGO_SUPERUSER_USERNAME\" --email \"$$DJANGO_SUPERUSER_EMAIL\" || true;
       fi;
       python manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test: ["CMD", "python3", "/code/healthcheck.py"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
 volumes:
   postgres_data:
