@@ -41,7 +41,7 @@
 	"type": "module",
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
-		"dompurify": "^3.2.5",
+		"dompurify": "^3.3.2",
 		"emoji-picker-element": "^1.26.3",
 		"gsap": "^3.12.7",
 		"luxon": "^3.6.1",
