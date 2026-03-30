@@ -492,7 +492,8 @@
 								"calendar": "Kalender",
 								"admin_panel": "Administration",
 								"navigation": "Navigation",
-								"worldtravel": "Weltreisen"
+								"worldtravel": "Weltreisen",
+								"mobile_login": "Mobile Anmeldung"
 				},
 				"auth": {
 								"confirm_password": "Passwort bestätigen",
