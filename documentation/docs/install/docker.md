@@ -62,6 +62,7 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 | `FRONTEND_URL`          | Yes      | URL to the **frontend**, used for email generation.                                | `http://localhost:8015`                       |
 | `BACKEND_PORT`          | Yes      | Port that the backend will run on inside Docker.                                   | `8016`                                        |
 | `DEBUG`                 | No       | Should be `False` in production.                                                   | `False`                                       |
+| `ENABLE_RATE_LIMITS`    | No       | Enable rate limits on the backend. Should be `True` in production.                 | `True`                                        |
 
 ## Optional Configuration
 

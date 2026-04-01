@@ -272,6 +272,10 @@ SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
 SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-link by email
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 
+# Enable or disable app-level rate limiting/throttling globally.
+# Defaults to disabled for local/dev convenience.
+ENABLE_RATE_LIMITS = getenv('ENABLE_RATE_LIMITS', 'false').lower() == 'true'
+
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
 if getenv('EMAIL_BACKEND', 'console') == 'console':
@@ -312,7 +316,7 @@ ACCOUNT_RATE_LIMITS = {
     "login": "30/m/ip",                      # 30 login attempts per minute per IP
     "login_failed": "10/m/ip,5/5m/key",      # 10 failed logins per minute per IP, 5 per 5 min per user
     "confirm_email": "1/3m/key",             # 1 email confirmation per 3 minutes per email
-}
+} if ENABLE_RATE_LIMITS else {}
 
 # ---------------------------------------------------------------------------
 # Django REST Framework
@@ -325,11 +329,11 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'rest_framework.schemas.coreapi.AutoSchema',
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
-    ],
+    ] if ENABLE_RATE_LIMITS else [],
     'DEFAULT_THROTTLE_RATES': {
-        'user': '1000/day',
-        'image_proxy': '60/minute',
-    },
+        'user': '100000/day',
+        'image_proxy': '1000/minute',
+    } if ENABLE_RATE_LIMITS else {},
 }
 
 if DEBUG:
