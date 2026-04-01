@@ -88,7 +88,7 @@
 
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<ul
-		tabindex="0"
+		tabindex="-1"
 		class="dropdown-content z-[100] menu p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl w-72 mt-2"
 	>
 		<!-- User Info Header -->

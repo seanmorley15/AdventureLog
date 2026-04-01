@@ -133,7 +133,7 @@
 			</div>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<ul
-				tabindex="0"
+				tabindex="-1"
 				class="menu dropdown-content mt-3 z-[999] p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl gap-2 w-80 max-h-[80vh] overflow-y-auto"
 			>
 				{#if data.user}
@@ -276,7 +276,7 @@
 			</div>
 			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 			<ul
-				tabindex="0"
+				tabindex="-1"
 				class="dropdown-content bg-base-100 border border-base-300 shadow-2xl z-[999] menu p-4 rounded-2xl w-80"
 			>
 				<!-- Quick Actions -->

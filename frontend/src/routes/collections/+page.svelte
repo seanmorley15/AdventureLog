@@ -797,6 +797,7 @@
 					<Plus class="w-8 h-8" />
 				</div>
 				<ul
+					tabindex="-1"
 					class="dropdown-content z-[1] menu p-4 shadow-2xl bg-base-100 rounded-2xl w-64 border border-base-300"
 				>
 					<div class="text-center mb-4">

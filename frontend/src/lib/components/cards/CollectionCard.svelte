@@ -336,6 +336,7 @@
 								<DotsHorizontal class="w-5 h-5" />
 							</button>
 							<ul
+								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
 							>
 								{#if type != 'viewonly'}
@@ -437,6 +438,7 @@
 								<DotsHorizontal class="w-5 h-5" />
 							</button>
 							<ul
+								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
 							>
 								<li>

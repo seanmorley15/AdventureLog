@@ -1967,6 +1967,7 @@
 										<Plus class="w-5 h-5" />
 									</button>
 									<ul
+										tabindex="-1"
 										class="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-56"
 										role="menu"
 									>

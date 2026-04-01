@@ -220,6 +220,7 @@
 					<DotsVertical class="w-8 h-8" />
 				</button>
 				<ul
+					tabindex="-1"
 					class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2"
 				>
 					<li>

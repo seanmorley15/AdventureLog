@@ -127,7 +127,7 @@
 		</svg>
 	</button>
 
-	<div class="dropdown-content z-50 w-full">
+	<div tabindex="-1" class="dropdown-content z-50 w-full">
 		<div class="card border border-base-300 bg-base-100 shadow-xl w-80 max-w-full">
 			<div class="p-3 space-y-3">
 				<label class="input input-bordered flex items-center gap-2">

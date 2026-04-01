@@ -42,6 +42,7 @@
 	</div>
 	{#if basemapOptions?.length}
 		<div
+			tabindex="-1"
 			class="dropdown-content z-20 shadow-lg bg-base-200 rounded-box w-54 max-h-80 overflow-y-auto overflow-x-hidden p-3"
 			role="menu"
 		>

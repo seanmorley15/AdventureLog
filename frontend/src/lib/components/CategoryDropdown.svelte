@@ -342,6 +342,7 @@
 		</div>
 
 		<div
+			tabindex="-1"
 			class="dropdown-content z-[1] w-full mt-1 bg-base-100 rounded-box shadow-xl border border-base-300 max-h-[28rem] overflow-y-auto hidden sm:block"
 		>
 			<div class="p-4 border-b border-base-300 space-y-3">

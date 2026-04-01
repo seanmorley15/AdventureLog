@@ -164,7 +164,7 @@
 						</div>
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 						<ul
-							tabindex="0"
+							tabindex="-1"
 							class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
 						>
 							<li>
