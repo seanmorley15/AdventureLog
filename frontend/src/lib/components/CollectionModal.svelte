@@ -479,7 +479,7 @@
 											/>
 											<div
 												class="absolute inset-0 bg-gradient-to-t from-base-300/60 to-transparent opacity-0 group-hover:opacity-100 transition"
-											/>
+											></div>
 											{#if coverImageId === image.id}
 												<div class="absolute top-2 left-2 badge badge-primary gap-2 shadow">
 													{$t('collection.cover') ?? 'Cover'}

@@ -399,12 +399,16 @@
 				<!-- Location Selector -->
 				{#if locationsWithCoords.length > 0}
 					<div class="form-control">
-						<label class="label">
+						<label class="label" for="search-around-location">
 							<span class="label-text font-semibold"
 								>{$t('recomendations.search_around_location')}</span
 							>
 						</label>
-						<select class="select select-bordered w-full" bind:value={selectedLocationId}>
+						<select
+							id="search-around-location"
+							class="select select-bordered w-full"
+							bind:value={selectedLocationId}
+						>
 							<option value={null}>{$t('recomendations.use_search_instead')}...</option>
 							{#each locationsWithCoords as location}
 								<option value={location.id}>{location.name}</option>
@@ -415,10 +419,11 @@
 
 				<!-- Search Input -->
 				<div class="form-control">
-					<label class="label">
+					<label class="label" for="search-by-address">
 						<span class="label-text font-semibold">{$t('recomendations.search_by_address')}</span>
 					</label>
 					<input
+						id="search-by-address"
 						type="text"
 						placeholder={$t('adventures.search_placeholder')}
 						class="input input-bordered w-full"
@@ -430,10 +435,14 @@
 
 				<!-- Category Selector -->
 				<div class="form-control">
-					<label class="label">
+					<label class="label" for="search-category">
 						<span class="label-text font-semibold">{$t('adventures.category')}</span>
 					</label>
-					<select class="select select-bordered w-full" bind:value={selectedCategory}>
+					<select
+						id="search-category"
+						class="select select-bordered w-full"
+						bind:value={selectedCategory}
+					>
 						<option value="tourism">🏛️ {$t('recomendations.tourism')}</option>
 						<option value="lodging">🏨 {$t('recomendations.lodging')}</option>
 						<option value="food">🍴 {$t('recomendations.food')}</option>
@@ -442,12 +451,12 @@
 
 				<!-- Radius Selector -->
 				<div class="form-control">
-					<label class="label">
+					<label class="label" for="search-radius">
 						<span class="label-text font-semibold"
 							>{$t('recomendations.search_radius_label')} {radiusDisplay}</span
 						>
 					</label>
-					<select class="select select-bordered w-full" bind:value={radiusValue}>
+					<select id="search-radius" class="select select-bordered w-full" bind:value={radiusValue}>
 						{#each radiusOptions as option}
 							<option value={option.value}>{option.label}</option>
 						{/each}
@@ -477,10 +486,14 @@
 				<div class="divider">{$t('adventures.filter')}</div>
 				<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
 					<div class="form-control">
-						<label class="label">
+						<label class="label" for="minimum-rating">
 							<span class="label-text">{$t('recomendations.minimum_rating')}</span>
 						</label>
-						<select class="select select-bordered select-sm" bind:value={minRating}>
+						<select
+							id="minimum-rating"
+							class="select select-bordered select-sm"
+							bind:value={minRating}
+						>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={3}>3+ ⭐</option>
 							<option value={3.5}>3.5+ ⭐</option>
@@ -490,11 +503,14 @@
 					</div>
 
 					<div class="form-control">
-						<!-- svelte-ignore a11y-label-has-associated-control -->
-						<label class="label">
+						<label class="label" for="minimum-reviews">
 							<span class="label-text">{$t('recomendations.minimum_reviews')}</span>
 						</label>
-						<select class="select select-bordered select-sm" bind:value={minReviews}>
+						<select
+							id="minimum-reviews"
+							class="select select-bordered select-sm"
+							bind:value={minReviews}
+						>
 							<option value={0}>{$t('recomendations.any')}</option>
 							<option value={10}>10+</option>
 							<option value={50}>50+</option>

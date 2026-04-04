@@ -949,7 +949,10 @@
 											>
 										</div>
 										<button
+											type="button"
 											class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
+											aria-label={$t('about.close')}
+											title={$t('about.close')}
 											on:click={() => {
 												newlyCreatedKey = null;
 												keyCopied = false;

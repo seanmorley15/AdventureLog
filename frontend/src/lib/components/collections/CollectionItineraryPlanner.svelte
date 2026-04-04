@@ -1936,7 +1936,7 @@
 											saveDayMetadata(day.date, day.dayMetadata?.name || null, newDesc);
 										}
 									}}
-								/>
+								></textarea>
 							{:else if day.dayMetadata?.description}
 								<p class="text-sm leading-relaxed opacity-80 whitespace-pre-wrap px-2 py-1">
 									{day.dayMetadata.description}

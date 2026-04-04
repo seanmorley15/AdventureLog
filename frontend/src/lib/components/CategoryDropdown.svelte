@@ -168,7 +168,13 @@
 			<div class="flex-shrink-0 bg-base-100 border-b border-base-300 p-4">
 				<div class="flex items-center justify-between">
 					<h2 class="text-lg font-semibold">{$t('categories.select_category')}</h2>
-					<button type="button" class="btn btn-ghost btn-sm btn-circle" on:click={closeDropdown}>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-circle"
+						aria-label={$t('about.close')}
+						title={$t('about.close')}
+						on:click={closeDropdown}
+					>
 						<svg
 							class="w-5 h-5"
 							fill="none"
