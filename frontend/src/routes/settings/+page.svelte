@@ -924,9 +924,7 @@
 
 							<!-- Newly created key banner -->
 							{#if newlyCreatedKey}
-								<div
-									class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden"
-								>
+								<div class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden">
 									<!-- Header -->
 									<div
 										class="flex items-center justify-between px-5 py-3 bg-warning/10 border-b border-warning/20"
@@ -1043,9 +1041,11 @@
 													{key.key_prefix}…
 												</p>
 												<p class="text-xs text-base-content/50 mt-0.5">
-													{$t('api_keys.created')} {new Date(key.created_at).toLocaleDateString()}
+													{$t('api_keys.created')}
+													{new Date(key.created_at).toLocaleDateString()}
 													{#if key.last_used_at}
-														· {$t('api_keys.last_used')} {new Date(key.last_used_at).toLocaleDateString()}
+														· {$t('api_keys.last_used')}
+														{new Date(key.last_used_at).toLocaleDateString()}
 													{:else}
 														· {$t('api_keys.never_used')}
 													{/if}
