@@ -1163,6 +1163,7 @@
 		"title": "API 키",
 		"copy_error": "키를 복사하는 중에 오류가 발생했습니다.",
 		"usage_middle": "헤더 또는 다음과 같이",
-		"usage_prefix": "다음에서 이 키를 사용하세요."
+		"usage_prefix": "다음에서 이 키를 사용하세요.",
+		"delete_confirm": "이 모바일 API 키를 삭제하시겠습니까?"
 	}
 }

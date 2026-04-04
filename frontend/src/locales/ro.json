@@ -1163,6 +1163,7 @@
 		"title": "Chei API",
 		"copy_error": "Eroare la copierea cheii.",
 		"usage_middle": "antet sau ca",
-		"usage_prefix": "Folosiți această cheie în"
+		"usage_prefix": "Folosiți această cheie în",
+		"delete_confirm": "Sigur doriți să ștergeți această cheie API mobilă?"
 	}
 }

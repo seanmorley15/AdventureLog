@@ -1163,6 +1163,7 @@
 		"title": "API 密钥",
 		"copy_error": "复制密钥时出错。",
 		"usage_middle": "标头或作为",
-		"usage_prefix": "在中使用该键"
+		"usage_prefix": "在中使用该键",
+		"delete_confirm": "您确定要删除此移动 API 密钥吗？"
 	}
 }

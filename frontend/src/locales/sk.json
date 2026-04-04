@@ -1163,6 +1163,7 @@
 		"title": "API kľúče",
 		"copy_error": "Chyba pri kopírovaní kľúča.",
 		"usage_middle": "hlavička alebo ako",
-		"usage_prefix": "Použite tento kľúč v"
+		"usage_prefix": "Použite tento kľúč v",
+		"delete_confirm": "Naozaj chcete odstrániť tento kľúč rozhrania API pre mobilné zariadenia?"
 	}
 }

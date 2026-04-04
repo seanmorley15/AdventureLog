@@ -1163,6 +1163,7 @@
 		"title": "API-nøkler",
 		"copy_error": "Feil ved kopiering av nøkkel.",
 		"usage_middle": "header eller as",
-		"usage_prefix": "Bruk denne tasten i"
+		"usage_prefix": "Bruk denne tasten i",
+		"delete_confirm": "Er du sikker på at du vil slette denne mobile API-nøkkelen?"
 	}
 }

@@ -1163,6 +1163,7 @@
 		"copy": "Copiar chave",
 		"copy_error": "Erro ao copiar a chave.",
 		"usage_middle": "cabeçalho ou como",
-		"usage_prefix": "Use esta chave no"
+		"usage_prefix": "Use esta chave no",
+		"delete_confirm": "Tem certeza de que deseja excluir esta chave de API móvel?"
 	}
 }

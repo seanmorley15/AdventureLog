@@ -1163,6 +1163,7 @@
 		"title": "API-sleutels",
 		"copy_error": "Fout bij kopiëren van sleutel.",
 		"usage_middle": "koptekst of als",
-		"usage_prefix": "Gebruik deze sleutel in de"
+		"usage_prefix": "Gebruik deze sleutel in de",
+		"delete_confirm": "Weet u zeker dat u deze mobiele API-sleutel wilt verwijderen?"
 	}
 }

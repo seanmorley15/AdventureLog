@@ -1163,6 +1163,7 @@
 		"title": "APIキー",
 		"copy_error": "キーのコピー中にエラーが発生しました。",
 		"usage_middle": "ヘッダーまたはとして",
-		"usage_prefix": "このキーを"
+		"usage_prefix": "このキーを",
+		"delete_confirm": "このモバイル API キーを削除してもよろしいですか?"
 	}
 }

@@ -1163,6 +1163,7 @@
 		"revoke_error": "API-Schlüssel konnte nicht widerrufen werden.",
 		"copy_error": "Fehler beim Kopieren des Schlüssels.",
 		"usage_middle": "Header oder als",
-		"usage_prefix": "Verwenden Sie diesen Schlüssel im"
+		"usage_prefix": "Verwenden Sie diesen Schlüssel im",
+		"delete_confirm": "Sind Sie sicher, dass Sie diesen mobilen API-Schlüssel löschen möchten?"
 	}
 }

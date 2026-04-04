@@ -1163,6 +1163,7 @@
 		"title": "API-nycklar",
 		"copy_error": "Fel vid kopiering av nyckel.",
 		"usage_middle": "header eller as",
-		"usage_prefix": "Använd denna nyckel i"
+		"usage_prefix": "Använd denna nyckel i",
+		"delete_confirm": "Är du säker på att du vill ta bort denna mobila API-nyckel?"
 	}
 }

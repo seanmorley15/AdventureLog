@@ -1163,6 +1163,7 @@
 		"title": "Claves API",
 		"copy_error": "Error al copiar la clave.",
 		"usage_middle": "encabezado o como",
-		"usage_prefix": "Utilice esta clave en el"
+		"usage_prefix": "Utilice esta clave en el",
+		"delete_confirm": "¿Está seguro de que desea eliminar esta clave API móvil?"
 	}
 }

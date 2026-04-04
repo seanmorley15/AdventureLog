@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   traefik:
-    image: traefik:v2.11
+    image: traefik:v2.11.42
     command:
       - "--api.insecure=true" # Enable Traefik dashboard (remove in production)
       - "--providers.docker=true"

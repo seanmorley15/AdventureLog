@@ -1163,6 +1163,7 @@
 		"title": "API kulcsok",
 		"copy_error": "Hiba a kulcs másolása közben.",
 		"usage_middle": "fejléc vagy mint",
-		"usage_prefix": "Használja ezt a kulcsot a"
+		"usage_prefix": "Használja ezt a kulcsot a",
+		"delete_confirm": "Biztosan törli ezt a mobil API-kulcsot?"
 	}
 }

@@ -1165,6 +1165,7 @@
 		"revoke_error": "Failed to revoke API key.",
 		"copy_error": "Error copying key.",
 		"usage_prefix": "Use this key in the",
-		"usage_middle": "header or as"
+		"usage_middle": "header or as",
+		"delete_confirm": "Are you sure you want to delete this mobile API key?"
 	}
 }

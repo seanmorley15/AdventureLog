@@ -1163,6 +1163,7 @@
 		"title": "Klucze API",
 		"copy_error": "Błąd podczas kopiowania klucza.",
 		"usage_middle": "nagłówek lub jako",
-		"usage_prefix": "Użyj tego klawisza w"
+		"usage_prefix": "Użyj tego klawisza w",
+		"delete_confirm": "Czy na pewno chcesz usunąć ten klucz mobilnego API?"
 	}
 }

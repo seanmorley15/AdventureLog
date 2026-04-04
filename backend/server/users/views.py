@@ -386,7 +386,7 @@ class MobileQRCodeView(APIView):
         # Create QR code data with proper structure for mobile app
         qr_data = {
             "version": 1,
-            "server_url": getattr(settings, 'PUBLIC_URL', 'http://localhost:8015'),
+            "server_url": getattr(settings, 'PUBLIC_URL', getenv('PUBLIC_URL', 'http://localhost:8000')),
             "api_key": raw_key,
             "code_words": ["hike", "explore"]
         }

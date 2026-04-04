@@ -96,7 +96,13 @@
 	}
 
 	async function deleteApiKey() {
-		if (!confirm('Are you sure you want to delete this mobile API key?')) {
+		if (
+			!confirm(
+				$t('api_keys.delete_confirm', {
+					default: 'Are you sure you want to delete the mobile API key?'
+				})
+			)
+		) {
 			return;
 		}
 

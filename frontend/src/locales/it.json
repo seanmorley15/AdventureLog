@@ -1163,6 +1163,7 @@
 		"title": "Chiavi API",
 		"copy_error": "Errore durante la copia della chiave.",
 		"usage_middle": "intestazione o come",
-		"usage_prefix": "Utilizzare questa chiave nel"
+		"usage_prefix": "Utilizzare questa chiave nel",
+		"delete_confirm": "Vuoi eliminare questa chiave API mobile?"
 	}
 }

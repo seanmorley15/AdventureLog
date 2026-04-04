@@ -15,9 +15,9 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
 # Clean install all node modules using pnpm with frozen lockfile.
 RUN pnpm install --frozen-lockfile
 
-# Copy source, then build and prune to production dependencies only.
+# Copy source, then build the frontend assets.
 COPY . .
-RUN rm -f .env && pnpm run build && pnpm prune --prod
+RUN rm -f .env && pnpm run build
 
 FROM gcr.io/distroless/nodejs22-debian12:nonroot@sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e AS external-website
 
