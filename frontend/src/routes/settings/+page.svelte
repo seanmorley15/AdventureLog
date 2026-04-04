@@ -440,7 +440,7 @@
 			keyCopied = true;
 			setTimeout(() => (keyCopied = false), 2000);
 		} catch {
-			addToast('error', 'Could not copy — please select the key and copy manually.');
+			addToast('error', $t('api_keys.copy_error'));
 		}
 	}
 
@@ -1023,7 +1023,8 @@
 											</button>
 										</div>
 										<p class="text-xs text-base-content/50 mt-2 pl-1">
-											Use this key in the <code class="font-mono">X-API-Key</code> header or as
+											{$t('api_keys.usage_prefix')} <code class="font-mono">X-API-Key</code>
+											{$t('api_keys.usage_middle')}
 											<code class="font-mono">Authorization: Api-Key &lt;token&gt;</code>
 										</p>
 									</div>

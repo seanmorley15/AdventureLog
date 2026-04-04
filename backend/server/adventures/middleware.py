@@ -48,6 +48,10 @@ class DisableCSRFForAPIKeyMiddleware(MiddlewareMixin):
     """
 
     def process_request(self, request):
+        # Never skip CSRF for requests that also include a Django session.
+        if settings.SESSION_COOKIE_NAME in request.COOKIES:
+            return
+
         if request.headers.get('X-API-Key'):
             setattr(request, '_dont_enforce_csrf_checks', True)
             return

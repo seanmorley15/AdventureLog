@@ -163,7 +163,7 @@ If your changes affect:
 please update the documentation in the:
 
 ```
-/docs
+/documentation
 ```
 
 folder accordingly.

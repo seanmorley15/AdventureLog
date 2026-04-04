@@ -1,4 +1,4 @@
-Django==5.2.11
+Django==5.2.12
 djangorestframework>=3.15.2
 django-allauth==0.63.3
 django-money==3.5.4
