@@ -4,8 +4,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.throttling import UserRateThrottle
 from django.http import HttpResponse
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import ipaddress
+import mimetypes
 import socket
+from urllib.parse import urljoin
 from urllib.parse import urlparse
 from django.db.models import Q
 from django.core.files.base import ContentFile
@@ -17,6 +20,7 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess  # Your existin
 import requests
 from adventures.permissions import ContentImagePermission
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +69,144 @@ def _is_safe_url(image_url):
             return False, "Access to internal networks is not allowed."
 
     return True, parsed
+
+
+def download_remote_image(image_url):
+    safe, result = _is_safe_url(image_url)
+    if not safe:
+        raise ValueError(result)
+
+    headers = {'User-Agent': 'AdventureLog/1.0 (Image Import)'}
+    max_redirects = 3
+    current_url = image_url
+
+    response = None
+    for _ in range(max_redirects + 1):
+        response = requests.get(
+            current_url,
+            timeout=10,
+            headers=headers,
+            stream=True,
+            allow_redirects=False,
+        )
+
+        if not response.is_redirect:
+            break
+
+        redirect_url = response.headers.get('Location', '')
+        if not redirect_url:
+            raise ValueError('Redirect with missing Location header')
+
+        # Handle relative redirects safely.
+        redirect_url = urljoin(current_url, redirect_url)
+
+        safe, result = _is_safe_url(redirect_url)
+        if not safe:
+            raise ValueError(f'Redirect blocked: {result}')
+
+        current_url = redirect_url
+    else:
+        raise ValueError('Too many redirects')
+
+    if response is None:
+        raise ValueError('Failed to fetch image')
+
+    response.raise_for_status()
+
+    content_type = response.headers.get('Content-Type', '').split(';')[0].strip().lower()
+    if not content_type.startswith('image/'):
+        raise ValueError('URL does not point to an image')
+
+    content_length = response.headers.get('Content-Length')
+    if content_length and int(content_length) > 20 * 1024 * 1024:
+        raise ValueError('Image too large (max 20MB)')
+
+    ext = mimetypes.guess_extension(content_type) or '.jpg'
+    if ext == '.jpe':
+        ext = '.jpg'
+
+    return {
+        'filename': f"remote_{uuid.uuid4().hex}{ext}",
+        'content': response.content,
+        'content_type': content_type,
+        'source_url': image_url,
+    }
+
+
+def import_remote_images_for_object(content_object, urls, owner=None, max_workers=5):
+    """Download remote URLs and attach them as ContentImage records for a content object."""
+    content_type = ContentType.objects.get_for_model(content_object.__class__)
+    object_id = str(content_object.id)
+    image_owner = owner or getattr(content_object, 'user', None)
+
+    downloaded_results = []
+    worker_count = max(1, min(max_workers, len(urls)))
+
+    with ThreadPoolExecutor(max_workers=worker_count) as executor:
+        futures = {
+            executor.submit(download_remote_image, image_url): (index, image_url)
+            for index, image_url in enumerate(urls)
+        }
+
+        for future in as_completed(futures):
+            index, image_url = futures[future]
+            try:
+                file_data = future.result()
+                downloaded_results.append((index, image_url, file_data, None))
+            except Exception as exc:
+                downloaded_results.append((index, image_url, None, str(exc)))
+
+    downloaded_results.sort(key=lambda item: item[0])
+
+    existing_image_count = ContentImage.objects.filter(
+        content_type=content_type,
+        object_id=object_id,
+    ).count()
+    set_primary_next = existing_image_count == 0
+
+    created_images = []
+    results = []
+    failed = []
+
+    for _, image_url, file_data, error_message in downloaded_results:
+        if error_message:
+            failure = {
+                'url': image_url,
+                'error': error_message,
+            }
+            results.append({
+                **failure,
+                'status': 'failed',
+            })
+            failed.append(failure)
+            continue
+
+        image_file = ContentFile(file_data['content'], name=file_data['filename'])
+        image = ContentImage.objects.create(
+            user=image_owner,
+            image=image_file,
+            content_type=content_type,
+            object_id=object_id,
+            is_primary=set_primary_next,
+        )
+        if set_primary_next:
+            set_primary_next = False
+
+        created_images.append(image)
+        results.append({
+            'url': image_url,
+            'status': 'created',
+            'id': str(image.id),
+        })
+
+    return {
+        'created_images': created_images,
+        'results': results,
+        'created_count': len(created_images),
+        'requested_count': len(urls),
+        'failed_count': len(failed),
+        'failed': failed,
+    }
 
 
 class ContentImageViewSet(viewsets.ModelViewSet):
@@ -192,69 +334,12 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Validate the initial URL (scheme, port, SSRF check on all resolved IPs)
-        safe, result = _is_safe_url(image_url)
-        if not safe:
-            return Response({"error": result}, status=status.HTTP_400_BAD_REQUEST)
-
         try:
-            headers = {'User-Agent': 'AdventureLog/1.0 (Image Proxy)'}
-            max_redirects = 3
-            current_url = image_url
+            image_data = download_remote_image(str(image_url).strip())
+            return HttpResponse(image_data['content'], content_type=image_data['content_type'], status=200)
 
-            for _ in range(max_redirects + 1):
-                response = requests.get(
-                    current_url,
-                    timeout=10,
-                    headers=headers,
-                    stream=True,
-                    allow_redirects=False,
-                )
-
-                if not response.is_redirect:
-                    break
-
-                # Re-validate every redirect destination before following
-                redirect_url = response.headers.get('Location', '')
-                if not redirect_url:
-                    return Response(
-                        {"error": "Redirect with missing Location header"},
-                        status=status.HTTP_502_BAD_GATEWAY,
-                    )
-
-                safe, result = _is_safe_url(redirect_url)
-                if not safe:
-                    return Response(
-                        {"error": f"Redirect blocked: {result}"},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-
-                current_url = redirect_url
-            else:
-                return Response(
-                    {"error": "Too many redirects"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            response.raise_for_status()
-
-            content_type = response.headers.get('Content-Type', '')
-            if not content_type.startswith('image/'):
-                return Response(
-                    {"error": "URL does not point to an image"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            content_length = response.headers.get('Content-Length')
-            if content_length and int(content_length) > 20 * 1024 * 1024:
-                return Response(
-                    {"error": "Image too large (max 20MB)"},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            image_data = response.content
-
-            return HttpResponse(image_data, content_type=content_type, status=200)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
         except requests.exceptions.Timeout:
             logger.error("Timeout fetching image from URL %s", image_url)
@@ -268,6 +353,64 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 {"error": "Failed to fetch image from the remote server"},
                 status=status.HTTP_502_BAD_GATEWAY
             )
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    def import_from_urls(self, request):
+        content_type_name = request.data.get('content_type')
+        object_id = request.data.get('object_id')
+        urls = request.data.get('urls')
+
+        if not isinstance(urls, list) or not urls:
+            return Response({"error": "urls must be a non-empty array"}, status=status.HTTP_400_BAD_REQUEST)
+
+        urls = [str(url).strip() for url in urls if str(url).strip()]
+        if not urls:
+            return Response({"error": "No valid URLs provided"}, status=status.HTTP_400_BAD_REQUEST)
+
+        if len(urls) > 10:
+            return Response({"error": "Maximum 10 URLs per request"}, status=status.HTTP_400_BAD_REQUEST)
+
+        content_object = self._get_and_validate_content_object(content_type_name, object_id)
+        if isinstance(content_object, Response):
+            return content_object
+
+        owner = getattr(content_object, 'user', request.user)
+
+        import_summary = import_remote_images_for_object(
+            content_object,
+            urls,
+            owner=owner,
+            max_workers=min(5, len(urls)),
+        )
+
+        created_images = import_summary['created_images']
+        results = import_summary['results']
+
+        if not created_images:
+            return Response(
+                {
+                    'error': 'No images could be imported',
+                    'results': results,
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serialized = ContentImageSerializer(created_images, many=True, context={'request': request})
+        response_status = (
+            status.HTTP_201_CREATED
+            if import_summary['created_count'] == import_summary['requested_count']
+            else status.HTTP_200_OK
+        )
+
+        return Response(
+            {
+                'created': serialized.data,
+                'results': results,
+                'created_count': import_summary['created_count'],
+                'requested_count': import_summary['requested_count'],
+            },
+            status=response_status,
+        )
 
     def create(self, request, *args, **kwargs):
         # Get content type and object ID from request

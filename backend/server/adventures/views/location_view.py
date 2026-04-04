@@ -1,4 +1,5 @@
 import logging
+from urllib.parse import urlparse
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
@@ -14,6 +15,9 @@ from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
 from adventures.utils import pagination
+from adventures.geocoding import get_place_details, reverse_geocode
+from worldtravel.models import City, Country, Region
+from .location_image_view import import_remote_images_for_object
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +161,122 @@ class LocationViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     # ==================== CUSTOM ACTIONS ====================
+
+    @action(detail=False, methods=['post'], url_path='quick-add')
+    @transaction.atomic
+    def quick_add(self, request):
+        """Create a location from lightweight map/place input in one server-side call."""
+        payload = request.data if isinstance(request.data, dict) else {}
+
+        name = str(payload.get('name') or '').strip()
+        if not name:
+            return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        latitude = self._coerce_coordinate(payload.get('latitude'), -90, 90)
+        longitude = self._coerce_coordinate(payload.get('longitude'), -180, 180)
+        if latitude is None or longitude is None:
+            return Response(
+                {"error": "Valid latitude and longitude are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        collection = self._resolve_quick_add_collection(payload.get('collection_id'))
+        if isinstance(collection, Response):
+            return collection
+
+        place_id = str(payload.get('place_id') or '').strip() or None
+        reverse_data = {}
+        details = {}
+
+        try:
+            reverse_result = reverse_geocode(latitude, longitude, request.user)
+            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
+                reverse_data = reverse_result
+        except Exception:
+            reverse_data = {}
+
+        if place_id:
+            details_result = get_place_details(place_id, fallback_query=name)
+            if isinstance(details_result, dict):
+                if 'error' not in details_result or details_result.get('description'):
+                    details = details_result
+
+        rating = self._coerce_float(payload.get('rating'))
+        if rating is None:
+            rating = self._coerce_float(details.get('rating'))
+
+        review_count = self._coerce_int(payload.get('review_count'))
+        if review_count is None:
+            review_count = self._coerce_int(details.get('review_count'))
+
+        website = self._clean_url(details.get('website')) or self._clean_url(payload.get('website'))
+        maps_url = self._clean_url(details.get('google_maps_url')) or self._clean_url(
+            payload.get('google_maps_url')
+        )
+        link = self._clean_url(payload.get('link')) or website or maps_url
+
+        phone_number = str(details.get('phone_number') or payload.get('phone_number') or '').strip() or None
+
+        location_label = (
+            str(payload.get('location') or '').strip()
+            or str(reverse_data.get('display_name') or '').strip()
+            or str(details.get('formatted_address') or '').strip()
+            or None
+        )
+
+        description = self._build_quick_add_description(
+            base_description=payload.get('description'),
+            detailed_description=details.get('description'),
+        )
+
+        category_payload = self._normalize_quick_add_category(payload.get('category'))
+        if isinstance(category_payload, Response):
+            return category_payload
+
+        serializer_payload = {
+            'name': name,
+            'location': location_label,
+            'latitude': latitude,
+            'longitude': longitude,
+            'rating': rating,
+            'description': description,
+            'link': link,
+            'tags': self._sanitize_tags(payload.get('types') or payload.get('tags')),
+            'is_public': self._coerce_bool(payload.get('is_public'), default=False),
+        }
+
+        if category_payload:
+            serializer_payload['category'] = category_payload
+
+        if collection:
+            serializer_payload['collections'] = [str(collection.id)]
+
+        serializer = self.get_serializer(data=serializer_payload)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        location = serializer.instance
+        self._apply_reverse_geocode_metadata(location, reverse_data, location_label)
+
+        photo_urls = self._sanitize_photo_urls(payload.get('photos'))
+        image_import_summary = None
+        if photo_urls:
+            image_import_summary = import_remote_images_for_object(
+                location,
+                photo_urls,
+                owner=location.user,
+                max_workers=min(5, len(photo_urls)),
+            )
+
+        response_data = self.get_serializer(location).data
+        if image_import_summary and image_import_summary.get('failed'):
+            response_data['quick_add_image_import'] = {
+                'created_count': image_import_summary['created_count'],
+                'failed_count': image_import_summary['failed_count'],
+                'failed': image_import_summary['failed'],
+            }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def filtered(self, request):
@@ -459,6 +579,195 @@ class LocationViewSet(viewsets.ModelViewSet):
                     raise PermissionDenied(
                         f"You don't have permission to add location to collection '{collection.name}'"
                     )
+
+    def _resolve_quick_add_collection(self, collection_id):
+        if not collection_id:
+            return None
+
+        try:
+            collection = Collection.objects.get(id=collection_id)
+        except Collection.DoesNotExist:
+            return Response(
+                {"error": "Collection not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            self._validate_collection_permissions([collection])
+        except PermissionDenied as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+        return collection
+
+    def _coerce_coordinate(self, value, min_value, max_value):
+        try:
+            number = round(float(value), 6)
+        except (TypeError, ValueError):
+            return None
+
+        if number < min_value or number > max_value:
+            return None
+
+        return number
+
+    def _coerce_float(self, value):
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _coerce_int(self, value):
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _coerce_bool(self, value, default=False):
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {'true', '1', 'yes', 'on'}:
+                return True
+            if normalized in {'false', '0', 'no', 'off'}:
+                return False
+        return default
+
+    def _clean_url(self, value):
+        if not isinstance(value, str):
+            return None
+
+        normalized = value.strip()
+        if not normalized:
+            return None
+
+        parsed = urlparse(normalized)
+        if parsed.scheme in {'http', 'https'} and parsed.netloc:
+            return normalized
+
+        return None
+
+    def _sanitize_tags(self, raw_tags):
+        if not isinstance(raw_tags, list):
+            return []
+
+        tags = []
+        for item in raw_tags:
+            if not isinstance(item, str):
+                continue
+
+            value = item.strip()
+            if not value or value in tags:
+                continue
+
+            tags.append(value)
+            if len(tags) >= 8:
+                break
+
+        return tags
+
+    def _sanitize_photo_urls(self, raw_urls):
+        if not isinstance(raw_urls, list):
+            return []
+
+        cleaned = []
+        for value in raw_urls:
+            url = self._clean_url(value)
+            if not url or url in cleaned:
+                continue
+            cleaned.append(url)
+            if len(cleaned) >= 5:
+                break
+
+        return cleaned
+
+    def _normalize_quick_add_category(self, raw_category):
+        if not raw_category:
+            return None
+
+        if isinstance(raw_category, dict):
+            category_id = raw_category.get('id')
+            name = str(raw_category.get('name') or '').strip().lower()
+            display_name = str(raw_category.get('display_name') or '').strip()
+            icon = str(raw_category.get('icon') or '').strip() or '🌍'
+        elif isinstance(raw_category, str):
+            category_id = raw_category.strip()
+            name = ''
+            display_name = ''
+            icon = '🌍'
+        else:
+            return Response(
+                {"error": "category must be an object or string"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        category = None
+        if category_id:
+            category = Category.objects.filter(id=category_id, user=self.request.user).first()
+            if not category:
+                return Response(
+                    {"error": "Category not found or inaccessible"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if category:
+            return {
+                'name': category.name,
+                'display_name': category.display_name,
+                'icon': category.icon,
+            }
+
+        if not name:
+            return None
+
+        return {
+            'name': name,
+            'display_name': display_name or name,
+            'icon': icon,
+        }
+
+    def _build_quick_add_description(
+        self,
+        base_description,
+        detailed_description,
+    ):
+        description = str(detailed_description or '').strip() or str(base_description or '').strip()
+
+        return description or None
+
+    def _apply_reverse_geocode_metadata(self, location, reverse_data, fallback_location):
+        if not isinstance(reverse_data, dict):
+            reverse_data = {}
+
+        updated_fields = []
+
+        region_id = reverse_data.get('region_id')
+        if region_id:
+            region = Region.objects.filter(id=region_id).first()
+            if region and location.region_id != region.id:
+                location.region = region
+                updated_fields.append('region')
+
+        city_id = reverse_data.get('city_id')
+        if city_id:
+            city = City.objects.filter(id=city_id).first()
+            if city and location.city_id != city.id:
+                location.city = city
+                updated_fields.append('city')
+
+        country_id = reverse_data.get('country_id')
+        if country_id:
+            country = Country.objects.filter(country_code=country_id).first()
+            if country and location.country_id != country.id:
+                location.country = country
+                updated_fields.append('country')
+
+        if fallback_location and not location.location:
+            location.location = fallback_location
+            updated_fields.append('location')
+
+        if updated_fields:
+            location.save(update_fields=updated_fields, _skip_geocode=True)
 
     def _apply_visit_filtering(self, queryset, request):
         """Apply visit status filtering to queryset."""

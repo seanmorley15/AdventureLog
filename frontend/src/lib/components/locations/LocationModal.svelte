@@ -19,6 +19,10 @@
 	let storedInitialVisitDate: string | null = initialVisitDate;
 
 	let modal: HTMLDialogElement;
+	let googleMapsEnabled = false;
+	let isEditMode = false;
+	let pendingGooglePhotoUrls: string[] = [];
+	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
@@ -45,6 +49,105 @@
 			requires_id: true
 		}
 	];
+
+	function setStep(stepIndex: number) {
+		steps = steps.map((step, index) => ({
+			...step,
+			selected: index === stepIndex
+		}));
+	}
+
+	function handleStepSelect(stepIndex: number) {
+		if (stepIndex === 0 && isEditMode) {
+			return;
+		}
+		if (steps[stepIndex]?.requires_id && !location.id) {
+			return;
+		}
+		setStep(stepIndex);
+	}
+
+	function handleDetailsBack() {
+		if (isEditMode) {
+			close();
+			return;
+		}
+		setStep(0);
+	}
+
+	function applyQuickStartPrefill(prefill: any) {
+		if (!prefill) return;
+
+		if (prefill.name) location.name = prefill.name;
+		if (prefill.location) location.location = prefill.location;
+		if (typeof prefill.latitude === 'number') location.latitude = prefill.latitude;
+		if (typeof prefill.longitude === 'number') location.longitude = prefill.longitude;
+		if (typeof prefill.rating === 'number') location.rating = prefill.rating;
+		if (!location.link && (prefill.website || prefill.google_maps_url)) {
+			location.link = prefill.website || prefill.google_maps_url;
+		}
+		if (!location.description && prefill.description) {
+			location.description = prefill.description;
+		}
+		if ((!location.tags || location.tags.length === 0) && Array.isArray(prefill.types)) {
+			location.tags = prefill.types.slice(0, 8);
+		}
+		if (prefill.selected_category && typeof prefill.selected_category === 'object') {
+			location.category = prefill.selected_category;
+		}
+		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
+			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
+			: [];
+	}
+
+	async function importPendingGoogleImages(locationId: string) {
+		if (!locationId || pendingGooglePhotoUrls.length === 0) return;
+		importingGooglePhotos = true;
+
+		try {
+			const res = await fetch('/api/images/import_from_urls/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					content_type: 'location',
+					object_id: locationId,
+					urls: pendingGooglePhotoUrls
+				})
+			});
+
+			if (!res.ok) {
+				addToast('warning', 'Location saved, but Google photos could not be imported');
+				return;
+			}
+
+			const data = await res.json();
+			if (Array.isArray(data.created) && data.created.length > 0) {
+				const existingImages = Array.isArray(location.images) ? location.images : [];
+				const existingIds = new Set(existingImages.map((img: any) => img.id));
+				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
+				location.images = [...existingImages, ...imported];
+			}
+
+			pendingGooglePhotoUrls = [];
+		} catch {
+			addToast('warning', 'Location saved, but Google photos import failed');
+		} finally {
+			importingGooglePhotos = false;
+		}
+	}
+
+	async function loadIntegrations() {
+		try {
+			const res = await fetch('/api/integrations/');
+			if (!res.ok) return;
+			const integrations = await res.json();
+			googleMapsEnabled = Boolean(integrations?.google_maps);
+		} catch {
+			googleMapsEnabled = false;
+		}
+	}
 
 	export let location: Location = {
 		id: '',
@@ -81,17 +184,17 @@
 		link: locationToEdit?.link || null,
 		description: locationToEdit?.description || null,
 		tags: locationToEdit?.tags || [],
-		rating: locationToEdit?.rating || NaN,
+		rating: locationToEdit?.rating ?? NaN,
 		price: locationToEdit?.price ?? null,
 		price_currency: locationToEdit?.price_currency ?? null,
-		is_public: locationToEdit?.is_public || false,
-		latitude: locationToEdit?.latitude || NaN,
-		longitude: locationToEdit?.longitude || NaN,
+		is_public: locationToEdit?.is_public ?? false,
+		latitude: locationToEdit?.latitude ?? NaN,
+		longitude: locationToEdit?.longitude ?? NaN,
 		location: locationToEdit?.location || null,
 		images: locationToEdit?.images || [],
 		user: locationToEdit?.user || null,
 		visits: locationToEdit?.visits || [],
-		is_visited: locationToEdit?.is_visited || false,
+		is_visited: locationToEdit?.is_visited ?? false,
 		collections: locationToEdit?.collections || [],
 		category: locationToEdit?.category || {
 			id: '',
@@ -104,23 +207,25 @@
 		attachments: locationToEdit?.attachments || []
 	};
 
-	onMount(async () => {
+	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
+		isEditMode = Boolean(locationToEdit?.id);
+
 		// Skip the quick start step if editing an existing location
-		if (!locationToEdit) {
-			steps[0].selected = true;
-			steps[1].selected = false;
+		if (!isEditMode) {
+			setStep(0);
 		} else {
-			steps[0].selected = false;
-			steps[1].selected = true;
+			setStep(1);
 		}
+
 		if (initialLatLng) {
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
-			steps[1].selected = true;
-			steps[0].selected = false;
+			setStep(1);
 		}
+
+		void loadIntegrations();
 	});
 
 	function close() {
@@ -206,7 +311,7 @@
 								>
 									<path
 										fill-rule="evenodd"
-										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-0.089l4-5-5z"
+										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
 										clip-rule="evenodd"
 									/>
 								</svg>
@@ -216,14 +321,11 @@
 									? 'bg-primary text-primary-content'
 									: 'bg-base-200'} {step.requires_id && !location.id
 									? 'opacity-50 cursor-not-allowed'
+									: ''} {index === 0 && isEditMode
+									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => {
-									// Reset all steps
-									steps.forEach((s) => (s.selected = false));
-									// Select clicked step
-									steps[index].selected = true;
-								}}
-								disabled={step.requires_id && !location.id}
+								on:click={() => handleStepSelect(index)}
+								disabled={(step.requires_id && !location.id) || (index === 0 && isEditMode)}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
 								<span class="sm:hidden"
@@ -264,22 +366,37 @@
 			</div>
 		</div>
 
-		{#if steps[0].selected}
+		{#if steps[0].selected && !isEditMode}
 			<!-- Main Content -->
 			<LocationQuickStart
-				on:locationSelected={(e) => {
-					location.name = e.detail.name;
-					location.location = e.detail.location;
-					location.latitude = e.detail.latitude;
-					location.longitude = e.detail.longitude;
-					steps[0].selected = false;
-					steps[1].selected = true;
+				googleEnabled={googleMapsEnabled}
+				collectionId={collection?.id || null}
+				on:addDetails={(e) => {
+					applyQuickStartPrefill(e.detail.prefill);
+					setStep(1);
+				}}
+				on:manual={() => {
+					setStep(1);
+				}}
+				on:quickAdded={(e) => {
+					location = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					close();
+				}}
+				on:quickAddedEdit={(e) => {
+					location = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					setStep(1);
+				}}
+				on:quickAddedDone={(e) => {
+					location = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					close();
 				}}
 				on:cancel={() => close()}
-				on:next={() => {
-					steps[0].selected = false;
-					steps[1].selected = true;
-				}}
 			/>
 		{/if}
 		{#if steps[1].selected}
@@ -288,55 +405,49 @@
 				initialLocation={location}
 				{collection}
 				bind:editingLocation={location}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:save={(e) => {
-					location.name = e.detail.name;
-					location.category = e.detail.category;
-					location.rating = e.detail.rating;
-					location.is_public = e.detail.is_public;
-					location.link = e.detail.link;
-					location.description = e.detail.description;
-					location.latitude = e.detail.latitude;
-					location.longitude = e.detail.longitude;
-					location.location = e.detail.location;
-					location.tags = e.detail.tags;
-					location.user = e.detail.user;
-					location.id = e.detail.id;
-					location.price = e.detail.price;
-					location.price_currency = e.detail.price_currency;
+				on:back={handleDetailsBack}
+				on:save={async (e) => {
+					location = {
+						...location,
+						...e.detail,
+						tags: e.detail.tags || location.tags || [],
+						images: e.detail.images || location.images || [],
+						attachments: e.detail.attachments || location.attachments || [],
+						trails: e.detail.trails || location.trails || [],
+						visits: e.detail.visits || location.visits || []
+					};
 
 					// Mark that a save occurred so close() will notify parent
 					didSave = true;
 
-					steps[1].selected = false;
 					if (location.id) {
-						steps[2].selected = true;
+						setStep(2);
+						if (pendingGooglePhotoUrls.length > 0) {
+							void importPendingGoogleImages(location.id);
+						}
 					} else {
 						// Stay on details if save failed (no ID returned)
-						steps[1].selected = true;
+						setStep(1);
 					}
 				}}
 			/>
 		{/if}
 		{#if steps[2].selected}
+			{#if importingGooglePhotos}
+				<div class="alert alert-info mb-4">
+					<span class="loading loading-spinner loading-sm"></span>
+					<span>Importing Google photos in the background. They will appear here shortly.</span>
+				</div>
+			{/if}
 			<LocationMedia
 				bind:images={location.images}
 				bind:attachments={location.attachments}
 				bind:trails={location.trails}
 				itemName={location.name}
 				userIsOwner={user?.uuid === location.user?.uuid}
-				on:back={() => {
-					steps[2].selected = false;
-					steps[1].selected = true;
-				}}
+				on:back={() => setStep(1)}
 				itemId={location.id}
-				on:next={() => {
-					steps[2].selected = false;
-					steps[3].selected = true;
-				}}
+				on:next={() => setStep(3)}
 				measurementSystem={user?.measurement_system || 'metric'}
 			/>
 		{/if}
@@ -345,10 +456,7 @@
 				bind:visits={location.visits}
 				bind:trails={location.trails}
 				objectId={location.id}
-				on:back={() => {
-					steps[3].selected = false;
-					steps[2].selected = true;
-				}}
+				on:back={() => setStep(2)}
 				on:close={() => close()}
 				measurementSystem={user?.measurement_system || 'metric'}
 				{collection}
