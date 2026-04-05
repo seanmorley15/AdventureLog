@@ -1,0 +1,9 @@
+overrides:
+  svelte-i18n>esbuild: 0.25.12
+  vite>esbuild: 0.25.12
+  '@sveltejs/adapter-vercel@<6.3.2': '>=6.3.2'
+  brace-expansion@>=4.0.0 <5.0.5: '>=5.0.5'
+  picomatch@<2.3.2: '>=2.3.2'
+  picomatch@>=4.0.0 <4.0.4: '>=4.0.4'
+  svelte@<=5.51.4: '>=5.51.5'
+  svelte@<=5.53.4: '>=5.53.5'

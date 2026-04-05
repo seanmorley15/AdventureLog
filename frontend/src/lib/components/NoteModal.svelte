@@ -209,7 +209,13 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button
+					type="button"
+					class="btn btn-ghost btn-square"
+					aria-label={$t('about.close')}
+					title={$t('about.close')}
+					on:click={close}
+				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							stroke-linecap="round"
@@ -340,7 +346,13 @@
 													}
 												}}
 											/>
-											<button type="button" class="btn btn-primary join-item" on:click={addLink}>
+											<button
+												type="button"
+												class="btn btn-primary join-item"
+												aria-label={$t('adventures.add')}
+												title={$t('adventures.add')}
+												on:click={addLink}
+											>
 												<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 													<path
 														stroke-linecap="round"
@@ -386,6 +398,8 @@
 													<button
 														type="button"
 														class="btn btn-ghost btn-xs text-error"
+														aria-label={$t('adventures.remove')}
+														title={$t('adventures.remove')}
 														on:click={() => {
 															newNote.links = newNote.links.filter((_, index) => index !== i);
 														}}

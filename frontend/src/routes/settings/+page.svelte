@@ -440,7 +440,7 @@
 			keyCopied = true;
 			setTimeout(() => (keyCopied = false), 2000);
 		} catch {
-			addToast('error', 'Could not copy — please select the key and copy manually.');
+			addToast('error', $t('api_keys.copy_error'));
 		}
 	}
 
@@ -924,9 +924,7 @@
 
 							<!-- Newly created key banner -->
 							{#if newlyCreatedKey}
-								<div
-									class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden"
-								>
+								<div class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden">
 									<!-- Header -->
 									<div
 										class="flex items-center justify-between px-5 py-3 bg-warning/10 border-b border-warning/20"
@@ -951,7 +949,10 @@
 											>
 										</div>
 										<button
+											type="button"
 											class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
+											aria-label={$t('about.close')}
+											title={$t('about.close')}
 											on:click={() => {
 												newlyCreatedKey = null;
 												keyCopied = false;
@@ -1025,7 +1026,8 @@
 											</button>
 										</div>
 										<p class="text-xs text-base-content/50 mt-2 pl-1">
-											Use this key in the <code class="font-mono">X-API-Key</code> header or as
+											{$t('api_keys.usage_prefix')} <code class="font-mono">X-API-Key</code>
+											{$t('api_keys.usage_middle')}
 											<code class="font-mono">Authorization: Api-Key &lt;token&gt;</code>
 										</p>
 									</div>
@@ -1043,9 +1045,11 @@
 													{key.key_prefix}…
 												</p>
 												<p class="text-xs text-base-content/50 mt-0.5">
-													{$t('api_keys.created')} {new Date(key.created_at).toLocaleDateString()}
+													{$t('api_keys.created')}
+													{new Date(key.created_at).toLocaleDateString()}
 													{#if key.last_used_at}
-														· {$t('api_keys.last_used')} {new Date(key.last_used_at).toLocaleDateString()}
+														· {$t('api_keys.last_used')}
+														{new Date(key.last_used_at).toLocaleDateString()}
 													{:else}
 														· {$t('api_keys.never_used')}
 													{/if}

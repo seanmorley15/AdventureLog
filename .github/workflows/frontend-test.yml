@@ -5,24 +5,44 @@ permissions:
 
 on:
   pull_request:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-test.yml"
   push:
+    paths:
+      - "frontend/**"
+      - ".github/workflows/frontend-test.yml"
 
 jobs:
-  build:
-    name: Build and Test Frontend
+  quality:
+    name: Frontend Quality Checks
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
 
       - name: install dependencies
         working-directory: frontend
-        run: npm i
+        run: pnpm install --frozen-lockfile
+
+      - name: run lint
+        working-directory: frontend
+        run: pnpm run lint
+
+      - name: run svelte check
+        working-directory: frontend
+        run: pnpm run check
 
       - name: build frontend
         working-directory: frontend
-        run: npm run build
+        run: pnpm run build

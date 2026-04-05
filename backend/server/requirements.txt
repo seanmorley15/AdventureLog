@@ -1,9 +1,9 @@
-Django==5.2.11
-djangorestframework>=3.15.2
+Django==5.2.12
+djangorestframework>=3.15.2,<3.16
 django-allauth==0.63.3
 django-money==3.5.4
 django-invitations==2.1.0
-drf-yasg==1.21.4
+drf-yasg==1.21.15
 django-cors-headers==4.4.0
 coreapi==2.3.3
 python-dotenv==1.1.0
