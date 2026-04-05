@@ -72,6 +72,10 @@
 	let initialTransportationApplied = false;
 	let isInitializing = false;
 
+	function isFiniteCoordinatePair(lat: unknown, lng: unknown): boolean {
+		return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+	}
+
 	// Track any provided codes (airport / station / etc)
 	let startCode: string | null = null;
 	let endCode: string | null = null;
@@ -572,7 +576,25 @@
 					endLocationData = metaData;
 				} else {
 					locationData = metaData;
-					displayName = data.display_name;
+					const resolvedLocationName = (data.location_name || '').trim();
+					const resolvedDisplayName = (data.display_name || '').trim();
+
+					if (selectedLocation) {
+						const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
+						selectedLocation = {
+							...selectedLocation,
+							name:
+								resolvedLocationName ||
+								(isCoordinatePlaceholder && resolvedDisplayName
+									? resolvedDisplayName
+									: selectedLocation.name),
+							location: resolvedDisplayName || selectedLocation.location
+						};
+						emitUpdate(selectedLocation);
+					}
+
+					displayName = resolvedDisplayName || resolvedLocationName || displayName;
+					searchQuery = selectedLocation?.name || searchQuery;
 				}
 			} else {
 				if (target === 'start') {
@@ -641,7 +663,11 @@
 		dispatch('clear');
 	}
 
-	$: if (!initialApplied && initialSelection) {
+	$: if (
+		!initialApplied &&
+		initialSelection &&
+		isFiniteCoordinatePair(initialSelection.lat, initialSelection.lng)
+	) {
 		initialApplied = true;
 		applyInitialSelection(initialSelection);
 	}
