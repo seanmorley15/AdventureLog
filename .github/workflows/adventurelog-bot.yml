@@ -61,9 +61,9 @@ jobs:
               await safeClosePr();
             }
 
-            // Ignore specific user
-            if (context.actor === "seanmorley15") {
-              console.log("Skipping maintainer PR");
+            // Ignore PRs created by the maintainer to avoid blocking their work, as well as dependabot
+            if (context.actor === "seanmorley15" || context.actor === "dependabot") {
+              console.log("Skipping maintainer or dependabot PR");
               return;
             }
 
