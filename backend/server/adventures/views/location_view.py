@@ -594,8 +594,11 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         try:
             self._validate_collection_permissions([collection])
-        except PermissionDenied as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        except PermissionDenied:
+            return Response(
+                {"error": "You do not have permission to add this location to the selected collection."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
 
         return collection
 

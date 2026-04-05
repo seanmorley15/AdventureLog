@@ -29,6 +29,17 @@ class ImageProxyThrottle(UserRateThrottle):
     scope = 'image_proxy'
 
 
+def _public_import_error_message(exc):
+    """Return a safe, user-facing import error without exposing internal details."""
+    if isinstance(exc, ValueError):
+        return "Invalid image URL"
+    if isinstance(exc, requests.exceptions.Timeout):
+        return "Download timeout"
+    if isinstance(exc, requests.exceptions.RequestException):
+        return "Failed to fetch image from the remote server"
+    return "Image import failed"
+
+
 def _is_safe_url(image_url):
     """
     Validate a URL for safe proxy use.
@@ -154,7 +165,12 @@ def import_remote_images_for_object(content_object, urls, owner=None, max_worker
                 file_data = future.result()
                 downloaded_results.append((index, image_url, file_data, None))
             except Exception as exc:
-                downloaded_results.append((index, image_url, None, str(exc)))
+                logger.warning(
+                    "Image import failed for URL %s",
+                    image_url,
+                    exc_info=True,
+                )
+                downloaded_results.append((index, image_url, None, _public_import_error_message(exc)))
 
     downloaded_results.sort(key=lambda item: item[0])
 
@@ -338,8 +354,8 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             image_data = download_remote_image(str(image_url).strip())
             return HttpResponse(image_data['content'], content_type=image_data['content_type'], status=200)
 
-        except ValueError as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except ValueError:
+            return Response({"error": "Invalid image URL"}, status=status.HTTP_400_BAD_REQUEST)
 
         except requests.exceptions.Timeout:
             logger.error("Timeout fetching image from URL %s", image_url)
