@@ -107,7 +107,9 @@
 				const dLng = item.lng - lng;
 				const distanceScore = dLat * dLat + dLng * dLng;
 				const nameScore =
-					normalizedPreferredName && item.name?.trim().toLowerCase() === normalizedPreferredName ? -1 : 0;
+					normalizedPreferredName && item.name?.trim().toLowerCase() === normalizedPreferredName
+						? -1
+						: 0;
 				const placeScore = item.place_id ? -0.5 : 0;
 				return {
 					item,
@@ -138,9 +140,7 @@
 			}
 
 			const rawResults = await response.json();
-			const mappedResults = Array.isArray(rawResults)
-				? rawResults.map(toPlaceResult)
-				: [];
+			const mappedResults = Array.isArray(rawResults) ? rawResults.map(toPlaceResult) : [];
 			const bestMatch = pickBestNearbyResult(mappedResults, lat, lng, query);
 			if (!bestMatch || !selectedLocation) {
 				return;
@@ -362,7 +362,9 @@
 						...selectedLocation,
 						name:
 							resolvedLocationName ||
-							(isCoordinatePlaceholder && resolvedDisplayName ? resolvedDisplayName : selectedLocation.name),
+							(isCoordinatePlaceholder && resolvedDisplayName
+								? resolvedDisplayName
+								: selectedLocation.name),
 						location: resolvedDisplayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
 					};
 					searchQuery = selectedLocation.name;
