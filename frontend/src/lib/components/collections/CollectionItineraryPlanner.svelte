@@ -1957,15 +1957,16 @@
 
 							{#if canModify}
 								<div class="dropdown z-30">
-									<button
-										type="button"
+									<div
+										tabindex="0"
+										role="button"
 										class="btn btn-square btn-sm btn-outline p-1"
 										aria-haspopup="menu"
 										aria-expanded="false"
 										title={$t('adventures.add')}
 									>
 										<Plus class="w-5 h-5" />
-									</button>
+									</div>
 									<ul
 										tabindex="-1"
 										class="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-56"
