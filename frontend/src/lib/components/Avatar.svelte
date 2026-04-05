@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	// Icons
@@ -16,6 +17,9 @@
 
 	let letter: string = user.first_name?.[0] || user.username?.[0] || '?';
 	let showMobileQR = false;
+	let showDevMobileLogin = false;
+	let typedBuffer = '';
+	const DEV_UNLOCK_KEYWORD = 'dev';
 
 	// Get display name
 	$: displayName = user.first_name
@@ -65,6 +69,24 @@
 	function closeMobileQR() {
 		showMobileQR = false;
 	}
+
+	onMount(() => {
+		const handleKeydown = (event: KeyboardEvent) => {
+			if (event.metaKey || event.ctrlKey || event.altKey) return;
+			if (event.key.length !== 1) return;
+
+			typedBuffer = (typedBuffer + event.key.toLowerCase()).slice(-DEV_UNLOCK_KEYWORD.length);
+			if (typedBuffer === DEV_UNLOCK_KEYWORD) {
+				showDevMobileLogin = true;
+			}
+		};
+
+		window.addEventListener('keydown', handleKeydown);
+
+		return () => {
+			window.removeEventListener('keydown', handleKeydown);
+		};
+	});
 </script>
 
 <div class="dropdown dropdown-bottom dropdown-end z-[100]">
@@ -154,16 +176,18 @@
 				</li>
 			{/if}
 
-			<!-- Mobile Login -->
-			<li>
-				<button
-					class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
-					on:click={openMobileQR}
-				>
-					<Phone class="w-5 h-5 text-base-content/70" />
-					<span>{$t('navbar.mobile_login', { default: 'Mobile Login' })}</span>
-				</button>
-			</li>
+			{#if showDevMobileLogin}
+				<!-- Mobile Login (dev unlock) -->
+				<li>
+					<button
+						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
+						on:click={openMobileQR}
+					>
+						<Phone class="w-5 h-5 text-base-content/70" />
+						<span>{$t('navbar.mobile_login', { default: 'Mobile Login' })}</span>
+					</button>
+				</li>
+			{/if}
 
 			{#each menuItems.filter((item) => item.section === 'secondary') as item}
 				<li>
