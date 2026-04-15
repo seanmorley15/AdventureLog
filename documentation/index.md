@@ -40,7 +40,7 @@ Get AdventureLog running in under 60 seconds:
 curl -sSL https://get.adventurelog.app | bash
 ```
 
-You can also explore our [full installation guide](/docs/install/getting_started) for plenty of options, including Docker, Proxmox, Synology NAS, and more.
+You can also explore our [full installation guide](/documentation/docs/install/getting_started) for plenty of options, including Docker, Proxmox, Synology NAS, and more.
 
 ## 📸 See It In Action
 
