@@ -676,7 +676,11 @@
 										{/if}
 
 										<!-- External Maps Links -->
-										<div class="grid grid-cols-3 gap-2 mb-3">
+										<div
+											class="grid gap-2 mb-3"
+											class:grid-cols-3={!immichServerUrl}
+											class:grid-cols-4={!!immichServerUrl}
+										>
 											<a
 												class="btn btn-sm btn-outline hover:btn-neutral"
 												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
@@ -701,6 +705,16 @@
 											>
 												🗺️ OSM
 											</a>
+											{#if immichServerUrl}
+												<a
+													class="btn btn-sm btn-outline hover:btn-warning"
+													href={`${immichServerUrl.replace(/\/api\/?$/, '')}/map#16.64/${adventure.latitude}/${adventure.longitude}`}
+													target="_blank"
+													rel="noopener noreferrer"
+												>
+													📷 Immich
+												</a>
+											{/if}
 										</div>
 
 										<!-- Quick Copy Actions -->
