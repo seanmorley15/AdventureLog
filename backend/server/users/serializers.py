@@ -97,11 +97,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     """
 
     has_password = serializers.SerializerMethodField()
+    immich_server_url = serializers.SerializerMethodField()
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ['has_password', 'disable_password']
-        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password', 'disable_password')
+        fields = UserDetailsSerializer.Meta.fields + ['has_password', 'disable_password', 'immich_server_url']
+        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password', 'disable_password', 'immich_server_url')
 
     @staticmethod
     def get_has_password(instance):
@@ -109,6 +110,12 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         Computes whether the user has a usable password set.
         """
         return instance.has_usable_password()
+
+    @staticmethod
+    def get_immich_server_url(instance):
+        from integrations.models import ImmichIntegration
+        integration = ImmichIntegration.objects.filter(user=instance).first()
+        return integration.server_url if integration else None
 
     def to_representation(self, instance):
         """

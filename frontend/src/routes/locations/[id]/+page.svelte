@@ -36,6 +36,7 @@
 	let measurementSystem = data.user?.measurement_system || 'metric';
 	console.log(data);
 
+	let immichServerUrl: string | null = data.user?.immich_server_url ?? null;
 	let adventure: AdditionalLocation;
 	let currentSlide = 0;
 

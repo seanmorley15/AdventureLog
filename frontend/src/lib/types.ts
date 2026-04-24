@@ -19,6 +19,7 @@ export type User = {
 	disable_password: boolean;
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
+	immich_server_url: string | null;
 };
 
 export type Collaborator = {
