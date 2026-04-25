@@ -6,7 +6,7 @@
 </script>
 
 <PlaceQuickStart
-	mode="location"
+	mode="lodging"
 	{googleEnabled}
 	{collectionId}
 	on:addDetails

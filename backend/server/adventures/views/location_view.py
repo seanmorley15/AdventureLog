@@ -1,5 +1,4 @@
 import logging
-from urllib.parse import urlparse
 from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
@@ -15,9 +14,22 @@ from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
 from adventures.utils import pagination
-from adventures.geocoding import get_place_details, reverse_geocode
+from adventures.geocoding import reverse_geocode
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
+from .quick_add_utils import (
+    build_quick_add_description,
+    clean_url,
+    coerce_bool,
+    coerce_coordinate,
+    coerce_float,
+    coerce_int,
+    extract_google_place_details,
+    preferred_link,
+    resolve_quick_add_collection,
+    sanitize_photo_urls,
+    sanitize_tags,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -172,8 +184,8 @@ class LocationViewSet(viewsets.ModelViewSet):
         if not name:
             return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
 
-        latitude = self._coerce_coordinate(payload.get('latitude'), -90, 90)
-        longitude = self._coerce_coordinate(payload.get('longitude'), -180, 180)
+        latitude = coerce_coordinate(payload.get('latitude'), -90, 90)
+        longitude = coerce_coordinate(payload.get('longitude'), -180, 180)
         if latitude is None or longitude is None:
             return Response(
                 {"error": "Valid latitude and longitude are required"},
@@ -184,9 +196,8 @@ class LocationViewSet(viewsets.ModelViewSet):
         if isinstance(collection, Response):
             return collection
 
-        place_id = str(payload.get('place_id') or '').strip() or None
         reverse_data = {}
-        details = {}
+        _, details = extract_google_place_details(payload, fallback_query=name)
 
         try:
             reverse_result = reverse_geocode(latitude, longitude, request.user)
@@ -195,25 +206,15 @@ class LocationViewSet(viewsets.ModelViewSet):
         except Exception:
             reverse_data = {}
 
-        if place_id:
-            details_result = get_place_details(place_id, fallback_query=name)
-            if isinstance(details_result, dict):
-                if 'error' not in details_result or details_result.get('description'):
-                    details = details_result
-
-        rating = self._coerce_float(payload.get('rating'))
+        rating = coerce_float(payload.get('rating'))
         if rating is None:
-            rating = self._coerce_float(details.get('rating'))
+            rating = coerce_float(details.get('rating'))
 
-        review_count = self._coerce_int(payload.get('review_count'))
+        review_count = coerce_int(payload.get('review_count'))
         if review_count is None:
-            review_count = self._coerce_int(details.get('review_count'))
+            review_count = coerce_int(details.get('review_count'))
 
-        website = self._clean_url(details.get('website')) or self._clean_url(payload.get('website'))
-        maps_url = self._clean_url(details.get('google_maps_url')) or self._clean_url(
-            payload.get('google_maps_url')
-        )
-        link = self._clean_url(payload.get('link')) or website or maps_url
+        link = preferred_link(payload, details)
 
         phone_number = str(details.get('phone_number') or payload.get('phone_number') or '').strip() or None
 
@@ -224,7 +225,7 @@ class LocationViewSet(viewsets.ModelViewSet):
             or None
         )
 
-        description = self._build_quick_add_description(
+        description = build_quick_add_description(
             base_description=payload.get('description'),
             detailed_description=details.get('description'),
         )
@@ -241,8 +242,8 @@ class LocationViewSet(viewsets.ModelViewSet):
             'rating': rating,
             'description': description,
             'link': link,
-            'tags': self._sanitize_tags(payload.get('types') or payload.get('tags')),
-            'is_public': self._coerce_bool(payload.get('is_public'), default=False),
+            'tags': sanitize_tags(payload.get('types') or payload.get('tags')),
+            'is_public': coerce_bool(payload.get('is_public'), default=False),
         }
 
         if category_payload:
@@ -258,7 +259,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         location = serializer.instance
         self._apply_reverse_geocode_metadata(location, reverse_data, location_label)
 
-        photo_urls = self._sanitize_photo_urls(payload.get('photos'))
+        photo_urls = sanitize_photo_urls(payload.get('photos'))
         image_import_summary = None
         if photo_urls:
             image_import_summary = import_remote_images_for_object(
@@ -581,108 +582,34 @@ class LocationViewSet(viewsets.ModelViewSet):
                     )
 
     def _resolve_quick_add_collection(self, collection_id):
-        if not collection_id:
-            return None
-
-        try:
-            collection = Collection.objects.get(id=collection_id)
-        except Collection.DoesNotExist:
-            return Response(
-                {"error": "Collection not found."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        try:
-            self._validate_collection_permissions([collection])
-        except PermissionDenied:
-            return Response(
-                {"error": "You do not have permission to add this location to the selected collection."},
-                status=status.HTTP_403_FORBIDDEN,
-            )
-
-        return collection
+        return resolve_quick_add_collection(
+            collection_id,
+            validate_permissions=self._validate_collection_permissions,
+            permission_error_message=(
+                "You do not have permission to add this location to the selected collection."
+            ),
+        )
 
     def _coerce_coordinate(self, value, min_value, max_value):
-        try:
-            number = round(float(value), 6)
-        except (TypeError, ValueError):
-            return None
-
-        if number < min_value or number > max_value:
-            return None
-
-        return number
+        return coerce_coordinate(value, min_value, max_value)
 
     def _coerce_float(self, value):
-        try:
-            return float(value)
-        except (TypeError, ValueError):
-            return None
+        return coerce_float(value)
 
     def _coerce_int(self, value):
-        try:
-            return int(value)
-        except (TypeError, ValueError):
-            return None
+        return coerce_int(value)
 
     def _coerce_bool(self, value, default=False):
-        if isinstance(value, bool):
-            return value
-        if isinstance(value, str):
-            normalized = value.strip().lower()
-            if normalized in {'true', '1', 'yes', 'on'}:
-                return True
-            if normalized in {'false', '0', 'no', 'off'}:
-                return False
-        return default
+        return coerce_bool(value, default=default)
 
     def _clean_url(self, value):
-        if not isinstance(value, str):
-            return None
-
-        normalized = value.strip()
-        if not normalized:
-            return None
-
-        parsed = urlparse(normalized)
-        if parsed.scheme in {'http', 'https'} and parsed.netloc:
-            return normalized
-
-        return None
+        return clean_url(value)
 
     def _sanitize_tags(self, raw_tags):
-        if not isinstance(raw_tags, list):
-            return []
-
-        tags = []
-        for item in raw_tags:
-            if not isinstance(item, str):
-                continue
-
-            value = item.strip()
-            if not value or value in tags:
-                continue
-
-            tags.append(value)
-            if len(tags) >= 8:
-                break
-
-        return tags
+        return sanitize_tags(raw_tags)
 
     def _sanitize_photo_urls(self, raw_urls):
-        if not isinstance(raw_urls, list):
-            return []
-
-        cleaned = []
-        for value in raw_urls:
-            url = self._clean_url(value)
-            if not url or url in cleaned:
-                continue
-            cleaned.append(url)
-            if len(cleaned) >= 5:
-                break
-
-        return cleaned
+        return sanitize_photo_urls(raw_urls)
 
     def _normalize_quick_add_category(self, raw_category):
         if not raw_category:
@@ -734,9 +661,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         base_description,
         detailed_description,
     ):
-        description = str(detailed_description or '').strip() or str(base_description or '').strip()
-
-        return description or None
+        return build_quick_add_description(base_description, detailed_description)
 
     def _apply_reverse_geocode_metadata(self, location, reverse_data, fallback_location):
         if not isinstance(reverse_data, dict):
