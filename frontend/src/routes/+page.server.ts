@@ -30,7 +30,7 @@ export const actions: Actions = {
 				path: '/',
 				maxAge: 60 * 60 * 24 * 365, // 1 year
 				sameSite: 'lax',
-				secure: url.protocol === 'https:',
+				secure: url.protocol === 'https:'
 			});
 		}
 	},
