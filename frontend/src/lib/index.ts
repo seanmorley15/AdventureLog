@@ -391,7 +391,7 @@ export let LODGING_TYPES_ICONS = {
 	apartment: '🏢',
 	house: '🏠',
 	villa: '🏡',
-	motel: '🚗🏨',
+	motel: '🏩',
 	other: '❓'
 };
 
