@@ -1060,7 +1060,7 @@ class CollectionItineraryDaySerializer(CustomModelSerializer):
         return super().update(instance, validated_data)
 
 class CollectionItineraryItemSerializer(CustomModelSerializer):
-    date = serializers.DateField(required=False, allow_null=True)
+    date = serializers.DateField(required=False, allow_null=True, default=None)
     item = serializers.SerializerMethodField()
     start_datetime = serializers.ReadOnlyField()
     end_datetime = serializers.ReadOnlyField()
