@@ -13,6 +13,11 @@ def get_csrf_token(request):
 def get_public_url(request):
     return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
 
+
+def healthz(request):
+    return HttpResponse(status=204)
+
+
 protected_paths = ['images/', 'attachments/']
 
 def serve_protected_media(request, path):
