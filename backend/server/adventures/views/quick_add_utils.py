@@ -1,12 +1,17 @@
+import datetime
 from urllib.parse import urlparse
 
 from django.core.exceptions import PermissionDenied as DjangoPermissionDenied
+from django.db import models
+from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied as DRFPermissionDenied
 from rest_framework.response import Response
 
+from django.contrib.contenttypes.models import ContentType
+
 from adventures.geocoding import get_place_details
-from adventures.models import Collection
+from adventures.models import Collection, CollectionItineraryItem, Visit
 
 
 def coerce_coordinate(value, min_value, max_value):
@@ -200,3 +205,121 @@ def infer_lodging_type(primary_type, place_types):
             return type_name
 
     return "other"
+
+
+def parse_itinerary_date(value):
+    if not value:
+        return None
+
+    raw_value = str(value).strip()
+    if not raw_value:
+        return None
+
+    parsed_date = parse_date(raw_value)
+    if parsed_date:
+        return parsed_date
+
+    parsed_datetime = parse_datetime(raw_value)
+    if parsed_datetime:
+        return parsed_datetime.date()
+
+    return None
+
+
+def validate_itinerary_date(collection, date_value):
+    if not collection or not date_value:
+        return None
+
+    if collection.start_date and date_value < collection.start_date:
+        return Response(
+            {"error": "Itinerary item date is before the collection start_date"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    if collection.end_date and date_value > collection.end_date:
+        return Response(
+            {"error": "Itinerary item date is after the collection end_date"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return None
+
+
+def apply_quick_add_itinerary_date(content_object, date_value):
+    if not content_object or not date_value:
+        return
+
+    model_name = content_object._meta.model_name
+
+    if model_name == "location":
+        start_dt = datetime.datetime.combine(date_value, datetime.time.min)
+        end_dt = datetime.datetime.combine(date_value, datetime.time.max)
+
+        exact_match = Visit.objects.filter(
+            location=content_object, start_date=start_dt, end_date=end_dt
+        ).first()
+        if exact_match:
+            return
+
+        overlap_q = models.Q(start_date__lte=end_dt) & models.Q(end_date__gte=start_dt)
+        existing = Visit.objects.filter(location=content_object).filter(overlap_q).first()
+        if existing:
+            existing.start_date = start_dt
+            existing.end_date = end_dt
+            existing.save(update_fields=["start_date", "end_date"])
+            return
+
+        Visit.objects.create(
+            location=content_object,
+            start_date=start_dt,
+            end_date=end_dt,
+            notes="Created from quick add",
+        )
+        return
+
+    if model_name == "lodging":
+        if content_object.check_in and content_object.check_out:
+            return
+
+        check_in = datetime.datetime.combine(date_value, datetime.time.min)
+        check_out = check_in + datetime.timedelta(days=1)
+        content_object.check_in = check_in
+        content_object.check_out = check_out
+        content_object.save(update_fields=["check_in", "check_out"])
+
+
+def create_quick_add_itinerary_item(collection, content_object, date_value):
+    if not collection or not content_object or not date_value:
+        return None
+
+    existing_error = validate_itinerary_date(collection, date_value)
+    if isinstance(existing_error, Response):
+        return existing_error
+
+    content_type = ContentType.objects.get_for_model(content_object.__class__)
+    existing_item = CollectionItineraryItem.objects.filter(
+        collection=collection,
+        content_type=content_type,
+        object_id=content_object.id,
+        date=date_value,
+        is_global=False,
+    ).first()
+    if existing_item:
+        return existing_item
+
+    max_order = (
+        CollectionItineraryItem.objects.filter(
+            collection=collection, date=date_value, is_global=False
+        ).aggregate(max_order=models.Max("order"))["max_order"]
+        or -1
+    )
+
+    apply_quick_add_itinerary_date(content_object, date_value)
+
+    return CollectionItineraryItem.objects.create(
+        collection=collection,
+        content_type=content_type,
+        object_id=content_object.id,
+        date=date_value,
+        is_global=False,
+        order=max_order + 1,
+    )

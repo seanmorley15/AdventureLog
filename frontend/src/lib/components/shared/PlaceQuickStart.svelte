@@ -50,11 +50,14 @@
 	export let mode: 'location' | 'lodging' = 'location';
 	export let googleEnabled = false;
 	export let collectionId: string | null = null;
+	export let itineraryDate: string | null = null;
+	export let itineraryLabel: string | null = null;
 
 	$: supportsCategory = mode === 'location';
 	$: itemLabel = mode === 'lodging' ? 'lodging' : 'location';
 	$: quickAddEndpoint =
 		mode === 'lodging' ? '/api/lodging/quick-add/' : '/api/locations/quick-add/';
+	$: formattedItineraryLabel = itineraryLabel || formatItineraryDate(itineraryDate);
 
 	let searchQuery = '';
 	let searchResults: SelectedPlace[] = [];
@@ -463,6 +466,24 @@
 		};
 	}
 
+	function formatItineraryDate(value: string | null) {
+		if (!value) {
+			return null;
+		}
+
+		const date = new Date(`${value}T00:00:00`);
+		if (Number.isNaN(date.getTime())) {
+			return value;
+		}
+
+		return date.toLocaleDateString(undefined, {
+			weekday: 'short',
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
+	}
+
 	async function continueWithDetails() {
 		await ensureAdventureLogFormattedLocation();
 
@@ -504,6 +525,7 @@
 				types: prefill.types || [],
 				photos: prefill.photos || [],
 				collection_id: collectionId,
+				itinerary_date: itineraryDate,
 				is_public: false
 			};
 
@@ -525,12 +547,18 @@
 			}
 
 			quickAddedLocation = await res.json();
+			const itineraryItem = quickAddedLocation?.quick_add_itinerary_item || null;
 
 			addToast(
 				'success',
 				`${itemLabel[0].toUpperCase()}${itemLabel.slice(1)} created successfully`
 			);
-			dispatch('quickAdded', { location: quickAddedLocation, prefill });
+			dispatch('quickAdded', {
+				location: quickAddedLocation,
+				prefill,
+				itineraryItem,
+				itineraryDate
+			});
 		} catch (error) {
 			addToast('error', error instanceof Error ? error.message : `Failed to create ${itemLabel}`);
 		} finally {
@@ -788,6 +816,14 @@
 				</div>
 			</div>
 		{/if}
+	{/if}
+
+	{#if itineraryDate}
+		<div class="alert alert-info alert-soft">
+			<span class="text-sm">
+				Will be added to {formattedItineraryLabel || itineraryDate}
+			</span>
+		</div>
 	{/if}
 
 	<div class="flex flex-col sm:flex-row gap-3 pt-2">

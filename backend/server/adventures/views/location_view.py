@@ -12,7 +12,12 @@ import requests
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
+from adventures.serializers import (
+    CalendarLocationSerializer,
+    CollectionItineraryItemSerializer,
+    LocationSerializer,
+    MapPinSerializer,
+)
 from adventures.utils import pagination
 from adventures.geocoding import reverse_geocode
 from worldtravel.models import City, Country, Region
@@ -24,7 +29,9 @@ from .quick_add_utils import (
     coerce_coordinate,
     coerce_float,
     coerce_int,
+    create_quick_add_itinerary_item,
     extract_google_place_details,
+    parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
     sanitize_photo_urls,
@@ -259,6 +266,13 @@ class LocationViewSet(viewsets.ModelViewSet):
         location = serializer.instance
         self._apply_reverse_geocode_metadata(location, reverse_data, location_label)
 
+        itinerary_date = parse_itinerary_date(payload.get('itinerary_date'))
+        itinerary_item = None
+        if collection and itinerary_date:
+            itinerary_item = create_quick_add_itinerary_item(collection, location, itinerary_date)
+            if isinstance(itinerary_item, Response):
+                return itinerary_item
+
         photo_urls = sanitize_photo_urls(payload.get('photos'))
         image_import_summary = None
         if photo_urls:
@@ -270,6 +284,10 @@ class LocationViewSet(viewsets.ModelViewSet):
             )
 
         response_data = self.get_serializer(location).data
+        if itinerary_item:
+            response_data['quick_add_itinerary_item'] = CollectionItineraryItemSerializer(
+                itinerary_item
+            ).data
         if image_import_summary and image_import_summary.get('failed'):
             response_data['quick_add_image_import'] = {
                 'created_count': image_import_summary['created_count'],

@@ -12,6 +12,7 @@
 	export let collection: Collection | null = null;
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	export let itineraryDayLabel: string | null = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -383,6 +384,8 @@
 			<LocationQuickStart
 				googleEnabled={googleMapsEnabled}
 				collectionId={collection?.id || null}
+				itineraryDate={storedInitialVisitDate}
+				itineraryLabel={itineraryDayLabel}
 				on:addDetails={(e) => {
 					applyQuickStartPrefill(e.detail.prefill);
 					setStep(1);
@@ -394,6 +397,11 @@
 					location = e.detail.location;
 					pendingGooglePhotoUrls = [];
 					didSave = true;
+					dispatch('quickAddCreated', {
+						location: e.detail.location,
+						itineraryItem: e.detail.itineraryItem || null,
+						itineraryDate: e.detail.itineraryDate || null
+					});
 					close();
 				}}
 				on:quickAddedEdit={(e) => {

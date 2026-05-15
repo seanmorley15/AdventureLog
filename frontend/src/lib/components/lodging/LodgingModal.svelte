@@ -12,6 +12,7 @@
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	export let itineraryDayLabel: string | null = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -361,6 +362,8 @@
 			<LodgingQuickStart
 				googleEnabled={googleMapsEnabled}
 				collectionId={collection?.id || null}
+				itineraryDate={storedInitialVisitDate}
+				itineraryLabel={itineraryDayLabel}
 				on:addDetails={(e) => {
 					applyQuickStartPrefill(e.detail.prefill);
 					setStep(1);
@@ -372,6 +375,11 @@
 					lodging = e.detail.location;
 					pendingGooglePhotoUrls = [];
 					didSave = true;
+					dispatch('quickAddCreated', {
+						location: e.detail.location,
+						itineraryItem: e.detail.itineraryItem || null,
+						itineraryDate: e.detail.itineraryDate || null
+					});
 					close();
 				}}
 				on:quickAddedEdit={(e) => {

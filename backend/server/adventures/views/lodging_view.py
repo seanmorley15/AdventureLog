@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Q
 from adventures.models import Lodging
-from adventures.serializers import LodgingSerializer
+from adventures.serializers import CollectionItineraryItemSerializer, LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.geocoding import reverse_geocode
@@ -14,8 +14,10 @@ from .quick_add_utils import (
     coerce_bool,
     coerce_coordinate,
     coerce_float,
+    create_quick_add_itinerary_item,
     extract_google_place_details,
     infer_lodging_type,
+    parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
     sanitize_photo_urls,
@@ -154,6 +156,13 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
         lodging = serializer.instance
 
+        itinerary_date = parse_itinerary_date(payload.get('itinerary_date'))
+        itinerary_item = None
+        if collection and itinerary_date:
+            itinerary_item = create_quick_add_itinerary_item(collection, lodging, itinerary_date)
+            if isinstance(itinerary_item, Response):
+                return itinerary_item
+
         photo_urls = sanitize_photo_urls(payload.get('photos'))
         image_import_summary = None
         if photo_urls:
@@ -165,6 +174,10 @@ class LodgingViewSet(viewsets.ModelViewSet):
             )
 
         response_data = self.get_serializer(lodging).data
+        if itinerary_item:
+            response_data['quick_add_itinerary_item'] = CollectionItineraryItemSerializer(
+                itinerary_item
+            ).data
         if image_import_summary and image_import_summary.get('failed'):
             response_data['quick_add_image_import'] = {
                 'created_count': image_import_summary['created_count'],

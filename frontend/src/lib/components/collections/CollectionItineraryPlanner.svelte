@@ -396,6 +396,79 @@
 		return value.includes('T') ? value.split('T')[0] : value;
 	}
 
+	function upsertItineraryItem(newItem: CollectionItineraryItem) {
+		if (!newItem) return;
+		const itinerary = collection.itinerary ? [...collection.itinerary] : [];
+		const idMatchIndex = itinerary.findIndex((it) => String(it.id) === String(newItem.id));
+		if (idMatchIndex >= 0) {
+			itinerary[idMatchIndex] = newItem;
+			collection = { ...collection, itinerary };
+			return;
+		}
+		const duplicate = itinerary.some(
+			(it) =>
+				String(it.object_id) === String(newItem.object_id) &&
+				String(it.date || '') === String(newItem.date || '') &&
+				Boolean(it.is_global) === Boolean(newItem.is_global)
+		);
+		if (!duplicate) {
+			collection = { ...collection, itinerary: [...itinerary, newItem] };
+		}
+	}
+
+	function handleQuickAddCreated(
+		objectType: 'location' | 'lodging',
+		event: CustomEvent<{
+			location: any;
+			itineraryItem?: CollectionItineraryItem | null;
+			itineraryDate?: string | null;
+		}>
+	) {
+		const createdItem = event.detail?.location;
+		if (!createdItem) return;
+
+		if (objectType === 'location') {
+			const locs = collection.locations ? [...collection.locations] : [];
+			const idx = locs.findIndex((loc) => String(loc.id) === String(createdItem.id));
+			if (idx >= 0) {
+				locs[idx] = {
+					...locs[idx],
+					...createdItem,
+					visits: createdItem.visits || locs[idx].visits || []
+				};
+			} else {
+				locs.unshift({ ...createdItem });
+			}
+			collection = { ...collection, locations: locs };
+		} else {
+			const lodgings = collection.lodging ? [...collection.lodging] : [];
+			const idx = lodgings.findIndex((l) => String(l.id) === String(createdItem.id));
+			if (idx >= 0) {
+				lodgings[idx] = { ...lodgings[idx], ...createdItem };
+			} else {
+				lodgings.unshift({ ...createdItem });
+			}
+			collection = { ...collection, lodging: lodgings };
+		}
+
+		const itineraryItem = event.detail?.itineraryItem || null;
+		if (itineraryItem) {
+			upsertItineraryItem(itineraryItem);
+			addedToItinerary.add(String(createdItem.id));
+			addedToItinerary = addedToItinerary;
+		} else if (event.detail?.itineraryDate) {
+			void addItineraryItemForObject(
+				objectType,
+				String(createdItem.id),
+				String(event.detail.itineraryDate)
+			);
+			addedToItinerary.add(String(createdItem.id));
+			addedToItinerary = addedToItinerary;
+		}
+
+		pendingAddDate = null;
+	}
+
 	function upsertNote(note: Note) {
 		const notes = collection.notes ? [...collection.notes] : [];
 		const idx = notes.findIndex((n) => n.id === note.id);
@@ -543,11 +616,11 @@
 	$: if (
 		locationBeingUpdated?.id &&
 		pendingAddDate &&
-		!addedToItinerary.has(locationBeingUpdated.id)
+		!addedToItinerary.has(String(locationBeingUpdated.id))
 	) {
 		addItineraryItemForObject('location', locationBeingUpdated.id, pendingAddDate);
 		// Mark this location as added to prevent duplicates
-		addedToItinerary.add(locationBeingUpdated.id);
+		addedToItinerary.add(String(locationBeingUpdated.id));
 		addedToItinerary = addedToItinerary; // trigger reactivity
 	}
 
@@ -578,7 +651,7 @@
 	$: if (
 		lodgingBeingUpdated?.id &&
 		pendingAddDate &&
-		!addedToItinerary.has(lodgingBeingUpdated.id)
+		!addedToItinerary.has(String(lodgingBeingUpdated.id))
 	) {
 		// Normalize check_in to date-only (YYYY-MM-DD) if present
 		const lodgingCheckInDate = lodgingBeingUpdated.check_in
@@ -588,7 +661,7 @@
 
 		addItineraryItemForObject('lodging', lodgingBeingUpdated.id, targetDate);
 		// Mark this lodging as added to prevent duplicates
-		addedToItinerary.add(lodgingBeingUpdated.id);
+		addedToItinerary.add(String(lodgingBeingUpdated.id));
 		addedToItinerary = addedToItinerary; // trigger reactivity
 	}
 
@@ -619,11 +692,11 @@
 	$: if (
 		transportationBeingUpdated?.id &&
 		pendingAddDate &&
-		!addedToItinerary.has(transportationBeingUpdated.id)
+		!addedToItinerary.has(String(transportationBeingUpdated.id))
 	) {
 		addItineraryItemForObject('transportation', transportationBeingUpdated.id, pendingAddDate);
 		// Mark this transportation as added to prevent duplicates
-		addedToItinerary.add(transportationBeingUpdated.id);
+		addedToItinerary.add(String(transportationBeingUpdated.id));
 		addedToItinerary = addedToItinerary; // trigger reactivity
 	}
 
@@ -1301,6 +1374,15 @@
 		dateISO: string,
 		updateItemDate: boolean = false
 	) {
+		const alreadyScheduled = (collection.itinerary || []).some(
+			(it) =>
+				String(it.object_id) === String(objectId) &&
+				String(it.date || '') === String(dateISO) &&
+				!it.is_global
+		);
+		if (alreadyScheduled) {
+			return;
+		}
 		const tempId = `temp-${Date.now()}`;
 		const day = days.find((d) => d.date === dateISO);
 		const order = day ? day.items.length : 0;
@@ -1520,6 +1602,7 @@
 			addedToItinerary.clear();
 			addedToItinerary = addedToItinerary;
 		}}
+		on:quickAddCreated={(e) => handleQuickAddCreated('location', e)}
 		{user}
 		{locationToEdit}
 		bind:location={locationBeingUpdated}
@@ -1538,6 +1621,7 @@
 			addedToItinerary.clear();
 			addedToItinerary = addedToItinerary;
 		}}
+		on:quickAddCreated={(e) => handleQuickAddCreated('lodging', e)}
 		{user}
 		{lodgingToEdit}
 		bind:lodging={lodgingBeingUpdated}
