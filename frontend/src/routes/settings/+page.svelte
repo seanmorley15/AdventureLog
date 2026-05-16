@@ -645,7 +645,7 @@
 											{/each}
 										</select>
 										<p class="text-sm text-base-content/60 mt-1">
-											This currency pre-fills money fields when adding new items.
+											{$t('settings.preferred_currency_desc')}
 										</p>
 									</div>
 
@@ -666,7 +666,7 @@
 											{/each}
 										</select>
 										<p class="text-sm text-base-content/60 mt-1">
-											Used as the default basemap across maps that support style selection.
+											{$t('settings.map_style_desc')}
 										</p>
 									</div>
 								</div>
