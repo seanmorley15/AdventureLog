@@ -19,7 +19,7 @@
 	import Trophy from '~icons/mdi/trophy';
 	import Target from '~icons/mdi/target';
 	import Flag from '~icons/mdi/flag';
-	import { getBasemapUrl } from '$lib';
+	import { normalizeBasemapType } from '$lib';
 
 	export let data: PageData;
 
@@ -406,7 +406,7 @@
 								geoJson={regionsGeoJson}
 								sourceId={REGION_SOURCE_ID}
 								clusterOptions={regionClusterOptions}
-								mapStyle={getBasemapUrl()}
+								basemapType={normalizeBasemapType(data.user?.map_style)}
 								mapClass="aspect-[16/10] w-full rounded-lg"
 								fitLevel="region"
 								on:markerSelect={handleMarkerSelect}

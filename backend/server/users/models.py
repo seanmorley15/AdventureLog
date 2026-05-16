@@ -30,6 +30,34 @@ CURRENCY_CHOICES = (
     ('TRY', 'Turkish Lira'),
 )
 
+BASEMAP_CHOICES = (
+    ('default', 'Default'),
+    ('terrain-3d', '3D Terrain'),
+    ('satellite-terrain-3d', '3D Satellite Terrain'),
+    ('topo-terrain-3d', '3D Topographic'),
+    ('osm-standard', 'OpenStreetMap'),
+    ('satellite', 'Satellite'),
+    ('satellite-labels', 'Satellite + Labels'),
+    ('usgs-imagery', 'USGS Imagery'),
+    ('usgs-imagery-topo', 'USGS Imagery + Topo'),
+    ('elevation', 'Elevation'),
+    ('usgs-topo', 'USGS Topo'),
+    ('esri-topo', 'Esri Topo'),
+    ('opentopomap', 'OpenTopoMap'),
+    ('carto-light', 'Light'),
+    ('carto-dark', 'Dark'),
+    ('carto-positron', 'Positron'),
+    ('carto-positron-labels', 'Positron + Labels'),
+    ('esri-gray', 'Gray Canvas'),
+    ('carto-voyager', 'Voyager'),
+    ('osm-humanitarian', 'Humanitarian'),
+    ('esri-streets', 'Streets'),
+    ('esri-national-geographic', 'National Geographic'),
+    ('esri-oceans', 'Oceans'),
+    ('osm-france', 'France Style'),
+    ('openfreemap-liberty', 'OpenFreeMap Liberty'),
+)
+
 class CustomUser(AbstractUser):
     email = models.EmailField(unique=True)  # Override the email field with unique constraint
     profile_pic = ResizedImageField(force_format="WEBP", quality=75, null=True, blank=True, upload_to='profile-pics/')
@@ -38,6 +66,7 @@ class CustomUser(AbstractUser):
     disable_password = models.BooleanField(default=False)
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     default_currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='USD')
+    map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
     
     
     def __str__(self):

@@ -4,7 +4,8 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { DefaultMarker, Popup } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
@@ -14,7 +15,7 @@
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { getBasemapUrl, isAllDay, LODGING_TYPES_ICONS } from '$lib';
+	import { normalizeBasemapType, isAllDay, LODGING_TYPES_ICONS } from '$lib';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -380,9 +381,9 @@
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.lodging')}</h2>
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<MapLibre
-									style={getBasemapUrl()}
-									class="w-full h-96"
+								<FullMap
+									basemapType={normalizeBasemapType(data.user?.map_style)}
+									mapClass="w-full h-96"
 									standardControls
 									center={[lodging.longitude, lodging.latitude]}
 									zoom={13}
@@ -415,7 +416,7 @@
 											</div>
 										</Popup>
 									</DefaultMarker>
-								</MapLibre>
+								</FullMap>
 							</div>
 							{#if lodging.location}
 								<ExternalMapLinks

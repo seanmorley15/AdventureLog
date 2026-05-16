@@ -5,7 +5,7 @@
 	import type { Activity, Location, VisitedCity, VisitedRegion, Pin } from '$lib/types.js';
 	import type { ClusterOptions } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { getActivityColor } from '$lib';
+	import { getActivityColor, normalizeBasemapType } from '$lib';
 	import { page } from '$app/stores';
 
 	// Icons
@@ -30,7 +30,7 @@
 	let showCities: boolean = false;
 	let sidebarOpen: boolean = false;
 
-	let basemapType: string = 'default';
+	let basemapType: string = normalizeBasemapType(data.user?.map_style);
 
 	// Map state from URL params
 	let mapZoom: number = 2;
@@ -476,7 +476,7 @@
 </script>
 
 <svelte:head>
-	<title>Adventure Map</title>
+	<title>Location Map</title>
 	<meta name="description" content="View your travels on a map." />
 </svelte:head>
 

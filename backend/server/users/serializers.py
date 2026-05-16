@@ -70,6 +70,8 @@ class UserDetailsSerializer(serializers.ModelSerializer):
             extra_fields.append('measurement_system')
         if hasattr(UserModel, 'default_currency'):
             extra_fields.append('default_currency')
+        if hasattr(UserModel, 'map_style'):
+            extra_fields.append('map_style')
 
         fields = ['pk', *extra_fields]
         read_only_fields = ('email', 'date_joined', 'is_staff', 'is_superuser', 'is_active', 'pk', 'disable_password')

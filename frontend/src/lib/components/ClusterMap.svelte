@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { CircleLayer, GeoJSON, MapLibre, MarkerLayer } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
 	import type { ClusterOptions, LayerClickInfo } from 'svelte-maplibre';
-	import { getBasemapUrl } from '$lib';
 	import { resolveThemeColor, withAlpha } from '$lib/utils/resolveThemeColor';
 
 	type PointGeometry = {
@@ -28,17 +27,12 @@
 		features: ClusterFeature<P>[];
 	};
 
-	type ClusterSource = {
-		getClusterExpansionZoom: (
-			clusterId: number,
-			callback: (error: unknown, zoom: number) => void
-		) => void;
-	};
-
 	export let geoJson: ClusterFeatureCollection = { type: 'FeatureCollection', features: [] };
 	export let clusterOptions: ClusterOptions = { radius: 300, maxZoom: 5, minPoints: 1 };
 	export let sourceId = 'cluster-source';
-	export let mapStyle: string = getBasemapUrl();
+	export let basemapType: string = 'default';
+	export let mapStyle: string | null = null;
+	export let showBasemapSelector: boolean = true;
 	export let mapClass = '';
 	export let zoom = 2;
 	export let standardControls = true;
@@ -167,10 +161,10 @@
 		clusterClick: LayerClickInfo;
 	}>();
 
-	let resolvedClusterCirclePaint: Record<string, unknown> = clusterCirclePaint;
-	$: resolvedClusterCirclePaint = clusterCirclePaint as Record<string, unknown>;
+	let resolvedClusterCirclePaint: Record<string, any> = clusterCirclePaint as Record<string, any>;
+	$: resolvedClusterCirclePaint = clusterCirclePaint as Record<string, any>;
 
-	// Map instance (bound from MapLibre) and bounding state
+	// Map instance (bound from FullMap) and bounding state
 	let map: any = undefined;
 	let _lastBoundsKey: string | null = null;
 
@@ -240,47 +234,12 @@
 	}
 
 	function handleClusterClick(event: CustomEvent<LayerClickInfo>) {
-		const { clusterId, features, map, source } = event.detail;
-		if (!clusterId || !features?.length) {
-			return;
-		}
-
-		const clusterFeature = features[0] as {
-			geometry?: { type?: string; coordinates?: [number, number] };
-		};
-
-		const coordinates =
-			clusterFeature?.geometry?.type === 'Point' ? clusterFeature.geometry.coordinates : undefined;
-		if (!coordinates) {
-			return;
-		}
-
-		const geoJsonSource = map.getSource(source) as ClusterSource | undefined;
-		if (!geoJsonSource || typeof geoJsonSource.getClusterExpansionZoom !== 'function') {
-			return;
-		}
-
-		geoJsonSource.getClusterExpansionZoom(
-			Number(clusterId),
-			(error: unknown, zoomLevel: number) => {
-				if (error) {
-					console.error('Failed to expand cluster', error);
-					return;
-				}
-
-				map.easeTo({
-					center: coordinates,
-					zoom: zoomLevel
-				});
-			}
-		);
-
 		dispatch('clusterClick', event.detail);
 	}
 
-	function handleMarkerClick(event: CustomEvent<any>) {
+	function handleMarkerClick(event: CustomEvent<{ feature: unknown; markerProps: MarkerProps }>) {
 		const feature = event.detail?.feature;
-		const markerProps = getMarkerProps(feature);
+		const markerProps = event.detail?.markerProps ?? getMarkerProps(feature);
 		const countryCode =
 			markerProps && typeof markerProps.country_code === 'string'
 				? markerProps.country_code
@@ -290,45 +249,46 @@
 	}
 </script>
 
-<MapLibre bind:map style={mapStyle} class={mapClass} {standardControls} {zoom}>
-	<GeoJSON id={sourceId} data={geoJson} cluster={clusterOptions} generateId>
-		<CircleLayer
-			id={`${sourceId}-clusters`}
-			applyToClusters
-			hoverCursor="pointer"
-			paint={resolvedClusterCirclePaint}
-			on:click={handleClusterClick}
-		/>
-		<!-- Render cluster counts as HTML so they don't depend on map glyph/font availability -->
-		<MarkerLayer applyToClusters let:feature={clusterFeature}>
-			{@const clusterProps = getMarkerProps(clusterFeature)}
-			{@const abbreviated = clusterProps && clusterProps['point_count_abbreviated']}
-			{@const count = abbreviated ?? (clusterProps && clusterProps['point_count'])}
-			{#if typeof count !== 'undefined' && count !== null}
-				<div
-					class="pointer-events-none select-none font-sans text-xs font-bold text-base-content drop-shadow-sm"
+<FullMap
+	bind:map
+	{mapStyle}
+	{basemapType}
+	{mapClass}
+	{showBasemapSelector}
+	{standardControls}
+	{zoom}
+	{geoJson}
+	{sourceId}
+	{clusterOptions}
+	clusterCirclePaint={resolvedClusterCirclePaint}
+	{clusterSymbolLayout}
+	{clusterSymbolPaint}
+	{getMarkerProps}
+	on:clusterClick={handleClusterClick}
+	on:markerClick={handleMarkerClick}
+>
+	<svelte:fragment
+		slot="marker"
+		let:featureData
+		let:markerProps
+		let:markerLngLat
+		let:isActive
+		let:setActive
+	>
+		<slot name="marker" {featureData} {markerProps} {markerLngLat} {isActive} {setActive}>
+			{#if markerProps}
+				<button
+					type="button"
+					class={`${markerBaseClass} ${markerClass(markerProps)}`.trim()}
+					title={markerTitle(markerProps)}
+					aria-label={markerLabel(markerProps)}
 				>
-					{count}
-				</div>
+					<span class="text-xs font-medium">{markerLabel(markerProps)}</span>
+				</button>
 			{/if}
-		</MarkerLayer>
-		<MarkerLayer applyToClusters={false} on:click={handleMarkerClick} let:feature={featureData}>
-			{@const markerProps = getMarkerProps(featureData)}
-			<slot name="marker" {featureData} {markerProps}>
-				{#if markerProps}
-					<button
-						type="button"
-						class={`${markerBaseClass} ${markerClass(markerProps)}`.trim()}
-						title={markerTitle(markerProps)}
-						aria-label={markerLabel(markerProps)}
-					>
-						<span class="text-xs font-medium">{markerLabel(markerProps)}</span>
-					</button>
-				{/if}
-			</slot>
-		</MarkerLayer>
-	</GeoJSON>
-</MapLibre>
+		</slot>
+	</svelte:fragment>
+</FullMap>
 
 <style>
 	:global(.mapboxgl-canvas) {

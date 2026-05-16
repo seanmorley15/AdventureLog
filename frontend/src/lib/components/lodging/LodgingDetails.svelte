@@ -17,6 +17,7 @@
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
+	import { normalizeBasemapType } from '$lib';
 	// @ts-ignore
 	import { DateTime } from 'luxon';
 	import { isAllDay } from '$lib';
@@ -497,6 +498,7 @@
 					{initialSelection}
 					bind:isReverseGeocoding
 					bind:displayName={lodging.location}
+					basemapType={normalizeBasemapType(user?.map_style)}
 					displayNamePosition="after"
 					on:update={handleLocationUpdate}
 					on:clear={handleLocationClear}

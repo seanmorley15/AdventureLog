@@ -83,11 +83,24 @@ from users.models import CustomUser
 
 class CustomUserAdmin(UserAdmin):
     model = CustomUser
-    list_display = ['username', 'is_staff', 'is_active', 'image_display', 'measurement_system', 'default_currency']
+    list_display = ['username', 'is_staff', 'is_active', 'image_display', 'measurement_system', 'default_currency', 'map_style']
     readonly_fields = ('uuid',)
     search_fields = ('username',)
     fieldsets = UserAdmin.fieldsets + (
-        (None, {'fields': ('profile_pic', 'uuid', 'public_profile', 'disable_password', 'measurement_system', 'default_currency')}),
+        (
+            None,
+            {
+                'fields': (
+                    'profile_pic',
+                    'uuid',
+                    'public_profile',
+                    'disable_password',
+                    'measurement_system',
+                    'default_currency',
+                    'map_style',
+                )
+            },
+        ),
     )
     def image_display(self, obj):
         if obj.profile_pic:

@@ -3,6 +3,7 @@
 	import type { Collection, Location, User } from '$lib/types';
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
+	import { normalizeBasemapType } from '$lib';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
@@ -386,6 +387,7 @@
 				collectionId={collection?.id || null}
 				itineraryDate={storedInitialVisitDate}
 				itineraryLabel={itineraryDayLabel}
+				basemapType={normalizeBasemapType(user?.map_style)}
 				on:addDetails={(e) => {
 					applyQuickStartPrefill(e.detail.prefill);
 					setStep(1);

@@ -7,6 +7,7 @@
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TagComplete from '../TagComplete.svelte';
 	import { DEFAULT_CURRENCY, toMoneyValue } from '$lib/money';
+	import { normalizeBasemapType } from '$lib';
 	import { saveLocation } from '$lib/location-save';
 	import { addToast } from '$lib/toasts';
 	import type { Category, Collection, Location, MoneyValue, User } from '$lib/types';
@@ -469,6 +470,7 @@
 					{initialSelection}
 					bind:isReverseGeocoding
 					bind:displayName={location.location}
+					basemapType={normalizeBasemapType(user?.map_style)}
 					displayNamePosition="before"
 					on:update={handleLocationUpdate}
 					on:clear={handleLocationClear}

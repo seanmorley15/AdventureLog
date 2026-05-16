@@ -17,7 +17,7 @@
 	import Check from '~icons/mdi/check-circle';
 	import Progress from '~icons/mdi/progress-check';
 	import Cancel from '~icons/mdi/cancel';
-	import { getBasemapUrl } from '$lib';
+	import { normalizeBasemapType } from '$lib';
 
 	export let data: PageData;
 	console.log(data);
@@ -437,7 +437,7 @@
 								geoJson={countriesGeoJson}
 								sourceId={COUNTRY_SOURCE_ID}
 								clusterOptions={countryClusterOptions}
-								mapStyle={getBasemapUrl()}
+								basemapType={normalizeBasemapType(data.user?.map_style)}
 								mapClass="aspect-[16/10] w-full rounded-lg"
 								fitLevel="country"
 								on:markerSelect={handleMarkerSelect}

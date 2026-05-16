@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
-	import { MapLibre, Marker, MapEvents } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { getBasemapUrl } from '$lib';
 	import { addToast } from '$lib/toasts';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Category } from '$lib/types';
@@ -52,6 +52,7 @@
 	export let collectionId: string | null = null;
 	export let itineraryDate: string | null = null;
 	export let itineraryLabel: string | null = null;
+	export let basemapType: string = 'default';
 
 	$: supportsCategory = mode === 'location';
 	$: itemLabel = mode === 'lodging' ? 'lodging' : 'location';
@@ -70,7 +71,6 @@
 	let isQuickAdding = false;
 	let quickAddedLocation: any = null;
 	let searchTimeout: ReturnType<typeof setTimeout>;
-	let mapComponent: any;
 	let selectedMarker: { lng: number; lat: number } | null = null;
 	let locationData: LocationData | null = null;
 	let selectedQuickAddCategory: Category | null = null;
@@ -727,15 +727,14 @@
 				</div>
 			{/if}
 
-			<MapLibre
-				bind:this={mapComponent}
-				style={getBasemapUrl()}
-				class="w-full h-80 rounded-lg border border-base-300"
+			<FullMap
+				basemapType={basemapType}
+				mapClass="w-full h-80 rounded-lg border border-base-300"
 				center={mapCenter}
 				zoom={mapZoom}
 				standardControls
+				on:mapClick={handleMapClick}
 			>
-				<MapEvents on:click={handleMapClick} />
 
 				{#if selectedMarker}
 					<Marker
@@ -745,7 +744,7 @@
 						<PinIcon class="w-5 h-5 text-primary-content" />
 					</Marker>
 				{/if}
-			</MapLibre>
+			</FullMap>
 		</div>
 	</div>
 

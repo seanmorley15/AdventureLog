@@ -142,6 +142,7 @@ export const actions: Actions = {
 			let public_profile = formData.get('public_profile') as string | null | undefined | boolean;
 			let measurement_system = formData.get('measurement_system') as string | null | undefined;
 			let default_currency = formData.get('default_currency') as string | null | undefined;
+			let map_style = formData.get('map_style') as string | null | undefined;
 
 			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
 				headers: {
@@ -171,6 +172,9 @@ export const actions: Actions = {
 			if (default_currency !== null && typeof default_currency === 'string') {
 				default_currency = default_currency.trim().toUpperCase();
 			}
+			if (map_style !== null && typeof map_style === 'string') {
+				map_style = map_style.trim();
+			}
 
 			let currentUser = (await resCurrent.json()) as User;
 
@@ -188,6 +192,9 @@ export const actions: Actions = {
 			}
 			if (!default_currency || default_currency === currentUser.default_currency) {
 				default_currency = undefined;
+			}
+			if (!map_style || map_style === currentUser.map_style) {
+				map_style = undefined;
 			}
 
 			let formDataToSend = new FormData();
@@ -208,6 +215,9 @@ export const actions: Actions = {
 			formDataToSend.append('measurement_system', measurement_system.toString());
 			if (default_currency) {
 				formDataToSend.append('default_currency', default_currency);
+			}
+			if (map_style) {
+				formDataToSend.append('map_style', map_style);
 			}
 
 			let csrfToken = await fetchCSRFToken();

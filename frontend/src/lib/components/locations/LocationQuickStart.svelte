@@ -5,6 +5,7 @@
 	export let collectionId: string | null = null;
 	export let itineraryDate: string | null = null;
 	export let itineraryLabel: string | null = null;
+	export let basemapType: string = 'default';
 </script>
 
 <PlaceQuickStart
@@ -13,6 +14,7 @@
 	{collectionId}
 	{itineraryDate}
 	{itineraryLabel}
+	{basemapType}
 	on:addDetails
 	on:manual
 	on:quickAdded

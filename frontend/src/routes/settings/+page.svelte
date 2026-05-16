@@ -3,6 +3,7 @@
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
+	import { basemapOptions, normalizeBasemapType } from '$lib';
 	import type { ImmichIntegration, User, APIKey } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
@@ -21,6 +22,7 @@
 	if (data.user) {
 		user = data.user;
 		emails = data.props.emails;
+		user.map_style = normalizeBasemapType(user.map_style);
 	}
 
 	type Provider = {
@@ -644,6 +646,27 @@
 										</select>
 										<p class="text-sm text-base-content/60 mt-1">
 											This currency pre-fills money fields when adding new items.
+										</p>
+									</div>
+
+									<div class="form-control">
+										<label class="label" for="map_style">
+											<span class="label-text font-medium">Default map style</span>
+										</label>
+										<select
+											id="map_style"
+											name="map_style"
+											class="select select-bordered select-primary w-full"
+											bind:value={user.map_style}
+										>
+											{#each basemapOptions as option}
+												<option value={option.value}>
+													{option.label} ({option.category})
+												</option>
+											{/each}
+										</select>
+										<p class="text-sm text-base-content/60 mt-1">
+											Used as the default basemap across maps that support style selection.
 										</p>
 									</div>
 								</div>

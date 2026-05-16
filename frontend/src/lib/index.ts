@@ -913,6 +913,9 @@ export function getBasemapUrl(type = 'default'): any {
 				'© OpenTopoMap (CC-BY-SA), © OpenStreetMap contributors'
 			);
 
+		case 'openfreemap-liberty':
+			return 'https://tiles.openfreemap.org/styles/liberty';
+
 		default:
 			return getIsDarkMode()
 				? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
@@ -1011,6 +1014,12 @@ export const basemapOptions = [
 	// Specialized
 	{ value: 'carto-voyager', label: 'Voyager', icon: '🚢', category: 'Specialized' },
 	{ value: 'osm-humanitarian', label: 'Humanitarian', icon: '🏥', category: 'Specialized' },
+	{
+		value: 'openfreemap-liberty',
+		label: 'OpenFreeMap Liberty',
+		icon: '🗽',
+		category: 'Specialized'
+	},
 	{ value: 'esri-streets', label: 'Streets', icon: '🛣️', category: 'Specialized' },
 	{
 		value: 'esri-national-geographic',
@@ -1025,6 +1034,11 @@ export const basemapOptions = [
 export function getBasemapLabel(value: string) {
 	const option = basemapOptions.find((opt) => opt.value === value);
 	return option ? option.label : 'Default';
+}
+
+export function normalizeBasemapType(value?: string | null): string {
+	if (!value) return 'default';
+	return basemapOptions.some((opt) => opt.value === value) ? value : 'default';
 }
 
 export function getDistance(measurementSystem: 'metric' | 'imperial', meters: number): string {

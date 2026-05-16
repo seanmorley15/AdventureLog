@@ -2,8 +2,9 @@
 	import type { Collection, User, ContentImage } from '$lib/types';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { DefaultMarker, MapLibre, Popup } from 'svelte-maplibre';
-	import { getBasemapUrl } from '$lib';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { DefaultMarker, Popup } from 'svelte-maplibre';
+	import { normalizeBasemapType } from '$lib';
 	import MagnifyIcon from '~icons/mdi/magnify';
 	import MapMarker from '~icons/mdi/map-marker';
 	import Star from '~icons/mdi/star';
@@ -571,11 +572,11 @@
 			<div class="card-body">
 				<h3 class="card-title text-xl mb-4">📍 {$t('recomendations.map_view')}</h3>
 				<div class="rounded-lg overflow-hidden shadow-lg">
-					<MapLibre
-						style={getBasemapUrl()}
-						class="w-full h-[500px]"
+					<FullMap
+						basemapType={normalizeBasemapType(user?.map_style)}
+						mapClass="w-full h-[500px]"
 						standardControls
-						center={mapCenter}
+						center={[mapCenter.lng, mapCenter.lat]}
 						zoom={mapZoom}
 					>
 						<!-- Collection Locations -->
@@ -637,7 +638,7 @@
 								</Popup>
 							</DefaultMarker>
 						{/each}
-					</MapLibre>
+					</FullMap>
 				</div>
 			</div>
 		</div>

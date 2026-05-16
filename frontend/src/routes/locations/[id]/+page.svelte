@@ -4,7 +4,8 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
@@ -19,7 +20,7 @@
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
-	import { getActivityColor, getBasemapUrl, isAllDay, copyToClipboard } from '$lib';
+	import { getActivityColor, normalizeBasemapType, isAllDay, copyToClipboard } from '$lib';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -717,11 +718,11 @@
 							{/if}
 
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<MapLibre
-									style={getBasemapUrl()}
-									class="w-full h-96"
+								<FullMap
+									basemapType={normalizeBasemapType(data.user?.map_style)}
+									mapClass="w-full h-96"
 									standardControls
-									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
+									center={[adventure.longitude || 0, adventure.latitude || 0]}
 									zoom={adventure.longitude ? 12 : 1}
 								>
 									{#if geojson}
@@ -784,7 +785,7 @@
 											</Popup>
 										</DefaultMarker>
 									{/if}
-								</MapLibre>
+								</FullMap>
 							</div>
 						</div>
 					</div>
