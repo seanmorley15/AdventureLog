@@ -27,7 +27,7 @@
 		"autoprefixer": "^10.4.21",
 		"baseline-browser-mapping": "^2.9.9",
 		"daisyui": "^4.12.24",
-		"postcss": "^8.5.3",
+		"postcss": "^8.5.10",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.3.3",
 		"svelte": "4.2.19",
