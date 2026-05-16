@@ -494,7 +494,8 @@
 		"export_success": "Exported collection",
 		"location_actions": "Location actions",
 		"collection_duplicate_success": "Collection duplicated successfully! Redirecting...",
-		"collection_duplicate_error": "Failed to duplicate collection."
+		"collection_duplicate_error": "Failed to duplicate collection.",
+		"add_details": "Add details"
 	},
 	"worldtravel": {
 		"country_list": "Country List",

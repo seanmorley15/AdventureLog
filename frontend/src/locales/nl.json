@@ -492,8 +492,7 @@
 		"calendar": "Kalender",
 		"admin_panel": "Admin -paneel",
 		"navigation": "Navigatie",
-		"worldtravel": "Wereldreizen",
-		"mobile_login": "Mobiel inloggen"
+		"worldtravel": "Wereldreizen"
 	},
 	"auth": {
 		"confirm_password": "Bevestig wachtwoord",
@@ -1032,8 +1031,7 @@
 	"locations": {
 		"location": "Locatie",
 		"locations": "Locaties",
-		"my_locations": "Mijn locaties",
-		"best_happened_at": "Het beste gebeurde om"
+		"my_locations": "Mijn locaties"
 	},
 	"settings_download_backup": "Download back -up",
 	"invites": {
@@ -1141,29 +1139,5 @@
 		"trip_context_info": "Reiscontextitems zijn van toepassing op de hele reis, bijvoorbeeld locaties die de bestemming zelf vormen, algemene opmerkingen of paklijsten die belangrijk zijn voor de hele reis.",
 		"unscheduled_items": "Niet-geplande items",
 		"unscheduled_items_desc": "Deze items zijn gekoppeld aan deze reis, maar nog niet toegevoegd aan een specifieke dag."
-	},
-	"api_keys": {
-		"copied": "Gekopieerd!",
-		"copy": "Kopieer sleutel",
-		"create": "Sleutel maken",
-		"create_error": "Kan API-sleutel niet maken.",
-		"created": "Gemaakt",
-		"description": "Maak persoonlijke API-sleutels voor programmatische toegang. \nSleutels worden slechts één keer weergegeven tijdens het maken.",
-		"dismiss": "Afwijzen",
-		"key_created": "API-sleutel is succesvol aangemaakt.",
-		"key_name_placeholder": "Sleutelnaam (bijv. Home Assistant)",
-		"key_revoked": "API-sleutel ingetrokken.",
-		"last_used": "Laatst gebruikt",
-		"never_used": "Nooit gebruikt",
-		"new_key_title": "Sla uw nieuwe API-sleutel op",
-		"new_key_warning": "Deze sleutel wordt niet meer getoond. \nKopieer het en bewaar het op een veilige plek.",
-		"no_keys": "Nog geen API-sleutels.",
-		"revoke": "Herroepen",
-		"revoke_error": "Kan de API-sleutel niet intrekken.",
-		"title": "API-sleutels",
-		"copy_error": "Fout bij kopiëren van sleutel.",
-		"usage_middle": "koptekst of als",
-		"usage_prefix": "Gebruik deze sleutel in de",
-		"delete_confirm": "Weet u zeker dat u deze mobiele API-sleutel wilt verwijderen?"
 	}
 }

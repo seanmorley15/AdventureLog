@@ -8,7 +8,7 @@
 </script>
 
 <PlaceQuickStart
-	mode="location"
+	mode="lodging"
 	{googleEnabled}
 	{collectionId}
 	{itineraryDate}

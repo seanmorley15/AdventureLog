@@ -391,7 +391,7 @@ export let LODGING_TYPES_ICONS = {
 	apartment: '🏢',
 	house: '🏠',
 	villa: '🏡',
-	motel: '🚗🏨',
+	motel: '🏨',
 	other: '❓'
 };
 
@@ -506,7 +506,7 @@ export function osmTagToEmoji(tag: string) {
 		case 'hotel':
 			return '🏨';
 		case 'motel':
-			return '🏩';
+			return '🏨';
 		case 'pub':
 			return '🍺';
 		case 'restaurant':

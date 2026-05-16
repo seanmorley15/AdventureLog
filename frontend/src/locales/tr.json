@@ -493,7 +493,8 @@
 		"collection_duplicate_success": "Koleksiyon başarıyla kopyalandı! Yönlendiriliyor...",
 		"collection_duplicate_error": "Koleksiyon kopyalanamadı.",
 		"hide_strava_activities": "Strava Faaliyetlerini Gizle",
-		"show_strava_activities": "Strava Aktivitelerini Göster"
+		"show_strava_activities": "Strava Aktivitelerini Göster",
+		"add_details": "Detayları ekle"
 	},
 	"worldtravel": {
 		"country_list": "Ülke Listesi",
@@ -1163,7 +1164,7 @@
 		"title": "API Anahtarları",
 		"copy_error": "Anahtar kopyalanırken hata oluştu.",
 		"usage_middle": "başlık veya olarak",
-		"usage_prefix": "Bu anahtarı şu şekilde kullanın:",
+		"usage_prefix": "Bu anahtar içinde kullanın",
 		"delete_confirm": "Bu mobil API anahtarını silmek istediğinizden emin misiniz?"
 	}
 }
