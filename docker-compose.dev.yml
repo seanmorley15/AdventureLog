@@ -1,7 +1,7 @@
 services:
   web:
     build: ./frontend/
-    image: ghcr.io/seanmorley15/adventurelog-frontend:latest
+    image: ghcr.io/seanmorley15/adventurelog-frontend:dev
     container_name: adventurelog-frontend
     restart: unless-stopped
     user: root
@@ -10,7 +10,7 @@ services:
       - CI=true
       - NODE_OPTIONS=--max-old-space-size=4096
     ports:
-      - "${FRONTEND_PORT:-8015}:3000"
+      - "127.0.0.1:${FRONTEND_PORT:-8015}:3000"
     depends_on:
       - server
     volumes:
@@ -19,7 +19,7 @@ services:
     command: sh -c "mkdir -p /pnpm-store && chown -R node:node /pnpm-store && su node -c 'pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile && pnpm exec vite dev --host 0.0.0.0 --port 3000 --strictPort'"
 
   db:
-    image: postgis/postgis:16-3.5
+    image: docker.io/postgis/postgis:16-3.5
     container_name: adventurelog-db
     restart: unless-stopped
     env_file: .env
@@ -28,7 +28,7 @@ services:
 
   server:
     build: ./backend/
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    image: ghcr.io/seanmorley15/adventurelog-backend:dev
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: .env
@@ -37,11 +37,12 @@ services:
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
       - DJANGO_SUPERUSER_EMAIL=${DJANGO_ADMIN_EMAIL}
     ports:
-      - "${BACKEND_PORT:-8016}:8000"
+      - "127.0.0.1:${BACKEND_PORT:-8016}:8000"
     depends_on:
       - db
     volumes:
       - ./backend/server:/code
+      - ./backend/entrypoint.sh:/code/entrypoint.sh:rw
       - adventurelog_media:/code/media/
     command: >
       sh -c "memcached -u nobody -m 64 -p 11211 -d;
