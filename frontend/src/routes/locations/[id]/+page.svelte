@@ -25,6 +25,7 @@
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 
 	let geojson: any;
 
@@ -675,32 +676,12 @@
 										{/if}
 
 										<!-- External Maps Links -->
-										<div class="grid grid-cols-3 gap-2 mb-3">
-											<a
-												class="btn btn-sm btn-outline hover:btn-neutral"
-												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🍎 Apple
-											</a>
-											<a
-												class="btn btn-sm btn-outline hover:btn-accent"
-												href={`https://maps.google.com/?q=${adventure.latitude},${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🌍 Google
-											</a>
-											<a
-												class="btn btn-sm btn-outline hover:btn-primary"
-												href={`https://www.openstreetmap.org/?mlat=${adventure.latitude}&mlon=${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🗺️ OSM
-											</a>
-										</div>
+										<ExternalMapLinks
+											className="mb-3"
+											placeName={adventure.name}
+											latitude={adventure.latitude}
+											longitude={adventure.longitude}
+										/>
 
 										<!-- Quick Copy Actions -->
 										<div class="flex gap-2">

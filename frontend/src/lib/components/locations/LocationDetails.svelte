@@ -6,7 +6,8 @@
 	import MoneyInput from '../shared/MoneyInput.svelte';
 	import MarkdownEditor from '../MarkdownEditor.svelte';
 	import TagComplete from '../TagComplete.svelte';
-	import { DEFAULT_CURRENCY, normalizeMoneyPayload, toMoneyValue } from '$lib/money';
+	import { DEFAULT_CURRENCY, toMoneyValue } from '$lib/money';
+	import { saveLocation } from '$lib/location-save';
 	import { addToast } from '$lib/toasts';
 	import type { Category, Collection, Location, MoneyValue, User } from '$lib/types';
 	import MapIcon from '~icons/mdi/map';
@@ -67,6 +68,14 @@
 	let isGeneratingDesc = false;
 	let ownerUser: User | null = null;
 
+	function toFiniteNumber(value: unknown): number | null {
+		if (value === null || value === undefined) {
+			return null;
+		}
+		const parsed = Number(value);
+		return Number.isFinite(parsed) ? parsed : null;
+	}
+
 	export let initialLocation: any = null;
 	export let currentUser: any = null;
 	export let editingLocation: any = null;
@@ -84,21 +93,25 @@
 			location.price_currency = defaultCurrency;
 		}
 	}
-	$: initialSelection =
-		initialLocation && initialLocation.latitude && initialLocation.longitude
-			? {
-					name: initialLocation.name || '',
-					lat: Number(initialLocation.latitude),
-					lng: Number(initialLocation.longitude),
-					location: initialLocation.location || ''
-				}
-			: null;
+	$: {
+		const lat = toFiniteNumber(initialLocation?.latitude);
+		const lng = toFiniteNumber(initialLocation?.longitude);
+		initialSelection =
+			initialLocation && lat !== null && lng !== null
+				? {
+						name: initialLocation.name || '',
+						lat,
+						lng,
+						location: initialLocation.location || ''
+					}
+				: null;
+	}
 
 	function handleLocationUpdate(
 		event: CustomEvent<{ name?: string; lat: number; lng: number; location: string }>
 	) {
 		const { name, lat, lng, location: displayName } = event.detail;
-		if (!location.name && name) location.name = name;
+		if (name) location.name = name;
 		location.latitude = lat;
 		location.longitude = lng;
 		location.location = displayName;
@@ -139,82 +152,30 @@
 			return;
 		}
 
-		if (location.latitude !== null && typeof location.latitude === 'number') {
-			location.latitude = parseFloat(location.latitude.toFixed(6));
-		}
-		if (location.longitude !== null && typeof location.longitude === 'number') {
-			location.longitude = parseFloat(location.longitude.toFixed(6));
-		}
-		if (collection && collection.id) {
-			location.collections = [collection.id];
-		}
-
-		let payload: any = { ...location };
-
-		// Clean up link: empty/whitespace → null, invalid URL → null
-		if (!payload.link || !payload.link.trim()) {
-			payload.link = null;
-		} else {
-			try {
-				new URL(payload.link);
-			} catch {
-				// Not a valid URL — clear it so Django doesn't reject it
-				payload.link = null;
-			}
-		}
-		if (!payload.description || !payload.description.trim()) {
-			payload.description = null;
-		}
-
-		if (location.price === null) {
-			payload.price = null;
-			payload.price_currency = null;
-		} else {
-			payload = normalizeMoneyPayload(payload, 'price', 'price_currency', defaultCurrency);
-		}
-
-		let res: Response;
-		if (locationToEdit && locationToEdit.id) {
-			// Only include collections if explicitly set via a collection context;
-			// otherwise remove them from the PATCH payload to avoid triggering the
-			// m2m_changed signal which can override is_public.
-			if (!collection || !collection.id) {
-				delete payload.collections;
-			}
-
-			res = await fetch(`/api/locations/${locationToEdit.id}`, {
-				method: 'PATCH',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
+		try {
+			const savedLocation = await saveLocation({
+				location,
+				locationToEdit,
+				collectionId: collection?.id || null,
+				defaultCurrency
 			});
-		} else {
-			res = await fetch(`/api/locations`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify(payload)
-			});
-		}
-
-		if (!res.ok) {
-			const errorData = await res.json().catch(() => ({}));
-			// Extract error message from Django field errors (e.g. {"link": ["Enter a valid URL."]})
-			let errorMsg = errorData?.detail || errorData?.name?.[0] || '';
-			if (!errorMsg) {
-				const fieldErrors = Object.entries(errorData)
-					.filter(([_, v]) => Array.isArray(v))
-					.map(([k, v]) => `${k}: ${(v as string[]).join(', ')}`)
-					.join('; ');
-				errorMsg = fieldErrors || 'Failed to save location';
-			}
-			addToast('error', String(errorMsg));
+			location = {
+				...location,
+				...savedLocation,
+				rating:
+					typeof savedLocation.rating === 'number' && !Number.isNaN(savedLocation.rating)
+						? savedLocation.rating
+						: location.rating,
+				link: savedLocation.link || location.link || '',
+				description: savedLocation.description || location.description || '',
+				location: savedLocation.location || location.location || '',
+				tags: savedLocation.tags || location.tags || [],
+				collections: savedLocation.collections || location.collections || []
+			};
+		} catch (error) {
+			addToast('error', error instanceof Error ? error.message : 'Failed to save location');
 			return;
 		}
-
-		location = await res.json();
 
 		dispatch('save', {
 			...location
@@ -226,9 +187,11 @@
 	}
 
 	onMount(() => {
-		if (initialLocation && initialLocation.latitude && initialLocation.longitude) {
-			location.latitude = initialLocation.latitude;
-			location.longitude = initialLocation.longitude;
+		const lat = toFiniteNumber(initialLocation?.latitude);
+		const lng = toFiniteNumber(initialLocation?.longitude);
+		if (initialLocation && lat !== null && lng !== null) {
+			location.latitude = lat;
+			location.longitude = lng;
 			if (!location.name) location.name = initialLocation.name || '';
 			if (initialLocation.location) location.location = initialLocation.location;
 		}

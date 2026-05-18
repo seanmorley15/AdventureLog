@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Samlingen har duplicerats! Omdirigerar...",
 		"collection_duplicate_error": "Misslyckades med att duplicera samlingen.",
 		"hide_strava_activities": "Göm Strava-aktiviteter",
-		"show_strava_activities": "Visa Strava-aktiviteter"
+		"show_strava_activities": "Visa Strava-aktiviteter",
+		"add_details": "Lägg till detaljer"
 	},
 	"home": {
 		"desc_1": "Upptäck, planera och utforska med lätthet",

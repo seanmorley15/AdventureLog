@@ -4,12 +4,15 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import Bed from '~icons/mdi/bed';
+	import LodgingQuickStart from './LodgingQuickStart.svelte';
 	import LodgingDetails from './LodgingDetails.svelte';
 	import MediaStep from '../shared/MediaStep.svelte';
+	import { inferLodgingTypeFromPlace } from '$lib/utils/lodgingType';
 
 	export let user: User | null = null;
 	export let collection: Collection | null = null;
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
+	export let itineraryDayLabel: string | null = null;
 
 	const dispatch = createEventDispatcher();
 
@@ -17,14 +20,23 @@
 	let storedInitialVisitDate: string | null = initialVisitDate;
 
 	let modal: HTMLDialogElement;
+	let googleMapsEnabled = false;
+	let isEditMode = false;
+	let pendingGooglePhotoUrls: string[] = [];
+	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
 
 	let steps = [
 		{
-			name: $t('adventures.details'),
+			name: $t('adventures.quick_start'),
 			selected: true,
+			requires_id: false
+		},
+		{
+			name: $t('adventures.details'),
+			selected: false,
 			requires_id: false
 		},
 		{
@@ -33,6 +45,104 @@
 			requires_id: true
 		}
 	];
+
+	function setStep(stepIndex: number) {
+		steps = steps.map((step, index) => ({
+			...step,
+			selected: index === stepIndex
+		}));
+	}
+
+	function handleStepSelect(stepIndex: number) {
+		if (stepIndex === 0 && isEditMode) {
+			return;
+		}
+		if (steps[stepIndex]?.requires_id && !lodging.id) {
+			return;
+		}
+		setStep(stepIndex);
+	}
+
+	function handleDetailsBack() {
+		if (isEditMode) {
+			close();
+			return;
+		}
+		setStep(0);
+	}
+
+	function applyQuickStartPrefill(prefill: any) {
+		if (!prefill) return;
+
+		if (prefill.name) lodging.name = prefill.name;
+		if (prefill.location) lodging.location = prefill.location;
+		if (typeof prefill.latitude === 'number') lodging.latitude = prefill.latitude;
+		if (typeof prefill.longitude === 'number') lodging.longitude = prefill.longitude;
+		if (typeof prefill.rating === 'number') lodging.rating = prefill.rating;
+		if (!lodging.link && (prefill.website || prefill.google_maps_url)) {
+			lodging.link = prefill.website || prefill.google_maps_url;
+		}
+		if (!lodging.description && prefill.description) {
+			lodging.description = prefill.description;
+		}
+
+		if (!lodging.type) {
+			lodging.type = inferLodgingTypeFromPlace(prefill.type, prefill.types);
+		}
+
+		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
+			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
+			: [];
+	}
+
+	async function importPendingGoogleImages(lodgingId: string) {
+		if (!lodgingId || pendingGooglePhotoUrls.length === 0) return;
+		importingGooglePhotos = true;
+
+		try {
+			const res = await fetch('/api/images/import_from_urls/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					content_type: 'lodging',
+					object_id: lodgingId,
+					urls: pendingGooglePhotoUrls
+				})
+			});
+
+			if (!res.ok) {
+				addToast('warning', 'Lodging saved, but Google photos could not be imported');
+				return;
+			}
+
+			const data = await res.json();
+			if (Array.isArray(data.created) && data.created.length > 0) {
+				const existingImages = Array.isArray(lodging.images) ? lodging.images : [];
+				const existingIds = new Set(existingImages.map((img: any) => img.id));
+				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
+				lodging.images = [...existingImages, ...imported];
+			}
+
+			pendingGooglePhotoUrls = [];
+		} catch {
+			addToast('warning', 'Lodging saved, but Google photos import failed');
+		} finally {
+			importingGooglePhotos = false;
+		}
+	}
+
+	async function loadIntegrations() {
+		try {
+			const res = await fetch('/api/integrations/');
+			if (!res.ok) return;
+			const integrations = await res.json();
+			googleMapsEnabled = Boolean(integrations?.google_maps);
+		} catch {
+			googleMapsEnabled = false;
+		}
+	}
 
 	function createEmptyLodging(): Lodging {
 		return {
@@ -106,9 +216,10 @@
 				// Only reset to empty if we don't already have a saved lodging with an ID
 				lodging = createEmptyLodging();
 				storedInitialVisitDate = initialVisitDate;
-				// Reset steps to details when creating a new lodging
+				// Reset steps for a fresh lodging creation session
 				steps = [
-					{ name: $t('adventures.details'), selected: true, requires_id: false },
+					{ name: $t('adventures.quick_start'), selected: true, requires_id: false },
+					{ name: $t('adventures.details'), selected: false, requires_id: false },
 					{ name: $t('settings.media'), selected: false, requires_id: true }
 				];
 			}
@@ -118,6 +229,15 @@
 	onMount(async () => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
+		isEditMode = Boolean(lodgingToEdit?.id);
+
+		if (isEditMode) {
+			setStep(1);
+		} else {
+			setStep(0);
+		}
+
+		void loadIntegrations();
 	});
 
 	function close() {
@@ -200,14 +320,11 @@
 									? 'bg-primary text-primary-content'
 									: 'bg-base-200'} {step.requires_id && !lodging?.id
 									? 'opacity-50 cursor-not-allowed'
+									: ''} {index === 0 && isEditMode
+									? 'opacity-50 cursor-not-allowed'
 									: 'hover:bg-primary/80 cursor-pointer'} transition-colors"
-								on:click={() => {
-									// Reset all steps
-									steps.forEach((s) => (s.selected = false));
-									// Select clicked step
-									steps[index].selected = true;
-								}}
-								disabled={step.requires_id && !lodging?.id}
+								on:click={() => handleStepSelect(index)}
+								disabled={(step.requires_id && !lodging?.id) || (index === 0 && isEditMode)}
 							>
 								<span class="hidden sm:inline">{step.name}</span>
 								<span class="sm:hidden"
@@ -241,17 +358,53 @@
 			</div>
 		</div>
 
-		{#if steps[0].selected}
+		{#if steps[0].selected && !isEditMode}
+			<LodgingQuickStart
+				googleEnabled={googleMapsEnabled}
+				collectionId={collection?.id || null}
+				itineraryDate={storedInitialVisitDate}
+				itineraryLabel={itineraryDayLabel}
+				on:addDetails={(e) => {
+					applyQuickStartPrefill(e.detail.prefill);
+					setStep(1);
+				}}
+				on:manual={() => {
+					setStep(1);
+				}}
+				on:quickAdded={(e) => {
+					lodging = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					dispatch('quickAddCreated', {
+						location: e.detail.location,
+						itineraryItem: e.detail.itineraryItem || null,
+						itineraryDate: e.detail.itineraryDate || null
+					});
+					close();
+				}}
+				on:quickAddedEdit={(e) => {
+					lodging = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					setStep(1);
+				}}
+				on:quickAddedDone={(e) => {
+					lodging = e.detail.location;
+					pendingGooglePhotoUrls = [];
+					didSave = true;
+					close();
+				}}
+				on:cancel={() => close()}
+			/>
+		{/if}
+		{#if steps[1].selected}
 			<LodgingDetails
 				currentUser={user}
 				initialLodging={lodging}
 				{collection}
 				bind:editingLodging={lodging}
-				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
-				}}
-				on:save={(e) => {
+				on:back={handleDetailsBack}
+				on:save={async (e) => {
 					// Update the entire lodging object with all saved data
 					const detail = e.detail || {};
 					const previousImages = lodging.images || [];
@@ -285,25 +438,31 @@
 					// Only allow moving to Media once we have a persisted id.
 					if (!lodging?.id) {
 						addToast('error', $t('adventures.lodging_save_error'));
-						steps[1].selected = false;
-						steps[0].selected = true;
+						setStep(1);
 						return;
 					}
 
-					steps[0].selected = false;
-					steps[1].selected = true;
+					setStep(2);
+					if (pendingGooglePhotoUrls.length > 0) {
+						await importPendingGoogleImages(lodging.id);
+					}
 				}}
 				initialVisitDate={storedInitialVisitDate}
 			/>
 		{/if}
-		{#if steps[1].selected}
+		{#if steps[2].selected}
+			{#if importingGooglePhotos}
+				<div class="alert alert-info mb-4">
+					<span class="loading loading-spinner loading-sm"></span>
+					<span>Importing Google photos in the background. They will appear here shortly.</span>
+				</div>
+			{/if}
 			<MediaStep
 				bind:images={lodging.images}
 				bind:attachments={lodging.attachments}
 				itemName={lodging.name}
 				on:back={() => {
-					steps[1].selected = false;
-					steps[0].selected = true;
+					setStep(1);
 				}}
 				on:close={() => close()}
 				itemId={lodging.id}

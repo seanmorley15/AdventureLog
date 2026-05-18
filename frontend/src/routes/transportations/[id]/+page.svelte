@@ -26,6 +26,7 @@
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -637,32 +638,7 @@
 												<MapMarker class="w-4 h-4" />
 												{transportation.from_location}
 											</p>
-											<div class="grid grid-cols-3 gap-2">
-												<a
-													class="btn btn-sm btn-outline hover:btn-neutral"
-													href={`https://maps.apple.com/?q=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🍎 Apple
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-accent"
-													href={`https://maps.google.com/?q=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🌍 Google
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-primary"
-													href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🗺️ OSM
-												</a>
-											</div>
+											<ExternalMapLinks placeName={transportation.from_location} />
 										</div>
 									{/if}
 
@@ -672,32 +648,7 @@
 												<MapMarker class="w-4 h-4" />
 												{transportation.to_location}
 											</p>
-											<div class="grid grid-cols-3 gap-2">
-												<a
-													class="btn btn-sm btn-outline hover:btn-neutral"
-													href={`https://maps.apple.com/?q=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🍎 Apple
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-accent"
-													href={`https://maps.google.com/?q=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🌍 Google
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-primary"
-													href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🗺️ OSM
-												</a>
-											</div>
+											<ExternalMapLinks placeName={transportation.to_location} />
 										</div>
 									{/if}
 								</div>

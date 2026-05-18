@@ -100,6 +100,103 @@ class BackupViewSet(viewsets.ViewSet):
             normalized_currency = default_currency
 
         return amount, normalized_currency
+
+    def _serialize_images(self, images_qs):
+        """Serialize ContentImage queryset into backup-safe dicts."""
+        serialized = []
+        for image in images_qs.all():
+            entry = {
+                'immich_id': image.immich_id,
+                'is_primary': image.is_primary,
+                'filename': None,
+            }
+            if image.image:
+                entry['filename'] = image.image.name.split('/')[-1]
+            serialized.append(entry)
+        return serialized
+
+    def _serialize_attachments(self, attachments_qs):
+        """Serialize ContentAttachment queryset into backup-safe dicts."""
+        serialized = []
+        for attachment in attachments_qs.all():
+            entry = {
+                'name': attachment.name,
+                'filename': None,
+            }
+            if attachment.file:
+                entry['filename'] = attachment.file.name.split('/')[-1]
+            serialized.append(entry)
+        return serialized
+
+    def _add_storage_file_to_zip(self, zip_file, storage_name, arcname, files_added):
+        """Read a Django storage file and add it to the zip once."""
+        if not storage_name or storage_name in files_added:
+            return
+
+        with default_storage.open(storage_name) as storage_file:
+            zip_file.writestr(arcname, storage_file.read())
+        files_added.add(storage_name)
+
+    def _import_images(self, images_data, zip_file, user, content_type, object_id, summary):
+        created = []
+        for img_data in images_data or []:
+            immich_id = (img_data or {}).get('immich_id')
+            if immich_id:
+                created.append(
+                    ContentImage.objects.create(
+                        user=user,
+                        immich_id=immich_id,
+                        is_primary=(img_data or {}).get('is_primary', False),
+                        content_type=content_type,
+                        object_id=object_id,
+                    )
+                )
+                summary['images'] += 1
+                continue
+
+            filename = (img_data or {}).get('filename')
+            if not filename:
+                continue
+
+            try:
+                img_content = zip_file.read(f'images/{filename}')
+            except KeyError:
+                continue
+
+            img_file = ContentFile(img_content, name=filename)
+            created.append(
+                ContentImage.objects.create(
+                    user=user,
+                    image=img_file,
+                    is_primary=(img_data or {}).get('is_primary', False),
+                    content_type=content_type,
+                    object_id=object_id,
+                )
+            )
+            summary['images'] += 1
+
+        return created
+
+    def _import_attachments(self, attachments_data, zip_file, user, content_type, object_id, summary):
+        for att_data in attachments_data or []:
+            filename = (att_data or {}).get('filename')
+            if not filename:
+                continue
+
+            try:
+                att_content = zip_file.read(f'attachments/{filename}')
+            except KeyError:
+                continue
+
+            att_file = ContentFile(att_content, name=filename)
+            ContentAttachment.objects.create(
+                user=user,
+                file=att_file,
+                name=(att_data or {}).get('name'),
+                content_type=content_type,
+                object_id=object_id,
+            )
+            summary['attachments'] += 1
     
     @action(detail=False, methods=['get'])
     def export(self, request):
@@ -148,9 +245,11 @@ class BackupViewSet(viewsets.ViewSet):
         
         # Track images so we can reference them for collection primary images
         image_export_map = {}
+        collection_id_to_export_id = {}
 
         # Export Collections
         for idx, collection in enumerate(user.collection_set.all()):
+            collection_id_to_export_id[collection.id] = idx
             export_data['collections'].append({
                 'export_id': idx,  # Add unique identifier for this export
                 'name': collection.name,
@@ -200,7 +299,9 @@ class BackupViewSet(viewsets.ViewSet):
                     'end_date': visit.end_date.isoformat() if visit.end_date else None,
                     'timezone': visit.timezone,
                     'notes': visit.notes,
-                    'activities': []
+                    'activities': [],
+                    'images': [],
+                    'attachments': [],
                 }
                 
                 # Add activities for this visit
@@ -239,6 +340,20 @@ class BackupViewSet(viewsets.ViewSet):
                     visit_data['activities'].append(activity_data)
                 
                 location_data['visits'].append(visit_data)
+
+                # Add visit images/attachments (generic)
+                visit_data['images'] = self._serialize_images(visit.images)
+                visit_data['attachments'] = self._serialize_attachments(visit.attachments)
+
+                for image_index, image in enumerate(visit.images.all()):
+                    image_export_map[image.id] = {
+                        'content_type': 'visit',
+                        'location_export_id': idx,
+                        'visit_export_id': visit_idx,
+                        'image_index': image_index,
+                        'immich_id': image.immich_id,
+                        'filename': image.image.name.split('/')[-1] if image.image else None,
+                    }
             
             # Add trails for this location
             for trail in location.trails.all():
@@ -251,48 +366,28 @@ class BackupViewSet(viewsets.ViewSet):
                 location_data['trails'].append(trail_data)
             
             # Add images
+            location_data['images'] = self._serialize_images(location.images)
             for image_index, image in enumerate(location.images.all()):
-                image_data = {
-                    'immich_id': image.immich_id,
-                    'is_primary': image.is_primary,
-                    'filename': None,
-                }
-                if image.image:
-                    image_data['filename'] = image.image.name.split('/')[-1]
-                location_data['images'].append(image_data)
-
                 image_export_map[image.id] = {
+                    'content_type': 'location',
                     'location_export_id': idx,
                     'image_index': image_index,
                     'immich_id': image.immich_id,
-                    'filename': image_data['filename'],
+                    'filename': image.image.name.split('/')[-1] if image.image else None,
                 }
             
             # Add attachments
-            for attachment in location.attachments.all():
-                attachment_data = {
-                    'name': attachment.name,
-                    'filename': None
-                }
-                if attachment.file:
-                    attachment_data['filename'] = attachment.file.name.split('/')[-1]
-                location_data['attachments'].append(attachment_data)
+            location_data['attachments'] = self._serialize_attachments(location.attachments)
             
             export_data['locations'].append(location_data)
 
-        # Attach collection primary image references (if any)
-        for idx, collection in enumerate(user.collection_set.all()):
-            primary = collection.primary_image
-            if primary and primary.id in image_export_map:
-                export_data['collections'][idx]['primary_image'] = image_export_map[primary.id]
-        
         # Export Transportation
         for idx, transport in enumerate(user.transportation_set.all()):
             collection_export_id = None
             if transport.collection:
                 collection_export_id = collection_name_to_id.get(transport.collection.name)
             
-            export_data['transportation'].append({
+            transport_data = {
                 'export_id': idx,
                 'type': transport.type,
                 'name': transport.name,
@@ -313,8 +408,20 @@ class BackupViewSet(viewsets.ViewSet):
                 'destination_longitude': str(transport.destination_longitude) if transport.destination_longitude else None,
                 'to_location': transport.to_location,
                 'is_public': transport.is_public,
-                'collection_export_id': collection_export_id
-            })
+                'collection_export_id': collection_export_id,
+                'images': self._serialize_images(transport.images),
+                'attachments': self._serialize_attachments(transport.attachments),
+            }
+            export_data['transportation'].append(transport_data)
+
+            for image_index, image in enumerate(transport.images.all()):
+                image_export_map[image.id] = {
+                    'content_type': 'transportation',
+                    'object_export_id': idx,
+                    'image_index': image_index,
+                    'immich_id': image.immich_id,
+                    'filename': image.image.name.split('/')[-1] if image.image else None,
+                }
         
         # Export Notes
         for idx, note in enumerate(user.note_set.all()):
@@ -322,15 +429,27 @@ class BackupViewSet(viewsets.ViewSet):
             if note.collection:
                 collection_export_id = collection_name_to_id.get(note.collection.name)
                 
-            export_data['notes'].append({
+            note_data = {
                 'export_id': idx,
                 'name': note.name,
                 'content': note.content,
                 'links': note.links,
                 'date': note.date.isoformat() if note.date else None,
                 'is_public': note.is_public,
-                'collection_export_id': collection_export_id
-            })
+                'collection_export_id': collection_export_id,
+                'images': self._serialize_images(note.images),
+                'attachments': self._serialize_attachments(note.attachments),
+            }
+            export_data['notes'].append(note_data)
+
+            for image_index, image in enumerate(note.images.all()):
+                image_export_map[image.id] = {
+                    'content_type': 'note',
+                    'object_export_id': idx,
+                    'image_index': image_index,
+                    'immich_id': image.immich_id,
+                    'filename': image.image.name.split('/')[-1] if image.image else None,
+                }
         
         # Export Checklists
         for idx, checklist in enumerate(user.checklist_set.all()):
@@ -362,7 +481,7 @@ class BackupViewSet(viewsets.ViewSet):
             if lodging.collection:
                 collection_export_id = collection_name_to_id.get(lodging.collection.name)
             
-            export_data['lodging'].append({
+            lodging_data = {
                 'export_id': idx,
                 'name': lodging.name,
                 'type': lodging.type,
@@ -379,8 +498,30 @@ class BackupViewSet(viewsets.ViewSet):
                 'longitude': str(lodging.longitude) if lodging.longitude else None,
                 'location': lodging.location,
                 'is_public': lodging.is_public,
-                'collection_export_id': collection_export_id
-            })
+                'collection_export_id': collection_export_id,
+                'images': self._serialize_images(lodging.images),
+                'attachments': self._serialize_attachments(lodging.attachments),
+            }
+            export_data['lodging'].append(lodging_data)
+
+            for image_index, image in enumerate(lodging.images.all()):
+                image_export_map[image.id] = {
+                    'content_type': 'lodging',
+                    'object_export_id': idx,
+                    'image_index': image_index,
+                    'immich_id': image.immich_id,
+                    'filename': image.image.name.split('/')[-1] if image.image else None,
+                }
+
+        # Attach collection primary image references (if any)
+        for collection in user.collection_set.all():
+            export_id = collection_id_to_export_id.get(collection.id)
+            if export_id is None:
+                continue
+
+            primary = collection.primary_image
+            if primary and primary.id in image_export_map:
+                export_data['collections'][export_id]['primary_image'] = image_export_map[primary.id]
         
         # Export Itinerary Items
         # Create export_id mappings for all content types
@@ -431,35 +572,153 @@ class BackupViewSet(viewsets.ViewSet):
                     for image in location.images.all():
                         if image.image and image.image.name not in files_added:
                             try:
-                                image_content = default_storage.open(image.image.name).read()
                                 filename = image.image.name.split('/')[-1]
-                                zip_file.writestr(f'images/{filename}', image_content)
-                                files_added.add(image.image.name)
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    image.image.name,
+                                    f'images/{filename}',
+                                    files_added,
+                                )
                             except Exception as e:
                                 print(f"Error adding image {image.image.name}: {e}")
+
+                    # Add visit images
+                    for visit in location.visits.all():
+                        for image in visit.images.all():
+                            if image.image and image.image.name not in files_added:
+                                try:
+                                    filename = image.image.name.split('/')[-1]
+                                    self._add_storage_file_to_zip(
+                                        zip_file,
+                                        image.image.name,
+                                        f'images/{filename}',
+                                        files_added,
+                                    )
+                                except Exception as e:
+                                    print(f"Error adding visit image {image.image.name}: {e}")
                     
                     # Add attachments
                     for attachment in location.attachments.all():
                         if attachment.file and attachment.file.name not in files_added:
                             try:
-                                file_content = default_storage.open(attachment.file.name).read()
                                 filename = attachment.file.name.split('/')[-1]
-                                zip_file.writestr(f'attachments/{filename}', file_content)
-                                files_added.add(attachment.file.name)
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    attachment.file.name,
+                                    f'attachments/{filename}',
+                                    files_added,
+                                )
                             except Exception as e:
                                 print(f"Error adding attachment {attachment.file.name}: {e}")
+
+                    # Add visit attachments
+                    for visit in location.visits.all():
+                        for attachment in visit.attachments.all():
+                            if attachment.file and attachment.file.name not in files_added:
+                                try:
+                                    filename = attachment.file.name.split('/')[-1]
+                                    self._add_storage_file_to_zip(
+                                        zip_file,
+                                        attachment.file.name,
+                                        f'attachments/{filename}',
+                                        files_added,
+                                    )
+                                except Exception as e:
+                                    print(f"Error adding visit attachment {attachment.file.name}: {e}")
                     
                     # Add GPX files from activities
                     for visit in location.visits.all():
                         for activity in visit.activities.all():
                             if activity.gpx_file and activity.gpx_file.name not in files_added:
                                 try:
-                                    gpx_content = default_storage.open(activity.gpx_file.name).read()
                                     filename = activity.gpx_file.name.split('/')[-1]
-                                    zip_file.writestr(f'gpx/{filename}', gpx_content)
-                                    files_added.add(activity.gpx_file.name)
+                                    self._add_storage_file_to_zip(
+                                        zip_file,
+                                        activity.gpx_file.name,
+                                        f'gpx/{filename}',
+                                        files_added,
+                                    )
                                 except Exception as e:
                                     print(f"Error adding GPX file {activity.gpx_file.name}: {e}")
+
+                # Add non-location content images/attachments
+                for transport in user.transportation_set.all():
+                    for image in transport.images.all():
+                        if image.image and image.image.name not in files_added:
+                            try:
+                                filename = image.image.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    image.image.name,
+                                    f'images/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding transportation image {image.image.name}: {e}")
+                    for attachment in transport.attachments.all():
+                        if attachment.file and attachment.file.name not in files_added:
+                            try:
+                                filename = attachment.file.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    attachment.file.name,
+                                    f'attachments/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding transportation attachment {attachment.file.name}: {e}")
+
+                for note in user.note_set.all():
+                    for image in note.images.all():
+                        if image.image and image.image.name not in files_added:
+                            try:
+                                filename = image.image.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    image.image.name,
+                                    f'images/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding note image {image.image.name}: {e}")
+                    for attachment in note.attachments.all():
+                        if attachment.file and attachment.file.name not in files_added:
+                            try:
+                                filename = attachment.file.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    attachment.file.name,
+                                    f'attachments/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding note attachment {attachment.file.name}: {e}")
+
+                for lodging in user.lodging_set.all():
+                    for image in lodging.images.all():
+                        if image.image and image.image.name not in files_added:
+                            try:
+                                filename = image.image.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    image.image.name,
+                                    f'images/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding lodging image {image.image.name}: {e}")
+                    for attachment in lodging.attachments.all():
+                        if attachment.file and attachment.file.name not in files_added:
+                            try:
+                                filename = attachment.file.name.split('/')[-1]
+                                self._add_storage_file_to_zip(
+                                    zip_file,
+                                    attachment.file.name,
+                                    f'attachments/{filename}',
+                                    files_added,
+                                )
+                            except Exception as e:
+                                print(f"Error adding lodging attachment {attachment.file.name}: {e}")
         
         # Return ZIP file as response
         with open(tmp_file.name, 'rb') as zip_file:
@@ -611,6 +870,16 @@ class BackupViewSet(viewsets.ViewSet):
         
         pending_primary_images = []
         location_images_map = {}
+        visit_images_map = {}
+        transportation_images_map = {}
+        note_images_map = {}
+        lodging_images_map = {}
+
+        content_type_location = ContentType.objects.get(model='location')
+        content_type_visit = ContentType.objects.get(model='visit')
+        content_type_transportation = ContentType.objects.get(model='transportation')
+        content_type_note = ContentType.objects.get(model='note')
+        content_type_lodging = ContentType.objects.get(model='lodging')
 
         # Import Collections
         for col_data in backup_data.get('collections', []):
@@ -721,6 +990,10 @@ class BackupViewSet(viewsets.ViewSet):
                     timezone=visit_data.get('timezone'),
                     notes=visit_data.get('notes')
                 )
+
+                visit_export_id = visit_data.get('export_id')
+                if visit_export_id is not None:
+                    visit_images_map.setdefault((adv_data['export_id'], visit_export_id), [])
                 
                 # Import activities for this visit
                 for activity_data in visit_data.get('activities', []):
@@ -783,77 +1056,50 @@ class BackupViewSet(viewsets.ViewSet):
                     
                     activity.save()
                     summary['activities'] += 1
+
+                # Import visit images/attachments (if present)
+                created_visit_images = self._import_images(
+                    visit_data.get('images', []),
+                    zip_file,
+                    user,
+                    content_type_visit,
+                    visit.id,
+                    summary,
+                )
+                if visit_export_id is not None:
+                    visit_images_map[(adv_data['export_id'], visit_export_id)].extend(created_visit_images)
+
+                self._import_attachments(
+                    visit_data.get('attachments', []),
+                    zip_file,
+                    user,
+                    content_type_visit,
+                    visit.id,
+                    summary,
+                )
             
             # Import images
-            content_type = ContentType.objects.get(model='location')
+            created_location_images = self._import_images(
+                adv_data.get('images', []),
+                zip_file,
+                user,
+                content_type_location,
+                location.id,
+                summary,
+            )
+            location_images_map[adv_data['export_id']].extend(created_location_images)
 
-            for img_data in adv_data.get('images', []):
-                immich_id = img_data.get('immich_id')
-                if immich_id:
-                    new_img = ContentImage.objects.create(
-                        user=user,
-                        immich_id=immich_id,
-                        is_primary=img_data.get('is_primary', False),
-                        content_type=content_type,
-                        object_id=location.id
-                    )
-                    location_images_map[adv_data['export_id']].append(new_img)
-                    summary['images'] += 1
-                else:
-                    filename = img_data.get('filename')
-                    if filename:
-                        try:
-                            img_content = zip_file.read(f'images/{filename}')
-                            img_file = ContentFile(img_content, name=filename)
-                            new_img = ContentImage.objects.create(
-                                user=user,
-                                image=img_file,
-                                is_primary=img_data.get('is_primary', False),
-                                content_type=content_type,
-                                object_id=location.id
-                            )
-                            location_images_map[adv_data['export_id']].append(new_img)
-                            summary['images'] += 1
-                        except KeyError:
-                            pass
-            
-            # Import attachments
-            for att_data in adv_data.get('attachments', []):
-                filename = att_data.get('filename')
-                if filename:
-                    try:
-                        att_content = zip_file.read(f'attachments/{filename}')
-                        att_file = ContentFile(att_content, name=filename)
-                        ContentAttachment.objects.create(
-                            user=user,
-                            file=att_file,
-                            name=att_data.get('name'),
-                            content_type=content_type,
-                            object_id=location.id
-                        )
-                        summary['attachments'] += 1
-                    except KeyError:
-                        pass
+            self._import_attachments(
+                adv_data.get('attachments', []),
+                zip_file,
+                user,
+                content_type_location,
+                location.id,
+                summary,
+            )
             
             summary['locations'] += 1
 
-        # Apply primary image selections now that images exist
-        for entry in pending_primary_images:
-            collection = collection_map.get(entry['collection_export_id'])
-            data = entry.get('data', {}) or {}
-            if not collection:
-                continue
-
-            loc_export_id = data.get('location_export_id')
-            img_index = data.get('image_index')
-            if loc_export_id is None or img_index is None:
-                continue
-
-            images_for_location = location_images_map.get(loc_export_id, [])
-            if 0 <= img_index < len(images_for_location):
-                collection.primary_image = images_for_location[img_index]
-                collection.save(update_fields=['primary_image'])
-        
         # Import Transportation
         transportation_map = {}  # Map export_id to actual transportation object
         for trans_data in backup_data.get('transportation', []):
@@ -889,6 +1135,28 @@ class BackupViewSet(viewsets.ViewSet):
                 is_public=trans_data.get('is_public', False),
                 collection=collection
             )
+
+            export_id = trans_data.get('export_id')
+            if export_id is not None:
+                transportation_images_map.setdefault(export_id, [])
+                transportation_images_map[export_id].extend(
+                    self._import_images(
+                        trans_data.get('images', []),
+                        zip_file,
+                        user,
+                        content_type_transportation,
+                        transportation.id,
+                        summary,
+                    )
+                )
+                self._import_attachments(
+                    trans_data.get('attachments', []),
+                    zip_file,
+                    user,
+                    content_type_transportation,
+                    transportation.id,
+                    summary,
+                )
             # Only add to map if export_id exists (for backward compatibility with old backups)
             if 'export_id' in trans_data:
                 transportation_map[trans_data['export_id']] = transportation
@@ -910,6 +1178,28 @@ class BackupViewSet(viewsets.ViewSet):
                 is_public=note_data.get('is_public', False),
                 collection=collection
             )
+
+            export_id = note_data.get('export_id')
+            if export_id is not None:
+                note_images_map.setdefault(export_id, [])
+                note_images_map[export_id].extend(
+                    self._import_images(
+                        note_data.get('images', []),
+                        zip_file,
+                        user,
+                        content_type_note,
+                        note.id,
+                        summary,
+                    )
+                )
+                self._import_attachments(
+                    note_data.get('attachments', []),
+                    zip_file,
+                    user,
+                    content_type_note,
+                    note.id,
+                    summary,
+                )
             # Only add to map if export_id exists (for backward compatibility with old backups)
             if 'export_id' in note_data:
                 note_map[note_data['export_id']] = note
@@ -976,10 +1266,77 @@ class BackupViewSet(viewsets.ViewSet):
                 is_public=lodg_data.get('is_public', False),
                 collection=collection
             )
+
+            export_id = lodg_data.get('export_id')
+            if export_id is not None:
+                lodging_images_map.setdefault(export_id, [])
+                lodging_images_map[export_id].extend(
+                    self._import_images(
+                        lodg_data.get('images', []),
+                        zip_file,
+                        user,
+                        content_type_lodging,
+                        lodging.id,
+                        summary,
+                    )
+                )
+                self._import_attachments(
+                    lodg_data.get('attachments', []),
+                    zip_file,
+                    user,
+                    content_type_lodging,
+                    lodging.id,
+                    summary,
+                )
             # Only add to map if export_id exists (for backward compatibility with old backups)
             if 'export_id' in lodg_data:
                 lodging_map[lodg_data['export_id']] = lodging
             summary['lodging'] += 1
+
+        # Apply primary image selections now that images exist
+        for entry in pending_primary_images:
+            collection = collection_map.get(entry['collection_export_id'])
+            data = entry.get('data', {}) or {}
+            if not collection:
+                continue
+
+            content_type_str = data.get('content_type') or 'location'
+            img_index = data.get('image_index')
+            if img_index is None:
+                continue
+
+            if content_type_str == 'location':
+                loc_export_id = data.get('location_export_id')
+                if loc_export_id is None:
+                    continue
+                images_for_object = location_images_map.get(loc_export_id, [])
+            elif content_type_str == 'visit':
+                loc_export_id = data.get('location_export_id')
+                visit_export_id = data.get('visit_export_id')
+                if loc_export_id is None or visit_export_id is None:
+                    continue
+                images_for_object = visit_images_map.get((loc_export_id, visit_export_id), [])
+            elif content_type_str == 'transportation':
+                obj_export_id = data.get('object_export_id')
+                if obj_export_id is None:
+                    continue
+                images_for_object = transportation_images_map.get(obj_export_id, [])
+            elif content_type_str == 'note':
+                obj_export_id = data.get('object_export_id')
+                if obj_export_id is None:
+                    continue
+                images_for_object = note_images_map.get(obj_export_id, [])
+            elif content_type_str == 'lodging':
+                obj_export_id = data.get('object_export_id')
+                if obj_export_id is None:
+                    continue
+                images_for_object = lodging_images_map.get(obj_export_id, [])
+            else:
+                continue
+
+            if 0 <= img_index < len(images_for_object):
+                collection.primary_image = images_for_object[img_index]
+                collection.save(update_fields=['primary_image'])
         
         # Import Itinerary Items
         # Maps already created during import of each content type

@@ -1,12 +1,27 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.db import transaction
 from django.db.models import Q
 from adventures.models import Lodging
-from adventures.serializers import LodgingSerializer
+from adventures.serializers import CollectionItineraryItemSerializer, LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from rest_framework.permissions import IsAuthenticated
+from adventures.geocoding import reverse_geocode
+from .location_image_view import import_remote_images_for_object
+from .quick_add_utils import (
+    build_quick_add_description,
+    coerce_bool,
+    coerce_coordinate,
+    coerce_float,
+    create_quick_add_itinerary_item,
+    extract_google_place_details,
+    infer_lodging_type,
+    parse_itinerary_date,
+    preferred_link,
+    resolve_quick_add_collection,
+    sanitize_photo_urls,
+)
 
 class LodgingViewSet(viewsets.ModelViewSet):
     queryset = Lodging.objects.all()
@@ -63,6 +78,114 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save()
+
+    @action(detail=False, methods=['post'], url_path='quick-add')
+    @transaction.atomic
+    def quick_add(self, request):
+        """Create a lodging from lightweight map/place input in one server-side call."""
+        payload = request.data if isinstance(request.data, dict) else {}
+
+        name = str(payload.get('name') or '').strip()
+        if not name:
+            return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        latitude = coerce_coordinate(payload.get('latitude'), -90, 90)
+        longitude = coerce_coordinate(payload.get('longitude'), -180, 180)
+        if latitude is None or longitude is None:
+            return Response(
+                {"error": "Valid latitude and longitude are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        collection = resolve_quick_add_collection(
+            payload.get('collection_id'),
+            validate_permissions=self._validate_collection_permissions,
+            permission_error_message=(
+                "You do not have permission to add this lodging to the selected collection."
+            ),
+        )
+        if isinstance(collection, Response):
+            return collection
+
+        reverse_data = {}
+        try:
+            reverse_result = reverse_geocode(latitude, longitude, request.user)
+            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
+                reverse_data = reverse_result
+        except Exception:
+            reverse_data = {}
+
+        _, details = extract_google_place_details(payload, fallback_query=name)
+
+        rating = coerce_float(payload.get('rating'))
+        if rating is None:
+            rating = coerce_float(details.get('rating'))
+
+        location_label = (
+            str(payload.get('location') or '').strip()
+            or str(reverse_data.get('display_name') or '').strip()
+            or str(details.get('formatted_address') or '').strip()
+            or None
+        )
+
+        place_types = payload.get('types')
+        if not isinstance(place_types, list) or not place_types:
+            place_types = details.get('types') if isinstance(details.get('types'), list) else []
+
+        serializer_payload = {
+            'name': name,
+            'type': infer_lodging_type(payload.get('type'), place_types),
+            'location': location_label,
+            'latitude': latitude,
+            'longitude': longitude,
+            'rating': rating,
+            'description': build_quick_add_description(
+                base_description=payload.get('description'),
+                detailed_description=details.get('description'),
+            ),
+            'link': preferred_link(payload, details),
+            'is_public': coerce_bool(payload.get('is_public'), default=False),
+        }
+
+        if collection:
+            serializer_payload['collection'] = str(collection.id)
+
+        serializer = self.get_serializer(data=serializer_payload)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        lodging = serializer.instance
+
+        itinerary_date = parse_itinerary_date(payload.get('itinerary_date'))
+        itinerary_item = None
+        if collection and itinerary_date:
+            itinerary_item = create_quick_add_itinerary_item(collection, lodging, itinerary_date)
+            if isinstance(itinerary_item, Response):
+                return itinerary_item
+
+        photo_urls = sanitize_photo_urls(payload.get('photos'))
+        image_import_summary = None
+        if photo_urls:
+            image_import_summary = import_remote_images_for_object(
+                lodging,
+                photo_urls,
+                owner=lodging.user,
+                max_workers=min(5, len(photo_urls)),
+            )
+
+        response_data = self.get_serializer(lodging).data
+        if itinerary_item:
+            response_data['quick_add_itinerary_item'] = CollectionItineraryItemSerializer(
+                itinerary_item
+            ).data
+        if image_import_summary and image_import_summary.get('failed'):
+            response_data['quick_add_image_import'] = {
+                'created_count': image_import_summary['created_count'],
+                'failed_count': image_import_summary['failed_count'],
+                'failed': image_import_summary['failed'],
+            }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
     
     # when creating an adventure, make sure the user is the owner of the collection or shared with the collection
     def perform_create(self, serializer):
@@ -82,3 +205,12 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
         # Save the adventure with the current user as the owner
         serializer.save(user=self.request.user)
+
+    def _validate_collection_permissions(self, collections):
+        """Validate permissions for all collections (used by quick add)."""
+        for collection in collections:
+            if collection.user != self.request.user:
+                if not collection.shared_with.filter(id=self.request.user.id).exists():
+                    raise PermissionDenied(
+                        f"You don't have permission to add lodging to collection '{collection.name}'"
+                    )
