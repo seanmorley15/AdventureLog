@@ -17,7 +17,8 @@ services:
       - server
     volumes:
       - ./frontend:/app
-      - pnpm_store:/pnpm-store
+      - node_modules:/app/node_modules
+      - pnpm_store:/pnpm
 
   db:
     image: docker.io/postgis/postgis:16-3.5
@@ -52,3 +53,4 @@ volumes:
   postgres_data:
   adventurelog_media:
   pnpm_store:
+  node_modules:
