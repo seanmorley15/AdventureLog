@@ -1,0 +1,30 @@
+# Development image with shell and debug tools
+FROM python:3.13-slim
+
+WORKDIR /code
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    PYTHONUNBUFFERED=1 \
+    DEBUG=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    postgresql-client \
+    gdal-bin \
+    libgdal-dev \
+    memcached \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+COPY ./server/requirements.txt /code/
+RUN pip install --upgrade pip && pip install -r requirements.txt
+
+COPY ./server /code/
+COPY ./entrypoint.sh /code/entrypoint.sh
+
+RUN chmod +x /code/entrypoint.sh && mkdir -p /code/static /code/media
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

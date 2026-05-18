@@ -1,3 +1,4 @@
+# Stage 1: Build stage - install dependencies and build
 FROM cgr.dev/chainguard/node:latest-dev@sha256:6eec455f386d097fc57d8aa73bd06c27ab91faa4f02f9103f94b4c56e0f9a80b AS build
 USER root
 
@@ -5,21 +6,21 @@ WORKDIR /app
 
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=production
 
 # Use Corepack so pnpm is managed by Node, not a global npm install.
 RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
 
 # Copy package manager files first for better Docker layer caching.
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* .npmrc* ./
-
-# Clean install all node modules using pnpm with frozen lockfile.
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Copy source, then build the frontend assets.
 COPY . .
 RUN rm -f .env && pnpm run build
 
-FROM gcr.io/distroless/nodejs22-debian12:nonroot@sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e AS external-website
+# Stage 2: Production runtime - minimal distroless image
+FROM gcr.io/distroless/nodejs22-debian12:nonroot@sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e AS production
 
 # Metadata labels for the AdventureLog image
 LABEL maintainer="Sean Morley" \

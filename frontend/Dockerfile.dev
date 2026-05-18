@@ -1,0 +1,17 @@
+# Development image with shell and dev tools
+FROM node:22-bookworm
+
+WORKDIR /app
+
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+ENV NODE_ENV=development
+
+RUN corepack enable && corepack prepare pnpm@10.32.1 --activate
+
+COPY package.json pnpm-workspace.yaml* .npmrc* ./
+RUN pnpm install
+
+EXPOSE 3000
+
+CMD ["pnpm", "exec", "vite", "dev", "--host", "0.0.0.0"]
