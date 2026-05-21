@@ -1065,6 +1065,7 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
     start_datetime = serializers.ReadOnlyField()
     end_datetime = serializers.ReadOnlyField()
     object_name = serializers.ReadOnlyField(source='content_type.model')
+    is_global = serializers.BooleanField(required=False, default=False)
     
     class Meta:
         model = CollectionItineraryItem

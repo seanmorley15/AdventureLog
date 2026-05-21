@@ -36,6 +36,7 @@
 	let mapZoom: number = 2;
 	let mapCenter: [number, number] = [0, 0];
 	let updateUrlTimeout: NodeJS.Timeout | null = null;
+	const MAP_VIEW_STORAGE_KEY = 'adventurelog.map.view';
 
 	export let initialLatLng: { lat: number; lng: number } | null = null;
 
@@ -428,8 +429,55 @@
 		}, 500);
 	}
 
+	function readStoredMapView(): { center: [number, number]; zoom: number } | null {
+		if (typeof window === 'undefined') return null;
+
+		try {
+			const storedValue = window.localStorage.getItem(MAP_VIEW_STORAGE_KEY);
+			if (!storedValue) return null;
+
+			const parsed = JSON.parse(storedValue) as {
+				center?: [number, number];
+				zoom?: number;
+			};
+			const zoomValue = parsed.zoom;
+
+			if (
+				!Array.isArray(parsed.center) ||
+				parsed.center.length < 2 ||
+				!Number.isFinite(parsed.center[0]) ||
+				!Number.isFinite(parsed.center[1]) ||
+				typeof zoomValue !== 'number' ||
+				!Number.isFinite(zoomValue)
+			) {
+				return null;
+			}
+
+			return {
+				center: [parsed.center[0], parsed.center[1]],
+				zoom: zoomValue
+			};
+		} catch {
+			return null;
+		}
+	}
+
+	function persistMapView(lat: number, lng: number, zoom: number) {
+		if (typeof window === 'undefined') return;
+
+		try {
+			window.localStorage.setItem(
+				MAP_VIEW_STORAGE_KEY,
+				JSON.stringify({ center: [lng, lat], zoom })
+			);
+		} catch {
+			// Ignore storage failures so map interaction still works.
+		}
+	}
+
 	function handleMapMove(e: CustomEvent<{ center: { lng: number; lat: number }; zoom: number }>) {
 		const { center, zoom } = e.detail;
+		persistMapView(center.lat, center.lng, zoom);
 		updateUrlParams(center.lat, center.lng, zoom);
 	}
 
@@ -448,7 +496,15 @@
 			if (Number.isFinite(parsedLat) && Number.isFinite(parsedLng) && Number.isFinite(parsedZoom)) {
 				mapCenter = [parsedLng, parsedLat];
 				mapZoom = parsedZoom;
+				persistMapView(parsedLat, parsedLng, parsedZoom);
+				return;
 			}
+		}
+
+		const storedView = readStoredMapView();
+		if (storedView) {
+			mapCenter = storedView.center;
+			mapZoom = storedView.zoom;
 		}
 
 		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return;
