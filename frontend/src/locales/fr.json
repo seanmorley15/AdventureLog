@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Collection dupliquée avec succès ! Redirection...",
 		"collection_duplicate_error": "Échec de la duplication de la collection.",
 		"hide_strava_activities": "Masquer les activités Strava",
-		"show_strava_activities": "Afficher les activités Strava"
+		"show_strava_activities": "Afficher les activités Strava",
+		"add_details": "Ajouter des détails"
 	},
 	"home": {
 		"desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -734,7 +735,9 @@
 		"activities": "Activités",
 		"trails": "Sentiers",
 		"use_imperial": "Utilisez des unités impériales",
-		"use_imperial_desc": "Utilisez des unités impériales (pieds, pouces, livres) au lieu d'unités métriques"
+		"use_imperial_desc": "Utilisez des unités impériales (pieds, pouces, livres) au lieu d'unités métriques",
+		"map_style_desc": "Utilisé comme fond de carte par défaut sur les cartes.",
+		"preferred_currency_desc": "Cette devise pré-remplit les champs monétaires lors de l'ajout de nouveaux éléments."
 	},
 	"checklist": {
 		"checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",

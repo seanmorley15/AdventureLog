@@ -735,7 +735,9 @@
 		"activities": "Aktiviteter",
 		"trails": "Spår",
 		"use_imperial": "Använd imperialistiska enheter",
-		"use_imperial_desc": "Använd imperialistiska enheter (fötter, tum, pund) istället för metriska enheter"
+		"use_imperial_desc": "Använd imperialistiska enheter (fötter, tum, pund) istället för metriska enheter",
+		"map_style_desc": "Används som standardbaskarta över kartor.",
+		"preferred_currency_desc": "Denna valuta fyller i i förväg pengafält när nya objekt läggs till."
 	},
 	"checklist": {
 		"checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",

@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "コレクションが正常に複製されました！リダイレクト中...",
 		"collection_duplicate_error": "コレクションの複製に失敗しました。",
 		"hide_strava_activities": "Strava アクティビティを非表示にする",
-		"show_strava_activities": "Strava アクティビティを表示する"
+		"show_strava_activities": "Strava アクティビティを表示する",
+		"add_details": "詳細を追加"
 	},
 	"auth": {
 		"confirm_password": "パスワードを認証する",
@@ -640,7 +641,8 @@
 	"locations": {
 		"location": "位置",
 		"locations": "場所",
-		"my_locations": "私の場所"
+		"my_locations": "私の場所",
+		"best_happened_at": "最高の出来事が起きた"
 	},
 	"lodging": {
 		"apartment": "アパート",
@@ -711,7 +713,8 @@
 		},
 		"users": "ユーザー",
 		"navigation": "ナビゲーション",
-		"worldtravel": "世界旅行"
+		"worldtravel": "世界旅行",
+		"mobile_login": "モバイルログイン"
 	},
 	"notes": {
 		"content": "コンテンツ",
@@ -924,7 +927,9 @@
 		"whats_included": "含まれているもの",
 		"world_travel_visits": "世界旅行訪問",
 		"enter_6_digit_code": "6桁のコードを入力します",
-		"enter_code_from_app": "アプリからコードを入力します"
+		"enter_code_from_app": "アプリからコードを入力します",
+		"map_style_desc": "マップ全体でデフォルトのベースマップとして使用されます。",
+		"preferred_currency_desc": "この通貨は、新しいアイテムを追加するときに通貨フィールドに事前に入力されます。"
 	},
 	"settings_download_backup": "バックアップをダウンロードします",
 	"share": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "旅行コンテキスト項目は、旅行全体に適用されます。たとえば、目的地そのものである場所、一般的なメモ、旅行全体にとって重要な持ち物リストなどです。",
 		"unscheduled_items": "予定外の項目",
 		"unscheduled_items_desc": "これらのアイテムはこの旅行にリンクされていますが、まだ特定の日に追加されていません。"
+	},
+	"api_keys": {
+		"copied": "コピーしました！",
+		"copy": "キーをコピーする",
+		"copy_error": "キーのコピー中にエラーが発生しました。",
+		"create": "キーの作成",
+		"create_error": "APIキーの作成に失敗しました。",
+		"created": "作成されました",
+		"delete_confirm": "このモバイル API キーを削除してもよろしいですか?",
+		"description": "プログラムによるアクセスのための個人用 API キーを作成します。\nキーは作成時に 1 回だけ表示されます。",
+		"dismiss": "却下する",
+		"key_created": "API キーが正常に作成されました。",
+		"key_name_placeholder": "キー名 (例: ホームアシスタント)",
+		"key_revoked": "API キーが取り消されました。",
+		"last_used": "最後に使用した",
+		"never_used": "一度も使用されていない",
+		"new_key_title": "新しい API キーを保存します",
+		"new_key_warning": "このキーは再度表示されません。\nそれをコピーして安全な場所に保管してください。",
+		"no_keys": "API キーはまだありません。",
+		"revoke": "取り消す",
+		"revoke_error": "APIキーの取り消しに失敗しました。",
+		"title": "APIキー",
+		"usage_middle": "ヘッダーまたはとして",
+		"usage_prefix": "このキーを"
 	}
 }

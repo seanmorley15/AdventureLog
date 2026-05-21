@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Collezione duplicata con successo! Reindirizzamento...",
 		"collection_duplicate_error": "Impossibile duplicare la collezione.",
 		"hide_strava_activities": "Nascondi attività Strava",
-		"show_strava_activities": "Mostra attività Strava"
+		"show_strava_activities": "Mostra attività Strava",
+		"add_details": "Aggiungi dettagli"
 	},
 	"home": {
 		"desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -734,7 +735,9 @@
 		"activities": "Attività",
 		"trails": "Trails",
 		"use_imperial": "Usa le unità imperiali",
-		"use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche"
+		"use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche",
+		"map_style_desc": "Utilizzata come mappa di base predefinita su tutte le mappe.",
+		"preferred_currency_desc": "Questa valuta precompila i campi denaro quando si aggiungono nuovi articoli."
 	},
 	"checklist": {
 		"checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",

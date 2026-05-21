@@ -735,7 +735,9 @@
 		"activities": "Aktivitäten",
 		"trails": "Wanderwege",
 		"use_imperial": "Verwenden Sie imperiale Einheiten",
-		"use_imperial_desc": "Verwenden Sie imperiale Einheiten (Füße, Zoll, Pfund) anstelle von metrischen Einheiten"
+		"use_imperial_desc": "Verwenden Sie imperiale Einheiten (Füße, Zoll, Pfund) anstelle von metrischen Einheiten",
+		"map_style_desc": "Wird als Standardgrundkarte für alle Karten verwendet.",
+		"preferred_currency_desc": "Diese Währung füllt die Geldfelder beim Hinzufügen neuer Artikel vorab aus."
 	},
 	"checklist": {
 		"checklist_delete_error": "Fehler beim Löschen der Checkliste",

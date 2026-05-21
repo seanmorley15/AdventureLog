@@ -493,7 +493,8 @@
 		"wikipedia_error": "Nu s-a generat descrierea de pe Wikipedia",
 		"with_activities": "Cu activități",
 		"written": "Scris",
-		"upload_from_device": "Încărcați de pe dispozitiv"
+		"upload_from_device": "Încărcați de pe dispozitiv",
+		"add_details": "Adăugați detalii"
 	},
 	"auth": {
 		"confirm_password": "Confirmați parola",
@@ -1003,7 +1004,9 @@
 		"verify_email_success": "Verificarea prin e-mail a fost trimisă cu succes!",
 		"verify_setup": "Verificați configurarea",
 		"whats_included": "Ce este inclus",
-		"world_travel_visits": "Vizite de călătorie în lume"
+		"world_travel_visits": "Vizite de călătorie în lume",
+		"map_style_desc": "Folosit ca hartă de bază implicită pe hărți.",
+		"preferred_currency_desc": "Această monedă completează în prealabil câmpurile de bani atunci când adăugați elemente noi."
 	},
 	"settings_download_backup": "Descărcați Backup",
 	"share": {

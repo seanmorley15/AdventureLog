@@ -493,7 +493,8 @@
 		"collection_duplicate_success": "Zbierka bola úspešne zduplikovaná! Presmerovanie...",
 		"collection_duplicate_error": "Nepodarilo sa zduplikovať zbierku.",
 		"hide_strava_activities": "Skryť Strava aktivity",
-		"show_strava_activities": "Zobraziť Strava Activities"
+		"show_strava_activities": "Zobraziť Strava Activities",
+		"add_details": "Pridajte podrobnosti"
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
@@ -734,7 +735,9 @@
 		"use_imperial": "Používať imperiálne jednotky",
 		"use_imperial_desc": "Používať imperiálne jednotky (stopy, palce, libry) namiesto metrických jednotiek",
 		"trails": "Trasy",
-		"activities": "Aktivity"
+		"activities": "Aktivity",
+		"map_style_desc": "Používa sa ako predvolená podkladová mapa naprieč mapami.",
+		"preferred_currency_desc": "Táto mena predvypĺňa peňažné polia pri pridávaní nových položiek."
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",

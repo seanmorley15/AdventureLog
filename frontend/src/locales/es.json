@@ -735,7 +735,9 @@
 		"activities": "Actividades",
 		"trails": "Senderos",
 		"use_imperial": "Use unidades imperiales",
-		"use_imperial_desc": "Use unidades imperiales (pies, pulgadas, libras) en lugar de unidades métricas"
+		"use_imperial_desc": "Use unidades imperiales (pies, pulgadas, libras) en lugar de unidades métricas",
+		"map_style_desc": "Se utiliza como mapa base predeterminado en todos los mapas.",
+		"preferred_currency_desc": "Esta moneda rellena previamente los campos de dinero al agregar nuevos artículos."
 	},
 	"checklist": {
 		"checklist_delete_error": "Error al eliminar la lista de tareas",

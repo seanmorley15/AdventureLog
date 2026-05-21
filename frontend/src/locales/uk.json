@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Колекцію успішно дубльовано! Перенаправлення...",
 		"collection_duplicate_error": "Не вдалося дублювати колекцію.",
 		"hide_strava_activities": "Приховати дії Strava",
-		"show_strava_activities": "Показати діяльність Strava"
+		"show_strava_activities": "Показати діяльність Strava",
+		"add_details": "Додайте деталі"
 	},
 	"auth": {
 		"confirm_password": "Підтвердьте пароль",
@@ -926,7 +927,9 @@
 		"verify_email_success": "Підтвердження електронної пошти успішно надіслано!",
 		"verify_setup": "Перевірте налаштування",
 		"whats_included": "Що включено",
-		"world_travel_visits": "Світові подорожі"
+		"world_travel_visits": "Світові подорожі",
+		"map_style_desc": "Використовується як базова карта за замовчуванням на всіх картах.",
+		"preferred_currency_desc": "Ця валюта попередньо заповнює грошові поля під час додавання нових елементів."
 	},
 	"settings_download_backup": "Завантажте резервну копію",
 	"share": {

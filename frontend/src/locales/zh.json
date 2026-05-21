@@ -493,7 +493,8 @@
 		"collection_duplicate_success": "集合复制成功！正在跳转...",
 		"collection_duplicate_error": "集合复制失败。",
 		"hide_strava_activities": "隐藏 Strava 活动",
-		"show_strava_activities": "显示 Strava 活动"
+		"show_strava_activities": "显示 Strava 活动",
+		"add_details": "添加详细信息"
 	},
 	"auth": {
 		"forgot_password": "忘记密码？",
@@ -734,7 +735,9 @@
 		"activities": "活动",
 		"trails": "路径",
 		"use_imperial": "使用英制单位",
-		"use_imperial_desc": "使用英制单位（英尺、英寸、磅）代替公制单位"
+		"use_imperial_desc": "使用英制单位（英尺、英寸、磅）代替公制单位",
+		"map_style_desc": "用作跨地图的默认底图。",
+		"preferred_currency_desc": "添加新项目时，此货币会预先填充货币字段。"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",

@@ -493,7 +493,8 @@
 		"collection_duplicate_success": "Gyűjtemény sikeresen megkettőzve! Átirányítás...",
 		"collection_duplicate_error": "A gyűjtemény másolása sikertelen.",
 		"hide_strava_activities": "A Strava-tevékenységek elrejtése",
-		"show_strava_activities": "Mutasd a Strava-tevékenységeket"
+		"show_strava_activities": "Mutasd a Strava-tevékenységeket",
+		"add_details": "Adjon hozzá részleteket"
 	},
 	"worldtravel": {
 		"country_list": "Országlista",
@@ -734,7 +735,9 @@
 		"use_imperial": "Imperiális mértékegységek használata",
 		"use_imperial_desc": "Imperiális mértékegységek (láb, hüvelyk, font) használata a metrikus helyett",
 		"trails": "Útvonalak",
-		"activities": "Tevékenységek"
+		"activities": "Tevékenységek",
+		"map_style_desc": "A térképek alapértelmezett alaptérképeként használatos.",
+		"preferred_currency_desc": "Ez a pénznem előre kitölti a pénz mezőket új tételek hozzáadásakor."
 	},
 	"collection": {
 		"collection_created": "A gyűjtemény sikeresen létrehozva!",

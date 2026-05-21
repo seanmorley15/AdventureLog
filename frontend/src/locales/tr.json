@@ -735,7 +735,9 @@
 		"use_imperial": "İngiliz Ölçü Birimlerini Kullan",
 		"use_imperial_desc": "Metrik birimler yerine İngiliz birimlerini (fit, inç, pound) kullanın",
 		"trails": "Patikalar",
-		"activities": "Aktiviteler"
+		"activities": "Aktiviteler",
+		"map_style_desc": "Haritalarda varsayılan altlık harita olarak kullanılır.",
+		"preferred_currency_desc": "Bu para birimi, yeni öğeler eklenirken para alanlarını önceden doldurur."
 	},
 	"collection": {
 		"collection_created": "Koleksiyon başarıyla oluşturuldu!",

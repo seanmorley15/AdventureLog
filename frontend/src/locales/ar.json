@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "تم تكرار المجموعة بنجاح! جارٍ إعادة التوجيه...",
 		"collection_duplicate_error": "فشل في تكرار المجموعة.",
 		"hide_strava_activities": "إخفاء أنشطة Strava",
-		"show_strava_activities": "عرض أنشطة Strava"
+		"show_strava_activities": "عرض أنشطة Strava",
+		"add_details": "أضف التفاصيل"
 	},
 	"auth": {
 		"confirm_password": "تأكيد كلمة المرور",
@@ -926,7 +927,9 @@
 		"world_travel_visits": "زيارات السفر العالمية",
 		"mfa_desc": "أضف طبقة إضافية من الأمان إلى حسابك",
 		"mfa_disabled": "تعطيل المصادقة متعددة العوامل بنجاح!",
-		"mfa_is_enabled": "يتم تمكين MFA"
+		"mfa_is_enabled": "يتم تمكين MFA",
+		"map_style_desc": "يتم استخدامها كخريطة أساس افتراضية عبر الخرائط.",
+		"preferred_currency_desc": "تقوم هذه العملة بملء حقول الأموال مسبقًا عند إضافة عناصر جديدة."
 	},
 	"settings_download_backup": "تنزيل النسخ الاحتياطي",
 	"share": {

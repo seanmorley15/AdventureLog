@@ -493,7 +493,8 @@
 		"collection_duplicate_success": "Коллекция успешно дублирована! Перенаправление...",
 		"collection_duplicate_error": "Не удалось дублировать коллекцию.",
 		"hide_strava_activities": "Скрыть действия Strava",
-		"show_strava_activities": "Показать действия Strava"
+		"show_strava_activities": "Показать действия Strava",
+		"add_details": "Добавить детали"
 	},
 	"worldtravel": {
 		"country_list": "Список стран",
@@ -734,7 +735,9 @@
 		"activities": "Активности",
 		"trails": "Маршруты",
 		"use_imperial": "Используйте имперские подразделения",
-		"use_imperial_desc": "Используйте имперские единицы (ноги, дюймы, фунты) вместо метрических единиц"
+		"use_imperial_desc": "Используйте имперские единицы (ноги, дюймы, фунты) вместо метрических единиц",
+		"map_style_desc": "Используется в качестве базовой карты по умолчанию на всех картах.",
+		"preferred_currency_desc": "Эта валюта предварительно заполняет поля денег при добавлении новых предметов."
 	},
 	"collection": {
 		"collection_created": "Коллекция успешно создана!",

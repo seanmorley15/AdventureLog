@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Coleção duplicada com sucesso! Redirecionando...",
 		"collection_duplicate_error": "Falha ao duplicar a coleção.",
 		"hide_strava_activities": "Ocultar atividades do Strava",
-		"show_strava_activities": "Mostrar atividades do Strava"
+		"show_strava_activities": "Mostrar atividades do Strava",
+		"add_details": "Adicionar detalhes"
 	},
 	"auth": {
 		"confirm_password": "Confirme a sua senha",
@@ -926,7 +927,9 @@
 		"verify_email_success": "Verificação de E-mail enviada com sucesso!",
 		"verify_setup": "Verifique a configuração",
 		"whats_included": "O que está incluído",
-		"world_travel_visits": "Visitas ao Mundo"
+		"world_travel_visits": "Visitas ao Mundo",
+		"map_style_desc": "Usado como mapa base padrão em mapas.",
+		"preferred_currency_desc": "Esta moeda preenche previamente os campos monetários ao adicionar novos itens."
 	},
 	"settings_download_backup": "Baixar Backup",
 	"share": {
