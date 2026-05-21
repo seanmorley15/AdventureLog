@@ -53,8 +53,15 @@ class CollectionShared(permissions.BasePermission):
                 if obj.invites.filter(invited_user=user).exists():
                     return True
 
+        # If obj is a Collection, shared users are read-only.
+        if obj.__class__.__name__ == 'Collection':
+            if obj.user == user:
+                return True
+            if request.method in permissions.SAFE_METHODS:
+                return obj.shared_with.filter(id=user.id).exists() or getattr(obj, 'is_public', False)
+            return False
+
         # Check if user is in shared_with of any collections related to the obj
-        # If obj is a Collection itself:
         if hasattr(obj, 'shared_with'):
             if obj.shared_with.filter(id=user.id).exists():
                 return True

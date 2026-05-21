@@ -128,7 +128,9 @@ class CollectionViewSet(viewsets.ModelViewSet):
         """Base queryset logic extracted for reuse"""
         if self.action == 'destroy':
             queryset = Collection.objects.filter(user=self.request.user.id)
-        elif self.action in ['update', 'partial_update', 'leave']:
+        elif self.action in ['update', 'partial_update']:
+            queryset = Collection.objects.filter(user=self.request.user.id)
+        elif self.action == 'leave':
             queryset = Collection.objects.filter(
                 Q(user=self.request.user.id) | Q(shared_with=self.request.user)
             ).distinct()
@@ -1057,6 +1059,17 @@ class CollectionViewSet(viewsets.ModelViewSet):
     def update(self, request, *args, **kwargs):
         """Override update to handle is_public cascading and clean up out-of-range itinerary items when dates change."""
         instance = self.get_object()
+        if 'is_public' in request.data and instance.user_id != request.user.id:
+            raw_is_public = request.data.get('is_public')
+            if isinstance(raw_is_public, str):
+                desired_is_public = raw_is_public.strip().lower() in ['true', '1', 't', 'yes', 'y']
+            else:
+                desired_is_public = bool(raw_is_public)
+            if desired_is_public != instance.is_public:
+                return Response(
+                    {"error": "Only the collection owner can change publicity."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
         old_is_public = instance.is_public
         old_start_date = instance.start_date
         old_end_date = instance.end_date
