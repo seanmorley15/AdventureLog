@@ -31,3 +31,4 @@ gpxpy==1.6.2
 pymemcache==4.0.0
 legacy-cgi==2.6.3
 requests>=2.31.0
+stripe==11.3.0

@@ -33,6 +33,16 @@ SECRET_KEY = getenv('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = getenv('DEBUG', 'true').lower() == 'true'
 
+# ---------------------------------------------------------------------------
+# Cloud Mode & Billing
+# ---------------------------------------------------------------------------
+CLOUD_MODE = getenv('CLOUD_MODE', 'false').lower() == 'true'
+CLOUD_TRIAL_DAYS = int(getenv('CLOUD_TRIAL_DAYS', '30'))
+STRIPE_SECRET_KEY = getenv('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = getenv('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_ID = getenv('STRIPE_PRICE_ID', '')
+STRIPE_PUBLISHABLE_KEY = getenv('STRIPE_PUBLISHABLE_KEY', '')
+
 # ALLOWED_HOSTS = [
 #     'localhost',
 #     '127.0.0.1',
@@ -68,6 +78,8 @@ INSTALLED_APPS = (
     'adventures',
     'worldtravel',
     'users',
+    'billing.apps.BillingConfig',
+    'cloud.apps.CloudConfig',
     'integrations',
     'django.contrib.gis',
     # 'achievements', # Not done yet, will be added later in a future update
@@ -91,6 +103,7 @@ MIDDLEWARE = (
     'adventures.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'cloud.middleware.CloudAccessMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'allauth.account.middleware.AccountMiddleware',
