@@ -1071,6 +1071,11 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
         model = CollectionItineraryItem
         fields = ['id', 'collection', 'content_type', 'object_id', 'item', 'date', 'is_global', 'order', 'start_datetime', 'end_datetime', 'created_at', 'object_name']
         read_only_fields = ['id', 'created_at', 'start_datetime', 'end_datetime', 'item', 'object_name']
+        # DRF 3.15 generates UniqueTogetherValidator from UniqueConstraints without applying
+        # their conditions, causing false 400s (e.g. a dated item with order=0 is rejected
+        # when a global item with the same order exists). The view and DB constraints
+        # already enforce the correct conditional uniqueness.
+        validators = []
 
     def validate(self, attrs):
         data = super().validate(attrs)
