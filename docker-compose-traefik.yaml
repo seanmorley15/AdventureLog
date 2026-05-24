@@ -71,6 +71,12 @@ services:
       - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt"
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "python", "/code/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres-data:

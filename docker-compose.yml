@@ -28,6 +28,12 @@ services:
       - "${BACKEND_PORT:-8016}:80"
     depends_on:
       - db
+    healthcheck:
+      test: ["CMD", "python", "/code/healthcheck.py"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     volumes:
       - adventurelog_media:/code/media/
 
