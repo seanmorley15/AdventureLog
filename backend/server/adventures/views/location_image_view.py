@@ -21,6 +21,7 @@ import requests
 from adventures.permissions import ContentImagePermission
 import logging
 import uuid
+from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
 
 logger = logging.getLogger(__name__)
 
@@ -189,6 +190,21 @@ def import_remote_images_for_object(content_object, urls, owner=None, max_worker
             failure = {
                 'url': image_url,
                 'error': error_message,
+            }
+            results.append({
+                **failure,
+                'status': 'failed',
+            })
+            failed.append(failure)
+            continue
+
+        incoming_bytes = len(file_data['content'])
+        allowed, details = enforce_media_storage_limit(image_owner, incoming_bytes)
+        if not allowed:
+            failure = {
+                'url': image_url,
+                'error': 'Media storage limit exceeded',
+                'details': details,
             }
             results.append({
                 **failure,
@@ -545,6 +561,20 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             
             # Create a Django ContentFile from the downloaded image
             image_file = ContentFile(immich_response.content, name=filename)
+
+            owner = content_object.user if hasattr(content_object, 'user') else request.user
+            allowed, details = enforce_media_storage_limit(
+                owner,
+                get_uploaded_file_size(image_file),
+            )
+            if not allowed:
+                return Response(
+                    {
+                        "error": "Media storage limit exceeded",
+                        **details,
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
             
             # Modify request data to use the downloaded image instead of immich_id
             request_data = request.data.copy()
@@ -559,7 +589,7 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             
             # Save with the downloaded image
             serializer.save(
-                user=content_object.user if hasattr(content_object, 'user') else request.user,
+                user=owner,
                 image=image_file,
                 content_type=content_type,
                 object_id=object_id
@@ -608,8 +638,23 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
 
         # Prepare save parameters
+        owner = getattr(content_object, 'user', request.user)
+        if image_file:
+            allowed, details = enforce_media_storage_limit(
+                owner,
+                get_uploaded_file_size(image_file),
+            )
+            if not allowed:
+                return Response(
+                    {
+                        "error": "Media storage limit exceeded",
+                        **details,
+                    },
+                    status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                )
+
         save_kwargs = {
-            'user': getattr(content_object, 'user', request.user),
+            'user': owner,
             'content_type': content_type,
             'object_id': object_id,
         }

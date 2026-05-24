@@ -1,7 +1,7 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { APIKey, ImmichIntegration, User } from '$lib/types';
+import type { APIKey, ImmichIntegration, MediaUsage, User } from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -104,6 +104,16 @@ export const load: PageServerLoad = async (event) => {
 		apiKeys = await apiKeysFetch.json();
 	}
 
+	let mediaUsage: MediaUsage | null = null;
+	let mediaUsageFetch = await fetch(`${endpoint}/auth/user-media-usage/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (mediaUsageFetch.ok) {
+		mediaUsage = (await mediaUsageFetch.json()) as MediaUsage;
+	}
+
 	return {
 		props: {
 			user,
@@ -117,7 +127,8 @@ export const load: PageServerLoad = async (event) => {
 			stravaUserEnabled,
 			wandererEnabled,
 			wandererExpired,
-			apiKeys
+			apiKeys,
+			mediaUsage
 		}
 	};
 };

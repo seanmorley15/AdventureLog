@@ -61,6 +61,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'storages',
     'django.contrib.sites',
     'rest_framework',
     'rest_framework.authtoken',
@@ -205,6 +206,14 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'  # Must match NGINX root for media serving
 STATICFILES_DIRS = [BASE_DIR / 'static']
 
+MEDIA_STORAGE_LIMIT_BYTES = int(getenv('MEDIA_STORAGE_LIMIT_BYTES', '0') or 0)
+MEDIA_STORAGE_LIMIT_MB = int(getenv('MEDIA_STORAGE_LIMIT_MB', '0') or 0)
+if MEDIA_STORAGE_LIMIT_BYTES <= 0 and MEDIA_STORAGE_LIMIT_MB > 0:
+    MEDIA_STORAGE_LIMIT_BYTES = MEDIA_STORAGE_LIMIT_MB * 1024 * 1024
+
+MEDIA_STORAGE = getenv('MEDIA_STORAGE', 'local').lower()
+USE_S3_MEDIA = MEDIA_STORAGE == 's3'
+
 STORAGES = {
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
@@ -213,6 +222,23 @@ STORAGES = {
         "BACKEND": "django.core.files.storage.FileSystemStorage",
     }
 }
+
+if USE_S3_MEDIA:
+    STORAGES["default"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    }
+    AWS_ACCESS_KEY_ID = getenv('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = getenv('AWS_SECRET_ACCESS_KEY')
+    AWS_STORAGE_BUCKET_NAME = getenv('AWS_STORAGE_BUCKET_NAME')
+    AWS_S3_ENDPOINT_URL = getenv('AWS_S3_ENDPOINT_URL') or None
+    AWS_S3_REGION_NAME = getenv('AWS_S3_REGION_NAME') or None
+    AWS_S3_ADDRESSING_STYLE = getenv('AWS_S3_ADDRESSING_STYLE', 'path')
+    AWS_S3_SIGNATURE_VERSION = getenv('AWS_S3_SIGNATURE_VERSION', 's3v4')
+    AWS_S3_CUSTOM_DOMAIN = getenv('AWS_S3_CUSTOM_DOMAIN') or None
+    AWS_QUERYSTRING_AUTH = getenv('AWS_QUERYSTRING_AUTH', 'true').lower() == 'true'
+    AWS_QUERYSTRING_EXPIRE = int(getenv('AWS_QUERYSTRING_EXPIRE', '3600'))
+    AWS_S3_FILE_OVERWRITE = getenv('AWS_S3_FILE_OVERWRITE', 'true').lower() == 'true'
+    AWS_DEFAULT_ACL = None
 
 SILENCED_SYSTEM_CHECKS = ["slippers.E001"]
 

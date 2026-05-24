@@ -3,9 +3,10 @@ from django.db.models import Q
 from adventures.models import Location, Activity
 from adventures.serializers import ActivitySerializer
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 import gpxpy
 from typing import Tuple
+from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
 
 class ActivityViewSet(viewsets.ModelViewSet):
     serializer_class = ActivitySerializer
@@ -49,6 +50,15 @@ class ActivityViewSet(viewsets.ModelViewSet):
         # if there is a GPX file, use it to get elevation data
         gpx_file = serializer.validated_data.get('gpx_file')
         if gpx_file:
+            allowed, details = enforce_media_storage_limit(
+                location.user,
+                get_uploaded_file_size(gpx_file),
+            )
+            if not allowed:
+                raise ValidationError({
+                    "error": "Media storage limit exceeded",
+                    **details,
+                })
             elevation_gain, elevation_loss, elevation_high, elevation_low = self._get_elevation_data_from_gpx(gpx_file)
             serializer.validated_data['elevation_gain'] = elevation_gain
             serializer.validated_data['elevation_loss'] = elevation_loss
@@ -60,6 +70,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         instance = serializer.instance
         new_visit = serializer.validated_data.get('visit')
+        new_gpx_file = serializer.validated_data.get('gpx_file')
         
         # Prevent changing visit/location after creation
         if new_visit and new_visit != instance.visit:
@@ -69,6 +80,21 @@ class ActivityViewSet(viewsets.ModelViewSet):
         location = instance.visit.location if instance.visit else None
         if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
             raise PermissionDenied("You do not have permission to update this activity.")
+
+        if new_gpx_file and location:
+            exclude_names = []
+            if instance.gpx_file and instance.gpx_file.name:
+                exclude_names.append(instance.gpx_file.name)
+            allowed, details = enforce_media_storage_limit(
+                location.user,
+                get_uploaded_file_size(new_gpx_file),
+                exclude_names=exclude_names,
+            )
+            if not allowed:
+                raise ValidationError({
+                    "error": "Media storage limit exceeded",
+                    **details,
+                })
 
         serializer.save()
 
