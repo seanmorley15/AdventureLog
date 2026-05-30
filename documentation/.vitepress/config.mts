@@ -227,6 +227,7 @@ export default defineConfig({
           },
           { text: "SMTP Email", link: "/docs/configuration/email" },
           { text: "Umami Analytics", link: "/docs/configuration/analytics" },
+          { text: "S3 Storage", link: "/docs/configuration/s3_storage" },
           {
             text: "API Keys",
             link: "/docs/configuration/api_keys",
