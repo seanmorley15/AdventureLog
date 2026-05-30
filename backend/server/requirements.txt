@@ -10,6 +10,8 @@ python-dotenv==1.1.0
 psycopg2-binary==2.9.10
 pillow==12.2.0
 whitenoise==6.9.0
+django-storages==1.14.3
+boto3==1.34.162
 django-resized==1.0.3
 django-geojson==4.2.0
 setuptools==79.0.1
@@ -31,3 +33,4 @@ gpxpy==1.6.2
 pymemcache==4.0.0
 legacy-cgi==2.6.3
 requests>=2.31.0
+stripe==11.3.0

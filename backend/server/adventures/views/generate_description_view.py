@@ -9,6 +9,7 @@ from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from adventures.throttling import ExternalWikipediaThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ class GenerateDescription(viewsets.ViewSet):
     ACCEPTED_IMAGE_FORMATS = {'.jpg', '.jpeg', '.png', '.webp', '.gif'}
     MIN_DESCRIPTION_LENGTH = 50  # Minimum characters for a valid description
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalWikipediaThrottle])
     def desc(self, request):
         name = self.request.query_params.get('name', '')
         if not name:
@@ -77,7 +78,7 @@ class GenerateDescription(viewsets.ViewSet):
         except ValueError:
             return Response({"error": "Invalid response from Wikipedia API"}, status=500)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalWikipediaThrottle])
     def img(self, request):
         name = self.request.query_params.get('name', '')
         if not name:

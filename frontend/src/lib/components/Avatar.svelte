@@ -10,10 +10,12 @@
 	import Settings from '~icons/mdi/cog';
 	import Logout from '~icons/mdi/logout';
 	import Phone from '~icons/mdi/cellphone';
+	import CreditCard from '~icons/mdi/credit-card';
 
 	import MobileQR from '$lib/components/MobileQR.svelte';
 
 	export let user: any;
+	export let cloudMode = false;
 
 	let letter: string = user.first_name?.[0] || user.username?.[0] || '?';
 	let showMobileQR = false;
@@ -200,6 +202,18 @@
 					</button>
 				</li>
 			{/each}
+
+			{#if cloudMode}
+				<li>
+					<button
+						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
+						on:click={() => goto('/subscribe')}
+					>
+						<CreditCard class="w-5 h-5 text-base-content/70" />
+						<span>{$t('Billing')}</span>
+					</button>
+				</li>
+			{/if}
 		</div>
 
 		<div class="divider my-2"></div>

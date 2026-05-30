@@ -8,32 +8,26 @@ import gc
 import tempfile
 import sqlite3
 from contextlib import contextmanager
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 from django.conf import settings
 
 COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
-        
-media_root = settings.MEDIA_ROOT
 
 def saveCountryFlag(country_code):
     # For standards, use the lowercase country_code
     country_code = country_code.lower()
-    flags_dir = os.path.join(media_root, 'flags')
+    flag_path = f"flags/{country_code}.png"
 
-    # Check if the flags directory exists, if not, create it
-    if not os.path.exists(flags_dir):
-        os.makedirs(flags_dir)
-
-    # Check if the flag already exists in the media folder
-    flag_path = os.path.join(flags_dir, f'{country_code}.png')
-    if os.path.exists(flag_path):
+    # Check if the flag already exists in storage
+    if default_storage.exists(flag_path):
         print(f'Flag for {country_code} already exists')
         return
 
     res = requests.get(f'https://flagcdn.com/h240/{country_code}.png'.lower())
     if res.status_code == 200:
-        with open(flag_path, 'wb') as f:
-            f.write(res.content)
+        default_storage.save(flag_path, ContentFile(res.content))
         print(f'Flag for {country_code} downloaded')
     else:
         print(f'Error downloading flag for {country_code}')
@@ -90,23 +84,21 @@ class Command(BaseCommand):
     def handle(self, **options):
         force = options['force']
         batch_size = options['batch_size']
-        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
+        countries_json_path = f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json'
         
         # Download or validate JSON file
-        if not os.path.exists(countries_json_path) or force:
+        if not default_storage.exists(countries_json_path) or force:
             self.stdout.write('Downloading JSON file...')
+            if force and default_storage.exists(countries_json_path):
+                default_storage.delete(countries_json_path)
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
             if res.status_code == 200:
-                with open(countries_json_path, 'w') as f:
-                    f.write(res.text)
+                default_storage.save(countries_json_path, ContentFile(res.content))
                 self.stdout.write(self.style.SUCCESS('JSON file downloaded successfully'))
             else:
                 self.stdout.write(self.style.ERROR('Error downloading JSON file'))
                 return
-        elif not os.path.isfile(countries_json_path):
-            self.stdout.write(self.style.ERROR('JSON file is not a file'))
-            return
-        elif os.path.getsize(countries_json_path) == 0:
+        elif default_storage.size(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('JSON file is empty'))
             return
         elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
@@ -142,7 +134,7 @@ class Command(BaseCommand):
         region_count = 0
         city_count = 0
         
-        with open(json_path, 'rb') as f:
+        with default_storage.open(json_path, 'rb') as f:
             parser = ijson.items(f, 'item')
             
             for country in parser:

@@ -2,8 +2,9 @@ from django.http import JsonResponse
 from django.middleware.csrf import get_token
 from os import getenv
 from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden
+from django.http import HttpResponse, HttpResponseForbidden, HttpResponseRedirect
 from django.views.static import serve
+from django.core.files.storage import default_storage
 from adventures.utils.file_permissions import checkFilePermission
 
 def get_csrf_token(request):
@@ -14,6 +15,10 @@ def get_public_url(request):
     return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
 
 protected_paths = ['images/', 'attachments/']
+
+def _redirect_storage(path):
+    storage_url = default_storage.url(path)
+    return HttpResponseRedirect(storage_url)
 
 def serve_protected_media(request, path):
     if any([path.startswith(protected_path) for protected_path in protected_paths]):
@@ -34,22 +39,24 @@ def serve_protected_media(request, path):
 
         media_type = path.split('/')[0] + '/'
         if checkFilePermission(image_id, user, media_type):
+            if settings.USE_S3_MEDIA:
+                return _redirect_storage(path)
             if settings.DEBUG:
                 # In debug mode, serve the file directly
                 return serve(request, path, document_root=settings.MEDIA_ROOT)
-            else:
-                # In production, use X-Accel-Redirect to serve the file using Nginx
-                response = HttpResponse()
-                response['Content-Type'] = ''
-                response['X-Accel-Redirect'] = '/protectedMedia/' + path
-                return response
-        else:
-            return HttpResponseForbidden()
-    else:
-        if settings.DEBUG:
-            return serve(request, path, document_root=settings.MEDIA_ROOT)
-        else:
+            # In production, use X-Accel-Redirect to serve the file using Nginx
             response = HttpResponse()
             response['Content-Type'] = ''
             response['X-Accel-Redirect'] = '/protectedMedia/' + path
             return response
+        else:
+            return HttpResponseForbidden()
+    else:
+        if settings.USE_S3_MEDIA:
+            return _redirect_storage(path)
+        if settings.DEBUG:
+            return serve(request, path, document_root=settings.MEDIA_ROOT)
+        response = HttpResponse()
+        response['Content-Type'] = ''
+        response['X-Accel-Redirect'] = '/protectedMedia/' + path
+        return response

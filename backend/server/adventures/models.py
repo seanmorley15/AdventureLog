@@ -492,9 +492,9 @@ class ContentImage(models.Model):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        # Remove file from disk when deleting image
-        if self.image and os.path.isfile(self.image.path):
-            os.remove(self.image.path)
+        # Remove file from storage when deleting image
+        if self.image:
+            self.image.delete(save=False)
         super().delete(*args, **kwargs)
 
     def __str__(self):
@@ -521,8 +521,8 @@ class ContentAttachment(models.Model):
         ]
 
     def delete(self, *args, **kwargs):
-        if self.file and os.path.isfile(self.file.path):
-            os.remove(self.file.path)
+        if self.file:
+            self.file.delete(save=False)
         super().delete(*args, **kwargs)
 
     def __str__(self):

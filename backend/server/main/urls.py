@@ -1,7 +1,8 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
+from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
+from cloud.views import CurrentUserView
 from .views import get_csrf_token, get_public_url, serve_protected_media
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
@@ -26,6 +27,8 @@ urlpatterns = [
     path('auth/update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),
 
     path('auth/user-metadata/', UserMetadataView.as_view(), name='user-metadata'),
+    path('auth/user-media-usage/', UserMediaUsageView.as_view(), name='user-media-usage'),
+    path('auth/current-user/', CurrentUserView.as_view(), name='current-user'),
 
     path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
 
@@ -54,6 +57,7 @@ urlpatterns = [
     path("accounts/", include("allauth.urls")),
 
     path("api/integrations/", include("integrations.urls")),
+    path("api/billing/", include("billing.urls")),
 
     # Include the API endpoints:   
 ]

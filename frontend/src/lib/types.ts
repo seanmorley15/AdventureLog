@@ -22,6 +22,27 @@ export type User = {
 	map_style: string;
 };
 
+export type MediaUsage = {
+	total_bytes: number;
+	limit_bytes: number | null;
+	images_bytes: number;
+	attachments_bytes: number;
+	profile_pics_bytes: number;
+	images_files: number;
+	attachments_files: number;
+	profile_pics_files: number;
+};
+
+export type SubscriptionStatus = 'trial' | 'active' | 'canceled' | 'past_due';
+
+export type Subscription = {
+	status: SubscriptionStatus;
+	stripe_subscription_id: string | null;
+	trial_ends_at: string | null;
+	current_period_ends_at: string | null;
+	cancel_at_period_end: boolean;
+};
+
 export type Collaborator = {
 	uuid: string;
 	username: string;

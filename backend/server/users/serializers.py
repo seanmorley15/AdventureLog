@@ -32,7 +32,7 @@ from .models import CustomUser
 
 from rest_framework import serializers
 from django.conf import settings
-import os
+from main.utils import build_media_url
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
@@ -120,9 +120,7 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
         # Construct profile picture URL if it exists
         if instance.profile_pic:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")  # Sanitize URL
-            representation['profile_pic'] = f"{public_url}/media/{instance.profile_pic.name}"
+            representation['profile_pic'] = build_media_url(instance.profile_pic.name)
 
         # Remove `pk` field from the response
         representation.pop('pk', None)

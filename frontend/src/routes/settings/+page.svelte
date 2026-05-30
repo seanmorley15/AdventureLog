@@ -4,7 +4,7 @@
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { basemapOptions, normalizeBasemapType } from '$lib';
-	import type { ImmichIntegration, User, APIKey } from '$lib/types.js';
+	import type { ImmichIntegration, User, APIKey, MediaUsage } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
@@ -82,6 +82,47 @@
 	let newApiKeyName: string = '';
 	let newlyCreatedKey: string | null = null;
 	let keyCopied = false;
+	let mediaUsage: MediaUsage =
+		data.props.mediaUsage ??
+		({
+			total_bytes: 0,
+			limit_bytes: null,
+			images_bytes: 0,
+			attachments_bytes: 0,
+			profile_pics_bytes: 0,
+			images_files: 0,
+			attachments_files: 0,
+			profile_pics_files: 0
+		} as MediaUsage);
+
+	const formatBytes = (bytes: number) => {
+		if (!bytes || bytes <= 0) return '0 B';
+		const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+		const value = bytes / Math.pow(1024, index);
+		const precision = value >= 10 || index === 0 ? 0 : 1;
+		return `${value.toFixed(precision)} ${units[index]}`;
+	};
+
+	$: totalMediaBytes = mediaUsage?.total_bytes ?? 0;
+	$: mediaLimitBytes = mediaUsage?.limit_bytes ?? null;
+	$: totalMediaFiles =
+		(mediaUsage?.images_files ?? 0) +
+		(mediaUsage?.attachments_files ?? 0) +
+		(mediaUsage?.profile_pics_files ?? 0);
+	$: overallUsagePercent = mediaLimitBytes
+		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
+		: 0;
+	$: imagesPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: attachmentsPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: profilePicsPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: mediaLimitLabel = mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited';
 
 	const sections = [
 		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
@@ -1849,6 +1890,133 @@
 													class="link link-neutral font-medium"
 													target="_blank">{$t('settings.documentation_link')}</a
 												>
+											</div>
+										</div>
+									</div>
+
+									<div class="p-6 bg-base-200 rounded-xl">
+										<div class="flex items-center gap-4 mb-5">
+											<div class="p-3 bg-secondary/10 rounded-xl">
+												<span class="text-2xl">📦</span>
+											</div>
+											<div>
+												<h3 class="text-lg font-semibold">{$t('settings.media')} Storage</h3>
+												<p class="text-sm text-base-content/70">
+													Storage usage for your uploaded images and attachments.
+												</p>
+											</div>
+										</div>
+
+										<div
+											class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4"
+										>
+											<div>
+												<p class="text-sm text-base-content/70">
+													{#if mediaLimitBytes}
+														Using {formatBytes(totalMediaBytes)} of {mediaLimitLabel} ({overallUsagePercent}%).
+													{:else}
+														Using {formatBytes(totalMediaBytes)} with no configured limit.
+													{/if}
+												</p>
+											</div>
+											<div class="badge badge-primary badge-lg">
+												{#if mediaLimitBytes}
+													{overallUsagePercent}% used
+												{:else}
+													Unlimited
+												{/if}
+											</div>
+										</div>
+
+										<div class="stats stats-vertical lg:stats-horizontal w-full bg-base-100 shadow">
+											<div class="stat">
+												<div class="stat-title">Total used</div>
+												<div class="stat-value text-primary">{formatBytes(totalMediaBytes)}</div>
+												<div class="stat-desc">
+													{totalMediaFiles}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('adventures.images')}</div>
+												<div class="stat-value text-secondary">
+													{formatBytes(mediaUsage.images_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.images_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('adventures.attachments')}</div>
+												<div class="stat-value text-accent">
+													{formatBytes(mediaUsage.attachments_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.attachments_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('auth.profile_picture')}</div>
+												<div class="stat-value text-info">
+													{formatBytes(mediaUsage.profile_pics_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.profile_pics_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+										</div>
+
+										<div class="mt-6 space-y-4">
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('adventures.images')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.images_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({imagesPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-secondary"
+													value={imagesPercent}
+													max="100"
+												></progress>
+											</div>
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('adventures.attachments')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.attachments_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({attachmentsPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-accent"
+													value={attachmentsPercent}
+													max="100"
+												></progress>
+											</div>
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('auth.profile_picture')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.profile_pics_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({profilePicsPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-primary"
+													value={profilePicsPercent}
+													max="100"
+												></progress>
 											</div>
 										</div>
 									</div>

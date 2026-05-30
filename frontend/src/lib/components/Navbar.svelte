@@ -118,6 +118,20 @@
 		{ path: '/calendar', icon: Calendar, label: 'navbar.calendar' },
 		{ path: '/users', icon: AccountMultiple, label: 'navbar.users' }
 	];
+
+	const msPerDay = 1000 * 60 * 60 * 24;
+	$: subscription = data?.subscription;
+	$: cloudMode = data?.cloudMode;
+	$: hasAccess = data?.hasAccess ?? true;
+	$: trialEndsAt = subscription?.trial_ends_at ? new Date(subscription.trial_ends_at) : null;
+	$: daysRemaining = trialEndsAt
+		? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / msPerDay))
+		: null;
+	$: isTrial = subscription?.status === 'trial';
+	$: hasScheduledSubscription = Boolean(subscription?.stripe_subscription_id);
+	$: showTrialCta = isTrial && !hasScheduledSubscription;
+	$: showExpiredCta = !hasAccess;
+	$: showFullNav = data?.user && (!cloudMode || hasAccess);
 </script>
 
 {#if isAboutModalOpen}
@@ -211,7 +225,7 @@
 
 	<!-- Desktop Navigation -->
 	<div class="navbar-center hidden lg:flex">
-		{#if data.user}
+		{#if showFullNav}
 			<ul class="menu menu-horizontal gap-1">
 				{#each navigationItems as item}
 					<li>
@@ -232,7 +246,7 @@
 
 	<div class="navbar-end gap-3">
 		<!-- Desktop Search -->
-		{#if data.user}
+		{#if showFullNav}
 			<form class="hidden lg:flex gap-2" on:submit={searchGo}>
 				<label
 					class="input input-bordered input-sm flex items-center gap-2 w-64 focus-within:w-80 transition-all duration-300"
@@ -252,6 +266,16 @@
 			</form>
 		{/if}
 
+		{#if data.user && cloudMode && subscription}
+			{#if showExpiredCta}
+				<a href="/subscribe" class="btn btn-warning btn-sm">Access paused</a>
+			{:else if showTrialCta}
+				<a href="/subscribe" class="btn btn-primary btn-sm">
+					Trial: {daysRemaining ?? 0}d left
+				</a>
+			{/if}
+		{/if}
+
 		<!-- Auth Buttons (Desktop) -->
 		{#if !data.user}
 			<div class="hidden lg:flex gap-2">
@@ -266,7 +290,7 @@
 
 		<!-- User Avatar -->
 		{#if data.user}
-			<Avatar user={data.user} />
+			<Avatar user={data.user} cloudMode={data.cloudMode} />
 		{/if}
 
 		<!-- Settings Dropdown -->

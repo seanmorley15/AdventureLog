@@ -20,6 +20,7 @@ from adventures.serializers import (
 )
 from adventures.utils import pagination
 from adventures.geocoding import reverse_geocode
+from adventures.throttling import ExternalGeocodeThrottle, ExternalSunTimesThrottle
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
@@ -181,7 +182,12 @@ class LocationViewSet(viewsets.ModelViewSet):
 
     # ==================== CUSTOM ACTIONS ====================
 
-    @action(detail=False, methods=['post'], url_path='quick-add')
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='quick-add',
+        throttle_classes=[ExternalGeocodeThrottle],
+    )
     @transaction.atomic
     def quick_add(self, request):
         """Create a location from lightweight map/place input in one server-side call."""
@@ -375,7 +381,12 @@ class LocationViewSet(viewsets.ModelViewSet):
         serializer = CalendarLocationSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(detail=True, methods=['get'], url_path='additional-info')
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path='additional-info',
+        throttle_classes=[ExternalSunTimesThrottle],
+    )
     def additional_info(self, request, pk=None):
         """Get adventure with additional sunrise/sunset information."""
         adventure = self.get_object()

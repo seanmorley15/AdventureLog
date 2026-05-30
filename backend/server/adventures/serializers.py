@@ -1,7 +1,6 @@
-import os
 from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
 from rest_framework import serializers
-from main.utils import CustomModelSerializer
+from main.utils import CustomModelSerializer, build_media_url, get_public_url
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
@@ -18,9 +17,7 @@ def _build_profile_pic_url(user):
     if not getattr(user, 'profile_pic', None):
         return None
 
-    public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-    public_url = public_url.replace("'", "")
-    return f"{public_url}/media/{user.profile_pic.name}"
+    return build_media_url(user.profile_pic.name)
 
 
 def _serialize_collaborator(user, owner_id=None, request_user=None):
@@ -57,14 +54,14 @@ class ContentImageSerializer(CustomModelSerializer):
         representation = super().to_representation(instance)
 
         # Prepare public URL once
-        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+        public_url = get_public_url()
 
         if instance.immich_id:
             # Use Immich integration URL
             representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
         elif instance.image:
             # Use local image URL
-            representation['image'] = f"{public_url}/media/{instance.image.name}"
+            representation['image'] = build_media_url(instance.image.name)
 
         return representation
     
@@ -82,11 +79,7 @@ class AttachmentSerializer(CustomModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.file:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            #print(public_url)
-            # remove any  ' from the url
-            public_url = public_url.replace("'", "")
-            representation['file'] = f"{public_url}/media/{instance.file.name}"
+            representation['file'] = build_media_url(instance.file.name)
         return representation
 
     def get_geojson(self, obj):
@@ -212,8 +205,7 @@ class ActivitySerializer(CustomModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.gpx_file:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
-            representation['gpx_file'] = f"{public_url}/media/{instance.gpx_file.name}"
+            representation['gpx_file'] = build_media_url(instance.gpx_file.name)
         return representation
     
     def get_geojson(self, obj):

@@ -1,20 +1,16 @@
-import os
 from .models import Country, Region, VisitedRegion, City, VisitedCity
 from rest_framework import serializers
-from main.utils import CustomModelSerializer
+from main.utils import CustomModelSerializer, build_media_url
 
 
 class CountrySerializer(serializers.ModelSerializer):
-    def get_public_url(self, obj):
-        return os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
-
     flag_url = serializers.SerializerMethodField()
     num_regions = serializers.SerializerMethodField()
     num_visits = serializers.SerializerMethodField()
 
     def get_flag_url(self, obj):
-        public_url = self.get_public_url(obj)
-        return public_url + '/media/' + 'flags/' + obj.country_code.lower() + '.png'
+        flag_path = f"flags/{obj.country_code.lower()}.png"
+        return build_media_url(flag_path)
     
     def get_num_regions(self, obj):
         # get the number of regions in the country

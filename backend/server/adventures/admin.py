@@ -1,10 +1,10 @@
-import os
 from django.contrib import admin
 from django.utils.html import mark_safe, format_html
 from django.urls import reverse
 from .models import Location, Checklist, ChecklistItem, Collection, Transportation, Note, ContentImage, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
 from worldtravel.models import Country, Region, VisitedRegion, City, VisitedCity
 from allauth.account.decorators import secure_admin_login
+from main.utils import build_media_url
 
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
@@ -104,9 +104,9 @@ class CustomUserAdmin(UserAdmin):
     )
     def image_display(self, obj):
         if obj.profile_pic:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            return mark_safe(f'<img src="{public_url}/media/{obj.profile_pic.name}" width="100px" height="100px"')
+            image_url = build_media_url(obj.profile_pic.name)
+            if image_url:
+                return mark_safe(f'<img src="{image_url}" width="100px" height="100px"')
         else:
             return
         
@@ -115,9 +115,9 @@ class ContentImageImageAdmin(admin.ModelAdmin):
 
     def image_display(self, obj):
         if obj.image:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
+            image_url = build_media_url(obj.image.name)
+            if image_url:
+                return mark_safe(f'<img src="{image_url}" width="100px" height="100px"')
         else:
             return
 
@@ -130,9 +130,9 @@ class VisitAdmin(admin.ModelAdmin):
 
     def image_display(self, obj):
         if obj.image:  # Ensure this field matches your model's image field
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            return mark_safe(f'<img src="{public_url}/media/{obj.image.name}" width="100px" height="100px"')
+            image_url = build_media_url(obj.image.name)
+            if image_url:
+                return mark_safe(f'<img src="{image_url}" width="100px" height="100px"')
         else:
             return
 
