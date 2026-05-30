@@ -6,13 +6,14 @@ from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 from adventures.models import Location
 from adventures.serializers import LocationSerializer
 from adventures.geocoding import reverse_geocode
+from adventures.throttling import ExternalGeocodeThrottle
 from django.conf import settings
 from adventures.geocoding import search_google, search_osm, get_place_details
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def reverse_geocode(self, request):
         lat = request.query_params.get('lat', '')
         lon = request.query_params.get('lon', '')
@@ -28,7 +29,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             return Response({"error": "An internal error occurred while processing the request"}, status=400)
         return Response(data)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def search(self, request):
         query = request.query_params.get('query', '')
         if not query:
@@ -133,7 +134,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             "cities": new_cities
         })
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def place_details(self, request):
         place_id = request.query_params.get('place_id', '').strip()
         if not place_id:

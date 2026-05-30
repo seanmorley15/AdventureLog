@@ -8,6 +8,7 @@ from adventures.serializers import CollectionItineraryItemSerializer, LodgingSer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.geocoding import reverse_geocode
+from adventures.throttling import ExternalGeocodeThrottle
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
     build_quick_add_description,
@@ -79,7 +80,12 @@ class LodgingViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save()
 
-    @action(detail=False, methods=['post'], url_path='quick-add')
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='quick-add',
+        throttle_classes=[ExternalGeocodeThrottle],
+    )
     @transaction.atomic
     def quick_add(self, request):
         """Create a lodging from lightweight map/place input in one server-side call."""

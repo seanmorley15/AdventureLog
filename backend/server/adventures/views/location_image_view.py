@@ -2,7 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.throttling import UserRateThrottle
+from adventures.throttling import ImageImportThrottle, ImageProxyThrottle
 from django.http import HttpResponse
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import ipaddress
@@ -24,10 +24,6 @@ import uuid
 from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
 
 logger = logging.getLogger(__name__)
-
-
-class ImageProxyThrottle(UserRateThrottle):
-    scope = 'image_proxy'
 
 
 def _public_import_error_message(exc):
@@ -386,7 +382,12 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_502_BAD_GATEWAY
             )
 
-    @action(detail=False, methods=['post'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=['post'],
+        permission_classes=[IsAuthenticated],
+        throttle_classes=[ImageImportThrottle],
+    )
     def import_from_urls(self, request):
         content_type_name = request.data.get('content_type')
         object_id = request.data.get('object_id')

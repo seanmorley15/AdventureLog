@@ -15,6 +15,50 @@ from .models import Subscription
 from .serializers import SubscriptionSerializer
 
 
+def _get_billing_email(user):
+    try:
+        from allauth.account.models import EmailAddress
+    except Exception:
+        return user.email or None
+
+    primary = EmailAddress.objects.filter(user=user, primary=True).first()
+    if primary and primary.email:
+        return primary.email
+
+    any_email = EmailAddress.objects.filter(user=user).order_by("id").first()
+    if any_email and any_email.email:
+        return any_email.email
+
+    return user.email or None
+
+
+def _find_existing_customer_id(billing_email, user_id):
+    if billing_email:
+        try:
+            existing = stripe.Customer.list(email=billing_email, limit=1)
+        except stripe.error.StripeError:
+            existing = None
+
+        if existing:
+            existing_data = existing.get("data", [])
+            if existing_data:
+                return existing_data[0].get("id")
+
+    if user_id:
+        try:
+            query = f"metadata['user_id']:'{user_id}'"
+            results = stripe.Customer.search(query=query, limit=1)
+        except stripe.error.StripeError:
+            results = None
+
+        if results:
+            results_data = results.get("data", [])
+            if results_data:
+                return results_data[0].get("id")
+
+    return None
+
+
 def _map_stripe_status(stripe_status: str) -> str:
     mapping = {
         "trialing": Subscription.STATUS_TRIAL,
@@ -84,15 +128,28 @@ class CreateCheckoutSessionView(APIView):
         stripe.api_key = settings.STRIPE_SECRET_KEY
 
         customer_id = subscription.stripe_customer_id
+        billing_email = _get_billing_email(request.user)
+        if not customer_id:
+            customer_id = _find_existing_customer_id(billing_email, str(request.user.id))
+            if customer_id:
+                subscription.stripe_customer_id = customer_id
+                subscription.save()
+
         if not customer_id:
             customer = stripe.Customer.create(
-                email=request.user.email or None,
+                email=billing_email or None,
                 metadata={"user_id": str(request.user.id)},
             )
             customer_id = customer.get("id")
             if customer_id:
                 subscription.stripe_customer_id = customer_id
                 subscription.save()
+
+        if customer_id and billing_email:
+            try:
+                stripe.Customer.modify(customer_id, email=billing_email)
+            except stripe.error.StripeError:
+                pass
 
         subscription_data = {
             "metadata": {"user_id": str(request.user.id)},
@@ -112,8 +169,8 @@ class CreateCheckoutSessionView(APIView):
 
         if customer_id:
             checkout_params["customer"] = customer_id
-        elif request.user.email:
-            checkout_params["customer_email"] = request.user.email
+        elif billing_email:
+            checkout_params["customer_email"] = billing_email
 
         try:
             session = stripe.checkout.Session.create(**checkout_params)

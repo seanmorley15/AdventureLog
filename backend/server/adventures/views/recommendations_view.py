@@ -7,6 +7,7 @@ import requests
 from geopy.distance import geodesic
 import logging
 from ..geocoding import search_google, search_osm
+from adventures.throttling import ExternalRecommendationsThrottle
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +480,7 @@ class RecommendationsViewSet(viewsets.ViewSet):
         
         return deduplicated
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalRecommendationsThrottle])
     def query(self, request):
         """
         Query both Google Places and OSM for recommendations.

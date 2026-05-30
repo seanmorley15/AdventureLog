@@ -315,6 +315,17 @@ SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 # Defaults to disabled for local/dev convenience.
 ENABLE_RATE_LIMITS = getenv('ENABLE_RATE_LIMITS', 'false').lower() == 'true'
 
+# Centralized API rate limit defaults (override via env vars as needed).
+RATE_LIMIT_RATES = {
+    'user': getenv('RATE_LIMIT_USER', '10000/hour'),
+    'image_proxy': getenv('RATE_LIMIT_IMAGE_PROXY', '60/minute'),
+    'image_import': getenv('RATE_LIMIT_IMAGE_IMPORT', '12/minute'),
+    'external_geocode': getenv('RATE_LIMIT_EXTERNAL_GEOCODE', '120/minute'),
+    'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
+    'external_wikipedia': getenv('RATE_LIMIT_EXTERNAL_WIKIPEDIA', '60/minute'),
+    'external_sun_times': getenv('RATE_LIMIT_EXTERNAL_SUN_TIMES', '30/minute'),
+}
+
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
 if getenv('EMAIL_BACKEND', 'console') == 'console':
@@ -369,10 +380,7 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
-    'DEFAULT_THROTTLE_RATES': {
-        'user': '100000/day',
-        'image_proxy': '1000/minute',
-    } if ENABLE_RATE_LIMITS else {},
+    'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {},
 }
 
 if DEBUG:
