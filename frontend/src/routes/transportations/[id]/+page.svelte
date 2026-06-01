@@ -535,7 +535,6 @@
 								<FullMap
 									basemapType={normalizeBasemapType(data.user?.map_style)}
 									mapClass="w-full h-96"
-									standardControls
 									center={mapCenter}
 									zoom={13}
 								>

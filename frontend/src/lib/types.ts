@@ -601,7 +601,37 @@ export type RecommendationResponse = {
 		osm: number;
 		total_before_dedup: number;
 	};
+	warnings?: string[];
+	error?: string;
 };
+
+export type PlaceSearchResult = {
+	id: string;
+	name: string;
+	lat: number;
+	lng: number;
+	location: string;
+	type?: string;
+	category?: string;
+	types?: string[];
+	rating?: number | null;
+	review_count?: number | null;
+	photos?: string[];
+	description?: string | null;
+	website?: string | null;
+	phone_number?: string | null;
+	place_id?: string | null;
+	google_maps_url?: string | null;
+	powered_by?: string;
+	provider?: string;
+};
+
+export type MapSelection =
+	| { kind: 'pin'; pinId: string }
+	| { kind: 'place'; place: PlaceSearchResult }
+	| { kind: 'recommendation'; item: Recommendation };
+
+export type MapSearchMode = 'my' | 'places' | 'nearby';
 
 export type CollectionItineraryDay = {
 	id: string;

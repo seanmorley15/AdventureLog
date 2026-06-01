@@ -721,7 +721,6 @@
 								<FullMap
 									basemapType={normalizeBasemapType(data.user?.map_style)}
 									mapClass="w-full h-96"
-									standardControls
 									center={[adventure.longitude || 0, adventure.latitude || 0]}
 									zoom={adventure.longitude ? 12 : 1}
 								>

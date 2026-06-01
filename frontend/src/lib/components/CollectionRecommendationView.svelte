@@ -265,7 +265,7 @@
 			}
 
 			// Normalize results -> ensure google_maps_uri exists when backend returns google_maps_url
-			results = (data.results || []).map((r) => ({
+			results = (data.results || []).map((r: RecommendationResult & { google_maps_url?: string }) => ({
 				...r,
 				google_maps_uri: r.google_maps_uri || r.google_maps_url || null
 			}));
@@ -579,7 +579,6 @@
 					<FullMap
 						basemapType={normalizeBasemapType(user?.map_style)}
 						mapClass="w-full h-[500px]"
-						standardControls
 						center={[mapCenter.lng, mapCenter.lat]}
 						zoom={mapZoom}
 					>

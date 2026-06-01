@@ -4,6 +4,7 @@
 	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
+	import { extractGooglePhotoUrls } from '$lib/map/places';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
@@ -14,6 +15,8 @@
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
 	export let itineraryDayLabel: string | null = null;
+	/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
+	export let skipQuickStart = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -97,9 +100,18 @@
 		if (prefill.selected_category && typeof prefill.selected_category === 'object') {
 			location.category = prefill.selected_category;
 		}
-		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
-			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
-			: [];
+		pendingGooglePhotoUrls = extractGooglePhotoUrls(prefill.photos, prefill.images);
+	}
+
+	function initPendingGooglePhotosFromPrefill(loc: Location | null) {
+		if (!loc) return;
+		const photos = extractGooglePhotoUrls(
+			(loc as Location & { photos?: string[] }).photos,
+			loc.images
+		);
+		if (photos.length > 0) {
+			pendingGooglePhotoUrls = photos;
+		}
 	}
 
 	async function importPendingGoogleImages(locationId: string) {
@@ -209,13 +221,29 @@
 		attachments: locationToEdit?.attachments || []
 	};
 
+	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
+		if (!loc) return false;
+		const lat = loc.latitude;
+		const lng = loc.longitude;
+		return (
+			typeof lat === 'number' &&
+			typeof lng === 'number' &&
+			Number.isFinite(lat) &&
+			Number.isFinite(lng) &&
+			Boolean(loc.name?.trim())
+		);
+	}
+
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
 		isEditMode = Boolean(locationToEdit?.id);
 
-		// Skip the quick start step if editing an existing location
-		if (!isEditMode) {
+		const prefilledNew =
+			!isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
+
+		// Skip the quick start step if editing an existing location or prefilled create
+		if (!isEditMode && !prefilledNew) {
 			setStep(0);
 		} else {
 			setStep(1);
@@ -225,6 +253,10 @@
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
 			setStep(1);
+		}
+
+		if (!isEditMode && locationToEdit) {
+			initPendingGooglePhotosFromPrefill(locationToEdit);
 		}
 
 		void loadIntegrations();

@@ -1134,7 +1134,6 @@
 				center={mapCenter}
 				zoom={mapZoom}
 				bounds={mapBounds ?? undefined}
-				standardControls
 				on:mapClick={handleMapClick}
 			>
 				{#if transportationMode}

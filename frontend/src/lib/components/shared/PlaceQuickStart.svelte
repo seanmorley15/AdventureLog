@@ -760,7 +760,6 @@
 				mapClass="w-full h-80 rounded-lg border border-base-300"
 				center={mapCenter}
 				zoom={mapZoom}
-				standardControls
 				on:mapClick={handleMapClick}
 			>
 				{#if selectedMarker}
