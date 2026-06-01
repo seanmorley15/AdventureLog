@@ -251,7 +251,7 @@
 			params.append('radius', radiusValue.toString());
 			params.append('category', selectedCategory);
 
-			const response = await fetch(`/api/recommendations/query?${params.toString()}`);
+			const response = await fetch(`/api/recommendations/query/?${params.toString()}`);
 
 			if (!response.ok) {
 				const errorData = await response.json();
@@ -264,7 +264,11 @@
 				throw new Error(data.error);
 			}
 
-			results = data.results || [];
+			// Normalize results -> ensure google_maps_uri exists when backend returns google_maps_url
+			results = (data.results || []).map((r) => ({
+				...r,
+				google_maps_uri: r.google_maps_uri || r.google_maps_url || null
+			}));
 
 			// Update map if we have results
 			if (results.length > 0) {

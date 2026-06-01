@@ -216,6 +216,8 @@ export type GeocodeSearchResult = {
 	addresstype?: string;
 	name?: string;
 	display_name?: string;
+	provider?: string;
+	powered_by?: string;
 };
 
 export type Transportation = {
@@ -302,6 +304,8 @@ export type ReverseGeocode = {
 	city: string;
 	city_id: string;
 	location_name: string;
+	provider_used?: string;
+	provider?: string;
 };
 
 export type Category = {

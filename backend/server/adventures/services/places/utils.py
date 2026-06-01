@@ -11,7 +11,6 @@ from rest_framework.response import Response
 from django.contrib.contenttypes.models import ContentType
 
 from adventures.models import Collection, CollectionItineraryItem, Visit
-from adventures.services.places.details import get_place_details
 
 
 def coerce_coordinate(value, min_value, max_value):
@@ -132,21 +131,6 @@ def resolve_quick_add_collection(collection_id, validate_permissions, permission
         )
 
     return collection
-
-
-def extract_google_place_details(payload, fallback_query=""):
-    place_id = str(payload.get("place_id") or "").strip() or None
-    details = {}
-
-    if not place_id:
-        return place_id, details
-
-    details_result = get_place_details(place_id, fallback_query=fallback_query)
-    if isinstance(details_result, dict):
-        if "error" not in details_result or details_result.get("description"):
-            details = details_result
-
-    return place_id, details
 
 
 def preferred_link(payload, details):

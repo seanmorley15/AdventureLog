@@ -19,8 +19,8 @@ from adventures.serializers import (
     MapPinSerializer,
 )
 from adventures.utils import pagination
-from adventures.geocoding import reverse_geocode
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunTimesThrottle
+from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
@@ -210,12 +210,17 @@ class LocationViewSet(viewsets.ModelViewSet):
             return collection
 
         reverse_data = {}
-        _, details = extract_google_place_details(payload, fallback_query=name)
+        # Use centralized services for place details and reverse geocoding
+        details = {}
+        try:
+            _, details = extract_google_place_details(payload, fallback_query=name)
+        except Exception:
+            details = {}
 
         try:
-            reverse_result = reverse_geocode(latitude, longitude, request.user)
-            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
-                reverse_data = reverse_result
+            selection = reverse_geocode_service(latitude, longitude, request.user)
+            if selection and selection.data and not selection.data.get('error'):
+                reverse_data = selection.data
         except Exception:
             reverse_data = {}
 
@@ -768,37 +773,13 @@ class LocationViewSet(viewsets.ModelViewSet):
         return False
 
     def _get_sun_times(self, adventure, visits):
-        """Get sunrise/sunset times for adventure visits."""
-        sun_times = []
+        """Get sunrise/sunset times for adventure visits via service."""
+        from adventures.services.sun.times import get_sun_times_for_visits
 
-        for visit in visits:
-            date = visit.get('start_date')
-            if not (date and adventure.longitude and adventure.latitude):
-                continue
-
-            api_url = (
-                f'https://api.sunrisesunset.io/json?'
-                f'lat={adventure.latitude}&lng={adventure.longitude}&date={date}'
-            )
-            
-            try:
-                response = requests.get(api_url)
-                if response.status_code == 200:
-                    data = response.json()
-                    results = data.get('results', {})
-                    
-                    if results.get('sunrise') and results.get('sunset'):
-                        sun_times.append({
-                            "date": date,
-                            "visit_id": visit.get('id'),
-                            "sunrise": results.get('sunrise'),
-                            "sunset": results.get('sunset')
-                        })
-            except requests.RequestException:
-                # Skip this visit if API call fails
-                continue
-
-        return sun_times
+        try:
+            return get_sun_times_for_visits(adventure.latitude, adventure.longitude, visits)
+        except Exception:
+            return []
 
     def paginate_and_respond(self, queryset, request):
         """Paginate queryset and return response."""

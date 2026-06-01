@@ -7,8 +7,8 @@ from adventures.models import Lodging
 from adventures.serializers import CollectionItineraryItemSerializer, LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.geocoding import reverse_geocode
 from adventures.throttling import ExternalGeocodeThrottle
+from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
     build_quick_add_description,
@@ -115,9 +115,9 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
         reverse_data = {}
         try:
-            reverse_result = reverse_geocode(latitude, longitude, request.user)
-            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
-                reverse_data = reverse_result
+            selection = reverse_geocode_service(latitude, longitude, request.user)
+            if selection and selection.data and not selection.data.get('error'):
+                reverse_data = selection.data
         except Exception:
             reverse_data = {}
 

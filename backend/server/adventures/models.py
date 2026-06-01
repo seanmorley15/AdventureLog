@@ -26,9 +26,10 @@ def background_geocode_and_assign(location_id: str):
         if not (location.latitude and location.longitude):
             return
         
-        from adventures.geocoding import reverse_geocode  # or wherever you defined it
+        from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
         is_visited = location.is_visited_status()
-        result = reverse_geocode(location.latitude, location.longitude, location.user)
+        selection = reverse_geocode_service(location.latitude, location.longitude, location.user)
+        result = selection.data
 
         if 'region_id' in result:
             region = Region.objects.filter(id=result['region_id']).first()
