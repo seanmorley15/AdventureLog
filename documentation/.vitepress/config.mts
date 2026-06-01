@@ -53,7 +53,7 @@ export default defineConfig({
           priceCurrency: "USD",
           description: "Open-source version available for self-hosting.",
         },
-        softwareVersion: "v0.12.0",
+        softwareVersion: "v0.12.1",
         license:
           "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
         screenshot:
@@ -228,6 +228,10 @@ export default defineConfig({
           { text: "SMTP Email", link: "/docs/configuration/email" },
           { text: "Umami Analytics", link: "/docs/configuration/analytics" },
           {
+            text: "API Keys",
+            link: "/docs/configuration/api_keys",
+          },
+          {
             text: "Advanced Configuration",
             link: "/docs/configuration/advanced_configuration",
           },
@@ -276,6 +280,10 @@ export default defineConfig({
           {
             text: "Development Timeline",
             link: "/docs/changelogs/development_timeline",
+          },
+          {
+            text: "v0.12.1",
+            link: "/docs/changelogs/v0-12-1",
           },
           {
             text: "v0.12.0",

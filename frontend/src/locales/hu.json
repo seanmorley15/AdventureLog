@@ -28,7 +28,8 @@
 			"dim": "Halvány"
 		},
 		"navigation": "Navigáció",
-		"worldtravel": "Világutazás"
+		"worldtravel": "Világutazás",
+		"mobile_login": "Mobil bejelentkezés"
 	},
 	"about": {
 		"about": "Névjegy",
@@ -492,7 +493,8 @@
 		"collection_duplicate_success": "Gyűjtemény sikeresen megkettőzve! Átirányítás...",
 		"collection_duplicate_error": "A gyűjtemény másolása sikertelen.",
 		"hide_strava_activities": "A Strava-tevékenységek elrejtése",
-		"show_strava_activities": "Mutasd a Strava-tevékenységeket"
+		"show_strava_activities": "Mutasd a Strava-tevékenységeket",
+		"add_details": "Adjon hozzá részleteket"
 	},
 	"worldtravel": {
 		"country_list": "Országlista",
@@ -733,7 +735,9 @@
 		"use_imperial": "Imperiális mértékegységek használata",
 		"use_imperial_desc": "Imperiális mértékegységek (láb, hüvelyk, font) használata a metrikus helyett",
 		"trails": "Útvonalak",
-		"activities": "Tevékenységek"
+		"activities": "Tevékenységek",
+		"map_style_desc": "A térképek alapértelmezett alaptérképeként használatos.",
+		"preferred_currency_desc": "Ez a pénznem előre kitölti a pénz mezőket új tételek hozzáadásakor."
 	},
 	"collection": {
 		"collection_created": "A gyűjtemény sikeresen létrehozva!",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Hely",
 		"locations": "Helyek",
-		"my_locations": "Saját helyek"
+		"my_locations": "Saját helyek",
+		"best_happened_at": "Legjobb az történt"
 	},
 	"settings_download_backup": "Biztonsági mentés letöltése",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Az utazási kontextus elemei az egész utazásra vonatkoznak – például olyan helyek, amelyek maga az úti cél, általános megjegyzések vagy csomaglisták, amelyek az egész utazás szempontjából fontosak.",
 		"unscheduled_items": "Nem ütemezett tételek",
 		"unscheduled_items_desc": "Ezek az elemek ehhez az utazáshoz kapcsolódnak, de még nem adták hozzá egy adott naphoz."
+	},
+	"api_keys": {
+		"copied": "Másolva!",
+		"copy": "Kulcs másolása",
+		"create": "Kulcs létrehozása",
+		"create_error": "Nem sikerült létrehozni az API-kulcsot.",
+		"created": "Létrehozva",
+		"description": "Személyes API-kulcsok létrehozása a programozott hozzáféréshez. \nA kulcsok csak egyszer jelennek meg a létrehozáskor.",
+		"dismiss": "Elvetés",
+		"key_created": "API-kulcs sikeresen létrehozva.",
+		"key_name_placeholder": "Kulcsnév (pl. Home Assistant)",
+		"key_revoked": "API-kulcs visszavonva.",
+		"last_used": "Utoljára használt",
+		"never_used": "Soha nem használt",
+		"new_key_title": "Mentse el az új API-kulcsot",
+		"new_key_warning": "Ez a kulcs nem jelenik meg többé. \nMásolja le és tárolja biztonságos helyen.",
+		"no_keys": "Még nincsenek API-kulcsok.",
+		"revoke": "Visszavonás",
+		"revoke_error": "Nem sikerült visszavonni az API-kulcsot.",
+		"title": "API kulcsok",
+		"copy_error": "Hiba a kulcs másolása közben.",
+		"usage_middle": "fejléc vagy mint",
+		"usage_prefix": "Használja ezt a kulcsot a",
+		"delete_confirm": "Biztosan törli ezt a mobil API-kulcsot?"
 	}
 }

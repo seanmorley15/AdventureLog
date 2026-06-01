@@ -28,7 +28,8 @@
 		"calendar": "日历",
 		"admin_panel": "管理面板",
 		"navigation": "导航",
-		"worldtravel": "环球旅行"
+		"worldtravel": "环球旅行",
+		"mobile_login": "手机登录"
 	},
 	"about": {
 		"about": "关于",
@@ -492,7 +493,8 @@
 		"collection_duplicate_success": "集合复制成功！正在跳转...",
 		"collection_duplicate_error": "集合复制失败。",
 		"hide_strava_activities": "隐藏 Strava 活动",
-		"show_strava_activities": "显示 Strava 活动"
+		"show_strava_activities": "显示 Strava 活动",
+		"add_details": "添加详细信息"
 	},
 	"auth": {
 		"forgot_password": "忘记密码？",
@@ -733,7 +735,9 @@
 		"activities": "活动",
 		"trails": "路径",
 		"use_imperial": "使用英制单位",
-		"use_imperial_desc": "使用英制单位（英尺、英寸、磅）代替公制单位"
+		"use_imperial_desc": "使用英制单位（英尺、英寸、磅）代替公制单位",
+		"map_style_desc": "用作跨地图的默认底图。",
+		"preferred_currency_desc": "添加新项目时，此货币会预先填充货币字段。"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "地点",
 		"locations": "地点",
-		"my_locations": "我的地点"
+		"my_locations": "我的地点",
+		"best_happened_at": "最好的事情发生在"
 	},
 	"settings_download_backup": "下载备份",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"no_matches": "没有匹配项",
 		"search": "搜索货币",
 		"select_currency": "选择货币"
+	},
+	"api_keys": {
+		"copied": "复制了！",
+		"copy": "复制键",
+		"create": "创建密钥",
+		"create_error": "无法创建 API 密钥。",
+		"created": "已创建",
+		"description": "创建个人 API 密钥以进行编程访问。\n密钥仅在创建时显示一次。",
+		"dismiss": "解雇",
+		"key_created": "API 密钥创建成功。",
+		"key_name_placeholder": "按键名称（例如家庭助理）",
+		"key_revoked": "API 密钥已撤销。",
+		"last_used": "上次使用",
+		"never_used": "从未使用过",
+		"new_key_title": "保存您的新 API 密钥",
+		"new_key_warning": "该键将不会再次显示。\n复制它并将其存储在安全的地方。",
+		"no_keys": "还没有 API 密钥。",
+		"revoke": "撤销",
+		"revoke_error": "撤销 API 密钥失败。",
+		"title": "API 密钥",
+		"copy_error": "复制密钥时出错。",
+		"usage_middle": "标头或作为",
+		"usage_prefix": "在中使用该键",
+		"delete_confirm": "您确定要删除此移动 API 密钥吗？"
 	}
 }

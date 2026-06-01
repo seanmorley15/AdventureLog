@@ -1536,6 +1536,7 @@
 				<Plus class="w-8 h-8" />
 			</div>
 			<ul
+				tabindex="-1"
 				class="dropdown-content z-[1] menu p-4 shadow bg-base-300 text-base-content rounded-box w-52 gap-4"
 			>
 				<p class="text-center font-bold text-lg">{$t('adventures.link_new')}</p>

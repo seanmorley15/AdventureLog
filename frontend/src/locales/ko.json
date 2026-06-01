@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "컬렉션이 성공적으로 복제되었습니다! 리디렉션 중...",
 		"collection_duplicate_error": "컬렉션 복제에 실패했습니다.",
 		"hide_strava_activities": "Strava 활동 숨기기",
-		"show_strava_activities": "Strava 활동 표시"
+		"show_strava_activities": "Strava 활동 표시",
+		"add_details": "세부정보 추가"
 	},
 	"auth": {
 		"confirm_password": "비밀번호 확인",
@@ -652,7 +653,8 @@
 		"users": "사용자",
 		"admin_panel": "관리자 패널",
 		"navigation": "항해",
-		"worldtravel": "세계여행"
+		"worldtravel": "세계여행",
+		"mobile_login": "모바일 로그인"
 	},
 	"notes": {
 		"content": "콘텐츠",
@@ -865,7 +867,9 @@
 		"activities": "활동",
 		"trails": "트레일",
 		"use_imperial": "제국 유닛을 사용하십시오",
-		"use_imperial_desc": "메트릭 단위 대신 황실 단위 (피트, 인치, 파운드)를 사용하십시오."
+		"use_imperial_desc": "메트릭 단위 대신 황실 단위 (피트, 인치, 파운드)를 사용하십시오.",
+		"map_style_desc": "지도 전체에서 기본 베이스맵으로 사용됩니다.",
+		"preferred_currency_desc": "이 통화는 새 항목을 추가할 때 돈 필드를 미리 채워줍니다."
 	},
 	"share": {
 		"no_users_shared": "공유한 사용자가 없습니다",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "위치",
 		"locations": "위치",
-		"my_locations": "내 위치"
+		"my_locations": "내 위치",
+		"best_happened_at": "가장 좋은 일이 일어난 시간은 다음과 같습니다."
 	},
 	"settings_download_backup": "백업을 다운로드하십시오",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "여행 컨텍스트 항목은 전체 여행에 적용됩니다. 예를 들어 목적지 자체인 위치, 일반 참고 사항, 전체 여행에 중요한 짐 목록 등이 있습니다.",
 		"unscheduled_items": "예정되지 않은 품목",
 		"unscheduled_items_desc": "이 항목은 이 여행에 연결되어 있지만 아직 특정 날짜에 추가되지 않았습니다."
+	},
+	"api_keys": {
+		"copied": "복사되었습니다!",
+		"copy": "키 복사",
+		"copy_error": "키를 복사하는 중에 오류가 발생했습니다.",
+		"create": "키 생성",
+		"create_error": "API 키를 생성하지 못했습니다.",
+		"created": "생성됨",
+		"delete_confirm": "이 모바일 API 키를 삭제하시겠습니까?",
+		"description": "프로그래밍 방식 액세스를 위한 개인 API 키를 만듭니다. \n키는 생성 시 한 번만 표시됩니다.",
+		"dismiss": "해고하다",
+		"key_created": "API 키가 생성되었습니다.",
+		"key_name_placeholder": "키 이름(예: 홈어시스턴트)",
+		"key_revoked": "API 키가 취소되었습니다.",
+		"last_used": "마지막으로 사용됨",
+		"never_used": "한번도 사용하지 않음",
+		"new_key_title": "새 API 키 저장",
+		"new_key_warning": "이 키는 다시 표시되지 않습니다. \n복사해서 안전한 곳에 보관하세요.",
+		"no_keys": "아직 API 키가 없습니다.",
+		"revoke": "취소",
+		"revoke_error": "API 키를 취소하지 못했습니다.",
+		"title": "API 키",
+		"usage_middle": "헤더 또는 다음과 같이",
+		"usage_prefix": "다음에서 이 키를 사용하세요."
 	}
 }

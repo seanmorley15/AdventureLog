@@ -2,7 +2,7 @@
 	import FullMap, { type FullMapFeatureCollection } from '$lib/components/map/FullMap.svelte';
 	import { GeoJSON, LineLayer, Marker } from 'svelte-maplibre';
 	import { goto } from '$app/navigation';
-	import { LODGING_TYPES_ICONS, getActivityColor } from '$lib';
+	import { LODGING_TYPES_ICONS, getActivityColor, normalizeBasemapType } from '$lib';
 	import SearchIcon from '~icons/mdi/magnify';
 	import FilterIcon from '~icons/mdi/filter-variant';
 	import ChevronDown from '~icons/mdi/chevron-down';
@@ -19,6 +19,11 @@
 	// Allow disabling/enabling clustering for markers
 	export let clusterEnabled: boolean = false;
 	export let clusterOptions: any = { radius: 300, maxZoom: 8, minPoints: 2 };
+
+	let basemapType = 'default';
+	$: if (user && basemapType === 'default' && user.map_style) {
+		basemapType = normalizeBasemapType(user.map_style);
+	}
 
 	type MarkerType = 'location' | 'lodging' | 'transportation';
 	type VisitStatus = 'visited' | 'planned';
@@ -913,6 +918,7 @@
 		center={mapCenter}
 		zoom={mapZoom}
 		mapClass="w-full h-[600px]"
+		bind:basemapType
 		{clusterEnabled}
 		clusterOptions={resolvedClusterOptions}
 		on:mapClick={handleMapClick}

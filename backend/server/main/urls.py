@@ -1,8 +1,8 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView, DisablePasswordAuthenticationView
-from .views import get_csrf_token, get_public_url, healthz, serve_protected_media
+from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
+from .views import get_csrf_token, get_public_url, serve_protected_media, healthz
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -31,6 +31,13 @@ urlpatterns = [
     path('auth/social-providers/', EnabledSocialProvidersView.as_view(), name='enabled-social-providers'),
 
     path('auth/disable-password/', DisablePasswordAuthenticationView.as_view(), name='disable-password-authentication'),
+
+    # API key management
+    path('auth/api-keys/', APIKeyListCreateView.as_view(), name='api-key-list-create'),
+    path('auth/api-keys/<uuid:pk>/', APIKeyDetailView.as_view(), name='api-key-detail'),
+
+    # Mobile QR code for app login
+    path('auth/mobile-qr/', MobileQRCodeView.as_view(), name='mobile-qr-code'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
     path('public-url/', get_public_url, name='get_public_url'),

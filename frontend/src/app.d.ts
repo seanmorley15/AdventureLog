@@ -19,6 +19,7 @@ declare global {
 				disable_password: boolean;
 				measurement_system: 'metric' | 'imperial';
 				default_currency: string;
+				map_style: string;
 			} | null;
 			locale: string;
 		}

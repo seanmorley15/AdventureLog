@@ -7,7 +7,7 @@ from adventures.models import Location
 from adventures.serializers import LocationSerializer
 from adventures.geocoding import reverse_geocode
 from django.conf import settings
-from adventures.geocoding import search_google, search_osm
+from adventures.geocoding import search_google, search_osm, get_place_details
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -132,3 +132,17 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             "new_cities": new_city_count,
             "cities": new_cities
         })
+
+    @action(detail=False, methods=['get'])
+    def place_details(self, request):
+        place_id = request.query_params.get('place_id', '').strip()
+        if not place_id:
+            return Response({"error": "place_id parameter is required"}, status=400)
+
+        name = request.query_params.get('name', '')
+        language = request.query_params.get('language', 'en')
+
+        details = get_place_details(place_id, fallback_query=name, language=language)
+        if 'error' in details and not details.get('description'):
+            return Response(details, status=502)
+        return Response(details)

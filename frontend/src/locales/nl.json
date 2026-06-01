@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Collectie succesvol gedupliceerd! Doorverwijzen...",
 		"collection_duplicate_error": "Kan collectie niet dupliceren.",
 		"hide_strava_activities": "Strava-activiteiten verbergen",
-		"show_strava_activities": "Strava-activiteiten weergeven"
+		"show_strava_activities": "Strava-activiteiten weergeven",
+		"add_details": "Voeg details toe"
 	},
 	"home": {
 		"desc_1": "Ontdek, plan en verken met gemak",
@@ -492,7 +493,8 @@
 		"calendar": "Kalender",
 		"admin_panel": "Admin -paneel",
 		"navigation": "Navigatie",
-		"worldtravel": "Wereldreizen"
+		"worldtravel": "Wereldreizen",
+		"mobile_login": "Mobiel inloggen"
 	},
 	"auth": {
 		"confirm_password": "Bevestig wachtwoord",
@@ -733,7 +735,9 @@
 		"activities": "Activiteiten",
 		"trails": "Paden",
 		"use_imperial": "Gebruik imperiale eenheden",
-		"use_imperial_desc": "Gebruik imperiale eenheden (voeten, inches, ponden) in plaats van metrische eenheden"
+		"use_imperial_desc": "Gebruik imperiale eenheden (voeten, inches, ponden) in plaats van metrische eenheden",
+		"map_style_desc": "Wordt gebruikt als de standaardbasiskaart op alle kaarten.",
+		"preferred_currency_desc": "Deze valuta vult geldvelden vooraf in bij het toevoegen van nieuwe items."
 	},
 	"checklist": {
 		"checklist_delete_error": "Fout bij het verwijderen van de checklist",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Locatie",
 		"locations": "Locaties",
-		"my_locations": "Mijn locaties"
+		"my_locations": "Mijn locaties",
+		"best_happened_at": "Het beste gebeurde om"
 	},
 	"settings_download_backup": "Download back -up",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Reiscontextitems zijn van toepassing op de hele reis, bijvoorbeeld locaties die de bestemming zelf vormen, algemene opmerkingen of paklijsten die belangrijk zijn voor de hele reis.",
 		"unscheduled_items": "Niet-geplande items",
 		"unscheduled_items_desc": "Deze items zijn gekoppeld aan deze reis, maar nog niet toegevoegd aan een specifieke dag."
+	},
+	"api_keys": {
+		"copied": "Gekopieerd!",
+		"copy": "Kopieer sleutel",
+		"copy_error": "Fout bij kopiëren van sleutel.",
+		"create": "Sleutel maken",
+		"create_error": "Kan API-sleutel niet maken.",
+		"created": "Gemaakt",
+		"delete_confirm": "Weet u zeker dat u deze mobiele API-sleutel wilt verwijderen?",
+		"description": "Maak persoonlijke API-sleutels voor programmatische toegang. \nSleutels worden slechts één keer weergegeven tijdens het maken.",
+		"dismiss": "Afwijzen",
+		"key_created": "API-sleutel is succesvol aangemaakt.",
+		"key_name_placeholder": "Sleutelnaam (bijv. Home Assistant)",
+		"key_revoked": "API-sleutel ingetrokken.",
+		"last_used": "Laatst gebruikt",
+		"new_key_title": "Sla uw nieuwe API-sleutel op",
+		"new_key_warning": "Deze sleutel wordt niet meer getoond. \nKopieer het en bewaar het op een veilige plek.",
+		"no_keys": "Nog geen API-sleutels.",
+		"revoke": "Herroepen",
+		"revoke_error": "Kan de API-sleutel niet intrekken.",
+		"title": "API-sleutels",
+		"usage_middle": "koptekst of als",
+		"usage_prefix": "Gebruik deze sleutel in de",
+		"never_used": "Nooit gebruikt"
 	}
 }

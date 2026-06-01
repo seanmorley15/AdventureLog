@@ -54,6 +54,8 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         if isinstance(is_global, str):
             is_global = is_global.lower() in ['1', 'true', 'yes']
         data['is_global'] = is_global
+        if is_global and not target_date:
+            data['date'] = None
 
         # Support legacy field 'location' -> treat as content_type='location'
         if not content_type_val and data.get('location'):

@@ -4,7 +4,8 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
@@ -14,7 +15,7 @@
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
-	import { getBasemapUrl, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
+	import { normalizeBasemapType, isAllDay, TRANSPORTATION_TYPES_ICONS } from '$lib';
 	import Star from '~icons/mdi/star';
 	import StarOutline from '~icons/mdi/star-outline';
 	import MapMarker from '~icons/mdi/map-marker';
@@ -26,6 +27,7 @@
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -530,9 +532,9 @@
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.transportation')}</h2>
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<MapLibre
-									style={getBasemapUrl()}
-									class="w-full h-96"
+								<FullMap
+									basemapType={normalizeBasemapType(data.user?.map_style)}
+									mapClass="w-full h-96"
 									standardControls
 									center={mapCenter}
 									zoom={13}
@@ -622,7 +624,7 @@
 											/>
 										</GeoJSON>
 									{/if}
-								</MapLibre>
+								</FullMap>
 							</div>
 							{#if transportation.from_location || transportation.to_location}
 								<p class="mt-4 text-base-content/70 flex items-center gap-2">
@@ -637,32 +639,7 @@
 												<MapMarker class="w-4 h-4" />
 												{transportation.from_location}
 											</p>
-											<div class="grid grid-cols-3 gap-2">
-												<a
-													class="btn btn-sm btn-outline hover:btn-neutral"
-													href={`https://maps.apple.com/?q=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🍎 Apple
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-accent"
-													href={`https://maps.google.com/?q=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🌍 Google
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-primary"
-													href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(transportation.from_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🗺️ OSM
-												</a>
-											</div>
+											<ExternalMapLinks placeName={transportation.from_location} />
 										</div>
 									{/if}
 
@@ -672,32 +649,7 @@
 												<MapMarker class="w-4 h-4" />
 												{transportation.to_location}
 											</p>
-											<div class="grid grid-cols-3 gap-2">
-												<a
-													class="btn btn-sm btn-outline hover:btn-neutral"
-													href={`https://maps.apple.com/?q=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🍎 Apple
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-accent"
-													href={`https://maps.google.com/?q=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🌍 Google
-												</a>
-												<a
-													class="btn btn-sm btn-outline hover:btn-primary"
-													href={`https://www.openstreetmap.org/search?query=${encodeURIComponent(transportation.to_location)}`}
-													target="_blank"
-													rel="noopener noreferrer"
-												>
-													🗺️ OSM
-												</a>
-											</div>
+											<ExternalMapLinks placeName={transportation.to_location} />
 										</div>
 									{/if}
 								</div>

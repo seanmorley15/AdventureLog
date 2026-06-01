@@ -37,12 +37,14 @@
 	// Map presentation
 	export let mapClass = 'w-full h-full';
 	export let standardControls = true;
-	export let zoom = 2;
-	export let center: [number, number] = [0, 0];
+	export let zoom: number | undefined = 2;
+	export let center: [number, number] | { lng: number; lat: number } = [0, 0];
+	export let bounds: [[number, number], [number, number]] | undefined = undefined;
 	export let mapClickEnabled: boolean = true;
 
 	// Basemap
 	export let basemapType: string = 'default';
+	export let mapStyle: string | null = null;
 	export let showBasemapSelector: boolean = true;
 
 	// GeoJSON source
@@ -94,14 +96,16 @@
 			: geoJson;
 
 	// Map instance
-	let map: any = undefined;
+	export let map: any = undefined;
 
 	// When MapLibre's style changes (basemap switch), it drops all custom sources/layers.
 	// Force the GeoJSON/layer subtree to remount after the new style finishes loading.
 	let styleNonce = 0;
-	let lastBasemapType: string | null = null;
-	$: if (map && lastBasemapType !== basemapType) {
-		lastBasemapType = basemapType;
+	let lastStyleKey: string | null = null;
+	let styleKey = basemapType;
+	$: styleKey = mapStyle ?? basemapType;
+	$: if (map && lastStyleKey !== styleKey) {
+		lastStyleKey = styleKey;
 
 		const m = map as any;
 		const bump = () => {
@@ -121,6 +125,9 @@
 			bump();
 		}
 	}
+
+	let resolvedStyle = getBasemapUrl(basemapType);
+	$: resolvedStyle = mapStyle ?? getBasemapUrl(basemapType);
 
 	// Active marker tracking (used for map-level z-index + slot convenience)
 	let activeMarkerId: string | null = null;
@@ -277,11 +284,12 @@
 
 	<MapLibre
 		bind:map
-		style={getBasemapUrl(basemapType)}
+		style={resolvedStyle}
 		class={mapClass}
 		{standardControls}
 		{zoom}
 		{center}
+		{bounds}
 	>
 		{#key styleNonce}
 			{#if effectiveGeoJson && Array.isArray(effectiveGeoJson.features) && effectiveGeoJson.features.length > 0}
@@ -356,6 +364,7 @@
 		{:else}
 			<MapEvents on:moveend={handleMapMove} />
 		{/if}
+		<slot {map} />
 		<slot name="overlays" {map} />
 	</MapLibre>
 </div>

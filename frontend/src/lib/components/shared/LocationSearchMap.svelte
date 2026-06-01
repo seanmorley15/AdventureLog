@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { MapLibre, Marker, MapEvents } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
-	import { getBasemapUrl } from '$lib';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
@@ -39,6 +39,7 @@
 	export let displayNamePosition: 'before' | 'after' = 'before';
 	export let displayNameLabel = '';
 	export let displayNamePlaceholder = '';
+	export let basemapType: string = 'default';
 	export let isReverseGeocoding = false;
 	export let transportationMode = false; // New prop for transportation mode
 	export let airportMode = false; // New prop for airport-specific search
@@ -66,11 +67,14 @@
 	let mapCenter: [number, number] = [-74.5, 40];
 	let mapZoom: number | undefined = 2;
 	let mapBounds: [[number, number], [number, number]] | null = null;
-	let mapComponent: any;
 	let searchTimeout: ReturnType<typeof setTimeout>;
 	let initialApplied = false;
 	let initialTransportationApplied = false;
 	let isInitializing = false;
+
+	function isFiniteCoordinatePair(lat: unknown, lng: unknown): boolean {
+		return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+	}
 
 	// Track any provided codes (airport / station / etc)
 	let startCode: string | null = null;
@@ -572,7 +576,25 @@
 					endLocationData = metaData;
 				} else {
 					locationData = metaData;
-					displayName = data.display_name;
+					const resolvedLocationName = (data.location_name || '').trim();
+					const resolvedDisplayName = (data.display_name || '').trim();
+
+					if (selectedLocation) {
+						const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
+						selectedLocation = {
+							...selectedLocation,
+							name:
+								resolvedLocationName ||
+								(isCoordinatePlaceholder && resolvedDisplayName
+									? resolvedDisplayName
+									: selectedLocation.name),
+							location: resolvedDisplayName || selectedLocation.location
+						};
+						emitUpdate(selectedLocation);
+					}
+
+					displayName = resolvedDisplayName || resolvedLocationName || displayName;
+					searchQuery = selectedLocation?.name || searchQuery;
 				}
 			} else {
 				if (target === 'start') {
@@ -641,7 +663,11 @@
 		dispatch('clear');
 	}
 
-	$: if (!initialApplied && initialSelection) {
+	$: if (
+		!initialApplied &&
+		initialSelection &&
+		isFiniteCoordinatePair(initialSelection.lat, initialSelection.lng)
+	) {
 		initialApplied = true;
 		applyInitialSelection(initialSelection);
 	}
@@ -1027,17 +1053,15 @@
 		</div>
 
 		<div class="relative">
-			<MapLibre
-				bind:this={mapComponent}
-				style={getBasemapUrl()}
-				class="w-full h-80 rounded-lg border border-base-300"
+			<FullMap
+				{basemapType}
+				mapClass="w-full h-80 rounded-lg border border-base-300"
 				center={mapCenter}
 				zoom={mapZoom}
 				bounds={mapBounds ?? undefined}
 				standardControls
+				on:mapClick={handleMapClick}
 			>
-				<MapEvents on:click={handleMapClick} />
-
 				{#if transportationMode}
 					{#if startMarker}
 						<Marker
@@ -1063,7 +1087,7 @@
 						<PinIcon class="w-5 h-5 text-primary-content" />
 					</Marker>
 				{/if}
-			</MapLibre>
+			</FullMap>
 		</div>
 
 		{#if transportationMode}

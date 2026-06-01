@@ -126,18 +126,26 @@
 							<div class="flex gap-1">
 								{#each images as _, index}
 									<button
+										type="button"
 										class="w-2 h-2 rounded-full transition-all {index === currentIndex
 											? 'bg-primary'
 											: 'bg-base-300 hover:bg-base-400'}"
+										aria-label={`Go to image ${index + 1}`}
 										on:click={() => goToSlide(index)}
-									/>
+									></button>
 								{/each}
 							</div>
 						</div>
 					{/if}
 
 					<!-- Close Button -->
-					<button class="btn btn-ghost btn-square" on:click={close}>
+					<button
+						type="button"
+						class="btn btn-ghost btn-square"
+						aria-label={$t('about.close')}
+						title={$t('about.close')}
+						on:click={close}
+					>
 						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
 								stroke-linecap="round"
@@ -155,7 +163,10 @@
 				<!-- Previous Button -->
 				{#if images.length > 1}
 					<button
+						type="button"
 						class="absolute left-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-primary/80 hover:btn-primary"
+						aria-label="Previous image"
+						title="Previous image"
 						on:click={previousSlide}
 					>
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -182,7 +193,10 @@
 				<!-- Next Button -->
 				{#if images.length > 1}
 					<button
+						type="button"
 						class="absolute right-4 top-1/2 -translate-y-1/2 z-20 btn btn-circle btn-primary/80 hover:btn-primary"
+						aria-label="Next image"
+						title="Next image"
 						on:click={nextSlide}
 					>
 						<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

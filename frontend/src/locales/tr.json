@@ -28,7 +28,8 @@
 			"dim": "Loş"
 		},
 		"navigation": "Navigasyon",
-		"worldtravel": "Dünya Seyahati"
+		"worldtravel": "Dünya Seyahati",
+		"mobile_login": "Mobil Giriş"
 	},
 	"about": {
 		"about": "Hakkında",
@@ -421,10 +422,10 @@
 			"already_added_on_this_day": "Bu günde zaten eklendi",
 			"already_added_on_this_day_desc": "Bu öğeler zaten bu gün için planlandı.",
 			"already_added_other_days": "Diğer günlerde zaten eklendi",
-			"already_added_other_days_desc": "Bu öğeler farklı tarihlerde planlanmıştır. \nBunları buraya eklemek, tarihlerinin güncellenmesine veya olduğu gibi eklenmesine neden olur.",
+			"already_added_other_days_desc": "Bu öğeler farklı tarihlerde planlanmıştır. Bunları buraya eklemek, tarihlerinin güncellenmesine veya olduğu gibi eklenmesine neden olur.",
 			"items_available": "Bağlanabilecek {count} öğe mevcut",
 			"items_on_other_days": "Diğer günlerdeki ürünler",
-			"items_on_other_days_desc": "Bu öğelerin farklı tarihleri ​​vardır. \nBunları ekleyebilir ve isteğe bağlı olarak tarihlerini eşleşecek şekilde güncelleyebilirsiniz.",
+			"items_on_other_days_desc": "Bu öğelerin farklı tarihleri vardır. Bunları ekleyebilir ve isteğe bağlı olarak tarihlerini eşleşecek şekilde güncelleyebilirsiniz.",
 			"items_on_this_day": "Bu günkü öğeler",
 			"no_unscheduled_items": "Planlanmamış öğe yok",
 			"no_unscheduled_items_desc": "Seyahat planına tüm öğeler eklendi veya eklenecek öğe yok.",
@@ -454,12 +455,12 @@
 		"routes_and_activities": "Rotalar",
 		"saving": "Kaydediliyor",
 		"search_end_location": "Arama bitiş konumu",
-		"search_start_end_locations": "Başlangıç ​​ve bitiş konumlarını arayın",
-		"search_start_location": "Arama başlangıç ​​konumu",
+		"search_start_end_locations": "Başlangıç ve bitiş konumlarını arayın",
+		"search_start_location": "Arama başlangıç konumu",
 		"segments": "Segmentler",
 		"select": "Seçme",
 		"show_filters": "Filtreleri Göster",
-		"start_location": "Başlangıç ​​Konumu",
+		"start_location": "Başlangıç Konumu",
 		"status_filter": "Durum Filtresi",
 		"stays": "Konaklamalar",
 		"tasks_done": "Tamamlanan Görevler",
@@ -492,7 +493,8 @@
 		"collection_duplicate_success": "Koleksiyon başarıyla kopyalandı! Yönlendiriliyor...",
 		"collection_duplicate_error": "Koleksiyon kopyalanamadı.",
 		"hide_strava_activities": "Strava Faaliyetlerini Gizle",
-		"show_strava_activities": "Strava Aktivitelerini Göster"
+		"show_strava_activities": "Strava Aktivitelerini Göster",
+		"add_details": "Detayları ekle"
 	},
 	"worldtravel": {
 		"country_list": "Ülke Listesi",
@@ -583,7 +585,7 @@
 		"enter_password": "Şifrenizi girin",
 		"totp": "İki Aşamalı Doğrulama Kodu",
 		"logging_in": "Giriş yapılıyor",
-		"user_email_verification_required": "E-posta doğrulaması gerekli. \nDoğrulama bağlantısı için lütfen e-postanızı kontrol edin."
+		"user_email_verification_required": "E-posta doğrulaması gerekli. Doğrulama bağlantısı için lütfen e-postanızı kontrol edin."
 	},
 	"users": {
 		"no_users_found": "Herkese açık profili olan kullanıcı bulunamadı."
@@ -733,7 +735,9 @@
 		"use_imperial": "İngiliz Ölçü Birimlerini Kullan",
 		"use_imperial_desc": "Metrik birimler yerine İngiliz birimlerini (fit, inç, pound) kullanın",
 		"trails": "Patikalar",
-		"activities": "Aktiviteler"
+		"activities": "Aktiviteler",
+		"map_style_desc": "Haritalarda varsayılan altlık harita olarak kullanılır.",
+		"preferred_currency_desc": "Bu para birimi, yeni öğeler eklenirken para alanlarını önceden doldurur."
 	},
 	"collection": {
 		"collection_created": "Koleksiyon başarıyla oluşturuldu!",
@@ -814,7 +818,7 @@
 		"type": "Tür",
 		"new_transportation": "Yeni Ulaşım",
 		"flight_number": "Uçuş Numarası",
-		"from_location": "Başlangıç Konumu",
+		"from_location": "Başlangıç Yeri",
 		"to_location": "Varış Konumu",
 		"edit": "Düzenle",
 		"modes": {
@@ -834,7 +838,7 @@
 		"select_type": "Tür Seçin",
 		"enter_link": "Bağlantı girin",
 		"enter_flight_number": "Uçuş numarasını girin",
-		"enter_from_location": "Başlangıç konumunu girin",
+		"enter_from_location": "Çıkış konumunu girin",
 		"enter_to_location": "Varış konumunu girin",
 		"arrival_code": "Varış Kodu",
 		"arrival_date": "Varış Tarihi",
@@ -864,7 +868,7 @@
 		"enter_lodging_name": "Konaklama adını girin",
 		"enter_reservation_number": "Rezervasyon numarası girin",
 		"invalid_link": "Lütfen geçerli bir URL girin (ör. https://example.com).",
-		"save_failed": "Konaklama kaydedilemedi. \nLütfen tekrar deneyin."
+		"save_failed": "Konaklama kaydedilemedi. Lütfen tekrar deneyin."
 	},
 	"search": {
 		"result": "Sonuç",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Konum",
 		"locations": "Konumlar",
-		"my_locations": "Konumlarım"
+		"my_locations": "Konumlarım",
+		"best_happened_at": "En iyi an şurada oldu"
 	},
 	"settings_download_backup": "Yedeği İndir",
 	"invites": {
@@ -1068,7 +1073,7 @@
 		"currencies": "Para birimleri",
 		"currency": "Para birimi",
 		"event_timezone": "Etkinlik saat dilimi",
-		"event_timezone_desc": "Etkinlik saat dilimi, mümkün olduğunda konumu veya öğenin saat dilimini kullanır. \nSaat dilimimin kullanımları",
+		"event_timezone_desc": "Etkinlik saat dilimi, mümkün olduğunda konumu veya öğenin saat dilimini kullanır. Saat dilimimin kullanımları",
 		"events": "olaylar",
 		"local_timezone": "Benim saat dilimim",
 		"no_calendar_events": "Bu koleksiyon için henüz bir ziyaret planlanmadı.",
@@ -1114,7 +1119,7 @@
 		"added_to_trip_context": "Gezi bağlamına eklendi",
 		"auto_generate": "Otomatik Oluştur",
 		"auto_generate_itinerary": "Otomatik Yol Oluşturma",
-		"auto_generate_itinerary_desc": "Bu koleksiyonda eski öğeler var ancak henüz seyahat planı yok. \nBunları tarihe göre otomatik olarak düzenlemek ister misiniz?",
+		"auto_generate_itinerary_desc": "Bu koleksiyonda eski öğeler var ancak henüz seyahat planı yok. Bunları tarihe göre otomatik olarak düzenlemek ister misiniz?",
 		"change_day": "Günü Değiştir",
 		"drag_to_reorder": "Yeniden sıralamak için sürükleyin",
 		"failed_to_add_to_trip_context": "Öğe gezi bağlamına eklenemedi",
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Seyahat bağlamı öğeleri seyahatin tamamı için geçerlidir; örneğin varış noktasının kendisi olan konumlar, genel notlar veya seyahatin tamamı için önemli olan paket listeleri.",
 		"unscheduled_items": "Planlanmamış Öğeler",
 		"unscheduled_items_desc": "Bu öğeler bu geziye bağlı ancak henüz belirli bir güne eklenmedi."
+	},
+	"api_keys": {
+		"copied": "Kopyalandı!",
+		"copy": "Anahtarı kopyala",
+		"create": "Anahtar oluştur",
+		"create_error": "API anahtarı oluşturulamadı.",
+		"created": "Oluşturuldu",
+		"description": "Programlı erişim için kişisel API anahtarları oluşturun. Anahtarlar oluşturma sırasında yalnızca bir kez gösterilir.",
+		"dismiss": "Azletmek",
+		"key_created": "API anahtarı başarıyla oluşturuldu.",
+		"key_name_placeholder": "Anahtar adı (örn. Ev Asistanı)",
+		"key_revoked": "API anahtarı iptal edildi.",
+		"last_used": "Son kullanılan",
+		"never_used": "Hiç kullanılmadı",
+		"new_key_title": "Yeni API anahtarınızı kaydedin",
+		"new_key_warning": "Bu anahtar bir daha gösterilmeyecek. Kopyalayın ve güvenli bir yerde saklayın.",
+		"no_keys": "Henüz API anahtarı yok.",
+		"revoke": "Geri çekmek",
+		"revoke_error": "API anahtarı iptal edilemedi.",
+		"title": "API Anahtarları",
+		"copy_error": "Anahtar kopyalanırken hata oluştu.",
+		"usage_middle": "başlık veya olarak",
+		"usage_prefix": "Bu anahtar içinde kullanın",
+		"delete_confirm": "Bu mobil API anahtarını silmek istediğinizden emin misiniz?"
 	}
 }

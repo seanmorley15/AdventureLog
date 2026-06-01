@@ -1060,15 +1060,49 @@ class CollectionItineraryDaySerializer(CustomModelSerializer):
         return super().update(instance, validated_data)
 
 class CollectionItineraryItemSerializer(CustomModelSerializer):
+    date = serializers.DateField(required=False, allow_null=True, default=None)
     item = serializers.SerializerMethodField()
     start_datetime = serializers.ReadOnlyField()
     end_datetime = serializers.ReadOnlyField()
     object_name = serializers.ReadOnlyField(source='content_type.model')
+    is_global = serializers.BooleanField(required=False, default=False)
     
     class Meta:
         model = CollectionItineraryItem
         fields = ['id', 'collection', 'content_type', 'object_id', 'item', 'date', 'is_global', 'order', 'start_datetime', 'end_datetime', 'created_at', 'object_name']
         read_only_fields = ['id', 'created_at', 'start_datetime', 'end_datetime', 'item', 'object_name']
+        # DRF 3.15 generates UniqueTogetherValidator from UniqueConstraints without applying
+        # their conditions, causing false 400s (e.g. a dated item with order=0 is rejected
+        # when a global item with the same order exists). The view and DB constraints
+        # already enforce the correct conditional uniqueness.
+        validators = []
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        is_global = data.get('is_global')
+        if is_global is None and self.instance is not None:
+            is_global = self.instance.is_global
+
+        if 'date' in data:
+            date = data.get('date')
+        elif self.instance is not None:
+            date = self.instance.date
+        else:
+            date = None
+
+        if is_global and date is not None:
+            raise serializers.ValidationError({
+                'date': 'Global items must not have a date.',
+                'is_global': 'Provide either a date or set is_global, not both.',
+            })
+
+        if not is_global and date is None and self.instance is None:
+            raise serializers.ValidationError({
+                'date': 'Dated items must include a date. To create a trip-wide item, set is_global=true.',
+            })
+
+        return data
     
     def update(self, instance, validated_data):
         # Security: Prevent changing collection, content_type, or object_id after creation

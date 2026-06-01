@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getBasemapUrl } from '$lib';
+	import { normalizeBasemapType } from '$lib';
 	import CityCard from '$lib/components/cards/CityCard.svelte';
 	import { addToast } from '$lib/toasts';
 	import type { City, VisitedCity } from '$lib/types';
@@ -385,7 +385,7 @@
 								geoJson={citiesGeoJson}
 								sourceId={CITY_SOURCE_ID}
 								clusterOptions={cityClusterOptions}
-								mapStyle={getBasemapUrl()}
+								basemapType={normalizeBasemapType(data.user?.map_style)}
 								mapClass="aspect-[16/10] w-full rounded-lg"
 								fitLevel="city"
 								on:markerSelect={handleMarkerSelect}

@@ -143,8 +143,8 @@
 		"timezone": "Fuseau horaire",
 		"no_visits": "Pas de visites",
 		"coordinates": "Coordonnées",
-		"copy_coordinates": "Coordonnées de copie",
-		"sun_times": "Temps du soleil",
+		"copy_coordinates": "Copier les coordonnées",
+		"sun_times": "Éphémérides",
 		"sunrise": "Lever du soleil",
 		"sunset": "Coucher de soleil",
 		"timed": "Chronométré",
@@ -163,7 +163,7 @@
 		"done": "Fait",
 		"name_location": "nom, emplacement",
 		"check_in": "Enregistrement",
-		"check_out": "Vérifier",
+		"check_out": "Départ",
 		"collection_link_location_error": "Erreur liant l'emplacement à la collection",
 		"collection_link_location_success": "Emplacement lié à la collection avec succès!",
 		"collection_locations": "Inclure les emplacements de collecte",
@@ -179,7 +179,7 @@
 		"new_location": "Nouvel emplacement",
 		"no_collections_to_add_location": "Aucune collection n'a été trouvée pour ajouter cet emplacement à.",
 		"public_location": "Lieu public",
-		"visit_calendar": "Visiter le calendrier",
+		"visit_calendar": "Calendrier des visites",
 		"no_locations_found": "Aucun emplacement trouvé",
 		"image_modal_navigate": "Utilisez des touches flèches ou cliquez pour naviguer",
 		"details": "Détails",
@@ -225,7 +225,7 @@
 		"create_new_location": "Créer un nouvel emplacement",
 		"create_trail": "Créer une piste",
 		"created": "Créé",
-		"current_attachments": "Attachements actuels",
+		"current_attachments": "Fichiers joints",
 		"date_selection": "Sélection de date",
 		"download_gpx": "Télécharger GPX",
 		"edit_visit": "Modifier la visite",
@@ -282,8 +282,8 @@
 		"select_on_map": "Sélectionner sur la carte",
 		"select_wanderer_trail": "Sélectionnez un sentier dans votre compte Wanderer",
 		"sport_type": "Type de sport",
-		"start_lat": "Commencer la latitude",
-		"start_lng": "Commencer la longitude",
+		"start_lat": "Latitude de départ",
+		"start_lng": "Longitude de départ",
 		"strava_activities_during_visit": "Activités de Strava lors de la visite",
 		"strava_activity_ready": "Activité Strava prête",
 		"time": "Temps",
@@ -351,7 +351,7 @@
 		"country": "pays",
 		"departure_airport": "Aéroport de départ",
 		"distance_traveled": "Distance parcourue",
-		"end_location": "Emplacement de fin",
+		"end_location": "Lieu d'arrivée",
 		"enter_location_display_name": "Entrez le nom d'affichage de l'emplacement",
 		"files": "Fichiers",
 		"flight": "Vol",
@@ -423,7 +423,7 @@
 		"traveled": "voyagé",
 		"travelers": "Voyageurs",
 		"trip_timeline": "Chronologie du voyage",
-		"trip_window": "Fenêtre de voyage",
+		"trip_window": "Durée de voyage",
 		"upcoming": "Prochain",
 		"view": "Voir",
 		"wiki_results_found": "Résultats Wikipédia",
@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Collection dupliquée avec succès ! Redirection...",
 		"collection_duplicate_error": "Échec de la duplication de la collection.",
 		"hide_strava_activities": "Masquer les activités Strava",
-		"show_strava_activities": "Afficher les activités Strava"
+		"show_strava_activities": "Afficher les activités Strava",
+		"add_details": "Ajouter des détails"
 	},
 	"home": {
 		"desc_1": "Découvrez, planifiez et explorez en toute simplicité",
@@ -492,7 +493,8 @@
 		"calendar": "Calendrier",
 		"admin_panel": "Panneau d'administration",
 		"navigation": "Navigation",
-		"worldtravel": "Voyage dans le monde"
+		"worldtravel": "Voyage dans le monde",
+		"mobile_login": "Connexion mobile"
 	},
 	"auth": {
 		"confirm_password": "Confirmer le mot de passe",
@@ -542,7 +544,7 @@
 		"cities_in": "Villes",
 		"clear_all": "Effacer tout",
 		"clear_all_filters": "Effacer tous les filtres",
-		"clear_filters": "Filtres à claire",
+		"clear_filters": "Réinitialiser les filtres",
 		"complete": "Complet",
 		"countries": "pays",
 		"country_completed": "Pays achevé",
@@ -733,7 +735,9 @@
 		"activities": "Activités",
 		"trails": "Sentiers",
 		"use_imperial": "Utilisez des unités impériales",
-		"use_imperial_desc": "Utilisez des unités impériales (pieds, pouces, livres) au lieu d'unités métriques"
+		"use_imperial_desc": "Utilisez des unités impériales (pieds, pouces, livres) au lieu d'unités métriques",
+		"map_style_desc": "Utilisé comme fond de carte par défaut sur les cartes.",
+		"preferred_currency_desc": "Cette devise pré-remplit les champs monétaires lors de l'ajout de nouveaux éléments."
 	},
 	"checklist": {
 		"checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Emplacement",
 		"locations": "Lieux",
-		"my_locations": "Mes emplacements"
+		"my_locations": "Mes emplacements",
+		"best_happened_at": "Le mieux s'est passé à"
 	},
 	"settings_download_backup": "Télécharger la sauvegarde",
 	"invites": {
@@ -1064,7 +1069,7 @@
 		"wanderer_integration_desc": "Connectez-vous à Wanderer pour importer facilement et afficher vos sentiers dans les endroits"
 	},
 	"collections": {
-		"all_items": "Tous les articles",
+		"all_items": "Tous les éléments",
 		"currencies": "Devises",
 		"currency": "Devise",
 		"event_timezone": "Fuseau horaire de l'événement",
@@ -1139,5 +1144,29 @@
 		"unscheduled_items": "Éléments non planifiés",
 		"unscheduled_items_desc": "Ces éléments sont liés à ce voyage mais n'ont pas encore été ajoutés à un jour spécifique.",
 		"link_existing_item": "Lier un élément existant"
+	},
+	"api_keys": {
+		"copied": "Copié!",
+		"copy": "Copier la clé",
+		"create": "Créer une clé",
+		"create_error": "Échec de la création de la clé API.",
+		"created": "Créé",
+		"description": "Créez des clés API personnelles pour un accès par programmation. \nLes clés ne sont affichées qu'une seule fois au moment de la création.",
+		"dismiss": "Rejeter",
+		"key_created": "Clé API créée avec succès.",
+		"key_name_placeholder": "Nom de la clé (par exemple, Home Assistant)",
+		"key_revoked": "Clé API révoquée.",
+		"last_used": "Dernière utilisation",
+		"never_used": "Jamais utilisé",
+		"new_key_title": "Enregistrez votre nouvelle clé API",
+		"new_key_warning": "Cette clé ne sera plus affichée. \nCopiez-le et conservez-le dans un endroit sûr.",
+		"no_keys": "Aucune clé API pour l'instant.",
+		"revoke": "Révoquer",
+		"revoke_error": "Échec de la révocation de la clé API.",
+		"title": "Clés API",
+		"copy_error": "Erreur lors de la copie de la clé.",
+		"usage_middle": "en-tête ou comme",
+		"usage_prefix": "Utilisez cette clé dans le",
+		"delete_confirm": "Êtes-vous sûr de vouloir supprimer cette clé API mobile ?"
 	}
 }

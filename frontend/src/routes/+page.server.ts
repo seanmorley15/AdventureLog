@@ -29,7 +29,8 @@ export const actions: Actions = {
 			cookies.set('colortheme', theme, {
 				path: '/',
 				maxAge: 60 * 60 * 24 * 365, // 1 year
-				sameSite: 'lax'
+				sameSite: 'lax',
+				secure: url.protocol === 'https:'
 			});
 		}
 	},

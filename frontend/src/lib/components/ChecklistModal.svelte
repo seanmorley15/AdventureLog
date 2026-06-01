@@ -190,7 +190,13 @@
 				</div>
 
 				<!-- Close Button -->
-				<button class="btn btn-ghost btn-square" on:click={close}>
+				<button
+					type="button"
+					class="btn btn-ghost btn-square"
+					aria-label={$t('about.close')}
+					title={$t('about.close')}
+					on:click={close}
+				>
 					<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							stroke-linecap="round"
@@ -402,6 +408,8 @@
 												<button
 													type="button"
 													class="btn btn-ghost btn-sm text-error opacity-0 group-hover:opacity-100 transition-opacity"
+													aria-label={$t('adventures.remove')}
+													title={$t('adventures.remove')}
 													on:click={() => removeItem(i)}
 												>
 													<svg

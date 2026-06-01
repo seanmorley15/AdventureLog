@@ -1,0 +1,18 @@
+{
+	"navbar": {
+		"map": "Mapa",
+		"users": "Usuaris",
+		"search": "Cerca",
+		"profile": "Perfil",
+		"greeting": "Hola",
+		"shared_with_me": "Compartit Amb Mi",
+		"settings": "Configuració",
+		"logout": "Tanca la sessió",
+		"about": "Quant a AdventureLog",
+		"documentation": "Documentació",
+		"language_selection": "Idioma",
+		"support": "Suport",
+		"calendar": "Calendari",
+		"theme_selection": "Selecció de tema"
+	}
+}

@@ -28,7 +28,8 @@
 			"northernLights": "Nordlys"
 		},
 		"navigation": "Navigasjon",
-		"worldtravel": "Verdensreise"
+		"worldtravel": "Verdensreise",
+		"mobile_login": "Mobil pålogging"
 	},
 	"about": {
 		"about": "Om",
@@ -492,7 +493,8 @@
 		"collection_duplicate_success": "Samlingen ble duplisert! Omdirigerer...",
 		"collection_duplicate_error": "Kunne ikke duplisere samlingen.",
 		"hide_strava_activities": "Skjul Strava-aktiviteter",
-		"show_strava_activities": "Vis Strava-aktiviteter"
+		"show_strava_activities": "Vis Strava-aktiviteter",
+		"add_details": "Legg til detaljer"
 	},
 	"worldtravel": {
 		"country_list": "Liste over land",
@@ -733,7 +735,9 @@
 		"activities": "Aktiviteter",
 		"trails": "Stier",
 		"use_imperial": "Bruk keiserlige enheter",
-		"use_imperial_desc": "Bruk keiserlige enheter (føtter, tommer, pund) i stedet for metriske enheter"
+		"use_imperial_desc": "Bruk keiserlige enheter (føtter, tommer, pund) i stedet for metriske enheter",
+		"map_style_desc": "Brukes som standard grunnkart på tvers av kart.",
+		"preferred_currency_desc": "Denne valutaen forhåndsutfyller pengefelt når du legger til nye varer."
 	},
 	"collection": {
 		"collection_created": "Samling opprettet!",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Sted",
 		"locations": "Lokasjoner",
-		"my_locations": "Mine lokasjoner"
+		"my_locations": "Mine lokasjoner",
+		"best_happened_at": "Best skjedde kl"
 	},
 	"settings_download_backup": "Last ned sikkerhetskopi",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Turkontekstelementer gjelder for hele turen – for eksempel steder som er selve destinasjonen, generelle notater eller pakkelister som er viktige for hele turen.",
 		"unscheduled_items": "Ikke-planlagte elementer",
 		"unscheduled_items_desc": "Disse elementene er knyttet til denne turen, men har ikke blitt lagt til en bestemt dag ennå."
+	},
+	"api_keys": {
+		"copied": "Kopiert!",
+		"copy": "Kopier nøkkel",
+		"copy_error": "Feil ved kopiering av nøkkel.",
+		"create": "Opprett nøkkel",
+		"create_error": "Kunne ikke opprette API-nøkkel.",
+		"created": "Opprettet",
+		"delete_confirm": "Er du sikker på at du vil slette denne mobile API-nøkkelen?",
+		"description": "Lag personlige API-nøkler for programmatisk tilgang. \nNøkler vises bare én gang ved opprettelsestidspunktet.",
+		"dismiss": "Avskjedige",
+		"key_created": "API-nøkkel opprettet.",
+		"key_name_placeholder": "Nøkkelnavn (f.eks. Home Assistant)",
+		"key_revoked": "API-nøkkel er opphevet.",
+		"last_used": "Sist brukt",
+		"never_used": "Aldri brukt",
+		"new_key_title": "Lagre din nye API-nøkkel",
+		"new_key_warning": "Denne nøkkelen vises ikke igjen. \nKopier den og oppbevar den et trygt sted.",
+		"no_keys": "Ingen API-nøkler ennå.",
+		"revoke": "Oppheve",
+		"revoke_error": "Kunne ikke tilbakekalle API-nøkkel.",
+		"title": "API-nøkler",
+		"usage_middle": "header eller as",
+		"usage_prefix": "Bruk denne tasten i"
 	}
 }

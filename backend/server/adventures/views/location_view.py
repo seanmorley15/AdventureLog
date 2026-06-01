@@ -12,8 +12,31 @@ import requests
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.serializers import LocationSerializer, MapPinSerializer, CalendarLocationSerializer
+from adventures.serializers import (
+    CalendarLocationSerializer,
+    CollectionItineraryItemSerializer,
+    LocationSerializer,
+    MapPinSerializer,
+)
 from adventures.utils import pagination
+from adventures.geocoding import reverse_geocode
+from worldtravel.models import City, Country, Region
+from .location_image_view import import_remote_images_for_object
+from .quick_add_utils import (
+    build_quick_add_description,
+    clean_url,
+    coerce_bool,
+    coerce_coordinate,
+    coerce_float,
+    coerce_int,
+    create_quick_add_itinerary_item,
+    extract_google_place_details,
+    parse_itinerary_date,
+    preferred_link,
+    resolve_quick_add_collection,
+    sanitize_photo_urls,
+    sanitize_tags,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +180,122 @@ class LocationViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
     # ==================== CUSTOM ACTIONS ====================
+
+    @action(detail=False, methods=['post'], url_path='quick-add')
+    @transaction.atomic
+    def quick_add(self, request):
+        """Create a location from lightweight map/place input in one server-side call."""
+        payload = request.data if isinstance(request.data, dict) else {}
+
+        name = str(payload.get('name') or '').strip()
+        if not name:
+            return Response({"error": "name is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        latitude = coerce_coordinate(payload.get('latitude'), -90, 90)
+        longitude = coerce_coordinate(payload.get('longitude'), -180, 180)
+        if latitude is None or longitude is None:
+            return Response(
+                {"error": "Valid latitude and longitude are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        collection = self._resolve_quick_add_collection(payload.get('collection_id'))
+        if isinstance(collection, Response):
+            return collection
+
+        reverse_data = {}
+        _, details = extract_google_place_details(payload, fallback_query=name)
+
+        try:
+            reverse_result = reverse_geocode(latitude, longitude, request.user)
+            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
+                reverse_data = reverse_result
+        except Exception:
+            reverse_data = {}
+
+        rating = coerce_float(payload.get('rating'))
+        if rating is None:
+            rating = coerce_float(details.get('rating'))
+
+        review_count = coerce_int(payload.get('review_count'))
+        if review_count is None:
+            review_count = coerce_int(details.get('review_count'))
+
+        link = preferred_link(payload, details)
+
+        phone_number = str(details.get('phone_number') or payload.get('phone_number') or '').strip() or None
+
+        location_label = (
+            str(payload.get('location') or '').strip()
+            or str(reverse_data.get('display_name') or '').strip()
+            or str(details.get('formatted_address') or '').strip()
+            or None
+        )
+
+        description = build_quick_add_description(
+            base_description=payload.get('description'),
+            detailed_description=details.get('description'),
+        )
+
+        category_payload = self._normalize_quick_add_category(payload.get('category'))
+        if isinstance(category_payload, Response):
+            return category_payload
+
+        serializer_payload = {
+            'name': name,
+            'location': location_label,
+            'latitude': latitude,
+            'longitude': longitude,
+            'rating': rating,
+            'description': description,
+            'link': link,
+            'tags': sanitize_tags(payload.get('types') or payload.get('tags')),
+            'is_public': coerce_bool(payload.get('is_public'), default=False),
+        }
+
+        if category_payload:
+            serializer_payload['category'] = category_payload
+
+        if collection:
+            serializer_payload['collections'] = [str(collection.id)]
+
+        serializer = self.get_serializer(data=serializer_payload)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        location = serializer.instance
+        self._apply_reverse_geocode_metadata(location, reverse_data, location_label)
+
+        itinerary_date = parse_itinerary_date(payload.get('itinerary_date'))
+        itinerary_item = None
+        if collection and itinerary_date:
+            itinerary_item = create_quick_add_itinerary_item(collection, location, itinerary_date)
+            if isinstance(itinerary_item, Response):
+                return itinerary_item
+
+        photo_urls = sanitize_photo_urls(payload.get('photos'))
+        image_import_summary = None
+        if photo_urls:
+            image_import_summary = import_remote_images_for_object(
+                location,
+                photo_urls,
+                owner=location.user,
+                max_workers=min(5, len(photo_urls)),
+            )
+
+        response_data = self.get_serializer(location).data
+        if itinerary_item:
+            response_data['quick_add_itinerary_item'] = CollectionItineraryItemSerializer(
+                itinerary_item
+            ).data
+        if image_import_summary and image_import_summary.get('failed'):
+            response_data['quick_add_image_import'] = {
+                'created_count': image_import_summary['created_count'],
+                'failed_count': image_import_summary['failed_count'],
+                'failed': image_import_summary['failed'],
+            }
+
+        return Response(response_data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=['get'])
     def filtered(self, request):
@@ -459,6 +598,122 @@ class LocationViewSet(viewsets.ModelViewSet):
                     raise PermissionDenied(
                         f"You don't have permission to add location to collection '{collection.name}'"
                     )
+
+    def _resolve_quick_add_collection(self, collection_id):
+        return resolve_quick_add_collection(
+            collection_id,
+            validate_permissions=self._validate_collection_permissions,
+            permission_error_message=(
+                "You do not have permission to add this location to the selected collection."
+            ),
+        )
+
+    def _coerce_coordinate(self, value, min_value, max_value):
+        return coerce_coordinate(value, min_value, max_value)
+
+    def _coerce_float(self, value):
+        return coerce_float(value)
+
+    def _coerce_int(self, value):
+        return coerce_int(value)
+
+    def _coerce_bool(self, value, default=False):
+        return coerce_bool(value, default=default)
+
+    def _clean_url(self, value):
+        return clean_url(value)
+
+    def _sanitize_tags(self, raw_tags):
+        return sanitize_tags(raw_tags)
+
+    def _sanitize_photo_urls(self, raw_urls):
+        return sanitize_photo_urls(raw_urls)
+
+    def _normalize_quick_add_category(self, raw_category):
+        if not raw_category:
+            return None
+
+        if isinstance(raw_category, dict):
+            category_id = raw_category.get('id')
+            name = str(raw_category.get('name') or '').strip().lower()
+            display_name = str(raw_category.get('display_name') or '').strip()
+            icon = str(raw_category.get('icon') or '').strip() or '🌍'
+        elif isinstance(raw_category, str):
+            category_id = raw_category.strip()
+            name = ''
+            display_name = ''
+            icon = '🌍'
+        else:
+            return Response(
+                {"error": "category must be an object or string"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        category = None
+        if category_id:
+            category = Category.objects.filter(id=category_id, user=self.request.user).first()
+            if not category:
+                return Response(
+                    {"error": "Category not found or inaccessible"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if category:
+            return {
+                'name': category.name,
+                'display_name': category.display_name,
+                'icon': category.icon,
+            }
+
+        if not name:
+            return None
+
+        return {
+            'name': name,
+            'display_name': display_name or name,
+            'icon': icon,
+        }
+
+    def _build_quick_add_description(
+        self,
+        base_description,
+        detailed_description,
+    ):
+        return build_quick_add_description(base_description, detailed_description)
+
+    def _apply_reverse_geocode_metadata(self, location, reverse_data, fallback_location):
+        if not isinstance(reverse_data, dict):
+            reverse_data = {}
+
+        updated_fields = []
+
+        region_id = reverse_data.get('region_id')
+        if region_id:
+            region = Region.objects.filter(id=region_id).first()
+            if region and location.region_id != region.id:
+                location.region = region
+                updated_fields.append('region')
+
+        city_id = reverse_data.get('city_id')
+        if city_id:
+            city = City.objects.filter(id=city_id).first()
+            if city and location.city_id != city.id:
+                location.city = city
+                updated_fields.append('city')
+
+        country_id = reverse_data.get('country_id')
+        if country_id:
+            country = Country.objects.filter(country_code=country_id).first()
+            if country and location.country_id != country.id:
+                location.country = country
+                updated_fields.append('country')
+
+        if fallback_location and not location.location:
+            location.location = fallback_location
+            updated_fields.append('location')
+
+        if updated_fields:
+            location.save(update_fields=updated_fields, _skip_geocode=True)
 
     def _apply_visit_filtering(self, queryset, request):
         """Apply visit status filtering to queryset."""

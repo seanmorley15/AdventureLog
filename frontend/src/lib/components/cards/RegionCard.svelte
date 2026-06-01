@@ -91,11 +91,3 @@
 		</div>
 	</div>
 </div>
-
-<style>
-	.truncate {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-</style>

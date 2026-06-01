@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "تم تكرار المجموعة بنجاح! جارٍ إعادة التوجيه...",
 		"collection_duplicate_error": "فشل في تكرار المجموعة.",
 		"hide_strava_activities": "إخفاء أنشطة Strava",
-		"show_strava_activities": "عرض أنشطة Strava"
+		"show_strava_activities": "عرض أنشطة Strava",
+		"add_details": "أضف التفاصيل"
 	},
 	"auth": {
 		"confirm_password": "تأكيد كلمة المرور",
@@ -640,7 +641,8 @@
 	"locations": {
 		"location": "موقع",
 		"locations": "المواقع",
-		"my_locations": "مواقعي"
+		"my_locations": "مواقعي",
+		"best_happened_at": "أفضل ما حدث في"
 	},
 	"lodging": {
 		"apartment": "شقة",
@@ -711,7 +713,8 @@
 		},
 		"users": "المستخدمون",
 		"navigation": "ملاحة",
-		"worldtravel": "السفر العالمي"
+		"worldtravel": "السفر العالمي",
+		"mobile_login": "تسجيل الدخول المحمول"
 	},
 	"notes": {
 		"content": "محتوى",
@@ -924,7 +927,9 @@
 		"world_travel_visits": "زيارات السفر العالمية",
 		"mfa_desc": "أضف طبقة إضافية من الأمان إلى حسابك",
 		"mfa_disabled": "تعطيل المصادقة متعددة العوامل بنجاح!",
-		"mfa_is_enabled": "يتم تمكين MFA"
+		"mfa_is_enabled": "يتم تمكين MFA",
+		"map_style_desc": "يتم استخدامها كخريطة أساس افتراضية عبر الخرائط.",
+		"preferred_currency_desc": "تقوم هذه العملة بملء حقول الأموال مسبقًا عند إضافة عناصر جديدة."
 	},
 	"settings_download_backup": "تنزيل النسخ الاحتياطي",
 	"share": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "تنطبق عناصر سياق الرحلة على الرحلة بأكملها — على سبيل المثال المواقع التي تمثل الوجهة نفسها، أو الملاحظات العامة، أو قوائم التعبئة المهمة للرحلة بأكملها.",
 		"unscheduled_items": "العناصر غير المجدولة",
 		"unscheduled_items_desc": "ترتبط هذه العناصر بهذه الرحلة ولكن لم تتم إضافتها إلى يوم محدد بعد."
+	},
+	"api_keys": {
+		"copied": "منسوخ!",
+		"copy": "نسخ المفتاح",
+		"create": "إنشاء مفتاح",
+		"create_error": "فشل في إنشاء مفتاح API.",
+		"created": "مخلوق",
+		"description": "قم بإنشاء مفاتيح API شخصية للوصول البرمجي. \nيتم عرض المفاتيح مرة واحدة فقط في وقت الإنشاء.",
+		"dismiss": "رفض",
+		"key_created": "تم إنشاء مفتاح API بنجاح.",
+		"key_name_placeholder": "اسم المفتاح (مثل Home Assistant)",
+		"key_revoked": "تم إبطال مفتاح API.",
+		"last_used": "آخر استخدام",
+		"never_used": "لم تستخدم قط",
+		"new_key_title": "احفظ مفتاح API الجديد الخاص بك",
+		"new_key_warning": "لن يتم عرض هذا المفتاح مرة أخرى. \nانسخها واحفظها في مكان آمن.",
+		"no_keys": "لا توجد مفاتيح API حتى الآن.",
+		"revoke": "إبطال",
+		"revoke_error": "فشل في إبطال مفتاح API.",
+		"title": "مفاتيح واجهة برمجة التطبيقات",
+		"copy_error": "حدث خطأ أثناء نسخ المفتاح.",
+		"usage_middle": "رأس أو كما",
+		"usage_prefix": "استخدم هذا المفتاح في",
+		"delete_confirm": "هل أنت متأكد من أنك تريد حذف مفتاح API للجوال هذا؟"
 	}
 }

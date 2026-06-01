@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Coleção duplicada com sucesso! Redirecionando...",
 		"collection_duplicate_error": "Falha ao duplicar a coleção.",
 		"hide_strava_activities": "Ocultar atividades do Strava",
-		"show_strava_activities": "Mostrar atividades do Strava"
+		"show_strava_activities": "Mostrar atividades do Strava",
+		"add_details": "Adicionar detalhes"
 	},
 	"auth": {
 		"confirm_password": "Confirme a sua senha",
@@ -640,7 +641,8 @@
 	"locations": {
 		"location": "Localização",
 		"locations": "Locais",
-		"my_locations": "Meus Locais"
+		"my_locations": "Meus Locais",
+		"best_happened_at": "O melhor aconteceu em"
 	},
 	"lodging": {
 		"apartment": "Apartamento",
@@ -711,7 +713,8 @@
 		},
 		"users": "Usuários",
 		"navigation": "Navegação",
-		"worldtravel": "Viagens pelo mundo"
+		"worldtravel": "Viagens pelo mundo",
+		"mobile_login": "Login móvel"
 	},
 	"notes": {
 		"content": "Conteúdo",
@@ -924,7 +927,9 @@
 		"verify_email_success": "Verificação de E-mail enviada com sucesso!",
 		"verify_setup": "Verifique a configuração",
 		"whats_included": "O que está incluído",
-		"world_travel_visits": "Visitas ao Mundo"
+		"world_travel_visits": "Visitas ao Mundo",
+		"map_style_desc": "Usado como mapa base padrão em mapas.",
+		"preferred_currency_desc": "Esta moeda preenche previamente os campos monetários ao adicionar novos itens."
 	},
 	"settings_download_backup": "Baixar Backup",
 	"share": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Os itens de contexto da viagem aplicam-se a toda a viagem — por exemplo, locais que são o próprio destino, notas gerais ou listas de embalagem que são importantes para toda a viagem.",
 		"unscheduled_items": "Itens não programados",
 		"unscheduled_items_desc": "Esses itens estão vinculados a esta viagem, mas ainda não foram adicionados a um dia específico."
+	},
+	"api_keys": {
+		"create": "Criar chave",
+		"create_error": "Falha ao criar a chave de API.",
+		"created": "Criado",
+		"description": "Crie chaves de API pessoais para acesso programático. \nAs chaves são mostradas apenas uma vez no momento da criação.",
+		"dismiss": "Liberar",
+		"key_created": "Chave de API criada com sucesso.",
+		"key_name_placeholder": "Nome da chave (por exemplo, Home Assistant)",
+		"key_revoked": "Chave de API revogada.",
+		"last_used": "Usado pela última vez",
+		"never_used": "Nunca usado",
+		"new_key_title": "Salve sua nova chave de API",
+		"new_key_warning": "Esta chave não será mostrada novamente. \nCopie-o e guarde-o em algum lugar seguro.",
+		"no_keys": "Ainda não há chaves de API.",
+		"revoke": "Revogar",
+		"revoke_error": "Falha ao revogar a chave de API.",
+		"title": "Chaves de API",
+		"copied": "Copiado!",
+		"copy": "Copiar chave",
+		"copy_error": "Erro ao copiar a chave.",
+		"usage_middle": "cabeçalho ou como",
+		"usage_prefix": "Use esta chave no",
+		"delete_confirm": "Tem certeza de que deseja excluir esta chave de API móvel?"
 	}
 }

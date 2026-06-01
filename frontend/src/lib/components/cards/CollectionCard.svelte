@@ -332,10 +332,16 @@
 					</button>
 					{#if user && user.uuid == collection.user}
 						<div class="dropdown dropdown-end">
-							<button type="button" class="btn btn-square btn-sm btn-base-300">
+							<div
+								tabindex="0"
+								role="button"
+								aria-haspopup="menu"
+								class="btn btn-square btn-sm btn-base-300"
+							>
 								<DotsHorizontal class="w-5 h-5" />
-							</button>
+							</div>
 							<ul
+								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
 							>
 								{#if type != 'viewonly'}
@@ -433,10 +439,16 @@
 					{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
 						<!-- dropdown with leave button -->
 						<div class="dropdown dropdown-end">
-							<button type="button" class="btn btn-square btn-sm btn-base-300">
+							<div
+								tabindex="0"
+								role="button"
+								aria-haspopup="menu"
+								class="btn btn-square btn-sm btn-base-300"
+							>
 								<DotsHorizontal class="w-5 h-5" />
-							</button>
+							</div>
 							<ul
+								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
 							>
 								<li>

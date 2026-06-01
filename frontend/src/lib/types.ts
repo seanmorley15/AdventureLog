@@ -19,6 +19,7 @@ export type User = {
 	disable_password: boolean;
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
+	map_style: string;
 };
 
 export type Collaborator = {
@@ -296,6 +297,14 @@ export type ImmichIntegration = {
 	server_url: string;
 	api_key: string;
 	copy_locally: boolean;
+};
+
+export type APIKey = {
+	id: string;
+	name: string;
+	key_prefix: string;
+	created_at: string;
+	last_used_at: string | null;
 };
 
 export type ImmichAlbum = {

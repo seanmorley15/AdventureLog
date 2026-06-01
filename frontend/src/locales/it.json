@@ -443,7 +443,8 @@
 		"collection_duplicate_success": "Collezione duplicata con successo! Reindirizzamento...",
 		"collection_duplicate_error": "Impossibile duplicare la collezione.",
 		"hide_strava_activities": "Nascondi attività Strava",
-		"show_strava_activities": "Mostra attività Strava"
+		"show_strava_activities": "Mostra attività Strava",
+		"add_details": "Aggiungi dettagli"
 	},
 	"home": {
 		"desc_1": "Scopri, pianifica ed esplora con facilità",
@@ -492,7 +493,8 @@
 		"calendar": "Calendario",
 		"admin_panel": "Pannello di amministrazione",
 		"navigation": "Navigazione",
-		"worldtravel": "Viaggio nel mondo"
+		"worldtravel": "Viaggio nel mondo",
+		"mobile_login": "Accesso mobile"
 	},
 	"auth": {
 		"confirm_password": "Conferma password",
@@ -733,7 +735,9 @@
 		"activities": "Attività",
 		"trails": "Trails",
 		"use_imperial": "Usa le unità imperiali",
-		"use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche"
+		"use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche",
+		"map_style_desc": "Utilizzata come mappa di base predefinita su tutte le mappe.",
+		"preferred_currency_desc": "Questa valuta precompila i campi denaro quando si aggiungono nuovi articoli."
 	},
 	"checklist": {
 		"checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Posizione",
 		"locations": "Luoghi",
-		"my_locations": "Le mie posizioni"
+		"my_locations": "Le mie posizioni",
+		"best_happened_at": "È successo meglio a"
 	},
 	"settings_download_backup": "Scarica il backup",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Gli elementi contestuali del viaggio si applicano all'intero viaggio, ad esempio luoghi che rappresentano la destinazione stessa, note generali o liste di cose da portare importanti per l'intero viaggio.",
 		"unscheduled_items": "Elementi non pianificati",
 		"unscheduled_items_desc": "Questi elementi sono collegati a questo viaggio ma non sono ancora stati aggiunti a un giorno specifico."
+	},
+	"api_keys": {
+		"copied": "Copiato!",
+		"copy": "Copia chiave",
+		"create": "Crea chiave",
+		"create_error": "Impossibile creare la chiave API.",
+		"created": "Creato",
+		"description": "Crea chiavi API personali per l'accesso programmatico. \nLe chiavi vengono visualizzate solo una volta al momento della creazione.",
+		"dismiss": "Congedare",
+		"key_created": "Chiave API creata correttamente.",
+		"key_name_placeholder": "Nome della chiave (ad esempio Home Assistant)",
+		"key_revoked": "Chiave API revocata.",
+		"last_used": "Ultimo usato",
+		"never_used": "Mai usato",
+		"new_key_title": "Salva la tua nuova chiave API",
+		"new_key_warning": "Questa chiave non verrà più visualizzata. \nCopialo e conservalo in un posto sicuro.",
+		"no_keys": "Nessuna chiave API ancora.",
+		"revoke": "Revocare",
+		"revoke_error": "Impossibile revocare la chiave API.",
+		"title": "Chiavi API",
+		"copy_error": "Errore durante la copia della chiave.",
+		"usage_middle": "intestazione o come",
+		"usage_prefix": "Utilizzare questa chiave nel",
+		"delete_confirm": "Vuoi eliminare questa chiave API mobile?"
 	}
 }

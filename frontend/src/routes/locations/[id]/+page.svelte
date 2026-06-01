@@ -4,7 +4,8 @@
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import Lost from '$lib/assets/undraw_lost.svg';
-	import { DefaultMarker, MapLibre, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
+	import FullMap from '$lib/components/map/FullMap.svelte';
+	import { DefaultMarker, Popup, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
@@ -19,12 +20,13 @@
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
-	import { getActivityColor, getBasemapUrl, isAllDay, copyToClipboard } from '$lib';
+	import { getActivityColor, normalizeBasemapType, isAllDay, copyToClipboard } from '$lib';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 
 	let geojson: any;
 
@@ -220,6 +222,7 @@
 					<DotsVertical class="w-8 h-8" />
 				</button>
 				<ul
+					tabindex="-1"
 					class="dropdown-content menu bg-base-100 rounded-box w-52 p-2 shadow-lg border border-base-300 mb-2"
 				>
 					<li>
@@ -674,32 +677,12 @@
 										{/if}
 
 										<!-- External Maps Links -->
-										<div class="grid grid-cols-3 gap-2 mb-3">
-											<a
-												class="btn btn-sm btn-outline hover:btn-neutral"
-												href={`https://maps.apple.com/?q=${adventure.latitude},${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🍎 Apple
-											</a>
-											<a
-												class="btn btn-sm btn-outline hover:btn-accent"
-												href={`https://maps.google.com/?q=${adventure.latitude},${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🌍 Google
-											</a>
-											<a
-												class="btn btn-sm btn-outline hover:btn-primary"
-												href={`https://www.openstreetmap.org/?mlat=${adventure.latitude}&mlon=${adventure.longitude}`}
-												target="_blank"
-												rel="noopener noreferrer"
-											>
-												🗺️ OSM
-											</a>
-										</div>
+										<ExternalMapLinks
+											className="mb-3"
+											placeName={adventure.name}
+											latitude={adventure.latitude}
+											longitude={adventure.longitude}
+										/>
 
 										<!-- Quick Copy Actions -->
 										<div class="flex gap-2">
@@ -735,11 +718,11 @@
 							{/if}
 
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<MapLibre
-									style={getBasemapUrl()}
-									class="w-full h-96"
+								<FullMap
+									basemapType={normalizeBasemapType(data.user?.map_style)}
+									mapClass="w-full h-96"
 									standardControls
-									center={{ lng: adventure.longitude || 0, lat: adventure.latitude || 0 }}
+									center={[adventure.longitude || 0, adventure.latitude || 0]}
 									zoom={adventure.longitude ? 12 : 1}
 								>
 									{#if geojson}
@@ -802,7 +785,7 @@
 											</Popup>
 										</DefaultMarker>
 									{/if}
-								</MapLibre>
+								</FullMap>
 							</div>
 						</div>
 					</div>

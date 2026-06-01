@@ -3,6 +3,7 @@ import time
 import socket
 import re
 import unicodedata
+from urllib.parse import quote
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 from django.conf import settings
 
@@ -20,7 +21,12 @@ def search_google(query):
         headers = {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': api_key,
-            'X-Goog-FieldMask': 'places.displayName.text,places.formattedAddress,places.location,places.types,places.rating,places.userRatingCount'
+            'X-Goog-FieldMask': (
+                'places.id,places.displayName.text,places.formattedAddress,places.location,'
+                'places.types,places.rating,places.userRatingCount,places.websiteUri,'
+                'places.nationalPhoneNumber,places.internationalPhoneNumber,'
+                'places.editorialSummary.text,places.googleMapsUri,places.photos.name'
+            )
         }
         
         payload = {
@@ -52,6 +58,14 @@ def search_google(query):
             if rating is not None and ratings_total:
                 importance = round(float(rating) * ratings_total / 100, 2)
 
+            photos = []
+            for photo in place.get('photos', [])[:5]:
+                photo_name = photo.get('name')
+                if photo_name:
+                    photos.append(
+                        f"https://places.googleapis.com/v1/{photo_name}/media?key={api_key}&maxHeightPx=800&maxWidthPx=800"
+                    )
+
             # Extract display name from the new API structure
             display_name_obj = place.get("displayName", {})
             name = display_name_obj.get("text") if display_name_obj else None
@@ -61,9 +75,18 @@ def search_google(query):
                 "lon": location.get("longitude"),
                 "name": name,
                 "display_name": place.get("formattedAddress"),
+                "place_id": place.get("id"),
                 "type": primary_type,
+                "types": types,
                 "category": category,
+                "description": (place.get('editorialSummary') or {}).get('text'),
+                "website": place.get('websiteUri'),
+                "phone_number": place.get('internationalPhoneNumber') or place.get('nationalPhoneNumber'),
+                "google_maps_url": place.get('googleMapsUri'),
                 "importance": importance,
+                "rating": rating,
+                "review_count": ratings_total,
+                "photos": photos,
                 "addresstype": addresstype,
                 "powered_by": "google",
             })
@@ -172,6 +195,359 @@ def search(query):
         # If Google fails, fallback to OSM
     return search_osm(query)
 
+
+def _fetch_wikipedia_summary(query, language='en'):
+    normalized_query = (query or '').strip()
+    if not normalized_query:
+        return None
+
+    candidates = [normalized_query]
+    if ',' in normalized_query:
+        head = normalized_query.split(',')[0].strip()
+        if head and head not in candidates:
+            candidates.append(head)
+
+    for candidate in candidates:
+        try:
+            encoded_query = quote(candidate, safe='')
+            url = f"https://{language}.wikipedia.org/api/rest_v1/page/summary/{encoded_query}"
+            response = requests.get(
+                url,
+                headers={'User-Agent': 'AdventureLog Server'},
+                timeout=(2, 5),
+            )
+            if response.status_code != 200:
+                continue
+
+            data = response.json()
+            if data.get('type') == 'disambiguation':
+                continue
+
+            extract = (data.get('extract') or '').strip()
+            if len(extract) >= 120:
+                return extract
+        except requests.exceptions.RequestException:
+            continue
+
+    return None
+
+
+def _compose_place_description(
+    editorial_summary,
+    review_snippets,
+):
+    parts = []
+
+    summary = (editorial_summary or '').strip()
+    if summary:
+        parts.append(f"### About\n\n{summary}")
+
+    cleaned_reviews = []
+    for snippet in review_snippets:
+        text = (snippet or '').strip()
+        if len(text) >= 40:
+            cleaned_reviews.append(text)
+        if len(cleaned_reviews) >= 2:
+            break
+
+    if cleaned_reviews:
+        review_block = '### Visitor Highlights\n\n' + '\n'.join(
+            f"- {text}" for text in cleaned_reviews
+        )
+        parts.append(review_block)
+
+    return '\n\n'.join(parts).strip() or None
+
+
+def get_place_details(place_id, fallback_query=None, language='en'):
+    if not place_id:
+        return {'error': 'place_id is required'}
+
+    details = {
+        'description': None,
+        'name': None,
+        'formatted_address': None,
+        'types': [],
+        'rating': None,
+        'review_count': None,
+        'website': None,
+        'phone_number': None,
+        'google_maps_url': None,
+        'source': None,
+    }
+
+    api_key = settings.GOOGLE_MAPS_API_KEY
+    if api_key:
+        try:
+            url = f"https://places.googleapis.com/v1/places/{place_id}"
+            headers = {
+                'X-Goog-Api-Key': api_key,
+                'X-Goog-FieldMask': (
+                    'id,displayName.text,formattedAddress,editorialSummary.text,types,'
+                    'rating,userRatingCount,websiteUri,nationalPhoneNumber,'
+                    'internationalPhoneNumber,googleMapsUri,reviews.text.text'
+                ),
+            }
+            response = requests.get(url, headers=headers, timeout=(2, 6))
+            response.raise_for_status()
+
+            place = response.json()
+            details['name'] = (place.get('displayName') or {}).get('text')
+            details['formatted_address'] = place.get('formattedAddress')
+            details['types'] = place.get('types') or []
+            details['rating'] = place.get('rating')
+            details['review_count'] = place.get('userRatingCount')
+            details['website'] = place.get('websiteUri')
+            details['phone_number'] = (
+                place.get('internationalPhoneNumber') or place.get('nationalPhoneNumber')
+            )
+            details['google_maps_url'] = place.get('googleMapsUri')
+
+            editorial_summary = (place.get('editorialSummary') or {}).get('text')
+            reviews = place.get('reviews') or []
+            review_snippets = [((review.get('text') or {}).get('text')) for review in reviews]
+            details['description'] = _compose_place_description(
+                editorial_summary,
+                review_snippets,
+            )
+            if details['description']:
+                details['source'] = 'google'
+        except requests.exceptions.RequestException:
+            pass
+
+    # Google summaries are often short; fallback to Wikipedia for richer context.
+    description_text = (details.get('description') or '').strip()
+    if len(description_text) < 220:
+        wikipedia_summary = _fetch_wikipedia_summary(
+            fallback_query or details.get('name') or '',
+            language=language,
+        )
+        if wikipedia_summary:
+            if description_text:
+                details['description'] = f"{description_text}\n\n### Background\n\n{wikipedia_summary}"
+                details['source'] = 'google+wikipedia'
+            else:
+                details['description'] = f"### Background\n\n{wikipedia_summary}"
+                details['source'] = 'wikipedia'
+
+    if not details.get('description'):
+        return {'error': 'Unable to enrich place description'}
+
+    return details
+
+
+def _clean_location_candidate(value):
+    if value is None:
+        return None
+    cleaned = str(value).strip()
+    return cleaned or None
+
+
+def _looks_like_street_address(value):
+    candidate = _clean_location_candidate(value)
+    if not candidate:
+        return False
+
+    lowered = candidate.lower()
+    if not re.search(r"\d", lowered):
+        return False
+
+    if lowered.count(",") >= 2:
+        return True
+
+    if not re.match(r"^\d{1,6}\s+\S+", lowered):
+        return False
+
+    street_tokens = (
+        "st",
+        "street",
+        "rd",
+        "road",
+        "ave",
+        "avenue",
+        "blvd",
+        "boulevard",
+        "dr",
+        "drive",
+        "ln",
+        "lane",
+        "ct",
+        "court",
+        "pl",
+        "place",
+        "pkwy",
+        "parkway",
+        "hwy",
+        "highway",
+        "trl",
+        "trail",
+    )
+    return any(re.search(rf"\b{token}\b", lowered) for token in street_tokens)
+
+
+def _first_preferred_location_name(candidates, allow_address_fallback=False):
+    address_fallback = None
+    for candidate in candidates:
+        cleaned = _clean_location_candidate(candidate)
+        if not cleaned:
+            continue
+        if not _looks_like_street_address(cleaned):
+            return cleaned
+        if address_fallback is None:
+            address_fallback = cleaned
+    return address_fallback if allow_address_fallback else None
+
+
+def _extract_google_component_name(address_components):
+    preferred_types = (
+        "premise",
+        "point_of_interest",
+        "establishment",
+        "subpremise",
+        "natural_feature",
+        "airport",
+        "park",
+        "tourist_attraction",
+        "shopping_mall",
+        "university",
+        "school",
+        "hospital",
+    )
+
+    for preferred_type in preferred_types:
+        for component in address_components or []:
+            types = component.get("types", [])
+            if preferred_type in types:
+                return component.get("long_name") or component.get("short_name")
+    return None
+
+
+def _score_google_result_types(types):
+    priority = (
+        "point_of_interest",
+        "establishment",
+        "premise",
+        "subpremise",
+        "tourist_attraction",
+        "park",
+        "airport",
+        "shopping_mall",
+        "university",
+        "school",
+        "hospital",
+        "street_address",
+        "route",
+    )
+    for idx, type_name in enumerate(priority):
+        if type_name in types:
+            return len(priority) - idx
+    return 0
+
+
+def _fetch_google_nearby_place_name(lat, lon, api_key):
+    url = "https://places.googleapis.com/v1/places:searchNearby"
+    headers = {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': api_key,
+        'X-Goog-FieldMask': 'places.displayName.text,places.formattedAddress,places.types',
+    }
+    payload = {
+        "maxResultCount": 6,
+        "rankPreference": "DISTANCE",
+        "locationRestriction": {
+            "circle": {
+                "center": {
+                    "latitude": float(lat),
+                    "longitude": float(lon),
+                },
+                "radius": 45.0,
+            }
+        },
+    }
+
+    try:
+        response = requests.post(url, headers=headers, json=payload, timeout=(2, 5))
+        response.raise_for_status()
+        places = (response.json() or {}).get("places", [])
+    except requests.exceptions.RequestException:
+        return None
+
+    candidates = [((place.get("displayName") or {}).get("text")) for place in places]
+    return _first_preferred_location_name(candidates, allow_address_fallback=False)
+
+
+def _extract_google_location_name(results, nearby_place_name=None):
+    preferred_nearby = _first_preferred_location_name([nearby_place_name], allow_address_fallback=False)
+    if preferred_nearby:
+        return preferred_nearby
+
+    scored_candidates = []
+    for result in results or []:
+        score = _score_google_result_types(result.get("types", []))
+        if score <= 0:
+            continue
+        component_name = _extract_google_component_name(result.get("address_components", []))
+        name_candidate = _first_preferred_location_name([component_name], allow_address_fallback=False)
+        if name_candidate:
+            scored_candidates.append((score, name_candidate))
+
+    if scored_candidates:
+        scored_candidates.sort(key=lambda item: item[0], reverse=True)
+        return scored_candidates[0][1]
+
+    component_candidates = [
+        _extract_google_component_name(result.get("address_components", []))
+        for result in (results or [])
+    ]
+    component_pick = _first_preferred_location_name(component_candidates, allow_address_fallback=False)
+    if component_pick:
+        return component_pick
+
+    formatted_candidates = [result.get("formatted_address") for result in (results or [])]
+    return _first_preferred_location_name(formatted_candidates, allow_address_fallback=True)
+
+
+def _extract_osm_location_name(data):
+    address = data.get("address", {}) or {}
+    namedetails = data.get("namedetails", {}) or {}
+    extratags = data.get("extratags", {}) or {}
+
+    candidates = [
+        data.get("name"),
+        namedetails.get("name"),
+        namedetails.get("official_name"),
+        namedetails.get("short_name"),
+        namedetails.get("brand"),
+        namedetails.get("loc_name"),
+        address.get("amenity"),
+        address.get("tourism"),
+        address.get("attraction"),
+        address.get("building"),
+        address.get("shop"),
+        address.get("leisure"),
+        address.get("historic"),
+        address.get("man_made"),
+        address.get("office"),
+        address.get("aeroway"),
+        address.get("railway"),
+        address.get("public_transport"),
+        address.get("craft"),
+        address.get("house_name"),
+        extratags.get("name"),
+        extratags.get("official_name"),
+        extratags.get("brand"),
+        extratags.get("operator"),
+    ]
+
+    preferred = _first_preferred_location_name(candidates, allow_address_fallback=False)
+    if preferred:
+        return preferred
+
+    return _first_preferred_location_name(
+        [data.get("name"), data.get("display_name")],
+        allow_address_fallback=True,
+    )
+
 # -----------------
 # REVERSE GEOCODING
 # -----------------
@@ -186,10 +562,7 @@ def extractIsoCode(user, data):
     country_code = None
     city = None
     visited_city = None
-    location_name = None
-
-    if 'name' in data.keys():
-        location_name = data['name']
+    location_name = _clean_location_candidate(data.get('location_name') or data.get('name'))
 
     address = data.get('address', {}) or {}
 
@@ -369,7 +742,10 @@ def reverse_geocode(lat, lon, user):
     return reverse_geocode_osm(lat, lon, user)
 
 def reverse_geocode_osm(lat, lon, user):
-    url = f"https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat={lat}&lon={lon}"
+    url = (
+        "https://nominatim.openstreetmap.org/reverse"
+        f"?format=jsonv2&addressdetails=1&namedetails=1&extratags=1&zoom=18&lat={lat}&lon={lon}"
+    )
     headers = {'User-Agent': 'AdventureLog Server'}
     connect_timeout = 1
     read_timeout = 5
@@ -381,6 +757,7 @@ def reverse_geocode_osm(lat, lon, user):
         response = requests.get(url, headers=headers, timeout=(connect_timeout, read_timeout))
         response.raise_for_status()
         data = response.json()
+        data["location_name"] = _extract_osm_location_name(data)
         return extractIsoCode(user, data)
     except requests.exceptions.Timeout:
         return {"error": "Request timed out while contacting OpenStreetMap. Please try again."}
@@ -424,11 +801,23 @@ def reverse_geocode_google(lat, lon, user):
             else:
                 return {"error": "Geocoding failed. Please try again."}
 
+        results = data.get("results", [])
+        if not results:
+            return {"error": "No location found for the given coordinates."}
+
+        nearby_place_name = _fetch_google_nearby_place_name(lat, lon, api_key)
+        location_name = _extract_google_location_name(results, nearby_place_name=nearby_place_name)
+
         # Convert Google schema to Nominatim-style for extractIsoCode
-        first_result = data.get("results", [])[0]
+        first_result = results[0]
+        address_result = next(
+            (result for result in results if "plus_code" not in result.get("types", [])),
+            first_result,
+        )
         result_data = {
             "name": first_result.get("formatted_address"),
-            "address": _parse_google_address_components(first_result.get("address_components", []))
+            "location_name": location_name,
+            "address": _parse_google_address_components(address_result.get("address_components", [])),
         }
         return extractIsoCode(user, result_data)
     except requests.exceptions.Timeout:

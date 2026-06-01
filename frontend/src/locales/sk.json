@@ -28,7 +28,8 @@
 			"dim": "Tlmená"
 		},
 		"navigation": "Navigácia",
-		"worldtravel": "Svetové cestovanie"
+		"worldtravel": "Svetové cestovanie",
+		"mobile_login": "Mobilné prihlásenie"
 	},
 	"about": {
 		"about": "O aplikácii",
@@ -492,7 +493,8 @@
 		"collection_duplicate_success": "Zbierka bola úspešne zduplikovaná! Presmerovanie...",
 		"collection_duplicate_error": "Nepodarilo sa zduplikovať zbierku.",
 		"hide_strava_activities": "Skryť Strava aktivity",
-		"show_strava_activities": "Zobraziť Strava Activities"
+		"show_strava_activities": "Zobraziť Strava Activities",
+		"add_details": "Pridajte podrobnosti"
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
@@ -733,7 +735,9 @@
 		"use_imperial": "Používať imperiálne jednotky",
 		"use_imperial_desc": "Používať imperiálne jednotky (stopy, palce, libry) namiesto metrických jednotiek",
 		"trails": "Trasy",
-		"activities": "Aktivity"
+		"activities": "Aktivity",
+		"map_style_desc": "Používa sa ako predvolená podkladová mapa naprieč mapami.",
+		"preferred_currency_desc": "Táto mena predvypĺňa peňažné polia pri pridávaní nových položiek."
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",
@@ -1031,7 +1035,8 @@
 	"locations": {
 		"location": "Miesto",
 		"locations": "Miesta",
-		"my_locations": "Moje miesta"
+		"my_locations": "Moje miesta",
+		"best_happened_at": "Najlepšie sa stalo o"
 	},
 	"settings_download_backup": "Stiahnuť zálohu",
 	"invites": {
@@ -1139,5 +1144,29 @@
 		"trip_context_info": "Kontextové položky cesty sa vzťahujú na celú cestu – napríklad miesta, ktoré sú samotným cieľom, všeobecné poznámky alebo zoznamy balíkov, ktoré sú dôležité pre celú cestu.",
 		"unscheduled_items": "Neplánované položky",
 		"unscheduled_items_desc": "Tieto položky sú spojené s touto cestou, ale zatiaľ neboli pridané ku konkrétnemu dňu."
+	},
+	"api_keys": {
+		"copied": "Skopírované!",
+		"copy": "Kopírovať kľúč",
+		"create": "Vytvoriť kľúč",
+		"create_error": "Nepodarilo sa vytvoriť kľúč API.",
+		"created": "Vytvorené",
+		"description": "Vytvorte osobné kľúče API pre programový prístup. \nKľúče sa pri vytváraní zobrazujú iba raz.",
+		"dismiss": "Odmietnuť",
+		"key_created": "Kľúč API bol úspešne vytvorený.",
+		"key_name_placeholder": "Názov kľúča (napr. Home Assistant)",
+		"key_revoked": "Kľúč API bol odvolaný.",
+		"last_used": "Naposledy použité",
+		"never_used": "Nikdy nepoužité",
+		"new_key_title": "Uložte si nový kľúč API",
+		"new_key_warning": "Tento kľúč sa už nebude zobrazovať. \nSkopírujte ho a uložte na bezpečné miesto.",
+		"no_keys": "Zatiaľ žiadne kľúče API.",
+		"revoke": "Odvolať",
+		"revoke_error": "Nepodarilo sa odvolať kľúč API.",
+		"title": "API kľúče",
+		"copy_error": "Chyba pri kopírovaní kľúča.",
+		"usage_middle": "hlavička alebo ako",
+		"usage_prefix": "Použite tento kľúč v",
+		"delete_confirm": "Naozaj chcete odstrániť tento kľúč rozhrania API pre mobilné zariadenia?"
 	}
 }
