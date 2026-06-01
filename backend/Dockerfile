@@ -69,6 +69,9 @@ RUN python3 manage.py collectstatic --noinput --verbosity 2
 # Expose ports
 EXPOSE 80 8000
 
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=5 \
+  CMD ["python3", "/code/healthcheck.py"]
+
 # Start with an entrypoint that runs init tasks then starts supervisord
 ENTRYPOINT ["/code/entrypoint.sh"]
 

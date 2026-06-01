@@ -43,5 +43,6 @@ COPY --from=build /app/package.json ./package.json
 
 EXPOSE 3000
 
-# Distroless node image uses node as entrypoint.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=5 \
+  CMD ["node", "/app/healthcheck.mjs"]
 CMD ["build/index.js"]
