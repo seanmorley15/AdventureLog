@@ -8,7 +8,6 @@ from django.db.models.functions import Lower
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-import requests
 from adventures.models import Location, Category, Collection, CollectionItineraryItem, ContentImage, Visit
 from django.contrib.contenttypes.models import ContentType
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
