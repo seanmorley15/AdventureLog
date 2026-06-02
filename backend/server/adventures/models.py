@@ -610,6 +610,19 @@ class Trail(models.Model):
     # Either an external link (e.g., AllTrails, Trailforks) or a Wanderer ID
     link = models.URLField("External Trail Link", max_length=2083, blank=True, null=True)
     wanderer_id = models.CharField("Wanderer Trail ID", max_length=100, blank=True, null=True)
+    wanderer_author_username = models.CharField(
+        "Wanderer Author Username",
+        max_length=255,
+        blank=True,
+        null=True,
+    )
+    wanderer_author_domain = models.CharField(
+        "Wanderer Author Domain",
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Author's Wanderer instance domain for /trail/view/@user@domain/id links.",
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
 

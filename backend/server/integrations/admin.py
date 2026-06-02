@@ -6,6 +6,12 @@ from .models import ImmichIntegration, StravaToken, WandererIntegration
 admin.autodiscover()
 admin.site.login = secure_admin_login(admin.site.login)
 
+
+@admin.register(WandererIntegration)
+class WandererIntegrationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'server_url', 'id')
+    exclude = ('api_key',)
+
+
 admin.site.register(ImmichIntegration)
 admin.site.register(StravaToken)
-admin.site.register(WandererIntegration)

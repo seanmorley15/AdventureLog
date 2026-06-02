@@ -324,6 +324,12 @@ export type ImmichIntegration = {
 	copy_locally: boolean;
 };
 
+export type WandererIntegration = {
+	id: string;
+	server_url: string;
+	api_key?: string;
+};
+
 export type APIKey = {
 	id: string;
 	name: string;
@@ -411,10 +417,13 @@ export type Trail = {
 	location: string; // UUID of the location
 	created_at: string; // ISO 8601 date string
 	link?: string | null; // Optional link to the trail
-	wanderer_id?: string | null; // Optional ID for integration with Wanderer
-	provider: string; // Provider of the trail data, e.g., 'wanderer', 'external'
+	wanderer_id?: string | null;
+	wanderer_author_username?: string | null;
+	wanderer_author_domain?: string | null;
+	provider: string;
 	wanderer_data: WandererTrail | null; // Optional data from Wanderer integration
 	wanderer_link: string | null; // Optional link to the Wanderer trail
+	geojson?: any | null;
 };
 
 export type StravaActivity = {
@@ -523,6 +532,13 @@ export type TransportationVisit = {
 	activities?: Activity[];
 };
 
+export type WandererAuthor = {
+	id: string;
+	username?: string;
+	preferred_username?: string;
+	domain?: string;
+};
+
 export type WandererTrail = {
 	id: string;
 	name: string;
@@ -531,6 +547,9 @@ export type WandererTrail = {
 	elevation_gain: number;
 	elevation_loss: number;
 	author: string;
+	expand?: {
+		author?: WandererAuthor;
+	};
 	category: string;
 	collectionId: string;
 	collectionName: string;

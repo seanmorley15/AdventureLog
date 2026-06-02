@@ -101,6 +101,92 @@ class BackupViewSet(viewsets.ViewSet):
 
         return amount, normalized_currency
 
+    def _optional_str(self, value):
+        if value is None:
+            return None
+        text = str(value).strip()
+        return text or None
+
+    def _serialize_trail_export(self, trail):
+        """Export trail data; author fields are optional for backward-compatible backups."""
+        data = {
+            'name': trail.name,
+            'link': trail.link,
+            'wanderer_id': trail.wanderer_id,
+            'created_at': trail.created_at.isoformat() if trail.created_at else None,
+        }
+        username = getattr(trail, 'wanderer_author_username', None)
+        domain = getattr(trail, 'wanderer_author_domain', None)
+        if username:
+            data['wanderer_author_username'] = username
+        if domain:
+            data['wanderer_author_domain'] = domain
+        return data
+
+    def _parse_trail_import(self, trail_data):
+        """
+        Parse trail JSON from backup. Old backups only have name/link/wanderer_id;
+        author username/domain are optional and backfilled on read when missing.
+        """
+        if not isinstance(trail_data, dict):
+            return None
+
+        name = self._optional_str(trail_data.get('name'))
+        if not name:
+            return None
+
+        link = self._optional_str(trail_data.get('link'))
+        wanderer_id = self._optional_str(trail_data.get('wanderer_id'))
+        if not link and not wanderer_id:
+            return None
+
+        domain = self._optional_str(trail_data.get('wanderer_author_domain'))
+        if domain:
+            domain = domain.lstrip('@')
+
+        return {
+            'name': name,
+            'link': link,
+            'wanderer_id': wanderer_id,
+            'wanderer_author_username': self._optional_str(
+                trail_data.get('wanderer_author_username')
+            ),
+            'wanderer_author_domain': domain,
+            'created_at': trail_data.get('created_at'),
+        }
+
+    def _import_trail(self, user, location, trail_data, trail_name_map, summary):
+        parsed = self._parse_trail_import(trail_data)
+        if not parsed:
+            summary['trails_skipped'] += 1
+            return
+
+        create_kwargs = {
+            'user': user,
+            'location': location,
+            'name': parsed['name'],
+            'link': parsed['link'],
+            'wanderer_id': parsed['wanderer_id'],
+            'wanderer_author_username': parsed['wanderer_author_username'],
+            'wanderer_author_domain': parsed['wanderer_author_domain'],
+        }
+        if parsed['created_at']:
+            create_kwargs['created_at'] = parsed['created_at']
+
+        try:
+            trail = Trail.objects.create(**create_kwargs)
+            trail_name_map[(location.id, parsed['name'])] = trail
+            summary['trails'] += 1
+        except Exception as exc:
+            import logging
+            logging.warning(
+                "Skipped trail import for location %s (%r): %s",
+                location.id,
+                parsed.get('name'),
+                exc,
+            )
+            summary['trails_skipped'] += 1
+
     def _serialize_images(self, images_qs):
         """Serialize ContentImage queryset into backup-safe dicts."""
         serialized = []
@@ -357,13 +443,7 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Add trails for this location
             for trail in location.trails.all():
-                trail_data = {
-                    'name': trail.name,
-                    'link': trail.link,
-                    'wanderer_id': trail.wanderer_id,
-                    'created_at': trail.created_at.isoformat() if trail.created_at else None
-                }
-                location_data['trails'].append(trail_data)
+                location_data['trails'].append(self._serialize_trail_export(trail))
             
             # Add images
             location_data['images'] = self._serialize_images(location.images)
@@ -832,7 +912,7 @@ class BackupViewSet(viewsets.ViewSet):
             'transportation': 0, 'notes': 0, 'checklists': 0,
             'checklist_items': 0, 'lodging': 0, 'images': 0, 
             'attachments': 0, 'visited_cities': 0, 'visited_regions': 0,
-            'trails': 0, 'activities': 0, 'gpx_files': 0, 'itinerary_items': 0
+            'trails': 0, 'trails_skipped': 0, 'activities': 0, 'gpx_files': 0, 'itinerary_items': 0
         }
 
         # Import Visited Cities
@@ -970,16 +1050,7 @@ class BackupViewSet(viewsets.ViewSet):
             
             # Import trails for this location first
             for trail_data in adv_data.get('trails', []):
-                trail = Trail.objects.create(
-                    user=user,
-                    location=location,
-                    name=trail_data['name'],
-                    link=trail_data.get('link'),
-                    wanderer_id=trail_data.get('wanderer_id'),
-                    created_at=trail_data.get('created_at')
-                )
-                trail_name_map[(location.id, trail_data['name'])] = trail
-                summary['trails'] += 1
+                self._import_trail(user, location, trail_data, trail_name_map, summary)
             
             # Import visits and their activities
             for visit_data in adv_data.get('visits', []):

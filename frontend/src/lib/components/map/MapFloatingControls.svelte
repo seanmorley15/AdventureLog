@@ -24,11 +24,13 @@
 
 	function getFullscreenElement(): HTMLElement | null {
 		if (fullscreenTarget) return fullscreenTarget;
+		const container = map?.getContainer?.();
+		if (!container) return null;
 		return (
-			map?.getContainer?.()?.parentElement ??
-			map?.getContainer?.()?.closest?.('.relative') ??
-			map?.getContainer?.() ??
-			null
+			container.closest('.fullmap-root') ??
+			container.closest('.relative') ??
+			container.parentElement ??
+			container
 		);
 	}
 
@@ -82,6 +84,9 @@
 
 	function handleFullscreenChange() {
 		isFullscreen = Boolean(document.fullscreenElement);
+		requestAnimationFrame(() => {
+			map?.resize?.();
+		});
 	}
 
 	onMount(() => {

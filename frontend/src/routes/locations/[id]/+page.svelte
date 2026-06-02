@@ -27,8 +27,8 @@
 	import CashMultiple from '~icons/mdi/cash-multiple';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
-
-	let geojson: any;
+	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
+	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -60,6 +60,9 @@
 	let adventure_images: { image: string; adventure: AdditionalLocation | null }[] = [];
 	let modalInitialIndex: number = 0;
 	let isImageModalOpen: boolean = false;
+	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
+	let showActivityTracks = true;
+	let showTrailTracks = true;
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -93,6 +96,10 @@
 
 	function hasAttachmentGeojson(adventure: AdditionalLocation) {
 		return adventure.attachments.some((attachment) => attachment.geojson);
+	}
+
+	function hasTrailGeojson(adventure: AdditionalLocation) {
+		return adventure.trails?.some((trail) => trail.geojson) ?? false;
 	}
 
 	function getTotalActivities(adventure: AdditionalLocation) {
@@ -719,38 +726,48 @@
 
 							<div class="rounded-lg overflow-hidden shadow-lg">
 								<FullMap
-									basemapType={normalizeBasemapType(data.user?.map_style)}
+									bind:basemapType={mapBasemapType}
 									mapClass="w-full h-96"
 									center={[adventure.longitude || 0, adventure.latitude || 0]}
 									zoom={adventure.longitude ? 12 : 1}
 								>
-									{#if geojson}
-										<GeoJSON data={geojson}>
-											<LineLayer
-												paint={{
-													'line-color': '#FF0000',
-													'line-width': 4
-												}}
-											/>
-										</GeoJSON>
-									{/if}
+									<div
+										slot="overlayControls"
+										let:map
+										let:fullscreenTarget
+										class="pointer-events-none absolute inset-0 z-20"
+									>
+										<MapTrackLayerControls
+											bind:showActivities={showActivityTracks}
+											bind:showTrails={showTrailTracks}
+											hasActivities={hasActivityGeojson(adventure)}
+											hasTrails={hasTrailGeojson(adventure)}
+										/>
+										<MapFloatingControls
+											{map}
+											{fullscreenTarget}
+											bind:basemapType={mapBasemapType}
+										/>
+									</div>
 
 									<!-- Activity GPS tracks -->
-									{#each adventure.visits as visit}
-										{#each visit.activities as activity}
-											{#if activity.geojson}
-												<GeoJSON data={activity.geojson}>
-													<LineLayer
-														paint={{
-															'line-color': getActivityColor(activity.sport_type),
-															'line-width': 3,
-															'line-opacity': 0.8
-														}}
-													/>
-												</GeoJSON>
-											{/if}
+									{#if showActivityTracks}
+										{#each adventure.visits as visit}
+											{#each visit.activities as activity}
+												{#if activity.geojson}
+													<GeoJSON data={activity.geojson}>
+														<LineLayer
+															paint={{
+																'line-color': getActivityColor(activity.sport_type),
+																'line-width': 3,
+																'line-opacity': 0.8
+															}}
+														/>
+													</GeoJSON>
+												{/if}
+											{/each}
 										{/each}
-									{/each}
+									{/if}
 
 									{#each adventure.attachments as attachment}
 										{#if attachment.geojson}
@@ -765,6 +782,22 @@
 											</GeoJSON>
 										{/if}
 									{/each}
+
+									{#if showTrailTracks}
+										{#each adventure.trails as trail}
+											{#if trail.geojson}
+												<GeoJSON data={trail.geojson}>
+													<LineLayer
+														paint={{
+															'line-color': '#a855f7',
+															'line-width': 3,
+															'line-opacity': 0.85
+														}}
+													/>
+												</GeoJSON>
+											{/if}
+										{/each}
+									{/if}
 
 									{#if adventure.longitude && adventure.latitude}
 										<DefaultMarker lngLat={{ lng: adventure.longitude, lat: adventure.latitude }}>

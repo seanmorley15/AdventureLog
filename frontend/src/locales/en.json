@@ -361,7 +361,7 @@
 		"trails_found_for": "trails found for",
 		"no_trails_found_matching": "No trails found matching",
 		"no_trails_available": "No Trails Available",
-		"wanderer_integration_error": "Wanderer integration is not enabled or has expired.",
+		"wanderer_integration_error": "Wanderer integration is not enabled. Connect it in Settings → Integrations.",
 		"no_external_link": "No external link available",
 		"no_trails_added": "No trails added yet",
 		"add_first_trail": "Add your first trail using the button above",
@@ -942,6 +942,11 @@
 		"exit_fullscreen": "Exit fullscreen",
 		"geolocation_unavailable": "Location is not available in this browser.",
 		"geolocation_denied": "Location access was denied.",
+		"track_layers": "Track layers",
+		"show_activities": "Show activity tracks",
+		"hide_activities": "Hide activity tracks",
+		"show_trails": "Show trail tracks",
+		"hide_trails": "Hide trail tracks",
 		"fullscreen_failed": "Could not toggle fullscreen.",
 		"map_style": "Map style"
 	},
@@ -1115,9 +1120,17 @@
 		"not_enabled": "Strava integration is not enabled on this instance."
 	},
 	"wanderer": {
-		"wanderer_integration_desc": "Connect to Wanderer to easily import and view your trails in locations",
+		"wanderer_integration_desc": "Connect to Wanderer with an API key to import and view your trails in locations",
 		"connection_error": "Error connecting to Wanderer",
-		"connected": "Successfully connected to Wanderer"
+		"connected": "Successfully connected to Wanderer",
+		"updated": "Wanderer integration updated",
+		"disconnected": "Wanderer disconnected",
+		"disconnect_error": "Error disconnecting Wanderer",
+		"server_url": "Server URL",
+		"api_key": "API Key",
+		"api_key_placeholder": "wanderer_key_...",
+		"localhost_note": "The Wanderer server must be reachable from the AdventureLog server (localhost may not work in Docker).",
+		"update_integration": "Update Integration"
 	},
 	"itinerary": {
 		"remove_from_itinerary": "Remove from Day",

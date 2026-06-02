@@ -276,10 +276,17 @@
 	}
 </script>
 
-<div class="relative h-full w-full min-h-[inherit]" bind:this={mapRootEl}>
+<div class="fullmap-root relative h-full w-full min-h-[inherit]" bind:this={mapRootEl}>
 	{#if showMapControls}
 		{#if $$slots.overlayControls}
-			<slot name="overlayControls" {basemapType} {setBasemapType} {map} />
+			<slot
+				name="overlayControls"
+				{basemapType}
+				{setBasemapType}
+				{map}
+				{mapRootEl}
+				fullscreenTarget={fullscreenTarget ?? mapRootEl}
+			/>
 		{:else}
 			<MapFloatingControls
 				{map}
@@ -294,7 +301,7 @@
 	<MapLibre
 		bind:map
 		style={resolvedStyle}
-		class={mapClass}
+		class="{mapClass} fullmap-map"
 		standardControls={false}
 		{zoom}
 		{center}
@@ -395,5 +402,21 @@
 	:global(.maplibregl-marker.map-pin-active),
 	:global(.mapboxgl-marker.map-pin-active) {
 		z-index: 2147483000 !important;
+	}
+
+	:global(.fullmap-root:fullscreen) {
+		height: 100%;
+		width: 100%;
+		max-height: none;
+		min-height: 100%;
+		background-color: var(--color-base-100, #1a1a1a);
+	}
+
+	:global(.fullmap-root:fullscreen .fullmap-map),
+	:global(.fullmap-root:fullscreen .fullmap-map .maplibregl-map),
+	:global(.fullmap-root:fullscreen .fullmap-map .maplibregl-canvas-container) {
+		height: 100% !important;
+		width: 100% !important;
+		min-height: 100% !important;
 	}
 </style>

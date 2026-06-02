@@ -27,11 +27,9 @@ class StravaToken(models.Model):
 
 class WandererIntegration(models.Model):
     server_url = models.CharField(max_length=255)
-    username = models.CharField(max_length=255)
+    api_key = models.CharField(max_length=512)
     user = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='wanderer_integrations')
-    token = models.CharField(null=True, blank=True)
-    token_expiry = models.DateTimeField(null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
 
     def __str__(self):

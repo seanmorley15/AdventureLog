@@ -117,6 +117,7 @@ class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
     wanderer_data = serializers.SerializerMethodField()
     wanderer_link = serializers.SerializerMethodField()
+    geojson = serializers.SerializerMethodField(read_only=True)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -124,8 +125,12 @@ class TrailSerializer(CustomModelSerializer):
     
     class Meta:
         model = Trail
-        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data', 'wanderer_link']
-        read_only_fields = ['id', 'created_at', 'user', 'provider']
+        fields = [
+            'id', 'user', 'name', 'location', 'created_at', 'link',
+            'wanderer_id', 'wanderer_author_username', 'wanderer_author_domain',
+            'provider', 'wanderer_data', 'wanderer_link', 'geojson',
+        ]
+        read_only_fields = ['id', 'created_at', 'user', 'provider', 'wanderer_link']
 
     def _get_wanderer_integration(self, user):
         """Cache wanderer integration to avoid multiple database queries"""
@@ -133,6 +138,75 @@ class TrailSerializer(CustomModelSerializer):
             from integrations.models import WandererIntegration
             self._wanderer_integration_cache[user.id] = WandererIntegration.objects.filter(user=user).first()
         return self._wanderer_integration_cache[user.id]
+
+    def _ensure_wanderer_author_fields(self, obj, integration, trail_data=None):
+        """Backfill username/domain from Wanderer API when missing on existing trails."""
+        if not obj.wanderer_id or not integration:
+            return obj.wanderer_author_username, obj.wanderer_author_domain
+
+        username = (obj.wanderer_author_username or '').strip() or None
+        domain = (obj.wanderer_author_domain or '').strip() or None
+        if username and domain:
+            return username, domain
+
+        from integrations.wanderer_services import (
+            extract_wanderer_author_from_trail,
+            fetch_trail_by_id,
+        )
+
+        if trail_data is None:
+            try:
+                trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
+            except Exception as exc:
+                logger.warning(
+                    "Could not fetch Wanderer trail %s for author backfill: %s",
+                    obj.wanderer_id,
+                    exc,
+                )
+                return username, domain
+
+        resolved_username, resolved_domain = extract_wanderer_author_from_trail(trail_data)
+        username = username or resolved_username
+        domain = domain or resolved_domain
+
+        updates = {}
+        if username and username != obj.wanderer_author_username:
+            updates['wanderer_author_username'] = username
+            obj.wanderer_author_username = username
+        if domain and domain != obj.wanderer_author_domain:
+            updates['wanderer_author_domain'] = domain
+            obj.wanderer_author_domain = domain
+        if updates:
+            Trail.objects.filter(pk=obj.pk).update(**updates)
+
+        return username, domain
+
+    def _build_wanderer_link(self, obj, integration, trail_data=None):
+        if not obj.wanderer_id or not integration:
+            return None
+
+        from integrations.wanderer_services import build_wanderer_trail_view_url
+
+        username, domain = self._ensure_wanderer_author_fields(
+            obj, integration, trail_data=trail_data
+        )
+        if not username or not domain:
+            return None
+
+        try:
+            return build_wanderer_trail_view_url(
+                integration.server_url,
+                obj.wanderer_id,
+                username,
+                domain,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Could not build Wanderer link for trail %s: %s",
+                obj.wanderer_id,
+                exc,
+            )
+            return None
 
     def get_provider(self, obj):
         if obj.wanderer_id:
@@ -152,40 +226,136 @@ class TrailSerializer(CustomModelSerializer):
     def get_wanderer_data(self, obj):
         if not obj.wanderer_id:
             return None
-        
-        # Use cached integration
+
         integration = self._get_wanderer_integration(obj.user)
         if not integration:
             return None
-        
-        # Fetch the Wanderer trail data
+
+        if hasattr(obj, '_wanderer_data'):
+            return obj._wanderer_data
+
         from integrations.wanderer_services import fetch_trail_by_id
+
         try:
             trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
             if not trail_data:
                 return None
-            
-            # Cache the trail data and link on the object to avoid refetching
             obj._wanderer_data = trail_data
-            base_url = integration.server_url.rstrip('/')
-            obj._wanderer_link = f"{base_url}/trails/{obj.wanderer_id}"
-            
+            self._ensure_wanderer_author_fields(obj, integration, trail_data=trail_data)
+            obj._wanderer_link = self._build_wanderer_link(
+                obj, integration, trail_data=trail_data
+            )
             return trail_data
         except Exception as e:
-            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}: {e}")
+            logger.error("Error fetching Wanderer trail data for %s: %s", obj.wanderer_id, e)
             return None
-    
+
     def get_wanderer_link(self, obj):
         if not obj.wanderer_id:
             return None
-        
-        # Use cached integration
+
         integration = self._get_wanderer_integration(obj.user)
         if not integration:
             return None
-        
-        base_url = integration.server_url.rstrip('/')
-        return f"{base_url}/trail/view/@{integration.username}/{obj.wanderer_id}"
+
+        if hasattr(obj, '_wanderer_link') and obj._wanderer_link:
+            return obj._wanderer_link
+
+        return self._build_wanderer_link(obj, integration)
+
+    def get_geojson(self, obj):
+        if not obj.wanderer_id:
+            return None
+
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+
+        from integrations.wanderer_services import fetch_trail_geojson
+
+        trail_data = getattr(obj, '_wanderer_data', None)
+        try:
+            return fetch_trail_geojson(
+                integration,
+                obj.wanderer_id,
+                trail_data=trail_data,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Could not fetch GeoJSON for Wanderer trail %s: %s",
+                obj.wanderer_id,
+                exc,
+            )
+            return None
+
+    def _sync_wanderer_author_fields(self, validated_data, user):
+        wanderer_id = validated_data.get('wanderer_id')
+        if wanderer_id is None:
+            return validated_data
+        if not wanderer_id:
+            validated_data['wanderer_author_username'] = None
+            validated_data['wanderer_author_domain'] = None
+            return validated_data
+
+        username = (validated_data.get('wanderer_author_username') or '').strip() or None
+        domain = (validated_data.get('wanderer_author_domain') or '').strip().lstrip('@') or None
+
+        if username and domain:
+            validated_data['wanderer_author_username'] = username
+            validated_data['wanderer_author_domain'] = domain
+            return validated_data
+
+        integration = self._get_wanderer_integration(user)
+        if not integration:
+            return validated_data
+
+        from integrations.wanderer_services import (
+            extract_wanderer_author_from_trail,
+            fetch_trail_by_id,
+        )
+
+        try:
+            trail_data = fetch_trail_by_id(integration, wanderer_id)
+            resolved_username, resolved_domain = extract_wanderer_author_from_trail(trail_data)
+            if resolved_username:
+                validated_data['wanderer_author_username'] = resolved_username
+            if resolved_domain:
+                validated_data['wanderer_author_domain'] = resolved_domain
+        except Exception as exc:
+            logger.warning(
+                "Could not resolve Wanderer author for trail %s: %s",
+                wanderer_id,
+                exc,
+            )
+
+        return validated_data
+
+    def create(self, validated_data):
+        user = validated_data.get('user')
+        if user:
+            validated_data = self._sync_wanderer_author_fields(validated_data, user)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'wanderer_id' in validated_data or (
+            'wanderer_author_username' in validated_data
+            or 'wanderer_author_domain' in validated_data
+        ):
+            merged = {
+                'wanderer_id': validated_data.get('wanderer_id', instance.wanderer_id),
+                'wanderer_author_username': validated_data.get(
+                    'wanderer_author_username',
+                    instance.wanderer_author_username,
+                ),
+                'wanderer_author_domain': validated_data.get(
+                    'wanderer_author_domain',
+                    instance.wanderer_author_domain,
+                ),
+            }
+            merged = self._sync_wanderer_author_fields(merged, instance.user)
+            validated_data['wanderer_author_username'] = merged.get('wanderer_author_username')
+            validated_data['wanderer_author_domain'] = merged.get('wanderer_author_domain')
+        return super().update(instance, validated_data)
             
     
 class ActivitySerializer(CustomModelSerializer):

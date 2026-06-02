@@ -4,7 +4,7 @@
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { basemapOptions, normalizeBasemapType } from '$lib';
-	import type { ImmichIntegration, User, APIKey, MediaUsage } from '$lib/types.js';
+	import type { ImmichIntegration, WandererIntegration, User, APIKey, MediaUsage } from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
@@ -37,7 +37,7 @@
 	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
 	let stravaUserEnabled = data.props.stravaUserEnabled;
 	let wandererEnabled = data.props.wandererEnabled;
-	let wandererExpired = data.props.wandererExpired;
+	let wandererIntegration: WandererIntegration | null = data.props.wandererIntegration;
 	let activeSection: string = 'profile';
 
 	// typed alias for social providers to satisfy TypeScript
@@ -70,10 +70,10 @@
 		copy_locally: true
 	};
 
-	let newWandererIntegration = {
+	let newWandererIntegration: WandererIntegration = {
 		server_url: '',
-		username: '',
-		password: ''
+		api_key: '',
+		id: ''
 	};
 
 	let isMFAModalOpen: boolean = false;
@@ -404,48 +404,46 @@
 		if (res.ok) {
 			addToast('success', $t('wanderer.disconnected'));
 			wandererEnabled = false;
+			wandererIntegration = null;
 		} else {
 			addToast('error', $t('wanderer.disconnect_error'));
 		}
 	}
 
-	async function wandererConnect() {
-		const res = await fetch('/api/integrations/wanderer/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(newWandererIntegration)
-		});
-		if (res.ok) {
-			addToast('success', $t('wanderer.connected'));
-			wandererEnabled = true;
-			newWandererIntegration = { server_url: '', username: '', password: '' };
-		} else {
-			const data = await res.json();
-			addToast('error', $t('wanderer.connection_error'));
-		}
-	}
+	async function enableWandererIntegration() {
+		const integrationId = newWandererIntegration.id || wandererIntegration?.id;
+		const isUpdate = !!integrationId;
+		const url = isUpdate
+			? `/api/integrations/wanderer/${integrationId}/`
+			: '/api/integrations/wanderer/';
+		const method = isUpdate ? 'PUT' : 'POST';
 
-	async function wandererRefresh() {
-		if (wandererEnabled) {
-			const res = await fetch(`/api/integrations/wanderer/refresh/`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					password: newWandererIntegration.password
-				})
+		try {
+			const res = await fetch(url, {
+				method,
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(newWandererIntegration)
 			});
+			const responseData = await res.json();
+
 			if (res.ok) {
-				addToast('success', $t('wanderer.refreshed'));
-				newWandererIntegration.password = '';
-				wandererExpired = false;
+				addToast(
+					'success',
+					$t(isUpdate ? 'wanderer.updated' : 'wanderer.connected')
+				);
+				wandererIntegration = responseData;
+				wandererEnabled = true;
+				newWandererIntegration = { server_url: '', api_key: '', id: '' };
 			} else {
-				addToast('error', $t('wanderer.refresh_error'));
+				const message =
+					responseData.error ||
+					responseData.detail ||
+					(Array.isArray(responseData) ? responseData.join(', ') : null) ||
+					$t('wanderer.connection_error');
+				addToast('error', message);
 			}
-			newWandererIntegration.password = '';
+		} catch {
+			addToast('error', $t('wanderer.connection_error'));
 		}
 	}
 
@@ -1492,35 +1490,33 @@
 									{/if}
 								</div>
 
-								{#if wandererEnabled && wandererExpired}
-									<div class="space-y-4 mb-4">
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">Password</span>
-											</label>
-											<input
-												type="password"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your password"
-												bind:value={newWandererIntegration.password}
-											/>
-										</div>
-
-										<button class="btn btn-primary w-full" on:click={wandererRefresh}>
-											🔗 Wanderer Reauth
+								{#if wandererIntegration && !newWandererIntegration.id}
+									<div class="flex gap-4 justify-center mb-4">
+										<button
+											class="btn btn-warning"
+											on:click={() => {
+												if (wandererIntegration) {
+													newWandererIntegration = {
+														...wandererIntegration,
+														api_key: ''
+													};
+												}
+											}}
+										>
+											✏️ {$t('lodging.edit')}
+										</button>
+										<button class="btn btn-error" on:click={wandererDisconnect}>
+											❌ {$t('strava.disconnect')}
 										</button>
 									</div>
 								{/if}
 
-								<!-- Content based on integration status -->
-								{#if !wandererEnabled}
-									<!-- login form with server url username and password -->
+								{#if !wandererIntegration || newWandererIntegration.id}
 									<div class="space-y-4">
 										<div class="form-control">
 											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">Server URL</span>
+												<span class="label-text font-medium">{$t('wanderer.server_url')}</span>
 											</label>
 											<input
 												type="url"
@@ -1528,61 +1524,46 @@
 												placeholder="https://wanderer.example.com"
 												bind:value={newWandererIntegration.server_url}
 											/>
+											{#if newWandererIntegration.server_url && (newWandererIntegration.server_url.indexOf('localhost') !== -1 || newWandererIntegration.server_url.indexOf('127.0.0.1') !== -1)}
+												<div class="label">
+													<span class="label-text-alt text-warning"
+														>{$t('wanderer.localhost_note')}</span
+													>
+												</div>
+											{/if}
 										</div>
 
 										<div class="form-control">
 											<!-- svelte-ignore a11y-label-has-associated-control -->
 											<label class="label">
-												<span class="label-text font-medium">{$t('auth.username')}</span>
-											</label>
-											<input
-												type="text"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your username"
-												bind:value={newWandererIntegration.username}
-											/>
-										</div>
-
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('auth.password')}</span>
+												<span class="label-text font-medium">{$t('wanderer.api_key')}</span>
 											</label>
 											<input
 												type="password"
 												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your password"
-												bind:value={newWandererIntegration.password}
+												placeholder={$t('wanderer.api_key_placeholder')}
+												bind:value={newWandererIntegration.api_key}
 											/>
 										</div>
 
-										<button class="btn btn-primary w-full" on:click={wandererConnect}>
-											🔗 {$t('adventures.connect_to_wanderer')}
-										</button>
-									</div>
-								{:else}
-									<!-- User connected - show management options -->
-									<div class="text-center">
-										<button class="btn btn-error" on:click={wandererDisconnect}>
-											❌ {$t('strava.disconnect')}
+										<button class="btn btn-primary w-full" on:click={enableWandererIntegration}>
+											{!wandererIntegration?.id
+												? `🔗 ${$t('adventures.connect_to_wanderer')}`
+												: `💾 ${$t('wanderer.update_integration')}`}
 										</button>
 									</div>
 								{/if}
 
-								<!-- Help documentation link -->
-
-								{#if !wandererEnabled}
-									<div class="mt-4 p-4 bg-info/10 rounded-lg">
-										<p class="text-sm">
-											📖 {$t('immich.need_help')}
-											<a
-												class="link link-primary"
-												href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
-												target="_blank">{$t('navbar.documentation')}</a
-											>
-										</p>
-									</div>
-								{/if}
+								<div class="mt-4 p-4 bg-info/10 rounded-lg">
+									<p class="text-sm">
+										📖 {$t('immich.need_help')}
+										<a
+											class="link link-primary"
+											href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
+											target="_blank">{$t('navbar.documentation')}</a
+										>
+									</p>
+								</div>
 							</div>
 						</div>
 					{/if}
