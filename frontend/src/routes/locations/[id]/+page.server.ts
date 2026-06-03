@@ -1,6 +1,7 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { AdditionalLocation, Location, Collection } from '$lib/types';
+import { buildLocationShareMeta } from '$lib/shareMeta.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -16,7 +17,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure: null
-			}
+			},
+			shareMeta: null
 		};
 	} else {
 		let adventure = (await request.json()) as AdditionalLocation;
@@ -24,7 +26,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure
-			}
+			},
+			shareMeta: buildLocationShareMeta(adventure, event.url.origin)
 		};
 	}
 }) satisfies PageServerLoad;

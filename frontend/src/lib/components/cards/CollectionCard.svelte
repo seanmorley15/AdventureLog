@@ -20,6 +20,7 @@
 	import TrashCan from '~icons/mdi/trashcan';
 	import DeleteWarning from '../DeleteWarning.svelte';
 	import ShareModal from '../ShareModal.svelte';
+	import SocialShareModal from '../SocialShareModal.svelte';
 	import CardCarousel from '../CardCarousel.svelte';
 	import ExitRun from '~icons/mdi/exit-run';
 	import Eye from '~icons/mdi/eye';
@@ -27,8 +28,10 @@
 	import Check from '~icons/mdi/check';
 	import MapMarker from '~icons/mdi/map-marker-multiple';
 	import LinkIcon from '~icons/mdi/link';
-	import DownloadIcon from '~icons/mdi/download';
-	import ContentCopy from '~icons/mdi/content-copy';
+import DownloadIcon from '~icons/mdi/download';
+import FilePdfBox from '~icons/mdi/file-pdf-box';
+import ContentCopy from '~icons/mdi/content-copy';
+import ImageOutline from '~icons/mdi/image-outline';
 
 	const dispatch = createEventDispatcher();
 
@@ -36,6 +39,7 @@
 	export let linkedCollectionList: string[] | null = null;
 	export let user: User | null;
 	let isShareModalOpen: boolean = false;
+	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
 
 	async function copyLink() {
@@ -77,24 +81,48 @@
 		dispatch('edit', collection);
 	}
 
-	async function exportCollectionZip() {
+	async function downloadCollectionBlob(
+		url: string,
+		filename: string,
+		successKey: string,
+		failedKey: string
+	) {
 		try {
-			const res = await fetch(`/api/collections/${collection.id}/export`);
+			const res = await fetch(url);
 			if (!res.ok) {
-				addToast('error', $t('adventures.export_failed') || 'Export failed');
+				addToast('error', $t(failedKey) || 'Export failed');
 				return;
 			}
 			const blob = await res.blob();
-			const url = URL.createObjectURL(blob);
+			const objectUrl = URL.createObjectURL(blob);
 			const a = document.createElement('a');
-			a.href = url;
-			a.download = `collection-${String(collection.name).replace(/\s+/g, '_')}.zip`;
+			a.href = objectUrl;
+			a.download = filename;
 			a.click();
-			URL.revokeObjectURL(url);
-			addToast('success', $t('adventures.export_success') || 'Exported collection');
+			URL.revokeObjectURL(objectUrl);
+			addToast('success', $t(successKey) || 'Exported collection');
 		} catch (e) {
-			addToast('error', $t('adventures.export_failed') || 'Export failed');
+			addToast('error', $t(failedKey) || 'Export failed');
 		}
+	}
+
+	async function exportCollectionZip() {
+		await downloadCollectionBlob(
+			`/api/collections/${collection.id}/export`,
+			`collection-${String(collection.name).replace(/\s+/g, '_')}.zip`,
+			'adventures.export_success',
+			'adventures.export_failed'
+		);
+	}
+
+	async function exportCollectionPdf() {
+		const safeName = String(collection.name).replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'collection';
+		await downloadCollectionBlob(
+			`/api/collections/${collection.id}/export-pdf/`,
+			`${safeName}_itinerary.pdf`,
+			'adventures.export_pdf_success',
+			'adventures.export_pdf_failed'
+		);
 	}
 
 	async function archiveCollection(is_archived: boolean) {
@@ -174,6 +202,16 @@
 
 {#if isShareModalOpen}
 	<ShareModal {collection} on:close={() => (isShareModalOpen = false)} />
+{/if}
+
+{#if isSocialShareModalOpen}
+	<SocialShareModal
+		type="collection"
+		id={collection.id}
+		name={collection.name}
+		isPublic={!!collection.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
 {/if}
 
 <div
@@ -360,6 +398,15 @@
 											{$t('adventures.share')}
 										</button>
 									</li>
+									<li>
+										<button
+											class="flex items-center gap-2"
+											on:click={() => (isSocialShareModalOpen = true)}
+										>
+											<ImageOutline class="w-4 h-4" />
+											{$t('social_share.share_externally')}
+										</button>
+									</li>
 									{#if collection.is_public}
 										<li>
 											<button on:click={copyLink} class="flex items-center gap-2">
@@ -394,6 +441,12 @@
 											</button>
 										</li>
 									{/if}
+									<li>
+										<button class="flex items-center gap-2" on:click={exportCollectionPdf}>
+											<FilePdfBox class="w-4 h-4" />
+											{$t('adventures.export_pdf')}
+										</button>
+									</li>
 									<li>
 										<button class="flex items-center gap-2" on:click={exportCollectionZip}>
 											<DownloadIcon class="w-4 h-4" />
@@ -451,6 +504,15 @@
 								tabindex="-1"
 								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
 							>
+								<li>
+									<button
+										class="flex items-center gap-2"
+										on:click={() => (isSocialShareModalOpen = true)}
+									>
+										<ImageOutline class="w-4 h-4" />
+										{$t('social_share.share_externally')}
+									</button>
+								</li>
 								<li>
 									<button
 										class="text-error flex items-center gap-2"

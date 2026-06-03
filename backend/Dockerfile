@@ -49,6 +49,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       nginx \
       memcached \
       supervisor \
+      fonts-noto-core \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy Python packages from builder

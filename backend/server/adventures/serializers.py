@@ -6,6 +6,12 @@ from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
+from adventures.utils.geo import point_to_lat_lon
+from adventures.utils.serializer_geo_fields import (
+    ActivityCoordinateMixin,
+    CoordinateSerializerMixin,
+    TransportationCoordinateMixin,
+)
 import gpxpy
 import logging
 
@@ -358,7 +364,7 @@ class TrailSerializer(CustomModelSerializer):
         return super().update(instance, validated_data)
             
     
-class ActivitySerializer(CustomModelSerializer):
+class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
     geojson = serializers.SerializerMethodField()
     
     class Meta:
@@ -420,7 +426,7 @@ class CalendarLocationSerializer(serializers.ModelSerializer):
         }
 
                                    
-class LocationSerializer(CustomModelSerializer):
+class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
@@ -578,6 +584,7 @@ class LocationSerializer(CustomModelSerializer):
         return obj.is_visited_status()
 
     def create(self, validated_data):
+        validated_data = self._pop_lat_lon(validated_data)
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
@@ -597,6 +604,7 @@ class LocationSerializer(CustomModelSerializer):
         return location
 
     def update(self, instance, validated_data):
+        validated_data = self._pop_lat_lon(validated_data)
         category_data = validated_data.pop('category', None)
         visits_data = validated_data.pop('visits', None)
         collections_data = validated_data.pop('collections', None)
@@ -632,7 +640,7 @@ class LocationSerializer(CustomModelSerializer):
 
         return instance
     
-class MapPinSerializer(serializers.ModelSerializer):
+class MapPinSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):
     is_visited = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True, required=False)
     
@@ -644,7 +652,7 @@ class MapPinSerializer(serializers.ModelSerializer):
     def get_is_visited(self, obj):
         return obj.is_visited_status()
 
-class TransportationSerializer(CustomModelSerializer):
+class TransportationSerializer(TransportationCoordinateMixin, CustomModelSerializer):
     distance = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
@@ -677,13 +685,12 @@ class TransportationSerializer(CustomModelSerializer):
         if gpx_distance is not None:
             return gpx_distance
 
-        if (
-            obj.origin_latitude and obj.origin_longitude and
-            obj.destination_latitude and obj.destination_longitude
-        ):
+        o_lat, o_lon = point_to_lat_lon(obj.origin)
+        d_lat, d_lon = point_to_lat_lon(obj.destination)
+        if o_lat is not None and o_lon is not None and d_lat is not None and d_lon is not None:
             try:
-                origin = (float(obj.origin_latitude), float(obj.origin_longitude))
-                destination = (float(obj.destination_latitude), float(obj.destination_longitude))
+                origin = (o_lat, o_lon)
+                destination = (d_lat, d_lon)
                 return round(geodesic(origin, destination).km, 2)
             except ValueError:
                 return None
@@ -751,7 +758,7 @@ class TransportationSerializer(CustomModelSerializer):
             and dt_value.time().microsecond == 0
         )
 
-class LodgingSerializer(CustomModelSerializer):
+class LodgingSerializer(CoordinateSerializerMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
 

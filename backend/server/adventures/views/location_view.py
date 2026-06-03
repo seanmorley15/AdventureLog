@@ -5,6 +5,8 @@ from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
 from django.db.models import Q, Max, Prefetch
 from django.db.models.functions import Lower
+from django.http import HttpResponse
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -19,7 +21,15 @@ from adventures.serializers import (
 )
 from adventures.utils import pagination
 from adventures.throttling import ExternalGeocodeThrottle, ExternalSunTimesThrottle
+from adventures.utils.geo import point_to_lat_lon
 from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
+from adventures.services.share_image import (
+    build_share_image,
+    get_location_for_share,
+    resolve_share_page_url,
+    share_image_filename,
+    valid_aspect,
+)
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
@@ -466,8 +476,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                     location=original.location,
                     tags=list(original.tags) if original.tags else None,
                     is_public=False,
-                    longitude=original.longitude,
-                    latitude=original.latitude,
+                    coordinates=original.coordinates,
                     city=original.city,
                     region=original.region,
                     country=original.country,
@@ -536,6 +545,34 @@ class LocationViewSet(viewsets.ModelViewSet):
                 {"error": "An error occurred while duplicating the location."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+    @action(
+        detail=True,
+        methods=['get'],
+        url_path=r'share-image/(?P<aspect>square|story|landscape)',
+    )
+    def share_image(self, request, pk=None, aspect=None):
+        """Generate a branded PNG share card for social media."""
+        if not valid_aspect(aspect):
+            return Response({'error': 'Invalid aspect ratio.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        location = self.get_object()
+        try:
+            location = get_location_for_share(location.id)
+            page_url = resolve_share_page_url(request, f'/locations/{location.id}')
+            png_bytes = build_share_image(location, aspect, page_url)
+        except Exception:
+            logger.exception('Failed to generate share image for location %s', location.id)
+            return Response(
+                {'error': 'Failed to generate share image. Please try again later.'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        filename = share_image_filename(location, aspect)
+        disposition = 'attachment' if request.query_params.get('download') else 'inline'
+        response = HttpResponse(png_bytes, content_type='image/png')
+        response['Content-Disposition'] = f'{disposition}; filename="{filename}"'
+        return response
 
     # view to return location name and lat/lon for all locations a user owns for the golobal map
     @action(detail=False, methods=['get'], url_path='pins')
@@ -776,7 +813,8 @@ class LocationViewSet(viewsets.ModelViewSet):
         from adventures.services.sun.times import get_sun_times_for_visits
 
         try:
-            return get_sun_times_for_visits(adventure.latitude, adventure.longitude, visits)
+            latitude, longitude = point_to_lat_lon(adventure.coordinates)
+            return get_sun_times_for_visits(latitude, longitude, visits)
         except Exception:
             return []
 

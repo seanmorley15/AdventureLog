@@ -31,6 +31,9 @@
 	import Lightbulb from '~icons/mdi/lightbulb';
 	import ChartBar from '~icons/mdi/chart-bar';
 	import Plus from '~icons/mdi/plus';
+	import FilePdfBox from '~icons/mdi/file-pdf-box';
+	import ImageOutline from '~icons/mdi/image-outline';
+	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 	import { addToast } from '$lib/toasts';
 	import NoteModal from '$lib/components/NoteModal.svelte';
 	import ChecklistModal from '$lib/components/ChecklistModal.svelte';
@@ -254,6 +257,37 @@
 
 	// Enforce recommendations visibility only for owner/shared users
 	$: availableViews.recommendations = !!canModifyCollection;
+
+	let isExportingPdf = false;
+	let isSocialShareModalOpen = false;
+
+	async function exportCollectionPdf() {
+		if (!collection || isExportingPdf) return;
+		isExportingPdf = true;
+		try {
+			const res = await fetch(`/api/collections/${collection.id}/export-pdf/`);
+			if (!res.ok) {
+				addToast('error', $t('adventures.export_pdf_failed'));
+				return;
+			}
+			const blob = await res.blob();
+			const safeName =
+				String(collection.name)
+					.replace(/[^\w\s-]/g, '')
+					.replace(/\s+/g, '_') || 'collection';
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement('a');
+			a.href = url;
+			a.download = `${safeName}_itinerary.pdf`;
+			a.click();
+			URL.revokeObjectURL(url);
+			addToast('success', $t('adventures.export_pdf_success'));
+		} catch {
+			addToast('error', $t('adventures.export_pdf_failed'));
+		} finally {
+			isExportingPdf = false;
+		}
+	}
 
 	// Build calendar events from collection visits
 	type TimezoneMode = 'event' | 'local';
@@ -816,6 +850,16 @@
 	/>
 {/if}
 
+{#if isSocialShareModalOpen && collection}
+	<SocialShareModal
+		type="collection"
+		id={collection.id}
+		name={collection.name}
+		isPublic={!!collection.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
+{/if}
+
 {#if isLocationLinkModalOpen && collection}
 	<LocationLink
 		user={data.user}
@@ -1086,7 +1130,7 @@
 	<!-- Main Content -->
 	<div class="container mx-auto px-2 sm:px-4 py-6 sm:py-8 max-w-7xl">
 		<!-- View Switcher -->
-		<div class="flex justify-center mb-6">
+		<div class="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
 			<div class="join">
 				{#if availableViews.all}
 					<button
@@ -1148,6 +1192,24 @@
 						<span class="hidden sm:inline">{$t('collections.statistics')}</span>
 					</button>
 				{/if}
+			</div>
+			<div class="flex flex-wrap gap-2">
+				<button
+					class="btn btn-outline btn-primary gap-2"
+					on:click={() => (isSocialShareModalOpen = true)}
+				>
+					<ImageOutline class="w-5 h-5" aria-hidden="true" />
+					<span>{$t('social_share.share_externally')}</span>
+				</button>
+				<button
+					class="btn btn-outline btn-primary gap-2"
+					on:click={exportCollectionPdf}
+					disabled={isExportingPdf}
+					aria-busy={isExportingPdf}
+				>
+					<FilePdfBox class="w-5 h-5" aria-hidden="true" />
+					<span>{isExportingPdf ? '...' : $t('adventures.export_pdf')}</span>
+				</button>
 			</div>
 		</div>
 
@@ -1609,5 +1671,18 @@
 	<title>
 		{collection && collection.name ? `${collection.name}` : 'Collection'}
 	</title>
-	<meta name="description" content="View collection details and locations" />
+	{#if data.shareMeta}
+		<meta name="description" content={data.shareMeta.description} />
+		<meta property="og:title" content={data.shareMeta.title} />
+		<meta property="og:description" content={data.shareMeta.description} />
+		<meta property="og:image" content={data.shareMeta.imageUrl} />
+		<meta property="og:url" content={data.shareMeta.pageUrl} />
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={data.shareMeta.title} />
+		<meta name="twitter:description" content={data.shareMeta.description} />
+		<meta name="twitter:image" content={data.shareMeta.imageUrl} />
+	{:else}
+		<meta name="description" content="View collection details and locations" />
+	{/if}
 </svelte:head>

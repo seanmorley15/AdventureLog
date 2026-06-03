@@ -2,6 +2,7 @@ import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type { Location, Collection } from '$lib/types';
+import { buildCollectionShareMeta } from '$lib/shareMeta.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
@@ -17,7 +18,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure: null
-			}
+			},
+			shareMeta: null
 		};
 	} else {
 		let collection = (await request.json()) as Collection;
@@ -25,7 +27,8 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure: collection
-			}
+			},
+			shareMeta: buildCollectionShareMeta(collection, event.url.origin)
 		};
 	}
 }) satisfies PageServerLoad;

@@ -25,6 +25,7 @@ from adventures.models import (
     CollectionItineraryItem
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
+from adventures.utils.geo import make_point, point_to_lat_lon
 
 User = get_user_model()
 
@@ -364,8 +365,12 @@ class BackupViewSet(viewsets.ViewSet):
                 'price_currency': str(location.price.currency) if location.price else None,
                 'link': location.link,
                 'is_public': location.is_public,
-                'longitude': str(location.longitude) if location.longitude else None,
-                'latitude': str(location.latitude) if location.latitude else None,
+                'longitude': (
+                    str(lon) if (lon := point_to_lat_lon(location.coordinates)[1]) is not None else None
+                ),
+                'latitude': (
+                    str(lat) if (lat := point_to_lat_lon(location.coordinates)[0]) is not None else None
+                ),
                 'city': location.city_id,
                 'region': location.region_id,
                 'country': location.country_id,
@@ -410,10 +415,26 @@ class BackupViewSet(viewsets.ViewSet):
                         'max_speed': float(activity.max_speed) if activity.max_speed else None,
                         'average_cadence': float(activity.average_cadence) if activity.average_cadence else None,
                         'calories': float(activity.calories) if activity.calories else None,
-                        'start_lat': float(activity.start_lat) if activity.start_lat else None,
-                        'start_lng': float(activity.start_lng) if activity.start_lng else None,
-                        'end_lat': float(activity.end_lat) if activity.end_lat else None,
-                        'end_lng': float(activity.end_lng) if activity.end_lng else None,
+                        'start_lat': (
+                            float(s_lat)
+                            if (s_lat := point_to_lat_lon(activity.start_point)[0]) is not None
+                            else None
+                        ),
+                        'start_lng': (
+                            float(s_lng)
+                            if (s_lng := point_to_lat_lon(activity.start_point)[1]) is not None
+                            else None
+                        ),
+                        'end_lat': (
+                            float(e_lat)
+                            if (e_lat := point_to_lat_lon(activity.end_point)[0]) is not None
+                            else None
+                        ),
+                        'end_lng': (
+                            float(e_lng)
+                            if (e_lng := point_to_lat_lon(activity.end_point)[1]) is not None
+                            else None
+                        ),
                         'external_service_id': activity.external_service_id,
                         'trail_name': activity.trail.name if activity.trail else None,  # Link by trail name
                         'gpx_filename': None
@@ -482,10 +503,26 @@ class BackupViewSet(viewsets.ViewSet):
                 'end_timezone': transport.end_timezone,
                 'flight_number': transport.flight_number,
                 'from_location': transport.from_location,
-                'origin_latitude': str(transport.origin_latitude) if transport.origin_latitude else None,
-                'origin_longitude': str(transport.origin_longitude) if transport.origin_longitude else None,
-                'destination_latitude': str(transport.destination_latitude) if transport.destination_latitude else None,
-                'destination_longitude': str(transport.destination_longitude) if transport.destination_longitude else None,
+                'origin_latitude': (
+                    str(o_lat)
+                    if (o_lat := point_to_lat_lon(transport.origin)[0]) is not None
+                    else None
+                ),
+                'origin_longitude': (
+                    str(o_lon)
+                    if (o_lon := point_to_lat_lon(transport.origin)[1]) is not None
+                    else None
+                ),
+                'destination_latitude': (
+                    str(d_lat)
+                    if (d_lat := point_to_lat_lon(transport.destination)[0]) is not None
+                    else None
+                ),
+                'destination_longitude': (
+                    str(d_lon)
+                    if (d_lon := point_to_lat_lon(transport.destination)[1]) is not None
+                    else None
+                ),
                 'to_location': transport.to_location,
                 'is_public': transport.is_public,
                 'collection_export_id': collection_export_id,
@@ -574,8 +611,12 @@ class BackupViewSet(viewsets.ViewSet):
                 'reservation_number': lodging.reservation_number,
                 'price': str(lodging.price.amount) if lodging.price else None,
                 'price_currency': str(lodging.price.currency) if lodging.price else None,
-                'latitude': str(lodging.latitude) if lodging.latitude else None,
-                'longitude': str(lodging.longitude) if lodging.longitude else None,
+                'latitude': (
+                    str(lat) if (lat := point_to_lat_lon(lodging.coordinates)[0]) is not None else None
+                ),
+                'longitude': (
+                    str(lon) if (lon := point_to_lat_lon(lodging.coordinates)[1]) is not None else None
+                ),
                 'location': lodging.location,
                 'is_public': lodging.is_public,
                 'collection_export_id': collection_export_id,
@@ -1032,8 +1073,7 @@ class BackupViewSet(viewsets.ViewSet):
                 price_currency=location_price_currency,
                 link=adv_data.get('link'),
                 is_public=adv_data.get('is_public', False),
-                longitude=adv_data.get('longitude'),
-                latitude=adv_data.get('latitude'),
+                coordinates=make_point(adv_data.get('longitude'), adv_data.get('latitude')),
                 city=city,
                 region=region,
                 country=country,
@@ -1107,10 +1147,12 @@ class BackupViewSet(viewsets.ViewSet):
                         max_speed=activity_data.get('max_speed'),
                         average_cadence=activity_data.get('average_cadence'),
                         calories=activity_data.get('calories'),
-                        start_lat=activity_data.get('start_lat'),
-                        start_lng=activity_data.get('start_lng'),
-                        end_lat=activity_data.get('end_lat'),
-                        end_lng=activity_data.get('end_lng'),
+                        start_point=make_point(
+                            activity_data.get('start_lng'), activity_data.get('start_lat')
+                        ),
+                        end_point=make_point(
+                            activity_data.get('end_lng'), activity_data.get('end_lat')
+                        ),
                         external_service_id=activity_data.get('external_service_id')
                     )
                     
@@ -1198,10 +1240,13 @@ class BackupViewSet(viewsets.ViewSet):
                 end_timezone=trans_data.get('end_timezone'),
                 flight_number=trans_data.get('flight_number'),
                 from_location=trans_data.get('from_location'),
-                origin_latitude=trans_data.get('origin_latitude'),
-                origin_longitude=trans_data.get('origin_longitude'),
-                destination_latitude=trans_data.get('destination_latitude'),
-                destination_longitude=trans_data.get('destination_longitude'),
+                origin=make_point(
+                    trans_data.get('origin_longitude'), trans_data.get('origin_latitude')
+                ),
+                destination=make_point(
+                    trans_data.get('destination_longitude'),
+                    trans_data.get('destination_latitude'),
+                ),
                 to_location=trans_data.get('to_location'),
                 is_public=trans_data.get('is_public', False),
                 collection=collection
@@ -1331,8 +1376,7 @@ class BackupViewSet(viewsets.ViewSet):
                 reservation_number=lodg_data.get('reservation_number'),
                 price=lodging_price,
                 price_currency=lodging_price_currency,
-                latitude=lodg_data.get('latitude'),
-                longitude=lodg_data.get('longitude'),
+                coordinates=make_point(lodg_data.get('longitude'), lodg_data.get('latitude')),
                 location=lodg_data.get('location'),
                 is_public=lodg_data.get('is_public', False),
                 collection=collection

@@ -28,8 +28,10 @@
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
 	import CollectionItineraryPlanner from '../collections/CollectionItineraryPlanner.svelte';
+	import SocialShareModal from '../SocialShareModal.svelte';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Globe from '~icons/mdi/globe';
+	import ImageOutline from '~icons/mdi/image-outline';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 
 	export let type: string | null = null;
@@ -41,6 +43,7 @@
 
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
+	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
 	let isActionsMenuOpen: boolean = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
@@ -274,6 +277,16 @@
 	/>
 {/if}
 
+{#if isSocialShareModalOpen}
+	<SocialShareModal
+		type="location"
+		id={adventure.id}
+		name={adventure.name}
+		isPublic={!!adventure.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
+{/if}
+
 <div
 	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="location-card"
@@ -486,6 +499,21 @@
 												<LinkIcon class="w-4 h-4" />
 												{$t('adventures.copy_link')}
 											{/if}
+										</button>
+									</li>
+								{/if}
+
+								{#if adventure.user && adventure.user.uuid == user?.uuid}
+									<li>
+										<button
+											on:click={() => {
+												isActionsMenuOpen = false;
+												isSocialShareModalOpen = true;
+											}}
+											class="flex items-center gap-2"
+										>
+											<ImageOutline class="w-4 h-4" />
+											{$t('social_share.share_externally')}
 										</button>
 									</li>
 								{/if}

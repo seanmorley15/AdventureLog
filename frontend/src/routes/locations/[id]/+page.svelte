@@ -29,6 +29,8 @@
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
+	import ImageOutline from '~icons/mdi/image-outline';
+	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -57,6 +59,7 @@
 
 	let notFound: boolean = false;
 	let isEditModalOpen: boolean = false;
+	let isSocialShareModalOpen: boolean = false;
 	let adventure_images: { image: string; adventure: AdditionalLocation | null }[] = [];
 	let modalInitialIndex: number = 0;
 	let isImageModalOpen: boolean = false;
@@ -210,6 +213,16 @@
 	/>
 {/if}
 
+{#if isSocialShareModalOpen && adventure}
+	<SocialShareModal
+		type="location"
+		id={adventure.id}
+		name={adventure.name}
+		isPublic={!!adventure.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
+{/if}
+
 {#if !adventure && !notFound}
 	<div class="hero min-h-screen overflow-x-hidden">
 		<div class="hero-content">
@@ -242,6 +255,18 @@
 						>
 							<ClipboardList class="w-5 h-5" />
 							{$t('adventures.edit_location')}
+						</button>
+					</li>
+					<li>
+						<button
+							on:click={() => {
+								isFabMenuOpen = false;
+								isSocialShareModalOpen = true;
+							}}
+							class="flex items-center gap-2"
+						>
+							<ImageOutline class="w-5 h-5" />
+							{$t('social_share.share_externally')}
 						</button>
 					</li>
 					<li>
@@ -984,5 +1009,18 @@
 			? `${data.props.adventure.name}`
 			: 'Adventure'}
 	</title>
-	<meta name="description" content="Explore the world and add countries to your visited list!" />
+	{#if data.shareMeta}
+		<meta name="description" content={data.shareMeta.description} />
+		<meta property="og:title" content={data.shareMeta.title} />
+		<meta property="og:description" content={data.shareMeta.description} />
+		<meta property="og:image" content={data.shareMeta.imageUrl} />
+		<meta property="og:url" content={data.shareMeta.pageUrl} />
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={data.shareMeta.title} />
+		<meta name="twitter:description" content={data.shareMeta.description} />
+		<meta name="twitter:image" content={data.shareMeta.imageUrl} />
+	{:else}
+		<meta name="description" content="Explore the world and add countries to your visited list!" />
+	{/if}
 </svelte:head>
