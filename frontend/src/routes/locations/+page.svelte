@@ -9,9 +9,8 @@
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
-	import Filter from '~icons/mdi/filter-variant';
 	import Sort from '~icons/mdi/sort';
-	import MapMarker from '~icons/mdi/map-marker';
+	import Filter from '~icons/mdi/filter-variant';
 	import Eye from '~icons/mdi/eye';
 	import Calendar from '~icons/mdi/calendar';
 	import Tag from '~icons/mdi/tag';
@@ -22,13 +21,13 @@
 
 	let adventures: Location[] = data.props.adventures || [];
 
+	let orderBy = data.props.order_by || 'updated_at';
+	let orderDirection = data.props.order_direction || 'asc';
 	let currentSort = {
-		order_by: '',
-		order: '',
 		visited: true,
 		planned: true,
-		includeCollections: true,
-		is_visited: 'all'
+		includeCollections: data.props.include_collections !== 'false',
+		is_visited: data.props.is_visited || 'all'
 	};
 
 	let locationBeingUpdated: Location | undefined = undefined;
@@ -76,37 +75,64 @@
 		syncTypesFromUrl();
 	});
 
-	function doApplyFilters() {
-		if (typeof window === 'undefined') {
-			return;
-		}
+	type LocationFilterOverrides = {
+		types?: string;
+		is_visited?: string;
+		order_by?: string;
+		order_direction?: string;
+		include_collections?: boolean;
+	};
 
-		const form = document.getElementById('location-filters-form') as HTMLFormElement | null;
-		if (!form) {
-			return;
-		}
+	async function applyLocationFilters(overrides: LocationFilterOverrides = {}) {
+		const url = new URL($page.url);
 
-		const formData = new FormData(form);
-		const url = new URL(window.location.href);
-		url.search = '';
+		const types = overrides.types !== undefined ? overrides.types : typeString;
+		const nextIsVisited =
+			overrides.is_visited !== undefined ? overrides.is_visited : currentSort.is_visited;
+		const nextOrderBy = overrides.order_by !== undefined ? overrides.order_by : orderBy;
+		const nextOrderDirection =
+			overrides.order_direction !== undefined ? overrides.order_direction : orderDirection;
+		const nextIncludeCollections =
+			overrides.include_collections !== undefined
+				? overrides.include_collections
+				: currentSort.includeCollections;
 
-		for (const [key, value] of formData.entries()) {
-			if (value !== '') {
-				url.searchParams.append(key, value.toString());
-			}
-		}
-
-		if (!url.searchParams.get('types')) {
+		if (types) {
+			url.searchParams.set('types', types);
+		} else {
 			url.searchParams.delete('types');
 		}
 
+		url.searchParams.set('is_visited', nextIsVisited);
+		url.searchParams.set('order_by', nextOrderBy);
+		url.searchParams.set('order_direction', nextOrderDirection);
+		url.searchParams.set('include_collections', nextIncludeCollections ? 'true' : 'false');
 		url.searchParams.delete('page');
-		goto(url.toString(), { invalidateAll: true, replaceState: true });
+
+		currentPage = 1;
+		currentSort.is_visited = nextIsVisited;
+		orderBy = nextOrderBy;
+		orderDirection = nextOrderDirection;
+		currentSort.includeCollections = nextIncludeCollections;
+
+		await goto(url.toString(), { invalidateAll: true, replaceState: true });
 	}
 
 	async function onCategoryChange() {
 		await tick();
-		doApplyFilters();
+		await applyLocationFilters({ types: typeString });
+	}
+
+	async function updateVisitedFilter(value: string) {
+		await applyLocationFilters({ is_visited: value });
+	}
+
+	async function updateSort(by: string, direction: string) {
+		await applyLocationFilters({ order_by: by, order_direction: direction });
+	}
+
+	async function updateIncludeCollections(checked: boolean) {
+		await applyLocationFilters({ include_collections: checked });
 	}
 
 	$: {
@@ -129,8 +155,8 @@
 
 	$: {
 		let url = new URL($page.url);
-		currentSort.order_by = url.searchParams.get('order_by') || 'updated_at';
-		currentSort.order = url.searchParams.get('order_direction') || 'asc';
+		orderBy = url.searchParams.get('order_by') || 'updated_at';
+		orderDirection = url.searchParams.get('order_direction') || 'asc';
 
 		if (url.searchParams.get('planned') === 'on') {
 			currentSort.planned = true;
@@ -156,9 +182,7 @@
 			currentSort.planned = true;
 		}
 
-		if (url.searchParams.get('is_visited')) {
-			currentSort.is_visited = url.searchParams.get('is_visited') || 'all';
-		}
+		currentSort.is_visited = url.searchParams.get('is_visited') || 'all';
 	}
 
 	function handleChangePage(pageNumber: number) {
@@ -329,43 +353,89 @@
 		</div>
 
 		<!-- Sidebar -->
-		<div class="drawer-side z-30">
+		<div class="drawer-side z-50">
 			<label for="my-drawer" class="drawer-overlay"></label>
 			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
 				<div class="p-6">
-					<!-- Sidebar Header -->
 					<div class="flex items-center gap-3 mb-8">
 						<div class="p-2 bg-primary/10 rounded-lg">
-							<Filter class="w-6 h-6 text-primary" />
+							<Sort class="w-6 h-6 text-primary" />
 						</div>
 						<h2 class="text-xl font-bold">{$t('adventures.filters_and_sort')}</h2>
 					</div>
 
-					<!-- Filters Form -->
-					<form
-						id="location-filters-form"
-						on:submit|preventDefault={doApplyFilters}
-						class="space-y-6"
-					>
-						<input type="hidden" name="types" value={typeString} />
-						<!-- Category Filter -->
-						<div class="card bg-base-200/50 p-4">
+					<div class="location-filters">
+						<div class="card bg-base-200/50 p-4 mb-4">
 							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 								<Tag class="w-5 h-5" />
-								Categories
+								{$t('adventures.categories')}
 							</h3>
 							<CategoryFilterDropdown bind:types={typeString} on:change={onCategoryChange} />
 							<button
 								type="button"
 								on:click={() => (is_category_modal_open = true)}
-								class="btn btn-outline btn-sm w-full mt-3 gap-2"
+								class="btn btn-outline btn-sm w-full mt-2 gap-2"
 							>
 								<Tag class="w-4 h-4" />
 								{$t('categories.manage_categories')}
 							</button>
 						</div>
 
-						<!-- Sort Options -->
+						<div class="card bg-base-200/50 p-4 mb-4">
+							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+								<Filter class="w-5 h-5" />
+								{$t('adventures.status_filter')}
+							</h3>
+
+							<div class="space-y-3">
+								<div class="space-y-1">
+									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<input
+											type="radio"
+											name="is_visited"
+											class="radio radio-primary radio-sm"
+											checked={currentSort.is_visited === 'all'}
+											on:change={() => updateVisitedFilter('all')}
+										/>
+										<span class="label-text">{$t('adventures.all')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<input
+											type="radio"
+											name="is_visited"
+											class="radio radio-primary radio-sm"
+											checked={currentSort.is_visited === 'true'}
+											on:change={() => updateVisitedFilter('true')}
+										/>
+										<span class="label-text">{$t('adventures.visited')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+										<input
+											type="radio"
+											name="is_visited"
+											class="radio radio-primary radio-sm"
+											checked={currentSort.is_visited === 'false'}
+											on:change={() => updateVisitedFilter('false')}
+										/>
+										<span class="label-text">{$t('adventures.not_visited')}</span>
+									</label>
+								</div>
+
+								<div class="divider my-0"></div>
+
+								<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+									<input
+										type="checkbox"
+										id="include_collections"
+										class="checkbox checkbox-primary checkbox-sm"
+										checked={currentSort.includeCollections}
+										on:change={(e) => updateIncludeCollections(e.currentTarget.checked)}
+									/>
+									<span class="label-text">{$t('adventures.collection_locations')}</span>
+								</label>
+							</div>
+						</div>
+
 						<div class="card bg-base-200/50 p-4">
 							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 								<Sort class="w-5 h-5" />
@@ -379,24 +449,24 @@
 										<span class="label-text font-medium">{$t('adventures.order_direction')}</span>
 									</label>
 									<div class="join w-full">
-										<input
-											class="join-item btn btn-sm flex-1"
-											type="radio"
-											name="order_direction"
-											id="asc"
-											value="asc"
-											aria-label={$t('adventures.ascending')}
-											checked={currentSort.order === 'asc'}
-										/>
-										<input
-											class="join-item btn btn-sm flex-1"
-											type="radio"
-											name="order_direction"
-											id="desc"
-											value="desc"
-											aria-label={$t('adventures.descending')}
-											checked={currentSort.order === 'desc'}
-										/>
+										<button
+											type="button"
+											class="join-item btn btn-sm flex-1 {orderDirection === 'asc'
+												? 'btn-active'
+												: ''}"
+											on:click={() => updateSort(orderBy, 'asc')}
+										>
+											{$t('adventures.ascending')}
+										</button>
+										<button
+											type="button"
+											class="join-item btn btn-sm flex-1 {orderDirection === 'desc'
+												? 'btn-active'
+												: ''}"
+											on:click={() => updateSort(orderBy, 'desc')}
+										>
+											{$t('adventures.descending')}
+										</button>
 									</div>
 								</div>
 
@@ -405,132 +475,65 @@
 									<label class="label">
 										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 									</label>
-									<div class="grid grid-cols-2 gap-2">
+									<div class="space-y-1">
 										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
+											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
+											on:click={() => updateSort('updated_at', orderDirection)}
 										>
 											<input
 												type="radio"
 												name="order_by"
-												value="updated_at"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'updated_at'}
+												class="radio radio-primary radio-sm pointer-events-none"
+												checked={orderBy === 'updated_at'}
+												tabindex="-1"
 											/>
-											<span class="label-text text-sm">{$t('adventures.updated')}</span>
+											<span class="label-text">{$t('adventures.updated')}</span>
 										</label>
 										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
+											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
+											on:click={() => updateSort('name', orderDirection)}
 										>
 											<input
 												type="radio"
 												name="order_by"
-												value="name"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'name'}
+												class="radio radio-primary radio-sm pointer-events-none"
+												checked={orderBy === 'name'}
+												tabindex="-1"
 											/>
-											<span class="label-text text-sm">{$t('adventures.name')}</span>
+											<span class="label-text">{$t('adventures.name')}</span>
 										</label>
 										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
+											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
+											on:click={() => updateSort('date', orderDirection)}
 										>
 											<input
 												type="radio"
 												name="order_by"
-												value="date"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'date'}
+												class="radio radio-primary radio-sm pointer-events-none"
+												checked={orderBy === 'date'}
+												tabindex="-1"
 											/>
-											<span class="label-text text-sm">{$t('adventures.date')}</span>
+											<span class="label-text">{$t('adventures.date')}</span>
 										</label>
 										<label
-											class="label cursor-pointer justify-start gap-2 p-2 rounded-lg hover:bg-base-300/50"
+											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
+											on:click={() => updateSort('rating', orderDirection)}
 										>
 											<input
 												type="radio"
 												name="order_by"
-												value="rating"
-												class="radio radio-primary radio-sm"
-												checked={currentSort.order_by === 'rating'}
+												class="radio radio-primary radio-sm pointer-events-none"
+												checked={orderBy === 'rating'}
+												tabindex="-1"
 											/>
-											<span class="label-text text-sm">{$t('adventures.rating')}</span>
+											<span class="label-text">{$t('adventures.rating')}</span>
 										</label>
 									</div>
 								</div>
 							</div>
 						</div>
 
-						<!-- Visit Status Filter -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<Eye class="w-5 h-5" />
-								{$t('adventures.visited')}
-							</h3>
-							<div class="join w-full">
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="all"
-									value="all"
-									aria-label={$t('adventures.all')}
-									checked={currentSort.is_visited === 'all'}
-								/>
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="true"
-									value="true"
-									aria-label={$t('adventures.visited')}
-									checked={currentSort.is_visited === 'true'}
-								/>
-								<input
-									class="join-item btn btn-sm flex-1"
-									type="radio"
-									name="is_visited"
-									id="false"
-									value="false"
-									aria-label={$t('adventures.not_visited')}
-									checked={currentSort.is_visited === 'false'}
-								/>
-							</div>
-						</div>
-
-						<!-- Sources Filter -->
-						<div class="card bg-base-200/50 p-4">
-							<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
-								<MapMarker class="w-5 h-5" />
-								{$t('adventures.sources')}
-							</h3>
-							<label class="label cursor-pointer justify-start gap-3">
-								<input
-									type="checkbox"
-									name="include_collections"
-									id="include_collections"
-									class="checkbox checkbox-primary"
-									checked={currentSort.includeCollections}
-									on:change={(e) => {
-										const target = e.currentTarget;
-										currentSort.includeCollections = target.checked;
-										// Immediately update the URL to reflect the change
-										let url = new URL(window.location.href);
-										if (target.checked) {
-											url.searchParams.set('include_collections', 'true');
-										} else {
-											url.searchParams.set('include_collections', 'false');
-										}
-										goto(url.toString(), { invalidateAll: true, replaceState: true });
-									}}
-								/>
-								<span class="label-text">{$t('adventures.collection_locations')}</span>
-							</label>
-						</div>
-
-						<button type="submit" class="btn btn-primary w-full gap-2">
-							<Filter class="w-4 h-4" />
-							{$t('adventures.filter')}
-						</button>
-					</form>
+					</div>
 				</div>
 			</div>
 		</div>

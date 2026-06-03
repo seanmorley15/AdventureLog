@@ -68,6 +68,7 @@
 
 	import Navbar from '$lib/components/Navbar.svelte';
 	import Toast from '$lib/components/Toast.svelte';
+	import CommandPalette from '$lib/components/search/CommandPalette.svelte';
 	import 'tailwindcss/tailwind.css';
 
 	// Create a promise that resolves when the locale is ready
@@ -78,6 +79,9 @@
 	<!-- You can add a loading indicator here if needed -->
 {:then}
 	<Navbar {data} />
+	{#if data.user}
+		<CommandPalette />
+	{/if}
 	<Toast />
 	<slot />
 {/await}

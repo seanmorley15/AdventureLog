@@ -54,7 +54,11 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventures,
-				count
+				count,
+				order_by,
+				order_direction,
+				is_visited,
+				include_collections
 			}
 		};
 	}
