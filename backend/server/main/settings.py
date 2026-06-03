@@ -368,7 +368,7 @@ LOGGING = {
         },
         'file': {
             'class': 'logging.FileHandler',
-            'filename': 'scheduler.log',
+            'filename': getenv('LOG_FILE', 'scheduler.log'),
         },
     },
     'root': {
