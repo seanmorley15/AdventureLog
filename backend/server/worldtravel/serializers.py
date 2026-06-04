@@ -5,16 +5,14 @@ from adventures.utils.geo import point_to_lat_lon
 
 
 class ReadOnlyLatLonMixin:
-    latitude = serializers.SerializerMethodField()
-    longitude = serializers.SerializerMethodField()
+    """Expose a model `coordinates` PointField as read-only latitude/longitude."""
 
-    def get_latitude(self, obj):
-        lat, _ = point_to_lat_lon(obj.coordinates)
-        return lat
-
-    def get_longitude(self, obj):
-        _, lon = point_to_lat_lon(obj.coordinates)
-        return lon
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        lat, lon = point_to_lat_lon(instance.coordinates)
+        data['latitude'] = lat
+        data['longitude'] = lon
+        return data
 
 
 class CountrySerializer(ReadOnlyLatLonMixin, serializers.ModelSerializer):

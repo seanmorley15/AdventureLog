@@ -14,12 +14,51 @@ import type {
 	User
 } from './types';
 
-export function getRandomQuote() {
-	const quotes = inspirationalQuotes.quotes;
-	const randomIndex = Math.floor(Math.random() * quotes.length);
-	let quoteString = quotes[randomIndex].quote;
-	let authorString = quotes[randomIndex].author;
-	return { quote: quoteString, author: authorString };
+type Quote = { quote: string; author: string };
+type MonthDay = { month: number; day: number };
+type SeasonalQuotePeriod = {
+	start: MonthDay;
+	end: MonthDay;
+	spansYearEnd?: boolean;
+	quotes: Quote[];
+};
+
+function monthDayOrdinal(month: number, day: number): number {
+	return month * 100 + day;
+}
+
+function isDateInSeasonalRange(
+	today: Date,
+	start: MonthDay,
+	end: MonthDay,
+	spansYearEnd = false
+): boolean {
+	const todayOrdinal = monthDayOrdinal(today.getMonth() + 1, today.getDate());
+	const startOrdinal = monthDayOrdinal(start.month, start.day);
+	const endOrdinal = monthDayOrdinal(end.month, end.day);
+
+	if (spansYearEnd) {
+		return todayOrdinal >= startOrdinal || todayOrdinal <= endOrdinal;
+	}
+
+	return todayOrdinal >= startOrdinal && todayOrdinal <= endOrdinal;
+}
+
+function pickRandomQuote(quotes: Quote[]): Quote {
+	return quotes[Math.floor(Math.random() * quotes.length)];
+}
+
+export function getRandomQuote(): Quote {
+	const today = new Date();
+	const seasonalPeriods = (inspirationalQuotes as { seasonal?: SeasonalQuotePeriod[] }).seasonal ?? [];
+
+	for (const period of seasonalPeriods) {
+		if (isDateInSeasonalRange(today, period.start, period.end, period.spansYearEnd)) {
+			return pickRandomQuote(period.quotes);
+		}
+	}
+
+	return pickRandomQuote(inspirationalQuotes.quotes);
 }
 
 export function getFlag(size: number, country: string) {

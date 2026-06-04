@@ -276,7 +276,7 @@
 						bind:value={query}
 						type="text"
 						class="input input-ghost w-full focus:outline-none pl-2 pr-0 text-lg h-12 min-h-0 bg-transparent"
-						placeholder={$t('search.palette_placeholder')}
+						placeholder={$t('navbar.search')}
 						autocomplete="off"
 						spellcheck="false"
 					/>

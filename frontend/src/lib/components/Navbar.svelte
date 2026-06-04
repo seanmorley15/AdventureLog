@@ -240,7 +240,7 @@
 			>
 				<Magnify class="w-4 h-4 opacity-60 shrink-0" />
 				<span class="grow text-base-content/50 truncate">
-					{query || $t('search.palette_placeholder')}
+					{query || $t('navbar.search')}
 				</span>
 				<kbd class="kbd kbd-xs opacity-60">{modifierHint}</kbd>
 			</button>

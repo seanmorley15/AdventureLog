@@ -392,7 +392,7 @@ def _search_cities(user: User, term: str, fetch_limit: int) -> tuple[list[Search
                 id=city.id,
                 title=city.name,
                 subtitle=f'{city.region.name}, {city.region.country.name}' if city.region_id else '',
-                url=f'/worldtravel/{country_code}/{city.region_id}/{city.id}' if country_code else '/worldtravel',
+                url=f'/worldtravel/{country_code}/{city.region_id}' if country_code and city.region_id else '/worldtravel',
                 score=ICONTAINS_SCORE,
                 meta={'is_visited': city.id in visited_city_ids},
                 sort_key=_sort_key(ICONTAINS_SCORE, entity_type='city', label=city.name),
