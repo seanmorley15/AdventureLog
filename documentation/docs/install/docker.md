@@ -67,6 +67,7 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 ## Optional Configuration
 
 - [Disable Registration](../configuration/disable_registration.md)
+- [Rootless mode](../configuration/rootless_mode.md)
 - [Google Maps](../configuration/google_maps_integration.md)
 - [Email Configuration](../configuration/email.md)
 - [Immich Integration](../configuration/immich_integration.md)
