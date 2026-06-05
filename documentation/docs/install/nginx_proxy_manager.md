@@ -43,6 +43,6 @@ networks:
    - **Domain Names**: Enter the domain name where you will be hosting AdventureLog.
    - **Scheme**: `http`
    - **Forward Hostname/IP**: `adventurelog-backend` The name of the AdventureLog **backend** container in the `docker-compose.yml` file.
-   - **Forward Port**: `80` This is the internal port of the AdventureLog **backend** container so you will not need to change it even if you change the external port.
+   - **Forward Port**: `8080` This is the internal port of the AdventureLog **backend** container so you will not need to change it even if you change the external port.
 
 This will allow you to access AdventureLog using the domain name you specified in the Nginx Proxy Manager configuration.

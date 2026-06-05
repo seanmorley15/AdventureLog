@@ -25,7 +25,7 @@ services:
     restart: unless-stopped
     env_file: .env
     ports:
-      - "${BACKEND_PORT:-8016}:80"
+      - "${BACKEND_PORT:-8016}:8080"
     depends_on:
       - db
     volumes:
