@@ -45,7 +45,7 @@ jobs:
       - name: Start AIO stack
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
-          docker compose -f docker-compose.aio.yml up -d --wait
+          docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
 
       - name: Wait for health endpoint
         run: |
@@ -56,10 +56,12 @@ jobs:
             sleep 5
           done
           echo "Health check failed"
-          docker compose -f docker-compose.aio.yml ps
-          docker compose -f docker-compose.aio.yml logs
+          docker compose --env-file .env.aio -f docker-compose.aio.yml ps
+          docker compose --env-file .env.aio -f docker-compose.aio.yml logs
           exit 1
 
       - name: Tear down
         if: always()
-        run: docker compose -f docker-compose.aio.yml down -v
+        run: |
+          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
+          docker compose --env-file .env.aio -f docker-compose.aio.yml down -v
