@@ -265,10 +265,12 @@
 			}
 
 			// Normalize results -> ensure google_maps_uri exists when backend returns google_maps_url
-			results = (data.results || []).map((r: RecommendationResult & { google_maps_url?: string }) => ({
-				...r,
-				google_maps_uri: r.google_maps_uri || r.google_maps_url || null
-			}));
+			results = (data.results || []).map(
+				(r: RecommendationResult & { google_maps_url?: string }) => ({
+					...r,
+					google_maps_uri: r.google_maps_uri || r.google_maps_url || null
+				})
+			);
 
 			// Update map if we have results
 			if (results.length > 0) {

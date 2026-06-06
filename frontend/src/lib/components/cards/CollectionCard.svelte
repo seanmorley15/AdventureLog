@@ -28,10 +28,10 @@
 	import Check from '~icons/mdi/check';
 	import MapMarker from '~icons/mdi/map-marker-multiple';
 	import LinkIcon from '~icons/mdi/link';
-import DownloadIcon from '~icons/mdi/download';
-import FilePdfBox from '~icons/mdi/file-pdf-box';
-import ContentCopy from '~icons/mdi/content-copy';
-import ImageOutline from '~icons/mdi/image-outline';
+	import DownloadIcon from '~icons/mdi/download';
+	import FilePdfBox from '~icons/mdi/file-pdf-box';
+	import ContentCopy from '~icons/mdi/content-copy';
+	import ImageOutline from '~icons/mdi/image-outline';
 
 	const dispatch = createEventDispatcher();
 
@@ -116,7 +116,10 @@ import ImageOutline from '~icons/mdi/image-outline';
 	}
 
 	async function exportCollectionPdf() {
-		const safeName = String(collection.name).replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'collection';
+		const safeName =
+			String(collection.name)
+				.replace(/[^\w\s-]/g, '')
+				.replace(/\s+/g, '_') || 'collection';
 		await downloadCollectionBlob(
 			`/api/collections/${collection.id}/export-pdf/`,
 			`${safeName}_itinerary.pdf`,

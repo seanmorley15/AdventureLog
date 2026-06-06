@@ -12,11 +12,7 @@
 	}>();
 
 	function normalizeTag(tag: string): string {
-		return tag
-			.trim()
-			.toLowerCase()
-			.replace(/-/g, '_')
-			.replace(/\s+/g, '_');
+		return tag.trim().toLowerCase().replace(/-/g, '_').replace(/\s+/g, '_');
 	}
 
 	function recommendationEmoji(rec: Recommendation): string {

@@ -50,7 +50,8 @@ function pickRandomQuote(quotes: Quote[]): Quote {
 
 export function getRandomQuote(): Quote {
 	const today = new Date();
-	const seasonalPeriods = (inspirationalQuotes as { seasonal?: SeasonalQuotePeriod[] }).seasonal ?? [];
+	const seasonalPeriods =
+		(inspirationalQuotes as { seasonal?: SeasonalQuotePeriod[] }).seasonal ?? [];
 
 	for (const period of seasonalPeriods) {
 		if (isDateInSeasonalRange(today, period.start, period.end, period.spansYearEnd)) {

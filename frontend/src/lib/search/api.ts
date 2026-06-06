@@ -7,7 +7,10 @@ export type SearchAppOptions = {
 	signal?: AbortSignal;
 };
 
-export async function searchApp(query: string, options: SearchAppOptions = {}): Promise<SearchResponse> {
+export async function searchApp(
+	query: string,
+	options: SearchAppOptions = {}
+): Promise<SearchResponse> {
 	const params = new URLSearchParams({ q: query });
 
 	if (options.types?.length) {

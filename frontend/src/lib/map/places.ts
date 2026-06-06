@@ -1,4 +1,9 @@
-import type { Location, PlaceSearchResult, Recommendation, RecommendationResponse } from '$lib/types';
+import type {
+	Location,
+	PlaceSearchResult,
+	Recommendation,
+	RecommendationResponse
+} from '$lib/types';
 
 export type PlacesSearchMeta = {
 	provider_used?: string;
@@ -263,9 +268,7 @@ export async function fetchRecommendations(params: {
 	return data;
 }
 
-export async function refetchPins(): Promise<
-	import('$lib/types').Pin[]
-> {
+export async function refetchPins(): Promise<import('$lib/types').Pin[]> {
 	const response = await fetch('/api/locations/pins/');
 	if (!response.ok) return [];
 	return response.json();

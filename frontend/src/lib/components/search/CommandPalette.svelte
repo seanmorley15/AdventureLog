@@ -127,9 +127,7 @@
 
 	async function scrollSelectedIntoView() {
 		await tick();
-		const selectedEl = scrollContainer?.querySelector(
-			`[data-palette-index="${selectedIndex}"]`
-		);
+		const selectedEl = scrollContainer?.querySelector(`[data-palette-index="${selectedIndex}"]`);
 		selectedEl?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 	}
 
@@ -302,7 +300,10 @@
 				</div>
 			</div>
 
-			<div bind:this={scrollContainer} class="max-h-[min(420px,50vh)] overflow-y-auto px-3 py-3 scroll-smooth bg-base-100/20">
+			<div
+				bind:this={scrollContainer}
+				class="max-h-[min(420px,50vh)] overflow-y-auto px-3 py-3 scroll-smooth bg-base-100/20"
+			>
 				{#if loading}
 					<div class="px-4 py-10 text-center text-base-content/60">
 						<span class="loading loading-spinner loading-md"></span>
@@ -337,7 +338,9 @@
 						{/each}
 
 						{#if recentSearches.length > 0}
-							<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-3">
+							<p
+								class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-3"
+							>
 								{$t('search.recent_searches')}
 							</p>
 							{#each recentSearches as recentQuery}
@@ -367,7 +370,9 @@
 					{#each paletteItems as item, index}
 						{#if item.kind === 'action'}
 							{#if index === 0 && showActions}
-								<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2">
+								<p
+									class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2"
+								>
 									{$t('search.quick_actions')}
 								</p>
 							{/if}
@@ -387,16 +392,22 @@
 								</div>
 								<div class="min-w-0 flex-1">
 									<div class="font-medium leading-snug">{$t(item.action.titleKey)}</div>
-									<p class="text-sm opacity-70 leading-snug mt-0.5">{$t(item.action.subtitleKey)}</p>
+									<p class="text-sm opacity-70 leading-snug mt-0.5">
+										{$t(item.action.subtitleKey)}
+									</p>
 								</div>
 							</button>
 						{:else if item.kind === 'hit'}
 							{#if index === filteredActions.length && showActions && filteredActions.length > 0}
-								<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-1">
+								<p
+									class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-1"
+								>
 									{$t('search.results_heading')}
 								</p>
 							{:else if index === 0 && !showActions}
-								<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2">
+								<p
+									class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2"
+								>
 									{$t('search.results_heading')}
 								</p>
 							{/if}
@@ -410,11 +421,15 @@
 							</div>
 						{:else}
 							{#if index === filteredActions.length && showActions && filteredActions.length > 0}
-								<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-1">
+								<p
+									class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2 mt-1"
+								>
 									{$t('search.places_heading')}
 								</p>
 							{:else if index === 0}
-								<p class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2">
+								<p
+									class="text-xs font-semibold uppercase tracking-wide text-base-content/50 px-3 py-2"
+								>
 									{$t('search.places_heading')}
 								</p>
 							{/if}
@@ -461,19 +476,32 @@
 				{/if}
 			</div>
 
-			<div class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-sm">
+			<div
+				class="border-t border-base-content/10 px-5 py-3.5 flex items-center justify-between gap-3 bg-base-100/35 backdrop-blur-sm"
+			>
 				<div class="text-xs text-base-content/60 hidden sm:flex gap-3">
 					<span>↑↓ {$t('search.navigate')}</span>
 					<span>↵ {$t('search.open')}</span>
 					<span>Tab {$t('search.switch_tab')}</span>
 				</div>
-				{#if activeTab === 'adventures' && query.trim().length >= 2 && !query.trim().startsWith('>')}
-					<button type="button" class="btn btn-primary btn-sm ml-auto" on:click={handleSeeAllResults}>
+				{#if activeTab === 'adventures' && query.trim().length >= 2 && !query
+						.trim()
+						.startsWith('>')}
+					<button
+						type="button"
+						class="btn btn-primary btn-sm ml-auto"
+						on:click={handleSeeAllResults}
+					>
 						{$t('search.see_all_results')}
 					</button>
 				{/if}
 			</div>
 		</div>
-		<button type="button" class="modal-backdrop bg-black/30 backdrop-blur-[2px]" aria-label={$t('search.close')} on:click={closeDialog}></button>
+		<button
+			type="button"
+			class="modal-backdrop bg-black/30 backdrop-blur-[2px]"
+			aria-label={$t('search.close')}
+			on:click={closeDialog}
+		></button>
 	</dialog>
 {/if}

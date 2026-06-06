@@ -20,10 +20,7 @@
 	import { getActivityColor, normalizeBasemapType } from '$lib';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import {
-		bindMapViewportCenterSync,
-		getMapViewportCenter
-	} from '$lib/map/viewportCenter';
+	import { bindMapViewportCenterSync, getMapViewportCenter } from '$lib/map/viewportCenter';
 	import {
 		enrichPlace,
 		fetchRecommendations,
@@ -31,7 +28,7 @@
 		placeToQuickAddPayload,
 		quickAddLocation,
 		recommendationToLocationPrefill,
-		recommendationToQuickAddPayload,
+		recommendationToQuickAddPayload
 	} from '$lib/map/places';
 
 	import MapIcon from '~icons/mdi/map';
@@ -172,9 +169,11 @@
 		props: { visitStatus?: string; id?: string } | null,
 		isSelected: boolean
 	): string {
-		if (isSelected) return 'ring-2 ring-primary ring-offset-2 ' + getVisitStatusClass(
-			(props?.visitStatus as VisitStatus) || 'planned'
-		);
+		if (isSelected)
+			return (
+				'ring-2 ring-primary ring-offset-2 ' +
+				getVisitStatusClass((props?.visitStatus as VisitStatus) || 'planned')
+			);
 		return getVisitStatusClass((props?.visitStatus as VisitStatus) || 'planned');
 	}
 
@@ -262,8 +261,7 @@
 	$: selectedRecId = selected?.kind === 'recommendation' ? selected.item.id : null;
 	$: selectedPin = selectedPinId ? pins.find((p) => p.id === selectedPinId) : null;
 
-	$: showLodgingAdd =
-		selected?.kind === 'recommendation' && recCategory === 'lodging';
+	$: showLodgingAdd = selected?.kind === 'recommendation' && recCategory === 'lodging';
 
 	async function fetchAllActivities() {
 		const response = await fetch('/api/activities');
@@ -749,7 +747,10 @@
 	<div class="drawer lg:drawer-open h-full w-full">
 		<input id="map-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
-		<div class="drawer-content relative h-full min-h-0 w-full overflow-hidden" bind:this={mapViewportEl}>
+		<div
+			class="drawer-content relative h-full min-h-0 w-full overflow-hidden"
+			bind:this={mapViewportEl}
+		>
 			<!-- Map (behind UI); pointer-events pass through toolbar gaps -->
 			<div class="absolute inset-0 z-0">
 				<FullMap
@@ -778,7 +779,10 @@
 					>
 						{#if markerProps && markerLngLat}
 							{@const isSelected = selectedPinId === markerProps.id}
-							<Marker lngLat={markerLngLat} class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}>
+							<Marker
+								lngLat={markerLngLat}
+								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
+							>
 								<div class="relative z-[1000]">
 									<div
 										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 hover:scale-110 {markerClassResolver(
@@ -891,7 +895,8 @@
 							class="bg-base-100/95 backdrop-blur-md rounded-full px-5 py-2.5 shadow-lg border border-base-300/80 flex items-center gap-3"
 						>
 							<span class="loading loading-spinner loading-sm text-primary"></span>
-							<span class="text-sm font-medium text-base-content">{$t('map.searching_nearby')}</span>
+							<span class="text-sm font-medium text-base-content">{$t('map.searching_nearby')}</span
+							>
 						</div>
 					{:else if showSearchThisArea}
 						<button
@@ -1144,9 +1149,7 @@
 											bind:checked={showRegions}
 											class="checkbox checkbox-accent checkbox-sm"
 										/>
-										<span class="label-text"
-											>{$t('profile.visited_regions')} ({totalRegions})</span
-										>
+										<span class="label-text">{$t('profile.visited_regions')} ({totalRegions})</span>
 									</label>
 									<label class="label cursor-pointer justify-start gap-3 py-1">
 										<input

@@ -177,7 +177,11 @@
 						>
 							{$t('navbar.search')}
 						</h3>
-						<button type="button" class="btn btn-outline w-full justify-start gap-2" on:click={() => openSearch()}>
+						<button
+							type="button"
+							class="btn btn-outline w-full justify-start gap-2"
+							on:click={() => openSearch()}
+						>
 							<Magnify class="h-4 w-4 opacity-70" />
 							{$t('search.open_palette')}
 						</button>

@@ -4,7 +4,13 @@
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { basemapOptions, normalizeBasemapType } from '$lib';
-	import type { ImmichIntegration, WandererIntegration, User, APIKey, MediaUsage } from '$lib/types.js';
+	import type {
+		ImmichIntegration,
+		WandererIntegration,
+		User,
+		APIKey,
+		MediaUsage
+	} from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
@@ -427,10 +433,7 @@
 			const responseData = await res.json();
 
 			if (res.ok) {
-				addToast(
-					'success',
-					$t(isUpdate ? 'wanderer.updated' : 'wanderer.connected')
-				);
+				addToast('success', $t(isUpdate ? 'wanderer.updated' : 'wanderer.connected'));
 				wandererIntegration = responseData;
 				wandererEnabled = true;
 				newWandererIntegration = { server_url: '', api_key: '', id: '' };

@@ -18,13 +18,15 @@
 	}
 
 	$: emojiIcon =
-		hit.type === 'location' && hit.meta?.category_icon
-			? String(hit.meta.category_icon)
-			: null;
+		hit.type === 'location' && hit.meta?.category_icon ? String(hit.meta.category_icon) : null;
 
 	$: rowClass = [
 		'w-full text-left flex items-center gap-3 transition-colors',
-		spotlight ? 'mx-2 px-3 py-2.5 rounded-xl' : compact ? 'px-4 py-2 rounded-lg' : 'px-4 py-3 rounded-lg',
+		spotlight
+			? 'mx-2 px-3 py-2.5 rounded-xl'
+			: compact
+				? 'px-4 py-2 rounded-lg'
+				: 'px-4 py-3 rounded-lg',
 		selected
 			? 'bg-primary text-primary-content'
 			: spotlight
@@ -33,11 +35,7 @@
 	].join(' ');
 </script>
 
-<button
-	type="button"
-	class={rowClass}
-	on:click={() => dispatch('select', hit)}
->
+<button type="button" class={rowClass} on:click={() => dispatch('select', hit)}>
 	<div
 		class="flex shrink-0 items-center justify-center rounded-xl"
 		class:h-10={spotlight}
@@ -54,7 +52,10 @@
 		{#if emojiIcon}
 			<span aria-hidden="true">{emojiIcon}</span>
 		{:else}
-			<svelte:component this={getSearchTypeIcon(hit.type)} class={spotlight ? 'w-5 h-5' : 'w-4 h-4'} />
+			<svelte:component
+				this={getSearchTypeIcon(hit.type)}
+				class={spotlight ? 'w-5 h-5' : 'w-4 h-4'}
+			/>
 		{/if}
 	</div>
 
@@ -86,7 +87,9 @@
 					<span class="badge badge-xs badge-success whitespace-nowrap">{$t('search.visited')}</span>
 				{/if}
 				{#if hit.meta?.is_shared}
-					<span class="badge badge-xs badge-info whitespace-nowrap">{$t('navbar.shared_with_me')}</span>
+					<span class="badge badge-xs badge-info whitespace-nowrap"
+						>{$t('navbar.shared_with_me')}</span
+					>
 				{/if}
 			</div>
 		</div>

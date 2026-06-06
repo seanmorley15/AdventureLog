@@ -239,8 +239,7 @@
 		modal.showModal();
 		isEditMode = Boolean(locationToEdit?.id);
 
-		const prefilledNew =
-			!isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
+		const prefilledNew = !isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
 
 		// Skip the quick start step if editing an existing location or prefilled create
 		if (!isEditMode && !prefilledNew) {

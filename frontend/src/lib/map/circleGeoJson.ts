@@ -4,7 +4,12 @@ type CircleFeature = {
 	properties: Record<string, never>;
 };
 
-export function circlePolygon(lng: number, lat: number, radiusMeters: number, steps = 64): CircleFeature {
+export function circlePolygon(
+	lng: number,
+	lat: number,
+	radiusMeters: number,
+	steps = 64
+): CircleFeature {
 	const coordinates: [number, number][] = [];
 	const latRad = (lat * Math.PI) / 180;
 	const metersPerDegLat = 110540;

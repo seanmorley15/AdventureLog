@@ -4,7 +4,7 @@ const MARKDOWN_PATTERNS: Array<[RegExp, string]> = [
 	[/#{1,6}\s*/g, ''],
 	[/\*\*([^*]+)\*\*/g, '$1'],
 	[/\*([^*]+)\*/g, '$1'],
-	[/`([^`]+)`/g, '$1'],
+	[/`([^`]+)`/g, '$1']
 ];
 
 export function stripMarkdown(value: string | null | undefined, maxLength = 200): string {
@@ -70,7 +70,7 @@ export function buildCollectionShareMeta(
 		title: collection.name,
 		description,
 		imageUrl: `${origin}/api/collections/${collection.id}/share-image/landscape/`,
-		pageUrl: `${origin}/collections/${collection.id}`,
+		pageUrl: `${origin}/collections/${collection.id}`
 	};
 }
 
@@ -110,6 +110,6 @@ export function buildLocationShareMeta(
 		title: location.name,
 		description,
 		imageUrl: `${origin}/api/locations/${location.id}/share-image/landscape/`,
-		pageUrl: `${origin}/locations/${location.id}`,
+		pageUrl: `${origin}/locations/${location.id}`
 	};
 }

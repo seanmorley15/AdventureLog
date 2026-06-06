@@ -89,7 +89,10 @@
 	}
 
 	function safeFilename(): string {
-		const safeName = String(name).replace(/[^\w\s-]/g, '').replace(/\s+/g, '_') || 'share';
+		const safeName =
+			String(name)
+				.replace(/[^\w\s-]/g, '')
+				.replace(/\s+/g, '_') || 'share';
 		return `${safeName}_${type}_${selectedAspect}.png`;
 	}
 
@@ -172,7 +175,11 @@
 					<p class="text-sm text-base-content/60">{$t('social_share.modal_desc')}</p>
 				</div>
 			</div>
-			<button class="btn btn-ghost btn-sm btn-square" on:click={close} aria-label={$t('about.close')}>
+			<button
+				class="btn btn-ghost btn-sm btn-square"
+				on:click={close}
+				aria-label={$t('about.close')}
+			>
 				<Clear class="w-5 h-5" />
 			</button>
 		</div>

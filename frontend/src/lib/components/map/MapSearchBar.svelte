@@ -39,18 +39,20 @@
 
 	$: myResults =
 		mode === 'my' && query.trim()
-			? filteredPins.filter((pin) => {
-					const q = query.toLowerCase().trim();
-					return (
-						pin.name?.toLowerCase().includes(q) ||
-						pin.category?.display_name?.toLowerCase().includes(q)
-					);
-				}).slice(0, 8)
+			? filteredPins
+					.filter((pin) => {
+						const q = query.toLowerCase().trim();
+						return (
+							pin.name?.toLowerCase().includes(q) ||
+							pin.category?.display_name?.toLowerCase().includes(q)
+						);
+					})
+					.slice(0, 8)
 			: [];
 
 	$: showDropdown = Boolean(
 		(mode === 'my' && myResults.length > 0 && query.trim().length > 0) ||
-			(mode === 'places' && (placeResults.length > 0 || isSearching || searchError))
+		(mode === 'places' && (placeResults.length > 0 || isSearching || searchError))
 	);
 
 	function handleModeChange(newMode: MapSearchMode) {
@@ -127,13 +129,16 @@
 				type="button"
 				role="tab"
 				aria-selected={mode === m.id}
-				class="btn btn-xs sm:btn-sm min-w-0 h-8 sm:h-9 px-1.5 sm:px-2 gap-0.5 sm:gap-1 {mode === m.id
+				class="btn btn-xs sm:btn-sm min-w-0 h-8 sm:h-9 px-1.5 sm:px-2 gap-0.5 sm:gap-1 {mode ===
+				m.id
 					? 'btn-primary'
 					: 'btn-ghost bg-base-100/80'}"
 				on:click={() => handleModeChange(m.id)}
 			>
 				<svelte:component this={m.icon} class="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-				<span class="truncate text-[10px] min-[380px]:text-[11px] sm:text-sm leading-none max-[379px]:sr-only">
+				<span
+					class="truncate text-[10px] min-[380px]:text-[11px] sm:text-sm leading-none max-[379px]:sr-only"
+				>
 					{$t(m.labelKey)}
 				</span>
 			</button>

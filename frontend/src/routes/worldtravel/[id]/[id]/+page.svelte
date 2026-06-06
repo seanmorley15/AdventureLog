@@ -149,7 +149,10 @@
 		return Number.isFinite(numeric) ? numeric : null;
 	}
 
-	function hasCoordinates(item: { latitude: number | string | null; longitude: number | string | null }) {
+	function hasCoordinates(item: {
+		latitude: number | string | null;
+		longitude: number | string | null;
+	}) {
 		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
 	}
 
@@ -242,10 +245,13 @@
 								</div>
 								<div>
 									<h1 class="text-3xl font-bold bg-clip-text text-primary">
-										{$t('worldtravel.cities_in')} {region?.name}
+										{$t('worldtravel.cities_in')}
+										{region?.name}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredCities.length} {$t('worldtravel.of')} {allCities.length}
+										{filteredCities.length}
+										{$t('worldtravel.of')}
+										{allCities.length}
 										{$t('worldtravel.cities')} ·
 										<span class="text-success">{visitedCount} {$t('adventures.visited')}</span>
 									</p>
@@ -269,11 +275,15 @@
 
 					{#if description}
 						<details class="mt-3 group">
-							<summary class="text-sm text-base-content/70 cursor-pointer hover:text-primary flex items-center gap-2 list-none">
+							<summary
+								class="text-sm text-base-content/70 cursor-pointer hover:text-primary flex items-center gap-2 list-none"
+							>
 								<Info class="w-4 h-4" />
 								{$t('worldtravel.about_region')}
 							</summary>
-							<p class="text-sm text-base-content/70 mt-2 pl-6 leading-relaxed max-h-32 overflow-y-auto">
+							<p
+								class="text-sm text-base-content/70 mt-2 pl-6 leading-relaxed max-h-32 overflow-y-auto"
+							>
 								{description}
 							</p>
 						</details>
@@ -357,7 +367,9 @@
 			{#if showMap && hasMappableCities}
 				<div class="container mx-auto px-6 py-4">
 					<div class="card bg-base-100 shadow-xl overflow-hidden">
-						<div class="flex items-center justify-between px-4 py-3 bg-base-200/50 border-b border-base-300">
+						<div
+							class="flex items-center justify-between px-4 py-3 bg-base-200/50 border-b border-base-300"
+						>
 							<span class="font-semibold flex items-center gap-2">
 								<Map class="w-5 h-5 text-primary" />
 								{$t('worldtravel.interactive_map')}

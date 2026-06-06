@@ -110,7 +110,12 @@
 		photoModalOpen = true;
 	}
 
-	function openLocationImages(images: ContentImage[], title: string, subtitle = '', startIndex = 0) {
+	function openLocationImages(
+		images: ContentImage[],
+		title: string,
+		subtitle = '',
+		startIndex = 0
+	) {
 		selectedPhotos = images;
 		photoTitle = title;
 		photoSubtitle = subtitle;
@@ -196,7 +201,7 @@
 					? recommendation?.id
 					: '';
 
-	$: selectionKey, (descriptionExpanded = false);
+	$: (selectionKey, (descriptionExpanded = false));
 
 	$: descriptionPlain = descriptionText?.trim() ? plainTextFromMarkdown(descriptionText) : '';
 	$: descriptionIsLong = descriptionPlain.length > DESCRIPTION_COLLAPSE_CHARS;
@@ -254,13 +259,9 @@
 				<div class="flex flex-wrap items-center gap-2">
 					{#if pinVisitStatus}
 						<div
-							class="badge badge-sm {pinVisitStatus === 'visited'
-								? 'badge-success'
-								: 'badge-info'}"
+							class="badge badge-sm {pinVisitStatus === 'visited' ? 'badge-success' : 'badge-info'}"
 						>
-							{pinVisitStatus === 'visited'
-								? $t('adventures.visited')
-								: $t('adventures.planned')}
+							{pinVisitStatus === 'visited' ? $t('adventures.visited') : $t('adventures.planned')}
 						</div>
 					{/if}
 					{#if pinCategoryIcon}
@@ -287,8 +288,7 @@
 					</div>
 					<span class="text-sm font-medium">{displayRating}</span>
 					{#if selectionKind === 'place' && place?.review_count}
-						<span class="text-xs text-base-content/60"
-							>({place.review_count.toLocaleString()})</span
+						<span class="text-xs text-base-content/60">({place.review_count.toLocaleString()})</span
 						>
 					{/if}
 					{#if selectionKind === 'recommendation' && recommendation?.review_count}

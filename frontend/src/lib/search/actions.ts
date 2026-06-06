@@ -81,7 +81,9 @@ export function filterQuickNavActions(query: string): QuickNavAction[] {
 		return quickNavActions;
 	}
 
-	const normalized = trimmed.startsWith('>') ? trimmed.slice(1).trim().toLowerCase() : trimmed.toLowerCase();
+	const normalized = trimmed.startsWith('>')
+		? trimmed.slice(1).trim().toLowerCase()
+		: trimmed.toLowerCase();
 	if (!normalized) {
 		return quickNavActions;
 	}

@@ -50,7 +50,9 @@
 <div class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors city-row">
 	<button
 		type="button"
-		class="btn btn-ghost btn-sm btn-square {visited ? 'text-success' : 'text-base-content/30 hover:text-success'}"
+		class="btn btn-ghost btn-sm btn-square {visited
+			? 'text-success'
+			: 'text-base-content/30 hover:text-success'}"
 		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
 		on:click={visited ? removeVisit : markVisited}
 	>

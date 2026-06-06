@@ -17,9 +17,7 @@
 				? 'complete'
 				: 'partial';
 	$: progressPct =
-		country.num_regions > 0
-			? Math.round((country.num_visits / country.num_regions) * 100)
-			: 0;
+		country.num_regions > 0 ? Math.round((country.num_visits / country.num_regions) * 100) : 0;
 
 	function nav() {
 		goto(`/worldtravel/${country.country_code}`);

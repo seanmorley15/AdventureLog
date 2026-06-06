@@ -113,27 +113,14 @@
 	>
 		{#if showBasemapSelector}
 			<div class="shrink-0 relative z-[60]">
-				<MapStyleSelector
-					bind:basemapType
-					dropdownClass="dropdown dropdown-end dropdown-bottom"
-				/>
+				<MapStyleSelector bind:basemapType dropdownClass="dropdown dropdown-end dropdown-bottom" />
 			</div>
 		{/if}
 
-		<button
-			type="button"
-			class={btnClass}
-			on:click={zoomIn}
-			aria-label={$t('map.zoom_in')}
-		>
+		<button type="button" class={btnClass} on:click={zoomIn} aria-label={$t('map.zoom_in')}>
 			<PlusIcon class="w-5 h-5" />
 		</button>
-		<button
-			type="button"
-			class={btnClass}
-			on:click={zoomOut}
-			aria-label={$t('map.zoom_out')}
-		>
+		<button type="button" class={btnClass} on:click={zoomOut} aria-label={$t('map.zoom_out')}>
 			<MinusIcon class="w-5 h-5" />
 		</button>
 		<button

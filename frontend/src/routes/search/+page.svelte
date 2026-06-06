@@ -145,7 +145,11 @@
 					</div>
 				</div>
 
-				<button type="button" class="btn btn-primary btn-sm lg:btn-md" on:click={() => openCommandPalette(query)}>
+				<button
+					type="button"
+					class="btn btn-primary btn-sm lg:btn-md"
+					on:click={() => openCommandPalette(query)}
+				>
 					{$t('search.open_palette')}
 				</button>
 			</div>
@@ -172,7 +176,11 @@
 		{#if data.error}
 			<div class="alert alert-error mb-6">
 				<span>{data.error}</span>
-				<button type="button" class="btn btn-sm" on:click={() => goto($page.url.pathname + $page.url.search)}>
+				<button
+					type="button"
+					class="btn btn-sm"
+					on:click={() => goto($page.url.pathname + $page.url.search)}
+				>
 					{$t('search.retry')}
 				</button>
 			</div>
@@ -204,13 +212,11 @@
 				</p>
 			</div>
 		{:else}
-			<div class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm divide-y divide-base-300">
+			<div
+				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm divide-y divide-base-300"
+			>
 				{#each results as hit (hit.type + hit.id)}
-					<SearchResultRow
-						{hit}
-						spotlight
-						on:select={() => goto(hit.url)}
-					/>
+					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />
 				{/each}
 			</div>
 

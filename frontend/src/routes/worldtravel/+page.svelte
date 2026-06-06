@@ -294,9 +294,12 @@
 										{$t('worldtravel.country_list')}
 									</h1>
 									<p class="text-sm text-base-content/60">
-										{filteredCountries.length} {$t('worldtravel.of')} {totalCountries}
+										{filteredCountries.length}
+										{$t('worldtravel.of')}
+										{totalCountries}
 										{$t('worldtravel.countries')} ·
-										<span class="text-success">{visitedCountries} {$t('adventures.visited')}</span> ·
+										<span class="text-success">{visitedCountries} {$t('adventures.visited')}</span>
+										·
 										<span class="text-warning">{partialCountries} {$t('worldtravel.partial')}</span>
 									</p>
 								</div>

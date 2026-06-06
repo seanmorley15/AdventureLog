@@ -891,7 +891,10 @@
 							{#if trailCount > 0}
 								<button
 									type="button"
-									class={filterChipClass(showTrails, 'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white')}
+									class={filterChipClass(
+										showTrails,
+										'bg-[#a855f7] hover:bg-[#9333ea] border-[#a855f7] text-white'
+									)}
 									on:click={() => (showTrails = !showTrails)}
 								>
 									🥾 {$t('adventures.trails')}
