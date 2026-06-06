@@ -1,0 +1,164 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: adventurelog-secret
+type: Opaque
+stringData:
+  postgres-password: change-me
+  django-secret-key: change-me-to-a-long-random-string
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: adventurelog-db-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: adventurelog-media-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: adventurelog-db
+spec:
+  serviceName: adventurelog-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adventurelog-db
+  template:
+    metadata:
+      labels:
+        app: adventurelog-db
+    spec:
+      containers:
+        - name: postgis
+          image: postgis/postgis:16-3.5
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_DB
+              value: database
+            - name: POSTGRES_USER
+              value: adventure
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: adventurelog-secret
+                  key: postgres-password
+          volumeMounts:
+            - name: db-data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "adventure", "-d", "database"]
+            initialDelaySeconds: 10
+            periodSeconds: 5
+      volumes:
+        - name: db-data
+          persistentVolumeClaim:
+            claimName: adventurelog-db-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adventurelog-db
+spec:
+  selector:
+    app: adventurelog-db
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adventurelog-aio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: adventurelog-aio
+  template:
+    metadata:
+      labels:
+        app: adventurelog-aio
+    spec:
+      containers:
+        - name: app
+          image: ghcr.io/seanmorley15/adventurelog-aio:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: adventurelog-secret
+                  key: postgres-password
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: adventurelog-secret
+                  key: django-secret-key
+            - name: PGHOST
+              value: adventurelog-db
+            - name: SITE_URL
+              value: https://adventurelog.example.com
+          volumeMounts:
+            - name: media
+              mountPath: /code/media
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+      volumes:
+        - name: media
+          persistentVolumeClaim:
+            claimName: adventurelog-media-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adventurelog-aio
+spec:
+  selector:
+    app: adventurelog-aio
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: adventurelog
+spec:
+  rules:
+    - host: adventurelog.example.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: adventurelog-aio
+                port:
+                  number: 80

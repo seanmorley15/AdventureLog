@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
 from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
 from cloud.views import CurrentUserView
-from .views import get_csrf_token, get_public_url, serve_protected_media
+from .views import get_csrf_token, get_public_url, health_check, serve_protected_media
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
@@ -42,6 +42,7 @@ urlpatterns = [
     path('auth/mobile-qr/', MobileQRCodeView.as_view(), name='mobile-qr-code'),
 
     path('csrf/', get_csrf_token, name='get_csrf_token'),
+    path('health/', health_check, name='health_check'),
     path('public-url/', get_public_url, name='get_public_url'),
 
     path("invitations/", include('invitations.urls', namespace='invitations')),

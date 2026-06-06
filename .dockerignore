@@ -1,0 +1,42 @@
+# Git and editor noise
+.git
+.gitignore
+.cursor
+.vscode
+**/.DS_Store
+
+# Local env and secrets
+.env
+.env.*
+!.env.example
+!.env.aio.example
+
+# Documentation and plans (not needed in runtime images)
+documentation/
+*.md
+!backend/server/**/*.md
+
+# Dev compose / k8s / scripts (not copied into app layers anyway, but keeps context small)
+backups/
+
+# Frontend — build stages install fresh; never bake local artifacts
+frontend/node_modules
+frontend/build
+frontend/.svelte-kit
+frontend/.env
+frontend/.env.*
+
+# Backend — media and generated files belong on volumes, not in images
+backend/server/media/
+backend/server/staticfiles/
+backend/server/scheduler.log
+backend/server/**/*.log
+backend/server/.venv/
+**/.venv/
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+
+# Root node_modules if present
+node_modules

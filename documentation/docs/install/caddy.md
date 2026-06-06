@@ -35,11 +35,10 @@ Since all ingress traffic to the AdventureLog containsers now travels through Ca
 ```yaml
   web:
     ports:
-      - "8016:80"
-…
+      - "8015:3000"
   server:
     ports:
-      - "8015:3000"
+      - "8016:80"
 ```
 
 That's it for the Docker compose changes. Of course, there are other methods to run Caddy which are equally valid.

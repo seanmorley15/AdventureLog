@@ -1,0 +1,65 @@
+name: Compose Smoke Test
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'backend/**'
+      - 'aio/**'
+      - 'frontend/**'
+      - 'docker/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/compose-smoke-test.yml'
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - 'backend/**'
+      - 'aio/**'
+      - 'frontend/**'
+      - 'docker/**'
+      - 'docker-compose*.yml'
+      - '.github/workflows/compose-smoke-test.yml'
+
+jobs:
+  aio-smoke:
+    name: AIO compose smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build AIO image
+        run: |
+          docker build -f docker/Dockerfile --target aio -t adventurelog-aio-smoke .
+          SIZE=$(docker image inspect adventurelog-aio-smoke --format='{{.Size}}')
+          echo "AIO image size: $(awk "BEGIN {printf \"%.1f MB\", ${SIZE}/1024/1024}")"
+
+      - name: Start AIO stack
+        run: |
+          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
+          docker compose -f docker-compose.aio.yml up -d --wait
+
+      - name: Wait for health endpoint
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8015/health; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Health check failed"
+          docker compose -f docker-compose.aio.yml ps
+          docker compose -f docker-compose.aio.yml logs
+          exit 1
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.aio.yml down -v

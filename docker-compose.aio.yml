@@ -1,0 +1,55 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: aio
+    image: ghcr.io/seanmorley15/adventurelog-aio:latest
+    container_name: adventurelog-aio
+    restart: unless-stopped
+    env_file: .env.aio
+    environment:
+      SITE_URL: ${SITE_URL:-http://localhost:8015}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.aio or your environment}
+      PGHOST: db
+      POSTGRES_DB: database
+      POSTGRES_USER: adventure
+      PORT: "3000"
+    ports:
+      - "${HOST_PORT:-8015}:80"
+    volumes:
+      - adventurelog_media:/code/media/
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:80/health')\""
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+
+  db:
+    image: postgis/postgis:16-3.5
+    container_name: adventurelog-aio-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: database
+      POSTGRES_USER: adventure
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.aio or your environment}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adventure -d database"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  postgres_data:
+  adventurelog_media:

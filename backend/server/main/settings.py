@@ -168,10 +168,20 @@ USE_L10N = True
 USE_TZ = True
 
 # ---------------------------------------------------------------------------
+# Site URL (optional convenience for reverse-proxy / single-domain setups)
+# ---------------------------------------------------------------------------
+SITE_URL = getenv('SITE_URL', '').strip().rstrip('/')
+
+
+def _env_explicit(name: str) -> bool:
+    return name in os.environ
+
+
+# ---------------------------------------------------------------------------
 # Frontend URL & Cookies
 # ---------------------------------------------------------------------------
 # Derive frontend URL from environment and configure cookie behavior.
-unParsedFrontenedUrl = getenv('FRONTEND_URL', 'http://localhost:3000')
+unParsedFrontenedUrl = getenv('FRONTEND_URL') or (SITE_URL if SITE_URL else 'http://localhost:3000')
 FRONTEND_URL = unParsedFrontenedUrl.translate(str.maketrans('', '', '\'"'))
 
 SESSION_COOKIE_SAMESITE = 'Lax'
@@ -397,8 +407,15 @@ else:
 # ---------------------------------------------------------------------------
 # CORS & CSRF
 # ---------------------------------------------------------------------------
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost').split(',') if origin.strip()]
+if _env_explicit('CSRF_TRUSTED_ORIGINS'):
+    _csrf_origins_raw = getenv('CSRF_TRUSTED_ORIGINS', 'http://localhost')
+elif SITE_URL:
+    _csrf_origins_raw = SITE_URL
+else:
+    _csrf_origins_raw = 'http://localhost'
+
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in _csrf_origins_raw.split(',') if origin.strip()]
+CSRF_TRUSTED_ORIGINS = CORS_ALLOWED_ORIGINS
 CORS_ALLOW_CREDENTIALS = True
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
@@ -434,7 +451,7 @@ LOGGING = {
 # ---------------------------------------------------------------------------
 # Public URLs & Third-Party Integrations
 # ---------------------------------------------------------------------------
-PUBLIC_URL = getenv('PUBLIC_URL', 'http://localhost:8000')
+PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
 # ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
 

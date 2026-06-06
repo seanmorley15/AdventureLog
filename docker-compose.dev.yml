@@ -12,11 +12,24 @@ services:
     ports:
       - "${FRONTEND_PORT:-8015}:3000"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     volumes:
       - ./frontend:/app
       - pnpm_store:/pnpm-store
     command: sh -c "mkdir -p /pnpm-store && chown -R node:node /pnpm-store && su node -c 'pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile && pnpm exec vite dev --host 0.0.0.0 --port 3000 --strictPort'"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
 
   db:
     image: postgis/postgis:16-3.5
@@ -25,6 +38,16 @@ services:
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-adventure} -d ${POSTGRES_DB:-database}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   server:
     build: ./backend/
@@ -39,7 +62,8 @@ services:
     ports:
       - "${BACKEND_PORT:-8016}:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend/server:/code
       - adventurelog_media:/code/media/
@@ -52,6 +76,16 @@ services:
         python manage.py createsuperuser --noinput --username \"$$DJANGO_SUPERUSER_USERNAME\" --email \"$$DJANGO_SUPERUSER_EMAIL\" || true;
       fi;
       python manage.py runserver 0.0.0.0:8000"
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/csrf/')\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
 
 volumes:
   postgres_data:

@@ -1,3 +1,7 @@
+# DEPRECATED: This legacy example colocates frontend, backend, and database in one pod.
+# Use `k8s/base/` for a production-oriented layout (separate PostGIS StatefulSet + AIO Deployment).
+# See documentation/docs/install/kustomize.md
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -30,14 +34,14 @@ spec:
             - containerPort: 3000
           env:
             - name: PUBLIC_SERVER_URL
-              value: "http://internally-and-externally.reachable.io:80"
+              value: "http://server:8000"
             - name: ORIGIN
               value: "http://url-typed-into-browser.io:80"
             - name: BODY_SIZE_LIMIT
               value: "Infinity"
 
         - name: adventure-db
-          image: postgis/postgis:15-3.3
+          image: postgis/postgis:16-3.5
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
@@ -82,21 +86,19 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: adventurelog-secret
-                  key: adventure-postgres-password
+                  key: adventure-django-secret-key
             - name: PUBLIC_URL
-              value: "http://internally-and-externally.reachable.io:80" # Match the outward port, used for the creation of image urls
+              value: "http://internally-and-externally.reachable.io:80"
             - name: FRONTEND_URL
               value: "http://url-typed-into-browser.io:80"
             - name: CSRF_TRUSTED_ORIGINS
-              value: "http://url-typed-into-browser.io:80, http://internally-and-externally.reachable.io:80"
+              value: "http://url-typed-into-browser.io:80,http://internally-and-externally.reachable.io:80"
             - name: DJANGO_ADMIN_USERNAME
-              value: "admin"
-            - name: DJANGO_ADMIN_PASSWORD
               value: "admin"
             - name: DJANGO_ADMIN_EMAIL
               value: "admin@example.com"
             - name: DEBUG
-              value: "True"
+              value: "False"
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -129,7 +131,6 @@ spec:
       port: 8000
       targetPort: 8000
 ---
-# If you aren't automatically provisioning PVCs (i.e. with Longhorn, you'll need to also create the PV's)
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

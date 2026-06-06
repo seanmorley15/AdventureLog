@@ -1,0 +1,14 @@
+name: Build and push release images
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-images.yml
+    with:
+      tag: ${{ github.event.release.tag_name }}
+      filter_paths: false
+      include_latest_tag: true
+    secrets: inherit

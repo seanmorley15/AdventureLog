@@ -1,12 +1,42 @@
 # Updating
 
-Updating AdventureLog when using docker can be quite easy. Run the following commands to pull the latest version and restart the containers. Make sure you backup your instance before updating just in case!
+Updating AdventureLog when using Docker is straightforward. **Back up your instance before updating.**
 
-Note: Make sure you are in the same directory as your `docker-compose.yml` file.
+### Option 1: Re-run the installer (management menu)
 
 ```bash
+curl -sSL https://get.adventurelog.app | bash
+```
+
+Choose **Update to latest images** (optionally with backup).
+
+### Option 2: deploy.sh (cron-safe)
+
+Make sure you are in the same directory as your compose file.
+
+```bash
+bash deploy.sh --backup
+bash deploy.sh --logs   # optional: follow container logs after deploy
+```
+
+For AIO installs, pass the compose file explicitly or rely on auto-detection when only `.env.aio` exists:
+
+```bash
+COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
+```
+
+### Option 3: Manual
+
+```bash
+bash scripts/backup.sh
 docker compose pull
-docker compose up -d
+docker compose up -d --wait
+```
+
+To restore from a backup directory:
+
+```bash
+bash scripts/restore.sh backups/YYYYMMDD-HHMMSS
 ```
 
 ## Updating the Region Data

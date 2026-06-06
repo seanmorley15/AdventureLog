@@ -1,15 +1,14 @@
-version: "3.9"
-
 services:
   traefik:
     image: traefik:v2.11.42
+    restart: unless-stopped
     command:
-      - "--api.insecure=true" # Enable Traefik dashboard (remove in production)
       - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com" # Replace with your email
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL in .env}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -17,60 +16,76 @@ services:
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
       - "traefik-letsencrypt:/letsencrypt"
-    labels:
-      - "traefik.enable=true"
 
   db:
-    image: postgis/postgis:15-3.3
+    image: postgis/postgis:16-3.5
+    container_name: adventurelog-traefik-db
     restart: unless-stopped
-    environment:
-      POSTGRES_DB: database
-      POSTGRES_USER: adventure
-      POSTGRES_PASSWORD: your_postgres_password # Replace with the actual password
+    env_file: .env
     volumes:
       - postgres-data:/var/lib/postgresql/data/
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-adventure} -d ${POSTGRES_DB:-database}"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   web:
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     restart: unless-stopped
-    environment:
-      PUBLIC_SERVER_URL: "http://server:8000"
-      BODY_SIZE_LIMIT: "100000"
+    env_file: .env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
-      - "traefik.http.routers.adventurelogweb.rule=Host(`yourdomain.com`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))" # Replace with your domain
+      - "traefik.http.routers.adventurelogweb.rule=Host(`${TRAEFIK_DOMAIN:?Set TRAEFIK_DOMAIN in .env}`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
       - "traefik.http.routers.adventurelogweb.tls=true"
       - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt"
     depends_on:
-      - server
+      server:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     restart: unless-stopped
-    environment:
-      PGHOST: "db"
-      PGDATABASE: "database"
-      PGUSER: "adventure"
-      PGPASSWORD: your_postgres_password # Replace with the actual password
-      SECRET_KEY: your_secret_key # Replace with the actual secret key
-      DJANGO_ADMIN_USERNAME: "admin"
-      DJANGO_ADMIN_PASSWORD: your_admin_password # Replace with the actual admin password
-      DJANGO_ADMIN_EMAIL: "adventurelog-admin@yourdomain.com" # Replace with your email
-      PUBLIC_URL: "https://yourdomain.com" # Replace with your domain
-      CSRF_TRUSTED_ORIGINS: "https://yourdomain.com" # Replace with your domain
-      DEBUG: "false"
-      FRONTEND_URL: "https://yourdomain.com" # Replace with your domain
+    env_file: .env
     volumes:
       - adventurelog-media:/code/media
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogserver.entrypoints=websecure"
-      - "traefik.http.routers.adventurelogserver.rule=Host(`yourdomain.com`) && (PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))" # Replace with your domain
+      - "traefik.http.routers.adventurelogserver.rule=Host(`${TRAEFIK_DOMAIN}`) && (PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
       - "traefik.http.routers.adventurelogserver.tls=true"
       - "traefik.http.routers.adventurelogserver.tls.certresolver=letsencrypt"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:80/health/')\""
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
 
 volumes:
   postgres-data:

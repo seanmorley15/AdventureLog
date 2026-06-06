@@ -14,6 +14,14 @@ def get_csrf_token(request):
 def get_public_url(request):
     return JsonResponse({'PUBLIC_URL': getenv('PUBLIC_URL')})
 
+def health_check(request):
+    from django.db import connection
+    try:
+        connection.ensure_connection()
+        return JsonResponse({'ok': True, 'db': 'connected'})
+    except Exception:
+        return JsonResponse({'ok': False, 'db': 'disconnected'}, status=503)
+
 protected_paths = ['images/', 'attachments/']
 
 def _redirect_storage(path):

@@ -2,6 +2,15 @@
 
 AdventureLog can be installed in a variety of ways, depending on your platform or preference.
 
+## Which setup should I use?
+
+| Your situation | Recommended path |
+| -------------- | ---------------- |
+| New homelab / quick install | [Quick start installer](quick_start.md) — AIO by default, interactive setup |
+| Full env control, split containers, or custom integrations | [Standard Docker](docker.md) — full `.env.example` (also available in installer advanced mode) |
+| Split domains or path-based reverse proxy (Traefik, NPM, Caddy) | Standard Docker + [reverse proxy docs](#advanced--alternative-setups) |
+| Kubernetes cluster | [Kubernetes + Kustomize](kustomize.md) — see `k8s/base/` |
+
 ## 📦 Docker Quick Start
 
 ::: tip Quick Start Script
@@ -12,7 +21,8 @@ Perfect for Docker beginners.
 
 ## 🐳 Popular Installation Methods
 
-- [Docker](docker.md) — Simple containerized setup
+- [All-in-One Docker (AIO)](aio.md) — Single container, one port, minimal config
+- [Docker](docker.md) — Standard multi-container setup
 - [Proxmox LXC](proxmox_lxc.md) — Lightweight virtual environment
 - [Synology NAS](synology_nas.md) — Self-host on your home NAS
 - [Kubernetes + Kustomize](kustomize.md) — Advanced, scalable deployment
