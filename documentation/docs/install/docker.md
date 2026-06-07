@@ -1,10 +1,10 @@
-# Docker 🐋
+# Standard Docker
 
-Docker is the preferred way to run AdventureLog on your local machine. It is a lightweight containerization technology that allows you to run applications in isolated environments called containers.
+Run AdventureLog as three containers: SvelteKit frontend, Django backend, and PostGIS database. This layout gives full control over environment variables and is the best fit for reverse proxies and custom integrations.
 
-> **Looking for the simplest setup?** See the [All-in-One (AIO)](aio.md) guide — one container, one port, two environment variables.
-
-> **Note**: This guide mainly focuses on installation with a Linux-based host machine, but the steps are similar for other operating systems.
+> **Looking for the simplest setup?** See [All-in-One Docker (AIO)](aio.md) — one container, one port, two required env vars.
+>
+> **Full env reference:** [Environment Variables](../configuration/environment_variables.md)
 
 ## Prerequisites
 
@@ -52,7 +52,7 @@ bash scripts/validate-env.sh
 
 ## Configuration
 
-The `.env` file contains all the configuration settings for your AdventureLog instance. Here’s a breakdown of each section:
+The `.env` file contains all configuration for your instance. Below are the most important variables — see [Environment Variables](../configuration/environment_variables.md) for the complete reference.
 
 ### 🌐 Frontend (web)
 
@@ -95,12 +95,21 @@ The `.env` file contains all the configuration settings for your AdventureLog in
 - [Immich Integration](../configuration/immich_integration.md)
 - [Umami Analytics](../configuration/analytics.md)
 
-## Running the Containers
+## Running the containers
 
-Once you've configured `.env`, you can start AdventureLog with:
+Validate and start:
 
 ```bash
-docker compose up -d
+bash scripts/validate-env.sh
+docker compose --env-file .env -f docker-compose.yml up -d --wait
 ```
 
-Enjoy using AdventureLog! 🎉
+Open **http://localhost:8015** (or your configured `ORIGIN` / `SITE_URL`).
+
+Default admin login: `admin` / `admin` — change this after first login.
+
+## Next steps
+
+- [Operations & Maintenance](../configuration/operations.md) — backups, updates, management menu
+- [Reverse proxy guides](getting_started.md#reverse-proxy) — HTTPS on a custom domain
+- [Configuration](../configuration/environment_variables.md) — integrations and advanced settings

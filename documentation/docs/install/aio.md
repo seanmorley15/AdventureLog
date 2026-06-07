@@ -105,6 +105,9 @@ docker compose --env-file .env.aio -f docker-compose.aio.yml build
 
 See [`docker/README.md`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/README.md) for all build targets.
 
-## Optional settings
+## Operations
 
-Advanced options (S3 media, OAuth, email, etc.) can still be passed as environment variables on the `app` service in `docker-compose.aio.yml`. See the full [Docker configuration](docker.md) reference for available variables.
+- [Operations & Maintenance](../configuration/operations.md) — backups, updates, management menu
+- [Environment Variables](../configuration/environment_variables.md) — full reference including optional S3, OAuth, and email settings
+
+Advanced options can be added to `.env.aio` or the `environment` block in `docker-compose.aio.yml`.

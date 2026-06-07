@@ -1,8 +1,8 @@
 # About AdventureLog
 
-Starting from a simple idea of tracking travel locations, AdventureLog has grown into a full-fledged travel companion. With AdventureLog, you can log your adventures, keep track of where you've been on the world map, plan your next trip collaboratively, and share your experiences with friends and family. **AdventureLog is the ultimate travel companion for the modern-day explorer**.
+AdventureLog is a self-hosted, open-source travel companion for tracking where you have been, planning where you are going, and sharing trips with the people you travel with.
 
-## Features
+## Core features
 
 - **Track Your Adventures** 🌍: Log your adventures and keep track of where you've been on the world map.
   - Locations can store a variety of information, including the location, date, and description.
@@ -32,4 +32,4 @@ Hi, I'm [Sean Morley](https://seanmorley.com), the creator of AdventureLog. I'm 
 
 I hope you enjoy using AdventureLog as much as I enjoy creating it! If you have any questions, feedback, or suggestions, feel free to reach out to me via the email address listed on my website. I'm always happy to hear from users and help in any way I can. Thank you for using AdventureLog, and happy travels! 🌍
 
-If you want to check out the origins of AdventureLog and the timeline, process, and story of its development, check out the [Development Timeline](/docs/changelogs/development_timeline.md).
+If you want to check out the origins of AdventureLog and the timeline, process, and story of its development, check out the [Development Timeline](../changelogs/development_timeline.md).

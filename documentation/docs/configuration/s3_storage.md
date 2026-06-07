@@ -1,6 +1,6 @@
-## S3-compatible media storage
+# S3 Media Storage
 
-This document explains how to enable optional S3-compatible object storage for AdventureLog's user-uploaded media (images, files). Use S3 when you want scalable, durable media hosting separate from the application container.
+Store AdventureLog user uploads (images, attachments) on S3-compatible object storage instead of the local filesystem. Supported providers include AWS S3, Cloudflare R2, DigitalOcean Spaces, and MinIO.
 
 ### Recommendation
 

@@ -1,11 +1,42 @@
-# AdventureLog Admin Panel
+# Admin Panel
 
-The AdventureLog Admin Panel, powered by Django, is a web-based interface that allows administrators to manage objects in the AdventureLog database. The Admin Panel is accessible at the `/admin` endpoint of the AdventureLog server. Example: `https://al-server.yourdomain.com/admin`.
+The AdventureLog admin panel is powered by Django and is available at `/admin` on your backend URL. In AIO installs, that is the same domain as the frontend (for example `https://adventurelog.example.com/admin`).
 
-Features of the Admin Panel include:
+## Access requirements
 
-- **User Management**: Administrators can view and manage user accounts, including creating new users, updating user information, and deleting users.
-- **Adventure Management**: Administrators can view and manage adventures, including creating new adventures, updating adventure information, and deleting adventures.
-- **Security**: The Admin Panel enforces access control to ensure that only authorized administrators can access and manage the database. This means that only users with the `is_staff` flag set to `True` can access the Admin Panel.
+Only users with the **staff** flag (`is_staff=True`) can access the admin panel. The first-boot superuser created from `DJANGO_ADMIN_*` environment variables has staff access by default.
 
-Note: the `CSRF_TRUSTED_ORIGINS` setting in your `docker-compose.yml` file must include the domain of the server. For example, if your server is hosted at `https://al-server.yourdomain.com`, you should add `al-server.yourdomain.com` to the `CSRF_TRUSTED_ORIGINS` setting.
+## What you can manage
+
+| Section | Description |
+| ------- | ----------- |
+| **Users** | Create, edit, and deactivate user accounts |
+| **Locations** | View and manage location records in the database |
+| **Social applications** | Configure OAuth/OIDC providers (GitHub, OIDC, etc.) |
+| **Invitations** | Send invite links for private instances |
+| **World data** | Countries, regions, and cities reference data |
+
+## CSRF configuration
+
+If the admin panel loads but form submissions fail, verify `CSRF_TRUSTED_ORIGINS` in your `.env` or `.env.aio` includes your public domain:
+
+```env
+CSRF_TRUSTED_ORIGINS=https://adventurelog.example.com
+```
+
+When using a single domain, set `SITE_URL` instead and the origins are derived automatically. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).
+
+## Social auth setup
+
+OAuth and OIDC providers are configured in the admin panel under **Social applications** and **Social accounts**. Step-by-step guides:
+
+- [Social Auth overview](../configuration/social_auth.md)
+- [GitHub](../configuration/social_auth/github.md)
+- [Authentik](../configuration/social_auth/authentik.md)
+- [Pocket ID](../configuration/social_auth/pocket_id.md)
+- [OpenID Connect](../configuration/social_auth/oidc.md)
+
+## Related guides
+
+- [Invite a User](invite_user.md)
+- [Disable Registration](../configuration/disable_registration.md)

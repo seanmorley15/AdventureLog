@@ -1,9 +1,9 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: frontend
+    # build:
+    #   context: .
+    #   dockerfile: docker/Dockerfile
+    #   target: frontend
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
@@ -45,11 +45,11 @@ services:
       start_period: 10s
 
   server:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: backend
-    image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    # build:
+    #   context: .
+    #   dockerfile: docker/Dockerfile
+    #   target: backend
+    # image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: .env

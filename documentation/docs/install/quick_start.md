@@ -1,47 +1,48 @@
-# 🚀 Quick Start Install
+# Quick Start Installer
 
-Install **AdventureLog** in seconds using our automated installer. The script defaults to the **All-in-One (AIO)** setup — one URL, one port, minimal configuration.
+Install AdventureLog in seconds with the official curl installer. It defaults to the **All-in-One (AIO)** layout — one URL, one port, minimal configuration — and includes a management menu for updates and backups.
 
-## 🧪 One-Liner Install
+## One-line install
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash
 ```
 
-This will:
+## What the installer does
 
-- Check dependencies (Docker, Docker Compose, RAM, architecture)
-- Detect ARM hosts and configure a compatible PostGIS image automatically
-- Set up the `./adventurelog` project directory
-- Download `docker-compose.aio.yml`, `.env.aio`, and management scripts
-- Walk you through core and optional configuration (S3, email, integrations, etc.)
-- Start AdventureLog and wait for the health check
+1. Checks dependencies (Docker, Compose v2, RAM, CPU architecture)
+2. Detects ARM hosts and configures a compatible PostGIS image automatically
+3. Creates the `./adventurelog` project directory (configurable via `INSTALL_DIR`)
+4. Downloads `docker-compose.aio.yml` or `docker-compose.yml`, env files, and management scripts
+5. Walks you through site URL, admin credentials, and optional features (S3, email, integrations)
+6. Starts containers and waits for the `/health` endpoint
+7. Saves credentials to `credentials.txt` when generated
 
-## ✅ Requirements
+## Requirements
 
-- Docker + Docker Compose v2
-- **2 GB RAM** recommended on first boot (world geography import); ~1 GB afterward
-- Linux server, VPS, or macOS with Docker Desktop
-- Optional: domain name for HTTPS (set `SITE_URL` to your public URL)
+| Requirement | Details |
+| ----------- | ------- |
+| Docker + Compose v2 | Required |
+| RAM | 2 GB recommended on first boot; ~1 GB afterward |
+| OS | Linux server, VPS, or macOS with Docker Desktop |
+| Domain | Optional — set `SITE_URL` for HTTPS behind a reverse proxy |
 
 ::: tip ARM / Apple Silicon
-The installer automatically uses `imresamu/postgis:16-3.5-alpine` on ARM hosts. AdventureLog AIO images are multi-arch.
+The installer automatically uses `imresamu/postgis:16-3.5-alpine` on ARM hosts. AdventureLog images are multi-arch.
 :::
 
-## 🔍 What It Does
+## Setup modes
 
-The script automatically:
+During installation you can choose:
 
-1. Verifies Docker is installed and running
-2. Offers **All-in-One** (recommended) or **Standard** (separate frontend/backend) setup
-3. Downloads compose files, `.env.aio` or `.env`, `deploy.sh`, and backup scripts
-4. Prompts for site URL, admin credentials, and optional features
-5. Waits for `/health` (first boot may take several minutes)
-6. Saves optional credentials to `credentials.txt`
+| Mode | Compose file | Env file | When to use |
+| ---- | ------------ | -------- | ----------- |
+| **All-in-One** (default) | `docker-compose.aio.yml` | `.env.aio` | Simplest — one port, auto-derived URLs |
+| **Standard** | `docker-compose.yml` | `.env` | Full env control, separate frontend/backend ports |
 
-## 🔄 Management (Re-run the installer)
+## Management menu
 
-Re-run the same command to open the **management menu** when an install already exists:
+Re-run the installer when an install already exists:
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash
@@ -49,22 +50,29 @@ curl -sSL https://get.adventurelog.app | bash
 bash install_adventurelog.sh --manage
 ```
 
-Management options include:
+Options include status, update, reconfigure, backup, restore, logs, restart, and uninstall. See [Operations & Maintenance](../configuration/operations.md).
 
-- Check status and health
-- Update to latest images (`deploy.sh --backup`)
-- Edit configuration
-- Backup and restore
-- View logs, restart, or uninstall
+## Dry run
 
-## 🧼 Uninstall
+Preview what the installer would do without making changes:
+
+```bash
+ADVENTURELOG_SKIP_GUM=1 bash install_adventurelog.sh --dry-run --force-install
+```
+
+## Uninstall
 
 From the management menu, choose **Uninstall**, or manually:
 
 ```bash
 cd adventurelog
-docker compose -f docker-compose.aio.yml down -v
+docker compose --env-file .env.aio -f docker-compose.aio.yml down -v
 rm -rf adventurelog
 ```
 
-Need more control? See [All-in-One Docker](aio.md), [Standard Docker](docker.md), or other [install options](getting_started.md).
+## Next steps
+
+- [All-in-One Docker](aio.md) — how the AIO container works
+- [Standard Docker](docker.md) — multi-container configuration
+- [Environment Variables](../configuration/environment_variables.md) — full reference
+- [Other install options](getting_started.md)

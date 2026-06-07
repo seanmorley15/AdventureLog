@@ -1,54 +1,68 @@
-# Updating
+# Updating AdventureLog
 
-Updating AdventureLog when using Docker is straightforward. **Back up your instance before updating.**
+Keep your self-hosted instance current with the latest images and database migrations. **Always back up before updating.**
 
-### Option 1: Re-run the installer (management menu)
+## Option 1: Installer management menu
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash
 ```
 
-Choose **Update to latest images** (optionally with backup).
+Choose **Update to latest images** (with optional backup).
 
-### Option 2: deploy.sh (cron-safe)
+## Option 2: deploy.sh (recommended)
 
-Make sure you are in the same directory as your compose file.
+From your install directory (where `deploy.sh` and your compose file live):
 
 ```bash
 bash deploy.sh --backup
-bash deploy.sh --logs   # optional: follow container logs after deploy
+bash deploy.sh --logs   # optional: follow logs after deploy
 ```
 
-For AIO installs, pass the compose file explicitly or rely on auto-detection when only `.env.aio` exists:
+`deploy.sh` validates your env file, creates a backup, pulls images, and runs `docker compose up -d --wait`.
+
+For AIO installs:
 
 ```bash
 COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
 ```
 
-### Option 3: Manual
+See [Operations & Maintenance](operations.md) for compose auto-detection details.
+
+## Option 3: Manual compose
 
 ```bash
 bash scripts/backup.sh
-docker compose pull
-docker compose up -d --wait
+
+# Standard
+docker compose --env-file .env -f docker-compose.yml pull
+docker compose --env-file .env -f docker-compose.yml up -d --wait
+
+# AIO
+docker compose --env-file .env.aio -f docker-compose.aio.yml pull
+docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
 ```
 
-To restore from a backup directory:
+## Restore from backup
 
 ```bash
 bash scripts/restore.sh backups/YYYYMMDD-HHMMSS
 ```
 
-## Updating the Region Data
+## Updating region data
 
-Region and Country data in AdventureLog is provided by an open source project: [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database). If you would like to update the region data in your AdventureLog instance, you can do so by running the following command. This will make sure your database is up to date with the latest region data for your version of AdventureLog. For security reasons, the region data is not automatically updated to the latest and is release version is controlled in the `settings.py` file.
-
-```bash
-docker exec -it <container> bash
-```
-
-Once you are in the container run the following command to resync the region data.
+Country and region reference data comes from [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database). To refresh it manually:
 
 ```bash
+docker exec -it <backend-container> bash
 python manage.py download-countries --force
 ```
+
+Region data version is pinned per AdventureLog release in `settings.py` and is not auto-updated on every deploy.
+
+## What happens during an update
+
+1. New container images are pulled
+2. Containers restart with your existing env and volumes
+3. Database migrations run automatically on backend startup
+4. The `/health` endpoint confirms the stack is ready

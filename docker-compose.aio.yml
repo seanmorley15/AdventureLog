@@ -1,9 +1,9 @@
 services:
   app:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
-      target: aio
+    # build:
+    #   context: .
+    #   dockerfile: docker/Dockerfile
+    #   target: aio
     image: ghcr.io/seanmorley15/adventurelog-aio:latest
     container_name: adventurelog-aio
     restart: unless-stopped
