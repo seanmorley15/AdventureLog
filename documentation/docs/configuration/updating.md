@@ -2,15 +2,7 @@
 
 Keep your self-hosted instance current with the latest images and database migrations. **Always back up before updating.**
 
-## Option 1: Installer management menu
-
-```bash
-curl -sSL https://get.adventurelog.app | bash
-```
-
-Choose **Update to latest images** (with optional backup).
-
-## Option 2: deploy.sh (recommended)
+## Option 1: deploy.sh (recommended)
 
 From your install directory (where `deploy.sh` and your compose file live):
 
@@ -29,7 +21,7 @@ COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
 
 See [Operations & Maintenance](operations.md) for compose auto-detection details.
 
-## Option 3: Manual compose
+## Option 2: Manual compose
 
 ```bash
 bash scripts/backup.sh
@@ -42,6 +34,16 @@ docker compose --env-file .env -f docker-compose.yml up -d --wait
 docker compose --env-file .env.aio -f docker-compose.aio.yml pull
 docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
 ```
+
+## Option 3: Guided installer menu
+
+If you used the [Quick Start Installer](../install/quick_start.md), re-run it to open the management menu:
+
+```bash
+curl -sSL https://get.adventurelog.app | bash
+```
+
+Choose **Update to latest images** (with optional backup).
 
 ## Restore from backup
 

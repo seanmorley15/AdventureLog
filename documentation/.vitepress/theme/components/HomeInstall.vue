@@ -1,37 +1,38 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
-const command = "curl -sSL https://get.adventurelog.app | bash";
-const copied = ref(false);
-
 type InstallPath = {
   icon: string;
   title: string;
   desc: string;
   href: string;
   external?: boolean;
+  featured?: boolean;
 };
 
 type InstallPathGroup = {
+  id: string;
   label: string;
+  icon: string;
   paths: InstallPath[];
 };
 
 const pathGroups: InstallPathGroup[] = [
   {
+    id: "docker",
     label: "Docker",
+    icon: "🐳",
     paths: [
-      {
-        icon: "⚡",
-        title: "Quick Start Installer",
-        desc: "Guided one-line install — AIO by default.",
-        href: "/docs/install/quick_start",
-      },
       {
         icon: "📦",
         title: "All-in-One Docker",
-        desc: "Single container, one port, minimal config.",
+        desc: "Default for most installs — one container, one port.",
         href: "/docs/install/aio",
+        featured: true,
+      },
+      {
+        icon: "⚡",
+        title: "Quick Start Installer",
+        desc: "Guided walkthrough that deploys AIO for you.",
+        href: "/docs/install/quick_start",
       },
       {
         icon: "🐋",
@@ -42,7 +43,9 @@ const pathGroups: InstallPathGroup[] = [
     ],
   },
   {
+    id: "homelab",
     label: "Homelab & NAS",
+    icon: "🏠",
     paths: [
       {
         icon: "🐧",
@@ -63,7 +66,7 @@ const pathGroups: InstallPathGroup[] = [
         href: "/docs/install/unraid",
       },
       {
-        icon: "🏠",
+        icon: "🔌",
         title: "Umbrel",
         desc: "Community app for Umbrel home servers.",
         href: "https://apps.umbrel.com/app/adventurelog",
@@ -79,99 +82,80 @@ const pathGroups: InstallPathGroup[] = [
     ],
   },
   {
+    id: "kubernetes",
     label: "Kubernetes",
+    icon: "☸️",
     paths: [
       {
         icon: "🌐",
         title: "Kubernetes + Kustomize",
-        desc: "Deploy with manifests in `k8s/base/`.",
+        desc: "Deploy with manifests in k8s/base/.",
         href: "/docs/install/kustomize",
       },
     ],
   },
 ];
-
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(command);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
-  } catch {
-    /* clipboard unavailable */
-  }
-}
 </script>
 
 <template>
   <section class="al-install" aria-labelledby="install-heading">
     <div class="al-install__inner">
-      <div class="al-install__copy">
+      <header class="al-install__head al-section-head al-section-head--center">
         <p class="al-eyebrow">Installation</p>
         <h2 id="install-heading">Choose how you run AdventureLog</h2>
-        <p class="al-install__desc">
-          Docker guides for most setups, plus platform-specific instructions
-          for Proxmox, Synology, Unraid, Umbrel, TrueNAS, and Kubernetes.
+        <p class="al-install__lead">
+          Most people run All-in-One Docker — one container on a single port.
+          Platform guides and Kubernetes are there when you need them.
         </p>
-        <ul class="al-install__badges" aria-label="Install methods">
-          <li>Docker Compose</li>
-          <li>Homelab &amp; NAS</li>
-          <li>Kubernetes</li>
-          <li>Reverse proxy</li>
-        </ul>
-        <div class="al-install__links">
+      </header>
+
+      <div class="al-install__shell">
+        <div class="al-install__bento">
+          <article
+            v-for="group in pathGroups"
+            :key="group.id"
+            class="al-install__category"
+            :class="`al-install__category--${group.id}`"
+          >
+            <header class="al-install__category-head">
+              <span class="al-install__category-icon" aria-hidden="true">{{ group.icon }}</span>
+              <h3>{{ group.label }}</h3>
+            </header>
+
+            <ul class="al-install__menu">
+              <li v-for="path in group.paths" :key="path.href">
+                <a
+                  class="al-install__menu-link"
+                  :href="path.href"
+                  :target="path.external ? '_blank' : undefined"
+                  :rel="path.external ? 'noopener noreferrer' : undefined"
+                >
+                  <span class="al-install__menu-icon" aria-hidden="true">{{ path.icon }}</span>
+                  <span class="al-install__menu-text">
+                    <strong>
+                      {{ path.title }}
+                      <span v-if="path.featured" class="al-install__menu-tag">Popular</span>
+                    </strong>
+                    <small>{{ path.desc }}</small>
+                  </span>
+                  <span class="al-install__menu-arrow" aria-hidden="true">
+                    {{ path.external ? "↗" : "→" }}
+                  </span>
+                </a>
+              </li>
+            </ul>
+          </article>
+        </div>
+
+        <footer class="al-install__foot">
           <a class="al-btn al-btn--brand" href="/docs/install/getting_started">
             All install options
           </a>
-          <a class="al-btn al-btn--ghost" href="/docs/install/quick_start">
-            Quick Start
+          <a class="al-install__foot-link" href="/docs/install/traefik">
+            Reverse proxy with Traefik
+            <span aria-hidden="true">→</span>
           </a>
-        </div>
-      </div>
-
-      <div class="al-install__panel">
-        <p class="al-install__panel-label">Install paths</p>
-
-        <div
-          v-for="group in pathGroups"
-          :key="group.label"
-          class="al-install__group"
-        >
-          <p class="al-install__group-label">{{ group.label }}</p>
-          <ul class="al-install__paths">
-            <li v-for="path in group.paths" :key="path.href">
-              <a
-                class="al-install__path"
-                :href="path.href"
-                :target="path.external ? '_blank' : undefined"
-                :rel="path.external ? 'noopener noreferrer' : undefined"
-              >
-                <span class="al-install__path-icon" aria-hidden="true">{{ path.icon }}</span>
-                <span class="al-install__path-text">
-                  <strong>{{ path.title }}</strong>
-                  <small>{{ path.desc }}</small>
-                </span>
-                <span class="al-install__path-arrow" aria-hidden="true">→</span>
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        <div class="al-install__quick" role="group" aria-label="Quick Start command">
-          <div class="al-install__quick-head">
-            <span>Fastest path</span>
-            <button
-              type="button"
-              class="al-install__quick-copy"
-              :aria-label="copied ? 'Copied' : 'Copy install command'"
-              @click="copy"
-            >
-              {{ copied ? "Copied" : "Copy" }}
-            </button>
-          </div>
-          <code class="al-install__quick-cmd">
-            <span class="al-prompt" aria-hidden="true">$</span> {{ command }}
-          </code>
-        </div>
+        </footer>
       </div>
     </div>
   </section>

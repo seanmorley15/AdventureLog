@@ -14,19 +14,22 @@ The standard [multi-container Docker setup](docker.md) remains available for use
 
 ## Quick start
 
-**Recommended:** use the [quick start installer](quick_start.md):
-
-```bash
-curl -sSL https://get.adventurelog.app | bash
-```
-
-Or manually:
+Most installs use Docker Compose directly:
 
 ```bash
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.aio.yml
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.aio.example
 cp .env.aio.example .env.aio
+# Edit .env.aio — set POSTGRES_PASSWORD, then:
 docker compose --env-file .env.aio -f docker-compose.aio.yml up -d
+```
+
+### Guided installer (optional)
+
+Prefer a walkthrough? The [Quick Start Installer](quick_start.md) deploys this same AIO stack interactively:
+
+```bash
+curl -sSL https://get.adventurelog.app | bash
 ```
 
 Open **http://localhost:8015** (or your configured `SITE_URL`).
@@ -65,24 +68,6 @@ HOST_PORT=443
 ```
 
 When using HTTPS behind an external reverse proxy, set `SITE_URL` to your public HTTPS URL and proxy traffic to the AIO container port.
-
-## How it works
-
-```mermaid
-flowchart LR
-  Browser -->|":8015"| Gateway[nginx :80]
-  Gateway -->|"/ pages /api /auth"| Frontend[node :3000]
-  Gateway -->|"/media /admin /accounts"| Gunicorn[:8000]
-  Frontend -->|SSR internal| Gunicorn
-  Gunicorn --> DB[(PostGIS)]
-```
-
-Inside the AIO container, nginx routes browser traffic:
-
-- **Frontend** (SvelteKit): all app pages, `/api`, `/auth`, `/health`
-- **Backend** (Gunicorn): `/media`, `/admin`, `/accounts`, `/static`
-
-The database runs in a separate container (same as the standard setup).
 
 ## Updating
 

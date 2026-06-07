@@ -53,7 +53,7 @@ const current = () => tabs.find((t) => t.id === active.value) ?? tabs[0];
 
 <template>
   <section class="al-showcase" aria-labelledby="showcase-heading">
-    <div class="al-section-head">
+    <div class="al-section-head al-section-head--center">
       <p class="al-eyebrow">See it in action</p>
       <h2 id="showcase-heading">Built for travelers who want more than a pin on a map</h2>
       <p class="al-section-lead">

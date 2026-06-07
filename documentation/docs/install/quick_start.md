@@ -1,6 +1,8 @@
 # Quick Start Installer
 
-Install AdventureLog in seconds with the official curl installer. It defaults to the **All-in-One (AIO)** layout — one URL, one port, minimal configuration — and includes a management menu for updates and backups.
+The guided installer is an optional way to deploy **All-in-One (AIO) Docker** — the setup most people use. It walks you through configuration interactively, writes your env files, and includes a management menu for updates and backups.
+
+For manual AIO setup with Docker Compose, see [All-in-One Docker](aio.md).
 
 ## One-line install
 

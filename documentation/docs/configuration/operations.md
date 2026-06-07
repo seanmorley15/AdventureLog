@@ -4,7 +4,7 @@ Day-to-day tasks for a self-hosted AdventureLog instance: updates, backups, vali
 
 ## Management menu
 
-Re-run the installer to open the interactive management menu:
+If you installed via the [Quick Start Installer](../install/quick_start.md), re-run it to open the interactive management menu:
 
 ```bash
 curl -sSL https://get.adventurelog.app | bash

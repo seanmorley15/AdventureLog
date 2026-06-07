@@ -1,16 +1,6 @@
 # Install AdventureLog
 
-AdventureLog runs on Docker in most setups. Pick the guide that matches your environment — from a one-line installer to platform-specific homelab and NAS instructions.
-
-## Quick start
-
-::: tip Fastest install
-```bash
-curl -sSL https://get.adventurelog.app | bash
-```
-:::
-
-The [Quick Start Installer](quick_start.md) walks you through setup (AIO by default), writes your env files, and starts AdventureLog. Re-run the same command for updates, backups, and configuration changes.
+AdventureLog runs on Docker in most setups. Pick the guide that matches your environment — from All-in-One Docker to platform-specific homelab and NAS instructions.
 
 ## Choose your setup
 
@@ -18,8 +8,8 @@ The [Quick Start Installer](quick_start.md) walks you through setup (AIO by defa
 
 | I want to… | Guide |
 | ---------- | ----- |
-| Guided install on a VPS or homelab | [Quick Start Installer](quick_start.md) |
-| One container, one port, minimal config | [All-in-One Docker (AIO)](aio.md) |
+| One container, one port | <span class="al-rec-badge">Recommended</span> [All-in-One Docker (AIO)](aio.md) |
+| Interactive walkthrough that deploys AIO | [Quick Start Installer](quick_start.md) |
 | Separate frontend, backend, and database | [Standard Docker](docker.md) |
 | HTTPS on a custom domain | [Reverse proxy guides](#reverse-proxy) |
 

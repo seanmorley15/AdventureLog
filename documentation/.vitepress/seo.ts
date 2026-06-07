@@ -33,18 +33,18 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/install/getting_started.md": {
     description:
-      "Choose the right AdventureLog installation path: quick-start installer, All-in-One Docker, standard Docker, Kubernetes, or platform-specific guides.",
-    keywords: ["AdventureLog install", "self-hosted travel app setup"],
+      "Install AdventureLog with All-in-One Docker — the default for most setups — plus optional guided installer, standard Docker, Kubernetes, and platform guides.",
+    keywords: ["AdventureLog install", "AIO docker", "self-hosted travel app setup"],
   },
   "docs/install/quick_start.md": {
     description:
-      "Install AdventureLog in seconds with the official curl installer. Defaults to All-in-One Docker with interactive configuration and a built-in management menu.",
-    keywords: ["AdventureLog quick start", "one line docker install"],
+      "Optional guided installer for All-in-One Docker. Interactive configuration, env file setup, and a built-in management menu for updates and backups.",
+    keywords: ["AdventureLog quick start", "guided docker install", "AIO installer"],
   },
   "docs/install/aio.md": {
     description:
-      "Run AdventureLog in a single Docker container on one port. Minimal .env.aio configuration with automatic URL and secret derivation for homelabs and VPS installs.",
-    keywords: ["AdventureLog AIO", "all in one docker", "single container travel app"],
+      "The default AdventureLog install: one Docker container on a single port. Minimal .env.aio configuration with automatic URL and secret derivation for homelabs and VPS.",
+    keywords: ["AdventureLog AIO", "all in one docker", "default docker install"],
   },
   "docs/install/docker.md": {
     description:

@@ -66,19 +66,30 @@ async function copy() {
           </a>
         </div>
 
-        <div class="al-hero__install">
-          <code class="al-hero__cmd">
-            <span class="al-hero__prompt" aria-hidden="true">$</span>
-            {{ command }}
-          </code>
-          <button
-            type="button"
-            class="al-hero__copy-btn"
-            :aria-label="copied ? 'Copied' : 'Copy install command'"
-            @click="copy"
-          >
-            {{ copied ? "Copied" : "Copy" }}
-          </button>
+        <div class="al-hero__install-block">
+          <p class="al-hero__install-label">
+            All-in-One Docker
+            <span class="al-hero__install-sep" aria-hidden="true">·</span>
+            <a href="/docs/install/aio">manual setup</a>
+          </p>
+          <div class="al-hero__install">
+            <code class="al-hero__cmd">
+              <span class="al-hero__prompt" aria-hidden="true">$</span>
+              {{ command }}
+            </code>
+            <button
+              type="button"
+              class="al-hero__copy-btn"
+              :aria-label="copied ? 'Copied' : 'Copy guided installer command'"
+              @click="copy"
+            >
+              {{ copied ? "Copied" : "Copy" }}
+            </button>
+          </div>
+          <p class="al-hero__install-note">
+            Guided installer — deploys AIO by default.
+            <a href="/docs/install/quick_start">Details</a>
+          </p>
         </div>
 
         <ul class="al-hero__stats" aria-label="Core features">

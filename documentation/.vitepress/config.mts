@@ -104,7 +104,7 @@ export default defineConfig({
             "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
           screenshot,
           downloadUrl: "https://github.com/seanmorley15/adventurelog",
-          installUrl: `${siteUrl}/docs/install/quick_start.html`,
+          installUrl: `${siteUrl}/docs/install/aio.html`,
           sameAs: ["https://github.com/seanmorley15/adventurelog"],
           keywords: (seo.keywords ?? []).join(", "),
         },
@@ -125,7 +125,7 @@ export default defineConfig({
               name: "How do I install AdventureLog?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Run curl -sSL https://get.adventurelog.app | bash to install with the official one-line Docker installer. It defaults to the All-in-One setup on port 8015.",
+                text: "Most installs use All-in-One (AIO) Docker — one container on port 8015 with minimal configuration. Deploy with docker-compose.aio.yml and .env.aio, or use the optional Quick Start installer for a guided setup.",
               },
             },
             {
@@ -212,8 +212,8 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: "Getting Started", link: "/docs/install/getting_started" },
-          { text: "Quick Start Installer", link: "/docs/install/quick_start" },
           { text: "All-in-One Docker (AIO)", link: "/docs/install/aio" },
+          { text: "Quick Start Installer", link: "/docs/install/quick_start" },
           { text: "Standard Docker", link: "/docs/install/docker" },
           {
             text: "Development Setup",
