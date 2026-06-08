@@ -17,11 +17,11 @@ The standard [multi-container Docker setup](docker.md) remains available for use
 Most installs use Docker Compose directly:
 
 ```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.aio.yml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.aio.yml
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.aio.example
 cp .env.aio.example .env.aio
 # Edit .env.aio — set POSTGRES_PASSWORD, then:
-docker compose --env-file .env.aio -f docker-compose.aio.yml up -d
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d
 ```
 
 ### Guided installer (optional)
@@ -34,7 +34,7 @@ curl -sSL https://get.adventurelog.app | bash
 
 Open **http://localhost:8015** (or your configured `SITE_URL`).
 
-**Memory:** allocate at least **2 GB RAM** on first boot; about **1 GB** is usually enough afterward. See [`docker-compose.override.example.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.override.example.yml) for optional resource limits.
+**Memory:** allocate at least **2 GB RAM** on first boot; about **1 GB** is usually enough afterward.
 
 Default admin login: `admin` / `admin` — change this after first login.
 
@@ -72,8 +72,8 @@ When using HTTPS behind an external reverse proxy, set `SITE_URL` to your public
 ## Updating
 
 ```bash
-docker compose --env-file .env.aio -f docker-compose.aio.yml pull
-docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml pull
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d --wait
 ```
 
 ## Image
@@ -85,7 +85,7 @@ To build locally from source:
 ```bash
 docker build -f docker/Dockerfile --target aio -t adventurelog-aio .
 # or
-docker compose --env-file .env.aio -f docker-compose.aio.yml build
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml build
 ```
 
 See [`docker/README.md`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/README.md) for all build targets.
@@ -95,4 +95,4 @@ See [`docker/README.md`](https://github.com/seanmorley15/AdventureLog/blob/main/
 - [Operations & Maintenance](../configuration/operations.md) — backups, updates, management menu
 - [Environment Variables](../configuration/environment_variables.md) — full reference including optional S3, OAuth, and email settings
 
-Advanced options can be added to `.env.aio` or the `environment` block in `docker-compose.aio.yml`.
+Advanced options can be added to `.env.aio` or the `environment` block in `docker/docker-compose.aio.yml`.

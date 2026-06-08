@@ -11,6 +11,8 @@ fi
 BACKUP_DIR="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$SCRIPT_DIR"
+# shellcheck source=lib/compose-paths.sh
+source "$(dirname "${BASH_SOURCE[0]}")/lib/compose-paths.sh"
 
 if [[ ! -d "$BACKUP_DIR" ]]; then
 	echo "ERROR: Backup directory not found: $BACKUP_DIR" >&2
@@ -19,13 +21,7 @@ fi
 
 COMPOSE_FILE="${COMPOSE_FILE:-}"
 if [[ -z "$COMPOSE_FILE" ]]; then
-	if [[ -f .env.aio ]] && [[ ! -f .env ]]; then
-		COMPOSE_FILE="docker-compose.aio.yml"
-	elif [[ -f .env.aio ]] && [[ -f docker-compose.aio.yml ]] && [[ "${ADVENTURELOG_COMPOSE:-}" == "aio" ]]; then
-		COMPOSE_FILE="docker-compose.aio.yml"
-	else
-		COMPOSE_FILE="docker-compose.yml"
-	fi
+	COMPOSE_FILE="$(default_compose_file)"
 fi
 
 ENV_FILE="${ENV_FILE:-}"

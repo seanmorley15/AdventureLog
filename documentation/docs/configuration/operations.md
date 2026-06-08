@@ -31,24 +31,24 @@ Available actions:
 
 ## Compose file detection
 
-`deploy.sh`, `scripts/backup.sh`, and `scripts/restore.sh` auto-detect your setup:
+`scripts/deploy.sh`, `scripts/backup.sh`, and `scripts/restore.sh` auto-detect your setup:
 
 | Condition | Compose file | Env file |
 | --------- | ------------ | -------- |
-| Only `.env.aio` exists | `docker-compose.aio.yml` | `.env.aio` |
-| `ADVENTURELOG_COMPOSE=aio` with both env files | `docker-compose.aio.yml` | `.env.aio` |
-| Otherwise | `docker-compose.yml` | `.env` |
+| Only `.env.aio` exists | `docker/docker-compose.aio.yml` | `.env.aio` |
+| `ADVENTURELOG_COMPOSE=aio` with both env files | `docker/docker-compose.aio.yml` | `.env.aio` |
+| Otherwise | `docker/docker-compose.yml` | `.env` |
 
 Override manually:
 
 ```bash
-COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
+COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
 ```
 
 Always pass `--env-file` when running `docker compose` directly:
 
 ```bash
-docker compose --env-file .env.aio -f docker-compose.aio.yml ps
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml ps
 ```
 
 ## Updating
@@ -57,10 +57,10 @@ See [Updating](updating.md) for full details. Quick reference:
 
 ```bash
 # Recommended — validates env, backs up, pulls, and waits for health
-bash deploy.sh --backup
+bash scripts/deploy.sh --backup
 
 # AIO with explicit compose file
-COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
+COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
 ```
 
 ## Backup
@@ -76,10 +76,6 @@ bash scripts/backup.sh
 # Custom output directory:
 BACKUP_DIR=/mnt/backups bash scripts/backup.sh
 ```
-
-::: warning Legacy script
-The root `backup.sh` only archives the media volume and does **not** include the database. Use `scripts/backup.sh` instead.
-:::
 
 ## Restore
 

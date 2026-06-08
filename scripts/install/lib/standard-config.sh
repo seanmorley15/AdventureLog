@@ -3,9 +3,8 @@
 set -euo pipefail
 
 prompt_standard_core_config() {
-	print_step_header 2 "$WIZARD_TOTAL" "Core configuration (Standard)"
-	log_info "Standard setup uses separate frontend and backend URLs."
-	echo ""
+	print_step_header 3 "$WIZARD_TOTAL" "Core configuration"
+	tui_print_box "Standard setup" "Separate frontend and backend URLs — best for advanced or split deployments."
 
 	local default_frontend="http://localhost:8015"
 	while true; do
@@ -91,7 +90,8 @@ write_env_standard() {
 }
 
 show_standard_review() {
-	print_step_header 5 "$WIZARD_TOTAL" "Review configuration"
+	print_step_header 5 "$WIZARD_TOTAL" "Review & confirm"
+	print_section "Configuration summary"
 	print_summary_row "Setup" "Standard (multi-container)"
 	print_summary_row "Frontend" "$FRONTEND_ORIGIN"
 	print_summary_row "Backend" "$BACKEND_URL"
@@ -102,19 +102,24 @@ show_standard_review() {
 
 print_standard_success() {
 	print_success_banner
-	log_success "Installation completed!"
-	echo -e "${BOLD}Frontend:${NC} ${CYAN}${FRONTEND_ORIGIN}${NC}"
-	echo -e "${BOLD}Backend:${NC}  ${CYAN}${BACKEND_URL}${NC}"
-	echo -e "${BOLD}Admin:${NC}    ${GREEN}${DJANGO_ADMIN_USERNAME}${NC} / ${GREEN}${DJANGO_ADMIN_PASSWORD}${NC}"
+	log_success "AdventureLog is installed and ready."
 	echo ""
-	echo -e "Update: bash deploy.sh --backup"
+	print_section "Your instance"
+	print_summary_row "Frontend" "$FRONTEND_ORIGIN"
+	print_summary_row "Backend" "$BACKEND_URL"
+	print_summary_row "Admin user" "$DJANGO_ADMIN_USERNAME"
+	print_summary_row "Admin password" "$DJANGO_ADMIN_PASSWORD"
 	echo ""
+	print_next_steps \
+		"Open ${FRONTEND_ORIGIN} in your browser" \
+		"Update images: bash scripts/deploy.sh --backup" \
+		"Re-run the installer for the management console"
+	print_footer
 }
 
 run_standard_install_wizard() {
 	SETUP_TYPE="standard"
 	resolve_compose_settings
-	WIZARD_TOTAL=7
 	prompt_standard_core_config
 	run_port_checks
 	run_optional_features_wizard

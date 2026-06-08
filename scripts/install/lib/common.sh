@@ -2,8 +2,15 @@
 # Shared globals and utilities for AdventureLog installer.
 set -euo pipefail
 
+_COMPOSE_PATHS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib" && pwd)/compose-paths.sh"
+if [[ -f "$_COMPOSE_PATHS" ]]; then
+	# shellcheck source=../../lib/compose-paths.sh
+	source "$_COMPOSE_PATHS"
+fi
+
 APP_NAME="AdventureLog"
 INSTALL_DIR="${INSTALL_DIR:-./adventurelog}"
+INSTALLER_VERSION="${INSTALLER_VERSION:-2.0.0}"
 ADVENTURELOG_REF="${ADVENTURELOG_REF:-main}"
 GITHUB_RAW="https://raw.githubusercontent.com/seanmorley15/AdventureLog/${ADVENTURELOG_REF}"
 DOCS_BASE="https://adventurelog.app/docs/configuration"
@@ -45,11 +52,11 @@ declare -g LOG_CONTAINER=""
 
 resolve_compose_settings() {
 	if [[ "$SETUP_TYPE" == "aio" ]]; then
-		COMPOSE_FILE="docker-compose.aio.yml"
+		COMPOSE_FILE="$(resolve_compose_file "docker-compose.aio.yml")"
 		ENV_FILE=".env.aio"
 		LOG_CONTAINER="adventurelog-aio"
 	else
-		COMPOSE_FILE="docker-compose.yml"
+		COMPOSE_FILE="$(resolve_compose_file "docker-compose.yml")"
 		ENV_FILE=".env"
 		LOG_CONTAINER="adventurelog-backend"
 	fi
@@ -150,10 +157,6 @@ detect_install_lib_dir() {
 	candidate="$(cd "$(dirname "$script_path")/../.." && pwd)/scripts/install/lib"
 	if [[ -f "$candidate/ui.sh" ]]; then
 		echo "$candidate"
-		return 0
-	fi
-	if [[ -f "./adventurelog/scripts/install/lib/ui.sh" ]]; then
-		echo "$(cd "./adventurelog/scripts/install/lib" && pwd)"
 		return 0
 	fi
 	return 1

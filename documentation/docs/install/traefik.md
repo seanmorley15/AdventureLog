@@ -4,7 +4,7 @@ Deploy AdventureLog behind [Traefik](https://traefik.io/) with automatic HTTPS a
 
 ## Official compose file
 
-Download [`docker-compose-traefik.yaml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose-traefik.yaml) from the repository. It includes:
+Download [`docker/docker-compose.traefik.yaml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.traefik.yaml) from the repository. It includes:
 
 - Traefik v2.11 with Let's Encrypt
 - Prebuilt `adventurelog-frontend` and `adventurelog-backend` images (no local build required)
@@ -25,12 +25,12 @@ See [Environment Variables](../configuration/environment_variables.md) for the f
 ## Getting started
 
 ```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose-traefik.yaml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.traefik.yaml
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
 cp .env.example .env
 # Edit .env: set SITE_URL, ACME_EMAIL, TRAEFIK_DOMAIN, POSTGRES_PASSWORD, SECRET_KEY
 bash scripts/validate-env.sh
-docker compose -f docker-compose-traefik.yaml up -d
+docker compose -f docker/docker-compose.traefik.yaml up -d
 ```
 
 ## Routing overview

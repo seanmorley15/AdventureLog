@@ -21,7 +21,7 @@ services:
     image: postgis/postgis:16-3.5
     container_name: adventurelog-traefik-db
     restart: unless-stopped
-    env_file: .env
+    env_file: ../.env
     volumes:
       - postgres-data:/var/lib/postgresql/data/
     healthcheck:
@@ -38,7 +38,7 @@ services:
   web:
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     restart: unless-stopped
-    env_file: .env
+    env_file: ../.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
@@ -64,7 +64,7 @@ services:
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     restart: unless-stopped
-    env_file: .env
+    env_file: ../.env
     volumes:
       - adventurelog-media:/code/media
     labels:

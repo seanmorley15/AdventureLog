@@ -26,35 +26,34 @@ print_pull_failure_help() {
 	echo "  • Manual pull: docker compose --env-file ${ENV_FILE} -f ${COMPOSE_FILE} pull" >&2
 	echo "" >&2
 	echo "To build from source instead, clone the full AdventureLog repo and run:" >&2
-	echo "  docker compose -f docker-compose.aio.yml build && docker compose -f docker-compose.aio.yml up -d" >&2
+	echo "  docker compose -f docker/docker-compose.aio.yml build && docker compose -f docker/docker-compose.aio.yml up -d" >&2
 	echo "" >&2
 }
 
 start_services() {
 	if [[ "$DRY_RUN" == true ]]; then
-		log_info "[dry-run] Would run: run_compose pull && run_compose up -d"
+		log_muted "[dry-run] Would pull images and start containers"
 		return 0
 	fi
 
-	log_info "Pulling Docker images (this may take a few minutes)..."
-	echo "" >&2
-	if ! run_compose pull; then
+	if ! tui_spinner "Pulling Docker images" run_compose pull; then
 		print_pull_failure_help
 		exit 1
 	fi
-	echo "" >&2
-	log_success "Images pulled"
 
-	log_info "Starting containers..."
-	if run_compose up -d --remove-orphans --wait 2>/dev/null; then
-		log_success "Containers started"
-	elif run_compose up -d --remove-orphans; then
-		log_success "Containers started (without --wait)"
+	log_info "Starting containers — first boot may take a few minutes depending on available memory. Please wait."
+	echo "" >&2
+
+	if tui_spinner "Starting containers" run_compose up -d --remove-orphans --wait; then
+		:
+	elif tui_spinner "Starting containers" run_compose up -d --remove-orphans; then
+		log_muted "Started without compose --wait support"
 	else
 		log_error "Failed to start containers"
 		run_compose ps || true
 		exit 1
 	fi
+	log_success "Containers are running"
 }
 
 wait_for_health() {
@@ -106,7 +105,7 @@ cleanup_on_failure() {
 }
 
 run_deploy_phase() {
-	print_step_header 6 "$WIZARD_TOTAL" "Deploy"
+	print_step_header 6 "$WIZARD_TOTAL" "Deploy containers"
 	validate_env_file
 	start_services
 	print_step_header 7 "$WIZARD_TOTAL" "Health check"

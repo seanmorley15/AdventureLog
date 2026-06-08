@@ -15,7 +15,7 @@ curl -sSL https://get.adventurelog.app | bash
 1. Checks dependencies (Docker, Compose v2, RAM, CPU architecture)
 2. Detects ARM hosts and configures a compatible PostGIS image automatically
 3. Creates the `./adventurelog` project directory (configurable via `INSTALL_DIR`)
-4. Downloads `docker-compose.aio.yml` or `docker-compose.yml`, env files, and management scripts
+4. Downloads compose files, env files, and management scripts
 5. Walks you through site URL, admin credentials, and optional features (S3, email, integrations)
 6. Starts containers and waits for the `/health` endpoint
 7. Saves credentials to `credentials.txt` when generated
@@ -39,8 +39,8 @@ During installation you can choose:
 
 | Mode | Compose file | Env file | When to use |
 | ---- | ------------ | -------- | ----------- |
-| **All-in-One** (default) | `docker-compose.aio.yml` | `.env.aio` | Simplest — one port, auto-derived URLs |
-| **Standard** | `docker-compose.yml` | `.env` | Full env control, separate frontend/backend ports |
+| **All-in-One** (default) | `docker/docker-compose.aio.yml` | `.env.aio` | Simplest — one port, auto-derived URLs |
+| **Standard** | `docker/docker-compose.yml` | `.env` | Full env control, separate frontend/backend ports |
 
 ## Management menu
 
@@ -68,7 +68,7 @@ From the management menu, choose **Uninstall**, or manually:
 
 ```bash
 cd adventurelog
-docker compose --env-file .env.aio -f docker-compose.aio.yml down -v
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml down -v
 rm -rf adventurelog
 ```
 

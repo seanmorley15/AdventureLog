@@ -1,11 +1,11 @@
 services:
   web:
-    build: ./frontend/
+    build: ../frontend/
     # image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
     restart: unless-stopped
     user: root
-    env_file: .env
+    env_file: ../.env
     environment:
       - CI=true
       - NODE_OPTIONS=--max-old-space-size=4096
@@ -15,7 +15,7 @@ services:
       server:
         condition: service_healthy
     volumes:
-      - ./frontend:/app
+      - ../frontend:/app
       - pnpm_store:/pnpm-store
     command: sh -c "mkdir -p /pnpm-store && chown -R node:node /pnpm-store && su node -c 'pnpm config set store-dir /pnpm-store && pnpm install --frozen-lockfile && pnpm exec vite dev --host 0.0.0.0 --port 3000 --strictPort'"
     healthcheck:
@@ -35,7 +35,7 @@ services:
     image: postgis/postgis:16-3.5
     container_name: adventurelog-db
     restart: unless-stopped
-    env_file: .env
+    env_file: ../.env
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
@@ -50,11 +50,11 @@ services:
       start_period: 10s
 
   server:
-    build: ./backend/
+    build: ../backend/
     # image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
-    env_file: .env
+    env_file: ../.env
     environment:
       - DJANGO_SUPERUSER_USERNAME=${DJANGO_ADMIN_USERNAME}
       - DJANGO_SUPERUSER_PASSWORD=${DJANGO_ADMIN_PASSWORD}
@@ -65,7 +65,7 @@ services:
       db:
         condition: service_healthy
     volumes:
-      - ./backend/server:/code
+      - ../backend/server:/code
       - adventurelog_media:/code/media/
     command: >
       sh -c "memcached -u nobody -m 64 -p 11211 -d;

@@ -51,7 +51,6 @@ jobs:
           docker build -f docker/Dockerfile --target backend -t adventurelog-backend .
           docker build -f docker/Dockerfile --target frontend -t adventurelog-frontend .
           docker build -f docker/Dockerfile --target aio -t adventurelog-aio .
-          docker build -t adventurelog-cdn ./cdn
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@master
@@ -77,16 +76,6 @@ jobs:
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: adventurelog-aio
-          format: table
-          exit-code: 1
-          ignore-unfixed: true
-          severity: CRITICAL,HIGH
-          trivyignores: .trivyignore
-
-      - name: Scan CDN image
-        uses: aquasecurity/trivy-action@master
-        with:
-          image-ref: adventurelog-cdn
           format: table
           exit-code: 1
           ignore-unfixed: true

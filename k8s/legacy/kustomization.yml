@@ -1,5 +1,5 @@
 # DEPRECATED: This legacy example colocates frontend, backend, and database in one pod.
-# Use `k8s/base/` for a production-oriented layout (separate PostGIS StatefulSet + AIO Deployment).
+# Use k8s/base/ for a production-oriented layout (separate PostGIS StatefulSet + AIO Deployment).
 # See documentation/docs/install/kustomize.md
 
 apiVersion: apps/v1

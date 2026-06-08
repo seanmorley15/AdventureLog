@@ -3,9 +3,8 @@
 set -euo pipefail
 
 prompt_aio_core_config() {
-	print_step_header 2 "$WIZARD_TOTAL" "Core configuration (AIO)"
-	log_info "All-in-One uses a single URL and port."
-	echo ""
+	print_step_header 3 "$WIZARD_TOTAL" "Core configuration"
+	tui_print_box "All-in-One setup" "One public URL and one host port — ideal for homelabs and quick installs."
 
 	local default_site="http://localhost:8015"
 	while true; do
@@ -56,13 +55,14 @@ write_env_aio() {
 show_aio_review() {
 	local opt_count=0
 	[[ -v OPTIONAL_ENV_LINES ]] && opt_count="${#OPTIONAL_ENV_LINES[@]}"
-	print_step_header 5 "$WIZARD_TOTAL" "Review configuration"
+	print_step_header 5 "$WIZARD_TOTAL" "Review & confirm"
+	print_section "Configuration summary"
 	print_summary_row "Setup" "All-in-One (AIO)"
 	print_summary_row "Site URL" "$SITE_URL"
 	print_summary_row "Host port" "$HOST_PORT"
 	print_summary_row "PostGIS image" "$POSTGIS_IMAGE"
 	print_summary_row "Admin user" "$DJANGO_ADMIN_USERNAME"
-	print_summary_row "Optional vars" "$opt_count configured"
+	print_summary_row "Optional features" "$opt_count configured"
 	echo ""
 	if ! tui_confirm "Proceed with installation?" "y"; then
 		log_info "Installation cancelled."
@@ -90,26 +90,25 @@ EOF
 
 print_aio_success() {
 	print_success_banner
-	log_success "Installation completed!"
+	log_success "AdventureLog is installed and ready."
 	echo ""
-	echo -e "${BOLD}Access:${NC} ${CYAN}${SITE_URL}${NC}"
+	print_section "Your instance"
+	print_summary_row "Open" "$SITE_URL"
+	print_summary_row "Admin user" "$DJANGO_ADMIN_USERNAME"
+	print_summary_row "Admin password" "$DJANGO_ADMIN_PASSWORD"
+	print_summary_row "Config file" "$(pwd)/${ENV_FILE}"
 	echo ""
-	echo -e "${BOLD}Admin:${NC} ${GREEN}${DJANGO_ADMIN_USERNAME}${NC} / ${GREEN}${DJANGO_ADMIN_PASSWORD}${NC}"
-	echo ""
-	echo -e "${BOLD}Config:${NC} $(pwd)/${ENV_FILE}"
-	echo ""
-	echo -e "${BOLD}Management:${NC}"
-	echo -e "  Re-run installer:  curl -sSL https://get.adventurelog.app | bash"
-	echo -e "  Update:            bash deploy.sh --backup"
-	echo -e "  Logs:              docker logs ${LOG_CONTAINER} -f"
-	echo -e "  Stop:              docker compose -f ${COMPOSE_FILE} down"
-	echo ""
+	print_next_steps \
+		"Open ${SITE_URL} in your browser" \
+		"Sign in and change the default admin password" \
+		"Re-run the installer anytime for updates: curl -sSL https://get.adventurelog.app | bash" \
+		"View logs: docker logs ${LOG_CONTAINER} -f"
+	print_footer
 }
 
 run_aio_install_wizard() {
 	SETUP_TYPE="aio"
 	resolve_compose_settings
-	WIZARD_TOTAL=7
 	prompt_aio_core_config
 	run_port_checks
 	run_optional_features_wizard

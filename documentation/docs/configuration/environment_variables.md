@@ -4,10 +4,10 @@ AdventureLog configuration is driven by environment variables. The file you edit
 
 | Install type | Env file | Compose file |
 | ------------ | -------- | ------------ |
-| All-in-One (AIO) | `.env.aio` | `docker-compose.aio.yml` |
-| Standard Docker | `.env` | `docker-compose.yml` |
-| Traefik | `.env` | `docker-compose-traefik.yaml` |
-| Development | `.env` | `docker-compose.dev.yml` |
+| All-in-One (AIO) | `.env.aio` | `docker/docker-compose.aio.yml` |
+| Standard Docker | `.env` | `docker/docker-compose.yml` |
+| Traefik | `.env` | `docker/docker-compose.traefik.yaml` |
+| Development | `.env` | `docker/docker-compose.dev.yml` |
 
 Validate before deploying:
 
@@ -131,7 +131,7 @@ See [S3 Media Storage](s3_storage.md).
 
 ## Traefik compose
 
-Used with `docker-compose-traefik.yaml`:
+Used with `docker/docker-compose.traefik.yaml`:
 
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
@@ -144,7 +144,7 @@ These are not application settings but affect management scripts:
 
 | Variable | Description | Default |
 | -------- | ----------- | ------- |
-| `COMPOSE_FILE` | Override compose file (`deploy.sh`, backup, restore). | Auto-detected |
+| `COMPOSE_FILE` | Override compose file (`scripts/deploy.sh`, backup, restore). | Auto-detected |
 | `ADVENTURELOG_COMPOSE` | Set to `aio` to prefer AIO when both env files exist. | unset |
 | `BACKUP_DIR` | Backup output directory for `scripts/backup.sh`. | `backups` |
 | `ADVENTURELOG_REF` | Git ref for installer downloads. | `main` |
@@ -156,4 +156,4 @@ See [Operations & Maintenance](operations.md).
 - Standard env template: [`.env.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
 - AIO env template: [`.env.aio.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.aio.example)
 - Django settings: [`backend/server/main/settings.py`](https://github.com/seanmorley15/AdventureLog/blob/main/backend/server/main/settings.py)
-- AIO derivation: [`aio/env-setup.sh`](https://github.com/seanmorley15/AdventureLog/blob/main/aio/env-setup.sh)
+- AIO derivation: [`docker/aio/env-setup.sh`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/aio/env-setup.sh)

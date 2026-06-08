@@ -53,7 +53,7 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/install/dev_container_wsl.md": {
     description:
-      "Develop AdventureLog on Windows with WSL 2 and VS Code Dev Containers using docker-compose.dev.yml and hot reload for frontend and backend.",
+      "Develop AdventureLog on Windows with WSL 2 and VS Code Dev Containers using docker/docker-compose.dev.yml and hot reload for frontend and backend.",
     keywords: ["AdventureLog development", "dev container", "WSL docker"],
   },
   "docs/install/proxmox_lxc.md": {
@@ -83,7 +83,7 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/install/traefik.md": {
     description:
-      "Deploy AdventureLog with Traefik using the official docker-compose-traefik.yaml for automatic HTTPS and path-based routing.",
+      "Deploy AdventureLog with Traefik using the official docker/docker-compose.traefik.yaml for automatic HTTPS and path-based routing.",
     keywords: ["AdventureLog Traefik", "docker reverse proxy"],
   },
   "docs/install/caddy.md": {
@@ -103,12 +103,12 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/configuration/operations.md": {
     description:
-      "Operate AdventureLog in production: deploy.sh updates, backup and restore scripts, validate-env checks, management menu, and first-boot behavior.",
+      "Operate AdventureLog in production: scripts/deploy.sh updates, backup and restore scripts, validate-env checks, management menu, and first-boot behavior.",
     keywords: ["AdventureLog backup", "deploy update", "docker operations"],
   },
   "docs/configuration/updating.md": {
     description:
-      "Update AdventureLog Docker images safely with deploy.sh, the installer management menu, manual compose commands, and region data refresh.",
+      "Update AdventureLog Docker images safely with scripts/deploy.sh, the installer management menu, manual compose commands, and region data refresh.",
     keywords: ["AdventureLog update", "docker pull upgrade"],
   },
   "docs/configuration/immich_integration.md": {

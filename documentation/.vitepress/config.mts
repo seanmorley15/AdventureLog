@@ -125,7 +125,7 @@ export default defineConfig({
               name: "How do I install AdventureLog?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Most installs use All-in-One (AIO) Docker — one container on port 8015 with minimal configuration. Deploy with docker-compose.aio.yml and .env.aio, or use the optional Quick Start installer for a guided setup.",
+                text: "Most installs use All-in-One (AIO) Docker — one container on port 8015 with minimal configuration. Deploy with docker/docker-compose.aio.yml and .env.aio, or use the optional Quick Start installer for a guided setup.",
               },
             },
             {

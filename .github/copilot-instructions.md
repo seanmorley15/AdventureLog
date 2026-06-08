@@ -85,7 +85,11 @@ AdventureLog/
 │   ├── server/        # Django project
 │   ├── Dockerfile     # Backend container
 │   └── requirements.txt # Python dependencies
-├── docker-compose.yml # Main deployment configuration
+├── docker/            # Dockerfile, compose stacks, and shared configs
+│   ├── docker-compose.yml
+│   ├── docker-compose.aio.yml
+│   └── docker-compose.dev.yml
+├── k8s/               # Kubernetes / Kustomize manifests
 ├── .env.example       # Environment template
 └── install_adventurelog.sh # Production installer
 ```
@@ -93,7 +97,8 @@ AdventureLog/
 ### Key Scripts and Files
 - `frontend/package.json` - Contains all frontend build scripts
 - `backend/server/manage.py` - Django management commands
-- `docker-compose.yml` - Service definitions (frontend:8015, backend:8016, db:5432)
+- `docker/docker-compose.yml` - Standard service definitions (frontend:8015, backend:8016, db:5432)
+- `docker/docker-compose.aio.yml` - All-in-one deployment (single port:8015)
 - `.env` - Environment configuration (copy from .env.example)
 
 ### Development vs Production

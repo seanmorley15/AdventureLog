@@ -15,7 +15,7 @@ mgmt_check_status() {
 	local compose health_url
 	compose="$(compose_args)"
 	echo ""
-	log_header "Status"
+	print_section "Container status"
 	$compose ps 2>/dev/null || docker ps -a --filter "name=adventurelog"
 	echo ""
 	if [[ "$SETUP_TYPE" == "aio" ]]; then
@@ -24,33 +24,33 @@ mgmt_check_status() {
 		health_url="${FRONTEND_ORIGIN:-http://localhost:8015}/health"
 	fi
 	if curl -fsS -o /dev/null "$health_url" 2>/dev/null; then
-		log_success "Health OK: $health_url"
+		log_success "Health check passed — ${health_url}"
 	else
-		log_warning "Health check failed: $health_url"
+		log_warning "Health check failed — ${health_url}"
 	fi
 	tui_press_enter
 }
 
 mgmt_update() {
 	local backup_flag=""
-	if tui_confirm "Create backup before update?" "y"; then
+	if tui_confirm "Create a backup before updating?" "y"; then
 		backup_flag="--backup"
 	fi
-	if [[ -f deploy.sh ]]; then
+	if [[ -f scripts/deploy.sh ]]; then
 		# shellcheck disable=SC2086
-		COMPOSE_FILE="$COMPOSE_FILE" bash deploy.sh $backup_flag
+		COMPOSE_FILE="$COMPOSE_FILE" bash scripts/deploy.sh $backup_flag
 	else
 		local compose
 		compose="$(compose_args)"
-		$compose pull
-		$compose up -d --wait 2>/dev/null || $compose up -d
+		tui_spinner "Pulling latest images" bash -c "$compose pull"
+		tui_spinner "Restarting services" bash -c "$compose up -d --wait 2>/dev/null || $compose up -d"
 	fi
 	log_success "Update complete"
 	tui_press_enter
 }
 
 mgmt_reconfigure() {
-	log_info "Reconfigure optional features and core settings"
+	log_info "Reconfigure site settings and optional features"
 	if [[ -f "$ENV_FILE" ]]; then
 		cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d-%H%M%S)"
 	fi
@@ -78,13 +78,13 @@ mgmt_backup() {
 	if [[ -f scripts/backup.sh ]]; then
 		COMPOSE_FILE="$COMPOSE_FILE" bash scripts/backup.sh
 	else
-		log_error "scripts/backup.sh not found"
+		log_error "scripts/backup.sh not found — run the installer from your install directory"
 	fi
 	tui_press_enter
 }
 
 mgmt_restore() {
-	local backups dir choice
+	local backups dir choice labels=()
 	if [[ ! -d backups ]]; then
 		log_error "No backups/ directory found"
 		tui_press_enter
@@ -92,32 +92,37 @@ mgmt_restore() {
 	fi
 	mapfile -t backups < <(find backups -mindepth 1 -maxdepth 1 -type d | sort -r)
 	if [[ ${#backups[@]} -eq 0 ]]; then
-		log_error "No backups found"
+		log_error "No backups found in backups/"
 		tui_press_enter
 		return
 	fi
-	echo "Available backups:"
 	local i=1
 	for dir in "${backups[@]}"; do
-		echo "  [$i] $dir"
+		labels+=("$(basename "$dir")")
 		((i++)) || true
 	done
-	read -r -p "Select backup number: " choice
-	if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#backups[@]} )); then
-		dir="${backups[$((choice - 1))]}"
-		if tui_confirm "Restore from $dir? This will overwrite current data." "n"; then
-			COMPOSE_FILE="$COMPOSE_FILE" bash scripts/restore.sh "$dir"
-		fi
-	else
-		log_error "Invalid selection"
+	if ! choice="$(tui_choose "Select a backup to restore" "${labels[@]}")"; then
+		tui_press_enter
+		return
 	fi
+	for dir in "${backups[@]}"; do
+		if [[ "$(basename "$dir")" == "$choice" ]]; then
+			if tui_confirm "Restore from $dir? This overwrites current data." "n"; then
+				COMPOSE_FILE="$COMPOSE_FILE" bash scripts/restore.sh "$dir"
+			fi
+			tui_press_enter
+			return
+		fi
+	done
+	log_error "Backup not found"
 	tui_press_enter
 }
 
 mgmt_logs() {
+	print_section "Recent logs (${LOG_CONTAINER})"
 	if docker logs "$LOG_CONTAINER" --tail 50 2>/dev/null; then
 		echo ""
-		if tui_confirm "Follow logs (Ctrl+C to stop)?" "n"; then
+		if tui_confirm "Follow logs live? (Ctrl+C to stop)" "n"; then
 			docker logs "$LOG_CONTAINER" --follow
 		fi
 	else
@@ -130,36 +135,36 @@ mgmt_logs() {
 mgmt_restart() {
 	local compose
 	compose="$(compose_args)"
-	$compose restart
+	tui_spinner "Restarting services" bash -c "$compose restart"
 	log_success "Services restarted"
 	tui_press_enter
 }
 
 mgmt_uninstall() {
-	if ! tui_confirm "Stop containers and remove volumes? This deletes all data." "n"; then
+	if ! tui_confirm "Stop containers and remove volumes? This deletes all AdventureLog data." "n"; then
 		return
 	fi
 	local compose
 	compose="$(compose_args)"
-	$compose down -v --remove-orphans
+	tui_spinner "Removing containers and volumes" bash -c "$compose down -v --remove-orphans"
 	if tui_confirm "Also delete install directory $(pwd)?" "n"; then
 		local install_path
 		install_path="$(pwd)"
 		cd .. || exit 1
 		rm -rf "$install_path"
 	fi
-	log_success "Uninstalled"
+	log_success "AdventureLog has been uninstalled"
 }
 
 run_management_menu() {
 	enter_install_dir
 	print_screen "AdventureLog Manager — $(pwd)"
-	log_info "Setup: $SETUP_TYPE | Compose: $COMPOSE_FILE"
+	log_muted "Setup: $SETUP_TYPE · Compose: $COMPOSE_FILE · Env: $ENV_FILE"
 	echo ""
 	while true; do
 		local choice
 		choice="$(tui_choose "What would you like to do?" \
-			"Check status & health" \
+			"Status & health check" \
 			"Update to latest images" \
 			"Edit configuration" \
 			"Backup now" \
@@ -169,7 +174,7 @@ run_management_menu() {
 			"Uninstall" \
 			"Exit")" || break
 		case "$choice" in
-			"Check status & health") mgmt_check_status ;;
+			"Status & health check") mgmt_check_status ;;
 			"Update to latest images") mgmt_update ;;
 			"Edit configuration") mgmt_reconfigure ;;
 			"Backup now") mgmt_backup ;;
@@ -180,5 +185,7 @@ run_management_menu() {
 			"Exit"|*) break ;;
 		esac
 		print_screen "AdventureLog Manager"
+		log_muted "$(pwd) · $SETUP_TYPE"
+		echo ""
 	done
 }

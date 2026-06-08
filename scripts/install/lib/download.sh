@@ -56,35 +56,35 @@ copy_local_installer_libs() {
 }
 
 download_aio_toolkit() {
-	log_info "Downloading AIO deployment files..."
-	download_file "${GITHUB_RAW}/docker-compose.aio.yml" "docker-compose.aio.yml"
+	log_info "Fetching All-in-One deployment files"
+	mkdir -p docker
+	download_file "${GITHUB_RAW}/docker/docker-compose.aio.yml" "docker/docker-compose.aio.yml"
 	download_file "${GITHUB_RAW}/.env.aio.example" ".env.aio.example"
-	download_file "${GITHUB_RAW}/deploy.sh" "deploy.sh"
+	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"
 	download_file "${GITHUB_RAW}/scripts/restore.sh" "scripts/restore.sh"
-	download_file "${GITHUB_RAW}/docker-compose.override.example.yml" "docker-compose.override.example.yml" || true
-	chmod +x deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
+	chmod +x scripts/deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
 	if [[ -d "$(dirname "${BASH_SOURCE[0]}")" ]]; then
 		copy_local_installer_libs "$(dirname "${BASH_SOURCE[0]}")" "scripts/install/lib"
 	fi
-	log_success "AIO toolkit downloaded"
+	log_success "Deployment toolkit ready"
 }
 
 download_standard_toolkit() {
-	log_info "Downloading standard deployment files..."
-	download_file "${GITHUB_RAW}/docker-compose.yml" "docker-compose.yml"
+	log_info "Fetching Standard deployment files"
+	mkdir -p docker
+	download_file "${GITHUB_RAW}/docker/docker-compose.yml" "docker/docker-compose.yml"
 	download_file "${GITHUB_RAW}/.env.example" ".env.example"
-	download_file "${GITHUB_RAW}/deploy.sh" "deploy.sh"
+	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"
 	download_file "${GITHUB_RAW}/scripts/restore.sh" "scripts/restore.sh"
-	download_file "${GITHUB_RAW}/docker-compose.override.example.yml" "docker-compose.override.example.yml" || true
-	chmod +x deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
+	chmod +x scripts/deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
 	if [[ -d "$(dirname "${BASH_SOURCE[0]}")" ]]; then
 		copy_local_installer_libs "$(dirname "${BASH_SOURCE[0]}")" "scripts/install/lib"
 	fi
-	log_success "Standard toolkit downloaded"
+	log_success "Deployment toolkit ready"
 }
 
 ensure_install_directory() {

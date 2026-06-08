@@ -120,8 +120,8 @@ COPY --from=frontend-build /app/package.json /app/package.json
 COPY frontend/start.js /app/start.js
 COPY docker/shared/nginx-aio.conf /etc/nginx/nginx.conf
 COPY docker/shared/supervisord-aio.conf /aio/supervisord.conf
-COPY aio/env-setup.sh /aio/env-setup.sh
-COPY aio/entrypoint.sh /aio/entrypoint.sh
+COPY docker/aio/env-setup.sh /aio/env-setup.sh
+COPY docker/aio/entrypoint.sh /aio/entrypoint.sh
 RUN chmod +x /aio/env-setup.sh /aio/entrypoint.sh
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=5 \

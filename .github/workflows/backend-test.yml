@@ -27,7 +27,7 @@ jobs:
 
       - name: start database
         run: |
-          docker compose -f .github/.docker-compose-database.yml up -d
+          docker compose -f docker/docker-compose.database.yml up -d
 
       - name: install python libraries
         working-directory: backend/server

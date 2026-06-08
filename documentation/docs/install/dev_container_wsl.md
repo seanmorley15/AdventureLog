@@ -115,7 +115,7 @@ Use the VS Code terminal (inside the Dev Container) for the commands below.
 To start the app, enter the following command:
 
 ```bash
-docker compose -f docker-compose.dev.yml up --build
+docker compose -f docker/docker-compose.dev.yml up --build
 ```
 
 Bringing the app up usually takes around 1-2 minutes.
@@ -123,7 +123,7 @@ Bringing the app up usually takes around 1-2 minutes.
 To fully reset the database and media volumes, run:
 
 ```bash
-docker compose -f docker-compose.dev.yml down -v
+docker compose -f docker/docker-compose.dev.yml down -v
 ```
 
 ## Accessing the App
@@ -134,7 +134,7 @@ docker compose -f docker-compose.dev.yml down -v
 * **Backend (API)**
   [http://localhost:8016](http://localhost:8016)
 
-Admin credentials are taken from your `.env` file. The `docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
+Admin credentials are taken from your `.env` file. The `docker/docker-compose.dev.yml` setup auto-creates a superuser on startup using those values so you can log in right away.
 It also checks whether the countries/flags data already exists before re-importing it, so the first build can take longer and subsequent `down`/`up` runs are faster.
 This dev setup can feel a bit slower because hot reload, dependency installs, and initial database bootstrapping all happen inside containers.
 

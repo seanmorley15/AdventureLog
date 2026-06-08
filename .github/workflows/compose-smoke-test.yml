@@ -7,10 +7,9 @@ on:
   pull_request:
     paths:
       - 'backend/**'
-      - 'aio/**'
+      - 'docker/aio/**'
       - 'frontend/**'
       - 'docker/**'
-      - 'docker-compose*.yml'
       - '.github/workflows/compose-smoke-test.yml'
   push:
     branches:
@@ -18,10 +17,9 @@ on:
       - development
     paths:
       - 'backend/**'
-      - 'aio/**'
+      - 'docker/aio/**'
       - 'frontend/**'
       - 'docker/**'
-      - 'docker-compose*.yml'
       - '.github/workflows/compose-smoke-test.yml'
 
 jobs:
@@ -45,7 +43,7 @@ jobs:
       - name: Start AIO stack
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
-          docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
+          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d --wait
 
       - name: Wait for health endpoint
         run: |
@@ -56,12 +54,12 @@ jobs:
             sleep 5
           done
           echo "Health check failed"
-          docker compose --env-file .env.aio -f docker-compose.aio.yml ps
-          docker compose --env-file .env.aio -f docker-compose.aio.yml logs
+          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml ps
+          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml logs
           exit 1
 
       - name: Tear down
         if: always()
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
-          docker compose --env-file .env.aio -f docker-compose.aio.yml down -v
+          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml down -v

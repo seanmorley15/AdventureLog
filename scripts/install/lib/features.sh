@@ -114,11 +114,11 @@ configure_debug() {
 run_optional_features_wizard() {
 	print_step_header 4 "$WIZARD_TOTAL" "Optional features"
 	if [[ "${DRY_RUN:-false}" == true ]]; then
-		log_info "[dry-run] Skipping optional features"
+		log_muted "[dry-run] Skipping optional features"
 		return 0
 	fi
-	log_info "Configure optional integrations, or pick Done when finished."
-	echo ""
+	tui_print_box "Optional integrations" \
+		"Configure email, S3, maps, analytics, and more.\nChoose Done when you are finished."
 	local groups=(
 		"Registration & Auth"
 		"Email"
@@ -132,9 +132,12 @@ run_optional_features_wizard() {
 	)
 	local choice
 	while true; do
+		TUI_CHOOSE_DEFAULT_INDEX=${#groups[@]}
 		if ! choice="$(tui_choose "Optional features" "${groups[@]}")"; then
+			unset TUI_CHOOSE_DEFAULT_INDEX
 			break
 		fi
+		unset TUI_CHOOSE_DEFAULT_INDEX
 		case "$choice" in
 			"Registration & Auth") configure_registration_auth ;;
 			"Email") configure_email ;;

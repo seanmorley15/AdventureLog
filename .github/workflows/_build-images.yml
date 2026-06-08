@@ -26,7 +26,6 @@ jobs:
     outputs:
       frontend: ${{ steps.flags.outputs.frontend }}
       backend: ${{ steps.flags.outputs.backend }}
-      cdn: ${{ steps.flags.outputs.cdn }}
       aio: ${{ steps.flags.outputs.aio }}
     steps:
       - uses: actions/checkout@v4
@@ -47,10 +46,8 @@ jobs:
               - 'backend/**'
               - 'docker/Dockerfile'
               - 'docker/shared/**'
-            cdn:
-              - 'cdn/**'
             aio:
-              - 'aio/**'
+              - 'docker/aio/**'
               - 'frontend/**'
               - 'backend/**'
               - 'docker/Dockerfile'
@@ -62,7 +59,6 @@ jobs:
           shared="${{ steps.filter.outputs.shared }}"
           frontend="${{ steps.filter.outputs.frontend }}"
           backend="${{ steps.filter.outputs.backend }}"
-          cdn="${{ steps.filter.outputs.cdn }}"
           aio="${{ steps.filter.outputs.aio }}"
 
           bool_or() {
@@ -71,7 +67,6 @@ jobs:
 
           echo "frontend=$(bool_or "$shared" "$frontend")" >> "$GITHUB_OUTPUT"
           echo "backend=$(bool_or "$shared" "$backend")" >> "$GITHUB_OUTPUT"
-          echo "cdn=$(bool_or "$shared" "$cdn")" >> "$GITHUB_OUTPUT"
           echo "aio=$(bool_or "$shared" "$aio")" >> "$GITHUB_OUTPUT"
 
   build-frontend:
@@ -96,18 +91,6 @@ jobs:
       dockerfile: docker/Dockerfile
       target: backend
       image_name: adventurelog-backend
-      tag: ${{ inputs.tag }}
-      include_latest_tag: ${{ inputs.include_latest_tag }}
-    secrets: inherit
-
-  build-cdn:
-    needs: changes
-    if: ${{ !inputs.filter_paths || needs.changes.outputs.cdn == 'true' }}
-    uses: ./.github/workflows/_build-image.yml
-    with:
-      context: ./cdn
-      dockerfile: cdn/Dockerfile
-      image_name: adventurelog-cdn
       tag: ${{ inputs.tag }}
       include_latest_tag: ${{ inputs.include_latest_tag }}
     secrets: inherit

@@ -25,7 +25,7 @@ kubectl apply -k k8s/base/
 
 Edit `SITE_URL`, ingress host, and secret values before applying in production.
 
-The legacy root [`kustomization.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/kustomization.yml) example is **deprecated** — it colocates frontend, backend, and database in one pod.
+The legacy [`k8s/legacy/kustomization.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/k8s/legacy/kustomization.yml) example is **deprecated** — it colocates frontend, backend, and database in one pod.
 
 ## Standard 3-container on Kubernetes
 

@@ -453,8 +453,6 @@ LOGGING = {
 # ---------------------------------------------------------------------------
 PUBLIC_URL = getenv('PUBLIC_URL') or (SITE_URL if SITE_URL else 'http://localhost:8000')
 
-# ADVENTURELOG_CDN_URL = getenv('ADVENTURELOG_CDN_URL', 'https://cdn.adventurelog.app')
-
 # Major release version of AdventureLog, not including the patch version date.
 ADVENTURELOG_RELEASE_VERSION = 'v0.12.1'
 

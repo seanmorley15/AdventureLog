@@ -49,7 +49,7 @@ EOF
 }
 
 check_dependencies() {
-	log_info "Checking system dependencies..."
+	print_section "Dependencies"
 	local missing=()
 	command -v curl &>/dev/null || missing+=("curl")
 	command -v docker &>/dev/null || missing+=("docker")
@@ -57,29 +57,29 @@ check_dependencies() {
 		missing+=("docker-compose")
 	fi
 	if [[ ${#missing[@]} -gt 0 ]]; then
-		log_error "Missing: ${missing[*]}"
-		echo "Install Docker: https://docs.docker.com/get-docker/"
+		log_error "Missing required tools: ${missing[*]}"
+		log_muted "Install Docker: https://docs.docker.com/get-docker/"
 		exit 1
 	fi
-	log_success "Dependencies OK"
+	log_success "Docker, Compose, and curl are available"
 }
 
 check_docker_status() {
 	if [[ "${DRY_RUN:-false}" == true ]]; then
-		log_info "[dry-run] Skipping Docker daemon check"
+		log_muted "[dry-run] Skipping Docker daemon check"
 		return 0
 	fi
-	log_info "Checking Docker daemon..."
+	log_info "Checking Docker daemon"
 	if ! docker info &>/dev/null; then
-		log_error "Docker is not running"
+		log_error "Docker is not running — start Docker and try again"
 		exit 1
 	fi
 	if ! docker info 2>/dev/null | grep -q "Username:" && [[ "$(id -u)" -ne 0 ]]; then
 		if ! groups 2>/dev/null | grep -q docker; then
-			log_warning "User not in docker group — you may need sudo for docker commands"
+			log_warning "Your user is not in the docker group — you may need sudo"
 		fi
 	fi
-	log_success "Docker is running"
+	log_success "Docker daemon is running"
 }
 
 check_memory() {
@@ -157,7 +157,8 @@ run_preflight() {
 	check_dependencies
 	check_docker_status
 	detect_system_arch
-	log_info "Architecture: $SYSTEM_ARCH (${POSTGIS_IMAGE})"
+	log_success "Architecture: $SYSTEM_ARCH"
+	log_muted "PostGIS image: $POSTGIS_IMAGE"
 	check_memory
 	check_disk_space "$INSTALL_DIR"
 }

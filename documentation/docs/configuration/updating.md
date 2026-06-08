@@ -2,21 +2,21 @@
 
 Keep your self-hosted instance current with the latest images and database migrations. **Always back up before updating.**
 
-## Option 1: deploy.sh (recommended)
+## Option 1: scripts/deploy.sh (recommended)
 
-From your install directory (where `deploy.sh` and your compose file live):
+From your install directory (where `scripts/deploy.sh` and your compose file live):
 
 ```bash
-bash deploy.sh --backup
-bash deploy.sh --logs   # optional: follow logs after deploy
+bash scripts/deploy.sh --backup
+bash scripts/deploy.sh --logs   # optional: follow logs after deploy
 ```
 
-`deploy.sh` validates your env file, creates a backup, pulls images, and runs `docker compose up -d --wait`.
+`scripts/deploy.sh` validates your env file, creates a backup, pulls images, and runs `docker compose up -d --wait`.
 
 For AIO installs:
 
 ```bash
-COMPOSE_FILE=docker-compose.aio.yml bash deploy.sh --backup
+COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
 ```
 
 See [Operations & Maintenance](operations.md) for compose auto-detection details.
@@ -27,12 +27,12 @@ See [Operations & Maintenance](operations.md) for compose auto-detection details
 bash scripts/backup.sh
 
 # Standard
-docker compose --env-file .env -f docker-compose.yml pull
-docker compose --env-file .env -f docker-compose.yml up -d --wait
+docker compose --env-file .env -f docker/docker-compose.yml pull
+docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
 
 # AIO
-docker compose --env-file .env.aio -f docker-compose.aio.yml pull
-docker compose --env-file .env.aio -f docker-compose.aio.yml up -d --wait
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml pull
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d --wait
 ```
 
 ## Option 3: Guided installer menu

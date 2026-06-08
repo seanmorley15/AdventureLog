@@ -7,11 +7,35 @@
 #   bash install_adventurelog.sh [--dry-run] [--manage] [--force-install]
 set -euo pipefail
 
+INSTALLER_VERSION="2.0.0"
 ADVENTURELOG_REF="${ADVENTURELOG_REF:-main}"
 GITHUB_RAW="https://raw.githubusercontent.com/seanmorley15/AdventureLog/${ADVENTURELOG_REF}"
 DRY_RUN=false
 FORCE_INSTALL=false
 ADVENTURELOG_MANAGE="${ADVENTURELOG_MANAGE:-}"
+
+print_help() {
+	cat << EOF
+AdventureLog Installer v${INSTALLER_VERSION}
+
+Usage:
+  curl -sSL https://get.adventurelog.app | bash
+  bash install_adventurelog.sh [options]
+
+Options:
+  --dry-run         Preview the wizard without changing your system
+  --force-install   Run a fresh install even if one already exists
+  --manage          Open the management console for an existing install
+  -h, --help        Show this help message
+
+Environment:
+  INSTALL_DIR              Target directory (default: ./adventurelog)
+  ADVENTURELOG_REF         Git branch/tag for remote files (default: main)
+  ADVENTURELOG_SKIP_GUM=1  Disable gum UI (useful for CI and dry runs)
+
+Docs: https://adventurelog.app/docs/install/quick_start
+EOF
+}
 
 for arg in "$@"; do
 	case "$arg" in
@@ -19,7 +43,7 @@ for arg in "$@"; do
 		--force-install) FORCE_INSTALL=true ;;
 		--manage) ADVENTURELOG_MANAGE=1 ;;
 		--help|-h)
-			echo "Usage: install_adventurelog.sh [--dry-run] [--manage] [--force-install]"
+			print_help
 			exit 0
 			;;
 	esac
@@ -36,10 +60,6 @@ find_installer_lib_dir() {
 	fi
 	if [[ -f "./scripts/install/lib/ui.sh" ]]; then
 		echo "$(cd "./scripts/install/lib" && pwd)"
-		return 0
-	fi
-	if [[ -f "./adventurelog/scripts/install/lib/ui.sh" ]]; then
-		echo "$(cd "./adventurelog/scripts/install/lib" && pwd)"
 		return 0
 	fi
 	return 1
@@ -62,6 +82,7 @@ bootstrap_and_source_libs() {
 		for f in "${files[@]}"; do
 			curl -fsSL "${GITHUB_RAW}/scripts/install/lib/${f}" -o "${cache_dir}/${f}" || {
 				echo "ERROR: Failed to download installer library: ${f}" >&2
+				echo "       Check ADVENTURELOG_REF=${ADVENTURELOG_REF} and your network connection." >&2
 				exit 1
 			}
 		done
@@ -109,6 +130,7 @@ if [[ -t 1 ]] || [[ "$DRY_RUN" == true ]]; then
 	bootstrap_and_source_libs
 	run_main "$@"
 else
-	echo "Error: This script needs an interactive terminal (or use --dry-run)." >&2
+	echo "Error: AdventureLog installer requires an interactive terminal (or use --dry-run)." >&2
+	echo "Run: bash install_adventurelog.sh --help" >&2
 	exit 1
 fi

@@ -1,4 +1,4 @@
-# Docker images
+# Docker
 
 All production images are built from a **single Dockerfile** with shared stages so frontend, backend, and AIO stay in sync.
 
@@ -21,6 +21,14 @@ docker buildx bake -f docker/docker-bake.hcl
 | [`Dockerfile`](Dockerfile) | Multi-target build (frontend, backend, aio) |
 | [`docker-bake.hcl`](docker-bake.hcl) | Optional bake file for all targets |
 | [`shared/`](shared/) | nginx, supervisord, and entrypoint scripts shared across images |
+| [`aio/`](aio/) | AIO container entrypoint and env setup scripts |
+| [`docker-compose*.yml`](docker-compose.aio.yml) | Compose stacks for production, development, Traefik, and CI |
+
+Run compose files from the repository root, for example:
+
+```bash
+docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d
+```
 
 ## Shared stages
 

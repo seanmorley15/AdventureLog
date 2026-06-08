@@ -44,7 +44,7 @@ Use these when AdventureLog sits behind HTTPS on a custom domain:
 | Proxy | Guide |
 | ----- | ----- |
 | Nginx Proxy Manager | [Nginx Proxy Manager](nginx_proxy_manager.md) |
-| Traefik | [Traefik](traefik.md) — includes `docker-compose-traefik.yaml` |
+| Traefik | [Traefik](traefik.md) — includes `docker/docker-compose.traefik.yaml` |
 | Caddy | [Caddy](caddy.md) |
 
 Set `SITE_URL` to your public HTTPS URL so Django CSRF and SvelteKit origins stay correct. See [Environment Variables](../configuration/environment_variables.md#url-and-networking).

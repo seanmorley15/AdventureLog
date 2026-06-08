@@ -9,17 +9,17 @@ Run AdventureLog as three containers: SvelteKit frontend, Django backend, and Po
 ## Prerequisites
 
 - Docker installed on your machine/server. You can learn how to download it [here](https://docs.docker.com/engine/install/).
-- **Memory:** allocate at least **2 GB RAM** for the first boot (world geography data import). Steady-state use typically needs about **1 GB**. Optional limits are documented in [`docker-compose.override.example.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.override.example.yml).
+- **Memory:** allocate at least **2 GB RAM** for the first boot (world geography data import). Steady-state use typically needs about **1 GB**.
 
 ## Getting Started
 
 Get the `docker-compose.yml` and `.env.example` files from the AdventureLog repository. You can download them here:
 
-- [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker-compose.yml)
+- [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.yml)
 - [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
 
 ```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.yml
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
 cp .env.example .env
 ```
@@ -101,7 +101,7 @@ Validate and start:
 
 ```bash
 bash scripts/validate-env.sh
-docker compose --env-file .env -f docker-compose.yml up -d --wait
+docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
 ```
 
 Open **http://localhost:8015** (or your configured `ORIGIN` / `SITE_URL`).

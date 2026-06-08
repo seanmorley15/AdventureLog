@@ -1,5 +1,5 @@
 #!/bin/bash
-# Cross-distro TUI: full gum (real terminals) | styled bash + gum cosmetics (IDE) | plain fallback.
+# Cross-distro TUI: gum (real terminals) | styled bash (IDE) | plain fallback.
 set -euo pipefail
 
 TUI_BACKEND="bash"
@@ -9,7 +9,6 @@ has_gum() {
 	command -v gum &>/dev/null
 }
 
-# Full gum choose/confirm/input uses alt-screen — broken in IDE integrated terminals.
 terminal_supports_gum_interactive() {
 	has_gum || return 1
 	[[ -t 0 && -t 1 ]] || return 1
@@ -45,24 +44,25 @@ offer_gum_install() {
 	if has_gum; then
 		return 0
 	fi
-	tui_print_box "Enhanced UI" "Install gum for styled menus, spinners, and progress bars."
+	tui_print_box "Enhanced UI" \
+		"Install gum for polished menus, spinners, and progress bars.\nhttps://github.com/charmbracelet/gum"
 	if ! tui_confirm_bash "Install gum now?" "y"; then
-		log_info "Continuing with built-in styled UI."
+		log_muted "Continuing with built-in styled UI."
 		return 1
 	fi
 	if [[ "$OSTYPE" == "darwin"* ]] && command -v brew &>/dev/null; then
-		log_info "Installing gum via Homebrew..."
-		brew install gum
+		tui_spinner_bash "Installing gum via Homebrew" brew install gum
 	elif command -v apt-get &>/dev/null; then
-		log_info "Installing gum via apt (may require sudo)..."
-		sudo mkdir -p /etc/apt/keyrings
-		curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
-		echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list >/dev/null
-		sudo apt-get update -qq
-		sudo apt-get install -y gum
+		tui_spinner_bash "Installing gum via apt" bash -c '
+			sudo mkdir -p /etc/apt/keyrings &&
+			curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg &&
+			echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list >/dev/null &&
+			sudo apt-get update -qq &&
+			sudo apt-get install -y gum
+		'
 	else
-		log_warning "Automatic gum install not supported on this OS."
-		log_info "See https://github.com/charmbracelet/gum#installation"
+		log_warning "Automatic gum install is not supported on this OS."
+		log_muted "See https://github.com/charmbracelet/gum#installation"
 		return 1
 	fi
 	has_gum
@@ -82,14 +82,7 @@ init_tui() {
 		offer_gum_install && GUM_STYLE=true
 	fi
 	detect_tui_backend
-	case "$TUI_BACKEND" in
-		gum) log_info "UI mode: interactive gum" ;;
-		styled) log_info "UI mode: styled terminal (IDE-safe)" ;;
-		*) log_info "UI mode: classic text" ;;
-	esac
 }
-
-# ── Visual helpers (safe in all terminals) ──────────────────────────────────
 
 tui_styled() {
 	local fg="${1:-212}"
@@ -104,20 +97,22 @@ tui_styled() {
 tui_print_box() {
 	local title="$1"
 	local body="$2"
+	body="$(printf '%b' "$body")"
 	echo "" >&2
 	if [[ "$GUM_STYLE" == true ]]; then
 		gum join --align left --vertical \
 			"$(gum style --border rounded --border-foreground 212 --padding "0 1" --bold "$title")" \
 			"$(gum style --border rounded --border-foreground 240 --padding "0 1" "$body")" >&2
 	else
-		local width=58
-		echo -e "${CYAN}╭$(printf '─%.0s' $(seq 1 "$width"))╮${NC}" >&2
-		echo -e "${CYAN}│${NC} ${BOLD}${title}${NC}" >&2
-		echo -e "${CYAN}├$(printf '─%.0s' $(seq 1 "$width"))┤${NC}" >&2
-		while IFS= read -r line; do
-			echo -e "${CYAN}│${NC} ${line}" >&2
+		local width=54
+		echo -e "  ${CYAN}╭$(printf '─%.0s' $(seq 1 "$width"))╮${NC}" >&2
+		echo -e "  ${CYAN}│${NC} ${BOLD}${title}${NC}" >&2
+		echo -e "  ${CYAN}├$(printf '─%.0s' $(seq 1 "$width"))┤${NC}" >&2
+		while IFS= read -r line || [[ -n "$line" ]]; do
+			[[ -z "$line" ]] && echo -e "  ${CYAN}│${NC}" >&2 && continue
+			echo -e "  ${CYAN}│${NC} ${line}" >&2
 		done <<< "$body"
-		echo -e "${CYAN}╰$(printf '─%.0s' $(seq 1 "$width"))╯${NC}" >&2
+		echo -e "  ${CYAN}╰$(printf '─%.0s' $(seq 1 "$width"))╯${NC}" >&2
 	fi
 	echo "" >&2
 }
@@ -126,36 +121,38 @@ tui_progress_bar() {
 	local step="$1"
 	local total="$2"
 	local label="$3"
-	local width=24
+	local width=28
 	local filled=$(( step * width / total ))
 	local empty=$(( width - filled ))
 	local bar
 	bar="$(printf '█%.0s' $(seq 1 "$filled" 2>/dev/null || true))$(printf '░%.0s' $(seq 1 "$empty" 2>/dev/null || true))"
+	local step_text="Step ${step} of ${total}"
 	if [[ "$GUM_STYLE" == true ]]; then
-		if ! gum join --horizontal \
-			"$(gum style --foreground 212 "[${bar}]")" \
-			"$(gum style --bold " Step ${step}/${total}")" \
-			"$(gum style --foreground 245 " ${label}")" >&2 2>/dev/null; then
-			echo -e "${CYAN}[${bar}]${NC} ${BOLD}Step ${step}/${total}${NC} ${DIM}${label}${NC}" >&2
+		if ! {
+			gum style --foreground 212 "$bar" >&2
+			gum style --bold "$step_text" >&2
+			gum style --foreground 245 "$label" >&2
+		} 2>/dev/null; then
+			echo -e "  ${CYAN}${bar}${NC}  ${BOLD}${step_text}${NC}" >&2
+			echo -e "  ${DIM}${label}${NC}" >&2
 		fi
 	else
-		echo -e "${CYAN}[${bar}]${NC} ${BOLD}Step ${step}/${total}${NC} ${DIM}${label}${NC}" >&2
+		echo -e "  ${CYAN}${bar}${NC}  ${BOLD}${step_text}${NC}" >&2
+		echo -e "  ${DIM}${label}${NC}" >&2
 	fi
 	echo "" >&2
 }
 
-# ── Prompts ─────────────────────────────────────────────────────────────────
-
 tui_confirm_bash() {
 	local prompt="$1"
 	local default="${2:-n}"
-	local hint="[y/N]"
-	[[ "$default" == "y" ]] && hint="[Y/n]"
+	local hint="y/N"
+	[[ "$default" == "y" ]] && hint="Y/n"
 	if [[ "$TUI_BACKEND" == "styled" ]] || [[ "$TUI_BACKEND" == "gum" ]]; then
 		tui_print_box "Confirm" "$prompt"
 	fi
 	echo "" >&2
-	read -r -p "$(echo -e "${BOLD}?${NC} ${prompt} ${DIM}${hint}${NC}: ")" reply
+	read -r -p "$(echo -e "  ${BOLD}?${NC} ${prompt} ${DIM}[${hint}]${NC}: ")" reply
 	reply="${reply:-$default}"
 	[[ "$reply" =~ ^[Yy] ]]
 }
@@ -171,9 +168,9 @@ tui_confirm() {
 		gum)
 			local gum_rc=0
 			if [[ "$default" == "y" ]]; then
-				gum confirm "$prompt" --affirmative "Yes" --negative "No" --default=true 2>/dev/null || gum_rc=$?
+				gum confirm "$prompt" --affirmative " Yes " --negative " No " --default=true 2>/dev/null || gum_rc=$?
 			else
-				gum confirm "$prompt" --affirmative "Yes" --negative "No" --default=false 2>/dev/null || gum_rc=$?
+				gum confirm "$prompt" --affirmative " Yes " --negative " No " --default=false 2>/dev/null || gum_rc=$?
 			fi
 			if [[ $gum_rc -eq 0 ]]; then return 0; fi
 			if [[ $gum_rc -eq 1 ]]; then return 1; fi
@@ -200,10 +197,10 @@ tui_input_bash() {
 	fi
 	echo "" >&2
 	if [[ -n "$default" ]]; then
-		read -r -p "$(echo -e "${BOLD}›${NC} ${prompt} ${DIM}[${default}]${NC}: ")" value
+		read -r -p "$(echo -e "  ${BOLD}›${NC} ${prompt} ${DIM}[${default}]${NC}: ")" value
 		echo "${value:-$default}"
 	else
-		read -r -p "$(echo -e "${BOLD}›${NC} ${prompt}: ")" value
+		read -r -p "$(echo -e "  ${BOLD}›${NC} ${prompt}: ")" value
 		echo "$value"
 	fi
 }
@@ -261,7 +258,7 @@ tui_password() {
 				tui_print_box "Secret" "$prompt"
 			fi
 			echo "" >&2
-			read -r -s -p "$(echo -e "${BOLD}🔒${NC} ${prompt}: ")" value
+			read -r -s -p "$(echo -e "  ${BOLD}🔒${NC} ${prompt}: ")" value
 			echo "" >&2
 			echo "$value"
 			;;
@@ -272,7 +269,7 @@ tui_choose_styled() {
 	local prompt="$1"
 	shift
 	local options=("$@")
-	local choice i default=1
+	local choice i default="${TUI_CHOOSE_DEFAULT_INDEX:-1}"
 
 	tui_print_box "$prompt" "Enter the number for your choice."
 	echo "" >&2
@@ -280,17 +277,17 @@ tui_choose_styled() {
 	for opt in "${options[@]}"; do
 		if (( i == default )); then
 			if [[ "$GUM_STYLE" == true ]]; then
-				echo "  $(gum style --foreground 212 --bold "❯ ${i}")  $(gum style --bold "$opt")" >&2
+				echo -e "    $(gum style --foreground 212 --bold "❯ ${i}")  $(gum style --bold "$opt")" >&2
 			else
-				echo -e "  ${CYAN}${BOLD}❯ ${i}${NC}  ${BOLD}${opt}${NC}" >&2
+				echo -e "    ${CYAN}${BOLD}❯ ${i}${NC}  ${BOLD}${opt}${NC}" >&2
 			fi
 		else
-			echo -e "    ${DIM}${i}${NC}  ${opt}" >&2
+			echo -e "      ${DIM}${i}${NC}  ${opt}" >&2
 		fi
 		((i++)) || true
 	done
 	echo "" >&2
-	read -r -p "$(echo -e "${BOLD}›${NC} Choice ${DIM}[${default}]${NC}: ")" choice
+	read -r -p "$(echo -e "  ${BOLD}›${NC} Choice ${DIM}[${default}]${NC}: ")" choice
 	choice="${choice:-$default}"
 	if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
 		echo "${options[$((choice - 1))]}"
@@ -303,14 +300,18 @@ tui_choose() {
 	local prompt="$1"
 	shift
 	local options=("$@")
-	local choice result
+	local choice result default_idx="${TUI_CHOOSE_DEFAULT_INDEX:-}"
 	if [[ "${DRY_RUN:-false}" == true ]]; then
-		echo "${options[0]}"
+		if [[ -n "$default_idx" ]]; then
+			echo "${options[$((default_idx - 1))]}"
+		else
+			echo "${options[0]}"
+		fi
 		return 0
 	fi
 	case "$TUI_BACKEND" in
 		gum)
-			if result="$(gum choose --header "$prompt" --cursor "❯ " --selected.foreground "212" "${options[@]}" 2>/dev/null)" && [[ -n "$result" ]]; then
+			if [[ -z "$default_idx" ]] && result="$(gum choose --header "$prompt" --cursor "❯ " --selected.foreground "212" --height 12 "${options[@]}" 2>/dev/null)" && [[ -n "$result" ]]; then
 				echo "$result"
 				return 0
 			fi
@@ -347,7 +348,7 @@ tui_spinner_bash() {
 	while kill -0 "$pid" 2>/dev/null; do
 		printf "\r  ${CYAN}${frames[$i]}${NC}  ${title}" >&2
 		i=$(( (i + 1) % ${#frames[@]} ))
-		sleep 0.1
+		sleep 0.08
 	done
 	wait "$pid"
 	local rc=$?
@@ -382,30 +383,13 @@ tui_spinner() {
 	esac
 }
 
-tui_wait_progress() {
-	local message="$1"
-	local max="$2"
-	local attempt=0
-	local frames=('⠋' '⠙' '⠹' '⠸' '⠼' '⠴' '⠦' '⠧' '⠇' '⠏')
-	local i=0
-	while (( attempt < max )); do
-		local pct=$(( attempt * 100 / max ))
-		local frame="${frames[$i]}"
-		printf "\r  ${CYAN}${frame}${NC}  ${message} ${DIM}(${pct}%%)${NC}  " >&2
-		i=$(( (i + 1) % ${#frames[@]} ))
-		sleep 2
-		((attempt++)) || true
-	done
-	printf "\r\033[K" >&2
-}
-
 tui_press_enter() {
-	local msg="${1:-Press Enter to continue...}"
+	local msg="${1:-Press Enter to continue}"
 	echo "" >&2
 	if [[ "$GUM_STYLE" == true ]]; then
-		gum style --foreground 245 "$msg" >&2
+		gum style --foreground 245 "  ${msg}…" >&2
 	else
-		echo -e "${DIM}${msg}${NC}" >&2
+		echo -e "  ${DIM}${msg}…${NC}" >&2
 	fi
 	read -r -p "" _
 }
@@ -422,7 +406,7 @@ prompt_with_default() {
 			echo "$value"
 			return 0
 		fi
-		log_error "Invalid value. Please try again."
+		log_error "Invalid value — please try again."
 	done
 }
 
