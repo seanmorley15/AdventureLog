@@ -1,192 +1,249 @@
 <div align="center">
 
-  <img src="brand/adventurelog.png" alt="logo" width="200" height="auto" />
-  <h1>AdventureLog</h1>
-  
-  <p>
-    The ultimate travel companion for the modern-day explorer.
-  </p>
-   
-<h4>
-    <a href="https://demo.adventurelog.app">View Demo</a>
-  <span> · </span>
-    <a href="https://adventurelog.app">Documentation</a>
-  <span> · </span>
-    <a href="https://discord.gg/wRbQ9Egr8C">Discord</a>
-  <span> · </span>
-    <a href="https://seanmorley.com/sponsor">Support 💖</a>
-  </h4>
+<img src="brand/adventurelog.png" alt="AdventureLog logo" width="120" />
+
+# AdventureLog
+
+**The ultimate travel companion — log where you've been, plan what's next, and see your whole world on one map.**
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://adventurelog.app/docs/install/getting_started)
+[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-success)](https://adventurelog.app/docs/install/getting_started)
+[![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/wRbQ9Egr8C)
+[![GitHub stars](https://img.shields.io/github/stars/seanmorley15/AdventureLog?style=social)](https://github.com/seanmorley15/AdventureLog/stargazers)
+
+[Live Demo](https://demo.adventurelog.app) · [**Get Started**](https://adventurelog.app/docs/install/getting_started) · [Quick Install](#quick-start) · [Documentation](https://adventurelog.app) · [Discord](https://discord.gg/wRbQ9Egr8C) · [Support the project](https://seanmorley.com/sponsor)
+
+<br />
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <strong>📍 Log travel experiences</strong><br />
+      Locations, visits, photos, trails &amp; activities
+    </td>
+    <td align="center" width="25%">
+      <strong>✈️ Plan trips</strong><br />
+      Itineraries, checklists, calendar &amp; shared planning
+    </td>
+    <td align="center" width="25%">
+      <strong>🌍 Track the world</strong><br />
+      Countries, regions, cities &amp; travel stats
+    </td>
+    <td align="center" width="25%">
+      <strong>🔒 Own your data</strong><br />
+      Open source, self-hosted, GPL-3.0
+    </td>
+  </tr>
+</table>
+
 </div>
 
 <br />
 
-<!-- Table of Contents -->
+## What is AdventureLog?
 
-# Table of Contents
+AdventureLog is a **modern open-source travel companion**. Pin every place you've visited, build multi-day trip itineraries, mark countries and regions on an interactive world map, and collaborate with the people you travel with. It integrates with your existing tools and services to help you plan your next unforgettable adventure.
 
-- [About the Project](#-about-the-project)
-  - [Screenshots](#-screenshots)
-  - [Tech Stack](#-tech-stack)
-  - [Features](#-features)
-- [Roadmap](#-roadmap)
-- [Contributing](#-contributing)
-  - [Translation](#-translation)
-- [License](#-license)
-- [Contact](#-contact)
-- [Acknowledgements](#-acknowledgements)
-- [Supporters](#-supporters)
+Built for travelers who want to track, plan, and remember their travel experiences.
 
-<!-- About the Project -->
+## See it in action
 
-## ⭐ About the Project
+<p align="center">
+  <img src="brand/screenshots/map.png" alt="Interactive world map with location pins and visit filters" width="100%" />
+  <br />
+  <em>Interactive world map — every location, visit status, and filter at a glance</em>
+</p>
 
-Starting from a simple idea of tracking travel locations, AdventureLog has grown into a full-fledged travel companion. With AdventureLog, you can log your adventures, keep track of where you've been on the world map, plan your next trip collaboratively, and share your experiences with friends and family.
-
-AdventureLog was created to solve a problem: the lack of a modern, open-source, user-friendly travel companion. Many existing travel apps are either too complex, too expensive, or too closed-off to be useful for the average traveler. AdventureLog aims to be the opposite: simple, beautiful, and open to everyone.
-
-<!-- Screenshots -->
-
-### 📷 Screenshots
-
-<div align="center"> 
-  <img src="./brand/screenshots/adventures.png" alt="Locations" />
-  <p>Displays the locations you have visited and the ones you plan to embark on. You can also filter and sort the locations.</p>
-  <img src="./brand/screenshots/details.png" alt="Location Details" />
-  <p>Shows specific details about a location, including the name, date, location, description, and rating.</p>
-  <img src="./brand/screenshots/edit.png" alt="Edit Modal" />
-  <img src="./brand/screenshots/map.png" alt="Location Details" />
-  <p>View all of your locations on a map, with the ability to filter by visit status and add new ones by click on the map</p>
-  <img src="./brand/screenshots/map-satellite.png" alt="Location Details" />
-  <p>View a 3D representation of your locations and activities on the map, allowing for a more immersive exploration of your travel history.</p>
-  <img src="./brand/screenshots/dashboard.png" alt="Dashboard" />
-  <p>Displays a summary of your locations, including your world travel stats.</p>
-  <img src="./brand/screenshots/itinerary.png" alt="Itinerary" />
-  <p>Plan your adventures and travel itinerary with a list of activities and a map view. View your trip in a variety of ways, including an itinerary list, a map view, and a calendar view. Order your plans and details to create the perfect trip.</p>
-  <img src="./brand/screenshots/countries.png" alt="Countries" />
-  <p>Lists all the countries you have visited and plan to visit, with the ability to filter by visit status.</p>
-  <img src="./brand/screenshots/regions.png" alt="Regions" />
-  <p>Displays the regions for a specific country, includes a map view to visually select regions.</p>
-</div>
-
-<!-- TechStack -->
-
-### 🚀 Tech Stack
+<table>
+  <tr>
+    <td width="50%" align="center">
+      <img src="brand/screenshots/adventures.png" alt="Location list with filters and categories" width="100%" />
+      <br />
+      <strong>Locations</strong> — browse, filter, categorize &amp; organize
+    </td>
+    <td width="50%" align="center">
+      <img src="brand/screenshots/itinerary.png" alt="Trip itinerary planner with map and calendar views" width="100%" />
+      <br />
+      <strong>Trip planning</strong> — itineraries, notes &amp; daily activities
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" align="center">
+      <img src="brand/screenshots/dashboard.png" alt="Travel statistics dashboard" width="100%" />
+      <br />
+      <strong>Dashboard</strong> — travel stats, progress &amp; milestones
+    </td>
+    <td width="50%" align="center">
+      <img src="brand/screenshots/countries.png" alt="World travel book with countries visited" width="100%" />
+      <br />
+      <strong>World travel</strong> — countries, regions &amp; bucket lists
+    </td>
+  </tr>
+</table>
 
 <details>
-  <summary>Client</summary>
-  <ul>
-    <li><a href="https://svelte.dev/">SvelteKit</a></li>
-    <li><a href="https://tailwindcss.com/">TailwindCSS</a></li>
-    <li><a href="https://daisyui.com/">DaisyUI</a></li>
-    <li><a href="https://github.com/dimfeld/svelte-maplibre/">Svelte MapLibre</a></li>
-  </ul>
+<summary><strong>More screenshots</strong></summary>
+<br />
+
+<p align="center">
+  <img src="brand/screenshots/details.png" alt="Location detail view with notes and rating" width="100%" />
+  <br /><em>Rich location details — dates, notes, ratings &amp; visit history</em>
+</p>
+
+<p align="center">
+  <img src="brand/screenshots/map-satellite.png" alt="3D satellite map view of travel locations" width="100%" />
+  <br /><em>3D satellite view — explore your travel history immersively</em>
+</p>
+
+<p align="center">
+  <img src="brand/screenshots/regions.png" alt="Regional map for tracking sub-country travel" width="100%" />
+  <br /><em>Regions — drill into states, provinces &amp; territories</em>
+</p>
+
+</details>
+
+## Features
+
+| | Feature | What you get |
+| --- | --- | --- |
+| 📍 | **Locations & visits** | Pin places on the map with dates, notes, photos, categories, tags, and multi-visit history |
+| 🗺️ | **Interactive map** | Filter by visited / planned, add locations by click, 2D & 3D views |
+| ✈️ | **Trip itineraries** | Multi-day collections with flights, lodging, checklists, links & calendar views |
+| 🤝 | **Collaboration** | Share locations and itineraries via public links or invite other users to edit together |
+| 🌍 | **World travel book** | Track countries, regions, and cities — with stats and progress milestones |
+| 🥾 | **Trails & activities** | Attach hiking routes, GPX tracks, distance, elevation & outdoor activity logs |
+| 🔍 | **Search & organize** | Full-text search, custom categories, public/private visibility |
+| 🔐 | **Security** | MFA, API keys, social auth (Google, GitHub, Authelia & more) |
+
+### Integrations
+
+Connect the tools you already use:
+
+| Integration | Purpose |
+| ----------- | ------- |
+| [**Immich**](https://adventurelog.app/docs/configuration/immich_integration) | Link photos from your self-hosted media library |
+| [**Strava**](https://adventurelog.app/docs/configuration/strava_integration) | Import activities with GPX tracks & stats |
+| [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration) | Attach trails with distance & elevation data |
+| [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration) | Geocoding & location search |
+
+## Why AdventureLog?
+
+| | **AdventureLog** | Typical closed travel apps |
+| --- | --- | --- |
+| **Ownership** | Your data on your server | Locked in a vendor cloud |
+| **Cost** | Free to self-host (GPL-3.0) | Subscriptions & upsells |
+| **Privacy** | You control access & sharing | Opaque data policies |
+| **Customization** | Open source — extend & integrate | Fixed feature set |
+| **Scope** | Locations, itineraries & world travel in one app | Split across multiple tools |
+
+## Quick start
+
+Not sure which setup fits you? The **[Getting Started guide](https://adventurelog.app/docs/install/getting_started)** covers every install path — Docker, homelab NAS, Kubernetes, reverse proxies, and more.
+
+The fastest way to get running — one container, one port:
+
+```bash
+curl -sSL https://get.adventurelog.app | bash
+```
+
+Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/standard) for Docker Compose.
+
+**Requirements:** Docker Engine + Compose v2 · 2 GB RAM on first boot · Linux, VPS, homelab, or macOS
+
+| I want to… | Guide |
+| ---------- | ----- |
+| See all install options | [**Getting Started**](https://adventurelog.app/docs/install/getting_started) |
+| Try before installing | [Live demo](https://demo.adventurelog.app) |
+| One-command install | [Quick Start Installer](https://adventurelog.app/docs/install/quick_start) |
+| Deploy on Proxmox / Synology / Unraid | [Platform guides](https://adventurelog.app/docs/install/getting_started) |
+| Run on Kubernetes | [Kustomize guide](https://adventurelog.app/docs/install/kustomize) |
+| Learn the app | [Usage guide](https://adventurelog.app/docs/usage/usage) |
+
+> Default login is `admin` / `admin` — it's recommended to change it immediately after first sign-in.
+
+## Tech stack
+
+<details>
+<summary><strong>Frontend</strong></summary>
+
+- [SvelteKit](https://svelte.dev/)
+- [Tailwind CSS](https://tailwindcss.com/) + [DaisyUI](https://daisyui.com/)
+- [Svelte MapLibre](https://github.com/dimfeld/svelte-maplibre/) (MapLibre GL)
+
 </details>
 
 <details>
-  <summary>Server</summary>
-  <ul>
-    <li><a href="https://www.djangoproject.com/">Django</a></li>
-    <li><a href="https://postgis.net/">PostGIS</a></li>
-    <li><a href="https://www.django-rest-framework.org/">Django REST Framework</a></li>
-    <li><a href="https://allauth.org/">AllAuth</a></li>
-  </ul>
+<summary><strong>Backend</strong></summary>
+
+- [Django](https://www.djangoproject.com/) + [Django REST Framework](https://www.django-rest-framework.org/)
+- [PostGIS](https://postgis.net/) / PostgreSQL
+- [AllAuth](https://allauth.org/)
+
 </details>
-<!-- Features -->
 
-### 🎯 Features
+<details>
+<summary><strong>Deployment</strong></summary>
 
-- **Track Your Adventures** 🌍: Log your adventures and keep track of where you've been on the world map.
-  - Locations can store a variety of information, including the location, date, and description.
-  - Locations can be sorted into custom categories for easy organization.
-  - Locations can be marked as private or public, allowing you to share your adventures with friends and family.
-  - Keep track of the countries and regions you've visited with the world travel book.
-  - Upload trails and activities to your locations to remember your experiences with detailed maps and stats.
-- **Plan Your Next Trip** 📃: Take the guesswork out of planning your next adventure with an easy-to-use itinerary planner.
-  - Itineraries can be created for any number of days and can include multiple destinations.
-  - Itineraries include many planning features like flight information, notes, checklists, and links to external resources.
-  - Itineraries can be shared with friends and family for collaborative planning.
-- **Share Your Experiences** 📸: Share your adventures with friends and family and collaborate on trips together.
-  - Locations and itineraries can be shared via a public link or directly with other AdventureLog users.
-  - Collaborators can view and edit shared itineraries (collections), making planning a breeze.
+- Docker & Docker Compose (recommended)
+- Kubernetes (Kustomize)
+- Reverse proxy guides for [Nginx](https://adventurelog.app/docs/install/nginx_proxy_manager), [Traefik](https://adventurelog.app/docs/install/traefik) & [Caddy](https://adventurelog.app/docs/install/caddy)
 
-<!-- Roadmap -->
+</details>
 
-## 🧭 Roadmap
+## Roadmap
 
-The AdventureLog Roadmap can be found [here](https://github.com/users/seanmorley15/projects/5)
+Track what's coming next on the [public roadmap →](https://github.com/users/seanmorley15/projects/5)
 
-<!-- Contributing -->
+## Contributing
 
-## 👋 Contributing
+Contributions are welcome! See [`CONTRIBUTING.md`](CONTRIBUTING.md) to get started.
 
 <a href="https://github.com/seanmorley15/AdventureLog/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=seanmorley15/AdventureLog" />
+  <img src="https://contrib.rocks/image?repo=seanmorley15/AdventureLog" alt="Contributors" />
 </a>
-
-Contributions are always welcome!
-
-See `contributing.md` for ways to get started.
 
 ### Translation
 
-AdventureLog is available on [Weblate](https://hosted.weblate.org/projects/adventurelog/). If you would like to help translate AdventureLog into your language, please visit the link and contribute!
+Help translate AdventureLog on [Weblate](https://hosted.weblate.org/projects/adventurelog/):
 
 <a href="https://hosted.weblate.org/engage/adventurelog/">
-<img src="https://hosted.weblate.org/widget/adventurelog/multi-auto.svg" alt="Translation status" />
+  <img src="https://hosted.weblate.org/widget/adventurelog/multi-auto.svg" alt="Translation status" />
 </a>
 
-<!-- License -->
+## License
 
-## 📃 License
+Distributed under the [GNU General Public License v3.0](LICENSE).
 
-Distributed under the GNU General Public License v3.0. See `LICENSE` for more information.
+## About the creator
 
-<!-- Contact -->
+**[Sean Morley](https://seanmorley.com)** — I'm an Electrical Engineering student at UConn, an open-source developer, and an avid traveler. AdventureLog started as my simple idea to track where I've been and grew into a full travel companion built for people who love exploring the world. I'm passionate about open-source software and building tools that solve real problems for real people. **Feel free to reach out to me directly via the info on my website if you have any questions or feedback! :)**
 
-## 🤝 Contact
+Want the full origin story? Read the [Development Timeline](https://adventurelog.app/docs/changelogs/development_timeline).
 
-Sean Morley - [website](https://seanmorley.com)
+## Acknowledgements
 
-Hi! I'm Sean, the creator of AdventureLog. I'm a college student and software developer with a passion for travel and adventure. I created AdventureLog to help people like me document their adventures and plan new ones effortlessly. As a student, I am always looking for more opportunities to learn and grow, so feel free to reach out via the contact on my website if you would like to collaborate or chat!
+- Logo design by [nordtektiger](https://github.com/nordtektiger)
+- World geography data from [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
 
-<!-- Acknowledgments -->
+## Supporters
 
-## 💎 Acknowledgements
+AdventureLog is built and maintained as an open-source project. These supporters help make continued development possible.
 
-- Logo Design by [nordtektiger](https://github.com/nordtektiger)
-- WorldTravel Dataset [dr5hn/countries-states-cities-database](https://github.com/dr5hn/countries-states-cities-database)
+### Individual supporters
 
-## 💖 Supporters
+Huge thanks to Veymax, [Mathias Ponnwitz](https://github.com/Solution-Partner-Mathias-Ponnwitz), [nebriv](https://github.com/nebriv), [Miguel Cruz](https://github.com/Tokynet), and [Victor Butler](https://x.com/victor_butler).
 
-AdventureLog is built and maintained as an open-source project. These incredible supporters help make continued development possible.
+### Become a supporter
 
-### 🏢 Corporate Sponsors
+Your support funds new features, infrastructure, and continued open-source development.
 
-<p align="left">
-  <a href="https://www.hostinger.com/">
-    <img src="https://raw.githubusercontent.com/hostinger/logo/refs/heads/master/v3/h-icon.png" alt="Hostinger" height="60"><br />
-    Hostinger
-  </a>
-</p>
+**[Become a Sponsor →](https://seanmorley.com/sponsor)**
 
-### 🌟 Individual Supporters
+<div align="center">
 
-Huge thanks to these amazing people supporting the project:
+**Happy travels!**
 
-- Veymax
-- [Mathias Ponnwitz](https://github.com/Solution-Partner-Mathias-Ponnwitz)
-- [nebriv](https://github.com/nebriv)
-- [Miguel Cruz](https://github.com/Tokynet)
-- [Victor Butler](https://x.com/victor_butler)
+[⭐ Star us on GitHub](https://github.com/seanmorley15/AdventureLog/stargazers) · [Get Started](https://adventurelog.app/docs/install/getting_started) · [Report a bug](https://github.com/seanmorley15/AdventureLog/issues) · [Join Discord](https://discord.gg/wRbQ9Egr8C)
 
-### 🚀 Become a Supporter
-
-If you enjoy AdventureLog and want to support its development, consider becoming a sponsor.
-
-Your support helps fund:
-
-- 🚀 New features and improvements
-- 🖥️ Infrastructure and hosting costs
-- 🌍 Continued open-source development
-
-[Become a Sponsor](https://seanmorley.com/sponsor) to help keep AdventureLog thriving!
+</div>

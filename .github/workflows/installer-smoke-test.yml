@@ -81,3 +81,15 @@ jobs:
           SITE_URL=http://localhost:8015
           EOF
           bash scripts/validate-env.sh /tmp/test3.env
+
+          cat > /tmp/test4.env << 'EOF'
+          POSTGRES_PASSWORD="#/M2$txJSHRSGrwyhfK@UD&1&U/LrtyC"
+          SITE_URL=http://localhost:8015
+          EOF
+          bash scripts/validate-env.sh /tmp/test4.env && exit 1 || true
+
+          cat > /tmp/test5.env << 'EOF'
+          POSTGRES_PASSWORD="#/M2\$txJSHRSGrwyhfK@UD&1&U/LrtyC"
+          SITE_URL=http://localhost:8015
+          EOF
+          bash scripts/validate-env.sh /tmp/test5.env

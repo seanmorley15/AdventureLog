@@ -69,7 +69,7 @@ generate_secure_password() {
 		return 1
 	fi
 	if command -v tr &>/dev/null; then
-		LC_ALL=C tr -dc 'A-Za-z0-9!#$%&*+-=?@^_' </dev/urandom 2>/dev/null | head -c "$length" 2>/dev/null
+		LC_ALL=C tr -dc 'A-Za-z0-9!#%&*+-=?@^_' </dev/urandom 2>/dev/null | head -c "$length" 2>/dev/null
 		return 0
 	fi
 	if command -v openssl &>/dev/null; then
@@ -114,6 +114,8 @@ format_env_value() {
 	else
 		local escaped="${val//\\/\\\\}"
 		escaped="${escaped//\"/\\\"}"
+		escaped="${escaped//\$/\\$}"
+		escaped="${escaped//\`/\\\`}"
 		printf '"%s"' "$escaped"
 	fi
 }
