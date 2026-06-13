@@ -338,7 +338,11 @@
 			for (const trail of loc.trails) {
 				if (!trail?.geojson) continue;
 				if (trail.geojson.type === 'FeatureCollection' && Array.isArray(trail.geojson.features)) {
-					features.push(...trail.geojson.features.filter((f) => f && typeof f === 'object'));
+					for (const f of trail.geojson.features) {
+						if (f && typeof f === 'object') {
+							features.push(f);
+						}
+					}
 				} else if (trail.geojson.type === 'Feature') {
 					features.push(trail.geojson);
 				}

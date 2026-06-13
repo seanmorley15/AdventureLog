@@ -75,7 +75,7 @@ RUN python3 manage.py collectstatic --noinput --verbosity 2
 # Production targets
 # ---------------------------------------------------------------------------
 
-FROM gcr.io/distroless/nodejs22-debian12:nonroot@sha256:13593b7570658e8477de39e2f4a1dd25db2f836d68a0ba771251572d23bb4f8e AS frontend
+FROM cgr.dev/chainguard/node:latest@sha256:27bf957bdf6d189108c8908c958fd966d9814f78e7172c2d791940f4e208a334 AS frontend
 LABEL org.opencontainers.image.title="AdventureLog Frontend" \
       org.opencontainers.image.description="AdventureLog SvelteKit frontend (SSR)." \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
