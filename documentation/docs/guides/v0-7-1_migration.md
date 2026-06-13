@@ -6,11 +6,11 @@ In order to make installation easier, the AdventureLog v0.7.1 release has **remo
 
 ::: tip
 
-You can also just use the new `docker-compose.yml` file in the repository and change the environment variables to match your setup.
+You can also just use the new `docker-compose.advanced.yml` file in the repository and change the environment variables to match your setup.
 
 :::
 
-1. Remove the `nginx` service from your `docker-compose.yml` file.
+1. Remove the `nginx` service from your `docker-compose.advanced.yml` file.
 2. Update the `PUBLIC_URL` environment variable in the `server` service (backend) to match the address of your **server**, instead of the previous nginx instance. For example, if your server is exposed to `http://localhost:8000`, set `PUBLIC_URL` to `http://localhost:8000`. If you are using a domain name, set `PUBLIC_URL` to `https://api.yourdomain.com` as an example.
 3. Change port mapping for the `server` service. Right now it probably looks like this:
 

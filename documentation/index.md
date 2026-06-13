@@ -13,6 +13,4 @@ description: Log locations with photos and notes, plan multi-day itineraries, an
 
 <HomeSocialProof />
 
-<HomeTech />
-
 <HomeFinalCta />

@@ -26,7 +26,7 @@ print_pull_failure_help() {
 	echo "  • Manual pull: docker compose --env-file ${ENV_FILE} -f ${COMPOSE_FILE} pull" >&2
 	echo "" >&2
 	echo "To build from source instead, clone the full AdventureLog repo and run:" >&2
-	echo "  docker compose -f docker/docker-compose.aio.yml build && docker compose -f docker/docker-compose.aio.yml up -d" >&2
+	echo "  docker compose -f docker/docker-compose.yml build && docker compose -f docker/docker-compose.yml up -d" >&2
 	echo "" >&2
 }
 
@@ -93,8 +93,8 @@ wait_for_health() {
 }
 
 cleanup_on_failure() {
-	if [[ -f ".env.aio.backup" ]]; then
-		mv .env.aio.backup .env.aio 2>/dev/null || true
+	if [[ -f ".env.backup" ]]; then
+		mv .env.backup .env 2>/dev/null || true
 	fi
 	if [[ -f ".env.backup" ]]; then
 		mv .env.backup .env 2>/dev/null || true
@@ -109,7 +109,7 @@ run_deploy_phase() {
 	validate_env_file
 	start_services
 	print_step_header 7 "$WIZARD_TOTAL" "Health check"
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		wait_for_health "$SITE_URL" 300
 	else
 		wait_for_health "$FRONTEND_ORIGIN" 300

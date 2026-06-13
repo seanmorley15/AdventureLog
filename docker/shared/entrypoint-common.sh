@@ -1,5 +1,5 @@
 #!/bin/bash
-# Shared startup tasks for backend and AIO containers.
+# Shared startup tasks for backend and Standard Deployment containers.
 # Source from entrypoint.sh after environment variables are configured.
 
 get_env() {

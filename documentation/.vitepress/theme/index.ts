@@ -3,6 +3,7 @@ import type { Theme } from "vitepress";
 import DefaultTheme from "vitepress/theme";
 import HomeHero from "./components/HomeHero.vue";
 import HomeFeatures from "./components/HomeFeatures.vue";
+import SiteFooter from "./components/SiteFooter.vue";
 import "./style.css";
 import "./home.css";
 
@@ -12,6 +13,7 @@ export default {
     return h(DefaultTheme.Layout, null, {
       "home-hero-before": () => h(HomeHero),
       "home-features-before": () => h(HomeFeatures),
+      "layout-bottom": () => h(SiteFooter),
     });
   },
   enhanceApp({ app }) {

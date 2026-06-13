@@ -35,20 +35,21 @@ Available actions:
 
 | Condition | Compose file | Env file |
 | --------- | ------------ | -------- |
-| Only `.env.aio` exists | `docker/docker-compose.aio.yml` | `.env.aio` |
-| `ADVENTURELOG_COMPOSE=aio` with both env files | `docker/docker-compose.aio.yml` | `.env.aio` |
+| Only `.env` exists | `docker/docker-compose.yml` | `.env` |
+| Only `.env.advanced` exists | `docker/docker-compose.advanced.yml` | `.env.advanced` |
+| `ADVENTURELOG_COMPOSE=advanced` with both env files | `docker/docker-compose.advanced.yml` | `.env.advanced` |
 | Otherwise | `docker/docker-compose.yml` | `.env` |
 
 Override manually:
 
 ```bash
-COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
+COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
 ```
 
 Always pass `--env-file` when running `docker compose` directly:
 
 ```bash
-docker compose --env-file .env.aio -f docker/docker-compose.aio.yml ps
+docker compose --env-file .env -f docker/docker-compose.yml ps
 ```
 
 ## Updating
@@ -59,15 +60,15 @@ See [Updating](updating.md) for full details. Quick reference:
 # Recommended — validates env, backs up, pulls, and waits for health
 bash scripts/deploy.sh --backup
 
-# AIO with explicit compose file
-COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
+# Advanced Deployment with explicit compose file
+COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
 ```
 
 ## Backup
 
 `scripts/backup.sh` creates a timestamped folder under `backups/` containing:
 
-- Your env file (`.env` or `.env.aio`)
+- Your env file (`.env` or `.env.advanced`)
 - PostgreSQL dump (`database.sql`)
 - Media volume archive (`media.tar.gz`)
 
@@ -91,46 +92,10 @@ Run before every deploy or after editing env files:
 
 ```bash
 bash scripts/validate-env.sh
-bash scripts/validate-env.sh .env.aio
+bash scripts/validate-env.sh .env
+bash scripts/validate-env.sh .env.advanced
 ```
 
 The validator catches common mistakes such as `PUBLIC_SERVER_URL` pointing at the host backend port instead of the internal Docker service name.
 
 ## First boot behavior
-
-On first start, the backend container:
-
-1. Runs database migrations
-2. Creates the Django superuser from `DJANGO_ADMIN_*` variables
-3. Imports world geography data (`download-countries`) unless `SKIP_WORLD_DATA=1`
-
-The geography import needs **~2 GB RAM** on first boot. Steady-state use is typically **~1 GB**. The installer offers `SKIP_WORLD_DATA=1` on low-memory hosts.
-
-## Scheduled tasks
-
-Inside the backend container, a cron job runs nightly (UTC midnight):
-
-```bash
-python manage.py sync_visited_regions
-```
-
-This keeps world-travel region visit status in sync with location data.
-
-## In-app backup vs shell scripts
-
-AdventureLog also has backup/restore features in **Settings** that operate through the REST API. These are separate from `scripts/backup.sh` and are useful for app-level exports. For full disaster recovery (database + media + env), use the shell scripts.
-
-## Security checklist
-
-- [ ] Change default `POSTGRES_PASSWORD`, `SECRET_KEY`, and admin credentials
-- [ ] Set `ENABLE_RATE_LIMITS=True` in production
-- [ ] Configure `CSRF_TRUSTED_ORIGINS` / `SITE_URL` for your public domain
-- [ ] Use HTTPS via a reverse proxy
-- [ ] Review [API Keys](api_keys.md) and revoke unused keys
-- [ ] Enable MFA in **Settings → Security** for admin accounts
-
-## Related docs
-
-- [Environment Variables](environment_variables.md)
-- [Updating](updating.md)
-- [Troubleshooting](../troubleshooting/login_unresponsive.md)

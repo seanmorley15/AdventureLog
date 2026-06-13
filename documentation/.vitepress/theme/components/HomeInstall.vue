@@ -23,20 +23,20 @@ const pathGroups: InstallPathGroup[] = [
     paths: [
       {
         icon: "📦",
-        title: "All-in-One Docker",
+        title: "Standard Deployment",
         desc: "Default for most installs — one container, one port.",
-        href: "/docs/install/aio",
+        href: "/docs/install/standard",
         featured: true,
       },
       {
         icon: "⚡",
         title: "Quick Start Installer",
-        desc: "Guided walkthrough that deploys AIO for you.",
+        desc: "Guided walkthrough that deploys Standard Deployment for you.",
         href: "/docs/install/quick_start",
       },
       {
         icon: "🐋",
-        title: "Standard Docker",
+        title: "Advanced Deployment",
         desc: "Frontend, backend, and PostGIS — full control.",
         href: "/docs/install/docker",
       },
@@ -104,7 +104,7 @@ const pathGroups: InstallPathGroup[] = [
         <p class="al-eyebrow">Installation</p>
         <h2 id="install-heading">Choose how you run AdventureLog</h2>
         <p class="al-install__lead">
-          Most people run All-in-One Docker — one container on a single port.
+          Most people run Standard Deployment — one container on a single port.
           Platform guides and Kubernetes are there when you need them.
         </p>
       </header>

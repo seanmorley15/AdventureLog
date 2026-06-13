@@ -16,13 +16,34 @@ resolve_compose_file() {
 }
 
 default_compose_file() {
-	local aio_file
-	aio_file="$(resolve_compose_file "docker-compose.aio.yml")"
-	if [[ -f .env.aio ]] && [[ ! -f .env ]]; then
-		printf '%s\n' "$aio_file"
-	elif [[ -f .env.aio ]] && [[ -f "$aio_file" ]] && [[ "${ADVENTURELOG_COMPOSE:-}" == "aio" ]]; then
-		printf '%s\n' "$aio_file"
-	else
-		resolve_compose_file "docker-compose.yml"
+	local standard_file advanced_file legacy_file
+	standard_file="$(resolve_compose_file "docker-compose.yml")"
+	advanced_file="$(resolve_compose_file "docker-compose.advanced.yml")"
+	legacy_file="$(resolve_compose_file "docker-compose.aio.yml")"
+
+	if [[ -f .env.advanced ]] && [[ "${ADVENTURELOG_COMPOSE:-}" == "advanced" ]]; then
+		printf '%s\n' "$advanced_file"
+		return
 	fi
+
+	if [[ -f .env.advanced ]] && [[ ! -f .env ]] && [[ ! -f .env.aio ]]; then
+		printf '%s\n' "$advanced_file"
+		return
+	fi
+
+	if [[ -f .env.aio ]] && [[ ! -f .env ]]; then
+		if [[ -f "$legacy_file" ]]; then
+			printf '%s\n' "$legacy_file"
+		else
+			printf '%s\n' "$standard_file"
+		fi
+		return
+	fi
+
+	if [[ -f .env.aio ]] && [[ -f "$legacy_file" ]] && [[ "${ADVENTURELOG_COMPOSE:-}" =~ ^(aio|standard)$ ]]; then
+		printf '%s\n' "$legacy_file"
+		return
+	fi
+
+	printf '%s\n' "$standard_file"
 }

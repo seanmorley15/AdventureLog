@@ -118,7 +118,7 @@ print_welcome() {
 
   ${BOLD}What happens next${NC}
     ${DIM}1.${NC} Verify Docker and system resources
-    ${DIM}2.${NC} Choose All-in-One or Standard setup
+    ${DIM}2.${NC} Choose Standard or Advanced Deployment
     ${DIM}3.${NC} Configure your site URL and admin account
     ${DIM}4.${NC} Optionally enable email, S3, integrations
     ${DIM}5.${NC} Deploy containers and wait for health check

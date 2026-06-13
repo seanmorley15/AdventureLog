@@ -13,7 +13,7 @@ Allocate at least **2 GB RAM** for first boot (world geography import) and **1 G
 The maintained example lives in [`k8s/base/`](https://github.com/seanmorley15/AdventureLog/tree/main/k8s/base):
 
 - **PostGIS** runs in its own StatefulSet (not co-located with the app)
-- **AIO** runs as a single Deployment on port 80 — simpler ingress than the 3-container split
+- **Standard Deployment** runs as a single Deployment on port 80 — simpler ingress than the 3-container split
 - **Secrets** for database and Django credentials (no hardcoded admin password)
 - **Ingress** for a single public hostname
 
@@ -27,9 +27,9 @@ Edit `SITE_URL`, ingress host, and secret values before applying in production.
 
 The legacy [`k8s/legacy/kustomization.yml`](https://github.com/seanmorley15/AdventureLog/blob/main/k8s/legacy/kustomization.yml) example is **deprecated** — it colocates frontend, backend, and database in one pod.
 
-## Standard 3-container on Kubernetes
+## Advanced 3-container on Kubernetes
 
-If you need separate frontend and backend Deployments, use the [standard Docker env reference](docker.md#configuration) and configure ingress path routing:
+If you need separate frontend and backend Deployments, use the [Advanced Deployment env reference](docker.md#configuration) and configure ingress path routing:
 
 - Frontend: all paths **except** `/media`, `/admin`, `/static`, `/accounts`
 - Backend: `/media`, `/admin`, `/static`, `/accounts`
@@ -47,6 +47,6 @@ You must [expose tailnet IPs to your cluster](https://tailscale.com/kb/1438/kube
 
 ## Environment Variables
 
-Look at the [environment variable summary](docker.md#configuration) in the docker install section to see available and required configuration options. AIO installs can use `SITE_URL` and `POSTGRES_PASSWORD` with other values derived at startup.
+Look at the [environment variable summary](docker.md#configuration) in the docker install section to see available and required configuration options. Standard Deployment installs can use `SITE_URL` and `POSTGRES_PASSWORD` with other values derived at startup.
 
 Enjoy AdventureLog! 🎉

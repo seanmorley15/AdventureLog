@@ -1,6 +1,6 @@
 # Install AdventureLog
 
-AdventureLog runs on Docker in most setups. Pick the guide that matches your environment — from All-in-One Docker to platform-specific homelab and NAS instructions.
+AdventureLog runs on Docker in most setups. Pick the guide that matches your environment — from Standard Deployment to platform-specific homelab and NAS instructions.
 
 ## Choose your setup
 
@@ -8,9 +8,9 @@ AdventureLog runs on Docker in most setups. Pick the guide that matches your env
 
 | I want to… | Guide |
 | ---------- | ----- |
-| One container, one port | <span class="al-rec-badge">Recommended</span> [All-in-One Docker (AIO)](aio.md) |
-| Interactive walkthrough that deploys AIO | [Quick Start Installer](quick_start.md) |
-| Separate frontend, backend, and database | [Standard Docker](docker.md) |
+| One container, one port | <span class="al-rec-badge">Recommended</span> [Standard Deployment](standard.md) |
+| Interactive walkthrough that deploys Standard Deployment | [Quick Start Installer](quick_start.md) |
+| Separate frontend, backend, and database | [Advanced Deployment](docker.md) |
 | HTTPS on a custom domain | [Reverse proxy guides](#reverse-proxy) |
 
 ### Homelab & NAS platforms

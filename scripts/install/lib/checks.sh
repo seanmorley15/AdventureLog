@@ -133,10 +133,10 @@ check_port_in_use() {
 
 detect_existing_install() {
 	local dir="${1:-$INSTALL_DIR}"
-	if [[ -f "$dir/.env.aio" ]] || [[ -f "$dir/.env" ]]; then
+	if [[ -f "$dir/.env" ]] || [[ -f "$dir/.env.advanced" ]] || [[ -f "$dir/.env.aio" ]]; then
 		return 0
 	fi
-	if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qE '^(adventurelog-aio|adventurelog-frontend|adventurelog-backend)$'; then
+	if docker ps -a --format '{{.Names}}' 2>/dev/null | grep -qE '^(adventurelog|adventurelog-aio|adventurelog-frontend|adventurelog-backend)$'; then
 		return 0
 	fi
 	return 1
@@ -145,9 +145,15 @@ detect_existing_install() {
 detect_setup_type_from_install() {
 	local dir="${1:-$INSTALL_DIR}"
 	if [[ -f "$dir/.env.aio" ]]; then
-		SETUP_TYPE="aio"
-	elif [[ -f "$dir/.env" ]]; then
 		SETUP_TYPE="standard"
+	elif [[ -f "$dir/.env.advanced" ]]; then
+		SETUP_TYPE="advanced"
+	elif [[ -f "$dir/.env" ]]; then
+		if grep -qE '^(ORIGIN|PUBLIC_URL|FRONTEND_URL)=' "$dir/.env" 2>/dev/null; then
+			SETUP_TYPE="advanced"
+		else
+			SETUP_TYPE="standard"
+		fi
 	fi
 	resolve_compose_settings
 }
@@ -164,7 +170,7 @@ run_preflight() {
 }
 
 run_port_checks() {
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		check_port_in_use "$HOST_PORT" "AdventureLog"
 	else
 		check_port_in_use "$FRONTEND_PORT" "frontend"

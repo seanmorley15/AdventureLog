@@ -2,7 +2,7 @@
 
 Caddy is a modern HTTP reverse proxy. It automatically integrates with Let's Encrypt (or other certificate providers) to generate TLS certificates for your site.
 
-As an example, if you want to add Caddy to your Docker compose configuration, add the following service to your `docker-compose.yml`:
+As an example, if you want to add Caddy to your Docker compose configuration, add the following service to your `docker-compose.advanced.yml`:
 
 ```yaml
 services:
@@ -30,7 +30,7 @@ volumes:
   caddy_config:
 ```
 
-Since all ingress traffic to the AdventureLog containsers now travels through Caddy, we can also remove the external ports configuration from those containsers in the `docker-compose.yml`. Just delete this configuration:
+Since all ingress traffic to the AdventureLog containsers now travels through Caddy, we can also remove the external ports configuration from those containsers in the `docker-compose.advanced.yml`. Just delete this configuration:
 
 ```yaml
   web:

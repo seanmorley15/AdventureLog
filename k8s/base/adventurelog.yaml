@@ -87,20 +87,20 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: adventurelog-aio
+  name: adventurelog
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: adventurelog-aio
+      app: adventurelog
   template:
     metadata:
       labels:
-        app: adventurelog-aio
+        app: adventurelog
     spec:
       containers:
         - name: app
-          image: ghcr.io/seanmorley15/adventurelog-aio:latest
+          image: ghcr.io/seanmorley15/adventurelog:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
@@ -137,10 +137,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: adventurelog-aio
+  name: adventurelog
 spec:
   selector:
-    app: adventurelog-aio
+    app: adventurelog
   ports:
     - name: http
       port: 80
@@ -159,6 +159,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: adventurelog-aio
+                name: adventurelog
                 port:
                   number: 80

@@ -24,7 +24,7 @@ on:
 
 jobs:
   aio-smoke:
-    name: AIO compose smoke test
+    name: Standard Deployment compose smoke test
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -34,16 +34,16 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build AIO image
+      - name: Build Standard Deployment image
         run: |
-          docker build -f docker/Dockerfile --target aio -t adventurelog-aio-smoke .
-          SIZE=$(docker image inspect adventurelog-aio-smoke --format='{{.Size}}')
-          echo "AIO image size: $(awk "BEGIN {printf \"%.1f MB\", ${SIZE}/1024/1024}")"
+          docker build -f docker/Dockerfile --target aio -t adventurelog-smoke .
+          SIZE=$(docker image inspect adventurelog-smoke --format='{{.Size}}')
+          echo "Standard Deployment image size: $(awk "BEGIN {printf \"%.1f MB\", ${SIZE}/1024/1024}")"
 
-      - name: Start AIO stack
+      - name: Start Standard Deployment stack
         run: |
-          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
-          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d --wait
+          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
+          docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
 
       - name: Wait for health endpoint
         run: |
@@ -54,12 +54,12 @@ jobs:
             sleep 5
           done
           echo "Health check failed"
-          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml ps
-          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml logs
+          docker compose --env-file .env -f docker/docker-compose.yml ps
+          docker compose --env-file .env -f docker/docker-compose.yml logs
           exit 1
 
       - name: Tear down
         if: always()
         run: |
-          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env.aio
-          docker compose --env-file .env.aio -f docker/docker-compose.aio.yml down -v
+          printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
+          docker compose --env-file .env -f docker/docker-compose.yml down -v

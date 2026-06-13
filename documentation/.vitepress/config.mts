@@ -33,6 +33,7 @@ export default defineConfig({
 
   rewrites: {
     "docs/Guides/nginx_migration.md": "docs/guides/v0-7-1_migration.md",
+    "docs/install/aio.md": "docs/install/standard.md",
   },
 
   transformPageData(pageData) {
@@ -104,7 +105,7 @@ export default defineConfig({
             "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
           screenshot,
           downloadUrl: "https://github.com/seanmorley15/adventurelog",
-          installUrl: `${siteUrl}/docs/install/aio.html`,
+          installUrl: `${siteUrl}/docs/install/standard.html`,
           sameAs: ["https://github.com/seanmorley15/adventurelog"],
           keywords: (seo.keywords ?? []).join(", "),
         },
@@ -125,7 +126,7 @@ export default defineConfig({
               name: "How do I install AdventureLog?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Most installs use All-in-One (AIO) Docker — one container on port 8015 with minimal configuration. Deploy with docker/docker-compose.aio.yml and .env.aio, or use the optional Quick Start installer for a guided setup.",
+                text: "Most installs use Standard Deployment — one container on port 8015 with minimal configuration. Deploy with docker/docker-compose.yml and .env, or use the optional Quick Start installer for a guided setup.",
               },
             },
             {
@@ -190,10 +191,7 @@ export default defineConfig({
         "https://github.com/seanmorley15/AdventureLog/edit/main/documentation/:path",
     },
 
-    footer: {
-      message: "AdventureLog — self-hosted travel companion",
-      copyright: "Copyright © 2023-2026 Sean Morley",
-    },
+    footer: false,
 
     logo: "/adventurelog.png",
 
@@ -212,9 +210,9 @@ export default defineConfig({
         collapsed: false,
         items: [
           { text: "Getting Started", link: "/docs/install/getting_started" },
-          { text: "All-in-One Docker (AIO)", link: "/docs/install/aio" },
+          { text: "Standard Deployment", link: "/docs/install/standard" },
           { text: "Quick Start Installer", link: "/docs/install/quick_start" },
-          { text: "Standard Docker", link: "/docs/install/docker" },
+          { text: "Advanced Deployment", link: "/docs/install/docker" },
           {
             text: "Development Setup",
             link: "/docs/install/dev_container_wsl",

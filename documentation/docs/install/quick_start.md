@@ -1,8 +1,8 @@
 # Quick Start Installer
 
-The guided installer is an optional way to deploy **All-in-One (AIO) Docker** — the setup most people use. It walks you through configuration interactively, writes your env files, and includes a management menu for updates and backups.
+The guided installer is an optional way to deploy **Standard Deployment** — the setup most people use. It walks you through configuration interactively, writes your env files, and includes a management menu for updates and backups.
 
-For manual AIO setup with Docker Compose, see [All-in-One Docker](aio.md).
+For manual Standard Deployment setup with Docker Compose, see [Standard Deployment](standard.md).
 
 ## One-line install
 
@@ -39,8 +39,8 @@ During installation you can choose:
 
 | Mode | Compose file | Env file | When to use |
 | ---- | ------------ | -------- | ----------- |
-| **All-in-One** (default) | `docker/docker-compose.aio.yml` | `.env.aio` | Simplest — one port, auto-derived URLs |
-| **Standard** | `docker/docker-compose.yml` | `.env` | Full env control, separate frontend/backend ports |
+| **Standard Deployment** (default) | `docker/docker-compose.yml` | `.env` | Simplest — one port, auto-derived URLs |
+| **Advanced Deployment** | `docker/docker-compose.advanced.yml` | `.env.advanced` | Full env control, separate frontend/backend ports |
 
 ## Management menu
 
@@ -68,13 +68,13 @@ From the management menu, choose **Uninstall**, or manually:
 
 ```bash
 cd adventurelog
-docker compose --env-file .env.aio -f docker/docker-compose.aio.yml down -v
+docker compose --env-file .env -f docker/docker-compose.yml down -v
 rm -rf adventurelog
 ```
 
 ## Next steps
 
-- [All-in-One Docker](aio.md) — how the AIO container works
-- [Standard Docker](docker.md) — multi-container configuration
+- [Standard Deployment](standard.md) — how the single-container setup works
+- [Advanced Deployment](docker.md) — multi-container configuration
 - [Environment Variables](../configuration/environment_variables.md) — full reference
 - [Other install options](getting_started.md)

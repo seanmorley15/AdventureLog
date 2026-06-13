@@ -50,7 +50,7 @@ jobs:
         run: |
           docker build -f docker/Dockerfile --target backend -t adventurelog-backend .
           docker build -f docker/Dockerfile --target frontend -t adventurelog-frontend .
-          docker build -f docker/Dockerfile --target aio -t adventurelog-aio .
+          docker build -f docker/Dockerfile --target aio -t adventurelog .
 
       - name: Scan backend image
         uses: aquasecurity/trivy-action@master
@@ -72,10 +72,10 @@ jobs:
           severity: CRITICAL,HIGH
           trivyignores: .trivyignore
 
-      - name: Scan AIO image
+      - name: Scan Standard Deployment image
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: adventurelog-aio
+          image-ref: adventurelog
           format: table
           exit-code: 1
           ignore-unfixed: true

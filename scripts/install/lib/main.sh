@@ -6,29 +6,29 @@ WIZARD_TOTAL=7
 
 choose_setup_type() {
 	if [[ "${DRY_RUN:-false}" == true ]]; then
-		SETUP_TYPE="aio"
+		SETUP_TYPE="standard"
 		resolve_compose_settings
 		return 0
 	fi
 	print_step_header 2 "$WIZARD_TOTAL" "Choose setup type"
 	tui_print_box "Installation mode" \
-		"All-in-One is recommended for homelabs and quick installs.\nStandard gives separate frontend and backend services."
+		"Standard Deployment is recommended for homelabs and quick installs.\nAdvanced Deployment gives separate frontend and backend services."
 	local choice
 	if ! choice="$(tui_choose "Which setup do you want?" \
-		"All-in-One — single URL, one port (recommended)" \
-		"Standard — separate frontend and backend")"; then
-		choice="All-in-One — single URL, one port (recommended)"
+		"Standard Deployment — single URL, one port (recommended)" \
+		"Advanced Deployment — separate frontend and backend")"; then
+		choice="Standard Deployment — single URL, one port (recommended)"
 	fi
 	case "$choice" in
-		Standard*)
-			SETUP_TYPE="standard"
+		Advanced*)
+			SETUP_TYPE="advanced"
 			;;
 		*)
-			SETUP_TYPE="aio"
+			SETUP_TYPE="standard"
 			;;
 	esac
 	resolve_compose_settings
-	log_success "Selected $( [[ "$SETUP_TYPE" == "aio" ]] && echo "All-in-One" || echo "Standard" ) setup"
+	log_success "Selected $( [[ "$SETUP_TYPE" == "standard" ]] && echo "Standard Deployment" || echo "Advanced Deployment" ) setup"
 }
 
 run_fresh_install() {
@@ -41,30 +41,30 @@ run_fresh_install() {
 	print_screen "Installing AdventureLog"
 	run_preflight
 
-	if [[ -z "${SETUP_TYPE:-}" ]] || [[ "$SETUP_TYPE" == "aio" && -z "${SITE_URL:-}" ]]; then
+	if [[ -z "${SETUP_TYPE:-}" ]] || [[ "$SETUP_TYPE" == "standard" && -z "${SITE_URL:-}" ]]; then
 		choose_setup_type
 	fi
 
 	ensure_install_directory
 
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
-		download_aio_toolkit
-		run_aio_install_wizard
-		write_env_aio
-	else
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		download_standard_toolkit
 		run_standard_install_wizard
 		write_env_standard
+	else
+		download_advanced_toolkit
+		run_advanced_install_wizard
+		write_env_advanced
 	fi
 
 	trap 'cleanup_on_failure; print_failure_message; exit 1' ERR
 	run_deploy_phase
 	save_credentials_file
 
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
-		print_aio_success
-	else
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		print_standard_success
+	else
+		print_advanced_success
 	fi
 }
 

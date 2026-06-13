@@ -13,10 +13,10 @@ bash scripts/deploy.sh --logs   # optional: follow logs after deploy
 
 `scripts/deploy.sh` validates your env file, creates a backup, pulls images, and runs `docker compose up -d --wait`.
 
-For AIO installs:
+For Standard Deployment installs:
 
 ```bash
-COMPOSE_FILE=docker/docker-compose.aio.yml bash scripts/deploy.sh --backup
+COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
 ```
 
 See [Operations & Maintenance](operations.md) for compose auto-detection details.
@@ -26,13 +26,13 @@ See [Operations & Maintenance](operations.md) for compose auto-detection details
 ```bash
 bash scripts/backup.sh
 
-# Standard
+# Standard Deployment
 docker compose --env-file .env -f docker/docker-compose.yml pull
 docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
 
-# AIO
-docker compose --env-file .env.aio -f docker/docker-compose.aio.yml pull
-docker compose --env-file .env.aio -f docker/docker-compose.aio.yml up -d --wait
+# Advanced Deployment
+docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml pull
+docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml up -d --wait
 ```
 
 ## Option 3: Guided installer menu

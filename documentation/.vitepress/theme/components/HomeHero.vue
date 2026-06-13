@@ -1,20 +1,19 @@
 <script setup lang="ts">
-import { ref } from "vue";
-
 const SHOT =
   "https://raw.githubusercontent.com/seanmorley15/AdventureLog/refs/heads/main/brand/screenshots";
 
-const command = "curl -sSL https://get.adventurelog.app | bash";
-const copied = ref(false);
+const badges = ["Self-hosted", "Open source", "GPL-3.0", "Docker-ready"];
 
-async function copy() {
-  try {
-    await navigator.clipboard.writeText(command);
-    copied.value = true;
-    setTimeout(() => (copied.value = false), 2000);
-  } catch {
-    /* clipboard unavailable */
-  }
+function scrollToContent(event: Event) {
+  event.preventDefault();
+  const target = document.getElementById("showcase-heading");
+  if (!target) return;
+
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  target.scrollIntoView({
+    behavior: prefersReducedMotion ? "auto" : "smooth",
+    block: "start",
+  });
 }
 </script>
 
@@ -24,13 +23,14 @@ async function copy() {
       <div class="al-hero__grid" />
       <div class="al-hero__orb al-hero__orb--green" />
       <div class="al-hero__orb al-hero__orb--blue" />
+      <div class="al-hero__orb al-hero__orb--violet" />
     </div>
 
     <div class="al-hero__inner">
       <div class="al-hero__copy">
         <p class="al-hero__pill">
           <span class="al-hero__pill-dot" aria-hidden="true" />
-          Locations · Itineraries · World map
+          The The ultimate travel companion
         </p>
 
         <h1 id="hero-heading" class="al-hero__title">
@@ -39,14 +39,14 @@ async function copy() {
         </h1>
 
         <p class="al-hero__lead">
-          Remember where you've been, plan what's ahead, and see your whole
-          travel story on one map.
+          Log every place you've been, plan what's ahead, and watch your whole
+          travel story unfold on one beautiful map — on your server, on your terms.
         </p>
 
         <div class="al-hero__actions">
           <a class="al-hero__btn al-hero__btn--primary" href="/docs/install/getting_started">
             Get started
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none" aria-hidden="true">
               <path
                 d="M3 8h10M9 4l4 4-4 4"
                 stroke="currentColor"
@@ -66,36 +66,8 @@ async function copy() {
           </a>
         </div>
 
-        <div class="al-hero__install-block">
-          <p class="al-hero__install-label">
-            All-in-One Docker
-            <span class="al-hero__install-sep" aria-hidden="true">·</span>
-            <a href="/docs/install/aio">manual setup</a>
-          </p>
-          <div class="al-hero__install">
-            <code class="al-hero__cmd">
-              <span class="al-hero__prompt" aria-hidden="true">$</span>
-              {{ command }}
-            </code>
-            <button
-              type="button"
-              class="al-hero__copy-btn"
-              :aria-label="copied ? 'Copied' : 'Copy guided installer command'"
-              @click="copy"
-            >
-              {{ copied ? "Copied" : "Copy" }}
-            </button>
-          </div>
-          <p class="al-hero__install-note">
-            Guided installer — deploys AIO by default.
-            <a href="/docs/install/quick_start">Details</a>
-          </p>
-        </div>
-
-        <ul class="al-hero__stats" aria-label="Core features">
-          <li><strong>Locations</strong> visits, photos &amp; trails</li>
-          <li><strong>Itineraries</strong> flights, lodging &amp; notes</li>
-          <li><strong>World travel</strong> countries &amp; regions</li>
+        <ul class="al-hero__badges" aria-label="Highlights">
+          <li v-for="badge in badges" :key="badge">{{ badge }}</li>
         </ul>
       </div>
 
@@ -134,5 +106,25 @@ async function copy() {
         </div>
       </div>
     </div>
+
+    <a
+      href="#showcase-heading"
+      class="al-hero__scroll"
+      aria-label="Scroll to explore features"
+      @click="scrollToContent"
+    >
+      <span class="al-hero__scroll-label">Explore</span>
+      <span class="al-hero__scroll-icon" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path
+            d="M5 8l5 5 5-5"
+            stroke="currentColor"
+            stroke-width="1.75"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </span>
+    </a>
   </section>
 </template>

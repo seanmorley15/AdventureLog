@@ -8,7 +8,8 @@ AdventureLog is a self-hosted travel companion web application built with Svelte
 
 ### Essential Setup (NEVER CANCEL - Set 60+ minute timeouts)
 Run these commands in order:
-- `cp .env.example .env` - Copy environment configuration
+- `cp .env.example .env` - Copy Standard Deployment environment configuration
+- `cp .env.advanced.example .env.advanced` - Copy Advanced Deployment environment configuration
 - `time docker compose up -d` - **FIRST TIME: 25+ minutes, NEVER CANCEL. Set timeout to 60+ minutes. Subsequent starts: <1 second**
 - Wait 30+ seconds for services to fully initialize before testing functionality
 
@@ -87,19 +88,21 @@ AdventureLog/
 │   └── requirements.txt # Python dependencies
 ├── docker/            # Dockerfile, compose stacks, and shared configs
 │   ├── docker-compose.yml
-│   ├── docker-compose.aio.yml
+│   ├── docker-compose.advanced.yml
 │   └── docker-compose.dev.yml
 ├── k8s/               # Kubernetes / Kustomize manifests
-├── .env.example       # Environment template
+├── .env.example              # Standard Deployment env template
+├── .env.advanced.example     # Advanced Deployment env template
 └── install_adventurelog.sh # Production installer
 ```
 
 ### Key Scripts and Files
 - `frontend/package.json` - Contains all frontend build scripts
 - `backend/server/manage.py` - Django management commands
-- `docker/docker-compose.yml` - Standard service definitions (frontend:8015, backend:8016, db:5432)
-- `docker/docker-compose.aio.yml` - All-in-one deployment (single port:8015)
-- `.env` - Environment configuration (copy from .env.example)
+- `docker/docker-compose.yml` - Standard Deployment (single port:8015)
+- `docker/docker-compose.advanced.yml` - Advanced Deployment service definitions (frontend:8015, backend:8016, db:5432)
+- `.env` - Standard Deployment configuration (copy from .env.example)
+- `.env.advanced` - Advanced Deployment configuration (copy from .env.advanced.example)
 
 ### Development vs Production
 - **Development**: Use `docker compose up -d` with .env file

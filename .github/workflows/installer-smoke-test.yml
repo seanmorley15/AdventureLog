@@ -37,7 +37,7 @@ jobs:
           shellcheck scripts/install/lib/*.sh
           shellcheck scripts/validate-env.sh
 
-      - name: Dry-run AIO install wizard
+      - name: Dry-run Standard Deployment install wizard
         env:
           ADVENTURELOG_SKIP_GUM: "1"
           ADVENTURELOG_REF: main
@@ -46,38 +46,38 @@ jobs:
           rm -rf "$INSTALL_DIR"
           bash install_adventurelog.sh --dry-run --force-install
 
-      - name: Validate generated AIO env
+      - name: Validate generated Standard Deployment env
         run: |
-          test -f adventurelog-installer-test/.env.aio
-          bash scripts/validate-env.sh adventurelog-installer-test/.env.aio
+          test -f adventurelog-installer-test/.env
+          bash scripts/validate-env.sh adventurelog-installer-test/.env
           rm -rf adventurelog-installer-test
 
   validate-env-aio:
-    name: validate-env.sh AIO checks
+    name: validate-env.sh Standard Deployment checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Test AIO validation rules
+      - name: Test Standard Deployment validation rules
         run: |
-          cat > /tmp/test.env.aio << 'EOF'
+          cat > /tmp/test.env << 'EOF'
           POSTGRES_PASSWORD=secure-pass
           SITE_URL=http://localhost:8015
           DJANGO_ADMIN_USERNAME=admin
           DJANGO_ADMIN_PASSWORD=admin
           MEDIA_STORAGE=s3
           EOF
-          bash scripts/validate-env.sh /tmp/test.env.aio && exit 1 || true
+          bash scripts/validate-env.sh /tmp/test.env && exit 1 || true
 
-          cat > /tmp/test2.env.aio << 'EOF'
+          cat > /tmp/test2.env << 'EOF'
           POSTGRES_PASSWORD=secure-pass
           SITE_URL=http://localhost:8015
           EMAIL_BACKEND=email
           EOF
-          bash scripts/validate-env.sh /tmp/test2.env.aio && exit 1 || true
+          bash scripts/validate-env.sh /tmp/test2.env && exit 1 || true
 
-          cat > /tmp/test3.env.aio << 'EOF'
+          cat > /tmp/test3.env << 'EOF'
           POSTGRES_PASSWORD=secure-pass
           SITE_URL=http://localhost:8015
           EOF
-          bash scripts/validate-env.sh /tmp/test3.env.aio
+          bash scripts/validate-env.sh /tmp/test3.env

@@ -9,7 +9,7 @@
 .env
 .env.*
 !.env.example
-!.env.aio.example
+!.env.advanced.example
 
 # Documentation and plans (not needed in runtime images)
 documentation/

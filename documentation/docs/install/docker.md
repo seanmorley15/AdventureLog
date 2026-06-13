@@ -1,8 +1,8 @@
-# Standard Docker
+# Advanced Deployment
 
 Run AdventureLog as three containers: SvelteKit frontend, Django backend, and PostGIS database. This layout gives full control over environment variables and is the best fit for reverse proxies and custom integrations.
 
-> **Looking for the simplest setup?** See [All-in-One Docker (AIO)](aio.md) — one container, one port, two required env vars.
+> **Looking for the simplest setup?** See [Standard Deployment](standard.md) — one container, one port, two required env vars.
 >
 > **Full env reference:** [Environment Variables](../configuration/environment_variables.md)
 
@@ -13,15 +13,15 @@ Run AdventureLog as three containers: SvelteKit frontend, Django backend, and Po
 
 ## Getting Started
 
-Get the `docker-compose.yml` and `.env.example` files from the AdventureLog repository. You can download them here:
+Get the `docker-compose.advanced.yml` and `.env.advanced.example` files from the AdventureLog repository. You can download them here:
 
-- [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.yml)
-- [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
+- [Docker Compose](https://github.com/seanmorley15/AdventureLog/blob/main/docker/docker-compose.advanced.yml)
+- [Environment Variables](https://github.com/seanmorley15/AdventureLog/blob/main/.env.advanced.example)
 
 ```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.yml
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
-cp .env.example .env
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.advanced.yml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.advanced.example
+cp .env.advanced.example .env.advanced
 ```
 
 ::: tip
@@ -36,13 +36,13 @@ AdventureLog uses several URL-related environment variables. Most installs only 
 
 | Variable | Who uses it | Typical value |
 | -------- | ----------- | ------------- |
-| `PUBLIC_SERVER_URL` | SvelteKit SSR (container-to-container) | `http://server:8000` — **do not change** for standard Docker installs |
+| `PUBLIC_SERVER_URL` | SvelteKit SSR (container-to-container) | `http://server:8000` — **do not change** for Advanced Deployment installs |
 | `ORIGIN` | SvelteKit origin when not using HTTPS | Your frontend URL, e.g. `http://localhost:8015` |
 | `PUBLIC_URL` | Django image and OAuth URLs | Your backend URL, e.g. `http://localhost:8016` (or your single domain if using a reverse proxy) |
 | `FRONTEND_URL` | Django emails and redirects | Your frontend URL, e.g. `http://localhost:8015` |
 | `CSRF_TRUSTED_ORIGINS` | Django CORS and CSRF | Comma-separated list of every browser origin, e.g. `http://localhost:8015,http://localhost:8016` |
 
-When frontend and backend share one domain behind a reverse proxy, you can set `SITE_URL` instead of configuring `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` individually. See `.env.example` for details.
+When frontend and backend share one domain behind a reverse proxy, you can set `SITE_URL` instead of configuring `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` individually. See `.env.advanced.example` for details.
 
 To validate your configuration, run:
 
@@ -101,7 +101,7 @@ Validate and start:
 
 ```bash
 bash scripts/validate-env.sh
-docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
+docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml up -d --wait
 ```
 
 Open **http://localhost:8015** (or your configured `ORIGIN` / `SITE_URL`).

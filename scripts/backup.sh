@@ -16,6 +16,9 @@ if [[ -z "$COMPOSE_FILE" ]]; then
 fi
 
 case "$COMPOSE_FILE" in
+	*docker-compose.advanced.yml*)
+		ENV_FILE=".env.advanced"
+		;;
 	*docker-compose.aio.yml*)
 		ENV_FILE=".env.aio"
 		;;

@@ -8,7 +8,7 @@ services:
       - "--entrypoints.web.address=:80"
       - "--entrypoints.websecure.address=:443"
       - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL in .env}"
+      - "--certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL in .env.advanced}"
       - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
@@ -21,7 +21,7 @@ services:
     image: postgis/postgis:16-3.5
     container_name: adventurelog-traefik-db
     restart: unless-stopped
-    env_file: ../.env
+    env_file: ../.env.advanced
     volumes:
       - postgres-data:/var/lib/postgresql/data/
     healthcheck:
@@ -38,11 +38,11 @@ services:
   web:
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     restart: unless-stopped
-    env_file: ../.env
+    env_file: ../.env.advanced
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.adventurelogweb.entrypoints=websecure"
-      - "traefik.http.routers.adventurelogweb.rule=Host(`${TRAEFIK_DOMAIN:?Set TRAEFIK_DOMAIN in .env}`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
+      - "traefik.http.routers.adventurelogweb.rule=Host(`${TRAEFIK_DOMAIN:?Set TRAEFIK_DOMAIN in .env.advanced}`) && !(PathPrefix(`/media`) || PathPrefix(`/admin`) || PathPrefix(`/static`) || PathPrefix(`/accounts`))"
       - "traefik.http.routers.adventurelogweb.tls=true"
       - "traefik.http.routers.adventurelogweb.tls.certresolver=letsencrypt"
     depends_on:
@@ -64,7 +64,7 @@ services:
   server:
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     restart: unless-stopped
-    env_file: ../.env
+    env_file: ../.env.advanced
     volumes:
       - adventurelog-media:/code/media
     labels:

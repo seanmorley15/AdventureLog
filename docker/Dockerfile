@@ -3,7 +3,7 @@
 # Unified AdventureLog image definitions — build from repository root:
 #   docker build -f docker/Dockerfile --target frontend -t adventurelog-frontend .
 #   docker build -f docker/Dockerfile --target backend  -t adventurelog-backend .
-#   docker build -f docker/Dockerfile --target aio     -t adventurelog-aio .
+#   docker build -f docker/Dockerfile --target aio     -t adventurelog .
 #
 # Or: docker buildx bake -f docker/docker-bake.hcl
 
@@ -43,7 +43,7 @@ COPY backend/server/requirements.txt /code/
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir -r requirements.txt
 
-# Shared Django runtime used by backend and AIO images.
+# Shared Django runtime used by backend and Standard Deployment images.
 FROM python:3.13-slim AS backend-runtime
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
@@ -107,7 +107,7 @@ ENTRYPOINT ["/code/entrypoint.sh"]
 CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
 
 FROM backend-runtime AS aio
-LABEL org.opencontainers.image.title="AdventureLog AIO" \
+LABEL org.opencontainers.image.title="AdventureLog Standard Deployment" \
       org.opencontainers.image.description="All-in-one AdventureLog container with frontend and backend on a single port." \
       org.opencontainers.image.source="https://github.com/seanmorley15/AdventureLog" \
       org.opencontainers.image.licenses="GPL-3.0"

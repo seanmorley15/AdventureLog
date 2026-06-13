@@ -76,7 +76,7 @@ bootstrap_and_source_libs() {
 		mkdir -p "$cache_dir"
 		local files=(
 			common.sh ui.sh tui.sh checks.sh download.sh deploy.sh
-			aio-config.sh standard-config.sh manage.sh features.sh main.sh
+			standard-config.sh advanced-config.sh manage.sh features.sh main.sh
 		)
 		local f
 		for f in "${files[@]}"; do
@@ -102,9 +102,9 @@ bootstrap_and_source_libs() {
 	# shellcheck source=/dev/null
 	source "$INSTALLER_LIB_DIR/features.sh"
 	# shellcheck source=/dev/null
-	source "$INSTALLER_LIB_DIR/aio-config.sh"
-	# shellcheck source=/dev/null
 	source "$INSTALLER_LIB_DIR/standard-config.sh"
+	# shellcheck source=/dev/null
+	source "$INSTALLER_LIB_DIR/advanced-config.sh"
 	# shellcheck source=/dev/null
 	source "$INSTALLER_LIB_DIR/deploy.sh"
 	# shellcheck source=/dev/null

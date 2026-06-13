@@ -103,7 +103,7 @@ jobs:
       context: .
       dockerfile: docker/Dockerfile
       target: aio
-      image_name: adventurelog-aio
+      image_name: adventurelog
       tag: ${{ inputs.tag }}
       include_latest_tag: ${{ inputs.include_latest_tag }}
     secrets: inherit

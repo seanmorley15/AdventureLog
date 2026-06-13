@@ -67,17 +67,17 @@ cd AdventureLog
 ### 2. Create the Development `.env` File (via WSL)
 
 ```bash
-cp .env.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
+cp .env.advanced.example .env && sed -i 's/^DEBUG=.*/DEBUG=True/' .env
 ```
 
 This creates the `.env` file required for the containers to start and enables DEBUG for local development.
 
 > **NOTE**
-> The rest of the defaults in `.env.example` are sufficient for running the project.
+> The rest of the defaults in `.env.advanced.example` are sufficient for running the project.
 
 #### Environment Variables
 
-The Dev Container setup uses the same `.env` configuration as the standard Docker installation.
+The Dev Container setup uses the same `.env` configuration as Advanced Deployment.
 
 For a full list of available environment variables and optional configuration options, see the
 [**Docker 🐋 installation guide**](docker.md#configuration).
@@ -173,8 +173,8 @@ This avoids performance issues and file watcher bugs.
 | Debugging    | ❌               | ✅                  |
 | Code editing | ❌               | ✅                  |
 
-For production or personal hosting, follow the standard
-[**Docker 🐋 installation guide**](docker.md).
+For production or personal hosting, follow the
+[**Advanced Deployment guide**](docker.md).
 
 Enjoy contributing to AdventureLog! 🎉
 If you run into issues not covered here, please open a discussion or issue so the docs can be improved.

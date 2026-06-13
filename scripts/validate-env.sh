@@ -28,12 +28,19 @@ set +a
 
 echo "Validating $ENV_FILE ..."
 
-IS_AIO_ENV=false
-if [[ "$ENV_FILE" == *".env.aio"* ]] || [[ "$(basename "$ENV_FILE")" == ".env.aio" ]]; then
-	IS_AIO_ENV=true
-fi
+IS_STANDARD_DEPLOYMENT=false
+case "$(basename "$ENV_FILE")" in
+	.env.aio)
+		IS_STANDARD_DEPLOYMENT=true
+		;;
+	.env)
+		if [[ -z "${ORIGIN:-}" && -z "${PUBLIC_URL:-}" && -z "${FRONTEND_URL:-}" ]]; then
+			IS_STANDARD_DEPLOYMENT=true
+		fi
+		;;
+esac
 
-if [[ "$IS_AIO_ENV" == true ]]; then
+if [[ "$IS_STANDARD_DEPLOYMENT" == true ]]; then
 	if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
 		error "POSTGRES_PASSWORD is required in $ENV_FILE"
 	fi
@@ -77,7 +84,7 @@ if [[ -z "${PUBLIC_SERVER_URL:-}" ]]; then
 elif [[ "$PUBLIC_SERVER_URL" == *"localhost:8016"* ]] || [[ "$PUBLIC_SERVER_URL" == *"127.0.0.1:8016"* ]]; then
 	error "PUBLIC_SERVER_URL points at the host-mapped backend port. Use http://server:8000 inside Docker."
 elif [[ "$PUBLIC_SERVER_URL" != *":8000"* ]] && [[ "$PUBLIC_SERVER_URL" != "http://server:8000" ]]; then
-	warn "PUBLIC_SERVER_URL is '$PUBLIC_SERVER_URL' — standard Docker installs should use http://server:8000"
+	warn "PUBLIC_SERVER_URL is '$PUBLIC_SERVER_URL' — Advanced Deployment installs should use http://server:8000"
 fi
 
 if [[ -n "${SITE_URL:-}" ]]; then

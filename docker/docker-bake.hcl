@@ -27,5 +27,5 @@ target "backend" {
 target "aio" {
   inherits = ["_common"]
   target   = "aio"
-  tags     = ["adventurelog-aio:local"]
+  tags     = ["adventurelog:local"]
 }

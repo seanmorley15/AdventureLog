@@ -18,7 +18,7 @@ mgmt_check_status() {
 	print_section "Container status"
 	$compose ps 2>/dev/null || docker ps -a --filter "name=adventurelog"
 	echo ""
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		health_url="${SITE_URL:-http://localhost:8015}/health"
 	else
 		health_url="${FRONTEND_ORIGIN:-http://localhost:8015}/health"
@@ -55,14 +55,14 @@ mgmt_reconfigure() {
 		cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d-%H%M%S)"
 	fi
 	OPTIONAL_ENV_LINES=()
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
-		prompt_aio_core_config
-		run_optional_features_wizard
-		write_env_aio
-	else
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		prompt_standard_core_config
 		run_optional_features_wizard
 		write_env_standard
+	else
+		prompt_advanced_core_config
+		run_optional_features_wizard
+		write_env_advanced
 	fi
 	validate_env_file
 	if tui_confirm "Restart services to apply changes?" "y"; then

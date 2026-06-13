@@ -1,5 +1,5 @@
 #!/bin/bash
-# Derive full AdventureLog configuration from minimal AIO environment variables.
+# Derive full AdventureLog configuration from minimal Standard Deployment environment variables.
 set -euo pipefail
 
 SITE_URL="${SITE_URL:-http://localhost:8015}"
@@ -22,7 +22,7 @@ export PGDATABASE="${PGDATABASE:-$POSTGRES_DB}"
 export PGUSER="${PGUSER:-$POSTGRES_USER}"
 
 if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then
-	echo "ERROR: POSTGRES_PASSWORD is required for the AIO container." >&2
+	echo "ERROR: POSTGRES_PASSWORD is required for Standard Deployment." >&2
 	exit 1
 fi
 export PGPASSWORD="${POSTGRES_PASSWORD}"
@@ -35,7 +35,7 @@ export DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
 export DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-admin}"
 export DJANGO_ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
 
-echo "AIO configuration:"
+echo "Standard Deployment configuration:"
 echo "  SITE_URL=$SITE_URL"
 echo "  PUBLIC_SERVER_URL=$PUBLIC_SERVER_URL"
 echo "  PGHOST=$PGHOST"

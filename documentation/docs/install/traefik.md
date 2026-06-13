@@ -26,8 +26,8 @@ See [Environment Variables](../configuration/environment_variables.md) for the f
 
 ```bash
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.traefik.yaml
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
-cp .env.example .env
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.advanced.example
+cp .env.advanced.example .env.advanced
 # Edit .env: set SITE_URL, ACME_EMAIL, TRAEFIK_DOMAIN, POSTGRES_PASSWORD, SECRET_KEY
 bash scripts/validate-env.sh
 docker compose -f docker/docker-compose.traefik.yaml up -d
@@ -42,10 +42,10 @@ Traefik routes traffic to two containers on a single domain:
 | `/`, `/api`, `/auth`, app pages | Frontend (SvelteKit) |
 | `/media`, `/admin`, `/accounts`, `/static` | Backend (Django/Gunicorn) |
 
-This matches the internal routing model used by the [All-in-One](aio.md) container, but with separate frontend and backend services.
+This matches the internal routing model used by [Standard Deployment](standard.md), but with separate frontend and backend services.
 
 ## Related guides
 
-- [Standard Docker](docker.md) — base configuration without Traefik
+- [Advanced Deployment](docker.md) — base configuration without Traefik
 - [Environment Variables](../configuration/environment_variables.md) — URL and CSRF settings
 - [Nginx Proxy Manager](nginx_proxy_manager.md) — alternative reverse proxy

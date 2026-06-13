@@ -33,22 +33,22 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/install/getting_started.md": {
     description:
-      "Install AdventureLog with All-in-One Docker — the default for most setups — plus optional guided installer, standard Docker, Kubernetes, and platform guides.",
-    keywords: ["AdventureLog install", "AIO docker", "self-hosted travel app setup"],
+      "Install AdventureLog with Standard Deployment — the default for most setups — plus optional guided installer, Advanced Deployment, Kubernetes, and platform guides.",
+    keywords: ["AdventureLog install", "standard deployment docker", "self-hosted travel app setup"],
   },
   "docs/install/quick_start.md": {
     description:
-      "Optional guided installer for All-in-One Docker. Interactive configuration, env file setup, and a built-in management menu for updates and backups.",
-    keywords: ["AdventureLog quick start", "guided docker install", "AIO installer"],
+      "Optional guided installer for Standard Deployment. Interactive configuration, env file setup, and a built-in management menu for updates and backups.",
+    keywords: ["AdventureLog quick start", "guided docker install", "standard deployment installer"],
   },
-  "docs/install/aio.md": {
+  "docs/install/standard.md": {
     description:
-      "The default AdventureLog install: one Docker container on a single port. Minimal .env.aio configuration with automatic URL and secret derivation for homelabs and VPS.",
-    keywords: ["AdventureLog AIO", "all in one docker", "default docker install"],
+      "The default AdventureLog install: one Docker container on a single port. Minimal .env configuration with automatic URL and secret derivation for homelabs and VPS.",
+    keywords: ["AdventureLog standard deployment", "single container docker", "default docker install"],
   },
   "docs/install/docker.md": {
     description:
-      "Standard multi-container Docker setup for AdventureLog with separate frontend, backend, and PostGIS services. Full environment variable reference for production deployments.",
+      "Advanced Deployment for AdventureLog with separate frontend, backend, and PostGIS services. Full environment variable reference for production deployments.",
     keywords: ["AdventureLog docker compose", "self-hosted docker travel log"],
   },
   "docs/install/dev_container_wsl.md": {
@@ -98,7 +98,7 @@ export const pageSeo: Record<string, PageSeo> = {
   },
   "docs/configuration/environment_variables.md": {
     description:
-      "Complete AdventureLog environment variable reference for standard Docker, AIO, and optional integrations including URLs, security, and storage.",
+      "Complete AdventureLog environment variable reference for Standard Deployment, Advanced Deployment, and optional integrations including URLs, security, and storage.",
     keywords: ["AdventureLog environment variables", "docker env configuration"],
   },
   "docs/configuration/operations.md": {

@@ -26,6 +26,9 @@ fi
 
 ENV_FILE="${ENV_FILE:-}"
 case "$COMPOSE_FILE" in
+	*docker-compose.advanced.yml*)
+		ENV_FILE="${ENV_FILE:-.env.advanced}"
+		;;
 	*docker-compose.aio.yml*)
 		ENV_FILE="${ENV_FILE:-.env.aio}"
 		;;
@@ -53,7 +56,12 @@ fi
 POSTGRES_USER="${POSTGRES_USER:-adventure}"
 POSTGRES_DB="${POSTGRES_DB:-database}"
 
-if [[ -f .env ]]; then
+if [[ -f .env.advanced ]]; then
+	# shellcheck disable=SC1090
+	set -a
+	source .env.advanced
+	set +a
+elif [[ -f .env ]]; then
 	# shellcheck disable=SC1090
 	set -a
 	source .env
@@ -68,7 +76,9 @@ fi
 echo "Stopping AdventureLog containers..."
 "${COMPOSE[@]}" down
 
-if [[ -f "$BACKUP_DIR/.env" ]]; then
+if [[ -f "$BACKUP_DIR/.env.advanced" ]]; then
+	cp "$BACKUP_DIR/.env.advanced" .env.advanced
+elif [[ -f "$BACKUP_DIR/.env" ]]; then
 	cp "$BACKUP_DIR/.env" .env
 elif [[ -f "$BACKUP_DIR/.env.aio" ]]; then
 	cp "$BACKUP_DIR/.env.aio" .env.aio

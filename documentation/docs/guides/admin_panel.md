@@ -1,6 +1,6 @@
 # Admin Panel
 
-The AdventureLog admin panel is powered by Django and is available at `/admin` on your backend URL. In AIO installs, that is the same domain as the frontend (for example `https://adventurelog.example.com/admin`).
+The AdventureLog admin panel is powered by Django and is available at `/admin` on your backend URL. In Standard Deployment installs, that is the same domain as the frontend (for example `https://adventurelog.example.com/admin`).
 
 ## Access requirements
 
@@ -18,7 +18,7 @@ Only users with the **staff** flag (`is_staff=True`) can access the admin panel.
 
 ## CSRF configuration
 
-If the admin panel loads but form submissions fail, verify `CSRF_TRUSTED_ORIGINS` in your `.env` or `.env.aio` includes your public domain:
+If the admin panel loads but form submissions fail, verify `CSRF_TRUSTED_ORIGINS` in your `.env` or `.env.advanced` includes your public domain:
 
 ```env
 CSRF_TRUSTED_ORIGINS=https://adventurelog.example.com

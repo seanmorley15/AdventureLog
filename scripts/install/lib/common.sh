@@ -15,12 +15,12 @@ ADVENTURELOG_REF="${ADVENTURELOG_REF:-main}"
 GITHUB_RAW="https://raw.githubusercontent.com/seanmorley15/AdventureLog/${ADVENTURELOG_REF}"
 DOCS_BASE="https://adventurelog.app/docs/configuration"
 
-# Setup type: aio | standard
-SETUP_TYPE="${SETUP_TYPE:-aio}"
+# Setup type: standard | advanced
+SETUP_TYPE="${SETUP_TYPE:-standard}"
 DRY_RUN="${DRY_RUN:-false}"
 FORCE_INSTALL="${FORCE_INSTALL:-false}"
 
-# AIO configuration
+# Standard Deployment configuration
 declare -g SITE_URL=""
 declare -g HOST_PORT=""
 declare -g POSTGRES_PASSWORD=""
@@ -29,7 +29,7 @@ declare -g DJANGO_ADMIN_PASSWORD=""
 declare -g DJANGO_ADMIN_EMAIL="admin@example.com"
 declare -g SKIP_WORLD_DATA=""
 
-# Standard configuration
+# Advanced Deployment configuration
 declare -g FRONTEND_ORIGIN=""
 declare -g BACKEND_URL=""
 declare -g FRONTEND_PORT=""
@@ -51,13 +51,13 @@ declare -g ENV_FILE=""
 declare -g LOG_CONTAINER=""
 
 resolve_compose_settings() {
-	if [[ "$SETUP_TYPE" == "aio" ]]; then
-		COMPOSE_FILE="$(resolve_compose_file "docker-compose.aio.yml")"
-		ENV_FILE=".env.aio"
-		LOG_CONTAINER="adventurelog-aio"
-	else
+	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		COMPOSE_FILE="$(resolve_compose_file "docker-compose.yml")"
 		ENV_FILE=".env"
+		LOG_CONTAINER="adventurelog"
+	else
+		COMPOSE_FILE="$(resolve_compose_file "docker-compose.advanced.yml")"
+		ENV_FILE=".env.advanced"
 		LOG_CONTAINER="adventurelog-backend"
 	fi
 }

@@ -11,7 +11,7 @@
         <a class="al-btn al-btn--brand al-btn--lg" href="https://demo.adventurelog.app" target="_blank" rel="noopener noreferrer">
           Try live demo
         </a>
-        <a class="al-btn al-btn--ghost al-btn--lg" href="/docs/install/aio">
+        <a class="al-btn al-btn--ghost al-btn--lg" href="/docs/install/standard">
           Install AdventureLog
         </a>
         <a class="al-btn al-btn--ghost al-btn--lg" href="/docs/usage/usage">

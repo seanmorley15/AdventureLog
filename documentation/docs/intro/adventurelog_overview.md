@@ -124,7 +124,7 @@ AdventureLog is licensed under **GPL-3.0**. Use it, modify it, and share it free
 | I want to… | Go to |
 | ---------- | ----- |
 | Install AdventureLog | [Getting Started](/docs/install/getting_started) |
-| Run All-in-One Docker (recommended) | [AIO Docker](/docs/install/aio) |
+| Run Standard Deployment (recommended) | [Standard Deployment](/docs/install/standard) |
 | Learn how to use the app | [Usage guide](/docs/usage/usage) |
 | Configure integrations &amp; env vars | [Environment Variables](/docs/configuration/environment_variables) |
 | Try before installing | [Live demo](https://demo.adventurelog.app) |

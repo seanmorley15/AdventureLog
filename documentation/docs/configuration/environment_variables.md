@@ -4,21 +4,21 @@ AdventureLog configuration is driven by environment variables. The file you edit
 
 | Install type | Env file | Compose file |
 | ------------ | -------- | ------------ |
-| All-in-One (AIO) | `.env.aio` | `docker/docker-compose.aio.yml` |
-| Standard Docker | `.env` | `docker/docker-compose.yml` |
-| Traefik | `.env` | `docker/docker-compose.traefik.yaml` |
+| Standard Deployment | `.env` | `docker/docker-compose.yml` |
+| Advanced Deployment | `.env.advanced` | `docker/docker-compose.advanced.yml` |
+| Traefik | `.env.advanced` | `docker/docker-compose.traefik.yaml` |
 | Development | `.env` | `docker/docker-compose.dev.yml` |
 
 Validate before deploying:
 
 ```bash
 bash scripts/validate-env.sh
-# or for AIO:
-bash scripts/validate-env.sh .env.aio
+# or for Standard Deployment:
+bash scripts/validate-env.sh .env
 ```
 
-::: tip AIO minimal setup
-AIO only requires `POSTGRES_PASSWORD` in `.env.aio`. URLs, `SECRET_KEY`, and admin defaults are derived at container startup. See [All-in-One Docker](../install/aio.md).
+::: tip Standard Deployment minimal setup
+Standard Deployment only requires `POSTGRES_PASSWORD` in `.env`. URLs, `SECRET_KEY`, and admin defaults are derived at container startup. See [Standard Deployment](../install/standard.md).
 :::
 
 ## URL and networking
@@ -28,17 +28,17 @@ These variables control how the browser, SvelteKit SSR, and Django talk to each 
 | Variable | Required | Used by | Description | Default |
 | -------- | -------- | ------- | ----------- | ------- |
 | `SITE_URL` | No | Both | Single public URL when frontend and backend share one domain. Derives `ORIGIN`, `FRONTEND_URL`, `PUBLIC_URL`, and `CSRF_TRUSTED_ORIGINS` when those are unset. | — |
-| `PUBLIC_SERVER_URL` | Yes | Frontend SSR | Internal backend URL for server-side requests. **Keep `http://server:8000` in standard Docker.** AIO uses `http://127.0.0.1:8000`. | `http://server:8000` |
+| `PUBLIC_SERVER_URL` | Yes | Frontend SSR | Internal backend URL for server-side requests. **Keep `http://server:8000` in Advanced Deployment.** Standard Deployment uses `http://127.0.0.1:8000`. | `http://server:8000` |
 | `ORIGIN` | Sometimes | Frontend | Public frontend origin (needed without HTTPS). | `http://localhost:8015` |
 | `FRONTEND_URL` | Yes | Backend | Public frontend URL for emails and redirects. | `http://localhost:8015` |
 | `PUBLIC_URL` | Yes | Backend | Public backend URL for media and OAuth callbacks. | `http://localhost:8016` |
 | `CSRF_TRUSTED_ORIGINS` | Yes | Backend | Comma-separated browser origins allowed to submit forms. | `http://localhost:8015,http://localhost:8016` |
 | `FRONTEND_PORT` | Yes | Compose | Host port for the frontend container. | `8015` |
 | `BACKEND_PORT` | Yes | Compose | Host port for the backend container. | `8016` |
-| `HOST_PORT` | No | AIO compose | Host port mapped to the AIO container. | `8015` |
+| `HOST_PORT` | No | Standard Deployment compose | Host port mapped to the single-container stack. | `8015` |
 | `BODY_SIZE_LIMIT` | Yes | Frontend | Maximum upload size in bytes. | `Infinity` |
 
-See [Standard Docker](../install/docker.md#url-mental-model) for a visual explanation of the URL model.
+See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual explanation of the URL model.
 
 ## Database (PostgreSQL / PostGIS)
 
@@ -53,7 +53,7 @@ See [Standard Docker](../install/docker.md#url-mental-model) for a visual explan
 
 | Variable | Required | Description | Default |
 | -------- | -------- | ----------- | ------- |
-| `SECRET_KEY` | Yes | Django secret key. Auto-generated on AIO if unset. | `changeme123` |
+| `SECRET_KEY` | Yes | Django secret key. Auto-generated in Standard Deployment if unset. | `changeme123` |
 | `DEBUG` | No | Enable debug mode. Use `False` in production. | `False` |
 | `DJANGO_ADMIN_USERNAME` | Yes | First-boot superuser username. | `admin` |
 | `DJANGO_ADMIN_PASSWORD` | Yes | First-boot superuser password. | `admin` |
@@ -145,7 +145,7 @@ These are not application settings but affect management scripts:
 | Variable | Description | Default |
 | -------- | ----------- | ------- |
 | `COMPOSE_FILE` | Override compose file (`scripts/deploy.sh`, backup, restore). | Auto-detected |
-| `ADVENTURELOG_COMPOSE` | Set to `aio` to prefer AIO when both env files exist. | unset |
+| `ADVENTURELOG_COMPOSE` | Set to `advanced` to prefer Advanced Deployment when both env files exist. Legacy `aio`/`standard` values still select Standard Deployment. | unset |
 | `BACKUP_DIR` | Backup output directory for `scripts/backup.sh`. | `backups` |
 | `ADVENTURELOG_REF` | Git ref for installer downloads. | `main` |
 
@@ -153,7 +153,7 @@ See [Operations & Maintenance](operations.md).
 
 ## Source of truth
 
-- Standard env template: [`.env.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
-- AIO env template: [`.env.aio.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.aio.example)
+- Standard Deployment env template: [`.env.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.example)
+- Advanced Deployment env template: [`.env.advanced.example`](https://github.com/seanmorley15/AdventureLog/blob/main/.env.advanced.example)
 - Django settings: [`backend/server/main/settings.py`](https://github.com/seanmorley15/AdventureLog/blob/main/backend/server/main/settings.py)
-- AIO derivation: [`docker/aio/env-setup.sh`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/aio/env-setup.sh)
+- Standard Deployment derivation: [`docker/aio/env-setup.sh`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/aio/env-setup.sh)

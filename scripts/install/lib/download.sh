@@ -4,7 +4,7 @@ set -euo pipefail
 
 INSTALLER_LIB_FILES=(
 	common.sh ui.sh tui.sh checks.sh download.sh deploy.sh
-	aio-config.sh standard-config.sh manage.sh features.sh
+	standard-config.sh advanced-config.sh manage.sh features.sh
 )
 
 download_file() {
@@ -55,11 +55,11 @@ copy_local_installer_libs() {
 	done
 }
 
-download_aio_toolkit() {
-	log_info "Fetching All-in-One deployment files"
+download_standard_toolkit() {
+	log_info "Fetching Standard Deployment files"
 	mkdir -p docker
-	download_file "${GITHUB_RAW}/docker/docker-compose.aio.yml" "docker/docker-compose.aio.yml"
-	download_file "${GITHUB_RAW}/.env.aio.example" ".env.aio.example"
+	download_file "${GITHUB_RAW}/docker/docker-compose.yml" "docker/docker-compose.yml"
+	download_file "${GITHUB_RAW}/.env.example" ".env.example"
 	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"
@@ -71,11 +71,11 @@ download_aio_toolkit() {
 	log_success "Deployment toolkit ready"
 }
 
-download_standard_toolkit() {
-	log_info "Fetching Standard deployment files"
+download_advanced_toolkit() {
+	log_info "Fetching Advanced Deployment files"
 	mkdir -p docker
-	download_file "${GITHUB_RAW}/docker/docker-compose.yml" "docker/docker-compose.yml"
-	download_file "${GITHUB_RAW}/.env.example" ".env.example"
+	download_file "${GITHUB_RAW}/docker/docker-compose.advanced.yml" "docker/docker-compose.advanced.yml"
+	download_file "${GITHUB_RAW}/.env.advanced.example" ".env.advanced.example"
 	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"

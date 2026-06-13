@@ -25,13 +25,17 @@ if [[ -z "$COMPOSE_FILE" ]]; then
 fi
 
 case "$COMPOSE_FILE" in
+	*docker-compose.advanced.yml*)
+		ENV_FILE=".env.advanced"
+		LOG_CONTAINER="adventurelog-backend"
+		;;
 	*docker-compose.aio.yml*)
 		ENV_FILE=".env.aio"
-		LOG_CONTAINER="adventurelog-aio"
+		LOG_CONTAINER="adventurelog"
 		;;
 	*)
 		ENV_FILE=".env"
-		LOG_CONTAINER="adventurelog-backend"
+		LOG_CONTAINER="adventurelog"
 		;;
 esac
 
