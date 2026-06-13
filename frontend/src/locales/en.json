@@ -987,6 +987,8 @@
 		"no_results": "No places found",
 		"search_error": "Search failed. Try again later.",
 		"clear_search": "Clear search",
+		"random_location": "Random location",
+		"no_locations_to_explore": "No locations on the map to explore.",
 		"recommendations_nearby": "Nearby places",
 		"recommendation_category": "Category",
 		"recommendation_radius": "Search radius",

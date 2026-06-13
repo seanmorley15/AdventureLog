@@ -8,18 +8,21 @@
 	import MapMarkerIcon from '~icons/mdi/map-marker';
 	import PlaceIcon from '~icons/mdi/map-search';
 	import NearbyIcon from '~icons/mdi/compass-outline';
+	import DiceIcon from '~icons/mdi/dice-5';
 
 	export let mode: MapSearchMode = 'my';
 	export let query = '';
 	export let filteredPins: Pin[] = [];
 	export let isSearching = false;
 	export let searchError: string | null = null;
+	export let randomDisabled = false;
 
 	const dispatch = createEventDispatcher<{
 		modeChange: MapSearchMode;
 		queryChange: string;
 		selectPin: { pinId: string };
 		selectPlace: { place: PlaceSearchResult };
+		random: void;
 	}>();
 
 	let placeResults: PlaceSearchResult[] = [];
@@ -115,6 +118,10 @@
 		dispatch('selectPlace', { place });
 	}
 
+	function handleRandomClick() {
+		dispatch('random');
+	}
+
 	onMount(() => () => clearTimeout(searchTimeout));
 </script>
 
@@ -146,82 +153,106 @@
 	</div>
 
 	{#if mode === 'nearby'}
-		<p class="hidden sm:block text-xs text-base-content/60 px-1 leading-snug">
-			{$t('map.nearby_search_hint')}
-		</p>
-	{:else}
-		<div class="relative w-full">
-			<label
-				class="input input-bordered input-sm flex items-center gap-2 w-full bg-base-100/95 shadow-sm"
+		<div class="flex items-center justify-end gap-2 px-1">
+			<p class="hidden sm:block flex-1 text-xs text-base-content/60 leading-snug">
+				{$t('map.nearby_search_hint')}
+			</p>
+			<button
+				type="button"
+				class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
+				disabled={randomDisabled}
+				on:click={handleRandomClick}
+				aria-label={$t('map.random_location')}
+				title={$t('map.random_location')}
 			>
-				<SearchIcon class="h-4 w-4 opacity-70 shrink-0" />
-				<input
-					type="text"
-					class="grow min-w-0"
-					placeholder={mode === 'my'
-						? $t('map.search_locations')
-						: $t('map.search_places_placeholder')}
-					bind:value={query}
-					on:input={handleInput}
-					on:focus={() => {
-						if (mode === 'places' && placeResults.length) showDropdown = true;
-					}}
-				/>
-				{#if query}
-					<button
-						type="button"
-						class="btn btn-ghost btn-xs btn-circle shrink-0"
-						on:click={clearQuery}
-						aria-label={$t('map.clear_search')}
-					>
-						<ClearIcon class="w-4 h-4" />
-					</button>
-				{/if}
-			</label>
-
-			{#if showDropdown}
-				<ul
-					class="absolute top-full left-0 right-0 z-50 mt-1 menu bg-base-100 rounded-box shadow-xl border border-base-300 max-h-64 overflow-y-auto p-1"
-					role="listbox"
+				<DiceIcon class="w-4 h-4" />
+			</button>
+		</div>
+	{:else}
+		<div class="relative w-full flex items-center gap-1.5">
+			<div class="relative flex-1 min-w-0">
+				<label
+					class="input input-bordered input-sm flex items-center gap-2 w-full min-w-0 bg-base-100/95 shadow-sm"
 				>
-					{#if mode === 'my'}
-						{#each myResults as pin (pin.id)}
-							<li>
-								<button type="button" on:click={() => selectPin(pin)}>
-									<span class="truncate">{pin.name}</span>
-									{#if pin.category?.icon}
-										<span class="badge badge-ghost badge-xs">{pin.category.icon}</span>
-									{/if}
-								</button>
-							</li>
-						{/each}
-					{:else if mode === 'places'}
-						{#if isSearching}
-							<li class="px-3 py-2 text-sm text-base-content/60">
-								<span class="loading loading-spinner loading-xs"></span>
-								{$t('map.searching')}
-							</li>
-						{:else if searchError}
-							<li class="px-3 py-2 text-sm text-error">{searchError}</li>
-						{:else if placeResults.length === 0 && query.trim().length >= 3}
-							<li class="px-3 py-2 text-sm text-base-content/60">{$t('map.no_results')}</li>
-						{:else}
-							{#each placeResults as place (place.id)}
+					<SearchIcon class="h-4 w-4 opacity-70 shrink-0" />
+					<input
+						type="text"
+						class="grow min-w-0"
+						placeholder={mode === 'my'
+							? $t('map.search_locations')
+							: $t('map.search_places_placeholder')}
+						bind:value={query}
+						on:input={handleInput}
+						on:focus={() => {
+							if (mode === 'places' && placeResults.length) showDropdown = true;
+						}}
+					/>
+					{#if query}
+						<button
+							type="button"
+							class="btn btn-ghost btn-xs btn-circle shrink-0"
+							on:click={clearQuery}
+							aria-label={$t('map.clear_search')}
+						>
+							<ClearIcon class="w-4 h-4" />
+						</button>
+					{/if}
+				</label>
+
+				{#if showDropdown}
+					<ul
+						class="absolute top-full left-0 right-0 z-50 mt-1 menu bg-base-100 rounded-box shadow-xl border border-base-300 max-h-64 overflow-y-auto p-1"
+						role="listbox"
+					>
+						{#if mode === 'my'}
+							{#each myResults as pin (pin.id)}
 								<li>
-									<button type="button" on:click={() => selectPlace(place)}>
-										<div class="flex flex-col items-start min-w-0">
-											<span class="font-medium truncate w-full">{place.name}</span>
-											<span class="text-xs text-base-content/60 truncate w-full"
-												>{place.location}</span
-											>
-										</div>
+									<button type="button" on:click={() => selectPin(pin)}>
+										<span class="truncate">{pin.name}</span>
+										{#if pin.category?.icon}
+											<span class="badge badge-ghost badge-xs">{pin.category.icon}</span>
+										{/if}
 									</button>
 								</li>
 							{/each}
+						{:else if mode === 'places'}
+							{#if isSearching}
+								<li class="px-3 py-2 text-sm text-base-content/60">
+									<span class="loading loading-spinner loading-xs"></span>
+									{$t('map.searching')}
+								</li>
+							{:else if searchError}
+								<li class="px-3 py-2 text-sm text-error">{searchError}</li>
+							{:else if placeResults.length === 0 && query.trim().length >= 3}
+								<li class="px-3 py-2 text-sm text-base-content/60">{$t('map.no_results')}</li>
+							{:else}
+								{#each placeResults as place (place.id)}
+									<li>
+										<button type="button" on:click={() => selectPlace(place)}>
+											<div class="flex flex-col items-start min-w-0">
+												<span class="font-medium truncate w-full">{place.name}</span>
+												<span class="text-xs text-base-content/60 truncate w-full"
+													>{place.location}</span
+												>
+											</div>
+										</button>
+									</li>
+								{/each}
+							{/if}
 						{/if}
-					{/if}
-				</ul>
-			{/if}
+					</ul>
+				{/if}
+			</div>
+			<button
+				type="button"
+				class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
+				disabled={randomDisabled}
+				on:click={handleRandomClick}
+				aria-label={$t('map.random_location')}
+				title={$t('map.random_location')}
+			>
+				<DiceIcon class="w-4 h-4" />
+			</button>
 		</div>
 	{/if}
 </div>

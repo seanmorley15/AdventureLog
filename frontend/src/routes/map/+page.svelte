@@ -37,11 +37,9 @@
 	import Clear from '~icons/mdi/close';
 	import Eye from '~icons/mdi/eye';
 	import PinIcon from '~icons/mdi/map-marker';
-	import Calendar from '~icons/mdi/calendar';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
-	import ActivityIcon from '~icons/mdi/run-fast';
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import MapSearchBar from '$lib/components/map/MapSearchBar.svelte';
 	import MapDetailPanel from '$lib/components/map/MapDetailPanel.svelte';
@@ -260,6 +258,11 @@
 	$: selectedPinId = selected?.kind === 'pin' ? selected.pinId : null;
 	$: selectedRecId = selected?.kind === 'recommendation' ? selected.item.id : null;
 	$: selectedPin = selectedPinId ? pins.find((p) => p.id === selectedPinId) : null;
+	$: randomEligiblePins = filteredPins.filter((pin) => {
+		const lat = parseCoordinate(pin.latitude);
+		const lng = parseCoordinate(pin.longitude);
+		return lat !== null && lng !== null;
+	});
 
 	$: showLodgingAdd = selected?.kind === 'recommendation' && recCategory === 'lodging';
 
@@ -372,6 +375,20 @@
 			if (lat !== null && lng !== null) flyTo(lat, lng);
 		}
 		await loadPreviewForPin(event.detail.pinId);
+	}
+
+	async function selectRandomLocation() {
+		if (randomEligiblePins.length === 0) {
+			addToast('info', $t('map.no_locations_to_explore'));
+			return;
+		}
+		const pin = randomEligiblePins[Math.floor(Math.random() * randomEligiblePins.length)];
+		const lat = parseCoordinate(pin.latitude);
+		const lng = parseCoordinate(pin.longitude);
+		if (lat === null || lng === null) return;
+		sidebarOpen = true;
+		flyTo(lat, lng);
+		await loadPreviewForPin(pin.id);
 	}
 
 	async function handleSelectPlace(event: CustomEvent<{ place: PlaceSearchResult }>) {
@@ -931,10 +948,12 @@
 						mode={searchMode}
 						bind:query={searchQuery}
 						{filteredPins}
+						randomDisabled={randomEligiblePins.length === 0}
 						on:modeChange={(e) => handleSearchModeChange(e.detail)}
 						on:queryChange={(e) => (searchQuery = e.detail)}
 						on:selectPin={handleSelectPin}
 						on:selectPlace={handleSelectPlace}
+						on:random={selectRandomLocation}
 					/>
 				</div>
 
