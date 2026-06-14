@@ -30,7 +30,7 @@ function scrollToContent(event: Event) {
       <div class="al-hero__copy">
         <p class="al-hero__pill">
           <span class="al-hero__pill-dot" aria-hidden="true" />
-          The The ultimate travel companion
+          The ultimate travel companion
         </p>
 
         <h1 id="hero-heading" class="al-hero__title">
