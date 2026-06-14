@@ -7,12 +7,12 @@
 **The ultimate travel companion — log where you've been, plan what's next, and see your whole world on one map.**
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://adventurelog.app/docs/install/getting_started)
-[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-success)](https://adventurelog.app/docs/install/getting_started)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://adventurelog.app/docs/install/getting_started.html)
+[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-Yes-success)](https://adventurelog.app/docs/install/getting_started.html)
 [![Discord](https://img.shields.io/badge/Discord-Join-5865F2?logo=discord&logoColor=white)](https://discord.gg/wRbQ9Egr8C)
 [![GitHub stars](https://img.shields.io/github/stars/seanmorley15/AdventureLog?style=social)](https://github.com/seanmorley15/AdventureLog/stargazers)
 
-[Live Demo](https://demo.adventurelog.app) · [**Get Started**](https://adventurelog.app/docs/install/getting_started) · [Quick Install](#quick-start) · [Documentation](https://adventurelog.app) · [Discord](https://discord.gg/wRbQ9Egr8C) · [Support the project](https://seanmorley.com/sponsor)
+[Live Demo](https://demo.adventurelog.app) · [**Get Started**](https://adventurelog.app/docs/install/getting_started.html) · [Quick Install](#quick-start) · [Documentation](https://adventurelog.app) · [Discord](https://discord.gg/wRbQ9Egr8C) · [Support the project](https://seanmorley.com/sponsor)
 
 <br />
 
@@ -122,10 +122,10 @@ Connect the tools you already use:
 
 | Integration | Purpose |
 | ----------- | ------- |
-| [**Immich**](https://adventurelog.app/docs/configuration/immich_integration) | Link photos from your self-hosted media library |
-| [**Strava**](https://adventurelog.app/docs/configuration/strava_integration) | Import activities with GPX tracks & stats |
-| [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration) | Attach trails with distance & elevation data |
-| [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration) | Geocoding & location search |
+| [**Immich**](https://adventurelog.app/docs/configuration/immich_integration.html) | Link photos from your self-hosted media library |
+| [**Strava**](https://adventurelog.app/docs/configuration/strava_integration.html) | Import activities with GPX tracks & stats |
+| [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration.html) | Attach trails with distance & elevation data |
+| [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration.html) | Geocoding & location search |
 
 ## Why AdventureLog?
 
@@ -139,7 +139,7 @@ Connect the tools you already use:
 
 ## Quick start
 
-Not sure which setup fits you? The **[Getting Started guide](https://adventurelog.app/docs/install/getting_started)** covers every install path — Docker, homelab NAS, Kubernetes, reverse proxies, and more.
+Not sure which setup fits you? The **[Getting Started guide](https://adventurelog.app/docs/install/getting_started.html)** covers every install path — Docker, homelab NAS, Kubernetes, reverse proxies, and more.
 
 The fastest way to get running — one container, one port:
 
@@ -147,18 +147,18 @@ The fastest way to get running — one container, one port:
 curl -sSL https://get.adventurelog.app | bash
 ```
 
-Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/standard) for Docker Compose.
+Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/standard.html) for Docker Compose.
 
 **Requirements:** Docker Engine + Compose v2 · 2 GB RAM on first boot · Linux, VPS, homelab, or macOS
 
 | I want to… | Guide |
 | ---------- | ----- |
-| See all install options | [**Getting Started**](https://adventurelog.app/docs/install/getting_started) |
+| See all install options | [**Getting Started**](https://adventurelog.app/docs/install/getting_started.html) |
 | Try before installing | [Live demo](https://demo.adventurelog.app) |
-| One-command install | [Quick Start Installer](https://adventurelog.app/docs/install/quick_start) |
-| Deploy on Proxmox / Synology / Unraid | [Platform guides](https://adventurelog.app/docs/install/getting_started) |
-| Run on Kubernetes | [Kustomize guide](https://adventurelog.app/docs/install/kustomize) |
-| Learn the app | [Usage guide](https://adventurelog.app/docs/usage/usage) |
+| One-command install | [Quick Start Installer](https://adventurelog.app/docs/install/quick_start.html) |
+| Deploy on Proxmox / Synology / Unraid | [Platform guides](https://adventurelog.app/docs/install/getting_started.html) |
+| Run on Kubernetes | [Kustomize guide](https://adventurelog.app/docs/install/kustomize.html) |
+| Learn the app | [Usage guide](https://adventurelog.app/docs/usage/usage.html) |
 
 > Default login is `admin` / `admin` — it's recommended to change it immediately after first sign-in.
 
@@ -187,7 +187,7 @@ Or follow the [Standard Deployment guide](https://adventurelog.app/docs/install/
 
 - Docker & Docker Compose (recommended)
 - Kubernetes (Kustomize)
-- Reverse proxy guides for [Nginx](https://adventurelog.app/docs/install/nginx_proxy_manager), [Traefik](https://adventurelog.app/docs/install/traefik) & [Caddy](https://adventurelog.app/docs/install/caddy)
+- Reverse proxy guides for [Nginx](https://adventurelog.app/docs/install/nginx_proxy_manager.html), [Traefik](https://adventurelog.app/docs/install/traefik.html) & [Caddy](https://adventurelog.app/docs/install/caddy.html)
 
 </details>
 
@@ -219,7 +219,7 @@ Distributed under the [GNU General Public License v3.0](LICENSE).
 
 **[Sean Morley](https://seanmorley.com)** — I'm an Electrical Engineering student at UConn, an open-source developer, and an avid traveler. AdventureLog started as my simple idea to track where I've been and grew into a full travel companion built for people who love exploring the world. I'm passionate about open-source software and building tools that solve real problems for real people. **Feel free to reach out to me directly via the info on my website if you have any questions or feedback! :)**
 
-Want the full origin story? Read the [Development Timeline](https://adventurelog.app/docs/changelogs/development_timeline).
+Want the full origin story? Read the [Development Timeline](https://adventurelog.app/docs/changelogs/development_timeline.html).
 
 ## Acknowledgements
 
@@ -244,6 +244,6 @@ Your support funds new features, infrastructure, and continued open-source devel
 
 **Happy travels!**
 
-[⭐ Star us on GitHub](https://github.com/seanmorley15/AdventureLog/stargazers) · [Get Started](https://adventurelog.app/docs/install/getting_started) · [Report a bug](https://github.com/seanmorley15/AdventureLog/issues) · [Join Discord](https://discord.gg/wRbQ9Egr8C)
+[⭐ Star us on GitHub](https://github.com/seanmorley15/AdventureLog/stargazers) · [Get Started](https://adventurelog.app/docs/install/getting_started.html) · [Report a bug](https://github.com/seanmorley15/AdventureLog/issues) · [Join Discord](https://discord.gg/wRbQ9Egr8C)
 
 </div>
