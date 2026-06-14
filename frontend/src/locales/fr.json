@@ -8,12 +8,12 @@
     "other_attributions": "Des attributions supplémentaires peuvent être trouvées dans le fichier README.",
     "generic_attributions": "Connectez-vous à AdventureLog pour afficher les attributions pour les intégrations et services activés.",
     "attributions": "Attributions",
-    "developer": "Promoteur",
+    "developer": "Développeur",
     "license_info": "Licence",
     "sponsor": "Parrainer",
     "thank_you": "Merci d'utiliser AdventureLog !",
     "version": "Version",
-    "view_changelog": "Voir Changelog",
+    "view_changelog": "Voir le journal des modifications",
     "view_license": "Afficher la licence"
   },
   "adventures": {
