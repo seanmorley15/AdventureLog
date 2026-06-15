@@ -46,7 +46,9 @@
 	import MapDetailPanel from '$lib/components/map/MapDetailPanel.svelte';
 	import MapRecommendationsLayer from '$lib/components/map/MapRecommendationsLayer.svelte';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
+	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import Compass from '~icons/mdi/compass';
+	import Tag from '~icons/mdi/tag';
 
 	export let data;
 
@@ -79,6 +81,7 @@
 
 	let showVisited = true;
 	let showPlanned = true;
+	let typeString = '';
 	let searchMode: MapSearchMode = 'my';
 	let searchQuery = '';
 	let selected: MapSelection | null = null;
@@ -184,6 +187,7 @@
 	$: visitedAdventures = pins.filter((pin) => pin.is_visited).length;
 	$: plannedAdventures = pins.filter((pin) => !pin.is_visited).length;
 	$: totalRegions = visitedRegions.length;
+	$: categoryFilterNames = typeString ? typeString.split(',').filter((item) => item !== '') : [];
 
 	$: isMetric = data.user?.measurement_system !== 'imperial';
 	$: recRadiusOptions = isMetric
@@ -210,6 +214,10 @@
 			const statusMatch =
 				(showVisited && pin.is_visited === true) || (showPlanned && pin.is_visited !== true);
 			if (!statusMatch) return false;
+			if (categoryFilterNames.length > 0) {
+				const categoryName = pin.category?.name;
+				if (!categoryName || !categoryFilterNames.includes(categoryName)) return false;
+			}
 			if (!query) return true;
 			return (
 				pin.name?.toLowerCase().includes(query) ||
@@ -936,11 +944,14 @@
 			>
 				<button
 					type="button"
-					class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0"
+					class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0 relative"
 					on:click={() => (sidebarOpen = !sidebarOpen)}
 					aria-label={$t('map.map_controls')}
 				>
 					<Filter class="w-5 h-5" />
+					{#if categoryFilterNames.length > 0}
+						<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
+					{/if}
 				</button>
 
 				<div
@@ -1042,35 +1053,41 @@
 							<h2 class="text-xl font-bold">{$t('map.map_controls')}</h2>
 						</div>
 
-						<div class="flex-1 overflow-y-auto min-h-0 space-y-6">
-							<div class="card bg-base-200/50 p-4">
+						<div class="flex-1 overflow-y-auto min-h-0 space-y-4">
+							<div class="card bg-base-200/50 p-3">
 								<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 									<MapIcon class="w-5 h-5" />
-									{$t('map.adventure_stats')}
+									{$t('map.stats')}
 								</h3>
-								<div class="space-y-3">
-									<div class="stat p-0">
-										<div class="stat-title text-sm">{$t('dashboard.total_adventures')}</div>
-										<div class="stat-value text-2xl">{totalAdventures}</div>
-									</div>
-									<div class="grid grid-cols-2 gap-3">
-										<div class="stat p-0">
-											<div class="stat-title text-xs">{$t('adventures.visited')}</div>
-											<div class="stat-value text-lg text-success">{visitedAdventures}</div>
+								<div class="grid grid-cols-3 gap-2">
+									<div class="text-center min-w-0">
+										<div class="text-[10px] uppercase tracking-wide text-base-content/50 truncate">
+											{$t('locations.locations')}
 										</div>
-										<div class="stat p-0">
-											<div class="stat-title text-xs">{$t('adventures.planned')}</div>
-											<div class="stat-value text-lg text-info">{plannedAdventures}</div>
+										<div class="text-lg font-bold leading-tight">{totalAdventures}</div>
+									</div>
+									<div class="text-center min-w-0">
+										<div class="text-[10px] uppercase tracking-wide text-base-content/50 truncate">
+											{$t('adventures.visited')}
+										</div>
+										<div class="text-lg font-bold leading-tight text-success">
+											{visitedAdventures}
 										</div>
 									</div>
-									{#if totalAdventures > 0}
-										<progress
-											class="progress progress-primary w-full"
-											value={visitedAdventures}
-											max={totalAdventures}
-										></progress>
-									{/if}
+									<div class="text-center min-w-0">
+										<div class="text-[10px] uppercase tracking-wide text-base-content/50 truncate">
+											{$t('adventures.planned')}
+										</div>
+										<div class="text-lg font-bold leading-tight text-info">{plannedAdventures}</div>
+									</div>
 								</div>
+								{#if totalAdventures > 0}
+									<progress
+										class="progress progress-primary progress-xs w-full mt-2"
+										value={visitedAdventures}
+										max={totalAdventures}
+									></progress>
+								{/if}
 							</div>
 
 							{#if searchMode === 'nearby'}
@@ -1141,6 +1158,14 @@
 									</div>
 								</div>
 							{/if}
+
+							<div class="card bg-base-200/50 p-4">
+								<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
+									<Tag class="w-5 h-5" />
+									{$t('adventures.categories')}
+								</h3>
+								<CategoryFilterDropdown bind:types={typeString} />
+							</div>
 
 							<div class="card bg-base-200/50 p-4">
 								<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">

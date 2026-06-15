@@ -1010,7 +1010,8 @@
 		"show_trails": "Show trail tracks",
 		"hide_trails": "Hide trail tracks",
 		"fullscreen_failed": "Could not toggle fullscreen.",
-		"map_style": "Map style"
+		"map_style": "Map style",
+		"stats": "Stats"
 	},
 	"share": {
 		"shared": "Shared",
@@ -1077,7 +1078,6 @@
 	"dashboard": {
 		"welcome_back": "Welcome back",
 		"countries_visited": "Countries Visited",
-		"total_adventures": "Total Adventures",
 		"total_visited_regions": "Total Visited Regions",
 		"total_visited_cities": "Total Visited Cities",
 		"recent_adventures": "Recent Adventures",
