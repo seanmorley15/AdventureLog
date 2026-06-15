@@ -21,6 +21,7 @@ from .quick_add_utils import (
     parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
+    resolve_quick_add_location_label,
     sanitize_photo_urls,
 )
 
@@ -127,12 +128,7 @@ class LodgingViewSet(viewsets.ModelViewSet):
         if rating is None:
             rating = coerce_float(details.get('rating'))
 
-        location_label = (
-            str(payload.get('location') or '').strip()
-            or str(reverse_data.get('display_name') or '').strip()
-            or str(details.get('formatted_address') or '').strip()
-            or None
-        )
+        location_label = resolve_quick_add_location_label(payload, reverse_data, details)
 
         place_types = payload.get('types')
         if not isinstance(place_types, list) or not place_types:

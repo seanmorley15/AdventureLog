@@ -98,6 +98,73 @@ export async function enrichPlace(place: PlaceSearchResult): Promise<PlaceSearch
 	}
 }
 
+export type FormattedLocationData = {
+	city?: { name: string; id: string; visited: boolean };
+	region?: { name: string; id: string; visited: boolean };
+	country?: { name: string; country_code: string; visited: boolean };
+	display_name?: string;
+	location_name?: string;
+	provider?: string;
+};
+
+export async function fetchFormattedLocation(
+	lat: number,
+	lng: number
+): Promise<FormattedLocationData | null> {
+	try {
+		const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
+		if (!response.ok) {
+			return null;
+		}
+
+		const data = await response.json();
+		const providerUsed = data.provider_used || data.provider || null;
+		return {
+			city: data.city
+				? {
+						name: data.city,
+						id: data.city_id,
+						visited: data.city_visited || false
+					}
+				: undefined,
+			region: data.region
+				? {
+						name: data.region,
+						id: data.region_id,
+						visited: data.region_visited || false
+					}
+				: undefined,
+			country: data.country
+				? {
+						name: data.country,
+						country_code: data.country_id,
+						visited: false
+					}
+				: undefined,
+			display_name: data.display_name,
+			location_name: data.location_name,
+			provider: providerUsed
+		};
+	} catch {
+		return null;
+	}
+}
+
+export function resolveQuickAddLocationLabel(
+	formatted: FormattedLocationData | null,
+	fallbackLocation = ''
+): string {
+	return (formatted?.display_name || '').trim() || fallbackLocation.trim() || '';
+}
+
+export async function resolveQuickAddPayload(payload: QuickAddPayload): Promise<QuickAddPayload> {
+	const formatted = await fetchFormattedLocation(payload.latitude, payload.longitude);
+	return {
+		...payload,
+		location: resolveQuickAddLocationLabel(formatted, payload.location)
+	};
+}
+
 export type QuickAddPayload = {
 	name: string;
 	latitude: number;

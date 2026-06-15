@@ -6,6 +6,7 @@
 	import { addToast } from '$lib/toasts';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Category } from '$lib/types';
+	import { fetchFormattedLocation } from '$lib/map/places';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
@@ -348,59 +349,32 @@
 
 	async function performDetailedReverseGeocode(lat: number, lng: number) {
 		try {
-			const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
-
-			if (response.ok) {
-				const data = await response.json();
-				const providerUsed = data.provider_used || data.provider || null;
-				locationData = {
-					city: data.city
-						? {
-								name: data.city,
-								id: data.city_id,
-								visited: data.city_visited || false
-							}
-						: undefined,
-					region: data.region
-						? {
-								name: data.region,
-								id: data.region_id,
-								visited: data.region_visited || false
-							}
-						: undefined,
-					country: data.country
-						? {
-								name: data.country,
-								country_code: data.country_id,
-								visited: false
-							}
-						: undefined,
-					display_name: data.display_name,
-					location_name: data.location_name,
-					provider: providerUsed
-				};
-
-				if (selectedLocation) {
-					const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
-					const shouldAutoEnrichQuickAdd = isCoordinatePlaceholder || !selectedLocation.place_id;
-					const resolvedLocationName = (data.location_name || '').trim();
-					const resolvedDisplayName = (data.display_name || '').trim();
-
-					selectedLocation = {
-						...selectedLocation,
-						name: isCoordinatePlaceholder
-							? resolvedLocationName || resolvedDisplayName || selectedLocation.name
-							: selectedLocation.name,
-						location: resolvedDisplayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-					};
-					searchQuery = selectedLocation.name;
-
-					if (shouldAutoEnrichQuickAdd && resolvedLocationName) {
-						await enrichFromResolvedName(lat, lng, resolvedLocationName);
-					}
-				}
-			} else {
+			const formatted = await fetchFormattedLocation(lat, lng);
+			if (!formatted) {
 				locationData = null;
+				return;
+			}
+
+			locationData = formatted;
+
+			if (selectedLocation) {
+				const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
+				const shouldAutoEnrichQuickAdd = isCoordinatePlaceholder || !selectedLocation.place_id;
+				const resolvedLocationName = (formatted.location_name || '').trim();
+				const resolvedDisplayName = (formatted.display_name || '').trim();
+
+				selectedLocation = {
+					...selectedLocation,
+					name: isCoordinatePlaceholder
+						? resolvedLocationName || resolvedDisplayName || selectedLocation.name
+						: selectedLocation.name,
+					location: resolvedDisplayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+				};
+				searchQuery = selectedLocation.name;
+
+				if (shouldAutoEnrichQuickAdd && resolvedLocationName) {
+					await enrichFromResolvedName(lat, lng, resolvedLocationName);
+				}
 			}
 		} catch (error) {
 			console.error('Detailed reverse geocoding error:', error);
@@ -519,6 +493,8 @@
 	}
 
 	async function quickAdd() {
+		await ensureAdventureLogFormattedLocation();
+
 		const prefill = buildPrefillPayload();
 		if (!prefill) {
 			addToast('warning', `Please select a place or drop a pin first`);

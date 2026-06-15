@@ -28,7 +28,8 @@
 		placeToQuickAddPayload,
 		quickAddLocation,
 		recommendationToLocationPrefill,
-		recommendationToQuickAddPayload
+		recommendationToQuickAddPayload,
+		resolveQuickAddPayload
 	} from '$lib/map/places';
 
 	import MapIcon from '~icons/mdi/map';
@@ -572,7 +573,8 @@
 				selected.kind === 'place'
 					? placeToQuickAddPayload(selected.place)
 					: recommendationToQuickAddPayload(selected.item);
-			const created = await quickAddLocation(payload);
+			const resolved = await resolveQuickAddPayload(payload);
+			const created = await quickAddLocation(resolved);
 			addToast('success', $t('map.quick_add'));
 			const newPin: Pin = {
 				id: created.id,

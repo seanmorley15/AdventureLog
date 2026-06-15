@@ -111,6 +111,20 @@ def build_quick_add_description(base_description, detailed_description):
     return description or None
 
 
+def resolve_quick_add_location_label(payload, reverse_data, details):
+    """Prefer server reverse-geocoded display_name over raw provider address strings."""
+    reverse_data = reverse_data if isinstance(reverse_data, dict) else {}
+    details = details if isinstance(details, dict) else {}
+    payload = payload if isinstance(payload, dict) else {}
+
+    return (
+        str(reverse_data.get('display_name') or '').strip()
+        or str(payload.get('location') or '').strip()
+        or str(details.get('formatted_address') or '').strip()
+        or None
+    )
+
+
 def resolve_quick_add_collection(collection_id, validate_permissions, permission_error_message):
     if not collection_id:
         return None

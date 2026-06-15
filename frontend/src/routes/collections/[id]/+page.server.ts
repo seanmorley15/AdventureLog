@@ -34,9 +34,7 @@ export const load = (async (event) => {
 }) satisfies PageServerLoad;
 
 import type { Actions } from '@sveltejs/kit';
-import { fetchCSRFToken } from '$lib/index.server';
-
-const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
 
 export const actions: Actions = {
 	delete: async (event) => {
@@ -61,7 +59,7 @@ export const actions: Actions = {
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${serverEndpoint}/api/collections/${event.params.id}`, {
+		let res = await fetch(backendApiUrl(`/api/collections/${event.params.id}`), {
 			method: 'DELETE',
 			headers: {
 				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,

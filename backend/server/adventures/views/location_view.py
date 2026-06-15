@@ -44,6 +44,7 @@ from .quick_add_utils import (
     parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
+    resolve_quick_add_location_label,
     sanitize_photo_urls,
     sanitize_tags,
 )
@@ -245,12 +246,7 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         phone_number = str(details.get('phone_number') or payload.get('phone_number') or '').strip() or None
 
-        location_label = (
-            str(payload.get('location') or '').strip()
-            or str(reverse_data.get('display_name') or '').strip()
-            or str(details.get('formatted_address') or '').strip()
-            or None
-        )
+        location_label = resolve_quick_add_location_label(payload, reverse_data, details)
 
         description = build_quick_add_description(
             base_description=payload.get('description'),

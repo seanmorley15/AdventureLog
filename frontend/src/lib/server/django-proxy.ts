@@ -22,8 +22,8 @@ type ProxyOptions = {
 	formatSearchParam?: (search: string, method: string) => string;
 };
 
-const authTrailingSlashPaths = ['disable-password', 'mobile-qr'];
-const authTrailingSlashPrefixes = ['api-keys'];
+/** Allauth headless routes omit trailing slashes; custom auth routes use them. */
+const authNoTrailingSlashPrefixes = ['browser/', 'app/'];
 
 /** Headers that must not be forwarded to Node fetch (undici rejects hop-by-hop headers). */
 const FORBIDDEN_PROXY_HEADERS = new Set([
@@ -60,11 +60,31 @@ function defaultFormatSearchParam(search: string, method: string, basePath: Prox
 }
 
 function authRequiresTrailingSlash(path: string, requireTrailingSlash: boolean): boolean {
-	return (
-		requireTrailingSlash ||
-		authTrailingSlashPaths.includes(path) ||
-		authTrailingSlashPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
-	);
+	if (authNoTrailingSlashPrefixes.some((prefix) => path.startsWith(prefix))) {
+		return false;
+	}
+	return requireTrailingSlash;
+}
+
+function apiRequiresTrailingSlash(path: string, requireTrailingSlash: boolean): boolean {
+	if (requireTrailingSlash === false) {
+		return false;
+	}
+	// Preserve trailing slash for nested action paths (e.g. locations/<id>/duplicate/).
+	if (path.endsWith('/')) {
+		return false;
+	}
+	return true;
+}
+
+/** Build a backend API URL with a trailing slash before query params. */
+export function backendApiUrl(path: string, search = ''): string {
+	const endpoint = getServerEndpoint();
+	const normalized = path.startsWith('/') ? path : `/${path}`;
+	const [pathname, embeddedSearch = ''] = normalized.split('?');
+	const slashPath = pathname.endsWith('/') ? pathname : `${pathname}/`;
+	const query = search || embeddedSearch;
+	return `${endpoint}${slashPath}${query ? (query.startsWith('?') ? query : `?${query}`) : ''}`;
 }
 
 export async function proxyToDjango(
@@ -79,8 +99,8 @@ export async function proxyToDjango(
 
 	const requireTrailingSlash =
 		basePath === 'auth'
-			? authRequiresTrailingSlash(path, options.requireTrailingSlash ?? false)
-			: (options.requireTrailingSlash ?? false);
+			? authRequiresTrailingSlash(path, options.requireTrailingSlash ?? true)
+			: apiRequiresTrailingSlash(path, options.requireTrailingSlash ?? true);
 
 	if (requireTrailingSlash && !targetUrl.endsWith('/')) {
 		targetUrl += '/';
