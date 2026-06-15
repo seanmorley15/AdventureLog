@@ -670,7 +670,7 @@
     "app_version": "Appversion",
     "connected": "Ansluten",
     "debug_information": "Felsökningsinformation",
-    "disabled": "Funktionshindrad",
+    "disabled": "Inaktiverad",
     "disconnected": "Osammanhängande",
     "email_management": "E -posthantering",
     "email_management_desc": "Hantera dina e -postadresser och verifieringsstatus",
@@ -978,7 +978,13 @@
     "exit_fullscreen": "Avsluta helskärm",
     "geolocation_unavailable": "Platsen är inte tillgänglig i den här webbläsaren.",
     "geolocation_denied": "Platsåtkomst nekades.",
-    "track_layers": "Spåra lager"
+    "track_layers": "Spåra lager",
+    "show_activities": "Visa aktivitetsspår",
+    "hide_activities": "Dölj aktivitetsspår",
+    "show_trails": "Visa stigspår",
+    "hide_trails": "Göm spåren",
+    "fullscreen_failed": "Kunde inte växla mellan helskärmsläge.",
+    "map_style": "Kartstil"
   },
   "share": {
     "no_users_shared": "Inga användare delas med",
@@ -1174,7 +1180,15 @@
   "wanderer": {
     "connected": "Framgångsrikt ansluten till vandrare",
     "connection_error": "Fel som ansluter till vandrare",
-    "wanderer_integration_desc": "Anslut till Wanderer för att enkelt importera och se dina spår på platser"
+    "wanderer_integration_desc": "Anslut till Wanderer med en API nyckel för att importera och se dina spår på platser",
+    "updated": "Wanderer-integrationen uppdaterad",
+    "disconnected": "Wanderer frånkopplad",
+    "disconnect_error": "Fel vid frånkoppling av Wanderer",
+    "server_url": "Server URL",
+    "api_key": "API-nyckel",
+    "api_key_placeholder": "wanderer_nyckel_...",
+    "localhost_note": "Wanderer-servern måste kunna nås från AdventureLog-servern (localhost kanske inte fungerar i Docker).",
+    "update_integration": "Uppdatera integration"
   },
   "collections": {
     "all_items": "Alla föremål",
@@ -1276,5 +1290,23 @@
     "usage_middle": "header eller as",
     "usage_prefix": "Använd denna nyckel i",
     "delete_confirm": "Är du säker på att du vill ta bort denna mobila API-nyckel?"
+  },
+  "social_share": {
+    "share_externally": "Dela externt",
+    "modal_desc": "Skapa en delbar bild för sociala medier.",
+    "aspect_square": "Fyrkant",
+    "aspect_story": "Berättelse",
+    "aspect_landscape": "Landskap",
+    "download_image": "Ladda ner bild",
+    "copy_image": "Kopiera bild",
+    "copy_image_success": "Bilden har kopierats till urklipp",
+    "copy_image_failed": "Misslyckades med att kopiera bilden",
+    "share_native": "Dela…",
+    "share_native_failed": "Delningen misslyckades",
+    "preview_loading": "Genererar förhandsgranskning…",
+    "share_image_failed": "Misslyckades med att generera delningsbilden",
+    "download_success": "Dela bilden har laddats ned",
+    "private_notice_collection": "Den här samlingen är inte offentlig. QR-koden och länken fungerar bara för dig och personer du har delat samlingen med.",
+    "private_notice_location": "Den här platsen är inte offentlig. QR-koden och länken fungerar bara för dig och användare med åtkomst."
   }
 }
