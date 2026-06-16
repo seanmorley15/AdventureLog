@@ -984,7 +984,10 @@
     "show_trails": "Visa stigspår",
     "hide_trails": "Göm spåren",
     "fullscreen_failed": "Kunde inte växla mellan helskärmsläge.",
-    "map_style": "Kartstil"
+    "map_style": "Kartstil",
+    "random_location": "Slumpmässig plats",
+    "no_locations_to_explore": "Inga platser på kartan att utforska.",
+    "stats": "Statistik"
   },
   "share": {
     "no_users_shared": "Inga användare delas med",
