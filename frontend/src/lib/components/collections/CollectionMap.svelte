@@ -16,6 +16,7 @@
 
 	export let collection: Collection;
 	export let user: User | null = null;
+	export let canModify: boolean = false;
 	// Allow disabling/enabling clustering for markers
 	export let clusterEnabled: boolean = false;
 	export let clusterOptions: any = { radius: 300, maxZoom: 8, minPoints: 2 };
@@ -642,65 +643,67 @@
 </script>
 
 <!-- Add to Collection CTA (compact) -->
-<div class="card bg-base-100 shadow-sm mb-3 border border-base-200">
-	<div class="card-body py-3 px-4 gap-2">
-		<div class="flex items-center justify-between gap-3">
-			<div class="flex items-center gap-2 min-w-0">
-				<span
-					class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary"
-				>
-					<Plus class="w-4 h-4" />
-				</span>
-				<div class="min-w-0">
-					<p class="text-sm font-semibold leading-tight truncate">
-						{$t('adventures.add_to_collection')}
-					</p>
-					<p class="text-xs text-base-content/60 leading-tight truncate">
-						{$t('adventures.click_map_add_marker')}
-					</p>
-				</div>
-			</div>
-			<div class="flex items-center gap-2">
-				<button type="button" class="btn btn-primary btn-xs" on:click={openCreateModal}>
-					<Plus class="w-4 h-4" />
-					{$t('adventures.add')}
-				</button>
-				{#if newMarker}
-					<button type="button" class="btn btn-ghost btn-xs" on:click={clearNewMarker}>
-						<Clear class="w-4 h-4" />
-						{$t('adventures.clear')}
-					</button>
-				{/if}
-			</div>
-		</div>
-
-		{#if newMarker}
-			<div
-				class="alert alert-info alert-sm flex flex-col sm:flex-row sm:items-center gap-2 py-2 px-3"
-			>
-				<div class="flex items-center gap-2 text-xs sm:text-sm">
-					<PinIcon class="w-4 h-4" />
-					<span class="truncate">
-						{newLatitude?.toFixed(4)}, {newLongitude?.toFixed(4)}
-					</span>
-				</div>
-				<div class="flex gap-2 sm:ml-auto">
-					<button
-						type="button"
-						class="btn btn-primary btn-xxs sm:btn-xs"
-						on:click={openCreateModal}
+{#if canModify}
+	<div class="card bg-base-100 shadow-sm mb-3 border border-base-200">
+		<div class="card-body py-3 px-4 gap-2">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-2 min-w-0">
+					<span
+						class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 text-primary"
 					>
-						<Plus class="w-3 h-3 sm:w-4 sm:h-4" />
-						{$t('adventures.add_here')}
+						<Plus class="w-4 h-4" />
+					</span>
+					<div class="min-w-0">
+						<p class="text-sm font-semibold leading-tight truncate">
+							{$t('adventures.add_to_collection')}
+						</p>
+						<p class="text-xs text-base-content/60 leading-tight truncate">
+							{$t('adventures.click_map_add_marker')}
+						</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-2">
+					<button type="button" class="btn btn-primary btn-xs" on:click={openCreateModal}>
+						<Plus class="w-4 h-4" />
+						{$t('adventures.add')}
 					</button>
-					<button type="button" class="btn btn-ghost btn-xxs sm:btn-xs" on:click={clearNewMarker}>
-						<Clear class="w-3 h-3 sm:w-4 sm:h-4" />
-					</button>
+					{#if newMarker}
+						<button type="button" class="btn btn-ghost btn-xs" on:click={clearNewMarker}>
+							<Clear class="w-4 h-4" />
+							{$t('adventures.clear')}
+						</button>
+					{/if}
 				</div>
 			</div>
-		{/if}
+
+			{#if newMarker}
+				<div
+					class="alert alert-info alert-sm flex flex-col sm:flex-row sm:items-center gap-2 py-2 px-3"
+				>
+					<div class="flex items-center gap-2 text-xs sm:text-sm">
+						<PinIcon class="w-4 h-4" />
+						<span class="truncate">
+							{newLatitude?.toFixed(4)}, {newLongitude?.toFixed(4)}
+						</span>
+					</div>
+					<div class="flex gap-2 sm:ml-auto">
+						<button
+							type="button"
+							class="btn btn-primary btn-xxs sm:btn-xs"
+							on:click={openCreateModal}
+						>
+							<Plus class="w-3 h-3 sm:w-4 sm:h-4" />
+							{$t('adventures.add_here')}
+						</button>
+						<button type="button" class="btn btn-ghost btn-xxs sm:btn-xs" on:click={clearNewMarker}>
+							<Clear class="w-3 h-3 sm:w-4 sm:h-4" />
+						</button>
+					</div>
+				</div>
+			{/if}
+		</div>
 	</div>
-</div>
+{/if}
 
 <!-- Filter Header -->
 <div class="card bg-base-100 shadow-lg mb-4">
@@ -923,6 +926,7 @@
 		bind:basemapType
 		{clusterEnabled}
 		clusterOptions={resolvedClusterOptions}
+		mapClickEnabled={canModify}
 		on:mapClick={handleMapClick}
 	>
 		<svelte:fragment slot="marker" let:markerProps let:markerLngLat let:isActive let:setActive>
@@ -1038,7 +1042,7 @@
 				</GeoJSON>
 			{/if}
 
-			{#if newMarker}
+			{#if canModify && newMarker}
 				<Marker lngLat={[newMarker.lngLat.lng, newMarker.lngLat.lat]} class="map-pin">
 					<div
 						class="map-pin-hit grid place-items-center w-10 h-10 rounded-full bg-primary text-primary-content border-2 border-base-100 shadow-lg"
@@ -1051,7 +1055,7 @@
 	</FullMap>
 </div>
 
-{#if createModalOpen}
+{#if canModify && createModalOpen}
 	<NewLocationModal
 		on:create={handleLocationCreated}
 		on:save={handleLocationSaved}

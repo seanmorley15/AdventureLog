@@ -68,7 +68,7 @@ class LocationViewSet(viewsets.ModelViewSet):
         Public actions allow unauthenticated access to public locations.
         """
         user = self.request.user
-        public_allowed_actions = {'retrieve', 'additional_info'}
+        public_allowed_actions = {'retrieve', 'additional_info', 'share_image'}
 
         if not user.is_authenticated:
             if self.action in public_allowed_actions:

@@ -160,7 +160,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
                     | Q(shared_with=self.request.user)
                     | Q(invites__invited_user=self.request.user)
                 ).distinct()
-        elif self.action == 'retrieve':
+        elif self.action in ('retrieve', 'export_pdf', 'share_image'):
             if not self.request.user.is_authenticated:
                 queryset = Collection.objects.filter(is_public=True)
             else:

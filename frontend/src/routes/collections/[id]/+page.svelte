@@ -194,42 +194,6 @@
 		});
 	})();
 
-	// Define available views based on collection type
-	$: availableViews = {
-		all: true, // Always available
-		itinerary: !isFolderView, // Only for collections with dates
-		map:
-			collection?.locations?.some((l) => l.latitude && l.longitude) ||
-			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
-			collection?.transportations?.some(
-				(t) =>
-					(t.origin_latitude && t.origin_longitude) ||
-					(t.destination_latitude && t.destination_longitude)
-			) ||
-			false,
-		calendar: !isFolderView,
-		recommendations: true, // may be overridden by permission check below
-		stats: true
-	};
-
-	// Get default view based on available views
-	let defaultView: ViewType;
-	$: defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
-
-	// Read view from URL params and validate it's available
-	$: {
-		const view = $page.url.searchParams.get('view') as ViewType;
-		if (
-			view &&
-			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
-			availableViews[view]
-		) {
-			currentView = view;
-		} else {
-			currentView = defaultView;
-		}
-	}
-
 	// Determine whether current user can modify the collection (owner or shared user)
 	$: canModifyCollection = (() => {
 		const u = data.user as any;
@@ -255,8 +219,44 @@
 		return false;
 	})();
 
-	// Enforce recommendations visibility only for owner/shared users
-	$: availableViews.recommendations = !!canModifyCollection;
+	// Public collections: anyone can export/share; private: owner or shared users only
+	$: canExportCollection = !!collection?.is_public || canModifyCollection;
+
+	// Define available views based on collection type
+	$: availableViews = {
+		all: true, // Always available
+		itinerary: !isFolderView, // Only for collections with dates
+		map:
+			collection?.locations?.some((l) => l.latitude && l.longitude) ||
+			collection?.lodging?.some((l) => l.latitude && l.longitude) ||
+			collection?.transportations?.some(
+				(t) =>
+					(t.origin_latitude && t.origin_longitude) ||
+					(t.destination_latitude && t.destination_longitude)
+			) ||
+			false,
+		calendar: !isFolderView,
+		recommendations: canModifyCollection,
+		stats: true
+	};
+
+	// Get default view based on available views
+	let defaultView: ViewType;
+	$: defaultView = (availableViews.itinerary ? 'itinerary' : 'all') as ViewType;
+
+	// Read view from URL params and validate it's available
+	$: {
+		const view = $page.url.searchParams.get('view') as ViewType;
+		if (
+			view &&
+			['all', 'itinerary', 'map', 'calendar', 'recommendations', 'stats'].includes(view) &&
+			availableViews[view]
+		) {
+			currentView = view;
+		} else {
+			currentView = defaultView;
+		}
+	}
 
 	let isExportingPdf = false;
 	let isSocialShareModalOpen = false;
@@ -850,7 +850,7 @@
 	/>
 {/if}
 
-{#if isSocialShareModalOpen && collection}
+{#if isSocialShareModalOpen && collection && canExportCollection}
 	<SocialShareModal
 		type="collection"
 		id={collection.id}
@@ -1193,24 +1193,26 @@
 					</button>
 				{/if}
 			</div>
-			<div class="flex flex-wrap gap-2">
-				<button
-					class="btn btn-outline btn-primary gap-2"
-					on:click={() => (isSocialShareModalOpen = true)}
-				>
-					<ImageOutline class="w-5 h-5" aria-hidden="true" />
-					<span>{$t('social_share.share_externally')}</span>
-				</button>
-				<button
-					class="btn btn-outline btn-primary gap-2"
-					on:click={exportCollectionPdf}
-					disabled={isExportingPdf}
-					aria-busy={isExportingPdf}
-				>
-					<FilePdfBox class="w-5 h-5" aria-hidden="true" />
-					<span>{isExportingPdf ? '...' : $t('adventures.export_pdf')}</span>
-				</button>
-			</div>
+			{#if canExportCollection}
+				<div class="flex flex-wrap gap-2">
+					<button
+						class="btn btn-outline btn-primary gap-2"
+						on:click={() => (isSocialShareModalOpen = true)}
+					>
+						<ImageOutline class="w-5 h-5" aria-hidden="true" />
+						<span>{$t('social_share.share_externally')}</span>
+					</button>
+					<button
+						class="btn btn-outline btn-primary gap-2"
+						on:click={exportCollectionPdf}
+						disabled={isExportingPdf}
+						aria-busy={isExportingPdf}
+					>
+						<FilePdfBox class="w-5 h-5" aria-hidden="true" />
+						<span>{isExportingPdf ? '...' : $t('adventures.export_pdf')}</span>
+					</button>
+				</div>
+			{/if}
 		</div>
 
 		<div class="grid grid-cols-1 lg:grid-cols-4 gap-6 sm:gap-10">
@@ -1258,7 +1260,7 @@
 						<div class="card-body">
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('navbar.map')}</h2>
 							<div class="rounded-lg overflow-hidden shadow-lg">
-								<CollectionMap bind:collection user={data.user} />
+								<CollectionMap bind:collection user={data.user} canModify={canModifyCollection} />
 							</div>
 						</div>
 					</div>
@@ -1320,7 +1322,7 @@
 				{/if}
 
 				<!-- Recommendations View -->
-				{#if currentView === 'recommendations'}
+				{#if currentView === 'recommendations' && canModifyCollection}
 					<CollectionRecommendationView bind:collection user={data.user} />
 				{/if}
 			</div>
