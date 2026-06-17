@@ -1,1 +1,14 @@
-{}
+{
+  "navbar": {
+    "collections": "Coleções",
+    "map": "Mapa",
+    "users": "Utilizadores",
+    "search": "Busca",
+    "profile": "Perfil",
+    "greeting": "Olá",
+    "shared_with_me": "Partilhado Comigo",
+    "settings": "Definições",
+    "logout": "Terminar sessão",
+    "about": "Acerca do AdventureLog"
+  }
+}
