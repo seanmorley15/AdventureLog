@@ -930,7 +930,17 @@
       "locations": "Konumlara git",
       "locations_desc": "Konumlarınıza göz atın ve yönetin",
       "collections": "Koleksiyonlara git",
-      "collections_desc": "Seyahat koleksiyonlarını açın"
+      "collections_desc": "Seyahat koleksiyonlarını açın",
+      "map": "Haritaya git",
+      "map_desc": "Haritadaki konumları keşfet",
+      "worldtravel": "Dünya Seyahati’ne git",
+      "worldtravel_desc": "Ülkeleri, bölgeleri ve şehirleri takip et",
+      "calendar": "Takvime git",
+      "calendar_desc": "Seyahat takviminizi görüntüleyin",
+      "users": "Kullanıcılara git",
+      "users_desc": "Herkese açık profillere göz atın",
+      "settings": "Ayarlara git",
+      "settings_desc": "Hesabı ve tercihlerinizi yönetin"
     }
   },
   "map": {
@@ -948,7 +958,36 @@
     "place_marker_desc_location": "Bir işaretçi yerleştirmek için haritaya tıklayın.",
     "locations_shown": "gösterilen konumlar",
     "show_visited_cities": "Ziyaret Edilen Şehirler",
-    "search_locations": "Konumları arayın..."
+    "search_locations": "Konumlarınızı arayın...",
+    "enter_fullscreen": "Tam ekrana geç",
+    "exit_fullscreen": "Tam ekrandan çık",
+    "geolocation_unavailable": "Konum bu tarayıcıda kullanılamıyor.",
+    "geolocation_denied": "Konum erişimi reddedildi.",
+    "track_layers": "İz katmanları",
+    "show_activities": "Etkinlik izlerini göster",
+    "hide_activities": "Etkinlik izlerini gizle",
+    "show_trails": "İz parkurlarını göster",
+    "hide_trails": "İz parkurlarını gizle",
+    "fullscreen_failed": "Tam ekran modu değiştirilemedi.",
+    "map_style": "Harita stili",
+    "search_mode_my": "Benim",
+    "search_mode_places": "Yerler",
+    "search_mode_nearby": "Yakında",
+    "search_places_placeholder": "Eklemek için bir yer arayın...",
+    "nearby_search_hint": "Haritayı kaydırın, ardından haritanın üst kısmında bu alanı Ara'ya dokunun.",
+    "search_this_area": "Bu alanı ara",
+    "back_to_controls": "Harita kontrollerine geri dön",
+    "select_on_map": "Detayları görmek için bir pin veya arama sonucunu seçin.",
+    "loading_details": "Detaylar yükleniyor...",
+    "quick_add": "Hızlı konum ekleme",
+    "add_with_details": "Daha fazla detayla ekle",
+    "add_as_lodging": "Konaklama olarak ekle",
+    "powered_by": "{provider} sağlayıcısından veri",
+    "visit_website": "Web sitesi",
+    "open_now": "Şu anda açık",
+    "closed_now": "Kapalı",
+    "hours": "Saatler",
+    "last_visit": "Son ziyaret"
   },
   "share": {
     "shared": "Paylaşılan",
@@ -1119,9 +1158,15 @@
     "not_enabled": "Bu örnekte Strava entegrasyonu etkin değil."
   },
   "wanderer": {
-    "wanderer_integration_desc": "Wanderer’a bağlanarak patikalarınızı konumlarda kolayca aktarabilir ve görüntüleyebilirsiniz",
+    "wanderer_integration_desc": "Bir API anahtarı ile Wanderer’a bağlanarak izlerinizi konumlar içinde içe aktarın ve görüntüleyin",
     "connection_error": "Wanderer'a bağlanırken hata oluştu",
-    "connected": "Wanderer'a başarıyla bağlandı"
+    "connected": "Wanderer'a başarıyla bağlandı",
+    "updated": "Wanderer entegrasyonu güncellendi",
+    "disconnected": "Wanderer bağlantısı kesildi",
+    "disconnect_error": "Wanderer bağlantısı kesilirken hata oluştu",
+    "server_url": "Sunucu URL",
+    "api_key": "API Anahtarı",
+    "api_key_placeholder": "wanderer_anahtarı_..."
   },
   "collections": {
     "all_items": "Tüm Ürünler",
@@ -1223,5 +1268,18 @@
     "usage_middle": "başlık veya olarak",
     "usage_prefix": "Bu anahtar içinde kullanın",
     "delete_confirm": "Bu mobil API anahtarını silmek istediğinizden emin misiniz?"
+  },
+  "social_share": {
+    "download_image": "Görseli indir",
+    "copy_image": "Görseli kopyala",
+    "copy_image_success": "Görsel panoya kopyalandı",
+    "copy_image_failed": "Görsel kopyalanamadı",
+    "share_native": "Paylaş…",
+    "share_native_failed": "Paylaşım başarısız oldu",
+    "preview_loading": "Önizleme oluşturuluyor…",
+    "share_image_failed": "Paylaşım görseli oluşturulamadı",
+    "download_success": "Paylaşım görseli indirildi",
+    "private_notice_collection": "Bu koleksiyon herkese açık değil. QR kodu ve bağlantı yalnızca sizin ve koleksiyonu paylaştığınız kişilerin erişimine açıktır.",
+    "private_notice_location": "Bu konum herkese açık değil. QR kodu ve bağlantı yalnızca sizin ve erişim izni olan kullanıcılar için çalışır."
   }
 }
