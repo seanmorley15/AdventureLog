@@ -301,7 +301,7 @@
     "likes": "Upodobania",
     "loading_activities": "Czynności ładowania",
     "location_display_name": "Nazwa wyświetlania lokalizacji",
-    "location_map": "Lokalizacja",
+    "location_map": "Lokalizacja i Mapa",
     "location_selected": "Wybrana lokalizacja",
     "max_speed": "Maksymalna prędkość",
     "moving_time": "Czas przeprowadzki",
@@ -583,7 +583,7 @@
     "no_public_collections": "Nie znaleziono publicznych kolekcji",
     "user_collections": "Kolekcje użytkowników",
     "no_public_locations": "Nie znaleziono żadnych lokalizacji publicznych",
-    "user_locations": "Lokalizacje użytkowników",
+    "user_locations": "Lokalizacje użytkownika",
     "enter_password": "Wprowadź swoje hasło",
     "enter_username": "Wprowadź swoją nazwę użytkownika",
     "logging_in": "Logowanie",
@@ -860,7 +860,7 @@
     "found": "znaleziony",
     "result": "Wynik",
     "results": "Wyniki",
-    "try_searching_desc": "Spróbuj szukać przygód, kolekcji, krajów, regionów, miast lub użytkowników.",
+    "try_searching_desc": "Spróbuj poszukać lokalizacji, kolekcji, notatek, transportu, krajów, regionów, miast lub użytkowników.",
     "tab_adventures": "Mój log",
     "tab_places": "Miejsca",
     "quick_actions": "Szybkie akcje",
@@ -880,15 +880,18 @@
     "filters": {
       "notes": "Notatki",
       "all": "Wszystkie",
-      "adventures": "Lokalizacja",
+      "adventures": "Lokalizacje",
       "collections": "Kolekcje",
       "transport": "Transport",
       "world": "Świat",
       "users": "Użytkownicy"
     },
     "actions": {
-      "settings": "Ustawienia",
-      "settings_desc": "Zarządzaj kontem i preferencjami"
+      "settings": "Idź do Ustawień",
+      "settings_desc": "Zarządzaj kontem i preferencjami",
+      "locations": "Idź do Lokalizacji",
+      "locations_desc": "Przeglądaj i zarządzaj twoimi miejscami",
+      "collections": "Idź do Kolekcji"
     },
     "types": {
       "city": "Miasto",
