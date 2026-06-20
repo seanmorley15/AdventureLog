@@ -963,6 +963,8 @@
 		"no_results": "Inga platser hittades",
 		"search_error": "Sökningen misslyckades. Försök igen senare.",
 		"clear_search": "Rensa sökning",
+		"random_location": "Slumpmässig plats",
+		"no_locations_to_explore": "Inga platser på kartan att utforska.",
 		"recommendations_nearby": "Närliggande platser",
 		"recommendation_category": "Kategori",
 		"recommendation_radius": "Sökradie",
@@ -984,7 +986,8 @@
 		"show_trails": "Visa stigspår",
 		"hide_trails": "Göm spåren",
 		"fullscreen_failed": "Kunde inte växla mellan helskärmsläge.",
-		"map_style": "Kartstil"
+		"map_style": "Kartstil",
+		"stats": "Statistik"
 	},
 	"share": {
 		"no_users_shared": "Inga användare delas med",
