@@ -744,7 +744,8 @@
 		"media_storage_desc": "Wykorzystanie miejsca przez twoje przesłane zdjęcia i załączniki.",
 		"media_total_used": "Łącznie wykorzystane",
 		"media_profile_pics": "Zdjęcia profilowe",
-		"media_files": "pliki"
+		"media_files": "pliki",
+		"media_storage": "Przechowywanie multimediów"
 	},
 	"collection": {
 		"collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -891,7 +892,16 @@
 			"settings_desc": "Zarządzaj kontem i preferencjami",
 			"locations": "Idź do Lokalizacji",
 			"locations_desc": "Przeglądaj i zarządzaj twoimi miejscami",
-			"collections": "Idź do Kolekcji"
+			"collections": "Idź do Kolekcji",
+			"calendar": "Przejdź do Kalendarza",
+			"calendar_desc": "Zobacz swój kalendarz podróży",
+			"collections_desc": "Otwórz swoje kolekcje z podróży",
+			"map": "Przejdź do mapy",
+			"map_desc": "Przeglądaj lokalizacje na mapie",
+			"users": "Przejdź do Użytkownicy",
+			"users_desc": "Przeglądaj profile publiczne",
+			"worldtravel": "Przejdź do Podróży po świecie",
+			"worldtravel_desc": "Śledź kraje, regiony i miasta"
 		},
 		"types": {
 			"city": "Miasto",
@@ -900,10 +910,15 @@
 			"collection": "Kolekcja",
 			"lodging": "Nocleg",
 			"transportation": "Rodzaj Transportu",
-			"location": "Lokalizacja"
+			"location": "Lokalizacja",
+			"activity": "Działalność",
+			"checklist": "Lista kontrolna",
+			"country": "Kraj",
+			"region": "Region"
 		},
 		"retry": "Ponów",
-		"load_more": "Załaduj więcej"
+		"load_more": "Załaduj więcej",
+		"empty_prompt_desc": "Znajdź lokalizacje, kolekcje, notatki, transport, światowe cele podróży i użytkowników w jednym miejscu."
 	},
 	"map": {
 		"view_details": "Zobacz szczegóły",
@@ -923,7 +938,56 @@
 		"search_locations": "Wyszukaj lokalizacje...",
 		"zoom_in": "Przybliż",
 		"zoom_out": "Oddal",
-		"locate_me": "Znajdź moją lokalizację"
+		"locate_me": "Znajdź moją lokalizację",
+		"add_as_lodging": "Dodaj jako zakwaterowanie",
+		"add_with_details": "Dodaj więcej szczegółów",
+		"back_to_controls": "Powrót do sterowania mapą",
+		"clear_search": "Wyczyść wyszukiwanie",
+		"closed_now": "Zamknięte",
+		"enter_fullscreen": "Wejdź na pełny ekran",
+		"exit_fullscreen": "Wyjdź z pełnego ekranu",
+		"fullscreen_failed": "Nie można przełączyć na tryb pełnoekranowy.",
+		"geolocation_denied": "Odmowa dostępu do lokalizacji.",
+		"geolocation_unavailable": "Lokalizacja nie jest dostępna w tej przeglądarce.",
+		"hide_activities": "Ukryj ścieżki aktywności",
+		"hide_trails": "Ukryj ślady szlaku",
+		"hours": "Godziny",
+		"last_visit": "Ostatnia wizyta",
+		"loading_details": "Ładowanie szczegółów...",
+		"map_style": "Styl mapy",
+		"media": "Głoska bezdźwięczna",
+		"nearby_controls": "Przeglądaj w pobliżu",
+		"nearby_search_hint": "Przesuń mapę, a następnie dotknij opcji Przeszukaj ten obszar u góry mapy.",
+		"no_locations_to_explore": "Brak lokalizacji na mapie do zbadania.",
+		"no_results": "Nie znaleziono żadnych miejsc",
+		"open_now": "Otwórz teraz",
+		"powered_by": "Dane od {provider}",
+		"preview_panel": "Bliższe dane",
+		"quick_add": "Szybkie dodawanie lokalizacji",
+		"random_location": "Losowa lokalizacja",
+		"recommendation_category": "Kategoria",
+		"recommendation_radius": "Promień wyszukiwania",
+		"recommendations_count": "Znaleziono {count} miejsc",
+		"recommendations_empty": "Brak rekomendacji w tym zakresie. \nWypróbuj większy promień.",
+		"recommendations_error": "Nie udało się wczytać rekomendacji",
+		"recommendations_nearby": "Miejsca w pobliżu",
+		"search_error": "Wyszukiwanie nie powiodło się. \nSpróbuj ponownie później.",
+		"search_mode_my": "Mój",
+		"search_mode_nearby": "W pobliżu",
+		"search_mode_places": "Miejsca",
+		"search_places_placeholder": "Wyszukaj miejsce do dodania...",
+		"search_this_area": "Przeszukaj ten obszar",
+		"searching": "Badawczy...",
+		"searching_nearby": "Znajdowanie pobliskich miejsc…",
+		"select_on_map": "Wybierz pinezkę lub wynik wyszukiwania, aby zobaczyć szczegóły.",
+		"show_activities": "Pokaż ścieżki aktywności",
+		"show_less": "Pokaż mniej",
+		"show_more": "Pokaż więcej",
+		"show_trails": "Pokaż ślady szlaku",
+		"stats": "Statystyki",
+		"track_layers": "Warstwy śledzenia",
+		"visit_website": "Strona internetowa",
+		"visits": "Wizyty"
 	},
 	"share": {
 		"shared": "Udostępnione",
@@ -972,7 +1036,6 @@
 		"countries_visited": "Odwiedzone kraje",
 		"no_recent_adventures": "Brak nowych przygód?",
 		"recent_adventures": "Ostatnie przygody",
-		"total_adventures": "Totalne przygody",
 		"total_visited_regions": "Łączna liczba odwiedzonych regionów",
 		"welcome_back": "Witamy z powrotem",
 		"total_visited_cities": "Łączna liczba odwiedzonych miast",
@@ -1119,7 +1182,15 @@
 	"wanderer": {
 		"connected": "Pomyślnie związany z Wandererem",
 		"connection_error": "Błąd łączący się z Wandererem",
-		"wanderer_integration_desc": "Połącz się z Wandererem, aby łatwo importować i przeglądać szlaki w lokalizacjach"
+		"wanderer_integration_desc": "Połącz się z Wandererem, aby łatwo importować i przeglądać szlaki w lokalizacjach",
+		"api_key": "Klucz API",
+		"api_key_placeholder": "klucz_wędrowca_...",
+		"disconnect_error": "Błąd podczas odłączania Wanderera",
+		"disconnected": "Wędrowiec rozłączony",
+		"localhost_note": "Serwer Wanderer musi być osiągalny z serwera AdventureLog (localhost może nie działać w Dockerze).",
+		"server_url": "Adres URL serwera",
+		"update_integration": "Zaktualizuj integrację",
+		"updated": "Zaktualizowano integrację Wanderera"
 	},
 	"collections": {
 		"all_items": "Wszystkie elementy",
@@ -1221,5 +1292,23 @@
 		"title": "Klucze API",
 		"usage_middle": "nagłówek lub jako",
 		"usage_prefix": "Użyj tego klawisza w"
+	},
+	"social_share": {
+		"aspect_landscape": "Krajobraz",
+		"aspect_square": "Kwadrat",
+		"aspect_story": "Historia",
+		"copy_image": "Skopiuj obraz",
+		"copy_image_failed": "Nie udało się skopiować obrazu",
+		"copy_image_success": "Obraz skopiowany do schowka",
+		"download_image": "Pobierz obraz",
+		"download_success": "Udostępnij pobrany obraz",
+		"modal_desc": "Stwórz obraz, który będzie można udostępniać w mediach społecznościowych.",
+		"preview_loading": "Generuję podgląd…",
+		"private_notice_collection": "Zbiór ten nie jest publiczny. \nKod QR i link działają tylko w przypadku Ciebie i osób, którym udostępniłeś kolekcję.",
+		"private_notice_location": "Ta lokalizacja nie jest publiczna. \nKod QR i link działają tylko dla Ciebie i użytkowników mających dostęp.",
+		"share_externally": "Udostępnij na zewnątrz",
+		"share_image_failed": "Nie udało się wygenerować udostępnionego obrazu",
+		"share_native": "Udział…",
+		"share_native_failed": "Udostępnianie nie powiodło się"
 	}
 }

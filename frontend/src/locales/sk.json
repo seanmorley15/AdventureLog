@@ -1002,7 +1002,15 @@
 		"enter_fullscreen": "Prejsť do režimu celej obrazovky",
 		"exit_fullscreen": "Ukončiť režim celej obrazovky",
 		"geolocation_unavailable": "V tomto prehliadači nie je k dispozícii informácia o polohe.",
-		"geolocation_denied": "Prístup k polohe bol zamietnutý."
+		"geolocation_denied": "Prístup k polohe bol zamietnutý.",
+		"fullscreen_failed": "Celú obrazovku sa nepodarilo prepnúť.",
+		"hide_activities": "Skryť stopy aktivity",
+		"hide_trails": "Skryť stopy chodníkov",
+		"map_style": "Štýl mapy",
+		"show_activities": "Zobraziť stopy aktivity",
+		"show_trails": "Zobraziť stopy stopy",
+		"stats": "Štatistiky",
+		"track_layers": "Sledovať vrstvy"
 	},
 	"share": {
 		"shared": "Zdieľané",
@@ -1050,7 +1058,6 @@
 	"dashboard": {
 		"welcome_back": "Vitajte späť",
 		"countries_visited": "Navštívené krajiny",
-		"total_adventures": "Celkový počet dobrodružstiev",
 		"total_visited_regions": "Celkový počet navštívených regiónov",
 		"total_visited_cities": "Celkový počet navštívených miest",
 		"recent_adventures": "Nedávne dobrodružstvá",
@@ -1175,7 +1182,15 @@
 	"wanderer": {
 		"wanderer_integration_desc": "Pripojte sa k Wanderer pre jednoduchý import a zobrazenie vašich trás v miestach",
 		"connection_error": "Chyba pri pripájaní k Wanderer",
-		"connected": "Úspešne pripojené k Wanderer"
+		"connected": "Úspešne pripojené k Wanderer",
+		"api_key": "API kľúč",
+		"api_key_placeholder": "wanderer_key_...",
+		"disconnect_error": "Chyba pri odpájaní Wanderera",
+		"disconnected": "Wanderer je odpojený",
+		"localhost_note": "Server Wanderer musí byť dostupný zo servera AdventureLog (localhost nemusí fungovať v Dockeri).",
+		"server_url": "Adresa URL servera",
+		"update_integration": "Aktualizovať integráciu",
+		"updated": "Integrácia Wanderer bola aktualizovaná"
 	},
 	"collections": {
 		"all_items": "Všetky položky",
@@ -1277,5 +1292,23 @@
 		"usage_middle": "hlavička alebo ako",
 		"usage_prefix": "Použite tento kľúč v",
 		"delete_confirm": "Naozaj chcete odstrániť tento kľúč rozhrania API pre mobilné zariadenia?"
+	},
+	"social_share": {
+		"aspect_landscape": "Krajina",
+		"aspect_square": "Štvorcový",
+		"aspect_story": "Príbeh",
+		"copy_image": "Kopírovať obrázok",
+		"copy_image_failed": "Obrázok sa nepodarilo skopírovať",
+		"copy_image_success": "Obrázok bol skopírovaný do schránky",
+		"download_image": "Stiahnite si obrázok",
+		"download_success": "Zdieľať stiahnutý obrázok",
+		"modal_desc": "Vytvorte zdieľateľný obrázok pre sociálne médiá.",
+		"preview_loading": "Generuje sa ukážka…",
+		"private_notice_collection": "Táto zbierka nie je verejná. \nQR kód a odkaz fungujú iba pre vás a ľudí, s ktorými zbierku zdieľate.",
+		"private_notice_location": "Toto miesto nie je verejné. \nQR kód a odkaz fungujú iba pre vás a používateľov s prístupom.",
+		"share_externally": "Zdieľať externe",
+		"share_image_failed": "Nepodarilo sa vytvoriť zdieľaný obrázok",
+		"share_native": "Zdieľať…",
+		"share_native_failed": "Zdieľanie zlyhalo"
 	}
 }

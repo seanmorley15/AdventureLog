@@ -1007,7 +1007,10 @@
 		"show_trails": "பாதை தடங்களைக் காட்டு",
 		"hide_trails": "பாதை தடங்களை மறை",
 		"fullscreen_failed": "முழுத்திரையை மாற்ற முடியவில்லை.",
-		"map_style": "வரைபட நடை"
+		"map_style": "வரைபட நடை",
+		"no_locations_to_explore": "ஆராய வரைபடத்தில் இடங்கள் இல்லை.",
+		"random_location": "சீரற்ற இடம்",
+		"stats": "புள்ளிவிவரங்கள்"
 	},
 	"share": {
 		"shared": "பகிரப்பட்டது",
@@ -1073,7 +1076,6 @@
 	"dashboard": {
 		"welcome_back": "மீண்டும் வரவேற்கிறோம்",
 		"countries_visited": "சென்ற நாடுகள்",
-		"total_adventures": "மொத்த சாகசங்கள்",
 		"total_visited_regions": "பார்வையிட்ட மொத்தப் பகுதிகள்",
 		"total_visited_cities": "பார்வையிடப்பட்ட மொத்த நகரங்கள்",
 		"recent_adventures": "அண்மைக் கால சாகசங்கள்",

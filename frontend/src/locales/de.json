@@ -984,7 +984,10 @@
 		"show_trails": "Trail-Routen anzeigen",
 		"hide_trails": "Trail-Routen ausblenden",
 		"fullscreen_failed": "Konnte nicht den Vollbildmodus wechseln.",
-		"map_style": "Kartenstil"
+		"map_style": "Kartenstil",
+		"no_locations_to_explore": "Auf der Karte sind keine Orte zum Erkunden vorhanden.",
+		"random_location": "Zufälliger Ort",
+		"stats": "Statistiken"
 	},
 	"share": {
 		"no_users_shared": "Mit keinen Benutzern geteilt",
@@ -1033,7 +1036,6 @@
 		"countries_visited": "Besuchte Länder",
 		"no_recent_adventures": "Keine aktuellen Abenteuer?",
 		"recent_adventures": "Kürzliche Abenteuer",
-		"total_adventures": "Abenteuer insgesamt",
 		"total_visited_regions": "Insgesamt besuchte Regionen",
 		"welcome_back": "Willkommen zurück",
 		"total_visited_cities": "Insgesamt besuchte Städte",

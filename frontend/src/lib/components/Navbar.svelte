@@ -74,12 +74,16 @@
 		ru: 'Русский',
 		ja: '日本語',
 		ar: 'العربية',
+		pt: 'Português',
 		'pt-br': 'Português (Brasil)',
 		ro: 'Română',
 		sk: 'Slovenský',
 		tr: 'Türkçe',
 		uk: 'Українська',
-		hu: 'Magyar'
+		hu: 'Magyar',
+		ca: 'Català',
+		cs: 'Čeština',
+		ta: 'தமிழ்'
 	};
 
 	const submitLocaleChange = (event: Event) => {

@@ -987,7 +987,30 @@
 		"open_now": "Şu anda açık",
 		"closed_now": "Kapalı",
 		"hours": "Saatler",
-		"last_visit": "Son ziyaret"
+		"last_visit": "Son ziyaret",
+		"clear_search": "Aramayı temizle",
+		"locate_me": "Konumumu bul",
+		"media": "Medya",
+		"nearby_controls": "Yakın çevreyi keşfedin",
+		"no_locations_to_explore": "Haritada keşfedilecek yer yok.",
+		"no_results": "Hiçbir yer bulunamadı",
+		"preview_panel": "Detaylar",
+		"random_location": "Rastgele konum",
+		"recommendation_category": "Kategori",
+		"recommendation_radius": "Arama yarıçapı",
+		"recommendations_count": "{count} yer bulundu",
+		"recommendations_empty": "Bu alanda öneri yok. \nDaha büyük bir yarıçap deneyin.",
+		"recommendations_error": "Öneriler yüklenemedi",
+		"recommendations_nearby": "Yakındaki yerler",
+		"search_error": "Arama başarısız oldu. \nDaha sonra tekrar deneyin.",
+		"searching": "Arama...",
+		"searching_nearby": "Yakındaki yerler bulunuyor…",
+		"show_less": "Daha az göster",
+		"show_more": "Daha fazlasını göster",
+		"stats": "İstatistikler",
+		"visits": "Ziyaretler",
+		"zoom_in": "Yakınlaştır",
+		"zoom_out": "Uzaklaştır"
 	},
 	"share": {
 		"shared": "Paylaşılan",
@@ -1035,7 +1058,6 @@
 	"dashboard": {
 		"welcome_back": "Tekrar hoş geldiniz",
 		"countries_visited": "Gidilen Ülkeler",
-		"total_adventures": "Toplam Maceralar",
 		"total_visited_regions": "Toplam Ziyaret Edilen Bölgeler",
 		"total_visited_cities": "Toplam Ziyaret Edilen Şehirler",
 		"recent_adventures": "Son Maceralar",
@@ -1166,7 +1188,9 @@
 		"disconnect_error": "Wanderer bağlantısı kesilirken hata oluştu",
 		"server_url": "Sunucu URL",
 		"api_key": "API Anahtarı",
-		"api_key_placeholder": "wanderer_anahtarı_..."
+		"api_key_placeholder": "wanderer_anahtarı_...",
+		"localhost_note": "Wanderer sunucusuna AdventureLog sunucusundan ulaşılabilir olmalıdır (localhost Docker'da çalışmayabilir).",
+		"update_integration": "Entegrasyonu Güncelle"
 	},
 	"collections": {
 		"all_items": "Tüm Ürünler",
@@ -1280,6 +1304,11 @@
 		"share_image_failed": "Paylaşım görseli oluşturulamadı",
 		"download_success": "Paylaşım görseli indirildi",
 		"private_notice_collection": "Bu koleksiyon herkese açık değil. QR kodu ve bağlantı yalnızca sizin ve koleksiyonu paylaştığınız kişilerin erişimine açıktır.",
-		"private_notice_location": "Bu konum herkese açık değil. QR kodu ve bağlantı yalnızca sizin ve erişim izni olan kullanıcılar için çalışır."
+		"private_notice_location": "Bu konum herkese açık değil. QR kodu ve bağlantı yalnızca sizin ve erişim izni olan kullanıcılar için çalışır.",
+		"aspect_landscape": "Manzara",
+		"aspect_square": "Kare",
+		"aspect_story": "Hikaye",
+		"modal_desc": "Sosyal medya için paylaşılabilir bir görsel oluşturun.",
+		"share_externally": "Harici Olarak Paylaş"
 	}
 }

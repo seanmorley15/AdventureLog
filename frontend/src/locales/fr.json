@@ -984,7 +984,10 @@
 		"show_trails": "Afficher les traces de sentier",
 		"hide_trails": "Masquer les traces de sentier",
 		"fullscreen_failed": "Impossible de passer en plein écran.",
-		"map_style": "Style de carte"
+		"map_style": "Style de carte",
+		"no_locations_to_explore": "Aucun endroit sur la carte à explorer.",
+		"random_location": "Emplacement aléatoire",
+		"stats": "Statistiques"
 	},
 	"share": {
 		"no_users_shared": "Aucun utilisateur",
@@ -1033,7 +1036,6 @@
 		"countries_visited": "Pays visités",
 		"no_recent_adventures": "Pas d'aventure récente ?",
 		"recent_adventures": "Aventures récentes",
-		"total_adventures": "Aventures totales",
 		"total_visited_regions": "Total des régions visitées",
 		"welcome_back": "Content de te revoir",
 		"total_visited_cities": "Total des villes visitées",

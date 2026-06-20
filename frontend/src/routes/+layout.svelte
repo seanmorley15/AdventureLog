@@ -25,6 +25,8 @@
 	register('tr', () => import('../locales/tr.json'));
 	register('uk', () => import('../locales/uk.json'));
 	register('hu', () => import('../locales/hu.json'));
+	register('ca', () => import('../locales/ca.json'));
+	register('cs', () => import('../locales/cs.json'));
 
 	let locales = [
 		'en',
@@ -41,12 +43,16 @@
 		'ru',
 		'ja',
 		'ar',
+		'pt',
 		'pt-br',
 		'ro',
 		'sk',
 		'tr',
 		'uk',
-		'hu'
+		'hu',
+		'ca',
+		'cs',
+		'ta'
 	];
 
 	if (browser) {

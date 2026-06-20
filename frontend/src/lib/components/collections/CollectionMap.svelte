@@ -235,6 +235,63 @@
 		return features;
 	}
 
+	function transportationToLineFeature(t: any): GeoJSON.Feature<GeoJSON.LineString> | null {
+		const originLat = parseNumber(t?.origin_latitude);
+		const originLon = parseNumber(t?.origin_longitude);
+		const destLat = parseNumber(t?.destination_latitude);
+		const destLon = parseNumber(t?.destination_longitude);
+
+		if (originLat === null || originLon === null || destLat === null || destLon === null) {
+			return null;
+		}
+		if (originLat === destLat && originLon === destLon) return null;
+
+		return {
+			type: 'Feature',
+			geometry: {
+				type: 'LineString',
+				coordinates: [
+					[originLon, originLat],
+					[destLon, destLat]
+				]
+			},
+			properties: {
+				id: String(t.id),
+				name: t?.name || t?.type || 'Transportation',
+				type: 'transportation',
+				_color: '#f59e0b'
+			}
+		};
+	}
+
+	function transportationMatchesFilters(
+		t: any,
+		filters: { startDate: string; endDate: string; search: string }
+	): boolean {
+		const date = getTransportationDate(t);
+		if (!isWithinDateRange(date, filters.startDate, filters.endDate)) return false;
+
+		if (filters.search) {
+			const query = filters.search.toLowerCase();
+			const nameMatch = (t?.name || '').toLowerCase().includes(query);
+			const typeMatch = (t?.type || '').toLowerCase().includes(query);
+			if (!nameMatch && !typeMatch) return false;
+		}
+
+		return true;
+	}
+
+	function collectTransportationLinesGeojson(
+		transportations: any[]
+	): { type: 'FeatureCollection'; features: GeoJSON.Feature<GeoJSON.LineString>[] } | null {
+		const features = transportations
+			.map(transportationToLineFeature)
+			.filter(Boolean) as GeoJSON.Feature<GeoJSON.LineString>[];
+
+		if (features.length === 0) return null;
+		return { type: 'FeatureCollection', features };
+	}
+
 	function getActivityDate(activity: any, visit?: any): string | null {
 		return (
 			activity?.start_date ||
@@ -380,6 +437,17 @@
 		startDate: startDateFilter || collection?.start_date || '',
 		endDate: endDateFilter || collection?.end_date || ''
 	});
+	$: transportationLinesGeoJson = showTransportation
+		? collectTransportationLinesGeojson(
+				(collection?.transportations || []).filter((t) =>
+					transportationMatchesFilters(t, {
+						startDate: startDateFilter,
+						endDate: endDateFilter,
+						search: searchQuery.trim()
+					})
+				)
+			)
+		: null;
 	$: trailsGeoJson = collectTrailGeojson(collection);
 	$: trailCount = (collection?.locations || []).reduce(
 		(count, loc) => count + (loc.trails || []).filter((trail) => trail.geojson).length,
@@ -1037,6 +1105,24 @@
 							'line-color': '#a855f7',
 							'line-width': 3,
 							'line-opacity': 0.85
+						}}
+					/>
+				</GeoJSON>
+			{/if}
+
+			{#if transportationLinesGeoJson}
+				<GeoJSON
+					id={`collection-transport-lines-${mapKey}`}
+					data={transportationLinesGeoJson}
+					generateId
+				>
+					<LineLayer
+						id={`collection-transport-lines-path-${mapKey}`}
+						paint={{
+							'line-color': ['coalesce', ['get', '_color'], '#f59e0b'],
+							'line-width': 2.5,
+							'line-opacity': 0.85,
+							'line-dasharray': [4, 3]
 						}}
 					/>
 				</GeoJSON>
