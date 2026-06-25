@@ -17,7 +17,7 @@
 	<img src={pic} {alt} class="{className} {imgClass}" />
 {:else}
 	<div
-		class="flex items-center justify-center font-semibold select-none {textClass} {className}"
+		class="flex items-center justify-center font-semibold select-none leading-none aspect-square {textClass} {className}"
 		style="background: {gradient}; color: #fff;"
 		role="img"
 		aria-label={alt || initials}

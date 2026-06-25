@@ -1,4 +1,5 @@
 import { VALID_TIMEZONES } from './dateUtils';
+import type { CalendarApiEvent } from '$lib/calendar/types';
 
 export type MoneyValue = {
 	amount: number | null;
@@ -674,4 +675,54 @@ export type CollectionItineraryItem = {
 	created_at: string; // ISO 8601 date string
 	start_datetime: string | null; // Computed property - ISO 8601 date string
 	end_datetime: string | null; // Computed property - ISO 8601 date string
+};
+
+export type ActivityRecord = {
+	metric_key: string;
+	metric_value: number;
+	activity_id: string;
+	activity_name: string | null;
+	sport_type: string | null;
+	start_date: string | null;
+	location_id: string | null;
+	location_name: string | null;
+};
+
+export type UserStats = {
+	location_count: number;
+	visited_location_count: number;
+	trips_count: number;
+	visited_country_count: number;
+	total_countries: number;
+	visited_region_count: number;
+	total_regions: number;
+	visited_city_count: number;
+	total_cities: number;
+	activities_overall: {
+		total_count: number;
+		total_distance: number;
+		total_moving_time: number;
+		total_elevation_gain: number;
+		total_elevation_loss: number;
+		total_calories: number;
+		record_holders: {
+			max_distance: ActivityRecord | null;
+			max_speed: ActivityRecord | null;
+			max_elevation_gain: ActivityRecord | null;
+			max_calories: ActivityRecord | null;
+		};
+	};
+	activity_count: number;
+	activity_distance: number;
+	activity_moving_time: number;
+	activity_elevation: number;
+};
+
+export type DashboardData = {
+	stats: UserStats | null;
+	recent_locations: Location[];
+	upcoming_trips: SlimCollection[];
+	active_trip: SlimCollection | null;
+	upcoming_events: CalendarApiEvent[];
+	invite_count: number;
 };

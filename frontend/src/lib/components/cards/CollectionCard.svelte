@@ -38,6 +38,7 @@
 	export let type: String | undefined | null;
 	export let linkedCollectionList: string[] | null = null;
 	export let user: User | null;
+	export let readOnly: boolean = false;
 	let isShareModalOpen: boolean = false;
 	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
@@ -341,66 +342,173 @@
 		{/if}
 
 		<!-- Actions -->
-		<div class="pt-4 border-t border-base-300">
-			{#if type == 'link'}
-				{#if linkedCollectionList && linkedCollectionList
-						.map(String)
-						.includes(String(collection.id))}
-					<button
-						class="btn btn-error btn-block"
-						on:click={() => dispatch('unlink', collection.id)}
-					>
-						<Minus class="w-4 h-4" />
-						{$t('adventures.remove_from_collection')}
-					</button>
+		{#if !readOnly}
+			<div class="pt-4 border-t border-base-300">
+				{#if type == 'link'}
+					{#if linkedCollectionList && linkedCollectionList
+							.map(String)
+							.includes(String(collection.id))}
+						<button
+							class="btn btn-error btn-block"
+							on:click={() => dispatch('unlink', collection.id)}
+						>
+							<Minus class="w-4 h-4" />
+							{$t('adventures.remove_from_collection')}
+						</button>
+					{:else}
+						<button
+							class="btn btn-primary btn-block"
+							on:click={() => dispatch('link', collection.id)}
+						>
+							<Plus class="w-4 h-4" />
+							{$t('adventures.add_to_collection')}
+						</button>
+					{/if}
 				{:else}
-					<button
-						class="btn btn-primary btn-block"
-						on:click={() => dispatch('link', collection.id)}
-					>
-						<Plus class="w-4 h-4" />
-						{$t('adventures.add_to_collection')}
-					</button>
-				{/if}
-			{:else}
-				<div class="flex justify-between items-center">
-					<button
-						class="btn btn-neutral btn-sm flex-1 mr-2"
-						on:click={() => goto(`/collections/${collection.id}`)}
-					>
-						<Launch class="w-4 h-4" />
-						{$t('adventures.open_details')}
-					</button>
-					{#if user && user.uuid == collection.user}
-						<div class="dropdown dropdown-end">
-							<div
-								tabindex="0"
-								role="button"
-								aria-haspopup="menu"
-								class="btn btn-square btn-sm btn-base-300"
-							>
-								<DotsHorizontal class="w-5 h-5" />
+					<div class="flex justify-between items-center">
+						<button
+							class="btn btn-neutral btn-sm flex-1 mr-2"
+							on:click={() => goto(`/collections/${collection.id}`)}
+						>
+							<Launch class="w-4 h-4" />
+							{$t('adventures.open_details')}
+						</button>
+						{#if user && user.uuid == collection.user}
+							<div class="dropdown dropdown-end">
+								<div
+									tabindex="0"
+									role="button"
+									aria-haspopup="menu"
+									class="btn btn-square btn-sm btn-base-300"
+								>
+									<DotsHorizontal class="w-5 h-5" />
+								</div>
+								<ul
+									tabindex="-1"
+									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+								>
+									{#if type != 'viewonly'}
+										<li>
+											<button class="flex items-center gap-2" on:click={editAdventure}>
+												<FileDocumentEdit class="w-4 h-4" />
+												{$t('adventures.edit_collection')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => (isShareModalOpen = true)}
+											>
+												<ShareVariant class="w-4 h-4" />
+												{$t('adventures.share')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => (isSocialShareModalOpen = true)}
+											>
+												<ImageOutline class="w-4 h-4" />
+												{$t('social_share.share_externally')}
+											</button>
+										</li>
+										{#if collection.is_public}
+											<li>
+												<button on:click={copyLink} class="flex items-center gap-2">
+													{#if copied}
+														<Check class="w-4 h-4 text-success" />
+														<span>{$t('adventures.link_copied')}</span>
+													{:else}
+														<LinkIcon class="w-4 h-4" />
+														{$t('adventures.copy_link')}
+													{/if}
+												</button>
+											</li>
+										{/if}
+										{#if collection.is_archived}
+											<li>
+												<button
+													class="flex items-center gap-2"
+													on:click={() => archiveCollection(false)}
+												>
+													<ArchiveArrowUp class="w-4 h-4" />
+													{$t('adventures.unarchive')}
+												</button>
+											</li>
+										{:else}
+											<li>
+												<button
+													class="flex items-center gap-2"
+													on:click={() => archiveCollection(true)}
+												>
+													<ArchiveArrowDown class="w-4 h-4" />
+													{$t('adventures.archive')}
+												</button>
+											</li>
+										{/if}
+										<li>
+											<button class="flex items-center gap-2" on:click={exportCollectionPdf}>
+												<FilePdfBox class="w-4 h-4" />
+												{$t('adventures.export_pdf')}
+											</button>
+										</li>
+										<li>
+											<button class="flex items-center gap-2" on:click={exportCollectionZip}>
+												<DownloadIcon class="w-4 h-4" />
+												{$t('adventures.export_zip')}
+											</button>
+										</li>
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={duplicateCollection}
+												disabled={isDuplicating}
+											>
+												<ContentCopy class="w-4 h-4" />
+												{isDuplicating ? '...' : $t('adventures.duplicate')}
+											</button>
+										</li>
+										<div class="divider my-1"></div>
+										<li>
+											<button
+												id="delete_collection"
+												data-umami-event="Delete Collection"
+												class="text-error flex items-center gap-2"
+												on:click={() => (isWarningModalOpen = true)}
+											>
+												<TrashCan class="w-4 h-4" />
+												{$t('adventures.delete')}
+											</button>
+										</li>
+									{/if}
+									{#if type == 'viewonly'}
+										<li>
+											<button
+												class="flex items-center gap-2"
+												on:click={() => goto(`/collections/${collection.id}`)}
+											>
+												<Launch class="w-4 h-4" />
+												{$t('adventures.open_details')}
+											</button>
+										</li>
+									{/if}
+								</ul>
 							</div>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
-							>
-								{#if type != 'viewonly'}
-									<li>
-										<button class="flex items-center gap-2" on:click={editAdventure}>
-											<FileDocumentEdit class="w-4 h-4" />
-											{$t('adventures.edit_collection')}
-										</button>
-									</li>
-									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={() => (isShareModalOpen = true)}
-										>
-											<ShareVariant class="w-4 h-4" />
-											{$t('adventures.share')}
-										</button>
-									</li>
+						{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
+							<!-- dropdown with leave button -->
+							<div class="dropdown dropdown-end">
+								<div
+									tabindex="0"
+									role="button"
+									aria-haspopup="menu"
+									class="btn btn-square btn-sm btn-base-300"
+								>
+									<DotsHorizontal class="w-5 h-5" />
+								</div>
+								<ul
+									tabindex="-1"
+									class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
+								>
 									<li>
 										<button
 											class="flex items-center gap-2"
@@ -410,127 +518,22 @@
 											{$t('social_share.share_externally')}
 										</button>
 									</li>
-									{#if collection.is_public}
-										<li>
-											<button on:click={copyLink} class="flex items-center gap-2">
-												{#if copied}
-													<Check class="w-4 h-4 text-success" />
-													<span>{$t('adventures.link_copied')}</span>
-												{:else}
-													<LinkIcon class="w-4 h-4" />
-													{$t('adventures.copy_link')}
-												{/if}
-											</button>
-										</li>
-									{/if}
-									{#if collection.is_archived}
-										<li>
-											<button
-												class="flex items-center gap-2"
-												on:click={() => archiveCollection(false)}
-											>
-												<ArchiveArrowUp class="w-4 h-4" />
-												{$t('adventures.unarchive')}
-											</button>
-										</li>
-									{:else}
-										<li>
-											<button
-												class="flex items-center gap-2"
-												on:click={() => archiveCollection(true)}
-											>
-												<ArchiveArrowDown class="w-4 h-4" />
-												{$t('adventures.archive')}
-											</button>
-										</li>
-									{/if}
-									<li>
-										<button class="flex items-center gap-2" on:click={exportCollectionPdf}>
-											<FilePdfBox class="w-4 h-4" />
-											{$t('adventures.export_pdf')}
-										</button>
-									</li>
-									<li>
-										<button class="flex items-center gap-2" on:click={exportCollectionZip}>
-											<DownloadIcon class="w-4 h-4" />
-											{$t('adventures.export_zip')}
-										</button>
-									</li>
 									<li>
 										<button
-											class="flex items-center gap-2"
-											on:click={duplicateCollection}
-											disabled={isDuplicating}
-										>
-											<ContentCopy class="w-4 h-4" />
-											{isDuplicating ? '...' : $t('adventures.duplicate')}
-										</button>
-									</li>
-									<div class="divider my-1"></div>
-									<li>
-										<button
-											id="delete_collection"
-											data-umami-event="Delete Collection"
 											class="text-error flex items-center gap-2"
-											on:click={() => (isWarningModalOpen = true)}
+											on:click={() => dispatch('leave', collection.id)}
 										>
-											<TrashCan class="w-4 h-4" />
-											{$t('adventures.delete')}
+											<ExitRun class="w-4 h-4" />
+											{$t('adventures.leave_collection')}
 										</button>
 									</li>
-								{/if}
-								{#if type == 'viewonly'}
-									<li>
-										<button
-											class="flex items-center gap-2"
-											on:click={() => goto(`/collections/${collection.id}`)}
-										>
-											<Launch class="w-4 h-4" />
-											{$t('adventures.open_details')}
-										</button>
-									</li>
-								{/if}
-							</ul>
-						</div>
-					{:else if user && collection.shared_with && collection.shared_with.includes(user.uuid)}
-						<!-- dropdown with leave button -->
-						<div class="dropdown dropdown-end">
-							<div
-								tabindex="0"
-								role="button"
-								aria-haspopup="menu"
-								class="btn btn-square btn-sm btn-base-300"
-							>
-								<DotsHorizontal class="w-5 h-5" />
+								</ul>
 							</div>
-							<ul
-								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[1] w-64 p-2 shadow-xl border border-base-300"
-							>
-								<li>
-									<button
-										class="flex items-center gap-2"
-										on:click={() => (isSocialShareModalOpen = true)}
-									>
-										<ImageOutline class="w-4 h-4" />
-										{$t('social_share.share_externally')}
-									</button>
-								</li>
-								<li>
-									<button
-										class="text-error flex items-center gap-2"
-										on:click={() => dispatch('leave', collection.id)}
-									>
-										<ExitRun class="w-4 h-4" />
-										{$t('adventures.leave_collection')}
-									</button>
-								</li>
-							</ul>
-						</div>
-					{/if}
-				</div>
-			{/if}
-		</div>
+						{/if}
+					</div>
+				{/if}
+			</div>
+		{/if}
 	</div>
 </div>
 
