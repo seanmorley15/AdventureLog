@@ -15,6 +15,7 @@
 	import Check from '~icons/mdi/check';
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard } from '$lib/index';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
@@ -105,11 +106,6 @@
 	}
 
 	// Creator avatar helpers
-	$: creatorInitials =
-		adventure.user?.first_name && adventure.user?.last_name
-			? `${adventure.user.first_name[0]}${adventure.user.last_name[0]}`
-			: adventure.user?.first_name?.[0] || adventure.user?.username?.[0] || '?';
-
 	$: creatorDisplayName = adventure.user?.first_name
 		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
 		: adventure.user?.username || 'Unknown User';
@@ -351,19 +347,14 @@
 			<div class="absolute bottom-4 right-4">
 				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
 					<div class="avatar">
-						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow">
-							{#if adventure.user.profile_pic}
-								<img
-									src={adventure.user.profile_pic}
+						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow overflow-hidden">
+							{#if adventure.user}
+								<UserAvatar
+									user={adventure.user}
 									alt={creatorDisplayName}
-									class="rounded-full object-cover"
+									className="w-7 h-7 rounded-full"
+									textClass="text-[10px]"
 								/>
-							{:else}
-								<div
-									class="w-7 h-7 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-content font-semibold text-xs"
-								>
-									{creatorInitials.toUpperCase()}
-								</div>
 							{/if}
 						</div>
 					</div>

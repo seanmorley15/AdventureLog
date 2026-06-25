@@ -592,7 +592,18 @@
 		"logging_in": "Logging in"
 	},
 	"users": {
-		"no_users_found": "No users found with public profiles."
+		"no_users_found": "No users found with public profiles.",
+		"no_users_desc": "When other travelers make their profiles public, they will appear here.",
+		"no_match": "No users match your search",
+		"no_match_desc": "Try a different name or clear your filters.",
+		"page_description": "Browse public AdventureLog profiles and discover other travelers.",
+		"search_placeholder": "Search by name or username...",
+		"public_profiles": "Public Profiles",
+		"public_profile": "Public Profile",
+		"browse_options": "Browse Options",
+		"overview": "Overview",
+		"sort_name": "Name",
+		"sort_recent": "Newest"
 	},
 	"settings": {
 		"update_error": "Error updating settings",
@@ -1156,17 +1167,41 @@
 		"your_location": "Your Location"
 	},
 	"calendar": {
+		"page_title": "Calendar",
 		"today": "Today",
 		"month": "Month",
 		"week": "Week",
 		"day": "Day",
+		"agenda": "Agenda",
+		"event": "Event",
 		"events_scheduled": "events scheduled",
 		"total_events": "Total Events",
 		"calendar_overview": "Calendar Overview",
 		"filtered_results": "Filtered Results",
 		"all_day_event": "All Day Event",
 		"event timezone": "Event timezone",
-		"your timezone": "Your timezone"
+		"your timezone": "Your timezone",
+		"sidebar_title": "Filters & Options",
+		"timezone_display": "Time display",
+		"event_types": "Show event types",
+		"type_visit": "Visits",
+		"type_transportation": "Transport",
+		"type_lodging": "Lodging",
+		"type_collection": "Trips",
+		"type_note": "Notes",
+		"type_checklist": "Checklists",
+		"search_placeholder": "Search events, places, collections...",
+		"upcoming": "Upcoming",
+		"this_month": "This month",
+		"upcoming_agenda": "Upcoming events",
+		"no_upcoming_events": "No upcoming events match your filters.",
+		"no_events_in_range": "No events in this range.",
+		"in_collection": "Collection",
+		"view_collection": "View collection",
+		"load_error": "Could not load calendar events. Try again.",
+		"export_success": "Calendar exported successfully.",
+		"export_error": "Could not export calendar.",
+		"more_events": "+{count} more"
 	},
 	"locations": {
 		"location": "Location",

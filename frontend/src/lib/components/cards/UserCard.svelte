@@ -1,20 +1,43 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { continentCodeToString, getFlag } from '$lib';
 	import type { User } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
-
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import Calendar from '~icons/mdi/calendar';
+	import Account from '~icons/mdi/account';
+	import ShieldAccount from '~icons/mdi/shield-account';
+	import ChevronRight from '~icons/mdi/chevron-right';
 
-	export let sharing: boolean = false;
+	export let sharing = false;
 	export let shared_with: string[] | undefined = undefined;
 	export let user: User & { status?: 'available' | 'pending' };
+
+	const dispatch = createEventDispatcher<{
+		share: User;
+		unshare: User;
+		revoke: User;
+	}>();
 
 	$: isShared = shared_with?.includes(user.uuid) || false;
 	$: isPending = user.status === 'pending';
 	$: isAvailable = user.status === 'available';
+
+	$: displayName =
+		[user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.username;
+
+	$: joinedLabel = user.date_joined
+		? new Date(user.date_joined).toLocaleDateString(undefined, {
+				year: 'numeric',
+				month: 'short',
+				day: 'numeric',
+				timeZone: 'UTC'
+			})
+		: '';
+
+	function openProfile() {
+		goto(`/profile/${user.username}`);
+	}
 
 	function handleShare() {
 		dispatch('share', user);
@@ -29,87 +52,108 @@
 	}
 </script>
 
-<div
-	class="card w-full max-w-xs bg-base-200 text-base-content shadow-lg border border-base-300 hover:shadow-xl transition-all"
->
-	<div class="card-body items-center text-center space-y-4">
-		<!-- Profile Picture -->
-		<div class="avatar">
-			<div class="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-				{#if user.profile_pic}
-					<img src={user.profile_pic} alt={user.username} />
-				{:else}
-					<div
-						class="bg-base-300 w-full h-full flex items-center justify-center text-xl font-semibold"
+{#if sharing}
+	<div
+		class="card w-full max-w-xs bg-base-100 text-base-content shadow-lg border border-base-300/60 hover:shadow-xl transition-all"
+	>
+		<div class="card-body items-center text-center gap-4 p-5">
+			<div class="avatar">
+				<div class="w-20 rounded-full ring-2 ring-primary/30 ring-offset-2 ring-offset-base-100">
+					<UserAvatar
+						{user}
+						alt={displayName}
+						className="w-20 h-20 rounded-full"
+						textClass="text-2xl"
+					/>
+				</div>
+			</div>
+
+			<div class="min-w-0 w-full">
+				<h3 class="font-bold truncate">{displayName}</h3>
+				<p class="text-sm text-base-content/60 truncate">@{user.username}</p>
+				{#if isPending}
+					<div class="badge badge-warning badge-sm mt-2">{$t('share.pending')}</div>
+				{:else if isShared}
+					<div class="badge badge-success badge-sm mt-2">{$t('share.shared')}</div>
+				{:else if isAvailable}
+					<div class="badge badge-ghost badge-sm mt-2">{$t('share.available')}</div>
+				{/if}
+			</div>
+
+			<div class="card-actions w-full">
+				{#if isShared}
+					<button type="button" class="btn btn-sm btn-error w-full" on:click={handleUnshare}>
+						{$t('adventures.remove')}
+					</button>
+				{:else if isPending}
+					<button
+						type="button"
+						class="btn btn-sm btn-warning btn-outline w-full"
+						on:click={handleRevoke}
 					>
-						{user.first_name?.[0] || user.username?.[0]}{user.last_name?.[0] || user.username?.[1]}
-					</div>
+						{$t('share.revoke_invite')}
+					</button>
+				{:else if isAvailable}
+					<button type="button" class="btn btn-sm btn-success w-full" on:click={handleShare}>
+						{$t('share.send_invite')}
+					</button>
 				{/if}
 			</div>
 		</div>
-
-		<!-- User Info -->
-		<div>
-			<h2 class="text-lg font-bold leading-tight">
-				{user.first_name}
-				{user.last_name}
-			</h2>
-			<p class="text-sm opacity-70">@{user.username}</p>
-
-			{#if user.is_staff}
-				<div class="badge badge-outline badge-primary mt-2">{$t('settings.admin')}</div>
-			{/if}
-
-			<!-- Status Badge for sharing mode -->
-			{#if sharing}
-				{#if isPending}
-					<div class="badge badge-warning badge-sm mt-2">
-						{$t('share.pending')}
-					</div>
-				{:else if isShared}
-					<div class="badge badge-success badge-sm mt-2">
-						{$t('share.shared')}
-					</div>
-				{:else if isAvailable}
-					<div class="badge badge-ghost badge-sm mt-2">
-						{$t('share.available')}
-					</div>
-				{/if}
-			{/if}
-		</div>
-
-		<!-- Join Date -->
-		<div class="flex items-center gap-2 text-sm text-base-content/70">
-			<Calendar class="w-4 h-4 text-primary" />
-			<span>
-				{user.date_joined
-					? `${$t('adventures.joined')} ` + new Date(user.date_joined).toLocaleDateString()
-					: ''}
-			</span>
-		</div>
-
-		<!-- Actions -->
-		<div class="card-actions w-full justify-center pt-2">
-			{#if !sharing}
-				<button
-					class="btn btn-sm btn-primary w-full"
-					on:click={() => goto(`/profile/${user.username}`)}
-				>
-					{$t('adventures.view_profile')}
-				</button>
-			{:else if isShared}
-				<button class="btn btn-sm btn-error w-full" on:click={handleUnshare}>
-					{$t('adventures.remove')}
-				</button>
-			{:else if isPending}
-				<button class="btn btn-sm btn-warning btn-outline w-full" on:click={handleRevoke}>
-					{$t('share.revoke_invite')}
-				</button>
-			{:else if isAvailable}
-				<button class="btn btn-sm btn-success w-full" on:click={handleShare}>
-					{$t('share.send_invite')}
-				</button>
-			{/if}
-		</div>
 	</div>
-</div>
+{:else}
+	<button
+		type="button"
+		class="group card w-full bg-base-100 border border-base-300/60 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 text-left overflow-hidden"
+		on:click={openProfile}
+	>
+		<div class="h-16 bg-gradient-to-r from-primary/15 via-secondary/10 to-accent/10"></div>
+
+		<div class="px-5 pb-5 -mt-10">
+			<div class="flex items-end justify-between gap-3">
+				<div class="avatar">
+					<div class="w-20 rounded-2xl ring-4 ring-base-100 shadow-lg overflow-hidden bg-base-200">
+						<UserAvatar
+							{user}
+							alt={displayName}
+							className="w-20 h-20 rounded-2xl"
+							textClass="text-2xl"
+						/>
+					</div>
+				</div>
+				{#if user.is_staff}
+					<span class="badge badge-primary badge-sm gap-1 mb-1 shrink-0">
+						<ShieldAccount class="w-3.5 h-3.5" />
+						{$t('settings.admin')}
+					</span>
+				{/if}
+			</div>
+
+			<div class="mt-3 min-w-0">
+				<h3
+					class="text-lg font-bold leading-tight truncate group-hover:text-primary transition-colors"
+				>
+					{displayName}
+				</h3>
+				<p class="text-sm text-base-content/60 truncate">@{user.username}</p>
+			</div>
+
+			<div class="mt-4 flex items-center justify-between gap-2 text-sm text-base-content/60">
+				{#if joinedLabel}
+					<span class="inline-flex items-center gap-1.5 min-w-0">
+						<Calendar class="w-4 h-4 shrink-0 text-primary/70" />
+						<span class="truncate">{$t('adventures.joined')} {joinedLabel}</span>
+					</span>
+				{:else}
+					<span class="inline-flex items-center gap-1.5">
+						<Account class="w-4 h-4 shrink-0 text-primary/70" />
+						{$t('users.public_profile')}
+					</span>
+				{/if}
+				<ChevronRight
+					class="w-5 h-5 shrink-0 text-base-content/30 group-hover:text-primary group-hover:translate-x-0.5 transition-all"
+				/>
+			</div>
+		</div>
+	</button>
+{/if}

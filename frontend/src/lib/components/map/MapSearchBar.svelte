@@ -153,21 +153,9 @@
 	</div>
 
 	{#if mode === 'nearby'}
-		<div class="flex items-center justify-end gap-2 px-1">
-			<p class="hidden sm:block flex-1 text-xs text-base-content/60 leading-snug">
-				{$t('map.nearby_search_hint')}
-			</p>
-			<button
-				type="button"
-				class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
-				disabled={randomDisabled}
-				on:click={handleRandomClick}
-				aria-label={$t('map.random_location')}
-				title={$t('map.random_location')}
-			>
-				<DiceIcon class="w-4 h-4" />
-			</button>
-		</div>
+		<p class="px-1 text-xs text-base-content/60 leading-snug">
+			{$t('map.nearby_search_hint')}
+		</p>
 	{:else}
 		<div class="relative w-full flex items-center gap-1.5">
 			<div class="relative flex-1 min-w-0">
@@ -243,16 +231,18 @@
 					</ul>
 				{/if}
 			</div>
-			<button
-				type="button"
-				class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
-				disabled={randomDisabled}
-				on:click={handleRandomClick}
-				aria-label={$t('map.random_location')}
-				title={$t('map.random_location')}
-			>
-				<DiceIcon class="w-4 h-4" />
-			</button>
+			{#if mode === 'my'}
+				<button
+					type="button"
+					class="btn btn-ghost btn-square btn-sm shrink-0 bg-base-100/95 border border-base-300 shadow-sm"
+					disabled={randomDisabled}
+					on:click={handleRandomClick}
+					aria-label={$t('map.random_location')}
+					title={$t('map.random_location')}
+				>
+					<DiceIcon class="w-4 h-4" />
+				</button>
+			{/if}
 		</div>
 	{/if}
 </div>

@@ -123,6 +123,7 @@
 		name: string;
 		visitStatus: VisitStatus;
 		categoryIcon?: string;
+		categoryName?: string;
 	};
 
 	function parseCoordinate(value: number | string | null | undefined): number | null {
@@ -142,7 +143,8 @@
 				id: pin.id,
 				name: pin.name,
 				visitStatus: pin.is_visited ? ('visited' as VisitStatus) : ('planned' as VisitStatus),
-				categoryIcon: pin.category?.icon || '📍'
+				categoryIcon: pin.category?.icon || '📍',
+				categoryName: pin.category?.display_name || pin.category?.name || ''
 			}
 		};
 	}
@@ -181,6 +183,10 @@
 
 	function markerLabelResolver(props: { categoryIcon?: string } | null): string {
 		return props?.categoryIcon || '📍';
+	}
+
+	function getVisitStatusLabel(status: VisitStatus | undefined): string {
+		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
 	$: totalAdventures = pins.length;
@@ -356,9 +362,19 @@
 	function attachViewportCenterSync() {
 		if (!mapInstance) return;
 		unbindViewportCenter?.();
-		unbindViewportCenter = bindMapViewportCenterSync(mapInstance, (center) => {
-			viewportCenter = center;
-		});
+		unbindViewportCenter = bindMapViewportCenterSync(
+			mapInstance,
+			(center) => {
+				viewportCenter = center;
+			},
+			mapViewportEl
+		);
+	}
+
+	function refreshMapLayout() {
+		if (!mapInstance) return;
+		mapInstance.resize?.();
+		viewportCenter = getMapViewportCenter(mapInstance, mapViewportEl);
 	}
 
 	function handleMapLoad() {
@@ -439,7 +455,7 @@
 
 	async function searchThisArea() {
 		if (!mapInstance) return;
-		const { lat, lng } = getMapViewportCenter(mapInstance);
+		const { lat, lng } = getMapViewportCenter(mapInstance, mapViewportEl);
 		if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
 
 		recLoading = true;
@@ -467,7 +483,8 @@
 	}
 
 	function handleMapMove(e: CustomEvent<{ center: { lng: number; lat: number }; zoom: number }>) {
-		const { center, zoom } = e.detail;
+		const { zoom } = e.detail;
+		const center = mapInstance ? getMapViewportCenter(mapInstance, mapViewportEl) : e.detail.center;
 		viewportCenter = { lng: center.lng, lat: center.lat };
 		// Do not update mapCenter/mapZoom here — that re-triggers FullMap easeTo and locks the map.
 		persistMapView(center.lat, center.lng, zoom);
@@ -717,11 +734,17 @@
 		if (mode === 'nearby') {
 			showSearchThisArea = true;
 			clearSelection();
+			queueMicrotask(refreshMapLayout);
 		} else {
 			recommendations = [];
 			recError = null;
 			showSearchThisArea = false;
 		}
+	}
+
+	$: if (mapInstance) {
+		sidebarOpen;
+		queueMicrotask(refreshMapLayout);
 	}
 
 	function handleKeydown(e: KeyboardEvent) {
@@ -810,9 +833,9 @@
 								lngLat={markerLngLat}
 								class={isActive || isSelected ? 'map-pin-active' : 'map-pin'}
 							>
-								<div class="relative z-[1000]">
+								<div class="relative group z-[1000] group-hover:z-[10000] focus-within:z-[10000]">
 									<div
-										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 hover:scale-110 {markerClassResolver(
+										class="map-pin-hit grid place-items-center w-8 h-8 rounded-full border-2 border-white shadow-lg text-base cursor-pointer transition-all duration-200 group-hover:scale-110 {markerClassResolver(
 											markerProps,
 											isSelected
 										)}"
@@ -821,6 +844,14 @@
 										tabindex="0"
 										aria-label={markerProps.name}
 										aria-pressed={isSelected}
+										on:mouseenter={() => setActive(true)}
+										on:mouseleave={() => {
+											if (!isSelected) setActive(false);
+										}}
+										on:focus={() => setActive(true)}
+										on:blur={() => {
+											if (!isSelected) setActive(false);
+										}}
 										on:click={(e) => {
 											e.stopPropagation();
 											handlePinClick(markerProps.id, setActive);
@@ -832,6 +863,36 @@
 										}}
 									>
 										{markerLabelResolver(markerProps)}
+									</div>
+
+									<div
+										class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 pointer-events-none group-hover:opacity-100 group-focus-within:opacity-100 transition-all duration-200 z-[9999]"
+										class:opacity-100={isActive || isSelected}
+									>
+										<div
+											class="card card-compact bg-base-100 shadow-xl border border-base-300 min-w-48 max-w-72"
+										>
+											<div class="card-body gap-2 p-3">
+												<h3 class="font-semibold text-sm leading-tight truncate">
+													{markerProps.name}
+												</h3>
+												<div class="flex flex-wrap items-center gap-1.5">
+													<span
+														class="badge badge-sm {markerProps.visitStatus === 'visited'
+															? 'badge-success'
+															: 'badge-info'}"
+													>
+														{getVisitStatusLabel(markerProps.visitStatus)}
+													</span>
+													{#if markerProps.categoryName}
+														<span class="badge badge-ghost badge-sm">
+															{markerProps.categoryName}
+														</span>
+													{/if}
+												</div>
+												<p class="text-xs text-base-content/60">{$t('map.view_details')}</p>
+											</div>
+										</div>
 									</div>
 								</div>
 							</Marker>
@@ -1214,42 +1275,6 @@
 										<span class="label-text">{$t('settings.activities')}</span>
 									</label>
 								</div>
-							</div>
-
-							<div class="card bg-base-200/50 p-4">
-								<h3 class="font-semibold text-lg mb-3 flex items-center gap-2">
-									<Plus class="w-5 h-5" />
-									{$t('adventures.new_location')}
-								</h3>
-								{#if newMarker}
-									<div class="space-y-2">
-										<div class="alert alert-info py-2">
-											<span class="text-xs">{$t('map.marker_placed_on_map')}</span>
-										</div>
-										<button
-											type="button"
-											class="btn btn-primary btn-sm w-full"
-											on:click={newAdventure}
-										>
-											{$t('map.add_location_at_marker')}
-										</button>
-									</div>
-								{:else}
-									<p class="text-xs text-base-content/60 mb-2">
-										{$t('map.place_marker_desc_location')}
-									</p>
-									<button
-										type="button"
-										class="btn btn-primary btn-sm w-full"
-										on:click={() => {
-											modalLocationPrefill = null;
-											modalSkipQuickStart = false;
-											createModalOpen = true;
-										}}
-									>
-										{$t('map.add_location')}
-									</button>
-								{/if}
 							</div>
 						</div>
 					{/if}

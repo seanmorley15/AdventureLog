@@ -13,8 +13,8 @@
 	import Calendar from '~icons/mdi/calendar';
 	import CalendarComponent from '$lib/components/calendar/Calendar.svelte';
 	import EventDetailsModal from '$lib/components/calendar/EventDetailsModal.svelte';
-	import { formatAllDayDate } from '$lib/dateUtils';
-	import { isAllDay } from '$lib';
+	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
+	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
 	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
@@ -67,9 +67,6 @@
 	let isImageModalOpen: boolean = false;
 	let isLocationLinkModalOpen: boolean = false;
 	let showCalendarModal = false;
-	let selectedCalendarEvent: any = null;
-	let calendarLocation = '';
-	let calendarDescription = '';
 
 	// Shared helpers for keeping collection sub-items in sync after modal actions
 	type CollectionArrayKey = 'locations' | 'transportations' | 'lodging' | 'notes' | 'checklists';
@@ -289,22 +286,28 @@
 		}
 	}
 
-	// Build calendar events from collection visits
-	type TimezoneMode = 'event' | 'local';
-
-	let collectionEvents: Array<{
-		id: string;
-		start: string;
-		end: string;
-		title: string;
-		backgroundColor?: string;
-		extendedProps?: any;
-	}> = [];
-	let timezoneMode: TimezoneMode = 'event';
+	// Calendar events from collection data
+	let timezoneMode: CalendarTimezoneMode = 'event';
 	let calendarInitialDate: string | null = null;
+	let selectedCalendarEvent: CalendarDisplayEvent | null = null;
 
 	const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 	const numberLocale = Intl.DateTimeFormat().resolvedOptions().locale;
+
+	$: calendarTimezoneLabels = {
+		eventTimezone: $t('collections.event_timezone'),
+		localTimezone: $t('collections.local_timezone')
+	};
+
+	$: collectionEvents = collection
+		? buildCollectionCalendarEvents(
+				collection,
+				timezoneMode,
+				userTimezone,
+				calendarTimezoneLabels,
+				(key) => $t(key)
+			)
+		: [];
 
 	type CostCategory = 'lodging' | 'transportation' | 'location';
 
@@ -346,8 +349,6 @@
 	$: pricedItemCount = costEntries.length;
 	$: currencyCount = costSummary.length;
 
-	$: collectionEvents = buildCollectionEvents(timezoneMode);
-
 	$: if (!calendarInitialDate && collectionEvents.length) {
 		const collectionRangeStart = collection?.start_date
 			? DateTime.fromISO(collection.start_date)
@@ -368,209 +369,6 @@
 		const chosenDate = (inCollectionRange[0] || validEvents[0])?.date;
 
 		calendarInitialDate = chosenDate?.toISODate() || calendarInitialDate;
-	}
-
-	function buildCollectionEvents(mode: TimezoneMode) {
-		const events: typeof collectionEvents = [];
-
-		(collection?.locations || []).forEach((loc) => {
-			if (!loc.visits || loc.visits.length === 0) return;
-
-			loc.visits.forEach((visit) => {
-				const times = buildEventTimes({
-					start: visit.start_date,
-					end: visit.end_date || visit.start_date,
-					timezone: visit.timezone,
-					mode,
-					allDay: isAllDay(visit.start_date)
-				});
-
-				if (!times) return;
-
-				events.push({
-					id: `location-${loc.id}-${visit.id}`,
-					title: `${loc.category?.icon || '📍'} ${loc.name}`,
-					start: times.start,
-					end: times.end,
-					backgroundColor: '#3b82f6',
-					extendedProps: {
-						type: 'location',
-						adventureId: loc.id,
-						adventureName: loc.name,
-						category: loc.category?.display_name || loc.category?.name || 'Adventure',
-						icon: loc.category?.icon || '🗺️',
-						timezone: visit.timezone || userTimezone,
-						timezoneUsed: times.timezoneUsed,
-						timezoneLabel: times.timezoneLabel,
-						timezoneMode: mode,
-						isAllDay: times.isAllDay,
-						formattedStart: times.formattedStart,
-						formattedEnd: times.formattedEnd,
-						location: loc.location || '',
-						description: loc.description || ''
-					}
-				});
-			});
-		});
-
-		(collection?.transportations || []).forEach((transportation) => {
-			if (!transportation.date) return;
-
-			const times = buildEventTimes({
-				start: transportation.date,
-				end: transportation.end_date || transportation.date,
-				timezone: transportation.start_timezone || transportation.end_timezone,
-				mode,
-				allDay: isAllDay(transportation.date)
-			});
-
-			if (!times) return;
-
-			const route = [transportation.from_location, transportation.to_location]
-				.filter(Boolean)
-				.join(' → ');
-
-			events.push({
-				id: `transport-${transportation.id}`,
-				title: `${getTransportIcon(transportation.type)} ${
-					transportation.name || transportation.type || $t('adventures.transportation')
-				}`,
-				start: times.start,
-				end: times.end,
-				backgroundColor: '#f97316',
-				extendedProps: {
-					type: 'transportation',
-					category: transportation.type || 'Transportation',
-					icon: getTransportIcon(transportation.type),
-					timezone: transportation.start_timezone || transportation.end_timezone || userTimezone,
-					timezoneUsed: times.timezoneUsed,
-					timezoneLabel: times.timezoneLabel,
-					timezoneMode: mode,
-					isAllDay: times.isAllDay,
-					formattedStart: times.formattedStart,
-					formattedEnd: times.formattedEnd,
-					location: route || transportation.description || '',
-					description: transportation.description || '',
-					route
-				}
-			});
-		});
-
-		(collection?.lodging || []).forEach((stay) => {
-			const start = stay.check_in || stay.check_out;
-			if (!start) return;
-
-			const calendarEnd = getLodgingCalendarEndDate(stay);
-
-			const times = buildEventTimes({
-				start,
-				end: calendarEnd || start,
-				timezone: stay.timezone,
-				mode,
-				allDay: true
-			});
-
-			if (!times) return;
-
-			events.push({
-				id: `lodging-${stay.id}`,
-				title: `🏨 ${stay.name}`,
-				start: times.start,
-				end: times.end,
-				backgroundColor: '#8b5cf6',
-				extendedProps: {
-					type: 'lodging',
-					category: stay.type || 'Lodging',
-					icon: '🏨',
-					timezone: stay.timezone || userTimezone,
-					timezoneUsed: times.timezoneUsed,
-					timezoneLabel: times.timezoneLabel,
-					timezoneMode: mode,
-					isAllDay: true,
-					formattedStart: times.formattedStart,
-					formattedEnd: times.formattedEnd,
-					checkoutDate: stay.check_out || null,
-					location: stay.location || '',
-					description: stay.description || ''
-				}
-			});
-		});
-
-		return events;
-	}
-
-	function buildEventTimes({
-		start,
-		end,
-		timezone,
-		mode,
-		allDay
-	}: {
-		start: string | null;
-		end: string | null;
-		timezone: string | null | undefined;
-		mode: TimezoneMode;
-		allDay: boolean;
-	}) {
-		if (!start) return null;
-
-		const eventTimezone = timezone || userTimezone;
-		const targetTimezone = mode === 'local' ? userTimezone : eventTimezone;
-
-		if (allDay) {
-			const startDate = start.split('T')[0];
-			const endDate = (end || start).split('T')[0];
-			const endDateObj = new Date(endDate);
-			endDateObj.setDate(endDateObj.getDate() + 1);
-
-			return {
-				start: startDate,
-				end: endDateObj.toISOString().split('T')[0],
-				formattedStart: formatAllDayDate(start),
-				formattedEnd: formatAllDayDate(end || start),
-				timezoneUsed: targetTimezone,
-				timezoneLabel:
-					mode === 'local'
-						? `${$t('calendar.your timezone') || 'Your timezone'} (${userTimezone})`
-						: `${$t('calendar.event timezone') || 'Event timezone'} (${eventTimezone})`,
-				isAllDay: true
-			};
-		}
-
-		const startDateTime = DateTime.fromISO(start, { zone: eventTimezone });
-		const endDateTime = DateTime.fromISO(end || start, { zone: eventTimezone });
-
-		if (!startDateTime.isValid || !endDateTime.isValid) return null;
-
-		const startConverted = startDateTime.setZone(targetTimezone);
-		const endConverted = endDateTime.setZone(targetTimezone);
-
-		return {
-			start: startConverted.toISO(),
-			end: endConverted.toISO(),
-			formattedStart: startConverted.toFormat('ccc, LLL d • t ZZZZ'),
-			formattedEnd: endConverted.toFormat('ccc, LLL d • t ZZZZ'),
-			timezoneUsed: targetTimezone,
-			timezoneLabel:
-				mode === 'local'
-					? `${$t('calendar.your timezone') || 'Your timezone'} (${userTimezone})`
-					: `${$t('calendar.event timezone') || 'Event timezone'} (${eventTimezone})`,
-			isAllDay: false
-		};
-	}
-
-	function getTransportIcon(type?: string | null) {
-		const normalized = (type || '').toLowerCase();
-
-		if (normalized.includes('flight') || normalized.includes('plane') || normalized.includes('air'))
-			return '✈️';
-		if (normalized.includes('train') || normalized.includes('rail')) return '🚆';
-		if (normalized.includes('bus')) return '🚌';
-		if (normalized.includes('car') || normalized.includes('drive')) return '🚗';
-		if (normalized.includes('boat') || normalized.includes('ferry') || normalized.includes('ship'))
-			return '🚢';
-
-		return '🛣️';
 	}
 
 	function buildCostEntries(current: Collection | null, fallbackCurrency: string): CostEntry[] {
@@ -609,26 +407,6 @@
 		});
 
 		return entries;
-	}
-
-	function getLodgingCalendarEndDate(stay: Lodging): string | null {
-		const { check_in, check_out } = stay;
-		if (!check_out) return check_in || null;
-		if (!check_in) return check_out;
-
-		const checkInDate = new Date(check_in.split('T')[0]);
-		const checkOutDate = new Date(check_out.split('T')[0]);
-
-		if (Number.isNaN(checkInDate.getTime()) || Number.isNaN(checkOutDate.getTime())) {
-			return check_out;
-		}
-
-		if (checkOutDate <= checkInDate) {
-			return check_out;
-		}
-
-		checkOutDate.setDate(checkOutDate.getDate() - 1);
-		return checkOutDate.toISOString().split('T')[0];
 	}
 
 	function summarizeCostEntries(
@@ -684,7 +462,7 @@
 			.sort((a, b) => a.currency.localeCompare(b.currency));
 	}
 
-	function handleCalendarEventClick(event: any) {
+	function handleCalendarEventClick(event: CalendarDisplayEvent) {
 		selectedCalendarEvent = event;
 		showCalendarModal = true;
 	}
@@ -693,9 +471,6 @@
 		showCalendarModal = false;
 		selectedCalendarEvent = null;
 	}
-
-	$: calendarLocation = selectedCalendarEvent?.extendedProps?.location || '';
-	$: calendarDescription = selectedCalendarEvent?.extendedProps?.description || '';
 
 	onMount(async () => {
 		if (!collection) {
@@ -982,10 +757,6 @@
 <EventDetailsModal
 	show={showCalendarModal}
 	event={selectedCalendarEvent}
-	isLoadingDetails={false}
-	detailsError={''}
-	location={calendarLocation}
-	description={calendarDescription}
 	{timezoneMode}
 	{userTimezone}
 	onClose={closeCalendarModal}
@@ -1313,8 +1084,9 @@
 								</p>
 								<CalendarComponent
 									events={collectionEvents}
-									onEventClick={handleCalendarEventClick}
 									initialDate={calendarInitialDate}
+									bare={true}
+									on:eventClick={(e) => handleCalendarEventClick(e.detail)}
 								/>
 							</div>
 						</div>

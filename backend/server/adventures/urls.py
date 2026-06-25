@@ -25,6 +25,7 @@ router.register(r'backup', BackupViewSet, basename='backup')
 router.register(r'trails', TrailViewSet, basename='trails')
 router.register(r'activities', ActivityViewSet, basename='activities')
 router.register(r'visits', VisitViewSet, basename='visits')
+router.register(r'calendar', CalendarViewSet, basename='calendar')
 router.register(r'itineraries', ItineraryViewSet, basename='itineraries')
 router.register(r'itinerary-days', ItineraryDayViewSet, basename='itinerary-days')
 
