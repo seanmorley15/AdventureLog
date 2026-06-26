@@ -145,6 +145,7 @@
 	function formatTripDate(date: string | null): string {
 		if (!date) return '';
 		return new Date(date).toLocaleDateString(undefined, {
+			timeZone: 'UTC',
 			month: 'short',
 			day: 'numeric',
 			year: 'numeric'

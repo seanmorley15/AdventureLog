@@ -15,7 +15,8 @@
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
 	import TotpModal from '$lib/components/TOTPModal.svelte';
-	import { appTitle, appVersion, copyrightYear } from '$lib/config.js';
+	import { copyrightYear } from '$lib/config.js';
+	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
 	import ImmichLogo from '$lib/assets/immich.svg';
 	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
 	import StravaLogo from '$lib/assets/strava.svg';
@@ -2024,7 +2025,7 @@
 											<div class="p-3 bg-base-300 rounded-lg">
 												<span class="text-base-content/60">{$t('settings.app_version')}:</span>
 												<br />
-												<span class="text-secondary font-semibold">{appTitle} {appVersion}</span>
+												<AppVersionDisplay size="sm" />
 											</div>
 											<div class="p-3 bg-base-300 rounded-lg">
 												<span class="text-base-content/60">Profile Type:</span>

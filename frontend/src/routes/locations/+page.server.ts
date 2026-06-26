@@ -9,6 +9,8 @@ import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
+	event.depends('locations:list');
+
 	if (!event.locals.user) {
 		return redirect(302, '/login');
 	} else {

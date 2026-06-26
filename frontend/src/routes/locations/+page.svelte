@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { afterNavigate, goto } from '$app/navigation';
+	import { goto, invalidate } from '$app/navigation';
 	import { page } from '$app/stores';
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import type { Location } from '$lib/types';
-	import { onMount, tick } from 'svelte';
+	import { tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -19,16 +19,22 @@
 
 	export let data: any;
 
-	let adventures: Location[] = data.props.adventures || [];
+	const resultsPerPage = 25;
 
-	let orderBy = data.props.order_by || 'updated_at';
-	let orderDirection = data.props.order_direction || 'asc';
-	let currentSort = {
-		visited: true,
-		planned: true,
-		includeCollections: data.props.include_collections !== 'false',
-		is_visited: data.props.is_visited || 'all'
-	};
+	let adventures: Location[] = [];
+	let count = 0;
+	let totalPages = 1;
+	let typeString = '';
+
+	$: adventures = data?.props?.adventures ?? [];
+	$: count = data?.props?.count ?? 0;
+	$: totalPages = Math.max(1, Math.ceil(count / resultsPerPage));
+	$: typeString = $page.url.searchParams.get('types') ?? '';
+	$: orderBy = $page.url.searchParams.get('order_by') || 'updated_at';
+	$: orderDirection = $page.url.searchParams.get('order_direction') || 'asc';
+	$: isVisitedFilter = $page.url.searchParams.get('is_visited') || 'all';
+	$: includeCollections = $page.url.searchParams.get('include_collections') !== 'false';
+	$: currentPage = parseInt($page.url.searchParams.get('page') || '1', 10);
 
 	let locationBeingUpdated: Location | undefined = undefined;
 
@@ -47,33 +53,10 @@
 		}
 	}
 
-	let resultsPerPage: number = 25;
-	let count = data.props.count || 0;
-	let totalPages = Math.ceil(count / resultsPerPage);
-	let currentPage: number = 1;
-
 	let is_category_modal_open: boolean = false;
-	let typeString: string = '';
 	let adventureToEdit: Location | null = null;
 	let isLocationModalOpen: boolean = false;
 	let sidebarOpen = false;
-
-	function syncTypesFromUrl() {
-		if (typeof window === 'undefined') {
-			return;
-		}
-
-		let url = new URL(window.location.href);
-		typeString = url.searchParams.get('types') || '';
-	}
-
-	onMount(() => {
-		syncTypesFromUrl();
-	});
-
-	afterNavigate(() => {
-		syncTypesFromUrl();
-	});
 
 	type LocationFilterOverrides = {
 		types?: string;
@@ -83,19 +66,21 @@
 		include_collections?: boolean;
 	};
 
-	async function applyLocationFilters(overrides: LocationFilterOverrides = {}) {
+	function buildFilterUrl(overrides: LocationFilterOverrides = {}) {
 		const url = new URL($page.url);
 
-		const types = overrides.types !== undefined ? overrides.types : typeString;
-		const nextIsVisited =
-			overrides.is_visited !== undefined ? overrides.is_visited : currentSort.is_visited;
-		const nextOrderBy = overrides.order_by !== undefined ? overrides.order_by : orderBy;
+		const types =
+			overrides.types !== undefined
+				? overrides.types
+				: (url.searchParams.get('types') ?? typeString);
+		const nextIsVisited = overrides.is_visited ?? url.searchParams.get('is_visited') ?? 'all';
+		const nextOrderBy = overrides.order_by ?? url.searchParams.get('order_by') ?? 'updated_at';
 		const nextOrderDirection =
-			overrides.order_direction !== undefined ? overrides.order_direction : orderDirection;
+			overrides.order_direction ?? url.searchParams.get('order_direction') ?? 'asc';
+		const includeCollectionsParam = url.searchParams.get('include_collections');
 		const nextIncludeCollections =
-			overrides.include_collections !== undefined
-				? overrides.include_collections
-				: currentSort.includeCollections;
+			overrides.include_collections ??
+			(includeCollectionsParam === null ? true : includeCollectionsParam !== 'false');
 
 		if (types) {
 			url.searchParams.set('types', types);
@@ -109,13 +94,13 @@
 		url.searchParams.set('include_collections', nextIncludeCollections ? 'true' : 'false');
 		url.searchParams.delete('page');
 
-		currentPage = 1;
-		currentSort.is_visited = nextIsVisited;
-		orderBy = nextOrderBy;
-		orderDirection = nextOrderDirection;
-		currentSort.includeCollections = nextIncludeCollections;
+		return `${url.pathname}${url.search}`;
+	}
 
-		await goto(url.toString(), { invalidateAll: true, replaceState: true });
+	async function applyLocationFilters(overrides: LocationFilterOverrides = {}) {
+		const target = buildFilterUrl(overrides);
+		await goto(target, { keepFocus: true, noScroll: true });
+		await invalidate('locations:list');
 	}
 
 	async function onCategoryChange() {
@@ -135,63 +120,12 @@
 		await applyLocationFilters({ include_collections: checked });
 	}
 
-	$: {
-		let url = new URL($page.url);
-		let page = url.searchParams.get('page');
-		if (page) {
-			currentPage = parseInt(page);
-		}
-	}
-
-	$: {
-		if (data.props.adventures) {
-			adventures = data.props.adventures;
-		}
-		if (data.props.count) {
-			count = data.props.count;
-			totalPages = Math.ceil(count / resultsPerPage);
-		}
-	}
-
-	$: {
-		let url = new URL($page.url);
-		orderBy = url.searchParams.get('order_by') || 'updated_at';
-		orderDirection = url.searchParams.get('order_direction') || 'asc';
-
-		if (url.searchParams.get('planned') === 'on') {
-			currentSort.planned = true;
-		} else {
-			currentSort.planned = false;
-		}
-		if (url.searchParams.get('visited') === 'on') {
-			currentSort.visited = true;
-		} else {
-			currentSort.visited = false;
-		}
-		if (url.searchParams.get('include_collections') === 'true') {
-			currentSort.includeCollections = true;
-		} else if (url.searchParams.get('include_collections') === 'false') {
-			currentSort.includeCollections = false;
-		} else {
-			// Default to true when no parameter is present (first visit)
-			currentSort.includeCollections = true;
-		}
-
-		if (!currentSort.visited && !currentSort.planned) {
-			currentSort.visited = true;
-			currentSort.planned = true;
-		}
-
-		currentSort.is_visited = url.searchParams.get('is_visited') || 'all';
-	}
-
-	function handleChangePage(pageNumber: number) {
-		currentPage = pageNumber;
-		let url = new URL(window.location.href);
+	async function handleChangePage(pageNumber: number) {
+		const url = new URL($page.url);
 		url.searchParams.set('page', pageNumber.toString());
-		adventures = [];
-		adventures = data.props.adventures;
-		goto(url.toString(), { invalidateAll: true, replaceState: true });
+		const target = `${url.pathname}${url.search}`;
+		await goto(target, { keepFocus: true, noScroll: true });
+		await invalidate('locations:list');
 	}
 
 	function deleteAdventure(event: CustomEvent<string>) {
@@ -394,7 +328,7 @@
 											type="radio"
 											name="is_visited"
 											class="radio radio-primary radio-sm"
-											checked={currentSort.is_visited === 'all'}
+											checked={isVisitedFilter === 'all'}
 											on:change={() => updateVisitedFilter('all')}
 										/>
 										<span class="label-text">{$t('adventures.all')}</span>
@@ -404,7 +338,7 @@
 											type="radio"
 											name="is_visited"
 											class="radio radio-primary radio-sm"
-											checked={currentSort.is_visited === 'true'}
+											checked={isVisitedFilter === 'true'}
 											on:change={() => updateVisitedFilter('true')}
 										/>
 										<span class="label-text">{$t('adventures.visited')}</span>
@@ -414,7 +348,7 @@
 											type="radio"
 											name="is_visited"
 											class="radio radio-primary radio-sm"
-											checked={currentSort.is_visited === 'false'}
+											checked={isVisitedFilter === 'false'}
 											on:change={() => updateVisitedFilter('false')}
 										/>
 										<span class="label-text">{$t('adventures.not_visited')}</span>
@@ -428,7 +362,7 @@
 										type="checkbox"
 										id="include_collections"
 										class="checkbox checkbox-primary checkbox-sm"
-										checked={currentSort.includeCollections}
+										checked={includeCollections}
 										on:change={(e) => updateIncludeCollections(e.currentTarget.checked)}
 									/>
 									<span class="label-text">{$t('adventures.collection_locations')}</span>
@@ -476,55 +410,43 @@
 										<span class="label-text font-medium">{$t('adventures.order_by')}</span>
 									</label>
 									<div class="space-y-1">
-										<label
-											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
-											on:click={() => updateSort('updated_at', orderDirection)}
-										>
+										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm pointer-events-none"
+												class="radio radio-primary radio-sm"
 												checked={orderBy === 'updated_at'}
-												tabindex="-1"
+												on:change={() => updateSort('updated_at', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.updated')}</span>
 										</label>
-										<label
-											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
-											on:click={() => updateSort('name', orderDirection)}
-										>
+										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm pointer-events-none"
+												class="radio radio-primary radio-sm"
 												checked={orderBy === 'name'}
-												tabindex="-1"
+												on:change={() => updateSort('name', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.name')}</span>
 										</label>
-										<label
-											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
-											on:click={() => updateSort('date', orderDirection)}
-										>
+										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm pointer-events-none"
+												class="radio radio-primary radio-sm"
 												checked={orderBy === 'date'}
-												tabindex="-1"
+												on:change={() => updateSort('date', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.date')}</span>
 										</label>
-										<label
-											class="label cursor-pointer justify-start gap-3 py-1 min-h-0"
-											on:click={() => updateSort('rating', orderDirection)}
-										>
+										<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
 											<input
 												type="radio"
 												name="order_by"
-												class="radio radio-primary radio-sm pointer-events-none"
+												class="radio radio-primary radio-sm"
 												checked={orderBy === 'rating'}
-												tabindex="-1"
+												on:change={() => updateSort('rating', orderDirection)}
 											/>
 											<span class="label-text">{$t('adventures.rating')}</span>
 										</label>

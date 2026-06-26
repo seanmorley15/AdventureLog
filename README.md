@@ -63,21 +63,30 @@ Built for travelers who want to track, plan, and remember their travel experienc
       <strong>Locations</strong> — browse, filter, categorize &amp; organize
     </td>
     <td width="50%" align="center">
-      <img src="brand/screenshots/itinerary.png" alt="Trip itinerary planner with map and calendar views" width="100%" />
-      <br />
-      <strong>Trip planning</strong> — itineraries, notes &amp; daily activities
-    </td>
-  </tr>
-  <tr>
-    <td width="50%" align="center">
       <img src="brand/screenshots/dashboard.png" alt="Travel statistics dashboard" width="100%" />
       <br />
       <strong>Dashboard</strong> — travel stats, progress &amp; milestones
     </td>
+  </tr>
+</table>
+
+<p align="center">
+  <img src="brand/screenshots/itinerary.png" alt="Trip itinerary planner with daily activities and lodging" width="520" />
+  <br />
+  <strong>Trip planning</strong> — itineraries, notes &amp; daily activities
+</p>
+
+<table>
+  <tr>
     <td width="50%" align="center">
       <img src="brand/screenshots/countries.png" alt="World travel book with countries visited" width="100%" />
       <br />
       <strong>World travel</strong> — countries, regions &amp; bucket lists
+    </td>
+    <td width="50%" align="center">
+      <img src="brand/screenshots/trip_stats.png" alt="Trip statistics with geographic breakdown and timeline" width="100%" />
+      <br />
+      <strong>Trip stats</strong> — costs, geography &amp; per-trip milestones
     </td>
   </tr>
 </table>

@@ -2,7 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
-	import { appVersion, copyrightYear, versionChangelog } from '$lib/config';
+	import { copyrightYear, versionChangelog } from '$lib/config';
+	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
 
 	const dispatch = createEventDispatcher();
 	let modal: HTMLDialogElement;
@@ -81,7 +82,7 @@
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						<div>
 							<div class="text-sm text-base-content/60">{$t('about.version')}</div>
-							<div class="text-lg font-bold text-primary">{appVersion}</div>
+							<AppVersionDisplay />
 							<a
 								href={versionChangelog}
 								target="_blank"
