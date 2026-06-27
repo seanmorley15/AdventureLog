@@ -19,7 +19,7 @@ const features = [
     title: "Track your world travel",
     summary: "See how far you've gone — and what's still on the list.",
     details:
-      "Mark countries, regions, and cities as visited. View travel stats on your dashboard and explore your progress with maps built for bucket lists and lifetime goals.",
+      "Mark countries, regions, and cities as visited. View travel stats on your dashboard and explore your progress with maps built for travel planning and tracking.",
   },
 ];
 </script>

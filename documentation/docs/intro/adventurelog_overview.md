@@ -53,7 +53,7 @@ AdventureLog is a modern travel companion you run yourself. Track locations and 
   <span class="al-overview-feature__icon" aria-hidden="true">🌍</span>
   <div class="al-overview-feature__body">
     <h3>Track your world travel</h3>
-    <p>Countries, regions, and cities on an interactive map — stats, milestones, and bucket lists.</p>
+    <p>Countries, regions, and cities on an interactive map — stats, milestones, and history.</p>
   </div>
 </div>
 

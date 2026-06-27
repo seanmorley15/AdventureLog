@@ -81,7 +81,7 @@ Built for travelers who want to track, plan, and remember their travel experienc
     <td width="50%" align="center">
       <img src="brand/screenshots/countries.png" alt="World travel book with countries visited" width="100%" />
       <br />
-      <strong>World travel</strong> — countries, regions &amp; bucket lists
+      <strong>World travel</strong> — countries, regions &amp; cities
     </td>
     <td width="50%" align="center">
       <img src="brand/screenshots/trip_stats.png" alt="Trip statistics with geographic breakdown and timeline" width="100%" />

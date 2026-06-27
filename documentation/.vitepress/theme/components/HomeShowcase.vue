@@ -41,7 +41,7 @@ const tabs = [
     id: "world",
     label: "World Travel",
     title: "Countries & regions explorer",
-    desc: "Mark countries and regions as visited with interactive maps. Perfect for bucket lists and lifetime travel goals.",
+    desc: "Mark countries and regions as visited with interactive maps. Perfect for seeing your travel history.",
     src: `${SHOT}/countries.png`,
     alt: "AdventureLog countries and regions visited tracker",
   },
