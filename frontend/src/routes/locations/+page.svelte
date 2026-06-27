@@ -5,7 +5,6 @@
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import CategoryModal from '$lib/components/CategoryModal.svelte';
 	import type { Location } from '$lib/types';
-	import { tick } from 'svelte';
 	import { t } from 'svelte-i18n';
 
 	import Plus from '~icons/mdi/plus';
@@ -24,12 +23,11 @@
 	let adventures: Location[] = [];
 	let count = 0;
 	let totalPages = 1;
-	let typeString = '';
 
 	$: adventures = data?.props?.adventures ?? [];
 	$: count = data?.props?.count ?? 0;
 	$: totalPages = Math.max(1, Math.ceil(count / resultsPerPage));
-	$: typeString = $page.url.searchParams.get('types') ?? '';
+	$: categoryTypes = $page.url.searchParams.get('types') ?? '';
 	$: orderBy = $page.url.searchParams.get('order_by') || 'updated_at';
 	$: orderDirection = $page.url.searchParams.get('order_direction') || 'asc';
 	$: isVisitedFilter = $page.url.searchParams.get('is_visited') || 'all';
@@ -70,9 +68,7 @@
 		const url = new URL($page.url);
 
 		const types =
-			overrides.types !== undefined
-				? overrides.types
-				: (url.searchParams.get('types') ?? typeString);
+			overrides.types !== undefined ? overrides.types : (url.searchParams.get('types') ?? '');
 		const nextIsVisited = overrides.is_visited ?? url.searchParams.get('is_visited') ?? 'all';
 		const nextOrderBy = overrides.order_by ?? url.searchParams.get('order_by') ?? 'updated_at';
 		const nextOrderDirection =
@@ -103,9 +99,8 @@
 		await invalidate('locations:list');
 	}
 
-	async function onCategoryChange() {
-		await tick();
-		await applyLocationFilters({ types: typeString });
+	async function onCategoryChange(event: CustomEvent<{ types: string }>) {
+		await applyLocationFilters({ types: event.detail.types });
 	}
 
 	async function updateVisitedFilter(value: string) {
@@ -288,7 +283,12 @@
 
 		<!-- Sidebar -->
 		<div class="drawer-side z-50">
-			<label for="my-drawer" class="drawer-overlay"></label>
+			<label
+				for="my-drawer"
+				class="drawer-overlay lg:hidden"
+				class:pointer-events-none={!sidebarOpen}
+				aria-hidden={!sidebarOpen}
+			></label>
 			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
 				<div class="p-6">
 					<div class="flex items-center gap-3 mb-8">
@@ -304,7 +304,7 @@
 								<Tag class="w-5 h-5" />
 								{$t('adventures.categories')}
 							</h3>
-							<CategoryFilterDropdown bind:types={typeString} on:change={onCategoryChange} />
+							<CategoryFilterDropdown types={categoryTypes} on:change={onCategoryChange} />
 							<button
 								type="button"
 								on:click={() => (is_category_modal_open = true)}

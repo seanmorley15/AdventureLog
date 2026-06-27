@@ -12,13 +12,18 @@
 	$: sortedAdventureTypes = [...adventure_types].sort((a, b) => {
 		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
 		if (usageDiff !== 0) return usageDiff;
-		return a.display_name.localeCompare(b.display_name);
+		return (a.display_name || '').localeCompare(b.display_name || '');
 	});
 
 	onMount(async () => {
-		const categoryFetch = await fetch('/api/categories');
-		const categoryData = await categoryFetch.json();
-		adventure_types = categoryData;
+		try {
+			const categoryFetch = await fetch('/api/categories');
+			const categoryData = await categoryFetch.json();
+			adventure_types = Array.isArray(categoryData) ? categoryData : [];
+		} catch (err) {
+			console.error('Failed to load categories:', err);
+			adventure_types = [];
+		}
 	});
 
 	$: {
@@ -26,20 +31,17 @@
 	}
 
 	function clearTypes() {
-		types = '';
 		types_arr = [];
-		dispatch('change', { types });
+		dispatch('change', { types: '' });
 	}
 
 	function toggleSelect(type: string) {
-		if (types_arr.indexOf(type) > -1) {
+		if (types_arr.includes(type)) {
 			types_arr = types_arr.filter((item) => item !== type);
 		} else {
-			types_arr.push(type);
+			types_arr = [...types_arr, type];
 		}
-		types_arr = types_arr.filter((item) => item !== '');
-		types = types_arr.join(',');
-		dispatch('change', { types });
+		dispatch('change', { types: types_arr.join(',') });
 	}
 </script>
 
