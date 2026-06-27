@@ -12,7 +12,10 @@ logger = logging.getLogger(__name__)
 
 
 class IntegrationError(Exception):
-    pass
+    def __init__(self, user_message: str, *, status_code: int | None = None):
+        super().__init__(user_message)
+        self.user_message = user_message
+        self.status_code = status_code
 
 
 TRAIL_CACHE_TIMEOUT = getattr(settings, 'WANDERER_TRAIL_CACHE_TIMEOUT', 60 * 15)
@@ -123,10 +126,12 @@ def validate_wanderer_connection(server_url: str, api_key: str) -> str:
 
     if last_status == 404:
         raise IntegrationError(
-            'Wanderer API endpoint not found. Check the server URL points to your Wanderer instance.'
+            'Wanderer API endpoint not found. Check the server URL points to your Wanderer instance.',
+            status_code=404,
         )
     raise IntegrationError(
-        f'Wanderer server rejected the connection request (HTTP {last_status}).'
+        f'Wanderer server rejected the connection request (HTTP {last_status}).',
+        status_code=last_status,
     )
 
 
@@ -155,11 +160,15 @@ def make_wanderer_request(
     except requests.HTTPError as exc:
         if exc.response is not None and exc.response.status_code in (401, 403):
             raise IntegrationError('Invalid or revoked Wanderer API key.') from exc
+        status_code = exc.response.status_code if exc.response is not None else None
         logger.error("Error making %s request to %s: %s", method, url, exc)
-        raise IntegrationError(f'Error communicating with Wanderer: {exc}') from exc
+        raise IntegrationError(
+            'Unable to communicate with Wanderer server.',
+            status_code=status_code,
+        ) from exc
     except requests.RequestException as exc:
         logger.error("Error making %s request to %s: %s", method, url, exc)
-        raise IntegrationError(f'Error communicating with Wanderer: {exc}') from exc
+        raise IntegrationError('Unable to communicate with Wanderer server.') from exc
 
 
 def fetch_trail_by_id(
@@ -197,7 +206,7 @@ def fetch_trail_by_id(
                 break
             except IntegrationError as exc:
                 last_error = exc
-                if '404' in str(exc):
+                if exc.status_code == 404:
                     continue
                 raise
 

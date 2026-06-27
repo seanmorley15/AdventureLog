@@ -15,6 +15,11 @@ on:
         type: boolean
         default: false
 
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
 concurrency:
   group: images-${{ inputs.tag }}
   cancel-in-progress: true
@@ -22,6 +27,8 @@ concurrency:
 jobs:
   changes:
     if: ${{ inputs.filter_paths }}
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     outputs:
       frontend: ${{ steps.flags.outputs.frontend }}

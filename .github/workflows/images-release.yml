@@ -4,6 +4,11 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
 jobs:
   build:
     uses: ./.github/workflows/_build-images.yml

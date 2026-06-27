@@ -1,9 +1,13 @@
+import logging
+
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from adventures.serializers import SearchHitSerializer
 from adventures.services.search import SearchValidationError, global_search
+
+logger = logging.getLogger(__name__)
 
 
 class GlobalSearchView(viewsets.ViewSet):
@@ -38,7 +42,8 @@ class GlobalSearchView(viewsets.ViewSet):
                 offset=offset,
             )
         except SearchValidationError as exc:
-            return Response({'error': str(exc)}, status=400)
+            logger.warning('Global search validation failed: %s', exc.message)
+            return Response({'error': exc.message}, status=400)
 
         serializer = SearchHitSerializer(payload['results'], many=True)
         return Response(

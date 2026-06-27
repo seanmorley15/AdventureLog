@@ -58,7 +58,9 @@ TYPE_SORT_PRIORITY: dict[str, int] = {
 
 
 class SearchValidationError(ValueError):
-    pass
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
 
 
 def _tokenize(term: str) -> list[str]:

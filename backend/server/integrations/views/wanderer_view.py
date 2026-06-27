@@ -1,3 +1,5 @@
+import logging
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +15,8 @@ from integrations.wanderer_services import (
     make_wanderer_request,
     validate_wanderer_connection,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class WandererIntegrationViewSet(viewsets.ViewSet):
@@ -41,7 +45,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
         try:
             normalized_url = validate_wanderer_connection(server_url, api_key)
         except IntegrationError as exc:
-            raise ValidationError({'error': str(exc)})
+            logger.warning('Wanderer connection validation failed during create: %s', exc.user_message)
+            raise ValidationError({'error': exc.user_message})
 
         inst = WandererIntegration.objects.create(
             user=request.user,
@@ -69,7 +74,8 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
         try:
             normalized_url = validate_wanderer_connection(server_url, api_key)
         except IntegrationError as exc:
-            raise ValidationError({'error': str(exc)})
+            logger.warning('Wanderer connection validation failed during update: %s', exc.user_message)
+            raise ValidationError({'error': exc.user_message})
 
         inst.server_url = normalized_url
         inst.api_key = api_key.strip()
@@ -104,8 +110,13 @@ class WandererIntegrationViewSet(viewsets.ViewSet):
                 return Response(response.json())
             except IntegrationError as exc:
                 last_error = exc
-                if '404' in str(exc):
+                if exc.status_code == 404:
                     continue
-                raise ValidationError({'detail': str(exc)})
+                logger.warning('Wanderer trails request failed: %s', exc.user_message)
+                raise ValidationError({'detail': 'Unable to fetch trails from Wanderer at this time.'})
 
-        raise ValidationError({'detail': str(last_error)})
+        logger.warning(
+            'Wanderer trails request failed for all known paths',
+            exc_info=last_error,
+        )
+        raise ValidationError({'detail': 'Unable to fetch trails from Wanderer at this time.'})

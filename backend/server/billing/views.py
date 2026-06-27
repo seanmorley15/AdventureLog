@@ -1,4 +1,5 @@
 from datetime import datetime, timezone as dt_timezone
+import logging
 
 import stripe
 from django.conf import settings
@@ -13,6 +14,8 @@ from rest_framework.views import APIView
 from cloud.utils import get_or_create_subscription
 from .models import Subscription
 from .serializers import SubscriptionSerializer
+
+logger = logging.getLogger(__name__)
 
 
 def _get_billing_email(user):
@@ -175,8 +178,9 @@ class CreateCheckoutSessionView(APIView):
         try:
             session = stripe.checkout.Session.create(**checkout_params)
         except stripe.error.StripeError as exc:
+            logger.exception('Failed to create Stripe checkout session: %s', exc)
             return Response(
-                {"detail": str(exc)},
+                {"detail": "Unable to create checkout session at this time."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
@@ -214,8 +218,9 @@ class CreatePortalSessionView(APIView):
                 return_url=f"{settings.FRONTEND_URL}/subscribe",
             )
         except stripe.error.StripeError as exc:
+            logger.exception('Failed to create Stripe billing portal session: %s', exc)
             return Response(
-                {"detail": str(exc)},
+                {"detail": "Unable to create billing portal session at this time."},
                 status=status.HTTP_502_BAD_GATEWAY,
             )
 
