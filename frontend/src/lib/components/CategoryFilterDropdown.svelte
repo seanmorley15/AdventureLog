@@ -9,6 +9,12 @@
 	let adventure_types: Category[] = [];
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
+	$: sortedAdventureTypes = [...adventure_types].sort((a, b) => {
+		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+		if (usageDiff !== 0) return usageDiff;
+		return a.display_name.localeCompare(b.display_name);
+	});
+
 	onMount(async () => {
 		const categoryFetch = await fetch('/api/categories');
 		const categoryData = await categoryFetch.json();
@@ -52,7 +58,7 @@
 		</p>
 	{:else}
 		<div class="max-h-40 overflow-y-auto space-y-1 -mx-1 px-1">
-			{#each adventure_types as type (type.id)}
+			{#each sortedAdventureTypes as type (type.id)}
 				<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
 					<input
 						type="checkbox"

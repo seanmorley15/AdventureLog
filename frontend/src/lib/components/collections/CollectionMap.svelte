@@ -413,12 +413,15 @@
 
 	// Build features and apply filters
 	$: categoryOptions = Array.from(
-		new Set(
-			(collection?.locations || [])
-				.map((loc: any) => loc?.category?.display_name)
-				.filter((name: string | null | undefined) => Boolean(name))
-		)
-	).sort();
+		(collection?.locations || []).reduce((counts, loc: any) => {
+			const name = loc?.category?.display_name;
+			if (name) counts.set(name, (counts.get(name) || 0) + 1);
+			return counts;
+		}, new Map<string, number>())
+	)
+		.entries()
+		.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+		.map(([name]) => name);
 
 	$: locationFeatures = (collection?.locations || [])
 		.map(locationToFeature)
