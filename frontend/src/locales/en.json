@@ -831,7 +831,8 @@
 		"current_items": "Current Items",
 		"completed": "Completed",
 		"no_items_yet": "No Items Yet",
-		"add_your_first_item": "Add your first item"
+		"add_your_first_item": "Add your first item",
+		"more_items": "More Items"
 	},
 	"transportation": {
 		"transportation_deleted": "Transportation deleted successfully!",
