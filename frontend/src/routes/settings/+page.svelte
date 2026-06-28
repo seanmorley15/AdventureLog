@@ -141,6 +141,51 @@
 		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
 	];
 
+	$: profileSharingImpact =
+		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0);
+
+	function handlePublicProfileToggle(nextValue: boolean) {
+		if (
+			user.public_profile &&
+			!nextValue &&
+			profileSharingImpact > 0 &&
+			!confirm(
+				$t('settings.public_profile_private_confirm', {
+					values: {
+						shared: user.shared_collection_count ?? 0,
+						invites: user.pending_collection_invite_count ?? 0
+					}
+				})
+			)
+		) {
+			return;
+		}
+
+		user.public_profile = nextValue;
+	}
+
+	function profileUpdateToastMessage(form: {
+		left_shared_collections?: number;
+		revoked_collection_invites?: number;
+	}) {
+		const messages: string[] = [$t('settings.update_success')];
+		const leftShared = form.left_shared_collections ?? 0;
+		const revokedInvites = form.revoked_collection_invites ?? 0;
+
+		if (leftShared > 0) {
+			messages.push(
+				$t('settings.public_profile_left_collections', { values: { count: leftShared } })
+			);
+		}
+		if (revokedInvites > 0) {
+			messages.push(
+				$t('settings.public_profile_revoked_invites', { values: { count: revokedInvites } })
+			);
+		}
+
+		return messages.join(' ');
+	}
+
 	onMount(async () => {
 		if (browser) {
 			const queryParams = new URLSearchParams($page.url.search);
@@ -155,7 +200,19 @@
 
 	$: {
 		if (browser && $page.form?.success) {
-			window.location.href = '/settings?page=success';
+			const leftShared = $page.form.left_shared_collections ?? 0;
+			const revokedInvites = $page.form.revoked_collection_invites ?? 0;
+			if (leftShared > 0 || revokedInvites > 0) {
+				addToast('success', profileUpdateToastMessage($page.form));
+				user.shared_collection_count = 0;
+				user.pending_collection_invite_count = Math.max(
+					0,
+					(user.pending_collection_invite_count ?? 0) - revokedInvites
+				);
+				window.location.href = '/settings?tab=profile';
+			} else {
+				window.location.href = '/settings?page=success';
+			}
 		}
 		if (browser && $page.form?.error) {
 			addToast('error', $t('settings.update_error'));
@@ -634,7 +691,9 @@
 										<label class="label cursor-pointer justify-start gap-4">
 											<input
 												type="checkbox"
-												bind:checked={user.public_profile}
+												checked={user.public_profile}
+												on:change={(event) =>
+													handlePublicProfileToggle(event.currentTarget.checked)}
 												name="public_profile"
 												class="toggle toggle-primary"
 											/>
@@ -643,6 +702,20 @@
 												<p class="text-sm text-base-content/60">
 													{$t('settings.public_profile_desc')}
 												</p>
+												{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
+													<p class="text-sm text-warning mt-2">
+														{$t('settings.public_profile_sharing_warning', {
+															values: { count: user.shared_collection_count ?? 0 }
+														})}
+													</p>
+												{/if}
+												{#if user.public_profile && (user.pending_collection_invite_count ?? 0) > 0}
+													<p class="text-sm text-warning mt-2">
+														{$t('settings.public_profile_invite_warning', {
+															values: { count: user.pending_collection_invite_count ?? 0 }
+														})}
+													</p>
+												{/if}
 											</div>
 										</label>
 									</div>

@@ -336,7 +336,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User UUID is required"}, status=400)
         
         try:
-            user = User.objects.get(uuid=uuid, public_profile=True)
+            user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         
@@ -430,7 +430,7 @@ class CollectionViewSet(viewsets.ModelViewSet):
             return Response({"error": "User UUID is required"}, status=400)
         
         try:
-            user = User.objects.get(uuid=uuid, public_profile=True)
+            user = User.objects.get(uuid=uuid)
         except User.DoesNotExist:
             return Response({"error": "User not found"}, status=404)
         

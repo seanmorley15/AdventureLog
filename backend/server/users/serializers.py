@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 
-from adventures.models import Collection
+from adventures.models import Collection, CollectionInvite
 
 User = get_user_model()
 
@@ -78,11 +78,26 @@ class UserDetailsSerializer(serializers.ModelSerializer):
 
     def handle_public_profile_change(self, instance, validated_data):
         """
-        Remove user from `shared_with` if public profile is set to False.
+        Leaving shared collections when a profile becomes private is intentional:
+        private profiles are not discoverable for new shares, and collaborators
+        should not retain access through a relationship that started via public discovery.
         """
         if 'public_profile' in validated_data and not validated_data['public_profile']:
-            for collection in Collection.objects.filter(shared_with=instance):
+            shared_collections = list(Collection.objects.filter(shared_with=instance))
+            left_count = len(shared_collections)
+            for collection in shared_collections:
                 collection.shared_with.remove(instance)
+
+            pending_invites = CollectionInvite.objects.filter(invited_user=instance)
+            invite_count = pending_invites.count()
+            pending_invites.delete()
+
+            self._sharing_impact = {
+                'left_shared_collections': left_count,
+                'revoked_collection_invites': invite_count,
+            }
+        else:
+            self._sharing_impact = None
 
     def update(self, instance, validated_data):
         self.handle_public_profile_change(instance, validated_data)
@@ -99,11 +114,32 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
     """
 
     has_password = serializers.SerializerMethodField()
+    shared_collection_count = serializers.SerializerMethodField()
+    pending_collection_invite_count = serializers.SerializerMethodField()
 
     class Meta(UserDetailsSerializer.Meta):
         model = CustomUser
-        fields = UserDetailsSerializer.Meta.fields + ['has_password', 'disable_password']
-        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + ('uuid', 'has_password', 'disable_password')
+        fields = UserDetailsSerializer.Meta.fields + [
+            'has_password',
+            'disable_password',
+            'shared_collection_count',
+            'pending_collection_invite_count',
+        ]
+        read_only_fields = UserDetailsSerializer.Meta.read_only_fields + (
+            'uuid',
+            'has_password',
+            'disable_password',
+            'shared_collection_count',
+            'pending_collection_invite_count',
+        )
+
+    @staticmethod
+    def get_shared_collection_count(instance):
+        return Collection.objects.filter(shared_with=instance).count()
+
+    @staticmethod
+    def get_pending_collection_invite_count(instance):
+        return CollectionInvite.objects.filter(invited_user=instance).count()
 
     @staticmethod
     def get_has_password(instance):
@@ -126,6 +162,10 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
         representation.pop('pk', None)
         # Remove the email field
         representation.pop('email', None)
+
+        sharing_impact = getattr(self, '_sharing_impact', None)
+        if sharing_impact:
+            representation.update(sharing_impact)
 
         return representation
 

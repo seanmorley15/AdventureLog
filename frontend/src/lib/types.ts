@@ -21,6 +21,10 @@ export type User = {
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
 	map_style: string;
+	shared_collection_count?: number;
+	pending_collection_invite_count?: number;
+	left_shared_collections?: number;
+	revoked_collection_invites?: number;
 };
 
 export type MediaUsage = {

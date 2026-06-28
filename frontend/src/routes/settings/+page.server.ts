@@ -257,7 +257,11 @@ export const actions: Actions = {
 				return fail(res.status, response);
 			}
 
-			return { success: true };
+			return {
+				success: true,
+				left_shared_collections: response.left_shared_collections ?? 0,
+				revoked_collection_invites: response.revoked_collection_invites ?? 0
+			};
 		} catch (error) {
 			console.error('Error:', error);
 			return { error: 'settings.generic_error' };
