@@ -156,13 +156,10 @@
 	}
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 <dialog id="social_share_modal" class="modal backdrop-blur-sm">
-	<div
-		class="modal-box w-11/12 max-w-3xl p-6 space-y-5"
-		role="dialog"
-		tabindex="0"
-		on:keydown={handleKeydown}
-	>
+	<div class="modal-box w-11/12 max-w-3xl p-6 space-y-5">
 		<div class="flex items-center justify-between border-b border-base-300 pb-4">
 			<div class="flex items-center gap-3">
 				<div class="p-2 bg-primary/10 rounded-xl">

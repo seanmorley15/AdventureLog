@@ -320,19 +320,22 @@
 		isSaving = true;
 
 		try {
+			const persistedId =
+				(lodgingToEdit && lodgingToEdit.id) || (lodging as { id?: string }).id || null;
+
 			// If we're editing and the original location had collection, but the form's collection
 			// is empty (i.e. user didn't modify collection), omit collection from payload so the
 			// server doesn't clear them unintentionally.
-			if (lodgingToEdit && lodgingToEdit.id) {
+			if (persistedId) {
 				if (
 					(!payload.collection || payload.collection.length === 0) &&
-					lodgingToEdit.collection &&
+					lodgingToEdit?.collection &&
 					lodgingToEdit.collection.length > 0
 				) {
 					delete payload.collection;
 				}
 
-				let res = await fetch(`/api/lodging/${lodgingToEdit.id}`, {
+				let res = await fetch(`/api/lodging/${persistedId}`, {
 					method: 'PATCH',
 					headers: {
 						'Content-Type': 'application/json'

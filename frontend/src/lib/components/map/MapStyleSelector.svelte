@@ -29,6 +29,7 @@
 	);
 
 	let dropdownOpen = false;
+	let dropdownEl: HTMLDivElement;
 
 	function selectBasemap(value: string) {
 		basemapType = value;
@@ -39,20 +40,22 @@
 		dropdownOpen = !dropdownOpen;
 	}
 
-	function closeDropdown() {
+	function closeDropdown(event: MouseEvent) {
+		if (!dropdownOpen) return;
+		if (dropdownEl?.contains(event.target as Node)) return;
 		dropdownOpen = false;
 	}
 </script>
 
 <svelte:window on:click={closeDropdown} />
 
-<div class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
+<div bind:this={dropdownEl} class="{dropdownClass} {dropdownOpen ? 'dropdown-open' : ''}">
 	<button
 		type="button"
 		class="btn btn-sm btn-ghost gap-1.5 min-h-0 h-8 px-2 sm:px-3"
 		aria-haspopup="menu"
 		aria-expanded={dropdownOpen}
-		on:click|stopPropagation={toggleDropdown}
+		on:click={toggleDropdown}
 	>
 		<MapIcon class="w-4 h-4 shrink-0" />
 		<span class="text-xs font-medium hidden sm:inline truncate max-w-[5.5rem] md:max-w-none">
@@ -67,7 +70,7 @@
 		<div
 			class="dropdown-content z-[100] shadow-xl bg-base-100 rounded-xl border border-base-300 w-56 sm:w-60 p-0"
 			role="menu"
-			on:click|stopPropagation
+			tabindex="-1"
 		>
 			<div class="px-3 py-2 border-b border-base-300/80">
 				<p class="text-[11px] font-semibold uppercase tracking-wide text-base-content/50">
@@ -93,7 +96,7 @@
 											option.value
 												? 'bg-primary/15 text-primary font-medium'
 												: 'hover:bg-base-200/80'}"
-											on:click|stopPropagation={() => selectBasemap(option.value)}
+											on:click={() => selectBasemap(option.value)}
 											role="menuitemradio"
 											aria-checked={basemapType === option.value}
 										>
