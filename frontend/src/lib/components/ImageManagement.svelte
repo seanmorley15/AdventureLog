@@ -11,6 +11,7 @@
 	import CheckIcon from '~icons/mdi/check';
 	import CloseIcon from '~icons/mdi/close';
 	import ImageIcon from '~icons/mdi/image';
+	import GoogleIcon from '~icons/mdi/google';
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from './ImmichSelect.svelte';
@@ -22,6 +23,8 @@
 	export let defaultSearchTerm: string = '';
 	export let immichIntegration: boolean = false;
 	export let copyImmichLocally: boolean = false;
+	/** Google photo URLs from place search; imported only when the user chooses. */
+	export let pendingGooglePhotoUrls: string[] = [];
 
 	// Component state
 	let fileInput: HTMLInputElement;
@@ -30,6 +33,17 @@
 	let imageError: string = '';
 	let wikiImageError: string = '';
 	let isLoading: boolean = false;
+	let importingGooglePhotos = false;
+	let googlePhotoError = '';
+	let deselectedGooglePhotoUrls = new Set<string>();
+
+	$: selectedGooglePhotoUrls = pendingGooglePhotoUrls.filter(
+		(url) => !deselectedGooglePhotoUrls.has(url)
+	);
+
+	$: if (pendingGooglePhotoUrls.length === 0) {
+		deselectedGooglePhotoUrls = new Set();
+	}
 
 	// Wikipedia image selection
 	let wikiImageResults: Array<{
@@ -348,6 +362,73 @@
 	$: if (defaultSearchTerm && !imageSearch) {
 		imageSearch = defaultSearchTerm;
 	}
+
+	function toggleGooglePhotoSelection(url: string) {
+		if (deselectedGooglePhotoUrls.has(url)) {
+			deselectedGooglePhotoUrls.delete(url);
+		} else {
+			deselectedGooglePhotoUrls.add(url);
+		}
+		deselectedGooglePhotoUrls = deselectedGooglePhotoUrls;
+	}
+
+	async function importGooglePhotos(urls: string[]) {
+		if (!objectId || urls.length === 0) return;
+
+		importingGooglePhotos = true;
+		importInProgress = true;
+		googlePhotoError = '';
+
+		try {
+			const res = await fetch('/api/images/import_from_urls/', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					content_type: contentType,
+					object_id: objectId,
+					urls
+				})
+			});
+
+			if (!res.ok) {
+				googlePhotoError = $t('adventures.google_photos_import_error');
+				addToast('warning', $t('adventures.google_photos_import_error'));
+				return;
+			}
+
+			const data = await res.json();
+			if (Array.isArray(data.created) && data.created.length > 0) {
+				const existingIds = new Set(images.map((img) => img.id));
+				const imported = data.created
+					.filter((img: ContentImage) => !existingIds.has(img.id))
+					.map((img: { id: string; image: string; immich_id?: string | null }) =>
+						createImageFromData(img)
+					);
+				images = [...images, ...imported];
+				dispatch('imagesUpdated', images);
+				addToast('success', $t('adventures.google_photos_import_success'));
+			}
+
+			const importedUrls = new Set(urls);
+			pendingGooglePhotoUrls = pendingGooglePhotoUrls.filter((url) => !importedUrls.has(url));
+		} catch {
+			googlePhotoError = $t('adventures.google_photos_import_error');
+			addToast('warning', $t('adventures.google_photos_import_error'));
+		} finally {
+			importingGooglePhotos = false;
+			importInProgress = false;
+		}
+	}
+
+	function importAllGooglePhotos() {
+		void importGooglePhotos([...pendingGooglePhotoUrls]);
+	}
+
+	function importSelectedGooglePhotos() {
+		void importGooglePhotos([...selectedGooglePhotoUrls]);
+	}
 </script>
 
 <div class="card bg-base-100 border border-base-300 shadow-lg">
@@ -513,6 +594,103 @@
 				</div>
 			{/if}
 		</div>
+
+		{#if pendingGooglePhotoUrls.length > 0}
+			<div class="bg-base-50 p-4 rounded-lg border border-base-200 mb-6 relative">
+				<div class="flex items-center gap-3 mb-3">
+					<div class="p-2 bg-primary/10 rounded-lg">
+						<GoogleIcon class="w-5 h-5 text-primary" />
+					</div>
+					<div class="flex-1">
+						<h4 class="font-medium text-base-content/80">
+							{$t('adventures.google_photos_available', {
+								values: { count: pendingGooglePhotoUrls.length }
+							})}
+						</h4>
+						<p class="text-sm text-base-content/60">
+							{$t('adventures.google_photos_select_hint')}
+						</p>
+					</div>
+				</div>
+
+				<div class="relative mb-4">
+					<div
+						class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 transition-opacity duration-200 {importingGooglePhotos
+							? 'opacity-40 pointer-events-none'
+							: ''}"
+					>
+						{#each pendingGooglePhotoUrls as url, i (url + '-' + i)}
+							<button
+								type="button"
+								class="relative aspect-square overflow-hidden rounded-lg border-2 transition-all cursor-pointer group {!deselectedGooglePhotoUrls.has(
+									url
+								)
+									? 'border-primary ring-2 ring-primary/30'
+									: 'border-base-300 opacity-70 hover:opacity-100'}"
+								on:click={() => toggleGooglePhotoSelection(url)}
+								disabled={importingGooglePhotos || !objectId}
+							>
+								<img
+									src={url}
+									alt="Google place photo"
+									class="w-full h-full object-cover"
+									loading="lazy"
+								/>
+								{#if !deselectedGooglePhotoUrls.has(url)}
+									<div
+										class="absolute top-1 right-1 bg-primary text-primary-content rounded-full p-0.5"
+									>
+										<CheckIcon class="h-3 w-3" />
+									</div>
+								{/if}
+							</button>
+						{/each}
+					</div>
+
+					{#if importingGooglePhotos}
+						<div
+							class="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-lg bg-base-100/60 backdrop-blur-[2px]"
+							role="status"
+							aria-live="polite"
+						>
+							<span class="loading loading-spinner loading-md text-primary"></span>
+							<span class="text-sm font-medium text-base-content/80">
+								{$t('adventures.google_photos_importing')}
+							</span>
+						</div>
+					{/if}
+				</div>
+
+				<div class="flex flex-wrap gap-2">
+					<button
+						type="button"
+						class="btn btn-primary btn-sm"
+						disabled={importingGooglePhotos || !objectId || pendingGooglePhotoUrls.length === 0}
+						on:click={importAllGooglePhotos}
+					>
+						{$t('adventures.google_photos_import_all')}
+					</button>
+					<button
+						type="button"
+						class="btn btn-outline btn-sm"
+						disabled={importingGooglePhotos || !objectId || selectedGooglePhotoUrls.length === 0}
+						on:click={importSelectedGooglePhotos}
+					>
+						{$t('adventures.google_photos_import_selected')}
+					</button>
+				</div>
+
+				{#if !objectId}
+					<p class="text-sm text-warning mt-2">Save the item first to import Google photos.</p>
+				{/if}
+
+				{#if googlePhotoError}
+					<div class="alert alert-error mt-2 py-2">
+						<span class="text-sm">{googlePhotoError}</span>
+					</div>
+				{/if}
+			</div>
+		{/if}
 
 		<!-- Image Gallery -->
 		{#if images.length > 0}

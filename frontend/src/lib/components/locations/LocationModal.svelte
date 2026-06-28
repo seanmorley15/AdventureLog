@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Collection, Location, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
 	import { extractGooglePhotoUrls } from '$lib/map/places';
@@ -27,7 +26,6 @@
 	let googleMapsEnabled = false;
 	let isEditMode = false;
 	let pendingGooglePhotoUrls: string[] = [];
-	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
@@ -111,44 +109,6 @@
 		);
 		if (photos.length > 0) {
 			pendingGooglePhotoUrls = photos;
-		}
-	}
-
-	async function importPendingGoogleImages(locationId: string) {
-		if (!locationId || pendingGooglePhotoUrls.length === 0) return;
-		importingGooglePhotos = true;
-
-		try {
-			const res = await fetch('/api/images/import_from_urls/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					content_type: 'location',
-					object_id: locationId,
-					urls: pendingGooglePhotoUrls
-				})
-			});
-
-			if (!res.ok) {
-				addToast('warning', 'Location saved, but Google photos could not be imported');
-				return;
-			}
-
-			const data = await res.json();
-			if (Array.isArray(data.created) && data.created.length > 0) {
-				const existingImages = Array.isArray(location.images) ? location.images : [];
-				const existingIds = new Set(existingImages.map((img: any) => img.id));
-				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
-				location.images = [...existingImages, ...imported];
-			}
-
-			pendingGooglePhotoUrls = [];
-		} catch {
-			addToast('warning', 'Location saved, but Google photos import failed');
-		} finally {
-			importingGooglePhotos = false;
 		}
 	}
 
@@ -475,9 +435,6 @@
 
 					if (location.id) {
 						setStep(2);
-						if (pendingGooglePhotoUrls.length > 0) {
-							void importPendingGoogleImages(location.id);
-						}
 					} else {
 						// Stay on details if save failed (no ID returned)
 						setStep(1);
@@ -486,16 +443,11 @@
 			/>
 		{/if}
 		{#if steps[2].selected}
-			{#if importingGooglePhotos}
-				<div class="alert alert-info mb-4">
-					<span class="loading loading-spinner loading-sm"></span>
-					<span>Importing Google photos in the background. They will appear here shortly.</span>
-				</div>
-			{/if}
 			<LocationMedia
 				bind:images={location.images}
 				bind:attachments={location.attachments}
 				bind:trails={location.trails}
+				bind:pendingGooglePhotoUrls
 				itemName={location.name}
 				userIsOwner={user?.uuid === location.user?.uuid}
 				on:back={() => setStep(1)}

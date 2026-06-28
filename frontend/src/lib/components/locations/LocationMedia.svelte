@@ -34,6 +34,7 @@
 	export let itemId: string = '';
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	export let userIsOwner: boolean = false;
+	export let pendingGooglePhotoUrls: string[] = [];
 
 	// Component state
 	let immichIntegration: boolean = false;
@@ -371,6 +372,7 @@
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
+			bind:pendingGooglePhotoUrls
 			objectId={itemId}
 			contentType="location"
 			defaultSearchTerm={itemName}

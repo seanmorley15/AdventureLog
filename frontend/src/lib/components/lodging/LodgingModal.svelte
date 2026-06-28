@@ -24,7 +24,6 @@
 	let googleMapsEnabled = false;
 	let isEditMode = false;
 	let pendingGooglePhotoUrls: string[] = [];
-	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
@@ -102,45 +101,6 @@
 		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
 			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
 			: [];
-	}
-
-	async function importPendingGoogleImages(lodgingId: string) {
-		if (!lodgingId || pendingGooglePhotoUrls.length === 0) return;
-		importingGooglePhotos = true;
-
-		try {
-			const res = await fetch('/api/images/import_from_urls/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					content_type: 'lodging',
-					object_id: lodgingId,
-					urls: pendingGooglePhotoUrls
-				})
-			});
-
-			if (!res.ok) {
-				addToast('warning', 'Lodging saved, but Google photos could not be imported');
-				return;
-			}
-
-			const data = await res.json();
-			if (Array.isArray(data.created) && data.created.length > 0) {
-				const current = resolveLodging();
-				const existingImages = Array.isArray(current.images) ? current.images : [];
-				const existingIds = new Set(existingImages.map((img: any) => img.id));
-				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
-				current.images = [...existingImages, ...imported];
-			}
-
-			pendingGooglePhotoUrls = [];
-		} catch {
-			addToast('warning', 'Lodging saved, but Google photos import failed');
-		} finally {
-			importingGooglePhotos = false;
-		}
 	}
 
 	async function loadIntegrations() {
@@ -296,9 +256,6 @@
 		}
 
 		setStep(2);
-		if (pendingGooglePhotoUrls.length > 0) {
-			await importPendingGoogleImages(savedLodging.id);
-		}
 	}
 
 	function close() {
@@ -471,15 +428,10 @@
 			/>
 		{/if}
 		{#if steps[2].selected && lodging}
-			{#if importingGooglePhotos}
-				<div class="alert alert-info mb-4">
-					<span class="loading loading-spinner loading-sm"></span>
-					<span>Importing Google photos in the background. They will appear here shortly.</span>
-				</div>
-			{/if}
 			<MediaStep
 				bind:images={lodging.images}
 				bind:attachments={lodging.attachments}
+				bind:pendingGooglePhotoUrls
 				itemName={lodging.name}
 				on:back={() => {
 					setStep(1);

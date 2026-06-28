@@ -21,6 +21,7 @@
 
 	export let start_date: string | null = null;
 	export let end_date: string | null = null;
+	export let pendingGooglePhotoUrls: string[] = [];
 	// export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	// export let user: User | null = null;
 
@@ -79,6 +80,7 @@
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
+			bind:pendingGooglePhotoUrls
 			objectId={itemId}
 			{contentType}
 			defaultSearchTerm={itemName}
