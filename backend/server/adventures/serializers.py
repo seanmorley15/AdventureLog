@@ -42,10 +42,20 @@ def _serialize_collaborator(user, owner_id=None, request_user=None):
     }
 
 
-class ContentImageSerializer(CustomModelSerializer):
+class ContentImageSerializer(CoordinateSerializerMixin, CustomModelSerializer):
+    source = serializers.ChoiceField(
+        choices=ContentImage.Source.choices,
+        required=False,
+        default=ContentImage.Source.UPLOAD,
+    )
+    source_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = ContentImage
-        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
+        fields = [
+            'id', 'image', 'is_primary', 'user', 'immich_id',
+            'source', 'source_url', 'latitude', 'longitude',
+        ]
         read_only_fields = ['id', 'user']
 
     def to_representation(self, instance):
@@ -69,6 +79,66 @@ class ContentImageSerializer(CustomModelSerializer):
             # Use local image URL
             representation['image'] = build_media_url(instance.image.name)
 
+        return representation
+
+
+class ImageMapPinSerializer(serializers.ModelSerializer):
+    latitude = serializers.SerializerMethodField()
+    longitude = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    parent_type = serializers.SerializerMethodField()
+    parent_id = serializers.SerializerMethodField()
+    parent_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentImage
+        fields = [
+            'id',
+            'image',
+            'latitude',
+            'longitude',
+            'source',
+            'is_primary',
+            'parent_type',
+            'parent_id',
+            'parent_name',
+        ]
+
+    def get_latitude(self, obj):
+        lat, _ = point_to_lat_lon(obj.coordinates)
+        return lat
+
+    def get_longitude(self, obj):
+        _, lon = point_to_lat_lon(obj.coordinates)
+        return lon
+
+    def get_image(self, obj):
+        if obj.immich_id:
+            integration = ImmichIntegration.objects.filter(user=obj.user).first()
+            if not integration:
+                return None
+            public_url = get_public_url()
+            return f"{public_url}/api/integrations/immich/{integration.id}/get/{obj.immich_id}"
+        if obj.image:
+            return build_media_url(obj.image.name)
+        return None
+
+    def get_parent_type(self, obj):
+        return obj.content_type.model if obj.content_type_id else None
+
+    def get_parent_id(self, obj):
+        return str(obj.object_id)
+
+    def get_parent_name(self, obj):
+        parent = obj.content_object
+        return getattr(parent, 'name', None) if parent else None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if representation.get('image') is None:
+            return None
+        if representation.get('latitude') is None or representation.get('longitude') is None:
+            return None
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):

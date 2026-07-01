@@ -59,11 +59,17 @@ export type Collaborator = {
 	is_current_user?: boolean;
 };
 
+export type ImageSource = 'upload' | 'google' | 'wikipedia' | 'url' | 'immich';
+
 export type ContentImage = {
 	id: string;
 	image: string;
 	is_primary: boolean;
 	immich_id: string | null;
+	source: ImageSource;
+	source_url?: string | null;
+	latitude?: number | null;
+	longitude?: number | null;
 };
 
 export type Location = {
@@ -650,10 +656,22 @@ export type PlaceSearchResult = {
 	provider?: string;
 };
 
+export type MapImagePinSelection = {
+	kind: 'image';
+	imageId: string;
+	imageUrl: string;
+	source: ImageSource;
+	isPrimary: boolean;
+	parentType: string;
+	parentId: string;
+	parentName: string;
+};
+
 export type MapSelection =
 	| { kind: 'pin'; pinId: string }
 	| { kind: 'place'; place: PlaceSearchResult }
-	| { kind: 'recommendation'; item: Recommendation };
+	| { kind: 'recommendation'; item: Recommendation }
+	| MapImagePinSelection;
 
 export type MapSearchMode = 'my' | 'places' | 'nearby';
 

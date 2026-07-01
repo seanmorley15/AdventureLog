@@ -132,6 +132,7 @@
 	$: showTrialCta = isTrial && !hasScheduledSubscription;
 	$: showExpiredCta = !hasAccess;
 	$: showFullNav = data?.user && (!cloudMode || hasAccess);
+	$: pendingInviteCount = data?.pendingInviteCount ?? 0;
 </script>
 
 {#if isAboutModalOpen}
@@ -164,8 +165,19 @@
 									href={item.path}
 									class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl"
 									class:btn-active={$page.url.pathname === item.path}
+									title={item.path === '/collections' && pendingInviteCount > 0
+										? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
+										: undefined}
 								>
-									<svelte:component this={item.icon} class="w-5 h-5" />
+									<span class="relative inline-flex shrink-0">
+										<svelte:component this={item.icon} class="w-5 h-5" />
+										{#if item.path === '/collections' && pendingInviteCount > 0}
+											<span
+												class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
+												aria-hidden="true"
+											></span>
+										{/if}
+									</span>
 									{$t(item.label)}
 								</a>
 							</li>
@@ -228,8 +240,19 @@
 							class="btn btn-ghost gap-2 rounded-xl transition-all duration-200 hover:bg-base-200"
 							class:bg-primary-10={$page.url.pathname === item.path}
 							class:text-primary={$page.url.pathname === item.path}
+							title={item.path === '/collections' && pendingInviteCount > 0
+								? `${$t(item.label)} (${pendingInviteCount} ${$t('invites.pending_invites')})`
+								: undefined}
 						>
-							<svelte:component this={item.icon} class="w-4 h-4" />
+							<span class="relative inline-flex shrink-0">
+								<svelte:component this={item.icon} class="w-4 h-4" />
+								{#if item.path === '/collections' && pendingInviteCount > 0}
+									<span
+										class="absolute top-0 right-0 h-2 w-2 translate-x-1/3 -translate-y-1/3 rounded-full bg-error ring-2 ring-base-100"
+										aria-hidden="true"
+									></span>
+								{/if}
+							</span>
 							<span class="hidden xl:inline">{$t(item.label)}</span>
 						</a>
 					</li>

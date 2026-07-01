@@ -10,6 +10,8 @@
 	import PinIcon from '~icons/mdi/map-marker';
 	import Clear from '~icons/mdi/close';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
+	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import { collectCollectionImageGeoJson } from '$lib/map/imagePins';
 	import { t } from 'svelte-i18n';
 	import { get as getStore } from 'svelte/store';
 	import type { Collection, Location, User } from '$lib/types';
@@ -60,6 +62,7 @@
 	let showPlanned = true;
 	let showLines = true;
 	let showTrails = true;
+	let showImagePins = true;
 	let startDateFilter = '';
 	let endDateFilter = '';
 	let selectedCategories: Set<string> = new Set();
@@ -419,9 +422,8 @@
 			return counts;
 		}, new Map<string, number>())
 	)
-		.entries()
-		.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-		.map(([name]) => name);
+		.sort((a: [string, number], b: [string, number]) => b[1] - a[1] || a[0].localeCompare(b[0]))
+		.map(([name]: [string, number]) => name);
 
 	$: locationFeatures = (collection?.locations || [])
 		.map(locationToFeature)
@@ -576,7 +578,10 @@
 			else mapZoom = 10;
 		}
 	}
-	$: mapKey = `${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${Array.from(
+	$: imagePinGeoJson = collectCollectionImageGeoJson(collection);
+	$: imagePinCount = imagePinGeoJson.features.length;
+
+	$: mapKey = `${visiblePinCount}-${startDateFilter}-${endDateFilter}-${showLocations}-${showLodging}-${showTransportation}-${showVisited}-${showPlanned}-${showLines}-${showTrails}-${showImagePins}-${Array.from(
 		selectedCategories
 	)
 		.sort()
@@ -662,6 +667,7 @@
 		showPlanned = true;
 		showLines = true;
 		showTrails = true;
+		showImagePins = true;
 		startDateFilter = '';
 		endDateFilter = '';
 		selectedCategories = new Set();
@@ -979,6 +985,19 @@
 									<span class="opacity-80">({trailCount})</span>
 								</button>
 							{/if}
+							{#if imagePinCount > 0}
+								<button
+									type="button"
+									class={filterChipClass(
+										showImagePins,
+										'bg-rose-500 hover:bg-rose-600 border-rose-500 text-white'
+									)}
+									on:click={() => (showImagePins = !showImagePins)}
+								>
+									📷 {$t('map.photos')}
+									<span class="opacity-80">({imagePinCount})</span>
+								</button>
+							{/if}
 						</div>
 					</div>
 				</div>
@@ -1140,6 +1159,8 @@
 					</div>
 				</Marker>
 			{/if}
+
+			<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
 		</svelte:fragment>
 	</FullMap>
 </div>

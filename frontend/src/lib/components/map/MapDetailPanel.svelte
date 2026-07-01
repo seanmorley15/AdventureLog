@@ -4,8 +4,12 @@
 	import { marked } from 'marked';
 	import DOMPurify from 'dompurify';
 	import type { Location, PlaceSearchResult, Recommendation, ContentImage } from '$lib/types';
+	import type { ImagePinProperties } from '$lib/map/imagePins';
+	import { getImagePinNavigationUrl, getImagePinParentTypeKey } from '$lib/map/imagePins';
 	import { formatProviderLabel } from '$lib/map/places';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import { googleContentImage } from '$lib/images';
 
 	import ArrowLeft from '~icons/mdi/arrow-left';
 	import OpenInNew from '~icons/mdi/open-in-new';
@@ -20,10 +24,11 @@
 	import MapMarker from '~icons/mdi/map-marker';
 	import LinkIcon from '~icons/mdi/link-variant';
 
-	export let selectionKind: 'pin' | 'place' | 'recommendation' | null = null;
+	export let selectionKind: 'pin' | 'place' | 'recommendation' | 'image' | null = null;
 	export let location: Location | null = null;
 	export let place: PlaceSearchResult | null = null;
 	export let recommendation: Recommendation | null = null;
+	export let imagePin: ImagePinProperties | null = null;
 	export let pinName = '';
 	export let pinVisitStatus: 'visited' | 'planned' | null = null;
 	export let pinCategoryIcon = '';
@@ -36,6 +41,7 @@
 	const dispatch = createEventDispatcher<{
 		back: void;
 		viewFull: { pinId: string };
+		viewImageParent: { href: string };
 		quickAdd: void;
 		addDetails: void;
 		addLodging: void;
@@ -98,12 +104,9 @@
 	}
 
 	function openPhotoUrls(urls: string[], title: string, subtitle = '', startIndex = 0) {
-		selectedPhotos = urls.map((url, index) => ({
-			id: `photo-${index}`,
-			image: url,
-			is_primary: index === 0,
-			immich_id: null
-		}));
+		selectedPhotos = urls.map((url, index) =>
+			googleContentImage(`photo-${index}`, url, index === 0)
+		);
 		photoTitle = title;
 		photoSubtitle = subtitle;
 		selectedPhotoIndex = startIndex;
@@ -130,7 +133,9 @@
 				? place?.name
 				: selectionKind === 'recommendation'
 					? recommendation?.name
-					: '';
+					: selectionKind === 'image'
+						? imagePin?.parentName || $t('images.map_pin_title')
+						: '';
 
 	$: subtitle =
 		selectionKind === 'pin'
@@ -139,7 +144,11 @@
 				? place?.location
 				: selectionKind === 'recommendation'
 					? recommendation?.address
-					: '';
+					: selectionKind === 'image'
+						? imagePin
+							? $t(getImagePinParentTypeKey(imagePin.parentType))
+							: ''
+						: '';
 
 	$: rating =
 		selectionKind === 'pin'
@@ -199,7 +208,11 @@
 				? (place?.place_id ?? place?.name)
 				: selectionKind === 'recommendation'
 					? recommendation?.id
-					: '';
+					: selectionKind === 'image'
+						? imagePin?.imageId
+						: '';
+
+	$: imageParentHref = imagePin ? getImagePinNavigationUrl(imagePin) : null;
 
 	$: (selectionKey, (descriptionExpanded = false));
 
@@ -254,6 +267,25 @@
 					<p class="text-sm text-base-content/70 mt-1 leading-snug">{subtitle}</p>
 				{/if}
 			</div>
+
+			{#if selectionKind === 'image' && imagePin}
+				<div class="rounded-xl overflow-hidden border border-base-300">
+					<img
+						src={imagePin.imageUrl}
+						alt=""
+						class="w-full max-h-64 object-cover bg-base-200"
+						loading="lazy"
+					/>
+				</div>
+				<div class="flex flex-wrap items-center gap-2">
+					<div class="badge badge-error badge-sm badge-outline">
+						{$t(getImagePinParentTypeKey(imagePin.parentType))}
+					</div>
+					{#if imagePin.isPrimary}
+						<div class="badge badge-primary badge-sm">{$t('settings.primary')}</div>
+					{/if}
+				</div>
+			{/if}
 
 			{#if selectionKind === 'pin'}
 				<div class="flex flex-wrap items-center gap-2">
@@ -330,15 +362,19 @@
 						{#each locationImages as image, i}
 							<button
 								type="button"
-								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary relative"
+								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary relative w-full"
 								on:click={() => openLocationImages(locationImages, title || '', subtitle || '', i)}
 							>
-								<img src={image.image} alt="" class="w-full h-full object-cover" />
-								{#if image.is_primary}
-									<span class="badge badge-primary badge-xs absolute top-1 right-1"
-										>{$t('settings.primary')}</span
-									>
-								{/if}
+								<ImageFrame source={image.source} className="w-full h-full">
+									<img src={image.image} alt="" class="w-full h-full object-cover" />
+									<div slot="overlays">
+										{#if image.is_primary}
+											<span class="badge badge-primary badge-xs absolute top-1 right-1"
+												>{$t('settings.primary')}</span
+											>
+										{/if}
+									</div>
+								</ImageFrame>
 							</button>
 						{/each}
 					</div>
@@ -350,10 +386,12 @@
 						{#each externalPhotoUrls.slice(0, 6) as photo, i}
 							<button
 								type="button"
-								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary"
+								class="aspect-square rounded-lg overflow-hidden border border-base-300 hover:ring-2 ring-primary w-full"
 								on:click={() => openPhotoUrls(externalPhotoUrls, title || '', subtitle || '', i)}
 							>
-								<img src={photo} alt="" class="w-full h-full object-cover" />
+								<ImageFrame source="google" className="w-full h-full">
+									<img src={photo} alt="" class="w-full h-full object-cover" />
+								</ImageFrame>
 							</button>
 						{/each}
 					</div>
@@ -527,6 +565,16 @@
 					on:click={() => dispatch('viewFull', { pinId: location.id })}
 				>
 					{$t('map.view_details')}
+				</button>
+			{/if}
+
+			{#if selectionKind === 'image' && imageParentHref}
+				<button
+					type="button"
+					class="btn btn-primary w-full"
+					on:click={() => dispatch('viewImageParent', { href: imageParentHref })}
+				>
+					{$t('adventures.open_details')}
 				</button>
 			{/if}
 

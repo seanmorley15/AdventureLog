@@ -1034,6 +1034,9 @@
 		"hide_activities": "Hide activity tracks",
 		"show_trails": "Show trail tracks",
 		"hide_trails": "Hide trail tracks",
+		"show_photos": "Show photos",
+		"hide_photos": "Hide photos",
+		"photos": "Photos",
 		"fullscreen_failed": "Could not toggle fullscreen.",
 		"map_style": "Map style",
 		"stats": "Stats"
@@ -1152,6 +1155,15 @@
 		"my_collections": "My Collections",
 		"view_profile": "View profile"
 	},
+	"images": {
+		"map_pin_title": "Photo location",
+		"source": {
+			"google": "Photo from Google Maps",
+			"wikipedia": "Photo from Wikipedia",
+			"immich": "Photo from Immich",
+			"url": "Photo from external URL"
+		}
+	},
 	"immich": {
 		"immich": "Immich",
 		"integration_fetch_error": "Error fetching data from the Immich integration",
@@ -1186,7 +1198,8 @@
 		"loading_albums": "Loading Albums",
 		"loading": "Loading",
 		"no_images": "No Images Found",
-		"try_different_date": "Try a different date"
+		"try_different_date": "Try a different date",
+		"immich_updated": "Immich integration updated successfully"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Connect your Google Maps account to get high-quality location search results and recommendations.",

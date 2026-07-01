@@ -32,6 +32,7 @@ from adventures.services.share_image import (
 )
 from worldtravel.models import City, Country, Region
 from .location_image_view import import_remote_images_for_object
+from adventures.services.images.metadata import create_content_image
 from .quick_add_utils import (
     build_quick_add_description,
     clean_url,
@@ -297,6 +298,7 @@ class LocationViewSet(viewsets.ModelViewSet):
                 photo_urls,
                 owner=location.user,
                 max_workers=min(5, len(photo_urls)),
+                explicit_source=ContentImage.Source.GOOGLE,
             )
 
         response_data = self.get_serializer(location).data
@@ -515,21 +517,27 @@ class LocationViewSet(viewsets.ModelViewSet):
 
                         file_name = (img.image.name or '').split('/')[-1] or 'image.webp'
 
-                        ContentImage.objects.create(
+                        create_content_image(
+                            user=request.user,
                             content_type=location_ct,
                             object_id=str(new_location.id),
-                            image=ContentFile(image_bytes, name=file_name),
-                            immich_id=None,
+                            image_file=ContentFile(image_bytes, name=file_name),
+                            file_bytes=image_bytes,
                             is_primary=img.is_primary,
-                            user=request.user,
+                            explicit_source=img.source,
+                            source_url=img.source_url,
+                            coordinates=img.coordinates,
                         )
                     else:
-                        ContentImage.objects.create(
+                        create_content_image(
+                            user=request.user,
                             content_type=location_ct,
                             object_id=str(new_location.id),
                             immich_id=img.immich_id,
                             is_primary=img.is_primary,
-                            user=request.user,
+                            explicit_source=img.source,
+                            source_url=img.source_url,
+                            coordinates=img.coordinates,
                         )
 
             serializer = self.get_serializer(new_location)

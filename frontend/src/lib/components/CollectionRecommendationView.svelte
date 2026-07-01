@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Collection, User, ContentImage } from '$lib/types';
+	import { googleContentImage } from '$lib/images';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import FullMap from '$lib/components/map/FullMap.svelte';
@@ -84,12 +85,7 @@
 	let modalLodgingToEdit: Lodging | null = null;
 
 	function mapPhotosToContentImages(photos: string[]): ContentImage[] {
-		return photos.map((url, i) => ({
-			id: `rec-${i}-${Date.now()}`,
-			image: url,
-			is_primary: i === 0,
-			immich_id: null
-		}));
+		return photos.map((url, i) => googleContentImage(`rec-${i}-${Date.now()}`, url, i === 0));
 	}
 
 	function openCreateLocationFromResult(result: RecommendationResult) {
@@ -296,12 +292,9 @@
 		startIndex: number = 0
 	) {
 		// Convert photo URLs to ContentImage format
-		selectedPhotos = photos.map((url, index) => ({
-			id: `photo-${index}`,
-			image: url,
-			is_primary: index === 0,
-			immich_id: null
-		}));
+		selectedPhotos = photos.map((url, index) =>
+			googleContentImage(`photo-${index}`, url, index === 0)
+		);
 		selectedPlaceName = placeName;
 		selectedPlaceAddress = placeAddress;
 		selectedPhotoIndex = startIndex;

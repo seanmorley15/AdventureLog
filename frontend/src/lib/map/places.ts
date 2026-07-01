@@ -4,6 +4,7 @@ import type {
 	Recommendation,
 	RecommendationResponse
 } from '$lib/types';
+import { googleContentImage } from '$lib/images';
 
 export type PlacesSearchMeta = {
 	provider_used?: string;
@@ -281,12 +282,7 @@ export function placeToLocationPrefill(place: PlaceSearchResult) {
 		link: place.website || place.google_maps_url || null,
 		tags: place.types?.slice(0, 8) || [],
 		photos: photoUrls,
-		images: photoUrls.map((url, i) => ({
-			id: `place-${i}`,
-			image: url,
-			is_primary: i === 0,
-			immich_id: null
-		}))
+		images: photoUrls.map((url, i) => googleContentImage(`place-${i}`, url, i === 0))
 	};
 }
 
@@ -303,12 +299,7 @@ export function recommendationToLocationPrefill(rec: Recommendation) {
 		link: rec.website || rec.google_maps_url || null,
 		tags: rec.types?.slice(0, 8) || [],
 		photos: photoUrls,
-		images: photoUrls.map((url, i) => ({
-			id: `rec-${i}`,
-			image: url,
-			is_primary: i === 0,
-			immich_id: null
-		}))
+		images: photoUrls.map((url, i) => googleContentImage(`rec-${i}`, url, i === 0))
 	};
 }
 

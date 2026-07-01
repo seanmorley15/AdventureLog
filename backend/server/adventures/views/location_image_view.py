@@ -8,7 +8,7 @@ from django.db.models import Q
 from django.core.files.base import ContentFile
 from django.contrib.contenttypes.models import ContentType
 from adventures.models import Location, Transportation, Note, Lodging, Visit, ContentImage
-from adventures.serializers import ContentImageSerializer
+from adventures.serializers import ContentImageSerializer, ImageMapPinSerializer
 from integrations.models import ImmichIntegration
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.permissions import ContentImagePermission
@@ -20,6 +20,7 @@ from adventures.services.images.fetch import (
     download_remote_image,
     import_remote_images_for_object,
 )
+from adventures.services.images.metadata import ImageSource, create_content_image
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +131,23 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         instance.save()
         return Response({"success": "Image set as primary image"})
 
+    @action(detail=False, methods=['get'], url_path='map_pins')
+    def map_pins(self, request):
+        """Return geotagged images accessible to the current user for map display."""
+        images = (
+            self.get_queryset()
+            .filter(coordinates__isnull=False)
+            .select_related('content_type', 'user')
+            .order_by('-is_primary', 'id')
+        )
+
+        pins = []
+        for image in images.iterator(chunk_size=200):
+            data = ImageMapPinSerializer(image, context={'request': request}).data
+            if data:
+                pins.append(data)
+
+        return Response(pins)
 
     @action(detail=False, methods=['post'],
             permission_classes=[IsAuthenticated],
@@ -195,11 +213,13 @@ class ContentImageViewSet(viewsets.ModelViewSet):
 
         owner = getattr(content_object, 'user', request.user)
 
+        explicit_source = request.data.get('source')
         import_summary = import_remote_images_for_object(
             content_object,
             urls,
             owner=owner,
             max_workers=min(5, len(urls)),
+            explicit_source=explicit_source,
         )
 
         created_images = import_summary['created_images']
@@ -362,26 +382,16 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                     },
                     status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 )
-            
-            # Modify request data to use the downloaded image instead of immich_id
-            request_data = request.data.copy()
-            request_data.pop('immich_id', None)  # Remove immich_id
-            request_data['image'] = image_file  # Add the image file
-            request_data['content_type'] = content_type.id
-            request_data['object_id'] = object_id
-            
-            # Create the serializer with the modified data
-            serializer = self.get_serializer(data=request_data)
-            serializer.is_valid(raise_exception=True)
-            
-            # Save with the downloaded image
-            serializer.save(
+
+            image = create_content_image(
                 user=owner,
-                image=image_file,
                 content_type=content_type,
-                object_id=object_id
+                object_id=object_id,
+                image_file=image_file,
+                file_bytes=immich_response.content,
+                explicit_source=ImageSource.IMMICH,
             )
-            
+            serializer = self.get_serializer(image)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
             
         except requests.exceptions.RequestException:
@@ -397,35 +407,17 @@ class ContentImageViewSet(viewsets.ModelViewSet):
     
     def _create_standard_image(self, request, content_object, content_type, object_id):
         """Handle standard image creation without deepcopy issues"""
-        
-        # Get uploaded image file safely
+
         image_file = request.FILES.get('image')
         immich_id = request.data.get('immich_id')
 
         if not image_file and not immich_id:
             return Response({"error": "No image uploaded"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # Build a clean dict for serializer input
-        request_data = {
-            'content_type': content_type.id,
-            'object_id': object_id,
-        }
 
-        # Add immich_id if provided
-        if immich_id:
-            request_data['immich_id'] = immich_id
-
-        # Optionally add other fields (e.g., caption, alt text) from request.data
-        for key in ['caption', 'alt_text', 'description']:  # update as needed
-            if key in request.data:
-                request_data[key] = request.data[key]
-
-        # Create and validate serializer
-        serializer = self.get_serializer(data=request_data)
-        serializer.is_valid(raise_exception=True)
-
-        # Prepare save parameters
         owner = getattr(content_object, 'user', request.user)
+        explicit_source = request.data.get('source')
+        source_url = request.data.get('source_url')
+
         if image_file:
             allowed, details = enforce_media_storage_limit(
                 owner,
@@ -440,19 +432,26 @@ class ContentImageViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
                 )
 
-        save_kwargs = {
-            'user': owner,
-            'content_type': content_type,
-            'object_id': object_id,
-        }
-        
-        # Add image file if provided
-        if image_file:
-            save_kwargs['image'] = image_file
+            file_bytes = image_file.read()
+            image_file = ContentFile(file_bytes, name=image_file.name)
+            immich_integration = None
+        else:
+            file_bytes = None
+            immich_integration = ImmichIntegration.objects.filter(user=owner).first()
 
-        # Save with appropriate parameters
-        serializer.save(**save_kwargs)
+        image = create_content_image(
+            user=owner,
+            content_type=content_type,
+            object_id=object_id,
+            image_file=image_file if not immich_id else None,
+            immich_id=immich_id or None,
+            file_bytes=file_bytes,
+            source_url=source_url,
+            explicit_source=explicit_source,
+            immich_integration=immich_integration,
+        )
 
+        serializer = self.get_serializer(image)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     

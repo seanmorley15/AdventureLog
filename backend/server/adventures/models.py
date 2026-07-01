@@ -448,6 +448,14 @@ class PathAndRename:
 
 class ContentImage(models.Model):
     """Generic image model that can be attached to any content type"""
+
+    class Source(models.TextChoices):
+        UPLOAD = 'upload', 'Upload'
+        GOOGLE = 'google', 'Google'
+        WIKIPEDIA = 'wikipedia', 'Wikipedia'
+        URL = 'url', 'URL'
+        IMMICH = 'immich', 'Immich'
+
     id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     image = ResizedImageField(
@@ -459,6 +467,13 @@ class ContentImage(models.Model):
     )
     immich_id = models.CharField(max_length=200, null=True, blank=True)
     is_primary = models.BooleanField(default=False)
+    source = models.CharField(
+        max_length=20,
+        choices=Source.choices,
+        default=Source.UPLOAD,
+    )
+    source_url = models.URLField(max_length=2048, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
     
     # Generic foreign key fields
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='content_images')

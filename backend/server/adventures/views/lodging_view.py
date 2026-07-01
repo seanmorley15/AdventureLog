@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Q
-from adventures.models import Lodging
+from adventures.models import Lodging, ContentImage
 from adventures.serializers import CollectionItineraryItemSerializer, LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
@@ -173,6 +173,7 @@ class LodgingViewSet(viewsets.ModelViewSet):
                 photo_urls,
                 owner=lodging.user,
                 max_workers=min(5, len(photo_urls)),
+                explicit_source=ContentImage.Source.GOOGLE,
             )
 
         response_data = self.get_serializer(lodging).data

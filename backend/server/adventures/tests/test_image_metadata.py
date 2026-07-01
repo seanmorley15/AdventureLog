@@ -1,0 +1,190 @@
+from django.contrib.contenttypes.models import ContentType
+from django.test import TestCase
+from rest_framework.test import APIRequestFactory
+
+from adventures.models import ContentImage, Location
+from adventures.serializers import ContentImageSerializer
+from adventures.services.images.metadata import (
+    ImageSource,
+    create_content_image,
+    extract_gps_from_bytes,
+    infer_source_from_url,
+    resolve_image_metadata,
+)
+from adventures.utils.geo import make_point, point_to_lat_lon
+from users.models import CustomUser
+
+
+class ImageSourceInferenceTests(TestCase):
+    def test_google_url(self):
+        self.assertEqual(
+            infer_source_from_url(
+                'https://places.googleapis.com/v1/photo/media?key=test'
+            ),
+            ImageSource.GOOGLE,
+        )
+
+    def test_wikipedia_url(self):
+        self.assertEqual(
+            infer_source_from_url('https://upload.wikimedia.org/wikipedia/commons/a/a1/test.jpg'),
+            ImageSource.WIKIPEDIA,
+        )
+
+    def test_generic_url(self):
+        self.assertEqual(
+            infer_source_from_url('https://example.com/photo.jpg'),
+            ImageSource.URL,
+        )
+
+
+class ImageMetadataResolutionTests(TestCase):
+    def test_explicit_source_overrides_url_inference(self):
+        metadata = resolve_image_metadata(
+            source_url='https://upload.wikimedia.org/wikipedia/commons/x.jpg',
+            explicit_source=ImageSource.GOOGLE,
+        )
+        self.assertEqual(metadata['source'], ImageSource.GOOGLE)
+
+    def test_immich_id_sets_immich_source(self):
+        metadata = resolve_image_metadata(immich_id='abc-123')
+        self.assertEqual(metadata['source'], ImageSource.IMMICH)
+
+    def test_extract_gps_returns_none_for_non_gps_image(self):
+        from PIL import Image
+        import io
+
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG')
+        self.assertIsNone(extract_gps_from_bytes(buffer.getvalue()))
+
+
+class CreateContentImageTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='image-user',
+            email='image-user@example.com',
+            password='testpassword123',
+        )
+        self.location = Location.objects.create(user=self.user, name='Test Location')
+        self.content_type = ContentType.objects.get_for_model(Location)
+
+    def test_create_with_explicit_google_source(self):
+        from django.core.files.base import ContentFile
+        from PIL import Image
+        import io
+
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='red').save(buffer, format='JPEG')
+        file_bytes = buffer.getvalue()
+
+        image = create_content_image(
+            user=self.user,
+            content_type=self.content_type,
+            object_id=str(self.location.id),
+            image_file=ContentFile(file_bytes, name='test.jpg'),
+            file_bytes=file_bytes,
+            explicit_source=ImageSource.GOOGLE,
+            source_url='https://places.googleapis.com/v1/photo/media',
+        )
+        image.refresh_from_db()
+        self.assertEqual(image.source, ImageSource.GOOGLE)
+        self.assertEqual(image.source_url, 'https://places.googleapis.com/v1/photo/media')
+
+    def test_create_with_coordinates(self):
+        from django.core.files.base import ContentFile
+        from PIL import Image
+        import io
+
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='red').save(buffer, format='JPEG')
+        file_bytes = buffer.getvalue()
+        point = make_point(2.3522, 48.8566)
+        image = create_content_image(
+            user=self.user,
+            content_type=self.content_type,
+            object_id=str(self.location.id),
+            image_file=ContentFile(file_bytes, name='test.jpg'),
+            file_bytes=file_bytes,
+            coordinates=point,
+        )
+        image.refresh_from_db()
+        lat, lon = point_to_lat_lon(image.coordinates)
+        self.assertAlmostEqual(lat, 48.8566, places=4)
+        self.assertAlmostEqual(lon, 2.3522, places=4)
+
+
+class ContentImageSerializerMetadataTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='serializer-user',
+            email='serializer-user@example.com',
+            password='testpassword123',
+        )
+        self.factory = APIRequestFactory()
+        self.request = self.factory.get('/')
+        self.request.user = self.user
+
+    def test_serializer_exposes_source_and_coordinates(self):
+        from django.core.files.base import ContentFile
+        from PIL import Image
+        import io
+
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='red').save(buffer, format='JPEG')
+
+        image = ContentImage.objects.create(
+            user=self.user,
+            content_type=ContentType.objects.get_for_model(Location),
+            object_id='00000000-0000-0000-0000-000000000001',
+            image=ContentFile(buffer.getvalue(), name='test.jpg'),
+            source=ContentImage.Source.WIKIPEDIA,
+            source_url='https://upload.wikimedia.org/wikipedia/commons/test.jpg',
+            coordinates=make_point(-73.968285, 40.785091),
+        )
+        data = ContentImageSerializer(image, context={'request': self.request}).data
+        self.assertIsNotNone(data)
+        self.assertEqual(data['source'], ContentImage.Source.WIKIPEDIA)
+        self.assertEqual(data['source_url'], 'https://upload.wikimedia.org/wikipedia/commons/test.jpg')
+        self.assertAlmostEqual(data['latitude'], 40.785091, places=4)
+        self.assertAlmostEqual(data['longitude'], -73.968285, places=4)
+
+
+class ImageMapPinSerializerTests(TestCase):
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='pin-user',
+            email='pin-user@example.com',
+            password='testpassword123',
+        )
+
+    def test_map_pin_serializer_includes_parent_fields(self):
+        from django.core.files.base import ContentFile
+        from PIL import Image
+        import io
+
+        location = Location.objects.create(
+            user=self.user,
+            name='GPS Place',
+            coordinates=make_point(2.0, 48.0),
+        )
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG')
+
+        image = ContentImage.objects.create(
+            user=self.user,
+            content_type=ContentType.objects.get_for_model(Location),
+            object_id=str(location.id),
+            image=ContentFile(buffer.getvalue(), name='gps.jpg'),
+            coordinates=make_point(-122.4194, 37.7749),
+            source=ContentImage.Source.UPLOAD,
+        )
+
+        from adventures.serializers import ImageMapPinSerializer
+
+        data = ImageMapPinSerializer(image).data
+        self.assertIsNotNone(data)
+        self.assertEqual(data['parent_type'], 'location')
+        self.assertEqual(data['parent_id'], str(location.id))
+        self.assertEqual(data['parent_name'], 'GPS Place')
+        self.assertAlmostEqual(data['latitude'], 37.7749, places=4)
+        self.assertAlmostEqual(data['longitude'], -122.4194, places=4)

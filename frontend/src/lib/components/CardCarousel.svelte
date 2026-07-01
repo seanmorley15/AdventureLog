@@ -1,5 +1,6 @@
 <script lang="ts">
 	import ImageDisplayModal from './ImageDisplayModal.svelte';
+	import ImageFrame from './ImageFrame.svelte';
 	import { t } from 'svelte-i18n';
 	import type { ContentImage } from '$lib/types';
 	export let images: ContentImage[] = [];
@@ -63,16 +64,19 @@
 				<!-- svelte-ignore a11y-missing-attribute -->
 				<a
 					on:click|stopPropagation={() => openImageModal(currentSlide)}
-					class="cursor-pointer relative group"
+					class="cursor-pointer relative group block w-full h-full"
 				>
-					<img
-						src={sortedImages[currentSlide].image}
-						class="w-full h-48 object-cover transition-all group-hover:brightness-110"
-						alt={name || 'Image'}
-					/>
+					<ImageFrame source={sortedImages[currentSlide].source} className="w-full h-full">
+						<img
+							src={sortedImages[currentSlide].image}
+							class="w-full h-48 object-cover transition-all group-hover:brightness-110"
+							alt={name || 'Image'}
+						/>
+					</ImageFrame>
+				</a>
 
-					<!-- Overlay indicator for multiple images -->
-					<!-- {#if sortedImages.length > 1}
+				<!-- Overlay indicator for multiple images -->
+				<!-- {#if sortedImages.length > 1}
 						<div
 							class="absolute top-3 right-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-medium"
 						>
@@ -80,8 +84,8 @@
 						</div>
 					{/if} -->
 
-					<!-- Click to expand hint -->
-					<!-- <div
+				<!-- Click to expand hint -->
+				<!-- <div
 						class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all flex items-center justify-center"
 					>
 						<div
@@ -102,7 +106,6 @@
 							</svg>
 						</div>
 					</div> -->
-				</a>
 
 				{#if sortedImages.length > 1}
 					<div class="absolute inset-0 flex items-center justify-between pointer-events-none">

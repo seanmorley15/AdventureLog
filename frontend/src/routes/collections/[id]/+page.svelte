@@ -16,6 +16,8 @@
 	import { buildCollectionCalendarEvents } from '$lib/calendar/events';
 	import type { CalendarDisplayEvent, CalendarTimezoneMode } from '$lib/calendar/types';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import { normalizeContentImage } from '$lib/images';
 	import CollectionAllItems from '$lib/components/collections/CollectionAllItems.svelte';
 	import CollectionItineraryPlanner from '$lib/components/collections/CollectionItineraryPlanner.svelte';
 	import CollectionRecommendationView from '$lib/components/CollectionRecommendationView.svelte';
@@ -137,6 +139,7 @@
 				form.append('image', file);
 				form.append('object_id', item.id);
 				form.append('content_type', contentType || 'location');
+				form.append('source', img.source || 'google');
 
 				const upload = await fetch('/locations?/image', {
 					method: 'POST',
@@ -150,12 +153,12 @@
 				// Replace temporary image in the item and in the collection
 				item.images = item.images.map((i: any) =>
 					String(i.id) === String(img.id)
-						? {
+						? normalizeContentImage({
+								...newImage,
 								id: newImage.id,
 								image: newImage.image,
-								is_primary: newImage.is_primary || false,
-								immich_id: newImage.immich_id || null
-							}
+								is_primary: newImage.is_primary || false
+							})
 						: i
 				);
 
@@ -791,7 +794,9 @@
 							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${collection.name}`}
 						>
-							<img src={image.image} class="w-full h-full object-cover" alt={collection.name} />
+							<ImageFrame source={image.source} className="w-full h-full">
+								<img src={image.image} class="w-full h-full object-cover" alt={collection.name} />
+							</ImageFrame>
 						</button>
 					</div>
 				{/each}
@@ -1330,7 +1335,7 @@
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 								{#each heroImages.slice(0, 12) as image, index}
-									<div class="relative group">
+									<ImageFrame source={image.source} className="relative group">
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
@@ -1339,12 +1344,14 @@
 											role="button"
 											tabindex="0"
 										></div>
-										{#if image.is_primary}
-											<div class="absolute top-1 right-1">
-												<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
-											</div>
-										{/if}
-									</div>
+										<div slot="overlays">
+											{#if image.is_primary}
+												<div class="absolute top-1 right-1">
+													<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
+												</div>
+											{/if}
+										</div>
+									</ImageFrame>
 								{/each}
 							</div>
 							{#if heroImages.length > 12}

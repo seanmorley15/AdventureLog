@@ -23,6 +23,7 @@
 
 	import { addToast } from '$lib/toasts';
 	import ImageManagement from '../ImageManagement.svelte';
+	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
 
@@ -347,11 +348,10 @@
 				const data = await res.json();
 
 				// Check Immich integration
-				if (data.immich) {
+				const immich = parseImmichIntegration(data.immich);
+				if (immich.enabled) {
 					immichIntegration = true;
-					// For copyImmichLocally, we might need to fetch specific details if needed
-					// or set a default value since it's not in the new response structure
-					copyImmichLocally = false;
+					copyImmichLocally = immich.copyLocally;
 				}
 
 				// Check Wanderer integration

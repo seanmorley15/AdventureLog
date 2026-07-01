@@ -98,4 +98,31 @@ bash scripts/validate-env.sh .env.advanced
 
 The validator catches common mistakes such as `PUBLIC_SERVER_URL` pointing at the host backend port instead of the internal Docker service name.
 
+## Image GPS backfill
+
+New uploads and imports store GPS coordinates on `ContentImage` records when EXIF or Immich metadata is available. Images imported before this feature, or stored as WEBP without retained EXIF, may not have coordinates until you backfill them.
+
+Run inside the backend container:
+
+```bash
+docker compose exec server python3 manage.py backfill_image_coordinates
+```
+
+Useful options:
+
+| Flag | Purpose |
+| ---- | ------- |
+| `--dry-run` | Show what would be updated without saving |
+| `--user-id ID` | Limit to one user's images |
+| `--batch-size N` | Progress logging interval (default 100) |
+| `--force` | Re-extract even when coordinates already exist |
+| `--verbose` | Log each processed image |
+
+The command tries, in order:
+
+1. **Local file** — reads the stored image and extracts EXIF GPS (may fail for WEBP conversions that stripped metadata)
+2. **Immich reference** — fetches GPS from the linked Immich asset when `immich_id` is set and the user has an Immich integration
+
+After backfill, geotagged images appear on maps when **Photo locations** is enabled in the map display options.
+
 ## First boot behavior

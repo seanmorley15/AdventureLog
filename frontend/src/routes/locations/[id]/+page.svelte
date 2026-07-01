@@ -18,6 +18,8 @@
 	import ContentCopy from '~icons/mdi/content-copy';
 	import DotsVertical from '~icons/mdi/dots-vertical';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '$lib/components/ImageFrame.svelte';
+	import { googleContentImage } from '$lib/images';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
 	import { getActivityColor, normalizeBasemapType, isAllDay, copyToClipboard } from '$lib';
@@ -29,6 +31,8 @@
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
+	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import { contentImagesToGeoJson } from '$lib/map/imagePins';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 
@@ -66,6 +70,16 @@
 	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
 	let showActivityTracks = true;
 	let showTrailTracks = true;
+	let showImagePins = true;
+
+	$: imagePinGeoJson = adventure
+		? contentImagesToGeoJson(adventure.images, {
+				parentType: 'location',
+				parentId: adventure.id,
+				parentName: adventure.name
+			})
+		: { type: 'FeatureCollection', features: [] };
+	$: hasImagePins = imagePinGeoJson.features.length > 0;
 
 	onMount(async () => {
 		if (data.props.adventure) {
@@ -304,7 +318,9 @@
 							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${adventure.name}`}
 						>
-							<img src={image.image} class="w-full h-full object-cover" alt={adventure.name} />
+							<ImageFrame source={image.source} showSourceBadge className="w-full h-full">
+								<img src={image.image} class="w-full h-full object-cover" alt={adventure.name} />
+							</ImageFrame>
 						</button>
 					</div>
 				{/each}
@@ -765,8 +781,10 @@
 										<MapTrackLayerControls
 											bind:showActivities={showActivityTracks}
 											bind:showTrails={showTrailTracks}
+											bind:showImagePins
 											hasActivities={hasActivityGeojson(adventure)}
 											hasTrails={hasTrailGeojson(adventure)}
+											{hasImagePins}
 										/>
 										<MapFloatingControls
 											{map}
@@ -842,6 +860,8 @@
 											</Popup>
 										</DefaultMarker>
 									{/if}
+
+									<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
 								</FullMap>
 							</div>
 						</div>
@@ -978,7 +998,7 @@
 							<h3 class="card-title text-lg mb-4">🖼️ {$t('adventures.images')}</h3>
 							<div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
 								{#each adventure.images as image, index}
-									<div class="relative group">
+									<ImageFrame source={image.source} showSourceBadge className="relative group">
 										<div
 											class="aspect-square bg-cover bg-center rounded-lg cursor-pointer transition-transform duration-200 group-hover:scale-105"
 											style="background-image: url({image.image})"
@@ -987,12 +1007,14 @@
 											role="button"
 											tabindex="0"
 										></div>
-										{#if image.is_primary}
-											<div class="absolute top-1 right-1">
-												<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
-											</div>
-										{/if}
-									</div>
+										<div slot="overlays">
+											{#if image.is_primary}
+												<div class="absolute top-1 right-1">
+													<span class="badge badge-primary badge-xs">{$t('settings.primary')}</span>
+												</div>
+											{/if}
+										</div>
+									</ImageFrame>
 								{/each}
 							</div>
 						</div>

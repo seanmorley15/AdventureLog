@@ -13,6 +13,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from users.media_utils import enforce_media_storage_limit, get_uploaded_file_size
 from adventures.models import ContentImage
+from adventures.services.images.metadata import create_content_image
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,13 @@ def download_remote_image(image_url: str, max_redirects: int = 3, timeout: int =
     }
 
 
-def import_remote_images_for_object(content_object, urls: List[str], owner=None, max_workers: int = 5):
+def import_remote_images_for_object(
+    content_object,
+    urls: List[str],
+    owner=None,
+    max_workers: int = 5,
+    explicit_source: str | None = None,
+):
     content_type = ContentType.objects.get_for_model(content_object.__class__)
     object_id = str(content_object.id)
     image_owner = owner or getattr(content_object, "user", None)
@@ -165,11 +172,14 @@ def import_remote_images_for_object(content_object, urls: List[str], owner=None,
             continue
 
         image_file = ContentFile(file_data["content"], name=file_data["filename"])
-        image = ContentImage.objects.create(
+        image = create_content_image(
             user=image_owner,
-            image=image_file,
             content_type=content_type,
             object_id=object_id,
+            image_file=image_file,
+            file_bytes=file_data["content"],
+            source_url=image_url,
+            explicit_source=explicit_source,
             is_primary=set_primary_next,
         )
         if set_primary_next:

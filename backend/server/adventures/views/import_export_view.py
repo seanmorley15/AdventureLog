@@ -26,6 +26,7 @@ from adventures.models import (
 )
 from worldtravel.models import VisitedCity, VisitedRegion, City, Region, Country
 from adventures.utils.geo import make_point, point_to_lat_lon
+from adventures.services.images.metadata import create_content_image
 
 User = get_user_model()
 
@@ -192,9 +193,14 @@ class BackupViewSet(viewsets.ViewSet):
         """Serialize ContentImage queryset into backup-safe dicts."""
         serialized = []
         for image in images_qs.all():
+            lat, lon = point_to_lat_lon(image.coordinates)
             entry = {
                 'immich_id': image.immich_id,
                 'is_primary': image.is_primary,
+                'source': image.source,
+                'source_url': image.source_url,
+                'latitude': lat,
+                'longitude': lon,
                 'filename': None,
             }
             if image.image:
@@ -227,21 +233,30 @@ class BackupViewSet(viewsets.ViewSet):
     def _import_images(self, images_data, zip_file, user, content_type, object_id, summary):
         created = []
         for img_data in images_data or []:
-            immich_id = (img_data or {}).get('immich_id')
+            img_data = img_data or {}
+            immich_id = img_data.get('immich_id')
+            explicit_source = img_data.get('source')
+            source_url = img_data.get('source_url')
+            coordinates = make_point(img_data.get('longitude'), img_data.get('latitude'))
+            is_primary = img_data.get('is_primary', False)
+
             if immich_id:
                 created.append(
-                    ContentImage.objects.create(
+                    create_content_image(
                         user=user,
                         immich_id=immich_id,
-                        is_primary=(img_data or {}).get('is_primary', False),
+                        is_primary=is_primary,
                         content_type=content_type,
                         object_id=object_id,
+                        explicit_source=explicit_source or ContentImage.Source.IMMICH,
+                        source_url=source_url,
+                        coordinates=coordinates,
                     )
                 )
                 summary['images'] += 1
                 continue
 
-            filename = (img_data or {}).get('filename')
+            filename = img_data.get('filename')
             if not filename:
                 continue
 
@@ -252,12 +267,16 @@ class BackupViewSet(viewsets.ViewSet):
 
             img_file = ContentFile(img_content, name=filename)
             created.append(
-                ContentImage.objects.create(
+                create_content_image(
                     user=user,
-                    image=img_file,
-                    is_primary=(img_data or {}).get('is_primary', False),
+                    image_file=img_file,
+                    file_bytes=img_content,
+                    is_primary=is_primary,
                     content_type=content_type,
                     object_id=object_id,
+                    explicit_source=explicit_source,
+                    source_url=source_url,
+                    coordinates=coordinates,
                 )
             )
             summary['images'] += 1

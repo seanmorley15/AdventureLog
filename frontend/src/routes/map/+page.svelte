@@ -2,7 +2,9 @@
 	import { DefaultMarker, Popup, Marker, GeoJSON, LineLayer } from 'svelte-maplibre';
 	import MapNearbyRadiusLayer from '$lib/components/map/MapNearbyRadiusLayer.svelte';
 	import { onDestroy, onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
+	import { googleContentImage } from '$lib/images';
 	import type {
 		Activity,
 		Location,
@@ -45,6 +47,15 @@
 	import MapSearchBar from '$lib/components/map/MapSearchBar.svelte';
 	import MapDetailPanel from '$lib/components/map/MapDetailPanel.svelte';
 	import MapRecommendationsLayer from '$lib/components/map/MapRecommendationsLayer.svelte';
+	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import {
+		fetchImageMapPins,
+		imageMapPinsToGeoJson,
+		imagePinPropsToSelection,
+		mapImagePinSelectionToProps,
+		type ImageMapPin,
+		type ImagePinProperties
+	} from '$lib/map/imagePins';
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import Compass from '~icons/mdi/compass';
@@ -56,6 +67,7 @@
 	let lodgingModalOpen = false;
 	let showRegions = false;
 	let showActivities = false;
+	let showImagePins = false;
 	let showCities = false;
 	let sidebarOpen = false;
 	let sidebarMode: 'controls' | 'preview' = 'controls';
@@ -77,6 +89,9 @@
 	let visitedCities: VisitedCity[] = [];
 	let pins: Pin[] = data.props.pins;
 	let activities: Activity[] = [];
+	let imageMapPins: ImageMapPin[] = [];
+	let imagePinsLoaded = false;
+	let imagePinsLoading = false;
 	let filteredPins = pins;
 
 	let showVisited = true;
@@ -189,6 +204,26 @@
 		return status === 'visited' ? $t('adventures.visited') : $t('adventures.planned');
 	}
 
+	$: imagePinGeoJson = imageMapPinsToGeoJson(imageMapPins);
+	$: imagePinCount = imagePinGeoJson.features.length;
+
+	async function ensureImageMapPinsLoaded() {
+		if (!browser || imagePinsLoaded || imagePinsLoading) return;
+		imagePinsLoading = true;
+		try {
+			imageMapPins = await fetchImageMapPins();
+			imagePinsLoaded = true;
+		} catch (error) {
+			console.error('Failed to load image map pins:', error);
+		} finally {
+			imagePinsLoading = false;
+		}
+	}
+
+	$: if (browser && showImagePins) {
+		void ensureImageMapPinsLoaded();
+	}
+
 	$: totalAdventures = pins.length;
 	$: visitedAdventures = pins.filter((pin) => pin.is_visited).length;
 	$: plannedAdventures = pins.filter((pin) => !pin.is_visited).length;
@@ -272,6 +307,8 @@
 
 	$: selectedPinId = selected?.kind === 'pin' ? selected.pinId : null;
 	$: selectedRecId = selected?.kind === 'recommendation' ? selected.item.id : null;
+	$: selectedImagePinId = selected?.kind === 'image' ? selected.imageId : null;
+	$: previewImagePin = selected?.kind === 'image' ? mapImagePinSelectionToProps(selected) : null;
 	$: selectedPin = selectedPinId ? pins.find((p) => p.id === selectedPinId) : null;
 	$: randomEligiblePins = filteredPins.filter((pin) => {
 		const lat = parseCoordinate(pin.latitude);
@@ -357,6 +394,28 @@
 	function handlePinClick(pinId: string, setActive: (v: boolean) => void) {
 		setActive(true);
 		loadPreviewForPin(pinId);
+	}
+
+	function handleImagePinSelect(event: CustomEvent<{ props: ImagePinProperties }>) {
+		const props = event.detail.props;
+		if (props.parentType === 'location' && props.parentId) {
+			loadPreviewForPin(props.parentId);
+			return;
+		}
+
+		selected = imagePinPropsToSelection(props);
+		selectedPlace = null;
+		previewLocation = null;
+		previewError = null;
+		previewLoading = false;
+		sidebarMode = 'preview';
+		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+			sidebarOpen = true;
+		}
+	}
+
+	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
+		goto(event.detail.href);
 	}
 
 	function attachViewportCenterSync() {
@@ -579,12 +638,7 @@
 			collection: null,
 			created_at: '',
 			updated_at: '',
-			images: (rec.photos || []).map((url, i) => ({
-				id: `rec-${i}`,
-				image: url,
-				is_primary: i === 0,
-				immich_id: null
-			})),
+			images: (rec.photos || []).map((url, i) => googleContentImage(`rec-${i}`, url, i === 0)),
 			attachments: []
 		} as Lodging;
 		lodgingModalOpen = true;
@@ -970,13 +1024,21 @@
 								{/if}
 							{/each}
 						{/if}
+
+						<MapImagePinLayer
+							geoJson={imagePinGeoJson}
+							visible={showImagePins}
+							navigateOnSelect={false}
+							selectedId={selectedImagePinId}
+							on:select={handleImagePinSelect}
+						/>
 					</svelte:fragment>
 				</FullMap>
 			</div>
 
 			{#if searchMode === 'nearby'}
 				<div
-					class="absolute top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
+					class="absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
 				>
 					{#if recLoading}
 						<div
@@ -1001,55 +1063,63 @@
 
 			<!-- Floating map toolbar -->
 			<div
-				class="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-start gap-1.5 sm:gap-2 pointer-events-none min-w-0"
+				class="absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
 			>
-				<button
-					type="button"
-					class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0 relative"
-					on:click={() => (sidebarOpen = !sidebarOpen)}
-					aria-label={$t('map.map_controls')}
-				>
-					<Filter class="w-5 h-5" />
-					{#if categoryFilterNames.length > 0}
-						<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
-					{/if}
-				</button>
-
 				<div
-					class="flex-1 min-w-0 max-w-full sm:max-w-xl pointer-events-auto bg-base-100/90 backdrop-blur-lg rounded-xl shadow-md border border-base-300 p-2 sm:p-2.5"
+					class="flex items-start gap-1.5 lg:gap-2 min-w-0 w-full lg:flex-1 lg:max-w-xl pointer-events-none"
 				>
-					<MapSearchBar
-						mode={searchMode}
-						bind:query={searchQuery}
-						{filteredPins}
-						randomDisabled={randomEligiblePins.length === 0}
-						on:modeChange={(e) => handleSearchModeChange(e.detail)}
-						on:queryChange={(e) => (searchQuery = e.detail)}
-						on:selectPin={handleSelectPin}
-						on:selectPlace={handleSelectPlace}
-						on:random={selectRandomLocation}
-					/>
+					<button
+						type="button"
+						class="btn btn-ghost btn-square btn-sm bg-base-100/90 shadow-md pointer-events-auto lg:hidden shrink-0 mt-0 relative"
+						on:click={() => (sidebarOpen = !sidebarOpen)}
+						aria-label={$t('map.map_controls')}
+					>
+						<Filter class="w-5 h-5" />
+						{#if categoryFilterNames.length > 0}
+							<span class="absolute top-1 right-1 w-2 h-2 rounded-full bg-primary"></span>
+						{/if}
+					</button>
+
+					<div
+						class="flex-1 min-w-0 pointer-events-auto bg-base-100/90 backdrop-blur-lg rounded-xl shadow-md border border-base-300 p-2 sm:p-2.5"
+					>
+						<MapSearchBar
+							mode={searchMode}
+							bind:query={searchQuery}
+							{filteredPins}
+							randomDisabled={randomEligiblePins.length === 0}
+							on:modeChange={(e) => handleSearchModeChange(e.detail)}
+							on:queryChange={(e) => (searchQuery = e.detail)}
+							on:selectPin={handleSelectPin}
+							on:selectPlace={handleSelectPlace}
+							on:random={selectRandomLocation}
+						/>
+					</div>
 				</div>
 
-				{#if newMarker}
-					<div class="flex items-center gap-2 pointer-events-auto shrink-0">
-						<button type="button" class="btn btn-primary btn-sm gap-1" on:click={newAdventure}>
-							<Plus class="w-4 h-4" />
-							<span class="hidden sm:inline">{$t('map.add_location_at_marker')}</span>
-						</button>
-						<button type="button" class="btn btn-ghost btn-sm btn-square" on:click={clearMarker}>
-							<Clear class="w-4 h-4" />
-						</button>
-					</div>
-				{/if}
+				<div
+					class="flex items-center gap-2 justify-end w-full lg:w-auto lg:ml-auto pointer-events-none shrink-0"
+				>
+					{#if newMarker}
+						<div class="flex items-center gap-2 pointer-events-auto shrink-0">
+							<button type="button" class="btn btn-primary btn-sm gap-1" on:click={newAdventure}>
+								<Plus class="w-4 h-4" />
+								<span class="hidden sm:inline">{$t('map.add_location_at_marker')}</span>
+							</button>
+							<button type="button" class="btn btn-ghost btn-sm btn-square" on:click={clearMarker}>
+								<Clear class="w-4 h-4" />
+							</button>
+						</div>
+					{/if}
 
-				<div class="shrink-0 ml-auto pointer-events-auto order-last sm:order-none">
-					<MapFloatingControls
-						embedded
-						map={mapInstance}
-						bind:basemapType
-						fullscreenTarget={mapViewportEl}
-					/>
+					<div class="pointer-events-auto shrink-0">
+						<MapFloatingControls
+							embedded
+							map={mapInstance}
+							bind:basemapType
+							fullscreenTarget={mapViewportEl}
+						/>
+					</div>
 				</div>
 			</div>
 
@@ -1091,6 +1161,7 @@
 								location={previewLocation}
 								place={selected?.kind === 'place' ? selected.place : null}
 								recommendation={selected?.kind === 'recommendation' ? selected.item : null}
+								imagePin={previewImagePin}
 								pinName={selectedPin?.name ?? ''}
 								pinVisitStatus={selectedPin?.is_visited ? 'visited' : 'planned'}
 								pinCategoryIcon={selectedPin?.category?.icon ?? ''}
@@ -1101,6 +1172,7 @@
 								{isMetric}
 								on:back={backToControls}
 								on:viewFull={handleViewFull}
+								on:viewImageParent={handleViewImageParent}
 								on:quickAdd={handleQuickAdd}
 								on:addDetails={openModalFromSelection}
 								on:addLodging={openLodgingFromRecommendation}
@@ -1265,6 +1337,17 @@
 											class="checkbox checkbox-warning checkbox-sm"
 										/>
 										<span class="label-text">{$t('map.show_visited_cities')}</span>
+									</label>
+									<label class="label cursor-pointer justify-start gap-3 py-1">
+										<input
+											type="checkbox"
+											bind:checked={showImagePins}
+											class="checkbox checkbox-secondary checkbox-sm"
+										/>
+										<span class="label-text">
+											{$t('map.photos')}{#if imagePinsLoaded}
+												{' '}({imagePinCount}){/if}
+										</span>
 									</label>
 									<label class="label cursor-pointer justify-start gap-3 py-1">
 										<input

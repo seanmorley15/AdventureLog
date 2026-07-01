@@ -1,5 +1,6 @@
 <script lang="ts">
-	import type { ContentImage } from '$lib/types';
+	import type { ContentImage, ImageSource } from '$lib/types';
+	import { normalizeContentImage } from '$lib/images';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { t, locale } from 'svelte-i18n';
 	import { deserialize } from '$app/forms';
@@ -15,6 +16,7 @@
 
 	import { addToast } from '$lib/toasts';
 	import ImmichSelect from './ImmichSelect.svelte';
+	import ImageFrame from './ImageFrame.svelte';
 
 	// Props
 	export let images: ContentImage[] = [];
@@ -59,17 +61,13 @@
 	}>();
 
 	// Helper functions
-	function createImageFromData(data: {
-		id: string;
-		image: string;
-		immich_id?: string | null;
-	}): ContentImage {
-		return {
-			id: data.id,
-			image: data.image,
-			is_primary: false,
-			immich_id: data.immich_id || null
-		};
+	function createImageFromData(
+		data: Partial<ContentImage> & Pick<ContentImage, 'id' | 'image'>
+	): ContentImage {
+		return normalizeContentImage({
+			...data,
+			is_primary: data.is_primary ?? false
+		});
 	}
 
 	function updateImagesList(newImage: ContentImage) {
@@ -78,7 +76,10 @@
 	}
 
 	// API calls
-	async function uploadImageToServer(file: File) {
+	async function uploadImageToServer(
+		file: File,
+		options: { source?: ImageSource; sourceUrl?: string } = {}
+	) {
 		if (!objectId) {
 			console.error('Cannot upload image: objectId is not set');
 			addToast('error', 'Cannot upload image: location must be saved first');
@@ -89,6 +90,12 @@
 		formData.append('image', file);
 		formData.append('object_id', objectId);
 		formData.append('content_type', contentType);
+		if (options.source) {
+			formData.append('source', options.source);
+		}
+		if (options.sourceUrl) {
+			formData.append('source_url', options.sourceUrl);
+		}
 
 		try {
 			const res = await fetch(`/locations?/image`, {
@@ -99,7 +106,7 @@
 
 			if (res.ok) {
 				const newData = deserialize(await res.text()) as {
-					data: { id: string; image: string; error?: string };
+					data: Partial<ContentImage> & { id: string; image: string; error?: string };
 				};
 				// Check if the server action returned an error
 				if (newData.data && newData.data.error) {
@@ -139,7 +146,7 @@
 				const blob = await res.blob();
 				const file = new File([blob], 'image.jpg', { type: blob.type || 'image/jpeg' });
 
-				const newImage = await uploadImageToServer(file);
+				const newImage = await uploadImageToServer(file, { source: 'google' });
 				if (newImage) {
 					images = images.map((i) => (i.id === img.id ? newImage : i));
 					dispatch('imagesUpdated', images);
@@ -230,7 +237,7 @@
 			}
 
 			const file = new File([blob], 'image.jpg', { type: 'image/jpeg' });
-			const newImage = await uploadImageToServer(file);
+			const newImage = await uploadImageToServer(file, { source: 'url', sourceUrl: url.trim() });
 
 			if (newImage) {
 				updateImagesList(newImage);
@@ -294,7 +301,10 @@
 			}
 
 			const file = new File([blob], `${imageSearch}.jpg`, { type: 'image/jpeg' });
-			const newImage = await uploadImageToServer(file);
+			const newImage = await uploadImageToServer(file, {
+				source: 'wikipedia',
+				sourceUrl: imageUrl
+			});
 
 			if (newImage) {
 				updateImagesList(newImage);
@@ -358,6 +368,32 @@
 		addToast('success', $t('adventures.image_upload_success'));
 	}
 
+	async function handleImmichLocalImage(event: CustomEvent<{ file: File; immichId: string }>) {
+		if (!objectId) {
+			addToast('error', $t('adventures.image_upload_error'));
+			return;
+		}
+
+		isLoading = true;
+		imageError = '';
+
+		try {
+			const newImage = await uploadImageToServer(event.detail.file, { source: 'immich' });
+			if (newImage) {
+				updateImagesList(newImage);
+				addToast('success', $t('adventures.image_upload_success'));
+			} else {
+				throw new Error('Upload failed');
+			}
+		} catch (error) {
+			console.error('Immich local upload error:', error);
+			imageError = $t('adventures.image_fetch_failed');
+			addToast('error', $t('adventures.image_upload_error'));
+		} finally {
+			isLoading = false;
+		}
+	}
+
 	// Watch for defaultSearchTerm changes
 	$: if (defaultSearchTerm && !imageSearch) {
 		imageSearch = defaultSearchTerm;
@@ -388,7 +424,8 @@
 				body: JSON.stringify({
 					content_type: contentType,
 					object_id: objectId,
-					urls
+					urls,
+					source: 'google'
 				})
 			});
 
@@ -403,9 +440,7 @@
 				const existingIds = new Set(images.map((img) => img.id));
 				const imported = data.created
 					.filter((img: ContentImage) => !existingIds.has(img.id))
-					.map((img: { id: string; image: string; immich_id?: string | null }) =>
-						createImageFromData(img)
-					);
+					.map((img: ContentImage) => createImageFromData(img));
 				images = [...images, ...imported];
 				dispatch('imagesUpdated', images);
 				addToast('success', $t('adventures.google_photos_import_success'));
@@ -585,10 +620,7 @@
 						{objectId}
 						{contentType}
 						{copyImmichLocally}
-						on:fetchImage={(e) => {
-							url = e.detail;
-							handleUrlUpload();
-						}}
+						on:localImage={handleImmichLocalImage}
 						on:remoteImmichSaved={handleImmichImageSaved}
 					/>
 				</div>
@@ -698,8 +730,10 @@
 			<div class="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
 				{#each images as image, i (image.id ?? image.image ?? `img-${i}`)}
 					<div class="relative group">
-						<div
-							class="aspect-square overflow-hidden rounded-lg bg-base-200 border border-base-300"
+						<ImageFrame
+							source={image.source}
+							showSourceBadge
+							className="aspect-square overflow-hidden rounded-lg bg-base-200 border border-base-300"
 						>
 							<img
 								src={image.image}
@@ -707,9 +741,16 @@
 								class="w-full h-full object-cover transition-transform group-hover:scale-105"
 								loading="lazy"
 							/>
-						</div>
-
-						<!-- Image Controls Overlay -->
+							<div slot="overlays">
+								{#if image.is_primary}
+									<div
+										class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
+									>
+										<Crown class="h-4 w-4" />
+									</div>
+								{/if}
+							</div>
+						</ImageFrame>
 
 						<div
 							class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all duration-200 rounded-lg flex items-center justify-center gap-2"
@@ -736,15 +777,6 @@
 								<TrashIcon class="h-4 w-4" />
 							</button>
 						</div>
-
-						<!-- Primary Badge -->
-						{#if image.is_primary}
-							<div
-								class="absolute top-2 left-2 bg-warning text-warning-content rounded-full p-1 shadow-lg"
-							>
-								<Crown class="h-4 w-4" />
-							</div>
-						{/if}
 					</div>
 				{/each}
 			</div>
