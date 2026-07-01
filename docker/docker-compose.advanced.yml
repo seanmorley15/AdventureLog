@@ -49,7 +49,7 @@ services:
     #   context: ..
     #   dockerfile: docker/Dockerfile
     #   target: backend
-    # image: ghcr.io/seanmorley15/adventurelog-backend:latest
+    image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
     restart: unless-stopped
     env_file: ../.env.advanced

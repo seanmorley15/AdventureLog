@@ -36,6 +36,17 @@ class ImageSourceInferenceTests(TestCase):
             ImageSource.URL,
         )
 
+    def test_spoofed_hostnames_are_not_matched(self):
+        spoofed_urls = [
+            'https://evil.googleapis.com.attacker.com/photo.jpg',
+            'https://notgoogleusercontent.com/photo.jpg',
+            'https://evil.wikimedia.org.attacker.com/photo.jpg',
+            'https://notwikipedia.org/photo.jpg',
+        ]
+        for url in spoofed_urls:
+            with self.subTest(url=url):
+                self.assertEqual(infer_source_from_url(url), ImageSource.URL)
+
 
 class ImageMetadataResolutionTests(TestCase):
     def test_explicit_source_overrides_url_inference(self):

@@ -28,11 +28,19 @@ class ImageSource:
     IMMICH = ContentImage.Source.IMMICH
 
 
+def _hostname_matches_domain(hostname: str, domain: str) -> bool:
+    return hostname == domain or hostname.endswith(f'.{domain}')
+
+
 def infer_source_from_url(url: str) -> str:
     hostname = (urlparse(url).hostname or '').lower()
-    if 'googleapis.com' in hostname or 'googleusercontent.com' in hostname:
+    if _hostname_matches_domain(hostname, 'googleapis.com') or _hostname_matches_domain(
+        hostname, 'googleusercontent.com'
+    ):
         return ImageSource.GOOGLE
-    if 'wikimedia.org' in hostname or 'wikipedia.org' in hostname:
+    if _hostname_matches_domain(hostname, 'wikimedia.org') or _hostname_matches_domain(
+        hostname, 'wikipedia.org'
+    ):
         return ImageSource.WIKIPEDIA
     return ImageSource.URL
 
