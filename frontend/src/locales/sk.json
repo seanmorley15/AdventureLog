@@ -498,7 +498,14 @@
 		"add_details": "Pridajte podrobnosti",
 		"export_pdf": "Stiahnuť PDF",
 		"export_pdf_success": "PDF zbierky stiahnuté",
-		"export_pdf_failed": "Nepodarilo sa stiahnuť PDF zbierky"
+		"export_pdf_failed": "Nepodarilo sa stiahnuť PDF zbierky",
+		"google_photos_available": "{count} dostupných fotografií z Google",
+		"google_photos_import_all": "Importovať všetko z Googlu",
+		"google_photos_import_selected": "Importovať vybrané",
+		"google_photos_importing": "Načítavanie fotografií z Google…",
+		"google_photos_import_success": "Fotky z Google boli úspešne importované",
+		"google_photos_import_error": "Nepodarilo sa načítať fotografie z Google Photos",
+		"google_photos_select_hint": "Vyberte fotografie, ktoré chcete importovať, alebo importujte všetky naraz."
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
@@ -757,7 +764,12 @@
 		"media_storage_desc": "Využitie úložiska pre vaše nahraté obrázky a prílohy.",
 		"media_total_used": "Celkom použité",
 		"media_profile_pics": "Profilové obrázky",
-		"media_files": "súbory"
+		"media_files": "súbory",
+		"public_profile_sharing_warning": "V súčasnosti ste zdieľaní v {count} zbierkach. Ak nastavíte svoj profil ako súkromný, budete z týchto zbierok odstránení.",
+		"public_profile_invite_warning": "Máte {count} nevybavených pozvánok do zbierky. Ak nastavíte svoj profil ako súkromný, tieto pozvánky sa zrušia.",
+		"public_profile_private_confirm": "Ak nastavíte svoj profil ako súkromný, budete odstránení zo {shared} zdieľaných zbierok a zrušia sa {invites} nevybavené pozvánky. Chcete pokračovať?",
+		"public_profile_left_collections": "Váš profil je teraz súkromný. Boli ste odstránení z {count} zdieľaných zbierok.",
+		"public_profile_revoked_invites": "Zrušilo sa {count} nevybavených pozvánok do zbierky."
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",
@@ -830,7 +842,8 @@
 		"current_items": "Aktuálne položky",
 		"completed": "Dokončené",
 		"no_items_yet": "Zatiaľ žiadne položky",
-		"add_your_first_item": "Pridajte svoju prvú položku"
+		"add_your_first_item": "Pridajte svoju prvú položku",
+		"more_items": "Ďalšie položky"
 	},
 	"transportation": {
 		"transportation_deleted": "Doprava bola úspešne odstránená!",

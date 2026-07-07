@@ -498,7 +498,14 @@
 		"add_details": "Añadir detalles",
 		"export_pdf": "Descargar PDF",
 		"export_pdf_failed": "No se pudo descargar el PDF de la colección",
-		"export_pdf_success": "Colección PDF descargada"
+		"export_pdf_success": "Colección PDF descargada",
+		"google_photos_available": "Se dispone(s) {count} foto(s) de Google",
+		"google_photos_import_all": "Importar todo desde Google",
+		"google_photos_import_selected": "Importar seleccionado",
+		"google_photos_importing": "Importar fotos de Google…",
+		"google_photos_import_success": "Las fotos de Google se han importado correctamente",
+		"google_photos_import_error": "No se pudo importar las fotos de Google",
+		"google_photos_select_hint": "Seleccione las fotos que desee importar, o importe todas a la vez."
 	},
 	"worldtravel": {
 		"no_countries_found": "No se encontraron países",
@@ -757,7 +764,12 @@
 		"use_imperial": "Use unidades imperiales",
 		"use_imperial_desc": "Use unidades imperiales (pies, pulgadas, libras) en lugar de unidades métricas",
 		"map_style_desc": "Se utiliza como mapa base predeterminado en todos los mapas.",
-		"preferred_currency_desc": "Esta moneda rellena previamente los campos de dinero al agregar nuevos artículos."
+		"preferred_currency_desc": "Esta moneda rellena previamente los campos de dinero al agregar nuevos artículos.",
+		"public_profile_sharing_warning": "Actualmente está compartiendo {count} colección(es). Si configuras tu perfil como privado, se te excluirá de esas colecciones.",
+		"public_profile_invite_warning": "Tiene pendientes {count} invitado(s) de colección. Hacer su perfil privado las cancelará.",
+		"public_profile_private_confirm": "Hacer tu perfil privado te eliminará de {shared} colección(es) compartidas y cancelará {invited} invitación(es) pendiente. ¿Quiere continuar?",
+		"public_profile_left_collections": "Su perfil ahora es privado. Ha sido retirado de {count} colección(es) compartidas.",
+		"public_profile_revoked_invites": "Se han cancelado {count} invitación(es) de colección pendientes."
 	},
 	"checklist": {
 		"checklist_delete_error": "Error al eliminar la lista de tareas",
@@ -779,7 +791,8 @@
 		"enter_checklist_title": "Ingrese el título de la lista de verificación",
 		"no_items_yet": "No hay artículos todavía",
 		"update_checklist_details": "Lista de verificación de edición",
-		"viewing_checklist": "Visualización de la lista de verificación"
+		"viewing_checklist": "Visualización de la lista de verificación",
+		"more_items": "Más elementos"
 	},
 	"collection": {
 		"collection_created": "¡Colección creada con éxito!",
