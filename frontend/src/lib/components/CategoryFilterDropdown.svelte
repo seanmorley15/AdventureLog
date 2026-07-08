@@ -32,6 +32,7 @@
 
 	function clearTypes() {
 		types_arr = [];
+		types = '';
 		dispatch('change', { types: '' });
 	}
 
@@ -41,7 +42,8 @@
 		} else {
 			types_arr = [...types_arr, type];
 		}
-		dispatch('change', { types: types_arr.join(',') });
+		types = types_arr.join(',');
+		dispatch('change', { types });
 	}
 </script>
 
