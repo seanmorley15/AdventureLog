@@ -34,6 +34,7 @@
 	import LocationMarker from '~icons/mdi/map-marker';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
+	import { isVisitAllDay } from '$lib';
 	import Globe from '~icons/mdi/globe';
 
 	export let collection: Collection;
@@ -1468,6 +1469,23 @@
 							if (idx === -1) return loc;
 
 							const v = visits[idx];
+							const visitAllDay = isVisitAllDay(v.start_date, v.end_date);
+
+							if (visitAllDay) {
+								const startDateOnly = v.start_date.split('T')[0];
+								const endDateOnly = (v.end_date || v.start_date).split('T')[0];
+								const daySpan = DateTime.fromISO(endDateOnly).diff(
+									DateTime.fromISO(startDateOnly),
+									'days'
+								).days;
+								const newEndDate = DateTime.fromISO(dateISO).plus({ days: daySpan }).toISODate();
+								const newStart = `${dateISO}T00:00:00Z`;
+								const newEnd = `${newEndDate}T00:00:00Z`;
+								const nextVisits = [...visits];
+								nextVisits[idx] = { ...v, start_date: newStart, end_date: newEnd };
+								return { ...loc, visits: nextVisits };
+							}
+
 							const startDT = v.start_date ? DateTime.fromISO(v.start_date) : null;
 							const endDT = v.end_date ? DateTime.fromISO(v.end_date) : null;
 							const baseStart = DateTime.fromISO(dateISO);
@@ -1480,7 +1498,7 @@
 											millisecond: startDT.millisecond
 										})
 										.toISO()
-								: `${dateISO}T00:00:00`;
+								: `${dateISO}T00:00:00Z`;
 							const newEnd = endDT
 								? DateTime.fromISO(dateISO)
 										.set({
@@ -1490,7 +1508,7 @@
 											millisecond: endDT.millisecond
 										})
 										.toISO()
-								: `${dateISO}T23:59:59`;
+								: `${dateISO}T00:00:00Z`;
 
 							const nextVisits = [...visits];
 							nextVisits[idx] = { ...v, start_date: newStart, end_date: newEnd };

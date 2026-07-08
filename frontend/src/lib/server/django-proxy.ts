@@ -132,7 +132,8 @@ export async function proxyToDjango(
 			},
 			body:
 				request.method !== 'GET' && request.method !== 'HEAD' ? await request.text() : undefined,
-			credentials: 'include'
+			credentials: 'include',
+			signal: request.signal
 		});
 
 		if (response.status === 204) {
@@ -154,6 +155,9 @@ export async function proxyToDjango(
 			headers: cleanHeaders
 		});
 	} catch (error) {
+		if (request.signal.aborted) {
+			return new Response(null, { status: 499 });
+		}
 		console.error('Error forwarding request:', error);
 		return json({ error: 'Internal Server Error' }, { status: 500 });
 	}

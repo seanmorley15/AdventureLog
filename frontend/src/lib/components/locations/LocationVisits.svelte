@@ -11,7 +11,7 @@
 	import { t } from 'svelte-i18n';
 	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
 	import { onMount } from 'svelte';
-	import { isAllDay, SPORT_TYPE_CHOICES } from '$lib';
+	import { isAllDay, isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
 	import { deserialize } from '$app/forms';
 
@@ -301,8 +301,9 @@
 			let startDate = new Date(visit.start_date);
 			let endDate = new Date(visit.end_date);
 
-			if (isAllDay(visit.start_date) && visit.end_date.includes('T00:00:00')) {
-				endDate = new Date(visit.end_date.replace('T00:00:00', 'T23:59:59'));
+			if (isVisitAllDay(visit.start_date, visit.end_date)) {
+				const endDatePart = allDayDatePart(visit.end_date);
+				endDate = new Date(`${endDatePart}T23:59:59Z`);
 			}
 
 			startDate.setHours(startDate.getHours() - 12);
@@ -583,7 +584,7 @@
 	function editVisit(visit: Visit) {
 		isEditing = true;
 		visitIdEditing = visit.id;
-		const isAllDayEvent = isAllDay(visit.start_date);
+		const isAllDayEvent = isVisitAllDay(visit.start_date, visit.end_date);
 		allDay = isAllDayEvent;
 
 		if ('start_timezone' in visit && typeof visit.start_timezone === 'string') {
@@ -932,18 +933,18 @@
 									<div class="flex items-start justify-between">
 										<div class="flex-1 min-w-0">
 											<div class="flex items-center gap-2 mb-2">
-												{#if isAllDay(visit.start_date)}
+												{#if isVisitAllDay(visit.start_date, visit.end_date)}
 													<span class="badge badge-outline badge-sm"
 														>{$t('adventures.all_day')}</span
 													>
 												{:else}
 													<ClockIcon class="w-3 h-3 text-base-content/50" />
 												{/if}
-												{#if visit.timezone && !isAllDay(visit.start_date)}
+												{#if visit.timezone && !isVisitAllDay(visit.start_date, visit.end_date)}
 													<span class="badge badge-outline badge-sm">{visit.timezone}</span>
 												{/if}
 												<div class="text-sm font-medium truncate">
-													{#if isAllDay(visit.start_date)}
+													{#if isVisitAllDay(visit.start_date, visit.end_date)}
 														{visit.start_date && typeof visit.start_date === 'string'
 															? visit.start_date.split('T')[0]
 															: ''}

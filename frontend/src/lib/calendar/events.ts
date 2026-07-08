@@ -7,7 +7,7 @@ import type {
 	CalendarTimezoneMode
 } from './types';
 import { formatAllDayDate } from '$lib/dateUtils';
-import { isAllDay } from '$lib';
+import { isAllDay, isVisitAllDay } from '$lib';
 // @ts-ignore luxon types are not bundled in this project
 import { DateTime } from 'luxon';
 import type { Collection, Lodging, Transportation } from '$lib/types';
@@ -280,7 +280,7 @@ export function buildCollectionCalendarEvents(
 				end: visit.end_date || visit.start_date,
 				timezone: visit.timezone,
 				mode,
-				allDay: isAllDay(visit.start_date),
+				allDay: isVisitAllDay(visit.start_date, visit.end_date),
 				userTimezone,
 				timezoneLabelEvent: labels.eventTimezone,
 				timezoneLabelLocal: labels.localTimezone

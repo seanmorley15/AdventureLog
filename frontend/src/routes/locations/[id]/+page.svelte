@@ -22,7 +22,7 @@
 	import { googleContentImage } from '$lib/images';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { addToast } from '$lib/toasts';
-	import { getActivityColor, normalizeBasemapType, isAllDay, copyToClipboard } from '$lib';
+	import { getActivityColor, normalizeBasemapType, isVisitAllDay, copyToClipboard } from '$lib';
 	import ActivityCard from '$lib/components/cards/ActivityCard.svelte';
 	import TrailCard from '$lib/components/cards/TrailCard.svelte';
 	import NewLocationModal from '$lib/components/locations/LocationModal.svelte';
@@ -559,7 +559,7 @@
 										<div class="flex-1 pb-4">
 											<div class="card bg-base-100 shadow">
 												<div class="card-body p-4">
-													{#if isAllDay(visit.start_date)}
+													{#if isVisitAllDay(visit.start_date, visit.end_date)}
 														<div class="flex items-center gap-2 mb-2">
 															<span class="badge badge-primary">All Day</span>
 															<span class="font-semibold">

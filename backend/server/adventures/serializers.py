@@ -7,6 +7,7 @@ from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
 from adventures.utils.geo import point_to_lat_lon
+from adventures.utils.datetime_utils import ensure_aware_utc, normalize_all_day_visit_dates
 from adventures.utils.serializer_geo_fields import (
     ActivityCoordinateMixin,
     CoordinateSerializerMixin,
@@ -465,6 +466,23 @@ class VisitSerializer(serializers.ModelSerializer):
         model = Visit
         fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        for field in ('start_date', 'end_date'):
+            if field in attrs and attrs[field] is not None:
+                attrs[field] = ensure_aware_utc(attrs[field])
+
+        instance = getattr(self, 'instance', None)
+        start = attrs.get('start_date', getattr(instance, 'start_date', None) if instance else None)
+        end = attrs.get('end_date', getattr(instance, 'end_date', None) if instance else None)
+
+        if start is not None:
+            normalized_start, normalized_end = normalize_all_day_visit_dates(start, end)
+            attrs['start_date'] = normalized_start
+            if normalized_end is not None:
+                attrs['end_date'] = normalized_end
+
+        return attrs
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):

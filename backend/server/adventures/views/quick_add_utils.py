@@ -12,6 +12,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from adventures.models import Collection, CollectionItineraryItem, Visit
 from adventures.services.places.details import get_place_details
+from adventures.utils.datetime_utils import aware_utc_from_date
 
 
 def coerce_coordinate(value, min_value, max_value):
@@ -265,8 +266,8 @@ def apply_quick_add_itinerary_date(content_object, date_value):
     model_name = content_object._meta.model_name
 
     if model_name == "location":
-        start_dt = datetime.datetime.combine(date_value, datetime.time.min)
-        end_dt = datetime.datetime.combine(date_value, datetime.time.max)
+        start_dt = aware_utc_from_date(date_value)
+        end_dt = aware_utc_from_date(date_value)
 
         exact_match = Visit.objects.filter(
             location=content_object, start_date=start_dt, end_date=end_dt
@@ -294,7 +295,7 @@ def apply_quick_add_itinerary_date(content_object, date_value):
         if content_object.check_in and content_object.check_out:
             return
 
-        check_in = datetime.datetime.combine(date_value, datetime.time.min)
+        check_in = aware_utc_from_date(date_value)
         check_out = check_in + datetime.timedelta(days=1)
         content_object.check_in = check_in
         content_object.check_out = check_out

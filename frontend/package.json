@@ -39,6 +39,9 @@
 		"vite": "^5.4.19"
 	},
 	"type": "module",
+	"engines": {
+		"node": ">=22 <26"
+	},
 	"dependencies": {
 		"@lukulent/svelte-umami": "^0.0.3",
 		"dompurify": "^3.2.5",

@@ -15,6 +15,7 @@ from adventures.models import (
     Transportation,
     Visit,
 )
+from adventures.utils.datetime_utils import is_midnight_utc
 
 CALENDAR_EVENT_COLORS = {
     'visit': '#3b82f6',
@@ -122,18 +123,6 @@ def _build_event(
     }
 
 
-def _is_midnight_utc(value: datetime) -> bool:
-    if timezone.is_naive(value):
-        value = timezone.make_aware(value, dt_timezone.utc)
-    utc_value = value.astimezone(dt_timezone.utc)
-    return (
-        utc_value.hour == 0
-        and utc_value.minute == 0
-        and utc_value.second == 0
-        and utc_value.microsecond == 0
-    )
-
-
 def _visit_events(
     user,
     range_start: date | None,
@@ -175,7 +164,7 @@ def _visit_events(
             ):
                 continue
 
-            all_day = _is_midnight_utc(visit.start_date)
+            all_day = is_midnight_utc(visit.start_date)
             events.append(
                 _build_event(
                     event_id=f'visit-{visit.id}',
@@ -233,7 +222,7 @@ def _transportation_events(user, range_start: date | None, range_end: date | Non
                 title=item.name or item.type or 'Transportation',
                 start=item.date,
                 end=item.end_date or item.date,
-                all_day=_is_midnight_utc(item.date),
+                all_day=is_midnight_utc(item.date),
                 timezone_name=item.start_timezone or item.end_timezone,
                 icon=icon,
                 category=item.type or 'Transportation',
