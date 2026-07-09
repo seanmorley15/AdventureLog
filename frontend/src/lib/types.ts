@@ -100,15 +100,6 @@ export type Location = {
 	trails: Trail[];
 };
 
-export type AdditionalLocation = Location & {
-	sun_times: {
-		date: string;
-		visit_id: string;
-		sunrise: string;
-		sunset: string;
-	}[];
-};
-
 export type Country = {
 	id: number;
 	name: string;

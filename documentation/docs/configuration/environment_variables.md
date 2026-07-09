@@ -84,7 +84,7 @@ Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_re
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | No | External geocoding limit. | `120/minute` |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | No | Recommendations API limit. | `30/minute` |
 | `RATE_LIMIT_EXTERNAL_WIKIPEDIA` | No | Wikipedia lookup limit. | `60/minute` |
-| `RATE_LIMIT_EXTERNAL_SUN_TIMES` | No | Sun times API limit. | `30/minute` |
+| `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET` | No | Sunrise/sunset API limit. | `30/minute` |
 
 See [Advanced Configuration](advanced_configuration.md) for usage notes.
 

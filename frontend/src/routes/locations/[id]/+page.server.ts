@@ -1,12 +1,12 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { AdditionalLocation, Location, Collection } from '$lib/types';
+import type { Location } from '$lib/types';
 import { buildLocationShareMeta } from '$lib/shareMeta.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
-	let request = await fetch(`${endpoint}/api/locations/${id.id}/additional-info/`, {
+	let request = await fetch(`${endpoint}/api/locations/${id.id}/`, {
 		headers: {
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
 		},
@@ -21,7 +21,7 @@ export const load = (async (event) => {
 			shareMeta: null
 		};
 	} else {
-		let adventure = (await request.json()) as AdditionalLocation;
+		let adventure = (await request.json()) as Location;
 
 		return {
 			props: {

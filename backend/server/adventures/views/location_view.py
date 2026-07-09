@@ -20,8 +20,7 @@ from adventures.serializers import (
     MapPinSerializer,
 )
 from adventures.utils import pagination
-from adventures.throttling import ExternalGeocodeThrottle, ExternalSunTimesThrottle
-from adventures.utils.geo import point_to_lat_lon
+from adventures.throttling import ExternalGeocodeThrottle
 from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from adventures.services.share_image import (
     build_share_image,
@@ -393,32 +392,20 @@ class LocationViewSet(viewsets.ModelViewSet):
         serializer = CalendarLocationSerializer(queryset, many=True)
         return Response(serializer.data)
 
-    @action(
-        detail=True,
-        methods=['get'],
-        url_path='additional-info',
-        throttle_classes=[ExternalSunTimesThrottle],
-    )
+    @action(detail=True, methods=['get'], url_path='additional-info')
     def additional_info(self, request, pk=None):
-        """Get adventure with additional sunrise/sunset information."""
+        """Get adventure with extended details (kept for backwards compatibility)."""
         adventure = self.get_object()
         user = request.user
 
-        # Validate access permissions
         if not self._has_adventure_access(adventure, user):
             return Response(
                 {"error": "User does not have permission to access this adventure"},
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        # Get base adventure data
         serializer = self.get_serializer(adventure)
-        response_data = serializer.data
-
-        # Add sunrise/sunset data
-        response_data['sun_times'] = self._get_sun_times(adventure, response_data.get('visits', []))
-        
-        return Response(response_data)
+        return Response(serializer.data)
     
     @action(detail=True, methods=['post'])
     def duplicate(self, request, pk=None):
@@ -811,16 +798,6 @@ class LocationViewSet(viewsets.ModelViewSet):
                     return True
 
         return False
-
-    def _get_sun_times(self, adventure, visits):
-        """Get sunrise/sunset times for adventure visits via service."""
-        from adventures.services.sun.times import get_sun_times_for_visits
-
-        try:
-            latitude, longitude = point_to_lat_lon(adventure.coordinates)
-            return get_sun_times_for_visits(latitude, longitude, visits)
-        except Exception:
-            return []
 
     def paginate_and_respond(self, queryset, request):
         """Paginate queryset and return response."""

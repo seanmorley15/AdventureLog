@@ -3,10 +3,15 @@ import re
 from typing import Dict, List, Optional
 
 from difflib import SequenceMatcher
+from django.conf import settings
 
+from adventures.services.external_cache import get_or_fetch_cached
 from adventures.services.wikipedia.search import WikipediaClient, is_valid_image_url
 
 logger = logging.getLogger(__name__)
+
+WIKIPEDIA_DESC_CACHE_PREFIX = 'wikipedia_desc_v1'
+WIKIPEDIA_DESC_CACHE_TIMEOUT = getattr(settings, 'WIKIPEDIA_DESC_CACHE_TIMEOUT', 60 * 60 * 24 * 7)
 
 
 class WikipediaDescriptionService:
@@ -47,6 +52,22 @@ class WikipediaDescriptionService:
     def get_description(self, term: str, lang: str) -> Optional[Dict]:
         if not term:
             return None
+
+        normalized_term = term.strip()
+        normalized_lang = self.get_language(lang)
+
+        def fetch() -> Optional[Dict]:
+            return self._fetch_description(normalized_term, normalized_lang)
+
+        return get_or_fetch_cached(
+            WIKIPEDIA_DESC_CACHE_PREFIX,
+            normalized_lang,
+            normalized_term,
+            fetch_fn=fetch,
+            timeout=WIKIPEDIA_DESC_CACHE_TIMEOUT,
+        )
+
+    def _fetch_description(self, term: str, lang: str) -> Optional[Dict]:
         candidates = self.client.get_candidate_pages(term, lang, max_candidates=self.MAX_CANDIDATES)
         for candidate in candidates:
             try:

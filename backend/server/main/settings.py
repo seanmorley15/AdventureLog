@@ -333,8 +333,13 @@ RATE_LIMIT_RATES = {
     'external_geocode': getenv('RATE_LIMIT_EXTERNAL_GEOCODE', '120/minute'),
     'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
     'external_wikipedia': getenv('RATE_LIMIT_EXTERNAL_WIKIPEDIA', '60/minute'),
-    'external_sun_times': getenv('RATE_LIMIT_EXTERNAL_SUN_TIMES', '30/minute'),
+    'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
 }
+
+SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60 * 60 * 24 * 30)))
+WIKIPEDIA_DESC_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_DESC_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
+WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', str(60 * 60 * 24 * 7)))
+EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 

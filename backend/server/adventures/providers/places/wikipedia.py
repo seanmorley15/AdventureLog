@@ -2,8 +2,13 @@ from typing import Optional
 from urllib.parse import quote
 
 import requests
+from django.conf import settings
 
 from adventures.providers.base import ProviderResult
+from adventures.services.external_cache import get_or_fetch_cached
+
+WIKIPEDIA_SUMMARY_CACHE_PREFIX = 'wikipedia_summary_v1'
+WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = getattr(settings, 'WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', 60 * 60 * 24 * 7)
 
 
 def fetch_summary(query: str, language: str = "en") -> ProviderResult[Optional[str]]:
@@ -11,9 +16,27 @@ def fetch_summary(query: str, language: str = "en") -> ProviderResult[Optional[s
     if not normalized_query:
         return ProviderResult(error="Missing query")
 
-    candidates = [normalized_query]
-    if "," in normalized_query:
-        head = normalized_query.split(",")[0].strip()
+    normalized_language = (language or "en").strip().lower() or "en"
+
+    def fetch() -> Optional[str]:
+        return _fetch_summary_uncached(normalized_query, normalized_language)
+
+    cached = get_or_fetch_cached(
+        WIKIPEDIA_SUMMARY_CACHE_PREFIX,
+        normalized_language,
+        normalized_query,
+        fetch_fn=fetch,
+        timeout=WIKIPEDIA_SUMMARY_CACHE_TIMEOUT,
+    )
+    if cached:
+        return ProviderResult(data=cached)
+    return ProviderResult(data=None)
+
+
+def _fetch_summary_uncached(query: str, language: str) -> Optional[str]:
+    candidates = [query]
+    if "," in query:
+        head = query.split(",")[0].strip()
         if head and head not in candidates:
             candidates.append(head)
 
@@ -35,8 +58,8 @@ def fetch_summary(query: str, language: str = "en") -> ProviderResult[Optional[s
 
             extract = (data.get("extract") or "").strip()
             if len(extract) >= 120:
-                return ProviderResult(data=extract)
+                return extract
         except requests.exceptions.RequestException:
             continue
 
-    return ProviderResult(data=None)
+    return None

@@ -29,5 +29,5 @@ class ExternalWikipediaThrottle(ConditionalUserRateThrottle):
     scope = "external_wikipedia"
 
 
-class ExternalSunTimesThrottle(ConditionalUserRateThrottle):
-    scope = "external_sun_times"
+class ExternalSunriseSunsetThrottle(ConditionalUserRateThrottle):
+    scope = "external_sunrise_sunset"

@@ -30,7 +30,7 @@ Per-endpoint overrides (all optional):
 | `RATE_LIMIT_EXTERNAL_GEOCODE` | `120/minute` | External geocoding |
 | `RATE_LIMIT_EXTERNAL_RECOMMENDATIONS` | `30/minute` | Recommendations |
 | `RATE_LIMIT_EXTERNAL_WIKIPEDIA` | `60/minute` | Wikipedia lookups |
-| `RATE_LIMIT_EXTERNAL_SUN_TIMES` | `30/minute` | Sun times API |
+| `RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET` | `30/minute` | Sunrise/sunset API |
 
 ## Performance
 
