@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Collection, ContentImage, Location, Collaborator, Lodging } from '$lib/types';
-	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -49,8 +48,14 @@
 
 	export let data: PageData;
 
-	// Handle both 'collection' and 'adventure' properties for backward compatibility
-	let collection: Collection = (data.props as any).collection || (data.props as any).adventure;
+	function getCollectionFromPageData(pageData: PageData): Collection | null | undefined {
+		return (
+			(pageData.props as { collection?: Collection; adventure?: Collection }).collection ??
+			(pageData.props as { collection?: Collection; adventure?: Collection }).adventure
+		);
+	}
+
+	let collection: Collection | undefined;
 	let currentSlide = 0;
 	let notFound: boolean = false;
 	let isLocationModalOpen: boolean = false;
@@ -475,11 +480,40 @@
 		selectedCalendarEvent = null;
 	}
 
-	onMount(async () => {
-		if (!collection) {
+	function resetCollectionPageUiState() {
+		currentSlide = 0;
+		isLocationModalOpen = false;
+		isLodgingModalOpen = false;
+		isTransportationModalOpen = false;
+		isChecklistModalOpen = false;
+		isNoteModalOpen = false;
+		adventureToEdit = null;
+		transportationToEdit = null;
+		noteToEdit = null;
+		checklistToEdit = null;
+		lodgingToEdit = null;
+		isImageModalOpen = false;
+		isLocationLinkModalOpen = false;
+		showCalendarModal = false;
+		selectedCalendarEvent = null;
+		isSocialShareModalOpen = false;
+		calendarInitialDate = null;
+	}
+
+	function applyCollectionPageData(collectionData: Collection | null | undefined) {
+		if (!collectionData) {
 			notFound = true;
+			collection = undefined;
+			resetCollectionPageUiState();
+			return;
 		}
-	});
+
+		notFound = false;
+		collection = collectionData;
+		resetCollectionPageUiState();
+	}
+
+	$: applyCollectionPageData(getCollectionFromPageData(data));
 
 	function goToSlide(index: number) {
 		currentSlide = index;
