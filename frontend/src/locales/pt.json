@@ -339,7 +339,7 @@
     "complete_import": "Concluir importação",
     "complete_strava_import": "Importação completa do Strava",
     "confirm_delete_activity": "Tem certeza de que deseja excluir esta atividade?",
-    "connect_to_wanderer": "Conecte-se ao Wanderer",
+    "connect_to_wanderer": "Ligue-se ao Wanderer",
     "continue": "Continuar",
     "countries": "Países",
     "create_new_location": "Criar novo local",
@@ -532,7 +532,7 @@
     "forgot_password": "Esqueceu sua senha?",
     "last_name": "Sobrenome",
     "logging_in": "Fazendo login",
-    "login": "Conecte-se",
+    "login": "Iniciar sessão",
     "login_error": "Não é possível fazer login com as credenciais fornecidas.",
     "new_password": "Nova senha (6 caracteres)",
     "no_public_collections": "Nenhuma coleção pública encontrada",
@@ -731,7 +731,7 @@
     "view_profile": "Ver perfil"
   },
   "google_maps": {
-    "google_maps_integration_desc": "Conecte sua conta do Google Maps para obter recomendações e resultados de pesquisa de localização de alta qualidade.",
+    "google_maps_integration_desc": "Ligue a sua conta do Google Maps para obter recomendações e resultados de pesquisa de localização de alta qualidade.",
     "google_maps_integration_desc_no_staff": "Esta integração deve primeiro ser habilitada pelo administrador neste servidor."
   },
   "immich": {
@@ -740,7 +740,7 @@
     "api_note": "Nota: este deve ser o URL do servidor API Immich, portanto provavelmente termina com /api, a menos que você tenha uma configuração personalizada.",
     "by_album": "Por álbum",
     "by_date": "Por data",
-    "connection_error": "Erro ao conectar ao servidor Immich",
+    "connection_error": "Erro ao ligar ao servidor Immich",
     "copy_locally": "Copie imagens localmente",
     "copy_locally_desc": "Copie as imagens para o servidor para acesso offline. \nUsa mais espaço em disco.",
     "disable": "Desativar",
@@ -1064,7 +1064,7 @@
     "change_password": "Alterar a senha",
     "complete_setup_to_enable": "Conclua a configuração para ativar o MFA",
     "confirm_new_password": "Confirme a nova senha",
-    "connected": "Conectado",
+    "connected": "Ligado",
     "copy": "Cópia",
     "copy_all": "Copiar tudo",
     "current_password": "Senha atual",
@@ -1075,7 +1075,7 @@
     "debug_information": "Informações de depuração",
     "disable_mfa": "Desativar MFA",
     "disabled": "Desabilitado",
-    "disconnected": "Desconectado",
+    "disconnected": "Desligado",
     "documentation_link": "Link da documentação",
     "email_added": "E-mail adicionado com sucesso!",
     "email_change": "Alterar e-mail",
@@ -1104,7 +1104,7 @@
     "generic_error": "Ocorreu um erro ao processar sua solicitação.",
     "important": "Importante",
     "integrations": "Integrações",
-    "integrations_desc": "Conecte serviços externos para aprimorar sua experiência",
+    "integrations_desc": "Ligue serviços externos para melhorar a sua experiência",
     "integrations_settings": "Configurações de integrações",
     "invalid_credentials": "Credenciais inválidas",
     "join_discord": "Junte-se à discórdia",
@@ -1137,7 +1137,7 @@
     "pass_change_desc": "Atualize a senha da sua conta para melhor segurança",
     "password_auth": "Autenticação de senha",
     "password_change": "Alterar a senha",
-    "password_change_lopout_warning": "Você será desconectado após alterar sua senha.",
+    "password_change_lopout_warning": "A sua sessão vai ser terminada após alterar a sua palavra passe.",
     "password_disable_warning": "Atualmente, a autenticação por senha está desabilitada. \nÉ necessário fazer login por meio de um provedor social ou OIDC.",
     "password_disabled": "Autenticação por senha desativada",
     "password_disabled_error": "Erro ao desativar a autenticação por senha. \nCertifique-se de que um provedor social ou OIDC esteja vinculado à sua conta.",
@@ -1237,7 +1237,7 @@
     "disconnected": "Desconectado do Strava com sucesso",
     "gpx_required": "Por favor envie o ficheiro GPX para concluir a importação do Strava",
     "not_enabled": "A integração do Strava não está habilitada nesta instância.",
-    "strava_integration_desc": "Conecte-se ao Strava para importar facilmente suas atividades para locais e visitas"
+    "strava_integration_desc": "Ligue-se ao Strava para importar facilmente as suas atividades para locais e visitas"
   },
   "transportation": {
     "arrival_code": "Código de chegada",
