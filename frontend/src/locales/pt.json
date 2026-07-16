@@ -495,7 +495,7 @@
     "view_on": "Ver em",
     "view_strava_activities": "Ver atividades do Strava",
     "view_trail": "Ver trilha",
-    "wanderer_integration_error": "A integração do Wanderer não está habilitada. \nConecte-o em Configurações → Integrações.",
+    "wanderer_integration_error": "A integração do Wanderer não está ativada. Ligue-a em Configurações → Integrações.",
     "wiki_results_found": "Resultados da Wikipédia",
     "wikipedia_error": "Falha ao gerar a descrição da Wikipedia"
   },
@@ -760,7 +760,7 @@
     "loading_albums": "Carregando álbuns",
     "localhost_note": "Nota: localhost provavelmente não vai funcionar, a menos que configure as redes docker adequadamente. \nRecomenda-se usar o endereço IP do servidor ou o nome de domínio.",
     "need_help": "Precisa de ajuda para configurar isso? \nConfira o",
-    "network_error": "Erro de rede ao conectar ao servidor Immich. \nVerifique sua conexão e tente novamente.",
+    "network_error": "Erro de rede ao ligar ao servidor Immich. Verifique a sua ligação e tente novamente.",
     "no_images": "Nenhuma imagem encontrada",
     "no_items_found": "Nenhum item encontrado",
     "select_album": "Selecione o álbum",
