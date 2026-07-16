@@ -598,7 +598,7 @@
     "new_item": "Novo item",
     "no_items_yet": "Nenhum item ainda",
     "update_checklist_details": "Lista de verificação de edição",
-    "viewing_checklist": "Visualizando lista de verificação"
+    "viewing_checklist": "Visualizar lista de verificação"
   },
   "collection": {
     "archived_appear_here": "As coleções arquivadas aparecerão aqui.",
@@ -922,15 +922,15 @@
     "enter_note_title": "Insira o título da nota",
     "failed_to_save": "Falha ao salvar nota",
     "invalid_url": "URL inválido",
-    "note_delete_error": "Erro ao excluir nota",
-    "note_deleted": "Nota excluída com sucesso!",
+    "note_delete_error": "Erro ao apagar nota",
+    "note_deleted": "Nota apagada com sucesso!",
     "note_editor": "Editor de notas",
     "note_public": "Esta nota é pública porque está em uma coleção pública.",
     "note_viewer": "Visualizador de notas",
     "open": "Abrir",
     "save": "Salvar",
     "update_note_details": "Nota de edição",
-    "viewing_note": "Visualizando nota"
+    "viewing_note": "Ver a nota"
   },
   "profile": {
     "discovered": "descoberto",
@@ -1114,7 +1114,7 @@
     "license": "Licença",
     "make_primary": "Tornar primário",
     "manual_entry": "Entrada manual",
-    "map_style_desc": "Usado como mapa base predefinido entre mapas.",
+    "map_style_desc": "Usado como o mapa base predefinido entre mapas.",
     "media": "Mídia",
     "media_files": "ficheiros",
     "media_profile_pics": "Fotos de perfil",
