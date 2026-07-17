@@ -501,7 +501,9 @@
     "wikipedia_error": "Falha ao gerar a descrição da Wikipedia",
     "google_photos_available": "{count} foto(s) Google disponíveis",
     "google_photos_import_all": "Importar tudo a partir do Google",
-    "google_photos_import_selected": "Importar os selecionados"
+    "google_photos_import_selected": "Importar os selecionados",
+    "google_photos_importing": "A importar fotos do Google…",
+    "google_photos_import_success": "Fotos do Google importadas com sucesso"
   },
   "api_keys": {
     "copied": "Copiado!",
