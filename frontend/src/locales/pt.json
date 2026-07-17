@@ -573,7 +573,14 @@
     "agenda": "Agenda",
     "event": "Evento",
     "sidebar_title": "Filtros & Opções",
-    "timezone_display": "Mostrador de hora"
+    "timezone_display": "Mostrador de hora",
+    "event_types": "Mostrar tipos de eventos",
+    "type_visit": "Visitas",
+    "type_transportation": "Transporte",
+    "type_lodging": "Alojamento",
+    "type_collection": "Viagens",
+    "type_note": "Notas",
+    "type_checklist": "Listas de verificação"
   },
   "categories": {
     "add_new_category": "Adicionar nova categoria",
@@ -606,7 +613,8 @@
     "new_item": "Novo item",
     "no_items_yet": "Nenhum item ainda",
     "update_checklist_details": "Lista de verificação de edição",
-    "viewing_checklist": "Visualizar lista de verificação"
+    "viewing_checklist": "Visualizar lista de verificação",
+    "more_items": "Mais Items"
   },
   "collection": {
     "archived_appear_here": "As coleções arquivadas aparecerão aqui.",
@@ -776,7 +784,8 @@
     "try_different_date": "Tente uma data diferente",
     "update_integration": "Atualizar integração",
     "validation_error": "Ocorreu um erro ao validar a integração do Immich. Por favor verifique o URL e a chave API do seu servidor.",
-    "enable_integration": "Habilitar integração"
+    "enable_integration": "Habilitar integração",
+    "immich_updated": "Integração do Immich atualizada com sucesso"
   },
   "invites": {
     "accept": "Aceitar",
@@ -921,7 +930,10 @@
     "recommendation_category": "Categoria",
     "recommendation_radius": "Raio de pesquisa",
     "recommendations_count": "{count} lugares encontrados",
-    "recommendations_empty": "Não há recomendações nesta área. Tente um raio maior."
+    "recommendations_empty": "Não há recomendações nesta área. Tente um raio maior.",
+    "show_photos": "Mostrar fotos",
+    "hide_photos": "Esconder fotos",
+    "photos": "Fotos"
   },
   "notes": {
     "content": "Contente",
@@ -1378,5 +1390,14 @@
     "visit_remove_failed": "Falha ao remover visita",
     "visit_to": "Visita a",
     "your_random_adventure_awaits": "Sua aventura aleatória o aguarda!"
+  },
+  "images": {
+    "map_pin_title": "Localização da foto",
+    "source": {
+      "google": "Foto do Google Maps",
+      "wikipedia": "Foto da Wikipedia",
+      "immich": "Foto do Immich",
+      "url": "Foto de URL externo"
+    }
   }
 }
