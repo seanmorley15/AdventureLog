@@ -580,7 +580,9 @@
     "type_lodging": "Alojamento",
     "type_collection": "Viagens",
     "type_note": "Notas",
-    "type_checklist": "Listas de verificação"
+    "type_checklist": "Listas de verificação",
+    "search_placeholder": "Procurar eventos, locais, coleções...",
+    "upcoming": "Próximos eventos"
   },
   "categories": {
     "add_new_category": "Adicionar nova categoria",
