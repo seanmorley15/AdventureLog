@@ -503,7 +503,9 @@
     "google_photos_import_all": "Importar tudo a partir do Google",
     "google_photos_import_selected": "Importar os selecionados",
     "google_photos_importing": "A importar fotos do Google…",
-    "google_photos_import_success": "Fotos do Google importadas com sucesso"
+    "google_photos_import_success": "Fotos do Google importadas com sucesso",
+    "google_photos_import_error": "Não pude importar as fotos do Google",
+    "google_photos_select_hint": "Selecione as fotos que deseja importar, ou importe todas de uma vez."
   },
   "api_keys": {
     "copied": "Copiado!",
@@ -1196,7 +1198,12 @@
     "verify_setup": "Verifique a configuração",
     "whats_included": "O que está incluído",
     "world_travel_visits": "Visitas de viagens pelo mundo",
-    "new_email": "Novo email"
+    "new_email": "Novo email",
+    "public_profile_sharing_warning": "Você está atualmente partilhado em {count} coleções. Tornar o seu perfil privado vai removê-lo dessas coleções.",
+    "public_profile_invite_warning": "Você tem {count} convites de coleção pendentes. Tornar o seu perfil privado vai cancelá-los.",
+    "public_profile_private_confirm": "Tornar o seu perfil privado vai removê-lo de {shared} coleções partilhadas e cancelar {invites} convites pendentes. Deseja continuar?",
+    "public_profile_left_collections": "O seu perfil agora é privado. Você foi removido de {count} coleções partilhadas.",
+    "public_profile_revoked_invites": "{count} convites de coleção pendentes cancelados."
   },
   "settings_download_backup": "Descarregar cópia de segurança",
   "share": {
