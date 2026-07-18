@@ -582,7 +582,17 @@
     "type_note": "Notas",
     "type_checklist": "Listas de verificação",
     "search_placeholder": "Procurar eventos, locais, coleções...",
-    "upcoming": "Próximos eventos"
+    "upcoming": "Próximos",
+    "this_month": "Este mês",
+    "upcoming_agenda": "Próximos eventos",
+    "no_upcoming_events": "Nenhuns próximos eventos correspondem aos seus filtros.",
+    "no_events_in_range": "Nenhuns eventos nesta gama.",
+    "in_collection": "Coleção",
+    "view_collection": "Ver coleção",
+    "load_error": "Não pude carregar eventos do calendário. Tente outra vez.",
+    "export_success": "Calendário exportado com sucesso.",
+    "export_error": "Não pude exportar o calendário.",
+    "more_events": "+{count} mais"
   },
   "categories": {
     "add_new_category": "Adicionar nova categoria",
