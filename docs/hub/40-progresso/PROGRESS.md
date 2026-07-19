@@ -10,7 +10,7 @@ justificativa completa da ordem.
 | P1 | Gate de pesquisa: VPS comporta OSRM? | Concluído | 2026-07-18 | `docs/hub/20-decisoes/001-infra-osrm.md` |
 | P2 | Fase 1: otimização de rota multi-parada | Concluído | 2026-07-19 | `4639236` (branch `fase-1-rota`, merge) |
 | P2.5 | Auditoria: bugs e gaps do AdventureLog base | Concluído | 2026-07-19 | [PR #3](https://github.com/Caio-Coutinho01/Trilho/pull/3) (mergeado) |
-| P2.6 | Features de baixo esforço (testadas) | Não iniciado | 2026-07-19 | — |
+| P2.6 | Features de baixo esforço (testadas) | Concluído | 2026-07-19 | [PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4) (mergeado, squash) |
 | P5 (P5a/P5b) | Fase 3: recomendação de lugares com restrições | Não iniciado | 2026-07-19 | — |
 | P6 | Fase 4: assistente de IA / orquestração | Não iniciado | 2026-07-19 | — |
 | P6.5 | Remapeamento de design/UI do site inteiro | Não iniciado | 2026-07-19 | — |
@@ -20,6 +20,12 @@ justificativa completa da ordem.
 
 ## Notas
 
+- 2026-07-19: P2.6 fechado com 1 único item de backlog (`backlog-p26`): issue #2 (reverse
+  geocode retornando "Arcinazzo Romano" pra Roma centro — substring match sem word-boundary em
+  `match_locality`, `backend/server/adventures/geocoding.py`). Corrigido em
+  [PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4), 2 testes de regressão novos,
+  suíte `adventures routing` 26/26 verde. Corte de linha (2.6.3): backlog `backlog-p26` zerou
+  após esse item — nada adiado.
 - 2026-07-19: `main` local estava sem `docs/hub/` (só existia em `fase-2-offline`, commits
   `11167e9`+`5414742`+`7615d20`) — fast-forward puro (`fase-2-offline` era só `main` + 2
   commits de doc, sem divergência) feito localmente pra destravar o protocolo de

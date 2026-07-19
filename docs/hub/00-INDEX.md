@@ -24,7 +24,7 @@
 
 ## 40-progresso — estado vivo
 
-- [PROGRESS.md](40-progresso/PROGRESS.md) — status por passo do blueprint; atualizar a cada fechamento.
+- [PROGRESS.md](40-progresso/PROGRESS.md) — status por passo do blueprint; atualizar a cada fechamento. P2.6 concluído em 2026-07-19 ([PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4)).
 - [auditoria-p25.md](40-progresso/auditoria-p25.md) — achados da auditoria P2.5 (2026-07-19): 1
   bug bloqueante corrigido (issue #1), 1 backlog (issue #2), 2 itens pendentes de validação manual.
 
