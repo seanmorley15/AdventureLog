@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trilho — Fluxo até o MVP</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mermaid/10.9.1/mermaid.min.js"></script>
+<style>
+  body { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; margin: 24px; background: #fafafa; color: #222; }
+  h1 { font-size: 1.3rem; margin-bottom: 4px; }
+  p.sub { color: #666; margin-top: 0; font-size: 0.9rem; }
+  .mermaid { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 16px; }
+  .legenda { font-size: 0.85rem; color: #555; margin-top: 12px; }
+  .legenda span { display: inline-block; margin-right: 16px; }
+  .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<h1>Trilho — do fork ao MVP</h1>
+<p class="sub">Fork do AdventureLog rumo a recursos do Wanderlog · cada caixa de feature = 1 PR com gate /verify · plano completo em <code>trilho-blueprint.md</code></p>
+
+<pre class="mermaid">
+flowchart TB
+    subgraph FUNDACAO["🏗️ Fundação (sem código novo)"]
+        P0["P0 — Bootstrap
+Fork + rodar local via Docker
+Codemap do código existente"]
+        P1{"P1 — Gate de infra
+A VPS Hetzner aguenta
+OSRM + Trilho + SecretarIA?"}
+        P1B["Plano B
+upgrade VPS / extract menor /
+pré-processar na máquina local"]
+    end
+
+    subgraph FEATURES["⚙️ Features (1 PR por fase, gate /verify)"]
+        P2["P2 — Fase 1: Rota otimizada
+OSRM (matriz real de distâncias)
++ nearest neighbor + 2-opt
+PR #1"]
+        P3["P3 — Deploy v0 na VPS
+Subdomínio + HTTPS
+SecretarIA segue no ar"]
+        P4["P4 — Fase 2: Offline / PWA
+Service worker + IndexedDB
+Instalar na tela de início
+PR #2"]
+        P5A["P5a — Fase 3a: Overpass
+Candidatos reais do OpenStreetMap
++ cache local
+PR #3a"]
+        P5B["P5b — Fase 3b: Ranking LLM
+Filtra/ranqueia por restrição
+Nunca inventa lugar
+PR #3b"]
+        P6["P6 — Fase 4: Assistente IA
+Chat que orquestra as ferramentas
+LLM não calcula nada geoespacial
+PR #4"]
+    end
+
+    subgraph USO["🎒 Você usando"]
+        P7{"P7 — Validação MVP
+Viagem real, offline,
+do início ao fim"}
+        MVP(["✅ v1.0-mvp
+Roteiro no bolso, sem sinal,
+sem entregar dados a ninguém"])
+        FIX["Corrigir bloqueantes
+em micro-PRs"]
+    end
+
+    P0 --> P1
+    P1 -- "cabe" --> P2
+    P1 -- "não cabe" --> P1B --> P2
+    P2 --> P3
+    P3 --> P4
+    P3 --> P5A --> P5B
+    P2 --> P6
+    P5B --> P6
+    P4 --> P7
+    P6 --> P7
+    P7 -- "fricção/bug" --> FIX --> P7
+    P7 -- "checklist completo" --> MVP
+
+    style P1 fill:#fff3cd,stroke:#b8860b
+    style P7 fill:#fff3cd,stroke:#b8860b
+    style MVP fill:#d4edda,stroke:#2e7d32
+    style P1B fill:#f8d7da,stroke:#a94442
+</pre>
+
+<p class="legenda">
+  <span><span class="dot" style="background:#fff3cd;border:1px solid #b8860b"></span>Decisão / gate</span>
+  <span><span class="dot" style="background:#f8d7da;border:1px solid #a94442"></span>Plano B (se a VPS não comportar)</span>
+  <span><span class="dot" style="background:#d4edda;border:1px solid #2e7d32"></span>MVP pronto</span>
+</p>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: "neutral", flowchart: { useMaxWidth: true } });
+</script>
+</body>
+</html>

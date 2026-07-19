@@ -1,0 +1,67 @@
+flowchart TB
+    subgraph FUNDACAO["🏗️ Fundação (sem código novo)"]
+        P0["P0 — Bootstrap
+Fork + rodar local via Docker
+Codemap do código existente"]
+        P1{"P1 — Gate de infra
+A VPS Hetzner aguenta
+OSRM + Trilho + SecretarIA?"}
+        P1B["Plano B
+upgrade VPS / extract menor /
+pré-processar na máquina local"]
+    end
+
+    subgraph FEATURES["⚙️ Features (1 PR por fase, gate /verify)"]
+        P2["P2 — Fase 1: Rota otimizada
+OSRM (matriz real de distâncias)
++ nearest neighbor + 2-opt
+PR #1"]
+        P3["P3 — Deploy v0 na VPS
+Subdomínio + HTTPS
+SecretarIA segue no ar"]
+        P4["P4 — Fase 2: Offline / PWA
+Service worker + IndexedDB
+Instalar na tela de início
+PR #2"]
+        P5A["P5a — Fase 3a: Overpass
+Candidatos reais do OpenStreetMap
++ cache local
+PR #3a"]
+        P5B["P5b — Fase 3b: Ranking LLM
+Filtra/ranqueia por restrição
+Nunca inventa lugar
+PR #3b"]
+        P6["P6 — Fase 4: Assistente IA
+Chat que orquestra as ferramentas
+LLM não calcula nada geoespacial
+PR #4"]
+    end
+
+    subgraph USO["🎒 Você usando"]
+        P7{"P7 — Validação MVP
+Viagem real, offline,
+do início ao fim"}
+        MVP(["✅ v1.0-mvp
+Roteiro no bolso, sem sinal,
+sem entregar dados a ninguém"])
+        FIX["Corrigir bloqueantes
+em micro-PRs"]
+    end
+
+    P0 --> P1
+    P1 -- "cabe" --> P2
+    P1 -- "não cabe" --> P1B --> P2
+    P2 --> P3
+    P3 --> P4
+    P3 --> P5A --> P5B
+    P2 --> P6
+    P5B --> P6
+    P4 --> P7
+    P6 --> P7
+    P7 -- "fricção/bug" --> FIX --> P7
+    P7 -- "checklist completo" --> MVP
+
+    style P1 fill:#fff3cd,stroke:#b8860b
+    style P7 fill:#fff3cd,stroke:#b8860b
+    style MVP fill:#d4edda,stroke:#2e7d32
+    style P1B fill:#f8d7da,stroke:#a94442
