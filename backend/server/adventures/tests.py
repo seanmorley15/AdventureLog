@@ -1,6 +1,10 @@
+from unittest.mock import patch
+
+from django.contrib.contenttypes.models import ContentType
 from rest_framework.test import APITestCase
 
-from adventures.models import Collection, CollectionItineraryItem, Location
+from adventures.models import Collection, CollectionItineraryItem, Location, Note, Visit
+from routing.exceptions import OSRMUnavailableError
 from users.models import CustomUser
 
 
@@ -55,3 +59,118 @@ class ItineraryAPITestCase(APITestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['date'][0], 'Dated items must include a date. To create a trip-wide item, set is_global=true.')
+
+
+class ItineraryOptimizeEndpointTests(APITestCase):
+    """Endpoint-level tests for POST /api/itineraries/optimize/, with the
+    OSRM call mocked (routing/tests.py covers the OSRM client and the
+    optimize_order algorithm in isolation).
+    """
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='optimize-user',
+            email='optimize-user@example.com',
+            password='testpassword123',
+        )
+        self.collection = Collection.objects.create(user=self.user, name='Italy Trip')
+        self.client.force_authenticate(user=self.user)
+
+        self.loc_a = Location.objects.create(user=self.user, name='A', latitude=41.9, longitude=12.5)
+        self.loc_b = Location.objects.create(user=self.user, name='B', latitude=43.7, longitude=11.3)
+        self.loc_c = Location.objects.create(user=self.user, name='C', latitude=45.4, longitude=9.2)
+
+        self.visit_a = Visit.objects.create(location=self.loc_a)
+        self.visit_b = Visit.objects.create(location=self.loc_b)
+        self.visit_c = Visit.objects.create(location=self.loc_c)
+
+        visit_ct = ContentType.objects.get_for_model(Visit)
+        self.item_a = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=visit_ct, object_id=self.visit_a.id,
+            date='2026-08-01', order=0,
+        )
+        self.item_b = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=visit_ct, object_id=self.visit_b.id,
+            date='2026-08-01', order=1,
+        )
+        self.item_c = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=visit_ct, object_id=self.visit_c.id,
+            date='2026-08-01', order=2,
+        )
+
+        # A Note on the same day: no coordinates, must be skipped and its
+        # order slot (3) must never be reassigned to a Visit.
+        note = Note.objects.create(user=self.user, name='Lembrete', date='2026-08-01')
+        note_ct = ContentType.objects.get_for_model(Note)
+        self.note_item = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=note_ct, object_id=note.id,
+            date='2026-08-01', order=3,
+        )
+
+    def _optimize(self, **overrides):
+        payload = {"collection_id": str(self.collection.id), "date": "2026-08-01"}
+        payload.update(overrides)
+        return self.client.post('/api/itineraries/optimize/', payload, format='json')
+
+    @patch('adventures.views.itinerary_view.get_duration_matrix')
+    def test_optimize_returns_cheaper_order_and_skips_note(self, mock_matrix):
+        # Stops arrive as A, B, C (indices 0,1,2 in that order, matching
+        # their .order values). A->B and B->C are both expensive; A->C is
+        # cheap, so a good tour avoids ever going straight A->B->C.
+        mock_matrix.return_value = [
+            [0, 100, 10],
+            [100, 0, 100],
+            [10, 100, 0],
+        ]
+
+        response = self._optimize()
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['optimized'])
+        self.assertEqual(data['skipped_item_ids'], [str(self.note_item.id)])
+        self.assertEqual(data['current_total_duration_seconds'], 200)  # A->B (100) + B->C (100)
+        self.assertEqual(data['proposed_total_duration_seconds'], 110)  # best achievable path cost
+
+        proposed_ids = {entry['id'] for entry in data['proposed_order']}
+        self.assertEqual(
+            proposed_ids, {str(self.item_a.id), str(self.item_b.id), str(self.item_c.id)}
+        )
+        # The Note's own order slot (3) must never be handed to a reordered stop.
+        self.assertNotIn(3, [entry['order'] for entry in data['proposed_order']])
+        # The three Visit order slots (0,1,2) must be exactly reused, just permuted.
+        self.assertEqual(
+            sorted(entry['order'] for entry in data['proposed_order']), [0, 1, 2]
+        )
+
+    @patch('adventures.views.itinerary_view.get_duration_matrix')
+    def test_optimize_returns_503_when_osrm_unavailable(self, mock_matrix):
+        mock_matrix.side_effect = OSRMUnavailableError("OSRM_URL não configurada")
+
+        response = self._optimize()
+
+        self.assertEqual(response.status_code, 503)
+        self.assertFalse(response.json()['optimized'])
+
+    def test_optimize_with_a_single_stop_reports_nothing_to_optimize(self):
+        # Remove two of the three stops so only one remains — OSRM is never
+        # even called in this case (asserted implicitly: no mock/patch here,
+        # so a real call would fail loudly if the view tried to make one).
+        self.item_b.delete()
+        self.item_c.delete()
+
+        response = self._optimize()
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertFalse(data['optimized'])
+
+    def test_optimize_denies_users_without_access_to_the_collection(self):
+        intruder = CustomUser.objects.create_user(
+            username='intruder', email='intruder@example.com', password='testpassword123',
+        )
+        self.client.force_authenticate(user=intruder)
+
+        response = self._optimize()
+
+        self.assertEqual(response.status_code, 403)

@@ -69,6 +69,7 @@ INSTALLED_APPS = (
     'worldtravel',
     'users',
     'integrations',
+    'routing',
     'django.contrib.gis',
     # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
@@ -401,3 +402,10 @@ COUNTRY_REGION_JSON_VERSION = 'v3.1'
 GOOGLE_MAPS_API_KEY = getenv('GOOGLE_MAPS_API_KEY', '')
 STRAVA_CLIENT_ID = getenv('STRAVA_CLIENT_ID', '')
 STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')
+
+# Self-hosted OSRM (route optimization, Fase 1 of the Trilho blueprint).
+# Intentionally read directly via os.environ in routing/osrm_client.py rather
+# than only through this setting, so an unset/blank value degrades the
+# optimize feature gracefully (I4) instead of needing a Django restart to
+# pick up docker-compose.osrm.yml. Kept here too for visibility/introspection.
+OSRM_URL = getenv('OSRM_URL', '')

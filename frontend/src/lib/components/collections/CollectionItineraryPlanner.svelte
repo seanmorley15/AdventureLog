@@ -74,6 +74,69 @@
 	// Which day (ISO date string) is currently being saved. Used to show per-day spinner.
 	let savingDay: string | null = null;
 
+	// Route optimization (Fase 1 of the Trilho blueprint). Tracks which day's
+	// "Otimizar rota" request is in flight so only one can run at a time and
+	// its button can show a spinner.
+	let optimizingDayIndex: number | null = null;
+
+	async function optimizeDay(dayIndex: number) {
+		if (optimizingDayIndex !== null || isSavingOrder) return;
+		const day = days[dayIndex];
+		if (!day || day.items.length < 2) return;
+
+		optimizingDayIndex = dayIndex;
+		try {
+			const response = await fetch('/api/itineraries/optimize/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ collection_id: collection.id, date: day.date })
+			});
+
+			if (!response.ok) {
+				const error = await response.json().catch(() => ({}));
+				throw new Error(error.reason || error.detail || 'Falha ao otimizar a rota');
+			}
+
+			const data = await response.json();
+
+			if (!data.optimized) {
+				addToast('info', data.reason || 'Nada para otimizar nesse dia.');
+				return;
+			}
+
+			const currentMin = Math.round(data.current_total_duration_seconds / 60);
+			const proposedMin = Math.round(data.proposed_total_duration_seconds / 60);
+
+			// Minimal preview per the blueprint's "before/after duration ->
+			// confirm/discard" ask: a native confirm() dialog rather than a
+			// full map preview component, to keep this PR's scope contained.
+			const accept = confirm(
+				`Ordem atual: ~${currentMin} min de deslocamento.\n` +
+					`Ordem otimizada: ~${proposedMin} min de deslocamento.\n\n` +
+					`Aplicar a nova ordem?`
+			);
+			if (!accept) return;
+
+			const reorderResponse = await fetch('/api/itineraries/reorder/', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ items: data.proposed_order })
+			});
+
+			if (!reorderResponse.ok) {
+				throw new Error('Falha ao salvar a nova ordem');
+			}
+
+			addToast('success', 'Rota otimizada aplicada.');
+			window.location.reload();
+		} catch (error) {
+			console.error('Optimize route error:', error);
+			addToast('error', error instanceof Error ? error.message : 'Falha ao otimizar a rota');
+		} finally {
+			optimizingDayIndex = null;
+		}
+	}
+
 	// Check if auto-generate is available (only for users with modify permission)
 	$: canAutoGenerate =
 		canModify && collection.itinerary?.length === 0 && hasDatedRecords(collection);
@@ -2037,6 +2100,21 @@
 										{$t('adventures.saving')}...
 									</div>
 								</div>
+							{/if}
+
+							{#if canModify && day.items.length >= 2}
+								<button
+									type="button"
+									class="btn btn-sm btn-outline"
+									disabled={optimizingDayIndex !== null || isSavingOrder}
+									title="Reordena as paradas deste dia pela rota mais curta (via OSRM)"
+									on:click={() => optimizeDay(dayIndex)}
+								>
+									{#if optimizingDayIndex === dayIndex}
+										<span class="loading loading-spinner loading-xs"></span>
+									{/if}
+									Otimizar rota
+								</button>
 							{/if}
 
 							{#if canModify}

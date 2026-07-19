@@ -1,8 +1,8 @@
-from typing import List
+from typing import List, Optional, Tuple
 from django.db import transaction
 from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from adventures.models import CollectionItineraryItem
+from adventures.models import CollectionItineraryItem, Visit, Lodging
 
 
 @transaction.atomic
@@ -113,3 +113,36 @@ def reorder_itinerary_items(user, items_data: List[dict]):
         CollectionItineraryItem.objects.bulk_update(updated_items, ['date', 'is_global', 'order'])
 
     return updated_items
+
+
+def resolve_item_coordinates(item: CollectionItineraryItem) -> Optional[Tuple[float, float]]:
+    """Return (latitude, longitude) for an itinerary item that resolves to a
+    single geographic point, or None if it doesn't.
+
+    Only two of the content types behind `CollectionItineraryItem.item`
+    (a GenericForeignKey) currently resolve to a single point:
+    - Visit -> its Location's latitude/longitude
+    - Lodging -> its own latitude/longitude
+
+    Transportation is a leg between two points (not a stop) and Note has no
+    coordinates at all — both are deliberately excluded from route
+    optimization rather than guessed at. Callers (routing endpoints) must
+    treat items this returns None for as "not part of the optimizable set"
+    and leave their `order`/`date` untouched, not drop them.
+    """
+    obj = item.item
+    if obj is None:
+        return None
+
+    if isinstance(obj, Visit):
+        location = obj.location
+        if location and location.latitude is not None and location.longitude is not None:
+            return (float(location.latitude), float(location.longitude))
+        return None
+
+    if isinstance(obj, Lodging):
+        if obj.latitude is not None and obj.longitude is not None:
+            return (float(obj.latitude), float(obj.longitude))
+        return None
+
+    return None

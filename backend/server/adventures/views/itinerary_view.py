@@ -4,8 +4,11 @@ from django.utils.dateparse import parse_date, parse_datetime
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from adventures.serializers import CollectionItineraryItemSerializer, CollectionItineraryDaySerializer
-from adventures.utils.itinerary import reorder_itinerary_items
+from adventures.utils.itinerary import reorder_itinerary_items, resolve_item_coordinates
 from adventures.utils.autogenerate_itinerary import auto_generate_itinerary
+from routing.osrm_client import get_duration_matrix
+from routing.optimizer import optimize_order
+from routing.exceptions import OSRMUnavailableError
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -262,12 +265,6 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         item_date = data.get('date')
         item_order = data.get('order', 0)
         
-        # Basic XOR validation between date and is_global
-        if is_global and item_date:
-            return Response({'error': 'Global itinerary items must not include a date.'}, status=status.HTTP_400_BAD_REQUEST)
-        if (not is_global) and not item_date:
-            return Response({'error': 'Dated itinerary items must include a date.'}, status=status.HTTP_400_BAD_REQUEST)
-        
         # Validate that the itinerary date (if provided) falls within the
         # collection's start_date/end_date range (if those bounds are set).
         if collection_id and item_date and not is_global:
@@ -413,7 +410,127 @@ class ItineraryViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(updated_items, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+    @action(detail=False, methods=['post'], url_path='optimize')
+    def optimize(self, request):
+        """
+        Preview an optimized visiting order for one group of itinerary items
+        (a single day, or the trip-wide/global group) in a collection.
+
+        This is a PREVIEW ONLY — nothing is persisted here. The frontend is
+        expected to show the current vs. proposed total duration, let the
+        user confirm or discard, and on confirm POST the returned
+        `proposed_order` array as-is to the existing `reorder` action above
+        (same collection, same permission model, same two-phase update).
+
+        Expected payload:
+        {
+            "collection_id": "uuid",
+            "date": "2024-01-01"   # OR "is_global": true
+        }
+
+        Only itinerary items that resolve to a single geographic point
+        (Visit -> Location, or Lodging) are considered "stops" and can be
+        reordered. Items that don't (Transportation legs, Notes) are left
+        untouched in place and reported under `skipped_item_ids` — see
+        adventures/utils/itinerary.py::resolve_item_coordinates.
+
+        If OSRM is unreachable or not configured (OSRM_URL unset), this
+        returns 503 with an explanatory `reason` rather than a 500 — the
+        rest of the API must keep working (blueprint invariant I4).
+        """
+        collection_id = request.data.get('collection_id')
+        date_param = request.data.get('date')
+        is_global = request.data.get('is_global', False)
+        if isinstance(is_global, str):
+            is_global = is_global.lower() in ['1', 'true', 'yes']
+
+        if not collection_id:
+            raise ValidationError({"collection_id": "This field is required."})
+        if not date_param and not is_global:
+            raise ValidationError({"date": "Either 'date' or 'is_global' must be provided."})
+
+        try:
+            collection = Collection.objects.get(id=collection_id)
+        except Collection.DoesNotExist:
+            raise ValidationError({"collection_id": "Collection not found."})
+
+        if not (collection.user == request.user or
+                collection.shared_with.filter(id=request.user.id).exists()):
+            raise PermissionDenied("You do not have permission to view this collection's itinerary.")
+
+        qs = CollectionItineraryItem.objects.filter(collection=collection)
+        if is_global:
+            qs = qs.filter(is_global=True)
+        else:
+            parsed_date = parse_date(str(date_param))
+            if not parsed_date:
+                raise ValidationError({"date": "Invalid date format, expected YYYY-MM-DD."})
+            qs = qs.filter(is_global=False, date=parsed_date)
+
+        # Ordered exactly as they currently sit; this ordering (and each
+        # item's existing .order value) is what lets us later reassign only
+        # the "stops" subset without colliding with skipped items' orders.
+        all_items = list(qs.order_by('order').select_related('collection'))
+
+        stops = []  # list of (item, latitude, longitude)
+        skipped_item_ids = []
+        for item in all_items:
+            coords = resolve_item_coordinates(item)
+            if coords is None:
+                skipped_item_ids.append(str(item.id))
+                continue
+            stops.append((item, coords[0], coords[1]))
+
+        if len(stops) < 2:
+            return Response({
+                "optimized": False,
+                "reason": "Menos de 2 paradas com coordenadas resolvíveis nesse grupo — nada para otimizar.",
+                "skipped_item_ids": skipped_item_ids,
+            }, status=status.HTTP_200_OK)
+
+        coordinates = [(lat, lon) for (_item, lat, lon) in stops]
+
+        try:
+            matrix = get_duration_matrix(coordinates)
+        except OSRMUnavailableError as exc:
+            return Response({
+                "optimized": False,
+                "reason": f"OSRM indisponível: {exc}",
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+
+        current_order = list(range(len(stops)))
+        proposed_order = optimize_order(matrix)
+
+        def total_duration(order):
+            return sum(matrix[order[i]][order[i + 1]] for i in range(len(order) - 1))
+
+        # The set of `.order` integer values that originally belonged to the
+        # optimizable subset (sorted ascending). Reassigning the proposed
+        # sequence onto exactly these slots means we never touch a slot
+        # a skipped item (Transportation/Note) currently occupies, so the
+        # unique-order-per-day constraint can't collide.
+        original_order_slots = sorted(item.order for item, _, _ in stops)
+        proposed_items = [stops[i][0] for i in proposed_order]
+
+        proposed_payload = [
+            {
+                "id": str(item.id),
+                "date": item.date.isoformat() if item.date else None,
+                "is_global": item.is_global,
+                "order": original_order_slots[idx],
+            }
+            for idx, item in enumerate(proposed_items)
+        ]
+
+        return Response({
+            "optimized": True,
+            "current_total_duration_seconds": total_duration(current_order),
+            "proposed_total_duration_seconds": total_duration(proposed_order),
+            "proposed_order": proposed_payload,
+            "skipped_item_ids": skipped_item_ids,
+        }, status=status.HTTP_200_OK)
+
     @action(detail=False, methods=['post'], url_path='auto-generate')
     @transaction.atomic
     def auto_generate(self, request):
