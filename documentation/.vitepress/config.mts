@@ -319,6 +319,10 @@ export default defineConfig({
                 text: "Wanderer",
                 link: "/docs/configuration/wanderer_integration",
               },
+              {
+                text: "Endurain",
+                link: "/docs/configuration/endurain_integration",
+              },
             ],
           },
           {

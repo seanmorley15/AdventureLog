@@ -63,12 +63,19 @@
 
 	// Activity management state
 	let stravaEnabled: boolean = false;
+	let endurainEnabled: boolean = false;
 	let visitActivities: { [visitId: string]: StravaActivity[] } = {};
+	let endurainVisitActivities: { [visitId: string]: StravaActivity[] } = {};
 	let loadingActivities: { [visitId: string]: boolean } = {};
+	let loadingEndurainActivities: { [visitId: string]: boolean } = {};
 	let expandedVisits: { [visitId: string]: boolean } = {};
+	let expandedEndurainVisits: { [visitId: string]: boolean } = {};
 	let uploadingActivity: { [visitId: string]: boolean } = {};
 	let showActivityUpload: { [visitId: string]: boolean } = {};
-	let pendingStravaImport: { [visitId: string]: StravaActivity | null } = {};
+	let pendingActivityImport: {
+		[visitId: string]: { activity: StravaActivity; provider: 'strava' | 'endurain' } | null;
+	} = {};
+	let importingEndurainActivity: { [visitId: string]: boolean } = {};
 
 	// Activity form state
 	let activityForm = {
@@ -80,6 +87,7 @@
 		elevation_gain: null as number | null,
 		elevation_loss: null as number | null,
 		start_date: '',
+		start_date_local: '',
 		calories: null as number | null,
 		gpx_file: null as File | null,
 		trail: null as string | null,
@@ -358,6 +366,71 @@
 		}
 	}
 
+	async function loadEndurainActivitiesForVisit(visit: Visit | TransportationVisit) {
+		if (!endurainEnabled) return;
+
+		loadingEndurainActivities[visit.id] = true;
+		loadingEndurainActivities = { ...loadingEndurainActivities };
+
+		try {
+			let startDate = new Date(visit.start_date);
+			let endDate = new Date(visit.end_date);
+
+			if (isVisitAllDay(visit.start_date, visit.end_date)) {
+				const endDatePart = allDayDatePart(visit.end_date);
+				endDate = new Date(`${endDatePart}T23:59:59Z`);
+			}
+
+			startDate.setHours(startDate.getHours() - 12);
+			endDate.setHours(endDate.getHours() + 12);
+
+			const bufferedStart = startDate.toISOString().split('T')[0];
+			const bufferedEnd = endDate.toISOString().split('T')[0];
+
+			const response = await fetch(
+				`/api/integrations/endurain/activities/?start_date=${bufferedStart}&end_date=${bufferedEnd}`,
+				{
+					method: 'GET',
+					headers: {
+						'Content-Type': 'application/json'
+					}
+				}
+			);
+
+			if (response.ok) {
+				const apiRes = await response.json();
+				endurainVisitActivities[visit.id] = apiRes.activities || [];
+				endurainVisitActivities = { ...endurainVisitActivities };
+			} else {
+				endurainVisitActivities[visit.id] = [];
+				endurainVisitActivities = { ...endurainVisitActivities };
+			}
+		} catch (error) {
+			console.error('Error loading Endurain activities for visit:', error);
+			endurainVisitActivities[visit.id] = [];
+			endurainVisitActivities = { ...endurainVisitActivities };
+		} finally {
+			loadingEndurainActivities[visit.id] = false;
+			loadingEndurainActivities = { ...loadingEndurainActivities };
+		}
+	}
+
+	function toggleEndurainVisitActivities(visit: Visit | TransportationVisit) {
+		const isExpanded = expandedEndurainVisits[visit.id];
+
+		if (!isExpanded) {
+			expandedEndurainVisits[visit.id] = true;
+			expandedEndurainVisits = { ...expandedEndurainVisits };
+
+			if (!endurainVisitActivities[visit.id]) {
+				loadEndurainActivitiesForVisit(visit);
+			}
+		} else {
+			expandedEndurainVisits[visit.id] = false;
+			expandedEndurainVisits = { ...expandedEndurainVisits };
+		}
+	}
+
 	function showActivityUploadForm(visitId: string) {
 		showActivityUpload[visitId] = true;
 		showActivityUpload = { ...showActivityUpload };
@@ -372,6 +445,7 @@
 			elevation_gain: null,
 			elevation_loss: null,
 			start_date: '',
+			start_date_local: '',
 			calories: null,
 			gpx_file: null,
 			trail: null,
@@ -394,8 +468,40 @@
 		showActivityUpload = { ...showActivityUpload };
 
 		// Clear pending import
-		delete pendingStravaImport[visitId];
-		pendingStravaImport = { ...pendingStravaImport };
+		delete pendingActivityImport[visitId];
+		pendingActivityImport = { ...pendingActivityImport };
+	}
+
+	function isStravaImportPending(visitId: string): boolean {
+		return pendingActivityImport[visitId]?.provider === 'strava';
+	}
+
+	function buildActivityFormFromExternal(activity: StravaActivity) {
+		return {
+			name: activity.name,
+			sport_type: activity.sport_type || activity.type,
+			distance: activity.distance ?? null,
+			moving_time: activity.moving_time ? formatDuration(activity.moving_time) : '',
+			elapsed_time: activity.elapsed_time ? formatDuration(activity.elapsed_time) : '',
+			elevation_gain: activity.total_elevation_gain ?? null,
+			elevation_loss: activity.estimated_elevation_loss ?? null,
+			start_date: activity.start_date ? activity.start_date.substring(0, 16) : '',
+			start_date_local: activity.start_date_local ? activity.start_date_local.substring(0, 16) : '',
+			calories: activity.calories ?? null,
+			gpx_file: null as File | null,
+			trail: null,
+			elev_high: activity.elev_high ?? null,
+			elev_low: activity.elev_low ?? null,
+			rest_time: activity.rest_time ?? null,
+			average_speed: activity.average_speed ?? null,
+			max_speed: activity.max_speed ?? null,
+			average_cadence: activity.average_cadence ?? null,
+			start_lat: activity.start_latlng ? activity.start_latlng[0] : null,
+			start_lng: activity.start_latlng ? activity.start_latlng[1] : null,
+			end_lat: activity.end_latlng ? activity.end_latlng[0] : null,
+			end_lng: activity.end_latlng ? activity.end_latlng[1] : null,
+			timezone: activity.timezone || undefined
+		};
 	}
 
 	function handleGpxFileChange(event: Event) {
@@ -412,7 +518,7 @@
 		}
 
 		// If this is a Strava import, require GPX file
-		if (pendingStravaImport[visitId] && !activityForm.gpx_file) {
+		if (isStravaImportPending(visitId) && !activityForm.gpx_file) {
 			alert($t('strava.gpx_required'));
 			return;
 		}
@@ -427,7 +533,8 @@
 			formData.append('visit', visitId);
 			formData.append('name', activityForm.name);
 			if (activityForm.sport_type) formData.append('sport_type', activityForm.sport_type);
-			if (activityForm.distance) formData.append('distance', activityForm.distance.toString());
+			if (activityForm.distance != null)
+				formData.append('distance', activityForm.distance.toString());
 			if (activityForm.moving_time) {
 				const seconds = parseDuration(activityForm.moving_time);
 				formData.append('moving_time', `PT${seconds}S`);
@@ -436,22 +543,34 @@
 				const seconds = parseDuration(activityForm.elapsed_time);
 				formData.append('elapsed_time', `PT${seconds}S`);
 			}
-			if (activityForm.elevation_gain)
+			if (activityForm.elevation_gain != null)
 				formData.append('elevation_gain', activityForm.elevation_gain.toString());
-			if (activityForm.elevation_loss)
+			if (activityForm.elevation_loss != null)
 				formData.append('elevation_loss', activityForm.elevation_loss.toString());
 			if (activityForm.start_date)
 				formData.append('start_date', formatUTCDate(activityForm.start_date));
+			if (activityForm.start_date_local)
+				formData.append(
+					'start_date_local',
+					activityForm.start_date_local.includes('T')
+						? activityForm.start_date_local.replace('T', ' ').slice(0, 16)
+						: activityForm.start_date_local.slice(0, 16)
+				);
 
-			if (activityForm.calories) formData.append('calories', activityForm.calories.toString());
+			if (activityForm.calories != null)
+				formData.append('calories', activityForm.calories.toString());
 			if (activityForm.trail) formData.append('trail', activityForm.trail);
-			if (activityForm.elev_high) formData.append('elev_high', activityForm.elev_high.toString());
-			if (activityForm.elev_low) formData.append('elev_low', activityForm.elev_low.toString());
-			if (activityForm.rest_time) formData.append('rest_time', activityForm.rest_time.toString());
-			if (activityForm.average_speed)
+			if (activityForm.elev_high != null)
+				formData.append('elev_high', activityForm.elev_high.toString());
+			if (activityForm.elev_low != null)
+				formData.append('elev_low', activityForm.elev_low.toString());
+			if (activityForm.rest_time != null)
+				formData.append('rest_time', `PT${activityForm.rest_time}S`);
+			if (activityForm.average_speed != null)
 				formData.append('average_speed', activityForm.average_speed.toString());
-			if (activityForm.max_speed) formData.append('max_speed', activityForm.max_speed.toString());
-			if (activityForm.average_cadence)
+			if (activityForm.max_speed != null)
+				formData.append('max_speed', activityForm.max_speed.toString());
+			if (activityForm.average_cadence != null)
 				formData.append('average_cadence', activityForm.average_cadence.toString());
 			if (activityForm.start_lat !== null)
 				formData.append('start_lat', activityForm.start_lat.toString());
@@ -471,8 +590,11 @@
 			}
 
 			// Add external service ID if this is a Strava import
-			if (pendingStravaImport[visitId]) {
-				formData.append('external_service_id', pendingStravaImport[visitId].id.toString());
+			if (pendingActivityImport[visitId]) {
+				formData.append(
+					'external_service_id',
+					pendingActivityImport[visitId].activity.id.toString()
+				);
 			}
 
 			const response = await fetch('/locations?/activity', {
@@ -541,43 +663,43 @@
 		const stravaActivity = event.detail;
 
 		try {
-			// Store the pending import and show upload form
-			pendingStravaImport[visitId] = stravaActivity;
-			pendingStravaImport = { ...pendingStravaImport };
-
-			// Pre-fill the activity form with Strava data
-			activityForm = {
-				name: stravaActivity.name,
-				sport_type: stravaActivity.sport_type || stravaActivity.type,
-				distance: stravaActivity.distance || null, // Keep in meters
-				moving_time: stravaActivity.moving_time ? formatDuration(stravaActivity.moving_time) : '',
-				elapsed_time: stravaActivity.elapsed_time
-					? formatDuration(stravaActivity.elapsed_time)
-					: '',
-				elevation_gain: stravaActivity.total_elevation_gain || null,
-				elevation_loss: stravaActivity.estimated_elevation_loss || null,
-				start_date: stravaActivity.start_date ? stravaActivity.start_date.substring(0, 16) : '',
-				calories: stravaActivity.calories || null,
-				gpx_file: null,
-				trail: null,
-				elev_high: stravaActivity.elev_high || null,
-				elev_low: stravaActivity.elev_low || null,
-				rest_time: stravaActivity.rest_time || null,
-				average_speed: stravaActivity.average_speed || null,
-				max_speed: stravaActivity.max_speed || null,
-				average_cadence: stravaActivity.average_cadence || null,
-				start_lat: stravaActivity.start_latlng ? stravaActivity.start_latlng[0] : null,
-				start_lng: stravaActivity.start_latlng ? stravaActivity.start_latlng[1] : null,
-				end_lat: stravaActivity.end_latlng ? stravaActivity.end_latlng[0] : null,
-				end_lng: stravaActivity.end_latlng ? stravaActivity.end_latlng[1] : null,
-				timezone: stravaActivity.timezone || undefined
-			};
-
-			// Show the upload form
+			pendingActivityImport[visitId] = { activity: stravaActivity, provider: 'strava' };
+			pendingActivityImport = { ...pendingActivityImport };
+			activityForm = buildActivityFormFromExternal(stravaActivity);
 			showActivityUpload[visitId] = true;
 			showActivityUpload = { ...showActivityUpload };
 		} catch (error) {
 			console.error('Error initiating Strava import:', error);
+		}
+	}
+
+	async function handleEndurainActivityImport(event: CustomEvent<StravaActivity>, visitId: string) {
+		const endurainActivity = event.detail;
+
+		importingEndurainActivity[visitId] = true;
+		importingEndurainActivity = { ...importingEndurainActivity };
+
+		try {
+			const gpxResponse = await fetch(endurainActivity.export_gpx);
+			if (!gpxResponse.ok) {
+				console.error('Failed to fetch Endurain GPX:', await gpxResponse.text());
+				return;
+			}
+
+			const blob = await gpxResponse.blob();
+			const filename = `${endurainActivity.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.gpx`;
+			activityForm = buildActivityFormFromExternal(endurainActivity);
+			activityForm.gpx_file = new File([blob], filename, { type: 'application/gpx+xml' });
+
+			pendingActivityImport[visitId] = { activity: endurainActivity, provider: 'endurain' };
+			pendingActivityImport = { ...pendingActivityImport };
+
+			await uploadActivity(visitId);
+		} catch (error) {
+			console.error('Error importing Endurain activity:', error);
+		} finally {
+			importingEndurainActivity[visitId] = false;
+			importingEndurainActivity = { ...importingEndurainActivity };
 		}
 	}
 
@@ -697,6 +819,16 @@
 			stravaEnabled = response.ok;
 		} catch {
 			stravaEnabled = false;
+		}
+
+		try {
+			const integrationsRes = await fetch('/api/integrations/');
+			if (integrationsRes.ok) {
+				const integrations = await integrationsRes.json();
+				endurainEnabled = Boolean(integrations.endurain?.exists);
+			}
+		} catch {
+			endurainEnabled = false;
 		}
 
 		// If initialVisitDate is provided and a visit on that date doesn't exist, create and upload a new all day visit on that date
@@ -997,6 +1129,19 @@
 												</button>
 											{/if}
 
+											{#if endurainEnabled}
+												<button
+													class="btn btn-secondary btn-xs tooltip tooltip-top gap-1"
+													data-tip={$t('adventures.view_endurain_activities')}
+													on:click={() => toggleEndurainVisitActivities(visit)}
+												>
+													<RunFastIcon class="w-3 h-3" />
+													{#if endurainVisitActivities[visit.id]}
+														({endurainVisitActivities[visit.id].length})
+													{/if}
+												</button>
+											{/if}
+
 											<!-- Upload Activity Button -->
 											<button
 												class="btn btn-success btn-xs tooltip tooltip-top gap-1"
@@ -1030,7 +1175,7 @@
 												<div class="flex items-center gap-2">
 													<UploadIcon class="w-4 h-4 text-success" />
 													<h4 class="font-medium text-sm">
-														{#if pendingStravaImport[visit.id]}
+														{#if isStravaImportPending(visit.id)}
 															{$t('adventures.complete_strava_import')}
 														{:else}
 															{$t('adventures.add_new_activity')}
@@ -1045,7 +1190,7 @@
 												</button>
 											</div>
 
-											{#if pendingStravaImport[visit.id]}
+											{#if isStravaImportPending(visit.id)}
 												<div class="alert alert-info mb-4">
 													<div class="flex items-center gap-2">
 														<RunFastIcon class="w-4 h-4" />
@@ -1062,7 +1207,7 @@
 											{/if}
 
 											<div class="bg-base-200/50 p-4 rounded-lg">
-												{#if pendingStravaImport[visit.id]}
+												{#if isStravaImportPending(visit.id)}
 													<!-- Highlight GPX upload for Strava imports -->
 													<div class="mb-6 p-4 bg-warning/10 border-2 border-warning/30 rounded-lg">
 														<div class="flex items-center gap-2 mb-2">
@@ -1085,7 +1230,7 @@
 																type="button"
 																class="btn btn-warning btn-sm gap-1"
 																on:click={() => {
-																	const stravaActivity = pendingStravaImport[visit.id];
+																	const stravaActivity = pendingActivityImport[visit.id]?.activity;
 																	if (stravaActivity && stravaActivity.export_gpx) {
 																		window.open(stravaActivity.export_gpx, '_blank');
 																	}
@@ -1128,7 +1273,7 @@
 															id="sport-type-{visit.id}"
 															class="select select-bordered select-sm w-full mt-1"
 															bind:value={activityForm.sport_type}
-															disabled={!!pendingStravaImport[visit.id]}
+															disabled={isStravaImportPending(visit.id)}
 														>
 															{#each SPORT_TYPE_CHOICES as sportType}
 																<option value={sportType.key}
@@ -1150,7 +1295,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="5.2"
 															bind:value={activityForm.distance}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1167,7 +1312,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="0:25:30"
 															bind:value={activityForm.moving_time}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1184,7 +1329,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="0:30:00"
 															bind:value={activityForm.elapsed_time}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1199,7 +1344,7 @@
 															type="datetime-local"
 															class="input input-bordered input-sm w-full mt-1"
 															bind:value={activityForm.start_date}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1217,7 +1362,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_gain}
-																readonly={!!pendingStravaImport[visit.id]}
+																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
@@ -1236,7 +1381,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="150"
 																bind:value={activityForm.elevation_loss}
-																readonly={!!pendingStravaImport[visit.id]}
+																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
@@ -1252,7 +1397,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="300"
 															bind:value={activityForm.calories}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1270,7 +1415,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="2000"
 																bind:value={activityForm.elev_high}
-																readonly={!!pendingStravaImport[visit.id]}
+																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
@@ -1289,7 +1434,7 @@
 																class="input input-bordered input-sm w-full mt-1"
 																placeholder="1000"
 																bind:value={activityForm.elev_low}
-																readonly={!!pendingStravaImport[visit.id]}
+																readonly={isStravaImportPending(visit.id)}
 															/>
 														</div>
 													{/if}
@@ -1305,7 +1450,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="60"
 															bind:value={activityForm.rest_time}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1321,7 +1466,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="37.7749"
 															bind:value={activityForm.start_lat}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1337,7 +1482,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="-122.4194"
 															bind:value={activityForm.start_lng}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1353,7 +1498,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="37.7749"
 															bind:value={activityForm.end_lat}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1369,7 +1514,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="-122.4194"
 															bind:value={activityForm.end_lng}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1395,7 +1540,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="3.5"
 															bind:value={activityForm.average_speed}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1411,7 +1556,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="5.0"
 															bind:value={activityForm.max_speed}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1429,7 +1574,7 @@
 															class="input input-bordered input-sm w-full mt-1"
 															placeholder="80"
 															bind:value={activityForm.average_cadence}
-															readonly={!!pendingStravaImport[visit.id]}
+															readonly={isStravaImportPending(visit.id)}
 														/>
 													</div>
 
@@ -1454,7 +1599,7 @@
 													{/if}
 
 													<!-- GPX File (for manual uploads) -->
-													{#if !pendingStravaImport[visit.id]}
+													{#if !isStravaImportPending(visit.id)}
 														<div class="md:col-span-2">
 															<label
 																class="label-text text-xs font-medium"
@@ -1484,16 +1629,16 @@
 														on:click={() => uploadActivity(visit.id)}
 														disabled={uploadingActivity[visit.id] ||
 															!activityForm.name.trim() ||
-															(pendingStravaImport[visit.id] && !activityForm.gpx_file)}
+															(isStravaImportPending(visit.id) && !activityForm.gpx_file)}
 													>
 														{#if uploadingActivity[visit.id]}
 															<LoadingIcon class="w-3 h-3 animate-spin" />
-															{#if pendingStravaImport[visit.id]}
+															{#if isStravaImportPending(visit.id)}
 																{$t('adventures.importing')}...
 															{:else}
 																{$t('adventures.uploading')}...
 															{/if}
-														{:else if pendingStravaImport[visit.id]}
+														{:else if isStravaImportPending(visit.id)}
 															<UploadIcon class="w-3 h-3" />
 															{$t('adventures.complete_import')}
 														{:else}
@@ -1567,6 +1712,49 @@
 												<div class="text-center py-4 text-base-content/60">
 													<div class="text-2xl mb-2">🏃‍♂️</div>
 													<p class="text-xs">{$t('adventures.no_strava_activities')}</p>
+												</div>
+											{/if}
+										</div>
+									{/if}
+
+									<!-- Endurain Activities Section -->
+									{#if endurainEnabled && expandedEndurainVisits[visit.id]}
+										<div class="mt-4 pt-4 border-t border-base-300">
+											<div class="flex items-center gap-2 mb-3">
+												<RunFastIcon class="w-4 h-4 text-secondary" />
+												<h4 class="font-medium text-sm">
+													{$t('adventures.endurain_activities_during_visit')}
+												</h4>
+												{#if loadingEndurainActivities[visit.id]}
+													<LoadingIcon class="w-4 h-4 animate-spin text-secondary" />
+												{/if}
+											</div>
+
+											{#if loadingEndurainActivities[visit.id]}
+												<div class="text-center py-4">
+													<div class="loading loading-spinner loading-sm"></div>
+													<p class="text-xs text-base-content/60 mt-2">
+														{$t('adventures.loading_activities')}...
+													</p>
+												</div>
+											{:else if endurainVisitActivities[visit.id] && endurainVisitActivities[visit.id].length > 0}
+												<div class="space-y-2">
+													{#each endurainVisitActivities[visit.id] as activity (activity.id)}
+														<div class="pl-4">
+															<StravaActivityCard
+																{activity}
+																provider="endurain"
+																on:import={(event) => handleEndurainActivityImport(event, visit.id)}
+																importing={importingEndurainActivity[visit.id]}
+																{measurementSystem}
+															/>
+														</div>
+													{/each}
+												</div>
+											{:else}
+												<div class="text-center py-4 text-base-content/60">
+													<div class="text-2xl mb-2">🏃‍♂️</div>
+													<p class="text-xs">{$t('adventures.no_endurain_activities')}</p>
 												</div>
 											{/if}
 										</div>

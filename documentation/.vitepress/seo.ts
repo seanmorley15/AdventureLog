@@ -131,6 +131,11 @@ export const pageSeo: Record<string, PageSeo> = {
       "Link Wanderer trails to AdventureLog locations for hiking routes with distance and elevation context.",
     keywords: ["AdventureLog Wanderer", "trail integration"],
   },
+  "docs/configuration/endurain_integration.md": {
+    description:
+      "Connect a self-hosted Endurain instance to AdventureLog for JWT-authenticated activity browsing and GPX import into visits.",
+    keywords: ["AdventureLog Endurain", "fitness integration", "GPX import"],
+  },
   "docs/configuration/social_auth.md": {
     description:
       "Configure social and OIDC login for AdventureLog with GitHub, Authentik, Pocket ID, Authelia, and generic OpenID Connect providers.",

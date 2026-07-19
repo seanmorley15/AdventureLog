@@ -2,7 +2,7 @@ import os
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from rest_framework.permissions import IsAuthenticated
-from integrations.models import ImmichIntegration, StravaToken, WandererIntegration
+from integrations.models import ImmichIntegration, StravaToken, WandererIntegration, EndurainIntegration
 from django.conf import settings
 
 
@@ -18,6 +18,7 @@ class IntegrationView(viewsets.ViewSet):
         strava_integration_global = settings.STRAVA_CLIENT_ID != '' and settings.STRAVA_CLIENT_SECRET != ''
         strava_integration_user = StravaToken.objects.filter(user=request.user).exists()
         wanderer_integration = WandererIntegration.objects.filter(user=request.user).exists()
+        endurain_integration = EndurainIntegration.objects.filter(user=request.user).exists()
 
         return Response(
             {
@@ -32,6 +33,9 @@ class IntegrationView(viewsets.ViewSet):
                 },
                 'wanderer': {
                     'exists': wanderer_integration,
+                },
+                'endurain': {
+                    'exists': endurain_integration,
                 }
             },
             status=status.HTTP_200_OK

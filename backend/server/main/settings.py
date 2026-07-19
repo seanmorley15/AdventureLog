@@ -334,6 +334,8 @@ RATE_LIMIT_RATES = {
     'external_recommendations': getenv('RATE_LIMIT_EXTERNAL_RECOMMENDATIONS', '30/minute'),
     'external_wikipedia': getenv('RATE_LIMIT_EXTERNAL_WIKIPEDIA', '60/minute'),
     'external_sunrise_sunset': getenv('RATE_LIMIT_EXTERNAL_SUNRISE_SUNSET', '30/minute'),
+    # Always applied on Endurain connect/MFA (see EndurainAuthThrottle).
+    'endurain_auth': getenv('RATE_LIMIT_ENDURAIN_AUTH', '10/minute'),
 }
 
 SUNRISE_SUNSET_CACHE_TIMEOUT = int(getenv('SUNRISE_SUNSET_CACHE_TIMEOUT', str(60 * 60 * 24 * 30)))
@@ -395,7 +397,10 @@ REST_FRAMEWORK = {
     'DEFAULT_THROTTLE_CLASSES': [
         'rest_framework.throttling.UserRateThrottle',
     ] if ENABLE_RATE_LIMITS else [],
-    'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {},
+    'DEFAULT_THROTTLE_RATES': RATE_LIMIT_RATES if ENABLE_RATE_LIMITS else {
+        # Endurain auth throttle is always-on and needs its rate registered.
+        'endurain_auth': RATE_LIMIT_RATES['endurain_auth'],
+    },
 }
 
 if DEBUG:

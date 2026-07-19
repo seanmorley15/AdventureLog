@@ -332,6 +332,14 @@ export type WandererIntegration = {
 	api_key?: string;
 };
 
+export type EndurainIntegration = {
+	id: string;
+	server_url: string;
+	username?: string;
+	auth_method?: 'password';
+	endurain_user_id?: number;
+};
+
 export type APIKey = {
 	id: string;
 	name: string;
@@ -479,6 +487,7 @@ export type StravaActivity = {
 	has_heartrate: boolean;
 	flagged: boolean;
 	commute: boolean;
+	provider?: 'strava' | 'endurain';
 };
 
 export type Activity = {

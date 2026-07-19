@@ -38,3 +38,30 @@ class WandererIntegration(models.Model):
     class Meta:
         verbose_name = "Wanderer Integration"
         verbose_name_plural = "Wanderer Integrations"
+
+
+class EndurainIntegration(models.Model):
+    AUTH_PASSWORD = 'password'
+    AUTH_METHOD_CHOICES = [
+        (AUTH_PASSWORD, 'Password'),
+    ]
+
+    server_url = models.CharField(max_length=255)
+    access_token = models.CharField(max_length=2048)
+    refresh_token = models.CharField(max_length=2048)
+    access_token_expires_at = models.BigIntegerField()
+    refresh_token_expires_at = models.BigIntegerField(null=True, blank=True)
+    endurain_user_id = models.BigIntegerField()
+    username = models.CharField(max_length=255, blank=True, default='')
+    auth_method = models.CharField(max_length=16, choices=AUTH_METHOD_CHOICES, default=AUTH_PASSWORD)
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='endurain_integrations')
+    id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True, primary_key=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.server_url}'
+
+    class Meta:
+        verbose_name = 'Endurain Integration'
+        verbose_name_plural = 'Endurain Integrations'

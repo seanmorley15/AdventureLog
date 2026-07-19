@@ -47,7 +47,7 @@ class ActivityViewSet(viewsets.ModelViewSet):
         if location and not IsOwnerOrSharedWithFullAccess().has_object_permission(self.request, self, location):
             raise PermissionDenied("You do not have permission to add an activity to this location.")
 
-        # if there is a GPX file, use it to get elevation data
+        # if there is a GPX file, fill missing elevation / start-end coords from it
         gpx_file = serializer.validated_data.get('gpx_file')
         if gpx_file:
             allowed, details = enforce_media_storage_limit(
@@ -60,10 +60,26 @@ class ActivityViewSet(viewsets.ModelViewSet):
                     **details,
                 })
             elevation_gain, elevation_loss, elevation_high, elevation_low = self._get_elevation_data_from_gpx(gpx_file)
-            serializer.validated_data['elevation_gain'] = elevation_gain
-            serializer.validated_data['elevation_loss'] = elevation_loss
-            serializer.validated_data['elev_high'] = elevation_high
-            serializer.validated_data['elev_low'] = elevation_low
+            # Prefer explicitly provided values (e.g. Endurain/Strava totals) over GPX-derived ones.
+            # When GPX has no elevation samples, _get_elevation_data_from_gpx returns None.
+            if serializer.validated_data.get('elevation_gain') is None and elevation_gain is not None:
+                serializer.validated_data['elevation_gain'] = elevation_gain
+            if serializer.validated_data.get('elevation_loss') is None and elevation_loss is not None:
+                serializer.validated_data['elevation_loss'] = elevation_loss
+            if serializer.validated_data.get('elev_high') is None and elevation_high is not None:
+                serializer.validated_data['elev_high'] = elevation_high
+            if serializer.validated_data.get('elev_low') is None and elevation_low is not None:
+                serializer.validated_data['elev_low'] = elevation_low
+
+            start_lat, start_lng, end_lat, end_lng = self._get_start_end_from_gpx(gpx_file)
+            if serializer.validated_data.get('start_lat') is None and start_lat is not None:
+                serializer.validated_data['start_lat'] = start_lat
+            if serializer.validated_data.get('start_lng') is None and start_lng is not None:
+                serializer.validated_data['start_lng'] = start_lng
+            if serializer.validated_data.get('end_lat') is None and end_lat is not None:
+                serializer.validated_data['end_lat'] = end_lat
+            if serializer.validated_data.get('end_lng') is None and end_lng is not None:
+                serializer.validated_data['end_lng'] = end_lng
 
         serializer.save(user=location.user)
 
@@ -105,10 +121,11 @@ class ActivityViewSet(viewsets.ModelViewSet):
 
         instance.delete()
 
-    def _get_elevation_data_from_gpx(self, gpx_file) -> Tuple[float, float, float, float]:
+    def _get_elevation_data_from_gpx(self, gpx_file) -> Tuple[float | None, float | None, float | None, float | None]:
         """
         Extract elevation data from a GPX file.
         Returns: (elevation_gain, elevation_loss, elevation_high, elevation_low)
+        Returns (None, None, None, None) when the GPX has no elevation samples.
         """
         try:
             # Parse the GPX file
@@ -129,9 +146,9 @@ class ActivityViewSet(viewsets.ModelViewSet):
                 if waypoint.elevation is not None:
                     elevations.append(waypoint.elevation)
             
-            # If no elevation data found, return zeros
+            # If no elevation data found, leave existing values alone
             if not elevations:
-                return 0.0, 0.0, 0.0, 0.0
+                return None, None, None, None
             
             # Calculate basic stats
             elevation_high = max(elevations)
@@ -154,9 +171,32 @@ class ActivityViewSet(viewsets.ModelViewSet):
             return elevation_gain, elevation_loss, elevation_high, elevation_low
             
         except Exception as e:
-            # Log the error and return zeros
+            # Log the error and leave existing values alone
             print(f"Error parsing GPX file: {e}")
-            return 0.0, 0.0, 0.0, 0.0
+            return None, None, None, None
+
+    def _get_start_end_from_gpx(self, gpx_file) -> Tuple[float | None, float | None, float | None, float | None]:
+        """
+        Extract start/end coordinates from a GPX track.
+        Returns: (start_lat, start_lng, end_lat, end_lng)
+        """
+        try:
+            gpx_file.seek(0)
+            gpx = gpxpy.parse(gpx_file)
+            points = []
+            for track in gpx.tracks:
+                for segment in track.segments:
+                    for point in segment.points:
+                        if point.latitude is not None and point.longitude is not None:
+                            points.append((point.latitude, point.longitude))
+            if not points:
+                return None, None, None, None
+            start_lat, start_lng = points[0]
+            end_lat, end_lng = points[-1]
+            return start_lat, start_lng, end_lat, end_lng
+        except Exception as e:
+            print(f"Error extracting GPX coordinates: {e}")
+            return None, None, None, None
 
     def _smooth_elevations(self, elevations, window_size=3):
         """

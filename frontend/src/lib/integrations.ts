@@ -11,6 +11,7 @@ export type IntegrationsResponse = {
 	google_maps?: boolean;
 	strava?: { global?: boolean; user?: boolean };
 	wanderer?: { exists?: boolean };
+	endurain?: { exists?: boolean };
 };
 
 export function parseImmichIntegration(status: ImmichIntegrationStatus | undefined): {

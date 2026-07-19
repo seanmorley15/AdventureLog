@@ -1,7 +1,7 @@
 from django.contrib import admin
 from allauth.account.decorators import secure_admin_login
 
-from integrations.models import ImmichIntegration, StravaToken, WandererIntegration
+from integrations.models import EndurainIntegration, ImmichIntegration, StravaToken, WandererIntegration
 
 admin.site.login = secure_admin_login(admin.site.login)
 
@@ -64,6 +64,38 @@ class StravaTokenAdmin(admin.ModelAdmin):
                 'classes': ('collapse',),
                 'fields': ('access_token', 'refresh_token'),
                 'description': 'OAuth tokens are stored for Strava sync.',
+            },
+        ),
+    )
+
+
+@admin.register(EndurainIntegration)
+class EndurainIntegrationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'server_url', 'username', 'auth_method', 'endurain_user_id', 'updated_at')
+    list_filter = ('auth_method',)
+    search_fields = ('user__username', 'server_url', 'username')
+    autocomplete_fields = ('user',)
+    readonly_fields = ('id', 'updated_at')
+
+    fieldsets = (
+        (None, {
+            'fields': (
+                'user',
+                'server_url',
+                'username',
+                'auth_method',
+                'endurain_user_id',
+                'access_token_expires_at',
+                'refresh_token_expires_at',
+                'id',
+                'updated_at',
+            ),
+        }),
+        (
+            'JWT tokens',
+            {
+                'classes': ('collapse',),
+                'fields': ('access_token', 'refresh_token'),
             },
         ),
     )

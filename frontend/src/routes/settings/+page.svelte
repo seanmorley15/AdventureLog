@@ -5,6 +5,7 @@
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { basemapOptions, normalizeBasemapType } from '$lib';
 	import type {
+		EndurainIntegration,
 		ImmichIntegration,
 		WandererIntegration,
 		User,
@@ -41,6 +42,8 @@
 	let stravaUserEnabled = data.props.stravaUserEnabled;
 	let wandererEnabled = data.props.wandererEnabled;
 	let wandererIntegration: WandererIntegration | null = data.props.wandererIntegration;
+	let endurainEnabled = data.props.endurainEnabled;
+	let endurainIntegration: EndurainIntegration | null = data.props.endurainIntegration;
 	let activeSection: string = 'profile';
 
 	// typed alias for social providers to satisfy TypeScript
@@ -1161,29 +1164,17 @@
 
 					<!-- Integrations Section -->
 					{#if activeSection === 'integrations'}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-accent/10 rounded-xl">
-									<span class="text-2xl">🔗</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('settings.integrations')}</h2>
-									<p class="text-base-content/70">
-										{$t('settings.integrations_desc')}
-									</p>
-								</div>
-							</div>
-
-							<IntegrationsSettings
-								{user}
-								bind:immichIntegration
-								bind:googleMapsEnabled
-								bind:stravaGlobalEnabled
-								bind:stravaUserEnabled
-								bind:wandererEnabled
-								bind:wandererIntegration
-							/>
-						</div>
+						<IntegrationsSettings
+							{user}
+							bind:immichIntegration
+							bind:googleMapsEnabled
+							bind:stravaGlobalEnabled
+							bind:stravaUserEnabled
+							bind:wandererEnabled
+							bind:wandererIntegration
+							bind:endurainEnabled
+							bind:endurainIntegration
+						/>
 					{/if}
 
 					<!-- import export -->

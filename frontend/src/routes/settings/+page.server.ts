@@ -1,7 +1,14 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { APIKey, ImmichIntegration, MediaUsage, User, WandererIntegration } from '$lib/types';
+import type {
+	APIKey,
+	EndurainIntegration,
+	ImmichIntegration,
+	MediaUsage,
+	User,
+	WandererIntegration
+} from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -83,7 +90,9 @@ export const load: PageServerLoad = async (event) => {
 	let stravaGlobalEnabled = integrations.strava.global as boolean;
 	let stravaUserEnabled = integrations.strava.user as boolean;
 	let wandererEnabled = integrations.wanderer.exists as boolean;
+	let endurainEnabled = integrations.endurain?.exists as boolean;
 	let wandererIntegration: WandererIntegration | null = null;
+	let endurainIntegration: EndurainIntegration | null = null;
 	let wandererIntegrationFetch = await fetch(`${endpoint}/api/integrations/wanderer/`, {
 		headers: {
 			Cookie: `sessionid=${sessionId}`
@@ -91,6 +100,15 @@ export const load: PageServerLoad = async (event) => {
 	});
 	if (wandererIntegrationFetch.ok) {
 		wandererIntegration = await wandererIntegrationFetch.json();
+	}
+
+	let endurainIntegrationFetch = await fetch(`${endpoint}/api/integrations/endurain/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (endurainIntegrationFetch.ok) {
+		endurainIntegration = await endurainIntegrationFetch.json();
 	}
 
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
@@ -135,6 +153,8 @@ export const load: PageServerLoad = async (event) => {
 			stravaUserEnabled,
 			wandererEnabled,
 			wandererIntegration,
+			endurainEnabled,
+			endurainIntegration,
 			apiKeys,
 			mediaUsage
 		}
