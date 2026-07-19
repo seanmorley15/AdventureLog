@@ -1,8 +1,8 @@
 # Optional override — adds a self-hosted OSRM service for route optimization
-# (Fase 1 of the Trilho blueprint, docs/adr/001-infra-osrm.md).
+# (Fase 1 of the Trilho blueprint, docs/hub/20-decisoes/001-infra-osrm.md).
 #
 # NEVER merge this into docker-compose.yml: the pre-processed `.osrm*` files
-# it expects under ./osrm-data are NOT part of this repo (see docs/osrm.md
+# it expects under ./osrm-data are NOT part of this repo (see docs/hub/50-operacao/osrm.md
 # for how to generate them), so `docker compose up` on its own must keep
 # working without this file (invariant I4).
 #
@@ -15,7 +15,7 @@ services:
     image: osrm/osrm-backend:latest
     container_name: trilho-osrm
     restart: unless-stopped
-    # Safety net for the accepted-risk decision in docs/adr/001-infra-osrm.md
+    # Safety net for the accepted-risk decision in docs/hub/20-decisoes/001-infra-osrm.md
     # (RAM estimate leaves little margin on the current 4 GB VPS): cap OSRM's
     # memory so if it balloons past the estimate, Docker kills/restarts THIS
     # container only. The rest of the stack — SecretarIA above all

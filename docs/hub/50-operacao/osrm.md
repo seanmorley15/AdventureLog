@@ -1,6 +1,6 @@
 # OSRM self-hosted — pré-processamento e operação
 
-Ver `docs/adr/001-infra-osrm.md` para a decisão de dimensionamento (por que a
+Ver `docs/hub/20-decisoes/001-infra-osrm.md` para a decisão de dimensionamento (por que a
 Itália inteira foi reprovada, por que a combinação nord-ovest+nord-est+centro
 foi escolhida para a viagem atual, e os riscos aceitos na VPS de 4 GB).
 
@@ -45,7 +45,7 @@ funcionando normalmente, sem o serviço OSRM.
 
    **Meça o pico de RAM/disco de cada etapa** (`docker stats --no-stream`
    em outro terminal, ou `/usr/bin/time -v` se rodar sem Docker) e atualize
-   a Seção 3 do `docs/adr/001-infra-osrm.md` com os números reais — a
+   a Seção 3 do `docs/hub/20-decisoes/001-infra-osrm.md` com os números reais — a
    estimativa registrada lá hoje é pública (wiki do Project-OSRM), não
    medida neste projeto.
 

@@ -4,7 +4,7 @@ Status: **Passo 1/2 fechado. Passo 3 (deploy na VPS) pausado — achado novo: a 
 
 ## Contexto
 
-O blueprint (`plans/trilho-blueprint.md`, Passo 1) já decidiu usar OSRM self-hosted via Docker
+O blueprint (`docs/hub/30-planos/trilho-blueprint.md`, Passo 1) já decidiu usar OSRM self-hosted via Docker
 para a matriz de distâncias/durações da Fase 1 (otimização de rota multi-parada), em vez de
 Google Routes. Este ADR registra o dimensionamento real desse serviço na VPS Hetzner que já
 hospeda o SecretarIA, e a decisão go/no-go antes de qualquer deploy em produção.
@@ -140,11 +140,11 @@ necessidade.
   `docker compose -f docker-compose.yml -f docker-compose.osrm.yml up` — nunca no compose
   principal (I4), já que os arquivos `.osrm*` pré-processados não vivem no repo.
 - Cliente OSRM entra em um **novo app Django** `backend/server/routing/` (não em `adventures/`,
-  para manter a mesma convenção de 1 app por domínio já usada no projeto — ver `docs/CODEMAP.md`
+  para manter a mesma convenção de 1 app por domínio já usada no projeto — ver `docs/hub/10-contexto/CODEMAP.md`
   seção 2). Consome o serviço `osrm` via `OSRM_URL` (env var opcional, ausente = feature
   indisponível, sem derrubar o resto do app).
 - O algoritmo de otimização escreve de volta no campo `order` já existente de
-  `CollectionItineraryItem` (não precisa de schema novo — achado do `docs/CODEMAP.md` seção 3).
+  `CollectionItineraryItem` (não precisa de schema novo — achado do `docs/hub/10-contexto/CODEMAP.md` seção 3).
 
 ## 7. Gate — status
 

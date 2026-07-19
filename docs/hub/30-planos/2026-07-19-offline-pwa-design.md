@@ -1,7 +1,7 @@
 # Design — Fase 2: Modo offline / PWA
 
 Data: 2026-07-19. Branch: `fase-2-offline`. Blueprint: Passo 4
-(`plans/trilho-blueprint.md`). Decisões de arquitetura: `docs/adr/002-offline-sync.md`
+(`docs/hub/30-planos/trilho-blueprint.md`). Decisões de arquitetura: `docs/hub/20-decisoes/002-offline-sync.md`
 (ler antes deste doc — contém o raciocínio completo).
 
 ## Objetivo

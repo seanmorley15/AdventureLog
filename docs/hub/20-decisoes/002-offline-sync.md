@@ -50,7 +50,7 @@ online implica proxy acessível.
 
 - **Dentro do escopo**: leitura completa do itinerário offline (snapshot via
   IndexedDB do objeto `collection`, que já inclui `itinerary` — achado do
-  `docs/CODEMAP.md` §4); edição offline de **reorder de itinerário** e
+  `docs/hub/10-contexto/CODEMAP.md` §4); edição offline de **reorder de itinerário** e
   **texto de nota**, com fila de mutações e sync ao reconectar.
 - **Fora do escopo** (registrado como limitação conhecida, não esquecimento):
   cache de tiles de mapa offline (tela cai para lista sem mapa quando sem

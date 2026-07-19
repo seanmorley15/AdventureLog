@@ -53,7 +53,7 @@ Hetzner, coexistindo com o SecretarIA. Não basta rodar localmente em dev.
 - I7. Todo endpoint novo entra com: rota registrada no `urls.py`, `permission_classes`
   (autenticado + dono do recurso) e CSRF/CORS conferidos conforme o modo de fetch
   (server-side SvelteKit vs. chamada direta do browser). Variável de ambiente nova entra no
-  `.env.example` com default seguro/opcional e no inventário de env vars do `docs/deploy.md`.
+  `.env.example` com default seguro/opcional e no inventário de env vars do `docs/hub/50-operacao/deploy.md`.
 
 ### Protocolo entre sessões
 
@@ -66,23 +66,29 @@ Hetzner, coexistindo com o SecretarIA. Não basta rodar localmente em dev.
 
 ### Grafo de dependências
 
+**Ordem de execução atual (pós-mutação 2026-07-19, ver Changelog):**
+
 ```
-P0 (bootstrap) → P1 (pesquisa/gate infra) → P2 (Fase 1: rota) → P3 (deploy v0 na VPS)
-                                                                   ├→ P4 (Fase 2: offline/PWA)
-                                                                   └→ P5a → P5b (Fase 3: recomendações)   [P4 ∥ P5]
-P2 + P5b → P6 (Fase 4: assistente)
-P4 + P6 → P7 (validação MVP em viagem real)
+P0 (bootstrap) → P1 (gate infra) → P2 (Fase 1: rota)
+  → P2.5 (auditoria bugs/gaps base AdventureLog)
+  → P2.6 (features de baixo esforço, testadas)
+  → P5a → P5b (Fase 3: recomendações)
+  → P6 (Fase 4: assistente)                      [depende logicamente de P2 + P5, ver nota]
+  → P6.5 (remapeamento design/UI do site)
+  → P3 (deploy v0 na VPS)
+  → P4 (Fase 2: offline/PWA)
+  → P7 (validação MVP em viagem real)
 ```
 
-**P6 depende de P2 e P5, NÃO de P4** — o assistente orquestra otimizador e recomendações;
-offline é ramo paralelo que só bloqueia o P7.
+**P6 depende logicamente de P2 e P5, NÃO de P4** — o assistente orquestra otimizador e
+recomendações; offline não é pré-requisito técnico do assistente. Na ordem de execução acima
+isso já é satisfeito (P6 vem depois de P2 e P5).
 
-**Paralelismo P4 ∥ P5 com ressalva:** é paralelo no backend/lógica, mas ambos tocam os
-componentes Svelte da tela de parada/itinerário (P4: indicador offline + hidratação IndexedDB;
-P5b: painel de sugestões). Se rodar em paralelo, isolar em componentes novos
-(`<OfflineIndicator>`, `<StopSuggestionsPanel>`) sem editar o mesmo bloco do componente de
-parada, ou serializar o merge do frontend. Para dev solo em sessões sequenciais, a ordem
-P4 → P5 é a recomendada (offline é pré-requisito do critério de MVP; recomendações não são).
+**Histórico de paralelismo (superado pela mutação 2026-07-19 — dev segue 100% sequencial até
+MVP local fechar; texto mantido para registro):** P4 e P5 foram desenhados originalmente como
+paralelizáveis no backend/lógica, com ressalva de colisão nos componentes Svelte da tela de
+parada (P4: `<OfflineIndicator>`; P5b: `<StopSuggestionsPanel>` — isolar em componentes novos
+se algum dia voltarem a rodar em paralelo).
 
 ---
 
@@ -101,14 +107,14 @@ real.
 3. Copiar `.env.example` → `.env`, ajustar variáveis mínimas, subir com
    `docker compose -f docker-compose.dev.yml up` (fallback: `docker-compose.yml`).
 4. Validar: login, criar uma collection/itinerário com 3+ locais, ver no mapa.
-5. Gerar codemap curto (`docs/CODEMAP.md` do fork): apps Django existentes, modelos principais
+5. Gerar codemap curto (`docs/hub/10-contexto/CODEMAP.md` do fork): apps Django existentes, modelos principais
    (Location/Adventure, Collection/Itinerary, Visit), rotas DRF, estrutura de rotas SvelteKit,
    como o frontend fala com o backend (proxy? fetch direto?), onde vive o mapa (svelte-maplibre).
 6. Rebranding mínimo: nome "Trilho" no frontend (título/logo). Nada além disso — não gastar
    sessão com estética.
 
 **Verificação.** App abre no browser, itinerário criado persiste após restart dos containers,
-`docs/CODEMAP.md` existe e cita arquivos reais.
+`docs/hub/10-contexto/CODEMAP.md` existe e cita arquivos reais.
 
 **Saída.** Fork rodando local + codemap. `/save-session`.
 
@@ -138,7 +144,7 @@ Este passo decide se tudo cabe ANTES de escrever qualquer código da Fase 1.
    estado/região a Brasil inteiro, salvo necessidade real da viagem.
 3. Somar: OSRM runtime + Django + PostGIS + SvelteKit + SecretarIA — **RAM e disco**. Margem
    mínima de 20% em ambos.
-4. Decidir e registrar em `docs/adr/001-infra-osrm.md`:
+4. Decidir e registrar em `docs/hub/20-decisoes/001-infra-osrm.md`:
    - **Cabe** → prosseguir.
    - **Não cabe** → escolher explicitamente: upgrade de plano Hetzner (custo/mês), extract menor
      (estado/região em vez de país), pré-processamento offline + runtime enxuto, ou plano B
@@ -147,7 +153,7 @@ Este passo decide se tudo cabe ANTES de escrever qualquer código da Fase 1.
    serviço OSRM entra no compose e onde o cliente OSRM entra no backend Django (novo app
    `routing/`? serviço em app existente?). Registrar o esboço no mesmo ADR.
 
-**Verificação.** `docs/adr/001-infra-osrm.md` existe, contém números medidos (não estimados) da
+**Verificação.** `docs/hub/20-decisoes/001-infra-osrm.md` existe, contém números medidos (não estimados) da
 VPS e decisão explícita go/no-go com alternativa escolhida se "no-go".
 
 **Saída.** Gate liberado (ou plano B decidido). `/save-session`.
@@ -165,13 +171,13 @@ e mapa via svelte-maplibre. Falta: "otimize a ordem das minhas paradas". Arquite
 OSRM self-hosted fornece a matriz de distâncias/durações (endpoint `/table`); um algoritmo
 determinístico em Python (nearest neighbor para solução inicial + 2-opt para refinamento) resolve
 o TSP aproximado por cima da matriz. Nenhum LLM envolvido nesta fase. Consultar
-`docs/adr/001-infra-osrm.md` para a decisão de dimensionamento e o esboço de integração.
+`docs/hub/20-decisoes/001-infra-osrm.md` para a decisão de dimensionamento e o esboço de integração.
 
 **Tarefas.**
 1. Adicionar serviço `osrm` em **override opcional** `docker-compose.osrm.yml` (imagem oficial
    `osrm/osrm-backend`, MLD), subido com `-f docker-compose.yml -f docker-compose.osrm.yml` —
    NUNCA no compose principal, pois os arquivos `.osrm*` pré-processados não estão no repo e
-   `docker compose up` puro tem de continuar verde (I4). Documentar em `docs/osrm.md` o comando
+   `docker compose up` puro tem de continuar verde (I4). Documentar em `docs/hub/50-operacao/osrm.md` o comando
    de pré-processamento e a cadência de re-extract (manual, sob demanda antes de viagem nova em
    região não coberta).
 2. Backend: módulo `routing/` com
@@ -203,7 +209,59 @@ da matriz OSRM na ordem proposta, e em ao menos 1 caso real a duração otimizad
 
 ---
 
+## Passo 2.5 — Auditoria: bugs e gaps do que o AdventureLog já traz
+
+**[tier: default | serial | 1+ micro-PRs para bloqueantes]**
+
+**Context brief.** Inserido pela mutação de 2026-07-19 (ver Changelog): antes de investir em
+features novas (Fase 3/4) ou em design, varrer o que o fork já herdou do AdventureLog rodando
+local (Passo 0) somado ao que a Fase 1 (Passo 2) adicionou, procurando bugs e fluxos quebrados
+que impedem uso real diário. Consultar `docs/hub/10-contexto/CODEMAP.md`.
+
+**Tarefas.**
+1. Roteiro manual pelas telas principais (login, criar coleção/itinerário, adicionar parada,
+   editar, mapa, otimizar rota) anotando toda quebra ou comportamento inesperado.
+2. Rodar a suíte de testes existente (backend `pytest`, frontend se houver) e registrar falhas
+   pré-existentes não relacionadas à Fase 1.
+3. Triagem em issues no fork: bloqueante (impede uso diário) vs. cosmético/backlog.
+4. Corrigir bloqueantes nesta fase (micro-PRs); o resto vira insumo do Passo 2.6. Atualizar
+   `docs/hub/10-contexto/CODEMAP.md` se a auditoria revelar estrutura não documentada.
+
+**Verificação.** Roteiro do item 1 sem bloqueante aberto; suíte de testes verde.
+
+**Saída.** Bloqueantes corrigidos + backlog triado em issues. `/save-session`.
+
+**Rollback.** Reverter micro-PRs individualmente.
+
+---
+
+## Passo 2.6 — Features de baixo esforço (testadas antes de seguir)
+
+**[tier: default | serial | 1 PR por feature pequena]**
+
+**Context brief.** Inserido pela mutação de 2026-07-19. Antes de partir para Fase 3/4 (esforço
+alto), fechar melhorias pequenas do backlog gerado no Passo 2.5 — ou óbvias no roadmap
+AdventureLog→Wanderlog —, testando cada uma isoladamente. Escopo concreto é definido pela
+auditoria do Passo 2.5, não fixado neste blueprint.
+
+**Tarefas.**
+1. Priorizar o backlog do Passo 2.5 por esforço (menor primeiro).
+2. Implementar e testar cada feature isoladamente, 1 PR por item, sem acumular trabalho não
+   testado.
+3. Registrar em `docs/hub/40-progresso/PROGRESS.md` cada feature fechada.
+
+**Verificação.** Cada PR passa o gate `/verify` antes do próximo item começar.
+
+**Saída.** Lote de PRs pequenos mergeados. `/save-session` ao final do lote.
+
+**Rollback.** Reverter o PR individual da feature problemática.
+
+---
+
 ## Passo 3 — Deploy v0 na VPS Hetzner (coexistindo com SecretarIA)
+
+**[reposicionado pela mutação 2026-07-19 — agora executa depois de P2.5/P2.6/P5/P6/P6.5, ver
+Changelog. Conteúdo do passo inalterado.]**
 
 **[tier: default | serial | sem PR de código — infra + docs]**
 
@@ -218,11 +276,11 @@ para que cada fase seguinte seja validada em produção, não só em dev.
 2. Subir Trilho (backend + frontend + PostGIS + OSRM) em subdomínio próprio com HTTPS.
 3. Copiar para a VPS os arquivos OSRM já pré-processados (se a decisão do Passo 1 foi
    pré-processar fora da VPS).
-4. Script/checklist de deploy reprodutível em `docs/deploy.md` (incluindo backup do Postgres —
+4. Script/checklist de deploy reprodutível em `docs/hub/50-operacao/deploy.md` (incluindo backup do Postgres —
    o repo tem `backup.sh` como base — e passo explícito de `python manage.py migrate` a cada
    deploy, I6; manter aqui o inventário de variáveis de ambiente novas, I7).
 5. Health checks documentados: URL do Trilho responde; URL do SecretarIA responde; uso de RAM
-   pós-deploy registrado no `docs/deploy.md` para comparar com a previsão do ADR 001.
+   pós-deploy registrado no `docs/hub/50-operacao/deploy.md` para comparar com a previsão do ADR 001.
 
 **Verificação.** Otimizar um itinerário no Trilho **em produção**; SecretarIA segue no ar (I3);
 RAM da VPS com margem ≥ a prevista no ADR.
@@ -236,14 +294,18 @@ não compartilha containers com o Trilho.
 
 ## Passo 4 — Fase 2: modo offline / PWA (PR #2)
 
-**[tier: default | paralelizável com P5 | branch `fase-2-offline`]**
+**[reposicionado pela mutação 2026-07-19 — agora último passo de feature antes da validação MVP
+(P7), ver Changelog. Conteúdo do passo inalterado; nota de paralelismo com P5 é histórica, ver
+Grafo de dependências.]**
+
+**[tier: default | serial (paralelismo com P5 superado) | branch `fase-2-offline`]**
 
 **Context brief.** O objetivo do produto: levar o roteiro no bolso sem sinal. SvelteKit no
 frontend; usar `@vite-pwa/sveltekit` (ou equivalente compatível com a versão de SvelteKit/Vite do
 repo — confirmar versão antes de instalar). "Adicionar à tela de início" já resolve o pedido de
 "app sem loja de aplicativos" — não é entrega separada. Escopo offline: **ler** o itinerário
 completo (paradas, ordem, notas, mapa da região) e **editar** campos simples, com sync ao voltar
-a rede. Consultar `docs/CODEMAP.md` (Passo 0) para o modelo de auth e como o frontend busca dados.
+a rede. Consultar `docs/hub/10-contexto/CODEMAP.md` (Passo 0) para o modelo de auth e como o frontend busca dados.
 
 **RISCO CENTRAL DA FASE (resolver antes de escrever o service worker):** o AdventureLog usa
 SvelteKit com SSR — telas que carregam dados via `+page.server.ts`/`hooks.server.ts` (fetch
@@ -258,7 +320,7 @@ plugin PWA não resolve isso sozinho.
    também **como a fila de mutações se autentica** no replay direto do browser contra o DRF:
    sessão-cookie com chamada direta ao `/api` (conferir CSRF/`SessionAuthentication` e
    CORS/same-origin) OU token DRF guardado no IndexedDB. Registrar as duas decisões em
-   `docs/adr/002-offline-sync.md` ANTES de qualquer código desta fase.
+   `docs/hub/20-decisoes/002-offline-sync.md` ANTES de qualquer código desta fase.
 1. Service worker via `@vite-pwa/sveltekit`: cache de assets (shell do app) + manifest PWA
    (ícone, nome Trilho, standalone). Chamar `navigator.storage.persist()` no boot e registrar o
    resultado — **iOS/WebKit despeja IndexedDB/Cache Storage após ~7 dias sem uso do site**, o
@@ -269,7 +331,7 @@ plugin PWA não resolve isso sozinho.
    avaliar cache de tiles da região do itinerário (bounding box) com limite de armazenamento; se
    inviável no tempo da fase, degradar para lista/ordem sem mapa e registrar como limitação.
 3. Fila de mutações offline + sync ao reconectar. **Resolução de conflito: last-write-wins**,
-   decidida agora e registrada em `docs/adr/002-offline-sync.md` (incluir: por que LWW é
+   decidida agora e registrada em `docs/hub/20-decisoes/002-offline-sync.md` (incluir: por que LWW é
    suficiente para uso pessoal/ocasional, e qual o comportamento quando o mesmo campo foi editado
    nos dois lados — vence o timestamp mais novo, sem merge).
 4. Indicador de estado na UI: offline/online, pendências de sync.
@@ -295,7 +357,11 @@ emergência. Aceitar que o pior caso (cache corrompido offline) só se resolve a
 
 ## Passo 5 — Fase 3: recomendação de lugares com restrições (2 PRs: P5a e P5b)
 
-**[tier: default; sub-decisões de ranking com strongest se necessário | paralelizável com P4 (ver ressalva no grafo) | branches `fase-3a-overpass` e `fase-3b-ranking`]**
+**[reposicionado pela mutação 2026-07-19 — agora executa logo após P2.6 (features de baixo
+esforço), antes de P6/P6.5/P3/P4. Conteúdo do passo inalterado; nota de paralelismo com P4 é
+histórica, ver Grafo de dependências.]**
+
+**[tier: default; sub-decisões de ranking com strongest se necessário | serial (paralelismo com P4 superado) | branches `fase-3a-overpass` e `fase-3b-ranking`]**
 
 **Context brief.** "Sugira onde comer perto da parada 3, vegetariano, barato." Arquitetura:
 **Overpass API (OpenStreetMap) é a fonte de candidatos** — gratuita, mas com fair-use real do
@@ -303,10 +369,10 @@ endpoint público (overpass-api.de: ~2 slots paralelos por IP, ~10k queries e ~1
 `[timeout:25]` na query e User-Agent identificável — e a VPS compartilha IP com o SecretarIA).
 O **LLM filtra e ranqueia** os candidatos respeitando restrições do usuário (orçamento, tipo de
 comida, mobilidade, tempo). O LLM **nunca gera lugar do zero** — todo item apresentado tem de
-existir na resposta da Overpass (I1). Consultar `docs/CODEMAP.md` para o modelo de dados de
+existir na resposta da Overpass (I1). Consultar `docs/hub/10-contexto/CODEMAP.md` para o modelo de dados de
 parada. Fase dividida em dois PRs para não virar PR gorda.
 
-**Pré-requisito de P5b:** ADR `docs/adr/003b-llm-provider.md` — provedor, modelo, chave própria,
+**Pré-requisito de P5b:** ADR `docs/hub/20-decisoes/003b-llm-provider.md` — provedor, modelo, chave própria,
 custo estimado por chamada e budget mensal explícito; variáveis `LLM_API_KEY`/`LLM_MODEL` no
 `.env.example` (opcionais, I7). O Passo 6 reusa esse ADR.
 
@@ -314,7 +380,7 @@ custo estimado por chamada e budget mensal explícito; variáveis `LLM_API_KEY`/
 1. Backend `places/`: cliente Overpass com (a) queries por categoria + raio em torno de uma
    parada; (b) **camada de cache local** — model Django + migração versionada (I6): query
    normalizada → resultado + TTL de dias — para não estourar o fair-use em buscas repetidas;
-   (c) backoff/retry; registrar em `docs/adr/003-overpass.md` os limites acima e a opção de
+   (c) backoff/retry; registrar em `docs/hub/20-decisoes/003-overpass.md` os limites acima e a opção de
    migrar para instância própria se o uso crescer.
 2. **Testes (foco):** cache (hit/miss/TTL), normalização de queries, `migrate` roda limpo.
 
@@ -346,6 +412,9 @@ exibido sem correspondência na resposta da Overpass; `/verify` antes de cada me
 
 ## Passo 6 — Fase 4: assistente de IA / orquestração (PR #4)
 
+**[reposicionado pela mutação 2026-07-19 — agora executa logo após P5 (Fase 3), antes de P6.5/P3/P4.
+Conteúdo do passo inalterado.]**
+
 **[tier: strongest para desenho da orquestração; default para implementação | serial (depende de P2 e P5) | branch `fase-4-assistente`]**
 
 **Context brief.** Última camada: um assistente conversacional que **orquestra** as ferramentas já
@@ -368,9 +437,9 @@ responsabilidades já estão nas Fases 1 e 3 (I1).
 3. Guard-rails codificados: respostas com números de distância/tempo devem vir de payload de
    ferramenta (propagar valores estruturados, não texto livre do modelo); recusar responder fato
    de lugar sem candidato da Overpass.
-4. Reusar provedor/modelo/budget do ADR 003b (P5); registrar em `docs/adr/004-assistente.md`
+4. Reusar provedor/modelo/budget do ADR 003b (P5); registrar em `docs/hub/20-decisoes/004-assistente.md`
    só o que muda (custo por conversa do loop de orquestração).
-5. UI de chat simples dentro do itinerário. Consultar `docs/CODEMAP.md` para o padrão de
+5. UI de chat simples dentro do itinerário. Consultar `docs/hub/10-contexto/CODEMAP.md` para o padrão de
    componentes e fetch do frontend.
 6. **Testes (foco):** o loop de orquestração com LLM mockado — dado uma intenção sintética, as
    ferramentas certas são chamadas na ordem certa; guard-rail anti-fato-inventado dispara.
@@ -382,6 +451,34 @@ chama recs + otimizador → resposta final bate com o que os endpoints retornam 
 **Saída.** PR #4 mergeado + deploy. `/save-session`.
 
 **Rollback.** Assistente é camada sobre APIs existentes; reverter PR remove só o chat.
+
+---
+
+## Passo 6.5 — Remapeamento de design/UI do site inteiro
+
+**[tier: default; strongest para decisões de direção visual | serial | branch `fase-design-remap`]**
+
+**Context brief.** Inserido pela mutação de 2026-07-19: com rota (P2), recomendações (P5) e
+assistente (P6) funcionais e testados, revisar a UI/UX do site inteiro — herdada do
+AdventureLog — para identidade própria do Trilho. Não é o rebranding mínimo do Passo 0 (só
+nome/logo); é remapeamento completo (layout, componentes, tema). Considerar as skills
+`frontend-design` / `ui-ux-pro-max` para direção visual.
+
+**Tarefas.**
+1. Auditoria da UI atual: telas, componentes herdados do AdventureLog, inconsistências.
+2. Definir direção visual (paleta, tipografia, componentes-chave); registrar decisão em
+   `docs/hub/20-decisoes/direcao-visual.md`.
+3. Aplicar remapeamento tela por tela, sem quebrar funcionalidade das fases anteriores —
+   repetir os roteiros de verificação de P2, P5 e P6 como regressão.
+4. **Testes (foco):** nenhuma regressão funcional (suítes de P2/P5/P6 seguem verdes); smoke-test
+   visual manual de cada tela.
+
+**Verificação.** Todas as telas usam a nova direção visual; testes automatizados das fases
+anteriores continuam verdes.
+
+**Saída.** PR de design mergeado. `/save-session`.
+
+**Rollback.** Reverter o PR de design não afeta a lógica de backend das fases anteriores.
 
 ---
 
@@ -430,8 +527,18 @@ Passos podem ser divididos, inseridos, pulados ou abandonados — registrar a mu
 
 ### Changelog do plano
 
+- 2026-07-19 (2) — Mutação: reordenação de fase pós-Fase 1. Decisão do usuário: construir o MVP
+  completo localmente antes de deploy/offline. Nova ordem de execução: P0 → P1 → P2 (feitos) →
+  P2.5 (NOVO: auditoria de bugs/gaps do que o AdventureLog já traz) → P2.6 (NOVO: features de
+  baixo esforço, testadas) → P5 (Fase 3: recomendações) → P6 (Fase 4: assistente) → P6.5 (NOVO:
+  remapeamento de design/UI do site inteiro) → P3 (deploy VPS) → P4 (Fase 2: offline/PWA) → P7
+  (validação MVP). P3 e P4 permanecem pausados/adiados como já registrado na entrada de mutação
+  anterior (abaixo) — essa entrada apenas muda a posição relativa de P4 (antes: logo após
+  P3/paralelo a P5; agora: último passo de feature, imediatamente antes de P7) e insere P2.5/P2.6
+  antes de P5, e P6.5 entre P6 e P3. Grafo de dependências e headers dos passos reposicionados
+  atualizados; conteúdo original de P3/P4/P5/P6 preservado sem alteração de tarefas.
 - 2026-07-19 — Mutação: P3 (deploy VPS) pausado por decisão do usuário — VPS Hetzner não tem
-  Docker instalado (achado real, `docs/adr/001-infra-osrm.md` §1.1). Em vez de instalar Docker
+  Docker instalado (achado real, `docs/hub/20-decisoes/001-infra-osrm.md` §1.1). Em vez de instalar Docker
   na VPS agora, desenvolvimento segue 100% local (Docker Desktop) até o MVP estar validado;
   deploy fica para o fim. Grafo original marcava P4/P5 como dependentes de P3 — essa dependência
   é suspensa: P4 e P5 prosseguem com validação local substituindo validação em produção em cada
