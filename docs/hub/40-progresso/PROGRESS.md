@@ -9,7 +9,7 @@ justificativa completa da ordem.
 | P0 | Bootstrap: clonar e rodar AdventureLog local | Concluído | 2026-07-18 | ver `docs/hub/10-contexto/CODEMAP.md` |
 | P1 | Gate de pesquisa: VPS comporta OSRM? | Concluído | 2026-07-18 | `docs/hub/20-decisoes/001-infra-osrm.md` |
 | P2 | Fase 1: otimização de rota multi-parada | Concluído | 2026-07-19 | `4639236` (branch `fase-1-rota`, merge) |
-| P2.5 | Auditoria: bugs e gaps do AdventureLog base | Concluído | 2026-07-19 | branch `fix/p25-otimizar-rota-location-content-type` |
+| P2.5 | Auditoria: bugs e gaps do AdventureLog base | Concluído (PR aberto, aguardando merge) | 2026-07-19 | [PR #3](https://github.com/Caio-Coutinho01/Trilho/pull/3) |
 | P2.6 | Features de baixo esforço (testadas) | Não iniciado | 2026-07-19 | — |
 | P5 (P5a/P5b) | Fase 3: recomendação de lugares com restrições | Não iniciado | 2026-07-19 | — |
 | P6 | Fase 4: assistente de IA / orquestração | Não iniciado | 2026-07-19 | — |
