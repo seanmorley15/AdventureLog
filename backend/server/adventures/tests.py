@@ -174,3 +174,37 @@ class ItineraryOptimizeEndpointTests(APITestCase):
         response = self._optimize()
 
         self.assertEqual(response.status_code, 403)
+
+    @patch('adventures.views.itinerary_view.get_duration_matrix')
+    def test_optimize_resolves_stops_added_via_the_location_quick_add_flow(self, mock_matrix):
+        # Regression test (P2.5 audit, 2026-07-19): the itinerary UI's "+" ->
+        # "Location" menu is the only way to add a stop from the day view,
+        # and it creates the CollectionItineraryItem with content_type=Location
+        # directly (a Visit is created alongside it for calendar display, but
+        # it isn't what the itinerary item links to). Before this fix,
+        # resolve_item_coordinates only recognized Visit/Lodging, so these
+        # items were always skipped and "Otimizar rota" never had >=2
+        # resolvable stops to work with.
+        location_ct = ContentType.objects.get_for_model(Location)
+        loc_d = Location.objects.create(user=self.user, name='D', latitude=41.89, longitude=12.49)
+        loc_e = Location.objects.create(user=self.user, name='E', latitude=41.90, longitude=12.48)
+
+        item_d = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=location_ct, object_id=loc_d.id,
+            date='2026-08-02', order=0,
+        )
+        item_e = CollectionItineraryItem.objects.create(
+            collection=self.collection, content_type=location_ct, object_id=loc_e.id,
+            date='2026-08-02', order=1,
+        )
+
+        mock_matrix.return_value = [[0, 50], [50, 0]]
+
+        response = self._optimize(date='2026-08-02')
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data['optimized'])
+        self.assertEqual(data['skipped_item_ids'], [])
+        proposed_ids = {entry['id'] for entry in data['proposed_order']}
+        self.assertEqual(proposed_ids, {str(item_d.id), str(item_e.id)})

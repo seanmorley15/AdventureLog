@@ -2,7 +2,7 @@ from typing import List, Optional, Tuple
 from django.db import transaction
 from django.utils.dateparse import parse_date, parse_datetime
 from rest_framework.exceptions import ValidationError, PermissionDenied
-from adventures.models import CollectionItineraryItem, Visit, Lodging
+from adventures.models import CollectionItineraryItem, Visit, Lodging, Location
 
 
 @transaction.atomic
@@ -119,9 +119,13 @@ def resolve_item_coordinates(item: CollectionItineraryItem) -> Optional[Tuple[fl
     """Return (latitude, longitude) for an itinerary item that resolves to a
     single geographic point, or None if it doesn't.
 
-    Only two of the content types behind `CollectionItineraryItem.item`
-    (a GenericForeignKey) currently resolve to a single point:
+    Content types behind `CollectionItineraryItem.item` (a GenericForeignKey)
+    that resolve to a single point:
     - Visit -> its Location's latitude/longitude
+    - Location -> its own latitude/longitude (the itinerary "+ Location"
+      quick-add flow saves the item with content_type=Location directly —
+      the Visit created alongside it, if any, is a separate object used for
+      calendar display, not what's linked here)
     - Lodging -> its own latitude/longitude
 
     Transportation is a leg between two points (not a stop) and Note has no
@@ -138,6 +142,11 @@ def resolve_item_coordinates(item: CollectionItineraryItem) -> Optional[Tuple[fl
         location = obj.location
         if location and location.latitude is not None and location.longitude is not None:
             return (float(location.latitude), float(location.longitude))
+        return None
+
+    if isinstance(obj, Location):
+        if obj.latitude is not None and obj.longitude is not None:
+            return (float(obj.latitude), float(obj.longitude))
         return None
 
     if isinstance(obj, Lodging):

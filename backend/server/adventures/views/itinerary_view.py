@@ -430,7 +430,7 @@ class ItineraryViewSet(viewsets.ModelViewSet):
         }
 
         Only itinerary items that resolve to a single geographic point
-        (Visit -> Location, or Lodging) are considered "stops" and can be
+        (Visit, Location, or Lodging) are considered "stops" and can be
         reordered. Items that don't (Transportation legs, Notes) are left
         untouched in place and reported under `skipped_item_ids` — see
         adventures/utils/itinerary.py::resolve_item_coordinates.
