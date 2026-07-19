@@ -43,12 +43,18 @@ O AdventureLog **já tem** boa parte do que o blueprint descreve como "a constru
 
 - **Itinerário com dias e ordenação manual já existe**:
   `CollectionItineraryDay` (dia dentro de uma collection, com data e nome) +
-  `CollectionItineraryItem` (item genérico — `Visit`, `Transportation`, `Lodging`, `Note` —
-  ligado a um dia via `GenericForeignKey`, com campo `order` para ordem manual e
-  `is_global`/`date` para itens que não têm dia fixo). Isso é o esqueleto de dados que a
+  `CollectionItineraryItem` (item genérico — `Visit`, `Location`, `Transportation`, `Lodging`,
+  `Note`, `Checklist` — ligado a um dia via `GenericForeignKey`, com campo `order` para ordem
+  manual e `is_global`/`date` para itens que não têm dia fixo). Isso é o esqueleto de dados que a
   Fase 1 (rota otimizada) precisaria de qualquer forma — não é preciso desenhar esse
   schema do zero, só adicionar o algoritmo de otimização que popula/reordena o campo
   `order`.
+  **Achado da auditoria P2.5 (2026-07-19):** o único fluxo de UI pra adicionar uma parada
+  (`+` → "Location" na visão Itinerário) salva o item com `content_type=Location` direto —
+  não `Visit`. Um `Visit` é criado como efeito colateral (só pra exibição no calendário), mas
+  não é o que o `CollectionItineraryItem` referencia. Qualquer lógica nova sobre itens do
+  itinerário precisa tratar `Location` como um tipo de "parada com coordenada" de primeira
+  classe, não só `Visit`/`Lodging` (ver `adventures/utils/itinerary.py::resolve_item_coordinates`).
 - **Recomendações já existem** (`recommendations_view.py`, 29KB): busca lugares via
   **Overpass API** (OSM) e **Google Places API** (se `GOOGLE_MAPS_API_KEY` estiver setada),
   calcula um `quality_score` determinístico (rating, nº de reviews em escala log, distância

@@ -25,7 +25,8 @@
 ## 40-progresso — estado vivo
 
 - [PROGRESS.md](40-progresso/PROGRESS.md) — status por passo do blueprint; atualizar a cada fechamento.
-- *(futuros: auditoria-p25.md e registros por fase — criar aqui)*
+- [auditoria-p25.md](40-progresso/auditoria-p25.md) — achados da auditoria P2.5 (2026-07-19): 1
+  bug bloqueante corrigido (issue #1), 1 backlog (issue #2), 2 itens pendentes de validação manual.
 
 ## 50-operacao — runbooks
 
