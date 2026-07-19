@@ -1,8 +1,11 @@
 services:
   web:
-    build: ./frontend/
+    build:
+      context: ./frontend/
+      target: build
     image: ghcr.io/seanmorley15/adventurelog-frontend:latest
     container_name: adventurelog-frontend
+    entrypoint: []
     restart: unless-stopped
     user: root
     env_file: .env
@@ -30,6 +33,7 @@ services:
     build: ./backend/
     image: ghcr.io/seanmorley15/adventurelog-backend:latest
     container_name: adventurelog-backend
+    entrypoint: []
     restart: unless-stopped
     env_file: .env
     environment:

@@ -1,8 +1,13 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
 	import { register, init, locale, waitLocale } from 'svelte-i18n';
-	import { UmamiAnalyticsEnv } from '@lukulent/svelte-umami';
 	export let data;
+
+	let UmamiAnalyticsEnv: typeof import('@lukulent/svelte-umami').UmamiAnalyticsEnv | undefined;
+	onMount(async () => {
+		({ UmamiAnalyticsEnv } = await import('@lukulent/svelte-umami'));
+	});
 
 	// Register your translations for each locale
 	register('en', () => import('../locales/en.json'));
@@ -82,7 +87,9 @@
 	<slot />
 {/await}
 
-<UmamiAnalyticsEnv />
+{#if browser && UmamiAnalyticsEnv}
+	<svelte:component this={UmamiAnalyticsEnv} />
+{/if}
 
 <svelte:head>
 	<title>AdventureLog</title>
