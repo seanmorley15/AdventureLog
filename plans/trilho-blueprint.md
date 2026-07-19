@@ -430,6 +430,14 @@ Passos podem ser divididos, inseridos, pulados ou abandonados — registrar a mu
 
 ### Changelog do plano
 
+- 2026-07-19 — Mutação: P3 (deploy VPS) pausado por decisão do usuário — VPS Hetzner não tem
+  Docker instalado (achado real, `docs/adr/001-infra-osrm.md` §1.1). Em vez de instalar Docker
+  na VPS agora, desenvolvimento segue 100% local (Docker Desktop) até o MVP estar validado;
+  deploy fica para o fim. Grafo original marcava P4/P5 como dependentes de P3 — essa dependência
+  é suspensa: P4 e P5 prosseguem com validação local substituindo validação em produção em cada
+  fase (item "validar também em produção" de P4 fica pendente até o deploy acontecer). P3
+  permanece no plano, movido para depois de P4/P5/P6, antes do P7 (validação MVP), já que o
+  critério de MVP exige deploy real.
 - 2026-07-18 — v1 gerada (planejamento com modelo strongest).
 - 2026-07-18 — v2: revisão adversarial (Opus) aplicada. Críticos corrigidos: (1) conflito
   SSR SvelteKit × offline → tarefa 0 do P4; (2) auth da fila de mutações offline → decisão
