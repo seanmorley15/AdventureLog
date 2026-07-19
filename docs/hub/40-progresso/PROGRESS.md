@@ -11,7 +11,8 @@ justificativa completa da ordem.
 | P2 | Fase 1: otimização de rota multi-parada | Concluído | 2026-07-19 | `4639236` (branch `fase-1-rota`, merge) |
 | P2.5 | Auditoria: bugs e gaps do AdventureLog base | Concluído | 2026-07-19 | [PR #3](https://github.com/Caio-Coutinho01/Trilho/pull/3) (mergeado) |
 | P2.6 | Features de baixo esforço (testadas) | Concluído | 2026-07-19 | [PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4) (mergeado, squash) |
-| P5 (P5a/P5b) | Fase 3: recomendação de lugares com restrições | Não iniciado | 2026-07-19 | — |
+| P5a | Fase 3A: backend Overpass + cache (sem LLM) | Concluído | 2026-07-19 | branch `fase-3a-overpass` (PR a abrir) |
+| P5b | Fase 3B: ranking LLM + UI de recomendação | Não iniciado | 2026-07-19 | — |
 | P6 | Fase 4: assistente de IA / orquestração | Não iniciado | 2026-07-19 | — |
 | P6.5 | Remapeamento de design/UI do site inteiro | Não iniciado | 2026-07-19 | — |
 | P3 | Deploy v0 na VPS Hetzner | Pausado (decisão 2026-07-19 — Docker não instalado na VPS; dev segue local até MVP fechar) | 2026-07-19 | `docs/hub/20-decisoes/001-infra-osrm.md` §1.1 |
@@ -20,6 +21,14 @@ justificativa completa da ordem.
 
 ## Notas
 
+- 2026-07-19: P5a fechado. App novo `backend/server/places/` (cache Overpass, sem LLM), reusando
+  `RecommendationsViewSet.query_overpass` (`adventures/views/recommendations_view.py`) via
+  subclasse em `places/overpass_client.py` — não duplica cliente Overpass do zero (achado do
+  CODEMAP §3). Cache `OverpassCacheEntry` com TTL de 14 dias (`docs/hub/20-decisoes/003-overpass.md`),
+  chave normalizada (lat/lon arredondados, ordem de params irrelevante). Endpoint
+  `GET /api/places/nearby/` (`IsAuthenticated` + dono da `Location`). Suíte `places` (11 testes,
+  incluindo cache hit/miss/TTL) + `adventures routing` seguem verdes: 37/37. Env var opcional
+  `PLACES_OVERPASS_CACHE_TTL_DAYS` documentada no `.env.example` (I7).
 - 2026-07-19: P2.6 fechado com 1 único item de backlog (`backlog-p26`): issue #2 (reverse
   geocode retornando "Arcinazzo Romano" pra Roma centro — substring match sem word-boundary em
   `match_locality`, `backend/server/adventures/geocoding.py`). Corrigido em

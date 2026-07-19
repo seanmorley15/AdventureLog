@@ -70,6 +70,7 @@ INSTALLED_APPS = (
     'users',
     'integrations',
     'routing',
+    'places',
     'django.contrib.gis',
     # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
@@ -409,3 +410,6 @@ STRAVA_CLIENT_SECRET = getenv('STRAVA_CLIENT_SECRET', '')
 # optimize feature gracefully (I4) instead of needing a Django restart to
 # pick up docker-compose.osrm.yml. Kept here too for visibility/introspection.
 OSRM_URL = getenv('OSRM_URL', '')
+
+# Overpass cache TTL in days (places app, P5a). Optional — defaults to 14 if unset.
+PLACES_OVERPASS_CACHE_TTL_DAYS = int(getenv('PLACES_OVERPASS_CACHE_TTL_DAYS', '14'))
