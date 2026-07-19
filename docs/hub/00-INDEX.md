@@ -14,7 +14,8 @@
 - [001-infra-osrm.md](20-decisoes/001-infra-osrm.md) — dimensionamento OSRM na VPS Hetzner; gate P1 fechado; deploy pausado (VPS sem Docker). Pendências pro P3: gates 3.0/3.1.
 - [002-offline-sync.md](20-decisoes/002-offline-sync.md) — offline/PWA: shell `ssr=false`, auth via proxy, escopo reorder+nota, LWW, mitigação eviction iOS. Aprovado.
 - [003-overpass.md](20-decisoes/003-overpass.md) — Overpass público (sem instância própria), cache local TTL 14 dias, User-Agent identificável. Aprovado (P5a).
-- *(futuros: 003b-llm-provider 🔒, 004-assistente, direcao-visual 🔒 — criar aqui)*
+- [003b-llm-provider.md](20-decisoes/003b-llm-provider.md) — provedor Anthropic, modelo `claude-haiku-4-5`, budget mensal US$ 5,00. Aprovado (P5b); reusado por P6.
+- *(futuros: 004-assistente, direcao-visual 🔒 — criar aqui)*
 
 ## 30-planos — planejamento
 
@@ -25,7 +26,7 @@
 
 ## 40-progresso — estado vivo
 
-- [PROGRESS.md](40-progresso/PROGRESS.md) — status por passo do blueprint; atualizar a cada fechamento. P2.6 concluído em 2026-07-19 ([PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4)); P5a concluído em 2026-07-19 (branch `fase-3a-overpass`).
+- [PROGRESS.md](40-progresso/PROGRESS.md) — status por passo do blueprint; atualizar a cada fechamento. P2.6 concluído em 2026-07-19 ([PR #4](https://github.com/Caio-Coutinho01/Trilho/pull/4)); P5a concluído em 2026-07-19 (branch `fase-3a-overpass`); P5b concluído em 2026-07-19 (branch `fase-3b-ranking`).
 - [auditoria-p25.md](40-progresso/auditoria-p25.md) — achados da auditoria P2.5 (2026-07-19): 1
   bug bloqueante corrigido (issue #1), 1 backlog (issue #2), 2 itens pendentes de validação manual.
 

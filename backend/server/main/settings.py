@@ -413,3 +413,9 @@ OSRM_URL = getenv('OSRM_URL', '')
 
 # Overpass cache TTL in days (places app, P5a). Optional — defaults to 14 if unset.
 PLACES_OVERPASS_CACHE_TTL_DAYS = int(getenv('PLACES_OVERPASS_CACHE_TTL_DAYS', '14'))
+
+# LLM ranking of place suggestions (places app, P5b). Optional — unset means
+# the "suggest places" feature degrades gracefully (controlled error, I4/I7).
+# Provider/model/budget decision: docs/hub/20-decisoes/003b-llm-provider.md.
+LLM_API_KEY = getenv('LLM_API_KEY', '')
+LLM_MODEL = getenv('LLM_MODEL', 'claude-haiku-4-5')

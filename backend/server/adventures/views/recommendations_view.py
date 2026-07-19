@@ -274,6 +274,9 @@ class RecommendationsViewSet(viewsets.ViewSet):
                 "osm_type": node.get('type'),
                 "wikipedia": wikipedia,
                 "stars": stars,
+                "cuisine": tags.get('cuisine'),
+                "wheelchair": tags.get('wheelchair'),
+                "fee": tags.get('fee'),
             }
             
             # Calculate quality score (will be lower without ratings)

@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 
 from adventures.models import Location
 
-from . import services
+from . import ranking, services
 from .overpass_client import VALID_CATEGORIES
 
 
@@ -59,5 +59,60 @@ class NearbyPlacesView(APIView):
                 'count': len(result['results']),
                 'results': result['results'],
                 'cached': result.get('cached', False),
+            }
+        )
+
+
+class SuggestPlacesView(APIView):
+    """POST /api/places/suggest/ {"stop": <location_id>, "category": ..., "radius": ..., "restrictions": "..."}
+
+    LLM ranking on top of the P5a Overpass candidates (P5b). Guard-rail I1
+    lives in `places/ranking.py::suggest_places` — this view only validates
+    ownership/params and translates the pipeline result to an HTTP response.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        stop_id = request.data.get('stop')
+        category = request.data.get('category')
+        radius = request.data.get('radius', 2000)
+        restrictions = request.data.get('restrictions', '') or ''
+
+        if not stop_id:
+            return Response({'error': "Parametro 'stop' e obrigatorio."}, status=400)
+        if category not in VALID_CATEGORIES:
+            return Response(
+                {'error': f"Categoria invalida. Opcoes: {', '.join(VALID_CATEGORIES)}"}, status=400
+            )
+
+        try:
+            radius = min(float(radius), 5000)
+        except (TypeError, ValueError):
+            return Response({'error': "Parametro 'radius' invalido."}, status=400)
+
+        try:
+            location = Location.objects.get(id=stop_id)
+        except (Location.DoesNotExist, ValueError, TypeError):
+            return Response({'error': 'Parada nao encontrada.'}, status=404)
+
+        if location.user_id != request.user.id:
+            return Response({'error': 'Sem permissao para esta parada.'}, status=403)
+
+        if location.latitude is None or location.longitude is None:
+            return Response({'error': 'Parada sem coordenadas.'}, status=400)
+
+        result = ranking.suggest_places(location, category, radius, restrictions)
+
+        if result.get('error') and not result.get('suggestions'):
+            return Response(
+                {'error': result['error'], 'count': 0, 'suggestions': []},
+                status=503,
+            )
+
+        return Response(
+            {
+                'count': len(result['suggestions']),
+                'suggestions': result['suggestions'],
             }
         )
