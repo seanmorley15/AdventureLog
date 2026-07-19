@@ -1,11 +1,14 @@
 from unittest.mock import patch
 
 from django.contrib.contenttypes.models import ContentType
+from django.test import TestCase
 from rest_framework.test import APITestCase
 
+from adventures.geocoding import extractIsoCode
 from adventures.models import Collection, CollectionItineraryItem, Location, Note, Visit
 from routing.exceptions import OSRMUnavailableError
 from users.models import CustomUser
+from worldtravel.models import City, Country, Region
 
 
 class ItineraryAPITestCase(APITestCase):
@@ -208,3 +211,39 @@ class ItineraryOptimizeEndpointTests(APITestCase):
         self.assertEqual(data['skipped_item_ids'], [])
         proposed_ids = {entry['id'] for entry in data['proposed_order']}
         self.assertEqual(proposed_ids, {str(item_d.id), str(item_e.id)})
+
+
+class ExtractIsoCodeLocalityMatchTests(TestCase):
+    """Regression for issue #2: reverse geocode picked 'Arcinazzo Romano' for Rome centre."""
+
+    def setUp(self):
+        self.user = CustomUser.objects.create_user(
+            username='geocode-user',
+            email='geocode-user@example.com',
+            password='testpassword123',
+        )
+        self.country = Country.objects.create(name='Italy', country_code='IT')
+        self.region = Region.objects.create(id='IT-62', name='Lazio', country=self.country)
+        # Decoy city whose name contains "Roma" as a substring but is a different place.
+        City.objects.create(id='IT-arcinazzo', name='Arcinazzo Romano', region=self.region)
+        self.rome = City.objects.create(id='IT-roma', name='Rome', region=self.region)
+
+    def _geocode_data(self, locality_value):
+        return {
+            'name': 'Piazza del Colosseo',
+            'address': {
+                'ISO3166-2-lvl4': self.region.id,
+                'ISO3166-1': 'IT',
+                'city': locality_value,
+            },
+        }
+
+    def test_exact_city_name_wins_over_substring_decoy(self):
+        result = extractIsoCode(self.user, self._geocode_data('Rome'))
+        self.assertEqual(result['city'], 'Rome')
+
+    def test_nominatim_roma_spelling_does_not_match_arcinazzo_romano(self):
+        # Nominatim returns the Italian spelling "Roma"; it should not fall through
+        # to a name__icontains match against "Arcinazzo Romano".
+        result = extractIsoCode(self.user, self._geocode_data('Roma'))
+        self.assertNotEqual(result['city'], 'Arcinazzo Romano')

@@ -687,7 +687,9 @@ def extractIsoCode(user, data):
         if key_name == 'county':
             return None
 
-        return qs.filter(name__icontains=value).first()
+        # Word-boundary match: plain icontains lets "Roma" match inside
+        # "Arcinazzo Romano", picking the wrong city for real Rome coordinates.
+        return qs.filter(name__iregex=rf"\m{re.escape(value)}\M").order_by('name').first()
 
     chosen_region = region
     for candidate_region in region_candidates or [region]:
