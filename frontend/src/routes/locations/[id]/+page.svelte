@@ -73,15 +73,6 @@
 	let showTrailTracks = true;
 	let showImagePins = true;
 
-	$: imagePinGeoJson = adventure
-		? contentImagesToGeoJson(adventure.images, {
-				parentType: 'location',
-				parentId: adventure.id,
-				parentName: adventure.name
-			})
-		: EMPTY_IMAGE_PIN_GEOJSON;
-	$: hasImagePins = imagePinGeoJson.features.length > 0;
-
 	async function loadSunriseSunsetForDate(date: string) {
 		if (!adventure?.id || sunriseSunsetLoading[date] || visitSunriseSunset[date]) {
 			return;
@@ -141,6 +132,15 @@
 	}
 
 	$: applyLocationPageData(data.props.adventure);
+
+	$: imagePinGeoJson = adventure
+		? contentImagesToGeoJson(adventure.images, {
+				parentType: 'location',
+				parentId: adventure.id,
+				parentName: adventure.name
+			})
+		: EMPTY_IMAGE_PIN_GEOJSON;
+	$: hasImagePins = imagePinGeoJson.features.length > 0;
 
 	function hasActivityGeojson(adventure: Location) {
 		return adventure.visits.some((visit) => visit.activities.some((activity) => activity.geojson));
