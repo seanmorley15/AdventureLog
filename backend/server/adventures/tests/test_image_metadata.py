@@ -10,6 +10,7 @@ from adventures.services.images.metadata import (
     extract_gps_from_bytes,
     infer_source_from_url,
     resolve_image_metadata,
+    _dms_to_decimal,
 )
 from adventures.utils.geo import make_point, point_to_lat_lon
 from users.models import CustomUser
@@ -67,6 +68,68 @@ class ImageMetadataResolutionTests(TestCase):
         buffer = io.BytesIO()
         Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG')
         self.assertIsNone(extract_gps_from_bytes(buffer.getvalue()))
+
+
+class DmsConversionTests(TestCase):
+    def test_ifdrational_components(self):
+        from PIL.TiffImagePlugin import IFDRational
+
+        values = (IFDRational(44, 1), IFDRational(58, 2), IFDRational(1234, 100))
+        result = _dms_to_decimal(values, 'N')
+        self.assertIsNotNone(result)
+        self.assertAlmostEqual(result, 44.486761111111115, places=4)
+
+    def test_tuple_rational_components(self):
+        values = ((44, 1), (58, 2), (1234, 100))
+        result = _dms_to_decimal(values, 'N')
+        self.assertIsNotNone(result)
+        self.assertAlmostEqual(result, 44.486761111111115, places=4)
+
+    def test_bytes_ref_applies_hemisphere(self):
+        values = ((44, 1), (58, 1), (0, 1))
+        north = _dms_to_decimal(values, b'N')
+        south = _dms_to_decimal(values, b'S')
+        self.assertAlmostEqual(north, 44.96666666666667, places=4)
+        self.assertAlmostEqual(south, -44.96666666666667, places=4)
+
+    def test_extract_gps_from_jpeg_with_exif(self):
+        from PIL import Image
+        import io
+
+        try:
+            import piexif
+        except ImportError:
+            self.skipTest('piexif is not installed')
+
+        lat, lon = 44.9673, -70.6473
+
+        def to_deg(value, refs):
+            abs_value = abs(value)
+            deg = int(abs_value)
+            t1 = (abs_value - deg) * 60
+            min_ = int(t1)
+            sec = round((t1 - min_) * 60 * 100)
+            return ((deg, 1), (min_, 1), (sec, 100)), refs[0 if value < 0 else 1]
+
+        lat_deg = to_deg(lat, ['S', 'N'])
+        lon_deg = to_deg(lon, ['W', 'E'])
+        exif_dict = {
+            'GPS': {
+                piexif.GPSIFD.GPSLatitudeRef: lat_deg[1],
+                piexif.GPSIFD.GPSLatitude: lat_deg[0],
+                piexif.GPSIFD.GPSLongitudeRef: lon_deg[1],
+                piexif.GPSIFD.GPSLongitude: lon_deg[0],
+            }
+        }
+        exif_bytes = piexif.dump(exif_dict)
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG', exif=exif_bytes)
+
+        point = extract_gps_from_bytes(buffer.getvalue())
+        self.assertIsNotNone(point)
+        extracted_lat, extracted_lon = point_to_lat_lon(point)
+        self.assertAlmostEqual(extracted_lat, lat, places=3)
+        self.assertAlmostEqual(extracted_lon, lon, places=3)
 
 
 class CreateContentImageTests(TestCase):

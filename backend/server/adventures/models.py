@@ -461,6 +461,7 @@ class ContentImage(models.Model):
     image = ResizedImageField(
         force_format="WEBP",
         quality=75,
+        keep_meta=True,
         upload_to=PathAndRename('images/'),
         blank=True,
         null=True,

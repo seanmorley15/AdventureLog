@@ -9,6 +9,7 @@ coreapi==2.3.3
 python-dotenv==1.1.0
 psycopg2-binary==2.9.10
 pillow==12.2.0
+pillow-heif>=0.21.0,<1
 whitenoise==6.9.0
 django-storages==1.14.3
 boto3==1.34.162

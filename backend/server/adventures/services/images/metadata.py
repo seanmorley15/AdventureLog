@@ -19,6 +19,13 @@ from adventures.utils.geo import make_point, point_to_lat_lon
 
 logger = logging.getLogger(__name__)
 
+try:
+    from pillow_heif import register_heif_opener
+
+    register_heif_opener()
+except ImportError:
+    pass
+
 
 class ImageSource:
     UPLOAD = ContentImage.Source.UPLOAD
@@ -45,16 +52,48 @@ def infer_source_from_url(url: str) -> str:
     return ImageSource.URL
 
 
-def _dms_to_decimal(values, ref: str) -> float | None:
+def _normalize_gps_ref(ref) -> str:
+    if ref is None:
+        return ''
+    if isinstance(ref, bytes):
+        ref = ref.decode('ascii', errors='ignore')
+    return str(ref).strip().upper()[:1]
+
+
+def _exif_rational_to_float(value) -> float | None:
+    if value is None:
+        return None
+    if isinstance(value, (tuple, list)):
+        if len(value) != 2:
+            return None
+        numerator, denominator = value
+        try:
+            numerator = float(numerator)
+            denominator = float(denominator)
+        except (TypeError, ValueError):
+            return None
+        if denominator == 0:
+            return None
+        return numerator / denominator
     try:
-        degrees = float(values[0])
-        minutes = float(values[1])
-        seconds = float(values[2])
-    except (TypeError, ValueError, IndexError):
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _dms_to_decimal(values, ref) -> float | None:
+    if not values or len(values) < 3:
+        return None
+
+    degrees = _exif_rational_to_float(values[0])
+    minutes = _exif_rational_to_float(values[1])
+    seconds = _exif_rational_to_float(values[2])
+    if degrees is None or minutes is None or seconds is None:
         return None
 
     decimal = degrees + minutes / 60 + seconds / 3600
-    if ref in ('S', 'W'):
+    normalized_ref = _normalize_gps_ref(ref)
+    if normalized_ref in ('S', 'W'):
         decimal = -decimal
     return decimal
 
