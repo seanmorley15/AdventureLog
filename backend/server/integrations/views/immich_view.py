@@ -1,4 +1,6 @@
 import os
+from datetime import datetime, timedelta
+
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 from integrations.serializers import ImmichIntegrationSerializer
@@ -13,6 +15,8 @@ from integrations.utils import StandardResultsSetPagination
 import logging
 
 logger = logging.getLogger(__name__)
+
+IMMICH_SEARCH_SIZE = 1000
 
 class ImmichIntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -48,6 +52,78 @@ class ImmichIntegrationView(viewsets.ViewSet):
 
         return user_integrations.first()
 
+    def _immich_connection_error(self):
+        return Response(
+            {
+                'message': 'The Immich server is currently down or unreachable.',
+                'error': True,
+                'code': 'immich.server_down'
+            },
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    def _immich_no_items_error(self, code='immich.no_items_found', message='No items found.'):
+        return Response(
+            {
+                'message': message,
+                'error': True,
+                'code': code
+            },
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    def _build_date_range_arguments(self, date):
+        selected_date = datetime.strptime(date, '%Y-%m-%d')
+        next_day = selected_date + timedelta(days=1)
+        return {
+            'takenAfter': f'{selected_date.strftime("%Y-%m-%d")}T00:00:00.000Z',
+            'takenBefore': f'{next_day.strftime("%Y-%m-%d")}T00:00:00.000Z',
+        }
+
+    def _paginate_immich_assets(self, integration, request, items):
+        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
+        public_url = public_url.replace("'", "")
+        for item in items:
+            item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
+
+        paginator = self.pagination_class()
+        result_page = paginator.paginate_queryset(items, request)
+        return paginator.get_paginated_response(result_page)
+
+    def _fetch_immich_search_assets(
+        self,
+        integration,
+        request,
+        arguments,
+        search_type='metadata',
+        not_found_code='immich.no_items_found',
+    ):
+        try:
+            url = f'{integration.server_url}/search/{search_type}'
+            immich_fetch = requests.post(
+                url,
+                headers={'x-api-key': integration.api_key},
+                json={'size': IMMICH_SEARCH_SIZE, **arguments},
+            )
+            res = immich_fetch.json()
+        except requests.exceptions.ConnectionError:
+            return self._immich_connection_error()
+
+        if not immich_fetch.ok:
+            logger.warning(
+                'Immich search request failed: status=%s response=%s',
+                immich_fetch.status_code,
+                res,
+            )
+            return self._immich_no_items_error(code=not_found_code)
+
+        if 'assets' in res and 'items' in res['assets']:
+            items = res['assets']['items']
+            if items:
+                return self._paginate_immich_assets(integration, request, items)
+
+        return self._immich_no_items_error(code=not_found_code)
+
     @action(detail=False, methods=['get'], url_path='search')
     def search(self, request):
         """
@@ -75,16 +151,8 @@ class ImmichIntegrationView(viewsets.ViewSet):
         if query:
             arguments['query'] = query
         if date:
-            # Create date range for the entire selected day
-            from datetime import datetime, timedelta
             try:
-                # Parse the date and create start/end of day
-                selected_date = datetime.strptime(date, '%Y-%m-%d')
-                start_of_day = selected_date.strftime('%Y-%m-%d')
-                end_of_day = (selected_date + timedelta(days=1)).strftime('%Y-%m-%d')
-                
-                arguments['takenAfter'] = start_of_day
-                arguments['takenBefore'] = end_of_day
+                arguments.update(self._build_date_range_arguments(date))
             except ValueError:
                 return Response(
                     {
@@ -95,43 +163,12 @@ class ImmichIntegrationView(viewsets.ViewSet):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-        # check so if the server is down, it does not tweak out like a madman and crash the server with a 500 error code
-        try:
-            url = f'{integration.server_url}/search/{"smart" if query else "metadata"}'
-            immich_fetch = requests.post(url, headers={
-                'x-api-key': integration.api_key
-            },
-            json = arguments
-            )
-            res = immich_fetch.json()
-        except requests.exceptions.ConnectionError:
-            return Response(
-                {
-                    'message': 'The Immich server is currently down or unreachable.',
-                    'error': True,
-                    'code': 'immich.server_down'
-                },
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-                
-        if 'assets' in res and 'items' in res['assets']:
-            paginator = self.pagination_class()
-            # for each item in the items, we need to add the image url to the item so we can display it in the frontend
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            for item in res['assets']['items']:
-                item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
-            result_page = paginator.paginate_queryset(res['assets']['items'], request)
-            return paginator.get_paginated_response(result_page)
-        else:
-            return Response(
-                {
-                    'message': 'No items found.',
-                    'error': True,
-                    'code': 'immich.no_items_found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
+        return self._fetch_immich_search_assets(
+            integration,
+            request,
+            arguments,
+            search_type='smart' if query else 'metadata',
+        )
         
     @action(detail=False, methods=['get'])
     def albums(self, request):
@@ -171,7 +208,6 @@ class ImmichIntegrationView(viewsets.ViewSet):
         """
         # Check for integration before proceeding
         integration = self.check_integration(request)
-        print(integration.user)
         if isinstance(integration, Response):
             return integration
 
@@ -201,24 +237,17 @@ class ImmichIntegrationView(viewsets.ViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         
-        if 'assets' in res:
-            paginator = self.pagination_class()
-            # for each item in the items, we need to add the image url to the item so we can display it in the frontend
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            public_url = public_url.replace("'", "")
-            for item in res['assets']:
-                item['image_url'] = f'{public_url}/api/integrations/immich/{integration.id}/get/{item["id"]}'
-            result_page = paginator.paginate_queryset(res['assets'], request)
-            return paginator.get_paginated_response(result_page)
-        else:
-            return Response(
-                {
-                    'message': 'No assets found in this album.',
-                    'error': True,
-                    'code': 'immich.no_assets_found'
-                },
-                status=status.HTTP_404_NOT_FOUND
-            )
+        album_assets = res.get('assets')
+        if isinstance(album_assets, list) and album_assets:
+            return self._paginate_immich_assets(integration, request, album_assets)
+
+        return self._fetch_immich_search_assets(
+            integration,
+            request,
+            {'albumIds': [albumid]},
+            search_type='metadata',
+            not_found_code='immich.no_assets_found',
+        )
 
     @action(
     detail=False,
