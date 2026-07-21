@@ -164,7 +164,7 @@ def resolve_image_metadata(
     coordinates = None
     if file_bytes:
         coordinates = extract_gps_from_bytes(file_bytes)
-    elif immich_id and immich_integration:
+    if coordinates is None and immich_id and immich_integration:
         coordinates = fetch_immich_coordinates(immich_integration, immich_id)
 
     return {

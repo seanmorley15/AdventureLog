@@ -20,7 +20,11 @@ from adventures.services.images.fetch import (
     download_remote_image,
     import_remote_images_for_object,
 )
-from adventures.services.images.metadata import ImageSource, create_content_image
+from adventures.services.images.metadata import (
+    ImageSource,
+    create_content_image,
+    fetch_immich_coordinates,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -418,6 +422,9 @@ class ContentImageViewSet(viewsets.ModelViewSet):
         explicit_source = request.data.get('source')
         source_url = request.data.get('source_url')
 
+        coordinates = None
+        immich_integration = None
+
         if image_file:
             allowed, details = enforce_media_storage_limit(
                 owner,
@@ -434,7 +441,11 @@ class ContentImageViewSet(viewsets.ModelViewSet):
 
             file_bytes = image_file.read()
             image_file = ContentFile(file_bytes, name=image_file.name)
-            immich_integration = None
+
+            if immich_id:
+                immich_integration = ImmichIntegration.objects.filter(user=owner).first()
+                coordinates = fetch_immich_coordinates(immich_integration, immich_id)
+                immich_id = None
         else:
             file_bytes = None
             immich_integration = ImmichIntegration.objects.filter(user=owner).first()
@@ -443,12 +454,13 @@ class ContentImageViewSet(viewsets.ModelViewSet):
             user=owner,
             content_type=content_type,
             object_id=object_id,
-            image_file=image_file if not immich_id else None,
+            image_file=image_file,
             immich_id=immich_id or None,
             file_bytes=file_bytes,
             source_url=source_url,
             explicit_source=explicit_source,
             immich_integration=immich_integration,
+            coordinates=coordinates,
         )
 
         serializer = self.get_serializer(image)

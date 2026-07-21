@@ -78,7 +78,7 @@
 	// API calls
 	async function uploadImageToServer(
 		file: File,
-		options: { source?: ImageSource; sourceUrl?: string } = {}
+		options: { source?: ImageSource; sourceUrl?: string; immichId?: string } = {}
 	) {
 		if (!objectId) {
 			console.error('Cannot upload image: objectId is not set');
@@ -95,6 +95,9 @@
 		}
 		if (options.sourceUrl) {
 			formData.append('source_url', options.sourceUrl);
+		}
+		if (options.immichId) {
+			formData.append('immich_id', options.immichId);
 		}
 
 		try {
@@ -378,7 +381,10 @@
 		imageError = '';
 
 		try {
-			const newImage = await uploadImageToServer(event.detail.file, { source: 'immich' });
+			const newImage = await uploadImageToServer(event.detail.file, {
+				source: 'immich',
+				immichId: event.detail.immichId
+			});
 			if (newImage) {
 				updateImagesList(newImage);
 				addToast('success', $t('adventures.image_upload_success'));

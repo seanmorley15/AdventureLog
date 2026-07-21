@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
@@ -68,6 +70,30 @@ class ImageMetadataResolutionTests(TestCase):
         buffer = io.BytesIO()
         Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG')
         self.assertIsNone(extract_gps_from_bytes(buffer.getvalue()))
+
+    @patch('adventures.services.images.metadata.fetch_immich_coordinates')
+    def test_resolve_metadata_falls_back_to_immich_when_file_has_no_gps(
+        self, mock_fetch_immich_coordinates
+    ):
+        from PIL import Image
+        import io
+
+        buffer = io.BytesIO()
+        Image.new('RGB', (4, 4), color='blue').save(buffer, format='JPEG')
+        file_bytes = buffer.getvalue()
+        immich_point = make_point(-70.6473, 44.9673)
+        mock_fetch_immich_coordinates.return_value = immich_point
+        mock_integration = object()
+
+        metadata = resolve_image_metadata(
+            file_bytes=file_bytes,
+            immich_id='abc-123',
+            immich_integration=mock_integration,
+        )
+
+        self.assertEqual(metadata['source'], ImageSource.IMMICH)
+        self.assertEqual(metadata['coordinates'], immich_point)
+        mock_fetch_immich_coordinates.assert_called_once_with(mock_integration, 'abc-123')
 
 
 class DmsConversionTests(TestCase):
