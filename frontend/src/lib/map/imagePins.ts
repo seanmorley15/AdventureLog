@@ -33,6 +33,11 @@ export type ImagePinProperties = {
 
 export type ImagePinFeatureCollection = FullMapFeatureCollection<ImagePinProperties>;
 
+export const EMPTY_IMAGE_PIN_GEOJSON: ImagePinFeatureCollection = {
+	type: 'FeatureCollection',
+	features: []
+};
+
 export function hasImageCoordinates(
 	image: Pick<ContentImage, 'latitude' | 'longitude'> | null | undefined
 ): boolean {

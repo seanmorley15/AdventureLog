@@ -35,6 +35,8 @@
 		baseContent = resolveThemeColor('--color-base-content', baseContent);
 	});
 
+	let clusterCirclePaint: Record<string, unknown> = {};
+
 	$: clusterCirclePaint = {
 		'circle-color': [
 			'step',

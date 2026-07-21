@@ -645,7 +645,7 @@
 	}
 
 	async function handleQuickAdd() {
-		if (!selected || selected.kind === 'pin') return;
+		if (!selected || selected.kind === 'pin' || selected.kind === 'image') return;
 		isQuickAdding = true;
 		try {
 			const payload =

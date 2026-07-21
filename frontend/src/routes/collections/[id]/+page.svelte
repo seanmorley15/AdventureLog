@@ -87,7 +87,7 @@
 	}
 
 	function upsertCollectionItem(key: CollectionArrayKey, item: any) {
-		if (!item || item.id === undefined || item.id === null) return;
+		if (!item || item.id === undefined || item.id === null || !collection) return;
 		const items = ensureCollectionArray(key);
 		const exists = items.some((entry: any) => String(entry.id) === String(item.id));
 		(collection as any)[key] = exists
@@ -120,6 +120,7 @@
 				(c: any) =>
 					c.name === item.name &&
 					(c.collections || c.collection) &&
+					collection &&
 					String(c.collections || c.collection || '') === String(collection.id)
 			);
 			if (match && match.id) {
@@ -352,7 +353,7 @@
 	let currencyCount = 0;
 
 	$: preferredCurrency = (data.user as any)?.default_currency || DEFAULT_CURRENCY;
-	$: costEntries = buildCostEntries(collection, preferredCurrency);
+	$: costEntries = buildCostEntries(collection ?? null, preferredCurrency);
 	$: costSummary = summarizeCostEntries(costEntries, numberLocale, costCategoryLabels);
 	$: pricedItemCount = costEntries.length;
 	$: currencyCount = costSummary.length;
@@ -591,6 +592,7 @@
 	async function handleLocationAdded(event: CustomEvent<Location>) {
 		// Link the location to this collection
 		const location = event.detail;
+		if (!collection) return;
 
 		try {
 			const response = await fetch(`/api/locations/${location.id}/`, {
@@ -653,7 +655,7 @@
 	</div>
 {/if}
 
-{#if isImageModalOpen}
+{#if isImageModalOpen && collection}
 	<ImageDisplayModal
 		images={heroImages}
 		initialIndex={modalInitialIndex}
@@ -681,7 +683,7 @@
 	/>
 {/if}
 
-{#if isNoteModalOpen}
+{#if isNoteModalOpen && collection}
 	<NoteModal
 		on:close={() => {
 			noteToEdit = null;
@@ -703,7 +705,7 @@
 	/>
 {/if}
 
-{#if isLocationModalOpen}
+{#if isLocationModalOpen && collection}
 	<LocationModal
 		on:close={() => {
 			adventureToEdit = null;
@@ -725,7 +727,7 @@
 	/>
 {/if}
 
-{#if isTransportationModalOpen}
+{#if isTransportationModalOpen && collection}
 	<TransportationModal
 		on:close={() => {
 			transportationToEdit = null;
@@ -747,7 +749,7 @@
 	/>
 {/if}
 
-{#if isChecklistModalOpen}
+{#if isChecklistModalOpen && collection}
 	<ChecklistModal
 		on:close={() => {
 			checklistToEdit = null;
@@ -769,7 +771,7 @@
 	/>
 {/if}
 
-{#if isLodgingModalOpen}
+{#if isLodgingModalOpen && collection}
 	<LodgingModal
 		on:close={() => {
 			lodgingToEdit = null;

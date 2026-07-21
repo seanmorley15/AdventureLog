@@ -27,17 +27,20 @@
 	let versionCopied = false;
 	let copyResetTimeout: ReturnType<typeof setTimeout> | undefined;
 
-	onMount(async () => {
+	onMount(() => {
 		modal = document.getElementById('about_modal') as HTMLDialogElement;
 		if (modal) {
 			modal.showModal();
 		}
-		const response = await fetch('/api/integrations');
-		if (response.ok) {
-			integrations = await response.json();
-		} else {
-			integrations = null;
-		}
+
+		void (async () => {
+			const response = await fetch('/api/integrations');
+			if (response.ok) {
+				integrations = await response.json();
+			} else {
+				integrations = null;
+			}
+		})();
 
 		return () => {
 			if (copyResetTimeout) clearTimeout(copyResetTimeout);

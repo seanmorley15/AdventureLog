@@ -16,11 +16,9 @@
 	const btnBase =
 		'btn btn-sm btn-square min-h-8 h-8 w-8 bg-transparent hover:bg-base-200/80 border-0 shadow-none';
 
-	function layerBtnClass(
-		show: boolean,
-		position: 'first' | 'middle' | 'last' | 'only',
-		activeClass: string
-	) {
+	type LayerPosition = 'first' | 'middle' | 'last' | 'only';
+
+	function layerBtnClass(show: boolean, position: LayerPosition, activeClass: string) {
 		const rounded =
 			position === 'only'
 				? 'rounded-xl'
@@ -34,6 +32,9 @@
 	}
 
 	$: layerCount = Number(hasActivities) + Number(hasTrails) + Number(hasImagePins);
+	let activityPosition: LayerPosition = 'only';
+	let trailPosition: LayerPosition = 'only';
+	let imagePosition: LayerPosition = 'only';
 	$: activityPosition = !hasActivities
 		? 'only'
 		: layerCount === 1

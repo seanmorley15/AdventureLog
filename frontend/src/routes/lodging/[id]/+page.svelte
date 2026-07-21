@@ -34,7 +34,7 @@
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
 	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { contentImagesToGeoJson } from '$lib/map/imagePins';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -66,7 +66,7 @@
 				parentId: lodging.id,
 				parentName: lodging.name
 			})
-		: { type: 'FeatureCollection', features: [] };
+		: EMPTY_IMAGE_PIN_GEOJSON;
 	$: hasImagePins = imagePinGeoJson.features.length > 0;
 
 	$: lodgingPriceLabel = lodging

@@ -32,7 +32,7 @@
 	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
 	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
 	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
-	import { contentImagesToGeoJson } from '$lib/map/imagePins';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
 
@@ -79,7 +79,7 @@
 				parentId: adventure.id,
 				parentName: adventure.name
 			})
-		: { type: 'FeatureCollection', features: [] };
+		: EMPTY_IMAGE_PIN_GEOJSON;
 	$: hasImagePins = imagePinGeoJson.features.length > 0;
 
 	async function loadSunriseSunsetForDate(date: string) {
@@ -194,7 +194,7 @@
 	let isFabMenuOpen = false;
 
 	async function duplicateAdventure() {
-		if (isDuplicating) return;
+		if (isDuplicating || !adventure) return;
 		isDuplicating = true;
 		isFabMenuOpen = false;
 		try {
@@ -221,12 +221,58 @@
 	}
 
 	function openImageModal(imageIndex: number) {
-		adventure_images = adventure.images.map((img) => ({
+		const current = adventure;
+		if (!current) return;
+		adventure_images = current.images.map((img) => ({
 			image: img.image,
-			adventure: adventure
+			adventure: current
 		}));
 		modalInitialIndex = imageIndex;
 		isImageModalOpen = true;
+	}
+
+	function goToPreviousImage() {
+		if (!adventure?.images?.length) return;
+		goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1);
+	}
+
+	function goToNextImage() {
+		if (!adventure?.images?.length) return;
+		goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0);
+	}
+
+	function navigateToWorldTravelRegion() {
+		if (!adventure?.country) return;
+		if (adventure.region) {
+			goto(`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`);
+		} else {
+			goto(`/worldtravel/${adventure.country.country_code}`);
+		}
+	}
+
+	function navigateToWorldTravelCountry() {
+		if (!adventure?.country?.country_code) return;
+		goto(`/worldtravel/${adventure.country.country_code}`);
+	}
+
+	async function copyAdventureCoordinates() {
+		if (!adventure) return;
+		try {
+			await copyToClipboard(`${adventure.latitude}, ${adventure.longitude}`);
+		} catch {
+			addToast('error', $t('adventures.copy_failed'));
+		}
+	}
+
+	async function copyAdventureGoogleMapsLink() {
+		if (!adventure) return;
+		try {
+			await copyToClipboard(
+				`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
+			);
+		} catch {
+			addToast('error', $t('adventures.copy_failed'));
+		}
 	}
 </script>
 
@@ -254,7 +300,7 @@
 	/>
 {/if}
 
-{#if isImageModalOpen}
+{#if isImageModalOpen && adventure}
 	<ImageDisplayModal
 		images={adventure.images}
 		initialIndex={modalInitialIndex}
@@ -430,8 +476,7 @@
 							<!-- Navigation arrows and current position -->
 							<div class="flex items-center justify-center gap-4 mb-3">
 								<button
-									on:click={() =>
-										goToSlide(currentSlide > 0 ? currentSlide - 1 : adventure.images.length - 1)}
+									on:click={goToPreviousImage}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.previous_image')}
 								>
@@ -443,8 +488,7 @@
 								</div>
 
 								<button
-									on:click={() =>
-										goToSlide(currentSlide < adventure.images.length - 1 ? currentSlide + 1 : 0)}
+									on:click={goToNextImage}
 									class="btn btn-circle btn-sm btn-primary"
 									aria-label={$t('adventures.next_image')}
 								>
@@ -769,15 +813,7 @@
 												{#if adventure.city}
 													<button
 														class="btn btn-xs btn-outline hover:btn-info"
-														on:click={() => {
-															if (adventure.country && adventure.region) {
-																goto(
-																	`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`
-																);
-															} else if (adventure.country) {
-																goto(`/worldtravel/${adventure.country.country_code}`);
-															}
-														}}
+														on:click={navigateToWorldTravelRegion}
 													>
 														🏙️ {adventure.city.name}
 													</button>
@@ -785,15 +821,7 @@
 												{#if adventure.region}
 													<button
 														class="btn btn-xs btn-outline hover:btn-warning"
-														on:click={() => {
-															if (adventure.country && adventure.region) {
-																goto(
-																	`/worldtravel/${adventure.country.country_code}/${adventure.region.id}`
-																);
-															} else if (adventure.country) {
-																goto(`/worldtravel/${adventure.country.country_code}`);
-															}
-														}}
+														on:click={navigateToWorldTravelRegion}
 													>
 														🗺️ {adventure.region.name}
 													</button>
@@ -801,7 +829,7 @@
 												{#if adventure.country}
 													<button
 														class="btn btn-xs btn-outline hover:btn-success"
-														on:click={() => goto(`/worldtravel/${adventure.country?.country_code}`)}
+														on:click={navigateToWorldTravelCountry}
 													>
 														{#if adventure.country.flag_url}
 															<img
@@ -830,27 +858,13 @@
 										<div class="flex gap-2">
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={async () => {
-													try {
-														await copyToClipboard(`${adventure.latitude}, ${adventure.longitude}`);
-													} catch {
-														addToast('error', $t('adventures.copy_failed'));
-													}
-												}}
+												on:click={copyAdventureCoordinates}
 											>
 												📋 {$t('adventures.copy_coordinates')}
 											</button>
 											<button
 												class="btn btn-xs btn-ghost flex-1 text-xs"
-												on:click={async () => {
-													try {
-														await copyToClipboard(
-															`https://www.google.com/maps/@${adventure.latitude},${adventure.longitude},15z`
-														);
-													} catch {
-														addToast('error', $t('adventures.copy_failed'));
-													}
-												}}
+												on:click={copyAdventureGoogleMapsLink}
 											>
 												🔗 {$t('adventures.copy_link')}
 											</button>
