@@ -43,6 +43,9 @@ class ImmichViewTests(TestCase):
         _, kwargs = mock_post.call_args
         self.assertEqual(kwargs['json']['takenAfter'], '2024-06-15T00:00:00.000Z')
         self.assertEqual(kwargs['json']['takenBefore'], '2024-06-16T00:00:00.000Z')
+        self.assertEqual(kwargs['json']['visibility'], 'timeline')
+        self.assertEqual(kwargs['json']['page'], 1)
+        self.assertEqual(kwargs['json']['size'], 1000)
 
     @patch('integrations.views.immich_view.requests.get')
     @patch('integrations.views.immich_view.requests.post')
@@ -72,7 +75,52 @@ class ImmichViewTests(TestCase):
         mock_post.assert_called_once()
         _, kwargs = mock_post.call_args
         self.assertEqual(kwargs['json']['albumIds'], ['album-1'])
+        self.assertEqual(kwargs['json']['visibility'], 'timeline')
         self.assertEqual(len(response.data['results']), 2)
+
+    @patch('integrations.views.immich_view.requests.get')
+    @patch('integrations.views.immich_view.requests.post')
+    def test_album_metadata_search_paginates_past_first_page(self, mock_post, mock_get):
+        mock_get_response = MagicMock()
+        mock_get_response.json.return_value = {
+            'id': 'album-1',
+            'albumName': 'Large Album',
+        }
+        mock_get.return_value = mock_get_response
+
+        first_page_response = MagicMock()
+        first_page_response.ok = True
+        first_page_response.json.return_value = {
+            'assets': {
+                'items': [{'id': f'asset-{index}'} for index in range(1000)],
+                'nextPage': '2',
+            }
+        }
+
+        second_page_response = MagicMock()
+        second_page_response.ok = True
+        second_page_response.json.return_value = {
+            'assets': {
+                'items': [{'id': 'asset-1000'}, {'id': 'asset-1001'}],
+                'nextPage': None,
+            }
+        }
+
+        mock_post.side_effect = [first_page_response, second_page_response]
+
+        request = self.factory.get('/api/integrations/immich/albums/album-1/')
+        force_authenticate(request, user=self.user)
+
+        response = self.album_view(request, albumid='album-1')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(mock_post.call_count, 2)
+        first_call_kwargs = mock_post.call_args_list[0].kwargs
+        second_call_kwargs = mock_post.call_args_list[1].kwargs
+        self.assertEqual(first_call_kwargs['json']['page'], 1)
+        self.assertEqual(second_call_kwargs['json']['page'], 2)
+        self.assertEqual(len(response.data['results']), 25)
+        self.assertEqual(response.data['count'], 1002)
 
     @patch('integrations.views.immich_view.requests.get')
     def test_album_uses_inline_assets_when_available(self, mock_get):

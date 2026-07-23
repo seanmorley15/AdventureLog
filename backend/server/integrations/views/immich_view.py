@@ -17,6 +17,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 IMMICH_SEARCH_SIZE = 1000
+IMMICH_SEARCH_VISIBILITY = 'timeline'
 
 class ImmichIntegrationView(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
@@ -98,29 +99,60 @@ class ImmichIntegrationView(viewsets.ViewSet):
         search_type='metadata',
         not_found_code='immich.no_items_found',
     ):
-        try:
-            url = f'{integration.server_url}/search/{search_type}'
-            immich_fetch = requests.post(
-                url,
-                headers={'x-api-key': integration.api_key},
-                json={'size': IMMICH_SEARCH_SIZE, **arguments},
-            )
-            res = immich_fetch.json()
-        except requests.exceptions.ConnectionError:
-            return self._immich_connection_error()
+        url = f'{integration.server_url}/search/{search_type}'
+        items = []
+        page = 1
 
-        if not immich_fetch.ok:
-            logger.warning(
-                'Immich search request failed: status=%s response=%s',
-                immich_fetch.status_code,
-                res,
-            )
-            return self._immich_no_items_error(code=not_found_code)
+        while True:
+            try:
+                immich_fetch = requests.post(
+                    url,
+                    headers={'x-api-key': integration.api_key},
+                    json={
+                        'size': IMMICH_SEARCH_SIZE,
+                        'page': page,
+                        'visibility': IMMICH_SEARCH_VISIBILITY,
+                        **arguments,
+                    },
+                )
+                res = immich_fetch.json()
+            except requests.exceptions.ConnectionError:
+                return self._immich_connection_error()
 
-        if 'assets' in res and 'items' in res['assets']:
-            items = res['assets']['items']
-            if items:
-                return self._paginate_immich_assets(integration, request, items)
+            if not immich_fetch.ok:
+                logger.warning(
+                    'Immich search request failed: status=%s response=%s',
+                    immich_fetch.status_code,
+                    res,
+                )
+                return self._immich_no_items_error(code=not_found_code)
+
+            assets = res.get('assets')
+            if not isinstance(assets, dict):
+                break
+
+            page_items = assets.get('items') or []
+            if page_items:
+                items.extend(page_items)
+
+            next_page = assets.get('nextPage')
+            if next_page:
+                try:
+                    page = int(next_page)
+                    continue
+                except (TypeError, ValueError):
+                    logger.warning(
+                        'Immich search returned invalid nextPage value: %s',
+                        next_page,
+                    )
+
+            if len(page_items) < IMMICH_SEARCH_SIZE:
+                break
+
+            page += 1
+
+        if items:
+            return self._paginate_immich_assets(integration, request, items)
 
         return self._immich_no_items_error(code=not_found_code)
 
