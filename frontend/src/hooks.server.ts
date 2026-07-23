@@ -1,6 +1,9 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { themes } from '$lib';
+
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 
 export const authHook: Handle = async ({ event, resolve }) => {
 	event.cookies.delete('csrftoken', { path: '/' });
@@ -88,7 +91,8 @@ export const authHook: Handle = async ({ event, resolve }) => {
 };
 
 export const themeHook: Handle = async ({ event, resolve }) => {
-	let theme = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
+	const candidate = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
+	const theme = candidate && ALLOWED_THEME_NAMES.has(candidate) ? candidate : null;
 
 	if (theme) {
 		return await resolve(event, {
