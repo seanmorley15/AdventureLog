@@ -505,7 +505,17 @@
 		"google_photos_importing": "A importar fotos do Google…",
 		"google_photos_import_success": "Fotos do Google importadas com sucesso",
 		"google_photos_import_error": "Não pude importar as fotos do Google",
-		"google_photos_select_hint": "Selecione as fotos que deseja importar, ou importe todas de uma vez."
+		"google_photos_select_hint": "Selecione as fotos que deseja importar, ou importe todas de uma vez.",
+		"show_sunrise_sunset": "Mostrar nascer do sol & pôr do sol",
+		"loading_sunrise_sunset": "A carregar nascer do sol & pôr do sol...",
+		"sunrise_sunset_load_error": "Não pude carregar as horas de nascer do sol e pôr do sol",
+		"importing_endurain_activity": "A importar atividade a partir de Endurain...",
+		"endurain_import_success": "Atividade importada a partir de Endurain",
+		"endurain_activities_during_visit": "Atividades Endurain Durante Visita",
+		"view_endurain_activities": "Ver atividades Endurain",
+		"show_endurain_activities": "Mostrar Atividades Endurain",
+		"hide_endurain_activities": "Esconder Atividades Endurain",
+		"no_endurain_activities": "Nenhumas atividades Endurain encontradas durante esta visita"
 	},
 	"api_keys": {
 		"copied": "Copiado!",
@@ -1227,7 +1237,44 @@
 		"public_profile_invite_warning": "Você tem {count} convites de coleção pendentes. Tornar o seu perfil privado vai cancelá-los.",
 		"public_profile_private_confirm": "Tornar o seu perfil privado vai removê-lo de {shared} coleções partilhadas e cancelar {invites} convites pendentes. Deseja continuar?",
 		"public_profile_left_collections": "O seu perfil agora é privado. Você foi removido de {count} coleções partilhadas.",
-		"public_profile_revoked_invites": "{count} convites de coleção pendentes cancelados."
+		"public_profile_revoked_invites": "{count} convites de coleção pendentes cancelados.",
+		"integrations_hub": {
+			"summary_personal_desc": "Vinculado à sua conta",
+			"summary_builtin": "Serviços embutidos",
+			"summary_builtin_desc": "Sempre disponível em cada instância",
+			"summary_instance": "Serviços da instância",
+			"summary_instance_desc": "Ativado pelo seu administrador de servidor",
+			"summary_personal": "As suas integrações",
+			"builtin_title": "Serviços embutidos",
+			"builtin_desc": "Estas fontes de dados tornam o AdventureLog pronto a usar. Nenhuma configuração é necessária.",
+			"included": "Incluído",
+			"learn_more": "Aprender mais",
+			"instance_title": "Serviços da instância",
+			"instance_desc": "Serviços opcionais configurados pelo seu administrador do AdventureLog.",
+			"personal_title": "As suas integrações",
+			"personal_desc": "Ligue as suas contas e serviços auto-hospedados.",
+			"connect": "Ligar",
+			"disconnect": "Desligar",
+			"update": "Atualizar",
+			"edit": "Editar",
+			"cancel": "Cancelar",
+			"google_maps_features": "Busca de local, detalhes de mapa, melhorias de adição rápida, e recomendações nas proximidades.",
+			"google_maps_active_hint": "Google Maps está ativo nesta instância. Procure locais e utilize-o para enriquecimento quando disponível.",
+			"builtin": {
+				"nominatim_name": "Nominatim do OpenStreetMap",
+				"nominatim_desc": "Codificação geográfica alternativa e pesquisa de locais quando o Google Maps está indisponível.",
+				"nominatim_features": "Usado para busca de localização, codificação geográfica reversa, e pesquisas de coordenadas.",
+				"wikipedia_name": "Wikipedia",
+				"wikipedia_desc": "Enriquece localizações com descrições de fundo e imagens de referência.",
+				"wikipedia_features": "Usado quando gerar descrições e importar fotos da Wikipedia.",
+				"sunrise_name": "SunriseSunset.io",
+				"sunrise_desc": "Adiciona horas de nascer do sol e pôr do sol às suas visitas da localização.",
+				"sunrise_features": "Mostrar nas páginas de detalhes da localização para cada data de visita.",
+				"overpass_name": "Overpass do OpenStreetMap",
+				"overpass_desc": "Fornece recomendações das proximidades a partir de dados do OpenStreetMap.",
+				"overpass_features": "Usado para recomendações de mapa e como alternativa de recurso quando o Google está indisponível."
+			}
+		}
 	},
 	"settings_download_backup": "Descarregar cópia de segurança",
 	"share": {
@@ -1411,5 +1458,28 @@
 			"immich": "Foto do Immich",
 			"url": "Foto de URL externo"
 		}
+	},
+	"endurain": {
+		"endurain_integration_desc": "Ligue a sua instância Endurain auto-hospedada para navegar em atividades e importa-las para visitas",
+		"connection_error": "Erro ao ligar ao Endurain",
+		"connected": "Ligado com sucesso ao Endurain",
+		"disconnected": "Endurain desligado",
+		"disconnect_error": "Erro ao desligar o Endurain",
+		"disconnect": "Desligar",
+		"server_url": "URL do servidor",
+		"server_url_required": "O URL do servidor é obrigatório",
+		"username": "Nome de utilizador",
+		"password": "Palavra passe",
+		"localhost_note": "O servidor Endurain tem de ser alcançável a partir do servidor AdventureLog (localhost pode não funcionar no Docker).",
+		"credentials_required": "URL do servidor, nome de utilizador, e palavra passe são obrigatórios",
+		"mfa_required": "Insira o seu código MFA para completar o início de sessão",
+		"mfa_code": "Código MFA",
+		"mfa_code_required": "O código MFA é obrigatório",
+		"verify_mfa": "Verificar o MFA",
+		"connect_password": "Ligar com palavra passe",
+		"continue": "Continuar",
+		"change_server": "Mudar de servidor",
+		"not_connected": "Endurain não está ligado",
+		"connected_as": "Ligado como {username}"
 	}
 }
