@@ -2058,7 +2058,7 @@
 							{/if}
 
 							{#if canModify}
-								<div class="dropdown z-30">
+								<div class="dropdown dropdown-end z-30">
 									<div
 										tabindex="0"
 										role="button"
