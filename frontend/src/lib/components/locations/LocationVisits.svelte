@@ -9,7 +9,14 @@
 	} from '$lib/types';
 	import TimezoneSelector from '../TimezoneSelector.svelte';
 	import { t } from 'svelte-i18n';
-	import { updateLocalDate, updateUTCDate, validateDateRange, formatUTCDate } from '$lib/dateUtils';
+	import {
+		updateLocalDate,
+		updateUTCDate,
+		validateDateRange,
+		formatUTCDate,
+		toDateOnlyLocal,
+		toTimedLocalDefault
+	} from '$lib/dateUtils';
 	import { onMount } from 'svelte';
 	import { isAllDay, isVisitAllDay, allDayDatePart, SPORT_TYPE_CHOICES } from '$lib';
 	import { createEventDispatcher } from 'svelte';
@@ -52,7 +59,7 @@
 	// Types
 
 	// Component state
-	let allDay: boolean = false;
+	let allDay: boolean = true;
 	let localStartDate: string = '';
 	let localEndDate: string = '';
 	let fullStartDate: string = '';
@@ -205,14 +212,18 @@
 		}).utcDate;
 	}
 
-	function handleAllDayToggle() {
-		if (allDay) {
-			localStartDate = localStartDate ? localStartDate.split('T')[0] : '';
-			localEndDate = localEndDate ? localEndDate.split('T')[0] : '';
+	function handleAllDayToggle(event: Event) {
+		const nextAllDay = (event.currentTarget as HTMLInputElement).checked;
+
+		if (nextAllDay) {
+			localStartDate = toDateOnlyLocal(localStartDate);
+			localEndDate = toDateOnlyLocal(localEndDate);
 		} else {
-			localStartDate = localStartDate + 'T00:00';
-			localEndDate = localEndDate + 'T23:59';
+			localStartDate = toTimedLocalDefault(localStartDate);
+			localEndDate = toTimedLocalDefault(localEndDate, true);
 		}
+
+		allDay = nextAllDay;
 
 		utcStartDate = updateUTCDate({
 			localDate: localStartDate,
@@ -226,15 +237,17 @@
 			allDay
 		}).utcDate;
 
-		localStartDate = updateLocalDate({
-			utcDate: utcStartDate,
-			timezone: selectedStartTimezone
-		}).localDate;
+		if (!allDay) {
+			localStartDate = updateLocalDate({
+				utcDate: utcStartDate,
+				timezone: selectedStartTimezone
+			}).localDate;
 
-		localEndDate = updateLocalDate({
-			utcDate: utcEndDate,
-			timezone: selectedStartTimezone
-		}).localDate;
+			localEndDate = updateLocalDate({
+				utcDate: utcEndDate,
+				timezone: selectedStartTimezone
+			}).localDate;
+		}
 	}
 
 	async function addVisit(isAuto: boolean = false) {
@@ -917,7 +930,7 @@
 									id="all-day-toggle"
 									type="checkbox"
 									class="toggle toggle-{typeConfig.color} toggle-sm"
-									bind:checked={allDay}
+									checked={allDay}
 									on:change={handleAllDayToggle}
 								/>
 							</div>

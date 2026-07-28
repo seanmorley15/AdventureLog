@@ -68,6 +68,19 @@ export function updateUTCDate({
 	return { utcDate: toUTCDatetime(localDate, timezone, allDay) };
 }
 
+/** Strip the time portion from a local date/datetime string for all-day inputs. */
+export function toDateOnlyLocal(localDate: string): string {
+	if (!localDate) return '';
+	return localDate.split('T')[0];
+}
+
+/** Add default start/end times when switching from all-day to timed inputs. */
+export function toTimedLocalDefault(localDate: string, end = false): string {
+	if (!localDate) return '';
+	const datePart = toDateOnlyLocal(localDate);
+	return end ? `${datePart}T23:59` : `${datePart}T00:00`;
+}
+
 /**
  * Validate date ranges using UTC comparison
  */
