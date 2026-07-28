@@ -100,7 +100,7 @@ export default defineConfig({
             priceCurrency: "USD",
             description: "Free open-source self-hosted travel companion.",
           },
-          softwareVersion: "v0.12.1",
+          softwareVersion: "v0.13.0",
           license:
             "https://github.com/seanmorley15/adventurelog/blob/main/LICENSE",
           screenshot,
