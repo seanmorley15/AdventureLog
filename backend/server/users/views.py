@@ -14,7 +14,26 @@ from allauth.socialaccount.models import SocialApp
 from adventures.serializers import LocationSerializer, CollectionSerializer
 from adventures.models import Location, Collection
 from allauth.socialaccount.models import SocialAccount
+from rest_framework.authentication import SessionAuthentication
 from .models import APIKey
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session authentication that does NOT enforce CSRF checks.
+
+    The SvelteKit frontend communicates with the Django backend through a
+    reverse proxy.  DRF's default ``SessionAuthentication`` enforces CSRF on
+    unsafe methods, but the SPA never obtains Django's CSRF cookie/token pair
+    for the ``/auth/api-keys/`` endpoint, causing every POST to fail with
+    403 Forbidden.  This subclass keeps session-based auth (so the user must
+    still be logged in) but skips the CSRF enforcement that the SPA cannot
+    satisfy.
+    """
+
+    def enforce_csrf(self, request):
+        pass
+
+
 import qrcode
 import io
 import base64
@@ -229,6 +248,7 @@ class APIKeyListCreateView(APIView):
     """
 
     permission_classes = [IsAuthenticated]
+    authentication_classes = [CsrfExemptSessionAuthentication]
 
     @swagger_auto_schema(
         responses={200: APIKeySerializer(many=True)},
