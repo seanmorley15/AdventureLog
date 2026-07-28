@@ -605,7 +605,9 @@
 		"user_collections": "User Collections",
 		"enter_username": "Enter your username",
 		"enter_password": "Enter your password",
-		"totp": "Two-Factor Code",
+		"totp": "Two-Factor or Recovery Code",
+		"totp_placeholder": "000000 or 12345678",
+		"totp_hint": "Enter a 6-digit authenticator code or an 8-digit recovery code.",
 		"logging_in": "Logging in"
 	},
 	"users": {
@@ -628,6 +630,7 @@
 		"settings_page": "Settings Page",
 		"account_settings": "User Account Settings",
 		"update": "Update",
+		"invalid_code": "Invalid code",
 		"no_verified_email_warning": "You must have a verified email address to enable two-factor authentication.",
 		"social_auth": "Social Authentication",
 		"social_auth_desc_1": "Manage social login options and password settings",
