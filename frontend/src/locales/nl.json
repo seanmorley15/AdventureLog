@@ -28,7 +28,7 @@
     "category_filter": "Categoriefilter",
     "clear": "Leegmaken",
     "collection": "Collectie",
-    "create_new": "Maak nieuw...",
+    "create_new": "Maak nieuw",
     "date": "Datum",
     "delete": "Verwijderen",
     "delete_collection": "Collectie verwijderen",
@@ -318,7 +318,7 @@
     "view_on": "Bekijk",
     "view_strava_activities": "Bekijk Strava -activiteiten",
     "view_trail": "Bekijk pad",
-    "wanderer_integration_error": "Wanderer -integratie is niet ingeschakeld of is verlopen.",
+    "wanderer_integration_error": "Wanderer-integratie is niet ingeschakeld. Maak verbinding in Instellingen → Integraties.",
     "wikipedia_error": "Kan geen beschrijving van Wikipedia genereren",
     "high": "Hoog",
     "low": "Laag",
@@ -450,7 +450,8 @@
     "export_pdf_failed": "Kan collectie-pdf niet downloaden",
     "export_pdf_success": "Collectie PDF gedownload",
     "google_photos_available": "{count} Google foto('s) beschikbaar",
-    "google_photos_import_selected": "Importeer selectie"
+    "google_photos_import_selected": "Importeer selectie",
+    "google_photos_import_all": "Importeer alles uit Google"
   },
   "home": {
     "desc_1": "Ontdek, plan en verken met gemak",
@@ -525,7 +526,7 @@
     "enter_password": "Voer uw wachtwoord in",
     "enter_username": "Voer uw gebruikersnaam in",
     "logging_in": "Inloggen",
-    "totp": "Tweefactorcode",
+    "totp": "Tweefactor- of Herstelcode",
     "user_email_verification_required": "E-mailverificatie vereist. Controleer uw e-mail voor een verificatielink."
   },
   "users": {
@@ -864,7 +865,7 @@
     "found": "gevonden",
     "result": "Resultaat",
     "results": "Resultaat",
-    "try_searching_desc": "Probeer op zoek naar avonturen, collecties, landen, regio's, steden of gebruikers.",
+    "try_searching_desc": "Probeer op zoek naar locaties, collecties, notities, transport, landen, regio's, steden of gebruikers.",
     "actions": {
       "calendar": "Ga naar Agenda",
       "calendar_desc": "Bekijk uw reiskalender",
@@ -938,7 +939,7 @@
     "locations_shown": "Getoonde locaties",
     "place_marker_desc_location": "Klik op de kaart om een ​​marker te plaatsen.",
     "show_visited_cities": "Bezochte steden",
-    "search_locations": "Locaties zoeken...",
+    "search_locations": "Doorzoek uw locaties...",
     "add_as_lodging": "Toevoegen als logement",
     "add_with_details": "Voeg toe met meer details",
     "back_to_controls": "Terug naar kaartbediening",
@@ -1185,7 +1186,7 @@
   "wanderer": {
     "connected": "Succesvol verbonden met Wanderer",
     "connection_error": "Fout die verbinding maakt met Wanderer",
-    "wanderer_integration_desc": "Maak verbinding met Wanderer om eenvoudig uw paden op locaties te importeren en te bekijken",
+    "wanderer_integration_desc": "Maak verbinding met Wanderer met een API- sleutel om eenvoudig uw paden op locaties te importeren en te bekijken",
     "api_key": "API-sleutel",
     "api_key_placeholder": "zwerver_key_...",
     "disconnect_error": "Fout bij het verbreken van de verbinding met Wanderer",
