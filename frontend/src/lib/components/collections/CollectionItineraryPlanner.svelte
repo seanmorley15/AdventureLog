@@ -41,6 +41,9 @@
 	// Whether the current user can modify this collection (owner or shared user)
 	export let canModify: boolean = false;
 
+	// Whether the Device-Pointer is on the Drag-Handle-Icon
+	let pointerIsOnDragHandle = false;
+
 	const flipDurationMs = 200;
 
 	// Extended itinerary item with resolved object
@@ -1794,11 +1797,14 @@
 								items: globalItems,
 								flipDurationMs,
 								dropTargetStyle: { outline: 'none', border: 'none' },
-								dragDisabled: isSavingOrder || !canModify,
+								dragDisabled: isSavingOrder || !canModify || !pointerIsOnDragHandle,
 								dropFromOthersDisabled: true
 							}}
 							on:consider={handleDndConsiderGlobal}
-							on:finalize={handleDndFinalizeGlobal}
+							on:finalize={(e) => {
+								handleDndFinalizeGlobal(e);
+								pointerIsOnDragHandle = false;
+							}}
 							class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
 						>
 							{#each globalItems as item (item.id)}
@@ -1811,14 +1817,17 @@
 									{#if resolvedObj}
 										{#if canModify}
 											<div
-												class="absolute left-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+												class="absolute left-2 top-2 z-20 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200"
 												title={$t('itinerary.drag_to_reorder')}
 											>
 												<div
-													class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing"
+													class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing select-none"
 													aria-label={$t('itinerary.drag_to_reorder')}
 													role="button"
 													tabindex="0"
+													style="touch-action: none;" 
+													on:pointerdown={() => pointerIsOnDragHandle = true}
+													on:pointerup={() => pointerIsOnDragHandle = false}
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
@@ -2163,11 +2172,14 @@
 									items: day.items,
 									flipDurationMs,
 									dropTargetStyle: { outline: 'none', border: 'none' },
-									dragDisabled: isSavingOrder || !canModify,
+									dragDisabled: isSavingOrder || !canModify || !pointerIsOnDragHandle,
 									dropFromOthersDisabled: true
 								}}
 								on:consider={(e) => handleDndConsider(dayIndex, e)}
-								on:finalize={(e) => handleDndFinalize(dayIndex, e)}
+								on:finalize={(e) => {
+									handleDndFinalize(dayIndex, e);
+									pointerIsOnDragHandle = false;
+								}}
 								class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
 							>
 								{#each day.items as item, index (item.id)}
@@ -2186,14 +2198,17 @@
 											<!-- Drag Handle Container -->
 											{#if canModify}
 												<div
-													class="absolute left-2 top-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+													class="absolute left-2 top-2 z-20 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity duration-200"
 													title={$t('itinerary.drag_to_reorder')}
 												>
 													<div
-														class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing"
+														class="itinerary-drag-handle btn btn-circle btn-xs btn-ghost bg-base-100/80 backdrop-blur-sm shadow-sm hover:bg-base-200 cursor-grab active:cursor-grabbing select-none"
 														aria-label={$t('itinerary.drag_to_reorder')}
 														role="button"
 														tabindex="0"
+														style="touch-action: none;"
+														on:pointerdown={() => pointerIsOnDragHandle = true}
+														on:pointerup={() => pointerIsOnDragHandle = false}
 													>
 														<svg
 															xmlns="http://www.w3.org/2000/svg"
