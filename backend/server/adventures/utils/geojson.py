@@ -19,14 +19,26 @@ def gpx_to_geojson(gpx_file):
             gpx = gpxpy.parse(f)
 
         features = []
-        for track in gpx.tracks:
-            track_name = track.name or "GPX Track"
-            for segment in track.segments:
-                coords = [(point.longitude, point.latitude) for point in segment.points]
+
+        if gpx.tracks:
+            for track in gpx.tracks:
+                track_name = track.name or "GPX Track"
+                for segment in track.segments:
+                    coords = [(point.longitude, point.latitude) for point in segment.points]
+                    if coords:
+                        feature = geojson.Feature(
+                            geometry=geojson.LineString(coords),
+                            properties={"name": track_name}
+                        )
+                        features.append(feature)
+        elif gpx.routes:
+            for route in gpx.routes:
+                route_name = route.name or "GPX Track"
+                coords = [(point.longitude, point.latitude) for point in route.points]
                 if coords:
                     feature = geojson.Feature(
                         geometry=geojson.LineString(coords),
-                        properties={"name": track_name}
+                        properties={"name": route_name}
                     )
                     features.append(feature)
 

@@ -549,7 +549,7 @@ class TransportationSerializer(CustomModelSerializer):
                         total_meters += segment_length
 
             for route in gpx.routes:
-                route_length = route.length_3d() or route.length_2d()
+                route_length = route.length()
                 if route_length:
                     total_meters += route_length
 
