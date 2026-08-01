@@ -152,7 +152,7 @@
     "distance": "Afstand",
     "itinerary": "Routebeschrijving",
     "joined": "Samengevoegd",
-    "view_profile": "Bekijk profiel",
+    "view_profile": "Bekijk Profiel",
     "share_collection": "Deel deze collectie!",
     "filters_and_sort": "Filters & Sorteren",
     "filters_and_stats": "Filters & Statistieken",
@@ -798,9 +798,28 @@
       "edit": "Aanpassen",
       "google_maps_active_hint": "Google Maps is actief in deze instantie. Plaats zoeken en verrijking gebruiken die wanneer die beschikbaar is.",
       "builtin": {
-        "nominatim_name": "OpenStreetMap Nominatim"
-      }
-    }
+        "nominatim_name": "OpenStreetMap Nominatim",
+        "nominatim_desc": "Systeem om op terug te vallen voor geocode en plaats zoeken als Google Maps niet beschikbaar is.",
+        "nominatim_features": "Gebruikt voor locatie zoeken, omgekeerd geocoderen en opzoeken van coördinaten.",
+        "wikipedia_name": "Wikipedia",
+        "wikipedia_desc": "Verrijkt locaties met achtergrondbeschrijvingen en referentieafbeeldingen.",
+        "wikipedia_features": "Wordt gebruikt voor het aanmaken van beschrijvingen en importeren van Wikipedia foto's.",
+        "sunrise_name": "SunriseSunset.io",
+        "sunrise_desc": "Voegt zonsopgangstijden en -ondergangstijden toe aan uw locatie bezoeken.",
+        "sunrise_features": "Wordt op de locatie detailpagina getoond voor elke bezoekdatum.",
+        "overpass_name": "OpenStreetMap Overpass",
+        "overpass_desc": "Drijft aanbevelingen dichtbij aan vanuit OpenStreetMap data.",
+        "overpass_features": "Wordt gebruikt voor kaartaanbevelingen en als terugvalsysteem als Google niet beschikbaar is."
+      },
+      "google_maps_features": "Plaats zoeken, kkaartdetails, snel verrijkingen toevoegen en aanbevelingen dichtbij.",
+      "cancel": "Afbreken",
+      "included": "Inclusief"
+    },
+    "public_profile_sharing_warning": "U wordt momenteel gedeeld in {count} collecties. Door uw profiel privé te maken wordt u uit deze collecties verwijderd.",
+    "public_profile_invite_warning": "U heeft {count} uitnodiging(en) voor collectie in afwachting. Door uw profiel privé te maken zullen deze afgewzen worden.",
+    "public_profile_private_confirm": "Door uw profiel privé te maken zult u verwijderd worden uit {shared} gedeelde collecties en worden {invites} uitnodigingen afgewzen. Wilt u doorgaan?",
+    "public_profile_left_collections": "Uw profiel is nu privé. U bent verwijderd uit {count} collectie(s).",
+    "public_profile_revoked_invites": "{count} afwachtende collectie uitnodiging(en) afgewezen."
   },
   "checklist": {
     "checklist_delete_error": "Fout bij het verwijderen van de checklist",
@@ -822,7 +841,8 @@
     "enter_checklist_title": "Voer de titel van de checklist in",
     "no_items_yet": "Nog geen items",
     "update_checklist_details": "Bewerkingshoofdlijst",
-    "viewing_checklist": "Checklist bekijken"
+    "viewing_checklist": "Checklist bekijken",
+    "more_items": "Meer Items"
   },
   "collection": {
     "collection_created": "Collectie succesvol aangemaakt!",
@@ -1042,7 +1062,10 @@
     "visit_website": "Website",
     "visits": "Bezoeken",
     "zoom_in": "Zoom in",
-    "zoom_out": "Uitzoomen"
+    "zoom_out": "Uitzoomen",
+    "show_photos": "Toon foto's",
+    "hide_photos": "Verberg foto's",
+    "photos": "Foto's"
   },
   "share": {
     "no_users_shared": "Er zijn geen gebruikers gedeeld",
@@ -1098,7 +1121,46 @@
     "view_all": "Bekijk alles",
     "welcome_text_1": "Je bent op",
     "welcome_text_2": "Avonturen tot nu toe",
-    "welcome_text_3": "Blijf je reizen verkennen en documenteren!"
+    "welcome_text_3": "Blijf je reizen verkennen en documenteren!",
+    "greeting_morning": "Goedemorgen",
+    "greeting_afternoon": "Goedemiddag",
+    "greeting_evening": "Goedenavond",
+    "greeting_night": "Goedennacht",
+    "hero_active_trip": "U bent onderweg — {name} is in volle gang",
+    "hero_next_trip": "{days} dagen tot {name}",
+    "hero_countries": "U heeft {count} landen ontdekt — waar wordt uw volgende reis?",
+    "hero_locations_logged": "{count} locaties op uw kaart — blijf aan het verhaal toevoegen",
+    "hero_location_logged": "1 locatie op uw kaart — blijf aan het verhaal toevoegen",
+    "hero_start_journey": "Uw reisdagboek is leeg — tijd om uw eerste bestemming te plannen",
+    "hero_headline": "Uw avonturencentrum",
+    "hero_headline_new": "Klaar om te ontdekken?",
+    "hero_active_subtitle": "{count} locaties in deze reis — laat de herinneringen maar komen",
+    "hero_next_subtitle": "Vertrek over {days} dagen — tijd om enthousiast te worden",
+    "hero_badge_countries": "{count} landen ontdekt",
+    "hero_badge_default": "AdventureLog",
+    "hero_trip_empty_title": "Geen reizen aan de horizon",
+    "hero_view_trip": "Open reis",
+    "hero_trip_on_the_road": "Onderweg",
+    "hero_trip_coming_up": "Binnenkort",
+    "page_title": "Dashboard",
+    "page_description": "Uw thuis voor reizen — statistieken, aankomende reizen en recente avonturen in een oogopslag.",
+    "whats_next": "Wat is het volgende",
+    "upcoming_trips": "Aankomende reizen",
+    "active_trip": "Momenteel aan het reizen",
+    "activity_highlights": "Activiteitshoogtepunten",
+    "personal_record": "Persoonlijke recordafstand",
+    "quick_links": "Snelle links",
+    "recently_updated": "Recent geüpdated",
+    "stats_error": "We konden uw dashboarddata niet laden. Probeer de pagina te verversen.",
+    "no_upcoming_trips": "Nog geen aankomende reizen gepland.",
+    "no_active_trip": "Geen reis onderweg op dit moment.",
+    "no_recent_locations": "Nog geen bezochte locaties.",
+    "locations_visited": "Bezochtte locaties",
+    "next_trip_in": "Volgende reis over {days} dagen",
+    "pending_invites": "Uitnodigingen in afwachting",
+    "my_collections": "Mijn Collecties",
+    "view_profile": "Bekijk profiel",
+    "hero_trip_empty_desc": "Zet een collectie op poten en begin met plannen maken voor uw volgende vakantie om aan alles te ontsnappen"
   },
   "immich": {
     "api_key": "Immich API-sleutel",
@@ -1134,7 +1196,8 @@
     "loading_albums": "Albums laden",
     "no_images": "Geen afbeeldingen gevonden",
     "select_album": "Selecteer album",
-    "try_different_date": "Probeer een andere datum"
+    "try_different_date": "Probeer een andere datum",
+    "immich_updated": "Immich integratie succesvol geüpdated"
   },
   "recomendations": {
     "recommendations": "Aanbevelingen",
@@ -1201,7 +1264,31 @@
     "total_events": "Totale gebeurtenissen",
     "week": "Week",
     "event timezone": "Tijdzone van evenement",
-    "your timezone": "Jouw tijdzone"
+    "your timezone": "Jouw tijdzone",
+    "page_title": "Kalender",
+    "agenda": "Agenda",
+    "event": "Gebeurtenis",
+    "sidebar_title": "Filters & Opties",
+    "timezone_display": "Tijdsweergave",
+    "event_types": "Toon types gebeurtenissen",
+    "type_visit": "Bezoeken",
+    "type_transportation": "Transport",
+    "type_lodging": "Overnachtingen",
+    "type_collection": "Reizen",
+    "type_note": "Notities",
+    "type_checklist": "Checklists",
+    "search_placeholder": "Zoek naar gebeurtenissen, plaatsen, collecties...",
+    "upcoming": "Aankomend",
+    "this_month": "Deze maand",
+    "upcoming_agenda": "Aankomende gebeurtenissen",
+    "no_upcoming_events": "Geen aankomende gebeurtenissen komen overeen met uw filters.",
+    "no_events_in_range": "Geen gebeurtenissen in dit tijdsbestek.",
+    "in_collection": "Collectie",
+    "view_collection": "Bekijk collectie",
+    "load_error": "Kalendergebeurtenissen konden niet geladen worden. Probeer opnieuw.",
+    "export_success": "Kalender succesvol geëxporteerd.",
+    "export_error": "Kalender kon niet geëxporteerd worden.",
+    "more_events": "+{count} meer"
   },
   "locations": {
     "location": "Locatie",
@@ -1365,5 +1452,37 @@
     "share_image_failed": "Kan gedeelde afbeelding niet genereren",
     "share_native": "Deel…",
     "share_native_failed": "Delen is mislukt"
+  },
+  "images": {
+    "map_pin_title": "Fotolocatie",
+    "source": {
+      "google": "Foto uit Google Maps",
+      "wikipedia": "Foto uit Wikipedia",
+      "immich": "Foto uit Immich",
+      "url": "Foto uit een externe URL"
+    }
+  },
+  "endurain": {
+    "endurain_integration_desc": "Verbindt uw zelfgehostte Endurain instantie om door activiteiten te bladeren en deze te importeren als bezoeken",
+    "connection_error": "Fout bij het verbinden met Endurain",
+    "connected": "Succesvol verbonden met Endurain",
+    "disconnected": "Endurain niet meer verbonden",
+    "disconnect_error": "Fout bij verbreken verbinding met Endurain",
+    "disconnect": "Verbinding verbreken",
+    "server_url": "Server URL",
+    "server_url_required": "Server URL is verplicht",
+    "username": "Gebruikersnaam",
+    "password": "Wachtwoord",
+    "localhost_note": "De Endurain server moet bereikbaar zijn voor de AdventureLog server (localhost werkt mogelijk niet in Docker).",
+    "credentials_required": "Server URL, gebeuikersnaam en wachtwoord zijn verplicht",
+    "mfa_required": "Vul uw MFA code in om inloggen te voltooien",
+    "mfa_code": "MFA code",
+    "mfa_code_required": "MFA code is verplicht",
+    "verify_mfa": "Verifiëer MFA",
+    "connect_password": "Verbind met wachtwoord",
+    "continue": "Doorgaan",
+    "change_server": "Verander server",
+    "not_connected": "Endurain is niet verbonden",
+    "connected_as": "Verbonden als {username}"
   }
 }
