@@ -48,7 +48,7 @@
 	<!-- Markdown Editor -->
 	{#if !is_preview}
 		<textarea
-			class="textarea textarea-bordered resize-none {editor_height}  w-full"
+			class="textarea textarea-bordered {editor_height}  w-full"
 			bind:this={editorRef}
 			bind:value={text}
 			placeholder={$t('adventures.md_instructions')}
