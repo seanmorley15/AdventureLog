@@ -33,12 +33,12 @@ case "$(basename "$ENV_FILE")" in
 	.env.aio)
 		IS_STANDARD_DEPLOYMENT=true
 		;;
-	.env)
-		if [[ -z "${ORIGIN:-}" && -z "${PUBLIC_URL:-}" && -z "${FRONTEND_URL:-}" ]]; then
-			IS_STANDARD_DEPLOYMENT=true
-		fi
-		;;
 esac
+
+# Standard Deployment uses SITE_URL without separate frontend/backend URL vars.
+if [[ "$IS_STANDARD_DEPLOYMENT" != true ]] && [[ -z "${ORIGIN:-}" && -z "${PUBLIC_URL:-}" && -z "${FRONTEND_URL:-}" ]]; then
+	IS_STANDARD_DEPLOYMENT=true
+fi
 
 if [[ "$IS_STANDARD_DEPLOYMENT" == true ]]; then
 	if [[ -z "${POSTGRES_PASSWORD:-}" ]]; then

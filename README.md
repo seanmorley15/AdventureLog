@@ -133,6 +133,7 @@ Connect the tools you already use:
 | ----------- | ------- |
 | [**Immich**](https://adventurelog.app/docs/configuration/immich_integration.html) | Link photos from your self-hosted media library |
 | [**Strava**](https://adventurelog.app/docs/configuration/strava_integration.html) | Import activities with GPX tracks & stats |
+| [**Endurain**](https://adventurelog.app/docs/configuration/endurain_integration.html) | Import activities with GPX tracks & stats |
 | [**Wanderer**](https://adventurelog.app/docs/configuration/wanderer_integration.html) | Attach trails with distance & elevation data |
 | [**Google Maps**](https://adventurelog.app/docs/configuration/google_maps_integration.html) | Geocoding & location search |
 

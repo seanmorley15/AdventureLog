@@ -59,7 +59,7 @@ find_installer_lib_dir() {
 		fi
 	fi
 	if [[ -f "./scripts/install/lib/ui.sh" ]]; then
-		echo "$(cd "./scripts/install/lib" && pwd)"
+		(cd "./scripts/install/lib" && pwd)
 		return 0
 	fi
 	return 1
@@ -69,7 +69,7 @@ bootstrap_and_source_libs() {
 	local lib_dir
 	if lib_dir="$(find_installer_lib_dir)"; then
 		INSTALLER_LIB_DIR="$lib_dir"
-		REPO_ROOT="$(cd "$INSTALLER_LIB_DIR/../../.." && pwd)"
+		export REPO_ROOT="$(cd "$INSTALLER_LIB_DIR/../../.." && pwd)"
 	else
 		local cache_dir
 		cache_dir="$(mktemp -d 2>/dev/null || echo "/tmp/adventurelog-installer-$$")"
