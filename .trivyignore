@@ -22,6 +22,8 @@ CVE-2026-39825
 CVE-2026-39836
 CVE-2026-42499
 CVE-2026-42504
+CVE-2026-27145
+CVE-2026-39822
 
 # esbuild Deno API integrity check (GHSA-gv7w-rqvm-qjhr)
 # Only affects lib/deno/mod.ts when NPM_CONFIG_REGISTRY is attacker-controlled; we use pnpm/npm, not Deno.
@@ -37,3 +39,10 @@ GHSA-6v7p-g79w-8964
 
 # pip bundled SBOM lists setuptools 70.3.0; runtime setuptools is 79.0.1+.
 CVE-2025-47273
+
+# Wolfi npm/node-gyp in Chainguard base; unused at SSR runtime (only `node start.js`).
+CVE-2026-12151
+CVE-2026-14257
+CVE-2026-59871
+CVE-2026-59873
+CVE-2026-59874
