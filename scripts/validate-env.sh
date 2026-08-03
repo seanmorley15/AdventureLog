@@ -21,8 +21,8 @@ if [[ ! -f "$ENV_FILE" ]]; then
 	exit 1
 fi
 
-# shellcheck disable=SC1090
 set -a
+# shellcheck disable=SC1090
 source "$ENV_FILE"
 set +a
 
@@ -96,7 +96,6 @@ if [[ -z "${CSRF_TRUSTED_ORIGINS:-}" ]] && [[ -z "${SITE_URL:-}" ]]; then
 fi
 
 if [[ -n "${CSRF_TRUSTED_ORIGINS:-}" ]] && [[ -z "${SITE_URL:-}" ]]; then
-	IFS=',' read -ra ORIGINS <<< "$CSRF_TRUSTED_ORIGINS"
 	if [[ -n "${ORIGIN:-}" ]] && [[ ! "$CSRF_TRUSTED_ORIGINS" == *"$ORIGIN"* ]]; then
 		warn "CSRF_TRUSTED_ORIGINS does not include ORIGIN ($ORIGIN)"
 	fi

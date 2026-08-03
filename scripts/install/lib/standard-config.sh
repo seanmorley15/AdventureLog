@@ -107,6 +107,7 @@ print_standard_success() {
 }
 
 run_standard_install_wizard() {
+	# shellcheck disable=SC2034
 	SETUP_TYPE="standard"
 	resolve_compose_settings
 	prompt_standard_core_config

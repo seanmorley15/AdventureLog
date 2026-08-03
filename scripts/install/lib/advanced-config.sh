@@ -118,6 +118,7 @@ print_advanced_success() {
 }
 
 run_advanced_install_wizard() {
+	# shellcheck disable=SC2034
 	SETUP_TYPE="advanced"
 	resolve_compose_settings
 	prompt_advanced_core_config

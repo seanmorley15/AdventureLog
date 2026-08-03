@@ -124,8 +124,9 @@ tui_progress_bar() {
 	local width=28
 	local filled=$(( step * width / total ))
 	local empty=$(( width - filled ))
-	local bar
-	bar="$(printf '█%.0s' $(seq 1 "$filled" 2>/dev/null || true))$(printf '░%.0s' $(seq 1 "$empty" 2>/dev/null || true))"
+	local bar="" i
+	for ((i = 0; i < filled; i++)); do bar+="█"; done
+	for ((i = 0; i < empty; i++)); do bar+="░"; done
 	local step_text="Step ${step} of ${total}"
 	if [[ "$GUM_STYLE" == true ]]; then
 		if ! {
@@ -346,7 +347,7 @@ tui_spinner_bash() {
 	("$@" >"$tmp_out" 2>"$tmp_err") &
 	local pid=$!
 	while kill -0 "$pid" 2>/dev/null; do
-		printf "\r  ${CYAN}${frames[$i]}${NC}  ${title}" >&2
+		printf '\r  %b%s%b  %s' "$CYAN" "${frames[$i]}" "$NC" "$title" >&2
 		i=$(( (i + 1) % ${#frames[@]} ))
 		sleep 0.08
 	done

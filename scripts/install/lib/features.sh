@@ -132,6 +132,7 @@ run_optional_features_wizard() {
 	)
 	local choice
 	while true; do
+		# shellcheck disable=SC2034
 		TUI_CHOOSE_DEFAULT_INDEX=${#groups[@]}
 		if ! choice="$(tui_choose "Optional features" "${groups[@]}")"; then
 			unset TUI_CHOOSE_DEFAULT_INDEX

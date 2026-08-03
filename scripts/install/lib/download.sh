@@ -10,7 +10,8 @@ INSTALLER_LIB_FILES=(
 download_file() {
 	local url="$1"
 	local dest="$2"
-	local relpath="${url#*AdventureLog/${ADVENTURELOG_REF}/}"
+	local prefix="AdventureLog/${ADVENTURELOG_REF}/"
+	local relpath="${url#*"${prefix}"}"
 	if [[ -n "${REPO_ROOT:-}" && -f "${REPO_ROOT}/${relpath}" ]]; then
 		mkdir -p "$(dirname "$dest")"
 		cp "${REPO_ROOT}/${relpath}" "$dest"

@@ -91,6 +91,7 @@ check_memory() {
 			if (( avail_mb < 2048 )); then
 				log_warning "Available RAM is ~${avail_mb}MB — first boot needs ~2GB for world data import"
 				if tui_confirm "Enable SKIP_WORLD_DATA=1 to skip geography import on first boot?" "y"; then
+					# shellcheck disable=SC2034
 					SKIP_WORLD_DATA="1"
 					append_env_line "SKIP_WORLD_DATA=1"
 				fi

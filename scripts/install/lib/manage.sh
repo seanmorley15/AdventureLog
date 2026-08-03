@@ -54,6 +54,7 @@ mgmt_reconfigure() {
 	if [[ -f "$ENV_FILE" ]]; then
 		cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d-%H%M%S)"
 	fi
+	# shellcheck disable=SC2034
 	OPTIONAL_ENV_LINES=()
 	if [[ "$SETUP_TYPE" == "standard" ]]; then
 		prompt_standard_core_config

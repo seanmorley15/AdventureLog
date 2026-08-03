@@ -1,10 +1,11 @@
 #!/bin/bash
 # Shared globals and utilities for AdventureLog installer.
+# shellcheck disable=SC2034
 set -euo pipefail
 
 _COMPOSE_PATHS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib" && pwd)/compose-paths.sh"
 if [[ -f "$_COMPOSE_PATHS" ]]; then
-	# shellcheck source=../../lib/compose-paths.sh
+	# shellcheck disable=SC1090
 	source "$_COMPOSE_PATHS"
 fi
 
@@ -196,8 +197,8 @@ load_existing_env() {
 	if [[ ! -f "$file" ]]; then
 		return 0
 	fi
-	# shellcheck disable=SC1090
 	set -a
+	# shellcheck disable=SC1090
 	source "$file"
 	set +a
 	SITE_URL="${SITE_URL:-}"

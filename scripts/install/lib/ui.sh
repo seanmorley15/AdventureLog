@@ -8,7 +8,6 @@ readonly YELLOW=$'\033[1;33m'
 readonly BLUE=$'\033[0;34m'
 readonly PURPLE=$'\033[0;35m'
 readonly CYAN=$'\033[0;36m'
-readonly MAGENTA=$'\033[0;35m'
 readonly WHITE=$'\033[0;97m'
 readonly BOLD=$'\033[1m'
 readonly DIM=$'\033[2m'
@@ -132,8 +131,6 @@ print_step_header() {
 	local step="$1"
 	local total="$2"
 	local label="$3"
-	WIZARD_STEP="$step"
-	WIZARD_TOTAL="$total"
 	echo "" >&2
 	if declare -f tui_progress_bar &>/dev/null; then
 		tui_progress_bar "$step" "$total" "$label"
