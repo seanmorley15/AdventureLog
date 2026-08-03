@@ -772,7 +772,8 @@
 		"location_primary": "Location cover",
 		"set_cover": "Set cover",
 		"clear_cover": "Clear cover",
-		"collaborators": "Collaborators"
+		"collaborators": "Collaborators",
+		"map_style_desc": "Used as the default basemap for this collection."
 	},
 	"notes": {
 		"note_deleted": "Note deleted successfully!",

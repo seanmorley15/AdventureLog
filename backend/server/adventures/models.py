@@ -6,6 +6,8 @@ from adventures.managers import LocationManager
 import threading
 from django.contrib.auth import get_user_model
 from django.contrib.postgres.fields import ArrayField
+# For map style choice
+from users.models import BASEMAP_CHOICES
 from django_resized import ResizedImageField
 from djmoney.models.fields import MoneyField
 from worldtravel.models import City, Country, Region, VisitedCity, VisitedRegion
@@ -294,6 +296,9 @@ class Collection(models.Model):
         null=True,
         blank=True,
     )
+
+    # Optional collection-level default map style.
+    map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
 
     # if connected locations are private and collection is public, raise an error
     def clean(self):

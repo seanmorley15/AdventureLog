@@ -6,6 +6,7 @@
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard } from '$lib/index';
 	import type { Collection, ContentImage, SlimCollection } from '$lib/types';
+	import { basemapOptions } from '$lib';
 
 	// Icons
 	import CollectionIcon from '~icons/mdi/folder-multiple';
@@ -37,6 +38,7 @@
 		days_until_start: collectionToEdit?.days_until_start ?? null,
 		primary_image: collectionToEdit?.primary_image ?? null,
 		primary_image_id: collectionToEdit?.primary_image_id ?? null,
+		map_style: collectionToEdit?.map_style ?? 'default',
 		itinerary_days: []
 	};
 
@@ -166,7 +168,8 @@
 			end_date: collection.end_date,
 			is_public: collection.is_public,
 			link: collection.link,
-			primary_image_id: coverImageId
+			primary_image_id: coverImageId,
+			map_style: collection.map_style
 		};
 
 		// Clean up link: empty/whitespace → null, invalid URL → null
@@ -330,6 +333,26 @@
 										class="input input-bordered w-full"
 										placeholder="https://example.com"
 									/>
+								</div>
+
+								<!-- Collection default map style -->
+								<div class="form-control">
+									<label class="label" for="map_style">
+										<span class="label-text font-medium">Default map style</span>
+									</label>
+									<select
+										id="map_style"
+										name="map_style"
+										bind:value={collection.map_style}
+										class="select select-bordered w-full"
+									>
+										{#each basemapOptions as option}
+											<option value={option.value}>{option.label}</option>
+										{/each}
+									</select>
+									<p class="text-sm text-base-content/60 mt-2">
+										{$t('collection.map_style_desc')}
+									</p>
 								</div>
 							</div>
 

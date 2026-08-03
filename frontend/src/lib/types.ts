@@ -163,6 +163,7 @@ export type Collection = {
 	itinerary_days: CollectionItineraryDay[]; // Day metadata (names/descriptions)
 	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
 	days_until_start: number | null;
+	map_style?: string | null;
 };
 
 export type SlimCollection = {
@@ -184,6 +185,7 @@ export type SlimCollection = {
 	primary_image?: ContentImage | null;
 	status: 'folder' | 'upcoming' | 'in_progress' | 'completed';
 	days_until_start: number | null;
+	map_style?: string | null;
 };
 
 export type GeocodeSearchResult = {
