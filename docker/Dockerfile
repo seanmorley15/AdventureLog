@@ -41,7 +41,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 COPY backend/server/requirements.txt /code/
 RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements.txt \
+    && rm -f /usr/local/lib/python3.13/site-packages/pip/_vendor/bom.cdx.json
 
 # Shared Django runtime used by backend and Standard Deployment images.
 FROM python:3.13-slim AS backend-runtime

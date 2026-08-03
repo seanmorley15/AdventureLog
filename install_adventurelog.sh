@@ -69,7 +69,8 @@ bootstrap_and_source_libs() {
 	local lib_dir
 	if lib_dir="$(find_installer_lib_dir)"; then
 		INSTALLER_LIB_DIR="$lib_dir"
-		export REPO_ROOT="$(cd "$INSTALLER_LIB_DIR/../../.." && pwd)"
+		REPO_ROOT="$(cd "$INSTALLER_LIB_DIR/../../.." && pwd)"
+		export REPO_ROOT
 	else
 		local cache_dir
 		cache_dir="$(mktemp -d 2>/dev/null || echo "/tmp/adventurelog-installer-$$")"

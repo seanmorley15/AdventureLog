@@ -5,7 +5,7 @@
     "cytoscape-cose-bilkent": "^4.1.0",
     "dayjs": "^1.11.21",
     "debug": "^4.4.3",
-    "mermaid": "^11.15.0",
+    "mermaid": "^11.16.0",
     "vitepress": "^1.6.4",
     "vitepress-plugin-mermaid": "^2.0.17"
   },
@@ -15,7 +15,7 @@
     "docs:preview": "vitepress preview"
   },
   "dependencies": {
-    "prettier": "^3.7.4",
+    "prettier": "^3.9.6",
     "vue": "^3.5.26"
   }
 }
