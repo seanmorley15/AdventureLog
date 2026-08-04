@@ -58,13 +58,14 @@ copy_local_installer_libs() {
 
 download_standard_toolkit() {
 	log_info "Fetching Standard Deployment files"
-	mkdir -p docker
+	mkdir -p docker scripts/lib
 	download_file "${GITHUB_RAW}/docker/docker-compose.yml" "docker/docker-compose.yml"
 	download_file "${GITHUB_RAW}/.env.example" ".env.example"
 	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"
 	download_file "${GITHUB_RAW}/scripts/restore.sh" "scripts/restore.sh"
+	download_file "${GITHUB_RAW}/scripts/lib/compose-paths.sh" "scripts/lib/compose-paths.sh"
 	chmod +x scripts/deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
 	if [[ -d "$(dirname "${BASH_SOURCE[0]}")" ]]; then
 		copy_local_installer_libs "$(dirname "${BASH_SOURCE[0]}")" "scripts/install/lib"
@@ -74,13 +75,14 @@ download_standard_toolkit() {
 
 download_advanced_toolkit() {
 	log_info "Fetching Advanced Deployment files"
-	mkdir -p docker
+	mkdir -p docker scripts/lib
 	download_file "${GITHUB_RAW}/docker/docker-compose.advanced.yml" "docker/docker-compose.advanced.yml"
 	download_file "${GITHUB_RAW}/.env.advanced.example" ".env.advanced.example"
 	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
 	download_file "${GITHUB_RAW}/scripts/backup.sh" "scripts/backup.sh"
 	download_file "${GITHUB_RAW}/scripts/restore.sh" "scripts/restore.sh"
+	download_file "${GITHUB_RAW}/scripts/lib/compose-paths.sh" "scripts/lib/compose-paths.sh"
 	chmod +x scripts/deploy.sh scripts/validate-env.sh scripts/backup.sh scripts/restore.sh 2>/dev/null || true
 	if [[ -d "$(dirname "${BASH_SOURCE[0]}")" ]]; then
 		copy_local_installer_libs "$(dirname "${BASH_SOURCE[0]}")" "scripts/install/lib"

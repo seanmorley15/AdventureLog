@@ -3,9 +3,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 # shellcheck source=lib/compose-paths.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib/compose-paths.sh"
+source "${SCRIPTS_DIR}/lib/compose-paths.sh"
 
 COMPOSE_FILE="${COMPOSE_FILE:-}"
 ENV_FILE=""

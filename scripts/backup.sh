@@ -3,9 +3,10 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 # shellcheck source=lib/compose-paths.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib/compose-paths.sh"
+source "${SCRIPTS_DIR}/lib/compose-paths.sh"
 
 COMPOSE_FILE="${COMPOSE_FILE:-}"
 BACKUP_DIR="${BACKUP_DIR:-backups}"
@@ -36,7 +37,7 @@ mkdir -p "$DEST"
 
 resolve_compose_volume() {
 	local suffix="$1"
-	"${COMPOSE[@]}" volume ls -q | grep "${suffix}$" | head -n 1
+	docker volume ls -q | grep "${suffix}$" | head -n 1
 }
 
 MEDIA_VOLUME="$(resolve_compose_volume "adventurelog_media")"
@@ -69,7 +70,7 @@ if [[ -z "$MEDIA_VOLUME" ]]; then
 else
 	docker run --rm \
 		-v "${MEDIA_VOLUME}:/data:ro" \
-		-v "$DEST:/backup" \
+		-v "$(cd "$DEST" && pwd):/backup" \
 		alpine:3.21 \
 		tar czf /backup/media.tar.gz -C /data .
 fi

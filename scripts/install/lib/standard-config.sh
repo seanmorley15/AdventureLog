@@ -6,7 +6,7 @@ prompt_standard_core_config() {
 	print_step_header 3 "$WIZARD_TOTAL" "Core configuration"
 	tui_print_box "Standard Deployment" "One public URL and one host port — ideal for homelabs and quick installs."
 
-	local default_site="http://localhost:8015"
+	local default_site="${SITE_URL:-http://localhost:8015}"
 	while true; do
 		SITE_URL="$(prompt_with_default "Public site URL" "$default_site")"
 		if validate_url "$SITE_URL"; then
@@ -15,25 +15,14 @@ prompt_standard_core_config() {
 		log_error "Enter a valid http:// or https:// URL"
 	done
 	SITE_URL="${SITE_URL%/}"
-	HOST_PORT="$(extract_port_from_url "$SITE_URL" "8015")"
+	HOST_PORT="$(extract_port_from_url "$SITE_URL" "${HOST_PORT:-8015}")"
 	local port_override
 	port_override="$(tui_input "Host port to bind [${HOST_PORT}]" "$HOST_PORT")"
 	HOST_PORT="${port_override:-$HOST_PORT}"
 	log_success "Site: $SITE_URL (port $HOST_PORT)"
 
-	POSTGRES_PASSWORD="$(generate_secure_password 32)"
-	log_success "Generated secure database password"
-
-	if tui_confirm "Change default admin credentials (admin/admin)?" "y"; then
-		DJANGO_ADMIN_USERNAME="$(prompt_with_default "Admin username" "admin")"
-		DJANGO_ADMIN_PASSWORD="$(generate_secure_password 24)"
-		DJANGO_ADMIN_EMAIL="$(prompt_with_default "Admin email" "admin@example.com")"
-	else
-		DJANGO_ADMIN_USERNAME="admin"
-		DJANGO_ADMIN_PASSWORD="admin"
-		DJANGO_ADMIN_EMAIL="admin@example.com"
-		log_warning "Using default admin/admin — change after first login"
-	fi
+	ensure_postgres_password
+	prompt_admin_credentials
 	echo ""
 }
 

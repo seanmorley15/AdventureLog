@@ -36,7 +36,16 @@ mgmt_update() {
 	if tui_confirm "Create a backup before updating?" "y"; then
 		backup_flag="--backup"
 	fi
-	if [[ -f scripts/deploy.sh ]]; then
+	# Older installs shipped deploy.sh without scripts/lib/compose-paths.sh
+	if [[ -f scripts/deploy.sh && ! -f scripts/lib/compose-paths.sh ]]; then
+		mkdir -p scripts/lib
+		if [[ -n "${REPO_ROOT:-}" && -f "${REPO_ROOT}/scripts/lib/compose-paths.sh" ]]; then
+			cp "${REPO_ROOT}/scripts/lib/compose-paths.sh" scripts/lib/compose-paths.sh
+		else
+			download_file "${GITHUB_RAW}/scripts/lib/compose-paths.sh" "scripts/lib/compose-paths.sh" || true
+		fi
+	fi
+	if [[ -f scripts/deploy.sh && -f scripts/lib/compose-paths.sh ]]; then
 		# shellcheck disable=SC2086
 		COMPOSE_FILE="$COMPOSE_FILE" bash scripts/deploy.sh $backup_flag
 	else
@@ -51,6 +60,7 @@ mgmt_update() {
 
 mgmt_reconfigure() {
 	log_info "Reconfigure site settings and optional features"
+	log_muted "Database password, secrets, and admin credentials are preserved"
 	if [[ -f "$ENV_FILE" ]]; then
 		cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d-%H%M%S)"
 	fi

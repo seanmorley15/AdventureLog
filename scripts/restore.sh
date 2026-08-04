@@ -10,9 +10,10 @@ fi
 
 BACKUP_DIR="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 # shellcheck source=lib/compose-paths.sh
-source "$(dirname "${BASH_SOURCE[0]}")/lib/compose-paths.sh"
+source "${SCRIPTS_DIR}/lib/compose-paths.sh"
 
 if [[ ! -d "$BACKUP_DIR" ]]; then
 	echo "ERROR: Backup directory not found: $BACKUP_DIR" >&2
@@ -45,7 +46,7 @@ fi
 
 resolve_compose_volume() {
 	local suffix="$1"
-	"${COMPOSE[@]}" volume ls -q | grep "${suffix}$" | head -n 1
+	docker volume ls -q | grep "${suffix}$" | head -n 1
 }
 
 MEDIA_VOLUME="$(resolve_compose_volume "adventurelog_media")"

@@ -35,6 +35,7 @@ declare -g FRONTEND_ORIGIN=""
 declare -g BACKEND_URL=""
 declare -g FRONTEND_PORT=""
 declare -g BACKEND_PORT=""
+declare -g SECRET_KEY=""
 
 # Platform
 declare -g SYSTEM_ARCH=""
@@ -79,6 +80,47 @@ generate_secure_password() {
 	fi
 	echo "ERROR: No suitable random generation method found" >&2
 	return 1
+}
+
+# Generate a DB password only on fresh install. Reconfigure must keep the
+# existing value — Postgres ignores POSTGRES_PASSWORD after the volume is initialized.
+ensure_postgres_password() {
+	if [[ -n "${POSTGRES_PASSWORD:-}" ]]; then
+		log_success "Keeping existing database password"
+		return 0
+	fi
+	POSTGRES_PASSWORD="$(generate_secure_password 32)"
+	log_success "Generated secure database password"
+}
+
+ensure_secret_key() {
+	if [[ -n "${SECRET_KEY:-}" ]]; then
+		return 0
+	fi
+	SECRET_KEY="$(generate_secure_password 50)"
+}
+
+# Fresh install only: offer to replace admin/admin.
+# After first start, the superuser already exists in the DB — rewriting
+# DJANGO_ADMIN_* in .env has no effect, so reconfigure skips this prompt.
+prompt_admin_credentials() {
+	if [[ -n "${DJANGO_ADMIN_PASSWORD:-}" ]]; then
+		DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
+		DJANGO_ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
+		log_muted "Admin credentials are set at first start only — change them in the app"
+		return 0
+	fi
+
+	if tui_confirm "Change default admin credentials (admin/admin)?" "y"; then
+		DJANGO_ADMIN_USERNAME="$(prompt_with_default "Admin username" "admin")"
+		DJANGO_ADMIN_PASSWORD="$(generate_secure_password 24)"
+		DJANGO_ADMIN_EMAIL="$(prompt_with_default "Admin email" "admin@example.com")"
+	else
+		DJANGO_ADMIN_USERNAME="admin"
+		DJANGO_ADMIN_PASSWORD="admin"
+		DJANGO_ADMIN_EMAIL="admin@example.com"
+		log_warning "Using default admin/admin — change after first login"
+	fi
 }
 
 validate_url() {
@@ -207,4 +249,9 @@ load_existing_env() {
 	DJANGO_ADMIN_USERNAME="${DJANGO_ADMIN_USERNAME:-admin}"
 	DJANGO_ADMIN_PASSWORD="${DJANGO_ADMIN_PASSWORD:-admin}"
 	DJANGO_ADMIN_EMAIL="${DJANGO_ADMIN_EMAIL:-admin@example.com}"
+	SECRET_KEY="${SECRET_KEY:-}"
+	FRONTEND_ORIGIN="${FRONTEND_ORIGIN:-${ORIGIN:-${FRONTEND_URL:-}}}"
+	BACKEND_URL="${BACKEND_URL:-${PUBLIC_URL:-}}"
+	FRONTEND_PORT="${FRONTEND_PORT:-}"
+	BACKEND_PORT="${BACKEND_PORT:-}"
 }
