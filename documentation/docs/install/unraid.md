@@ -2,8 +2,8 @@
 
 AdventureLog is available in the Unraid Community Applications store. You can install it by searching for `AdventureLog` in the Community Applications store, where you will find the frontend and the backend. The database can be found by searching `PostGIS`.
 
-Community Applications Page for AdventureLog: [AdventureLog on CA Store](https://unraid.net/community/apps?q=AdventureLog)\
-Community Applications Page for PostGIS: [PostGIS on CA Store](https://unraid.net/community/apps?q=PostGIS)
+Community Applications Page for AdventureLog: [AdventureLog on CA Store](https://ca.unraid.net/apps?q=adventurelog)\
+Community Applications Page for PostGIS: [PostGIS on CA Store](https://ca.unraid.net/apps/postgis-0xoswv81175v5s?q=PostGIS)
 
 ## Installation Configuration
 
