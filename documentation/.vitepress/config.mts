@@ -378,6 +378,7 @@ export default defineConfig({
             text: "Development Timeline",
             link: "/docs/changelogs/development_timeline",
           },
+          { text: "v0.13.0", link: "/docs/changelogs/v0-13-0" },
           { text: "v0.12.1", link: "/docs/changelogs/v0-12-1" },
           { text: "v0.12.0", link: "/docs/changelogs/v0-12-0" },
           { text: "v0.11.0", link: "/docs/changelogs/v0-11-0" },

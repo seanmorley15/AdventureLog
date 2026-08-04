@@ -226,6 +226,11 @@ export const pageSeo: Record<string, PageSeo> = {
       "The origin story and development timeline of AdventureLog from first commit to a full-featured self-hosted travel platform.",
     keywords: ["AdventureLog history", "development timeline"],
   },
+  "docs/changelogs/v0-13-0.md": {
+    description:
+      "AdventureLog v0.13.0 Acadia release: dashboard, travel calendar, global search, PDF exports, Endurain integration, and self-hosting improvements.",
+    keywords: ["AdventureLog v0.13.0 changelog", "Acadia release"],
+  },
   "docs/changelogs/v0-12-1.md": {
     description: "AdventureLog v0.12.1 release notes, bug fixes, and improvements.",
     keywords: ["AdventureLog v0.12.1 changelog"],
