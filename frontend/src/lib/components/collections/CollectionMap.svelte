@@ -23,7 +23,9 @@
 	let basemapType = 'default';
 	$: if (basemapType === 'default') {
 		const userStyle = user?.map_style ? normalizeBasemapType(user.map_style) : 'default';
-		const collectionStyle = collection?.map_style ? normalizeBasemapType(collection.map_style) : 'default';
+		const collectionStyle = collection?.map_style
+			? normalizeBasemapType(collection.map_style)
+			: 'default';
 		if (userStyle !== 'default') basemapType = userStyle;
 		else if (collectionStyle !== 'default') basemapType = collectionStyle;
 	}
