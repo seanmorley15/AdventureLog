@@ -3,11 +3,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.db import transaction
 from django.db.models import Q
-from adventures.models import Lodging
+from adventures.models import Lodging, ContentImage
 from adventures.serializers import CollectionItineraryItemSerializer, LodgingSerializer
 from rest_framework.exceptions import PermissionDenied
 from adventures.permissions import IsOwnerOrSharedWithFullAccess
-from adventures.geocoding import reverse_geocode
+from adventures.throttling import ExternalGeocodeThrottle
+from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
 from .location_image_view import import_remote_images_for_object
 from .quick_add_utils import (
     build_quick_add_description,
@@ -20,6 +21,7 @@ from .quick_add_utils import (
     parse_itinerary_date,
     preferred_link,
     resolve_quick_add_collection,
+    resolve_quick_add_location_label,
     sanitize_photo_urls,
 )
 
@@ -79,7 +81,12 @@ class LodgingViewSet(viewsets.ModelViewSet):
     def perform_update(self, serializer):
         serializer.save()
 
-    @action(detail=False, methods=['post'], url_path='quick-add')
+    @action(
+        detail=False,
+        methods=['post'],
+        url_path='quick-add',
+        throttle_classes=[ExternalGeocodeThrottle],
+    )
     @transaction.atomic
     def quick_add(self, request):
         """Create a lodging from lightweight map/place input in one server-side call."""
@@ -109,9 +116,9 @@ class LodgingViewSet(viewsets.ModelViewSet):
 
         reverse_data = {}
         try:
-            reverse_result = reverse_geocode(latitude, longitude, request.user)
-            if isinstance(reverse_result, dict) and 'error' not in reverse_result:
-                reverse_data = reverse_result
+            selection = reverse_geocode_service(latitude, longitude, request.user)
+            if selection and selection.data and not selection.data.get('error'):
+                reverse_data = selection.data
         except Exception:
             reverse_data = {}
 
@@ -121,12 +128,7 @@ class LodgingViewSet(viewsets.ModelViewSet):
         if rating is None:
             rating = coerce_float(details.get('rating'))
 
-        location_label = (
-            str(payload.get('location') or '').strip()
-            or str(reverse_data.get('display_name') or '').strip()
-            or str(details.get('formatted_address') or '').strip()
-            or None
-        )
+        location_label = resolve_quick_add_location_label(payload, reverse_data, details)
 
         place_types = payload.get('types')
         if not isinstance(place_types, list) or not place_types:
@@ -171,6 +173,7 @@ class LodgingViewSet(viewsets.ModelViewSet):
                 photo_urls,
                 owner=lodging.user,
                 max_workers=min(5, len(photo_urls)),
+                explicit_source=ContentImage.Source.GOOGLE,
             )
 
         response_data = self.get_serializer(lodging).data

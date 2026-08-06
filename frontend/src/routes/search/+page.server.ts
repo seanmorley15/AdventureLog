@@ -9,15 +9,28 @@ export const load = (async (event) => {
 		return redirect(302, '/login');
 	}
 
-	const query = event.url.searchParams.get('query');
+	const query = event.url.searchParams.get('q') || event.url.searchParams.get('query');
+	const types = event.url.searchParams.get('types') || '';
 
 	if (!query) {
-		return { data: [] };
+		return {
+			query: '',
+			results: [],
+			facets: {},
+			total: 0,
+			limit: 20,
+			offset: 0,
+			error: null
+		};
 	}
 
-	let sessionId = event.cookies.get('sessionid');
+	const sessionId = event.cookies.get('sessionid');
+	const params = new URLSearchParams({ q: query, limit: '20', offset: '0' });
+	if (types) {
+		params.set('types', types);
+	}
 
-	let res = await fetch(`${serverEndpoint}/api/search/?query=${query}`, {
+	const res = await fetch(`${serverEndpoint}/api/search/?${params.toString()}`, {
 		headers: {
 			'Content-Type': 'application/json',
 			Cookie: `sessionid=${sessionId}`
@@ -25,21 +38,27 @@ export const load = (async (event) => {
 	});
 
 	if (!res.ok) {
-		console.error('Failed to fetch search data');
-		let error = await res.json();
-		return { error: error.error };
+		const errorPayload = await res.json().catch(() => ({}));
+		return {
+			query,
+			results: [],
+			facets: {},
+			total: 0,
+			limit: 20,
+			offset: 0,
+			error: errorPayload.error || 'Failed to fetch search results'
+		};
 	}
 
-	let data = await res.json();
+	const data = await res.json();
 
 	return {
-		locations: data.locations,
-		collections: data.collections,
-		users: data.users,
-		countries: data.countries,
-		regions: data.regions,
-		cities: data.cities,
-		visited_cities: data.visited_cities,
-		visited_regions: data.visited_regions
+		query: data.query,
+		results: data.results,
+		facets: data.facets,
+		total: data.total,
+		limit: data.limit,
+		offset: data.offset,
+		error: null
 	};
 }) satisfies PageServerLoad;

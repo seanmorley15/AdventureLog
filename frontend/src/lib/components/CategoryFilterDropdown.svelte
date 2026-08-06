@@ -7,13 +7,23 @@
 	let types_arr: string[] = [];
 	export let types: string;
 	let adventure_types: Category[] = [];
-	let isOpen = false;
 	const dispatch = createEventDispatcher<{ change: { types: string } }>();
 
+	$: sortedAdventureTypes = [...adventure_types].sort((a, b) => {
+		const usageDiff = (b.num_locations || 0) - (a.num_locations || 0);
+		if (usageDiff !== 0) return usageDiff;
+		return (a.display_name || '').localeCompare(b.display_name || '');
+	});
+
 	onMount(async () => {
-		let categoryFetch = await fetch('/api/categories');
-		let categoryData = await categoryFetch.json();
-		adventure_types = categoryData;
+		try {
+			const categoryFetch = await fetch('/api/categories');
+			const categoryData = await categoryFetch.json();
+			adventure_types = Array.isArray(categoryData) ? categoryData : [];
+		} catch (err) {
+			console.error('Failed to load categories:', err);
+			adventure_types = [];
+		}
 	});
 
 	$: {
@@ -21,58 +31,53 @@
 	}
 
 	function clearTypes() {
-		types = '';
 		types_arr = [];
-		dispatch('change', { types });
+		types = '';
+		dispatch('change', { types: '' });
 	}
 
 	function toggleSelect(type: string) {
-		if (types_arr.indexOf(type) > -1) {
+		if (types_arr.includes(type)) {
 			types_arr = types_arr.filter((item) => item !== type);
 		} else {
-			types_arr.push(type);
+			types_arr = [...types_arr, type];
 		}
-		types_arr = types_arr.filter((item) => item !== '');
-		// turn types_arr into a comma seperated list with no spaces
 		types = types_arr.join(',');
 		dispatch('change', { types });
 	}
 </script>
 
-<div class="mb-4 rounded-lg bg-base-300">
-	<button
-		type="button"
-		class="w-full text-left text-xl font-medium p-4"
-		on:click={() => (isOpen = !isOpen)}
-	>
-		{$t('adventures.category_filter')}
-	</button>
-
-	{#if isOpen}
-		<div class="px-4 pb-4">
-			<button type="button" class="btn btn-sm btn-neutral-300 w-full mb-2" on:click={clearTypes}>
+<div>
+	{#if types_arr.length > 0}
+		<div class="flex justify-end mb-2">
+			<button type="button" class="btn btn-ghost btn-xs h-auto min-h-0 px-2" on:click={clearTypes}>
 				{$t('adventures.clear')}
 			</button>
+		</div>
+	{/if}
 
-			<ul>
-				{#each adventure_types as type}
-					<li class="mb-1">
-						<label class="cursor-pointer flex items-center gap-2">
-							<input
-								type="checkbox"
-								class="checkbox"
-								value={type.name}
-								on:change={() => toggleSelect(type.name)}
-								checked={types_arr.includes(type.name)}
-							/>
-							<span>
-								{type.display_name}
-								{type.icon} ({type.num_locations})
-							</span>
-						</label>
-					</li>
-				{/each}
-			</ul>
+	{#if adventure_types.length === 0}
+		<p class="text-sm text-base-content/60 text-center py-2">
+			{$t('categories.no_categories_found')}
+		</p>
+	{:else}
+		<div class="max-h-40 overflow-y-auto space-y-1 -mx-1 px-1">
+			{#each sortedAdventureTypes as type (type.id)}
+				<label class="label cursor-pointer justify-start gap-3 py-1 min-h-0">
+					<input
+						type="checkbox"
+						class="checkbox checkbox-primary checkbox-sm"
+						value={type.name}
+						on:change={() => toggleSelect(type.name)}
+						checked={types_arr.includes(type.name)}
+					/>
+					<span class="label-text leading-tight">
+						{type.icon}
+						{type.display_name}
+						<span class="text-base-content/50">({type.num_locations})</span>
+					</span>
+				</label>
+			{/each}
 		</div>
 	{/if}
 </div>

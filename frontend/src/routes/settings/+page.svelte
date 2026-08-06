@@ -4,19 +4,23 @@
 	import { addToast } from '$lib/toasts';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { basemapOptions, normalizeBasemapType } from '$lib';
-	import type { ImmichIntegration, User, APIKey } from '$lib/types.js';
+	import type {
+		EndurainIntegration,
+		ImmichIntegration,
+		WandererIntegration,
+		User,
+		APIKey,
+		MediaUsage
+	} from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { t } from 'svelte-i18n';
 	import TotpModal from '$lib/components/TOTPModal.svelte';
-	import { appTitle, appVersion, copyrightYear } from '$lib/config.js';
-	import ImmichLogo from '$lib/assets/immich.svg';
-	import GoogleMapsLogo from '$lib/assets/google_maps.svg';
-	import StravaLogo from '$lib/assets/strava.svg';
-	import WandererLogoSrc from '$lib/assets/wanderer.svg';
+	import { copyrightYear } from '$lib/config.js';
+	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
+	import IntegrationsSettings from '$lib/components/settings/IntegrationsSettings.svelte';
 
 	export let data;
-	console.log(data);
 	let user: User;
 	let emails: typeof data.props.emails;
 	if (data.user) {
@@ -37,7 +41,9 @@
 	let stravaGlobalEnabled = data.props.stravaGlobalEnabled;
 	let stravaUserEnabled = data.props.stravaUserEnabled;
 	let wandererEnabled = data.props.wandererEnabled;
-	let wandererExpired = data.props.wandererExpired;
+	let wandererIntegration: WandererIntegration | null = data.props.wandererIntegration;
+	let endurainEnabled = data.props.endurainEnabled;
+	let endurainIntegration: EndurainIntegration | null = data.props.endurainIntegration;
 	let activeSection: string = 'profile';
 
 	// typed alias for social providers to satisfy TypeScript
@@ -63,25 +69,53 @@
 
 	// Indicates restore operation in progress to disable button and show loader
 	let isRestoring: boolean = false;
-	let newImmichIntegration: ImmichIntegration = {
-		server_url: '',
-		api_key: '',
-		id: '',
-		copy_locally: true
-	};
-
-	let newWandererIntegration = {
-		server_url: '',
-		username: '',
-		password: ''
-	};
-
 	let isMFAModalOpen: boolean = false;
 
 	let apiKeys: APIKey[] = data.props.apiKeys ?? [];
 	let newApiKeyName: string = '';
 	let newlyCreatedKey: string | null = null;
 	let keyCopied = false;
+	let mediaUsage: MediaUsage =
+		data.props.mediaUsage ??
+		({
+			total_bytes: 0,
+			limit_bytes: null,
+			images_bytes: 0,
+			attachments_bytes: 0,
+			profile_pics_bytes: 0,
+			images_files: 0,
+			attachments_files: 0,
+			profile_pics_files: 0
+		} as MediaUsage);
+
+	const formatBytes = (bytes: number) => {
+		if (!bytes || bytes <= 0) return '0 B';
+		const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+		const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
+		const value = bytes / Math.pow(1024, index);
+		const precision = value >= 10 || index === 0 ? 0 : 1;
+		return `${value.toFixed(precision)} ${units[index]}`;
+	};
+
+	$: totalMediaBytes = mediaUsage?.total_bytes ?? 0;
+	$: mediaLimitBytes = mediaUsage?.limit_bytes ?? null;
+	$: totalMediaFiles =
+		(mediaUsage?.images_files ?? 0) +
+		(mediaUsage?.attachments_files ?? 0) +
+		(mediaUsage?.profile_pics_files ?? 0);
+	$: overallUsagePercent = mediaLimitBytes
+		? Math.min(100, Math.round((totalMediaBytes / mediaLimitBytes) * 100))
+		: 0;
+	$: imagesPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.images_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: attachmentsPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.attachments_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: profilePicsPercent = mediaLimitBytes
+		? Math.min(100, Math.round((mediaUsage.profile_pics_bytes / mediaLimitBytes) * 100))
+		: 0;
+	$: mediaLimitLabel = mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited';
 
 	const sections = [
 		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
@@ -92,6 +126,51 @@
 		{ id: 'admin', icon: '⚙️', label: () => $t('settings.admin') },
 		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
 	];
+
+	$: profileSharingImpact =
+		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0);
+
+	function handlePublicProfileToggle(nextValue: boolean) {
+		if (
+			user.public_profile &&
+			!nextValue &&
+			profileSharingImpact > 0 &&
+			!confirm(
+				$t('settings.public_profile_private_confirm', {
+					values: {
+						shared: user.shared_collection_count ?? 0,
+						invites: user.pending_collection_invite_count ?? 0
+					}
+				})
+			)
+		) {
+			return;
+		}
+
+		user.public_profile = nextValue;
+	}
+
+	function profileUpdateToastMessage(form: {
+		left_shared_collections?: number;
+		revoked_collection_invites?: number;
+	}) {
+		const messages: string[] = [$t('settings.update_success')];
+		const leftShared = form.left_shared_collections ?? 0;
+		const revokedInvites = form.revoked_collection_invites ?? 0;
+
+		if (leftShared > 0) {
+			messages.push(
+				$t('settings.public_profile_left_collections', { values: { count: leftShared } })
+			);
+		}
+		if (revokedInvites > 0) {
+			messages.push(
+				$t('settings.public_profile_revoked_invites', { values: { count: revokedInvites } })
+			);
+		}
+
+		return messages.join(' ');
+	}
 
 	onMount(async () => {
 		if (browser) {
@@ -107,7 +186,19 @@
 
 	$: {
 		if (browser && $page.form?.success) {
-			window.location.href = '/settings?page=success';
+			const leftShared = $page.form.left_shared_collections ?? 0;
+			const revokedInvites = $page.form.revoked_collection_invites ?? 0;
+			if (leftShared > 0 || revokedInvites > 0) {
+				addToast('success', profileUpdateToastMessage($page.form));
+				user.shared_collection_count = 0;
+				user.pending_collection_invite_count = Math.max(
+					0,
+					(user.pending_collection_invite_count ?? 0) - revokedInvites
+				);
+				window.location.href = '/settings?tab=profile';
+			} else {
+				window.location.href = '/settings?page=success';
+			}
 		}
 		if (browser && $page.form?.error) {
 			addToast('error', $t('settings.update_error'));
@@ -240,74 +331,6 @@
 		}
 	}
 
-	function handleImmichError(data: {
-		code: string;
-		details: any;
-		message: any;
-		error: any;
-		server_url: any[];
-		api_key: any[];
-	}) {
-		if (data.code === 'immich.connection_failed') {
-			return `${$t('immich.connection_error')}: ${data.details || data.message}`;
-		} else if (data.code === 'immich.integration_exists') {
-			return $t('immich.integration_already_exists');
-		} else if (data.code === 'immich.integration_not_found') {
-			return $t('immich.integration_not_found');
-		} else if (data.error && data.message) {
-			return data.message;
-		} else {
-			// Handle validation errors
-			const errors = [];
-			if (data.server_url) errors.push(`Server URL: ${data.server_url.join(', ')}`);
-			if (data.api_key) errors.push(`API Key: ${data.api_key.join(', ')}`);
-			return errors.length > 0
-				? `${$t('immich.validation_error')}: ${errors.join('; ')}`
-				: $t('immich.immich_error');
-		}
-	}
-
-	async function enableImmichIntegration() {
-		const isUpdate = !!immichIntegration?.id;
-		const url = isUpdate
-			? `/api/integrations/immich/${immichIntegration?.id ?? ''}/`
-			: '/api/integrations/immich/';
-		const method = isUpdate ? 'PUT' : 'POST';
-
-		try {
-			const res = await fetch(url, {
-				method,
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(newImmichIntegration)
-			});
-
-			const data = await res.json();
-
-			if (res.ok) {
-				addToast('success', $t(isUpdate ? 'immich.immich_updated' : 'immich.immich_enabled'));
-				immichIntegration = data;
-			} else {
-				addToast('error', handleImmichError(data));
-			}
-		} catch (error) {
-			addToast('error', $t('immich.network_error'));
-		}
-	}
-
-	async function disableImmichIntegration() {
-		if (immichIntegration && immichIntegration.id) {
-			let res = await fetch(`/api/integrations/immich/${immichIntegration.id}/`, {
-				method: 'DELETE'
-			});
-			if (res.ok) {
-				addToast('success', $t('immich.immich_disabled'));
-				immichIntegration = null;
-			} else {
-				addToast('error', $t('immich.immich_error'));
-			}
-		}
-	}
-
 	async function disableMfa() {
 		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
 			method: 'DELETE'
@@ -320,91 +343,6 @@
 				addToast('error', $t('settings.reset_session_error'));
 			}
 			addToast('error', $t('settings.generic_error'));
-		}
-	}
-
-	async function stravaAuthorizeRedirect() {
-		const res = await fetch('/api/integrations/strava/authorize/', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		if (res.ok) {
-			const data = await res.json();
-			window.location.href = data.auth_url;
-		} else {
-			addToast('error', $t('strava.authorization_error'));
-		}
-	}
-
-	async function stravaDisconnect() {
-		const res = await fetch('/api/integrations/strava/disable/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		if (res.ok) {
-			addToast('success', $t('strava.disconnected'));
-			stravaUserEnabled = false;
-		} else {
-			addToast('error', $t('strava.disconnect_error'));
-		}
-	}
-
-	async function wandererDisconnect() {
-		const res = await fetch('/api/integrations/wanderer/disable/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
-		});
-		if (res.ok) {
-			addToast('success', $t('wanderer.disconnected'));
-			wandererEnabled = false;
-		} else {
-			addToast('error', $t('wanderer.disconnect_error'));
-		}
-	}
-
-	async function wandererConnect() {
-		const res = await fetch('/api/integrations/wanderer/', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(newWandererIntegration)
-		});
-		if (res.ok) {
-			addToast('success', $t('wanderer.connected'));
-			wandererEnabled = true;
-			newWandererIntegration = { server_url: '', username: '', password: '' };
-		} else {
-			const data = await res.json();
-			addToast('error', $t('wanderer.connection_error'));
-		}
-	}
-
-	async function wandererRefresh() {
-		if (wandererEnabled) {
-			const res = await fetch(`/api/integrations/wanderer/refresh/`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					password: newWandererIntegration.password
-				})
-			});
-			if (res.ok) {
-				addToast('success', $t('wanderer.refreshed'));
-				newWandererIntegration.password = '';
-				wandererExpired = false;
-			} else {
-				addToast('error', $t('wanderer.refresh_error'));
-			}
-			newWandererIntegration.password = '';
 		}
 	}
 
@@ -591,7 +529,9 @@
 										<label class="label cursor-pointer justify-start gap-4">
 											<input
 												type="checkbox"
-												bind:checked={user.public_profile}
+												checked={user.public_profile}
+												on:change={(event) =>
+													handlePublicProfileToggle(event.currentTarget.checked)}
 												name="public_profile"
 												class="toggle toggle-primary"
 											/>
@@ -600,6 +540,20 @@
 												<p class="text-sm text-base-content/60">
 													{$t('settings.public_profile_desc')}
 												</p>
+												{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
+													<p class="text-sm text-warning mt-2">
+														{$t('settings.public_profile_sharing_warning', {
+															values: { count: user.shared_collection_count ?? 0 }
+														})}
+													</p>
+												{/if}
+												{#if user.public_profile && (user.pending_collection_invite_count ?? 0) > 0}
+													<p class="text-sm text-warning mt-2">
+														{$t('settings.public_profile_invite_warning', {
+															values: { count: user.pending_collection_invite_count ?? 0 }
+														})}
+													</p>
+												{/if}
 											</div>
 										</label>
 									</div>
@@ -1210,340 +1164,17 @@
 
 					<!-- Integrations Section -->
 					{#if activeSection === 'integrations'}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-accent/10 rounded-xl">
-									<span class="text-2xl">🔗</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('settings.integrations')}</h2>
-									<p class="text-base-content/70">
-										{$t('settings.integrations_desc')}
-									</p>
-								</div>
-							</div>
-
-							<!-- Immich Integration -->
-							<div class="p-6 bg-base-200 rounded-xl mb-4">
-								<div class="flex items-center gap-4 mb-4">
-									<img src={ImmichLogo} alt="Immich" class="w-8 h-8" />
-									<div>
-										<h3 class="text-xl font-bold">Immich</h3>
-										<p class="text-sm text-base-content/70">
-											{$t('immich.immich_integration_desc')}
-										</p>
-									</div>
-									{#if immichIntegration}
-										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
-									{:else}
-										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
-									{/if}
-								</div>
-
-								{#if immichIntegration && !newImmichIntegration.id}
-									<div class="flex gap-4 justify-center mb-4">
-										<button
-											class="btn btn-warning"
-											on:click={() => {
-												if (immichIntegration) newImmichIntegration = immichIntegration;
-											}}
-										>
-											✏️ {$t('lodging.edit')}
-										</button>
-										<button class="btn btn-error" on:click={disableImmichIntegration}>
-											❌ {$t('immich.disable')}
-										</button>
-									</div>
-								{/if}
-
-								{#if !immichIntegration || newImmichIntegration.id}
-									<div class="space-y-4">
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('immich.server_url')}</span>
-											</label>
-											<input
-												type="url"
-												bind:value={newImmichIntegration.server_url}
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="https://immich.example.com/api"
-											/>
-											{#if newImmichIntegration.server_url && !newImmichIntegration.server_url.endsWith('api')}
-												<div class="label">
-													<span class="label-text-alt text-warning">{$t('immich.api_note')}</span>
-												</div>
-											{/if}
-											{#if newImmichIntegration.server_url && (newImmichIntegration.server_url.indexOf('localhost') !== -1 || newImmichIntegration.server_url.indexOf('127.0.0.1') !== -1)}
-												<div class="label">
-													<span class="label-text-alt text-warning"
-														>{$t('immich.localhost_note')}</span
-													>
-												</div>
-											{/if}
-										</div>
-
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('immich.api_key')}</span>
-											</label>
-											<input
-												type="password"
-												bind:value={newImmichIntegration.api_key}
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder={$t('immich.api_key_placeholder')}
-											/>
-										</div>
-
-										<!-- Toggle for copy_locally -->
-										<div class="form-control">
-											<label class="label cursor-pointer justify-start gap-4">
-												<input
-													type="checkbox"
-													bind:checked={newImmichIntegration.copy_locally}
-													class="toggle toggle-primary"
-												/>
-												<div>
-													<span class="label-text font-medium">
-														{$t('immich.copy_locally') || 'Copy Locally'}
-													</span>
-													<p class="text-sm text-base-content/70">
-														{$t('immich.copy_locally_desc') ||
-															'If enabled, files will be copied locally.'}
-													</p>
-												</div>
-											</label>
-										</div>
-
-										<button on:click={enableImmichIntegration} class="btn btn-primary w-full">
-											{!immichIntegration?.id
-												? `🔗 ${$t('immich.enable_integration')}`
-												: `💾 ${$t('immich.update_integration')}`}
-										</button>
-									</div>
-								{/if}
-
-								<div class="mt-4 p-4 bg-info/10 rounded-lg">
-									<p class="text-sm">
-										📖 {$t('immich.need_help')}
-										<a
-											class="link link-primary"
-											href="https://adventurelog.app/docs/configuration/immich_integration.html"
-											target="_blank">{$t('navbar.documentation')}</a
-										>
-									</p>
-								</div>
-							</div>
-
-							<!-- Google maps integration - displayt only if its connected -->
-							<div class="p-6 bg-base-200 rounded-xl mb-4">
-								<div class="flex items-center gap-4 mb-4">
-									<img src={GoogleMapsLogo} alt="Google Maps" class="w-8 h-8" />
-									<div>
-										<h3 class="text-xl font-bold">Google Maps</h3>
-										<p class="text-sm text-base-content/70">
-											{$t('google_maps.google_maps_integration_desc')}
-										</p>
-									</div>
-									{#if googleMapsEnabled}
-										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
-									{:else}
-										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
-									{/if}
-								</div>
-								{#if user.is_staff || !googleMapsEnabled}
-									<div class="mt-4 p-4 bg-info/10 rounded-lg">
-										{#if user.is_staff}
-											<p class="text-sm">
-												📖 {$t('immich.need_help')}
-												<a
-													class="link link-primary"
-													href="https://adventurelog.app/docs/configuration/google_maps_integration.html"
-													target="_blank">{$t('navbar.documentation')}</a
-												>
-											</p>
-										{:else if !googleMapsEnabled}
-											<p class="text-sm">
-												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
-											</p>
-										{/if}
-									</div>
-								{/if}
-							</div>
-
-							<!-- Strava Integration Section -->
-							<div class="p-6 bg-base-200 rounded-xl mb-4">
-								<div class="flex items-center gap-4 mb-4">
-									<img src={StravaLogo} alt="Strava" class="w-8 h-8 rounded-md" />
-									<div>
-										<h3 class="text-xl font-bold">Strava</h3>
-										<p class="text-sm text-base-content/70">
-											{$t('strava.strava_integration_desc')}
-										</p>
-									</div>
-									{#if stravaGlobalEnabled && stravaUserEnabled}
-										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
-									{:else}
-										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
-									{/if}
-								</div>
-
-								<!-- Content based on integration status -->
-								{#if !stravaGlobalEnabled}
-									<!-- Strava not enabled globally -->
-									<div class="text-center">
-										<p class="text-base-content/70 mb-4">
-											{$t('strava.not_enabled') ||
-												'Strava integration is not enabled on this instance.'}
-										</p>
-									</div>
-								{:else if !stravaUserEnabled && stravaGlobalEnabled}
-									<!-- Globally enabled but user not connected -->
-									<div class="text-center">
-										<button class="btn btn-primary" on:click={stravaAuthorizeRedirect}>
-											🔗 {$t('strava.connect_account')}
-										</button>
-									</div>
-								{:else if stravaGlobalEnabled && stravaUserEnabled}
-									<!-- User connected - show management options -->
-									<div class="text-center">
-										<button class="btn btn-error" on:click={stravaDisconnect}>
-											❌ {$t('strava.disconnect')}
-										</button>
-									</div>
-								{/if}
-
-								<!-- Help documentation link -->
-								{#if user.is_staff || !stravaGlobalEnabled}
-									<div class="mt-4 p-4 bg-info/10 rounded-lg">
-										{#if user.is_staff}
-											<p class="text-sm">
-												📖 {$t('immich.need_help')}
-												<a
-													class="link link-primary"
-													href="https://adventurelog.app/docs/configuration/strava_integration.html"
-													target="_blank">{$t('navbar.documentation')}</a
-												>
-											</p>
-										{:else if !stravaGlobalEnabled}
-											<p class="text-sm">
-												ℹ️ {$t('google_maps.google_maps_integration_desc_no_staff')}
-											</p>
-										{/if}
-									</div>
-								{/if}
-							</div>
-
-							<div class="p-6 bg-base-200 rounded-xl mb-4">
-								<div class="flex items-center gap-4 mb-4">
-									<img src={WandererLogoSrc} alt="Wanderer" class="w-8 h-8" />
-									<div>
-										<h3 class="text-xl font-bold">Wanderer</h3>
-										<p class="text-sm text-base-content/70">
-											{$t('wanderer.wanderer_integration_desc')}
-										</p>
-									</div>
-									{#if wandererEnabled}
-										<div class="badge badge-success ml-auto">{$t('settings.connected')}</div>
-									{:else}
-										<div class="badge badge-error ml-auto">{$t('settings.disconnected')}</div>
-									{/if}
-								</div>
-
-								{#if wandererEnabled && wandererExpired}
-									<div class="space-y-4 mb-4">
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">Password</span>
-											</label>
-											<input
-												type="password"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your password"
-												bind:value={newWandererIntegration.password}
-											/>
-										</div>
-
-										<button class="btn btn-primary w-full" on:click={wandererRefresh}>
-											🔗 Wanderer Reauth
-										</button>
-									</div>
-								{/if}
-
-								<!-- Content based on integration status -->
-								{#if !wandererEnabled}
-									<!-- login form with server url username and password -->
-									<div class="space-y-4">
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">Server URL</span>
-											</label>
-											<input
-												type="url"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="https://wanderer.example.com"
-												bind:value={newWandererIntegration.server_url}
-											/>
-										</div>
-
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('auth.username')}</span>
-											</label>
-											<input
-												type="text"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your username"
-												bind:value={newWandererIntegration.username}
-											/>
-										</div>
-
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('auth.password')}</span>
-											</label>
-											<input
-												type="password"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder="Enter your password"
-												bind:value={newWandererIntegration.password}
-											/>
-										</div>
-
-										<button class="btn btn-primary w-full" on:click={wandererConnect}>
-											🔗 {$t('adventures.connect_to_wanderer')}
-										</button>
-									</div>
-								{:else}
-									<!-- User connected - show management options -->
-									<div class="text-center">
-										<button class="btn btn-error" on:click={wandererDisconnect}>
-											❌ {$t('strava.disconnect')}
-										</button>
-									</div>
-								{/if}
-
-								<!-- Help documentation link -->
-
-								{#if !wandererEnabled}
-									<div class="mt-4 p-4 bg-info/10 rounded-lg">
-										<p class="text-sm">
-											📖 {$t('immich.need_help')}
-											<a
-												class="link link-primary"
-												href="https://adventurelog.app/docs/configuration/wanderer_integration.html"
-												target="_blank">{$t('navbar.documentation')}</a
-											>
-										</p>
-									</div>
-								{/if}
-							</div>
-						</div>
+						<IntegrationsSettings
+							{user}
+							bind:immichIntegration
+							bind:googleMapsEnabled
+							bind:stravaGlobalEnabled
+							bind:stravaUserEnabled
+							bind:wandererEnabled
+							bind:wandererIntegration
+							bind:endurainEnabled
+							bind:endurainIntegration
+						/>
 					{/if}
 
 					<!-- import export -->
@@ -1853,6 +1484,133 @@
 										</div>
 									</div>
 
+									<div class="p-6 bg-base-200 rounded-xl">
+										<div class="flex items-center gap-4 mb-5">
+											<div class="p-3 bg-secondary/10 rounded-xl">
+												<span class="text-2xl">📦</span>
+											</div>
+											<div>
+												<h3 class="text-lg font-semibold">{$t('settings.media')} Storage</h3>
+												<p class="text-sm text-base-content/70">
+													Storage usage for your uploaded images and attachments.
+												</p>
+											</div>
+										</div>
+
+										<div
+											class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4"
+										>
+											<div>
+												<p class="text-sm text-base-content/70">
+													{#if mediaLimitBytes}
+														Using {formatBytes(totalMediaBytes)} of {mediaLimitLabel} ({overallUsagePercent}%).
+													{:else}
+														Using {formatBytes(totalMediaBytes)} with no configured limit.
+													{/if}
+												</p>
+											</div>
+											<div class="badge badge-primary badge-lg">
+												{#if mediaLimitBytes}
+													{overallUsagePercent}% used
+												{:else}
+													Unlimited
+												{/if}
+											</div>
+										</div>
+
+										<div class="stats stats-vertical lg:stats-horizontal w-full bg-base-100 shadow">
+											<div class="stat">
+												<div class="stat-title">Total used</div>
+												<div class="stat-value text-primary">{formatBytes(totalMediaBytes)}</div>
+												<div class="stat-desc">
+													{totalMediaFiles}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('adventures.images')}</div>
+												<div class="stat-value text-secondary">
+													{formatBytes(mediaUsage.images_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.images_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('adventures.attachments')}</div>
+												<div class="stat-value text-accent">
+													{formatBytes(mediaUsage.attachments_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.attachments_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+											<div class="stat">
+												<div class="stat-title">{$t('auth.profile_picture')}</div>
+												<div class="stat-value text-info">
+													{formatBytes(mediaUsage.profile_pics_bytes)}
+												</div>
+												<div class="stat-desc">
+													{mediaUsage.profile_pics_files}
+													{$t('adventures.files')}
+												</div>
+											</div>
+										</div>
+
+										<div class="mt-6 space-y-4">
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('adventures.images')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.images_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({imagesPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-secondary"
+													value={imagesPercent}
+													max="100"
+												></progress>
+											</div>
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('adventures.attachments')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.attachments_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({attachmentsPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-accent"
+													value={attachmentsPercent}
+													max="100"
+												></progress>
+											</div>
+											<div>
+												<div class="flex items-center justify-between text-sm">
+													<span class="font-medium">{$t('auth.profile_picture')}</span>
+													<span class="text-base-content/70">
+														{formatBytes(mediaUsage.profile_pics_bytes)}
+														{#if mediaLimitBytes}
+															/ {mediaLimitLabel} ({profilePicsPercent}%)
+														{/if}
+													</span>
+												</div>
+												<progress
+													class="progress progress-primary"
+													value={profilePicsPercent}
+													max="100"
+												></progress>
+											</div>
+										</div>
+									</div>
+
 									<!-- Debug Information -->
 									<div class="p-6 bg-base-200 rounded-xl">
 										<h3 class="text-lg font-semibold mb-4">{$t('settings.debug_information')}</h3>
@@ -1872,7 +1630,7 @@
 											<div class="p-3 bg-base-300 rounded-lg">
 												<span class="text-base-content/60">{$t('settings.app_version')}:</span>
 												<br />
-												<span class="text-secondary font-semibold">{appTitle} {appVersion}</span>
+												<AppVersionDisplay size="sm" />
 											</div>
 											<div class="p-3 bg-base-300 rounded-lg">
 												<span class="text-base-content/60">Profile Type:</span>

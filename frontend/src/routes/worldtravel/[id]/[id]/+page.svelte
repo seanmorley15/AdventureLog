@@ -17,7 +17,6 @@
 	import Check from '~icons/mdi/check-circle';
 	import Cancel from '~icons/mdi/cancel';
 	import Trophy from '~icons/mdi/trophy';
-	import Target from '~icons/mdi/target';
 	import Info from '~icons/mdi/information-outline';
 	import CityIcon from '~icons/mdi/city';
 
@@ -26,6 +25,7 @@
 	let filteredCities: City[] = [];
 	let searchQuery: string = '';
 	let showGeo: boolean = true;
+	let showMap: boolean = false;
 	let sidebarOpen = false;
 	let filterOption: string = 'all';
 
@@ -33,7 +33,6 @@
 	let visitedCities: VisitedCity[] = data.props?.visitedCities || [];
 	const region = data.props?.region || null;
 	let description: string = data.props?.description || '';
-	let showFullDesc = false;
 
 	console.log(data);
 
@@ -150,6 +149,15 @@
 		return Number.isFinite(numeric) ? numeric : null;
 	}
 
+	function hasCoordinates(item: {
+		latitude: number | string | null;
+		longitude: number | string | null;
+	}) {
+		return parseCoordinate(item.latitude) !== null && parseCoordinate(item.longitude) !== null;
+	}
+
+	$: hasMappableCities = allCities.some(hasCoordinates);
+
 	function cityToFeature(city: City): CityFeature | null {
 		const lat = parseCoordinate(city.latitude);
 		const lon = parseCoordinate(city.longitude);
@@ -167,15 +175,16 @@
 	}
 
 	const CITY_SOURCE_ID = 'worldtravel-cities';
-	const cityClusterOptions: ClusterOptions = { radius: 300, maxZoom: 12, minPoints: 1 };
+	const cityClusterOptions: ClusterOptions = { radius: 300, maxZoom: 12, minPoints: 2 };
 
 	let citiesGeoJson: CityFeatureCollection = { type: 'FeatureCollection', features: [] };
-	$: citiesGeoJson = {
-		type: 'FeatureCollection',
-		features: filteredCities
-			.map((c) => cityToFeature(c))
-			.filter((f): f is CityFeature => f !== null)
-	};
+	$: {
+		visitedCities;
+		citiesGeoJson = {
+			type: 'FeatureCollection',
+			features: allCities.map((c) => cityToFeature(c)).filter((f): f is CityFeature => f !== null)
+		};
+	}
 
 	function getMarkerProps(feature: any): CityFeatureProperties | null {
 		return feature && feature.properties ? feature.properties : null;
@@ -243,13 +252,13 @@
 										{filteredCities.length}
 										{$t('worldtravel.of')}
 										{allCities.length}
-										{$t('worldtravel.cities')}
+										{$t('worldtravel.cities')} ·
+										<span class="text-success">{visitedCount} {$t('adventures.visited')}</span>
 									</p>
 								</div>
 							</div>
 						</div>
 
-						<!-- Completion Badge -->
 						<div class="hidden md:flex items-center gap-2">
 							{#if completionPercentage === 100}
 								<div class="badge badge-success gap-2 p-3">
@@ -258,15 +267,30 @@
 								</div>
 							{:else}
 								<div class="badge badge-primary gap-2 p-3">
-									<Target class="w-4 h-4" />
 									{completionPercentage}%
 								</div>
 							{/if}
 						</div>
 					</div>
 
+					{#if description}
+						<details class="mt-3 group">
+							<summary
+								class="text-sm text-base-content/70 cursor-pointer hover:text-primary flex items-center gap-2 list-none"
+							>
+								<Info class="w-4 h-4" />
+								{$t('worldtravel.about_region')}
+							</summary>
+							<p
+								class="text-sm text-base-content/70 mt-2 pl-6 leading-relaxed max-h-32 overflow-y-auto"
+							>
+								{description}
+							</p>
+						</details>
+					{/if}
+
 					<!-- Search and Filters -->
-					<div class="mt-4 flex flex-col lg:flex-row items-start lg:items-center gap-4">
+					<div class="mt-4 flex flex-col lg:flex-row lg:items-center gap-4">
 						<div class="relative flex-1 max-w-md">
 							<Search
 								class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-base-content/40"
@@ -286,6 +310,18 @@
 								</button>
 							{/if}
 						</div>
+
+						{#if hasMappableCities}
+							<button
+								class="btn btn-outline gap-2 {showMap ? 'btn-active' : ''}"
+								on:click={() => (showMap = !showMap)}
+							>
+								<Map class="w-4 h-4" />
+								<span class="hidden sm:inline">
+									{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
+								</span>
+							</button>
+						{/if}
 
 						<!-- Filter Chips -->
 						<div class="flex flex-wrap items-center gap-2">
@@ -327,79 +363,46 @@
 				</div>
 			</div>
 
-			<!-- Description Section -->
-			{#if description}
-				<div class="container mx-auto px-6 py-4">
-					<div class="card bg-base-100 shadow-xl">
-						<div class="card-body p-4">
-							<div class="flex items-center gap-2 mb-4">
-								<Info class="w-5 h-5 text-primary" />
-								<h2 class="text-lg font-semibold">{$t('worldtravel.about_region')}</h2>
-							</div>
-							<p
-								class="text-base-content/70 leading-relaxed"
-								class:overflow-hidden={!showFullDesc}
-								style={!showFullDesc && description.length > 400
-									? 'max-height:8rem;overflow:hidden;'
-									: ''}
-							>
-								{description}
-							</p>
-							{#if description.length > 400}
-								<button
-									class="btn btn-ghost btn-sm mt-3"
-									on:click={() => (showFullDesc = !showFullDesc)}
-								>
-									{#if showFullDesc}{$t('worldtravel.show_less')}{:else}{$t(
-											'worldtravel.show_more'
-										)}{/if}
-								</button>
-							{/if}
-						</div>
-					</div>
-				</div>
-			{/if}
-
 			<!-- Map Section -->
-			{#if allCities.length > 0}
+			{#if showMap && hasMappableCities}
 				<div class="container mx-auto px-6 py-4">
-					<div class="card bg-base-100 shadow-xl">
-						<div class="card-body p-4">
-							<div class="flex items-center justify-between mb-4">
-								<div class="flex items-center gap-2">
-									<Map class="w-5 h-5 text-primary" />
-									<h2 class="text-lg font-semibold">{$t('worldtravel.interactive_map')}</h2>
-								</div>
-								<div class="flex items-center gap-2 text-sm text-base-content/60">
-									<div class="flex items-center gap-1">
-										<div class="w-3 h-3 bg-green-200 rounded-full border"></div>
-										<span>{$t('adventures.visited')}</span>
-									</div>
-									<div class="flex items-center gap-1">
-										<div class="w-3 h-3 bg-red-200 rounded-full border"></div>
-										<span>{$t('adventures.not_visited')}</span>
-									</div>
-								</div>
+					<div class="card bg-base-100 shadow-xl overflow-hidden">
+						<div
+							class="flex items-center justify-between px-4 py-3 bg-base-200/50 border-b border-base-300"
+						>
+							<span class="font-semibold flex items-center gap-2">
+								<Map class="w-5 h-5 text-primary" />
+								{$t('worldtravel.interactive_map')}
+							</span>
+							<div class="flex items-center gap-4 text-sm text-base-content/60">
+								<span class="flex items-center gap-1.5">
+									<span class="w-3 h-3 bg-green-200 rounded-full border"></span>
+									{$t('adventures.visited')}
+								</span>
+								<span class="flex items-center gap-1.5">
+									<span class="w-3 h-3 bg-red-200 rounded-full border"></span>
+									{$t('adventures.not_visited')}
+								</span>
 							</div>
-							<ClusterMap
-								geoJson={citiesGeoJson}
-								sourceId={CITY_SOURCE_ID}
-								clusterOptions={cityClusterOptions}
-								basemapType={normalizeBasemapType(data.user?.map_style)}
-								mapClass="aspect-[16/10] w-full rounded-lg"
-								fitLevel="city"
-								on:markerSelect={handleMarkerSelect}
-								{getMarkerProps}
-								markerClass={markerClassResolver}
-								markerLabel={markerLabelResolver}
-							/>
 						</div>
+						<ClusterMap
+							geoJson={citiesGeoJson}
+							sourceId={CITY_SOURCE_ID}
+							clusterOptions={cityClusterOptions}
+							basemapType={normalizeBasemapType(data.user?.map_style)}
+							mapClass="aspect-[16/10] w-full"
+							fitLevel="city"
+							on:markerSelect={handleMarkerSelect}
+							{getMarkerProps}
+							markerClass={markerClassResolver}
+							markerLabel={markerLabelResolver}
+						/>
 					</div>
 				</div>
 			{/if}
 
 			<!-- Main Content -->
-			<div class="container mx-auto px-6 py-8">
+			<div class="container mx-auto px-6 py-6">
 				{#if filteredCities.length === 0}
 					<div class="flex flex-col items-center justify-center py-16">
 						<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
@@ -417,26 +420,33 @@
 						</button>
 					</div>
 				{:else}
-					<!-- Cities Grid -->
-					<div
-						class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-					>
-						{#each filteredCities as city}
-							<CityCard
-								{city}
-								visited={visitedCities.some((visitedCity) => visitedCity.city === city.id)}
-								on:visit={(e) => {
-									visitedCities = [...visitedCities, e.detail];
-									numVisitedCities++;
-								}}
-								on:remove={() => {
-									visitedCities = visitedCities.filter(
-										(visitedCity) => visitedCity.city !== city.id
-									);
-									numVisitedCities--;
-								}}
-							/>
-						{/each}
+					<div class="card bg-base-100 shadow-xl overflow-hidden">
+						<div
+							class="hidden sm:grid items-center gap-3 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-base-content/50 bg-base-200/50 border-b border-base-300 city-header"
+						>
+							<span></span>
+							<span>{$t('adventures.city')}</span>
+							<span>{$t('adventures.region')}</span>
+							<span>Country</span>
+						</div>
+						<div class="divide-y divide-base-300/50">
+							{#each filteredCities as city (city.id)}
+								<CityCard
+									{city}
+									visited={visitedCities.some((visitedCity) => visitedCity.city === city.id)}
+									on:visit={(e) => {
+										visitedCities = [...visitedCities, e.detail];
+										numVisitedCities++;
+									}}
+									on:remove={() => {
+										visitedCities = visitedCities.filter(
+											(visitedCity) => visitedCity.city !== city.id
+										);
+										numVisitedCities--;
+									}}
+								/>
+							{/each}
+						</div>
 					</div>
 				{/if}
 			</div>
@@ -447,7 +457,6 @@
 			<label for="cities-drawer" class="drawer-overlay"></label>
 			<div class="w-80 min-h-full bg-base-100 shadow-2xl">
 				<div class="p-6">
-					<!-- Sidebar Header -->
 					<div class="flex items-center gap-3 mb-8">
 						<div class="p-2 bg-primary/10 rounded-lg">
 							<Filter class="w-6 h-6 text-primary" />
@@ -455,7 +464,6 @@
 						<h2 class="text-xl font-bold">{$t('worldtravel.progress_and_stats')}</h2>
 					</div>
 
-					<!-- Region Progress -->
 					<div class="card bg-base-200/50 p-4 mb-6">
 						<h3 class="font-semibold text-lg mb-4 flex items-center gap-2">
 							<CityIcon class="w-5 h-5" />
@@ -466,7 +474,6 @@
 							<div class="stat p-0">
 								<div class="stat-title text-sm">{$t('worldtravel.total_cities')}</div>
 								<div class="stat-value text-2xl">{allCities.length}</div>
-								<div class="stat-desc">{$t('worldtravel.available_to_explore')}</div>
 							</div>
 
 							<div class="grid grid-cols-2 gap-4">
@@ -480,7 +487,6 @@
 								</div>
 							</div>
 
-							<!-- Progress Bar -->
 							<div class="space-y-2">
 								<div class="flex justify-between text-sm">
 									<span>{$t('worldtravel.progress')}</span>
@@ -489,33 +495,35 @@
 								<progress
 									class="progress progress-primary w-full"
 									value={visitedCount}
-									max={allCities.length}
+									max={allCities.length || 1}
 								></progress>
 							</div>
 
 							{#if completionPercentage === 100}
-								<div class="alert alert-success">
+								<div class="alert alert-success py-2">
 									<Trophy class="w-4 h-4" />
-									<span class="text-sm">{$t('worldtravel.region_completed')}! 🎉</span>
+									<span class="text-sm">{$t('worldtravel.region_completed')}!</span>
 								</div>
 							{/if}
 						</div>
 					</div>
 
-					<!-- Quick Actions -->
-					<div class="space-y-3">
-						<button class="btn btn-outline w-full gap-2" on:click={() => (showGeo = !showGeo)}>
-							{#if showGeo}
+					{#if hasMappableCities}
+						<div class="space-y-3">
+							<button class="btn btn-outline w-full gap-2" on:click={() => (showMap = !showMap)}>
 								<Map class="w-4 h-4" />
-								{$t('worldtravel.hide_map_labels')}
-							{:else}
-								<Map class="w-4 h-4" />
-								{$t('worldtravel.show_map_labels')}
-							{/if}
-						</button>
-					</div>
+								{showMap ? $t('worldtravel.hide_map') : $t('worldtravel.show_map')}
+							</button>
+						</div>
+					{/if}
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
+
+<style>
+	.city-header {
+		grid-template-columns: 2.5rem 1fr 9rem 7rem;
+	}
+</style>

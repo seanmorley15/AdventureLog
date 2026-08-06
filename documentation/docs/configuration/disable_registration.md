@@ -1,6 +1,6 @@
 # Disable Registration
 
-To disable registration, you can set the following variable in your docker-compose.yml under the server service:
+To disable registration, you can set the following variable in your docker-compose.advanced.yml under the server service:
 
 ```yaml
 environment:

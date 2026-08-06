@@ -8,32 +8,33 @@ import gc
 import tempfile
 import sqlite3
 from contextlib import contextmanager
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 from django.conf import settings
+from adventures.utils.geo import make_point
 
 COUNTRY_REGION_JSON_VERSION = settings.COUNTRY_REGION_JSON_VERSION
-        
-media_root = settings.MEDIA_ROOT
+
+
+def coordinates_from_lon_lat(longitude, latitude):
+    if longitude is None or latitude is None:
+        return None
+    return make_point(longitude, latitude)
 
 def saveCountryFlag(country_code):
     # For standards, use the lowercase country_code
     country_code = country_code.lower()
-    flags_dir = os.path.join(media_root, 'flags')
+    flag_path = f"flags/{country_code}.png"
 
-    # Check if the flags directory exists, if not, create it
-    if not os.path.exists(flags_dir):
-        os.makedirs(flags_dir)
-
-    # Check if the flag already exists in the media folder
-    flag_path = os.path.join(flags_dir, f'{country_code}.png')
-    if os.path.exists(flag_path):
+    # Check if the flag already exists in storage
+    if default_storage.exists(flag_path):
         print(f'Flag for {country_code} already exists')
         return
 
     res = requests.get(f'https://flagcdn.com/h240/{country_code}.png'.lower())
     if res.status_code == 200:
-        with open(flag_path, 'wb') as f:
-            f.write(res.content)
+        default_storage.save(flag_path, ContentFile(res.content))
         print(f'Flag for {country_code} downloaded')
     else:
         print(f'Error downloading flag for {country_code}')
@@ -90,23 +91,21 @@ class Command(BaseCommand):
     def handle(self, **options):
         force = options['force']
         batch_size = options['batch_size']
-        countries_json_path = os.path.join(settings.MEDIA_ROOT, f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json')
+        countries_json_path = f'countries+regions+states-{COUNTRY_REGION_JSON_VERSION}.json'
         
         # Download or validate JSON file
-        if not os.path.exists(countries_json_path) or force:
+        if not default_storage.exists(countries_json_path) or force:
             self.stdout.write('Downloading JSON file...')
+            if force and default_storage.exists(countries_json_path):
+                default_storage.delete(countries_json_path)
             res = requests.get(f'https://raw.githubusercontent.com/dr5hn/countries-states-cities-database/{COUNTRY_REGION_JSON_VERSION}/json/countries%2Bstates%2Bcities.json')
             if res.status_code == 200:
-                with open(countries_json_path, 'w') as f:
-                    f.write(res.text)
+                default_storage.save(countries_json_path, ContentFile(res.content))
                 self.stdout.write(self.style.SUCCESS('JSON file downloaded successfully'))
             else:
                 self.stdout.write(self.style.ERROR('Error downloading JSON file'))
                 return
-        elif not os.path.isfile(countries_json_path):
-            self.stdout.write(self.style.ERROR('JSON file is not a file'))
-            return
-        elif os.path.getsize(countries_json_path) == 0:
+        elif default_storage.size(countries_json_path) == 0:
             self.stdout.write(self.style.ERROR('JSON file is empty'))
             return
         elif Country.objects.count() == 0 or Region.objects.count() == 0 or City.objects.count() == 0:
@@ -142,7 +141,7 @@ class Command(BaseCommand):
         region_count = 0
         city_count = 0
         
-        with open(json_path, 'rb') as f:
+        with default_storage.open(json_path, 'rb') as f:
             parser = ijson.items(f, 'item')
             
             for country in parser:
@@ -228,7 +227,7 @@ class Command(BaseCommand):
             existing_countries = {
                 c.country_code: c for c in 
                 Country.objects.filter(country_code__in=country_codes_in_batch)
-                .only('country_code', 'name', 'subregion', 'capital', 'longitude', 'latitude')
+                .only('country_code', 'name', 'subregion', 'capital', 'coordinates')
             }
             
             for row in rows:
@@ -240,8 +239,7 @@ class Command(BaseCommand):
                     country_obj.name = name
                     country_obj.subregion = subregion
                     country_obj.capital = capital
-                    country_obj.longitude = longitude
-                    country_obj.latitude = latitude
+                    country_obj.coordinates = coordinates_from_lon_lat(longitude, latitude)
                     countries_to_update.append(country_obj)
                 else:
                     countries_to_create.append(Country(
@@ -249,8 +247,7 @@ class Command(BaseCommand):
                         name=name,
                         subregion=subregion,
                         capital=capital,
-                        longitude=longitude,
-                        latitude=latitude
+                        coordinates=coordinates_from_lon_lat(longitude, latitude),
                     ))
                 
                 processed += 1
@@ -265,7 +262,7 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     Country.objects.bulk_update(
                         countries_to_update, 
-                        ['name', 'subregion', 'capital', 'longitude', 'latitude'],
+                        ['name', 'subregion', 'capital', 'coordinates'],
                         batch_size=batch_size
                     )
                 countries_to_update.clear()
@@ -282,7 +279,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 Country.objects.bulk_update(
                     countries_to_update, 
-                    ['name', 'subregion', 'capital', 'longitude', 'latitude'],
+                    ['name', 'subregion', 'capital', 'coordinates'],
                     batch_size=batch_size
                 )
         
@@ -310,7 +307,7 @@ class Command(BaseCommand):
                 r.id: r for r in 
                 Region.objects.filter(id__in=region_ids_in_batch)
                 .select_related('country')
-                .only('id', 'name', 'country', 'longitude', 'latitude')
+                .only('id', 'name', 'country', 'coordinates')
             }
             
             for row in rows:
@@ -325,16 +322,14 @@ class Command(BaseCommand):
                     region_obj = existing_regions[region_id]
                     region_obj.name = name
                     region_obj.country = country_obj
-                    region_obj.longitude = longitude
-                    region_obj.latitude = latitude
+                    region_obj.coordinates = coordinates_from_lon_lat(longitude, latitude)
                     regions_to_update.append(region_obj)
                 else:
                     regions_to_create.append(Region(
                         id=region_id,
                         name=name,
                         country=country_obj,
-                        longitude=longitude,
-                        latitude=latitude
+                        coordinates=coordinates_from_lon_lat(longitude, latitude),
                     ))
                 
                 processed += 1
@@ -349,7 +344,7 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     Region.objects.bulk_update(
                         regions_to_update, 
-                        ['name', 'country', 'longitude', 'latitude'],
+                        ['name', 'country', 'coordinates'],
                         batch_size=batch_size
                     )
                 regions_to_update.clear()
@@ -366,7 +361,7 @@ class Command(BaseCommand):
             with transaction.atomic():
                 Region.objects.bulk_update(
                     regions_to_update, 
-                    ['name', 'country', 'longitude', 'latitude'],
+                    ['name', 'country', 'coordinates'],
                     batch_size=batch_size
                 )
         
@@ -403,21 +398,19 @@ class Command(BaseCommand):
                     continue
                     
                 if city_id in existing_city_ids:
-                    # For updates, just store the data - we'll do bulk update by raw SQL
-                    cities_to_update.append({
-                        'id': city_id,
-                        'name': name,
-                        'region_id': region_obj.id,
-                        'longitude': longitude,
-                        'latitude': latitude
-                    })
+                    city_obj = City(
+                        id=city_id,
+                        name=name,
+                        region=region_obj,
+                        coordinates=coordinates_from_lon_lat(longitude, latitude),
+                    )
+                    cities_to_update.append(city_obj)
                 else:
                     cities_to_create.append(City(
                         id=city_id,
                         name=name,
                         region=region_obj,
-                        longitude=longitude,
-                        latitude=latitude
+                        coordinates=coordinates_from_lon_lat(longitude, latitude),
                     ))
                 
                 processed += 1
@@ -428,9 +421,13 @@ class Command(BaseCommand):
                     City.objects.bulk_create(cities_to_create, batch_size=batch_size, ignore_conflicts=True)
                 cities_to_create.clear()
                 
-            # Flush update batch with raw SQL for speed
             if cities_to_update:
-                self._bulk_update_cities_raw(cities_to_update)
+                with transaction.atomic():
+                    City.objects.bulk_update(
+                        cities_to_update,
+                        ['name', 'region', 'coordinates'],
+                        batch_size=batch_size,
+                    )
                 cities_to_update.clear()
                 
             if processed % 5000 == 0:
@@ -442,58 +439,14 @@ class Command(BaseCommand):
             with transaction.atomic():
                 City.objects.bulk_create(cities_to_create, batch_size=batch_size, ignore_conflicts=True)
         if cities_to_update:
-            self._bulk_update_cities_raw(cities_to_update)
+            with transaction.atomic():
+                City.objects.bulk_update(
+                    cities_to_update,
+                    ['name', 'region', 'coordinates'],
+                    batch_size=batch_size,
+                )
         
         self.stdout.write(f'✓ Cities complete: {processed} processed')
-
-    def _bulk_update_cities_raw(self, cities_data):
-        """Fast bulk update using raw SQL"""
-        if not cities_data:
-            return
-            
-        from django.db import connection
-        
-        with connection.cursor() as cursor:
-            # Build the SQL for bulk update
-            # Using CASE statements for efficient bulk updates
-            when_clauses_name = []
-            when_clauses_region = []
-            when_clauses_lng = []
-            when_clauses_lat = []
-            city_ids = []
-            
-            for city in cities_data:
-                city_id = city['id']
-                city_ids.append(city_id)
-                when_clauses_name.append(f"WHEN id = %s THEN %s")
-                when_clauses_region.append(f"WHEN id = %s THEN %s")
-                when_clauses_lng.append(f"WHEN id = %s THEN %s")
-                when_clauses_lat.append(f"WHEN id = %s THEN %s")
-            
-            # Build parameters list
-            params = []
-            for city in cities_data:
-                params.extend([city['id'], city['name']])  # for name
-            for city in cities_data:
-                params.extend([city['id'], city['region_id']])  # for region_id
-            for city in cities_data:
-                params.extend([city['id'], city['longitude']])  # for longitude
-            for city in cities_data:
-                params.extend([city['id'], city['latitude']])  # for latitude
-            params.extend(city_ids)  # for WHERE clause
-            
-            # Execute the bulk update
-            sql = f"""
-                UPDATE worldtravel_city 
-                SET 
-                    name = CASE {' '.join(when_clauses_name)} END,
-                    region_id = CASE {' '.join(when_clauses_region)} END,
-                    longitude = CASE {' '.join(when_clauses_lng)} END,
-                    latitude = CASE {' '.join(when_clauses_lat)} END
-                WHERE id IN ({','.join(['%s'] * len(city_ids))})
-            """
-            
-            cursor.execute(sql, params)
 
     def _cleanup_obsolete_records(self, temp_conn):
         """Clean up obsolete records using temporary database"""

@@ -1,8 +1,28 @@
-from adventures.models import ContentImage, ContentAttachment
+from adventures.models import Activity, ContentAttachment, ContentImage, Visit
+import posixpath
 
-from adventures.models import Visit
+PUBLIC_MEDIA_PATHS = ('profile-pics/', 'achievements/', 'flags/')
+PROTECTED_MEDIA_PATHS = ('images/', 'attachments/', 'activities/')
 
-protected_paths = ['images/', 'attachments/']
+
+def normalize_media_request_path(path):
+    if not path or '\x00' in path:
+        return None
+
+    normalized = posixpath.normpath(path)
+    if normalized in ('.', '..') or normalized.startswith('../') or normalized.startswith('/'):
+        return None
+
+    return normalized
+
+
+def is_public_media_path(path):
+    return path.startswith(PUBLIC_MEDIA_PATHS)
+
+
+def is_protected_media_path(path):
+    return path.startswith(PROTECTED_MEDIA_PATHS)
+
 
 def _check_content_object_permission(content_object, user):
     """Check if user has permission to access a content object."""
@@ -33,8 +53,8 @@ def _check_content_object_permission(content_object, user):
         return False
 
 def checkFilePermission(fileId, user, mediaType):
-    if mediaType not in protected_paths:
-        return True
+    if mediaType not in PROTECTED_MEDIA_PATHS:
+        return False
     if mediaType == 'images/':
         image_path = f"images/{fileId}"
         # Use filter() instead of get() to handle multiple ContentImage entries
@@ -56,3 +76,13 @@ def checkFilePermission(fileId, user, mediaType):
             return _check_content_object_permission(content_object, user) if content_object else False
         except ContentAttachment.DoesNotExist:
             return False
+    elif mediaType == 'activities/':
+        activity_path = f"activities/{fileId}"
+        activities = Activity.objects.filter(gpx_file=activity_path)
+        if not activities.exists():
+            return False
+        for activity in activities:
+            if activity.visit and _check_content_object_permission(activity.visit, user):
+                return True
+        return False
+    return False

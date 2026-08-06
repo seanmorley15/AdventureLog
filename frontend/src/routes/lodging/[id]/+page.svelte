@@ -14,6 +14,7 @@
 
 	import ClipboardList from '~icons/mdi/clipboard-list';
 	import ImageDisplayModal from '$lib/components/ImageDisplayModal.svelte';
+	import ImageFrame from '$lib/components/ImageFrame.svelte';
 	import AttachmentCard from '$lib/components/cards/AttachmentCard.svelte';
 	import { normalizeBasemapType, isAllDay, LODGING_TYPES_ICONS } from '$lib';
 	import Star from '~icons/mdi/star';
@@ -30,6 +31,10 @@
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import ExternalMapLinks from '$lib/components/shared/ExternalMapLinks.svelte';
+	import MapFloatingControls from '$lib/components/map/MapFloatingControls.svelte';
+	import MapTrackLayerControls from '$lib/components/map/MapTrackLayerControls.svelte';
+	import MapImagePinLayer from '$lib/components/map/MapImagePinLayer.svelte';
+	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -52,6 +57,17 @@
 	let isEditModalOpen: boolean = false;
 	let localStayWindow: string | null = null;
 	let showLocalStayTime: boolean = false;
+	let mapBasemapType = normalizeBasemapType(data.user?.map_style);
+	let showImagePins = true;
+
+	$: imagePinGeoJson = lodging
+		? contentImagesToGeoJson(lodging.images, {
+				parentType: 'lodging',
+				parentId: lodging.id,
+				parentName: lodging.name
+			})
+		: EMPTY_IMAGE_PIN_GEOJSON;
+	$: hasImagePins = imagePinGeoJson.features.length > 0;
 
 	$: lodgingPriceLabel = lodging
 		? formatMoney(
@@ -239,7 +255,9 @@
 							on:click={() => openImageModal(i)}
 							aria-label={`View full image of ${lodging.name}`}
 						>
-							<img src={image.image} class="w-full h-full object-cover" alt={lodging.name} />
+							<ImageFrame source={image.source} className="w-full h-full">
+								<img src={image.image} class="w-full h-full object-cover" alt={lodging.name} />
+							</ImageFrame>
 						</button>
 					</div>
 				{/each}
@@ -382,12 +400,25 @@
 							<h2 class="card-title text-2xl mb-4">🗺️ {$t('adventures.lodging')}</h2>
 							<div class="rounded-lg overflow-hidden shadow-lg">
 								<FullMap
-									basemapType={normalizeBasemapType(data.user?.map_style)}
+									bind:basemapType={mapBasemapType}
 									mapClass="w-full h-96"
-									standardControls
 									center={[lodging.longitude, lodging.latitude]}
 									zoom={13}
 								>
+									<div
+										slot="overlayControls"
+										let:map
+										let:fullscreenTarget
+										class="pointer-events-none absolute inset-0 z-20"
+									>
+										<MapTrackLayerControls bind:showImagePins {hasImagePins} />
+										<MapFloatingControls
+											{map}
+											{fullscreenTarget}
+											bind:basemapType={mapBasemapType}
+										/>
+									</div>
+
 									<DefaultMarker lngLat={[lodging.longitude, lodging.latitude]}>
 										<Popup openOn="click" offset={[0, -10]}>
 											<div class="p-2">
@@ -416,6 +447,8 @@
 											</div>
 										</Popup>
 									</DefaultMarker>
+
+									<MapImagePinLayer geoJson={imagePinGeoJson} visible={showImagePins} />
 								</FullMap>
 							</div>
 							{#if lodging.location}
@@ -579,14 +612,16 @@
 							<div class="grid grid-cols-2 gap-2">
 								{#each lodging.images as image, i}
 									<button
-										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity"
+										class="aspect-square rounded-lg overflow-hidden hover:opacity-80 transition-opacity w-full"
 										on:click={() => openImageModal(i)}
 									>
-										<img
-											src={image.image}
-											alt={`${lodging.name} - ${i + 1}`}
-											class="w-full h-full object-cover"
-										/>
+										<ImageFrame source={image.source} className="w-full h-full">
+											<img
+												src={image.image}
+												alt={`${lodging.name} - ${i + 1}`}
+												class="w-full h-full object-cover"
+											/>
+										</ImageFrame>
 									</button>
 								{/each}
 							</div>

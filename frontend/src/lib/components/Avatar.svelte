@@ -10,12 +10,14 @@
 	import Settings from '~icons/mdi/cog';
 	import Logout from '~icons/mdi/logout';
 	import Phone from '~icons/mdi/cellphone';
+	import CreditCard from '~icons/mdi/credit-card';
 
 	import MobileQR from '$lib/components/MobileQR.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	export let user: any;
+	export let cloudMode = false;
 
-	let letter: string = user.first_name?.[0] || user.username?.[0] || '?';
 	let showMobileQR = false;
 	let showDevMobileLogin = false;
 	let typedBuffer = '';
@@ -25,10 +27,6 @@
 	$: displayName = user.first_name
 		? `${user.first_name} ${user.last_name || ''}`.trim()
 		: user.username || 'User';
-
-	// Get initials for fallback
-	$: initials =
-		user.first_name && user.last_name ? `${user.first_name[0]}${user.last_name[0]}` : letter;
 
 	// Menu items for better organization
 	const menuItems = [
@@ -89,49 +87,40 @@
 	});
 </script>
 
-<div class="dropdown dropdown-bottom dropdown-end z-[100]">
+<div class="dropdown dropdown-bottom dropdown-end z-[999]">
 	<div
 		tabindex="0"
 		role="button"
 		class="btn btn-ghost btn-circle avatar hover:bg-base-200 transition-colors"
 	>
-		<div class="w-10 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
-			{#if user.profile_pic}
-				<img src={user.profile_pic} alt={$t('navbar.profile')} class="rounded-full object-cover" />
-			{:else}
-				<div
-					class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-content font-semibold text-sm"
-				>
-					{initials.toUpperCase()}
-				</div>
-			{/if}
+		<div
+			class="w-10 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all overflow-hidden"
+		>
+			<UserAvatar
+				{user}
+				alt={$t('navbar.profile')}
+				className="w-10 h-10 rounded-full"
+				textClass="text-sm"
+			/>
 		</div>
 	</div>
 
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<ul
 		tabindex="-1"
-		class="dropdown-content z-[100] menu p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl w-72 mt-2"
+		class="dropdown-content z-[999] menu p-4 shadow-2xl bg-base-100 border border-base-300 rounded-2xl w-72 mt-2"
 	>
 		<!-- User Info Header -->
 		<div class="px-2 py-3 mb-3 border-b border-base-300">
 			<div class="flex items-center gap-3">
 				<div class="avatar placeholder">
-					<div class="w-12 rounded-full ring-2 ring-primary/20">
-						{#if user.profile_pic}
-							<img
-								src={user.profile_pic}
-								alt={$t('navbar.profile')}
-								class="rounded-full object-cover"
-							/>
-						{:else}
-							<div
-								class="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-content font-semibold text-lg"
-								style="line-height: 3rem;"
-							>
-								{initials.toUpperCase()}
-							</div>
-						{/if}
+					<div class="w-12 rounded-full ring-2 ring-primary/20 overflow-hidden">
+						<UserAvatar
+							{user}
+							alt={$t('navbar.profile')}
+							className="w-12 h-12 rounded-full"
+							textClass="text-lg"
+						/>
 					</div>
 				</div>
 				<div class="flex-1 min-w-0">
@@ -200,6 +189,18 @@
 					</button>
 				</li>
 			{/each}
+
+			{#if cloudMode}
+				<li>
+					<button
+						class="btn btn-ghost justify-start gap-3 w-full text-left rounded-xl hover:bg-base-200"
+						on:click={() => goto('/subscribe')}
+					>
+						<CreditCard class="w-5 h-5 text-base-content/70" />
+						<span>{$t('Billing')}</span>
+					</button>
+				</li>
+			{/if}
 		</div>
 
 		<div class="divider my-2"></div>
