@@ -1,13 +1,13 @@
 services:
   app:
     # build:
-    #   context: ..
+    #   context: .
     #   dockerfile: docker/Dockerfile
     #   target: aio
     image: ghcr.io/seanmorley15/adventurelog:latest
     container_name: adventurelog
     restart: unless-stopped
-    env_file: ../.env
+    env_file: .env
     environment:
       SITE_URL: ${SITE_URL:-http://localhost:8015}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or your environment}

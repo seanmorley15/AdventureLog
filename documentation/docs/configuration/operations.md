@@ -35,10 +35,10 @@ Available actions:
 
 | Condition | Compose file | Env file |
 | --------- | ------------ | -------- |
-| Only `.env` exists | `docker/docker-compose.yml` | `.env` |
+| Only `.env` exists | `docker-compose.yml` | `.env` |
 | Only `.env.advanced` exists | `docker/docker-compose.advanced.yml` | `.env.advanced` |
 | `ADVENTURELOG_COMPOSE=advanced` with both env files | `docker/docker-compose.advanced.yml` | `.env.advanced` |
-| Otherwise | `docker/docker-compose.yml` | `.env` |
+| Otherwise | `docker-compose.yml` | `.env` |
 
 Override manually:
 
@@ -49,7 +49,7 @@ COMPOSE_FILE=docker/docker-compose.advanced.yml bash scripts/deploy.sh --backup
 Always pass `--env-file` when running `docker compose` directly:
 
 ```bash
-docker compose --env-file .env -f docker/docker-compose.yml ps
+docker compose --env-file .env ps
 ```
 
 ## Updating

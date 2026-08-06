@@ -87,9 +87,9 @@ AdventureLog/
 │   ├── Dockerfile     # Backend container
 │   └── requirements.txt # Python dependencies
 ├── docker/            # Dockerfile, compose stacks, and shared configs
-│   ├── docker-compose.yml
 │   ├── docker-compose.advanced.yml
 │   └── docker-compose.dev.yml
+├── docker-compose.yml        # Standard Deployment (single container)
 ├── k8s/               # Kubernetes / Kustomize manifests
 ├── .env.example              # Standard Deployment env template
 ├── .env.advanced.example     # Advanced Deployment env template
@@ -99,7 +99,7 @@ AdventureLog/
 ### Key Scripts and Files
 - `frontend/package.json` - Contains all frontend build scripts
 - `backend/server/manage.py` - Django management commands
-- `docker/docker-compose.yml` - Standard Deployment (single port:8015)
+- `docker-compose.yml` - Standard Deployment (single port:8015)
 - `docker/docker-compose.advanced.yml` - Advanced Deployment service definitions (frontend:8015, backend:8016, db:5432)
 - `.env` - Standard Deployment configuration (copy from .env.example)
 - `.env.advanced` - Advanced Deployment configuration (copy from .env.advanced.example)

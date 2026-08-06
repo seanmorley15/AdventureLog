@@ -4,7 +4,7 @@ AdventureLog configuration is driven by environment variables. The file you edit
 
 | Install type | Env file | Compose file |
 | ------------ | -------- | ------------ |
-| Standard Deployment | `.env` | `docker/docker-compose.yml` |
+| Standard Deployment | `.env` | `docker-compose.yml` |
 | Advanced Deployment | `.env.advanced` | `docker/docker-compose.advanced.yml` |
 | Traefik | `.env.advanced` | `docker/docker-compose.traefik.yaml` |
 | Development | `.env` | `docker/docker-compose.dev.yml` |

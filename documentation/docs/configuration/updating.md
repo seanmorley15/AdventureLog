@@ -27,8 +27,8 @@ See [Operations & Maintenance](operations.md) for compose auto-detection details
 bash scripts/backup.sh
 
 # Standard Deployment
-docker compose --env-file .env -f docker/docker-compose.yml pull
-docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
+docker compose --env-file .env pull
+docker compose --env-file .env up -d --wait
 
 # Advanced Deployment
 docker compose --env-file .env.advanced -f docker/docker-compose.advanced.yml pull

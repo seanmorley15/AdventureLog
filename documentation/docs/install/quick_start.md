@@ -39,7 +39,7 @@ During installation you can choose:
 
 | Mode | Compose file | Env file | When to use |
 | ---- | ------------ | -------- | ----------- |
-| **Standard Deployment** (default) | `docker/docker-compose.yml` | `.env` | Simplest — one port, auto-derived URLs |
+| **Standard Deployment** (default) | `docker-compose.yml` | `.env` | Simplest — one port, auto-derived URLs |
 | **Advanced Deployment** | `docker/docker-compose.advanced.yml` | `.env.advanced` | Full env control, separate frontend/backend ports |
 
 ## Management menu
@@ -68,7 +68,7 @@ From the management menu, choose **Uninstall**, or manually:
 
 ```bash
 cd adventurelog
-docker compose --env-file .env -f docker/docker-compose.yml down -v
+docker compose --env-file .env down -v
 rm -rf adventurelog
 ```
 

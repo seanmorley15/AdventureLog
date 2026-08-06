@@ -17,11 +17,11 @@ The [Advanced Deployment](docker.md) remains available for users who prefer sepa
 Most installs use Docker Compose directly:
 
 ```bash
-wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker/docker-compose.yml
+wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/docker-compose.yml
 wget https://raw.githubusercontent.com/seanmorley15/AdventureLog/main/.env.example
 cp .env.example .env
 # Edit .env — set POSTGRES_PASSWORD, then:
-docker compose --env-file .env -f docker/docker-compose.yml up -d
+docker compose --env-file .env up -d
 ```
 
 ### Guided installer (optional)
@@ -72,8 +72,8 @@ When using HTTPS behind an external reverse proxy, set `SITE_URL` to your public
 ## Updating
 
 ```bash
-docker compose --env-file .env -f docker/docker-compose.yml pull
-docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
+docker compose --env-file .env pull
+docker compose --env-file .env up -d --wait
 ```
 
 ## Image
@@ -85,7 +85,7 @@ To build locally from source:
 ```bash
 docker build -f docker/Dockerfile --target aio -t adventurelog .
 # or
-docker compose --env-file .env -f docker/docker-compose.yml build
+docker compose --env-file .env build
 ```
 
 See [`docker/README.md`](https://github.com/seanmorley15/AdventureLog/blob/main/docker/README.md) for all build targets.
@@ -95,4 +95,4 @@ See [`docker/README.md`](https://github.com/seanmorley15/AdventureLog/blob/main/
 - [Operations & Maintenance](../configuration/operations.md) — backups, updates, management menu
 - [Environment Variables](../configuration/environment_variables.md) — full reference including optional S3, OAuth, and email settings
 
-Additional options can be added to `.env` or the `environment` block in `docker/docker-compose.yml`.
+Additional options can be added to `.env` or the `environment` block in `docker-compose.yml`.

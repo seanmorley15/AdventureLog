@@ -26,7 +26,7 @@ print_pull_failure_help() {
 	echo "  • Manual pull: docker compose --env-file ${ENV_FILE} -f ${COMPOSE_FILE} pull" >&2
 	echo "" >&2
 	echo "To build from source instead, clone the full AdventureLog repo and run:" >&2
-	echo "  docker compose -f docker/docker-compose.yml build && docker compose -f docker/docker-compose.yml up -d" >&2
+	echo "  docker compose -f docker-compose.yml build && docker compose -f docker-compose.yml up -d" >&2
 	echo "" >&2
 }
 

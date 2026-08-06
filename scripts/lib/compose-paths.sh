@@ -1,5 +1,5 @@
 #!/bin/bash
-# Resolve Docker Compose file paths (supports docker/ layout and legacy locations).
+# Resolve Docker Compose file paths (root docker-compose.yml, docker/ variants, legacy locations).
 COMPOSE_DIR="${COMPOSE_DIR:-docker}"
 
 resolve_compose_file() {

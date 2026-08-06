@@ -22,14 +22,14 @@ docker buildx bake -f docker/docker-bake.hcl
 | [`docker-bake.hcl`](docker-bake.hcl) | Optional bake file for all targets |
 | [`shared/`](shared/) | nginx, supervisord, and entrypoint scripts shared across images |
 | [`aio/`](aio/) | Standard Deployment container entrypoint and env setup scripts |
-| [`docker-compose.yml`](docker-compose.yml) | Standard Deployment (single container) |
+| [`../docker-compose.yml`](../docker-compose.yml) | Standard Deployment (single container) — at repository root |
 | [`docker-compose.advanced.yml`](docker-compose.advanced.yml) | Advanced Deployment (frontend, backend, database) |
 | [`docker-compose*.yml`](docker-compose.dev.yml) | Development, Traefik, database-only, and CI stacks |
 
 Run compose files from the repository root, for example:
 
 ```bash
-docker compose --env-file .env -f docker/docker-compose.yml up -d
+docker compose --env-file .env up -d
 ```
 
 Advanced Deployment:

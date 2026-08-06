@@ -10,6 +10,7 @@ on:
       - 'docker/aio/**'
       - 'frontend/**'
       - 'docker/**'
+      - 'docker-compose.yml'
       - '.github/workflows/compose-smoke-test.yml'
   push:
     branches:
@@ -20,6 +21,7 @@ on:
       - 'docker/aio/**'
       - 'frontend/**'
       - 'docker/**'
+      - 'docker-compose.yml'
       - '.github/workflows/compose-smoke-test.yml'
 
 jobs:
@@ -43,7 +45,7 @@ jobs:
       - name: Start Standard Deployment stack
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
-          docker compose --env-file .env -f docker/docker-compose.yml up -d --wait
+          docker compose --env-file .env up -d --wait
 
       - name: Wait for health endpoint
         run: |
@@ -54,12 +56,12 @@ jobs:
             sleep 5
           done
           echo "Health check failed"
-          docker compose --env-file .env -f docker/docker-compose.yml ps
-          docker compose --env-file .env -f docker/docker-compose.yml logs
+          docker compose --env-file .env ps
+          docker compose --env-file .env logs
           exit 1
 
       - name: Tear down
         if: always()
         run: |
           printf '%s\n' 'POSTGRES_PASSWORD=smoke-test-pass' > .env
-          docker compose --env-file .env -f docker/docker-compose.yml down -v
+          docker compose --env-file .env down -v

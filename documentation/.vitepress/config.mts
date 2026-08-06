@@ -126,7 +126,7 @@ export default defineConfig({
               name: "How do I install AdventureLog?",
               acceptedAnswer: {
                 "@type": "Answer",
-                text: "Most installs use Standard Deployment — one container on port 8015 with minimal configuration. Deploy with docker/docker-compose.yml and .env, or use the optional Quick Start installer for a guided setup.",
+                text: "Most installs use Standard Deployment — one container on port 8015 with minimal configuration. Deploy with docker-compose.yml and .env, or use the optional Quick Start installer for a guided setup.",
               },
             },
             {

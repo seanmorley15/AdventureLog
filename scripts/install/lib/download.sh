@@ -59,7 +59,7 @@ copy_local_installer_libs() {
 download_standard_toolkit() {
 	log_info "Fetching Standard Deployment files"
 	mkdir -p docker scripts/lib
-	download_file "${GITHUB_RAW}/docker/docker-compose.yml" "docker/docker-compose.yml"
+	download_file "${GITHUB_RAW}/docker-compose.yml" "docker-compose.yml"
 	download_file "${GITHUB_RAW}/.env.example" ".env.example"
 	download_file "${GITHUB_RAW}/scripts/deploy.sh" "scripts/deploy.sh"
 	download_file "${GITHUB_RAW}/scripts/validate-env.sh" "scripts/validate-env.sh"
