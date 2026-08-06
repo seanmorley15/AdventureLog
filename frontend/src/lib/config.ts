@@ -1,4 +1,4 @@
-export let appVersion = 'v0.13.0-beta-080126';
+export let appVersion = 'v0.13.0-main-080626';
 export let appCodename = 'Acadia';
 export let versionChangelog = 'https://github.com/seanmorley15/AdventureLog/releases/tag/v0.13.0';
 export let appTitle = 'AdventureLog';
