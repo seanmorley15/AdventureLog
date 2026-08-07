@@ -830,6 +830,7 @@
 			"boat": "Barca",
 			"bus": "Autobus",
 			"car": "Auto",
+			"motorcycle": "Motocicletta",
 			"other": "Altro",
 			"plane": "Aereo",
 			"train": "Treno",

@@ -297,6 +297,9 @@
 		if (normalized.includes('walk')) {
 			return { key: 'walk', icon: '🚶', label: 'Walking' };
 		}
+		if (normalized.includes('motorcycle')) {
+			return { key: 'motorcycle', icon: '🏍️', label: 'Motorcycle' };
+		}
 		if (normalized.includes('bike') || normalized.includes('cycle')) {
 			return { key: 'bike', icon: '🚴', label: 'Cycling' };
 		}

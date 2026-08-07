@@ -831,6 +831,7 @@
 		"edit": "Rediger",
 		"modes": {
 			"car": "Bil",
+			"motorcycle": "Motorsykkel",
 			"plane": "Fly",
 			"train": "Tog",
 			"bus": "Buss",

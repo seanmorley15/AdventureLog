@@ -202,6 +202,7 @@ def _transportation_events(user, range_start: date | None, range_end: date | Non
         'train': '🚆',
         'bus': '🚌',
         'car': '🚗',
+        'motorcycle': '🏍️',
         'boat': '🚢',
     }
 

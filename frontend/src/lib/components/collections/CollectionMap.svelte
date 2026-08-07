@@ -162,6 +162,7 @@
 			return '✈️';
 		if (normalized.includes('train')) return '🚆';
 		if (normalized.includes('bus')) return '🚌';
+		if (normalized.includes('motorcycle')) return '🏍️';
 		if (normalized.includes('car') || normalized.includes('drive') || normalized.includes('taxi'))
 			return '🚗';
 		if (normalized.includes('boat') || normalized.includes('ferry')) return '⛴️';
