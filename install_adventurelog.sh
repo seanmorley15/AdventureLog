@@ -75,6 +75,7 @@ bootstrap_and_source_libs() {
 		local cache_dir
 		cache_dir="$(mktemp -d 2>/dev/null || echo "/tmp/adventurelog-installer-$$")"
 		mkdir -p "$cache_dir"
+		# Installer libs plus compose-paths.sh (normally under scripts/lib/).
 		local files=(
 			common.sh ui.sh tui.sh checks.sh download.sh deploy.sh
 			standard-config.sh advanced-config.sh manage.sh features.sh main.sh
@@ -87,6 +88,11 @@ bootstrap_and_source_libs() {
 				exit 1
 			}
 		done
+		curl -fsSL "${GITHUB_RAW}/scripts/lib/compose-paths.sh" -o "${cache_dir}/compose-paths.sh" || {
+			echo "ERROR: Failed to download scripts/lib/compose-paths.sh" >&2
+			echo "       Check ADVENTURELOG_REF=${ADVENTURELOG_REF} and your network connection." >&2
+			exit 1
+		}
 		INSTALLER_LIB_DIR="$cache_dir"
 	fi
 
