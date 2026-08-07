@@ -52,6 +52,21 @@ jobs:
           bash scripts/validate-env.sh adventurelog-installer-test/.env
           rm -rf adventurelog-installer-test
 
+      - name: Curl-style flat lib bootstrap (no repo-relative paths)
+        run: |
+          # Mimic curl | bash: libs land in a flat temp dir with compose-paths.sh beside them
+          cache="$(mktemp -d)"
+          cp scripts/install/lib/*.sh "$cache/"
+          cp scripts/lib/compose-paths.sh "$cache/compose-paths.sh"
+          INSTALLER_LIB_DIR="$cache" bash -euo pipefail -c '
+            source "$INSTALLER_LIB_DIR/common.sh"
+            resolve_compose_settings
+            test "$COMPOSE_FILE" = "docker-compose.yml" -o "$COMPOSE_FILE" = "docker/docker-compose.yml"
+            test "$ENV_FILE" = ".env"
+            type resolve_compose_file >/dev/null
+          '
+          rm -rf "$cache"
+
   validate-env-aio:
     name: validate-env.sh Standard Deployment checks
     runs-on: ubuntu-latest

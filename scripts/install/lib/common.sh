@@ -3,10 +3,48 @@
 # shellcheck disable=SC2034
 set -euo pipefail
 
-_COMPOSE_PATHS="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../lib" && pwd)/compose-paths.sh"
-if [[ -f "$_COMPOSE_PATHS" ]]; then
-	# shellcheck disable=SC1090
-	source "$_COMPOSE_PATHS"
+# compose-paths.sh lives in scripts/lib/ in the repo. Curl bootstrap copies it
+# next to the installer libs in a temp dir (INSTALLER_LIB_DIR).
+_source_compose_paths() {
+	local candidates=()
+	local here lib_dir candidate
+	here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+	candidates+=("${INSTALLER_LIB_DIR:-}/compose-paths.sh")
+	candidates+=("${here}/compose-paths.sh")
+	if lib_dir="$(cd "${here}/../../lib" 2>/dev/null && pwd)"; then
+		candidates+=("${lib_dir}/compose-paths.sh")
+	fi
+	candidates+=("${REPO_ROOT:-}/scripts/lib/compose-paths.sh")
+	for candidate in "${candidates[@]}"; do
+		if [[ -n "$candidate" && -f "$candidate" ]]; then
+			# shellcheck disable=SC1090
+			source "$candidate"
+			return 0
+		fi
+	done
+	return 1
+}
+
+# Minimal fallback when libs were bootstrapped into a flat temp dir without
+# compose-paths.sh (older installer entrypoints). Keep in sync with scripts/lib/compose-paths.sh.
+_install_compose_paths_fallback() {
+	COMPOSE_DIR="${COMPOSE_DIR:-docker}"
+	resolve_compose_file() {
+		local filename="$1"
+		if [[ -f "$filename" ]]; then
+			printf '%s\n' "$filename"
+		elif [[ -f "${COMPOSE_DIR}/${filename}" ]]; then
+			printf '%s\n' "${COMPOSE_DIR}/${filename}"
+		elif [[ -f "compose/${filename}" ]]; then
+			printf '%s\n' "compose/${filename}"
+		else
+			printf '%s\n' "${COMPOSE_DIR}/${filename}"
+		fi
+	}
+}
+
+if ! _source_compose_paths; then
+	_install_compose_paths_fallback
 fi
 
 APP_NAME="AdventureLog"

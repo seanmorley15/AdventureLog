@@ -59,6 +59,8 @@ Options include status, update, reconfigure, backup, restore, logs, restart, and
 Preview what the installer would do without making changes:
 
 ```bash
+curl -sSL https://get.adventurelog.app | bash -s -- --dry-run --force-install
+# or from a repo checkout:
 ADVENTURELOG_SKIP_GUM=1 bash install_adventurelog.sh --dry-run --force-install
 ```
 
