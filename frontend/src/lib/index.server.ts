@@ -5,6 +5,11 @@ export {
 	type PasswordPolicy
 } from '$lib/server/password-policy';
 export {
+	fetchSignupLegalLinks,
+	signupLegalRequired,
+	type SignupLegalLinks
+} from '$lib/server/signup-legal';
+export {
 	mapAllauthPasswordError,
 	mapSignupError,
 	type PasswordFormError

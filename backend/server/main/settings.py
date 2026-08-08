@@ -278,6 +278,8 @@ ALLAUTH_UI_THEME = "dim"
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
+TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
+PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()
 
 SOCIALACCOUNT_ALLOW_SIGNUP = getenv('SOCIALACCOUNT_ALLOW_SIGNUP', 'false').lower() == 'true'
 

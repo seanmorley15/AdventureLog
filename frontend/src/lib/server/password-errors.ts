@@ -63,6 +63,9 @@ export function mapSignupError(
 	}
 
 	const code = response.errors?.[0]?.code;
+	if (code === 'required' && response.errors?.[0]?.param === 'accept_terms') {
+		return { message: 'auth.terms_acceptance_required' };
+	}
 	if (code) {
 		return { message: `auth.${code}` };
 	}

@@ -2,7 +2,13 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
-import { fetchPasswordPolicy, isPasswordLongEnough, mapSignupError } from '$lib/index.server';
+import {
+	fetchPasswordPolicy,
+	fetchSignupLegalLinks,
+	isPasswordLongEnough,
+	mapSignupError,
+	signupLegalRequired
+} from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -14,6 +20,7 @@ export const load: PageServerLoad = async (event) => {
 	let is_disabled_json = await is_disabled_fetch.json();
 	let is_disabled = is_disabled_json.is_disabled;
 	const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
+	const signupLegalLinks = await fetchSignupLegalLinks(event.fetch, serverEndpoint);
 	const quote = getRandomQuote();
 	const background = getRandomBackground();
 
@@ -22,6 +29,7 @@ export const load: PageServerLoad = async (event) => {
 			is_disabled: is_disabled,
 			is_disabled_message: is_disabled_json.message,
 			passwordPolicy,
+			signupLegalLinks,
 			quote,
 			background
 		}
@@ -36,11 +44,13 @@ export const actions: Actions = {
 		const email = formData.get('email');
 		const first_name = formData.get('first_name');
 		const last_name = formData.get('last_name');
+		const acceptTerms = formData.get('accept_terms') === 'on';
 
 		let username = formUsername?.toString().toLocaleLowerCase();
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 		const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
+		const signupLegalLinks = await fetchSignupLegalLinks(event.fetch, serverEndpoint);
 		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
 
 		if (!csrfTokenFetch.ok) {
@@ -59,6 +69,10 @@ export const actions: Actions = {
 			});
 		}
 
+		if (signupLegalRequired(signupLegalLinks) && !acceptTerms) {
+			return fail(400, { message: 'auth.terms_acceptance_required' });
+		}
+
 		const tokenPromise = await csrfTokenFetch.json();
 		const csrfToken = tokenPromise.csrfToken;
 
@@ -75,7 +89,8 @@ export const actions: Actions = {
 				password: password1,
 				email: email,
 				first_name,
-				last_name
+				last_name,
+				accept_terms: acceptTerms
 			})
 		});
 		const loginResponse = await loginFetch.json();

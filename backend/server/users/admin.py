@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.sessions.models import Session
+from django.utils.html import format_html_join
 from allauth.account.decorators import secure_admin_login
 
 from main.admin_utils import TIMESTAMP_READONLY, admin_image_preview
+from users.legal import legal_links_required
 from users.models import APIKey, CustomUser
 
 admin.site.login = secure_admin_login(admin.site.login)
@@ -35,8 +37,22 @@ class CustomUserAdmin(UserAdmin):
     )
     search_fields = ('username', 'email', 'first_name', 'last_name', 'uuid')
     ordering = ('username',)
-    readonly_fields = ('uuid', 'profile_preview_large', 'last_login', 'date_joined')
+    readonly_fields = ('uuid', 'profile_preview_large', 'last_login', 'date_joined', 'legal_consent_display')
     filter_horizontal = ('groups', 'user_permissions')
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = list(super().get_fieldsets(request, obj))
+        if legal_links_required() or (obj and obj.legal_consent):
+            fieldsets.append(
+                (
+                    'Legal consent',
+                    {
+                        'fields': ('legal_consent_display',),
+                        'classes': ('collapse',),
+                    },
+                )
+            )
+        return fieldsets
 
     fieldsets = UserAdmin.fieldsets + (
         (
@@ -65,6 +81,20 @@ class CustomUserAdmin(UserAdmin):
     @admin.display(description='Profile picture')
     def profile_preview_large(self, obj):
         return admin_image_preview(obj.profile_pic, 120, 120)
+
+    @admin.display(description='Signup consent')
+    def legal_consent_display(self, obj):
+        if not obj.legal_consent:
+            return '—'
+        data = obj.legal_consent
+        lines = []
+        if data.get('accepted_at'):
+            lines.append(f"Accepted: {data['accepted_at']}")
+        if data.get('terms_of_service_url'):
+            lines.append(f"Terms: {data['terms_of_service_url']}")
+        if data.get('privacy_policy_url'):
+            lines.append(f"Privacy: {data['privacy_policy_url']}")
+        return format_html_join('<br>', '{}', ((line,) for line in lines))
 
 
 @admin.register(APIKey)

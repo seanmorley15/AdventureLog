@@ -3,6 +3,56 @@ from .models import CustomUser
 from uuid import UUID
 
 from allauth.account.models import EmailAddress
+from django.test import override_settings
+
+
+class SignupLegalLinksTestCase(APITestCase):
+    @override_settings(
+        TERMS_OF_SERVICE_URL='https://example.com/terms',
+        PRIVACY_POLICY_URL='https://example.com/privacy',
+    )
+    def test_signup_legal_links_endpoint_returns_configured_urls(self):
+        response = self.client.get('/auth/signup-legal-links/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['terms_of_service_url'], 'https://example.com/terms')
+        self.assertEqual(data['privacy_policy_url'], 'https://example.com/privacy')
+
+    @override_settings(
+        TERMS_OF_SERVICE_URL='https://example.com/terms',
+        PRIVACY_POLICY_URL='https://example.com/privacy',
+    )
+    def test_signup_rejects_missing_terms_acceptance(self):
+        response = self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'termsuser',
+            'email': 'termsuser@example.com',
+            'password': 'testpassword',
+            'first_name': 'Terms',
+            'last_name': 'User',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(CustomUser.objects.filter(username='termsuser').exists())
+
+    @override_settings(
+        TERMS_OF_SERVICE_URL='https://example.com/terms',
+        PRIVACY_POLICY_URL='https://example.com/privacy',
+    )
+    def test_signup_accepts_terms_acceptance(self):
+        response = self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'termsaccepted',
+            'email': 'termsaccepted@example.com',
+            'password': 'testpassword',
+            'first_name': 'Terms',
+            'last_name': 'Accepted',
+            'accept_terms': True,
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+        user = CustomUser.objects.get(username='termsaccepted')
+        self.assertTrue(user.legal_consent)
+        self.assertEqual(user.legal_consent['terms_of_service_url'], 'https://example.com/terms')
+        self.assertEqual(user.legal_consent['privacy_policy_url'], 'https://example.com/privacy')
+        self.assertIn('accepted_at', user.legal_consent)
+
 
 class UserAPITestCase(APITestCase):
     
@@ -89,6 +139,13 @@ class PasswordPolicyTestCase(APITestCase):
         data = response.json()
         self.assertEqual(data['min_length'], 6)
         self.assertFalse(data['validators_enabled'])
+
+    def test_signup_legal_links_endpoint_returns_empty_by_default(self):
+        response = self.client.get('/auth/signup-legal-links/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertIsNone(data['terms_of_service_url'])
+        self.assertIsNone(data['privacy_policy_url'])
 
     def test_signup_rejects_password_below_min_length(self):
         response = self.client.post('/auth/browser/v1/auth/signup', {

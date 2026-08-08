@@ -631,7 +631,12 @@
 		"totp": "Two-Factor or Recovery Code",
 		"totp_placeholder": "000000 or 12345678",
 		"totp_hint": "Enter a 6-digit authenticator code or an 8-digit recovery code.",
-		"logging_in": "Logging in"
+		"logging_in": "Logging in",
+		"terms_of_service": "Terms of Service",
+		"privacy_policy": "Privacy Policy",
+		"agree_to_prefix": "I agree to the",
+		"and": "and",
+		"terms_acceptance_required": "You must accept the terms to create an account."
 	},
 	"users": {
 		"no_users_found": "No users found with public profiles.",

@@ -6,6 +6,8 @@
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
 	import type { Background } from '$lib/types.js';
+	import { signupLegalRequired, type SignupLegalLinks } from '$lib/signup-legal';
+	import type { PasswordPolicy } from '$lib/password-policy';
 
 	export let data;
 
@@ -13,11 +15,14 @@
 	let background: Background = data.props.background;
 	let is_disabled = data.props.is_disabled as boolean;
 	let is_disabled_message = data.props.is_disabled_message as string;
-	let passwordPolicy = data.props.passwordPolicy;
+	let passwordPolicy = data.props.passwordPolicy as PasswordPolicy;
+	let signupLegalLinks = data.props.signupLegalLinks as SignupLegalLinks;
+	let legalRequired = signupLegalRequired(signupLegalLinks);
 
 	let isImageInfoModalOpen = false;
 	let password = '';
 	let confirmPassword = '';
+	let acceptedTerms = false;
 </script>
 
 {#if isImageInfoModalOpen}
@@ -146,8 +151,52 @@
 
 										<PasswordRequirements policy={passwordPolicy} {password} />
 
+										{#if legalRequired}
+											<div class="form-control">
+												<label class="label cursor-pointer justify-start gap-3 items-start py-2">
+													<input
+														type="checkbox"
+														name="accept_terms"
+														class="checkbox checkbox-primary mt-0.5"
+														bind:checked={acceptedTerms}
+														required
+													/>
+													<span class="label-text text-left leading-snug">
+														{$t('auth.agree_to_prefix')}
+														{#if signupLegalLinks.terms_of_service_url}
+															<a
+																href={signupLegalLinks.terms_of_service_url}
+																target="_blank"
+																rel="noopener noreferrer"
+																class="link link-primary"
+															>
+																{$t('auth.terms_of_service')}
+															</a>
+														{/if}
+														{#if signupLegalLinks.terms_of_service_url && signupLegalLinks.privacy_policy_url}
+															{$t('auth.and')}
+														{/if}
+														{#if signupLegalLinks.privacy_policy_url}
+															<a
+																href={signupLegalLinks.privacy_policy_url}
+																target="_blank"
+																rel="noopener noreferrer"
+																class="link link-primary"
+															>
+																{$t('auth.privacy_policy')}
+															</a>
+														{/if}
+													</span>
+												</label>
+											</div>
+										{/if}
+
 										<div class="form-control mt-6">
-											<button type="submit" class="btn btn-primary w-full">
+											<button
+												type="submit"
+												class="btn btn-primary w-full"
+												disabled={legalRequired && !acceptedTerms}
+											>
 												{$t('auth.signup')}
 											</button>
 										</div>

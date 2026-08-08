@@ -84,6 +84,26 @@ class PasswordPolicyView(APIView):
             status=status.HTTP_200_OK,
         )
 
+
+class SignupLegalLinksView(APIView):
+    # Used by the signup page to show optional terms/privacy acceptance.
+    throttle_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Signup legal link configuration'),
+        },
+        operation_description="Get configured Terms of Service and Privacy Policy URLs."
+    )
+    def get(self, request):
+        return Response(
+            {
+                "terms_of_service_url": settings.TERMS_OF_SERVICE_URL or None,
+                "privacy_policy_url": settings.PRIVACY_POLICY_URL or None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 class PublicUserListView(APIView):
     # Allow the listing of all public users
     permission_classes = []
