@@ -1146,9 +1146,9 @@
 		"verify_email_success": "La verificació del correu electrònic s'ha enviat correctament!",
 		"verify_setup": "Verifiqueu la configuració",
 		"whats_included": "Què inclou",
-		"world_travel_visits": "Visites de viatges al món"
+		"world_travel_visits": "Visites de viatges al món",
+		"download_backup": "Descarrega la còpia de seguretat"
 	},
-	"settings_download_backup": "Descarrega la còpia de seguretat",
 	"share": {
 		"available": "Disponible",
 		"available_users": "Usuaris disponibles",

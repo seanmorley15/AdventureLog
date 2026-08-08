@@ -195,3 +195,40 @@ class LoginByEmailTestCase(APITestCase):
             'password': 'testpassword',
         }, format='json')
         self.assertEqual(response.status_code, 200)
+
+
+class ServerSignupRedirectTestCase(APITestCase):
+    @override_settings(FRONTEND_URL='http://localhost:3000')
+    def test_server_signup_page_redirects_to_frontend(self):
+        response = self.client.get('/accounts/signup/')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'http://localhost:3000/signup')
+
+    @override_settings(FRONTEND_URL='http://localhost:3000')
+    def test_server_signup_page_preserves_query_string(self):
+        response = self.client.get('/accounts/signup/?invite_key=abc123')
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'http://localhost:3000/signup?invite_key=abc123')
+
+    def test_headless_signup_still_works_when_registration_enabled(self):
+        response = self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'frontenduser',
+            'email': 'frontenduser@example.com',
+            'password': 'testpassword',
+            'first_name': 'Frontend',
+            'last_name': 'User',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(CustomUser.objects.filter(username='frontenduser').exists())
+
+    @override_settings(FRONTEND_URL='http://localhost:3000')
+    def test_server_signup_post_is_not_allowed(self):
+        response = self.client.post('/accounts/signup/', {
+            'username': 'serveruser',
+            'email': 'serveruser@example.com',
+            'password1': 'testpassword',
+            'password2': 'testpassword',
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response['Location'], 'http://localhost:3000/signup')
+        self.assertFalse(CustomUser.objects.filter(username='serveruser').exists())

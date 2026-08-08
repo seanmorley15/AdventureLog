@@ -769,7 +769,8 @@
 		"public_profile_invite_warning": "Máte {count} nevybavených pozvánok do zbierky. Ak nastavíte svoj profil ako súkromný, tieto pozvánky sa zrušia.",
 		"public_profile_private_confirm": "Ak nastavíte svoj profil ako súkromný, budete odstránení zo {shared} zdieľaných zbierok a zrušia sa {invites} nevybavené pozvánky. Chcete pokračovať?",
 		"public_profile_left_collections": "Váš profil je teraz súkromný. Boli ste odstránení z {count} zdieľaných zbierok.",
-		"public_profile_revoked_invites": "Zrušilo sa {count} nevybavených pozvánok do zbierky."
+		"public_profile_revoked_invites": "Zrušilo sa {count} nevybavených pozvánok do zbierky.",
+		"download_backup": "Stiahnuť zálohu"
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",
@@ -1246,7 +1247,6 @@
 		"my_locations": "Moje miesta",
 		"best_happened_at": "Najlepšie sa stalo o"
 	},
-	"settings_download_backup": "Stiahnuť zálohu",
 	"invites": {
 		"accepted": "Pozvánka prijatá",
 		"accept_failed": "Nepodarilo sa prijať pozvánku",

@@ -1045,9 +1045,9 @@
 		"media_profile_pics": "Фотографії профілю",
 		"media_storage": "Зберігання медіа",
 		"media_storage_desc": "Використання пам’яті для ваших завантажених зображень і вкладень.",
-		"media_total_used": "Всього використано"
+		"media_total_used": "Всього використано",
+		"download_backup": "Завантажте резервну копію"
 	},
-	"settings_download_backup": "Завантажте резервну копію",
 	"share": {
 		"available": "в наявності",
 		"available_users": "Доступні користувачі",

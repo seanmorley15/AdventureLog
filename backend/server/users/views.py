@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ChangeEmailSerializer, APIKeySerializer, APIKeyCreateSerializer
+from .serializers import ChangeEmailSerializer, APIKeySerializer, APIKeyCreateSerializer, DeleteAccountSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.conf import settings
@@ -21,6 +21,9 @@ import io
 import base64
 import json
 from datetime import datetime
+
+from django.contrib.auth import logout
+from users.services.account_deletion import AccountDeletionError, delete_user_account
 
 User = get_user_model()
 
@@ -512,4 +515,46 @@ class MobileQRCodeView(APIView):
             )
 
         mobile_key.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteAccountView(APIView):
+    """
+    POST /auth/delete-account/
+
+    Permanently delete the authenticated user's account and all associated data.
+    Cancels any active Stripe subscription in cloud mode before removing the user.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=DeleteAccountSerializer,
+        responses={
+            204: "Account deleted.",
+            400: "Invalid confirmation or password.",
+            403: "Staff accounts cannot be self-deleted.",
+            502: "Stripe billing cleanup failed.",
+        },
+        operation_description="Permanently delete the authenticated user's account.",
+    )
+    def post(self, request):
+        user = request.user
+
+        if user.is_staff or user.is_superuser:
+            return Response(
+                {"detail": "Staff accounts cannot be deleted via self-service."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = DeleteAccountSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            delete_user_account(user)
+        except AccountDeletionError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

@@ -427,5 +427,54 @@ export const actions: Actions = {
 			console.error('Restore error:', error);
 			return fail(500, { message: 'settings.generic_error' });
 		}
+	},
+	deleteAccount: async (event) => {
+		if (!event.locals.user) {
+			return redirect(302, '/');
+		}
+		const sessionId = event.cookies.get('sessionid');
+		if (!sessionId) {
+			return redirect(302, '/');
+		}
+
+		const formData = await event.request.formData();
+		const confirmation = (formData.get('confirmation') as string | null)?.trim() ?? '';
+		const password = (formData.get('password') as string | null)?.trim() ?? '';
+
+		const csrfToken = await fetchCSRFToken();
+		const body: { confirmation: string; password?: string } = { confirmation };
+		if (password) {
+			body.password = password;
+		}
+
+		const res = await fetch(`${endpoint}/auth/delete-account/`, {
+			method: 'POST',
+			headers: {
+				Referer: event.url.origin,
+				Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
+				'X-CSRFToken': csrfToken,
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(body)
+		});
+
+		if (res.status === 204) {
+			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+			throw redirect(303, '/');
+		}
+
+		const error = await res.json().catch(() => ({}));
+		if (error.confirmation || error.password) {
+			const messages = [error.confirmation, error.password].filter(Boolean).flat();
+			return fail(res.status, {
+				deleteAccountError: messages[0] || 'settings.delete_account_error'
+			});
+		}
+		if (res.status === 403) {
+			return fail(403, { deleteAccountError: 'settings.delete_account_staff_blocked' });
+		}
+		return fail(res.status, {
+			deleteAccountError: error.detail || 'settings.delete_account_error'
+		});
 	}
 };

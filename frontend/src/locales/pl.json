@@ -745,7 +745,8 @@
 		"media_total_used": "Łącznie wykorzystane",
 		"media_profile_pics": "Zdjęcia profilowe",
 		"media_files": "pliki",
-		"media_storage": "Przechowywanie multimediów"
+		"media_storage": "Przechowywanie multimediów",
+		"download_backup": "Pobierz kopię zapasową"
 	},
 	"collection": {
 		"collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -1154,7 +1155,6 @@
 		"my_locations": "Moje lokalizacje",
 		"best_happened_at": "Najlepsze wydarzyło się o godz"
 	},
-	"settings_download_backup": "Pobierz kopię zapasową",
 	"invites": {
 		"accept": "Przyjąć",
 		"accept_failed": "Nie udało się zaakceptować zaproszenia",

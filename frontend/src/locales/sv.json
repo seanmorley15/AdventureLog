@@ -754,7 +754,8 @@
 		"media_storage_desc": "Lagringsanvändning för dina uppladdade bilder och bilagor.",
 		"media_total_used": "Totalt använt",
 		"media_profile_pics": "Profilbilder",
-		"media_files": "filer"
+		"media_files": "filer",
+		"download_backup": "Ladda ner säkerhetskopiering"
 	},
 	"checklist": {
 		"checklist_delete_error": "Ett fel uppstod vid borttagning av checklista",
@@ -1163,7 +1164,6 @@
 		"my_locations": "Mina platser",
 		"best_happened_at": "Bäst hände kl"
 	},
-	"settings_download_backup": "Ladda ner säkerhetskopiering",
 	"invites": {
 		"accept": "Acceptera",
 		"accept_failed": "Det gick inte att acceptera inbjudan",

@@ -746,7 +746,8 @@
 		"media_profile_pics": "个人资料图片",
 		"media_storage": "媒体存储",
 		"media_storage_desc": "您上传的图像和附件的存储使用情况。",
-		"media_total_used": "已使用总量"
+		"media_total_used": "已使用总量",
+		"download_backup": "下载备份"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",
@@ -1155,7 +1156,6 @@
 		"my_locations": "我的地点",
 		"best_happened_at": "最好的事情发生在"
 	},
-	"settings_download_backup": "下载备份",
 	"invites": {
 		"accept": "接受",
 		"accept_failed": "未能接受邀请",

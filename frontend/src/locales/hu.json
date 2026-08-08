@@ -745,7 +745,8 @@
 		"media_profile_pics": "Profil képek",
 		"media_storage": "Médiatárolás",
 		"media_storage_desc": "A feltöltött képek és mellékletek tárhelyhasználata.",
-		"media_total_used": "Összesen használt"
+		"media_total_used": "Összesen használt",
+		"download_backup": "Biztonsági mentés letöltése"
 	},
 	"collection": {
 		"collection_created": "A gyűjtemény sikeresen létrehozva!",
@@ -1154,7 +1155,6 @@
 		"my_locations": "Saját helyek",
 		"best_happened_at": "Legjobb az történt"
 	},
-	"settings_download_backup": "Biztonsági mentés letöltése",
 	"invites": {
 		"accepted": "Meghívó elfogadva",
 		"accept_failed": "Nem sikerült elfogadni a meghívót",

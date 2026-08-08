@@ -1277,9 +1277,9 @@
 				"overpass_features": "Usado para recomendações de mapa e como alternativa de recurso quando o Google está indisponível."
 			}
 		},
-		"invalid_code": "Código inválido"
+		"invalid_code": "Código inválido",
+		"download_backup": "Descarregar cópia de segurança"
 	},
-	"settings_download_backup": "Descarregar cópia de segurança",
 	"share": {
 		"available": "Disponível",
 		"available_users": "Utilizadores disponíveis",

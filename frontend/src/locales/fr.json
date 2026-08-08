@@ -819,7 +819,8 @@
 				"overpass_desc": "Fournit des recommandations de proximité à partir des données OpenStreetMap.",
 				"overpass_features": "Utilisé pour les recommandations de cartes et comme solution de repli lorsque Google n'est pas disponible."
 			}
-		}
+		},
+		"download_backup": "Télécharger la sauvegarde"
 	},
 	"checklist": {
 		"checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",
@@ -1296,7 +1297,6 @@
 		"my_locations": "Mes emplacements",
 		"best_happened_at": "Le mieux s'est passé à"
 	},
-	"settings_download_backup": "Télécharger la sauvegarde",
 	"invites": {
 		"accept_failed": "Échec de l'acceptation de l'invitation",
 		"accepted": "Inviter accepté",

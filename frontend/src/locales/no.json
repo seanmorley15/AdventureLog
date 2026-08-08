@@ -745,7 +745,8 @@
 		"media_profile_pics": "Profilbilder",
 		"media_storage": "Medielagring",
 		"media_storage_desc": "Lagringsbruk for dine opplastede bilder og vedlegg.",
-		"media_total_used": "Totalt brukt"
+		"media_total_used": "Totalt brukt",
+		"download_backup": "Last ned sikkerhetskopi"
 	},
 	"collection": {
 		"collection_created": "Samling opprettet!",
@@ -1154,7 +1155,6 @@
 		"my_locations": "Mine lokasjoner",
 		"best_happened_at": "Best skjedde kl"
 	},
-	"settings_download_backup": "Last ned sikkerhetskopi",
 	"invites": {
 		"accept": "Akseptere",
 		"accept_failed": "Kunne ikke godta invitasjon",

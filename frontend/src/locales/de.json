@@ -769,7 +769,8 @@
 		"public_profile_invite_warning": "Du hast {count} ausstehende Sammlungseinladung(en). Wenn du dein Profil auf Privat stellst, wird diese stornieren.",
 		"public_profile_private_confirm": "Wenn du dein Profil auf Privat stellst wirst du von {shared} geteilten Sammlung(en) entfernt und {invites} ausstehende Einladung(en) werden storniert. Fortfahren?",
 		"public_profile_left_collections": "Dein Profil ist jetzt privat. Du wurdest von {count} geteiltenSammlung(en) entfernt.",
-		"public_profile_revoked_invites": "{count} ausstehende Sammlungseinladung(en) storniert."
+		"public_profile_revoked_invites": "{count} ausstehende Sammlungseinladung(en) storniert.",
+		"download_backup": "Sicherung herunterladen"
 	},
 	"checklist": {
 		"checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -1246,7 +1247,6 @@
 		"my_locations": "Meine Standorte",
 		"best_happened_at": "Das Beste ist passiert bei"
 	},
-	"settings_download_backup": "Sicherung herunterladen",
 	"invites": {
 		"accept": "Akzeptieren",
 		"accept_failed": "Fehler beim Akzeptieren der Einladung",

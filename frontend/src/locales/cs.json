@@ -1146,9 +1146,9 @@
 		"verify_email_success": "Ověření e-mailu bylo úspěšně odesláno!",
 		"verify_setup": "Ověřte nastavení",
 		"whats_included": "Co je zahrnuto",
-		"world_travel_visits": "Cestování po světě"
+		"world_travel_visits": "Cestování po světě",
+		"download_backup": "Stáhněte si zálohu"
 	},
-	"settings_download_backup": "Stáhněte si zálohu",
 	"share": {
 		"available": "K dispozici",
 		"available_users": "Dostupní uživatelé",

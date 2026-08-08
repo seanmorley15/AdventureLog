@@ -1122,9 +1122,9 @@
 		"media_profile_pics": "Poze de profil",
 		"media_storage": "Stocare media",
 		"media_storage_desc": "Utilizarea stocării pentru imaginile și atașamentele încărcate.",
-		"media_total_used": "Total folosit"
+		"media_total_used": "Total folosit",
+		"download_backup": "Descărcați Backup"
 	},
-	"settings_download_backup": "Descărcați Backup",
 	"share": {
 		"available": "Disponibil",
 		"available_users": "Utilizatori disponibili",

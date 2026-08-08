@@ -1045,9 +1045,9 @@
 		"media_profile_pics": "プロフィール写真",
 		"media_storage": "メディアストレージ",
 		"media_storage_desc": "アップロードした画像と添付ファイルのストレージ使用量。",
-		"media_total_used": "使用合計"
+		"media_total_used": "使用合計",
+		"download_backup": "バックアップをダウンロードします"
 	},
-	"settings_download_backup": "バックアップをダウンロードします",
 	"share": {
 		"available": "利用可能",
 		"no_users_shared": "共有するユーザーはいません",

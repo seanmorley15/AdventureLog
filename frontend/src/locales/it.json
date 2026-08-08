@@ -745,7 +745,8 @@
 		"use_imperial": "Usa le unità imperiali",
 		"use_imperial_desc": "Usa unità imperiali (piedi, pollici, chili) anziché unità metriche",
 		"map_style_desc": "Utilizzata come mappa di base predefinita su tutte le mappe.",
-		"preferred_currency_desc": "Questa valuta precompila i campi denaro quando si aggiungono nuovi articoli."
+		"preferred_currency_desc": "Questa valuta precompila i campi denaro quando si aggiungono nuovi articoli.",
+		"download_backup": "Scarica il backup"
 	},
 	"checklist": {
 		"checklist_delete_error": "Errore durante l'eliminazione della lista di controllo",
@@ -1154,7 +1155,6 @@
 		"my_locations": "Le mie posizioni",
 		"best_happened_at": "È successo meglio a"
 	},
-	"settings_download_backup": "Scarica il backup",
 	"invites": {
 		"accept": "Accettare",
 		"accept_failed": "Impossibile accettare l'invito",

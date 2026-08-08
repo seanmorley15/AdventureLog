@@ -745,7 +745,8 @@
 		"media_profile_pics": "Фотографии профиля",
 		"media_storage": "Медиа-хранилище",
 		"media_storage_desc": "Использование хранилища для загруженных изображений и вложений.",
-		"media_total_used": "Всего использовано"
+		"media_total_used": "Всего использовано",
+		"download_backup": "Скачать резервную копию"
 	},
 	"collection": {
 		"collection_created": "Коллекция успешно создана!",
@@ -1154,7 +1155,6 @@
 		"my_locations": "Мои локации",
 		"best_happened_at": "Лучшее произошло в"
 	},
-	"settings_download_backup": "Скачать резервную копию",
 	"invites": {
 		"accept": "Принять",
 		"accept_failed": "Не удалось принять приглашение",

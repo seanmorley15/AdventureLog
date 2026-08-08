@@ -1,44 +1,42 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	let isSubmitting: boolean = false;
-
-	export let data;
-	console.log(data);
 	import { t } from 'svelte-i18n';
-
+	import { page } from '$app/stores';
 	import FileImageBox from '~icons/mdi/file-image-box';
-
-	let isImageInfoModalOpen: boolean = false;
-
-	let socialProviders = data.props?.socialProviders ?? [];
-
-	let socialOnly: boolean = data.props?.socialOnly ?? false;
-
 	import GitHub from '~icons/mdi/github';
 	import OpenIdConnect from '~icons/mdi/openid';
-
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
-
-	function handleEnhanceSubmit() {
-		isSubmitting = true;
-		// If the form is aborted or done, reset the state
-		return async ({ update, result }: { update: any; result: any }) => {
-			if (result.type === 'success') {
-				// Keep isSubmitting as true for success to show loading state
-				await update(result);
-			} else {
-				isSubmitting = false;
-				await update(result);
-			}
-		};
-	}
-
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
+	let isSubmitting = false;
+
+	export let data;
+
+	let isImageInfoModalOpen = false;
+
+	let socialProviders = data.props?.socialProviders ?? [];
+	let socialOnly: boolean = data.props?.socialOnly ?? false;
+
 	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
 	let background: Background = data.props?.background ?? { url: '' };
+
+	function handleEnhanceSubmit() {
+		isSubmitting = true;
+		return async ({
+			update,
+			result
+		}: {
+			update: () => Promise<void>;
+			result: { type: string };
+		}) => {
+			if (result.type === 'redirect' || result.type === 'success') {
+				await update();
+				return;
+			}
+			isSubmitting = false;
+			await update();
+		};
+	}
 </script>
 
 {#if isImageInfoModalOpen}

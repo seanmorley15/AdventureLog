@@ -1045,9 +1045,9 @@
 		"media_profile_pics": "صور الملف الشخصي",
 		"media_storage": "تخزين الوسائط",
 		"media_storage_desc": "استخدام مساحة التخزين للصور والمرفقات التي تم تحميلها.",
-		"media_total_used": "مجموع المستخدمة"
+		"media_total_used": "مجموع المستخدمة",
+		"download_backup": "تنزيل النسخ الاحتياطي"
 	},
-	"settings_download_backup": "تنزيل النسخ الاحتياطي",
 	"share": {
 		"available": "متاح",
 		"no_users_shared": "لم يشارك أي مستخدمين معهم",

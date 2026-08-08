@@ -190,3 +190,30 @@ class APIKeyCreateSerializer(serializers.Serializer):
     """Write serializer – only accepts a ``name`` for the new key."""
 
     name = serializers.CharField(max_length=100, required=True)
+
+
+class DeleteAccountSerializer(serializers.Serializer):
+    """Validates account-deletion confirmation and optional password re-auth."""
+
+    confirmation = serializers.CharField(required=True)
+    password = serializers.CharField(required=False, allow_blank=True, write_only=True)
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        confirmation = attrs.get("confirmation", "").strip()
+
+        if confirmation != user.username:
+            raise serializers.ValidationError(
+                {"confirmation": "Type your username exactly to confirm account deletion."}
+            )
+
+        if user.has_usable_password() and not user.disable_password:
+            password = attrs.get("password", "")
+            if not password:
+                raise serializers.ValidationError(
+                    {"password": "Password is required to delete your account."}
+                )
+            if not user.check_password(password):
+                raise serializers.ValidationError({"password": "Incorrect password."})
+
+        return attrs

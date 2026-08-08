@@ -1,0 +1,91 @@
+<script lang="ts">
+	import { t } from 'svelte-i18n';
+	import SettingsCard from './SettingsCard.svelte';
+	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
+
+	export let emails: { email: string; verified?: boolean; primary?: boolean }[];
+	export let newEmail: string;
+	export let onVerify: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
+	export let onMakePrimary: (email: {
+		email: string;
+		verified?: boolean;
+		primary?: boolean;
+	}) => void;
+	export let onRemove: (email: { email: string; verified?: boolean; primary?: boolean }) => void;
+	export let onAdd: () => void;
+</script>
+
+<SettingsCard>
+	<SettingsSectionHeader
+		icon="📧"
+		iconBgClass="bg-secondary/10"
+		title={$t('settings.email_management')}
+		description={$t('settings.email_management_desc')}
+	/>
+
+	{#if emails.length > 0}
+		<div class="space-y-3 mb-8">
+			{#each emails as email}
+				<div class="p-4 bg-base-200 rounded-xl">
+					<div class="flex items-center justify-between flex-wrap gap-4">
+						<div class="flex items-center gap-3 min-w-0">
+							<span class="font-medium truncate">{email.email}</span>
+							<div class="flex gap-2 shrink-0">
+								{#if email.verified}
+									<span class="badge badge-success">✅ {$t('settings.verified')}</span>
+								{:else}
+									<span class="badge badge-error">❌ {$t('settings.not_verified')}</span>
+								{/if}
+								{#if email.primary}
+									<span class="badge badge-primary">⭐ {$t('settings.primary')}</span>
+								{/if}
+							</div>
+						</div>
+						<div class="flex gap-2 flex-wrap">
+							{#if !email.verified}
+								<button class="btn btn-sm btn-secondary" on:click={() => onVerify(email)}>
+									{$t('settings.verify')}
+								</button>
+							{/if}
+							{#if !email.primary && email.verified}
+								<button class="btn btn-sm btn-primary" on:click={() => onMakePrimary(email)}>
+									{$t('settings.make_primary')}
+								</button>
+							{/if}
+							<button
+								class="btn btn-sm btn-warning"
+								on:click={() => onRemove(email)}
+								disabled={emails.length === 1 || email.primary}
+							>
+								{$t('adventures.remove')}
+							</button>
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+	{:else}
+		<div class="text-center py-8 mb-8">
+			<div class="text-6xl mb-4">📧</div>
+			<p class="text-lg text-base-content/70">{$t('settings.no_email_set')}</p>
+		</div>
+	{/if}
+
+	<div class="divider">{$t('settings.add_new_email')}</div>
+	<form class="space-y-4" on:submit|preventDefault={onAdd}>
+		<div class="form-control">
+			<!-- svelte-ignore a11y-label-has-associated-control -->
+			<label class="label">
+				<span class="label-text font-medium">{$t('settings.add_new_email_address')}</span>
+			</label>
+			<input
+				type="email"
+				bind:value={newEmail}
+				class="input input-bordered input-primary w-full"
+				placeholder={$t('settings.enter_new_email')}
+				required
+			/>
+		</div>
+		<button class="btn btn-primary">➕ {$t('settings.add_email')}</button>
+	</form>
+</SettingsCard>

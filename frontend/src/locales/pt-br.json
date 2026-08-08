@@ -1045,9 +1045,9 @@
 		"media_profile_pics": "Fotos de perfil",
 		"media_storage": "Armazenamento de mídia",
 		"media_storage_desc": "Uso de armazenamento para suas imagens e anexos enviados.",
-		"media_total_used": "Total usado"
+		"media_total_used": "Total usado",
+		"download_backup": "Baixar Backup"
 	},
-	"settings_download_backup": "Baixar Backup",
 	"share": {
 		"available": "Disponível",
 		"no_users_shared": "Nenhum usuário compartilhado com",

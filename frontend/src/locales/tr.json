@@ -769,7 +769,8 @@
 		"public_profile_revoked_invites": "{count} bekleyen koleksiyon daveti iptal edildi.",
 		"public_profile_sharing_warning": "Şuan {count} adet koleksiyon üzerinde paylaşıldınız. Profilinizi gizli yapmak sizi bu koleksiyonlardan silecektir.",
 		"public_profile_invite_warning": "{count} adet bekleyen koleksiyon davetiniz bulunmaktadır. Profilinizi gizli yapmak bu davetleri iptal eder.",
-		"public_profile_private_confirm": "Profilinizi gizli yapmak sizi {shared} adet paylaşılmız koleksiyondan siler ve {invites} bekleyen daveti iptal eder. Devam edilsin mi?"
+		"public_profile_private_confirm": "Profilinizi gizli yapmak sizi {shared} adet paylaşılmız koleksiyondan siler ve {invites} bekleyen daveti iptal eder. Devam edilsin mi?",
+		"download_backup": "Yedeği İndir"
 	},
 	"collection": {
 		"collection_created": "Koleksiyon başarıyla oluşturuldu!",
@@ -1246,7 +1247,6 @@
 		"my_locations": "Konumlarım",
 		"best_happened_at": "En iyi an şurada oldu"
 	},
-	"settings_download_backup": "Yedeği İndir",
 	"invites": {
 		"accepted": "Davet kabul edildi",
 		"accept_failed": "Davet kabul edilemedi",
