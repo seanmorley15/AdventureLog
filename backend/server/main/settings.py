@@ -315,6 +315,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_EMAIL_VERIFICATION = getenv('ACCOUNT_EMAIL_VERIFICATION', 'none')  # 'none', 'optional', 'mandatory'
 
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True

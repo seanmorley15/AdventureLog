@@ -111,3 +111,30 @@ class PasswordPolicyTestCase(APITestCase):
         }, format='json')
         self.assertEqual(response.status_code, 200)
         self.assertTrue(CustomUser.objects.filter(username='validpwuser').exists())
+
+
+class LoginByEmailTestCase(APITestCase):
+    def setUp(self):
+        self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'loginbyemail',
+            'email': 'loginbyemail@example.com',
+            'password': 'testpassword',
+            'first_name': 'Login',
+            'last_name': 'ByEmail',
+        }, format='json')
+
+    def test_login_with_username(self):
+        self.client.cookies.clear()
+        response = self.client.post('/auth/browser/v1/auth/login', {
+            'username': 'loginbyemail',
+            'password': 'testpassword',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+
+    def test_login_with_email(self):
+        self.client.cookies.clear()
+        response = self.client.post('/auth/browser/v1/auth/login', {
+            'username': 'loginbyemail@example.com',
+            'password': 'testpassword',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)

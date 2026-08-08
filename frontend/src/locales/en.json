@@ -622,6 +622,8 @@
 		"user_locations": "User Locations",
 		"user_collections": "User Collections",
 		"enter_username": "Enter your username",
+		"username_or_email": "Username or Email",
+		"enter_username_or_email": "Enter your username or email",
 		"enter_password": "Enter your password",
 		"enter_email": "Enter your email",
 		"enter_first_name": "First name",

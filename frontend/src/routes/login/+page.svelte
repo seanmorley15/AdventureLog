@@ -100,17 +100,17 @@
 									</div>
 								{:else}
 									<form method="post" use:enhance={handleEnhanceSubmit} class="space-y-4">
-										<!-- Username -->
+										<!-- Username or email -->
 										<div class="form-control">
 											<label class="label" for="username">
-												<span class="label-text font-medium">{$t('auth.username')}</span>
+												<span class="label-text font-medium">{$t('auth.username_or_email')}</span>
 											</label>
 											<input
 												name="username"
 												id="username"
 												type="text"
 												class="input input-bordered w-full focus:input-primary"
-												placeholder={$t('auth.enter_username')}
+												placeholder={$t('auth.enter_username_or_email')}
 												autocomplete="username"
 											/>
 										</div>
