@@ -63,6 +63,27 @@ class IsRegistrationDisabled(APIView):
     def get(self, request):
         return Response({"is_disabled": settings.DISABLE_REGISTRATION, "message": settings.DISABLE_REGISTRATION_MESSAGE}, status=status.HTTP_200_OK)
 
+
+class PasswordPolicyView(APIView):
+    # Used by auth pages to validate passwords client-side before submission.
+    throttle_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Password policy configuration'),
+            400: 'Bad Request'
+        },
+        operation_description="Get the configured password policy for this instance."
+    )
+    def get(self, request):
+        return Response(
+            {
+                "min_length": settings.ACCOUNT_PASSWORD_MIN_LENGTH,
+                "validators_enabled": settings.AUTH_PASSWORD_VALIDATORS_ENABLED,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 class PublicUserListView(APIView):
     # Allow the listing of all public users
     permission_classes = []

@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
+import { fetchPasswordPolicy, isPasswordLongEnough, mapSignupError } from '$lib/index.server';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -12,6 +13,7 @@ export const load: PageServerLoad = async (event) => {
 	let is_disabled_fetch = await event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`);
 	let is_disabled_json = await is_disabled_fetch.json();
 	let is_disabled = is_disabled_json.is_disabled;
+	const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
 	const quote = getRandomQuote();
 	const background = getRandomBackground();
 
@@ -19,6 +21,7 @@ export const load: PageServerLoad = async (event) => {
 		props: {
 			is_disabled: is_disabled,
 			is_disabled_message: is_disabled_json.message,
+			passwordPolicy,
 			quote,
 			background
 		}
@@ -37,6 +40,7 @@ export const actions: Actions = {
 		let username = formUsername?.toString().toLocaleLowerCase();
 
 		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+		const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
 		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
 
 		if (!csrfTokenFetch.ok) {
@@ -46,6 +50,13 @@ export const actions: Actions = {
 
 		if (password1 !== password2) {
 			return fail(400, { message: 'settings.password_does_not_match' });
+		}
+
+		if (!isPasswordLongEnough(password1?.toString(), passwordPolicy)) {
+			return fail(400, {
+				message: 'auth.password_too_short',
+				values: { min: passwordPolicy.min_length }
+			});
 		}
 
 		const tokenPromise = await csrfTokenFetch.json();
@@ -76,7 +87,7 @@ export const actions: Actions = {
 				return { message: 'auth.user_email_verification_required' };
 			}
 
-			return fail(loginFetch.status, { message: loginResponse?.errors?.[0]?.code });
+			return fail(loginFetch.status, mapSignupError(loginResponse, passwordPolicy));
 		} else {
 			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
 

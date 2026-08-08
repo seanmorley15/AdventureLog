@@ -19,6 +19,7 @@
 	import { copyrightYear } from '$lib/config.js';
 	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
 	import IntegrationsSettings from '$lib/components/settings/IntegrationsSettings.svelte';
+	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
 
 	export let data;
 	let user: User;
@@ -48,6 +49,9 @@
 
 	// typed alias for social providers to satisfy TypeScript
 	let socialProviders: Provider[] = data.props.socialProviders ?? [];
+	let passwordPolicy = data.props.passwordPolicy;
+	let newPassword = '';
+	let confirmPassword = '';
 
 	// Initialize activeSection from URL on mount
 	onMount(() => {
@@ -678,6 +682,8 @@
 												name="password1"
 												class="input input-bordered input-primary focus:input-primary"
 												placeholder={$t('settings.enter_new_password')}
+												minlength={passwordPolicy.min_length}
+												bind:value={newPassword}
 											/>
 										</div>
 
@@ -693,9 +699,13 @@
 												name="password2"
 												class="input input-bordered input-primary focus:input-primary"
 												placeholder={$t('settings.confirm_new_password')}
+												minlength={passwordPolicy.min_length}
+												bind:value={confirmPassword}
 											/>
 										</div>
 									</div>
+
+									<PasswordRequirements policy={passwordPolicy} password={newPassword} />
 
 									{#if $page.form?.message}
 										<div class="alert alert-warning">
@@ -712,7 +722,11 @@
 													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
 												/>
 											</svg>
-											<span>{$t($page.form?.message)}</span>
+											<span
+												>{$t($page.form?.message, {
+													values: $page.form?.values ?? {}
+												})}</span
+											>
 										</div>
 									{/if}
 
@@ -1359,7 +1373,11 @@
 														d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
 													/>
 												</svg>
-												<span>{$t($page.form?.message)}</span>
+												<span
+													>{$t($page.form?.message, {
+														values: $page.form?.values ?? {}
+													})}</span
+												>
 											</div>
 										{/if}
 

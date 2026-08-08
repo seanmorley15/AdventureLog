@@ -80,3 +80,34 @@ class UserAPITestCase(APITestCase):
         # assert email are testuser@example and testuser2@example.com
         self.assertEqual(emails[1].email, 'testuser@example.com')
         self.assertEqual(emails[0].email, 'testuser2@example.com')
+
+
+class PasswordPolicyTestCase(APITestCase):
+    def test_password_policy_endpoint_returns_defaults(self):
+        response = self.client.get('/auth/password-policy/')
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data['min_length'], 6)
+        self.assertFalse(data['validators_enabled'])
+
+    def test_signup_rejects_password_below_min_length(self):
+        response = self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'shortpwuser',
+            'email': 'shortpwuser@example.com',
+            'password': 'short',
+            'first_name': 'Short',
+            'last_name': 'Password',
+        }, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(CustomUser.objects.filter(username='shortpwuser').exists())
+
+    def test_signup_accepts_password_at_min_length(self):
+        response = self.client.post('/auth/browser/v1/auth/signup', {
+            'username': 'validpwuser',
+            'email': 'validpwuser@example.com',
+            'password': 'valid1',
+            'first_name': 'Valid',
+            'last_name': 'Password',
+        }, format='json')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(CustomUser.objects.filter(username='validpwuser').exists())

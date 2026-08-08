@@ -1,7 +1,7 @@
 from django.urls import include, re_path, path
 from django.contrib import admin
 from django.views.generic import RedirectView, TemplateView
-from users.views import IsRegistrationDisabled, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
+from users.views import IsRegistrationDisabled, PasswordPolicyView, PublicUserListView, PublicUserDetailView, UserMetadataView, UpdateUserMetadataView, UserMediaUsageView, EnabledSocialProvidersView, DisablePasswordAuthenticationView, APIKeyListCreateView, APIKeyDetailView, MobileQRCodeView
 from cloud.views import CurrentUserView
 from .views import get_csrf_token, get_public_url, health_check, serve_protected_media
 from drf_yasg.views import get_schema_view
@@ -22,6 +22,7 @@ urlpatterns = [
     re_path(r'^media/(?P<path>.*)$', serve_protected_media, name='serve-protected-media'),
 
     path('auth/is-registration-disabled/', IsRegistrationDisabled.as_view(), name='is_registration_disabled'),
+    path('auth/password-policy/', PasswordPolicyView.as_view(), name='password_policy'),
     path('auth/users/', PublicUserListView.as_view(), name='public-user-list'),
     path('auth/user/<str:username>/', PublicUserDetailView.as_view(), name='public-user-detail'),
     path('auth/update-user/', UpdateUserMetadataView.as_view(), name='update-user-metadata'),

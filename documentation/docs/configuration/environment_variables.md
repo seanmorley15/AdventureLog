@@ -70,6 +70,8 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
 | `ACCOUNT_EMAIL_VERIFICATION` | No | `none`, `optional`, or `mandatory`. | `none` |
+| `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
+| `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
 
 Related guides: [Social Auth](social_auth.md), [Disable Registration](disable_registration.md), [API Keys](api_keys.md).
 

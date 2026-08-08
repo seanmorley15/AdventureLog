@@ -345,6 +345,34 @@ EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 6
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
 
+# Minimum password length enforced by allauth when AUTH_PASSWORD_VALIDATORS is empty.
+ACCOUNT_PASSWORD_MIN_LENGTH = int(getenv('ACCOUNT_PASSWORD_MIN_LENGTH', '6'))
+
+# When enabled, Django's built-in password validators are applied (similarity, common
+# passwords, numeric-only, and minimum length via MinimumLengthValidator).
+AUTH_PASSWORD_VALIDATORS_ENABLED = getenv('AUTH_PASSWORD_VALIDATORS_ENABLED', 'false').lower() == 'true'
+
+if AUTH_PASSWORD_VALIDATORS_ENABLED:
+    AUTH_PASSWORD_VALIDATORS = [
+        {
+            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+            'OPTIONS': {
+                'min_length': ACCOUNT_PASSWORD_MIN_LENGTH,
+            },
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        },
+    ]
+else:
+    AUTH_PASSWORD_VALIDATORS = []
+
 if getenv('EMAIL_BACKEND', 'console') == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 else:

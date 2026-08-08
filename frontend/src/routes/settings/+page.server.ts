@@ -9,7 +9,12 @@ import type {
 	User,
 	WandererIntegration
 } from '$lib/types';
-import { fetchCSRFToken } from '$lib/index.server';
+import {
+	fetchCSRFToken,
+	fetchPasswordPolicy,
+	isPasswordLongEnough,
+	mapAllauthPasswordError
+} from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 type MFAAuthenticatorResponse = {
@@ -140,6 +145,8 @@ export const load: PageServerLoad = async (event) => {
 		mediaUsage = (await mediaUsageFetch.json()) as MediaUsage;
 	}
 
+	const passwordPolicy = await fetchPasswordPolicy(event.fetch, endpoint);
+
 	return {
 		props: {
 			user,
@@ -156,7 +163,8 @@ export const load: PageServerLoad = async (event) => {
 			endurainEnabled,
 			endurainIntegration,
 			apiKeys,
-			mediaUsage
+			mediaUsage,
+			passwordPolicy
 		}
 	};
 };
@@ -310,8 +318,12 @@ export const actions: Actions = {
 			current_password = null;
 		}
 
-		if (password1 && password1?.length < 6) {
-			return fail(400, { message: 'settings.password_too_short' });
+		const passwordPolicy = await fetchPasswordPolicy(event.fetch, endpoint);
+		if (password1 && !isPasswordLongEnough(password1, passwordPolicy)) {
+			return fail(400, {
+				message: 'auth.password_too_short',
+				values: { min: passwordPolicy.min_length }
+			});
 		}
 
 		let csrfToken = await fetchCSRFToken();
@@ -331,7 +343,11 @@ export const actions: Actions = {
 				})
 			});
 			if (!res.ok) {
-				return fail(res.status, { message: 'settings.error_change_password' });
+				const errorResponse = await res.json();
+				return fail(
+					res.status,
+					mapAllauthPasswordError(errorResponse, { minLength: passwordPolicy.min_length })
+				);
 			}
 			return { success: true };
 		} else {
@@ -348,8 +364,11 @@ export const actions: Actions = {
 				})
 			});
 			if (!res.ok) {
-				console.log('Error:', await res.json());
-				return fail(res.status, { message: 'settings.error_change_password' });
+				const errorResponse = await res.json();
+				return fail(
+					res.status,
+					mapAllauthPasswordError(errorResponse, { minLength: passwordPolicy.min_length })
+				);
 			}
 			return { success: true };
 		}
