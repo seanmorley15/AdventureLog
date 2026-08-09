@@ -1078,6 +1078,8 @@
 		"exit_fullscreen": "Exit fullscreen",
 		"geolocation_unavailable": "Location is not available in this browser.",
 		"geolocation_denied": "Location access was denied.",
+		"geolocation_insecure": "Location needs a secure connection. Open AdventureLog over HTTPS or via localhost.",
+		"geolocation_timeout": "Timed out while getting your location. Please try again.",
 		"track_layers": "Track layers",
 		"show_activities": "Show activity tracks",
 		"hide_activities": "Hide activity tracks",

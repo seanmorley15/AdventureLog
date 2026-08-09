@@ -3,6 +3,8 @@
 	import FullMap from '$lib/components/map/FullMap.svelte';
 	import { Marker } from 'svelte-maplibre';
 	import { t } from 'svelte-i18n';
+	import { addToast } from '$lib/toasts';
+	import { GeolocationFailure, requestCurrentPosition } from '$lib/map/geolocate';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
@@ -67,7 +69,7 @@
 	let selectedLocation: GeoSelection | null = null;
 	let selectedMarker: { lng: number; lat: number } | null = null;
 	let locationData: LocationMeta | null = null;
-	let mapCenter: [number, number] = [-74.5, 40];
+	let mapCenter: [number, number] = [0, 20];
 	let mapZoom: number | undefined = 2;
 	let mapBounds: [[number, number], [number, number]] | null = null;
 	let searchTimeout: ReturnType<typeof setTimeout>;
@@ -650,21 +652,22 @@
 		}
 	}
 
-	function useCurrentLocation() {
-		if ('geolocation' in navigator) {
-			navigator.geolocation.getCurrentPosition(
-				async (position) => {
-					const lat = position.coords.latitude;
-					const lng = position.coords.longitude;
-					selectedMarker = { lng, lat };
-					mapCenter = [lng, lat];
-					mapZoom = 14;
-					await reverseGeocode(lng, lat);
-				},
-				(error) => {
-					console.error('Geolocation error:', error);
-				}
-			);
+	async function useCurrentLocation() {
+		try {
+			const { lat, lng } = await requestCurrentPosition();
+			selectedMarker = { lng, lat };
+			mapCenter = [lng, lat];
+			mapZoom = 14;
+			await reverseGeocode(lng, lat);
+		} catch (error) {
+			// Previously this only hit console.error, so the map silently stayed at its
+			// default centre and looked like it had navigated somewhere wrong.
+			if (error instanceof GeolocationFailure) {
+				addToast('warning', $t(error.messageKey));
+			} else {
+				console.error('Geolocation error:', error);
+				addToast('warning', $t('map.geolocation_unavailable'));
+			}
 		}
 	}
 
@@ -693,7 +696,7 @@
 			displayName = '';
 			searchProvider = null;
 		}
-		mapCenter = [-74.5, 40];
+		mapCenter = [0, 20];
 		mapZoom = 2;
 		mapBounds = null;
 		dispatch('clear');

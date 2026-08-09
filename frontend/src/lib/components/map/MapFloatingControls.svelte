@@ -2,6 +2,7 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import { addToast } from '$lib/toasts';
+	import { GeolocationFailure, requestCurrentPosition } from '$lib/map/geolocate';
 	import MapStyleSelector from '$lib/components/map/MapStyleSelector.svelte';
 	import PlusIcon from '~icons/mdi/plus';
 	import MinusIcon from '~icons/mdi/minus';
@@ -42,29 +43,30 @@
 		map?.zoomOut?.({ duration: 250 });
 	}
 
-	function locateUser() {
+	async function locateUser() {
 		if (!map) return;
-		if (!navigator.geolocation) {
-			addToast('warning', $t('map.geolocation_unavailable'));
-			return;
-		}
 
 		locating = true;
-		navigator.geolocation.getCurrentPosition(
-			(position) => {
-				map.flyTo({
-					center: [position.coords.longitude, position.coords.latitude],
-					zoom: Math.max(map.getZoom(), 14),
-					duration: 800
-				});
-				locating = false;
-			},
-			() => {
-				addToast('warning', $t('map.geolocation_denied'));
-				locating = false;
-			},
-			{ enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-		);
+		try {
+			const { lat, lng } = await requestCurrentPosition();
+			map.flyTo({
+				center: [lng, lat],
+				zoom: Math.max(map.getZoom(), 14),
+				duration: 800
+			});
+		} catch (error) {
+			// Reports the specific cause rather than always blaming a denied permission;
+			// an insecure origin (plain HTTP on a LAN IP) is the common case for
+			// self-hosted instances and needs a different message.
+			if (error instanceof GeolocationFailure) {
+				addToast('warning', $t(error.messageKey));
+			} else {
+				console.error('Geolocation error:', error);
+				addToast('warning', $t('map.geolocation_unavailable'));
+			}
+		} finally {
+			locating = false;
+		}
 	}
 
 	async function toggleFullscreen() {
