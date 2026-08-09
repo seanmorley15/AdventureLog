@@ -28,38 +28,13 @@
 	register('ca', () => import('../locales/ca.json'));
 	register('cs', () => import('../locales/cs.json'));
 
-	let locales = [
-		'en',
-		'es',
-		'fr',
-		'de',
-		'it',
-		'zh',
-		'nl',
-		'sv',
-		'pl',
-		'ko',
-		'no',
-		'ru',
-		'ja',
-		'ar',
-		'pt',
-		'pt-br',
-		'ro',
-		'sk',
-		'tr',
-		'uk',
-		'hu',
-		'ca',
-		'cs',
-		'ta'
-	];
-
 	if (browser) {
 		init({
-			fallbackLocale: locales.includes(navigator.language.split('-')[0])
-				? navigator.language.split('-')[0]
-				: 'en',
+			// The fallback must be a fully translated locale, otherwise a key that is missing
+			// from the active locale has nowhere to fall back to and renders as its raw id
+			// (e.g. "dashboard.greeting_afternoon"). Deriving it from navigator.language made
+			// the fallback identical to the active locale for most users, which defeated it.
+			fallbackLocale: 'en',
 			initialLocale: data.locale
 		});
 		// get the locale cookie if it exists and set it as the initial locale if it exists
