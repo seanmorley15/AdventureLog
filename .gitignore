@@ -13,3 +13,19 @@ docs/cursor-prompts/
 docs/FIX_PACKAGE_PLAN.md
 docs/GITHUB_COMMENTS.md
 BUGFIX_DOCUMENTATION.md
+
+# Local runtime data bind-mounted into the containers (see docker-compose.override.yml).
+# This is MEDIA_ROOT, so it mixes two very different things:
+#   - a cache of immutable reference data (world-travel dataset + country flags)
+#   - user uploads (images/, attachments/, activities/) -- private, never commit
+#
+# Default-deny, then allowlist only the reference cache. Any future upload
+# directory is therefore ignored automatically rather than needing a new rule.
+#
+# Committing the cache is deliberate: the dataset is version-pinned
+# (COUNTRY_REGION_JSON_VERSION), compresses 46.7MB -> ~3.7MB in git, and having it
+# in-tree means a fresh clone skips a 46MB download plus 250 requests to flagcdn.
+# download-countries checks default_storage first and skips the fetch when present.
+data/media/*
+!data/media/countries+regions+states-*.json
+!data/media/flags/

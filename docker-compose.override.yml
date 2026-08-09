@@ -1,19 +1,55 @@
-# Local-only override for Apple Silicon (linux/arm64).
+# Local-only override. Compose merges this automatically; the repo's
+# docker-compose.yml is untouched. Safe to delete to return to stock behaviour.
 #
-# Why this exists:
-#   docker-compose.yml pins `postgis/postgis:16-3.5`, which publishes **amd64 only**.
-#   On arm64 `podman compose up` fails with:
-#     no image found in image index for architecture "arm64", variant "v8", OS "linux"
-#   (The AdventureLog image itself is fine — it ships both amd64 and arm64.)
+# ---------------------------------------------------------------------------
+# 1. arm64 support
+# ---------------------------------------------------------------------------
+# docker-compose.yml pins postgis/postgis:16-3.5, which publishes linux/amd64
+# only. On Apple Silicon `compose up` fails before anything starts:
+#     Image postgis/postgis:16-3.5 Error no image found in image index for
+#       architecture "arm64", variant "v8", OS "linux"
+# imresamu/postgis is the multi-arch rebuild of the same upstream PostGIS
+# Dockerfiles (PostgreSQL 16 + PostGIS 3.5) and provides native linux/arm64.
+# Alternative: keep the official image and add `platform: linux/amd64` to let it
+# emulate. Verified working, but Postgres under qemu is noticeably slower.
 #
-# Fix used here: imresamu/postgis is the multi-arch rebuild of the same upstream
-# PostGIS Dockerfiles (PostgreSQL 16 + PostGIS 3.5) and provides native linux/arm64.
+# ---------------------------------------------------------------------------
+# 2. Reachable on localhost AND the LAN IP (192.168.2.10)
+# ---------------------------------------------------------------------------
+# env-setup.sh derives ORIGIN / FRONTEND_URL / PUBLIC_URL / CSRF_TRUSTED_ORIGINS
+# from SITE_URL using ${VAR:-default}, so explicit values here win.
 #
-# Alternative: keep the official image and run it emulated by deleting this file and
-# adding `platform: linux/amd64` to the db service. Verified working on this machine,
-# but Postgres under qemu is markedly slower.
+# SITE_URL is set to the LAN IP because PUBLIC_URL feeds absolute media URLs and
+# the Immich proxy — those must be reachable from other devices (e.g. a phone
+# running the Apple Shortcuts). A localhost value would emit URLs no other device
+# can resolve.
 #
-# Safe to delete. Compose merges this automatically; it does not modify the repo file.
+# PROTOCOL_HEADER/HOST_HEADER make SvelteKit's adapter-node derive the request
+# origin from nginx's forwarded headers instead of pinning it to ORIGIN. Without
+# them, form POSTs to whichever host is *not* ORIGIN are rejected as cross-site.
+#
+# ---------------------------------------------------------------------------
+# 3. Media on host storage, not inside the podman VM
+# ---------------------------------------------------------------------------
+# The named volume adventurelog_media lives inside the podman machine's disk
+# image, so `podman machine rm` destroys it. Bind-mounting to ./data/media puts
+# it on macOS instead, which also means the cached world-travel dataset
+# (countries+regions+states-<version>.json, ~46MB) and the 250 country flag PNGs
+# survive VM rebuilds -- download-countries checks default_storage for that file
+# and skips the download when present.
+#
+# Postgres data is deliberately NOT bind-mounted: PostgreSQL on virtio-fs is slow
+# and fsync semantics there are not guaranteed. It stays in the named volume, so
+# back it up with scripts/backup.sh rather than relying on the VM surviving.
 services:
   db:
     image: docker.io/imresamu/postgis:16-3.5
+
+  app:
+    environment:
+      SITE_URL: http://192.168.2.10:8015
+      CSRF_TRUSTED_ORIGINS: http://192.168.2.10:8015,http://localhost:8015,http://127.0.0.1:8015
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: host
+    volumes:
+      - ./data/media:/code/media
