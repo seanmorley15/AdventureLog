@@ -46,7 +46,8 @@
 		"thank_you": "Dziękujemy za korzystanie z Adventurelog!",
 		"version": "Wersja",
 		"view_changelog": "Zobacz Changelog",
-		"view_license": "Wyświetl licencję"
+		"view_license": "Wyświetl licencję",
+		"copy_version": "Kopiuj wersję"
 	},
 	"home": {
 		"hero_1": "Odkryj najbardziej ekscytujące podróże na świecie",
@@ -497,7 +498,24 @@
 		"add_details": "Dodaj szczegóły",
 		"export_pdf": "Pobierz PDF",
 		"export_pdf_success": "Kolekcje pobrane PDF",
-		"export_pdf_failed": "Błąd przy pobieraniu kolekcji PDF"
+		"export_pdf_failed": "Błąd przy pobieraniu kolekcji PDF",
+		"show_sunrise_sunset": "Pokaż wschód i zachód słońca",
+		"loading_sunrise_sunset": "Wczytywanie wschodu i zachodu słońca...",
+		"sunrise_sunset_load_error": "Nie udało się wczytać godzin wschodu i zachodu słońca",
+		"google_photos_available": "Dostępne zdjęcia z Google: {count}",
+		"google_photos_import_all": "Importuj wszystkie z Google",
+		"google_photos_import_selected": "Importuj zaznaczone",
+		"google_photos_importing": "Importowanie zdjęć z Google…",
+		"google_photos_import_success": "Zdjęcia z Google zostały zaimportowane",
+		"google_photos_import_error": "Nie udało się zaimportować zdjęć z Google",
+		"google_photos_select_hint": "Zaznacz zdjęcia, które chcesz zaimportować, albo zaimportuj wszystkie naraz.",
+		"importing_endurain_activity": "Importowanie aktywności z Endurain...",
+		"endurain_import_success": "Aktywność zaimportowana z Endurain",
+		"endurain_activities_during_visit": "Aktywności Endurain podczas wizyty",
+		"view_endurain_activities": "Zobacz aktywności Endurain",
+		"show_endurain_activities": "Pokaż aktywności Endurain",
+		"hide_endurain_activities": "Ukryj aktywności Endurain",
+		"no_endurain_activities": "Nie znaleziono aktywności Endurain podczas tej wizyty"
 	},
 	"worldtravel": {
 		"country_list": "Lista krajów",
@@ -588,10 +606,23 @@
 		"enter_username": "Wprowadź swoją nazwę użytkownika",
 		"logging_in": "Logowanie",
 		"totp": "Kod dwuskładnikowy",
-		"user_email_verification_required": "Wymagana weryfikacja e-mailowa. \nSprawdź swoją skrzynkę e-mail, gdzie znajduje się link weryfikacyjny."
+		"user_email_verification_required": "Wymagana weryfikacja e-mailowa. \nSprawdź swoją skrzynkę e-mail, gdzie znajduje się link weryfikacyjny.",
+		"totp_placeholder": "000000 lub 12345678",
+		"totp_hint": "Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej lub 8-cyfrowy kod odzyskiwania."
 	},
 	"users": {
-		"no_users_found": "Nie znaleziono użytkowników z publicznymi profilami."
+		"no_users_found": "Nie znaleziono użytkowników z publicznymi profilami.",
+		"no_users_desc": "Gdy inni podróżnicy udostępnią swoje profile publicznie, pojawią się tutaj.",
+		"no_match": "Żaden użytkownik nie pasuje do wyszukiwania",
+		"no_match_desc": "Spróbuj innej nazwy albo wyczyść filtry.",
+		"page_description": "Przeglądaj publiczne profile AdventureLog i poznawaj innych podróżników.",
+		"search_placeholder": "Szukaj po imieniu lub nazwie użytkownika...",
+		"public_profiles": "Profile publiczne",
+		"public_profile": "Profil publiczny",
+		"browse_options": "Opcje przeglądania",
+		"overview": "Przegląd",
+		"sort_name": "Nazwa",
+		"sort_recent": "Najnowsze"
 	},
 	"settings": {
 		"update_error": "Błąd podczas aktualizacji ustawień",
@@ -745,7 +776,50 @@
 		"media_total_used": "Łącznie wykorzystane",
 		"media_profile_pics": "Zdjęcia profilowe",
 		"media_files": "pliki",
-		"media_storage": "Przechowywanie multimediów"
+		"media_storage": "Przechowywanie multimediów",
+		"invalid_code": "Nieprawidłowy kod",
+		"integrations_hub": {
+			"summary_builtin": "Usługi wbudowane",
+			"summary_builtin_desc": "Zawsze dostępne w każdej instancji",
+			"summary_instance": "Usługi instancji",
+			"summary_instance_desc": "Włączone przez administratora serwera",
+			"summary_personal": "Twoje integracje",
+			"summary_personal_desc": "Powiązane z Twoim kontem",
+			"builtin_title": "Usługi wbudowane",
+			"builtin_desc": "Te źródła danych zasilają AdventureLog od razu po instalacji. Nie wymagają konfiguracji.",
+			"included": "W zestawie",
+			"learn_more": "Dowiedz się więcej",
+			"instance_title": "Usługi instancji",
+			"instance_desc": "Opcjonalne usługi skonfigurowane przez administratora Twojego AdventureLog.",
+			"personal_title": "Twoje integracje",
+			"personal_desc": "Podłącz własne konta i usługi hostowane samodzielnie.",
+			"connect": "Połącz",
+			"disconnect": "Rozłącz",
+			"update": "Aktualizuj",
+			"edit": "Edytuj",
+			"cancel": "Anuluj",
+			"google_maps_features": "Wyszukiwanie miejsc, szczegóły mapy, szybkie uzupełnianie danych i rekomendacje w pobliżu.",
+			"google_maps_active_hint": "Mapy Google są aktywne w tej instancji. Wyszukiwanie miejsc i uzupełnianie danych korzystają z nich, gdy są dostępne.",
+			"builtin": {
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"nominatim_desc": "Zapasowe geokodowanie i wyszukiwanie miejsc, gdy Mapy Google są niedostępne.",
+				"nominatim_features": "Używane do wyszukiwania lokalizacji, geokodowania odwrotnego i sprawdzania współrzędnych.",
+				"wikipedia_name": "Wikipedia",
+				"wikipedia_desc": "Wzbogaca lokalizacje o opisy i zdjęcia poglądowe.",
+				"wikipedia_features": "Używane przy generowaniu opisów i importowaniu zdjęć z Wikipedii.",
+				"sunrise_name": "SunriseSunset.io",
+				"sunrise_desc": "Dodaje godziny wschodu i zachodu słońca do Twoich wizyt.",
+				"sunrise_features": "Wyświetlane na stronie szczegółów lokalizacji dla każdej daty wizyty.",
+				"overpass_name": "OpenStreetMap Overpass",
+				"overpass_desc": "Zasila rekomendacje w pobliżu danymi z OpenStreetMap.",
+				"overpass_features": "Używane do rekomendacji na mapie i jako rozwiązanie zapasowe, gdy Google jest niedostępne."
+			}
+		},
+		"public_profile_sharing_warning": "Jesteś obecnie udostępniony w {count} kolekcjach. Ustawienie profilu jako prywatnego usunie Cię z tych kolekcji.",
+		"public_profile_invite_warning": "Masz {count} oczekujących zaproszeń do kolekcji. Ustawienie profilu jako prywatnego je anuluje.",
+		"public_profile_private_confirm": "Ustawienie profilu jako prywatnego usunie Cię z {shared} udostępnionych kolekcji i anuluje {invites} oczekujących zaproszeń. Kontynuować?",
+		"public_profile_left_collections": "Twój profil jest teraz prywatny. Usunięto Cię z {count} udostępnionych kolekcji.",
+		"public_profile_revoked_invites": "Anulowano {count} oczekujących zaproszeń do kolekcji."
 	},
 	"collection": {
 		"collection_created": "Kolekcja została pomyślnie utworzona!",
@@ -818,7 +892,8 @@
 		"enter_checklist_title": "Wprowadź tytuł listy kontrolnej",
 		"no_items_yet": "Nie ma jeszcze przedmiotów",
 		"update_checklist_details": "Edycja listy kontrolnej",
-		"viewing_checklist": "Przeglądanie listy kontrolnej"
+		"viewing_checklist": "Przeglądanie listy kontrolnej",
+		"more_items": "Więcej pozycji"
 	},
 	"transportation": {
 		"transportation_deleted": "Transport został pomyślnie usunięty!",
@@ -987,7 +1062,10 @@
 		"stats": "Statystyki",
 		"track_layers": "Warstwy śledzenia",
 		"visit_website": "Strona internetowa",
-		"visits": "Wizyty"
+		"visits": "Wizyty",
+		"show_photos": "Pokaż zdjęcia",
+		"hide_photos": "Ukryj zdjęcia",
+		"photos": "Zdjęcia"
 	},
 	"share": {
 		"shared": "Udostępnione",
@@ -1043,7 +1121,46 @@
 		"view_all": "Zobacz wszystkie",
 		"welcome_text_1": "Byłeś włączony",
 		"welcome_text_2": "Jak dotąd przygody",
-		"welcome_text_3": "Badaj i dokumentuj swoje podróże!"
+		"welcome_text_3": "Badaj i dokumentuj swoje podróże!",
+		"greeting_morning": "Dzień dobry",
+		"greeting_afternoon": "Dzień dobry",
+		"greeting_evening": "Dobry wieczór",
+		"greeting_night": "Dobranoc",
+		"hero_active_trip": "Jesteś w drodze — {name} właśnie trwa",
+		"hero_next_trip": "{days} dni do {name}",
+		"hero_countries": "Masz na koncie {count} krajów — dokąd teraz?",
+		"hero_locations_logged": "{count} miejsc na Twojej mapie — dopisuj kolejne rozdziały",
+		"hero_location_logged": "1 miejsce na Twojej mapie — dopisuj kolejne rozdziały",
+		"hero_start_journey": "Twój dziennik podróży jest pusty — czas zaplanować pierwszy przystanek",
+		"hero_headline": "Twoje centrum przygód",
+		"hero_headline_new": "Czas na odkrywanie?",
+		"hero_active_subtitle": "{count} miejsc na tej wyprawie — zbieraj kolejne wspomnienia",
+		"hero_next_subtitle": "Wyjazd za {days} dni — jest się na co cieszyć",
+		"hero_badge_countries": "Odwiedzone kraje: {count}",
+		"hero_badge_default": "AdventureLog",
+		"hero_trip_empty_title": "Brak wyjazdów na horyzoncie",
+		"hero_trip_empty_desc": "Załóż kolekcję i zacznij planować kolejną ucieczkę",
+		"hero_view_trip": "Otwórz wyjazd",
+		"hero_trip_on_the_road": "W drodze",
+		"hero_trip_coming_up": "Wkrótce",
+		"page_title": "Pulpit",
+		"page_description": "Twoje centrum podróży — statystyki, nadchodzące wyjazdy i ostatnie przygody w jednym miejscu.",
+		"whats_next": "Co dalej",
+		"upcoming_trips": "Nadchodzące wyjazdy",
+		"active_trip": "Aktualnie w podróży",
+		"activity_highlights": "Najciekawsze aktywności",
+		"personal_record": "Rekord odległości",
+		"quick_links": "Szybkie odnośniki",
+		"recently_updated": "Ostatnio zaktualizowane",
+		"stats_error": "Nie udało się wczytać danych pulpitu. Spróbuj odświeżyć stronę.",
+		"no_upcoming_trips": "Brak zaplanowanych wyjazdów.",
+		"no_active_trip": "Żadna podróż nie jest w toku.",
+		"no_recent_locations": "Brak odwiedzonych miejsc.",
+		"locations_visited": "Odwiedzone miejsca",
+		"next_trip_in": "Następny wyjazd za {days} dni",
+		"pending_invites": "Oczekujące zaproszenia",
+		"my_collections": "Moje kolekcje",
+		"view_profile": "Zobacz profil"
 	},
 	"immich": {
 		"api_key": "Klucz API Immicha",
@@ -1079,7 +1196,8 @@
 		"loading_albums": "Ładowanie albumów",
 		"no_images": "Nie znaleziono zdjęć",
 		"select_album": "Wybierz album",
-		"try_different_date": "Wypróbuj inną datę"
+		"try_different_date": "Wypróbuj inną datę",
+		"immich_updated": "Integracja z Immich została zaktualizowana"
 	},
 	"recomendations": {
 		"recommendations": "Propozycje",
@@ -1146,7 +1264,31 @@
 		"total_events": "Całkowite zdarzenia",
 		"week": "Tydzień",
 		"event timezone": "Strefa czasowa wydarzenia",
-		"your timezone": "Twoja strefa czasowa"
+		"your timezone": "Twoja strefa czasowa",
+		"page_title": "Kalendarz",
+		"agenda": "Agenda",
+		"event": "Wydarzenie",
+		"sidebar_title": "Filtry i opcje",
+		"timezone_display": "Wyświetlanie czasu",
+		"event_types": "Pokaż typy wydarzeń",
+		"type_visit": "Wizyty",
+		"type_transportation": "Transport",
+		"type_lodging": "Noclegi",
+		"type_collection": "Wyjazdy",
+		"type_note": "Notatki",
+		"type_checklist": "Listy kontrolne",
+		"search_placeholder": "Szukaj wydarzeń, miejsc, kolekcji...",
+		"upcoming": "Nadchodzące",
+		"this_month": "W tym miesiącu",
+		"upcoming_agenda": "Nadchodzące wydarzenia",
+		"no_upcoming_events": "Żadne nadchodzące wydarzenie nie pasuje do filtrów.",
+		"no_events_in_range": "Brak wydarzeń w tym zakresie.",
+		"in_collection": "Kolekcja",
+		"view_collection": "Zobacz kolekcję",
+		"load_error": "Nie udało się wczytać wydarzeń kalendarza. Spróbuj ponownie.",
+		"export_success": "Kalendarz został wyeksportowany.",
+		"export_error": "Nie udało się wyeksportować kalendarza.",
+		"more_events": "+{count} więcej"
 	},
 	"locations": {
 		"location": "Lokalizacja",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "Nie udało się wygenerować udostępnionego obrazu",
 		"share_native": "Udział…",
 		"share_native_failed": "Udostępnianie nie powiodło się"
+	},
+	"images": {
+		"map_pin_title": "Lokalizacja zdjęcia",
+		"source": {
+			"google": "Zdjęcie z Map Google",
+			"wikipedia": "Zdjęcie z Wikipedii",
+			"immich": "Zdjęcie z Immich",
+			"url": "Zdjęcie z zewnętrznego adresu URL"
+		}
+	},
+	"endurain": {
+		"endurain_integration_desc": "Podłącz własną instancję Endurain, aby przeglądać aktywności i importować je do wizyt",
+		"connection_error": "Błąd połączenia z Endurain",
+		"connected": "Połączono z Endurain",
+		"disconnected": "Rozłączono Endurain",
+		"disconnect_error": "Błąd podczas rozłączania Endurain",
+		"disconnect": "Rozłącz",
+		"server_url": "Adres URL serwera",
+		"server_url_required": "Adres URL serwera jest wymagany",
+		"username": "Nazwa użytkownika",
+		"password": "Hasło",
+		"localhost_note": "Serwer Endurain musi być osiągalny z serwera AdventureLog (localhost może nie działać w Dockerze).",
+		"credentials_required": "Adres URL serwera, nazwa użytkownika i hasło są wymagane",
+		"mfa_required": "Wpisz kod MFA, aby dokończyć logowanie",
+		"mfa_code": "Kod MFA",
+		"mfa_code_required": "Kod MFA jest wymagany",
+		"verify_mfa": "Zweryfikuj MFA",
+		"connect_password": "Połącz hasłem",
+		"continue": "Kontynuuj",
+		"change_server": "Zmień serwer",
+		"not_connected": "Endurain nie jest połączony",
+		"connected_as": "Połączono jako {username}"
 	}
 }
