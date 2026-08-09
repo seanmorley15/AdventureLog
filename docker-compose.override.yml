@@ -1,0 +1,19 @@
+# Local-only override for Apple Silicon (linux/arm64).
+#
+# Why this exists:
+#   docker-compose.yml pins `postgis/postgis:16-3.5`, which publishes **amd64 only**.
+#   On arm64 `podman compose up` fails with:
+#     no image found in image index for architecture "arm64", variant "v8", OS "linux"
+#   (The AdventureLog image itself is fine — it ships both amd64 and arm64.)
+#
+# Fix used here: imresamu/postgis is the multi-arch rebuild of the same upstream
+# PostGIS Dockerfiles (PostgreSQL 16 + PostGIS 3.5) and provides native linux/arm64.
+#
+# Alternative: keep the official image and run it emulated by deleting this file and
+# adding `platform: linux/amd64` to the db service. Verified working on this machine,
+# but Postgres under qemu is markedly slower.
+#
+# Safe to delete. Compose merges this automatically; it does not modify the repo file.
+services:
+  db:
+    image: docker.io/imresamu/postgis:16-3.5
