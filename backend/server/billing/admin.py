@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib import admin
 
-from .models import Subscription
+from .models import StripeWebhookEvent, Subscription
 
 
 if settings.CLOUD_MODE:
@@ -40,3 +40,11 @@ if settings.CLOUD_MODE:
                 {"classes": ("collapse",), "fields": ("created_at", "updated_at")},
             ),
         )
+
+    @admin.register(StripeWebhookEvent)
+    class StripeWebhookEventAdmin(admin.ModelAdmin):
+        list_display = ("event_id", "event_type", "processed_at")
+        search_fields = ("event_id", "event_type")
+        list_filter = ("event_type",)
+        readonly_fields = ("event_id", "event_type", "processed_at")
+        date_hierarchy = "processed_at"
