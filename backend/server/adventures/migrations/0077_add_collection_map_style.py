@@ -5,7 +5,7 @@ from users.models import BASEMAP_CHOICES
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('adventures', '0071_alter_collectionitineraryitem_unique_together_and_more'),
+        ('adventures', '0076_normalize_all_day_visit_end_dates'),
     ]
 
     operations = [
