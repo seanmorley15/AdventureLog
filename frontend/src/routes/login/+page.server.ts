@@ -1,56 +1,62 @@
 import { fail, redirect, type RequestEvent } from '@sveltejs/kit';
-// @ts-ignore
-import psl from 'psl';
 import type { Actions, PageServerLoad, RouteParams } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
-import { fetchCSRFToken } from '$lib/index.server';
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+import {
+	csrfFail,
+	djangoBrowserFetch,
+	extractSessionIdFromResponse,
+	requireCsrf,
+	setSessionFromResponse
+} from '$lib/index.server';
+import { hasPendingAllauthFlow } from '$lib/server/allauth-flows';
+import { getServerEndpoint } from '$lib/server/django-proxy';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/');
-	} else {
-		const quote = getRandomQuote();
-		const background = getRandomBackground();
-
-		let socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
-		if (!socialProviderFetch.ok) {
-			return fail(500, { message: 'settings.social_providers_error' });
-		}
-		let socialProviders = await socialProviderFetch.json();
-
-		// Determine if social auth usage is required. The API returns `usage_required`
-		// either for all providers or none — so check the first provider if present.
-		const usageRequired =
-			socialProviders && socialProviders.length > 0 ? !!socialProviders[0].usage_required : false;
-
-		// If usage is required and there's exactly one social provider, redirect straight
-		// to that provider's URL. If multiple providers and usage is required, instruct
-		// the client to render social-only UI.
-		if (usageRequired) {
-			if (socialProviders.length === 1) {
-				return redirect(302, socialProviders[0].url);
-			} else if (socialProviders.length > 1) {
-				return {
-					props: {
-						quote,
-						background,
-						socialProviders,
-						socialOnly: true
-					}
-				};
-			}
-		}
-
-		return {
-			props: {
-				quote,
-				background,
-				socialProviders
-			}
-		};
 	}
+
+	const quote = getRandomQuote();
+	const background = getRandomBackground();
+	const serverEndpoint = getServerEndpoint();
+
+	let socialProviders: { name: string; url: string; provider: string; usage_required?: boolean }[] =
+		[];
+
+	try {
+		const socialProviderFetch = await event.fetch(`${serverEndpoint}/auth/social-providers/`);
+		if (socialProviderFetch.ok) {
+			socialProviders = await socialProviderFetch.json();
+		}
+	} catch {
+		// Degrade gracefully — login still works without social providers.
+	}
+
+	const usageRequired = socialProviders.length > 0 ? !!socialProviders[0].usage_required : false;
+
+	if (usageRequired) {
+		if (socialProviders.length === 1) {
+			return redirect(302, socialProviders[0].url);
+		}
+		if (socialProviders.length > 1) {
+			return {
+				props: {
+					quote,
+					background,
+					socialProviders,
+					socialOnly: true
+				}
+			};
+		}
+	}
+
+	return {
+		props: {
+			quote,
+			background,
+			socialProviders
+		}
+	};
 };
 
 export const actions: Actions = {
@@ -61,150 +67,89 @@ export const actions: Actions = {
 		const password = formData.get('password');
 		const totp = formData.get('totp');
 
-		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
-		const csrfToken = await fetchCSRFToken();
+		let csrfToken: string;
+		try {
+			csrfToken = await requireCsrf();
+		} catch {
+			return csrfFail();
+		}
 
-		// Initial login attempt
-		const loginFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/login`, {
+		const loginFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/login', {
 			method: 'POST',
-			headers: {
-				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json',
-				Cookie: `csrftoken=${csrfToken}`,
-				Referer: event.url.origin // Include Referer header
-			},
-			body: JSON.stringify({ username, password }),
-			credentials: 'include'
+			csrfToken,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password })
 		});
 
-		// console.log('[LOGIN] Login response status:', loginFetch.status);
-		// console.log('[LOGIN] Login response headers:', Array.from(loginFetch.headers.entries()));
-
 		if (loginFetch.status === 200) {
-			// Login successful without MFA
-			handleSuccessfulLogin(event, loginFetch);
-			return redirect(302, '/');
-		} else if (loginFetch.status === 401) {
-			// MFA required
-			if (!totp) {
+			setSessionFromResponse(event, loginFetch);
+			return redirect(302, resolvePostLoginRedirect(event));
+		}
+
+		if (loginFetch.status === 401) {
+			const loginResponse = await loginFetch.json();
+
+			if (hasPendingAllauthFlow(loginResponse, 'verify_email')) {
 				return fail(401, {
-					message: 'settings.mfa_required',
-					mfa_required: true
+					message: 'auth.user_email_verification_required',
+					email_verification_required: true
 				});
-			} else {
-				// Attempt MFA authentication
-				const sessionId = extractSessionId(loginFetch.headers.get('Set-Cookie'));
-				const mfaLoginFetch = await event.fetch(
-					`${serverEndpoint}/auth/browser/v1/auth/2fa/authenticate`,
+			}
+
+			if (hasPendingAllauthFlow(loginResponse, 'mfa_authenticate')) {
+				if (!totp) {
+					return fail(401, {
+						message: 'settings.mfa_required',
+						mfa_required: true
+					});
+				}
+
+				const sessionId = extractSessionIdFromResponse(loginFetch);
+				if (!sessionId) {
+					return fail(401, {
+						message: 'settings.invalid_code',
+						mfa_required: true
+					});
+				}
+
+				const mfaLoginFetch = await djangoBrowserFetch(
+					event,
+					'/auth/browser/v1/auth/2fa/authenticate',
 					{
 						method: 'POST',
-						headers: {
-							'X-CSRFToken': csrfToken,
-							'Content-Type': 'application/json',
-							Cookie: `csrftoken=${csrfToken}; sessionid=${sessionId}`,
-							Referer: event.url.origin // Include Referer header
-						},
-						body: JSON.stringify({ code: totp }),
-						credentials: 'include'
+						csrfToken,
+						sessionId,
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ code: totp })
 					}
 				);
 
 				if (mfaLoginFetch.ok) {
-					// MFA successful
-					handleSuccessfulLogin(event, mfaLoginFetch);
-					return redirect(302, '/');
-				} else {
-					// MFA failed
-					const mfaLoginResponse = await mfaLoginFetch.json();
-					return fail(401, {
-						message: mfaLoginResponse.error || 'settings.invalid_code',
-						mfa_required: true
-					});
+					setSessionFromResponse(event, mfaLoginFetch);
+					return redirect(302, resolvePostLoginRedirect(event));
 				}
+
+				const mfaLoginResponse = await mfaLoginFetch.json();
+				return fail(401, {
+					message: mfaLoginResponse.error || 'settings.invalid_code',
+					mfa_required: true
+				});
 			}
-		} else {
-			// Login failed
-			const loginResponse = await loginFetch.json();
-			const firstKey = Object.keys(loginResponse)[0] || 'error';
-			const error = loginResponse[firstKey][0] || 'settings.invalid_credentials';
-			return fail(400, { message: error });
+
+			return fail(400, { message: 'auth.login_error' });
 		}
+
+		const loginResponse = await loginFetch.json();
+		const firstKey = Object.keys(loginResponse)[0] || 'error';
+		const error = loginResponse[firstKey][0] || 'settings.invalid_credentials';
+		return fail(400, { message: error });
 	}
 };
 
-function handleSuccessfulLogin(event: RequestEvent<RouteParams, '/login'>, response: Response) {
-	// Get all Set-Cookie headers
-	let setCookieHeaders: string[] = [];
-
-	if ('getSetCookie' in response.headers && typeof response.headers.getSetCookie === 'function') {
-		setCookieHeaders = response.headers.getSetCookie();
-	} else {
-		const raw = response.headers.get('Set-Cookie');
-		if (raw) {
-			// Safely split on commas only if a new cookie starts (e.g., key=value)
-			setCookieHeaders = raw.split(/,\s*(?=\w+=)/);
-		}
+function resolvePostLoginRedirect(event: RequestEvent<RouteParams, '/login'>): string {
+	const next = event.url.searchParams.get('next');
+	if (next && next.startsWith('/') && !next.startsWith('//')) {
+		return next;
 	}
-
-	// console.log('[LOGIN] All Set-Cookie headers:', setCookieHeaders);
-
-	const sessionCookie = setCookieHeaders.find((cookie) => cookie.startsWith('sessionid=')) || '';
-	// console.log('[LOGIN] Session cookie:', sessionCookie);
-
-	if (!sessionCookie) {
-		console.warn('[LOGIN] No sessionid cookie found.');
-		return;
-	}
-
-	const sessionIdMatch = sessionCookie.match(/sessionid=([^;]+)/);
-	const expiresMatch = sessionCookie.match(/expires=([^;]+)/i);
-
-	if (!sessionIdMatch) {
-		console.warn('[LOGIN] Could not extract session ID from cookie.');
-		return;
-	}
-
-	const sessionId = sessionIdMatch[1];
-	const expires = expiresMatch ? new Date(expiresMatch[1]) : undefined;
-
-	// console.log('[LOGIN] Extracted session ID:', sessionId);
-	// if (expires) console.log('[LOGIN] Extracted expires:', expires);
-
-	// Determine cookie domain
-	const hostname = event.url.hostname;
-	const isIPAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
-	const isLocalhost = hostname === 'localhost';
-	const isSingleLabel = hostname.split('.').length === 1;
-
-	let cookieDomain: string | undefined;
-	if (!isIPAddress && !isLocalhost && !isSingleLabel) {
-		const parsed = psl.parse(hostname);
-		if (parsed && parsed.domain) {
-			cookieDomain = `.${parsed.domain}`;
-		}
-	}
-	// console.log('[LOGIN] Setting cookie domain:', cookieDomain);
-
-	const cookieOptions = {
-		path: '/',
-		httpOnly: true,
-		sameSite: 'lax' as const,
-		secure: event.url.protocol === 'https:',
-		...(expires && { expires }),
-		...(cookieDomain && { domain: cookieDomain })
-	};
-
-	// console.log('[LOGIN] Cookie options:', cookieOptions);
-
-	event.cookies.set('sessionid', sessionId, cookieOptions);
-	// console.log('[LOGIN] Cookie set successfully.');
-}
-
-function extractSessionId(setCookieHeader: string | null) {
-	if (setCookieHeader) {
-		const sessionIdRegex = /sessionid=([^;]+)/;
-		const match = setCookieHeader.match(sessionIdRegex);
-		return match ? match[1] : '';
-	}
-	return '';
+	return '/';
 }

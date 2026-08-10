@@ -15,6 +15,15 @@
 	let background: Background = data.props.background;
 	let is_disabled = data.props.is_disabled as boolean;
 	let is_disabled_message = data.props.is_disabled_message as string;
+	let inviteKey = data.props.invite_key as string | null;
+	let inviteSignup = data.props.inviteSignup as {
+		valid: boolean;
+		email?: string | null;
+		expired?: boolean;
+		accepted?: boolean;
+		registered?: boolean;
+		message?: string | null;
+	} | null;
 	let passwordPolicy = data.props.passwordPolicy as PasswordPolicy;
 	let signupLegalLinks = data.props.signupLegalLinks as SignupLegalLinks;
 	let legalRequired = signupLegalRequired(signupLegalLinks);
@@ -23,6 +32,7 @@
 	let password = '';
 	let confirmPassword = '';
 	let acceptedTerms = false;
+	let inviteEmail = inviteSignup?.email ?? '';
 </script>
 
 {#if isImageInfoModalOpen}
@@ -49,11 +59,19 @@
 										<h1 class="text-3xl font-bold text-primary mb-1">AdventureLog</h1>
 										<div class="w-12 h-1 bg-primary mx-auto rounded"></div>
 									</div>
-									<h2 class="text-4xl font-bold text-base-content mb-2">{$t('auth.signup')}</h2>
+									<h2 class="text-4xl font-bold text-base-content mb-2">
+										{inviteSignup?.valid ? $t('auth.invite_signup_title') : $t('auth.signup')}
+									</h2>
+									{#if inviteSignup?.valid}
+										<p class="text-base-content/70 mt-2">{$t('auth.invite_signup_desc')}</p>
+									{/if}
 								</div>
 
 								<div class="max-w-sm mx-auto w-full">
 									<form method="post" use:enhance class="space-y-4">
+										{#if inviteKey}
+											<input type="hidden" name="invite_key" value={inviteKey} />
+										{/if}
 										<div class="form-control">
 											<label class="label" for="username">
 												<span class="label-text font-medium">{$t('auth.username')}</span>
@@ -80,6 +98,8 @@
 												class="input input-bordered w-full focus:input-primary"
 												placeholder={$t('auth.enter_email')}
 												autocomplete="email"
+												value={inviteEmail}
+												readonly={!!inviteSignup?.valid}
 												required
 											/>
 										</div>
@@ -201,7 +221,11 @@
 											</button>
 										</div>
 
-										{#if $page.form?.message}
+										{#if $page.form?.email_verification_required}
+											<div class="alert alert-warning mt-4">
+												<span>{$t('auth.user_email_verification_required')}</span>
+											</div>
+										{:else if $page.form?.message}
 											<div class="alert alert-error mt-4">
 												<span
 													>{$t($page.form.message, {
@@ -220,6 +244,46 @@
 											</a>
 										</div>
 									</form>
+								</div>
+							{:else if inviteSignup && !inviteSignup.valid}
+								<div class="text-center">
+									<div class="mb-6">
+										<div
+											class="w-16 h-16 mx-auto bg-warning/10 rounded-full flex items-center justify-center mb-4"
+										>
+											<svg
+												class="w-8 h-8 text-warning"
+												fill="none"
+												stroke="currentColor"
+												viewBox="0 0 24 24"
+											>
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													stroke-width="2"
+													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+												/>
+											</svg>
+										</div>
+										<h1 class="text-4xl font-bold text-base-content mb-4">
+											{$t('auth.invite_invalid_title')}
+										</h1>
+										<p class="text-lg text-base-content/70 max-w-md mx-auto">
+											{#if inviteSignup.expired}
+												{$t('auth.invite_expired_desc')}
+											{:else if inviteSignup.accepted}
+												{$t('auth.invite_accepted_desc')}
+											{:else if inviteSignup.registered}
+												{$t('auth.invite_registered_desc')}
+											{:else}
+												{$t('auth.invite_invalid_desc')}
+											{/if}
+										</p>
+									</div>
+
+									<div class="mt-8">
+										<a href="/login" class="btn btn-primary">{$t('auth.login')}</a>
+									</div>
 								</div>
 							{:else}
 								<div class="text-center">

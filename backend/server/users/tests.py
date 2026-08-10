@@ -73,7 +73,6 @@ class UserAPITestCase(APITestCase):
         self.assertEqual(response.status_code, 200)
         data = response.json()
         self.assertEqual(data['username'], 'testuser')
-        self.assertEqual(data['email'], 'testuser@example.com')
         self.assertEqual(data['first_name'], 'Test')
         self.assertEqual(data['last_name'], 'User')
         self.assertEqual(data['public_profile'], False)
@@ -102,7 +101,6 @@ class UserAPITestCase(APITestCase):
         # Note that the email field is not updated because that is a seperate endpoint
         userModel = CustomUser.objects.get(username='testuser2')
         self.assertEqual(data['username'], 'testuser2')
-        self.assertEqual(data['email'], 'testuser@example.com')
         self.assertEqual(data['first_name'], 'Test2')
         self.assertEqual(data['last_name'], 'User2')
         self.assertEqual(data['public_profile'], True)
@@ -137,7 +135,7 @@ class PasswordPolicyTestCase(APITestCase):
         response = self.client.get('/auth/password-policy/')
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertEqual(data['min_length'], 6)
+        self.assertEqual(data['min_length'], 10)
         self.assertFalse(data['validators_enabled'])
 
     def test_signup_legal_links_endpoint_returns_empty_by_default(self):
@@ -162,7 +160,7 @@ class PasswordPolicyTestCase(APITestCase):
         response = self.client.post('/auth/browser/v1/auth/signup', {
             'username': 'validpwuser',
             'email': 'validpwuser@example.com',
-            'password': 'valid1',
+            'password': 'validpass1',
             'first_name': 'Valid',
             'last_name': 'Password',
         }, format='json')

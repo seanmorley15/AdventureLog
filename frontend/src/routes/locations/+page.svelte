@@ -36,16 +36,27 @@
 
 	let locationBeingUpdated: Location | undefined = undefined;
 
+	function toListLocation(loc: Location): Location {
+		// Keep the in-memory list aligned with the slim list API payload
+		return {
+			...loc,
+			visits: [],
+			attachments: [],
+			trails: []
+		};
+	}
+
 	// Sync the locationBeingUpdated with the adventures array
 	$: {
 		if (locationBeingUpdated && locationBeingUpdated.id) {
-			const index = adventures.findIndex((adventure) => adventure.id === locationBeingUpdated?.id);
+			const listItem = toListLocation(locationBeingUpdated);
+			const index = adventures.findIndex((adventure) => adventure.id === listItem.id);
 
 			if (index !== -1) {
-				adventures[index] = { ...locationBeingUpdated };
+				adventures[index] = listItem;
 				adventures = adventures; // Trigger reactivity
 			} else {
-				adventures = [{ ...locationBeingUpdated }, ...adventures];
+				adventures = [listItem, ...adventures];
 				data.props.adventures = adventures; // Update data.props.adventures as well
 			}
 		}
@@ -54,6 +65,7 @@
 	let is_category_modal_open: boolean = false;
 	let adventureToEdit: Location | null = null;
 	let isLocationModalOpen: boolean = false;
+	let editingLocationId: string | null = null;
 	let sidebarOpen = false;
 
 	type LocationFilterOverrides = {
@@ -127,9 +139,26 @@
 		adventures = adventures.filter((adventure) => adventure.id !== event.detail);
 	}
 
-	function editAdventure(event: CustomEvent<Location>) {
-		adventureToEdit = event.detail;
-		isLocationModalOpen = true;
+	async function editAdventure(event: CustomEvent<Location>) {
+		const locationId = event.detail?.id;
+		if (!locationId) {
+			adventureToEdit = event.detail;
+			isLocationModalOpen = true;
+			return;
+		}
+
+		// List endpoint returns a slim payload; fetch full location for the edit modal
+		editingLocationId = locationId;
+		try {
+			const res = await fetch(`/api/locations/${locationId}/`);
+			adventureToEdit = res.ok ? await res.json() : event.detail;
+			isLocationModalOpen = true;
+		} catch {
+			adventureToEdit = event.detail;
+			isLocationModalOpen = true;
+		} finally {
+			editingLocationId = null;
+		}
 	}
 
 	function toggleSidebar() {
@@ -250,6 +279,7 @@
 							<LocationCard
 								user={data.user}
 								{adventure}
+								isEditLoading={editingLocationId === adventure.id}
 								on:delete={deleteAdventure}
 								on:edit={editAdventure}
 								on:duplicate={(e) => {

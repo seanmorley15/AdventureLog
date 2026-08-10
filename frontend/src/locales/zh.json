@@ -747,7 +747,19 @@
 		"media_storage": "媒体存储",
 		"media_storage_desc": "您上传的图像和附件的存储使用情况。",
 		"media_total_used": "已使用总量",
-		"download_backup": "下载备份"
+		"download_backup": "下载备份",
+		"sessions_title": "Active Sessions",
+		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
+		"sessions_current": "This device",
+		"sessions_unknown_device": "Unknown device",
+		"sessions_signed_in": "Signed in",
+		"sessions_revoke": "Sign out",
+		"sessions_revoke_others": "Sign out other devices",
+		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
+		"sessions_empty": "No other active sessions.",
+		"sessions_revoked": "Session signed out.",
+		"sessions_others_revoked": "Other devices signed out.",
+		"sessions_revoke_error": "Could not sign out that session. Try again."
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",

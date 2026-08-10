@@ -2,7 +2,7 @@
 	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { t } from 'svelte-i18n';
-	import type { APIKey, User } from '$lib/types.js';
+	import type { APIKey, AuthUserSession, User } from '$lib/types.js';
 	import PasswordRequirements from '$lib/components/auth/PasswordRequirements.svelte';
 	import SettingsCard from './SettingsCard.svelte';
 	import SettingsSectionHeader from './SettingsSectionHeader.svelte';
@@ -22,13 +22,48 @@
 	export let newApiKeyName: string;
 	export let newlyCreatedKey: string | null;
 	export let keyCopied: boolean;
+	export let sessions: AuthUserSession[];
+	export let isRevokingSession: boolean = false;
+	export let onRevokeSession: (id: number) => void;
+	export let onRevokeOtherSessions: () => void;
 	export let onEnableMfa: () => void;
 	export let onDisableMfa: () => void;
+	export let onVerifyMfaDisablePassword: () => void;
+	export let onCancelMfaDisableReauth: () => void;
 	export let onDisablePassword: () => void;
 	export let onCreateApiKey: () => void;
 	export let onCopyKey: () => void;
 	export let onDeleteApiKey: (id: string) => void;
 	export let onDismissNewKey: () => void;
+	export let mfaDisableNeedsReauth: boolean = false;
+	export let mfaDisablePassword: string = '';
+	export let mfaDisableReauthError: boolean = false;
+	export let isDisablingMfa: boolean = false;
+	export let isVerifyingMfaDisablePassword: boolean = false;
+
+	function sessionDeviceLabel(userAgent: string): string {
+		const ua = userAgent?.trim() ?? '';
+		if (!ua) return '';
+
+		let browser = '';
+		if (/Edg\//.test(ua)) browser = 'Edge';
+		else if (/Chrome\//.test(ua) && !/Chromium\//.test(ua)) browser = 'Chrome';
+		else if (/Firefox\//.test(ua)) browser = 'Firefox';
+		else if (/Safari\//.test(ua) && !/Chrome\//.test(ua)) browser = 'Safari';
+
+		let os = '';
+		if (/Windows/.test(ua)) os = 'Windows';
+		else if (/Android/.test(ua)) os = 'Android';
+		else if (/iPhone|iPad|iPod/.test(ua)) os = 'iOS';
+		else if (/Mac OS X/.test(ua)) os = 'macOS';
+		else if (/Linux/.test(ua)) os = 'Linux';
+
+		if (browser && os) return `${browser} on ${os}`;
+		if (browser || os) return browser || os;
+		return ua.length > 80 ? `${ua.slice(0, 80)}…` : ua;
+	}
+
+	$: hasOtherSessions = sessions.some((s) => !s.is_current);
 </script>
 
 <div class="space-y-8">
@@ -83,15 +118,64 @@
 				</div>
 			</div>
 			<PasswordRequirements policy={passwordPolicy} password={newPassword} />
-			{#if $page.form?.message}
+			{#if $page.form?.changePasswordError}
 				<div class="alert alert-warning max-w-2xl">
-					<span>{$t($page.form?.message, { values: $page.form?.values ?? {} })}</span>
+					<span
+						>{$t($page.form.changePasswordError, {
+							values: $page.form.changePasswordValues ?? {}
+						})}</span
+					>
 				</div>
 			{/if}
-			<div class="tooltip tooltip-warning" data-tip={$t('settings.password_change_lopout_warning')}>
+			<div class="tooltip tooltip-warning" data-tip={$t('settings.password_change_logout_warning')}>
 				<button class="btn btn-warning">🔑 {$t('settings.password_change')}</button>
 			</div>
 		</form>
+	</SettingsCard>
+
+	<SettingsCard>
+		<SettingsSectionHeader
+			icon="💻"
+			iconBgClass="bg-info/10"
+			title={$t('settings.sessions_title')}
+			description={$t('settings.sessions_desc')}
+		/>
+		<div class="space-y-3">
+			{#each sessions as session (session.id)}
+				<div class="flex items-center justify-between p-4 bg-base-200 rounded-xl gap-4 flex-wrap">
+					<div class="min-w-0">
+						<p class="font-semibold truncate">
+							{sessionDeviceLabel(session.user_agent) || $t('settings.sessions_unknown_device')}
+						</p>
+						<p class="text-sm text-base-content/60">
+							{session.ip} · {new Date(session.created_at * 1000).toLocaleDateString()}
+						</p>
+					</div>
+					{#if session.is_current}
+						<span class="badge badge-success">{$t('settings.sessions_current')}</span>
+					{:else}
+						<button
+							class="btn btn-error btn-sm shrink-0"
+							on:click={() => onRevokeSession(session.id)}
+							disabled={isRevokingSession}
+						>
+							{$t('settings.sessions_revoke')}
+						</button>
+					{/if}
+				</div>
+			{/each}
+		</div>
+		{#if hasOtherSessions}
+			<button
+				class="btn btn-outline btn-warning mt-4"
+				on:click={onRevokeOtherSessions}
+				disabled={isRevokingSession}
+			>
+				{$t('settings.sessions_revoke_others')}
+			</button>
+		{:else}
+			<p class="text-base-content/50 mt-4">{$t('settings.sessions_empty')}</p>
+		{/if}
 	</SettingsCard>
 
 	<SettingsCard>
@@ -118,10 +202,64 @@
 					>
 				{/if}
 			{:else}
-				<button class="btn btn-warning" on:click={onDisableMfa}>{$t('settings.disable_mfa')}</button
+				<button
+					class="btn btn-warning"
+					on:click={onDisableMfa}
+					disabled={isDisablingMfa || mfaDisableNeedsReauth}
 				>
+					{$t('settings.disable_mfa')}
+				</button>
 			{/if}
 		</div>
+		{#if mfaDisableNeedsReauth}
+			<div class="mt-4 p-4 bg-base-200 rounded-xl border border-warning/40 space-y-3 max-w-md">
+				<div>
+					<h3 class="font-semibold">{$t('settings.reauth_required_title')}</h3>
+					<p class="text-sm text-base-content/70 mt-1">
+						{$t('settings.reauth_required_disable_desc')}
+					</p>
+				</div>
+				<div class="form-control">
+					<!-- svelte-ignore a11y-label-has-associated-control -->
+					<label class="label">
+						<span class="label-text font-medium">{$t('settings.current_password')}</span>
+					</label>
+					<input
+						type="password"
+						class="input input-bordered input-primary w-full"
+						placeholder={$t('settings.enter_current_password')}
+						autocomplete="current-password"
+						bind:value={mfaDisablePassword}
+						on:keydown={(e) => e.key === 'Enter' && onVerifyMfaDisablePassword()}
+						disabled={isVerifyingMfaDisablePassword}
+					/>
+					{#if mfaDisableReauthError}
+						<!-- svelte-ignore a11y-label-has-associated-control -->
+						<label class="label">
+							<span class="label-text-alt text-error">
+								{$t('settings.reauth_incorrect_password')}
+							</span>
+						</label>
+					{/if}
+				</div>
+				<div class="flex gap-2 flex-wrap">
+					<button
+						class="btn btn-warning"
+						on:click={onVerifyMfaDisablePassword}
+						disabled={!mfaDisablePassword || isVerifyingMfaDisablePassword}
+					>
+						{isVerifyingMfaDisablePassword ? '…' : $t('settings.reauth_verify')}
+					</button>
+					<button
+						class="btn btn-ghost"
+						on:click={onCancelMfaDisableReauth}
+						disabled={isVerifyingMfaDisablePassword}
+					>
+						{$t('about.close')}
+					</button>
+				</div>
+			</div>
+		{/if}
 		{#if !emails.some((e) => e.verified)}
 			<div class="alert alert-warning mt-4">
 				<span>{$t('settings.no_verified_email_warning')}</span>

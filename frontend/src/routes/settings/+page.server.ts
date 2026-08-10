@@ -1,21 +1,29 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
 import type {
 	APIKey,
 	EndurainIntegration,
 	ImmichIntegration,
 	MediaUsage,
 	User,
-	WandererIntegration
+	WandererIntegration,
+	AuthUserSession
 } from '$lib/types';
 import {
+	clearSessionCookie,
+	djangoBrowserFetch,
+	djangoSessionFetch,
+	djangoSessionJson,
 	fetchCSRFToken,
 	fetchPasswordPolicy,
+	getServerEndpoint,
 	isPasswordLongEnough,
-	mapAllauthPasswordError
+	mapAllauthPasswordError,
+	requireCsrf,
+	requireUser
 } from '$lib/index.server';
-const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+
+const endpoint = getServerEndpoint();
 
 type MFAAuthenticatorResponse = {
 	status: number;
@@ -28,143 +36,96 @@ type MFAAuthenticatorResponse = {
 	}[];
 };
 
+type EmailListResponse = {
+	status: number;
+	data: { email: string; verified: boolean; primary: boolean }[];
+};
+
+type SessionsListResponse = {
+	status: number;
+	data: AuthUserSession[];
+};
+
+type IntegrationsSummary = {
+	google_maps: boolean;
+	strava: { global: boolean; user: boolean };
+	wanderer: { exists: boolean };
+	endurain?: { exists: boolean };
+};
+
+type SocialProvider = {
+	provider: string;
+	url: string;
+	name: string;
+	usage_required: boolean;
+};
+
 export const load: PageServerLoad = async (event) => {
-	if (!event.locals.user) {
-		return redirect(302, '/');
-	}
-	let sessionId = event.cookies.get('sessionid');
+	requireUser(event);
+
+	const sessionId = event.cookies.get('sessionid');
 	if (!sessionId) {
-		return redirect(302, '/');
-	}
-	let res = await fetch(`${endpoint}/auth/user-metadata/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	let user = (await res.json()) as User;
-
-	let emailFetch = await fetch(`${endpoint}/auth/browser/v1/account/email`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	let emailResponse = (await emailFetch.json()) as {
-		status: number;
-		data: { email: string; verified: boolean; primary: boolean }[];
-	};
-	let emails = emailResponse.data;
-	if (!res.ok || !emailFetch.ok) {
-		return redirect(302, '/');
+		throw redirect(302, '/login');
 	}
 
-	let mfaAuthenticatorFetch = await fetch(`${endpoint}/auth/browser/v1/account/authenticators`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	let mfaAuthenticatorResponse = (await mfaAuthenticatorFetch.json()) as MFAAuthenticatorResponse;
-	let authenticators = (mfaAuthenticatorResponse.data.length > 0) as boolean;
+	// User profile is already hydrated in event.locals.user via the auth hook.
+	// Fetch everything else in parallel instead of serial round-trips.
+	const [
+		emailResponse,
+		mfaAuthenticatorResponse,
+		integrations,
+		publicUrlJson,
+		socialProviders,
+		immichIntegration,
+		apiKeys,
+		mediaUsage,
+		passwordPolicy,
+		wandererIntegration,
+		endurainIntegration,
+		sessionsResponse
+	] = await Promise.all([
+		djangoSessionJson<EmailListResponse>(event, '/auth/browser/v1/account/email'),
+		djangoSessionJson<MFAAuthenticatorResponse>(event, '/auth/browser/v1/account/authenticators'),
+		djangoSessionJson<IntegrationsSummary>(event, '/api/integrations/'),
+		event
+			.fetch(`${endpoint}/public-url/`)
+			.then(async (res) => (res.ok ? ((await res.json()) as { PUBLIC_URL: string }) : null)),
+		djangoSessionJson<SocialProvider[]>(event, '/auth/social-providers/').then(
+			(data) => data ?? []
+		),
+		djangoSessionJson<ImmichIntegration>(event, '/api/integrations/immich/'),
+		djangoSessionJson<APIKey[]>(event, '/auth/api-keys/').then((data) => data ?? []),
+		djangoSessionJson<MediaUsage>(event, '/auth/user-media-usage/'),
+		fetchPasswordPolicy(event.fetch, endpoint),
+		djangoSessionJson<WandererIntegration>(event, '/api/integrations/wanderer/'),
+		djangoSessionJson<EndurainIntegration>(event, '/api/integrations/endurain/'),
+		djangoSessionJson<SessionsListResponse>(event, '/auth/browser/v1/auth/sessions')
+	]);
 
-	let immichIntegration: ImmichIntegration | null = null;
-	let immichIntegrationsFetch = await fetch(`${endpoint}/api/integrations/immich/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (immichIntegrationsFetch.ok) {
-		immichIntegration = await immichIntegrationsFetch.json();
+	if (!emailResponse || !integrations || !publicUrlJson) {
+		throw redirect(302, '/login');
 	}
 
-	let socialProvidersFetch = await fetch(`${endpoint}/auth/social-providers`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	let socialProviders = await socialProvidersFetch.json();
-
-	let integrationsFetch = await fetch(`${endpoint}/api/integrations/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (!integrationsFetch.ok) {
-		return redirect(302, '/');
-	}
-	let integrations = await integrationsFetch.json();
-	let googleMapsEnabled = integrations.google_maps as boolean;
-	let stravaGlobalEnabled = integrations.strava.global as boolean;
-	let stravaUserEnabled = integrations.strava.user as boolean;
-	let wandererEnabled = integrations.wanderer.exists as boolean;
-	let endurainEnabled = integrations.endurain?.exists as boolean;
-	let wandererIntegration: WandererIntegration | null = null;
-	let endurainIntegration: EndurainIntegration | null = null;
-	let wandererIntegrationFetch = await fetch(`${endpoint}/api/integrations/wanderer/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (wandererIntegrationFetch.ok) {
-		wandererIntegration = await wandererIntegrationFetch.json();
-	}
-
-	let endurainIntegrationFetch = await fetch(`${endpoint}/api/integrations/endurain/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (endurainIntegrationFetch.ok) {
-		endurainIntegration = await endurainIntegrationFetch.json();
-	}
-
-	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
-	let publicUrl = '';
-	if (!publicUrlFetch.ok) {
-		return redirect(302, '/');
-	} else {
-		let publicUrlJson = await publicUrlFetch.json();
-		publicUrl = publicUrlJson.PUBLIC_URL;
-	}
-
-	let apiKeys: APIKey[] = [];
-	let apiKeysFetch = await fetch(`${endpoint}/auth/api-keys/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (apiKeysFetch.ok) {
-		apiKeys = await apiKeysFetch.json();
-	}
-
-	let mediaUsage: MediaUsage | null = null;
-	let mediaUsageFetch = await fetch(`${endpoint}/auth/user-media-usage/`, {
-		headers: {
-			Cookie: `sessionid=${sessionId}`
-		}
-	});
-	if (mediaUsageFetch.ok) {
-		mediaUsage = (await mediaUsageFetch.json()) as MediaUsage;
-	}
-
-	const passwordPolicy = await fetchPasswordPolicy(event.fetch, endpoint);
+	const authenticators = (mfaAuthenticatorResponse?.data.length ?? 0) > 0;
 
 	return {
 		props: {
-			user,
-			emails,
+			emails: emailResponse.data,
 			authenticators,
 			immichIntegration,
-			publicUrl,
+			publicUrl: publicUrlJson.PUBLIC_URL,
 			socialProviders,
-			googleMapsEnabled,
-			stravaGlobalEnabled,
-			stravaUserEnabled,
-			wandererEnabled,
+			googleMapsEnabled: integrations.google_maps,
+			stravaGlobalEnabled: integrations.strava.global,
+			stravaUserEnabled: integrations.strava.user,
+			wandererEnabled: integrations.wanderer.exists,
 			wandererIntegration,
-			endurainEnabled,
+			endurainEnabled: integrations.endurain?.exists ?? false,
 			endurainIntegration,
 			apiKeys,
 			mediaUsage,
-			passwordPolicy
+			passwordPolicy,
+			sessions: sessionsResponse?.data ?? []
 		}
 	};
 };
@@ -191,25 +152,18 @@ export const actions: Actions = {
 			let default_currency = formData.get('default_currency') as string | null | undefined;
 			let map_style = formData.get('map_style') as string | null | undefined;
 
-			const resCurrent = await fetch(`${endpoint}/auth/user-metadata/`, {
-				headers: {
-					Cookie: `sessionid=${sessionId}`,
-					Referer: event.url.origin // Include Referer header
-				}
-			});
+			const resCurrent = await djangoSessionFetch(event, '/auth/user-metadata/');
 
 			if (!resCurrent.ok) {
 				return fail(resCurrent.status, await resCurrent.json());
 			}
 
-			// Gets the boolean value of the public_profile input
 			if (public_profile === 'on') {
 				public_profile = true;
 			} else {
 				public_profile = false;
 			}
 
-			// Gets the boolean value of the measurement_system input checked means imperial
 			if (measurement_system === 'on') {
 				measurement_system = 'imperial';
 			} else {
@@ -272,7 +226,7 @@ export const actions: Actions = {
 			let res = await fetch(`${endpoint}/auth/update-user/`, {
 				method: 'PATCH',
 				headers: {
-					Referer: event.url.origin, // Include Referer header
+					Referer: event.url.origin,
 					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
 					'X-CSRFToken': csrfToken
 				},
@@ -296,12 +250,10 @@ export const actions: Actions = {
 		}
 	},
 	changePassword: async (event) => {
-		if (!event.locals.user) {
-			return redirect(302, '/');
-		}
+		requireUser(event);
 		let sessionId = event.cookies.get('sessionid');
 		if (!sessionId) {
-			return redirect(302, '/');
+			return redirect(302, '/login');
 		}
 
 		const formData = await event.request.formData();
@@ -311,7 +263,7 @@ export const actions: Actions = {
 		let current_password = formData.get('current_password') as string | null | undefined;
 
 		if (password1 !== password2) {
-			return fail(400, { message: 'settings.password_does_not_match' });
+			return fail(400, { changePasswordError: 'settings.password_does_not_match' });
 		}
 
 		if (!current_password) {
@@ -321,57 +273,54 @@ export const actions: Actions = {
 		const passwordPolicy = await fetchPasswordPolicy(event.fetch, endpoint);
 		if (password1 && !isPasswordLongEnough(password1, passwordPolicy)) {
 			return fail(400, {
-				message: 'auth.password_too_short',
-				values: { min: passwordPolicy.min_length }
+				changePasswordError: 'auth.password_too_short',
+				changePasswordValues: { min: passwordPolicy.min_length }
 			});
 		}
 
-		let csrfToken = await fetchCSRFToken();
-
-		if (current_password) {
-			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
-				method: 'POST',
-				headers: {
-					Referer: event.url.origin, // Include Referer header
-					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					current_password,
-					new_password: password1
-				})
-			});
-			if (!res.ok) {
-				const errorResponse = await res.json();
-				return fail(
-					res.status,
-					mapAllauthPasswordError(errorResponse, { minLength: passwordPolicy.min_length })
-				);
-			}
-			return { success: true };
-		} else {
-			let res = await fetch(`${endpoint}/auth/browser/v1/account/password/change`, {
-				method: 'POST',
-				headers: {
-					Referer: event.url.origin, // Include Referer header
-					Cookie: `sessionid=${sessionId}; csrftoken=${csrfToken}`,
-					'X-CSRFToken': csrfToken,
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					new_password: password1
-				})
-			});
-			if (!res.ok) {
-				const errorResponse = await res.json();
-				return fail(
-					res.status,
-					mapAllauthPasswordError(errorResponse, { minLength: passwordPolicy.min_length })
-				);
-			}
-			return { success: true };
+		let csrfToken: string;
+		try {
+			csrfToken = await requireCsrf();
+		} catch {
+			return fail(500, { changePasswordError: 'settings.csrf_failed' });
 		}
+
+		const body = current_password
+			? { current_password, new_password: password1 }
+			: { new_password: password1 };
+
+		const res = await djangoBrowserFetch(event, '/auth/browser/v1/account/password/change', {
+			method: 'POST',
+			csrfToken,
+			sessionId,
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify(body)
+		});
+
+		if (!res.ok) {
+			const errorResponse = await res.json();
+			const mapped = mapAllauthPasswordError(errorResponse, {
+				minLength: passwordPolicy.min_length
+			});
+			return fail(res.status, {
+				changePasswordError: mapped.message,
+				changePasswordValues: mapped.values
+			});
+		}
+
+		try {
+			await djangoBrowserFetch(event, '/auth/browser/v1/auth/session', {
+				method: 'DELETE',
+				csrfToken,
+				sessionId,
+				headers: { 'Content-Type': 'application/json' }
+			});
+		} catch {
+			// Still clear the local session after a successful password change.
+		}
+
+		clearSessionCookie(event);
+		throw redirect(303, '/login');
 	},
 	restoreData: async (event) => {
 		if (!event.locals.user) {
@@ -397,7 +346,6 @@ export const actions: Actions = {
 
 			let csrfToken = await fetchCSRFToken();
 
-			// Create FormData for the API request
 			const apiFormData = new FormData();
 			apiFormData.append('file', file);
 			apiFormData.append('confirm', 'yes');
@@ -459,7 +407,7 @@ export const actions: Actions = {
 		});
 
 		if (res.status === 204) {
-			event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
+			clearSessionCookie(event);
 			throw redirect(303, '/');
 		}
 

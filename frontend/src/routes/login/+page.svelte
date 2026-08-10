@@ -138,12 +138,9 @@
 													type="text"
 													name="totp"
 													id="totp"
-													inputmode="numeric"
-													pattern="[0-9]*"
 													autocomplete="one-time-code"
 													class="input input-bordered w-full focus:input-primary"
 													placeholder={$t('auth.totp_placeholder')}
-													maxlength="8"
 												/>
 												<label class="label" for="totp">
 													<span class="label-text-alt text-base-content/60">
@@ -165,8 +162,12 @@
 											</button>
 										</div>
 
-										<!-- Error Message -->
-										{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
+										<!-- Status / Error Message -->
+										{#if $page.form?.email_verification_required}
+											<div class="alert alert-warning mt-4">
+												<span>{$t('auth.user_email_verification_required')}</span>
+											</div>
+										{:else if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
 											<div class="alert alert-error mt-4">
 												<span>{$t($page.form.message) || $t('auth.login_error')}</span>
 											</div>

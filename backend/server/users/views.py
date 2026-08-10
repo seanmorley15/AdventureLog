@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ChangeEmailSerializer, APIKeySerializer, APIKeyCreateSerializer, DeleteAccountSerializer
+from .serializers import APIKeySerializer, APIKeyCreateSerializer, DeleteAccountSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.conf import settings
@@ -26,30 +26,6 @@ from django.contrib.auth import logout
 from users.services.account_deletion import AccountDeletionError, delete_user_account
 
 User = get_user_model()
-
-class ChangeEmailView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        request_body=ChangeEmailSerializer,
-        responses={
-            200: openapi.Response('Email successfully changed'),
-            400: 'Bad Request'
-        },
-        operation_description="Change the email address for the authenticated user."
-    )
-    def post(self, request):
-        serializer = ChangeEmailSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            user = request.user
-            new_email = serializer.validated_data['new_email']
-            user.email = new_email
-            # remove all other email addresses for the user
-            user.emailaddress_set.exclude(email=new_email).delete()
-            user.emailaddress_set.create(email=new_email, primary=True, verified=False)
-            user.save()
-            return Response({"detail": "Email successfully changed."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class IsRegistrationDisabled(APIView):
     # This endpoint is requested on auth pages and should not be globally throttled.
@@ -120,9 +96,6 @@ class PublicUserListView(APIView):
     )
     def get(self, request):
         users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
-        # remove the email addresses from the response
-        for user in users:
-            user.email = None
         serializer = PublicUserSerializer(users, many=True)
         # for every user, remove the field has_password
         for user in serializer.data:
@@ -149,9 +122,6 @@ class PublicUserDetailView(APIView):
         serializer = PublicUserSerializer(user)
         # for every user, remove the field has_password
         serializer.data.pop('has_password', None)
-        
-        # remove the email address from the response
-        user.email = None
         
         # Get the users adventures and collections to include in the response
         adventures = Location.objects.filter(user=user, is_public=True)

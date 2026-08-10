@@ -8,10 +8,12 @@
 		WandererIntegration,
 		User,
 		APIKey,
-		MediaUsage
+		MediaUsage,
+		AuthUserSession
 	} from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import TotpModal from '$lib/components/TOTPModal.svelte';
 	import IntegrationsSettings from '$lib/components/settings/IntegrationsSettings.svelte';
@@ -23,6 +25,7 @@
 	import DangerZoneSettingsPanel from '$lib/components/settings/DangerZoneSettingsPanel.svelte';
 	import AboutSettingsPanel from '$lib/components/settings/AboutSettingsPanel.svelte';
 	import AdminSettingsPanel from '$lib/components/settings/AdminSettingsPanel.svelte';
+	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
 
 	export let data;
 
@@ -60,11 +63,18 @@
 	let acknowledgeRestoreOverride = false;
 	let isRestoring = false;
 	let isMFAModalOpen = false;
+	let mfaDisableNeedsReauth = false;
+	let mfaDisablePassword = '';
+	let mfaDisableReauthError = false;
+	let isDisablingMfa = false;
+	let isVerifyingMfaDisablePassword = false;
 	let deleteConfirmation = '';
 	let deletePassword = '';
 	let isDeletingAccount = false;
 
 	let apiKeys: APIKey[] = data.props.apiKeys ?? [];
+	let sessions: AuthUserSession[] = data.props.sessions ?? [];
+	let isRevokingSession = false;
 	let newApiKeyName = '';
 	let newlyCreatedKey: string | null = null;
 	let keyCopied = false;
@@ -303,14 +313,74 @@
 	}
 
 	async function disableMfa() {
-		const res = await fetch('/auth/browser/v1/account/authenticators/totp', { method: 'DELETE' });
-		if (res.ok) {
-			addToast('success', $t('settings.mfa_disabled'));
-			data.props.authenticators = false;
-		} else {
-			if (res.status === 401) addToast('error', $t('settings.reset_session_error'));
+		if (isDisablingMfa) return;
+		isDisablingMfa = true;
+		try {
+			const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+			if (res.ok) {
+				mfaDisableNeedsReauth = false;
+				mfaDisablePassword = '';
+				mfaDisableReauthError = false;
+				addToast('success', $t('settings.mfa_disabled'));
+				data.props.authenticators = false;
+				return;
+			}
+
+			let body: unknown = null;
+			try {
+				body = await res.json();
+			} catch {
+				/* ignore parse errors */
+			}
+
+			if (isReauthRequired(res, body)) {
+				if (user?.has_password === false) {
+					mfaDisableNeedsReauth = false;
+					addToast('error', $t('settings.reset_session_error'));
+					return;
+				}
+				mfaDisableNeedsReauth = true;
+				addToast('info', $t('settings.reauth_required_disable_desc'));
+				return;
+			}
+
 			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isDisablingMfa = false;
 		}
+	}
+
+	async function verifyMfaDisablePassword() {
+		if (!mfaDisablePassword || isVerifyingMfaDisablePassword) return;
+		isVerifyingMfaDisablePassword = true;
+		mfaDisableReauthError = false;
+		try {
+			const { ok, status } = await reauthenticateWithPassword(mfaDisablePassword);
+			if (ok) {
+				mfaDisableNeedsReauth = false;
+				mfaDisablePassword = '';
+				mfaDisableReauthError = false;
+				addToast('success', $t('settings.reauth_success'));
+				await disableMfa();
+				return;
+			}
+			if (status === 400) {
+				mfaDisableReauthError = true;
+				return;
+			}
+			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isVerifyingMfaDisablePassword = false;
+		}
+	}
+
+	function cancelMfaDisableReauth() {
+		mfaDisableNeedsReauth = false;
+		mfaDisablePassword = '';
+		mfaDisableReauthError = false;
 	}
 
 	async function createApiKey() {
@@ -359,6 +429,49 @@
 		} else {
 			addToast('error', $t('api_keys.revoke_error'));
 		}
+	}
+
+	async function revokeSessions(ids: number[]) {
+		if (!ids.length || isRevokingSession) return;
+		isRevokingSession = true;
+		try {
+			const res = await fetch('/auth/browser/v1/auth/sessions', {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ sessions: ids })
+			});
+			if (res.status === 401) {
+				await goto('/login');
+				return;
+			}
+			if (!res.ok) {
+				addToast('error', $t('settings.sessions_revoke_error'));
+				return;
+			}
+			const payload = await res.json();
+			sessions = Array.isArray(payload?.data)
+				? payload.data
+				: sessions.filter((s) => !ids.includes(s.id));
+			addToast(
+				'success',
+				ids.length > 1 ? $t('settings.sessions_others_revoked') : $t('settings.sessions_revoked')
+			);
+		} catch {
+			addToast('error', $t('settings.sessions_revoke_error'));
+		} finally {
+			isRevokingSession = false;
+		}
+	}
+
+	function revokeSession(id: number) {
+		return revokeSessions([id]);
+	}
+
+	function revokeOtherSessions() {
+		if (!confirm($t('settings.sessions_revoke_others_confirm'))) return;
+		const otherIds = sessions.filter((s) => !s.is_current).map((s) => s.id);
+		return revokeSessions(otherIds);
 	}
 
 	function confirmDeleteAccount() {
@@ -414,12 +527,23 @@
 						bind:newApiKeyName
 						{newlyCreatedKey}
 						{keyCopied}
+						{sessions}
+						{isRevokingSession}
+						{mfaDisableNeedsReauth}
+						bind:mfaDisablePassword
+						{mfaDisableReauthError}
+						{isDisablingMfa}
+						{isVerifyingMfaDisablePassword}
 						onEnableMfa={() => (isMFAModalOpen = true)}
 						onDisableMfa={disableMfa}
+						onVerifyMfaDisablePassword={verifyMfaDisablePassword}
+						onCancelMfaDisableReauth={cancelMfaDisableReauth}
 						onDisablePassword={disablePassword}
 						onCreateApiKey={createApiKey}
 						onCopyKey={copyKey}
 						onDeleteApiKey={deleteApiKey}
+						onRevokeSession={revokeSession}
+						onRevokeOtherSessions={revokeOtherSessions}
 						onDismissNewKey={() => {
 							newlyCreatedKey = null;
 							keyCopied = false;

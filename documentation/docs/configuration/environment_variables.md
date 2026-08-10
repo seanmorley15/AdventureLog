@@ -48,6 +48,7 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `POSTGRES_DB` / `PGDATABASE` | Yes | Database name. | `database` |
 | `POSTGRES_USER` / `PGUSER` | Yes | Database user. | `adventure` |
 | `POSTGRES_PASSWORD` / `PGPASSWORD` | Yes | Database password. Change in production. | `changeme123` |
+| `PG_CONN_MAX_AGE` | No | Seconds to reuse database connections between requests (`0` closes after each request). | `300` |
 
 ## Django core
 
@@ -69,7 +70,7 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `DISABLE_REGISTRATION_MESSAGE` | No | Message shown when registration is disabled. | Custom message |
 | `SOCIALACCOUNT_ALLOW_SIGNUP` | No | Allow new accounts via social providers when registration is disabled. | `False` |
 | `FORCE_SOCIALACCOUNT_LOGIN` | No | Disable password login; social/OIDC only. | `False` |
-| `ACCOUNT_EMAIL_VERIFICATION` | No | `none`, `optional`, or `mandatory`. | `none` |
+| `ACCOUNT_EMAIL_VERIFICATION` | No | `none` (skip), `optional` (send link, still allow login), or `mandatory` (block login until verified). Requires working email (SMTP or console). | `none` |
 | `ACCOUNT_PASSWORD_MIN_LENGTH` | No | Minimum password length enforced on signup, change, and reset. | `6` |
 | `AUTH_PASSWORD_VALIDATORS_ENABLED` | No | Enable Django password validators in addition to minimum length: rejects commonly used passwords, entirely numeric passwords, and passwords too similar to profile fields (username, email, name). | `False` |
 

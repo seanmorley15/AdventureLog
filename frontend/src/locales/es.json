@@ -770,7 +770,19 @@
 		"public_profile_private_confirm": "Hacer tu perfil privado te eliminará de {shared} colección(es) compartidas y cancelará {invited} invitación(es) pendiente. ¿Quiere continuar?",
 		"public_profile_left_collections": "Su perfil ahora es privado. Ha sido retirado de {count} colección(es) compartidas.",
 		"public_profile_revoked_invites": "Se han cancelado {count} invitación(es) de colección pendientes.",
-		"download_backup": "Descargar copia de seguridad"
+		"download_backup": "Descargar copia de seguridad",
+		"sessions_title": "Active Sessions",
+		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
+		"sessions_current": "This device",
+		"sessions_unknown_device": "Unknown device",
+		"sessions_signed_in": "Signed in",
+		"sessions_revoke": "Sign out",
+		"sessions_revoke_others": "Sign out other devices",
+		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
+		"sessions_empty": "No other active sessions.",
+		"sessions_revoked": "Session signed out.",
+		"sessions_others_revoked": "Other devices signed out.",
+		"sessions_revoke_error": "Could not sign out that session. Try again."
 	},
 	"checklist": {
 		"checklist_delete_error": "Error al eliminar la lista de tareas",

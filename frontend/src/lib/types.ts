@@ -349,6 +349,15 @@ export type APIKey = {
 	last_used_at: string | null;
 };
 
+export type AuthUserSession = {
+	id: number;
+	user_agent: string;
+	ip: string;
+	created_at: number;
+	is_current: boolean;
+	last_seen_at?: number;
+};
+
 export type ImmichAlbum = {
 	albumName: string;
 	description: string;

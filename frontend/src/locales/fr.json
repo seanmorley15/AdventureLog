@@ -820,7 +820,19 @@
 				"overpass_features": "Utilisé pour les recommandations de cartes et comme solution de repli lorsque Google n'est pas disponible."
 			}
 		},
-		"download_backup": "Télécharger la sauvegarde"
+		"download_backup": "Télécharger la sauvegarde",
+		"sessions_title": "Active Sessions",
+		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
+		"sessions_current": "This device",
+		"sessions_unknown_device": "Unknown device",
+		"sessions_signed_in": "Signed in",
+		"sessions_revoke": "Sign out",
+		"sessions_revoke_others": "Sign out other devices",
+		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
+		"sessions_empty": "No other active sessions.",
+		"sessions_revoked": "Session signed out.",
+		"sessions_others_revoked": "Other devices signed out.",
+		"sessions_revoke_error": "Could not sign out that session. Try again."
 	},
 	"checklist": {
 		"checklist_delete_error": "Erreur lors de la suppression de la liste de contrôle",

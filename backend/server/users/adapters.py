@@ -4,8 +4,11 @@ from allauth.socialaccount.adapter import DefaultSocialAccountAdapter
 from allauth.account.adapter import DefaultAccountAdapter
 from allauth.account.signals import user_signed_up
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.urls import resolve, Resolver404
-from invitations.models import Invitation
+from django.utils.translation import gettext_lazy as _
+
+from users.invitation_signup import invite_email_for_request, request_has_valid_invite
 
 HEADLESS_AUTH_PREFIXES = ('/auth/browser/', '/auth/app/')
 
@@ -15,7 +18,7 @@ def _is_headless_auth_request(request) -> bool:
 
 
 def _allow_invite_signup(request) -> bool:
-    if hasattr(request, 'session') and request.session.get('account_verified_email'):
+    if request_has_valid_invite(request):
         return True
 
     try:
@@ -40,6 +43,15 @@ class CustomAccountAdapter(DefaultAccountAdapter):
             return True
 
         return _allow_invite_signup(request)
+
+    def clean_email(self, email):
+        email = super().clean_email(email)
+        invited_email = invite_email_for_request(self.request)
+        if invited_email and email.lower() != invited_email.lower():
+            raise ValidationError(
+                _('You must sign up with the email address that received the invitation.')
+            )
+        return email
 
     def get_user_signed_up_signal(self):
         """Return the allauth `user_signed_up` signal for compatibility with

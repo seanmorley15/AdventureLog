@@ -1,38 +1,14 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-
+from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 from adventures.models import Collection, CollectionInvite
+from main.utils import build_media_url
+from .models import CustomUser, APIKey
 
 User = get_user_model()
-
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
-
-
-class ChangeEmailSerializer(serializers.Serializer):
-    new_email = serializers.EmailField(required=True)
-
-    def validate_new_email(self, value):
-        user = self.context['request'].user
-        if User.objects.filter(email=value).exclude(pk=user.pk).exists():
-            raise serializers.ValidationError("This email is already in use.")
-        return value
-    
-
-
-
-from django.conf import settings
-from django.contrib.auth import get_user_model
-from django.utils.translation import gettext_lazy as _
-from rest_framework import serializers
 UserModel = get_user_model()
-# from dj_rest_auth.serializers import UserDetailsSerializer
-from .models import CustomUser
 
-from rest_framework import serializers
-from django.conf import settings
-from main.utils import build_media_url
 
 class UserDetailsSerializer(serializers.ModelSerializer):
     """
@@ -168,9 +144,6 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
             representation.update(sharing_impact)
 
         return representation
-
-
-from .models import APIKey
 
 
 class APIKeySerializer(serializers.ModelSerializer):

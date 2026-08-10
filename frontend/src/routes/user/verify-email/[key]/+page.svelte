@@ -11,16 +11,18 @@
 			<h1 class="text-4xl font-bold text-success mb-4">
 				{$t('settings.email_verified')}
 			</h1>
-			<p class="text-lg text-base-content">
+			<p class="text-lg text-base-content mb-6">
 				{$t('settings.email_verified_success')}
 			</p>
+			<a href="/login" class="btn btn-primary">{$t('auth.login')}</a>
 		{:else}
 			<h1 class="text-4xl font-bold text-error mb-4">
 				{$t('settings.email_verified_error')}
 			</h1>
-			<p class="text-lg text-base-content">
+			<p class="text-lg text-base-content mb-6">
 				{$t('settings.email_verified_erorr_desc')}
 			</p>
+			<a href="/login" class="btn btn-outline">{$t('auth.login')}</a>
 		{/if}
 	</div>
 </section>

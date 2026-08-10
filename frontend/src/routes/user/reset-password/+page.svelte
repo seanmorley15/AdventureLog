@@ -31,7 +31,7 @@
 
 			{#if $page.form?.message}
 				<div class="mt-4 text-center text-error">
-					{$t(`settings.${$page.form?.message}`)}
+					{$t($page.form.message)}
 				</div>
 			{/if}
 

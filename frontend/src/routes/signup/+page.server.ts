@@ -1,33 +1,47 @@
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 
 import type { Actions, PageServerLoad } from './$types';
 import { getRandomBackground, getRandomQuote } from '$lib';
 import {
+	csrfFail,
+	djangoBrowserFetch,
 	fetchPasswordPolicy,
 	fetchSignupLegalLinks,
+	getServerEndpoint,
 	isPasswordLongEnough,
 	mapSignupError,
+	requireCsrf,
+	setSessionFromResponse,
 	signupLegalRequired
 } from '$lib/index.server';
-const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+import { hasPendingAllauthFlow } from '$lib/server/allauth-flows';
+import { getInviteKeyFromUrl, prepareInviteSignup } from '$lib/server/invite-signup';
 
 export const load: PageServerLoad = async (event) => {
 	if (event.locals.user) {
 		return redirect(302, '/');
 	}
-	let is_disabled_fetch = await event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`);
-	let is_disabled_json = await is_disabled_fetch.json();
-	let is_disabled = is_disabled_json.is_disabled;
-	const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
-	const signupLegalLinks = await fetchSignupLegalLinks(event.fetch, serverEndpoint);
+
+	const serverEndpoint = getServerEndpoint();
+	const inviteKey = getInviteKeyFromUrl(event.url);
+	const inviteSignup = inviteKey ? await prepareInviteSignup(event, inviteKey) : null;
+
+	const [isDisabledFetch, passwordPolicy, signupLegalLinks] = await Promise.all([
+		event.fetch(`${serverEndpoint}/auth/is-registration-disabled/`),
+		fetchPasswordPolicy(event.fetch, serverEndpoint),
+		fetchSignupLegalLinks(event.fetch, serverEndpoint)
+	]);
+	const isDisabledJson = await isDisabledFetch.json();
 	const quote = getRandomQuote();
 	const background = getRandomBackground();
+	const inviteAllowsSignup = inviteSignup?.valid === true;
 
 	return {
 		props: {
-			is_disabled: is_disabled,
-			is_disabled_message: is_disabled_json.message,
+			is_disabled: inviteAllowsSignup ? false : isDisabledJson.is_disabled,
+			is_disabled_message: isDisabledJson.message,
+			invite_key: inviteKey || null,
+			inviteSignup,
 			passwordPolicy,
 			signupLegalLinks,
 			quote,
@@ -35,6 +49,7 @@ export const load: PageServerLoad = async (event) => {
 		}
 	};
 };
+
 export const actions: Actions = {
 	default: async (event) => {
 		const formData = await event.request.formData();
@@ -45,17 +60,24 @@ export const actions: Actions = {
 		const first_name = formData.get('first_name');
 		const last_name = formData.get('last_name');
 		const acceptTerms = formData.get('accept_terms') === 'on';
+		const inviteKey = (
+			formData.get('invite_key')?.toString() ||
+			getInviteKeyFromUrl(event.url) ||
+			''
+		).trim();
 
 		let username = formUsername?.toString().toLocaleLowerCase();
 
-		const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+		const serverEndpoint = getServerEndpoint();
 		const passwordPolicy = await fetchPasswordPolicy(event.fetch, serverEndpoint);
 		const signupLegalLinks = await fetchSignupLegalLinks(event.fetch, serverEndpoint);
-		const csrfTokenFetch = await event.fetch(`${serverEndpoint}/csrf/`);
 
-		if (!csrfTokenFetch.ok) {
+		let csrfToken: string;
+		try {
+			csrfToken = await requireCsrf();
+		} catch {
 			event.locals.user = null;
-			return fail(500, { message: 'settings.csrf_failed' });
+			return csrfFail();
 		}
 
 		if (password1 !== password2) {
@@ -73,63 +95,41 @@ export const actions: Actions = {
 			return fail(400, { message: 'auth.terms_acceptance_required' });
 		}
 
-		const tokenPromise = await csrfTokenFetch.json();
-		const csrfToken = tokenPromise.csrfToken;
+		if (inviteKey) {
+			const inviteState = await prepareInviteSignup(event, inviteKey);
+			if (!inviteState.valid) {
+				return fail(400, { message: 'auth.invite_invalid_desc' });
+			}
+		}
 
-		const loginFetch = await event.fetch(`${serverEndpoint}/auth/browser/v1/auth/signup`, {
+		const signupFetch = await djangoBrowserFetch(event, '/auth/browser/v1/auth/signup', {
 			method: 'POST',
-			headers: {
-				'X-CSRFToken': csrfToken,
-				'Content-Type': 'application/json',
-				Cookie: `csrftoken=${csrfToken}`,
-				Referer: event.url.origin // Include Referer header
-			},
+			csrfToken,
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
-				username: username,
+				username,
 				password: password1,
-				email: email,
+				email,
 				first_name,
 				last_name,
-				accept_terms: acceptTerms
+				accept_terms: acceptTerms,
+				...(inviteKey ? { invite_key: inviteKey } : {})
 			})
 		});
-		const loginResponse = await loginFetch.json();
+		const signupResponse = await signupFetch.json();
 
-		if (!loginFetch.ok) {
-			// If backend returns 401, signup succeeded but email verification is required.
-			// Return an i18n key (not raw text) so the frontend can show the proper message.
-			if (loginFetch.status === 401) {
-				return { message: 'auth.user_email_verification_required' };
+		if (!signupFetch.ok) {
+			if (signupFetch.status === 401 && hasPendingAllauthFlow(signupResponse, 'verify_email')) {
+				return {
+					message: 'auth.user_email_verification_required',
+					email_verification_required: true
+				};
 			}
 
-			return fail(loginFetch.status, mapSignupError(loginResponse, passwordPolicy));
-		} else {
-			const setCookieHeader = loginFetch.headers.get('Set-Cookie');
-
-			if (setCookieHeader) {
-				// Regular expression to match sessionid cookie and its expiry
-				const sessionIdRegex = /sessionid=([^;]+).*?expires=([^;]+)/;
-				const match = setCookieHeader.match(sessionIdRegex);
-
-				if (match) {
-					const sessionId = match[1];
-					const expiryString = match[2];
-					const expiryDate = new Date(expiryString);
-
-					console.log('Session ID:', sessionId);
-					console.log('Expiry Date:', expiryDate);
-
-					// Set the sessionid cookie
-					event.cookies.set('sessionid', sessionId, {
-						path: '/',
-						httpOnly: true,
-						sameSite: 'lax',
-						secure: event.url.protocol === 'https:',
-						expires: expiryDate
-					});
-				}
-			}
-			redirect(302, '/');
+			return fail(signupFetch.status, mapSignupError(signupResponse, passwordPolicy));
 		}
+
+		setSessionFromResponse(event, signupFetch);
+		redirect(302, '/');
 	}
 };

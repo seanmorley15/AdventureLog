@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.core.exceptions import PermissionDenied
 from django.core.files.base import ContentFile
-from django.db.models import Q, Max, Prefetch
+from django.db.models import Q, Max, Prefetch, Exists, OuterRef
 from django.db.models.functions import Lower
 from django.http import HttpResponse
 from django.conf import settings
@@ -16,6 +16,7 @@ from adventures.permissions import IsOwnerOrSharedWithFullAccess
 from adventures.serializers import (
     CalendarLocationSerializer,
     CollectionItineraryItemSerializer,
+    LocationListSerializer,
     LocationSerializer,
     MapPinSerializer,
 )
@@ -317,35 +318,65 @@ class LocationViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['get'])
     def filtered(self, request):
         """Filter locations by category types and visit status."""
-        types = request.query_params.get('types', '').split(',')
+        types = [t for t in request.query_params.get('types', '').split(',') if t]
         
         # Handle 'all' types
         if 'all' in types:
-            types = Category.objects.filter(
-                user=request.user
-            ).values_list('name', flat=True)
+            types = list(
+                Category.objects.filter(user=request.user).values_list('name', flat=True)
+            )
         else:
-            # Validate provided types
-            if not types or not all(
-                Category.objects.filter(user=request.user, name=type_name).exists() 
-                for type_name in types
-            ):
+            # Validate provided types in a single query
+            if not types:
                 return Response(
-                    {"error": "Invalid category or no types provided"}, 
+                    {"error": "Invalid category or no types provided"},
+                    status=400
+                )
+            found = set(
+                Category.objects.filter(
+                    user=request.user, name__in=types
+                ).values_list('name', flat=True)
+            )
+            if found != set(types):
+                return Response(
+                    {"error": "Invalid category or no types provided"},
                     status=400
                 )
 
-        # Build base queryset
-        queryset = Location.objects.filter(
-            category__in=Category.objects.filter(name__in=types, user=request.user),
-            user=request.user.id
+        now = timezone.now()
+
+        # Build base queryset optimized for list cards (no GPX/trails/geo payloads)
+        queryset = (
+            Location.objects.filter(
+                category__name__in=types,
+                category__user=request.user,
+                user=request.user.id,
+            )
+            .annotate(
+                annotated_is_visited=Exists(
+                    Visit.objects.filter(
+                        location_id=OuterRef('pk'),
+                        start_date__lte=now,
+                    )
+                )
+            )
+            .select_related('category', 'user')
+            .prefetch_related(
+                Prefetch(
+                    'images',
+                    queryset=ContentImage.objects.select_related('user'),
+                ),
+                'collections',
+            )
         )
 
         # Apply visit status filtering
         queryset = self._apply_visit_filtering(queryset, request)
         queryset = self.apply_sorting(queryset)
-        
-        return self.paginate_and_respond(queryset, request)
+
+        return self.paginate_and_respond(
+            queryset, request, serializer_class=LocationListSerializer
+        )
 
     @action(detail=False, methods=['get'])
     def all(self, request):
@@ -799,14 +830,16 @@ class LocationViewSet(viewsets.ModelViewSet):
 
         return False
 
-    def paginate_and_respond(self, queryset, request):
+    def paginate_and_respond(self, queryset, request, serializer_class=None):
         """Paginate queryset and return response."""
         paginator = self.pagination_class()
         page = paginator.paginate_queryset(queryset, request)
-        
+        serializer_cls = serializer_class or self.get_serializer_class()
+        context = self.get_serializer_context()
+
         if page is not None:
-            serializer = self.get_serializer(page, many=True)
+            serializer = serializer_cls(page, many=True, context=context)
             return paginator.get_paginated_response(serializer.data)
 
-        serializer = self.get_serializer(queryset, many=True)
+        serializer = serializer_cls(queryset, many=True, context=context)
         return Response(serializer.data)
