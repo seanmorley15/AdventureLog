@@ -1,7 +1,14 @@
 import { fail, redirect, type Actions } from '@sveltejs/kit';
 import type { PageServerLoad } from '../$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { APIKey, ImmichIntegration, User } from '$lib/types';
+import type {
+	APIKey,
+	EndurainIntegration,
+	ImmichIntegration,
+	MediaUsage,
+	User,
+	WandererIntegration
+} from '$lib/types';
 import { fetchCSRFToken } from '$lib/index.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
@@ -83,7 +90,26 @@ export const load: PageServerLoad = async (event) => {
 	let stravaGlobalEnabled = integrations.strava.global as boolean;
 	let stravaUserEnabled = integrations.strava.user as boolean;
 	let wandererEnabled = integrations.wanderer.exists as boolean;
-	let wandererExpired = integrations.wanderer.expired as boolean;
+	let endurainEnabled = integrations.endurain?.exists as boolean;
+	let wandererIntegration: WandererIntegration | null = null;
+	let endurainIntegration: EndurainIntegration | null = null;
+	let wandererIntegrationFetch = await fetch(`${endpoint}/api/integrations/wanderer/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (wandererIntegrationFetch.ok) {
+		wandererIntegration = await wandererIntegrationFetch.json();
+	}
+
+	let endurainIntegrationFetch = await fetch(`${endpoint}/api/integrations/endurain/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (endurainIntegrationFetch.ok) {
+		endurainIntegration = await endurainIntegrationFetch.json();
+	}
 
 	let publicUrlFetch = await fetch(`${endpoint}/public-url/`);
 	let publicUrl = '';
@@ -104,6 +130,16 @@ export const load: PageServerLoad = async (event) => {
 		apiKeys = await apiKeysFetch.json();
 	}
 
+	let mediaUsage: MediaUsage | null = null;
+	let mediaUsageFetch = await fetch(`${endpoint}/auth/user-media-usage/`, {
+		headers: {
+			Cookie: `sessionid=${sessionId}`
+		}
+	});
+	if (mediaUsageFetch.ok) {
+		mediaUsage = (await mediaUsageFetch.json()) as MediaUsage;
+	}
+
 	return {
 		props: {
 			user,
@@ -116,8 +152,11 @@ export const load: PageServerLoad = async (event) => {
 			stravaGlobalEnabled,
 			stravaUserEnabled,
 			wandererEnabled,
-			wandererExpired,
-			apiKeys
+			wandererIntegration,
+			endurainEnabled,
+			endurainIntegration,
+			apiKeys,
+			mediaUsage
 		}
 	};
 };
@@ -238,7 +277,11 @@ export const actions: Actions = {
 				return fail(res.status, response);
 			}
 
-			return { success: true };
+			return {
+				success: true,
+				left_shared_collections: response.left_shared_collections ?? 0,
+				revoked_collection_invites: response.revoked_collection_invites ?? 0
+			};
 		} catch (error) {
 			console.error('Error:', error);
 			return { error: 'settings.generic_error' };

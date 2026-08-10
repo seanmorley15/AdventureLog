@@ -15,6 +15,7 @@
 	import Check from '~icons/mdi/check';
 	import { addToast } from '$lib/toasts';
 	import { copyToClipboard } from '$lib/index';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import Link from '~icons/mdi/link-variant';
 	import LinkVariantRemove from '~icons/mdi/link-variant-remove';
 	import Plus from '~icons/mdi/plus';
@@ -28,8 +29,10 @@
 	import Eye from '~icons/mdi/eye';
 	import EyeOff from '~icons/mdi/eye-off';
 	import CollectionItineraryPlanner from '../collections/CollectionItineraryPlanner.svelte';
+	import SocialShareModal from '../SocialShareModal.svelte';
 	import CalendarRemove from '~icons/mdi/calendar-remove';
 	import Globe from '~icons/mdi/globe';
+	import ImageOutline from '~icons/mdi/image-outline';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 
 	export let type: string | null = null;
@@ -41,6 +44,7 @@
 
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
+	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
 	let isActionsMenuOpen: boolean = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
@@ -102,11 +106,6 @@
 	}
 
 	// Creator avatar helpers
-	$: creatorInitials =
-		adventure.user?.first_name && adventure.user?.last_name
-			? `${adventure.user.first_name[0]}${adventure.user.last_name[0]}`
-			: adventure.user?.first_name?.[0] || adventure.user?.username?.[0] || '?';
-
 	$: creatorDisplayName = adventure.user?.first_name
 		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
 		: adventure.user?.username || 'Unknown User';
@@ -274,6 +273,16 @@
 	/>
 {/if}
 
+{#if isSocialShareModalOpen}
+	<SocialShareModal
+		type="location"
+		id={adventure.id}
+		name={adventure.name}
+		isPublic={!!adventure.is_public}
+		on:close={() => (isSocialShareModalOpen = false)}
+	/>
+{/if}
+
 <div
 	class="card w-full max-w-md bg-base-300 shadow hover:shadow-md transition-all duration-200 border border-base-300 group"
 	aria-label="location-card"
@@ -338,19 +347,14 @@
 			<div class="absolute bottom-4 right-4">
 				<div class="tooltip tooltip-left" data-tip={creatorDisplayName}>
 					<div class="avatar">
-						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow">
-							{#if adventure.user.profile_pic}
-								<img
-									src={adventure.user.profile_pic}
+						<div class="w-7 h-7 rounded-full ring-2 ring-white/40 shadow overflow-hidden">
+							{#if adventure.user}
+								<UserAvatar
+									user={adventure.user}
 									alt={creatorDisplayName}
-									class="rounded-full object-cover"
+									className="w-7 h-7 rounded-full"
+									textClass="text-[10px]"
 								/>
-							{:else}
-								<div
-									class="w-7 h-7 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-primary-content font-semibold text-xs"
-								>
-									{creatorInitials.toUpperCase()}
-								</div>
 							{/if}
 						</div>
 					</div>
@@ -486,6 +490,21 @@
 												<LinkIcon class="w-4 h-4" />
 												{$t('adventures.copy_link')}
 											{/if}
+										</button>
+									</li>
+								{/if}
+
+								{#if adventure.user && adventure.user.uuid == user?.uuid}
+									<li>
+										<button
+											on:click={() => {
+												isActionsMenuOpen = false;
+												isSocialShareModalOpen = true;
+											}}
+											class="flex items-center gap-2"
+										>
+											<ImageOutline class="w-4 h-4" />
+											{$t('social_share.share_externally')}
 										</button>
 									</li>
 								{/if}

@@ -1,6 +1,6 @@
 # Change Email Backend
 
-To change the email backend, you can set the following variable in your docker-compose.yml under the server service:
+To change the email backend, you can set the following variable in your docker-compose.advanced.yml under the server service:
 
 ## Using Console (default)
 

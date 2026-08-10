@@ -1,40 +1,56 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { addToast } from '$lib/toasts';
-	import type { Region, VisitedRegion } from '$lib/types';
+	import type { Region } from '$lib/types';
 	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
 	import { t } from 'svelte-i18n';
+
+	import Check from '~icons/mdi/check-circle-outline';
+	import CheckFilled from '~icons/mdi/check-circle';
+	import ChevronRight from '~icons/mdi/chevron-right';
+	import City from '~icons/mdi/city';
+
+	const dispatch = createEventDispatcher();
 
 	export let region: Region;
 	export let visited: boolean | undefined;
 
-	function goToCity() {
-		console.log(region);
-		goto(`/worldtravel/${region.id.split('-')[0]}/${region.id}`);
+	const countryCode = region.id.split('-')[0];
+
+	function goToCity(e: MouseEvent) {
+		e.stopPropagation();
+		goto(`/worldtravel/${countryCode}/${region.id}`);
 	}
 
-	async function markVisited() {
-		let res = await fetch(`/api/visitedregion/`, {
+	function nav() {
+		if (region.num_cities > 0) {
+			goto(`/worldtravel/${countryCode}/${region.id}`);
+		}
+	}
+
+	async function markVisited(e: MouseEvent) {
+		e.stopPropagation();
+		const res = await fetch(`/api/visitedregion/`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'POST',
 			body: JSON.stringify({ region: region.id })
 		});
 		if (res.ok) {
 			visited = true;
-			let data = await res.json();
+			const data = await res.json();
 			addToast(
 				'success',
 				`${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.marked_visited')}`
 			);
 			dispatch('visit', data);
 		} else {
-			console.error($t('worldtravel.region_failed_visited'));
 			addToast('error', `${$t('worldtravel.failed_to_mark_visit')} ${region.name}`);
 		}
 	}
-	async function removeVisit() {
-		let res = await fetch(`/api/visitedregion/${region.id}`, {
+
+	async function removeVisit(e: MouseEvent) {
+		e.stopPropagation();
+		const res = await fetch(`/api/visitedregion/${region.id}`, {
 			headers: { 'Content-Type': 'application/json' },
 			method: 'DELETE'
 		});
@@ -43,51 +59,76 @@
 			addToast('info', `${$t('worldtravel.visit_to')} ${region.name} ${$t('worldtravel.removed')}`);
 			dispatch('remove', region);
 		} else {
-			console.error($t('worldtravel.visit_remove_failed'));
 			addToast('error', `${$t('worldtravel.failed_to_remove_visit')} ${region.name}`);
 		}
 	}
 </script>
 
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="card w-full max-w-md bg-base-300 text-base-content shadow-2xl hover:shadow-3xl transition-all duration-300 border border-base-300 hover:border-primary/20 group overflow-hidden"
+	class="grid items-center gap-3 px-4 py-3 hover:bg-base-200/60 transition-colors group region-row {region.num_cities >
+	0
+		? 'cursor-pointer'
+		: ''}"
+	on:click={nav}
+	on:keydown={(e) => e.key === 'Enter' && nav()}
+	role={region.num_cities > 0 ? 'button' : undefined}
+	tabindex={region.num_cities > 0 ? 0 : undefined}
 >
-	<div class="card-body p-6 space-y-4">
-		<!-- Header -->
-		<a
-			href="/worldtravel/{region.id.split('-')[0]}/{region.id}"
-			class="text-xl font-bold text-left hover:text-primary transition-colors duration-200 line-clamp-2 group-hover:underline block"
+	<button
+		type="button"
+		class="btn btn-ghost btn-sm btn-square {visited
+			? 'text-success'
+			: 'text-base-content/30 hover:text-success'}"
+		title={visited ? $t('adventures.remove') : $t('adventures.mark_visited')}
+		on:click={visited ? removeVisit : markVisited}
+	>
+		{#if visited}
+			<CheckFilled class="w-5 h-5" />
+		{:else}
+			<Check class="w-5 h-5" />
+		{/if}
+	</button>
+
+	<a
+		href="/worldtravel/{countryCode}/{region.id}"
+		class="font-semibold truncate group-hover:text-primary transition-colors min-w-0"
+		on:click|stopPropagation
+	>
+		{region.name}
+	</a>
+
+	<span class="hidden sm:block text-sm text-base-content/60 truncate">
+		{region.country_name}
+	</span>
+
+	<span class="inline-flex items-center gap-1.5 text-sm text-base-content/60 tabular-nums">
+		<City class="w-4 h-4" />
+		{region.num_cities}
+	</span>
+
+	{#if region.num_cities > 0}
+		<button
+			type="button"
+			class="btn btn-ghost btn-sm gap-1 hidden sm:flex justify-end"
+			on:click={goToCity}
 		>
-			{region.name}
-		</a>
-
-		<!-- Metadata Badges -->
-		<div class="flex flex-wrap gap-2">
-			<div class="badge badge-primary">{region.country_name}</div>
-			<div class="badge badge-neutral">
-				{region.num_cities}
-				{$t('worldtravel.cities')}
-			</div>
-			<div class="badge badge-neutral-300">ID: {region.id}</div>
-		</div>
-
-		<!-- Actions -->
-		<div class="pt-4 border-t border-base-300 flex flex-wrap gap-2 justify-end">
-			{#if visited === false}
-				<button class="btn btn-primary btn-sm" on:click={markVisited}>
-					{$t('adventures.mark_visited')}
-				</button>
-			{/if}
-			{#if visited === true}
-				<button class="btn btn-warning btn-sm" on:click={removeVisit}>
-					{$t('adventures.remove')}
-				</button>
-			{/if}
-			{#if region.num_cities > 0}
-				<button class="btn btn-neutral btn-sm" on:click={goToCity}>
-					{$t('worldtravel.view_cities')}
-				</button>
-			{/if}
-		</div>
-	</div>
+			{$t('worldtravel.view_cities')}
+			<ChevronRight class="w-4 h-4" />
+		</button>
+	{:else}
+		<span></span>
+	{/if}
 </div>
+
+<style>
+	.region-row {
+		grid-template-columns: 2.5rem 1fr 7rem 5rem 8rem;
+	}
+
+	@media (max-width: 640px) {
+		.region-row {
+			grid-template-columns: 2.5rem 1fr 4rem;
+		}
+	}
+</style>

@@ -1,4 +1,5 @@
 import { VALID_TIMEZONES } from './dateUtils';
+import type { CalendarApiEvent } from '$lib/calendar/types';
 
 export type MoneyValue = {
 	amount: number | null;
@@ -20,6 +21,31 @@ export type User = {
 	measurement_system: 'metric' | 'imperial';
 	default_currency: string;
 	map_style: string;
+	shared_collection_count?: number;
+	pending_collection_invite_count?: number;
+	left_shared_collections?: number;
+	revoked_collection_invites?: number;
+};
+
+export type MediaUsage = {
+	total_bytes: number;
+	limit_bytes: number | null;
+	images_bytes: number;
+	attachments_bytes: number;
+	profile_pics_bytes: number;
+	images_files: number;
+	attachments_files: number;
+	profile_pics_files: number;
+};
+
+export type SubscriptionStatus = 'trial' | 'active' | 'canceled' | 'past_due';
+
+export type Subscription = {
+	status: SubscriptionStatus;
+	stripe_subscription_id: string | null;
+	trial_ends_at: string | null;
+	current_period_ends_at: string | null;
+	cancel_at_period_end: boolean;
 };
 
 export type Collaborator = {
@@ -33,11 +59,17 @@ export type Collaborator = {
 	is_current_user?: boolean;
 };
 
+export type ImageSource = 'upload' | 'google' | 'wikipedia' | 'url' | 'immich';
+
 export type ContentImage = {
 	id: string;
 	image: string;
 	is_primary: boolean;
 	immich_id: string | null;
+	source: ImageSource;
+	source_url?: string | null;
+	latitude?: number | null;
+	longitude?: number | null;
 };
 
 export type Location = {
@@ -66,15 +98,6 @@ export type Location = {
 	region?: Region | null;
 	country?: Country | null;
 	trails: Trail[];
-};
-
-export type AdditionalLocation = Location & {
-	sun_times: {
-		date: string;
-		visit_id: string;
-		sunrise: string;
-		sunset: string;
-	}[];
 };
 
 export type Country = {
@@ -197,6 +220,8 @@ export type GeocodeSearchResult = {
 	addresstype?: string;
 	name?: string;
 	display_name?: string;
+	provider?: string;
+	powered_by?: string;
 };
 
 export type Transportation = {
@@ -283,6 +308,8 @@ export type ReverseGeocode = {
 	city: string;
 	city_id: string;
 	location_name: string;
+	provider_used?: string;
+	provider?: string;
 };
 
 export type Category = {
@@ -299,6 +326,20 @@ export type ImmichIntegration = {
 	server_url: string;
 	api_key: string;
 	copy_locally: boolean;
+};
+
+export type WandererIntegration = {
+	id: string;
+	server_url: string;
+	api_key?: string;
+};
+
+export type EndurainIntegration = {
+	id: string;
+	server_url: string;
+	username?: string;
+	auth_method?: 'password';
+	endurain_user_id?: number;
 };
 
 export type APIKey = {
@@ -388,10 +429,13 @@ export type Trail = {
 	location: string; // UUID of the location
 	created_at: string; // ISO 8601 date string
 	link?: string | null; // Optional link to the trail
-	wanderer_id?: string | null; // Optional ID for integration with Wanderer
-	provider: string; // Provider of the trail data, e.g., 'wanderer', 'external'
+	wanderer_id?: string | null;
+	wanderer_author_username?: string | null;
+	wanderer_author_domain?: string | null;
+	provider: string;
 	wanderer_data: WandererTrail | null; // Optional data from Wanderer integration
 	wanderer_link: string | null; // Optional link to the Wanderer trail
+	geojson?: any | null;
 };
 
 export type StravaActivity = {
@@ -445,6 +489,7 @@ export type StravaActivity = {
 	has_heartrate: boolean;
 	flagged: boolean;
 	commute: boolean;
+	provider?: 'strava' | 'endurain';
 };
 
 export type Activity = {
@@ -500,6 +545,13 @@ export type TransportationVisit = {
 	activities?: Activity[];
 };
 
+export type WandererAuthor = {
+	id: string;
+	username?: string;
+	preferred_username?: string;
+	domain?: string;
+};
+
 export type WandererTrail = {
 	id: string;
 	name: string;
@@ -508,6 +560,9 @@ export type WandererTrail = {
 	elevation_gain: number;
 	elevation_loss: number;
 	author: string;
+	expand?: {
+		author?: WandererAuthor;
+	};
 	category: string;
 	collectionId: string;
 	collectionName: string;
@@ -578,7 +633,49 @@ export type RecommendationResponse = {
 		osm: number;
 		total_before_dedup: number;
 	};
+	warnings?: string[];
+	error?: string;
 };
+
+export type PlaceSearchResult = {
+	id: string;
+	name: string;
+	lat: number;
+	lng: number;
+	location: string;
+	type?: string;
+	category?: string;
+	types?: string[];
+	rating?: number | null;
+	review_count?: number | null;
+	photos?: string[];
+	description?: string | null;
+	website?: string | null;
+	phone_number?: string | null;
+	place_id?: string | null;
+	google_maps_url?: string | null;
+	powered_by?: string;
+	provider?: string;
+};
+
+export type MapImagePinSelection = {
+	kind: 'image';
+	imageId: string;
+	imageUrl: string;
+	source: ImageSource;
+	isPrimary: boolean;
+	parentType: string;
+	parentId: string;
+	parentName: string;
+};
+
+export type MapSelection =
+	| { kind: 'pin'; pinId: string }
+	| { kind: 'place'; place: PlaceSearchResult }
+	| { kind: 'recommendation'; item: Recommendation }
+	| MapImagePinSelection;
+
+export type MapSearchMode = 'my' | 'places' | 'nearby';
 
 export type CollectionItineraryDay = {
 	id: string;
@@ -602,4 +699,54 @@ export type CollectionItineraryItem = {
 	created_at: string; // ISO 8601 date string
 	start_datetime: string | null; // Computed property - ISO 8601 date string
 	end_datetime: string | null; // Computed property - ISO 8601 date string
+};
+
+export type ActivityRecord = {
+	metric_key: string;
+	metric_value: number;
+	activity_id: string;
+	activity_name: string | null;
+	sport_type: string | null;
+	start_date: string | null;
+	location_id: string | null;
+	location_name: string | null;
+};
+
+export type UserStats = {
+	location_count: number;
+	visited_location_count: number;
+	trips_count: number;
+	visited_country_count: number;
+	total_countries: number;
+	visited_region_count: number;
+	total_regions: number;
+	visited_city_count: number;
+	total_cities: number;
+	activities_overall: {
+		total_count: number;
+		total_distance: number;
+		total_moving_time: number;
+		total_elevation_gain: number;
+		total_elevation_loss: number;
+		total_calories: number;
+		record_holders: {
+			max_distance: ActivityRecord | null;
+			max_speed: ActivityRecord | null;
+			max_elevation_gain: ActivityRecord | null;
+			max_calories: ActivityRecord | null;
+		};
+	};
+	activity_count: number;
+	activity_distance: number;
+	activity_moving_time: number;
+	activity_elevation: number;
+};
+
+export type DashboardData = {
+	stats: UserStats | null;
+	recent_locations: Location[];
+	upcoming_trips: SlimCollection[];
+	active_trip: SlimCollection | null;
+	upcoming_events: CalendarApiEvent[];
+	invite_count: number;
 };

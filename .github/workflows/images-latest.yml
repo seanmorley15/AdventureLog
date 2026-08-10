@@ -1,0 +1,20 @@
+name: Build and push latest images
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+jobs:
+  build:
+    uses: ./.github/workflows/_build-images.yml
+    with:
+      tag: latest
+      filter_paths: true
+    secrets: inherit

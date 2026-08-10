@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount } from 'svelte';
 	import type { Collection, Location, User } from '$lib/types';
-	import { addToast } from '$lib/toasts';
 	import { t } from 'svelte-i18n';
 	import { normalizeBasemapType } from '$lib';
+	import { extractGooglePhotoUrls } from '$lib/map/places';
 	import LocationQuickStart from './LocationQuickStart.svelte';
 	import LocationDetails from './LocationDetails.svelte';
 	import LocationMedia from './LocationMedia.svelte';
@@ -14,6 +14,8 @@
 	export let initialLatLng: { lat: number; lng: number } | null = null; // Used to pass the location from the map selection to the modal
 	export let initialVisitDate: string | null = null; // Used to pre-fill visit date when adding from itinerary planner
 	export let itineraryDayLabel: string | null = null;
+	/** Skip quick-start when opening with prefilled coordinates/name (e.g. map or recommendations). */
+	export let skipQuickStart = false;
 
 	const dispatch = createEventDispatcher();
 
@@ -24,7 +26,6 @@
 	let googleMapsEnabled = false;
 	let isEditMode = false;
 	let pendingGooglePhotoUrls: string[] = [];
-	let importingGooglePhotos = false;
 
 	// Whether a save/create occurred during this modal session
 	let didSave = false;
@@ -97,46 +98,17 @@
 		if (prefill.selected_category && typeof prefill.selected_category === 'object') {
 			location.category = prefill.selected_category;
 		}
-		pendingGooglePhotoUrls = Array.isArray(prefill.photos)
-			? prefill.photos.filter((url: unknown) => typeof url === 'string' && url.trim()).slice(0, 5)
-			: [];
+		pendingGooglePhotoUrls = extractGooglePhotoUrls(prefill.photos, prefill.images);
 	}
 
-	async function importPendingGoogleImages(locationId: string) {
-		if (!locationId || pendingGooglePhotoUrls.length === 0) return;
-		importingGooglePhotos = true;
-
-		try {
-			const res = await fetch('/api/images/import_from_urls/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					content_type: 'location',
-					object_id: locationId,
-					urls: pendingGooglePhotoUrls
-				})
-			});
-
-			if (!res.ok) {
-				addToast('warning', 'Location saved, but Google photos could not be imported');
-				return;
-			}
-
-			const data = await res.json();
-			if (Array.isArray(data.created) && data.created.length > 0) {
-				const existingImages = Array.isArray(location.images) ? location.images : [];
-				const existingIds = new Set(existingImages.map((img: any) => img.id));
-				const imported = data.created.filter((img: any) => !existingIds.has(img.id));
-				location.images = [...existingImages, ...imported];
-			}
-
-			pendingGooglePhotoUrls = [];
-		} catch {
-			addToast('warning', 'Location saved, but Google photos import failed');
-		} finally {
-			importingGooglePhotos = false;
+	function initPendingGooglePhotosFromPrefill(loc: Location | null) {
+		if (!loc) return;
+		const photos = extractGooglePhotoUrls(
+			(loc as Location & { photos?: string[] }).photos,
+			loc.images
+		);
+		if (photos.length > 0) {
+			pendingGooglePhotoUrls = photos;
 		}
 	}
 
@@ -209,13 +181,28 @@
 		attachments: locationToEdit?.attachments || []
 	};
 
+	function hasPrefilledCoordinates(loc: Location | null | undefined): boolean {
+		if (!loc) return false;
+		const lat = loc.latitude;
+		const lng = loc.longitude;
+		return (
+			typeof lat === 'number' &&
+			typeof lng === 'number' &&
+			Number.isFinite(lat) &&
+			Number.isFinite(lng) &&
+			Boolean(loc.name?.trim())
+		);
+	}
+
 	onMount(() => {
 		modal = document.getElementById('my_modal_1') as HTMLDialogElement;
 		modal.showModal();
 		isEditMode = Boolean(locationToEdit?.id);
 
-		// Skip the quick start step if editing an existing location
-		if (!isEditMode) {
+		const prefilledNew = !isEditMode && (skipQuickStart || hasPrefilledCoordinates(locationToEdit));
+
+		// Skip the quick start step if editing an existing location or prefilled create
+		if (!isEditMode && !prefilledNew) {
 			setStep(0);
 		} else {
 			setStep(1);
@@ -225,6 +212,10 @@
 			location.latitude = initialLatLng.lat;
 			location.longitude = initialLatLng.lng;
 			setStep(1);
+		}
+
+		if (!isEditMode && locationToEdit) {
+			initPendingGooglePhotosFromPrefill(locationToEdit);
 		}
 
 		void loadIntegrations();
@@ -444,9 +435,6 @@
 
 					if (location.id) {
 						setStep(2);
-						if (pendingGooglePhotoUrls.length > 0) {
-							void importPendingGoogleImages(location.id);
-						}
 					} else {
 						// Stay on details if save failed (no ID returned)
 						setStep(1);
@@ -455,16 +443,11 @@
 			/>
 		{/if}
 		{#if steps[2].selected}
-			{#if importingGooglePhotos}
-				<div class="alert alert-info mb-4">
-					<span class="loading loading-spinner loading-sm"></span>
-					<span>Importing Google photos in the background. They will appear here shortly.</span>
-				</div>
-			{/if}
 			<LocationMedia
 				bind:images={location.images}
 				bind:attachments={location.attachments}
 				bind:trails={location.trails}
+				bind:pendingGooglePhotoUrls
 				itemName={location.name}
 				userIsOwner={user?.uuid === location.user?.uuid}
 				on:back={() => setStep(1)}

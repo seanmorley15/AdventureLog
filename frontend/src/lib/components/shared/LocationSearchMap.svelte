@@ -20,6 +20,8 @@
 		location: string;
 		type?: string;
 		category?: string;
+		provider?: string;
+		powered_by?: string;
 	};
 
 	type LocationMeta = {
@@ -28,6 +30,7 @@
 		country?: { name: string; country_code: string; visited: boolean };
 		display_name?: string;
 		location_name?: string;
+		provider?: string;
 	};
 
 	const dispatch = createEventDispatcher();
@@ -71,9 +74,23 @@
 	let initialApplied = false;
 	let initialTransportationApplied = false;
 	let isInitializing = false;
+	let searchProvider: string | null = null;
+	let startSearchProvider: string | null = null;
+	let endSearchProvider: string | null = null;
 
 	function isFiniteCoordinatePair(lat: unknown, lng: unknown): boolean {
 		return Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
+	}
+
+	function formatProviderLabel(provider?: string | null): string | null {
+		const normalized = (provider || '').trim().toLowerCase();
+		if (!normalized) return null;
+		if (normalized === 'google') return 'Google Maps';
+		if (normalized === 'osm' || normalized === 'nominatim') return 'OpenStreetMap';
+		if (normalized === 'mixed') return 'Google Maps + OpenStreetMap';
+		if (normalized === 'google+wikipedia') return 'Google Maps + Wikipedia';
+		if (normalized === 'wikipedia') return 'Wikipedia';
+		return provider || null;
 	}
 
 	// Track any provided codes (airport / station / etc)
@@ -197,6 +214,7 @@
 	async function searchLocations(query: string) {
 		if (!query.trim() || query.length < 3) {
 			searchResults = [];
+			searchProvider = null;
 			return;
 		}
 
@@ -204,11 +222,13 @@
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
 			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
 			);
-			const results = await response.json();
+			const payload = await response.json();
+			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
+			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
 
-			searchResults = results.map((result: any) => ({
+			searchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
 				name: result.name,
 				lat: parseFloat(result.lat),
@@ -217,11 +237,13 @@
 				category: result.category,
 				location: result.display_name,
 				importance: result.importance,
-				powered_by: result.powered_by
+				powered_by: result.powered_by,
+				provider: result.provider || result.powered_by
 			}));
 		} catch (error) {
 			console.error('Search error:', error);
 			searchResults = [];
+			searchProvider = null;
 		} finally {
 			isSearching = false;
 		}
@@ -230,6 +252,7 @@
 	async function searchStartLocation(query: string) {
 		if (!query.trim() || query.length < 3) {
 			startSearchResults = [];
+			startSearchProvider = null;
 			return;
 		}
 
@@ -237,11 +260,13 @@
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
 			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
 			);
-			const results = await response.json();
+			const payload = await response.json();
+			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
+			startSearchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
 
-			startSearchResults = results.map((result: any) => ({
+			startSearchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
 				name: result.name,
 				lat: parseFloat(result.lat),
@@ -250,11 +275,13 @@
 				category: result.category,
 				location: result.display_name,
 				importance: result.importance,
-				powered_by: result.powered_by
+				powered_by: result.powered_by,
+				provider: result.provider || result.powered_by
 			}));
 		} catch (error) {
 			console.error('Search error:', error);
 			startSearchResults = [];
+			startSearchProvider = null;
 		} finally {
 			isSearchingStart = false;
 		}
@@ -263,18 +290,20 @@
 	async function searchEndLocation(query: string) {
 		if (!query.trim() || query.length < 3) {
 			endSearchResults = [];
+			endSearchProvider = null;
 			return;
 		}
-
 		isSearchingEnd = true;
 		try {
 			const searchTerm = airportMode ? `${query} Airport` : query;
 			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(searchTerm)}`
+				`/api/places/search/?query=${encodeURIComponent(searchTerm)}&include_meta=1`
 			);
-			const results = await response.json();
+			const payload = await response.json();
+			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
+			endSearchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
 
-			endSearchResults = results.map((result: any) => ({
+			endSearchResults = rawResults.map((result: any) => ({
 				id: result.name + result.lat + result.lon,
 				name: result.name,
 				lat: parseFloat(result.lat),
@@ -283,11 +312,13 @@
 				category: result.category,
 				location: result.display_name,
 				importance: result.importance,
-				powered_by: result.powered_by
+				powered_by: result.powered_by,
+				provider: result.provider || result.powered_by
 			}));
 		} catch (error) {
 			console.error('Search error:', error);
 			endSearchResults = [];
+			endSearchProvider = null;
 		} finally {
 			isSearchingEnd = false;
 		}
@@ -484,8 +515,10 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/reverse-geocode/search/?query=${lat},${lng}`);
-			const results = await response.json();
+			const response = await fetch(`/api/places/search/?query=${lat},${lng}&include_meta=1`);
+			const payload = await response.json();
+			const results = Array.isArray(payload) ? payload : payload?.results || [];
+			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
 
 			if (results && results.length > 0) {
 				const result = results[0];
@@ -495,7 +528,9 @@
 					lng: lng,
 					location: result.display_name,
 					type: result.type,
-					category: result.category
+					category: result.category,
+					provider: result.provider || result.powered_by,
+					powered_by: result.powered_by
 				};
 				searchQuery = result.display_name || result.name;
 				displayName = result.display_name || result.name;
@@ -538,12 +573,11 @@
 		target: 'single' | 'start' | 'end' = 'single'
 	) {
 		try {
-			const response = await fetch(
-				`/api/reverse-geocode/reverse_geocode/?lat=${lat}&lon=${lng}&format=json`
-			);
+			const response = await fetch(`/api/places/reverse/?lat=${lat}&lon=${lng}&format=json`);
 
 			if (response.ok) {
 				const data = await response.json();
+				const providerUsed = data.provider_used || data.provider || null;
 				const metaData = {
 					city: data.city
 						? {
@@ -567,7 +601,8 @@
 							}
 						: undefined,
 					display_name: data.display_name,
-					location_name: data.location_name
+					location_name: data.location_name,
+					provider: providerUsed
 				};
 
 				if (target === 'start') {
@@ -583,11 +618,9 @@
 						const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
 						selectedLocation = {
 							...selectedLocation,
-							name:
-								resolvedLocationName ||
-								(isCoordinatePlaceholder && resolvedDisplayName
-									? resolvedDisplayName
-									: selectedLocation.name),
+							name: isCoordinatePlaceholder
+								? resolvedLocationName || resolvedDisplayName || selectedLocation.name
+								: selectedLocation.name,
 							location: resolvedDisplayName || selectedLocation.location
 						};
 						emitUpdate(selectedLocation);
@@ -649,6 +682,8 @@
 			endSearchQuery = '';
 			startSearchResults = [];
 			endSearchResults = [];
+			startSearchProvider = null;
+			endSearchProvider = null;
 		} else {
 			selectedLocation = null;
 			selectedMarker = null;
@@ -656,6 +691,7 @@
 			searchQuery = '';
 			searchResults = [];
 			displayName = '';
+			searchProvider = null;
 		}
 		mapCenter = [-74.5, 40];
 		mapZoom = 2;
@@ -763,6 +799,11 @@
 				</div>
 			{:else if startSearchResults.length > 0}
 				<div class="space-y-2">
+					{#if startSearchProvider}
+						<div class="text-xs text-base-content/60">
+							Source: {formatProviderLabel(startSearchProvider)}
+						</div>
+					{/if}
 					<div class="max-h-48 overflow-y-auto space-y-1">
 						{#each startSearchResults as result}
 							<button
@@ -776,6 +817,11 @@
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
 										{#if result.category}
 											<div class="text-xs text-success/70 capitalize">{result.category}</div>
+										{/if}
+										{#if result.provider || result.powered_by}
+											<div class="text-xs text-base-content/50">
+												Source: {formatProviderLabel(result.provider || result.powered_by)}
+											</div>
 										{/if}
 									</div>
 								</div>
@@ -829,6 +875,11 @@
 				</div>
 			{:else if endSearchResults.length > 0}
 				<div class="space-y-2">
+					{#if endSearchProvider}
+						<div class="text-xs text-base-content/60">
+							Source: {formatProviderLabel(endSearchProvider)}
+						</div>
+					{/if}
 					<div class="max-h-48 overflow-y-auto space-y-1">
 						{#each endSearchResults as result}
 							<button
@@ -842,6 +893,11 @@
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
 										{#if result.category}
 											<div class="text-xs text-error/70 capitalize">{result.category}</div>
+										{/if}
+										{#if result.provider || result.powered_by}
+											<div class="text-xs text-base-content/50">
+												Source: {formatProviderLabel(result.provider || result.powered_by)}
+											</div>
 										{/if}
 									</div>
 								</div>
@@ -943,6 +999,11 @@
 					<div class="label">
 						<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
 					</div>
+					{#if searchProvider}
+						<div class="text-xs text-base-content/60">
+							Source: {formatProviderLabel(searchProvider)}
+						</div>
+					{/if}
 					<div class="max-h-48 overflow-y-auto space-y-1">
 						{#each searchResults as result}
 							<button
@@ -956,6 +1017,11 @@
 										<div class="text-xs text-base-content/60 truncate">{result.location}</div>
 										{#if result.category}
 											<div class="text-xs text-primary/70 capitalize">{result.category}</div>
+										{/if}
+										{#if result.provider || result.powered_by}
+											<div class="text-xs text-base-content/50">
+												Source: {formatProviderLabel(result.provider || result.powered_by)}
+											</div>
 										{/if}
 									</div>
 								</div>
@@ -1006,6 +1072,15 @@
 								<p class="text-xs text-base-content/60 mt-1">
 									{selectedMarker.lat.toFixed(6)}, {selectedMarker.lng.toFixed(6)}
 								</p>
+								{#if locationData?.provider || selectedLocation.provider || selectedLocation.powered_by}
+									<p class="text-xs text-base-content/60 mt-1">
+										Source: {formatProviderLabel(
+											locationData?.provider ||
+												selectedLocation.provider ||
+												selectedLocation.powered_by
+										)}
+									</p>
+								{/if}
 
 								{#if locationData?.city || locationData?.region || locationData?.country}
 									<div class="flex flex-wrap gap-2 mt-3">
@@ -1059,7 +1134,6 @@
 				center={mapCenter}
 				zoom={mapZoom}
 				bounds={mapBounds ?? undefined}
-				standardControls
 				on:mapClick={handleMapClick}
 			>
 				{#if transportationMode}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Collection, User, ContentImage } from '$lib/types';
+	import { googleContentImage } from '$lib/images';
 	import { onMount } from 'svelte';
 	import { t } from 'svelte-i18n';
 	import FullMap from '$lib/components/map/FullMap.svelte';
@@ -84,12 +85,7 @@
 	let modalLodgingToEdit: Lodging | null = null;
 
 	function mapPhotosToContentImages(photos: string[]): ContentImage[] {
-		return photos.map((url, i) => ({
-			id: `rec-${i}-${Date.now()}`,
-			image: url,
-			is_primary: i === 0,
-			immich_id: null
-		}));
+		return photos.map((url, i) => googleContentImage(`rec-${i}-${Date.now()}`, url, i === 0));
 	}
 
 	function openCreateLocationFromResult(result: RecommendationResult) {
@@ -251,7 +247,7 @@
 			params.append('radius', radiusValue.toString());
 			params.append('category', selectedCategory);
 
-			const response = await fetch(`/api/recommendations/query?${params.toString()}`);
+			const response = await fetch(`/api/recommendations/query/?${params.toString()}`);
 
 			if (!response.ok) {
 				const errorData = await response.json();
@@ -264,7 +260,13 @@
 				throw new Error(data.error);
 			}
 
-			results = data.results || [];
+			// Normalize results -> ensure google_maps_uri exists when backend returns google_maps_url
+			results = (data.results || []).map(
+				(r: RecommendationResult & { google_maps_url?: string }) => ({
+					...r,
+					google_maps_uri: r.google_maps_uri || r.google_maps_url || null
+				})
+			);
 
 			// Update map if we have results
 			if (results.length > 0) {
@@ -290,12 +292,9 @@
 		startIndex: number = 0
 	) {
 		// Convert photo URLs to ContentImage format
-		selectedPhotos = photos.map((url, index) => ({
-			id: `photo-${index}`,
-			image: url,
-			is_primary: index === 0,
-			immich_id: null
-		}));
+		selectedPhotos = photos.map((url, index) =>
+			googleContentImage(`photo-${index}`, url, index === 0)
+		);
 		selectedPlaceName = placeName;
 		selectedPlaceAddress = placeAddress;
 		selectedPhotoIndex = startIndex;
@@ -575,7 +574,6 @@
 					<FullMap
 						basemapType={normalizeBasemapType(user?.map_style)}
 						mapClass="w-full h-[500px]"
-						standardControls
 						center={[mapCenter.lng, mapCenter.lat]}
 						zoom={mapZoom}
 					>

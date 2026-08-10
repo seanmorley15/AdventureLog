@@ -16,7 +16,7 @@ export const GET: RequestHandler = async (event) => {
 			});
 		}
 
-		let integrationFetch = await fetch(`${endpoint}/api/integrations/immich`, {
+		let integrationFetch = await fetch(`${endpoint}/api/integrations/immich/`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

@@ -5,6 +5,8 @@
 	let modal: HTMLDialogElement;
 	import { t } from 'svelte-i18n';
 	import type { ContentImage } from '$lib/types';
+	import ImageSourceBadge from './ImageSourceBadge.svelte';
+	import { defaultImageSource } from '$lib/images';
 	export let images: ContentImage[] = [];
 	export let initialIndex: number = 0;
 	export let name: string = '';
@@ -72,6 +74,8 @@
 	$: if (images.length > 0 && currentIndex >= images.length) {
 		updateCurrentSlide(0);
 	}
+
+	$: currentImageSource = defaultImageSource(images[currentIndex]?.source);
 </script>
 
 <!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
@@ -181,13 +185,14 @@
 				{/if}
 
 				<!-- Main Image -->
-				<div class="flex justify-center items-center max-w-full">
+				<div class="relative inline-flex max-h-[75vh] max-w-full">
 					<img
 						src={currentImage}
 						alt={name}
-						class="max-w-full max-h-[75vh] object-contain rounded-lg shadow-lg"
+						class="max-h-[75vh] max-w-full rounded-lg object-contain shadow-lg"
 						style="max-width: 100%; max-height: 75vh; object-fit: contain;"
 					/>
+					<ImageSourceBadge source={currentImageSource} />
 				</div>
 
 				<!-- Next Button -->

@@ -23,6 +23,7 @@
 
 	import { addToast } from '$lib/toasts';
 	import ImageManagement from '../ImageManagement.svelte';
+	import { parseImmichIntegration } from '$lib/integrations';
 	import AttachmentManagement from '../AttachmentManagement.svelte';
 	import WandererCard from '../cards/WandererCard.svelte';
 
@@ -34,6 +35,7 @@
 	export let itemId: string = '';
 	export let measurementSystem: 'metric' | 'imperial' = 'metric';
 	export let userIsOwner: boolean = false;
+	export let pendingGooglePhotoUrls: string[] = [];
 
 	// Component state
 	let immichIntegration: boolean = false;
@@ -44,6 +46,8 @@
 	let trailName: string = '';
 	let trailLink: string = '';
 	let trailWandererId: string = '';
+	let trailWandererAuthorUsername: string = '';
+	let trailWandererAuthorDomain: string = '';
 	let trailError: string = '';
 	let isTrailLoading: boolean = false;
 	let trailToEdit: Trail | null = null;
@@ -80,7 +84,9 @@
 			name: trailName.trim(),
 			location: itemId,
 			link: trailLink.trim() || null,
-			wanderer_id: trailWandererId.trim() || null
+			wanderer_id: trailWandererId.trim() || null,
+			wanderer_author_username: trailWandererAuthorUsername.trim() || null,
+			wanderer_author_domain: trailWandererAuthorDomain.trim() || null
 		};
 
 		try {
@@ -113,8 +119,22 @@
 	function resetTrailForm() {
 		trailName = '';
 		trailLink = '';
+		trailWandererId = '';
+		trailWandererAuthorUsername = '';
+		trailWandererAuthorDomain = '';
 		trailError = '';
 		showAddTrailForm = false;
+	}
+
+	function wandererAuthorFromTrail(trail: WandererTrail): {
+		username: string;
+		domain: string;
+	} {
+		const author = trail.expand?.author;
+		return {
+			username: (author?.preferred_username || author?.username || '').trim(),
+			domain: (author?.domain || '').trim().replace(/^@+/, '')
+		};
 	}
 
 	function startEditingTrail(trail: Trail) {
@@ -159,6 +179,7 @@
 		isSearching = true;
 		try {
 			const url = new URL('/api/integrations/wanderer/trails', window.location.origin);
+			url.searchParams.set('expand', 'author');
 			if (filter) {
 				url.searchParams.append('filter', filter);
 			}
@@ -216,10 +237,12 @@
 
 	async function linkWandererTrail(event: CustomEvent<WandererTrail>) {
 		const trail = event.detail;
-		let trailId = trail.id;
+		const { username, domain } = wandererAuthorFromTrail(trail);
 		trailName = trail.name;
 		trailLink = '';
-		trailWandererId = trailId;
+		trailWandererId = trail.id;
+		trailWandererAuthorUsername = username;
+		trailWandererAuthorDomain = domain;
 		trailError = '';
 		createTrail();
 	}
@@ -325,15 +348,14 @@
 				const data = await res.json();
 
 				// Check Immich integration
-				if (data.immich) {
+				const immich = parseImmichIntegration(data.immich);
+				if (immich.enabled) {
 					immichIntegration = true;
-					// For copyImmichLocally, we might need to fetch specific details if needed
-					// or set a default value since it's not in the new response structure
-					copyImmichLocally = false;
+					copyImmichLocally = immich.copyLocally;
 				}
 
 				// Check Wanderer integration
-				if (data.wanderer && data.wanderer.exists && !data.wanderer.expired) {
+				if (data.wanderer && data.wanderer.exists) {
 					isWandererEnabled = true;
 				}
 			} else if (res.status !== 404) {
@@ -350,6 +372,7 @@
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
+			bind:pendingGooglePhotoUrls
 			objectId={itemId}
 			contentType="location"
 			defaultSearchTerm={itemName}

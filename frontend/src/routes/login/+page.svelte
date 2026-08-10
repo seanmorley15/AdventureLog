@@ -130,7 +130,7 @@
 											/>
 										</div>
 
-										<!-- TOTP -->
+										<!-- TOTP / recovery code -->
 										{#if $page.form?.mfa_required}
 											<div class="form-control">
 												<label class="label" for="totp">
@@ -144,9 +144,14 @@
 													pattern="[0-9]*"
 													autocomplete="one-time-code"
 													class="input input-bordered w-full focus:input-primary"
-													placeholder="000000"
-													maxlength="6"
+													placeholder={$t('auth.totp_placeholder')}
+													maxlength="8"
 												/>
+												<label class="label" for="totp">
+													<span class="label-text-alt text-base-content/60">
+														{$t('auth.totp_hint')}
+													</span>
+												</label>
 											</div>
 										{/if}
 

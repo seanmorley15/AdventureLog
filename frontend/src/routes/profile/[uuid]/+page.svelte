@@ -2,6 +2,7 @@
 	export let data;
 	import LocationCard from '$lib/components/cards/LocationCard.svelte';
 	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 	import type { Location, Collection, User } from '$lib/types.js';
 	import { t } from 'svelte-i18n';
 
@@ -319,33 +320,20 @@
 			<div class="profile-header flex flex-col items-center text-center">
 				<!-- Profile Picture with Enhanced Styling -->
 				<div class="relative mb-6">
-					{#if user.profile_pic}
-						<div class="avatar">
-							<div
-								class="w-32 h-32 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-2xl"
-							>
-								<img src={user.profile_pic} alt="Profile" />
-							</div>
+					<div class="avatar">
+						<div
+							class="w-32 h-32 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-2xl overflow-hidden"
+						>
+							<UserAvatar
+								{user}
+								alt={user.first_name && user.last_name
+									? `${user.first_name} ${user.last_name}`
+									: user.username}
+								className="w-32 h-32 rounded-full"
+								textClass="text-4xl"
+							/>
 						</div>
-					{:else}
-						<div class="avatar">
-							<div
-								class="w-32 h-32 rounded-full ring-4 ring-primary ring-offset-4 ring-offset-base-100 shadow-2xl bg-gradient-to-br from-primary to-secondary"
-							>
-								{#if user.first_name && user.last_name}
-									<img
-										src={`https://eu.ui-avatars.com/api/?name=${user.first_name}+${user.last_name}&size=250&background=random`}
-										alt="Profile"
-									/>
-								{:else}
-									<img
-										src={`https://eu.ui-avatars.com/api/?name=${user.username}&size=250&background=random`}
-										alt="Profile"
-									/>
-								{/if}
-							</div>
-						</div>
-					{/if}
+					</div>
 				</div>
 
 				<!-- User Info -->

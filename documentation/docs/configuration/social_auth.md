@@ -4,12 +4,17 @@ AdventureLog support authentication via 3rd party services and self-hosted ident
 
 The steps for each service varies so please refer to the specific service's documentation for more information.
 
-## Supported Services
+## Supported providers
 
-- [Authentik](social_auth/authentik.md) (self-hosted)
-- [GitHub](social_auth/github.md)
-- [Open ID Connect](social_auth/oidc.md)
-- [Authelia](https://www.authelia.com/integration/openid-connect/adventure-log/)
+| Provider | Type | Guide |
+| -------- | ---- | ----- |
+| Authentik | Self-hosted OIDC | [Setup guide](social_auth/authentik.md) |
+| GitHub | OAuth | [Setup guide](social_auth/github.md) |
+| Pocket ID | Self-hosted OIDC | [Setup guide](social_auth/pocket_id.md) |
+| OpenID Connect | Generic OIDC | [Setup guide](social_auth/oidc.md) |
+| Authelia | Self-hosted OIDC | [External guide](https://www.authelia.com/integration/openid-connect/adventure-log/) |
+
+Providers are configured in the Django admin panel under **Social applications**. See the [Admin Panel](../guides/admin_panel.md) for access requirements.
 
 ## Linking Existing Accounts
 
