@@ -2,11 +2,13 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.contrib.gis.db import models as gis_models
+from adventures.utils.geo import point_to_lat_lon
 
 
 User = get_user_model()
 
 default_user = 1  # Replace with an actual user ID
+
 
 class Country(models.Model):
 
@@ -15,12 +17,21 @@ class Country(models.Model):
     country_code = models.CharField(max_length=2, unique=True) #iso2 code
     subregion = models.CharField(max_length=100, blank=True, null=True)
     capital = models.CharField(max_length=100, blank=True, null=True)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
 
     class Meta:
         verbose_name = "Country"
         verbose_name_plural = "Countries"
+
+    @property
+    def latitude(self):
+        lat, _ = point_to_lat_lon(self.coordinates)
+        return lat
+
+    @property
+    def longitude(self):
+        _, lon = point_to_lat_lon(self.coordinates)
+        return lon
 
     def __str__(self):
         return self.name
@@ -29,8 +40,17 @@ class Region(models.Model):
     id = models.CharField(primary_key=True)
     name = models.CharField(max_length=100)
     country = models.ForeignKey(Country, on_delete=models.CASCADE)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
+
+    @property
+    def latitude(self):
+        lat, _ = point_to_lat_lon(self.coordinates)
+        return lat
+
+    @property
+    def longitude(self):
+        _, lon = point_to_lat_lon(self.coordinates)
+        return lon
 
     def __str__(self):
         return self.name
@@ -39,11 +59,20 @@ class City(models.Model):
     id = models.CharField(primary_key=True)
     name = models.CharField(max_length=100)
     region = models.ForeignKey(Region, on_delete=models.CASCADE)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    coordinates = gis_models.PointField(srid=4326, null=True, blank=True)
 
     class Meta:
         verbose_name_plural = "Cities"
+
+    @property
+    def latitude(self):
+        lat, _ = point_to_lat_lon(self.coordinates)
+        return lat
+
+    @property
+    def longitude(self):
+        _, lon = point_to_lat_lon(self.coordinates)
+        return lon
 
     def __str__(self):
         return self.name

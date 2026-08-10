@@ -1,4 +1,11 @@
+packages:
+  - '.'
+allowBuilds:
+  es5-ext: true
+  esbuild: true
+  svelte-preprocess: true
 overrides:
+  postcss: 8.5.18
   svelte-i18n>esbuild: 0.25.12
   vite>esbuild: 0.25.12
   '@sveltejs/adapter-vercel@<6.3.2': '>=6.3.2'

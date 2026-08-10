@@ -1,0 +1,116 @@
+name: Build and push image set
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      filter_paths:
+        required: false
+        type: boolean
+        default: true
+      include_latest_tag:
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+  actions: write
+
+concurrency:
+  group: images-${{ inputs.tag }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    if: ${{ inputs.filter_paths }}
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.flags.outputs.frontend }}
+      backend: ${{ steps.flags.outputs.backend }}
+      aio: ${{ steps.flags.outputs.aio }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            shared:
+              - '.github/workflows/**'
+              - 'docker/Dockerfile'
+              - 'docker/docker-bake.hcl'
+            frontend:
+              - 'frontend/**'
+              - 'docker/Dockerfile'
+              - 'docker/shared/**'
+            backend:
+              - 'backend/**'
+              - 'docker/Dockerfile'
+              - 'docker/shared/**'
+            aio:
+              - 'docker/aio/**'
+              - 'frontend/**'
+              - 'backend/**'
+              - 'docker/Dockerfile'
+              - 'docker/shared/**'
+
+      - name: Resolve build targets
+        id: flags
+        run: |
+          shared="${{ steps.filter.outputs.shared }}"
+          frontend="${{ steps.filter.outputs.frontend }}"
+          backend="${{ steps.filter.outputs.backend }}"
+          aio="${{ steps.filter.outputs.aio }}"
+
+          bool_or() {
+            [[ "$1" == "true" || "$2" == "true" ]] && echo "true" || echo "false"
+          }
+
+          echo "frontend=$(bool_or "$shared" "$frontend")" >> "$GITHUB_OUTPUT"
+          echo "backend=$(bool_or "$shared" "$backend")" >> "$GITHUB_OUTPUT"
+          echo "aio=$(bool_or "$shared" "$aio")" >> "$GITHUB_OUTPUT"
+
+  build-frontend:
+    needs: changes
+    if: ${{ !inputs.filter_paths || needs.changes.outputs.frontend == 'true' }}
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: frontend
+      image_name: adventurelog-frontend
+      tag: ${{ inputs.tag }}
+      include_latest_tag: ${{ inputs.include_latest_tag }}
+    secrets: inherit
+
+  build-backend:
+    needs: changes
+    if: ${{ !inputs.filter_paths || needs.changes.outputs.backend == 'true' }}
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: backend
+      image_name: adventurelog-backend
+      tag: ${{ inputs.tag }}
+      include_latest_tag: ${{ inputs.include_latest_tag }}
+    secrets: inherit
+
+  build-aio:
+    needs: changes
+    if: ${{ !inputs.filter_paths || needs.changes.outputs.aio == 'true' }}
+    uses: ./.github/workflows/_build-image.yml
+    with:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: aio
+      image_name: adventurelog
+      tag: ${{ inputs.tag }}
+      include_latest_tag: ${{ inputs.include_latest_tag }}
+    secrets: inherit

@@ -1,0 +1,110 @@
+name: Installer Smoke Test
+
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'install_adventurelog.sh'
+      - 'scripts/install/**'
+      - 'scripts/validate-env.sh'
+      - '.github/workflows/installer-smoke-test.yml'
+  push:
+    branches:
+      - main
+      - development
+    paths:
+      - 'install_adventurelog.sh'
+      - 'scripts/install/**'
+      - 'scripts/validate-env.sh'
+      - '.github/workflows/installer-smoke-test.yml'
+
+jobs:
+  installer-dry-run:
+    name: Installer dry-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Shellcheck installer scripts
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y shellcheck
+          shellcheck install_adventurelog.sh
+          shellcheck scripts/install/lib/*.sh
+          shellcheck scripts/validate-env.sh
+
+      - name: Dry-run Standard Deployment install wizard
+        env:
+          ADVENTURELOG_SKIP_GUM: "1"
+          ADVENTURELOG_REF: main
+          INSTALL_DIR: adventurelog-installer-test
+        run: |
+          rm -rf "$INSTALL_DIR"
+          bash install_adventurelog.sh --dry-run --force-install
+
+      - name: Validate generated Standard Deployment env
+        run: |
+          test -f adventurelog-installer-test/.env
+          bash scripts/validate-env.sh adventurelog-installer-test/.env
+          rm -rf adventurelog-installer-test
+
+      - name: Curl-style flat lib bootstrap (no repo-relative paths)
+        run: |
+          # Mimic curl | bash: libs land in a flat temp dir with compose-paths.sh beside them
+          cache="$(mktemp -d)"
+          cp scripts/install/lib/*.sh "$cache/"
+          cp scripts/lib/compose-paths.sh "$cache/compose-paths.sh"
+          INSTALLER_LIB_DIR="$cache" bash -euo pipefail -c '
+            source "$INSTALLER_LIB_DIR/common.sh"
+            resolve_compose_settings
+            test "$COMPOSE_FILE" = "docker-compose.yml" -o "$COMPOSE_FILE" = "docker/docker-compose.yml"
+            test "$ENV_FILE" = ".env"
+            type resolve_compose_file >/dev/null
+          '
+          rm -rf "$cache"
+
+  validate-env-aio:
+    name: validate-env.sh Standard Deployment checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test Standard Deployment validation rules
+        run: |
+          cat > /tmp/test.env << 'EOF'
+          POSTGRES_PASSWORD=secure-pass
+          SITE_URL=http://localhost:8015
+          DJANGO_ADMIN_USERNAME=admin
+          DJANGO_ADMIN_PASSWORD=admin
+          MEDIA_STORAGE=s3
+          EOF
+          bash scripts/validate-env.sh /tmp/test.env && exit 1 || true
+
+          cat > /tmp/test2.env << 'EOF'
+          POSTGRES_PASSWORD=secure-pass
+          SITE_URL=http://localhost:8015
+          EMAIL_BACKEND=email
+          EOF
+          bash scripts/validate-env.sh /tmp/test2.env && exit 1 || true
+
+          cat > /tmp/test3.env << 'EOF'
+          POSTGRES_PASSWORD=secure-pass
+          SITE_URL=http://localhost:8015
+          EOF
+          bash scripts/validate-env.sh /tmp/test3.env
+
+          cat > /tmp/test4.env << 'EOF'
+          POSTGRES_PASSWORD="#/M2$txJSHRSGrwyhfK@UD&1&U/LrtyC"
+          SITE_URL=http://localhost:8015
+          EOF
+          bash scripts/validate-env.sh /tmp/test4.env && exit 1 || true
+
+          cat > /tmp/test5.env << 'EOF'
+          POSTGRES_PASSWORD="#/M2\$txJSHRSGrwyhfK@UD&1&U/LrtyC"
+          SITE_URL=http://localhost:8015
+          EOF
+          bash scripts/validate-env.sh /tmp/test5.env

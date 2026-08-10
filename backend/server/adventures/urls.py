@@ -1,6 +1,8 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 from adventures.views import *
+from adventures.views.places_api_view import PlacesAPI
+from adventures.views.sunrise_sunset_view import SunriseSunsetAPI
 
 router = DefaultRouter()
 router.register(r'locations', LocationViewSet, basename='locations')
@@ -13,6 +15,8 @@ router.register(r'notes', NoteViewSet, basename='notes')
 router.register(r'checklists', ChecklistViewSet, basename='checklists')
 router.register(r'images', ContentImageViewSet, basename='images')
 router.register(r'reverse-geocode', ReverseGeocodeViewSet, basename='reverse-geocode')
+router.register(r'places', PlacesAPI, basename='places')
+router.register(r'sunrise-sunset', SunriseSunsetAPI, basename='sunrise-sunset')
 router.register(r'categories', CategoryViewSet, basename='categories')
 router.register(r'ics-calendar', IcsCalendarGeneratorViewSet, basename='ics-calendar')
 router.register(r'search', GlobalSearchView, basename='search')
@@ -23,6 +27,7 @@ router.register(r'backup', BackupViewSet, basename='backup')
 router.register(r'trails', TrailViewSet, basename='trails')
 router.register(r'activities', ActivityViewSet, basename='activities')
 router.register(r'visits', VisitViewSet, basename='visits')
+router.register(r'calendar', CalendarViewSet, basename='calendar')
 router.register(r'itineraries', ItineraryViewSet, basename='itineraries')
 router.register(r'itinerary-days', ItineraryDayViewSet, basename='itinerary-days')
 

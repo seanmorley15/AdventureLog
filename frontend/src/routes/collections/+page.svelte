@@ -385,7 +385,7 @@
 			<!-- Header Section -->
 			<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
 				<div class="container mx-auto px-6 py-4">
-					<div class="flex items-center justify-between">
+					<div class="flex flex-wrap gap-2 items-center justify-between">
 						<div class="flex items-center gap-4">
 							<button class="btn btn-ghost btn-square lg:hidden" on:click={toggleSidebar}>
 								<Filter class="w-5 h-5" />

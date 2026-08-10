@@ -1,9 +1,15 @@
 import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { themes } from '$lib';
+
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
+const ALLOWED_THEME_NAMES = new Set(themes.map((theme) => theme.name));
 
 export const authHook: Handle = async ({ event, resolve }) => {
 	event.cookies.delete('csrftoken', { path: '/' });
+	event.locals.subscription = null;
+	event.locals.hasAccess = true;
+	event.locals.cloudMode = false;
 	try {
 		// Image proxy requests can be very high-volume and do not need locals.user.
 		if (event.url.pathname.startsWith('/immich/')) {
@@ -21,7 +27,7 @@ export const authHook: Handle = async ({ event, resolve }) => {
 
 		const cookie = event.request.headers.get('cookie') || '';
 
-		let userFetch = await event.fetch(`${serverEndpoint}/auth/user-metadata/`, {
+		let userFetch = await event.fetch(`${serverEndpoint}/auth/current-user/`, {
 			headers: {
 				cookie
 			}
@@ -41,8 +47,11 @@ export const authHook: Handle = async ({ event, resolve }) => {
 		}
 
 		if (userFetch.ok) {
-			const user = await userFetch.json();
-			event.locals.user = user;
+			const payload = await userFetch.json();
+			event.locals.user = payload.user || null;
+			event.locals.subscription = payload.subscription || null;
+			event.locals.hasAccess = payload.has_access ?? true;
+			event.locals.cloudMode = payload.cloud_mode ?? false;
 			const setCookieHeader = userFetch.headers.get('Set-Cookie');
 
 			if (setCookieHeader) {
@@ -72,6 +81,9 @@ export const authHook: Handle = async ({ event, resolve }) => {
 	} catch (error) {
 		console.error('Error in authHook:', error);
 		event.locals.user = null;
+		event.locals.subscription = null;
+		event.locals.hasAccess = true;
+		event.locals.cloudMode = false;
 		event.cookies.delete('sessionid', { path: '/', secure: event.url.protocol === 'https:' });
 	}
 
@@ -79,7 +91,8 @@ export const authHook: Handle = async ({ event, resolve }) => {
 };
 
 export const themeHook: Handle = async ({ event, resolve }) => {
-	let theme = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
+	const candidate = event.url.searchParams.get('theme') || event.cookies.get('colortheme');
+	const theme = candidate && ALLOWED_THEME_NAMES.has(candidate) ? candidate : null;
 
 	if (theme) {
 		return await resolve(event, {

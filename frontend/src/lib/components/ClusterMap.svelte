@@ -33,9 +33,9 @@
 	export let basemapType: string = 'default';
 	export let mapStyle: string | null = null;
 	export let showBasemapSelector: boolean = true;
+	export let showMapControls = true;
 	export let mapClass = '';
 	export let zoom = 2;
-	export let standardControls = true;
 	export let fitToBounds: boolean = true;
 	export let fitPadding: number = 40;
 	export let fitMaxZoom: number = 8;
@@ -255,7 +255,7 @@
 	{basemapType}
 	{mapClass}
 	{showBasemapSelector}
-	{standardControls}
+	{showMapControls}
 	{zoom}
 	{geoJson}
 	{sourceId}

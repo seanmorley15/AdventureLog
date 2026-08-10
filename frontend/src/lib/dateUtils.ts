@@ -1,7 +1,7 @@
 // @ts-ignore
 import { DateTime } from 'luxon';
 import type { Checklist, Collection, Lodging, Note, Transportation, Visit } from './types';
-import { isAllDay } from '$lib';
+import { isAllDay, isVisitAllDay, allDayDatePart } from '$lib';
 
 /**
  * Convert a UTC ISO date to a datetime-local value in the specified timezone
@@ -66,6 +66,19 @@ export function updateUTCDate({
 	allDay?: boolean;
 }) {
 	return { utcDate: toUTCDatetime(localDate, timezone, allDay) };
+}
+
+/** Strip the time portion from a local date/datetime string for all-day inputs. */
+export function toDateOnlyLocal(localDate: string): string {
+	if (!localDate) return '';
+	return localDate.split('T')[0];
+}
+
+/** Add default start/end times when switching from all-day to timed inputs. */
+export function toTimedLocalDefault(localDate: string, end = false): string {
+	if (!localDate) return '';
+	const datePart = toDateOnlyLocal(localDate);
+	return end ? `${datePart}T23:59` : `${datePart}T00:00`;
 }
 
 /**
@@ -141,15 +154,13 @@ function getEntityDateRange(entity: Visit | Transportation | Lodging | Note | Ch
 	try {
 		let timezone = (entity as Visit).timezone || Intl.DateTimeFormat().resolvedOptions().timeZone;
 		if ('start_date' in entity && 'end_date' in entity) {
-			// Check if all-day (no time portion)
-			isAllDayEvent = isAllDay(entity.start_date) && isAllDay(entity.end_date);
-			console;
+			isAllDayEvent = isVisitAllDay(entity.start_date, entity.end_date);
 			if (isAllDayEvent) {
 				start = entity.start_date
-					? DateTime.fromISO(entity.start_date.split('T')[0], { zone: 'UTC' }).startOf('day')
+					? DateTime.fromISO(allDayDatePart(entity.start_date), { zone: 'UTC' }).startOf('day')
 					: null;
 				end = entity.end_date
-					? DateTime.fromISO(entity.end_date.split('T')[0], { zone: 'UTC' }).endOf('day')
+					? DateTime.fromISO(allDayDatePart(entity.end_date), { zone: 'UTC' }).startOf('day')
 					: null;
 			} else {
 				start = DateTime.fromISO(entity.start_date, { zone: 'UTC' }).setZone(timezone);

@@ -5,14 +5,15 @@ from rest_framework.response import Response
 from worldtravel.models import Region, City, VisitedRegion, VisitedCity
 from adventures.models import Location
 from adventures.serializers import LocationSerializer
-from adventures.geocoding import reverse_geocode
-from django.conf import settings
-from adventures.geocoding import search_google, search_osm, get_place_details
+from adventures.services.geocoding.reverse import reverse_geocode as reverse_geocode_service
+from adventures.services.places.details import get_place_details
+from adventures.services.places.search import search_places
+from adventures.throttling import ExternalGeocodeThrottle
 
 class ReverseGeocodeViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def reverse_geocode(self, request):
         lat = request.query_params.get('lat', '')
         lon = request.query_params.get('lon', '')
@@ -23,23 +24,39 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             lon = float(lon)
         except ValueError:
             return Response({"error": "Invalid latitude or longitude"}, status=400)
-        data = reverse_geocode(lat, lon, self.request.user)
+        selection = reverse_geocode_service(lat, lon, self.request.user)
+        data = selection.data
         if 'error' in data:
             return Response({"error": "An internal error occurred while processing the request"}, status=400)
         return Response(data)
     
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def search(self, request):
         query = request.query_params.get('query', '')
         if not query:
             return Response({"error": "Query parameter is required"}, status=400)
 
+        include_meta = request.query_params.get('include_meta', '').lower() in {'1', 'true', 'yes'}
+
         try:
-            if getattr(settings, 'GOOGLE_MAPS_API_KEY', None):
-                results = search_google(query)
-            else:
-                results = search_osm(query)
-            return Response(results)
+            selection = search_places(query)
+            if selection.error:
+                if include_meta:
+                    return Response({
+                        "provider_used": selection.provider_used,
+                        "providers_attempted": selection.providers_attempted,
+                        "results": [],
+                        "error": selection.error,
+                    })
+                return Response([])
+
+            if include_meta:
+                return Response({
+                    "provider_used": selection.provider_used,
+                    "providers_attempted": selection.providers_attempted,
+                    "results": selection.results,
+                })
+            return Response(selection.results)
         except Exception:
             return Response({"error": "An internal error occurred while processing the request"}, status=500)
 
@@ -133,7 +150,7 @@ class ReverseGeocodeViewSet(viewsets.ViewSet):
             "cities": new_cities
         })
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], throttle_classes=[ExternalGeocodeThrottle])
     def place_details(self, request):
         place_id = request.query_params.get('place_id', '').strip()
         if not place_id:

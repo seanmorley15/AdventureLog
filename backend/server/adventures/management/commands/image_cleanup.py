@@ -1,12 +1,30 @@
-import os
 from django.core.management.base import BaseCommand
-from django.conf import settings
+from django.core.files.storage import default_storage
 from adventures.models import ContentImage, ContentAttachment
 from users.models import CustomUser
 
 
 class Command(BaseCommand):
-	help = 'Find and prompt for deletion of unused image files and attachments in filesystem'
+	help = 'Find and prompt for deletion of unused image files and attachments in storage'
+
+	def _join_storage_path(self, prefix, name):
+		prefix = prefix.strip('/') if prefix else ''
+		if not prefix:
+			return name
+		return f"{prefix}/{name}"
+
+	def _list_storage_files(self, prefix):
+		try:
+			directories, files = default_storage.listdir(prefix)
+		except (FileNotFoundError, NotADirectoryError, OSError):
+			return []
+		paths = []
+		for file_name in files:
+			paths.append(self._join_storage_path(prefix, file_name))
+		for directory in directories:
+			nested_prefix = self._join_storage_path(prefix, directory)
+			paths.extend(self._list_storage_files(nested_prefix))
+		return paths
 
 	def add_arguments(self, parser):
 		parser.add_argument(
@@ -24,42 +42,22 @@ class Command(BaseCommand):
 		# Get ContentImage file paths
 		for img in ContentImage.objects.all():
 			if img.image and img.image.name:
-				used_files.add(os.path.join(settings.MEDIA_ROOT, img.image.name))
+				used_files.add(img.image.name)
 		
 		# Get Attachment file paths
 		for attachment in ContentAttachment.objects.all():
 			if attachment.file and attachment.file.name:
-				used_files.add(os.path.join(settings.MEDIA_ROOT, attachment.file.name))
+				used_files.add(attachment.file.name)
 		
 		# Get user profile picture file paths
 		for user in CustomUser.objects.all():
 			if user.profile_pic and user.profile_pic.name:
-				used_files.add(os.path.join(settings.MEDIA_ROOT, user.profile_pic.name))
+				used_files.add(user.profile_pic.name)
 		
-		# Find all files in media/images and media/attachments directories
-		media_root = settings.MEDIA_ROOT
+		# Find all files in storage under known media prefixes
 		all_files = []
-		
-		# Scan images directory
-		images_dir = os.path.join(media_root, 'images')
-		# Scan attachments directory
-		attachments_dir = os.path.join(media_root, 'attachments')
-		if os.path.exists(attachments_dir):
-			for root, _, files in os.walk(attachments_dir):
-				for file in files:
-					all_files.append(os.path.join(root, file))
-		
-		# Scan profile-pics directory
-		profile_pics_dir = os.path.join(media_root, 'profile-pics')
-		if os.path.exists(profile_pics_dir):
-			for root, _, files in os.walk(profile_pics_dir):
-				for file in files:
-					all_files.append(os.path.join(root, file))
-		attachments_dir = os.path.join(media_root, 'attachments')
-		if os.path.exists(attachments_dir):
-			for root, _, files in os.walk(attachments_dir):
-				for file in files:
-					all_files.append(os.path.join(root, file))
+		for prefix in ['images', 'attachments', 'profile-pics']:
+			all_files.extend(self._list_storage_files(prefix))
 		
 		# Find unused files
 		unused_files = [f for f in all_files if f not in used_files]
@@ -82,7 +80,7 @@ class Command(BaseCommand):
 			deleted_count = 0
 			for file_path in unused_files:
 				try:
-					os.remove(file_path)
+					default_storage.delete(file_path)
 					self.stdout.write(f'Deleted: {file_path}')
 					deleted_count += 1
 				except OSError as e:

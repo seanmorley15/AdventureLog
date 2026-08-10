@@ -6,6 +6,7 @@
 	import { addToast } from '$lib/toasts';
 	import CategoryDropdown from '../CategoryDropdown.svelte';
 	import type { Category } from '$lib/types';
+	import { fetchFormattedLocation } from '$lib/map/places';
 
 	import SearchIcon from '~icons/mdi/magnify';
 	import LocationIcon from '~icons/mdi/crosshairs-gps';
@@ -35,6 +36,7 @@
 		place_id?: string | null;
 		google_maps_url?: string | null;
 		powered_by?: string;
+		provider?: string;
 	};
 
 	type LocationData = {
@@ -43,6 +45,7 @@
 		country?: { name: string; country_code: string; visited: boolean };
 		display_name?: string;
 		location_name?: string;
+		provider?: string;
 	};
 
 	const dispatch = createEventDispatcher();
@@ -75,6 +78,18 @@
 	let locationData: LocationData | null = null;
 	let selectedQuickAddCategory: Category | null = null;
 	const placeDetailsCache = new Map<string, any>();
+	let searchProvider: string | null = null;
+
+	function formatProviderLabel(provider?: string | null): string | null {
+		const normalized = (provider || '').trim().toLowerCase();
+		if (!normalized) return null;
+		if (normalized === 'google') return 'Google Maps';
+		if (normalized === 'osm' || normalized === 'nominatim') return 'OpenStreetMap';
+		if (normalized === 'mixed') return 'Google Maps + OpenStreetMap';
+		if (normalized === 'google+wikipedia') return 'Google Maps + Wikipedia';
+		if (normalized === 'wikipedia') return 'Wikipedia';
+		return provider || null;
+	}
 
 	function toPlaceResult(result: any): SelectedPlace {
 		return {
@@ -94,7 +109,8 @@
 			phone_number: result.phone_number || null,
 			place_id: result.place_id || null,
 			google_maps_url: result.google_maps_url || null,
-			powered_by: result.powered_by
+			powered_by: result.powered_by,
+			provider: result.provider || result.powered_by
 		};
 	}
 
@@ -141,9 +157,7 @@
 		}
 
 		try {
-			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(query)}`
-			);
+			const response = await fetch(`/api/places/search/?query=${encodeURIComponent(query)}`);
 			if (!response.ok) {
 				return;
 			}
@@ -184,7 +198,7 @@
 		}
 
 		const response = await fetch(
-			`/api/reverse-geocode/place_details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name || '')}`
+			`/api/places/place_details/?place_id=${encodeURIComponent(placeId)}&name=${encodeURIComponent(name || '')}`
 		);
 		if (!response.ok) {
 			throw new Error('Unable to fetch place details');
@@ -238,19 +252,23 @@
 	async function searchLocations(query: string) {
 		if (!query.trim() || query.length < 3) {
 			searchResults = [];
+			searchProvider = null;
 			return;
 		}
 
 		isSearching = true;
 		try {
 			const response = await fetch(
-				`/api/reverse-geocode/search/?query=${encodeURIComponent(query)}`
+				`/api/places/search/?query=${encodeURIComponent(query)}&include_meta=1`
 			);
-			const results = await response.json();
-			searchResults = Array.isArray(results) ? results.map(toPlaceResult) : [];
+			const payload = await response.json();
+			const rawResults = Array.isArray(payload) ? payload : payload?.results || [];
+			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
+			searchResults = Array.isArray(rawResults) ? rawResults.map(toPlaceResult) : [];
 		} catch (error) {
 			console.error('Search error:', error);
 			searchResults = [];
+			searchProvider = null;
 		} finally {
 			isSearching = false;
 		}
@@ -285,8 +303,10 @@
 		isReverseGeocoding = true;
 
 		try {
-			const response = await fetch(`/api/reverse-geocode/search/?query=${lat},${lng}`);
-			const results = await response.json();
+			const response = await fetch(`/api/places/search/?query=${lat},${lng}&include_meta=1`);
+			const payload = await response.json();
+			const results = Array.isArray(payload) ? payload : payload?.results || [];
+			searchProvider = Array.isArray(payload) ? null : payload?.provider_used || null;
 
 			if (Array.isArray(results) && results.length > 0) {
 				selectedLocation = {
@@ -329,61 +349,32 @@
 
 	async function performDetailedReverseGeocode(lat: number, lng: number) {
 		try {
-			const response = await fetch(
-				`/api/reverse-geocode/reverse_geocode/?lat=${lat}&lon=${lng}&format=json`
-			);
-
-			if (response.ok) {
-				const data = await response.json();
-				locationData = {
-					city: data.city
-						? {
-								name: data.city,
-								id: data.city_id,
-								visited: data.city_visited || false
-							}
-						: undefined,
-					region: data.region
-						? {
-								name: data.region,
-								id: data.region_id,
-								visited: data.region_visited || false
-							}
-						: undefined,
-					country: data.country
-						? {
-								name: data.country,
-								country_code: data.country_id,
-								visited: false
-							}
-						: undefined,
-					display_name: data.display_name,
-					location_name: data.location_name
-				};
-
-				if (selectedLocation) {
-					const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
-					const shouldAutoEnrichQuickAdd = isCoordinatePlaceholder || !selectedLocation.place_id;
-					const resolvedLocationName = (data.location_name || '').trim();
-					const resolvedDisplayName = (data.display_name || '').trim();
-
-					selectedLocation = {
-						...selectedLocation,
-						name:
-							resolvedLocationName ||
-							(isCoordinatePlaceholder && resolvedDisplayName
-								? resolvedDisplayName
-								: selectedLocation.name),
-						location: resolvedDisplayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
-					};
-					searchQuery = selectedLocation.name;
-
-					if (shouldAutoEnrichQuickAdd && resolvedLocationName) {
-						await enrichFromResolvedName(lat, lng, resolvedLocationName);
-					}
-				}
-			} else {
+			const formatted = await fetchFormattedLocation(lat, lng);
+			if (!formatted) {
 				locationData = null;
+				return;
+			}
+
+			locationData = formatted;
+
+			if (selectedLocation) {
+				const isCoordinatePlaceholder = selectedLocation.name.startsWith('Location at ');
+				const shouldAutoEnrichQuickAdd = isCoordinatePlaceholder || !selectedLocation.place_id;
+				const resolvedLocationName = (formatted.location_name || '').trim();
+				const resolvedDisplayName = (formatted.display_name || '').trim();
+
+				selectedLocation = {
+					...selectedLocation,
+					name: isCoordinatePlaceholder
+						? resolvedLocationName || resolvedDisplayName || selectedLocation.name
+						: selectedLocation.name,
+					location: resolvedDisplayName || `${lat.toFixed(4)}, ${lng.toFixed(4)}`
+				};
+				searchQuery = selectedLocation.name;
+
+				if (shouldAutoEnrichQuickAdd && resolvedLocationName) {
+					await enrichFromResolvedName(lat, lng, resolvedLocationName);
+				}
 			}
 		} catch (error) {
 			console.error('Detailed reverse geocoding error:', error);
@@ -427,6 +418,7 @@
 		locationData = null;
 		searchQuery = '';
 		searchResults = [];
+		searchProvider = null;
 		quickAddedLocation = null;
 		selectedQuickAddCategory = null;
 		mapCenter = [-74.5, 40];
@@ -501,6 +493,8 @@
 	}
 
 	async function quickAdd() {
+		await ensureAdventureLogFormattedLocation();
+
 		const prefill = buildPrefillPayload();
 		if (!prefill) {
 			addToast('warning', `Please select a place or drop a pin first`);
@@ -654,6 +648,11 @@
 					<label class="label" for="quickstart-search-results">
 						<span class="label-text text-sm font-medium">{$t('adventures.search_results')}</span>
 					</label>
+					{#if searchProvider}
+						<div class="text-xs text-base-content/60">
+							Source: {formatProviderLabel(searchProvider)}
+						</div>
+					{/if}
 					<div id="quickstart-search-results" class="max-h-52 overflow-y-auto space-y-1">
 						{#each searchResults as result}
 							<button
@@ -672,6 +671,11 @@
 												{#if result.review_count}
 													<span class="text-base-content/60">({result.review_count})</span>
 												{/if}
+											</div>
+										{/if}
+										{#if result.provider || result.powered_by}
+											<div class="text-xs text-base-content/50">
+												Source: {formatProviderLabel(result.provider || result.powered_by)}
 											</div>
 										{/if}
 									</div>
@@ -732,7 +736,6 @@
 				mapClass="w-full h-80 rounded-lg border border-base-300"
 				center={mapCenter}
 				zoom={mapZoom}
-				standardControls
 				on:mapClick={handleMapClick}
 			>
 				{#if selectedMarker}
@@ -775,6 +778,13 @@
 									>
 								{/if}
 							</div>
+						{/if}
+						{#if locationData?.provider || selectedLocation.provider || selectedLocation.powered_by}
+							<p class="text-xs text-base-content/60 mt-1">
+								Source: {formatProviderLabel(
+									locationData?.provider || selectedLocation.provider || selectedLocation.powered_by
+								)}
+							</p>
 						{/if}
 						{#if isEnrichingDescription}
 							<div class="text-xs text-base-content/60 mt-2 inline-flex items-center gap-1">

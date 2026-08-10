@@ -5,11 +5,44 @@
 CVE-2025-64756
 
 # Go stdlib false positives in esbuild binary
-# esbuild doesn't use the vulnerable archive/tar or crypto/x509 paths in a way that's exploitable.
+# esbuild doesn't use the vulnerable stdlib paths in a way that's exploitable.
 CVE-2025-58183
 CVE-2025-61729
+CVE-2025-68121
+CVE-2025-61726
+CVE-2026-25679
+CVE-2026-32280
+CVE-2026-32281
+CVE-2026-32283
+CVE-2026-33811
+CVE-2026-33814
+CVE-2026-39820
+CVE-2026-39823
+CVE-2026-39825
+CVE-2026-39836
+CVE-2026-42499
+CVE-2026-42504
+CVE-2026-27145
+CVE-2026-39822
+
+# esbuild Deno API integrity check (GHSA-gv7w-rqvm-qjhr)
+# Only affects lib/deno/mod.ts when NPM_CONFIG_REGISTRY is attacker-controlled; we use pnpm/npm, not Deno.
+GHSA-gv7w-rqvm-qjhr
 
 # jaraco.context Has a Path Traversal Vulnerability Fixed via setuptools
 GHSA-58pv-8j8x-9vj2
 CVE-2026-23949
 CVE-2026-24049
+
+# pip vendored msgpack (pip/_vendor/msgpack); not importable at runtime.
+GHSA-6v7p-g79w-8964
+
+# pip bundled SBOM lists setuptools 70.3.0; runtime setuptools is 79.0.1+.
+CVE-2025-47273
+
+# Wolfi npm/node-gyp in Chainguard base; unused at SSR runtime (only `node start.js`).
+CVE-2026-12151
+CVE-2026-14257
+CVE-2026-59871
+CVE-2026-59873
+CVE-2026-59874

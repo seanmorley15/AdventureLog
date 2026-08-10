@@ -1,205 +1,237 @@
 <script lang="ts">
-	import LocationCard from '$lib/components/cards/LocationCard.svelte';
-	import RegionCard from '$lib/components/cards/RegionCard.svelte';
-	import CityCard from '$lib/components/cards/CityCard.svelte';
-	import CountryCard from '$lib/components/cards/CountryCard.svelte';
-	import CollectionCard from '$lib/components/cards/CollectionCard.svelte';
-	import UserCard from '$lib/components/cards/UserCard.svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { searchApp } from '$lib/search/api';
+	import SearchResultRow from '$lib/search/SearchResultRow.svelte';
+	import { openCommandPalette } from '$lib/search/palette';
+	import type { SearchEntityType, SearchHit } from '$lib/search/types';
 	import type { PageData } from './$types';
+	import Magnify from '~icons/mdi/magnify';
 	import { t } from 'svelte-i18n';
-	import type {
-		Location,
-		Collection,
-		User,
-		Country,
-		Region,
-		City,
-		VisitedRegion,
-		VisitedCity
-	} from '$lib/types';
-	import SearchIcon from '~icons/mdi/magnify';
 
 	export let data: PageData;
 
-	// Whenever the query changes in the URL, SvelteKit automatically re-calls +page.server.ts
-	// and updates 'data'. This reactive statement reads the updated 'query' from $page:
-	$: query = $page.url.searchParams.get('query') ?? '';
+	type SearchFilter = {
+		id: string;
+		labelKey: string;
+		types?: SearchEntityType[];
+	};
 
-	// Assign updated results from data, so when data changes, the displayed items update:
-	$: locations = data.locations as Location[];
-	$: collections = data.collections as Collection[];
-	$: users = data.users as User[];
-	$: countries = data.countries as Country[];
-	$: regions = data.regions as Region[];
-	$: cities = data.cities as City[];
-	$: visited_regions = data.visited_regions as VisitedRegion[];
-	$: visited_cities = data.visited_cities as VisitedCity[];
+	const filters: SearchFilter[] = [
+		{ id: 'all', labelKey: 'search.filters.all' },
+		{
+			id: 'adventures',
+			labelKey: 'search.filters.adventures',
+			types: ['location']
+		},
+		{
+			id: 'collections',
+			labelKey: 'search.filters.collections',
+			types: ['collection', 'lodging', 'transportation', 'note', 'checklist', 'activity']
+		},
+		{
+			id: 'notes',
+			labelKey: 'search.filters.notes',
+			types: ['note', 'checklist']
+		},
+		{
+			id: 'transport',
+			labelKey: 'search.filters.transport',
+			types: ['transportation', 'lodging']
+		},
+		{
+			id: 'world',
+			labelKey: 'search.filters.world',
+			types: ['country', 'region', 'city']
+		},
+		{ id: 'users', labelKey: 'search.filters.users', types: ['user'] }
+	];
 
-	// new stats
-	$: totalResults =
-		locations.length +
-		collections.length +
-		users.length +
-		countries.length +
-		regions.length +
-		cities.length;
-	$: hasResults = totalResults > 0;
+	let results: SearchHit[] = data.results;
+	let total = data.total;
+	let offset = data.offset;
+	let limit = data.limit;
+	let loadingMore = false;
+	let loadMoreError = '';
+
+	$: query = $page.url.searchParams.get('q') || $page.url.searchParams.get('query') || '';
+	$: activeFilter = $page.url.searchParams.get('filter') || 'all';
+	$: hasQuery = query.trim().length > 0;
+	$: hasResults = results.length > 0;
+	$: canLoadMore = hasQuery && results.length < total;
+
+	$: if (data) {
+		results = data.results;
+		total = data.total;
+		offset = data.offset;
+		limit = data.limit;
+	}
+
+	function getFilterTypes(filterId: string): SearchEntityType[] | undefined {
+		return filters.find((filter) => filter.id === filterId)?.types;
+	}
+
+	function applyFilter(filterId: string) {
+		const url = new URL(window.location.href);
+		if (filterId === 'all') {
+			url.searchParams.delete('filter');
+			url.searchParams.delete('types');
+		} else {
+			url.searchParams.set('filter', filterId);
+			const types = getFilterTypes(filterId);
+			if (types?.length) {
+				url.searchParams.set('types', types.join(','));
+			}
+		}
+		goto(url.toString(), { invalidateAll: true });
+	}
+
+	async function loadMore() {
+		if (!hasQuery || loadingMore || !canLoadMore) return;
+
+		loadingMore = true;
+		loadMoreError = '';
+		const nextOffset = offset + limit;
+		const types = getFilterTypes(activeFilter);
+
+		try {
+			const response = await searchApp(query, {
+				types,
+				limit,
+				offset: nextOffset
+			});
+			results = [...results, ...response.results];
+			total = response.total;
+			offset = response.offset;
+		} catch (err) {
+			loadMoreError = (err as Error).message || 'Failed to load more results';
+		} finally {
+			loadingMore = false;
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>Search: {query}</title>
-	<meta name="description" content="AdventureLog global search results for {query}" />
+	<title>{hasQuery ? `Search: ${query}` : 'Search'} | AdventureLog</title>
+	<meta
+		name="description"
+		content={hasQuery
+			? `AdventureLog search results for ${query}`
+			: 'Search your adventures, collections, and travel data in AdventureLog'}
+	/>
 </svelte:head>
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 via-base-100 to-base-200">
-	<!-- Header -->
 	<div class="sticky top-0 z-40 bg-base-100/80 backdrop-blur-lg border-b border-base-300">
-		<div class="container mx-auto px-6 py-4 flex items-center">
-			<div class="flex items-center gap-3">
-				<div class="p-2 bg-primary/10 rounded-xl">
-					<SearchIcon class="w-8 h-8 text-primary" />
+		<div class="container mx-auto px-6 py-4">
+			<div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+				<div class="flex items-center gap-3">
+					<div class="p-2 bg-primary/10 rounded-xl">
+						<Magnify class="w-8 h-8 text-primary" />
+					</div>
+					<div>
+						<h1
+							class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
+						>
+							{$t('navbar.search')}{hasQuery ? `: ${query}` : ''}
+						</h1>
+						{#if hasQuery && hasResults}
+							<p class="text-sm text-base-content/60">
+								{total}
+								{total !== 1 ? $t('search.results') : $t('search.result')}
+								{$t('search.found')}
+							</p>
+						{/if}
+					</div>
 				</div>
-				<div>
-					<h1
-						class="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent"
-					>
-						{$t('navbar.search')}{query ? `: ${query}` : ''}
-					</h1>
-					{#if hasResults}
-						<p class="text-sm text-base-content/60">
-							{totalResults}
-							{totalResults !== 1 ? $t('search.results') : $t('search.result')}
-							{$t('search.found')}
-						</p>
-					{/if}
-				</div>
+
+				<button
+					type="button"
+					class="btn btn-primary btn-sm lg:btn-md"
+					on:click={() => openCommandPalette(query)}
+				>
+					{$t('search.open_palette')}
+				</button>
 			</div>
+
+			{#if hasQuery}
+				<div class="flex flex-wrap gap-2 mt-4">
+					{#each filters as filter}
+						<button
+							type="button"
+							class="btn btn-sm"
+							class:btn-primary={activeFilter === filter.id}
+							class:btn-ghost={activeFilter !== filter.id}
+							on:click={() => applyFilter(filter.id)}
+						>
+							{$t(filter.labelKey)}
+						</button>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 
-	<!-- Main content -->
-	<div class="container mx-auto px-6 py-8">
-		{#if !hasResults}
-			<div class="flex flex-col items-center justify-center py-16">
+	<div class="container mx-auto px-6 py-8 max-w-3xl">
+		{#if data.error}
+			<div class="alert alert-error mb-6">
+				<span>{data.error}</span>
+				<button
+					type="button"
+					class="btn btn-sm"
+					on:click={() => goto($page.url.pathname + $page.url.search)}
+				>
+					{$t('search.retry')}
+				</button>
+			</div>
+		{:else if !hasQuery}
+			<div class="flex flex-col items-center justify-center py-16 text-center">
 				<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
-					<SearchIcon class="w-16 h-16 text-base-content/30" />
+					<Magnify class="w-16 h-16 text-base-content/30" />
+				</div>
+				<h3 class="text-xl font-semibold text-base-content/70 mb-2">
+					{$t('search.empty_prompt_title')}
+				</h3>
+				<p class="text-base-content/50 max-w-md mb-6">
+					{$t('search.empty_prompt_desc')}
+				</p>
+				<button type="button" class="btn btn-primary" on:click={() => openCommandPalette()}>
+					{$t('search.open_palette')}
+				</button>
+			</div>
+		{:else if !hasResults}
+			<div class="flex flex-col items-center justify-center py-16 text-center">
+				<div class="p-6 bg-base-200/50 rounded-2xl mb-6">
+					<Magnify class="w-16 h-16 text-base-content/30" />
 				</div>
 				<h3 class="text-xl font-semibold text-base-content/70 mb-2">
 					{$t('adventures.no_results')}
 				</h3>
-				<p class="text-base-content/50 text-center max-w-md">
+				<p class="text-base-content/50 max-w-md">
 					{$t('search.try_searching_desc')}
 				</p>
 			</div>
 		{:else}
-			{#if locations.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-primary/10 rounded-lg">
-							<SearchIcon class="w-6 h-6 text-primary" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('locations.locations')}</h2>
-						<div class="badge badge-primary">{locations.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each locations as adventure}
-							<LocationCard {adventure} user={null} />
-						{/each}
-					</div>
-				</div>
+			<div
+				class="bg-base-100 border border-base-300 rounded-2xl overflow-hidden shadow-sm divide-y divide-base-300"
+			>
+				{#each results as hit (hit.type + hit.id)}
+					<SearchResultRow {hit} spotlight on:select={() => goto(hit.url)} />
+				{/each}
+			</div>
+
+			{#if loadMoreError}
+				<div class="alert alert-error mt-4">{loadMoreError}</div>
 			{/if}
 
-			{#if collections.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-secondary/10 rounded-lg">
-							<!-- you can replace with a CollectionIcon -->
-							<SearchIcon class="w-6 h-6 text-secondary" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('navbar.collections')}</h2>
-						<div class="badge badge-secondary">{collections.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each collections as collection}
-							<CollectionCard {collection} type="" user={null} />
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			{#if countries.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-accent/10 rounded-lg">
-							<!-- you can replace with a GlobeIcon -->
-							<SearchIcon class="w-6 h-6 text-accent" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('search.countries')}</h2>
-						<div class="badge badge-accent">{countries.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each countries as country}
-							<CountryCard {country} />
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			{#if regions.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-info/10 rounded-lg">
-							<!-- MapIcon -->
-							<SearchIcon class="w-6 h-6 text-info" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('map.regions')}</h2>
-						<div class="badge badge-info">{regions.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each regions as region}
-							<RegionCard
-								{region}
-								visited={visited_regions.some((vr) => vr.region === region.id)}
-							/>
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			{#if cities.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-warning/10 rounded-lg">
-							<!-- CityIcon -->
-							<SearchIcon class="w-6 h-6 text-warning" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('search.cities')}</h2>
-						<div class="badge badge-warning">{cities.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each cities as city}
-							<CityCard {city} visited={visited_cities.some((vc) => vc.city === city.id)} />
-						{/each}
-					</div>
-				</div>
-			{/if}
-
-			{#if users.length > 0}
-				<div class="mb-12">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="p-2 bg-success/10 rounded-lg">
-							<!-- UserIcon -->
-							<SearchIcon class="w-6 h-6 text-success" />
-						</div>
-						<h2 class="text-2xl font-bold">{$t('navbar.users')}</h2>
-						<div class="badge badge-success">{users.length}</div>
-					</div>
-					<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-						{#each users as user}
-							<UserCard {user} />
-						{/each}
-					</div>
+			{#if canLoadMore}
+				<div class="flex justify-center mt-6">
+					<button type="button" class="btn btn-outline" disabled={loadingMore} on:click={loadMore}>
+						{#if loadingMore}
+							<span class="loading loading-spinner loading-sm"></span>
+						{/if}
+						{$t('search.load_more')}
+					</button>
 				</div>
 			{/if}
 		{/if}

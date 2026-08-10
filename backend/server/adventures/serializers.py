@@ -1,12 +1,18 @@
-import os
 from .models import Location, ContentImage, ChecklistItem, Collection, Note, Transportation, Checklist, Visit, Category, ContentAttachment, Lodging, CollectionInvite, Trail, Activity, CollectionItineraryItem, CollectionItineraryDay
 from rest_framework import serializers
-from main.utils import CustomModelSerializer
+from main.utils import CustomModelSerializer, build_media_url, get_public_url
 from users.serializers import CustomUserDetailsSerializer
 from worldtravel.serializers import CountrySerializer, RegionSerializer, CitySerializer
 from geopy.distance import geodesic
 from integrations.models import ImmichIntegration
 from adventures.utils.geojson import gpx_to_geojson
+from adventures.utils.geo import point_to_lat_lon
+from adventures.utils.datetime_utils import ensure_aware_utc, normalize_all_day_visit_dates
+from adventures.utils.serializer_geo_fields import (
+    ActivityCoordinateMixin,
+    CoordinateSerializerMixin,
+    TransportationCoordinateMixin,
+)
 import gpxpy
 import logging
 
@@ -18,9 +24,7 @@ def _build_profile_pic_url(user):
     if not getattr(user, 'profile_pic', None):
         return None
 
-    public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-    public_url = public_url.replace("'", "")
-    return f"{public_url}/media/{user.profile_pic.name}"
+    return build_media_url(user.profile_pic.name)
 
 
 def _serialize_collaborator(user, owner_id=None, request_user=None):
@@ -39,10 +43,20 @@ def _serialize_collaborator(user, owner_id=None, request_user=None):
     }
 
 
-class ContentImageSerializer(CustomModelSerializer):
+class ContentImageSerializer(CoordinateSerializerMixin, CustomModelSerializer):
+    source = serializers.ChoiceField(
+        choices=ContentImage.Source.choices,
+        required=False,
+        default=ContentImage.Source.UPLOAD,
+    )
+    source_url = serializers.URLField(required=False, allow_null=True, allow_blank=True)
+
     class Meta:
         model = ContentImage
-        fields = ['id', 'image', 'is_primary', 'user', 'immich_id']
+        fields = [
+            'id', 'image', 'is_primary', 'user', 'immich_id',
+            'source', 'source_url', 'latitude', 'longitude',
+        ]
         read_only_fields = ['id', 'user']
 
     def to_representation(self, instance):
@@ -57,15 +71,75 @@ class ContentImageSerializer(CustomModelSerializer):
         representation = super().to_representation(instance)
 
         # Prepare public URL once
-        public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
+        public_url = get_public_url()
 
         if instance.immich_id:
             # Use Immich integration URL
             representation['image'] = f"{public_url}/api/integrations/immich/{integration.id}/get/{instance.immich_id}"
         elif instance.image:
             # Use local image URL
-            representation['image'] = f"{public_url}/media/{instance.image.name}"
+            representation['image'] = build_media_url(instance.image.name)
 
+        return representation
+
+
+class ImageMapPinSerializer(serializers.ModelSerializer):
+    latitude = serializers.SerializerMethodField()
+    longitude = serializers.SerializerMethodField()
+    image = serializers.SerializerMethodField()
+    parent_type = serializers.SerializerMethodField()
+    parent_id = serializers.SerializerMethodField()
+    parent_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ContentImage
+        fields = [
+            'id',
+            'image',
+            'latitude',
+            'longitude',
+            'source',
+            'is_primary',
+            'parent_type',
+            'parent_id',
+            'parent_name',
+        ]
+
+    def get_latitude(self, obj):
+        lat, _ = point_to_lat_lon(obj.coordinates)
+        return lat
+
+    def get_longitude(self, obj):
+        _, lon = point_to_lat_lon(obj.coordinates)
+        return lon
+
+    def get_image(self, obj):
+        if obj.immich_id:
+            integration = ImmichIntegration.objects.filter(user=obj.user).first()
+            if not integration:
+                return None
+            public_url = get_public_url()
+            return f"{public_url}/api/integrations/immich/{integration.id}/get/{obj.immich_id}"
+        if obj.image:
+            return build_media_url(obj.image.name)
+        return None
+
+    def get_parent_type(self, obj):
+        return obj.content_type.model if obj.content_type_id else None
+
+    def get_parent_id(self, obj):
+        return str(obj.object_id)
+
+    def get_parent_name(self, obj):
+        parent = obj.content_object
+        return getattr(parent, 'name', None) if parent else None
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        if representation.get('image') is None:
+            return None
+        if representation.get('latitude') is None or representation.get('longitude') is None:
+            return None
         return representation
     
 class AttachmentSerializer(CustomModelSerializer):
@@ -82,11 +156,7 @@ class AttachmentSerializer(CustomModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.file:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/')
-            #print(public_url)
-            # remove any  ' from the url
-            public_url = public_url.replace("'", "")
-            representation['file'] = f"{public_url}/media/{instance.file.name}"
+            representation['file'] = build_media_url(instance.file.name)
         return representation
 
     def get_geojson(self, obj):
@@ -124,6 +194,7 @@ class TrailSerializer(CustomModelSerializer):
     provider = serializers.SerializerMethodField()
     wanderer_data = serializers.SerializerMethodField()
     wanderer_link = serializers.SerializerMethodField()
+    geojson = serializers.SerializerMethodField(read_only=True)
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -131,8 +202,12 @@ class TrailSerializer(CustomModelSerializer):
     
     class Meta:
         model = Trail
-        fields = ['id', 'user', 'name', 'location', 'created_at','link','wanderer_id', 'provider', 'wanderer_data', 'wanderer_link']
-        read_only_fields = ['id', 'created_at', 'user', 'provider']
+        fields = [
+            'id', 'user', 'name', 'location', 'created_at', 'link',
+            'wanderer_id', 'wanderer_author_username', 'wanderer_author_domain',
+            'provider', 'wanderer_data', 'wanderer_link', 'geojson',
+        ]
+        read_only_fields = ['id', 'created_at', 'user', 'provider', 'wanderer_link']
 
     def _get_wanderer_integration(self, user):
         """Cache wanderer integration to avoid multiple database queries"""
@@ -140,6 +215,75 @@ class TrailSerializer(CustomModelSerializer):
             from integrations.models import WandererIntegration
             self._wanderer_integration_cache[user.id] = WandererIntegration.objects.filter(user=user).first()
         return self._wanderer_integration_cache[user.id]
+
+    def _ensure_wanderer_author_fields(self, obj, integration, trail_data=None):
+        """Backfill username/domain from Wanderer API when missing on existing trails."""
+        if not obj.wanderer_id or not integration:
+            return obj.wanderer_author_username, obj.wanderer_author_domain
+
+        username = (obj.wanderer_author_username or '').strip() or None
+        domain = (obj.wanderer_author_domain or '').strip() or None
+        if username and domain:
+            return username, domain
+
+        from integrations.wanderer_services import (
+            extract_wanderer_author_from_trail,
+            fetch_trail_by_id,
+        )
+
+        if trail_data is None:
+            try:
+                trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
+            except Exception as exc:
+                logger.warning(
+                    "Could not fetch Wanderer trail %s for author backfill: %s",
+                    obj.wanderer_id,
+                    exc,
+                )
+                return username, domain
+
+        resolved_username, resolved_domain = extract_wanderer_author_from_trail(trail_data)
+        username = username or resolved_username
+        domain = domain or resolved_domain
+
+        updates = {}
+        if username and username != obj.wanderer_author_username:
+            updates['wanderer_author_username'] = username
+            obj.wanderer_author_username = username
+        if domain and domain != obj.wanderer_author_domain:
+            updates['wanderer_author_domain'] = domain
+            obj.wanderer_author_domain = domain
+        if updates:
+            Trail.objects.filter(pk=obj.pk).update(**updates)
+
+        return username, domain
+
+    def _build_wanderer_link(self, obj, integration, trail_data=None):
+        if not obj.wanderer_id or not integration:
+            return None
+
+        from integrations.wanderer_services import build_wanderer_trail_view_url
+
+        username, domain = self._ensure_wanderer_author_fields(
+            obj, integration, trail_data=trail_data
+        )
+        if not username or not domain:
+            return None
+
+        try:
+            return build_wanderer_trail_view_url(
+                integration.server_url,
+                obj.wanderer_id,
+                username,
+                domain,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Could not build Wanderer link for trail %s: %s",
+                obj.wanderer_id,
+                exc,
+            )
+            return None
 
     def get_provider(self, obj):
         if obj.wanderer_id:
@@ -159,43 +303,139 @@ class TrailSerializer(CustomModelSerializer):
     def get_wanderer_data(self, obj):
         if not obj.wanderer_id:
             return None
-        
-        # Use cached integration
+
         integration = self._get_wanderer_integration(obj.user)
         if not integration:
             return None
-        
-        # Fetch the Wanderer trail data
+
+        if hasattr(obj, '_wanderer_data'):
+            return obj._wanderer_data
+
         from integrations.wanderer_services import fetch_trail_by_id
+
         try:
             trail_data = fetch_trail_by_id(integration, obj.wanderer_id)
             if not trail_data:
                 return None
-            
-            # Cache the trail data and link on the object to avoid refetching
             obj._wanderer_data = trail_data
-            base_url = integration.server_url.rstrip('/')
-            obj._wanderer_link = f"{base_url}/trails/{obj.wanderer_id}"
-            
+            self._ensure_wanderer_author_fields(obj, integration, trail_data=trail_data)
+            obj._wanderer_link = self._build_wanderer_link(
+                obj, integration, trail_data=trail_data
+            )
             return trail_data
         except Exception as e:
-            logger.error(f"Error fetching Wanderer trail data for {obj.wanderer_id}: {e}")
+            logger.error("Error fetching Wanderer trail data for %s: %s", obj.wanderer_id, e)
             return None
-    
+
     def get_wanderer_link(self, obj):
         if not obj.wanderer_id:
             return None
-        
-        # Use cached integration
+
         integration = self._get_wanderer_integration(obj.user)
         if not integration:
             return None
-        
-        base_url = integration.server_url.rstrip('/')
-        return f"{base_url}/trail/view/@{integration.username}/{obj.wanderer_id}"
+
+        if hasattr(obj, '_wanderer_link') and obj._wanderer_link:
+            return obj._wanderer_link
+
+        return self._build_wanderer_link(obj, integration)
+
+    def get_geojson(self, obj):
+        if not obj.wanderer_id:
+            return None
+
+        integration = self._get_wanderer_integration(obj.user)
+        if not integration:
+            return None
+
+        from integrations.wanderer_services import fetch_trail_geojson
+
+        trail_data = getattr(obj, '_wanderer_data', None)
+        try:
+            return fetch_trail_geojson(
+                integration,
+                obj.wanderer_id,
+                trail_data=trail_data,
+            )
+        except Exception as exc:
+            logger.warning(
+                "Could not fetch GeoJSON for Wanderer trail %s: %s",
+                obj.wanderer_id,
+                exc,
+            )
+            return None
+
+    def _sync_wanderer_author_fields(self, validated_data, user):
+        wanderer_id = validated_data.get('wanderer_id')
+        if wanderer_id is None:
+            return validated_data
+        if not wanderer_id:
+            validated_data['wanderer_author_username'] = None
+            validated_data['wanderer_author_domain'] = None
+            return validated_data
+
+        username = (validated_data.get('wanderer_author_username') or '').strip() or None
+        domain = (validated_data.get('wanderer_author_domain') or '').strip().lstrip('@') or None
+
+        if username and domain:
+            validated_data['wanderer_author_username'] = username
+            validated_data['wanderer_author_domain'] = domain
+            return validated_data
+
+        integration = self._get_wanderer_integration(user)
+        if not integration:
+            return validated_data
+
+        from integrations.wanderer_services import (
+            extract_wanderer_author_from_trail,
+            fetch_trail_by_id,
+        )
+
+        try:
+            trail_data = fetch_trail_by_id(integration, wanderer_id)
+            resolved_username, resolved_domain = extract_wanderer_author_from_trail(trail_data)
+            if resolved_username:
+                validated_data['wanderer_author_username'] = resolved_username
+            if resolved_domain:
+                validated_data['wanderer_author_domain'] = resolved_domain
+        except Exception as exc:
+            logger.warning(
+                "Could not resolve Wanderer author for trail %s: %s",
+                wanderer_id,
+                exc,
+            )
+
+        return validated_data
+
+    def create(self, validated_data):
+        user = validated_data.get('user')
+        if user:
+            validated_data = self._sync_wanderer_author_fields(validated_data, user)
+        return super().create(validated_data)
+
+    def update(self, instance, validated_data):
+        if 'wanderer_id' in validated_data or (
+            'wanderer_author_username' in validated_data
+            or 'wanderer_author_domain' in validated_data
+        ):
+            merged = {
+                'wanderer_id': validated_data.get('wanderer_id', instance.wanderer_id),
+                'wanderer_author_username': validated_data.get(
+                    'wanderer_author_username',
+                    instance.wanderer_author_username,
+                ),
+                'wanderer_author_domain': validated_data.get(
+                    'wanderer_author_domain',
+                    instance.wanderer_author_domain,
+                ),
+            }
+            merged = self._sync_wanderer_author_fields(merged, instance.user)
+            validated_data['wanderer_author_username'] = merged.get('wanderer_author_username')
+            validated_data['wanderer_author_domain'] = merged.get('wanderer_author_domain')
+        return super().update(instance, validated_data)
             
     
-class ActivitySerializer(CustomModelSerializer):
+class ActivitySerializer(ActivityCoordinateMixin, CustomModelSerializer):
     geojson = serializers.SerializerMethodField()
     
     class Meta:
@@ -212,8 +452,7 @@ class ActivitySerializer(CustomModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         if instance.gpx_file:
-            public_url = os.environ.get('PUBLIC_URL', 'http://127.0.0.1:8000').rstrip('/').replace("'", "")
-            representation['gpx_file'] = f"{public_url}/media/{instance.gpx_file.name}"
+            representation['gpx_file'] = build_media_url(instance.gpx_file.name)
         return representation
     
     def get_geojson(self, obj):
@@ -227,6 +466,23 @@ class VisitSerializer(serializers.ModelSerializer):
         model = Visit
         fields = ['id', 'start_date', 'end_date', 'timezone', 'notes', 'activities','location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        for field in ('start_date', 'end_date'):
+            if field in attrs and attrs[field] is not None:
+                attrs[field] = ensure_aware_utc(attrs[field])
+
+        instance = getattr(self, 'instance', None)
+        start = attrs.get('start_date', getattr(instance, 'start_date', None) if instance else None)
+        end = attrs.get('end_date', getattr(instance, 'end_date', None) if instance else None)
+
+        if start is not None:
+            normalized_start, normalized_end = normalize_all_day_visit_dates(start, end)
+            attrs['start_date'] = normalized_start
+            if normalized_end is not None:
+                attrs['end_date'] = normalized_end
+
+        return attrs
 
     def create(self, validated_data):
         if not validated_data.get('end_date') and validated_data.get('start_date'):
@@ -258,7 +514,7 @@ class CalendarLocationSerializer(serializers.ModelSerializer):
         }
 
                                    
-class LocationSerializer(CustomModelSerializer):
+class LocationSerializer(CoordinateSerializerMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     visits = VisitSerializer(many=True, read_only=False, required=False)
     attachments = AttachmentSerializer(many=True, read_only=True)
@@ -416,6 +672,7 @@ class LocationSerializer(CustomModelSerializer):
         return obj.is_visited_status()
 
     def create(self, validated_data):
+        validated_data = self._pop_lat_lon(validated_data)
         category_data = validated_data.pop('category', None)
         collections_data = validated_data.pop('collections', [])
         
@@ -435,6 +692,7 @@ class LocationSerializer(CustomModelSerializer):
         return location
 
     def update(self, instance, validated_data):
+        validated_data = self._pop_lat_lon(validated_data)
         category_data = validated_data.pop('category', None)
         visits_data = validated_data.pop('visits', None)
         collections_data = validated_data.pop('collections', None)
@@ -470,7 +728,7 @@ class LocationSerializer(CustomModelSerializer):
 
         return instance
     
-class MapPinSerializer(serializers.ModelSerializer):
+class MapPinSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):
     is_visited = serializers.SerializerMethodField()
     category = CategorySerializer(read_only=True, required=False)
     
@@ -482,7 +740,7 @@ class MapPinSerializer(serializers.ModelSerializer):
     def get_is_visited(self, obj):
         return obj.is_visited_status()
 
-class TransportationSerializer(CustomModelSerializer):
+class TransportationSerializer(TransportationCoordinateMixin, CustomModelSerializer):
     distance = serializers.SerializerMethodField()
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
@@ -515,13 +773,12 @@ class TransportationSerializer(CustomModelSerializer):
         if gpx_distance is not None:
             return gpx_distance
 
-        if (
-            obj.origin_latitude and obj.origin_longitude and
-            obj.destination_latitude and obj.destination_longitude
-        ):
+        o_lat, o_lon = point_to_lat_lon(obj.origin)
+        d_lat, d_lon = point_to_lat_lon(obj.destination)
+        if o_lat is not None and o_lon is not None and d_lat is not None and d_lon is not None:
             try:
-                origin = (float(obj.origin_latitude), float(obj.origin_longitude))
-                destination = (float(obj.destination_latitude), float(obj.destination_longitude))
+                origin = (o_lat, o_lon)
+                destination = (d_lat, d_lon)
                 return round(geodesic(origin, destination).km, 2)
             except ValueError:
                 return None
@@ -589,7 +846,7 @@ class TransportationSerializer(CustomModelSerializer):
             and dt_value.time().microsecond == 0
         )
 
-class LodgingSerializer(CustomModelSerializer):
+class LodgingSerializer(CoordinateSerializerMixin, CustomModelSerializer):
     images = serializers.SerializerMethodField()
     attachments = serializers.SerializerMethodField()
 
@@ -1123,4 +1380,14 @@ class CollectionItineraryItemSerializer(CustomModelSerializer):
             'id': str(obj.item.id),
             'type': obj.content_type.model,
         }
+
+
+class SearchHitSerializer(serializers.Serializer):
+    type = serializers.CharField()
+    id = serializers.CharField()
+    title = serializers.CharField()
+    subtitle = serializers.CharField(allow_blank=True)
+    url = serializers.CharField()
+    score = serializers.FloatField()
+    meta = serializers.DictField(required=False, default=dict)
         

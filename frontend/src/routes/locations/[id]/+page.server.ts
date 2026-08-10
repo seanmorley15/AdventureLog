@@ -1,11 +1,12 @@
 import type { PageServerLoad } from './$types';
 const PUBLIC_SERVER_URL = process.env['PUBLIC_SERVER_URL'];
-import type { AdditionalLocation, Location, Collection } from '$lib/types';
+import type { Location } from '$lib/types';
+import { buildLocationShareMeta } from '$lib/shareMeta.server';
 const endpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
 
 export const load = (async (event) => {
 	const id = event.params as { id: string };
-	let request = await fetch(`${endpoint}/api/locations/${id.id}/additional-info/`, {
+	let request = await fetch(`${endpoint}/api/locations/${id.id}/`, {
 		headers: {
 			Cookie: `sessionid=${event.cookies.get('sessionid')}`
 		},
@@ -16,23 +17,23 @@ export const load = (async (event) => {
 		return {
 			props: {
 				adventure: null
-			}
+			},
+			shareMeta: null
 		};
 	} else {
-		let adventure = (await request.json()) as AdditionalLocation;
+		let adventure = (await request.json()) as Location;
 
 		return {
 			props: {
 				adventure
-			}
+			},
+			shareMeta: buildLocationShareMeta(adventure, event.url.origin)
 		};
 	}
 }) satisfies PageServerLoad;
 
 import { redirect, type Actions } from '@sveltejs/kit';
-import { fetchCSRFToken } from '$lib/index.server';
-
-const serverEndpoint = PUBLIC_SERVER_URL || 'http://localhost:8000';
+import { backendApiUrl, fetchCSRFToken } from '$lib/index.server';
 
 export const actions: Actions = {
 	delete: async (event) => {
@@ -51,7 +52,7 @@ export const actions: Actions = {
 
 		let csrfToken = await fetchCSRFToken();
 
-		let res = await fetch(`${serverEndpoint}/api/locations/${event.params.id}`, {
+		let res = await fetch(backendApiUrl(`/api/locations/${event.params.id}`), {
 			method: 'DELETE',
 			headers: {
 				Referer: event.url.origin, // Include Referer header
