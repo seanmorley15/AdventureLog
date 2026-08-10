@@ -498,7 +498,24 @@
 		"add_details": "添加详细信息",
 		"export_pdf": "下载PDF",
 		"export_pdf_failed": "无法下载合集 PDF",
-		"export_pdf_success": "下载PDF合集"
+		"export_pdf_success": "下载PDF合集",
+		"endurain_activities_during_visit": "访问期间坚持活动",
+		"endurain_import_success": "从 Endurain 导入的活动",
+		"google_photos_available": "{count} 张可用的 Google 照片",
+		"google_photos_import_all": "全部从 Google 导入",
+		"google_photos_import_error": "无法导入 Google 照片",
+		"google_photos_import_selected": "导入选定的",
+		"google_photos_import_success": "Google 照片导入成功",
+		"google_photos_importing": "正在导入 Google 照片...",
+		"google_photos_select_hint": "选择要导入的照片，或一次性导入全部照片。",
+		"hide_endurain_activities": "隐藏耐力活动",
+		"importing_endurain_activity": "正在从 Endurain 导入活动...",
+		"loading_sunrise_sunset": "加载日出",
+		"no_endurain_activities": "本次访问期间未发现 Endurain 活动",
+		"show_endurain_activities": "显示耐力活动",
+		"show_sunrise_sunset": "显示日出",
+		"sunrise_sunset_load_error": "无法加载日出和日落时间",
+		"view_endurain_activities": "查看 Endurain 活动"
 	},
 	"auth": {
 		"forgot_password": "忘记密码？",
@@ -524,7 +541,9 @@
 		"enter_username": "输入您的用户名",
 		"logging_in": "登录",
 		"totp": "二步验证代码",
-		"user_email_verification_required": "需要电子邮件验证。\n请检查您的电子邮件以获取验证链接。"
+		"user_email_verification_required": "需要电子邮件验证。\n请检查您的电子邮件以获取验证链接。",
+		"totp_hint": "输入 6 位验证码或 8 位恢复码。",
+		"totp_placeholder": "000000 或 12345678"
 	},
 	"worldtravel": {
 		"country_list": "国家列表",
@@ -592,7 +611,18 @@
 		"all_locations_visited": "访问过的所有地点！"
 	},
 	"users": {
-		"no_users_found": "未找到已公开的用户。"
+		"no_users_found": "未找到已公开的用户。",
+		"browse_options": "浏览选项",
+		"no_match": "没有用户符合您的搜索",
+		"no_match_desc": "尝试使用不同的名称或清除过滤器。",
+		"no_users_desc": "当其他旅行者公开他们的个人资料时，他们将出现在此处。",
+		"overview": "概述",
+		"page_description": "浏览公共 AdventureLog 个人资料并发现其他旅行者。",
+		"public_profile": "公开资料",
+		"public_profiles": "公开资料",
+		"search_placeholder": "按名称或用户名搜索...",
+		"sort_name": "姓名",
+		"sort_recent": "最新"
 	},
 	"settings": {
 		"account_settings": "用户账户设置",
@@ -746,7 +776,50 @@
 		"media_profile_pics": "个人资料图片",
 		"media_storage": "媒体存储",
 		"media_storage_desc": "您上传的图像和附件的存储使用情况。",
-		"media_total_used": "已使用总量"
+		"media_total_used": "已使用总量",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "当 Google 地图不可用时，后备地理编码和地点搜索。",
+				"nominatim_features": "用于位置搜索、反向地理编码和坐标查找。",
+				"nominatim_name": "OpenStreetMap 提名",
+				"overpass_desc": "支持来自 OpenStreetMap 数据的附近推荐。",
+				"overpass_features": "用于地图推荐并作为 Google 不可用时的后备方案。",
+				"overpass_name": "OpenStreetMap立交桥",
+				"sunrise_desc": "将日出和日落时间添加到您的位置访问中。",
+				"sunrise_features": "显示在每个访问日期的位置详细信息页面上。",
+				"sunrise_name": "日出日落.io",
+				"wikipedia_desc": "通过背景描述和参考图像丰富地点。",
+				"wikipedia_features": "在生成描述和导入维基百科照片时使用。",
+				"wikipedia_name": "维基百科"
+			},
+			"builtin_desc": "这些数据源开箱即用地为 AdventureLog 提供支持。\n无需设置。",
+			"builtin_title": "内置服务",
+			"cancel": "取消",
+			"connect": "连接",
+			"disconnect": "断开",
+			"edit": "编辑",
+			"google_maps_active_hint": "Google 地图在此实例上处于活动状态。\n地点搜索和丰富可在可用时使用它。",
+			"google_maps_features": "地点搜索、地图详细信息、快速添加丰富内容以及附近的推荐。",
+			"included": "包括",
+			"instance_desc": "由 AdventureLog 管理员配置的可选服务。",
+			"instance_title": "实例服务",
+			"learn_more": "了解更多",
+			"personal_desc": "连接您自己的帐户和自托管服务。",
+			"summary_builtin_desc": "在每个实例上始终可用",
+			"summary_instance": "实例服务",
+			"summary_instance_desc": "由您的服务器管理员启用",
+			"summary_personal": "您的集成",
+			"summary_personal_desc": "链接到您的帐户",
+			"update": "更新",
+			"personal_title": "您的集成",
+			"summary_builtin": "内置服务"
+		},
+		"invalid_code": "代码无效",
+		"public_profile_invite_warning": "您有 {count} 个待处理的收集邀请。\n将您的个人资料设为私有将会取消它们。",
+		"public_profile_left_collections": "您的个人资料现在是私人的。\n您已从 {count} 个共享集合中删除。",
+		"public_profile_private_confirm": "将您的个人资料设为私有会将您从 {shared} 个共享集合中删除，并取消 {invites} 个待处理的邀请。\n继续？",
+		"public_profile_revoked_invites": "已取消 {count} 个待处理的收集邀请。",
+		"public_profile_sharing_warning": "您目前已在 {count} 个收藏集上被分享。\n将您的个人资料设为私有会将您从这些集合中删除。"
 	},
 	"checklist": {
 		"checklist_delete_error": "删除清单时出错",
@@ -768,7 +841,8 @@
 		"enter_checklist_title": "输入清单标题",
 		"no_items_yet": "还没有物品",
 		"update_checklist_details": "编辑清单",
-		"viewing_checklist": "查看清单"
+		"viewing_checklist": "查看清单",
+		"more_items": "更多商品"
 	},
 	"collection": {
 		"collection_created": "合集创建成功！",
@@ -988,7 +1062,10 @@
 		"visit_website": "网站",
 		"visits": "访问量",
 		"zoom_in": "放大",
-		"zoom_out": "缩小"
+		"zoom_out": "缩小",
+		"hide_photos": "隐藏照片",
+		"photos": "照片",
+		"show_photos": "显示照片"
 	},
 	"share": {
 		"no_users_shared": "没有已共享的用户",
@@ -1044,7 +1121,46 @@
 		"view_all": "查看全部",
 		"welcome_text_1": "你去过",
 		"welcome_text_2": "到目前为止的冒险",
-		"welcome_text_3": "继续探索和记录您的旅行！"
+		"welcome_text_3": "继续探索和记录您的旅行！",
+		"active_trip": "目前正在旅行",
+		"activity_highlights": "活动亮点",
+		"greeting_afternoon": "下午好",
+		"greeting_evening": "晚上好",
+		"greeting_morning": "早上好",
+		"greeting_night": "晚安",
+		"hero_active_subtitle": "这次旅行的 {count} 个地点 - 留下美好回忆",
+		"hero_active_trip": "您正在路上 — {name} 正在进行中",
+		"hero_badge_countries": "探索了 {count} 个国家/地区",
+		"hero_badge_default": "冒险日志",
+		"hero_countries": "您已经探索了 {count} 个国家/地区 - 接下来您要去哪里？",
+		"hero_headline": "您的冒险中心",
+		"hero_headline_new": "准备好探索了吗？",
+		"hero_location_logged": "地图上有 1 个位置 - 不断添加到故事中",
+		"hero_locations_logged": "地图上的 {count} 个位置 - 不断添加到故事中",
+		"hero_next_subtitle": "{days} 天后出发 — 激动人心的时刻到了",
+		"hero_next_trip": "距离{name}还有{days}天",
+		"hero_start_journey": "你的旅行日记是空的——是时候计划你的第一站了",
+		"hero_trip_coming_up": "即将推出",
+		"hero_trip_empty_desc": "启动一个收藏并开始策划你的下一次逃亡",
+		"hero_trip_empty_title": "没有即将到来的旅行",
+		"hero_trip_on_the_road": "在路上",
+		"hero_view_trip": "开启行程",
+		"locations_visited": "访问地点",
+		"my_collections": "我的收藏",
+		"next_trip_in": "{day} 天后的下一次旅行",
+		"no_active_trip": "目前没有正在进行的旅行。",
+		"no_recent_locations": "还没有访问过的地点。",
+		"no_upcoming_trips": "尚未计划即将到来的旅行。",
+		"page_description": "您的旅行之家 — 统计数据、即将到来的旅行和最近的冒险一目了然。",
+		"page_title": "仪表板",
+		"pending_invites": "待处理的邀请",
+		"personal_record": "个人最佳距离",
+		"quick_links": "快速链接",
+		"recently_updated": "最近更新",
+		"stats_error": "我们无法加载您的仪表板数据。\n尝试刷新页面。",
+		"upcoming_trips": "即将到来的旅行",
+		"view_profile": "查看个人资料",
+		"whats_next": "接下来是什么"
 	},
 	"immich": {
 		"api_key": "Immich API 密钥",
@@ -1080,7 +1196,8 @@
 		"loading_albums": "加载专辑",
 		"no_images": "找不到图像",
 		"select_album": "选择专辑",
-		"try_different_date": "尝试其他日期"
+		"try_different_date": "尝试其他日期",
+		"immich_updated": "Immich 集成更新成功"
 	},
 	"recomendations": {
 		"recommendations": "建议",
@@ -1147,7 +1264,31 @@
 		"total_events": "总事件",
 		"week": "周",
 		"event timezone": "活动时区",
-		"your timezone": "您的时区"
+		"your timezone": "您的时区",
+		"agenda": "议程",
+		"event": "事件",
+		"event_types": "显示事件类型",
+		"export_error": "无法导出日历。",
+		"export_success": "日历导出成功。",
+		"in_collection": "收藏",
+		"load_error": "无法加载日历事件。\n再试一次。",
+		"more_events": "还有 {count} 个",
+		"no_events_in_range": "此范围内没有事件。",
+		"no_upcoming_events": "没有符合您的筛选条件的即将举办的活动。",
+		"page_title": "日历",
+		"search_placeholder": "搜索事件、地点、收藏...",
+		"sidebar_title": "过滤器",
+		"this_month": "本月",
+		"timezone_display": "时间显示",
+		"type_checklist": "清单",
+		"type_collection": "行程",
+		"type_lodging": "住宿",
+		"type_note": "笔记",
+		"type_transportation": "运输",
+		"type_visit": "访问量",
+		"upcoming": "即将推出",
+		"upcoming_agenda": "即将举行的活动",
+		"view_collection": "查看收藏"
 	},
 	"locations": {
 		"location": "地点",
@@ -1311,5 +1452,37 @@
 		"share_image_failed": "生成共享镜像失败",
 		"share_native": "分享…",
 		"share_native_failed": "分享失败"
+	},
+	"endurain": {
+		"change_server": "更换服务器",
+		"connect_password": "使用密码连接",
+		"connected": "已成功连接到 Endurain",
+		"connected_as": "以 {用户名} 连接",
+		"connection_error": "连接到 Endurain 时出错",
+		"continue": "继续",
+		"credentials_required": "需要服务器 URL、用户名和密码",
+		"disconnect": "断开",
+		"disconnect_error": "断开 Endurain 时出错",
+		"disconnected": "Endurain 已断开连接",
+		"endurain_integration_desc": "连接您的自托管 Endurain 实例以浏览活动并将其导入到访问中",
+		"localhost_note": "Endurain 服务器必须可从 AdventureLog 服务器访问（本地主机可能无法在 Docker 中工作）。",
+		"mfa_code": "外交部代码",
+		"mfa_code_required": "需要 MFA 代码",
+		"mfa_required": "输入您的 MFA 代码以完成登录",
+		"not_connected": "Endurain 未连接",
+		"password": "密码",
+		"server_url": "服务器地址",
+		"server_url_required": "服务器 URL 为必填项",
+		"username": "用户名",
+		"verify_mfa": "验证 MFA"
+	},
+	"images": {
+		"map_pin_title": "照片地点",
+		"source": {
+			"google": "照片来自谷歌地图",
+			"immich": "伊米奇的照片",
+			"url": "来自外部 URL 的照片",
+			"wikipedia": "照片来自维基百科"
+		}
 	}
 }

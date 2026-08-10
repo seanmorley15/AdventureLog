@@ -14,7 +14,8 @@
 		"thank_you": "AdventureLogを使用していただきありがとうございます！",
 		"version": "バージョン",
 		"view_changelog": "changelogを表示します",
-		"view_license": "ライセンスを表示します"
+		"view_license": "ライセンスを表示します",
+		"copy_version": "バージョンをコピーする"
 	},
 	"adventures": {
 		"add": "追加",
@@ -447,7 +448,24 @@
 		"add_details": "詳細を追加",
 		"export_pdf": "PDFをダウンロード",
 		"export_pdf_failed": "コレクション PDF のダウンロードに失敗しました",
-		"export_pdf_success": "コレクションPDFをダウンロードしました"
+		"export_pdf_success": "コレクションPDFをダウンロードしました",
+		"endurain_activities_during_visit": "訪問中のエンデュレイン活動",
+		"endurain_import_success": "Endurain からインポートされたアクティビティ",
+		"google_photos_available": "{count} 枚の Google フォトが利用可能です",
+		"google_photos_import_all": "Google からすべてインポートする",
+		"google_photos_import_error": "Googleフォトをインポートできませんでした",
+		"google_photos_import_selected": "選択したインポート",
+		"google_photos_import_success": "Googleフォトが正常にインポートされました",
+		"google_photos_importing": "Google フォトをインポート中…",
+		"google_photos_select_hint": "インポートする写真を選択するか、すべてを一度にインポートします。",
+		"hide_endurain_activities": "エンデュレイン アクティビティを非表示にする",
+		"importing_endurain_activity": "Endurain からアクティビティをインポートしています...",
+		"loading_sunrise_sunset": "日の出の読み込み中",
+		"no_endurain_activities": "この訪問中に Endurain アクティビティは見つかりませんでした",
+		"show_endurain_activities": "エンデュレイン アクティビティを表示する",
+		"show_sunrise_sunset": "日の出を表示する",
+		"sunrise_sunset_load_error": "日の出と日の入りの時間を読み込めませんでした",
+		"view_endurain_activities": "エンデュレインのアクティビティを見る"
 	},
 	"auth": {
 		"confirm_password": "パスワードを認証する",
@@ -473,7 +491,9 @@
 		"enter_username": "ユーザー名を入力します",
 		"logging_in": "ログインします",
 		"totp": "二因子コード",
-		"user_email_verification_required": "メール認証が必要です。\nメールに確認用のリンクがあるかどうかを確認してください。"
+		"user_email_verification_required": "メール認証が必要です。\nメールに確認用のリンクがあるかどうかを確認してください。",
+		"totp_hint": "6 桁の認証コードまたは 8 桁のリカバリ コードを入力します。",
+		"totp_placeholder": "000000 または 12345678"
 	},
 	"calendar": {
 		"all_day_event": "終日イベント",
@@ -486,7 +506,31 @@
 		"total_events": "総イベント",
 		"week": "週",
 		"event timezone": "イベントのタイムゾーン",
-		"your timezone": "あなたのタイムゾーン"
+		"your timezone": "あなたのタイムゾーン",
+		"agenda": "議題",
+		"event": "イベント",
+		"event_types": "イベントの種類を表示",
+		"export_error": "カレンダーをエクスポートできませんでした。",
+		"export_success": "カレンダーは正常にエクスポートされました。",
+		"in_collection": "コレクション",
+		"load_error": "カレンダーイベントを読み込めませんでした。\nもう一度やり直してください。",
+		"more_events": "あと {count} 個",
+		"no_events_in_range": "この範囲にはイベントはありません。",
+		"no_upcoming_events": "フィルタに一致する今後のイベントはありません。",
+		"page_title": "カレンダー",
+		"search_placeholder": "イベント、場所、コレクションを検索...",
+		"sidebar_title": "フィルター",
+		"this_month": "今月",
+		"timezone_display": "時刻表示",
+		"type_checklist": "チェックリスト",
+		"type_collection": "旅行",
+		"type_lodging": "宿泊",
+		"type_note": "注意事項",
+		"type_transportation": "輸送",
+		"type_visit": "訪問",
+		"upcoming": "今後の予定",
+		"upcoming_agenda": "今後のイベント",
+		"view_collection": "コレクションを見る"
 	},
 	"categories": {
 		"add_new_category": "新しいカテゴリを追加します",
@@ -519,7 +563,8 @@
 		"enter_checklist_title": "チェックリストのタイトルを入力します",
 		"no_items_yet": "まだアイテムはありません",
 		"update_checklist_details": "編集チェックリスト",
-		"viewing_checklist": "チェックリストの表示"
+		"viewing_checklist": "チェックリストの表示",
+		"more_items": "その他のアイテム"
 	},
 	"collection": {
 		"archived_appear_here": "アーカイブコレクションがここに表示されます。",
@@ -566,7 +611,46 @@
 		"welcome_back": "おかえり",
 		"welcome_text_1": "あなたはオンになっています",
 		"welcome_text_2": "これまでのところ冒険",
-		"welcome_text_3": "旅行を探索し、文書化し続けてください！"
+		"welcome_text_3": "旅行を探索し、文書化し続けてください！",
+		"active_trip": "現在旅行中",
+		"activity_highlights": "活動のハイライト",
+		"greeting_afternoon": "こんにちは",
+		"greeting_evening": "こんばんは",
+		"greeting_morning": "おはよう",
+		"greeting_night": "おやすみ",
+		"hero_active_subtitle": "この旅行で {count} か所の場所 — 思い出をいつまでも残してください",
+		"hero_active_trip": "あなたは外出中です — {name} は進行中です",
+		"hero_badge_countries": "{count} か国を調査しました",
+		"hero_badge_default": "冒険日誌",
+		"hero_countries": "{count} か国を探索しました — 次はどこに行きますか?",
+		"hero_headline": "あなたの冒険の拠点",
+		"hero_headline_new": "探索する準備はできましたか?",
+		"hero_location_logged": "地図上に 1 つの場所 — ストーリーを追加し続けます",
+		"hero_locations_logged": "地図上の {count} か所の場所 — ストーリーを追加し続けます",
+		"hero_next_subtitle": "{days} 日後に出発 — ワクワクする時間です",
+		"hero_next_trip": "{name}まであと{days}日",
+		"hero_start_journey": "旅行日記は空です — 最初の目的地の計画を立てましょう",
+		"hero_trip_coming_up": "もうすぐ",
+		"hero_trip_empty_desc": "コレクションを作成して、次の脱出計画を立てましょう",
+		"hero_trip_empty_title": "地平線に旅行はありません",
+		"hero_trip_on_the_road": "路上で",
+		"hero_view_trip": "オープントリップ",
+		"locations_visited": "訪れた場所",
+		"my_collections": "私のコレクション",
+		"next_trip_in": "次の旅行は {days} 日後",
+		"no_active_trip": "現在進行中の旅行はありません。",
+		"no_recent_locations": "まだ訪問した場所はありません。",
+		"no_upcoming_trips": "今後の旅行の予定はまだありません。",
+		"page_description": "自宅への旅行 – 統計情報、今後の旅行、最近の冒険が一目でわかります。",
+		"page_title": "ダッシュボード",
+		"pending_invites": "保留中の招待",
+		"personal_record": "自己ベスト飛距離",
+		"quick_links": "クイックリンク",
+		"recently_updated": "最近更新された",
+		"stats_error": "ダッシュボード データをロードできませんでした。\nページを更新してみてください。",
+		"upcoming_trips": "今後の旅行",
+		"view_profile": "プロフィールを見る",
+		"whats_next": "次は何ですか"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Googleマップアカウントを接続して、高品質のロケーション検索結果と推奨事項を取得します。",
@@ -624,7 +708,8 @@
 		"loading_albums": "アルバムのロード",
 		"no_images": "画像は見つかりません",
 		"select_album": "アルバムを選択します",
-		"try_different_date": "別の日付を試してください"
+		"try_different_date": "別の日付を試してください",
+		"immich_updated": "Immich統合が正常に更新されました"
 	},
 	"invites": {
 		"accept": "受け入れる",
@@ -736,7 +821,10 @@
 		"visit_website": "Webサイト",
 		"visits": "訪問",
 		"zoom_in": "ズームイン",
-		"zoom_out": "ズームアウト"
+		"zoom_out": "ズームアウト",
+		"hide_photos": "写真を隠す",
+		"photos": "写真",
+		"show_photos": "写真を表示する"
 	},
 	"navbar": {
 		"about": "AdventureLogについて",
@@ -1045,7 +1133,50 @@
 		"media_profile_pics": "プロフィール写真",
 		"media_storage": "メディアストレージ",
 		"media_storage_desc": "アップロードした画像と添付ファイルのストレージ使用量。",
-		"media_total_used": "使用合計"
+		"media_total_used": "使用合計",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Google マップが利用できない場合は、フォールバック ジオコーディングと場所検索を行います。",
+				"nominatim_features": "位置検索、逆ジオコーディング、座標検索に使用されます。",
+				"nominatim_name": "OpenStreetMap の公称値",
+				"overpass_desc": "OpenStreetMap データから近くの推奨事項を強化します。",
+				"overpass_features": "地図の推奨事項や、Google が利用できない場合のフォールバックとして使用されます。",
+				"overpass_name": "オープンストリートマップ陸橋",
+				"sunrise_desc": "訪問場所に日の出と日の入りの時間を追加します。",
+				"sunrise_features": "各訪問日の場所の詳細ページに表示されます。",
+				"sunrise_name": "サンライズサンセット.io",
+				"wikipedia_desc": "背景の説明と参照画像を使用して場所を充実させます。",
+				"wikipedia_features": "説明を生成したり、Wikipedia の写真をインポートしたりするときに使用されます。",
+				"wikipedia_name": "ウィキペディア"
+			},
+			"builtin_desc": "これらのデータ ソースは、そのままの状態で AdventureLog を強化します。\nセットアップは必要ありません。",
+			"builtin_title": "組み込みサービス",
+			"cancel": "キャンセル",
+			"connect": "接続する",
+			"disconnect": "切断する",
+			"edit": "編集",
+			"google_maps_active_hint": "このインスタンスでは Google マップがアクティブになっています。\n利用可能な場合は、場所の検索とエンリッチメントに使用します。",
+			"google_maps_features": "場所の検索、地図の詳細、クイック追加機能、および近くのおすすめ情報。",
+			"included": "付属",
+			"instance_desc": "AdventureLog 管理者によって構成されたオプションのサービス。",
+			"instance_title": "インスタンスサービス",
+			"learn_more": "もっと詳しく知る",
+			"personal_desc": "自分のアカウントと自己ホスト型サービスを接続します。",
+			"personal_title": "あなたの統合",
+			"summary_builtin": "組み込みサービス",
+			"summary_builtin_desc": "どのインスタンスでも常に利用可能",
+			"summary_instance": "インスタンスサービス",
+			"summary_instance_desc": "サーバー管理者によって有効化されています",
+			"summary_personal": "あなたの統合",
+			"summary_personal_desc": "あなたのアカウントにリンクされています",
+			"update": "アップデート"
+		},
+		"invalid_code": "無効なコード",
+		"public_profile_invite_warning": "保留中のコレクションへの招待が {count} 件あります。\nプロフィールを非公開にすると、プロフィールがキャンセルされます。",
+		"public_profile_left_collections": "あなたのプロフィールは非公開になりました。\nあなたは {count} 個の共有コレクションから削除されました。",
+		"public_profile_private_confirm": "プロフィールを非公開にすると、{shared} 個の共有コレクションからあなたが削除され、{invites} 個の保留中の招待がキャンセルされます。\n続く？",
+		"public_profile_revoked_invites": "{count} 件の保留中のコレクションへの招待をキャンセルしました。",
+		"public_profile_sharing_warning": "あなたは現在 {count} 個のコレクションで共有されています。\nプロフィールを非公開にすると、それらのコレクションから削除されます。"
 	},
 	"settings_download_backup": "バックアップをダウンロードします",
 	"share": {
@@ -1112,7 +1243,18 @@
 		"departure_timezone": "出発時間帯"
 	},
 	"users": {
-		"no_users_found": "パブリックプロファイルで見つかったユーザーは見つかりませんでした。"
+		"no_users_found": "パブリックプロファイルで見つかったユーザーは見つかりませんでした。",
+		"browse_options": "参照オプション",
+		"no_match": "検索に一致するユーザーはいません",
+		"no_match_desc": "別の名前を試すか、フィルターをクリアしてください。",
+		"no_users_desc": "他の旅行者がプロフィールを公開すると、ここに表示されます。",
+		"overview": "概要",
+		"page_description": "AdventureLog の公開プロフィールを参照し、他の旅行者を発見します。",
+		"public_profile": "公開プロフィール",
+		"public_profiles": "公開プロフィール",
+		"search_placeholder": "名前またはユーザー名で検索...",
+		"sort_name": "名前",
+		"sort_recent": "最新"
 	},
 	"wanderer": {
 		"connected": "ワンダラーに正常に接続されています",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "共有イメージの生成に失敗しました",
 		"share_native": "共有…",
 		"share_native_failed": "共有に失敗しました"
+	},
+	"endurain": {
+		"change_server": "サーバーを変更する",
+		"connect_password": "パスワードで接続する",
+		"connected": "Endurainへの接続に成功しました",
+		"connected_as": "{ユーザー名}として接続しました",
+		"connection_error": "Endurain への接続エラー",
+		"continue": "続く",
+		"credentials_required": "サーバーの URL、ユーザー名、パスワードは必須です",
+		"disconnect": "切断する",
+		"disconnect_error": "Endurain の切断中にエラーが発生しました",
+		"disconnected": "Endurain が切断されました",
+		"endurain_integration_desc": "自己ホスト型 Endurain インスタンスを接続してアクティビティを参照し、訪問にインポートします",
+		"localhost_note": "Endurain サーバーには、AdventureLog サーバーからアクセスできる必要があります (localhost は Docker では機能しない可能性があります)。",
+		"mfa_code": "MFAコード",
+		"mfa_code_required": "MFAコードが必要です",
+		"mfa_required": "MFA コードを入力してサインインを完了します",
+		"not_connected": "エンデュレインが接続されていません",
+		"password": "パスワード",
+		"server_url": "サーバーURL",
+		"server_url_required": "サーバーURLは必須です",
+		"username": "ユーザー名",
+		"verify_mfa": "MFA を検証する"
+	},
+	"images": {
+		"map_pin_title": "写真の場所",
+		"source": {
+			"google": "写真はGoogleマップより",
+			"immich": "写真提供：イミッチ",
+			"url": "写真は外部URLより",
+			"wikipedia": "写真はウィキペディアより"
+		}
 	}
 }

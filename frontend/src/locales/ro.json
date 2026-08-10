@@ -46,7 +46,8 @@
 		"attributions": "Atribuții",
 		"license_info": "Licență",
 		"view_license": "Vezi Licența",
-		"sponsor": "Sponsor"
+		"sponsor": "Sponsor",
+		"copy_version": "Copiați versiunea"
 	},
 	"home": {
 		"hero_1": "Descoperă cele mai palpitante aventuri din lume",
@@ -497,7 +498,24 @@
 		"add_details": "Adăugați detalii",
 		"export_pdf": "Descărcați PDF",
 		"export_pdf_failed": "Nu s-a putut descărca colecția PDF",
-		"export_pdf_success": "Colecția PDF descărcată"
+		"export_pdf_success": "Colecția PDF descărcată",
+		"endurain_activities_during_visit": "Activități Endurain în timpul vizitei",
+		"endurain_import_success": "Activitate importată din Endurain",
+		"google_photos_available": "{count} fotografii Google disponibile",
+		"google_photos_import_all": "Importați totul de pe Google",
+		"google_photos_import_error": "Nu s-au putut importa fotografii Google",
+		"google_photos_import_selected": "Import selectat",
+		"google_photos_import_success": "Fotografiile Google au fost importate cu succes",
+		"google_photos_importing": "Se importă fotografii Google...",
+		"google_photos_select_hint": "Selectați fotografiile pe care doriți să le importați sau importați toate odată.",
+		"hide_endurain_activities": "Ascunde Activitățile Endurain",
+		"importing_endurain_activity": "Se importă activitatea din Endurain...",
+		"loading_sunrise_sunset": "Se încarcă răsăritul soarelui",
+		"no_endurain_activities": "Nu s-au găsit activități Endurain în timpul acestei vizite",
+		"show_endurain_activities": "Show Endurain Activities",
+		"show_sunrise_sunset": "Arată răsăritul soarelui",
+		"sunrise_sunset_load_error": "Nu s-au putut încărca orele de răsărit și apus",
+		"view_endurain_activities": "Vizualizați activitățile Endurain"
 	},
 	"auth": {
 		"confirm_password": "Confirmați parola",
@@ -523,7 +541,9 @@
 		"user_collections": "Colecții de utilizatori",
 		"user_email_verification_required": "Este necesară verificarea e-mailului. \nVă rugăm să vă verificați e-mailul pentru un link de verificare.",
 		"user_locations": "Locațiile utilizatorilor",
-		"username": "Nume de utilizator"
+		"username": "Nume de utilizator",
+		"totp_hint": "Introduceți un cod de autentificare din 6 cifre sau un cod de recuperare din 8 cifre.",
+		"totp_placeholder": "000000 sau 12345678"
 	},
 	"calendar": {
 		"all_day_event": "Eveniment toată ziua",
@@ -536,7 +556,31 @@
 		"today": "Astăzi",
 		"total_events": "Total evenimente",
 		"week": "Săptămână",
-		"your timezone": "Fusul dvs. orar"
+		"your timezone": "Fusul dvs. orar",
+		"agenda": "Agenda",
+		"event": "Eveniment",
+		"event_types": "Afișați tipurile de evenimente",
+		"export_error": "Nu s-a putut exporta calendarul.",
+		"export_success": "Calendarul a fost exportat cu succes.",
+		"in_collection": "Colectare",
+		"load_error": "Nu s-au putut încărca evenimentele din calendar. \nÎncearcă din nou.",
+		"more_events": "încă {count}",
+		"no_events_in_range": "Nu există evenimente în acest interval.",
+		"no_upcoming_events": "Niciun eveniment viitor nu se potrivește cu filtrele dvs.",
+		"page_title": "Calendaristic",
+		"search_placeholder": "Căutați evenimente, locuri, colecții...",
+		"sidebar_title": "Filtre",
+		"this_month": "Luna aceasta",
+		"timezone_display": "Afișare timp",
+		"type_checklist": "Liste de verificare",
+		"type_collection": "Excursii",
+		"type_lodging": "Cazare",
+		"type_note": "Note",
+		"type_transportation": "Transport",
+		"type_visit": "Vizite",
+		"upcoming": "În viitor",
+		"upcoming_agenda": "Evenimente viitoare",
+		"view_collection": "Vizualizați colecția"
 	},
 	"categories": {
 		"add_new_category": "Adăugați o nouă categorie",
@@ -569,7 +613,8 @@
 		"new_item": "Articol nou",
 		"no_items_yet": "Niciun articol încă",
 		"update_checklist_details": "Editarea listei de verificare",
-		"viewing_checklist": "Vizualizarea listei de verificare"
+		"viewing_checklist": "Vizualizarea listei de verificare",
+		"more_items": "Mai multe articole"
 	},
 	"collection": {
 		"archived_appear_here": "Colecțiile arhivate vor apărea aici.",
@@ -660,7 +705,46 @@
 		"welcome_back": "Bine ai revenit",
 		"welcome_text_1": "Ai fost pe",
 		"welcome_text_2": "aventuri de până acum",
-		"welcome_text_3": "Continuați să explorați și să vă documentați călătoriile!"
+		"welcome_text_3": "Continuați să explorați și să vă documentați călătoriile!",
+		"active_trip": "În prezent călătoresc",
+		"activity_highlights": "Evidențierea activității",
+		"greeting_afternoon": "Bună ziua",
+		"greeting_evening": "Bună seara",
+		"greeting_morning": "Bună dimineaţa",
+		"greeting_night": "Noapte bună",
+		"hero_active_subtitle": "{count} locații în această călătorie - păstrați amintirile",
+		"hero_active_trip": "Sunteți pe drum — {name} este în desfășurare",
+		"hero_badge_countries": "{count} țări explorate",
+		"hero_badge_default": "AdventureLog",
+		"hero_countries": "Ați explorat {count} țări — unde veți merge mai departe?",
+		"hero_headline": "Centrul tău de aventură",
+		"hero_headline_new": "Ești gata să explorezi?",
+		"hero_location_logged": "1 locație pe harta dvs. - continuați să adăugați la poveste",
+		"hero_locations_logged": "{count} locații pe harta dvs. - continuați să adăugați la poveste",
+		"hero_next_subtitle": "Plecare în {zile} zile - este timpul să vă entuziasmați",
+		"hero_next_trip": "{days} zile până la {name}",
+		"hero_start_journey": "Jurnalul dvs. de călătorie este gol - este timpul să vă planificați prima oprire",
+		"hero_trip_coming_up": "Urmează",
+		"hero_trip_empty_desc": "Faceți o colecție și începeți să plănuiți următoarea evadare",
+		"hero_trip_empty_title": "Fără călătorii la orizont",
+		"hero_trip_on_the_road": "Pe drum",
+		"hero_view_trip": "Excursie deschisă",
+		"locations_visited": "Locații vizitate",
+		"my_collections": "Colecțiile mele",
+		"next_trip_in": "Următoarea călătorie în {zile} zile",
+		"no_active_trip": "Nicio călătorie în desfășurare în acest moment.",
+		"no_recent_locations": "Nicio locație vizitată încă.",
+		"no_upcoming_trips": "Încă nu sunt planificate călătorii viitoare.",
+		"page_description": "Călătoria dvs. acasă — statistici, călătorii viitoare și aventuri recente dintr-o privire.",
+		"page_title": "Bord",
+		"pending_invites": "Invitații în așteptare",
+		"personal_record": "Cea mai bună distanță personală",
+		"quick_links": "Legături rapide",
+		"recently_updated": "Actualizat recent",
+		"stats_error": "Nu am putut încărca datele din tabloul de bord. \nÎncercați să reîmprospătați pagina.",
+		"upcoming_trips": "Excursii viitoare",
+		"view_profile": "Vezi profilul",
+		"whats_next": "Ce urmează"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Conectați-vă contul Google Maps pentru a obține rezultate și recomandări de căutare a locației de înaltă calitate.",
@@ -700,7 +784,8 @@
 		"server_url": "Adresa URL a serverului Immich",
 		"try_different_date": "Încercați o altă dată",
 		"update_integration": "Actualizați integrarea",
-		"validation_error": "A apărut o eroare la validarea integrării Immich. \nVă rugăm să verificați adresa URL a serverului și cheia API."
+		"validation_error": "A apărut o eroare la validarea integrării Immich. \nVă rugăm să verificați adresa URL a serverului și cheia API.",
+		"immich_updated": "Integrarea Immich a fost actualizată cu succes"
 	},
 	"invites": {
 		"accept": "Accepta",
@@ -845,7 +930,10 @@
 		"visit_website": "Site-ul web",
 		"visits": "Vizite",
 		"zoom_in": "Măriți",
-		"zoom_out": "Micșorați"
+		"zoom_out": "Micșorați",
+		"hide_photos": "Ascunde fotografiile",
+		"photos": "Fotografii",
+		"show_photos": "Afișați fotografii"
 	},
 	"notes": {
 		"content": "Conţinut",
@@ -1122,7 +1210,50 @@
 		"media_profile_pics": "Poze de profil",
 		"media_storage": "Stocare media",
 		"media_storage_desc": "Utilizarea stocării pentru imaginile și atașamentele încărcate.",
-		"media_total_used": "Total folosit"
+		"media_total_used": "Total folosit",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Geocodare alternativă și căutare de locații atunci când Google Maps nu este disponibil.",
+				"nominatim_features": "Folosit pentru căutarea locației, geocodarea inversă și căutările de coordonate.",
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"overpass_desc": "Propune recomandările din apropiere din datele OpenStreetMap.",
+				"overpass_features": "Folosit pentru recomandări de hărți și ca alternativă atunci când Google nu este disponibil.",
+				"overpass_name": "Pasaj superior OpenStreetMap",
+				"sunrise_desc": "Adaugă orele răsăritului și apusului soarelui vizitelor în locație.",
+				"sunrise_features": "Afișat pe paginile cu detalii despre locație pentru fiecare dată de vizită.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Îmbogătește locațiile cu descrieri de fundal și imagini de referință.",
+				"wikipedia_features": "Folosit la generarea descrierilor și la importul fotografiilor Wikipedia.",
+				"wikipedia_name": "Wikipedia"
+			},
+			"builtin_desc": "Aceste surse de date alimentează AdventureLog din cutie. \nNu este necesară nicio configurare.",
+			"builtin_title": "Servicii încorporate",
+			"cancel": "Anula",
+			"connect": "Conectați-vă",
+			"disconnect": "Deconecta",
+			"edit": "Edita",
+			"google_maps_active_hint": "Google Maps este activ în această instanță. \nCăutarea și îmbogățirea locațiilor utilizați-l atunci când este disponibil.",
+			"google_maps_features": "Căutare de locații, detalii pe hartă, îmbogățire cu adăugare rapidă și recomandări din apropiere.",
+			"included": "Inclus",
+			"instance_desc": "Servicii opționale configurate de administratorul AdventureLog.",
+			"instance_title": "Servicii de instanță",
+			"learn_more": "Află mai multe",
+			"personal_desc": "Conectați-vă propriile conturi și servicii auto-găzduite.",
+			"personal_title": "Integrarile tale",
+			"summary_builtin": "Servicii încorporate",
+			"summary_builtin_desc": "Întotdeauna disponibil în orice instanță",
+			"summary_instance": "Servicii de instanță",
+			"summary_instance_desc": "Activat de administratorul serverului dvs",
+			"summary_personal": "Integrarile tale",
+			"summary_personal_desc": "Conectat la contul dvs",
+			"update": "Actualizare"
+		},
+		"invalid_code": "Cod nevalid",
+		"public_profile_invite_warning": "Aveți {count} invitații de colectare în așteptare. \nPrivind profilul dvs. le va anula.",
+		"public_profile_left_collections": "Profilul tău este acum privat. \nAți fost eliminat din {count} colecții comune.",
+		"public_profile_private_confirm": "Dacă vă faceți profilul privat, veți elimina din {shared} colecții partajate și veți anula {invites} (invitații) în așteptare. \nContinua?",
+		"public_profile_revoked_invites": "Au fost anulate {count} invitații de colectare în așteptare.",
+		"public_profile_sharing_warning": "În prezent, sunteți distribuit în {count} colecții. \nDacă vă faceți profilul privat, veți elimina din acele colecții."
 	},
 	"settings_download_backup": "Descărcați Backup",
 	"share": {
@@ -1189,7 +1320,18 @@
 		"update_transportation_details": "Actualizați detaliile de transport"
 	},
 	"users": {
-		"no_users_found": "Nu s-au găsit utilizatori cu profiluri publice."
+		"no_users_found": "Nu s-au găsit utilizatori cu profiluri publice.",
+		"browse_options": "Opțiuni de navigare",
+		"no_match": "Niciun utilizator nu corespunde căutării dvs",
+		"no_match_desc": "Încercați un alt nume sau ștergeți filtrele.",
+		"no_users_desc": "Când alți călători își fac publice profilurile, aceștia vor apărea aici.",
+		"overview": "Prezentare generală",
+		"page_description": "Răsfoiți profilurile publice AdventureLog și descoperiți alți călători.",
+		"public_profile": "Profil public",
+		"public_profiles": "Profiluri publice",
+		"search_placeholder": "Căutați după nume sau nume de utilizator...",
+		"sort_name": "Nume",
+		"sort_recent": "Cel mai nou"
 	},
 	"wanderer": {
 		"connected": "Conectat cu succes la Wanderer",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "Nu s-a generat imaginea partajată",
 		"share_native": "Distribuie...",
 		"share_native_failed": "Partajarea a eșuat"
+	},
+	"endurain": {
+		"change_server": "Schimbați serverul",
+		"connect_password": "Conectați-vă cu parola",
+		"connected": "Conectat cu succes la Endurain",
+		"connected_as": "Conectat ca {username}",
+		"connection_error": "Eroare la conectarea la Endurain",
+		"continue": "Continua",
+		"credentials_required": "Adresa URL a serverului, numele de utilizator și parola sunt necesare",
+		"disconnect": "Deconecta",
+		"disconnect_error": "Eroare la deconectarea Endurain",
+		"disconnected": "Endurain deconectat",
+		"endurain_integration_desc": "Conectați-vă instanța Endurain auto-găzduită pentru a căuta activități și a le importa în vizite",
+		"localhost_note": "Serverul Endurain trebuie să fie accesibil de pe serverul AdventureLog (localhost poate să nu funcționeze în Docker).",
+		"mfa_code": "Cod MFA",
+		"mfa_code_required": "Este necesar codul MFA",
+		"mfa_required": "Introdu codul MFA pentru a finaliza conectarea",
+		"not_connected": "Endurain nu este conectat",
+		"password": "Parolă",
+		"server_url": "Adresa URL a serverului",
+		"server_url_required": "Este necesară adresa URL a serverului",
+		"username": "Nume de utilizator",
+		"verify_mfa": "Verificați MFA"
+	},
+	"images": {
+		"map_pin_title": "Locația fotografiei",
+		"source": {
+			"google": "Fotografie de pe Google Maps",
+			"immich": "Fotografie de la Immich",
+			"url": "Fotografie de la adresa URL externă",
+			"wikipedia": "Fotografie de pe Wikipedia"
+		}
 	}
 }
