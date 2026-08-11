@@ -14,7 +14,8 @@
 		"thank_you": "شكرا لك على استخدام المغامرة!",
 		"version": "إصدار",
 		"view_changelog": "عرض changelog",
-		"view_license": "عرض الترخيص"
+		"view_license": "عرض الترخيص",
+		"copy_version": "نسخ النسخة"
 	},
 	"adventures": {
 		"add": "يضيف",
@@ -447,7 +448,24 @@
 		"add_details": "أضف التفاصيل",
 		"export_pdf": "تحميل قوات الدفاع الشعبي",
 		"export_pdf_failed": "فشل في تنزيل مجموعة PDF",
-		"export_pdf_success": "تم تنزيل المجموعة بتنسيق PDF"
+		"export_pdf_success": "تم تنزيل المجموعة بتنسيق PDF",
+		"endurain_activities_during_visit": "أنشطة Endurain أثناء الزيارة",
+		"endurain_import_success": "النشاط مستورد من Endurain",
+		"google_photos_available": "{count} صورة (صور) Google متاحة",
+		"google_photos_import_all": "استيراد الكل من جوجل",
+		"google_photos_import_error": "تعذر استيراد صور Google",
+		"google_photos_import_selected": "تم تحديد الاستيراد",
+		"google_photos_import_success": "تم استيراد صور Google بنجاح",
+		"google_photos_importing": "جارٍ استيراد صور Google...",
+		"google_photos_select_hint": "حدد الصور التي تريد استيرادها، أو قم باستيرادها كلها مرة واحدة.",
+		"hide_endurain_activities": "إخفاء أنشطة إندورين",
+		"importing_endurain_activity": "جارٍ استيراد النشاط من Endurain...",
+		"loading_sunrise_sunset": "تحميل شروق الشمس",
+		"no_endurain_activities": "لم يتم العثور على أنشطة Endurain خلال هذه الزيارة",
+		"show_endurain_activities": "عرض أنشطة إندورين",
+		"show_sunrise_sunset": "عرض شروق الشمس",
+		"sunrise_sunset_load_error": "لا يمكن تحميل أوقات شروق الشمس وغروبها",
+		"view_endurain_activities": "عرض أنشطة Endurain"
 	},
 	"auth": {
 		"confirm_password": "تأكيد كلمة المرور",
@@ -473,7 +491,9 @@
 		"enter_username": "أدخل اسم المستخدم الخاص بك",
 		"logging_in": "تسجيل الدخول",
 		"totp": "رمز ثنائي العوامل",
-		"user_email_verification_required": "التحقق من البريد الإلكتروني مطلوب. \nيرجى التحقق من بريدك الإلكتروني للحصول على رابط التحقق."
+		"user_email_verification_required": "التحقق من البريد الإلكتروني مطلوب. \nيرجى التحقق من بريدك الإلكتروني للحصول على رابط التحقق.",
+		"totp_hint": "أدخل رمز المصادقة المكون من 6 أرقام أو رمز الاسترداد المكون من 8 أرقام.",
+		"totp_placeholder": "000000 أو 12345678"
 	},
 	"calendar": {
 		"all_day_event": "الحدث طوال اليوم",
@@ -486,7 +506,31 @@
 		"total_events": "الأحداث الكلية",
 		"week": "أسبوع",
 		"event timezone": "المنطقة الزمنية للحدث",
-		"your timezone": "منطقتك الزمنية"
+		"your timezone": "منطقتك الزمنية",
+		"agenda": "جدول الأعمال",
+		"event": "حدث",
+		"event_types": "إظهار أنواع الأحداث",
+		"export_error": "لا يمكن تصدير التقويم.",
+		"export_success": "تم تصدير التقويم بنجاح.",
+		"in_collection": "مجموعة",
+		"load_error": "تعذر تحميل أحداث التقويم. \nحاول ثانية.",
+		"more_events": "{عد} أكثر",
+		"no_events_in_range": "لا توجد أحداث في هذا النطاق.",
+		"no_upcoming_events": "لا توجد أحداث قادمة تتطابق مع عوامل التصفية الخاصة بك.",
+		"page_title": "تقويم",
+		"search_placeholder": "البحث عن الأحداث والأماكن والمجموعات...",
+		"sidebar_title": "المرشحات",
+		"this_month": "هذا الشهر",
+		"timezone_display": "عرض الوقت",
+		"type_checklist": "قوائم المراجعة",
+		"type_collection": "رحلات",
+		"type_lodging": "إقامة",
+		"type_note": "ملحوظات",
+		"type_transportation": "ينقل",
+		"type_visit": "الزيارات",
+		"upcoming": "القادمة",
+		"upcoming_agenda": "الأحداث القادمة",
+		"view_collection": "عرض المجموعة"
 	},
 	"categories": {
 		"add_new_category": "أضف فئة جديدة",
@@ -519,7 +563,8 @@
 		"enter_checklist_title": "أدخل عنوان قائمة المراجعة",
 		"no_items_yet": "لا توجد عناصر حتى الآن",
 		"update_checklist_details": "قائمة التحقق من التحرير",
-		"viewing_checklist": "عرض قائمة المراجعة"
+		"viewing_checklist": "عرض قائمة المراجعة",
+		"more_items": "المزيد من العناصر"
 	},
 	"collection": {
 		"archived_appear_here": "سوف تظهر مجموعات أرشفة هنا.",
@@ -566,7 +611,46 @@
 		"welcome_back": "مرحبًا بعودتك",
 		"welcome_text_1": "لقد كنت على",
 		"welcome_text_2": "مغامرات حتى الآن",
-		"welcome_text_3": "استمر في استكشاف وتوثيق رحلاتك!"
+		"welcome_text_3": "استمر في استكشاف وتوثيق رحلاتك!",
+		"active_trip": "السفر حاليا",
+		"activity_highlights": "أبرز الأنشطة",
+		"greeting_afternoon": "مساء الخير",
+		"greeting_evening": "مساء الخير",
+		"greeting_morning": "صباح الخير",
+		"greeting_night": "طاب مساؤك",
+		"hero_active_subtitle": "{count} من المواقع في هذه الرحلة - احتفظ بالذكريات القادمة",
+		"hero_active_trip": "أنت على الطريق — {name} قيد التقدم",
+		"hero_badge_countries": "تم استكشاف {count} من البلدان",
+		"hero_badge_default": "سجل المغامرة",
+		"hero_countries": "لقد استكشفت {count} من البلدان — إلى أين ستذهب بعد ذلك؟",
+		"hero_headline": "مركز المغامرة الخاص بك",
+		"hero_headline_new": "هل أنت مستعد للاستكشاف؟",
+		"hero_location_logged": "موقع واحد على خريطتك - استمر في الإضافة إلى القصة",
+		"hero_locations_logged": "{count} من المواقع على خريطتك - استمر في الإضافة إلى القصة",
+		"hero_next_subtitle": "المغادرة خلال {days} أيام - وقت الإثارة",
+		"hero_next_trip": "{days} أيام حتى {name}",
+		"hero_start_journey": "مجلة سفرك فارغة — حان الوقت للتخطيط لمحطتك الأولى",
+		"hero_trip_coming_up": "القادمة",
+		"hero_trip_empty_desc": "قم بتدوير مجموعة وابدأ في التخطيط للهروب التالي",
+		"hero_trip_empty_title": "لا رحلات في الأفق",
+		"hero_trip_on_the_road": "على الطريق",
+		"hero_view_trip": "رحلة مفتوحة",
+		"locations_visited": "المواقع التي تمت زيارتها",
+		"my_collections": "مجموعاتي",
+		"next_trip_in": "الرحلة القادمة خلال {days} أيام",
+		"no_active_trip": "لا توجد رحلة في التقدم في الوقت الراهن.",
+		"no_recent_locations": "لم تتم زيارة المواقع حتى الآن.",
+		"no_upcoming_trips": "لم يتم التخطيط لرحلات قادمة بعد.",
+		"page_description": "موطن سفرك - نظرة سريعة على الإحصائيات والرحلات القادمة والمغامرات الأخيرة.",
+		"page_title": "لوحة القيادة",
+		"pending_invites": "الدعوات المعلقة",
+		"personal_record": "أفضل مسافة شخصية",
+		"quick_links": "روابط سريعة",
+		"recently_updated": "تم تحديثها مؤخرا",
+		"stats_error": "لم نتمكن من تحميل بيانات لوحة التحكم الخاصة بك. \nحاول تحديث الصفحة.",
+		"upcoming_trips": "الرحلات القادمة",
+		"view_profile": "عرض الملف الشخصي",
+		"whats_next": "ما هي الخطوة التالية"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "قم بتوصيل حساب خرائط Google الخاص بك للحصول على نتائج وتوصيات بحث عالية الجودة.",
@@ -624,7 +708,8 @@
 		"loading_albums": "ألبومات تحميل",
 		"no_images": "لم يتم العثور على صور",
 		"select_album": "حدد الألبوم",
-		"try_different_date": "جرب تاريخًا مختلفًا"
+		"try_different_date": "جرب تاريخًا مختلفًا",
+		"immich_updated": "تم تحديث تكامل Imich بنجاح"
 	},
 	"invites": {
 		"accept": "يقبل",
@@ -736,7 +821,10 @@
 		"visit_website": "موقع إلكتروني",
 		"visits": "الزيارات",
 		"zoom_in": "تكبير",
-		"zoom_out": "تصغير"
+		"zoom_out": "تصغير",
+		"hide_photos": "إخفاء الصور",
+		"photos": "صور",
+		"show_photos": "عرض الصور"
 	},
 	"navbar": {
 		"about": "حول المغامرة",
@@ -1045,7 +1133,50 @@
 		"media_profile_pics": "صور الملف الشخصي",
 		"media_storage": "تخزين الوسائط",
 		"media_storage_desc": "استخدام مساحة التخزين للصور والمرفقات التي تم تحميلها.",
-		"media_total_used": "مجموع المستخدمة"
+		"media_total_used": "مجموع المستخدمة",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "الترميز الجغرافي الاحتياطي والبحث عن الأماكن عندما لا تتوفر خرائط Google.",
+				"nominatim_features": "يستخدم للبحث عن الموقع، والترميز الجغرافي العكسي، وعمليات البحث عن الإحداثيات.",
+				"nominatim_name": "خريطة الشارع المفتوحة الاسمية",
+				"overpass_desc": "يدعم التوصيات القريبة من بيانات OpenStreetMap.",
+				"overpass_features": "يُستخدم لتوصيات الخرائط وكإجراء احتياطي عندما لا يتوفر Google.",
+				"overpass_name": "خريطة الشارع المفتوحة الجسر",
+				"sunrise_desc": "يضيف أوقات شروق الشمس وغروبها إلى زيارات موقعك.",
+				"sunrise_features": "تظهر على صفحات تفاصيل الموقع لكل تاريخ زيارة.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "يثري المواقع بأوصاف الخلفية والصور المرجعية.",
+				"wikipedia_features": "يُستخدم عند إنشاء الأوصاف واستيراد صور ويكيبيديا.",
+				"wikipedia_name": "ويكيبيديا"
+			},
+			"builtin_desc": "تعمل مصادر البيانات هذه على تشغيل AdventureLog خارج الصندوق. \nلا يلزم الإعداد.",
+			"builtin_title": "الخدمات المضمنة",
+			"cancel": "يلغي",
+			"connect": "يتصل",
+			"disconnect": "قطع الاتصال",
+			"edit": "يحرر",
+			"google_maps_active_hint": "خرائط Google نشطة في هذه الحالة. \nمكان البحث والإثراء استخدامه عند توفره.",
+			"google_maps_features": "البحث عن المكان وتفاصيل الخريطة والإضافة السريعة والتوصيات القريبة.",
+			"included": "متضمنة",
+			"instance_desc": "الخدمات الاختيارية التي تم تكوينها بواسطة مسؤول AdventureLog الخاص بك.",
+			"instance_title": "خدمات المثيل",
+			"learn_more": "يتعلم أكثر",
+			"personal_desc": "قم بتوصيل حساباتك الخاصة والخدمات المستضافة ذاتيًا.",
+			"personal_title": "التكامل الخاص بك",
+			"summary_builtin": "الخدمات المضمنة",
+			"summary_builtin_desc": "متاح دائما في كل حالة",
+			"summary_instance": "خدمات المثيل",
+			"summary_instance_desc": "تم التمكين من قبل مسؤول الخادم الخاص بك",
+			"summary_personal": "التكامل الخاص بك",
+			"summary_personal_desc": "مرتبطة بحسابك",
+			"update": "تحديث"
+		},
+		"invalid_code": "رمز غير صالح",
+		"public_profile_invite_warning": "لديك {count} دعوة (دعوات) للتجميع معلقة. \nسيؤدي جعل ملفك الشخصي خاصًا إلى إلغائه.",
+		"public_profile_left_collections": "أصبح ملفك الشخصي الآن خاصًا. \nلقد تمت إزالتك من {count} مجموعة (مجموعات) مشتركة.",
+		"public_profile_private_confirm": "سيؤدي جعل ملفك الشخصي خاصًا إلى إزالتك من {shared} مجموعة (مجموعات) مشتركة وإلغاء {invites} دعوة (دعوات) معلقة. \nيكمل؟",
+		"public_profile_revoked_invites": "تم إلغاء {count} من دعوات التجميع المعلقة.",
+		"public_profile_sharing_warning": "لقد تمت مشاركتك حاليًا في {count} مجموعة (مجموعات). \nسيؤدي جعل ملفك الشخصي خاصًا إلى إزالتك من تلك المجموعات."
 	},
 	"settings_download_backup": "تنزيل النسخ الاحتياطي",
 	"share": {
@@ -1112,7 +1243,18 @@
 		"departure_timezone": "منطقة المغادرة الزمنية"
 	},
 	"users": {
-		"no_users_found": "لم يتم العثور على مستخدمين مع ملفات تعريف عامة."
+		"no_users_found": "لم يتم العثور على مستخدمين مع ملفات تعريف عامة.",
+		"browse_options": "تصفح الخيارات",
+		"no_match": "لا يوجد مستخدمون يطابقون بحثك",
+		"no_match_desc": "جرّب اسمًا مختلفًا أو امسح عوامل التصفية.",
+		"no_users_desc": "عندما يقوم المسافرون الآخرون بنشر ملفاتهم الشخصية للعامة، سيظهرون هنا.",
+		"overview": "ملخص",
+		"page_description": "تصفح الملفات الشخصية العامة في AdventureLog واكتشف المسافرين الآخرين.",
+		"public_profile": "الملف الشخصي العام",
+		"public_profiles": "الملفات الشخصية العامة",
+		"search_placeholder": "البحث بالاسم أو اسم المستخدم...",
+		"sort_name": "اسم",
+		"sort_recent": "الأحدث"
 	},
 	"wanderer": {
 		"connected": "متصل بنجاح بالتجول",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "فشل في إنشاء صورة المشاركة",
 		"share_native": "يشارك…",
 		"share_native_failed": "فشلت المشاركة"
+	},
+	"endurain": {
+		"change_server": "تغيير الخادم",
+		"connect_password": "الاتصال بكلمة المرور",
+		"connected": "تم الاتصال بنجاح بـ Endurain",
+		"connected_as": "متصل كـ {اسم المستخدم}",
+		"connection_error": "حدث خطأ أثناء الاتصال بـ Endurain",
+		"continue": "يكمل",
+		"endurain_integration_desc": "قم بتوصيل مثيل Endurain المستضاف ذاتيًا لتصفح الأنشطة واستيرادها في الزيارات",
+		"localhost_note": "يجب أن يكون خادم Endurain قابلاً للوصول من خادم AdventureLog (قد لا يعمل المضيف المحلي في Docker).",
+		"mfa_code": "كود وزارة الخارجية",
+		"mfa_code_required": "مطلوب رمز MFA",
+		"mfa_required": "أدخل رمز MFA الخاص بك لإكمال تسجيل الدخول",
+		"not_connected": "إندورين غير متصل",
+		"password": "كلمة المرور",
+		"server_url": "عنوان URL للخادم",
+		"server_url_required": "عنوان URL للخادم مطلوب",
+		"username": "اسم المستخدم",
+		"verify_mfa": "التحقق من وزارة الخارجية",
+		"credentials_required": "مطلوب عنوان URL للخادم واسم المستخدم وكلمة المرور",
+		"disconnect": "قطع الاتصال",
+		"disconnect_error": "حدث خطأ أثناء فصل Endurain",
+		"disconnected": "إندورين مفصول"
+	},
+	"images": {
+		"map_pin_title": "موقع الصورة",
+		"source": {
+			"google": "صورة من خرائط جوجل",
+			"immich": "الصورة من إيميتش",
+			"url": "صورة من URL خارجي",
+			"wikipedia": "الصورة من ويكيبيديا"
+		}
 	}
 }

@@ -46,7 +46,8 @@
 		"thank_you": "Takk for at du bruker Adventurelog!",
 		"version": "Versjon",
 		"view_changelog": "Se Changelog",
-		"view_license": "Vis lisens"
+		"view_license": "Vis lisens",
+		"copy_version": "Kopier versjon"
 	},
 	"home": {
 		"hero_1": "Oppdag verdens mest spennende eventyr",
@@ -497,7 +498,24 @@
 		"add_details": "Legg til detaljer",
 		"export_pdf": "Last ned PDF",
 		"export_pdf_failed": "Kunne ikke laste ned PDF-samlingen",
-		"export_pdf_success": "Samling PDF lastet ned"
+		"export_pdf_success": "Samling PDF lastet ned",
+		"endurain_activities_during_visit": "Endurain-aktiviteter under besøk",
+		"endurain_import_success": "Aktivitet importert fra Endurain",
+		"google_photos_available": "{count} Google-bilder tilgjengelig",
+		"google_photos_import_all": "Importer alt fra Google",
+		"google_photos_import_error": "Kunne ikke importere Google-bilder",
+		"google_photos_import_selected": "Importer valgt",
+		"google_photos_import_success": "Google-bilder ble importert",
+		"google_photos_importing": "Importerer Google-bilder …",
+		"google_photos_select_hint": "Velg bildene du vil importere, eller importer alle på en gang.",
+		"hide_endurain_activities": "Skjul Endurain-aktiviteter",
+		"importing_endurain_activity": "Importerer aktivitet fra Endurain...",
+		"loading_sunrise_sunset": "Laster soloppgang",
+		"no_endurain_activities": "Ingen Endurain-aktiviteter funnet under dette besøket",
+		"show_endurain_activities": "Vis Endurain-aktiviteter",
+		"show_sunrise_sunset": "Vis soloppgang",
+		"sunrise_sunset_load_error": "Kunne ikke laste inn tider for soloppgang og solnedgang",
+		"view_endurain_activities": "Se Endurain-aktiviteter"
 	},
 	"worldtravel": {
 		"country_list": "Liste over land",
@@ -588,10 +606,23 @@
 		"enter_username": "Skriv inn brukernavnet ditt",
 		"logging_in": "Logger inn",
 		"totp": "To-faktorkode",
-		"user_email_verification_required": "E-postbekreftelse kreves. \nVennligst sjekk e-posten din for en bekreftelseslenke."
+		"user_email_verification_required": "E-postbekreftelse kreves. \nVennligst sjekk e-posten din for en bekreftelseslenke.",
+		"totp_hint": "Skriv inn en 6-sifret autentiseringskode eller en 8-sifret gjenopprettingskode.",
+		"totp_placeholder": "000 000 eller 12345678"
 	},
 	"users": {
-		"no_users_found": "Ingen brukere med offentlig profil funnet."
+		"no_users_found": "Ingen brukere med offentlig profil funnet.",
+		"browse_options": "Bla gjennom alternativer",
+		"no_match": "Ingen brukere samsvarer med søket ditt",
+		"no_match_desc": "Prøv et annet navn eller tøm filtrene.",
+		"no_users_desc": "Når andre reisende offentliggjør profilen sin, vises de her.",
+		"overview": "Oversikt",
+		"page_description": "Bla gjennom offentlige AdventureLog-profiler og oppdag andre reisende.",
+		"public_profile": "Offentlig profil",
+		"public_profiles": "Offentlige profiler",
+		"search_placeholder": "Søk etter navn eller brukernavn...",
+		"sort_name": "Navn",
+		"sort_recent": "Nyeste"
 	},
 	"settings": {
 		"update_error": "Feil ved oppdatering av innstillinger",
@@ -745,7 +776,50 @@
 		"media_profile_pics": "Profilbilder",
 		"media_storage": "Medielagring",
 		"media_storage_desc": "Lagringsbruk for dine opplastede bilder og vedlegg.",
-		"media_total_used": "Totalt brukt"
+		"media_total_used": "Totalt brukt",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Reservegeokoding og stedssøk når Google Maps ikke er tilgjengelig.",
+				"nominatim_features": "Brukes til stedssøk, omvendt geokoding og koordinatoppslag.",
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"overpass_desc": "Styrer nærliggende anbefalinger fra OpenStreetMap-data.",
+				"overpass_features": "Brukes til kartanbefalinger og som reserve når Google er utilgjengelig.",
+				"overpass_name": "OpenStreetMap Overpass",
+				"sunrise_desc": "Legger til tider for soloppgang og solnedgang til stedsbesøkene dine.",
+				"sunrise_features": "Vises på stedsdetaljsider for hver besøksdato.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Beriker lokasjoner med bakgrunnsbeskrivelser og referansebilder.",
+				"wikipedia_features": "Brukes ved generering av beskrivelser og import av Wikipedia-bilder.",
+				"wikipedia_name": "Wikipedia"
+			},
+			"builtin_desc": "Disse datakildene driver AdventureLog ut av esken. \nIngen oppsett er nødvendig.",
+			"builtin_title": "Innebygde tjenester",
+			"cancel": "Kansellere",
+			"connect": "Koble til",
+			"disconnect": "Frakople",
+			"edit": "Redigere",
+			"google_maps_active_hint": "Google Maps er aktiv på denne forekomsten. \nStedssøk og berikelse bruk det når det er tilgjengelig.",
+			"google_maps_features": "Stedssøk, kartdetaljer, hurtigleggende berikelse og anbefalinger i nærheten.",
+			"included": "Inkludert",
+			"instance_desc": "Valgfrie tjenester konfigurert av AdventureLog-administratoren.",
+			"instance_title": "Forekomsttjenester",
+			"learn_more": "Lær mer",
+			"personal_desc": "Koble til dine egne kontoer og selvvertsbaserte tjenester.",
+			"personal_title": "Dine integrasjoner",
+			"summary_builtin": "Innebygde tjenester",
+			"summary_builtin_desc": "Alltid tilgjengelig på alle instanser",
+			"summary_instance": "Forekomsttjenester",
+			"summary_instance_desc": "Aktivert av serveradministratoren din",
+			"summary_personal": "Dine integrasjoner",
+			"summary_personal_desc": "Koblet til kontoen din",
+			"update": "Oppdater"
+		},
+		"invalid_code": "Ugyldig kode",
+		"public_profile_invite_warning": "Du har {count} ventende invitasjon(er). \nHvis du gjør profilen din privat, kanselleres de.",
+		"public_profile_left_collections": "Profilen din er nå privat. \nDu ble fjernet fra {count} delte samling(er).",
+		"public_profile_private_confirm": "Hvis du gjør profilen din privat, fjernes du fra {shared} delte samling(er) og kansellerer {invites} ventende invitasjoner. \nFortsette?",
+		"public_profile_revoked_invites": "Avbrutt {count} ventende samlingsinvitasjon(er).",
+		"public_profile_sharing_warning": "Du er for øyeblikket delt på {count} samling(er). \nHvis du gjør profilen din privat, fjernes du fra disse samlingene."
 	},
 	"collection": {
 		"collection_created": "Samling opprettet!",
@@ -818,7 +892,8 @@
 		"enter_checklist_title": "Skriv inn sjekklistetittel",
 		"no_items_yet": "Ingen ting ennå",
 		"update_checklist_details": "Redigering av sjekkliste",
-		"viewing_checklist": "Viser sjekkliste"
+		"viewing_checklist": "Viser sjekkliste",
+		"more_items": "Flere varer"
 	},
 	"transportation": {
 		"transportation_deleted": "Transport slettet!",
@@ -1010,7 +1085,10 @@
 		"visit_website": "Nettsted",
 		"visits": "Besøk",
 		"zoom_in": "Zoom inn",
-		"zoom_out": "Zoom ut"
+		"zoom_out": "Zoom ut",
+		"hide_photos": "Skjul bilder",
+		"photos": "Bilder",
+		"show_photos": "Vis bilder"
 	},
 	"share": {
 		"shared": "Delt",
@@ -1066,7 +1144,46 @@
 		"view_all": "Se alle",
 		"welcome_text_1": "Du har vært på",
 		"welcome_text_2": "Eventyr så langt",
-		"welcome_text_3": "Fortsett å utforske og dokumentere dine reiser!"
+		"welcome_text_3": "Fortsett å utforske og dokumentere dine reiser!",
+		"active_trip": "Er på reise for øyeblikket",
+		"activity_highlights": "Aktivitetshøydepunkter",
+		"greeting_afternoon": "God ettermiddag",
+		"greeting_evening": "God kveld",
+		"greeting_morning": "God morgen",
+		"greeting_night": "God natt",
+		"hero_active_subtitle": "{count} steder på denne turen – fortsett med minnene",
+		"hero_active_trip": "Du er på veien – {name} pågår",
+		"hero_badge_countries": "{count} land utforsket",
+		"hero_badge_default": "Eventyrlogg",
+		"hero_countries": "Du har utforsket {count} land – hvor vil du dra videre?",
+		"hero_headline": "Eventyrsenteret ditt",
+		"hero_headline_new": "Klar til å utforske?",
+		"hero_location_logged": "1 plassering på kartet ditt – fortsett å legge til historien",
+		"hero_locations_logged": "{count} steder på kartet ditt – fortsett å legge til historien",
+		"hero_next_subtitle": "Avgang om {days} dager — på tide å bli begeistret",
+		"hero_next_trip": "{days} dager til {name}",
+		"hero_start_journey": "Reisedagboken din er tom – på tide å planlegge ditt første stopp",
+		"hero_trip_coming_up": "Kommer opp",
+		"hero_trip_empty_desc": "Spinn opp en samling og begynn å planlegge din neste flukt",
+		"hero_trip_empty_title": "Ingen turer i horisonten",
+		"hero_trip_on_the_road": "På veien",
+		"hero_view_trip": "Åpen tur",
+		"locations_visited": "Besøkte steder",
+		"my_collections": "Mine samlinger",
+		"next_trip_in": "Neste tur om {days} dager",
+		"no_active_trip": "Ingen tur pågår akkurat nå.",
+		"no_recent_locations": "Ingen besøkte steder ennå.",
+		"no_upcoming_trips": "Ingen kommende turer planlagt ennå.",
+		"page_description": "Reisen din hjem – statistikk, kommende turer og nyere eventyr på et øyeblikk.",
+		"page_title": "Dashbord",
+		"pending_invites": "Ventende invitasjoner",
+		"personal_record": "Personlig beste distanse",
+		"quick_links": "Hurtigkoblinger",
+		"recently_updated": "Nylig oppdatert",
+		"stats_error": "Vi kunne ikke laste dashborddataene dine. \nPrøv å oppdatere siden.",
+		"upcoming_trips": "Kommende turer",
+		"view_profile": "Se profil",
+		"whats_next": "Hva er neste"
 	},
 	"immich": {
 		"immich": "Immich",
@@ -1102,7 +1219,8 @@
 		"loading_albums": "Laster inn album",
 		"no_images": "Ingen bilder funnet",
 		"select_album": "Velg album",
-		"try_different_date": "Prøv en annen dato"
+		"try_different_date": "Prøv en annen dato",
+		"immich_updated": "Immich-integrasjonen ble oppdatert"
 	},
 	"recomendations": {
 		"recommendations": "Anbefalinger",
@@ -1146,7 +1264,31 @@
 		"total_events": "Total hendelser",
 		"week": "Uke",
 		"event timezone": "Tidssone for hendelsen",
-		"your timezone": "Din tidssone"
+		"your timezone": "Din tidssone",
+		"agenda": "Dagsorden",
+		"event": "Hendelse",
+		"event_types": "Vis hendelsestyper",
+		"export_error": "Kunne ikke eksportere kalenderen.",
+		"export_success": "Kalender eksportert vellykket.",
+		"in_collection": "Samling",
+		"load_error": "Kunne ikke laste inn kalenderhendelser. \nPrøv igjen.",
+		"more_events": "{count} til",
+		"no_events_in_range": "Ingen hendelser i dette området.",
+		"no_upcoming_events": "Ingen kommende arrangementer samsvarer med filtrene dine.",
+		"sidebar_title": "Filtre",
+		"this_month": "Denne måneden",
+		"timezone_display": "Tidsvisning",
+		"type_checklist": "Sjekklister",
+		"type_collection": "Turer",
+		"type_lodging": "Overnatting",
+		"type_note": "Notater",
+		"type_transportation": "Transportere",
+		"type_visit": "Besøk",
+		"upcoming": "Kommende",
+		"upcoming_agenda": "Kommende arrangementer",
+		"view_collection": "Se samlingen",
+		"page_title": "Kalender",
+		"search_placeholder": "Søk i hendelser, steder, samlinger..."
 	},
 	"locations": {
 		"location": "Sted",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "Kunne ikke generere delbilde",
 		"share_native": "Dele…",
 		"share_native_failed": "Deling mislyktes"
+	},
+	"endurain": {
+		"change_server": "Bytt server",
+		"connect_password": "Koble til med passord",
+		"connected": "Koblet til Endurain",
+		"connected_as": "Tilkoblet som {brukernavn}",
+		"connection_error": "Feil ved tilkobling til Endurain",
+		"continue": "Fortsette",
+		"credentials_required": "Server-URL, brukernavn og passord kreves",
+		"disconnect": "Frakople",
+		"disconnect_error": "Feil ved frakobling av Endurain",
+		"disconnected": "Endurain koblet fra",
+		"endurain_integration_desc": "Koble til din egenvertsbaserte Endurain-instans for å bla gjennom aktiviteter og importere dem til besøk",
+		"localhost_note": "Endurain-serveren må være tilgjengelig fra AdventureLog-serveren (localhost fungerer kanskje ikke i Docker).",
+		"mfa_code": "MFA-kode",
+		"mfa_code_required": "MFA-kode kreves",
+		"mfa_required": "Skriv inn MFA-koden din for å fullføre påloggingen",
+		"not_connected": "Endurain er ikke tilkoblet",
+		"password": "Passord",
+		"server_url": "Server URL",
+		"server_url_required": "Server-URL er nødvendig",
+		"username": "Brukernavn",
+		"verify_mfa": "Bekreft MFA"
+	},
+	"images": {
+		"map_pin_title": "Fotoplassering",
+		"source": {
+			"google": "Bilde fra Google Maps",
+			"immich": "Foto fra Immich",
+			"url": "Bilde fra ekstern URL",
+			"wikipedia": "Bilde fra Wikipedia"
+		}
 	}
 }

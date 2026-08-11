@@ -505,7 +505,17 @@
 		"google_photos_importing": "Načítavanie fotografií z Google…",
 		"google_photos_import_success": "Fotky z Google boli úspešne importované",
 		"google_photos_import_error": "Nepodarilo sa načítať fotografie z Google Photos",
-		"google_photos_select_hint": "Vyberte fotografie, ktoré chcete importovať, alebo importujte všetky naraz."
+		"google_photos_select_hint": "Vyberte fotografie, ktoré chcete importovať, alebo importujte všetky naraz.",
+		"endurain_activities_during_visit": "Endurain aktivity počas návštevy",
+		"endurain_import_success": "Aktivita importovaná z Endurainu",
+		"hide_endurain_activities": "Skryť endurain aktivity",
+		"importing_endurain_activity": "Importuje sa aktivita z Endurainu...",
+		"loading_sunrise_sunset": "Načítava sa východ slnka",
+		"no_endurain_activities": "Počas tejto návštevy sa nenašli žiadne aktivity Endurain",
+		"show_endurain_activities": "Zobraziť Endurain aktivity",
+		"show_sunrise_sunset": "Ukáž východ slnka",
+		"sunrise_sunset_load_error": "Nepodarilo sa načítať časy východu a západu slnka",
+		"view_endurain_activities": "Pozrite si aktivity Endurain"
 	},
 	"worldtravel": {
 		"country_list": "Zoznam krajín",
@@ -596,7 +606,9 @@
 		"enter_password": "Zadajte vaše heslo",
 		"totp": "Dvojfaktorový kód",
 		"logging_in": "Prihlasovanie",
-		"user_email_verification_required": "Vyžaduje sa overenie e-mailom. Skontrolujte svoj e-mail, kde nájdete overovací odkaz."
+		"user_email_verification_required": "Vyžaduje sa overenie e-mailom. Skontrolujte svoj e-mail, kde nájdete overovací odkaz.",
+		"totp_hint": "Zadajte 6-miestny overovací kód alebo 8-miestny obnovovací kód.",
+		"totp_placeholder": "000000 alebo 12345678"
 	},
 	"users": {
 		"no_users_found": "Nenašli sa žiadni používatelia s verejnými profilmi.",
@@ -769,7 +781,45 @@
 		"public_profile_invite_warning": "Máte {count} nevybavených pozvánok do zbierky. Ak nastavíte svoj profil ako súkromný, tieto pozvánky sa zrušia.",
 		"public_profile_private_confirm": "Ak nastavíte svoj profil ako súkromný, budete odstránení zo {shared} zdieľaných zbierok a zrušia sa {invites} nevybavené pozvánky. Chcete pokračovať?",
 		"public_profile_left_collections": "Váš profil je teraz súkromný. Boli ste odstránení z {count} zdieľaných zbierok.",
-		"public_profile_revoked_invites": "Zrušilo sa {count} nevybavených pozvánok do zbierky."
+		"public_profile_revoked_invites": "Zrušilo sa {count} nevybavených pozvánok do zbierky.",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Záložné geokódovanie a vyhľadávanie miest, keď sú Mapy Google nedostupné.",
+				"nominatim_features": "Používa sa na vyhľadávanie polohy, spätné geokódovanie a vyhľadávanie súradníc.",
+				"nominatim_name": "Nominácia OpenStreetMap",
+				"overpass_desc": "Podporuje odporúčania v okolí z údajov OpenStreetMap.",
+				"overpass_features": "Používa sa na odporúčania máp a ako náhrada, keď je Google nedostupný.",
+				"overpass_name": "Nadjazd OpenStreetMap",
+				"sunrise_desc": "Pridá časy východu a západu slnka k návštevám vašej polohy.",
+				"sunrise_features": "Zobrazuje sa na stránkach s podrobnosťami o mieste pre každý dátum návštevy.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Obohacuje miesta o popisy na pozadí a referenčné obrázky.",
+				"wikipedia_features": "Používa sa pri generovaní popisov a importovaní fotografií z Wikipédie.",
+				"wikipedia_name": "Wikipedia"
+			},
+			"builtin_desc": "Tieto zdroje údajov poháňajú AdventureLog hneď po vybalení. \nNevyžaduje sa žiadne nastavenie.",
+			"builtin_title": "Vstavané služby",
+			"cancel": "Zrušiť",
+			"connect": "Pripojte sa",
+			"disconnect": "Odpojiť",
+			"edit": "Upraviť",
+			"google_maps_active_hint": "Mapy Google sú v tomto prípade aktívne. \nVyhľadávanie miest a obohacovanie ho použite, ak je k dispozícii.",
+			"google_maps_features": "Vyhľadávanie miest, detaily mapy, rýchle pridanie obohatenia a odporúčania v okolí.",
+			"included": "Zahrnuté",
+			"instance_desc": "Voliteľné služby nakonfigurované vaším administrátorom AdventureLog.",
+			"instance_title": "Inštancia služieb",
+			"learn_more": "Zistite viac",
+			"personal_desc": "Pripojte svoje vlastné účty a služby s vlastným hosťovaním.",
+			"personal_title": "Vaše integrácie",
+			"summary_builtin": "Vstavané služby",
+			"summary_builtin_desc": "Vždy k dispozícii v každom prípade",
+			"summary_instance": "Inštancia služieb",
+			"summary_instance_desc": "Povolené správcom servera",
+			"summary_personal": "Vaše integrácie",
+			"summary_personal_desc": "Prepojené s vaším účtom",
+			"update": "Aktualizovať"
+		},
+		"invalid_code": "Neplatný kód"
 	},
 	"collection": {
 		"collection_created": "Zbierka bola úspešne vytvorená!",
@@ -1411,5 +1461,28 @@
 			"immich": "Fotografia z Immich",
 			"url": "Fotografia z externej URL adresy"
 		}
+	},
+	"endurain": {
+		"change_server": "Zmeniť server",
+		"connect_password": "Pripojte sa heslom",
+		"connected": "Úspešne pripojené k Endurainu",
+		"connected_as": "Pripojené ako {username}",
+		"connection_error": "Chyba pri pripájaní k Endurainu",
+		"continue": "Pokračovať",
+		"credentials_required": "Vyžaduje sa adresa URL servera, používateľské meno a heslo",
+		"disconnect": "Odpojiť",
+		"disconnect_error": "Chyba pri odpájaní Endurainu",
+		"disconnected": "Endurain odpojený",
+		"endurain_integration_desc": "Pripojte svoju vlastnú hostenú inštanciu Endurain, aby ste mohli prehliadať aktivity a importovať ich do návštev",
+		"localhost_note": "Server Endurain musí byť dostupný zo servera AdventureLog (localhost nemusí fungovať v Dockeri).",
+		"mfa_code": "kód MFA",
+		"mfa_code_required": "Vyžaduje sa kód MFA",
+		"mfa_required": "Dokončite prihlásenie zadaním kódu MFA",
+		"not_connected": "Endurain nie je pripojený",
+		"password": "heslo",
+		"server_url": "Adresa URL servera",
+		"server_url_required": "Vyžaduje sa adresa URL servera",
+		"username": "Používateľské meno",
+		"verify_mfa": "Overte MFA"
 	}
 }

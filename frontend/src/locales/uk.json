@@ -14,7 +14,8 @@
 		"thank_you": "Дякуємо за використання AdventureLog!",
 		"version": "Версія",
 		"view_changelog": "Переглянути журнал змін",
-		"view_license": "Переглянути ліцензію"
+		"view_license": "Переглянути ліцензію",
+		"copy_version": "Копія версії"
 	},
 	"adventures": {
 		"achievements": "Досягнення",
@@ -447,7 +448,24 @@
 		"add_details": "Додайте деталі",
 		"export_pdf": "Завантажити PDF",
 		"export_pdf_failed": "Не вдалося завантажити колекцію PDF",
-		"export_pdf_success": "Збірник PDF завантажено"
+		"export_pdf_success": "Збірник PDF завантажено",
+		"endurain_activities_during_visit": "Діяльність Endurain під час візиту",
+		"endurain_import_success": "Активність імпортована з Endurain",
+		"google_photos_available": "{count} доступних фотографій Google",
+		"google_photos_import_all": "Імпортувати все з Google",
+		"google_photos_import_error": "Не вдалося імпортувати фотографії Google",
+		"google_photos_import_selected": "Вибраний імпорт",
+		"google_photos_import_success": "Фотографії Google успішно імпортовано",
+		"google_photos_importing": "Імпорт фотографій Google…",
+		"google_photos_select_hint": "Виберіть фотографії, які потрібно імпортувати, або імпортуйте всі одразу.",
+		"hide_endurain_activities": "Приховати діяльність Endurain",
+		"importing_endurain_activity": "Імпорт активності з Endurain...",
+		"loading_sunrise_sunset": "Завантаження світанку",
+		"no_endurain_activities": "Під час цього візиту не виявлено активності Endurain",
+		"show_endurain_activities": "Показати діяльність Endurain",
+		"show_sunrise_sunset": "Показати схід сонця",
+		"sunrise_sunset_load_error": "Не вдалося завантажити час сходу та заходу сонця",
+		"view_endurain_activities": "Перегляньте діяльність Endurain"
 	},
 	"auth": {
 		"confirm_password": "Підтвердьте пароль",
@@ -473,7 +491,9 @@
 		"user_collections": "Колекції користувачів",
 		"user_locations": "Розташування користувачів",
 		"username": "Ім'я користувача",
-		"user_email_verification_required": "Потрібна перевірка електронної пошти. \nБудь ласка, перевірте свою електронну пошту на наявність посилання для підтвердження."
+		"user_email_verification_required": "Потрібна перевірка електронної пошти. \nБудь ласка, перевірте свою електронну пошту на наявність посилання для підтвердження.",
+		"totp_hint": "Введіть 6-значний код автентифікації або 8-значний код відновлення.",
+		"totp_placeholder": "000000 або 12345678"
 	},
 	"calendar": {
 		"all_day_event": "Подія на весь день",
@@ -486,7 +506,31 @@
 		"total_events": "Загальна кількість подій",
 		"week": "тиждень",
 		"event timezone": "Часовий пояс події",
-		"your timezone": "Ваш часовий пояс"
+		"your timezone": "Ваш часовий пояс",
+		"agenda": "Порядок денний",
+		"event": "Подія",
+		"event_types": "Показати типи подій",
+		"export_error": "Не вдалося експортувати календар.",
+		"export_success": "Календар успішно експортовано.",
+		"in_collection": "Колекція",
+		"load_error": "Не вдалося завантажити події календаря. \nСпробуйте знову.",
+		"more_events": "ще {count}",
+		"no_events_in_range": "Немає подій у цьому діапазоні.",
+		"no_upcoming_events": "Немає майбутніх подій, які відповідають вашим фільтрам.",
+		"page_title": "Календар",
+		"search_placeholder": "Пошук подій, місць, колекцій...",
+		"sidebar_title": "Фільтри",
+		"this_month": "Цей місяць",
+		"timezone_display": "Відображення часу",
+		"type_checklist": "Контрольні списки",
+		"type_collection": "Поїздки",
+		"type_lodging": "Ночівля",
+		"type_note": "Примітки",
+		"type_transportation": "Транспорт",
+		"type_visit": "Відвідування",
+		"upcoming": "Майбутні",
+		"upcoming_agenda": "Найближчі події",
+		"view_collection": "Переглянути колекцію"
 	},
 	"categories": {
 		"add_new_category": "Додати нову категорію",
@@ -519,7 +563,8 @@
 		"new_item": "Новий товар",
 		"no_items_yet": "Поки немає предметів",
 		"update_checklist_details": "Контрольний список редагування",
-		"viewing_checklist": "Перегляд контрольного списку"
+		"viewing_checklist": "Перегляд контрольного списку",
+		"more_items": "Більше елементів"
 	},
 	"collection": {
 		"archived_appear_here": "Архівні колекції з’являться тут.",
@@ -566,7 +611,46 @@
 		"welcome_back": "Ласкаво просимо назад",
 		"welcome_text_1": "Ви були на",
 		"welcome_text_2": "пригоди досі",
-		"welcome_text_3": "Продовжуйте досліджувати та документувати свої подорожі!"
+		"welcome_text_3": "Продовжуйте досліджувати та документувати свої подорожі!",
+		"active_trip": "Зараз у подорожі",
+		"activity_highlights": "Основні моменти діяльності",
+		"greeting_afternoon": "доброго дня",
+		"greeting_evening": "добрий вечір",
+		"greeting_morning": "доброго ранку",
+		"greeting_night": "на добраніч",
+		"hero_active_subtitle": "{count} місць у цій подорожі — нехай залишаються спогади",
+		"hero_active_trip": "Ви в дорозі — {name} триває",
+		"hero_badge_countries": "Досліджено {count} країн",
+		"hero_badge_default": "Журнал пригод",
+		"hero_countries": "Ви дослідили {count} країн — куди ви збираєтеся поїхати далі?",
+		"hero_headline": "Ваш центр пригод",
+		"hero_headline_new": "Готові досліджувати?",
+		"hero_location_logged": "1 місце на вашій карті — продовжуйте додавати в історію",
+		"hero_locations_logged": "{count} місць на вашій карті — продовжуйте додавати в історію",
+		"hero_next_subtitle": "Відправлення через {days} днів — час порадуватись",
+		"hero_next_trip": "{days} днів до {name}",
+		"hero_start_journey": "Ваш щоденник подорожей порожній — час спланувати першу зупинку",
+		"hero_trip_coming_up": "Наближається",
+		"hero_trip_empty_desc": "Зберіть колекцію та почніть планувати свою наступну втечу",
+		"hero_trip_empty_title": "Ніяких поїздок на горизонті",
+		"hero_trip_on_the_road": "На дорозі",
+		"hero_view_trip": "Відкрита подорож",
+		"locations_visited": "Відвідані місця",
+		"my_collections": "Мої колекції",
+		"next_trip_in": "Наступна поїздка через {days} дн",
+		"no_active_trip": "Зараз жодна подорож не триває.",
+		"no_recent_locations": "Ще немає відвіданих місць.",
+		"no_upcoming_trips": "Майбутніх поїздок поки що не заплановано.",
+		"page_description": "Ваша подорож додому — короткий огляд статистики, майбутніх подорожей і останніх пригод.",
+		"page_title": "Приладова панель",
+		"pending_invites": "Очікують запрошення",
+		"personal_record": "Особиста дистанція",
+		"quick_links": "Швидкі посилання",
+		"recently_updated": "Нещодавно оновлено",
+		"stats_error": "Нам не вдалося завантажити дані вашої інформаційної панелі. \nСпробуйте оновити сторінку.",
+		"upcoming_trips": "Найближчі поїздки",
+		"view_profile": "Переглянути профіль",
+		"whats_next": "Що далі"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Підключіть свій обліковий запис Карт Google, щоб отримувати високоякісні результати пошуку місцезнаходження та рекомендації.",
@@ -624,7 +708,8 @@
 		"server_url": "URL-адреса сервера Immich",
 		"try_different_date": "Спробуйте іншу дату",
 		"update_integration": "Інтеграція оновлення",
-		"validation_error": "Під час перевірки інтеграції Immich сталася помилка. Перевірте URL-адресу свого сервера та ключ API."
+		"validation_error": "Під час перевірки інтеграції Immich сталася помилка. Перевірте URL-адресу свого сервера та ключ API.",
+		"immich_updated": "Інтеграцію Immich успішно оновлено"
 	},
 	"invites": {
 		"accept": "прийняти",
@@ -736,7 +821,10 @@
 		"visit_website": "Веб-сайт",
 		"visits": "Відвідування",
 		"zoom_in": "Збільшити",
-		"zoom_out": "Зменшити масштаб"
+		"zoom_out": "Зменшити масштаб",
+		"hide_photos": "Приховати фотографії",
+		"photos": "Фотографії",
+		"show_photos": "Покажіть фотографії"
 	},
 	"navbar": {
 		"about": "Про AdventureLog",
@@ -1045,7 +1133,50 @@
 		"media_profile_pics": "Фотографії профілю",
 		"media_storage": "Зберігання медіа",
 		"media_storage_desc": "Використання пам’яті для ваших завантажених зображень і вкладень.",
-		"media_total_used": "Всього використано"
+		"media_total_used": "Всього використано",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Резервне геокодування та пошук місць, коли Карти Google недоступні.",
+				"nominatim_features": "Використовується для пошуку місцезнаходження, зворотного геокодування та пошуку координат.",
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"overpass_desc": "Використовує рекомендації поблизу з даних OpenStreetMap.",
+				"overpass_features": "Використовується для рекомендацій карт і як резервний варіант, коли Google недоступний.",
+				"overpass_name": "Шляхопровід OpenStreetMap",
+				"sunrise_desc": "Додає час сходу та заходу сонця до ваших відвідувань.",
+				"sunrise_features": "Відображається на сторінках інформації про місцезнаходження для кожної дати відвідування.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Збагачує локації фоновими описами та довідковими зображеннями.",
+				"wikipedia_features": "Використовується під час створення описів та імпорту фотографій з Вікіпедії.",
+				"wikipedia_name": "Вікіпедія"
+			},
+			"builtin_desc": "Ці джерела даних живлять AdventureLog із коробки. \nНалаштування не потрібно.",
+			"builtin_title": "Вбудовані служби",
+			"cancel": "Скасувати",
+			"connect": "Підключитися",
+			"disconnect": "Відключити",
+			"edit": "Редагувати",
+			"google_maps_active_hint": "Карти Google активні в цьому випадку. \nПошук місця та збагачення використовуйте його, якщо доступно.",
+			"google_maps_features": "Пошук місць, деталі карти, розширення для швидкого додавання та рекомендації поблизу.",
+			"included": "В комплекті",
+			"instance_desc": "Додаткові служби, налаштовані вашим адміністратором AdventureLog.",
+			"instance_title": "Сервіси інстанцій",
+			"learn_more": "Дізнайтесь більше",
+			"personal_desc": "Підключіть власні облікові записи та власні послуги.",
+			"personal_title": "Ваші інтеграції",
+			"summary_builtin": "Вбудовані служби",
+			"summary_builtin_desc": "Завжди в наявності на кожному екземплярі",
+			"summary_instance": "Сервіси інстанцій",
+			"summary_instance_desc": "Увімкнено адміністратором вашого сервера",
+			"summary_personal": "Ваші інтеграції",
+			"summary_personal_desc": "Пов’язано з вашим обліковим записом",
+			"update": "оновлення"
+		},
+		"invalid_code": "Недійсний код",
+		"public_profile_invite_warning": "У вас є {count} незавершених запрошень до колекції. \nЯкщо зробити свій профіль приватним, їх буде скасовано.",
+		"public_profile_left_collections": "Тепер ваш профіль закритий. \nВас було вилучено з {count} спільних колекцій.",
+		"public_profile_private_confirm": "Якщо зробити свій профіль приватним, вас буде видалено зі спільної колекції ({shared}) і скасовано запрошення ({invites}), які очікують на розгляд. \nПродовжити?",
+		"public_profile_revoked_invites": "Скасовано {count} незавершених запрошень до колекції.",
+		"public_profile_sharing_warning": "Ви наразі маєте спільний доступ до {count} колекції(й). \nЯкщо зробити свій профіль приватним, вас буде видалено з цих колекцій."
 	},
 	"settings_download_backup": "Завантажте резервну копію",
 	"share": {
@@ -1112,7 +1243,18 @@
 		"departure_timezone": "Часовий пояс відправлення"
 	},
 	"users": {
-		"no_users_found": "Не знайдено користувачів із загальнодоступними профілями."
+		"no_users_found": "Не знайдено користувачів із загальнодоступними профілями.",
+		"browse_options": "Параметри перегляду",
+		"no_match": "Жоден користувач не відповідає вашому запиту",
+		"no_match_desc": "Спробуйте змінити назву або очистіть фільтри.",
+		"no_users_desc": "Коли інші мандрівники опублікують свої профілі, вони з’являться тут.",
+		"overview": "Огляд",
+		"page_description": "Переглядайте загальнодоступні профілі AdventureLog і знаходьте інших мандрівників.",
+		"public_profile": "Загальнодоступний профіль",
+		"public_profiles": "Публічні профілі",
+		"search_placeholder": "Пошук за іменем або іменем користувача...",
+		"sort_name": "Ім'я",
+		"sort_recent": "Найновіший"
 	},
 	"wanderer": {
 		"connected": "Успішно підключено до Wanderer",
@@ -1310,5 +1452,37 @@
 		"share_image_failed": "Не вдалося створити зображення для спільного використання",
 		"share_native": "Поділитися…",
 		"share_native_failed": "Помилка спільного доступу"
+	},
+	"endurain": {
+		"change_server": "Змінити сервер",
+		"connect_password": "Підключитися за допомогою пароля",
+		"connected": "Успішно підключено до Endurain",
+		"connected_as": "Підключено як {username}",
+		"connection_error": "Помилка підключення до Endurain",
+		"continue": "Продовжити",
+		"credentials_required": "Потрібні URL-адреса сервера, ім’я користувача та пароль",
+		"disconnect": "Відключити",
+		"disconnect_error": "Помилка відключення Endurain",
+		"disconnected": "Endurain відключено",
+		"endurain_integration_desc": "Підключіть свій власний екземпляр Endurain, щоб переглядати дії та імпортувати їх у відвідування",
+		"localhost_note": "Сервер Endurain має бути доступним із сервера AdventureLog (localhost може не працювати в Docker).",
+		"mfa_code": "код МЗС",
+		"mfa_code_required": "Потрібно ввести код MFA",
+		"mfa_required": "Введіть код MFA, щоб завершити вхід",
+		"not_connected": "Endurain не підключено",
+		"password": "Пароль",
+		"server_url": "URL-адреса сервера",
+		"server_url_required": "Потрібна URL-адреса сервера",
+		"username": "Ім'я користувача",
+		"verify_mfa": "Підтвердити МЗС"
+	},
+	"images": {
+		"map_pin_title": "Розташування фото",
+		"source": {
+			"google": "Фото з Google Maps",
+			"immich": "Фото з Імміха",
+			"url": "Фото із зовнішньої URL-адреси",
+			"wikipedia": "Фото з Вікіпедії"
+		}
 	}
 }

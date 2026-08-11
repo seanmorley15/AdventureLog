@@ -505,7 +505,17 @@
 		"google_photos_importing": "Google fotoğrafları içeri aktarılıyor…",
 		"google_photos_import_success": "Google fotoğraflar başarılı bir şekilde içeri aktarıldı",
 		"google_photos_import_error": "Google fotoğraflar içeri aktarılamadı",
-		"google_photos_select_hint": "İçeri aktarmak istediginiz fotoğrafları seçin, veya tümünü tek seferde aktarın."
+		"google_photos_select_hint": "İçeri aktarmak istediginiz fotoğrafları seçin, veya tümünü tek seferde aktarın.",
+		"show_sunrise_sunset": "Gün doğumu ve gün batımını göster",
+		"loading_sunrise_sunset": "Gün doğumu ve gün batımı yükleniyor...",
+		"sunrise_sunset_load_error": "Gün doğumu ve gün batımı saatleri yüklenemedi",
+		"importing_endurain_activity": "Endurain’den aktivite içe aktarılıyor...",
+		"endurain_import_success": "Endurain’den aktivite içe aktarıldı",
+		"endurain_activities_during_visit": "Endurain Ziyareti Sırasındaki Aktiviteler",
+		"view_endurain_activities": "Endurain aktivitelerini görüntüle",
+		"show_endurain_activities": "Endurain aktivitelerini göster",
+		"hide_endurain_activities": "Endurain aktivitelerini gizle",
+		"no_endurain_activities": "Bu ziyaret sırasında Endurain aktivitesi bulunamadı"
 	},
 	"worldtravel": {
 		"country_list": "Ülke Listesi",
@@ -594,9 +604,11 @@
 		"user_collections": "Kullanıcı Koleksiyonları",
 		"enter_username": "Kullanıcı adınızı girin",
 		"enter_password": "Şifrenizi girin",
-		"totp": "İki Aşamalı Doğrulama Kodu",
+		"totp": "İki Faktörlü Kimlik Doğrulama veya Kurtarma Kodu",
 		"logging_in": "Giriş yapılıyor",
-		"user_email_verification_required": "E-posta doğrulaması gerekli. Doğrulama bağlantısı için lütfen e-postanızı kontrol edin."
+		"user_email_verification_required": "E-posta doğrulaması gerekli. Doğrulama bağlantısı için lütfen e-postanızı kontrol edin.",
+		"totp_placeholder": "000000 ya da 12345678",
+		"totp_hint": "6 haneli doğrulayıcı kodu veya 8 haneli kurtarma kodunu girin."
 	},
 	"users": {
 		"no_users_found": "Herkese açık profili olan kullanıcı bulunamadı.",
@@ -769,7 +781,45 @@
 		"public_profile_revoked_invites": "{count} bekleyen koleksiyon daveti iptal edildi.",
 		"public_profile_sharing_warning": "Şuan {count} adet koleksiyon üzerinde paylaşıldınız. Profilinizi gizli yapmak sizi bu koleksiyonlardan silecektir.",
 		"public_profile_invite_warning": "{count} adet bekleyen koleksiyon davetiniz bulunmaktadır. Profilinizi gizli yapmak bu davetleri iptal eder.",
-		"public_profile_private_confirm": "Profilinizi gizli yapmak sizi {shared} adet paylaşılmız koleksiyondan siler ve {invites} bekleyen daveti iptal eder. Devam edilsin mi?"
+		"public_profile_private_confirm": "Profilinizi gizli yapmak sizi {shared} adet paylaşılmız koleksiyondan siler ve {invites} bekleyen daveti iptal eder. Devam edilsin mi?",
+		"invalid_code": "Geçersiz kod",
+		"integrations_hub": {
+			"summary_builtin": "Yerleşik servisler",
+			"summary_builtin_desc": "Her zaman her örnekte kullanılabilir",
+			"summary_instance": "Örnek servisleri",
+			"summary_instance_desc": "Sunucu yöneticiniz tarafından etkinleştirildi",
+			"summary_personal": "Entegrasyonlarınız",
+			"summary_personal_desc": "Hesabınıza bağlı",
+			"builtin_title": "Yerleşik servisler",
+			"builtin_desc": "Bu veri kaynakları AdventureLog’u varsayılan olarak çalıştırır. Herhangi bir kurulum gerekmez.",
+			"included": "Dahil",
+			"learn_more": "Daha fazla bilgi edin",
+			"instance_title": "Örnek servisleri",
+			"instance_desc": "AdventureLog yöneticiniz tarafından yapılandırılan isteğe bağlı servisler.",
+			"personal_title": "Entegrasyonlarınız",
+			"personal_desc": "Kendi hesaplarınızı ve self-host edilen servislerinizi bağlayın.",
+			"connect": "Bağlan",
+			"disconnect": "Bağlantıyı kes",
+			"update": "Güncelle",
+			"edit": "Düzenle",
+			"cancel": "İptal Et",
+			"google_maps_features": "Yer arama, harita detayları, hızlı ekleme zenginleştirmesi ve yakınlardaki öneriler.",
+			"google_maps_active_hint": "Google Maps bu örnekte etkin. Yer arama ve zenginleştirme, mevcut olduğunda bunu kullanır.",
+			"builtin": {
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"nominatim_desc": "Google Maps kullanılamadığında yedek konum çözümleme ve yer arama.",
+				"nominatim_features": "Konum arama, ters geocoding ve koordinat sorguları için kullanılır.",
+				"wikipedia_name": "Vikipedi",
+				"wikipedia_desc": "Konumları arka plan açıklamaları ve referans görsellerle zenginleştirir.",
+				"wikipedia_features": "Açıklamalar oluşturulurken ve Wikipedia fotoğrafları içe aktarılırken kullanılır.",
+				"sunrise_name": "SunriseSunset.io",
+				"sunrise_desc": "Konum ziyaretlerinize gün doğumu ve gün batımı saatlerini ekler.",
+				"sunrise_features": "Her ziyaret tarihi için konum detay sayfalarında gösterilir.",
+				"overpass_name": "OpenStreetMap Overpass",
+				"overpass_desc": "OpenStreetMap verilerini kullanarak yakınlardaki önerileri sağlar.",
+				"overpass_features": "Harita önerileri için kullanılır ve Google kullanılamadığında yedek olarak devreye girer."
+			}
+		}
 	},
 	"collection": {
 		"collection_created": "Koleksiyon başarıyla oluşturuldu!",
@@ -1411,5 +1461,28 @@
 			"immich": "Immich fotoğrafı",
 			"url": "Dış bağlantı fotoğrafı"
 		}
+	},
+	"endurain": {
+		"endurain_integration_desc": "Kendi barındırdığınız Endurain örneğini bağlayarak aktiviteleri görüntüleyebilir ve ziyaretlere içe aktarabilirsiniz",
+		"connection_error": "Endurain’e bağlanırken hata oluştu",
+		"connected": "Endurain’e başarıyla bağlanıldı",
+		"disconnected": "Endurain bağlantısı kesildi",
+		"disconnect_error": "Endurain bağlantısı kesilirken hata oluştu",
+		"disconnect": "Bağlantıyı kes",
+		"server_url": "Sunucu URL",
+		"server_url_required": "Sunucu URL’si gerekli",
+		"username": "Kullanıcı Adı",
+		"password": "Şifre",
+		"localhost_note": "Endurain sunucusuna AdventureLog sunucusundan erişilebilmelidir (Docker’da localhost çalışmayabilir).",
+		"credentials_required": "Sunucu URL’si, kullanıcı adı ve şifre gerekli",
+		"mfa_required": "Giriş işlemini tamamlamak için MFA kodunuzu girin",
+		"mfa_code": "MFA kodu",
+		"mfa_code_required": "MFA kodu gerekli",
+		"verify_mfa": "MFA'yı doğrula",
+		"connect_password": "Şifre ile bağlan",
+		"continue": "Devam et",
+		"change_server": "Sunucuyu değiştir",
+		"not_connected": "Endurain bağlı değil",
+		"connected_as": "{username} olarak bağlandı"
 	}
 }

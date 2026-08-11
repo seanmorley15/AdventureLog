@@ -46,7 +46,8 @@
 		"thank_you": "Gràcies per utilitzar AdventureLog!",
 		"version": "Versió",
 		"view_changelog": "Veure registre de canvis",
-		"view_license": "Veure llicència"
+		"view_license": "Veure llicència",
+		"copy_version": "Copia la versió"
 	},
 	"adventures": {
 		"achievements": "Assoliments",
@@ -479,7 +480,24 @@
 		"pins": "agulles",
 		"places": "Llocs",
 		"planned": "Planificada",
-		"preview": "Vista prèvia"
+		"preview": "Vista prèvia",
+		"endurain_activities_during_visit": "Activitats Endurain durant la visita",
+		"endurain_import_success": "Activitat importada d'Endurain",
+		"google_photos_available": "{count} fotos de Google disponibles",
+		"google_photos_import_all": "Importa-ho tot des de Google",
+		"google_photos_import_error": "No s'han pogut importar les fotos de Google",
+		"google_photos_import_selected": "Importa seleccionat",
+		"google_photos_import_success": "Fotos de Google importades correctament",
+		"google_photos_importing": "S'estan important fotos de Google...",
+		"google_photos_select_hint": "Seleccioneu les fotos que voleu importar o importar-les totes alhora.",
+		"hide_endurain_activities": "Amaga les activitats d'Endurain",
+		"importing_endurain_activity": "S'està important l'activitat d'Endurain...",
+		"loading_sunrise_sunset": "Carregant la sortida del sol",
+		"no_endurain_activities": "No s'han trobat activitats Endurain durant aquesta visita",
+		"show_endurain_activities": "Mostra les activitats d'Endurain",
+		"show_sunrise_sunset": "Mostra la sortida del sol",
+		"sunrise_sunset_load_error": "No s'han pogut carregar les hores de sortida i posta del sol",
+		"view_endurain_activities": "Veure activitats Endurain"
 	},
 	"api_keys": {
 		"copied": "Copiat!",
@@ -529,7 +547,9 @@
 		"user_collections": "Col·leccions d'usuaris",
 		"user_email_verification_required": "Cal verificar el correu electrònic. \nSi us plau, comproveu el vostre correu electrònic per obtenir un enllaç de verificació.",
 		"user_locations": "Ubicacions dels usuaris",
-		"username": "Nom d'usuari"
+		"username": "Nom d'usuari",
+		"totp_hint": "Introduïu un codi d'autenticador de 6 dígits o un codi de recuperació de 8 dígits.",
+		"totp_placeholder": "000000 o 12345678"
 	},
 	"calendar": {
 		"all_day_event": "Esdeveniment durant tot el dia",
@@ -542,7 +562,31 @@
 		"today": "Avui",
 		"total_events": "Total d'esdeveniments",
 		"week": "Setmana",
-		"your timezone": "La teva zona horària"
+		"your timezone": "La teva zona horària",
+		"agenda": "Agenda",
+		"event": "Esdeveniment",
+		"event_types": "Mostra els tipus d'esdeveniment",
+		"export_error": "No s'ha pogut exportar el calendari.",
+		"export_success": "El calendari s'ha exportat correctament.",
+		"in_collection": "Col·lecció",
+		"load_error": "No s'han pogut carregar els esdeveniments del calendari. \nTorna-ho a provar.",
+		"more_events": "{count} més",
+		"no_events_in_range": "No hi ha esdeveniments en aquest interval.",
+		"no_upcoming_events": "No hi ha esdeveniments propers que coincideixin amb els vostres filtres.",
+		"page_title": "Calendari",
+		"search_placeholder": "Cerca esdeveniments, llocs, col·leccions...",
+		"sidebar_title": "Filtres",
+		"this_month": "Aquest mes",
+		"timezone_display": "Visualització del temps",
+		"type_checklist": "Llistes de verificació",
+		"type_collection": "Viatges",
+		"type_lodging": "Allotjament",
+		"type_note": "Notes",
+		"type_transportation": "Transport",
+		"type_visit": "Visites",
+		"upcoming": "Properament",
+		"upcoming_agenda": "Pròxims esdeveniments",
+		"view_collection": "Veure col·lecció"
 	},
 	"categories": {
 		"add_new_category": "Afegeix una nova categoria",
@@ -575,7 +619,8 @@
 		"new_item": "Article nou",
 		"no_items_yet": "Encara no hi ha articles",
 		"update_checklist_details": "Llista de verificació d'edició",
-		"viewing_checklist": "Visualització de la llista de verificació"
+		"viewing_checklist": "Visualització de la llista de verificació",
+		"more_items": "Més articles"
 	},
 	"collection": {
 		"archived_appear_here": "Les col·leccions arxivades apareixeran aquí.",
@@ -666,7 +711,46 @@
 		"welcome_back": "Benvingut de nou",
 		"welcome_text_1": "Has estat encès",
 		"welcome_text_2": "aventures fins ara",
-		"welcome_text_3": "Segueix explorant i documentant els teus viatges!"
+		"welcome_text_3": "Segueix explorant i documentant els teus viatges!",
+		"active_trip": "Actualment viatjant",
+		"activity_highlights": "Activitats destacades",
+		"greeting_afternoon": "Bona tarda",
+		"greeting_evening": "Bona tarda",
+		"greeting_morning": "Bon dia",
+		"greeting_night": "Bona nit",
+		"hero_active_subtitle": "{count} ubicacions d'aquest viatge: mantingueu els records",
+		"hero_active_trip": "Esteu de camí: {name} està en curs",
+		"hero_badge_countries": "S'han explorat {count} països",
+		"hero_badge_default": "Registre d'aventures",
+		"hero_countries": "Heu explorat {count} països; on aniràs a continuació?",
+		"hero_headline": "El teu centre d'aventures",
+		"hero_headline_new": "Preparat per explorar?",
+		"hero_location_logged": "1 ubicació al mapa: seguiu afegint a la història",
+		"hero_locations_logged": "{count} ubicacions al mapa: seguiu afegint a la història",
+		"hero_next_subtitle": "Sortida d'aquí a {dies} dies: hora d'emocionar-se",
+		"hero_next_trip": "{days} dies fins a {name}",
+		"hero_start_journey": "El vostre diari de viatge està buit: és hora de planificar la vostra primera parada",
+		"hero_trip_coming_up": "S'acosta",
+		"hero_trip_empty_desc": "Crea una col·lecció i comença a traçar la teva propera escapada",
+		"hero_trip_empty_title": "No hi ha viatges a l'horitzó",
+		"hero_trip_on_the_road": "A la carretera",
+		"hero_view_trip": "Viatge obert",
+		"locations_visited": "Llocs visitats",
+		"my_collections": "Les meves col·leccions",
+		"next_trip_in": "Proper viatge d'aquí a {dies} dies",
+		"no_active_trip": "No hi ha cap viatge en curs ara mateix.",
+		"no_recent_locations": "Encara no s'ha visitat cap ubicació.",
+		"no_upcoming_trips": "Encara no hi ha cap viatge previst.",
+		"page_description": "El vostre viatge a casa: estadístiques, propers viatges i aventures recents d'un cop d'ull.",
+		"page_title": "Tauler de control",
+		"pending_invites": "Invitacions pendents",
+		"personal_record": "Millor distància personal",
+		"quick_links": "Enllaços ràpids",
+		"stats_error": "No hem pogut carregar les dades del vostre tauler. \nProva d'actualitzar la pàgina.",
+		"upcoming_trips": "Pròxims viatges",
+		"view_profile": "Veure perfil",
+		"whats_next": "Què passa després",
+		"recently_updated": "Actualitzat recentment"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Connecteu el vostre compte de Google Maps per obtenir resultats i recomanacions de cerca d'ubicacions d'alta qualitat.",
@@ -724,7 +808,8 @@
 		"server_url": "URL del servidor Immich",
 		"try_different_date": "Prova una data diferent",
 		"update_integration": "Actualitzar la integració",
-		"validation_error": "S'ha produït un error en validar la integració d'Immich. \nComproveu l'URL del vostre servidor i la clau API."
+		"validation_error": "S'ha produït un error en validar la integració d'Immich. \nComproveu l'URL del vostre servidor i la clau API.",
+		"immich_updated": "La integració d'Immich s'ha actualitzat correctament"
 	},
 	"invites": {
 		"accept": "Acceptar",
@@ -869,7 +954,10 @@
 		"visit_website": "Lloc web",
 		"visits": "Visites",
 		"zoom_in": "Apropa",
-		"zoom_out": "Allunya el zoom"
+		"zoom_out": "Allunya el zoom",
+		"hide_photos": "Amaga les fotos",
+		"photos": "Fotos",
+		"show_photos": "Mostra fotos"
 	},
 	"notes": {
 		"content": "Contingut",
@@ -1146,7 +1234,50 @@
 		"verify_email_success": "La verificació del correu electrònic s'ha enviat correctament!",
 		"verify_setup": "Verifiqueu la configuració",
 		"whats_included": "Què inclou",
-		"world_travel_visits": "Visites de viatges al món"
+		"world_travel_visits": "Visites de viatges al món",
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Geocodificació alternativa i cerca de llocs quan Google Maps no està disponible.",
+				"nominatim_features": "S'utilitza per a la cerca d'ubicacions, la geocodificació inversa i les cerques de coordenades.",
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"overpass_desc": "Potencia les recomanacions properes a partir de les dades d'OpenStreetMap.",
+				"overpass_features": "S'utilitza per a recomanacions de mapes i com a alternativa quan Google no està disponible.",
+				"overpass_name": "Pas superior d'OpenStreetMap",
+				"sunrise_desc": "Afegeix les hores de sortida i posta del sol a les vostres visites a la ubicació.",
+				"sunrise_features": "Es mostra a les pàgines de detalls de la ubicació per a cada data de visita.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Enriqueix les ubicacions amb descripcions de fons i imatges de referència.",
+				"wikipedia_features": "S'utilitza per generar descripcions i importar fotos de la Viquipèdia.",
+				"wikipedia_name": "Viquipèdia"
+			},
+			"builtin_desc": "Aquestes fonts de dades alimenten AdventureLog des de la caixa. \nNo es requereix cap configuració.",
+			"builtin_title": "Serveis integrats",
+			"cancel": "Cancel·la",
+			"connect": "Connecta't",
+			"disconnect": "Desconnecta",
+			"edit": "Edita",
+			"google_maps_active_hint": "Google Maps està actiu en aquesta instància. \nLa cerca de llocs i l'enriquiment utilitza-la quan estigui disponible.",
+			"google_maps_features": "Cerca de llocs, detalls del mapa, enriquiment d'addició ràpida i recomanacions properes.",
+			"included": "Inclòs",
+			"instance_desc": "Serveis opcionals configurats pel vostre administrador AdventureLog.",
+			"instance_title": "Serveis d'instància",
+			"learn_more": "Més informació",
+			"personal_desc": "Connecteu els vostres propis comptes i serveis autoallotjats.",
+			"personal_title": "Les teves integracions",
+			"summary_builtin": "Serveis integrats",
+			"summary_builtin_desc": "Sempre disponible en cada instància",
+			"summary_instance": "Serveis d'instància",
+			"summary_instance_desc": "Habilitat per l'administrador del vostre servidor",
+			"summary_personal": "Les teves integracions",
+			"summary_personal_desc": "Enllaçat al teu compte",
+			"update": "Actualització"
+		},
+		"invalid_code": "Codi no vàlid",
+		"public_profile_invite_warning": "Tens {count} invitacions pendents de recollida. \nSi feu que el vostre perfil sigui privat, els cancel·larà.",
+		"public_profile_left_collections": "El teu perfil ara és privat. \nT'han eliminat de {count} col·leccions compartides.",
+		"public_profile_private_confirm": "Si feu que el vostre perfil sigui privat, us suprimirà de {shared} col·leccions compartides i cancel·larà {invites} pendents. \nContinuar?",
+		"public_profile_revoked_invites": "S'han cancel·lat {count} invitacions pendents de recollida.",
+		"public_profile_sharing_warning": "Actualment estàs compartit en {count} col·leccions. \nSi feu que el vostre perfil sigui privat, us eliminarà d'aquestes col·leccions."
 	},
 	"settings_download_backup": "Descarrega la còpia de seguretat",
 	"share": {
@@ -1231,7 +1362,18 @@
 		"update_transportation_details": "Actualitza els detalls del transport"
 	},
 	"users": {
-		"no_users_found": "No s'ha trobat cap usuari amb perfils públics."
+		"no_users_found": "No s'ha trobat cap usuari amb perfils públics.",
+		"browse_options": "Opcions de navegació",
+		"no_match": "Cap usuari coincideix amb la teva cerca",
+		"no_match_desc": "Prova amb un nom diferent o esborra els filtres.",
+		"no_users_desc": "Quan altres viatgers facin públics els seus perfils, apareixeran aquí.",
+		"overview": "Visió general",
+		"page_description": "Navega pels perfils públics d'AdventureLog i descobreix altres viatgers.",
+		"public_profile": "Perfil públic",
+		"public_profiles": "Perfils públics",
+		"search_placeholder": "Cerca per nom o nom d'usuari...",
+		"sort_name": "Nom",
+		"sort_recent": "El més nou"
 	},
 	"wanderer": {
 		"api_key": "Clau de l'API",
@@ -1310,5 +1452,37 @@
 		"visit_remove_failed": "No s'ha pogut eliminar la visita",
 		"visit_to": "Visita a",
 		"your_random_adventure_awaits": "La teva aventura aleatòria t'espera!"
+	},
+	"endurain": {
+		"change_server": "Canvia servidor",
+		"connect_password": "Connecta't amb contrasenya",
+		"connected": "S'ha connectat correctament a Endurain",
+		"connected_as": "Connectat com a {username}",
+		"connection_error": "S'ha produït un error en connectar-se a Endurain",
+		"continue": "Continua",
+		"credentials_required": "Cal l'URL del servidor, el nom d'usuari i la contrasenya",
+		"disconnect": "Desconnecta",
+		"disconnect_error": "S'ha produït un error en desconnectar Endurain",
+		"disconnected": "Endurain desconnectat",
+		"endurain_integration_desc": "Connecteu la vostra instància d'Endurain autoallotjada per explorar activitats i importar-les a les visites",
+		"localhost_note": "S'ha de poder accedir al servidor Endurain des del servidor AdventureLog (pot ser que localhost no funcioni a Docker).",
+		"mfa_code": "Codi MFA",
+		"mfa_code_required": "El codi MFA és obligatori",
+		"mfa_required": "Introduïu el vostre codi MFA per completar l'inici de sessió",
+		"not_connected": "Endurain no està connectat",
+		"password": "Contrasenya",
+		"server_url": "URL del servidor",
+		"server_url_required": "L'URL del servidor és obligatori",
+		"username": "Nom d'usuari",
+		"verify_mfa": "Verifiqueu l'MFA"
+	},
+	"images": {
+		"map_pin_title": "Ubicació de la foto",
+		"source": {
+			"google": "Foto de Google Maps",
+			"immich": "Foto d'Immich",
+			"url": "Foto de l'URL extern",
+			"wikipedia": "Foto de la Viquipèdia"
+		}
 	}
 }
