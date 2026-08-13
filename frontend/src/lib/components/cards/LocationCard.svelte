@@ -34,6 +34,7 @@
 	import Globe from '~icons/mdi/globe';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	export let type: string | null = null;
 	export let user: User | null;
@@ -48,6 +49,7 @@
 	let isSocialShareModalOpen: boolean = false;
 	let copied: boolean = false;
 	let isActionsMenuOpen: boolean = false;
+	let openUpward = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => {
@@ -412,6 +414,7 @@
 						<div
 							class="dropdown dropdown-end relative z-50"
 							class:dropdown-open={isActionsMenuOpen}
+							class:dropdown-top={openUpward}
 							bind:this={actionsMenuRef}
 						>
 							<button
@@ -426,6 +429,7 @@
 										return;
 									}
 									closeAllLocationMenus();
+									openUpward = shouldFlipDropdownUp(actionsMenuRef);
 									isActionsMenuOpen = true;
 								}}
 							>
@@ -433,7 +437,7 @@
 							</button>
 							<ul
 								tabindex="-1"
-								class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+								class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 							>
 								<li>
 									<button

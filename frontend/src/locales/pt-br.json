@@ -14,7 +14,8 @@
 		"thank_you": "Obrigado por usar o AdventureLog!",
 		"version": "Versão",
 		"view_changelog": "Ver Changelog",
-		"view_license": "Visualizar Licença"
+		"view_license": "Visualizar Licença",
+		"copy_version": "Copiar versão"
 	},
 	"adventures": {
 		"add": "Adicionar",
@@ -447,7 +448,24 @@
 		"add_details": "Adicionar detalhes",
 		"export_pdf": "Baixar PDF",
 		"export_pdf_failed": "Falha ao baixar o PDF da coleção",
-		"export_pdf_success": "PDF da coleção baixado"
+		"export_pdf_success": "PDF da coleção baixado",
+		"endurain_activities_during_visit": "Atividades Endurain durante a visita",
+		"endurain_import_success": "Atividade importada do Endurain",
+		"google_photos_available": "{count} fotos do Google disponíveis",
+		"google_photos_import_all": "Importe tudo do Google",
+		"google_photos_import_error": "Não foi possível importar fotos do Google",
+		"google_photos_import_selected": "Importação selecionada",
+		"google_photos_import_success": "Fotos do Google importadas com sucesso",
+		"google_photos_importing": "Importando fotos do Google…",
+		"google_photos_select_hint": "Selecione as fotos que deseja importar ou importe todas de uma vez.",
+		"hide_endurain_activities": "Ocultar atividades Endurain",
+		"importing_endurain_activity": "Importando atividade do Endurain...",
+		"loading_sunrise_sunset": "Carregando nascer do sol",
+		"no_endurain_activities": "Nenhuma atividade Endurain encontrada durante esta visita",
+		"show_endurain_activities": "Mostrar atividades Endurain",
+		"show_sunrise_sunset": "Mostrar nascer do sol",
+		"sunrise_sunset_load_error": "Não foi possível carregar os horários do nascer e do pôr do sol",
+		"view_endurain_activities": "Veja as atividades do Endurain"
 	},
 	"auth": {
 		"confirm_password": "Confirme a sua senha",
@@ -473,7 +491,9 @@
 		"enter_username": "Digite o seu nome de usuário",
 		"logging_in": "Registrar",
 		"totp": "Autenticação de dois fatores",
-		"user_email_verification_required": "Verificação de e-mail necessária. \nVerifique seu e-mail para obter um link de verificação."
+		"user_email_verification_required": "Verificação de e-mail necessária. \nVerifique seu e-mail para obter um link de verificação.",
+		"totp_hint": "Insira um código autenticador de 6 dígitos ou um código de recuperação de 8 dígitos.",
+		"totp_placeholder": "000000 ou 12345678"
 	},
 	"calendar": {
 		"all_day_event": "Evento durante o dia todo",
@@ -486,7 +506,31 @@
 		"total_events": "Eventos totais",
 		"week": "Semana",
 		"event timezone": "Fuso horário do evento",
-		"your timezone": "Seu fuso horário"
+		"your timezone": "Seu fuso horário",
+		"agenda": "Agenda",
+		"event": "Evento",
+		"event_types": "Mostrar tipos de eventos",
+		"export_error": "Não foi possível exportar o calendário.",
+		"export_success": "Calendário exportado com sucesso.",
+		"in_collection": "Coleção",
+		"load_error": "Não foi possível carregar os eventos do calendário. \nTente novamente.",
+		"more_events": "{contar} mais",
+		"no_events_in_range": "Nenhum evento neste intervalo.",
+		"no_upcoming_events": "Nenhum evento próximo corresponde aos seus filtros.",
+		"page_title": "Calendário",
+		"search_placeholder": "Pesquise eventos, lugares, coleções...",
+		"sidebar_title": "Filtros",
+		"this_month": "Este mês",
+		"timezone_display": "Exibição de hora",
+		"type_checklist": "Listas de verificação",
+		"type_collection": "Viagens",
+		"type_lodging": "Alojamento",
+		"type_note": "Notas",
+		"type_transportation": "Transporte",
+		"type_visit": "Visitas",
+		"upcoming": "Por vir",
+		"upcoming_agenda": "Próximos eventos",
+		"view_collection": "Ver coleção"
 	},
 	"categories": {
 		"add_new_category": "Adicionar Nova Categoria",
@@ -519,7 +563,8 @@
 		"enter_checklist_title": "Digite o título da lista de verificação",
 		"no_items_yet": "Ainda não há itens",
 		"update_checklist_details": "Editando a lista de verificação",
-		"viewing_checklist": "Visualizando a lista de verificação"
+		"viewing_checklist": "Visualizando a lista de verificação",
+		"more_items": "Mais itens"
 	},
 	"collection": {
 		"archived_appear_here": "As coleções arquivadas aparecerão aqui.",
@@ -566,7 +611,46 @@
 		"welcome_back": "Bem-vindo de volta",
 		"welcome_text_1": "Você esteve em",
 		"welcome_text_2": "aventuras até agora",
-		"welcome_text_3": "Continue explorando e registrando suas viagens!"
+		"welcome_text_3": "Continue explorando e registrando suas viagens!",
+		"active_trip": "Atualmente viajando",
+		"activity_highlights": "Destaques da atividade",
+		"greeting_afternoon": "Boa tarde",
+		"greeting_evening": "Boa noite",
+		"greeting_morning": "Bom dia",
+		"greeting_night": "Boa noite",
+		"hero_active_subtitle": "{count} locais nesta viagem. Continue com as lembranças",
+		"hero_active_trip": "Você está na estrada — {name} está em andamento",
+		"hero_badge_countries": "{count} países explorados",
+		"hero_badge_default": "Registro de Aventura",
+		"hero_countries": "Você explorou {count} países. Para onde irá em seguida?",
+		"hero_headline": "Seu centro de aventura",
+		"hero_headline_new": "Pronto para explorar?",
+		"hero_location_logged": "1 local no seu mapa – continue adicionando itens à história",
+		"hero_locations_logged": "{count} locais em seu mapa – continue adicionando coisas à história",
+		"hero_next_subtitle": "Partida em {days} dias – hora de ficar animado",
+		"hero_next_trip": "{days} dias até {name}",
+		"hero_start_journey": "Seu diário de viagem está vazio – é hora de planejar sua primeira parada",
+		"hero_trip_coming_up": "Chegando",
+		"hero_trip_empty_desc": "Crie uma coleção e comece a planejar sua próxima fuga",
+		"hero_trip_empty_title": "Nenhuma viagem no horizonte",
+		"hero_trip_on_the_road": "Na estrada",
+		"hero_view_trip": "Viagem aberta",
+		"locations_visited": "Locais visitados",
+		"my_collections": "Minhas coleções",
+		"next_trip_in": "Próxima viagem em {days} dias",
+		"no_active_trip": "Nenhuma viagem em andamento no momento.",
+		"no_recent_locations": "Nenhum local visitado ainda.",
+		"no_upcoming_trips": "Nenhuma próxima viagem planejada ainda.",
+		"page_description": "Sua viagem para casa — resumo de estatísticas, próximas viagens e aventuras recentes.",
+		"page_title": "Painel",
+		"pending_invites": "Convites pendentes",
+		"personal_record": "Melhor distância pessoal",
+		"quick_links": "Links rápidos",
+		"recently_updated": "Atualizado recentemente",
+		"stats_error": "Não foi possível carregar os dados do seu painel. \nTente atualizar a página.",
+		"upcoming_trips": "Próximas viagens",
+		"view_profile": "Ver perfil",
+		"whats_next": "O que vem a seguir"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Conecte sua conta do Google Maps para obter resultados de pesquisa de localização e recomendações de melhor qualidade.",
@@ -624,7 +708,8 @@
 		"loading_albums": "Carregando álbuns",
 		"no_images": "Nenhuma imagem encontrada",
 		"select_album": "Selecionar Álbum",
-		"try_different_date": "Tente uma data diferente"
+		"try_different_date": "Tente uma data diferente",
+		"immich_updated": "Integração Immich atualizada com sucesso"
 	},
 	"invites": {
 		"accept": "Aceitar",
@@ -736,7 +821,10 @@
 		"visit_website": "Site",
 		"visits": "Visitas",
 		"zoom_in": "Ampliar",
-		"zoom_out": "Diminuir zoom"
+		"zoom_out": "Diminuir zoom",
+		"hide_photos": "Ocultar fotos",
+		"photos": "Fotos",
+		"show_photos": "Mostrar fotos"
 	},
 	"navbar": {
 		"about": "Sobre AdventureLog",
@@ -1046,19 +1134,49 @@
 		"media_storage": "Armazenamento de mídia",
 		"media_storage_desc": "Uso de armazenamento para suas imagens e anexos enviados.",
 		"media_total_used": "Total usado",
-		"download_backup": "Baixar Backup",
-		"sessions_title": "Active Sessions",
-		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
-		"sessions_current": "This device",
-		"sessions_unknown_device": "Unknown device",
-		"sessions_signed_in": "Signed in",
-		"sessions_revoke": "Sign out",
-		"sessions_revoke_others": "Sign out other devices",
-		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
-		"sessions_empty": "No other active sessions.",
-		"sessions_revoked": "Session signed out.",
-		"sessions_others_revoked": "Other devices signed out.",
-		"sessions_revoke_error": "Could not sign out that session. Try again."
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Geocodificação alternativa e pesquisa de local quando o Google Maps não estiver disponível.",
+				"nominatim_features": "Usado para pesquisa de localização, geocodificação reversa e pesquisas de coordenadas.",
+				"nominatim_name": "Nome do OpenStreetMap",
+				"overpass_desc": "Fornece recomendações próximas a partir de dados do OpenStreetMap.",
+				"overpass_features": "Usado para recomendações de mapas e como alternativa quando o Google não está disponível.",
+				"overpass_name": "Viaduto OpenStreetMap",
+				"sunrise_desc": "Adiciona horários de nascer e pôr do sol às suas visitas locais.",
+				"sunrise_features": "Exibido nas páginas de detalhes do local para cada data de visita.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Enriquece os locais com descrições de fundo e imagens de referência.",
+				"wikipedia_features": "Usado ao gerar descrições e importar fotos da Wikipedia.",
+				"wikipedia_name": "Wikipédia"
+			},
+			"builtin_desc": "Essas fontes de dados capacitam o AdventureLog pronto para uso. \nNenhuma configuração é necessária.",
+			"builtin_title": "Serviços integrados",
+			"cancel": "Cancelar",
+			"connect": "Conectar",
+			"disconnect": "Desconectar",
+			"edit": "Editar",
+			"google_maps_active_hint": "O Google Maps está ativo nesta instância. \nLocal de pesquisa e enriquecimento, use-o quando disponível.",
+			"google_maps_features": "Pesquisa de locais, detalhes do mapa, enriquecimento de adição rápida e recomendações próximas.",
+			"included": "Incluído",
+			"instance_desc": "Serviços opcionais configurados pelo administrador do AdventureLog.",
+			"instance_title": "Serviços de instância",
+			"personal_title": "Suas integrações",
+			"summary_builtin": "Serviços integrados",
+			"summary_builtin_desc": "Sempre disponível em todas as instâncias",
+			"summary_instance": "Serviços de instância",
+			"summary_instance_desc": "Ativado pelo administrador do seu servidor",
+			"summary_personal": "Suas integrações",
+			"summary_personal_desc": "Vinculado à sua conta",
+			"update": "Atualizar",
+			"learn_more": "Saber mais",
+			"personal_desc": "Conecte suas próprias contas e serviços auto-hospedados."
+		},
+		"invalid_code": "Código inválido",
+		"public_profile_invite_warning": "Você tem {count} convites de coleta pendentes. \nTornar seu perfil privado irá cancelá-los.",
+		"public_profile_left_collections": "Seu perfil agora é privado. \nVocê foi removido de {count} coleções compartilhadas.",
+		"public_profile_private_confirm": "Tornar seu perfil privado removerá você de {shared} coleções compartilhadas e cancelará {invites} convite(s) pendente(s). \nContinuar?",
+		"public_profile_revoked_invites": "{count} convites de coleta pendentes cancelados.",
+		"public_profile_sharing_warning": "Atualmente você está compartilhado em {count} coleções. \nTornar seu perfil privado removerá você dessas coleções."
 	},
 	"share": {
 		"available": "Disponível",
@@ -1124,7 +1242,18 @@
 		"departure_timezone": "Fuso horário de partida"
 	},
 	"users": {
-		"no_users_found": "Não foram encontrados usuários com perfis públicos."
+		"no_users_found": "Não foram encontrados usuários com perfis públicos.",
+		"browse_options": "Opções de navegação",
+		"no_match": "Nenhum usuário corresponde à sua pesquisa",
+		"no_match_desc": "Experimente um nome diferente ou limpe seus filtros.",
+		"no_users_desc": "Quando outros viajantes tornarem seus perfis públicos, eles aparecerão aqui.",
+		"overview": "Visão geral",
+		"page_description": "Navegue por perfis públicos do AdventureLog e descubra outros viajantes.",
+		"public_profile": "Perfil Público",
+		"public_profiles": "Perfis Públicos",
+		"search_placeholder": "Pesquise por nome ou nome de usuário...",
+		"sort_name": "Nome",
+		"sort_recent": "Mais recente"
 	},
 	"wanderer": {
 		"connected": "Conectado com sucesso ao Wanderer",
@@ -1322,5 +1451,37 @@
 		"share_image_failed": "Falha ao gerar imagem compartilhada",
 		"share_native": "Compartilhar…",
 		"share_native_failed": "Falha no compartilhamento"
+	},
+	"endurain": {
+		"change_server": "Alterar servidor",
+		"connect_password": "Conecte-se com senha",
+		"connected": "Conectado com sucesso ao Endurain",
+		"connected_as": "Conectado como {nome de usuário}",
+		"connection_error": "Erro ao conectar ao Endurain",
+		"continue": "Continuar",
+		"credentials_required": "URL do servidor, nome de usuário e senha são obrigatórios",
+		"disconnect": "Desconectar",
+		"disconnect_error": "Erro ao desconectar o Endurain",
+		"disconnected": "Endurain desconectado",
+		"endurain_integration_desc": "Conecte sua instância Endurain auto-hospedada para navegar pelas atividades e importá-las para visitas",
+		"localhost_note": "O servidor Endurain deve ser acessível a partir do servidor AdventureLog (localhost pode não funcionar no Docker).",
+		"mfa_code": "Código MFA",
+		"mfa_code_required": "O código MFA é obrigatório",
+		"mfa_required": "Insira seu código MFA para concluir o login",
+		"not_connected": "Endurain não está conectado",
+		"password": "Senha",
+		"server_url": "URL do servidor",
+		"server_url_required": "O URL do servidor é obrigatório",
+		"username": "Nome de usuário",
+		"verify_mfa": "Verifique a MFA"
+	},
+	"images": {
+		"map_pin_title": "Localização da foto",
+		"source": {
+			"google": "Foto do Google Maps",
+			"immich": "Foto de Immich",
+			"url": "Foto de URL externo",
+			"wikipedia": "Foto da Wikipédia"
+		}
 	}
 }

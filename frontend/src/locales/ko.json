@@ -14,7 +14,8 @@
 		"thank_you": "Adventurelog를 사용해 주셔서 감사합니다!",
 		"version": "버전",
 		"view_changelog": "changelog를 봅니다",
-		"view_license": "라이센스보기"
+		"view_license": "라이센스보기",
+		"copy_version": "버전 복사"
 	},
 	"adventures": {
 		"add": "추가",
@@ -447,7 +448,24 @@
 		"add_details": "세부정보 추가",
 		"export_pdf": "PDF 다운로드",
 		"export_pdf_failed": "컬렉션 PDF를 다운로드하지 못했습니다.",
-		"export_pdf_success": "컬렉션 PDF ​​다운로드됨"
+		"export_pdf_success": "컬렉션 PDF ​​다운로드됨",
+		"endurain_activities_during_visit": "방문 중 활동을 지속하십시오",
+		"endurain_import_success": "Endurain에서 가져온 활동",
+		"google_photos_available": "{count}개의 Google 사진을 사용할 수 있습니다.",
+		"google_photos_import_all": "Google에서 모두 가져오기",
+		"google_photos_import_error": "Google 사진을 가져올 수 없습니다.",
+		"google_photos_import_selected": "선택 항목 가져오기",
+		"google_photos_import_success": "Google 사진을 성공적으로 가져왔습니다.",
+		"google_photos_importing": "Google 사진을 가져오는 중…",
+		"google_photos_select_hint": "가져오려는 사진을 선택하거나 한 번에 모두 가져오세요.",
+		"hide_endurain_activities": "Endurain 활동 숨기기",
+		"importing_endurain_activity": "Endurain에서 활동을 가져오는 중...",
+		"loading_sunrise_sunset": "일출 로드 중",
+		"no_endurain_activities": "이번 방문 동안 Endurain 활동이 발견되지 않았습니다.",
+		"show_endurain_activities": "엔듀레인 활동 보기",
+		"show_sunrise_sunset": "일출 표시",
+		"sunrise_sunset_load_error": "일출 및 일몰 시간을 로드할 수 없습니다.",
+		"view_endurain_activities": "엔듀레인 활동 보기"
 	},
 	"auth": {
 		"confirm_password": "비밀번호 확인",
@@ -473,7 +491,9 @@
 		"enter_username": "사용자 이름을 입력하십시오",
 		"logging_in": "로그인",
 		"totp": "2 단계 코드",
-		"user_email_verification_required": "이메일 인증이 필요합니다. \n확인 링크가 있는지 이메일을 확인하세요."
+		"user_email_verification_required": "이메일 인증이 필요합니다. \n확인 링크가 있는지 이메일을 확인하세요.",
+		"totp_hint": "6자리 인증 코드 또는 8자리 복구 코드를 입력하세요.",
+		"totp_placeholder": "000000 또는 12345678"
 	},
 	"categories": {
 		"category_name": "카테고리 이름",
@@ -506,7 +526,8 @@
 		"update_checklist_details": "체크리스트 편집",
 		"viewing_checklist": "체크리스트보기",
 		"add_new_item": "새 항목을 추가하십시오",
-		"checklist_viewer": "점검표 뷰어"
+		"checklist_viewer": "점검표 뷰어",
+		"more_items": "더 많은 항목"
 	},
 	"collection": {
 		"collection_created": "컬렉션이 성공적으로 생성되었습니다!",
@@ -553,7 +574,46 @@
 		"view_all": "모두보기",
 		"welcome_text_1": "당신은있었습니다",
 		"welcome_text_2": "지금까지 모험",
-		"welcome_text_3": "여행을 계속 탐색하고 문서화하십시오!"
+		"welcome_text_3": "여행을 계속 탐색하고 문서화하십시오!",
+		"active_trip": "현재 여행 중",
+		"activity_highlights": "활동 하이라이트",
+		"greeting_afternoon": "좋은 오후에요",
+		"greeting_evening": "좋은 저녁이에요",
+		"greeting_morning": "좋은 아침이에요",
+		"greeting_night": "안녕히 주무세요",
+		"hero_active_subtitle": "이번 여행의 장소는 {count}개입니다. 추억을 계속 간직하세요",
+		"hero_active_trip": "이동 중입니다 — {name}님이 진행 중입니다",
+		"hero_badge_countries": "{count}개 국가를 탐색했습니다.",
+		"hero_badge_default": "모험로그",
+		"hero_countries": "{count}개 국가를 탐험했습니다. 다음에는 어디로 갈 예정인가요?",
+		"hero_headline": "당신의 모험 허브",
+		"hero_headline_new": "탐험할 준비가 되셨나요?",
+		"hero_location_logged": "지도의 위치 1개 - 스토리에 계속 추가",
+		"hero_locations_logged": "지도에 있는 위치 {count}개 — 스토리에 계속 추가하세요",
+		"hero_next_subtitle": "{days}일 후에 출발 — 기대해볼 시간입니다",
+		"hero_next_trip": "{name}까지 {days}일",
+		"hero_start_journey": "여행 일지가 비어 있습니다. 첫 번째 목적지를 계획할 시간입니다.",
+		"hero_trip_coming_up": "곧",
+		"hero_trip_empty_desc": "컬렉션을 확장하고 다음 탈출 계획을 시작해 보세요.",
+		"hero_trip_empty_title": "곧 여행이 없을 것입니다.",
+		"hero_trip_on_the_road": "길에서",
+		"hero_view_trip": "오픈트립",
+		"locations_visited": "방문한 장소",
+		"my_collections": "내 컬렉션",
+		"next_trip_in": "{days}일 후 다음 여행",
+		"no_active_trip": "현재 진행 중인 여행이 없습니다.",
+		"no_recent_locations": "아직 방문한 장소가 없습니다.",
+		"no_upcoming_trips": "아직 예정된 여행이 없습니다.",
+		"page_description": "집으로 가는 길 — 통계, 예정된 여행, 최근 모험을 한눈에 살펴보세요.",
+		"page_title": "계기반",
+		"pending_invites": "대기 중인 초대",
+		"personal_record": "개인 최고 거리",
+		"quick_links": "빠른 링크",
+		"recently_updated": "최근 업데이트됨",
+		"stats_error": "대시보드 데이터를 로드할 수 없습니다. \n페이지를 새로 고쳐보세요.",
+		"upcoming_trips": "다가오는 여행",
+		"view_profile": "프로필 보기",
+		"whats_next": "다음은 무엇입니까?"
 	},
 	"home": {
 		"desc_1": "쉽고 편리하게 발견하고, 계획하고, 탐험하세요",
@@ -607,7 +667,8 @@
 		"loading_albums": "앨범로드",
 		"no_images": "이미지가 없습니다",
 		"select_album": "앨범을 선택하십시오",
-		"try_different_date": "다른 날짜를 시도하십시오"
+		"try_different_date": "다른 날짜를 시도하십시오",
+		"immich_updated": "Immich 통합이 성공적으로 업데이트되었습니다."
 	},
 	"map": {
 		"clear_marker": "마커 초기화",
@@ -676,7 +737,10 @@
 		"visit_website": "웹사이트",
 		"visits": "방문",
 		"zoom_in": "확대",
-		"zoom_out": "축소"
+		"zoom_out": "축소",
+		"hide_photos": "사진 숨기기",
+		"photos": "사진",
+		"show_photos": "사진 보여주기"
 	},
 	"navbar": {
 		"about": "Adventurelog 소개",
@@ -986,19 +1050,49 @@
 		"media_storage": "미디어 저장",
 		"media_storage_desc": "업로드한 이미지 및 첨부파일의 저장용량 사용량입니다.",
 		"media_total_used": "총 사용",
-		"download_backup": "백업을 다운로드하십시오",
-		"sessions_title": "Active Sessions",
-		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
-		"sessions_current": "This device",
-		"sessions_unknown_device": "Unknown device",
-		"sessions_signed_in": "Signed in",
-		"sessions_revoke": "Sign out",
-		"sessions_revoke_others": "Sign out other devices",
-		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
-		"sessions_empty": "No other active sessions.",
-		"sessions_revoked": "Session signed out.",
-		"sessions_others_revoked": "Other devices signed out.",
-		"sessions_revoke_error": "Could not sign out that session. Try again."
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Google 지도를 사용할 수 없는 경우 대체 지오코딩 및 장소 검색.",
+				"nominatim_features": "위치 검색, 역지오코딩, 좌표 조회에 사용됩니다.",
+				"nominatim_name": "OpenStreetMap 후보",
+				"overpass_desc": "OpenStreetMap 데이터에서 주변 추천 기능을 제공합니다.",
+				"overpass_features": "지도 추천에 사용되며 Google을 사용할 수 없을 때 대체 수단으로 사용됩니다.",
+				"overpass_name": "오픈스트리트맵 고가도로",
+				"sunrise_desc": "위치 방문에 일출 및 일몰 시간을 추가합니다.",
+				"sunrise_features": "방문 날짜별 위치 상세 페이지에 표시됩니다.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "배경 설명과 참조 이미지로 위치를 풍부하게 합니다.",
+				"wikipedia_features": "설명을 생성하고 Wikipedia 사진을 가져올 때 사용됩니다.",
+				"wikipedia_name": "위키피디아"
+			},
+			"builtin_desc": "이러한 데이터 소스는 즉시 AdventureLog를 강화합니다. \n설정이 필요하지 않습니다.",
+			"builtin_title": "내장 서비스",
+			"cancel": "취소",
+			"connect": "연결하다",
+			"disconnect": "연결 끊기",
+			"edit": "편집하다",
+			"google_maps_active_hint": "이 인스턴스에서는 Google 지도가 활성화되어 있습니다. \n장소 검색 및 강화는 가능한 경우 이를 사용합니다.",
+			"google_maps_features": "장소 검색, 지도 세부정보, 빠른 추가 강화 및 주변 추천 기능을 제공합니다.",
+			"instance_desc": "AdventureLog 관리자가 구성한 선택적 서비스입니다.",
+			"instance_title": "인스턴스 서비스",
+			"learn_more": "자세히 알아보기",
+			"summary_builtin": "내장 서비스",
+			"summary_builtin_desc": "모든 인스턴스에서 항상 사용 가능",
+			"summary_instance": "인스턴스 서비스",
+			"summary_instance_desc": "서버 관리자가 활성화했습니다.",
+			"summary_personal": "귀하의 통합",
+			"summary_personal_desc": "귀하의 계정에 연결됨",
+			"update": "업데이트",
+			"included": "포함됨",
+			"personal_desc": "자신의 계정과 자체 호스팅 서비스를 연결하세요.",
+			"personal_title": "귀하의 통합"
+		},
+		"invalid_code": "잘못된 코드",
+		"public_profile_invite_warning": "대기 중인 컬렉션 초대가 {count}개 있습니다. \n프로필을 비공개로 설정하면 프로필이 취소됩니다.",
+		"public_profile_left_collections": "귀하의 프로필은 이제 비공개입니다. \n귀하는 {count}개의 공유 컬렉션에서 삭제되었습니다.",
+		"public_profile_private_confirm": "프로필을 비공개로 설정하면 {shared} 공유 컬렉션에서 귀하가 제거되고 대기 중인 초대 {invites}이 취소됩니다. \n계속하다?",
+		"public_profile_revoked_invites": "보류 중인 컬렉션 초대 {count}개를 취소했습니다.",
+		"public_profile_sharing_warning": "귀하는 현재 {count}개의 컬렉션에서 공유되었습니다. \n프로필을 비공개로 설정하면 해당 컬렉션에서 귀하가 제거됩니다."
 	},
 	"share": {
 		"no_users_shared": "공유한 사용자가 없습니다",
@@ -1054,7 +1148,18 @@
 		"departure_timezone": "출발 시간대"
 	},
 	"users": {
-		"no_users_found": "공개 프로필인 사용자가 없습니다."
+		"no_users_found": "공개 프로필인 사용자가 없습니다.",
+		"browse_options": "찾아보기 옵션",
+		"no_match": "검색어와 일치하는 사용자가 없습니다.",
+		"no_match_desc": "다른 이름을 사용하거나 필터를 지우십시오.",
+		"no_users_desc": "다른 여행자가 자신의 프로필을 공개하면 여기에 표시됩니다.",
+		"overview": "개요",
+		"page_description": "공개 AdventureLog 프로필을 탐색하고 다른 여행자를 찾아보세요.",
+		"public_profile": "공개 프로필",
+		"public_profiles": "공개 프로필",
+		"search_placeholder": "이름이나 사용자 이름으로 검색하세요...",
+		"sort_name": "이름",
+		"sort_recent": "최신"
 	},
 	"worldtravel": {
 		"cities": "도시",
@@ -1159,7 +1264,31 @@
 		"total_events": "총 이벤트",
 		"week": "주",
 		"event timezone": "이벤트 시간대",
-		"your timezone": "귀하의 시간대"
+		"your timezone": "귀하의 시간대",
+		"agenda": "의제",
+		"event": "이벤트",
+		"event_types": "이벤트 유형 표시",
+		"export_error": "캘린더를 내보낼 수 없습니다.",
+		"export_success": "캘린더를 성공적으로 내보냈습니다.",
+		"in_collection": "수집",
+		"load_error": "캘린더 이벤트를 로드할 수 없습니다. \n다시 시도해 보세요.",
+		"more_events": "{count}개 더보기",
+		"no_events_in_range": "이 범위에는 이벤트가 없습니다.",
+		"no_upcoming_events": "필터와 일치하는 예정된 이벤트가 없습니다.",
+		"page_title": "달력",
+		"search_placeholder": "이벤트, 장소, 컬렉션 검색...",
+		"sidebar_title": "필터",
+		"this_month": "이번 달",
+		"timezone_display": "시간 표시",
+		"type_checklist": "체크리스트",
+		"type_collection": "여행",
+		"type_lodging": "하숙",
+		"type_note": "메모",
+		"type_transportation": "수송",
+		"type_visit": "방문",
+		"upcoming": "예정",
+		"upcoming_agenda": "다가오는 이벤트",
+		"view_collection": "컬렉션 보기"
 	},
 	"locations": {
 		"location": "위치",
@@ -1322,5 +1451,37 @@
 		"share_image_failed": "공유 이미지를 생성하지 못했습니다.",
 		"share_native": "공유하다…",
 		"share_native_failed": "공유 실패"
+	},
+	"endurain": {
+		"change_server": "서버 변경",
+		"connect_password": "비밀번호로 연결",
+		"connected": "Endurain에 성공적으로 연결되었습니다.",
+		"connected_as": "{username}(으)로 연결됨",
+		"connection_error": "Endurain 연결 오류",
+		"continue": "계속하다",
+		"credentials_required": "서버 URL, 사용자 이름, 비밀번호가 필요합니다.",
+		"disconnect": "연결 끊기",
+		"disconnect_error": "Endurain 연결 해제 오류",
+		"disconnected": "Endurain 연결이 끊어졌습니다.",
+		"endurain_integration_desc": "자체 호스팅 Endurain 인스턴스를 연결하여 활동을 찾아보고 방문으로 가져옵니다.",
+		"localhost_note": "Endurain 서버는 AdventureLog 서버에서 연결할 수 있어야 합니다(localhost는 Docker에서 작동하지 않을 수 있음).",
+		"mfa_code": "MFA 코드",
+		"mfa_code_required": "MFA 코드가 필요합니다",
+		"mfa_required": "로그인을 완료하려면 MFA 코드를 입력하세요.",
+		"not_connected": "Endurain이 연결되지 않았습니다",
+		"password": "비밀번호",
+		"server_url": "서버 URL",
+		"server_url_required": "서버 URL이 필요합니다",
+		"username": "사용자 이름",
+		"verify_mfa": "MFA 확인"
+	},
+	"images": {
+		"map_pin_title": "사진 위치",
+		"source": {
+			"google": "Google 지도의 사진",
+			"immich": "이미히의 사진",
+			"url": "외부 URL의 사진",
+			"wikipedia": "위키피디아의 사진"
+		}
 	}
 }

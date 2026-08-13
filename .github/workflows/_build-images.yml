@@ -78,7 +78,9 @@ jobs:
 
   build-frontend:
     needs: changes
-    if: ${{ !inputs.filter_paths || needs.changes.outputs.frontend == 'true' }}
+    # !cancelled() is required so builds still run when `changes` is skipped
+    # (filter_paths: false on release). Without it, GitHub skips dependents of skipped jobs.
+    if: ${{ !cancelled() && (!inputs.filter_paths || needs.changes.outputs.frontend == 'true') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       context: .
@@ -91,7 +93,7 @@ jobs:
 
   build-backend:
     needs: changes
-    if: ${{ !inputs.filter_paths || needs.changes.outputs.backend == 'true' }}
+    if: ${{ !cancelled() && (!inputs.filter_paths || needs.changes.outputs.backend == 'true') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       context: .
@@ -104,7 +106,7 @@ jobs:
 
   build-aio:
     needs: changes
-    if: ${{ !inputs.filter_paths || needs.changes.outputs.aio == 'true' }}
+    if: ${{ !cancelled() && (!inputs.filter_paths || needs.changes.outputs.aio == 'true') }}
     uses: ./.github/workflows/_build-image.yml
     with:
       context: .

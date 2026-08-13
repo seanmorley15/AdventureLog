@@ -24,8 +24,10 @@
 	import { goto } from '$app/navigation';
 	import Calendar from '~icons/mdi/calendar';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	let isActionsMenuOpen = false;
+	let openUpward = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
@@ -100,6 +102,7 @@
 	export let collection: Collection | null = null;
 	export let readOnly: boolean = false;
 	export let itineraryItem: CollectionItineraryItem | null = null;
+	export let isMultiDay: boolean = false;
 
 	let isWarningModalOpen: boolean = false;
 
@@ -213,6 +216,7 @@
 					<div
 						class="dropdown dropdown-end relative z-50"
 						class:dropdown-open={isActionsMenuOpen}
+						class:dropdown-top={openUpward}
 						bind:this={actionsMenuRef}
 					>
 						<button
@@ -225,6 +229,7 @@
 									return;
 								}
 								closeAllLodgingMenus();
+								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
 							}}
 						>
@@ -232,7 +237,7 @@
 						</button>
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 						>
 							<li>
 								<button
@@ -464,6 +469,26 @@
 
 		<!-- Rating & Info Badges -->
 		<div class="flex flex-wrap items-center gap-2 text-sm">
+			{#if isMultiDay}
+				<span class="badge badge-info badge-sm gap-1">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-3 w-3"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+						/>
+					</svg>
+					{$t('itinerary.multi_day')}
+				</span>
+			{/if}
+
 			{#if lodging.rating}
 				<div class="flex items-center gap-1">
 					<div class="flex -ml-1">

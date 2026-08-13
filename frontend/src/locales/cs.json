@@ -46,7 +46,8 @@
 		"generic_attributions": "Přihlaste se do AdventureLog pro zobrazení atributů pro povolené integrace a služby.",
 		"message": "Vyrobeno s ❤️ ve Spojených státech.",
 		"nominatim_1": "Lokalizační vyhledávání a geokódování zajišťuje",
-		"other_attributions": "Další atributy lze nalézt v souboru README."
+		"other_attributions": "Další atributy lze nalézt v souboru README.",
+		"copy_version": "Kopírovat verzi"
 	},
 	"home": {
 		"hero_1": "Objevte svět nejvíce vzrušující dobrodružství",
@@ -497,7 +498,24 @@
 		"created": "Vytvořeno",
 		"current_attachments": "Aktuální přílohy",
 		"show_filters": "Zobrazit filtry",
-		"sort": "Seřadit"
+		"sort": "Seřadit",
+		"endurain_activities_during_visit": "Endurain aktivity během návštěvy",
+		"endurain_import_success": "Aktivita importovaná z Endurainu",
+		"google_photos_available": "Počet dostupných fotek Google: {count}",
+		"google_photos_import_all": "Importujte vše z Googlu",
+		"google_photos_import_error": "Fotky Google nelze importovat",
+		"google_photos_import_selected": "Import vybrán",
+		"google_photos_import_success": "Fotky Google byly úspěšně importovány",
+		"google_photos_importing": "Import fotek Google…",
+		"google_photos_select_hint": "Vyberte fotografie, které chcete importovat, nebo importujte všechny najednou.",
+		"hide_endurain_activities": "Skrýt Endurain aktivity",
+		"importing_endurain_activity": "Import aktivity z Endurainu...",
+		"loading_sunrise_sunset": "Načítání východu slunce",
+		"no_endurain_activities": "Během této návštěvy nebyly nalezeny žádné aktivity Endurain",
+		"show_endurain_activities": "Zobrazit Endurain aktivity",
+		"show_sunrise_sunset": "Zobrazit východ slunce",
+		"sunrise_sunset_load_error": "Nelze načíst časy východu a západu slunce",
+		"view_endurain_activities": "Zobrazit aktivity Endurain"
 	},
 	"api_keys": {
 		"copied": "Zkopírováno!",
@@ -547,7 +565,9 @@
 		"user_collections": "Sbírky uživatelů",
 		"user_email_verification_required": "Vyžaduje se ověření e-mailem. \nZkontrolujte prosím svůj e-mail, kde najdete ověřovací odkaz.",
 		"user_locations": "Umístění uživatelů",
-		"username": "Uživatelské jméno"
+		"username": "Uživatelské jméno",
+		"totp_hint": "Zadejte 6místný ověřovací kód nebo 8místný obnovovací kód.",
+		"totp_placeholder": "000000 nebo 12345678"
 	},
 	"calendar": {
 		"all_day_event": "Celodenní akce",
@@ -560,7 +580,31 @@
 		"today": "Dnes",
 		"total_events": "Celkem událostí",
 		"week": "Týden",
-		"your timezone": "Vaše časové pásmo"
+		"your timezone": "Vaše časové pásmo",
+		"agenda": "Agenda",
+		"event": "Událost",
+		"event_types": "Zobrazit typy událostí",
+		"export_error": "Kalendář se nepodařilo exportovat.",
+		"export_success": "Kalendář byl úspěšně exportován.",
+		"in_collection": "Sbírka",
+		"load_error": "Události kalendáře se nepodařilo načíst. \nZkuste to znovu.",
+		"more_events": "ještě {count}",
+		"no_events_in_range": "Žádné události v tomto rozsahu.",
+		"no_upcoming_events": "Vašim filtrům neodpovídají žádné nadcházející události.",
+		"page_title": "Kalendář",
+		"search_placeholder": "Hledat události, místa, sbírky...",
+		"sidebar_title": "Filtry",
+		"this_month": "Tento měsíc",
+		"timezone_display": "Zobrazení času",
+		"type_checklist": "Kontrolní seznamy",
+		"type_collection": "Výlety",
+		"type_lodging": "Ubytování",
+		"type_note": "Poznámky",
+		"type_transportation": "Doprava",
+		"type_visit": "Návštěvy",
+		"upcoming": "Nadcházející",
+		"upcoming_agenda": "Nadcházející události",
+		"view_collection": "Zobrazit sbírku"
 	},
 	"categories": {
 		"add_new_category": "Přidat novou kategorii",
@@ -593,7 +637,8 @@
 		"new_item": "Nová položka",
 		"no_items_yet": "Zatím žádné položky",
 		"update_checklist_details": "Kontrolní seznam úprav",
-		"viewing_checklist": "Zobrazení kontrolního seznamu"
+		"viewing_checklist": "Zobrazení kontrolního seznamu",
+		"more_items": "Další položky"
 	},
 	"collection": {
 		"archived_appear_here": "Zde se zobrazí archivované sbírky.",
@@ -684,7 +729,46 @@
 		"welcome_back": "Vítejte zpět",
 		"welcome_text_1": "Byli jste na",
 		"welcome_text_2": "dosavadní dobrodružství",
-		"welcome_text_3": "Pokračujte ve zkoumání a dokumentování svých cest!"
+		"welcome_text_3": "Pokračujte ve zkoumání a dokumentování svých cest!",
+		"active_trip": "Momentálně na cestách",
+		"activity_highlights": "Nejdůležitější aktivity",
+		"greeting_afternoon": "Dobré odpoledne",
+		"greeting_evening": "Dobrý večer",
+		"greeting_morning": "Dobré ráno",
+		"greeting_night": "Dobrou noc",
+		"hero_active_subtitle": "{count} míst na této cestě – nechte si vzpomínky",
+		"hero_active_trip": "Jste na cestě — {name} právě probíhá",
+		"hero_badge_countries": "{count} prozkoumaných zemí",
+		"hero_badge_default": "AdventureLog",
+		"hero_countries": "Prozkoumali jste {count} zemí – kam se vydáte příště?",
+		"hero_headline": "Vaše centrum dobrodružství",
+		"hero_headline_new": "Jste připraveni prozkoumat?",
+		"hero_location_logged": "1 místo na vaší mapě – pokračujte v přidávání do příběhu",
+		"hero_locations_logged": "{count} míst na vaší mapě – pokračujte v přidávání do příběhu",
+		"hero_next_subtitle": "Odjezd za {days} d – čas na vzrušení",
+		"hero_next_trip": "{days} dní do {name}",
+		"hero_start_journey": "Váš cestovní deník je prázdný – čas naplánovat si první zastávku",
+		"hero_trip_coming_up": "Blíží se",
+		"hero_trip_empty_desc": "Roztočte sbírku a začněte plánovat svůj další útěk",
+		"hero_trip_empty_title": "Žádné výlety na obzoru",
+		"hero_trip_on_the_road": "Na cestě",
+		"hero_view_trip": "Otevřený výlet",
+		"locations_visited": "Navštívená místa",
+		"my_collections": "Moje sbírky",
+		"next_trip_in": "Další cesta za {days} d",
+		"no_active_trip": "Momentálně neprobíhá žádná cesta.",
+		"no_recent_locations": "Zatím žádná navštívená místa.",
+		"no_upcoming_trips": "Zatím nejsou naplánovány žádné nadcházející výlety.",
+		"page_description": "Vaše cesta domů – statistiky, nadcházející cesty a nedávná dobrodružství na první pohled.",
+		"page_title": "Dashboard",
+		"pending_invites": "Nevyřízené pozvánky",
+		"personal_record": "Osobní nejlepší vzdálenost",
+		"quick_links": "Rychlé odkazy",
+		"recently_updated": "Nedávno aktualizováno",
+		"stats_error": "Nepodařilo se načíst data vašeho hlavního panelu. \nZkuste obnovit stránku.",
+		"upcoming_trips": "Nadcházející výlety",
+		"view_profile": "Zobrazit profil",
+		"whats_next": "Co bude dál?"
 	},
 	"google_maps": {
 		"google_maps_integration_desc": "Připojte svůj účet Map Google a získejte vysoce kvalitní výsledky vyhledávání polohy a doporučení.",
@@ -724,7 +808,8 @@
 		"server_url": "Adresa URL serveru Immich",
 		"try_different_date": "Zkuste jiné datum",
 		"update_integration": "Aktualizovat integraci",
-		"validation_error": "Při ověřování integrace Immich došlo k chybě. \nZkontrolujte prosím adresu URL serveru a klíč API."
+		"validation_error": "Při ověřování integrace Immich došlo k chybě. \nZkontrolujte prosím adresu URL serveru a klíč API.",
+		"immich_updated": "Integrace Immich byla úspěšně aktualizována"
 	},
 	"invites": {
 		"accept": "Přijmout",
@@ -869,7 +954,10 @@
 		"visit_website": "webové stránky",
 		"visits": "Návštěvy",
 		"zoom_in": "Přiblížit",
-		"zoom_out": "Oddálit"
+		"zoom_out": "Oddálit",
+		"hide_photos": "Skrýt fotky",
+		"photos": "Fotografie",
+		"show_photos": "Ukaž fotky"
 	},
 	"notes": {
 		"content": "Obsah",
@@ -1147,19 +1235,49 @@
 		"verify_setup": "Ověřte nastavení",
 		"whats_included": "Co je zahrnuto",
 		"world_travel_visits": "Cestování po světě",
-		"download_backup": "Stáhněte si zálohu",
-		"sessions_title": "Active Sessions",
-		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
-		"sessions_current": "This device",
-		"sessions_unknown_device": "Unknown device",
-		"sessions_signed_in": "Signed in",
-		"sessions_revoke": "Sign out",
-		"sessions_revoke_others": "Sign out other devices",
-		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
-		"sessions_empty": "No other active sessions.",
-		"sessions_revoked": "Session signed out.",
-		"sessions_others_revoked": "Other devices signed out.",
-		"sessions_revoke_error": "Could not sign out that session. Try again."
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_desc": "Záložní geokódování a vyhledávání míst, když jsou Mapy Google nedostupné.",
+				"nominatim_features": "Používá se pro vyhledávání polohy, zpětné geokódování a vyhledávání souřadnic.",
+				"nominatim_name": "Nominace OpenStreetMap",
+				"overpass_desc": "Podporuje doporučení v okolí z dat OpenStreetMap.",
+				"overpass_features": "Používá se pro doporučení map a jako záložní řešení, když je Google nedostupný.",
+				"overpass_name": "Nadjezd OpenStreetMap",
+				"sunrise_desc": "Přidává časy východu a západu slunce k vašim návštěvám místa.",
+				"sunrise_features": "Zobrazeno na stránkách s podrobnostmi o místě pro každé datum návštěvy.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Obohacuje místa o popisy na pozadí a referenční obrázky.",
+				"wikipedia_features": "Používá se při generování popisů a importu fotografií z Wikipedie.",
+				"wikipedia_name": "Wikipedie"
+			},
+			"builtin_desc": "Tyto zdroje dat pohání AdventureLog hned po vybalení. \nNení potřeba žádné nastavení.",
+			"builtin_title": "Vestavěné služby",
+			"cancel": "Zrušit",
+			"connect": "Připojit",
+			"disconnect": "Odpojit",
+			"edit": "Upravit",
+			"google_maps_active_hint": "Mapy Google jsou v tomto případě aktivní. \nHledání místa a obohacování ho použijte, pokud je k dispozici.",
+			"google_maps_features": "Vyhledávání míst, detaily mapy, rychlé přidání obohacení a doporučení v okolí.",
+			"included": "V ceně",
+			"instance_desc": "Volitelné služby nakonfigurované vaším administrátorem AdventureLog.",
+			"instance_title": "Instanční služby",
+			"learn_more": "Zjistěte více",
+			"personal_desc": "Propojte své vlastní účty a samoobslužné služby.",
+			"personal_title": "Vaše integrace",
+			"summary_builtin": "Vestavěné služby",
+			"summary_builtin_desc": "Vždy k dispozici v každém případě",
+			"summary_instance": "Instanční služby",
+			"summary_instance_desc": "Povoleno administrátorem serveru",
+			"summary_personal": "Vaše integrace",
+			"summary_personal_desc": "Propojeno s vaším účtem",
+			"update": "Aktualizovat"
+		},
+		"invalid_code": "Neplatný kód",
+		"public_profile_invite_warning": "Počet nevyřízených pozvánek do sbírky: {count}. \nNastavením vašeho profilu na soukromý je zrušíte.",
+		"public_profile_left_collections": "Váš profil je nyní soukromý. \nByli jste odebráni z {count} sdílených sbírek.",
+		"public_profile_private_confirm": "Nastavíte-li svůj profil jako soukromý, odeberete se ze sdílených sbírek (celkem {shared}) a zrušíte nevyřízené pozvánky (celkem {invites}). \nPokračovat?",
+		"public_profile_revoked_invites": "Zrušeno {count} nevyřízených pozvánek do sbírky.",
+		"public_profile_sharing_warning": "Momentálně jste sdíleni v {count} sbírkách. \nNastavíte-li svůj profil jako soukromý, odeberete se z těchto sbírek."
 	},
 	"share": {
 		"available": "K dispozici",
@@ -1243,7 +1361,18 @@
 		"update_transportation_details": "Aktualizujte podrobnosti o dopravě"
 	},
 	"users": {
-		"no_users_found": "Nebyli nalezeni žádní uživatelé s veřejnými profily."
+		"no_users_found": "Nebyli nalezeni žádní uživatelé s veřejnými profily.",
+		"browse_options": "Možnosti procházení",
+		"no_match": "Vašemu vyhledávání neodpovídají žádní uživatelé",
+		"no_match_desc": "Zkuste jiný název nebo vymažte filtry.",
+		"no_users_desc": "Když ostatní cestovatelé zveřejní své profily, zobrazí se zde.",
+		"overview": "Přehled",
+		"page_description": "Procházejte veřejné profily AdventureLog a objevujte další cestovatele.",
+		"public_profile": "Veřejný profil",
+		"public_profiles": "Veřejné profily",
+		"search_placeholder": "Hledat podle jména nebo uživatelského jména...",
+		"sort_name": "Jméno",
+		"sort_recent": "Nejnovější"
 	},
 	"wanderer": {
 		"api_key": "Klíč API",
@@ -1322,5 +1451,37 @@
 		"visit_remove_failed": "Návštěvu se nepodařilo odstranit",
 		"visit_to": "Návštěva",
 		"your_random_adventure_awaits": "Vaše náhodné dobrodružství čeká!"
+	},
+	"endurain": {
+		"change_server": "Změnit server",
+		"connect_password": "Připojte se heslem",
+		"connected": "Úspěšně připojeno k Endurainu",
+		"connected_as": "Připojeno jako {username}",
+		"connection_error": "Chyba při připojování k Endurainu",
+		"continue": "Pokračovat",
+		"credentials_required": "Je vyžadována adresa URL serveru, uživatelské jméno a heslo",
+		"disconnect": "Odpojit",
+		"disconnect_error": "Chyba při odpojování Endurainu",
+		"disconnected": "Endurain odpojen",
+		"endurain_integration_desc": "Připojte svou vlastní hostovanou instanci Endurain, abyste mohli procházet aktivity a importovat je do návštěv",
+		"localhost_note": "Server Endurain musí být dostupný ze serveru AdventureLog (localhost nemusí fungovat v Dockeru).",
+		"mfa_code": "kód MFA",
+		"mfa_code_required": "Je vyžadován kód MFA",
+		"mfa_required": "Dokončete přihlášení zadáním kódu MFA",
+		"not_connected": "Endurain není připojen",
+		"password": "Heslo",
+		"server_url": "Adresa URL serveru",
+		"server_url_required": "Adresa URL serveru je povinná",
+		"username": "Uživatelské jméno",
+		"verify_mfa": "Ověřte MFA"
+	},
+	"images": {
+		"map_pin_title": "Umístění fotografie",
+		"source": {
+			"google": "Fotografie z Google Maps",
+			"immich": "Foto z Immich",
+			"url": "Fotografie z externí adresy URL",
+			"wikipedia": "Foto z Wikipedie"
+		}
 	}
 }

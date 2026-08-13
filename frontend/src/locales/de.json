@@ -455,7 +455,17 @@
 		"google_photos_importing": "Importiere Google Fotos…",
 		"google_photos_import_success": "Google Fotos erfolgreich importiert",
 		"google_photos_import_error": "Google Fotos konnten nicht importiert werden",
-		"google_photos_select_hint": "Wähle die Fotos aus die du importieren möchtest oder importiere alle auf einmal."
+		"google_photos_select_hint": "Wähle die Fotos aus die du importieren möchtest oder importiere alle auf einmal.",
+		"endurain_activities_during_visit": "Endurain-Aktivitäten während des Besuchs",
+		"endurain_import_success": "Von Endurain importierte Aktivität",
+		"hide_endurain_activities": "Endurain-Aktivitäten ausblenden",
+		"importing_endurain_activity": "Aktivität aus Endurain importieren...",
+		"loading_sunrise_sunset": "Sonnenaufgang wird geladen",
+		"no_endurain_activities": "Während dieses Besuchs wurden keine Endurain-Aktivitäten gefunden",
+		"show_endurain_activities": "Endurain-Aktivitäten anzeigen",
+		"show_sunrise_sunset": "Sonnenaufgang anzeigen",
+		"sunrise_sunset_load_error": "Sonnenauf- und -untergangszeiten konnten nicht geladen werden",
+		"view_endurain_activities": "Endurain-Aktivitäten ansehen"
 	},
 	"home": {
 		"desc_1": "Entdecke, plane und erkunde mühelos",
@@ -531,7 +541,9 @@
 		"enter_username": "Gib deinen Benutzernamen ein",
 		"logging_in": "Anmelden",
 		"totp": "Zwei-Faktor-Code",
-		"user_email_verification_required": "E-Mail-Bestätigung erforderlich. Bitte überprüfe deine E-Mail auf einen Bestätigungslink."
+		"user_email_verification_required": "E-Mail-Bestätigung erforderlich. Bitte überprüfe deine E-Mail auf einen Bestätigungslink.",
+		"totp_hint": "Geben Sie einen 6-stelligen Authentifizierungscode oder einen 8-stelligen Wiederherstellungscode ein.",
+		"totp_placeholder": "000000 oder 12345678"
 	},
 	"users": {
 		"no_users_found": "Keine Benutzer mit öffentlichem Profil gefunden.",
@@ -770,19 +782,44 @@
 		"public_profile_private_confirm": "Wenn du dein Profil auf Privat stellst wirst du von {shared} geteilten Sammlung(en) entfernt und {invites} ausstehende Einladung(en) werden storniert. Fortfahren?",
 		"public_profile_left_collections": "Dein Profil ist jetzt privat. Du wurdest von {count} geteiltenSammlung(en) entfernt.",
 		"public_profile_revoked_invites": "{count} ausstehende Sammlungseinladung(en) storniert.",
-		"download_backup": "Sicherung herunterladen",
-		"sessions_title": "Active Sessions",
-		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
-		"sessions_current": "This device",
-		"sessions_unknown_device": "Unknown device",
-		"sessions_signed_in": "Signed in",
-		"sessions_revoke": "Sign out",
-		"sessions_revoke_others": "Sign out other devices",
-		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
-		"sessions_empty": "No other active sessions.",
-		"sessions_revoked": "Session signed out.",
-		"sessions_others_revoked": "Other devices signed out.",
-		"sessions_revoke_error": "Could not sign out that session. Try again."
+		"integrations_hub": {
+			"builtin": {
+				"nominatim_features": "Wird für die Standortsuche, die umgekehrte Geokodierung und die Koordinatensuche verwendet.",
+				"nominatim_name": "OpenStreetMap Nominatim",
+				"overpass_desc": "Unterstützt Empfehlungen in der Nähe aus OpenStreetMap-Daten.",
+				"overpass_features": "Wird für Kartenempfehlungen und als Ersatz verwendet, wenn Google nicht verfügbar ist.",
+				"overpass_name": "OpenStreetMap-Überführung",
+				"sunrise_desc": "Fügt Ihren Standortbesuchen Sonnenauf- und -untergangszeiten hinzu.",
+				"sunrise_features": "Wird auf den Standortdetailseiten für jedes Besuchsdatum angezeigt.",
+				"sunrise_name": "SunriseSunset.io",
+				"wikipedia_desc": "Bereichert Standorte mit Hintergrundbeschreibungen und Referenzbildern.",
+				"wikipedia_features": "Wird beim Generieren von Beschreibungen und beim Importieren von Wikipedia-Fotos verwendet.",
+				"wikipedia_name": "Wikipedia",
+				"nominatim_desc": "Ersatz-Geokodierung und Ortssuche, wenn Google Maps nicht verfügbar ist."
+			},
+			"builtin_desc": "Diese Datenquellen unterstützen AdventureLog sofort. \nEs ist keine Einrichtung erforderlich.",
+			"builtin_title": "Integrierte Dienste",
+			"cancel": "Stornieren",
+			"connect": "Verbinden",
+			"disconnect": "Trennen",
+			"edit": "Bearbeiten",
+			"google_maps_active_hint": "Google Maps ist auf dieser Instanz aktiv. \nOrtssuche und -anreicherung verwenden, sofern verfügbar.",
+			"google_maps_features": "Ortssuche, Kartendetails, Quick-Add-Anreicherung und Empfehlungen in der Nähe.",
+			"included": "Im Lieferumfang enthalten",
+			"instance_desc": "Optionale Dienste, die von Ihrem AdventureLog-Administrator konfiguriert werden.",
+			"instance_title": "Instanzdienste",
+			"learn_more": "Erfahren Sie mehr",
+			"personal_desc": "Verbinden Sie Ihre eigenen Konten und selbst gehosteten Dienste.",
+			"personal_title": "Ihre Integrationen",
+			"summary_builtin": "Integrierte Dienste",
+			"summary_builtin_desc": "Immer auf jeder Instanz verfügbar",
+			"summary_instance": "Instanzdienste",
+			"summary_instance_desc": "Wird von Ihrem Serveradministrator aktiviert",
+			"summary_personal": "Ihre Integrationen",
+			"summary_personal_desc": "Mit Ihrem Konto verknüpft",
+			"update": "Aktualisieren"
+		},
+		"invalid_code": "Ungültiger Code"
 	},
 	"checklist": {
 		"checklist_delete_error": "Fehler beim Löschen der Checkliste",
@@ -1423,5 +1460,28 @@
 			"immich": "Foto von Immich",
 			"url": "Foto von externer URL"
 		}
+	},
+	"endurain": {
+		"change_server": "Server wechseln",
+		"connect_password": "Mit Passwort verbinden",
+		"connected": "Erfolgreich mit Endurain verbunden",
+		"connected_as": "Verbunden als {Benutzername}",
+		"connection_error": "Fehler beim Herstellen einer Verbindung zu Endurain",
+		"continue": "Weitermachen",
+		"credentials_required": "Server-URL, Benutzername und Passwort sind erforderlich",
+		"disconnect": "Trennen",
+		"disconnect_error": "Fehler beim Trennen von Endurain",
+		"disconnected": "Endurain nicht angeschlossen",
+		"endurain_integration_desc": "Verbinden Sie Ihre selbst gehostete Endurain-Instanz, um Aktivitäten zu durchsuchen und diese in Besuche zu importieren",
+		"localhost_note": "Der Endurain-Server muss vom AdventureLog-Server aus erreichbar sein (localhost funktioniert möglicherweise nicht in Docker).",
+		"mfa_code": "MFA-Code",
+		"mfa_code_required": "MFA-Code ist erforderlich",
+		"mfa_required": "Geben Sie Ihren MFA-Code ein, um die Anmeldung abzuschließen",
+		"not_connected": "Endurain ist nicht angeschlossen",
+		"password": "Passwort",
+		"server_url": "Server-URL",
+		"server_url_required": "Server-URL ist erforderlich",
+		"username": "Benutzername",
+		"verify_mfa": "Überprüfen Sie die MFA"
 	}
 }

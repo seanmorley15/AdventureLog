@@ -36,6 +36,7 @@
 	import { addToast } from '$lib/toasts';
 	import { isVisitAllDay } from '$lib';
 	import Globe from '~icons/mdi/globe';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	export let collection: Collection;
 	export let user: any;
@@ -2058,7 +2059,14 @@
 							{/if}
 
 							{#if canModify}
-								<div class="dropdown dropdown-end z-30">
+								<div
+									class="dropdown dropdown-end z-30"
+									role="group"
+									on:pointerdown={(e) => {
+										const el = e.currentTarget;
+										el.classList.toggle('dropdown-top', shouldFlipDropdownUp(el));
+									}}
+								>
 									<div
 										tabindex="0"
 										role="button"
@@ -2071,7 +2079,7 @@
 									</div>
 									<ul
 										tabindex="-1"
-										class="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-56"
+										class="dropdown-content menu p-2 shadow bg-base-300 rounded-box w-56 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 										role="menu"
 									>
 										<li>
@@ -2241,29 +2249,6 @@
 												</div>
 											</div> -->
 
-											<!-- Multi-day indicator for lodging -->
-											{#if multiDay && objectType === 'lodging'}
-												<div class="absolute left-2 bottom-2 z-10">
-													<div class="badge badge-info badge-xs gap-1 shadow-sm">
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															class="h-3 w-3"
-															fill="none"
-															viewBox="0 0 24 24"
-															stroke="currentColor"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																stroke-width="2"
-																d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-															/>
-														</svg>
-														<span class="text-xs">{$t('itinerary.multi_day')}</span>
-													</div>
-												</div>
-											{/if}
-
 											<!-- Card with smooth transition and proper sizing for grid -->
 											<div class="transition-all duration-200 h-full">
 												<!-- Display the appropriate card based on type -->
@@ -2311,6 +2296,7 @@
 														{user}
 														{collection}
 														itineraryItem={item}
+														isMultiDay={multiDay}
 														on:delete={handleItemDelete}
 														on:removeFromItinerary={handleRemoveItineraryItem}
 														on:edit={handleEditLodging}
