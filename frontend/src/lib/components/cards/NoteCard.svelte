@@ -22,8 +22,10 @@
 	import Close from '~icons/mdi/close';
 	import Globe from '~icons/mdi/globe';
 	import type { CollectionItineraryItem } from '$lib/types';
+	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
 	let isActionsMenuOpen = false;
+	let openUpward = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
 	const handleCloseEvent = () => (isActionsMenuOpen = false);
@@ -208,6 +210,7 @@
 					<div
 						class="dropdown dropdown-end relative z-50"
 						class:dropdown-open={isActionsMenuOpen}
+						class:dropdown-top={openUpward}
 						bind:this={actionsMenuRef}
 					>
 						<button
@@ -220,6 +223,7 @@
 									return;
 								}
 								closeAllNoteMenus();
+								openUpward = shouldFlipDropdownUp(actionsMenuRef);
 								isActionsMenuOpen = true;
 							}}
 						>
@@ -227,7 +231,7 @@
 						</button>
 						<ul
 							tabindex="-1"
-							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300"
+							class="dropdown-content menu bg-base-100 rounded-box z-[9999] w-52 p-2 shadow-lg border border-base-300 max-h-[min(24rem,calc(100vh-2rem))] overflow-y-auto"
 						>
 							<li>
 								<button
