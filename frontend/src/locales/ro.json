@@ -1255,7 +1255,6 @@
 		"public_profile_revoked_invites": "Au fost anulate {count} invitații de colectare în așteptare.",
 		"public_profile_sharing_warning": "În prezent, sunteți distribuit în {count} colecții. \nDacă vă faceți profilul privat, veți elimina din acele colecții."
 	},
-	"settings_download_backup": "Descărcați Backup",
 	"share": {
 		"available": "Disponibil",
 		"available_users": "Utilizatori disponibili",

@@ -279,10 +279,10 @@
 
 		{#if data.user && cloudMode && subscription}
 			{#if showExpiredCta}
-				<a href="/subscribe" class="btn btn-warning btn-sm">Access paused</a>
+				<a href="/subscribe" class="btn btn-warning btn-sm">{$t('navbar.access_paused')}</a>
 			{:else if showTrialCta}
 				<a href="/subscribe" class="btn btn-primary btn-sm">
-					Trial: {daysRemaining ?? 0}d left
+					{$t('navbar.trial_days_left', { values: { days: daysRemaining ?? 0 } })}
 				</a>
 			{/if}
 		{/if}

@@ -1279,7 +1279,6 @@
 		"public_profile_revoked_invites": "Zrušeno {count} nevyřízených pozvánek do sbírky.",
 		"public_profile_sharing_warning": "Momentálně jste sdíleni v {count} sbírkách. \nNastavíte-li svůj profil jako soukromý, odeberete se z těchto sbírek."
 	},
-	"settings_download_backup": "Stáhněte si zálohu",
 	"share": {
 		"available": "K dispozici",
 		"available_users": "Dostupní uživatelé",

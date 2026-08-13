@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { page } from '$app/stores';
+	import { t } from 'svelte-i18n';
 	import type { Subscription } from '$lib/types';
 
 	export let subscription: Subscription | null = null;
@@ -14,45 +16,59 @@
 	$: isTrial = subscription?.status === 'trial';
 	$: hasScheduledSubscription = Boolean(subscription?.stripe_subscription_id);
 	$: isPaidTrial = isTrial && hasScheduledSubscription;
+	$: hideOnBillingPage = $page.url.pathname.startsWith('/subscribe');
 </script>
 
-{#if cloudMode && subscription}
+{#if cloudMode && subscription && !hideOnBillingPage}
 	{#if !hasAccess}
-		<div role="alert" class="alert alert-warning rounded-none border-b border-warning/40">
+		<div role="alert" class="alert alert-warning rounded-none border-b border-warning/40 shadow-sm">
 			<div>
-				<p class="font-semibold">Your AdventureLog Cloud access is paused.</p>
-				<p class="text-sm opacity-80">
-					Subscribe to restore full access and keep your data in sync.
-				</p>
+				<p class="font-semibold">{$t('billing.banner_access_paused_title')}</p>
+				<p class="text-sm opacity-80">{$t('billing.banner_access_paused_description')}</p>
 			</div>
-			<a href="/subscribe" class="btn btn-primary btn-sm">Subscribe</a>
+			<a href="/subscribe" class="btn btn-primary btn-sm">{$t('billing.banner_subscribe')}</a>
 		</div>
 	{:else if isPaidTrial}
-		<div role="alert" class="alert alert-success rounded-none border-b border-success/40">
+		<div role="alert" class="alert alert-success rounded-none border-b border-success/40 shadow-sm">
 			<div>
-				<p class="font-semibold">Subscription scheduled.</p>
+				<p class="font-semibold">{$t('billing.banner_scheduled_title')}</p>
 				<p class="text-sm opacity-80">
 					{#if trialEndsAt}
-						Paid billing starts on {trialEndsAt.toLocaleDateString()}.
+						{$t('billing.banner_scheduled_description', {
+							values: {
+								date: trialEndsAt.toLocaleDateString(undefined, {
+									year: 'numeric',
+									month: 'long',
+									day: 'numeric'
+								})
+							}
+						})}
 					{:else}
-						Paid billing will start after your trial ends.
+						{$t('billing.banner_scheduled_description_fallback')}
 					{/if}
 				</p>
 			</div>
 		</div>
 	{:else if isTrial}
-		<div role="alert" class="alert alert-info rounded-none border-b border-info/40">
+		<div role="alert" class="alert alert-info rounded-none border-b border-info/40 shadow-sm">
 			<div>
-				<p class="font-semibold">AdventureLog Cloud trial active.</p>
+				<p class="font-semibold">{$t('billing.banner_trial_active_title')}</p>
 				<p class="text-sm opacity-80">
 					{#if daysRemaining !== null}
-						{daysRemaining} day{daysRemaining === 1 ? '' : 's'} remaining in your trial.
+						{$t(
+							daysRemaining === 1
+								? 'billing.banner_trial_active_description_one'
+								: 'billing.banner_trial_active_description_other',
+							{ values: { days: daysRemaining } }
+						)}
 					{:else}
-						Your trial is active.
+						{$t('billing.alert_trial_active_description', {
+							values: { days: 0, count: 0 }
+						})}
 					{/if}
 				</p>
 			</div>
-			<a href="/subscribe" class="btn btn-primary btn-sm">Manage billing</a>
+			<a href="/subscribe" class="btn btn-primary btn-sm">{$t('billing.banner_manage_billing')}</a>
 		</div>
 	{/if}
 {/if}

@@ -1279,7 +1279,6 @@
 		"public_profile_revoked_invites": "S'han cancel·lat {count} invitacions pendents de recollida.",
 		"public_profile_sharing_warning": "Actualment estàs compartit en {count} col·leccions. \nSi feu que el vostre perfil sigui privat, us eliminarà d'aquestes col·leccions."
 	},
-	"settings_download_backup": "Descarrega la còpia de seguretat",
 	"share": {
 		"available": "Disponible",
 		"available_users": "Usuaris disponibles",

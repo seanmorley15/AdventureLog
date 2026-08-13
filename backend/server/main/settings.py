@@ -64,7 +64,6 @@ INSTALLED_APPS = (
     'storages',
     'django.contrib.sites',
     'rest_framework',
-    'rest_framework.authtoken',
     'allauth',
     'allauth.account',
     'allauth.mfa',
@@ -72,6 +71,7 @@ INSTALLED_APPS = (
     'allauth.socialaccount',
     'allauth.socialaccount.providers.github',
     'allauth.socialaccount.providers.openid_connect',
+    'allauth.usersessions',
     'invitations',
     'drf_yasg',
     'djmoney',
@@ -86,6 +86,7 @@ INSTALLED_APPS = (
     # 'achievements', # Not done yet, will be added later in a future update
     'widget_tweaks',
     'slippers',
+    'django.contrib.humanize',
 
 )
 
@@ -94,16 +95,14 @@ INSTALLED_APPS = (
 # ---------------------------------------------------------------------------
 MIDDLEWARE = (
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    'adventures.middleware.XSessionTokenMiddleware',
-    'adventures.middleware.DisableCSRFForSessionTokenMiddleware',
     'adventures.middleware.DisableCSRFForAPIKeyMiddleware',
-    'adventures.middleware.DisableCSRFForMobileLoginSignup',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'adventures.middleware.OverrideHostMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'users.middleware.EfficientSessionMiddleware',
     'cloud.middleware.CloudAccessMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -149,6 +148,9 @@ DATABASES = {
         'PASSWORD': env('PGPASSWORD', 'POSTGRES_PASSWORD'),
         'HOST': env('PGHOST', default='localhost'),
         'PORT': int(env('PGPORT', default='5432')),
+        # Reuse DB connections across requests (seconds). 0 = close every request.
+        'CONN_MAX_AGE': int(getenv('PG_CONN_MAX_AGE', '300')),
+        'CONN_HEALTH_CHECKS': True,
         'OPTIONS': {
             'sslmode': 'prefer',  # Prefer SSL, but allow non-SSL connections
         },
@@ -198,9 +200,11 @@ is_single_label = '.' not in hostname  # single-label hostnames (e.g., "localhos
 
 if is_ip_address or is_single_label:
     SESSION_COOKIE_DOMAIN = None
+    CSRF_COOKIE_DOMAIN = None
 else:
     cookie_domain = get_sld(hostname)
     SESSION_COOKIE_DOMAIN = f".{cookie_domain}" if cookie_domain else hostname
+    CSRF_COOKIE_DOMAIN = SESSION_COOKIE_DOMAIN
 
 
 # ---------------------------------------------------------------------------
@@ -278,6 +282,8 @@ ALLAUTH_UI_THEME = "dim"
 # ---------------------------------------------------------------------------
 DISABLE_REGISTRATION = getenv('DISABLE_REGISTRATION', 'false').lower() == 'true'
 DISABLE_REGISTRATION_MESSAGE = getenv('DISABLE_REGISTRATION_MESSAGE', 'Registration is disabled. Please contact the administrator if you need an account.')
+TERMS_OF_SERVICE_URL = getenv('TERMS_OF_SERVICE_URL', '').strip()
+PRIVACY_POLICY_URL = getenv('PRIVACY_POLICY_URL', '').strip()
 
 SOCIALACCOUNT_ALLOW_SIGNUP = getenv('SOCIALACCOUNT_ALLOW_SIGNUP', 'false').lower() == 'true'
 
@@ -289,12 +295,23 @@ INVITATIONS_EMAIL_SUBJECT_PREFIX = 'AdventureLog: '
 SOCIALACCOUNT_ADAPTER = 'users.adapters.CustomSocialAccountAdapter'
 ACCOUNT_SIGNUP_FORM_CLASS = 'users.form_overrides.CustomSignupForm'
 
-SESSION_SAVE_EVERY_REQUEST = True
+# Avoid a django_session write on every request. EfficientSessionMiddleware
+# extends expiry at most once per SESSION_TOUCH_INTERVAL_SECONDS instead.
+SESSION_SAVE_EVERY_REQUEST = False
+SESSION_COOKIE_AGE = int(getenv('SESSION_COOKIE_AGE', str(60 * 60 * 24 * 14)))  # 2 weeks
+SESSION_TOUCH_INTERVAL_SECONDS = int(getenv('SESSION_TOUCH_INTERVAL_SECONDS', str(60 * 60 * 24)))
+
+# Track sessions at login (and once via EfficientSessionMiddleware). Do not enable
+# USERSESSIONS_TRACK_ACTIVITY — that writes on every request.
+USERSESSIONS_TRACK_ACTIVITY = False
+
 LOGIN_REDIRECT_URL = FRONTEND_URL  # Redirect to frontend after login
 
 SOCIALACCOUNT_LOGIN_ON_GET = True
 INVITATIONS_INVITE_FORM = 'users.form_overrides.UseAdminInviteForm'
 INVITATIONS_SIGNUP_REDIRECT_URL = f"{FRONTEND_URL}/signup"
+INVITATIONS_SIGNUP_REDIRECT = f"{FRONTEND_URL}/signup"
+INVITATIONS_CONFIRMATION_URL_NAME = 'accept-invite'
 
 HEADLESS_FRONTEND_URLS = {
     "account_confirm_email": f"{FRONTEND_URL}/user/verify-email/{{key}}",
@@ -315,10 +332,19 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 SITE_ID = 1
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_EMAIL_VERIFICATION = getenv('ACCOUNT_EMAIL_VERIFICATION', 'none')  # 'none', 'optional', 'mandatory'
+ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# none: never verify | optional: send link, allow login | mandatory: block login until verified
+_ACCOUNT_EMAIL_VERIFICATION = getenv('ACCOUNT_EMAIL_VERIFICATION', 'none').strip().lower()
+ACCOUNT_EMAIL_VERIFICATION = (
+    _ACCOUNT_EMAIL_VERIFICATION
+    if _ACCOUNT_EMAIL_VERIFICATION in ('none', 'optional', 'mandatory')
+    else 'none'
+)
 
 SOCIALACCOUNT_EMAIL_AUTHENTICATION = True
-SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = True  # Auto-link by email
+SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT = (
+    getenv('SOCIALACCOUNT_EMAIL_AUTHENTICATION_AUTO_CONNECT', 'false').lower() == 'true'
+)
 SOCIALACCOUNT_AUTO_SIGNUP = True  # Allow auto-signup post adapter checks
 
 # Enable or disable app-level rate limiting/throttling globally.
@@ -344,6 +370,34 @@ WIKIPEDIA_SUMMARY_CACHE_TIMEOUT = int(getenv('WIKIPEDIA_SUMMARY_CACHE_TIMEOUT', 
 EXTERNAL_API_CACHE_TIMEOUT = int(getenv('EXTERNAL_API_CACHE_TIMEOUT', str(60 * 60 * 24)))
 
 FORCE_SOCIALACCOUNT_LOGIN = getenv('FORCE_SOCIALACCOUNT_LOGIN', 'false').lower() == 'true' # When true, only social login is allowed (no password login) and the login page will show only social providers or redirect directly to the first provider if only one is configured.
+
+# Minimum password length enforced by allauth when AUTH_PASSWORD_VALIDATORS is empty.
+ACCOUNT_PASSWORD_MIN_LENGTH = int(getenv('ACCOUNT_PASSWORD_MIN_LENGTH', '10'))
+
+# When enabled, Django's built-in password validators are applied (similarity, common
+# passwords, numeric-only, and minimum length via MinimumLengthValidator).
+AUTH_PASSWORD_VALIDATORS_ENABLED = getenv('AUTH_PASSWORD_VALIDATORS_ENABLED', 'false').lower() == 'true'
+
+if AUTH_PASSWORD_VALIDATORS_ENABLED:
+    AUTH_PASSWORD_VALIDATORS = [
+        {
+            'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+            'OPTIONS': {
+                'min_length': ACCOUNT_PASSWORD_MIN_LENGTH,
+            },
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        },
+        {
+            'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        },
+    ]
+else:
+    AUTH_PASSWORD_VALIDATORS = []
 
 if getenv('EMAIL_BACKEND', 'console') == 'console':
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

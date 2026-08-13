@@ -1,44 +1,42 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	let isSubmitting: boolean = false;
-
-	export let data;
-	console.log(data);
 	import { t } from 'svelte-i18n';
-
+	import { page } from '$app/stores';
 	import FileImageBox from '~icons/mdi/file-image-box';
-
-	let isImageInfoModalOpen: boolean = false;
-
-	let socialProviders = data.props?.socialProviders ?? [];
-
-	let socialOnly: boolean = data.props?.socialOnly ?? false;
-
 	import GitHub from '~icons/mdi/github';
 	import OpenIdConnect from '~icons/mdi/openid';
-
-	import { page } from '$app/stores';
-	import { onMount } from 'svelte';
-
-	function handleEnhanceSubmit() {
-		isSubmitting = true;
-		// If the form is aborted or done, reset the state
-		return async ({ update, result }: { update: any; result: any }) => {
-			if (result.type === 'success') {
-				// Keep isSubmitting as true for success to show loading state
-				await update(result);
-			} else {
-				isSubmitting = false;
-				await update(result);
-			}
-		};
-	}
-
 	import ImageInfoModal from '$lib/components/ImageInfoModal.svelte';
 	import type { Background } from '$lib/types.js';
 
+	let isSubmitting = false;
+
+	export let data;
+
+	let isImageInfoModalOpen = false;
+
+	let socialProviders = data.props?.socialProviders ?? [];
+	let socialOnly: boolean = data.props?.socialOnly ?? false;
+
 	let quote: { quote: string; author: string } = data.props?.quote ?? { quote: '', author: '' };
 	let background: Background = data.props?.background ?? { url: '' };
+
+	function handleEnhanceSubmit() {
+		isSubmitting = true;
+		return async ({
+			update,
+			result
+		}: {
+			update: () => Promise<void>;
+			result: { type: string };
+		}) => {
+			if (result.type === 'redirect' || result.type === 'success') {
+				await update();
+				return;
+			}
+			isSubmitting = false;
+			await update();
+		};
+	}
 </script>
 
 {#if isImageInfoModalOpen}
@@ -100,17 +98,17 @@
 									</div>
 								{:else}
 									<form method="post" use:enhance={handleEnhanceSubmit} class="space-y-4">
-										<!-- Username -->
+										<!-- Username or email -->
 										<div class="form-control">
 											<label class="label" for="username">
-												<span class="label-text font-medium">{$t('auth.username')}</span>
+												<span class="label-text font-medium">{$t('auth.username_or_email')}</span>
 											</label>
 											<input
 												name="username"
 												id="username"
 												type="text"
 												class="input input-bordered w-full focus:input-primary"
-												placeholder={$t('auth.enter_username')}
+												placeholder={$t('auth.enter_username_or_email')}
 												autocomplete="username"
 											/>
 										</div>
@@ -140,12 +138,9 @@
 													type="text"
 													name="totp"
 													id="totp"
-													inputmode="numeric"
-													pattern="[0-9]*"
 													autocomplete="one-time-code"
 													class="input input-bordered w-full focus:input-primary"
 													placeholder={$t('auth.totp_placeholder')}
-													maxlength="8"
 												/>
 												<label class="label" for="totp">
 													<span class="label-text-alt text-base-content/60">
@@ -167,8 +162,12 @@
 											</button>
 										</div>
 
-										<!-- Error Message -->
-										{#if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
+										<!-- Status / Error Message -->
+										{#if $page.form?.email_verification_required}
+											<div class="alert alert-warning mt-4">
+												<span>{$t('auth.user_email_verification_required')}</span>
+											</div>
+										{:else if ($page.form?.message && $page.form?.message.length > 1) || $page.form?.type === 'error'}
 											<div class="alert alert-error mt-4">
 												<span>{$t($page.form.message) || $t('auth.login_error')}</span>
 											</div>

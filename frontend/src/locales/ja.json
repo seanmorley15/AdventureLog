@@ -1178,7 +1178,6 @@
 		"public_profile_revoked_invites": "{count} 件の保留中のコレクションへの招待をキャンセルしました。",
 		"public_profile_sharing_warning": "あなたは現在 {count} 個のコレクションで共有されています。\nプロフィールを非公開にすると、それらのコレクションから削除されます。"
 	},
-	"settings_download_backup": "バックアップをダウンロードします",
 	"share": {
 		"available": "利用可能",
 		"no_users_shared": "共有するユーザーはいません",

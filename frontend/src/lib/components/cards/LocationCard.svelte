@@ -42,6 +42,7 @@
 	export let readOnly: boolean = false;
 	export let compact: boolean = false; // For compact grid display in itinerary
 	export let itineraryItem: CollectionItineraryPlanner | null = null;
+	export let isEditLoading: boolean = false;
 
 	let isCollectionModalOpen: boolean = false;
 	let isWarningModalOpen: boolean = false;
@@ -51,10 +52,24 @@
 	let openUpward = false;
 	let actionsMenuRef: HTMLDivElement | null = null;
 	const ACTIONS_CLOSE_EVENT = 'card-actions-close';
-	const handleCloseEvent = () => (isActionsMenuOpen = false);
+	const handleCloseEvent = () => {
+		if (isEditLoading) return;
+		isActionsMenuOpen = false;
+	};
+
+	let wasEditLoading = false;
+	$: {
+		if (isEditLoading) {
+			isActionsMenuOpen = true;
+			wasEditLoading = true;
+		} else if (wasEditLoading) {
+			isActionsMenuOpen = false;
+			wasEditLoading = false;
+		}
+	}
 
 	function handleDocumentClick(event: MouseEvent) {
-		if (!isActionsMenuOpen) return;
+		if (!isActionsMenuOpen || isEditLoading) return;
 		const target = event.target as Node | null;
 		if (actionsMenuRef && target && !actionsMenuRef.contains(target)) {
 			isActionsMenuOpen = false;
@@ -408,6 +423,7 @@
 								aria-haspopup="menu"
 								aria-label={$t('adventures.location_actions') || 'Location actions'}
 								on:click|stopPropagation={() => {
+									if (isEditLoading) return;
 									if (isActionsMenuOpen) {
 										isActionsMenuOpen = false;
 										return;
@@ -426,12 +442,16 @@
 								<li>
 									<button
 										on:click={() => {
-											isActionsMenuOpen = false;
 											editAdventure();
 										}}
 										class="flex items-center gap-2"
+										disabled={isEditLoading}
 									>
-										<FileDocumentEdit class="w-4 h-4" />
+										{#if isEditLoading}
+											<span class="loading loading-spinner loading-xs"></span>
+										{:else}
+											<FileDocumentEdit class="w-4 h-4" />
+										{/if}
 										{$t('adventures.edit_location')}
 									</button>
 								</li>

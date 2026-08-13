@@ -1178,7 +1178,6 @@
 		"public_profile_revoked_invites": "تم إلغاء {count} من دعوات التجميع المعلقة.",
 		"public_profile_sharing_warning": "لقد تمت مشاركتك حاليًا في {count} مجموعة (مجموعات). \nسيؤدي جعل ملفك الشخصي خاصًا إلى إزالتك من تلك المجموعات."
 	},
-	"settings_download_backup": "تنزيل النسخ الاحتياطي",
 	"share": {
 		"available": "متاح",
 		"no_users_shared": "لم يشارك أي مستخدمين معهم",

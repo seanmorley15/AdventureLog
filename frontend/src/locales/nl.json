@@ -819,7 +819,20 @@
 		"public_profile_invite_warning": "U heeft {count} uitnodiging(en) voor collectie in afwachting. Door uw profiel privé te maken zullen deze afgewzen worden.",
 		"public_profile_private_confirm": "Door uw profiel privé te maken zult u verwijderd worden uit {shared} gedeelde collecties en worden {invites} uitnodigingen afgewzen. Wilt u doorgaan?",
 		"public_profile_left_collections": "Uw profiel is nu privé. U bent verwijderd uit {count} collectie(s).",
-		"public_profile_revoked_invites": "{count} afwachtende collectie uitnodiging(en) afgewezen."
+		"public_profile_revoked_invites": "{count} afwachtende collectie uitnodiging(en) afgewezen.",
+		"download_backup": "Download back -up",
+		"sessions_title": "Active Sessions",
+		"sessions_desc": "See where you're signed in and sign out devices you don't recognize.",
+		"sessions_current": "This device",
+		"sessions_unknown_device": "Unknown device",
+		"sessions_signed_in": "Signed in",
+		"sessions_revoke": "Sign out",
+		"sessions_revoke_others": "Sign out other devices",
+		"sessions_revoke_others_confirm": "Sign out of all other devices? You'll stay signed in here.",
+		"sessions_empty": "No other active sessions.",
+		"sessions_revoked": "Session signed out.",
+		"sessions_others_revoked": "Other devices signed out.",
+		"sessions_revoke_error": "Could not sign out that session. Try again."
 	},
 	"checklist": {
 		"checklist_delete_error": "Fout bij het verwijderen van de checklist",
@@ -1296,7 +1309,6 @@
 		"my_locations": "Mijn locaties",
 		"best_happened_at": "Het beste gebeurde om"
 	},
-	"settings_download_backup": "Download back -up",
 	"invites": {
 		"accept": "Accepteren",
 		"accept_failed": "Kan uitnodigen niet accepteren",

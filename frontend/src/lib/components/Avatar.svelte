@@ -197,7 +197,7 @@
 						on:click={() => goto('/subscribe')}
 					>
 						<CreditCard class="w-5 h-5 text-base-content/70" />
-						<span>{$t('Billing')}</span>
+						<span>{$t('navbar.billing')}</span>
 					</button>
 				</li>
 			{/if}

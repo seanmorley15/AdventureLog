@@ -67,8 +67,8 @@ class CustomUser(AbstractUser):
     measurement_system = models.CharField(max_length=10, choices=[('metric', 'Metric'), ('imperial', 'Imperial')], default='metric')
     default_currency = models.CharField(max_length=5, choices=CURRENCY_CHOICES, default='USD')
     map_style = models.CharField(max_length=32, choices=BASEMAP_CHOICES, default='default')
-    
-    
+    legal_consent = models.JSONField(null=True, blank=True, editable=False)
+
     def __str__(self):
         return self.username
 

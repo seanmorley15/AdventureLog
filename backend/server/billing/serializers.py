@@ -7,6 +7,7 @@ class SubscriptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscription
         fields = [
+            "stripe_customer_id",
             "stripe_subscription_id",
             "status",
             "trial_ends_at",

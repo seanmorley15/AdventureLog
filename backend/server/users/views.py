@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ChangeEmailSerializer, APIKeySerializer, APIKeyCreateSerializer
+from .serializers import APIKeySerializer, APIKeyCreateSerializer, DeleteAccountSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.conf import settings
@@ -22,31 +22,10 @@ import base64
 import json
 from datetime import datetime
 
+from django.contrib.auth import logout
+from users.services.account_deletion import AccountDeletionError, delete_user_account
+
 User = get_user_model()
-
-class ChangeEmailView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    @swagger_auto_schema(
-        request_body=ChangeEmailSerializer,
-        responses={
-            200: openapi.Response('Email successfully changed'),
-            400: 'Bad Request'
-        },
-        operation_description="Change the email address for the authenticated user."
-    )
-    def post(self, request):
-        serializer = ChangeEmailSerializer(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            user = request.user
-            new_email = serializer.validated_data['new_email']
-            user.email = new_email
-            # remove all other email addresses for the user
-            user.emailaddress_set.exclude(email=new_email).delete()
-            user.emailaddress_set.create(email=new_email, primary=True, verified=False)
-            user.save()
-            return Response({"detail": "Email successfully changed."}, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class IsRegistrationDisabled(APIView):
     # This endpoint is requested on auth pages and should not be globally throttled.
@@ -63,6 +42,47 @@ class IsRegistrationDisabled(APIView):
     def get(self, request):
         return Response({"is_disabled": settings.DISABLE_REGISTRATION, "message": settings.DISABLE_REGISTRATION_MESSAGE}, status=status.HTTP_200_OK)
 
+
+class PasswordPolicyView(APIView):
+    # Used by auth pages to validate passwords client-side before submission.
+    throttle_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Password policy configuration'),
+            400: 'Bad Request'
+        },
+        operation_description="Get the configured password policy for this instance."
+    )
+    def get(self, request):
+        return Response(
+            {
+                "min_length": settings.ACCOUNT_PASSWORD_MIN_LENGTH,
+                "validators_enabled": settings.AUTH_PASSWORD_VALIDATORS_ENABLED,
+            },
+            status=status.HTTP_200_OK,
+        )
+
+
+class SignupLegalLinksView(APIView):
+    # Used by the signup page to show optional terms/privacy acceptance.
+    throttle_classes = []
+
+    @swagger_auto_schema(
+        responses={
+            200: openapi.Response('Signup legal link configuration'),
+        },
+        operation_description="Get configured Terms of Service and Privacy Policy URLs."
+    )
+    def get(self, request):
+        return Response(
+            {
+                "terms_of_service_url": settings.TERMS_OF_SERVICE_URL or None,
+                "privacy_policy_url": settings.PRIVACY_POLICY_URL or None,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 class PublicUserListView(APIView):
     # Allow the listing of all public users
     permission_classes = []
@@ -76,9 +96,6 @@ class PublicUserListView(APIView):
     )
     def get(self, request):
         users = User.objects.filter(public_profile=True).exclude(id=request.user.id)
-        # remove the email addresses from the response
-        for user in users:
-            user.email = None
         serializer = PublicUserSerializer(users, many=True)
         # for every user, remove the field has_password
         for user in serializer.data:
@@ -105,9 +122,6 @@ class PublicUserDetailView(APIView):
         serializer = PublicUserSerializer(user)
         # for every user, remove the field has_password
         serializer.data.pop('has_password', None)
-        
-        # remove the email address from the response
-        user.email = None
         
         # Get the users adventures and collections to include in the response
         adventures = Location.objects.filter(user=user, is_public=True)
@@ -471,4 +485,46 @@ class MobileQRCodeView(APIView):
             )
 
         mobile_key.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteAccountView(APIView):
+    """
+    POST /auth/delete-account/
+
+    Permanently delete the authenticated user's account and all associated data.
+    Cancels any active Stripe subscription in cloud mode before removing the user.
+    """
+
+    permission_classes = [IsAuthenticated]
+
+    @swagger_auto_schema(
+        request_body=DeleteAccountSerializer,
+        responses={
+            204: "Account deleted.",
+            400: "Invalid confirmation or password.",
+            403: "Staff accounts cannot be self-deleted.",
+            502: "Stripe billing cleanup failed.",
+        },
+        operation_description="Permanently delete the authenticated user's account.",
+    )
+    def post(self, request):
+        user = request.user
+
+        if user.is_staff or user.is_superuser:
+            return Response(
+                {"detail": "Staff accounts cannot be deleted via self-service."},
+                status=status.HTTP_403_FORBIDDEN,
+            )
+
+        serializer = DeleteAccountSerializer(data=request.data, context={"request": request})
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            delete_user_account(user)
+        except AccountDeletionError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_502_BAD_GATEWAY)
+
+        logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)

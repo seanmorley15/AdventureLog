@@ -1,26 +1,39 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { page } from '$app/stores';
 	import { addToast } from '$lib/toasts';
-	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
-	import { basemapOptions, normalizeBasemapType } from '$lib';
+	import { normalizeBasemapType } from '$lib';
 	import type {
 		EndurainIntegration,
 		ImmichIntegration,
 		WandererIntegration,
 		User,
 		APIKey,
-		MediaUsage
+		MediaUsage,
+		AuthUserSession
 	} from '$lib/types.js';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { t } from 'svelte-i18n';
 	import TotpModal from '$lib/components/TOTPModal.svelte';
-	import { copyrightYear } from '$lib/config.js';
-	import AppVersionDisplay from '$lib/components/shared/AppVersionDisplay.svelte';
 	import IntegrationsSettings from '$lib/components/settings/IntegrationsSettings.svelte';
+	import SettingsNav from '$lib/components/settings/SettingsNav.svelte';
+	import ProfileSettingsPanel from '$lib/components/settings/ProfileSettingsPanel.svelte';
+	import EmailsSettingsPanel from '$lib/components/settings/EmailsSettingsPanel.svelte';
+	import SecuritySettingsPanel from '$lib/components/settings/SecuritySettingsPanel.svelte';
+	import DataSettingsPanel from '$lib/components/settings/DataSettingsPanel.svelte';
+	import DangerZoneSettingsPanel from '$lib/components/settings/DangerZoneSettingsPanel.svelte';
+	import AboutSettingsPanel from '$lib/components/settings/AboutSettingsPanel.svelte';
+	import AdminSettingsPanel from '$lib/components/settings/AdminSettingsPanel.svelte';
+	import { isReauthRequired, reauthenticateWithPassword } from '$lib/reauthenticate';
 
 	export let data;
+
+	const LEGACY_TAB_MAP: Record<string, string> = {
+		import_export: 'data',
+		advanced: 'about'
+	};
+
 	let user: User;
 	let emails: typeof data.props.emails;
 	if (data.user) {
@@ -29,12 +42,9 @@
 		user.map_style = normalizeBasemapType(user.map_style);
 	}
 
-	type Provider = {
-		name: string;
-		usage_required: boolean;
-	};
+	type Provider = { name: string; usage_required: boolean };
 
-	let new_email: string = '';
+	let new_email = '';
 	let public_url: string = data.props.publicUrl;
 	let immichIntegration = data.props.immichIntegration;
 	let googleMapsEnabled = data.props.googleMapsEnabled;
@@ -44,35 +54,28 @@
 	let wandererIntegration: WandererIntegration | null = data.props.wandererIntegration;
 	let endurainEnabled = data.props.endurainEnabled;
 	let endurainIntegration: EndurainIntegration | null = data.props.endurainIntegration;
-	let activeSection: string = 'profile';
+	let activeSection = 'profile';
 
-	// typed alias for social providers to satisfy TypeScript
 	let socialProviders: Provider[] = data.props.socialProviders ?? [];
-
-	// Initialize activeSection from URL on mount
-	onMount(() => {
-		if (browser && $page.url.searchParams.has('tab')) {
-			activeSection = $page.url.searchParams.get('tab') || 'profile';
-		}
-	});
-
-	function setActiveSection(sectionId: string) {
-		activeSection = sectionId;
-		if (browser) {
-			const url = new URL($page.url);
-			url.searchParams.set('tab', sectionId);
-			history.replaceState({}, '', url);
-		}
-	}
-
-	let acknowledgeRestoreOverride: boolean = false;
-
-	// Indicates restore operation in progress to disable button and show loader
-	let isRestoring: boolean = false;
-	let isMFAModalOpen: boolean = false;
+	let passwordPolicy = data.props.passwordPolicy;
+	let newPassword = '';
+	let confirmPassword = '';
+	let acknowledgeRestoreOverride = false;
+	let isRestoring = false;
+	let isMFAModalOpen = false;
+	let mfaDisableNeedsReauth = false;
+	let mfaDisablePassword = '';
+	let mfaDisableReauthError = false;
+	let isDisablingMfa = false;
+	let isVerifyingMfaDisablePassword = false;
+	let deleteConfirmation = '';
+	let deletePassword = '';
+	let isDeletingAccount = false;
 
 	let apiKeys: APIKey[] = data.props.apiKeys ?? [];
-	let newApiKeyName: string = '';
+	let sessions: AuthUserSession[] = data.props.sessions ?? [];
+	let isRevokingSession = false;
+	let newApiKeyName = '';
 	let newlyCreatedKey: string | null = null;
 	let keyCopied = false;
 	let mediaUsage: MediaUsage =
@@ -117,18 +120,34 @@
 		: 0;
 	$: mediaLimitLabel = mediaLimitBytes ? formatBytes(mediaLimitBytes) : 'Unlimited';
 
-	const sections = [
-		{ id: 'profile', icon: '👤', label: () => $t('navbar.profile') },
-		{ id: 'security', icon: '🔒', label: () => $t('settings.security') },
-		{ id: 'emails', icon: '📧', label: () => $t('settings.emails') },
-		{ id: 'integrations', icon: '🔗', label: () => $t('settings.integrations') },
-		{ id: 'import_export', icon: '📦', label: () => $t('settings.backup_restore') },
-		{ id: 'admin', icon: '⚙️', label: () => $t('settings.admin') },
-		{ id: 'advanced', icon: '🛠️', label: () => $t('settings.advanced') }
-	];
-
 	$: profileSharingImpact =
 		(user?.shared_collection_count ?? 0) + (user?.pending_collection_invite_count ?? 0);
+
+	$: {
+		if (browser && $page.form?.deleteAccountError) {
+			addToast('error', $t($page.form.deleteAccountError));
+		}
+	}
+
+	$: canDeleteAccount =
+		deleteConfirmation.trim() === user?.username &&
+		(!user?.has_password || user?.disable_password || deletePassword.length > 0);
+
+	function normalizeSection(tab: string | null) {
+		if (!tab) return 'profile';
+		if (tab === 'danger' || tab === 'about' || tab === 'data') return tab;
+		return LEGACY_TAB_MAP[tab] ?? tab;
+	}
+
+	function setActiveSection(sectionId: string) {
+		activeSection = sectionId;
+		if (browser) {
+			const url = new URL($page.url);
+			url.searchParams.set('tab', sectionId);
+			url.searchParams.delete('focus');
+			history.replaceState({}, '', url);
+		}
+	}
 
 	function handlePublicProfileToggle(nextValue: boolean) {
 		if (
@@ -146,7 +165,6 @@
 		) {
 			return;
 		}
-
 		user.public_profile = nextValue;
 	}
 
@@ -155,32 +173,28 @@
 		revoked_collection_invites?: number;
 	}) {
 		const messages: string[] = [$t('settings.update_success')];
-		const leftShared = form.left_shared_collections ?? 0;
-		const revokedInvites = form.revoked_collection_invites ?? 0;
-
-		if (leftShared > 0) {
+		if ((form.left_shared_collections ?? 0) > 0) {
 			messages.push(
-				$t('settings.public_profile_left_collections', { values: { count: leftShared } })
+				$t('settings.public_profile_left_collections', {
+					values: { count: form.left_shared_collections ?? 0 }
+				})
 			);
 		}
-		if (revokedInvites > 0) {
+		if ((form.revoked_collection_invites ?? 0) > 0) {
 			messages.push(
-				$t('settings.public_profile_revoked_invites', { values: { count: revokedInvites } })
+				$t('settings.public_profile_revoked_invites', {
+					values: { count: form.revoked_collection_invites ?? 0 }
+				})
 			);
 		}
-
 		return messages.join(' ');
 	}
 
-	onMount(async () => {
-		if (browser) {
-			const queryParams = new URLSearchParams($page.url.search);
-			const pageParam = queryParams.get('page');
-
-			if (pageParam === 'success') {
-				addToast('success', $t('settings.update_success'));
-				console.log('Settings updated successfully!');
-			}
+	onMount(() => {
+		if (!browser) return;
+		activeSection = normalizeSection($page.url.searchParams.get('tab'));
+		if ($page.url.searchParams.get('page') === 'success') {
+			addToast('success', $t('settings.update_success'));
 		}
 	});
 
@@ -200,40 +214,30 @@
 				window.location.href = '/settings?page=success';
 			}
 		}
-		if (browser && $page.form?.error) {
-			addToast('error', $t('settings.update_error'));
-		}
-
-		// Stop any restoring loader when a form result (success or error) is present
-		if (browser && $page.form) {
-			isRestoring = false;
-		}
+		if (browser && $page.form?.error) addToast('error', $t('settings.update_error'));
+		if (browser && $page.form) isRestoring = false;
 	}
 
 	async function checkVisitedRegions() {
-		let res = await fetch('/api/reverse-geocode/mark_visited_region/', {
+		const res = await fetch('/api/reverse-geocode/mark_visited_region/', {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			}
+			headers: { 'Content-Type': 'application/json' }
 		});
-		let data = await res.json();
+		const result = await res.json();
 		if (res.ok) {
 			addToast(
 				'success',
-				`${data.new_regions} ${$t('adventures.regions_updated')}. ${data.new_cities} ${$t('adventures.cities_updated')}.`
+				`${result.new_regions} ${$t('adventures.regions_updated')}. ${result.new_cities} ${$t('adventures.cities_updated')}.`
 			);
 		} else {
 			addToast('error', $t('adventures.error_updating_regions'));
 		}
 	}
 
-	async function removeEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/auth/browser/v1/account/email', {
+	async function removeEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
+		const res = await fetch('/auth/browser/v1/account/email', {
 			method: 'DELETE',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email })
 		});
 		if (res.ok) {
@@ -245,56 +249,43 @@
 	}
 
 	async function disablePassword() {
-		if (user.disable_password) {
-			let res = await fetch('/auth/disable-password/', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-			if (res.ok) {
-				addToast('success', $t('settings.password_disabled'));
-			} else {
-				addToast('error', $t('settings.password_disabled_error'));
-				user.disable_password = false;
-			}
+		const method = user.disable_password ? 'POST' : 'DELETE';
+		const res = await fetch('/auth/disable-password/', {
+			method,
+			headers: { 'Content-Type': 'application/json' }
+		});
+		if (res.ok) {
+			addToast(
+				'success',
+				$t(user.disable_password ? 'settings.password_disabled' : 'settings.password_enabled')
+			);
 		} else {
-			let res = await fetch('/auth/disable-password/', {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			});
-			if (res.ok) {
-				addToast('success', $t('settings.password_enabled'));
-			} else {
-				addToast('error', $t('settings.password_enabled_error'));
-				user.disable_password = true;
-			}
+			addToast(
+				'error',
+				$t(
+					user.disable_password
+						? 'settings.password_disabled_error'
+						: 'settings.password_enabled_error'
+				)
+			);
+			user.disable_password = !user.disable_password;
 		}
 	}
 
-	async function verifyEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/auth/browser/v1/account/email', {
+	async function verifyEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
+		const res = await fetch('/auth/browser/v1/account/email', {
 			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email })
 		});
-		if (res.ok) {
-			addToast('success', $t('settings.verify_email_success'));
-		} else {
-			addToast('error', $t('settings.verify_email_error'));
-		}
+		if (res.ok) addToast('success', $t('settings.verify_email_success'));
+		else addToast('error', $t('settings.verify_email_error'));
 	}
 
 	async function addEmail() {
-		let res = await fetch('/auth/browser/v1/account/email', {
+		const res = await fetch('/auth/browser/v1/account/email', {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: new_email })
 		});
 		if (res.ok) {
@@ -302,48 +293,94 @@
 			emails = [...emails, { email: new_email, verified: false, primary: false }];
 			new_email = '';
 		} else {
-			let error = await res.json();
-			let error_code = error.errors[0].code;
-			addToast('error', $t(`settings.${error_code}`) || $t('settings.generic_error'));
+			const error = await res.json();
+			addToast('error', $t(`settings.${error.errors[0].code}`) || $t('settings.generic_error'));
 		}
 	}
 
-	async function primaryEmail(email: { email: any; verified?: boolean; primary?: boolean }) {
-		let res = await fetch('/auth/browser/v1/account/email', {
+	async function primaryEmail(email: { email: string; verified?: boolean; primary?: boolean }) {
+		const res = await fetch('/auth/browser/v1/account/email', {
 			method: 'PATCH',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({ email: email.email, primary: true })
 		});
 		if (res.ok) {
 			addToast('success', $t('settings.email_set_primary'));
-			emails = emails.map((e) => {
-				if (e.email === email.email) {
-					e.primary = true;
-				} else {
-					e.primary = false;
-				}
-				return e;
-			});
+			emails = emails.map((e) => ({ ...e, primary: e.email === email.email }));
 		} else {
 			addToast('error', $t('settings.email_set_primary_error'));
 		}
 	}
 
 	async function disableMfa() {
-		const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
-			method: 'DELETE'
-		});
-		if (res.ok) {
-			addToast('success', $t('settings.mfa_disabled'));
-			data.props.authenticators = false;
-		} else {
-			if (res.status == 401) {
-				addToast('error', $t('settings.reset_session_error'));
+		if (isDisablingMfa) return;
+		isDisablingMfa = true;
+		try {
+			const res = await fetch('/auth/browser/v1/account/authenticators/totp', {
+				method: 'DELETE',
+				credentials: 'include'
+			});
+			if (res.ok) {
+				mfaDisableNeedsReauth = false;
+				mfaDisablePassword = '';
+				mfaDisableReauthError = false;
+				addToast('success', $t('settings.mfa_disabled'));
+				data.props.authenticators = false;
+				return;
+			}
+
+			let body: unknown = null;
+			try {
+				body = await res.json();
+			} catch {
+				/* ignore parse errors */
+			}
+
+			if (isReauthRequired(res, body)) {
+				if (user?.has_password === false) {
+					mfaDisableNeedsReauth = false;
+					addToast('error', $t('settings.reset_session_error'));
+					return;
+				}
+				mfaDisableNeedsReauth = true;
+				addToast('info', $t('settings.reauth_required_disable_desc'));
+				return;
+			}
+
+			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isDisablingMfa = false;
+		}
+	}
+
+	async function verifyMfaDisablePassword() {
+		if (!mfaDisablePassword || isVerifyingMfaDisablePassword) return;
+		isVerifyingMfaDisablePassword = true;
+		mfaDisableReauthError = false;
+		try {
+			const { ok, status } = await reauthenticateWithPassword(mfaDisablePassword);
+			if (ok) {
+				mfaDisableNeedsReauth = false;
+				mfaDisablePassword = '';
+				mfaDisableReauthError = false;
+				addToast('success', $t('settings.reauth_success'));
+				await disableMfa();
+				return;
+			}
+			if (status === 400) {
+				mfaDisableReauthError = true;
+				return;
 			}
 			addToast('error', $t('settings.generic_error'));
+		} finally {
+			isVerifyingMfaDisablePassword = false;
 		}
+	}
+
+	function cancelMfaDisableReauth() {
+		mfaDisableNeedsReauth = false;
+		mfaDisablePassword = '';
+		mfaDisableReauthError = false;
 	}
 
 	async function createApiKey() {
@@ -393,6 +430,53 @@
 			addToast('error', $t('api_keys.revoke_error'));
 		}
 	}
+
+	async function revokeSessions(ids: number[]) {
+		if (!ids.length || isRevokingSession) return;
+		isRevokingSession = true;
+		try {
+			const res = await fetch('/auth/browser/v1/auth/sessions', {
+				method: 'DELETE',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ sessions: ids })
+			});
+			if (res.status === 401) {
+				await goto('/login');
+				return;
+			}
+			if (!res.ok) {
+				addToast('error', $t('settings.sessions_revoke_error'));
+				return;
+			}
+			const payload = await res.json();
+			sessions = Array.isArray(payload?.data)
+				? payload.data
+				: sessions.filter((s) => !ids.includes(s.id));
+			addToast(
+				'success',
+				ids.length > 1 ? $t('settings.sessions_others_revoked') : $t('settings.sessions_revoked')
+			);
+		} catch {
+			addToast('error', $t('settings.sessions_revoke_error'));
+		} finally {
+			isRevokingSession = false;
+		}
+	}
+
+	function revokeSession(id: number) {
+		return revokeSessions([id]);
+	}
+
+	function revokeOtherSessions() {
+		if (!confirm($t('settings.sessions_revoke_others_confirm'))) return;
+		const otherIds = sessions.filter((s) => !s.is_current).map((s) => s.id);
+		return revokeSessions(otherIds);
+	}
+
+	function confirmDeleteAccount() {
+		return confirm($t('settings.delete_account_confirm_prompt'));
+	}
 </script>
 
 {#if isMFAModalOpen}
@@ -404,1299 +488,118 @@
 {/if}
 
 <div class="min-h-screen bg-gradient-to-br from-base-200 to-base-300">
-	<!-- Header -->
 	<div class="bg-base-100 shadow-lg border-b border-base-300">
-		<div class="container mx-auto px-6 py-8">
-			<div class="flex items-center justify-between">
-				<div>
-					<h1 class="text-4xl font-bold bg-clip-text text-primary pb-1">
-						{$t('settings.settings_page')}
-					</h1>
-				</div>
-			</div>
+		<div class="container mx-auto px-6 py-8 max-w-7xl">
+			<h1 class="text-4xl font-bold text-primary">{$t('settings.settings_page')}</h1>
+			<p class="text-base-content/60 mt-1">{$t('settings.account_settings')}</p>
 		</div>
 	</div>
 
 	<div class="container mx-auto px-6 py-8 max-w-7xl">
 		<div class="flex flex-col lg:flex-row gap-8">
-			<!-- Sidebar Navigation -->
-			<div class="lg:w-1/4">
-				<div class="bg-base-100 rounded-2xl shadow-xl p-6 sticky top-8">
-					<h3 class="font-semibold text-lg mb-4 text-base-content/80">
-						{$t('settings.settings_menu')}
-					</h3>
-					<ul class="menu menu-vertical w-full space-y-1">
-						{#each sections as section}
-							<li>
-								<button
-									class="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 {activeSection ===
-									section.id
-										? 'bg-primary text-primary-content shadow-lg'
-										: 'hover:bg-base-200'}"
-									on:click={() => setActiveSection(section.id)}
-								>
-									<span class="text-xl">{section.icon}</span>
-									<span class="font-medium">{section.label()}</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
-				</div>
-			</div>
+			<aside class="lg:w-64 shrink-0">
+				<SettingsNav {activeSection} isStaff={user.is_staff} onSelect={setActiveSection} />
+			</aside>
 
-			<!-- Main Content -->
-			<div class="lg:w-3/4">
-				<div class="space-y-8">
-					<!-- Profile Section -->
-					{#if activeSection === 'profile'}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-primary/10 rounded-xl">
-									<span class="text-2xl">👤</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('settings.profile_info')}</h2>
-									<p class="text-base-content/70">
-										{$t('settings.profile_info_desc')}
-									</p>
-								</div>
-							</div>
-
-							<form
-								method="post"
-								action="?/changeDetails"
-								use:enhance
-								enctype="multipart/form-data"
-								class="space-y-6"
-							>
-								<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-									<div class="form-control">
-										<!-- svelte-ignore a11y-label-has-associated-control -->
-										<label class="label">
-											<span class="label-text font-medium">{$t('auth.username')}</span>
-										</label>
-										<input
-											type="text"
-											bind:value={user.username}
-											name="username"
-											class="input input-bordered input-primary focus:input-primary"
-											placeholder={$t('settings.enter_username')}
-										/>
-									</div>
-
-									<div class="form-control">
-										<!-- svelte-ignore a11y-label-has-associated-control -->
-										<label class="label">
-											<span class="label-text font-medium">{$t('auth.first_name')}</span>
-										</label>
-										<input
-											type="text"
-											bind:value={user.first_name}
-											name="first_name"
-											class="input input-bordered input-primary focus:input-primary"
-											placeholder={$t('settings.enter_first_name')}
-										/>
-									</div>
-
-									<div class="form-control">
-										<!-- svelte-ignore a11y-label-has-associated-control -->
-										<label class="label">
-											<span class="label-text font-medium">{$t('auth.last_name')}</span>
-										</label>
-										<input
-											type="text"
-											bind:value={user.last_name}
-											name="last_name"
-											class="input input-bordered input-primary focus:input-primary"
-											placeholder={$t('settings.enter_last_name')}
-										/>
-									</div>
-
-									<div class="form-control">
-										<!-- svelte-ignore a11y-label-has-associated-control -->
-										<label class="label">
-											<span class="label-text font-medium">{$t('auth.profile_picture')}</span>
-										</label>
-										<input
-											type="file"
-											name="profile_pic"
-											class="file-input file-input-bordered file-input-primary"
-											accept="image/*"
-										/>
-									</div>
-
-									<div class="form-control">
-										<label class="label cursor-pointer justify-start gap-4">
-											<input
-												type="checkbox"
-												checked={user.public_profile}
-												on:change={(event) =>
-													handlePublicProfileToggle(event.currentTarget.checked)}
-												name="public_profile"
-												class="toggle toggle-primary"
-											/>
-											<div>
-												<span class="label-text font-medium">{$t('auth.public_profile')}</span>
-												<p class="text-sm text-base-content/60">
-													{$t('settings.public_profile_desc')}
-												</p>
-												{#if user.public_profile && (user.shared_collection_count ?? 0) > 0}
-													<p class="text-sm text-warning mt-2">
-														{$t('settings.public_profile_sharing_warning', {
-															values: { count: user.shared_collection_count ?? 0 }
-														})}
-													</p>
-												{/if}
-												{#if user.public_profile && (user.pending_collection_invite_count ?? 0) > 0}
-													<p class="text-sm text-warning mt-2">
-														{$t('settings.public_profile_invite_warning', {
-															values: { count: user.pending_collection_invite_count ?? 0 }
-														})}
-													</p>
-												{/if}
-											</div>
-										</label>
-									</div>
-
-									<!-- metric or imperal toggle -->
-									<div class="form-control">
-										<label class="label cursor-pointer justify-start gap-4">
-											<input
-												type="checkbox"
-												checked={user.measurement_system === 'imperial'}
-												name="measurement_system"
-												class="toggle toggle-primary"
-												on:change={() =>
-													(user.measurement_system =
-														user.measurement_system === 'metric' ? 'imperial' : 'metric')}
-											/>
-											<div>
-												<span class="label-text font-medium">{$t('settings.use_imperial')}</span>
-												<p class="text-sm text-base-content/60">
-													{$t('settings.use_imperial_desc')}
-												</p>
-											</div>
-										</label>
-									</div>
-
-									<div class="form-control">
-										<label class="label" for="default_currency">
-											<span class="label-text font-medium">Preferred currency</span>
-										</label>
-										<select
-											id="default_currency"
-											name="default_currency"
-											class="select select-bordered select-primary w-full"
-											bind:value={user.default_currency}
-										>
-											{#each CURRENCY_OPTIONS as code}
-												<option value={code}>
-													{code}
-													{#if CURRENCY_LABELS[code]}
-														{' '}-{' '}{CURRENCY_LABELS[code]}
-													{/if}
-												</option>
-											{/each}
-										</select>
-										<p class="text-sm text-base-content/60 mt-1">
-											{$t('settings.preferred_currency_desc')}
-										</p>
-									</div>
-
-									<div class="form-control">
-										<label class="label" for="map_style">
-											<span class="label-text font-medium">Default map style</span>
-										</label>
-										<select
-											id="map_style"
-											name="map_style"
-											class="select select-bordered select-primary w-full"
-											bind:value={user.map_style}
-										>
-											{#each basemapOptions as option}
-												<option value={option.value}>
-													{option.label} ({option.category})
-												</option>
-											{/each}
-										</select>
-										<p class="text-sm text-base-content/60 mt-1">
-											{$t('settings.map_style_desc')}
-										</p>
-									</div>
-								</div>
-
-								<button class="btn btn-primary btn-wide">
-									<span class="loading loading-spinner loading-sm hidden"></span>
-									{$t('settings.update')}
-								</button>
-							</form>
-						</div>
-					{/if}
-
-					<!-- Security Section -->
-					{#if activeSection === 'security'}
-						<div class="space-y-8">
-							<!-- Password Change -->
-							<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-								<div class="flex items-center gap-4 mb-6">
-									<div class="p-3 bg-warning/10 rounded-xl">
-										<span class="text-2xl">🔐</span>
-									</div>
-									<div>
-										<h2 class="text-2xl font-bold">{$t('settings.change_password')}</h2>
-										<p class="text-base-content/70">
-											{$t('settings.pass_change_desc')}
-										</p>
-									</div>
-								</div>
-
-								<form method="post" action="?/changePassword" use:enhance class="space-y-6">
-									{#if user.has_password}
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('settings.current_password')}</span
-												>
-											</label>
-											<input
-												type="password"
-												name="current_password"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder={$t('settings.enter_current_password')}
-											/>
-										</div>
-									{/if}
-
-									<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium">{$t('settings.new_password')}</span>
-											</label>
-											<input
-												type="password"
-												name="password1"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder={$t('settings.enter_new_password')}
-											/>
-										</div>
-
-										<div class="form-control">
-											<!-- svelte-ignore a11y-label-has-associated-control -->
-											<label class="label">
-												<span class="label-text font-medium"
-													>{$t('settings.confirm_new_password')}</span
-												>
-											</label>
-											<input
-												type="password"
-												name="password2"
-												class="input input-bordered input-primary focus:input-primary"
-												placeholder={$t('settings.confirm_new_password')}
-											/>
-										</div>
-									</div>
-
-									{#if $page.form?.message}
-										<div class="alert alert-warning">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="stroke-current shrink-0 h-6 w-6"
-												fill="none"
-												viewBox="0 0 24 24"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-												/>
-											</svg>
-											<span>{$t($page.form?.message)}</span>
-										</div>
-									{/if}
-
-									<div
-										class="tooltip tooltip-warning"
-										data-tip={$t('settings.password_change_lopout_warning')}
-									>
-										<button class="btn btn-warning">
-											🔑 {$t('settings.password_change')}
-										</button>
-									</div>
-								</form>
-							</div>
-
-							<!-- MFA Section -->
-							<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-								<div class="flex items-center gap-4 mb-6">
-									<div class="p-3 bg-success/10 rounded-xl">
-										<span class="text-2xl">🛡️</span>
-									</div>
-									<div>
-										<h2 class="text-2xl font-bold">{$t('settings.mfa_page_title')}</h2>
-										<p class="text-base-content/70">
-											{$t('settings.mfa_desc')}
-										</p>
-									</div>
-								</div>
-
-								<div class="flex items-center justify-between p-4 bg-base-200 rounded-xl">
-									<div class="flex items-center gap-4">
-										<div
-											class="badge {data.props.authenticators
-												? 'badge-success'
-												: 'badge-error'} gap-2"
-										>
-											{#if data.props.authenticators}
-												✅ {$t('settings.enabled')}
-											{:else}
-												❌ {$t('settings.disabled')}
-											{/if}
-										</div>
-										<span class="font-medium">
-											{data.props.authenticators
-												? $t('settings.mfa_is_enabled')
-												: $t('settings.mfa_not_enabled')}
-										</span>
-									</div>
-
-									{#if !data.props.authenticators}
-										{#if !emails.some((e) => e.verified)}
-											<div
-												class="tooltip tooltip-warning"
-												data-tip={$t('settings.no_verified_email_warning')}
-											>
-												<button class="btn btn-disabled">{$t('settings.enable_mfa')}</button>
-											</div>
-										{:else}
-											<button class="btn btn-primary" on:click={() => (isMFAModalOpen = true)}>
-												{$t('settings.enable_mfa')}
-											</button>
-										{/if}
-									{:else}
-										<button class="btn btn-warning" on:click={disableMfa}>
-											{$t('settings.disable_mfa')}
-										</button>
-									{/if}
-								</div>
-
-								{#if !emails.some((e) => e.verified)}
-									<div class="alert alert-warning mt-4">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="stroke-current shrink-0 h-6 w-6"
-											fill="none"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-											/>
-										</svg>
-										<span>{$t('settings.no_verified_email_warning')}</span>
-									</div>
-								{/if}
-							</div>
-
-							<!-- Social Auth & Password Disable -->
-							{#if socialProviders && socialProviders.length > 0}
-								<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-									<div class="flex items-center gap-4 mb-6">
-										<div class="p-3 bg-info/10 rounded-xl">
-											<span class="text-2xl">🔗</span>
-										</div>
-										<div>
-											<h2 class="text-2xl font-bold">{$t('settings.social_auth')}</h2>
-											<p class="text-base-content/70">
-												{$t('settings.social_auth_desc_1')}
-											</p>
-										</div>
-									</div>
-
-									<div class="space-y-6">
-										<div class="p-4 bg-base-200 rounded-xl">
-											<div class="flex items-center justify-between">
-												<div>
-													<h3 class="font-semibold">{$t('settings.password_auth')}</h3>
-													<p class="text-sm text-base-content/70">
-														{user.disable_password ||
-														(socialProviders && socialProviders.some((p) => p.usage_required))
-															? $t('settings.password_login_disabled')
-															: $t('settings.password_login_enabled')}
-													</p>
-												</div>
-												<div class="flex items-center gap-4">
-													<div
-														class="badge {user.disable_password ||
-														(socialProviders && socialProviders.some((p) => p.usage_required))
-															? 'badge-error'
-															: 'badge-success'}"
-													>
-														{user.disable_password ||
-														(socialProviders && socialProviders.some((p) => p.usage_required))
-															? $t('settings.disabled')
-															: $t('settings.enabled')}
-													</div>
-													<input
-														type="checkbox"
-														bind:checked={user.disable_password}
-														on:change={disablePassword}
-														disabled={socialProviders &&
-															socialProviders.some((p) => p.usage_required)}
-														class="toggle toggle-primary {socialProviders &&
-														socialProviders.some((p) => p.usage_required)
-															? 'toggle-disabled'
-															: ''}"
-													/>
-												</div>
-											</div>
-											{#if user.disable_password}
-												<div class="alert alert-warning mt-4">
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														class="stroke-current shrink-0 h-6 w-6"
-														fill="none"
-														viewBox="0 0 24 24"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															stroke-width="2"
-															d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-														/>
-													</svg>
-													<span>{$t('settings.password_disable_warning')}</span>
-												</div>
-											{/if}
-										</div>
-
-										<a
-											class="btn btn-outline btn-primary w-full"
-											href={`${public_url}/accounts/social/connections/`}
-											target="_blank"
-										>
-											🔗 {$t('settings.launch_account_connections')}
-										</a>
-									</div>
-								</div>
-							{/if}
-						</div>
-
-						<!-- API Keys -->
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8 mt-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-warning/10 rounded-xl">
-									<span class="text-2xl">🔑</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('api_keys.title')}</h2>
-									<p class="text-base-content/70">
-										{$t('api_keys.description')}
-									</p>
-								</div>
-							</div>
-
-							<!-- Newly created key banner -->
-							{#if newlyCreatedKey}
-								<div class="mb-6 rounded-2xl border border-warning/40 bg-warning/5 overflow-hidden">
-									<!-- Header -->
-									<div
-										class="flex items-center justify-between px-5 py-3 bg-warning/10 border-b border-warning/20"
-									>
-										<div class="flex items-center gap-2">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="h-4 w-4 text-warning shrink-0"
-												viewBox="0 0 24 24"
-												fill="none"
-												stroke="currentColor"
-												stroke-width="2"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
-												/>
-											</svg>
-											<span class="text-sm font-semibold text-warning"
-												>{$t('api_keys.new_key_title')}</span
-											>
-										</div>
-										<button
-											type="button"
-											class="btn btn-ghost btn-xs text-base-content/50 hover:text-base-content"
-											aria-label={$t('about.close')}
-											title={$t('about.close')}
-											on:click={() => {
-												newlyCreatedKey = null;
-												keyCopied = false;
-											}}
-										>
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												class="h-4 w-4"
-												fill="none"
-												viewBox="0 0 24 24"
-												stroke="currentColor"
-												stroke-width="2"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													d="M6 18L18 6M6 6l12 12"
-												/>
-											</svg>
-										</button>
-									</div>
-
-									<!-- Key body -->
-									<div class="px-5 py-4">
-										<div
-											class="flex items-center gap-2 bg-base-200 rounded-xl border border-base-300 px-4 py-3"
-										>
-											<code class="flex-1 text-sm font-mono break-all text-base-content select-all"
-												>{newlyCreatedKey}</code
-											>
-											<button
-												class="btn btn-sm shrink-0 transition-all {keyCopied
-													? 'btn-success'
-													: 'btn-ghost'}"
-												on:click={copyKey}
-												title="Copy to clipboard"
-											>
-												{#if keyCopied}
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														class="h-4 w-4"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-														stroke-width="2.5"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															d="M5 13l4 4L19 7"
-														/>
-													</svg>
-													{$t('api_keys.copied')}
-												{:else}
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														class="h-4 w-4"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke="currentColor"
-														stroke-width="2"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-														/>
-													</svg>
-													{$t('api_keys.copy')}
-												{/if}
-											</button>
-										</div>
-										<p class="text-xs text-base-content/50 mt-2 pl-1">
-											{$t('api_keys.usage_prefix')} <code class="font-mono">X-API-Key</code>
-											{$t('api_keys.usage_middle')}
-											<code class="font-mono">Authorization: Api-Key &lt;token&gt;</code>
-										</p>
-									</div>
-								</div>
-							{/if}
-
-							<!-- Existing keys list -->
-							{#if apiKeys.length > 0}
-								<div class="space-y-3 mb-6">
-									{#each apiKeys as key (key.id)}
-										<div class="flex items-center justify-between p-4 bg-base-200 rounded-xl gap-4">
-											<div class="min-w-0">
-												<p class="font-semibold truncate">{key.name}</p>
-												<p class="text-sm text-base-content/60 font-mono">
-													{key.key_prefix}…
-												</p>
-												<p class="text-xs text-base-content/50 mt-0.5">
-													{$t('api_keys.created')}
-													{new Date(key.created_at).toLocaleDateString()}
-													{#if key.last_used_at}
-														· {$t('api_keys.last_used')}
-														{new Date(key.last_used_at).toLocaleDateString()}
-													{:else}
-														· {$t('api_keys.never_used')}
-													{/if}
-												</p>
-											</div>
-											<button
-												class="btn btn-error btn-sm shrink-0"
-												on:click={() => deleteApiKey(key.id)}
-											>
-												{$t('api_keys.revoke')}
-											</button>
-										</div>
-									{/each}
-								</div>
-							{:else}
-								<p class="text-base-content/50 mb-6">{$t('api_keys.no_keys')}</p>
-							{/if}
-
-							<!-- Create new key form -->
-							<div class="flex gap-3">
-								<input
-									type="text"
-									bind:value={newApiKeyName}
-									placeholder={$t('api_keys.key_name_placeholder')}
-									class="input input-bordered input-primary flex-1"
-									maxlength="100"
-								/>
-								<button
-									class="btn btn-primary"
-									on:click={createApiKey}
-									disabled={!newApiKeyName.trim()}
-								>
-									{$t('api_keys.create')}
-								</button>
-							</div>
-						</div>
-					{/if}
-
-					<!-- Emails Section -->
-					{#if activeSection === 'emails'}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-secondary/10 rounded-xl">
-									<span class="text-2xl">📧</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('settings.email_management')}</h2>
-									<p class="text-base-content/70">
-										{$t('settings.email_management_desc')}
-									</p>
-								</div>
-							</div>
-
-							<!-- Current Emails -->
-							{#if emails.length > 0}
-								<div class="space-y-4 mb-8">
-									{#each emails as email}
-										<div class="p-4 bg-base-200 rounded-xl">
-											<div class="flex items-center justify-between flex-wrap gap-4">
-												<div class="flex items-center gap-3">
-													<span class="font-medium">{email.email}</span>
-													<div class="flex gap-2">
-														{#if email.verified}
-															<div class="badge badge-success gap-1">
-																✅ {$t('settings.verified')}
-															</div>
-														{:else}
-															<div class="badge badge-error gap-1">❌ Not Verified</div>
-														{/if}
-														{#if email.primary}
-															<div class="badge badge-primary gap-1">
-																⭐ {$t('settings.primary')}
-															</div>
-														{/if}
-													</div>
-												</div>
-												<div class="flex gap-2">
-													{#if !email.verified}
-														<button
-															class="btn btn-sm btn-secondary"
-															on:click={() => verifyEmail(email)}
-														>
-															{$t('settings.verify')}
-														</button>
-													{/if}
-													{#if !email.primary && email.verified}
-														<button
-															class="btn btn-sm btn-primary"
-															on:click={() => primaryEmail(email)}
-														>
-															{$t('settings.make_primary')}
-														</button>
-													{/if}
-													<button
-														class="btn btn-sm btn-warning"
-														on:click={() => removeEmail(email)}
-														disabled={emails.length === 1 || email.primary}
-													>
-														{$t('adventures.remove')}
-													</button>
-												</div>
-											</div>
-										</div>
-									{/each}
-								</div>
-							{:else}
-								<div class="text-center py-8">
-									<div class="text-6xl mb-4">📧</div>
-									<p class="text-lg text-base-content/70">{$t('settings.no_email_set')}</p>
-								</div>
-							{/if}
-
-							<!-- Add New Email -->
-							<div class="divider">{$t('settings.add_new_email')}</div>
-							<form class="space-y-4" on:submit|preventDefault={addEmail}>
-								<div class="form-control">
-									<!-- svelte-ignore a11y-label-has-associated-control -->
-									<label class="label">
-										<span class="label-text font-medium"
-											>{$t('settings.add_new_email_address')}</span
-										>
-									</label>
-									<input
-										type="email"
-										bind:value={new_email}
-										class="input input-bordered input-primary focus:input-primary"
-										placeholder={$t('settings.enter_new_email')}
-										required
-									/>
-								</div>
-								<button class="btn btn-primary w-full"> ➕ {$t('settings.add_email')} </button>
-							</form>
-						</div>
-					{/if}
-
-					<!-- Integrations Section -->
-					{#if activeSection === 'integrations'}
-						<IntegrationsSettings
-							{user}
-							bind:immichIntegration
-							bind:googleMapsEnabled
-							bind:stravaGlobalEnabled
-							bind:stravaUserEnabled
-							bind:wandererEnabled
-							bind:wandererIntegration
-							bind:endurainEnabled
-							bind:endurainIntegration
-						/>
-					{/if}
-
-					<!-- import export -->
-					{#if activeSection === 'import_export'}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-accent/10 rounded-xl">
-									<span class="text-2xl">📦</span>
-								</div>
-								<div>
-									<div>
-										<h2 class="text-2xl font-bold">{$t('settings.backup_restore')}</h2>
-										<p class="text-base-content/70">
-											{$t('settings.backup_restore_desc')}
-										</p>
-									</div>
-								</div>
-							</div>
-
-							<!-- Backup Coverage -->
-							<div class="bg-base-200 rounded-xl p-4 mb-6">
-								<h4 class="text-sm font-semibold mb-3 text-base-content/70">
-									{$t('settings.whats_included')}
-								</h4>
-								<div class="grid grid-cols-2 gap-4 text-sm">
-									<!-- Backed Up -->
-									<div class="space-y-2">
-										<div class="flex items-center justify-between">
-											<span>📍 {$t('locations.locations')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>🚶 {$t('adventures.visits')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>📚 {$t('navbar.collections')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>🖼️ {$t('settings.media')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>🥾 {$t('settings.trails')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>⏱️ {$t('settings.activities')}</span>
-											<span>✅</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>🌍 {$t('settings.world_travel_visits')}</span>
-											<span>✅</span>
-										</div>
-									</div>
-									<!-- Not Backed Up -->
-									<div class="space-y-2">
-										<div class="flex items-center justify-between">
-											<span>⚙️ {$t('navbar.settings')}</span>
-											<span>❌</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>👤 {$t('navbar.profile')}</span>
-											<span>❌</span>
-										</div>
-										<div class="flex items-center justify-between">
-											<span>🔗 {$t('settings.integrations_settings')}</span>
-											<span>❌</span>
-										</div>
-										<div class="flex items-center justify-between opacity-30">
-											<span></span>
-											<span></span>
-										</div>
-									</div>
-								</div>
-							</div>
-
-							<div class="space-y-6">
-								<!-- Backup Data -->
-								<div class="p-6 bg-base-200 rounded-xl">
-									<h3 class="text-lg font-semibold mb-4">📤 {$t('settings.backup_your_data')}</h3>
-									<p class="text-base-content/70 mb-4">
-										{$t('settings.backup_your_data_desc')}
-									</p>
-									<div class="flex gap-4">
-										<a class="btn btn-primary" href="/api/backup/export">
-											💾 {$t('settings_download_backup')}
-										</a>
-									</div>
-								</div>
-
-								<!-- Restore Data -->
-								<div class="p-6 bg-base-200 rounded-xl">
-									<h3 class="text-lg font-semibold mb-4">📥 {$t('settings.restore_data')}</h3>
-									<p class="text-base-content/70 mb-4">
-										{$t('settings.restore_data_desc')}
-									</p>
-
-									<!-- Warning Alert -->
-									<div class="alert alert-warning mb-4">
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											class="stroke-current shrink-0 h-6 w-6"
-											fill="none"
-											viewBox="0 0 24 24"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												stroke-width="2"
-												d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-											/>
-										</svg>
-										<div>
-											<h4 class="font-bold">⚠️ {$t('settings.data_override_warning')}</h4>
-											<p class="text-sm">
-												{$t('settings.data_override_warning_desc')}
-											</p>
-										</div>
-									</div>
-
-									<!-- File Upload Form -->
-									<form
-										method="post"
-										action="?/restoreData"
-										use:enhance
-										on:submit={() => (isRestoring = true)}
-										enctype="multipart/form-data"
-										class="space-y-4"
-									>
-										<div class="form-control">
-											<label class="label" for="backup-file">
-												<span class="label-text font-medium"
-													>{$t('settings.select_backup_file')}</span
-												>
-											</label>
-											<input
-												type="file"
-												name="file"
-												id="backup-file"
-												class="file-input file-input-bordered file-input-primary w-full"
-												accept=".zip"
-												required
-											/>
-										</div>
-
-										<!-- Acknowledgment Checkbox -->
-										<div class="form-control">
-											<label class="label cursor-pointer justify-start gap-4">
-												<input
-													type="checkbox"
-													name="confirm"
-													value="yes"
-													class="checkbox checkbox-warning"
-													required
-													bind:checked={acknowledgeRestoreOverride}
-												/>
-												<div>
-													<span class="label-text font-medium text-warning"
-														>{$t('settings.data_override_acknowledge')}</span
-													>
-													<p class="text-xs text-base-content/60 mt-1">
-														{$t('settings.data_override_acknowledge_desc')}
-													</p>
-												</div>
-											</label>
-										</div>
-
-										{#if $page.form?.message && $page.form?.message.includes('restore')}
-											<div class="alert alert-error">
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													class="stroke-current shrink-0 h-6 w-6"
-													fill="none"
-													viewBox="0 0 24 24"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														stroke-width="2"
-														d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-													/>
-												</svg>
-												<span>{$t($page.form?.message)}</span>
-											</div>
-										{/if}
-
-										<div class="flex gap-4">
-											<button
-												type="submit"
-												class="btn btn-warning"
-												disabled={!acknowledgeRestoreOverride || isRestoring}
-											>
-												{#if isRestoring}
-													<span class="loading loading-spinner loading-sm mr-2"></span>
-												{/if}
-												🚀 {$t('settings.restore_data')}
-											</button>
-										</div>
-									</form>
-								</div>
-							</div>
-						</div>
-					{/if}
-
-					<!-- Admin Section -->
-					{#if activeSection === 'admin' && user.is_staff}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-							<div class="flex items-center gap-4 mb-6">
-								<div class="p-3 bg-error/10 rounded-xl">
-									<span class="text-2xl">⚙️</span>
-								</div>
-								<div>
-									<h2 class="text-2xl font-bold">{$t('settings.administration')}</h2>
-									<p class="text-base-content/70">{$t('settings.administration_desc')}</p>
-								</div>
-							</div>
-
-							<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-								<div
-									class="card bg-gradient-to-br from-primary/10 to-secondary/10 border border-primary/20"
-								>
-									<div class="card-body text-center">
-										<div class="text-4xl mb-4">🛠️</div>
-										<h3 class="card-title justify-center">{$t('navbar.admin_panel')}</h3>
-										<p class="text-sm text-base-content/70 mb-4">
-											{$t('settings.admin_panel_desc')}
-										</p>
-										<a class="btn btn-primary" href={`${public_url}/admin/`} target="_blank">
-											{$t('settings.launch_administration_panel')}
-										</a>
-									</div>
-								</div>
-
-								<div
-									class="card bg-gradient-to-br from-info/10 to-success/10 border border-info/20"
-								>
-									<div class="card-body text-center">
-										<div class="text-4xl mb-4">📍</div>
-										<h3 class="card-title justify-center">{$t('settings.region_updates')}</h3>
-										<p class="text-sm text-base-content/70 mb-4">
-											{$t('settings.region_updates_desc')}
-										</p>
-										<button class="btn btn-info" on:click={checkVisitedRegions}>
-											{$t('adventures.update_visited_regions')}
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					{:else if activeSection === 'admin' && !user.is_staff}
-						<div class="bg-base-100 rounded-2xl shadow-xl p-8 text-center">
+			<main class="flex-1 min-w-0">
+				{#if activeSection === 'profile'}
+					<ProfileSettingsPanel {user} onPublicProfileToggle={handlePublicProfileToggle} />
+				{:else if activeSection === 'emails'}
+					<EmailsSettingsPanel
+						{emails}
+						bind:newEmail={new_email}
+						onVerify={verifyEmail}
+						onMakePrimary={primaryEmail}
+						onRemove={removeEmail}
+						onAdd={addEmail}
+					/>
+				{:else if activeSection === 'security'}
+					<SecuritySettingsPanel
+						{user}
+						{emails}
+						authenticators={data.props.authenticators}
+						{socialProviders}
+						publicUrl={public_url}
+						{passwordPolicy}
+						bind:newPassword
+						bind:confirmPassword
+						{apiKeys}
+						bind:newApiKeyName
+						{newlyCreatedKey}
+						{keyCopied}
+						{sessions}
+						{isRevokingSession}
+						{mfaDisableNeedsReauth}
+						bind:mfaDisablePassword
+						{mfaDisableReauthError}
+						{isDisablingMfa}
+						{isVerifyingMfaDisablePassword}
+						onEnableMfa={() => (isMFAModalOpen = true)}
+						onDisableMfa={disableMfa}
+						onVerifyMfaDisablePassword={verifyMfaDisablePassword}
+						onCancelMfaDisableReauth={cancelMfaDisableReauth}
+						onDisablePassword={disablePassword}
+						onCreateApiKey={createApiKey}
+						onCopyKey={copyKey}
+						onDeleteApiKey={deleteApiKey}
+						onRevokeSession={revokeSession}
+						onRevokeOtherSessions={revokeOtherSessions}
+						onDismissNewKey={() => {
+							newlyCreatedKey = null;
+							keyCopied = false;
+						}}
+					/>
+				{:else if activeSection === 'integrations'}
+					<IntegrationsSettings
+						{user}
+						bind:immichIntegration
+						bind:googleMapsEnabled
+						bind:stravaGlobalEnabled
+						bind:stravaUserEnabled
+						bind:wandererEnabled
+						bind:wandererIntegration
+						bind:endurainEnabled
+						bind:endurainIntegration
+					/>
+				{:else if activeSection === 'data'}
+					<DataSettingsPanel
+						{mediaUsage}
+						{formatBytes}
+						{totalMediaBytes}
+						{mediaLimitBytes}
+						{totalMediaFiles}
+						{overallUsagePercent}
+						{imagesPercent}
+						{attachmentsPercent}
+						{profilePicsPercent}
+						{mediaLimitLabel}
+						bind:acknowledgeRestoreOverride
+						{isRestoring}
+						onRestoreStart={() => (isRestoring = true)}
+					/>
+				{:else if activeSection === 'danger'}
+					<DangerZoneSettingsPanel
+						{user}
+						bind:deleteConfirmation
+						bind:deletePassword
+						{isDeletingAccount}
+						{canDeleteAccount}
+						onDeleteSubmit={confirmDeleteAccount}
+					/>
+				{:else if activeSection === 'about'}
+					<AboutSettingsPanel {user} />
+				{:else if activeSection === 'admin'}
+					{#if user.is_staff}
+						<AdminSettingsPanel publicUrl={public_url} onUpdateRegions={checkVisitedRegions} />
+					{:else}
+						<div class="bg-base-100 rounded-2xl shadow-xl p-12 text-center">
 							<div class="text-6xl mb-4">🔒</div>
 							<h2 class="text-2xl font-bold mb-2">{$t('settings.access_restricted')}</h2>
-							<p class="text-base-content/70">
-								{$t('settings.access_restricted_desc')}
-							</p>
+							<p class="text-base-content/70">{$t('settings.access_restricted_desc')}</p>
 						</div>
 					{/if}
-
-					<!-- Advanced Section -->
-					{#if activeSection === 'advanced'}
-						<div class="space-y-8">
-							<!-- Social Auth Info -->
-							<div class="bg-base-100 rounded-2xl shadow-xl p-8">
-								<div class="flex items-center gap-4 mb-6">
-									<div class="p-3 bg-warning/10 rounded-xl">
-										<span class="text-2xl">🛠️</span>
-									</div>
-									<div>
-										<h2 class="text-2xl font-bold">{$t('settings.advanced_settings')}</h2>
-										<p class="text-base-content/70">
-											{$t('settings.advanced_settings_desc')}
-										</p>
-									</div>
-								</div>
-
-								<div class="space-y-6">
-									<!-- Social Auth Configuration -->
-									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">{$t('settings.social_auth_setup')}</h3>
-										<p class="text-base-content/70 mb-4">{$t('settings.social_auth_desc')}</p>
-
-										<div class="alert alert-info">
-											<svg
-												xmlns="http://www.w3.org/2000/svg"
-												fill="none"
-												viewBox="0 0 24 24"
-												class="stroke-info shrink-0 w-6 h-6"
-											>
-												<path
-													stroke-linecap="round"
-													stroke-linejoin="round"
-													stroke-width="2"
-													d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-												></path>
-											</svg>
-											<div>
-												<span>{$t('settings.social_auth_desc_2')}</span>
-												<a
-													href="https://adventurelog.app/docs/configuration/social_auth.html"
-													class="link link-neutral font-medium"
-													target="_blank">{$t('settings.documentation_link')}</a
-												>
-											</div>
-										</div>
-									</div>
-
-									<div class="p-6 bg-base-200 rounded-xl">
-										<div class="flex items-center gap-4 mb-5">
-											<div class="p-3 bg-secondary/10 rounded-xl">
-												<span class="text-2xl">📦</span>
-											</div>
-											<div>
-												<h3 class="text-lg font-semibold">{$t('settings.media')} Storage</h3>
-												<p class="text-sm text-base-content/70">
-													Storage usage for your uploaded images and attachments.
-												</p>
-											</div>
-										</div>
-
-										<div
-											class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-4"
-										>
-											<div>
-												<p class="text-sm text-base-content/70">
-													{#if mediaLimitBytes}
-														Using {formatBytes(totalMediaBytes)} of {mediaLimitLabel} ({overallUsagePercent}%).
-													{:else}
-														Using {formatBytes(totalMediaBytes)} with no configured limit.
-													{/if}
-												</p>
-											</div>
-											<div class="badge badge-primary badge-lg">
-												{#if mediaLimitBytes}
-													{overallUsagePercent}% used
-												{:else}
-													Unlimited
-												{/if}
-											</div>
-										</div>
-
-										<div class="stats stats-vertical lg:stats-horizontal w-full bg-base-100 shadow">
-											<div class="stat">
-												<div class="stat-title">Total used</div>
-												<div class="stat-value text-primary">{formatBytes(totalMediaBytes)}</div>
-												<div class="stat-desc">
-													{totalMediaFiles}
-													{$t('adventures.files')}
-												</div>
-											</div>
-											<div class="stat">
-												<div class="stat-title">{$t('adventures.images')}</div>
-												<div class="stat-value text-secondary">
-													{formatBytes(mediaUsage.images_bytes)}
-												</div>
-												<div class="stat-desc">
-													{mediaUsage.images_files}
-													{$t('adventures.files')}
-												</div>
-											</div>
-											<div class="stat">
-												<div class="stat-title">{$t('adventures.attachments')}</div>
-												<div class="stat-value text-accent">
-													{formatBytes(mediaUsage.attachments_bytes)}
-												</div>
-												<div class="stat-desc">
-													{mediaUsage.attachments_files}
-													{$t('adventures.files')}
-												</div>
-											</div>
-											<div class="stat">
-												<div class="stat-title">{$t('auth.profile_picture')}</div>
-												<div class="stat-value text-info">
-													{formatBytes(mediaUsage.profile_pics_bytes)}
-												</div>
-												<div class="stat-desc">
-													{mediaUsage.profile_pics_files}
-													{$t('adventures.files')}
-												</div>
-											</div>
-										</div>
-
-										<div class="mt-6 space-y-4">
-											<div>
-												<div class="flex items-center justify-between text-sm">
-													<span class="font-medium">{$t('adventures.images')}</span>
-													<span class="text-base-content/70">
-														{formatBytes(mediaUsage.images_bytes)}
-														{#if mediaLimitBytes}
-															/ {mediaLimitLabel} ({imagesPercent}%)
-														{/if}
-													</span>
-												</div>
-												<progress
-													class="progress progress-secondary"
-													value={imagesPercent}
-													max="100"
-												></progress>
-											</div>
-											<div>
-												<div class="flex items-center justify-between text-sm">
-													<span class="font-medium">{$t('adventures.attachments')}</span>
-													<span class="text-base-content/70">
-														{formatBytes(mediaUsage.attachments_bytes)}
-														{#if mediaLimitBytes}
-															/ {mediaLimitLabel} ({attachmentsPercent}%)
-														{/if}
-													</span>
-												</div>
-												<progress
-													class="progress progress-accent"
-													value={attachmentsPercent}
-													max="100"
-												></progress>
-											</div>
-											<div>
-												<div class="flex items-center justify-between text-sm">
-													<span class="font-medium">{$t('auth.profile_picture')}</span>
-													<span class="text-base-content/70">
-														{formatBytes(mediaUsage.profile_pics_bytes)}
-														{#if mediaLimitBytes}
-															/ {mediaLimitLabel} ({profilePicsPercent}%)
-														{/if}
-													</span>
-												</div>
-												<progress
-													class="progress progress-primary"
-													value={profilePicsPercent}
-													max="100"
-												></progress>
-											</div>
-										</div>
-									</div>
-
-									<!-- Debug Information -->
-									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">{$t('settings.debug_information')}</h3>
-										<div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm font-mono">
-											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">UUID:</span>
-												<br />
-												<span class="text-primary font-semibold">{user.uuid}</span>
-											</div>
-											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">{$t('settings.staff_status')}:</span>
-												<br />
-												<span class="badge {user.is_staff ? 'badge-success' : 'badge-error'}">
-													{user.is_staff ? $t('settings.staff_user') : $t('settings.regular_user')}
-												</span>
-											</div>
-											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">{$t('settings.app_version')}:</span>
-												<br />
-												<AppVersionDisplay size="sm" />
-											</div>
-											<div class="p-3 bg-base-300 rounded-lg">
-												<span class="text-base-content/60">Profile Type:</span>
-												<br />
-												<span class="badge {user.public_profile ? 'badge-info' : 'badge-ghost'}">
-													{user.public_profile ? $t('adventures.public') : $t('adventures.private')}
-												</span>
-											</div>
-										</div>
-									</div>
-
-									<!-- Quick Actions -->
-									<div class="p-6 bg-base-200 rounded-xl">
-										<h3 class="text-lg font-semibold mb-4">{$t('settings.quick_actions')}</h3>
-										<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-											<button class="btn btn-outline btn-info" on:click={checkVisitedRegions}>
-												📍 {$t('adventures.update_visited_regions')}
-											</button>
-											{#if user.is_staff}
-												<a
-													class="btn btn-outline btn-primary"
-													href={`${public_url}/admin/`}
-													target="_blank"
-												>
-													⚙️ {$t('settings.launch_administration_panel')}
-												</a>
-											{/if}
-										</div>
-									</div>
-
-									<!-- Developer message and thanks -->
-									<div class="p-6 bg-base-200 rounded-xl">
-										<div class="text-center space-y-3">
-											<h4 class="font-medium">{$t('about.about')} AdventureLog</h4>
-											<p>
-												{$t('about.license')}
-											</p>
-											<p class="text-sm text-base-content/70">
-												© {copyrightYear}
-												<a href="https://seanmorley.com" target="_blank" class="link">Sean Morley</a
-												>. {$t('settings.all_rights_reserved')}
-											</p>
-											<div class="flex justify-center gap-3 mt-2">
-												<a
-													href="https://github.com/seanmorley15/AdventureLog"
-													target="_blank"
-													class="link link-primary text-sm"
-												>
-													GitHub
-												</a>
-												<a
-													href="https://github.com/seanmorley15/AdventureLog/blob/main/LICENSE"
-													target="_blank"
-													class="link link-secondary text-sm"
-												>
-													{$t('settings.license')}
-												</a>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-					{/if}
-				</div>
-			</div>
+				{/if}
+			</main>
 		</div>
 	</div>
 </div>
@@ -1705,6 +608,6 @@
 	<title>User Settings | AdventureLog</title>
 	<meta
 		name="description"
-		content="Comprehensive user settings dashboard. Manage your profile, security, emails, integrations, and more in one organized interface."
+		content="Manage your AdventureLog profile, security, integrations, data, and account settings."
 	/>
 </svelte:head>

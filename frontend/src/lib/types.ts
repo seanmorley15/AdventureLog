@@ -42,6 +42,7 @@ export type SubscriptionStatus = 'trial' | 'active' | 'canceled' | 'past_due';
 
 export type Subscription = {
 	status: SubscriptionStatus;
+	stripe_customer_id: string | null;
 	stripe_subscription_id: string | null;
 	trial_ends_at: string | null;
 	current_period_ends_at: string | null;
@@ -346,6 +347,15 @@ export type APIKey = {
 	key_prefix: string;
 	created_at: string;
 	last_used_at: string | null;
+};
+
+export type AuthUserSession = {
+	id: number;
+	user_agent: string;
+	ip: string;
+	created_at: number;
+	is_current: boolean;
+	last_seen_at?: number;
 };
 
 export type ImmichAlbum = {

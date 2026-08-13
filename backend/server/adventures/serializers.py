@@ -59,11 +59,18 @@ class ContentImageSerializer(CoordinateSerializerMixin, CustomModelSerializer):
         ]
         read_only_fields = ['id', 'user']
 
+    def _get_immich_integration(self, user_id):
+        """Cache Immich integrations per request to avoid N+1 lookups."""
+        cache = self.context.setdefault('_immich_integrations', {})
+        if user_id not in cache:
+            cache[user_id] = ImmichIntegration.objects.filter(user_id=user_id).first()
+        return cache[user_id]
+
     def to_representation(self, instance):
         # If immich_id is set, check for user integration once
         integration = None
         if instance.immich_id:
-            integration = ImmichIntegration.objects.filter(user=instance.user).first()
+            integration = self._get_immich_integration(instance.user_id)
             if not integration:
                 return None  # Skip if Immich image but no integration
 
@@ -511,6 +518,60 @@ class CalendarLocationSerializer(serializers.ModelSerializer):
         return {
             "name": obj.category.name,
             "icon": obj.category.icon,
+        }
+
+
+class LocationListSerializer(CoordinateSerializerMixin, serializers.ModelSerializer):
+    """
+    Lightweight serializer for location list endpoints (e.g. /filtered/).
+    Omits visits/activities/geojson, attachments, trails, and geo objects that
+    dominate payload size and CPU on the locations index page.
+    """
+    images = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    is_visited = serializers.SerializerMethodField()
+    user = serializers.SerializerMethodField()
+    collections = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+    class Meta:
+        model = Location
+        fields = [
+            'id', 'name', 'rating', 'tags', 'location', 'is_public', 'collections',
+            'created_at', 'updated_at', 'images', 'link', 'longitude', 'latitude',
+            'is_visited', 'category', 'user', 'price', 'price_currency',
+        ]
+        read_only_fields = fields
+
+    def get_images(self, obj):
+        serializer = ContentImageSerializer(obj.images.all(), many=True, context=self.context)
+        return [image for image in serializer.data if image is not None]
+
+    def get_category(self, obj):
+        if not obj.category:
+            return None
+        return {
+            'id': str(obj.category.id),
+            'name': obj.category.name,
+            'display_name': obj.category.display_name,
+            'icon': obj.category.icon,
+        }
+
+    def get_is_visited(self, obj):
+        annotated = getattr(obj, 'annotated_is_visited', None)
+        if annotated is not None:
+            return bool(annotated)
+        return obj.is_visited_status()
+
+    def get_user(self, obj):
+        if not obj.user:
+            return None
+        return {
+            'uuid': str(obj.user.uuid),
+            'username': obj.user.username,
+            'first_name': obj.user.first_name,
+            'last_name': obj.user.last_name,
+            'profile_pic': _build_profile_pic_url(obj.user),
+            'public_profile': bool(getattr(obj.user, 'public_profile', False)),
         }
 
                                    

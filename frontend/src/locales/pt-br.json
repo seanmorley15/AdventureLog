@@ -1178,7 +1178,6 @@
 		"public_profile_revoked_invites": "{count} convites de coleta pendentes cancelados.",
 		"public_profile_sharing_warning": "Atualmente você está compartilhado em {count} coleções. \nTornar seu perfil privado removerá você dessas coleções."
 	},
-	"settings_download_backup": "Baixar Backup",
 	"share": {
 		"available": "Disponível",
 		"no_users_shared": "Nenhum usuário compartilhado com",

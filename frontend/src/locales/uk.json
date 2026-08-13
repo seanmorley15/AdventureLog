@@ -1178,7 +1178,6 @@
 		"public_profile_revoked_invites": "Скасовано {count} незавершених запрошень до колекції.",
 		"public_profile_sharing_warning": "Ви наразі маєте спільний доступ до {count} колекції(й). \nЯкщо зробити свій профіль приватним, вас буде видалено з цих колекцій."
 	},
-	"settings_download_backup": "Завантажте резервну копію",
 	"share": {
 		"available": "в наявності",
 		"available_users": "Доступні користувачі",
