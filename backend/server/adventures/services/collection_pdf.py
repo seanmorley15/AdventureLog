@@ -49,6 +49,15 @@ COLOR_MUTED = colors.HexColor('#64748b')
 COLOR_BORDER = colors.HexColor('#e2e8f0')
 COLOR_LIGHT_BG = colors.HexColor('#f8fafc')
 
+# Letter frames are ~686pt; ItemBody leading is 13pt. Keep chunks well under that
+# so a card cell (title + padding) can split across pages without LayoutError.
+_MAX_PDF_PARAGRAPH_LINES = 35
+_MAX_PDF_PARAGRAPH_CHARS = 2000
+# Tour notes can be long; still cap so a single export cannot explode.
+_NOTE_PDF_MAX_LENGTH = 100_000
+# Minimum leftover height (points) required to split a card mid-row.
+_CARD_SPLIT_IN_ROW = 40
+
 
 def get_collection_for_pdf(collection_id) -> Collection:
     """Load a collection with relations needed for PDF export."""
@@ -98,9 +107,41 @@ def _plain_text(value: Optional[str], max_length: int = 2000) -> str:
     text = re.sub(r'`([^`]+)`', r'\1', text)
     text = text.replace('\r\n', '\n').replace('\r', '\n')
     text = re.sub(r'\n{3,}', '\n\n', text).strip()
-    if len(text) > max_length:
+    if max_length and len(text) > max_length:
         return text[: max_length - 3] + '...'
     return text
+
+
+def _iter_text_chunks(text: str) -> List[str]:
+    """Split plain text into page-friendly sections for PDF paragraphs."""
+    chunks: List[str] = []
+    for block in re.split(r'\n\s*\n', text):
+        block = block.strip()
+        if not block:
+            continue
+        current: List[str] = []
+        current_chars = 0
+        for line in block.split('\n'):
+            extra = len(line) + (1 if current else 0)
+            if current and (
+                len(current) >= _MAX_PDF_PARAGRAPH_LINES
+                or current_chars + extra > _MAX_PDF_PARAGRAPH_CHARS
+            ):
+                chunks.append('\n'.join(current))
+                current = []
+                current_chars = 0
+            current.append(line)
+            current_chars += extra
+        if current:
+            chunks.append('\n'.join(current))
+    return chunks
+
+
+def _body_paragraphs(value: Optional[str], style, max_length: int = 2000) -> List:
+    text = _plain_text(value, max_length=max_length)
+    if not text:
+        return []
+    return [Paragraph(pdf_markup(chunk), style) for chunk in _iter_text_chunks(text)]
 
 
 def _format_date(d: Optional[date]) -> str:
@@ -287,9 +328,7 @@ def _location_paragraphs(location: Location, styles) -> List:
         elif start:
             flowables.append(Paragraph(f'Visit: {_format_short_date(start)}', styles['ItemMeta']))
 
-    desc = _plain_text(location.description)
-    if desc:
-        flowables.append(Paragraph(pdf_markup(desc), styles['ItemBody']))
+    flowables.extend(_body_paragraphs(location.description, styles['ItemBody']))
 
     extras = []
     if location.rating is not None:
@@ -330,9 +369,7 @@ def _transportation_paragraphs(transport: Transportation, styles) -> List:
     if transport.flight_number:
         flowables.append(Paragraph(f'Flight: {pdf_markup(transport.flight_number)}', styles['ItemMeta']))
 
-    desc = _plain_text(transport.description)
-    if desc:
-        flowables.append(Paragraph(pdf_markup(desc), styles['ItemBody']))
+    flowables.extend(_body_paragraphs(transport.description, styles['ItemBody']))
 
     extras = []
     if transport.rating is not None:
@@ -365,9 +402,7 @@ def _lodging_paragraphs(lodging: Lodging, styles) -> List:
     if lodging.reservation_number:
         flowables.append(Paragraph(f'Confirmation: {pdf_markup(lodging.reservation_number)}', styles['ItemMeta']))
 
-    desc = _plain_text(lodging.description)
-    if desc:
-        flowables.append(Paragraph(pdf_markup(desc), styles['ItemBody']))
+    flowables.extend(_body_paragraphs(lodging.description, styles['ItemBody']))
 
     extras = []
     if lodging.rating is not None:
@@ -387,9 +422,9 @@ def _note_paragraphs(note: Note, styles) -> List:
     flowables.append(Paragraph(f'<b>{pdf_markup(note.name or "Note")}</b>', styles['ItemTitle']))
     if note.date:
         flowables.append(Paragraph(_format_short_date(note.date), styles['ItemMeta']))
-    content = _plain_text(note.content)
-    if content:
-        flowables.append(Paragraph(pdf_markup(content), styles['ItemBody']))
+    flowables.extend(
+        _body_paragraphs(note.content, styles['ItemBody'], max_length=_NOTE_PDF_MAX_LENGTH)
+    )
     if note.links:
         for link in note.links:
             if link:
@@ -421,18 +456,20 @@ def _checklist_paragraphs(checklist: Checklist, styles, _body_font: str, _emoji_
             Paragraph(pdf_markup(item.name or ''), styles['ItemBody']),
         ])
     if rows:
-        table = Table(rows, colWidths=[0.35 * inch, 6.0 * inch])
-        table.setStyle(
-            TableStyle(
-                [
-                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-                    ('LEFTPADDING', (0, 0), (-1, -1), 0),
-                    ('RIGHTPADDING', (0, 0), (-1, -1), 4),
-                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-                ]
+        # One row per item (not a nested unsplittable table) so long checklists paginate.
+        for row in rows:
+            item_table = Table([row], colWidths=[0.35 * inch, 6.0 * inch])
+            item_table.setStyle(
+                TableStyle(
+                    [
+                        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                        ('LEFTPADDING', (0, 0), (-1, -1), 0),
+                        ('RIGHTPADDING', (0, 0), (-1, -1), 4),
+                        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+                    ]
+                )
             )
-        )
-        flowables.append(table)
+            flowables.append(item_table)
     return flowables
 
 
@@ -464,19 +501,30 @@ def _item_card(
             f'<font color="#64748b">{_item_type_label(model).upper()}</font>',
             styles['ItemLabel'],
         ),
-        Spacer(1, 4),
     ]
     inner.extend(_item_flowables(model, obj, styles, body_font, emoji_font))
-    card = Table([[inner]], colWidths=[6.5 * inch])
+    # One flowable per row so ReportLab can page-split between sections. Do not
+    # repeatRows: that reprints "1. NOTE" at every page/row split. splitInRow
+    # still splits an oversized cell (e.g. a still-too-tall paragraph) mid-row.
+    rows = [[flowable] for flowable in inner]
+    card = Table(
+        rows,
+        colWidths=[6.5 * inch],
+        splitByRow=1,
+        splitInRow=_CARD_SPLIT_IN_ROW,
+    )
     card.setStyle(
         TableStyle(
             [
                 ('BACKGROUND', (0, 0), (-1, -1), COLOR_LIGHT_BG),
                 ('BOX', (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP'),
                 ('LEFTPADDING', (0, 0), (-1, -1), 12),
                 ('RIGHTPADDING', (0, 0), (-1, -1), 12),
-                ('TOPPADDING', (0, 0), (-1, -1), 10),
-                ('BOTTOMPADDING', (0, 0), (-1, -1), 10),
+                ('TOPPADDING', (0, 0), (-1, -1), 4),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                ('TOPPADDING', (0, 0), (0, 0), 10),
+                ('BOTTOMPADDING', (0, -1), (-1, -1), 10),
             ]
         )
     )
