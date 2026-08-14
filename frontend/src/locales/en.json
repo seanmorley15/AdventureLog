@@ -165,6 +165,7 @@
 		"open_in_maps": "Open in Maps",
 		"fetch_image": "Fetch Image",
 		"wikipedia": "Wikipedia",
+		"google_maps": "Google Maps",
 		"add": "Add",
 		"end_date": "End Date",
 		"start_date": "Start Date",
@@ -178,7 +179,8 @@
 		"attachment": "Attachment",
 		"images": "Images",
 		"image_modal_navigate": "Use arrow keys or click to navigate",
-		"generate_desc": "Generate Description",
+		"generate_desc": "Fetch Description",
+		"google_maps_error": "Failed to fetch description from Google Maps",
 		"public_location": "Public Location",
 		"link": "Link",
 		"links": "Links",
@@ -326,7 +328,7 @@
 		"continue": "Continue",
 		"update_location_details": "Update location details",
 		"create_new_location": "Create new location",
-		"wikipedia_error": "Failed to generate description from Wikipedia",
+		"wikipedia_error": "Failed to fetch description from Wikipedia",
 		"public_location_description": "Make this location visible to other users",
 		"location_map": "Location & Map",
 		"location_display_name": "Location Display Name",
@@ -1563,7 +1565,8 @@
 		"TRY": "Turkish Lira",
 		"select_currency": "Select currency",
 		"search": "Search currency",
-		"no_matches": "No matches"
+		"no_matches": "No matches",
+		"default": "Default"
 	},
 	"api_keys": {
 		"title": "API Keys",

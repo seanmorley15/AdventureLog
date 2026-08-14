@@ -157,6 +157,12 @@ DATABASES = {
     }
 }
 
+# runserver starts a new thread per request. Persistent connections are
+# thread-local, so CONN_MAX_AGE cannot reuse them and leaks until Postgres
+# hits max_connections. Close after each request in DEBUG unless overridden.
+if DEBUG and 'PG_CONN_MAX_AGE' not in os.environ:
+    DATABASES['default']['CONN_MAX_AGE'] = 0
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
 

@@ -43,6 +43,7 @@
 	import LodgingModal from '$lib/components/lodging/LodgingModal.svelte';
 	import TransportationModal from '$lib/components/transportation/TransportationModal.svelte';
 	import LocationModal from '$lib/components/locations/LocationModal.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -427,16 +428,6 @@
 		return fullName || person.username;
 	}
 
-	function collaboratorInitials(person: Collaborator | null | undefined): string {
-		const name = collaboratorDisplayName(person) || person?.username || '';
-		const parts = name.split(/\s+/).filter(Boolean);
-		const initials = parts
-			.slice(0, 2)
-			.map((part) => part[0]?.toUpperCase() || '')
-			.join('');
-		return initials || (person?.username ? person.username.slice(0, 2).toUpperCase() : '');
-	}
-
 	function switchView(view: ViewType) {
 		const url = new URL($page.url);
 		url.searchParams.set('view', view);
@@ -664,6 +655,19 @@
 		applyCollectionPageData(getCollectionFromPageData(data));
 	});
 </script>
+
+{#snippet collaboratorAvatar(person: Collaborator)}
+	<div
+		class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 overflow-hidden"
+	>
+		<UserAvatar
+			user={person}
+			alt={collaboratorDisplayName(person)}
+			className="w-9 h-9 rounded-full"
+			textClass="text-xs"
+		/>
+	</div>
+{/snippet}
 
 {#if notFound}
 	<div class="hero min-h-screen bg-gradient-to-br from-base-200 to-base-300 overflow-x-hidden">
@@ -1258,35 +1262,11 @@
 													title={collaboratorDisplayName(person)}
 													tabindex="0"
 												>
-													<div
-														class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
-													>
-														{#if person.profile_pic}
-															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
-														{:else}
-															<span
-																class="text-xs font-semibold text-base-content/80 flex items-center justify-center w-full h-full bg-primary/10"
-															>
-																{collaboratorInitials(person)}
-															</span>
-														{/if}
-													</div>
+													{@render collaboratorAvatar(person)}
 												</a>
 											{:else}
 												<div class="avatar tooltip" data-tip={collaboratorDisplayName(person)}>
-													<div
-														class="w-9 h-9 rounded-full ring-3 ring-base-200 ring-offset-base-100 ring-offset-2 bg-base-300 overflow-hidden"
-													>
-														{#if person.profile_pic}
-															<img src={person.profile_pic} alt={collaboratorDisplayName(person)} />
-														{:else}
-															<span
-																class="text-xs font-semibold text-base-content/80 flex items-center justify-center w-full h-full bg-primary/10"
-															>
-																{collaboratorInitials(person)}
-															</span>
-														{/if}
-													</div>
+													{@render collaboratorAvatar(person)}
 												</div>
 											{/if}
 										{/each}

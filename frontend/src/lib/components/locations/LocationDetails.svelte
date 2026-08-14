@@ -16,7 +16,6 @@
 	import MapIcon from '~icons/mdi/map';
 	import InfoIcon from '~icons/mdi/information';
 	import CategoryIcon from '~icons/mdi/tag';
-	import GenerateIcon from '~icons/mdi/lightning-bolt';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
 	import ClearIcon from '~icons/mdi/close-circle';
@@ -67,8 +66,6 @@
 
 	let user: User | null = $state(null);
 	let locationToEdit: Location | null = $state(null);
-	let wikiError = $state('');
-	let isGeneratingDesc = $state(false);
 	let ownerUser: User | null = $state(null);
 
 	function toFiniteNumber(value: unknown): number | null {
@@ -105,7 +102,7 @@
 	run(() => {
 		moneyValue =
 			location.price === null
-				? { amount: null, currency: location.price_currency || null }
+				? { amount: null, currency: location.price_currency || defaultCurrency }
 				: toMoneyValue(location.price, location.price_currency, defaultCurrency);
 	});
 	run(() => {
@@ -141,29 +138,6 @@
 		location.latitude = null;
 		location.longitude = null;
 		location.location = '';
-	}
-
-	async function generateDesc() {
-		if (!location.name) return;
-
-		isGeneratingDesc = true;
-		wikiError = '';
-
-		try {
-			const response = await fetch(
-				`/api/generate/desc/?name=${encodeURIComponent(location.name)}&lang=${$locale || 'en'}`
-			);
-			if (response.ok) {
-				const data = await response.json();
-				location.description = data.extract || '';
-			} else {
-				wikiError = `${$t('adventures.wikipedia_error') || 'Error fetching description from Wikipedia'}`;
-			}
-		} catch (error) {
-			wikiError = `${$t('adventures.wikipedia_error') || ''}`;
-		} finally {
-			isGeneratingDesc = false;
-		}
 	}
 
 	async function handleSave() {
@@ -273,7 +247,8 @@
 	});
 </script>
 
-<div class="space-y-6">
+<div class="h-full min-h-0 flex flex-col">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 		<!-- Basic Information Section -->
 		<div class="card bg-base-100 border border-base-300">
 			<div class="card-body p-6">
@@ -308,7 +283,7 @@
 								{$t('adventures.category')} <span class="text-error">*</span>
 							</label>
 							{#if (user && ownerUser && user.uuid == ownerUser.uuid) || !ownerUser}
-								<CategoryDropdown bind:selected_category={location.category} />
+								<CategoryDropdown id="category" bind:selected_category={location.category} />
 							{:else}
 								<div
 									class="flex items-center gap-3 p-3 bg-base-200/40 border border-base-300 rounded-lg"
@@ -326,14 +301,10 @@
 						<MoneyInput
 							label={$t('adventures.price')}
 							value={moneyValue}
+							{defaultCurrency}
 							on:change={(event) => {
 								location.price = event.detail.amount;
-								location.price_currency = event.detail.currency;
-
-								// If an amount exists but no currency is chosen, fall back to the user's default
-								if (location.price !== null && !location.price_currency) {
-									location.price_currency = defaultCurrency;
-								}
+								location.price_currency = event.detail.currency || defaultCurrency;
 							}}
 						/>
 
@@ -412,29 +383,14 @@
 						<!-- Description Field -->
 						<div class="flex flex-col">
 							<label class="field-label" for="description">{$t('adventures.description')}</label>
-							<MarkdownEditor bind:text={location.description} editor_height="h-32" />
-
-							<div class="flex items-center gap-4 mt-3">
-								<button
-									type="button"
-									class="btn btn-neutral btn-sm gap-2"
-									onclick={generateDesc}
-									disabled={!location.name || isGeneratingDesc}
-								>
-									{#if isGeneratingDesc}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
-										<GenerateIcon class="w-4 h-4" />
-									{/if}
-									{$t('adventures.generate_desc')}
-								</button>
-								{#if wikiError}
-									<div class="alert alert-error">
-										<InfoIcon class="w-4 h-4" />
-										<span class="text-sm">{wikiError}</span>
-									</div>
-								{/if}
-							</div>
+							<MarkdownEditor
+								id="description"
+								bind:text={location.description}
+								editor_height="h-32"
+								enableFetch
+								fetchName={location.name}
+								fetchLang={$locale || 'en'}
+							/>
 						</div>
 					</div>
 				</div>
@@ -486,8 +442,12 @@
 			</div>
 		</div>
 
+	</div>
+
 		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
+		<div
+			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+		>
 			<button class="btn btn-ghost gap-2" onclick={handleBack}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}

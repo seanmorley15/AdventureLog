@@ -7,9 +7,14 @@
 	interface Props {
 		selected_category?: Category | null;
 		searchTerm?: string;
+		id?: string;
 	}
 
-	let { selected_category = $bindable(null), searchTerm = $bindable('') }: Props = $props();
+	let {
+		selected_category = $bindable(null),
+		searchTerm = $bindable(''),
+		id = undefined
+	}: Props = $props();
 
 	const emptyCategory: Category = {
 		name: '',
@@ -138,7 +143,8 @@
 <div class="dropdown w-full" class:dropdown-open={isOpen} class:dropdown-top={openUpward} bind:this={dropdownRef}>
 	<button
 		type="button"
-		class="btn btn-outline w-full justify-between sm:h-auto h-12"
+		{id}
+		class="input w-full h-12 min-h-12 flex justify-between items-center gap-2 cursor-pointer font-normal text-left"
 		aria-haspopup="listbox"
 		aria-expanded={isOpen}
 		onclick={toggleDropdown}
@@ -152,7 +158,10 @@
 			{/if}
 		</span>
 		<svg
-			class={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+			class={[
+				'w-4 h-4 shrink-0 text-base-content/50 transition-transform duration-200',
+				isOpen && 'rotate-180'
+			]}
 			fill="none"
 			stroke="currentColor"
 			viewBox="0 0 24 24"

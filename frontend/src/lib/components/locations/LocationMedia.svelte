@@ -381,7 +381,8 @@
 	});
 </script>
 
-<div class="space-y-6">
+<div class="h-full min-h-0 flex flex-col">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 		<!-- Image Management Section -->
 		<ImageManagement
 			bind:images
@@ -783,8 +784,12 @@
 			</div>
 		</div>
 
+	</div>
+
 		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
+		<div
+			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+		>
 			<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}

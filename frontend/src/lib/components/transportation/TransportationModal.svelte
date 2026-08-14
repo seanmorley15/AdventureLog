@@ -171,21 +171,21 @@
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
-<dialog id="transportation_modal" class="modal backdrop-blur-xs">
+<dialog id="transportation_modal" class="modal modal-bottom md:modal-middle backdrop-blur-xs">
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl"
+		class="modal-box transportation-modal-box w-11/12 max-w-6xl bg-gradient-to-br from-base-100 via-base-100 to-base-200 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
 		onkeydown={handleKeydown}
 		tabindex="0"
 	>
 		<!-- Header Section - Following adventurelog pattern -->
 		<div
-			class="top-0 z-10 bg-base-100/90 backdrop-blur-lg border-b border-base-300 -mx-6 -mt-6 px-6 py-4 mb-6"
+			class="shrink-0 bg-base-100/90 backdrop-blur-lg border-b border-base-300 px-4 md:px-6 py-3 md:py-4"
 		>
-			<div class="flex items-center justify-between">
-				<div class="flex items-center gap-3">
+			<div class="flex items-center justify-between gap-3">
+				<div class="flex items-center gap-3 min-w-0">
 					<div class="p-2 bg-primary/10 rounded-xl">
 						<Plane class="w-6 h-6 text-primary" />
 					</div>
@@ -256,7 +256,7 @@
 				<!-- Close Button -->
 				<button
 					type="button"
-					class="btn btn-ghost btn-square"
+					class="btn btn-ghost btn-square shrink-0"
 					aria-label={$t('about.close')}
 					title={$t('about.close')}
 					onclick={close}
@@ -273,6 +273,7 @@
 			</div>
 		</div>
 
+		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
 		{#if steps[0].selected}
 			<TransportationDetails
 				currentUser={user}
@@ -321,5 +322,24 @@
 				{user}
 			/>
 		{/if}
+		</div>
 	</div>
 </dialog>
+
+<style>
+	.transportation-modal-box {
+		width: 100%;
+		max-width: 100%;
+		height: 100dvh;
+		max-height: 100dvh;
+	}
+
+	@media (min-width: 768px) {
+		.transportation-modal-box {
+			width: min(96vw, 72rem);
+			max-width: 72rem;
+			height: min(90dvh, 56rem);
+			max-height: 90dvh;
+		}
+	}
+</style>

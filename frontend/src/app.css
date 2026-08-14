@@ -36,10 +36,15 @@
 	--size-selector: 0.25rem;
 	--size-field: 0.25rem;
 	--border: 1px;
-	--depth: 1;
+	--depth: 0;
 	--noise: 0;
 	font-family:
-		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif;
 }
 
 @plugin 'daisyui/theme' {
@@ -72,10 +77,15 @@
 	--size-selector: 0.25rem;
 	--size-field: 0.25rem;
 	--border: 1px;
-	--depth: 1;
+	--depth: 0;
 	--noise: 0;
 	font-family:
-		ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+		ui-sans-serif,
+		system-ui,
+		-apple-system,
+		BlinkMacSystemFont,
+		'Segoe UI',
+		sans-serif;
 }
 
 @plugin 'daisyui/theme' {
@@ -243,21 +253,30 @@
 	padding-inline: 1rem;
 }
 
-:where(.field-label) + :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+:where(.field-label)
+	+ :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
 	height: 3rem;
 	min-height: 3rem;
 	font-size: 1rem;
 	padding-inline: 1rem;
 }
 
-:where(.field-label) + :where(.flex, .relative, .join, .grid, .mt-1, .dropdown) :where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
+:where(.field-label)
+	+ :where(.flex, .relative, .join, .grid, .mt-1, .dropdown)
+	:where(.input, .select):not(.input-sm):not(.input-xs):not(.select-sm):not(.select-xs) {
 	height: 3rem;
 	min-height: 3rem;
 	font-size: 1rem;
 	padding-inline: 1rem;
 }
 
-:where(.field-label) + :where(.dropdown) > :where(.btn):not(.btn-sm):not(.btn-xs):not(.btn-ghost) {
+:where(.field-label) + :where(.join) :where(.btn):not(.btn-sm):not(.btn-xs) {
+	height: 3rem;
+	min-height: 3rem;
+}
+
+:where(.field-label) + :where(.dropdown) > :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs),
+:where(.field-label) + * > :where(.dropdown) > :where(.btn, .input):not(.btn-sm):not(.btn-xs):not(.btn-ghost):not(.input-sm):not(.input-xs) {
 	height: 3rem;
 	min-height: 3rem;
 }

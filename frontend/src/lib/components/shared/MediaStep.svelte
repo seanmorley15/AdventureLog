@@ -90,7 +90,8 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
+<div class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
 	<div class="max-w-full mx-auto space-y-6">
 		<!-- Image Management Section -->
 		<ImageManagement
@@ -116,8 +117,13 @@
 			{user}
 		/>
 
+	</div>
+	</div>
+
 		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
+		<div
+			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+		>
 			<button class="btn btn-ghost gap-2" onclick={handleBack} disabled={importInProgress}>
 				<ArrowLeftIcon class="w-5 h-5" />
 				{$t('adventures.back')}
@@ -128,5 +134,4 @@
 				{$t('adventures.done')}
 			</button>
 		</div>
-	</div>
 </div>

@@ -282,7 +282,7 @@
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
-		class="modal-box location-modal-box w-11/12 max-w-6xl bg-base-100 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-t-2xl md:rounded-2xl"
+		class="modal-box location-modal-box w-11/12 max-w-6xl bg-base-100 border border-base-300 shadow-2xl flex flex-col p-0 overflow-hidden rounded-none md:rounded-2xl"
 		role="dialog"
 		aria-labelledby="location-modal-title"
 		onkeydown={handleKeydown}
@@ -385,7 +385,7 @@
 			</div>
 		</div>
 
-		<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
+		<div class="flex-1 min-h-0 overflow-hidden [&>*]:h-full [&>*]:min-h-0">
 		{#if steps[0].selected && !isEditMode}
 			<!-- Main Content -->
 			<LocationQuickStart
@@ -491,8 +491,8 @@
 	.location-modal-box {
 		width: 100%;
 		max-width: 100%;
-		height: 92dvh;
-		max-height: 92dvh;
+		height: 100dvh;
+		max-height: 100dvh;
 	}
 
 	@media (min-width: 768px) {

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { run } from 'svelte/legacy';
 
-	import { tick } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 	import { CURRENCY_LABELS, CURRENCY_OPTIONS } from '$lib/money';
 	import { t } from 'svelte-i18n';
@@ -15,6 +14,7 @@
 		placeholder?: string;
 		disabled?: boolean;
 		id?: string;
+		defaultCurrency?: string | null;
 	}
 
 	let {
@@ -22,7 +22,8 @@
 		options = CURRENCY_OPTIONS,
 		placeholder = '',
 		disabled = false,
-		id
+		id,
+		defaultCurrency = null
 	}: Props = $props();
 
 	const dispatch = createEventDispatcher<{ change: string | null }>();
@@ -31,7 +32,6 @@
 	let openUpward = $state(false);
 	let search = $state('');
 	let container: HTMLDivElement | null = $state(null);
-	let searchInput: HTMLInputElement | null = $state(null);
 	let normalizedOptions: CurrencyOption[] = $state([]);
 
 	run(() => {
@@ -41,29 +41,40 @@
 		}));
 	});
 
-	let filteredOptions = $derived(normalizedOptions.filter((option) => {
-		if (!search.trim()) return true;
+	let filteredOptions = $derived.by(() => {
 		const term = search.trim().toLowerCase();
-		return (
-			option.code.toLowerCase().includes(term) || (option.label || '').toLowerCase().includes(term)
-		);
-	}));
+		const matches = normalizedOptions.filter((option) => {
+			if (!term) return true;
+			return (
+				option.code.toLowerCase().includes(term) ||
+				(option.label || '').toLowerCase().includes(term)
+			);
+		});
+
+		if (!defaultCurrency) return matches;
+
+		const defaultIndex = matches.findIndex((option) => option.code === defaultCurrency);
+		if (defaultIndex <= 0) return matches;
+
+		const next = [...matches];
+		const [preferred] = next.splice(defaultIndex, 1);
+		next.unshift(preferred);
+		return next;
+	});
 
 	function closeDropdown() {
 		open = false;
 		search = '';
 	}
 
-	async function openDropdown() {
+	function openDropdown() {
 		if (disabled) return;
 		openUpward = shouldFlipDropdownUp(container);
 		open = true;
-		await tick();
-		searchInput?.focus();
 	}
 
 	function toggleDropdown() {
-		open ? closeDropdown() : void openDropdown();
+		open ? closeDropdown() : openDropdown();
 	}
 
 	function handleFocusOut(event: FocusEvent) {
@@ -98,7 +109,7 @@
 </script>
 
 <div
-	class={`dropdown w-full ${open ? 'dropdown-open' : ''}`}
+	class={`dropdown dropdown-end flex shrink-0 ${open ? 'dropdown-open' : ''}`}
 	class:dropdown-top={openUpward}
 	class:dropdown-bottom={!openUpward}
 	bind:this={container}
@@ -106,28 +117,23 @@
 >
 	<button
 		type="button"
-		class="input w-full justify-between gap-3 bg-base-100/80 focus:bg-base-100 flex items-center"
+		class="btn join-item h-full min-w-24 gap-1 bg-base-100 px-3 font-mono font-normal"
 		aria-haspopup="listbox"
 		aria-expanded={open}
 		aria-controls={id ? `${id}-listbox` : undefined}
+		aria-label={value
+			? `${value} ${$t(`currencies.${value}`) || CURRENCY_LABELS[value] || ''}`
+			: $t('currencies.select_currency') || placeholder}
+		title={value ? $t(`currencies.${value}`) || CURRENCY_LABELS[value] : undefined}
 		onclick={toggleDropdown}
 		onkeydown={handleButtonKeydown}
 		{disabled}
 		{id}
 	>
-		<span class="flex items-center gap-2 truncate">
-			<span class="font-mono text-sm"
-				>{value || $t('currencies.select_currency') || placeholder}</span
-			>
-			{#if value}
-				<span class="text-xs text-base-content/70 truncate"
-					>{$t(`currencies.${value}`) || CURRENCY_LABELS[value]}</span
-				>
-			{/if}
-		</span>
+		<span class="font-mono text-sm truncate">{value || '—'}</span>
 		<svg
 			xmlns="http://www.w3.org/2000/svg"
-			class={`h-4 w-4 transition-transform ${open ? 'rotate-180' : ''}`}
+			class={`h-4 w-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
 			fill="none"
 			viewBox="0 0 24 24"
 			stroke="currentColor"
@@ -138,10 +144,20 @@
 		</svg>
 	</button>
 
-	<div tabindex="-1" class="dropdown-content z-50 w-full">
-		<div class="card border border-base-300 bg-base-100 shadow-xl w-80 max-w-full">
-			<div class="p-3 space-y-3">
-				<label class="input flex items-center gap-2">
+	<div
+		tabindex="-1"
+		class="dropdown-content z-50 w-80 max-w-[calc(100vw-2rem)] [--join-ss:var(--radius-field)] [--join-se:var(--radius-field)] [--join-es:var(--radius-field)] [--join-ee:var(--radius-field)]"
+	>
+		<div class="card rounded-box border border-base-300 bg-base-100 shadow-xl">
+			<div class="space-y-3 p-3">
+				{#if defaultCurrency}
+					<p class="text-xs text-base-content/70">
+						{$t('currencies.default') || 'Default'}
+						<span class="font-mono font-semibold text-base-content">{defaultCurrency}</span>
+					</p>
+				{/if}
+
+				<label class="input input-sm w-full rounded-full">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="h-4 w-4 text-base-content/70"
@@ -164,39 +180,46 @@
 						bind:value={search}
 						onkeydown={handleSearchKeydown}
 						aria-label={$t('currencies.search') || 'Search currency'}
-						bind:this={searchInput}
 					/>
 				</label>
 
 				{#if filteredOptions.length}
 					<ul
-						class="space-y-1 w-full max-h-64 overflow-y-auto overflow-x-hidden"
+						class="w-full max-h-64 space-y-1 overflow-y-auto"
 						role="listbox"
 						id={id ? `${id}-listbox` : undefined}
 					>
-						{#each filteredOptions as option}
+						{#each filteredOptions as option (option.code)}
 							<li>
 								<button
 									type="button"
-									class={`w-full text-left flex flex-col items-start gap-1 px-3 py-2 rounded-lg transition-colors ${
+									class={[
+										'flex w-full flex-col items-start gap-1 rounded-lg px-3 py-2 text-left transition-colors',
 										value === option.code
-											? 'bg-primary/10 text-primary font-semibold'
+											? 'bg-primary/10 font-semibold text-primary'
 											: 'hover:bg-base-200/80'
-									}`}
+									]}
 									onclick={() => selectCurrency(option.code)}
 									role="option"
 									aria-selected={value === option.code}
 								>
-									<span class="font-mono text-sm">{option.code}</span>
+									<span class="flex items-center gap-2">
+										<span class="font-mono text-sm">{option.code}</span>
+										{#if option.code === defaultCurrency}
+											<span class="badge badge-ghost badge-xs font-normal"
+												>{$t('currencies.default') || 'Default'}</span
+											>
+										{/if}
+									</span>
 									{#if option.label}
-										<span class="text-xs text-base-content/70 truncate w-full">{option.label}</span>
+										<span class="w-full text-xs font-normal text-base-content/70">{option.label}</span>
 									{/if}
 								</button>
 							</li>
 						{/each}
 					</ul>
 				{:else}
-					<div class="text-sm text-base-content/70 px-3 py-2">
+					<div class="px-3 py-2 text-sm text-base-content/70">
 						{$t('currencies.no_matches') || 'No matches'}
 					</div>
 				{/if}

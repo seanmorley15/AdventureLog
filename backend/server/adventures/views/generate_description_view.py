@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from adventures.throttling import ExternalWikipediaThrottle
 from adventures.services.wikipedia.description_service import WikipediaDescriptionService
+from adventures.services.places.google_description import fetch_google_description
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,27 @@ class GenerateDescription(viewsets.ViewSet):
         name = urllib.parse.unquote(name).strip()
         if not name:
             return Response({"error": "Name parameter is required"}, status=400)
+
+        source = (request.query_params.get('source') or 'wikipedia').strip().lower()
+        if source not in {'wikipedia', 'google'}:
+            return Response({"error": "Invalid source. Use wikipedia or google."}, status=400)
+
+        if source == 'google':
+            if not (getattr(settings, 'GOOGLE_MAPS_API_KEY', '') or '').strip():
+                return Response({"error": "Google Maps is not configured"}, status=400)
+            try:
+                page = fetch_google_description(
+                    name,
+                    place_id=request.query_params.get('place_id') or None,
+                )
+                if page:
+                    return Response(page)
+                return Response({"error": "No description found"}, status=404)
+            except requests.exceptions.RequestException:
+                logger.exception("Failed to fetch description from Google Maps")
+                return Response({"error": "Failed to fetch description from Google Maps."}, status=500)
+            except RuntimeError:
+                return Response({"error": "Google Maps is not configured"}, status=400)
 
         service = WikipediaDescriptionService()
         lang = service.get_language(request.query_params.get('lang'))

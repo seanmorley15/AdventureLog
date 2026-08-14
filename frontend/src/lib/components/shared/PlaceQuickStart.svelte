@@ -578,7 +578,8 @@
 	let formattedItineraryLabel = $derived(itineraryLabel || formatItineraryDate(itineraryDate));
 </script>
 
-<div class="space-y-6">
+<div class="h-full min-h-0 flex flex-col">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5 space-y-6">
 	{#if quickAddedLocation}
 		<div class="card bg-success/10 border border-success/30">
 			<div class="card-body p-5 space-y-4">
@@ -819,10 +820,11 @@
 				<div class="card-body p-4">
 					<div class="flex flex-col gap-2">
 						<label class="field-label" for="quick-add-category">Category for Quick Add</label>
-						<div id="quick-add-category">
-							<CategoryDropdown bind:selected_category={selectedQuickAddCategory} />
-						</div>
-						<p class="text-xs text-base-content/60">
+						<CategoryDropdown
+							id="quick-add-category"
+							bind:selected_category={selectedQuickAddCategory}
+						/>
+						<p class="field-hint">
 							Optional. If not selected, backend defaults to General.
 						</p>
 					</div>
@@ -839,7 +841,11 @@
 		</div>
 	{/if}
 
-	<div class="flex flex-col sm:flex-row gap-3 pt-2">
+	</div>
+
+	<div
+		class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex flex-col sm:flex-row gap-3"
+	>
 		<button class="btn btn-ghost sm:flex-1" onclick={() => dispatch('cancel')}>
 			{$t('adventures.cancel') || 'Cancel'}
 		</button>

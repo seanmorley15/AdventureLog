@@ -465,245 +465,122 @@
 
 			<!-- Globe Spin Section -->
 			{#if showGlobeSpin}
-				<div class="container mx-auto px-6 py-4">
+				<div class="container mx-auto px-6 py-2">
 					<div class="card bg-base-100 shadow-xl overflow-hidden">
-						<div class="card-body p-6">
+						<div class="card-body p-3 sm:p-4">
 							{#if isLoadingGlobeSpin}
-								<!-- Loading State with Spinning Globe -->
-								<div class="flex flex-col items-center py-12">
-									<div class="relative">
-										<!-- Spinning globe with pulse effect -->
-										<div class="relative animate-spin" style="animation-duration: 3s;">
-											<div
-												class="w-24 h-24 rounded-full bg-gradient-to-br from-primary/20 to-accent/30 flex items-center justify-center border-4 border-primary/30"
-											>
-												<Globe class="w-12 h-12 text-primary" />
-											</div>
-											<!-- Orbit rings -->
-											<div
-												class="absolute inset-0 rounded-full border-2 border-dashed border-primary/20 animate-pulse"
-											></div>
-											<div
-												class="absolute -inset-2 rounded-full border border-dashed border-accent/20 animate-pulse"
-												style="animation-delay: 0.5s;"
-											></div>
-										</div>
-										<!-- Sparkle effects -->
-										<div
-											class="absolute -top-2 -right-2 w-3 h-3 bg-yellow-400 rounded-full animate-ping"
-										></div>
-										<div
-											class="absolute -bottom-3 -left-3 w-2 h-2 bg-blue-400 rounded-full animate-ping"
-											style="animation-delay: 1s;"
-										></div>
-										<div
-											class="absolute top-1/2 -right-4 w-1.5 h-1.5 bg-green-400 rounded-full animate-ping"
-											style="animation-delay: 2s;"
-										></div>
+								<div class="flex items-center gap-3">
+									<div
+										class="w-10 h-10 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 animate-spin"
+										style="animation-duration: 3s;"
+									>
+										<Globe class="w-5 h-5 text-primary" />
 									</div>
-									<div class="mt-6 text-center">
-										<h3 class="text-xl font-bold text-primary mb-2">
+									<div class="min-w-0">
+										<p class="font-semibold text-primary leading-tight">
 											{$t('worldtravel.spinning_globe') + '...'}
-										</h3>
-										<p class="text-base-content/70 animate-pulse">
+										</p>
+										<p class="text-sm text-base-content/70">
 											{$t('worldtravel.loading_globe_spin')}
 										</p>
-										<div class="flex items-center justify-center gap-1 mt-3">
-											<div class="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-											<div
-												class="w-2 h-2 bg-primary rounded-full animate-bounce"
-												style="animation-delay: 0.2s;"
-											></div>
-											<div
-												class="w-2 h-2 bg-primary rounded-full animate-bounce"
-												style="animation-delay: 0.4s;"
-											></div>
-										</div>
 									</div>
 								</div>
 							{:else if globeSpinData}
-								<!-- Result Display with Amazing Animations -->
-								<div class="text-center">
-									<div class="mb-6">
-										<h3
-											class="text-2xl font-bold text-primary mb-2 flex items-center justify-center gap-3"
-										>
-											<Globe class="w-8 h-8 animate-spin" style="animation-duration: 4s;" />
-											{$t('worldtravel.destination_revealed')}
-											<Globe
-												class="w-8 h-8 animate-spin"
-												style="animation-duration: 4s; animation-direction: reverse;"
-											/>
-										</h3>
-										<p class="text-base-content/60">
-											{$t('worldtravel.your_random_adventure_awaits')}
-										</p>
-									</div>
+								<div class="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+									<img
+										src={globeSpinData.country.flag_url}
+										alt="{globeSpinData.country.name} flag"
+										class="w-28 h-[4.5rem] sm:w-32 sm:h-20 object-cover rounded-xl border border-base-300 shadow-md shrink-0"
+									/>
 
-									<!-- Country Card with Entrance Animation -->
-									<div class="animate-slideInUp" style="animation-duration: 0.8s;">
-										<!-- Flag with Reveal Effect -->
-										<div class="relative mb-6 mx-auto w-fit">
-											<div
-												class="relative overflow-hidden rounded-2xl shadow-2xl border-4 border-primary/20 hover:border-primary/40 transition-colors duration-300"
-											>
-												<img
-													src={globeSpinData.country.flag_url}
-													alt="{globeSpinData.country.name} flag"
-													class="w-64 h-40 object-cover hover:scale-105 transition-transform duration-500"
-												/>
-												<!-- Shimmer overlay -->
-												<div
-													class="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-shimmer"
-												></div>
-											</div>
-											<!-- Floating badges -->
-											<div
-												class="absolute -top-3 -right-3 badge badge-primary badge-lg animate-bounce shadow-lg"
-											>
+									<div class="min-w-0 flex-1 space-y-1.5">
+										<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+											<h2 class="text-lg sm:text-xl font-bold text-primary leading-tight">
+												{globeSpinData.country.name}
+											</h2>
+											<div class="badge badge-primary badge-sm">
 												{globeSpinData.country.country_code}
 											</div>
 											{#if globeSpinData.country.num_visits > 0}
-												<div
-													class="absolute -top-3 -left-3 badge badge-success badge-lg animate-pulse shadow-lg"
-												>
-													<Check class="w-4 h-4 mr-1" />
+												<div class="badge badge-success badge-sm gap-1">
+													<Check class="w-3 h-3" />
 													{$t('adventures.visited')}
+												</div>
+											{/if}
+											<div class="badge badge-outline badge-sm gap-1">
+												<Pin class="w-3 h-3" />
+												{globeSpinData.country.subregion}
+											</div>
+											{#if globeSpinData.country.capital}
+												<div class="badge badge-outline badge-sm gap-1">
+													<Globe class="w-3 h-3" />
+													{globeSpinData.country.capital}
+												</div>
+											{/if}
+											{#if globeSpinData.region}
+												<div class="badge badge-accent badge-soft badge-sm gap-1">
+													<Pin class="w-3 h-3" />
+													{globeSpinData.region.name}
+												</div>
+											{/if}
+											{#if globeSpinData.city}
+												<div class="badge badge-success badge-soft badge-sm gap-1">
+													<Map class="w-3 h-3" />
+													{globeSpinData.city.name}
 												</div>
 											{/if}
 										</div>
 
-										<!-- Country Info -->
-										<div class="space-y-4 animate-fadeInUp" style="animation-delay: 0.2s;">
-											<h2
-												class="text-4xl font-bold text-primary bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent pb-2"
-											>
-												{globeSpinData.country.name}
-											</h2>
-
-											<div class="flex flex-wrap justify-center gap-4">
-												<div class="badge badge-lg badge-outline gap-2">
-													<Pin class="w-4 h-4" />
-													{globeSpinData.country.subregion}
-												</div>
-												{#if globeSpinData.country.capital}
-													<div class="badge badge-lg badge-outline gap-2">
-														<Globe class="w-4 h-4" />
-														{globeSpinData.country.capital}
-													</div>
-												{/if}
-											</div>
-
-											<!-- Progress Info -->
-											<div
-												class="card bg-gradient-to-br from-base-200/50 to-base-300/30 p-4 max-w-md mx-auto"
-											>
-												<div class="flex justify-between items-center mb-2">
-													<span class="text-sm font-medium"
-														>{$t('worldtravel.exploration_progress')}</span
-													>
-													<span class="text-lg font-bold text-primary">
-														{globeSpinData.country.num_visits}/{globeSpinData.country.num_regions}
-													</span>
-												</div>
-												<progress
-													class="progress progress-primary w-full"
-													value={globeSpinData.country.num_visits}
-													max={globeSpinData.country.num_regions}
-												></progress>
-												<div class="text-xs text-base-content/60 mt-1">
-													{Math.round(
-														(globeSpinData.country.num_visits / globeSpinData.country.num_regions) *
-															100
-													)}% explored
-												</div>
-											</div>
+										<div class="flex items-center gap-2 max-w-md">
+											<progress
+												class="progress progress-primary h-2 flex-1"
+												value={globeSpinData.country.num_visits}
+												max={globeSpinData.country.num_regions}
+											></progress>
+											<span class="text-xs font-medium text-primary whitespace-nowrap">
+												{globeSpinData.country.num_visits}/{globeSpinData.country.num_regions}
+											</span>
+											<span class="text-xs text-base-content/60 whitespace-nowrap hidden sm:inline">
+												{globeSpinData.country.num_regions
+													? Math.round(
+															(globeSpinData.country.num_visits /
+																globeSpinData.country.num_regions) *
+																100
+														)
+													: 0}%
+											</span>
 										</div>
 									</div>
 
-									<!-- Region & City Info (if available) -->
-									{#if globeSpinData.region || globeSpinData.city}
-										<div class="mt-8 space-y-4 animate-fadeInUp" style="animation-delay: 0.4s;">
-											<div class="divider">
-												<span class="text-primary font-semibold"
-													>{$t('worldtravel.dive_deeper')}</span
-												>
-											</div>
-
-											<div class="grid md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-												{#if globeSpinData.region}
-													<div
-														class="card bg-gradient-to-br from-accent/10 to-secondary/10 border border-accent/20"
-													>
-														<div class="card-body p-4">
-															<h4 class="font-bold text-accent flex items-center gap-2">
-																<Pin class="w-5 h-5" />
-																{$t('adventures.region')}
-															</h4>
-															<p class="text-lg font-semibold">{globeSpinData.region.name}</p>
-															<p class="text-sm text-base-content/60">
-																{globeSpinData.region.num_cities}
-																{$t('worldtravel.cities_available')}
-															</p>
-														</div>
-													</div>
-												{/if}
-
-												{#if globeSpinData.city}
-													<div
-														class="card bg-gradient-to-br from-success/10 to-info/10 border border-success/20"
-													>
-														<div class="card-body p-4">
-															<h4 class="font-bold text-success flex items-center gap-2">
-																<Map class="w-5 h-5" />
-																{$t('adventures.city')}
-															</h4>
-															<p class="text-lg font-semibold">{globeSpinData.city.name}</p>
-															<p class="text-sm text-base-content/60">
-																{$t('worldtravel.in')}
-																{globeSpinData.city.region_name}
-															</p>
-														</div>
-													</div>
-												{/if}
-											</div>
-										</div>
-									{/if}
-
-									<!-- Action Buttons -->
-									<div
-										class="mt-8 flex flex-wrap justify-center gap-4 animate-fadeInUp"
-										style="animation-delay: 0.6s;"
-									>
+									<div class="flex sm:flex-col gap-2 shrink-0">
 										<a
 											href="/worldtravel/{globeSpinData.country.country_code}"
-											class="btn btn-primary btn-lg gap-2 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+											class="btn btn-primary btn-sm gap-1.5 flex-1 sm:flex-none"
 										>
-											<Globe class="w-5 h-5" />
+											<Globe class="w-4 h-4" />
 											{$t('worldtravel.explore_country')}
 										</a>
 										<button
-											class="btn btn-outline btn-lg gap-2 hover:scale-105 transition-all duration-300"
+											class="btn btn-outline btn-sm gap-1.5 flex-1 sm:flex-none"
 											onclick={fetchGlobeSpin}
 										>
-											<Globe class="w-5 h-5 animate-spin" style="animation-duration: 2s;" />
+											<Globe class="w-4 h-4" />
 											{$t('worldtravel.spin_again')}
 										</button>
 									</div>
 								</div>
 							{:else}
-								<!-- No Data State -->
-								<div class="flex flex-col items-center py-12">
-									<div class="p-6 bg-error/10 rounded-2xl mb-6">
-										<Cancel class="w-16 h-16 text-error/50" />
+								<div class="flex flex-col sm:flex-row sm:items-center gap-3">
+									<Cancel class="w-8 h-8 text-error/50 shrink-0" />
+									<div class="min-w-0 flex-1">
+										<p class="font-semibold leading-tight">
+											{$t('worldtravel.no_globe_spin_data')}
+										</p>
+										<p class="text-sm text-base-content/60">
+											{$t('worldtravel.globe_spin_error_desc')}
+										</p>
 									</div>
-									<h3 class="text-xl font-semibold text-base-content/70 mb-2">
-										{$t('worldtravel.no_globe_spin_data')}
-									</h3>
-									<p class="text-base-content/50 text-center max-w-md mb-6">
-										{$t('worldtravel.globe_spin_error_desc')}
-									</p>
-									<button class="btn btn-primary gap-2" onclick={fetchGlobeSpin}>
+									<button class="btn btn-primary btn-sm gap-1.5 shrink-0" onclick={fetchGlobeSpin}>
 										<Globe class="w-4 h-4" />
 										{$t('worldtravel.try_again')}
 									</button>
@@ -879,47 +756,3 @@
 	</div>
 </div>
 
-<style>
-	@keyframes slideInUp {
-		from {
-			opacity: 0;
-			transform: translateY(30px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes fadeInUp {
-		from {
-			opacity: 0;
-			transform: translateY(20px);
-		}
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes shimmer {
-		0% {
-			transform: translateX(-100%);
-		}
-		100% {
-			transform: translateX(100%);
-		}
-	}
-
-	.animate-slideInUp {
-		animation: slideInUp ease-out forwards;
-	}
-
-	.animate-fadeInUp {
-		animation: fadeInUp ease-out forwards;
-	}
-
-	.animate-shimmer {
-		animation: shimmer 2s infinite;
-	}
-</style>

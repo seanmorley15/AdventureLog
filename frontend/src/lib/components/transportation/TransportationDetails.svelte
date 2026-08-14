@@ -17,7 +17,6 @@
 	import MapIcon from '~icons/mdi/map';
 	import ClearIcon from '~icons/mdi/close';
 	import InfoIcon from '~icons/mdi/information';
-	import GenerateIcon from '~icons/mdi/lightning-bolt';
 	import ArrowLeftIcon from '~icons/mdi/arrow-left';
 	import SaveIcon from '~icons/mdi/content-save';
 	import type { Category, User } from '$lib/types';
@@ -106,8 +105,6 @@
 
 	let user: User | null = $state(null);
 	let transportationToEdit: Transportation | null = $state(null);
-	let wikiError = $state('');
-	let isGeneratingDesc = $state(false);
 	let ownerUser: User | null = null;
 	let dateError = $state('');
 	let moneyValue: MoneyValue = $state({ amount: null, currency: DEFAULT_CURRENCY });
@@ -140,7 +137,7 @@
 		}
 		moneyValue =
 			transportation.price === null
-				? { amount: null, currency: transportation.price_currency || null }
+				? { amount: null, currency: transportation.price_currency || preferredCurrency }
 				: toMoneyValue(transportation.price, transportation.price_currency, preferredCurrency);
 	});
 
@@ -351,30 +348,6 @@
 		}
 
 		return true;
-	}
-
-	async function generateDesc() {
-		if (!transportation.name) return;
-
-		isGeneratingDesc = true;
-		wikiError = '';
-
-		try {
-			// Mock Wikipedia API call - replace with actual implementation
-			const response = await fetch(
-				`/api/generate/desc/?name=${encodeURIComponent(transportation.name)}&lang=${$locale || 'en'}`
-			);
-			if (response.ok) {
-				const data = await response.json();
-				transportation.description = data.extract || '';
-			} else {
-				wikiError = `${$t('adventures.wikipedia_error') || 'Error fetching description from Wikipedia'}`;
-			}
-		} catch (error) {
-			wikiError = `${$t('adventures.wikipedia_error') || ''}`;
-		} finally {
-			isGeneratingDesc = false;
-		}
 	}
 
 	async function handleSave() {
@@ -598,7 +571,8 @@
 	});
 </script>
 
-<div class="min-h-screen bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5 p-6">
+<div class="h-full min-h-0 flex flex-col bg-gradient-to-br from-base-200/30 via-base-100 to-primary/5">
+	<div class="flex-1 min-h-0 overflow-y-auto px-4 md:px-6 py-4 md:py-5">
 	<div class="max-w-full mx-auto space-y-6">
 		<!-- Location Search & Map Section - FIRST! -->
 		<div class="card bg-base-100 border border-base-300 shadow-lg">
@@ -676,7 +650,7 @@
 								{$t('transportation.type')} <span class="text-error">*</span>
 							</label>
 							<select
-								class="select w-full bg-base-100/80 focus:bg-base-100"
+								class="select w-full bg-base-100 text-base-content"
 								name="type"
 								id="type"
 								required
@@ -790,39 +764,25 @@
 						<MoneyInput
 							label={$t('adventures.price')}
 							value={moneyValue}
+							defaultCurrency={preferredCurrency}
 							on:change={(event) => {
 								transportation.price = event.detail.amount;
-								transportation.price_currency =
-									event.detail.amount === null ? null : event.detail.currency || preferredCurrency;
+								transportation.price_currency = event.detail.currency || preferredCurrency;
 							}}
 						/>
 
 						<!-- Description Field -->
 						<div class="flex flex-col">
 							<label class="field-label" for="description">{$t('adventures.description')}</label>
-							<MarkdownEditor bind:text={transportation.description} editor_height="h-32" />
-
-							<div class="flex items-center gap-4 mt-3">
-								<button
-									type="button"
-									class="btn btn-neutral btn-sm gap-2"
-									onclick={generateDesc}
-									disabled={!transportation.name || isGeneratingDesc || !transportation.type}
-								>
-									{#if isGeneratingDesc}
-										<span class="loading loading-spinner loading-xs"></span>
-									{:else}
-										<GenerateIcon class="w-4 h-4" />
-									{/if}
-									{$t('adventures.generate_desc')}
-								</button>
-								{#if wikiError}
-									<div class="alert alert-error alert-sm">
-										<InfoIcon class="w-4 h-4" />
-										<span class="text-sm">{wikiError}</span>
-									</div>
-								{/if}
-							</div>
+							<MarkdownEditor
+								id="description"
+								bind:text={transportation.description}
+								editor_height="h-32"
+								enableFetch
+								fetchName={transportation.name}
+								fetchLang={$locale || 'en'}
+								fetchDisabled={!transportation.name || !transportation.type}
+							/>
 						</div>
 					</div>
 				</div>
@@ -947,8 +907,13 @@
 			</div>
 		</div>
 
+	</div>
+	</div>
+
 		<!-- Action Buttons -->
-		<div class="flex gap-3 justify-end pt-4">
+		<div
+			class="shrink-0 border-t border-base-300 bg-base-100/90 backdrop-blur-lg px-4 md:px-6 py-3 md:py-4 flex gap-3 justify-end"
+		>
 			<button
 				class="btn btn-primary gap-2"
 				disabled={!transportation.name || !transportation.type || isReverseGeocoding}
@@ -963,5 +928,11 @@
 				{/if}
 			</button>
 		</div>
-	</div>
 </div>
+
+<style>
+	select option {
+		background-color: var(--color-base-100);
+		color: var(--color-base-content);
+	}
+</style>

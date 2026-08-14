@@ -220,11 +220,11 @@
 
 			<div class="flex items-center gap-2">
 				<button
-					class="btn btn-sm p-1 text-base-content"
+					class="btn btn-square btn-sm p-1 text-base-content"
 					aria-label="open-details"
 					onclick={() => goto(`/lodging/${lodging.id}`)}
 				>
-					<Launch class="w-4 h-4" />
+					<Launch class="w-5 h-5" />
 				</button>
 
 				{#if !readOnly && (lodging.user == user?.uuid || (collection && user && collection.shared_with?.includes(user.uuid)))}
@@ -248,7 +248,7 @@
 								isActionsMenuOpen = true;
 							})}
 						>
-							<DotsHorizontal class="w-5 h-5" />
+							<DotsHorizontal class="w-4 h-4" />
 						</button>
 						<ul
 							tabindex="-1"

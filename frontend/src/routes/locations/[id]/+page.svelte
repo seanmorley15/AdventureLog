@@ -37,6 +37,7 @@
 	import { contentImagesToGeoJson, EMPTY_IMAGE_PIN_GEOJSON } from '$lib/map/imagePins';
 	import ImageOutline from '~icons/mdi/image-outline';
 	import SocialShareModal from '$lib/components/SocialShareModal.svelte';
+	import UserAvatar from '$lib/components/UserAvatar.svelte';
 
 	const renderMarkdown = (markdown: string) => {
 		return marked(markdown) as string;
@@ -549,29 +550,20 @@
 					<div class="card bg-base-200 shadow-xl">
 						<div class="card-body">
 							<div class="flex items-center gap-4">
-								{#if adventure.user.profile_pic}
-									<div class="avatar">
-										<div
-											class="w-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
-										>
-											<img src={adventure.user.profile_pic} alt={adventure.user.username} />
-										</div>
+								<div class="avatar shrink-0">
+									<div
+										class="w-16 overflow-hidden rounded-full ring-3 ring-neutral ring-offset-base-100 ring-offset-2"
+									>
+										<UserAvatar
+											user={adventure.user}
+											alt={adventure.user.first_name && adventure.user.last_name
+												? `${adventure.user.first_name} ${adventure.user.last_name}`
+												: adventure.user.username}
+											className="w-16 h-16 rounded-full"
+											textClass="text-xl"
+										/>
 									</div>
-								{:else}
-									<div class="avatar avatar-placeholder">
-										<div
-											class="bg-primary text-primary-content w-16 rounded-full ring-3 ring-primary ring-offset-base-100 ring-offset-2"
-										>
-											<span class="text-xl font-bold">
-												{adventure.user.first_name
-													? adventure.user.first_name.charAt(0)
-													: adventure.user.username.charAt(0)}{adventure.user.last_name
-													? adventure.user.last_name.charAt(0)
-													: ''}
-											</span>
-										</div>
-									</div>
-								{/if}
+								</div>
 								<div class="flex-1">
 									<div class="text-lg font-bold">
 										{#if adventure.user.public_profile}

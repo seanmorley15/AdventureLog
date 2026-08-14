@@ -37,7 +37,6 @@
 	import { DEFAULT_CURRENCY, formatMoney, toMoneyValue } from '$lib/money';
 	import { shouldFlipDropdownUp } from '$lib/utils/flipDropdown';
 
-
 	let isCollectionModalOpen: boolean = $state(false);
 	let isWarningModalOpen: boolean = $state(false);
 	let isSocialShareModalOpen: boolean = $state(false);
@@ -108,9 +107,6 @@
 	}: Props = $props();
 	let displayActivityTypes: string[] = $state([]);
 	let remainingCount = $state(0);
-
-
-
 
 	// Helper functions for display
 
@@ -263,9 +259,9 @@
 		}
 	});
 	// Price formatting
-	let adventurePriceLabel = $derived(formatMoney(
-		toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY)
-	));
+	let adventurePriceLabel = $derived(
+		formatMoney(toMoneyValue(adventure?.price, adventure?.price_currency, DEFAULT_CURRENCY))
+	);
 	// Process activity types for display
 	run(() => {
 		if (adventure.tags) {
@@ -279,9 +275,11 @@
 		}
 	});
 	// Creator avatar helpers
-	let creatorDisplayName = $derived(adventure.user?.first_name
-		? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
-		: adventure.user?.username || 'Unknown User');
+	let creatorDisplayName = $derived(
+		adventure.user?.first_name
+			? `${adventure.user.first_name} ${adventure.user.last_name || ''}`.trim()
+			: adventure.user?.username || 'Unknown User'
+	);
 </script>
 
 {#if isCollectionModalOpen}
@@ -417,11 +415,11 @@
 
 			<div class="flex items-center gap-2">
 				<button
-					class="btn btn-sm p-1 text-base-content"
+					class="btn btn-square btn-sm p-1 text-base-content"
 					aria-label="open-details"
 					onclick={() => goto(`/locations/${adventure.id}`)}
 				>
-					<Launch class="w-4 h-4" />
+					<Launch class="w-5 h-5" />
 				</button>
 				{#if !readOnly}
 					{#if (adventure.user && adventure.user.uuid == user?.uuid) || (collection && user && collection.shared_with?.includes(user.uuid)) || (collection && user && collection.user == user.uuid)}

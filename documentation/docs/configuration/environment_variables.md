@@ -48,7 +48,7 @@ See [Advanced Deployment](../install/docker.md#url-mental-model) for a visual ex
 | `POSTGRES_DB` / `PGDATABASE` | Yes | Database name. | `database` |
 | `POSTGRES_USER` / `PGUSER` | Yes | Database user. | `adventure` |
 | `POSTGRES_PASSWORD` / `PGPASSWORD` | Yes | Database password. Change in production. | `changeme123` |
-| `PG_CONN_MAX_AGE` | No | Seconds to reuse database connections between requests (`0` closes after each request). | `300` |
+| `PG_CONN_MAX_AGE` | No | Seconds to reuse database connections between requests (`0` closes after each request). When `DEBUG` is on, this is forced to `0` unless the variable is set explicitly — Django's `runserver` cannot reuse connections across requests. | `300` |
 
 ## Django core
 
