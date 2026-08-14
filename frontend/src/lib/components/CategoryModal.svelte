@@ -336,7 +336,7 @@
 															<input
 																id="edit-category-name"
 																type="text"
-																class="input w-full min-w-0"
+																class="input w-full min-w-0 bg-base-100"
 																bind:value={categoryToEdit.display_name}
 																required
 															/>
@@ -347,7 +347,7 @@
 																<input
 																	id="edit-category-icon"
 																	type="text"
-																	class="input join-item flex-1 min-w-0 w-0"
+																	class="input join-item flex-1 min-w-0 w-0 bg-base-100"
 																	bind:value={categoryToEdit.icon}
 																/>
 																<button
@@ -356,8 +356,8 @@
 																		showEmojiPickerEdit = !showEmojiPickerEdit;
 																		showEmojiPickerAdd = false;
 																	}}
-																	class="btn join-item btn-square btn-outline shrink-0"
-																	class:btn-active={showEmojiPickerEdit}
+																	class="icon-join-btn btn join-item btn-square shrink-0"
+																	aria-pressed={showEmojiPickerEdit}
 																	aria-label={$t('categories.icon')}
 																>
 																	<EmojiIcon class="w-5 h-5" />
@@ -483,7 +483,7 @@
 								<input
 									id="new-category-name"
 									type="text"
-									class="input w-full min-w-0"
+									class="input w-full min-w-0 bg-base-100"
 									bind:value={newCategory.display_name}
 									placeholder={$t('categories.category_name')}
 									required
@@ -496,7 +496,7 @@
 									<input
 										id="new-category-icon"
 										type="text"
-										class="input join-item flex-1 min-w-0 w-0"
+										class="input join-item flex-1 min-w-0 w-0 bg-base-100"
 										bind:value={newCategory.icon}
 										placeholder="🌍"
 									/>
@@ -506,8 +506,8 @@
 											showEmojiPickerAdd = !showEmojiPickerAdd;
 											showEmojiPickerEdit = false;
 										}}
-										class="btn join-item btn-square btn-outline shrink-0"
-										class:btn-active={showEmojiPickerAdd}
+										class="icon-join-btn btn join-item btn-square shrink-0"
+										aria-pressed={showEmojiPickerAdd}
 										aria-label={$t('categories.icon')}
 									>
 										<EmojiIcon class="w-5 h-5" />
@@ -567,6 +567,16 @@
 	dialog::backdrop {
 		backdrop-filter: blur(8px);
 		background: rgba(0, 0, 0, 0.3);
+	}
+
+	/* DaisyUI .btn fill uses --btn-bg (base-200). bg-base-100 only wins on hover. */
+	.icon-join-btn,
+	.icon-join-btn:hover,
+	.icon-join-btn:active,
+	.icon-join-btn:focus-visible {
+		--btn-bg: var(--color-base-100);
+		--btn-border: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+		--btn-fg: var(--color-base-content);
 	}
 
 	.category-modal-box {

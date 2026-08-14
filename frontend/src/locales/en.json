@@ -1132,6 +1132,8 @@
 		"add_location": "Add New Location",
 		"adventure_stats": "Adventure Stats",
 		"map_controls": "Map Controls",
+		"hide_controls": "Hide map controls",
+		"show_controls": "Show map controls",
 		"regions": "Regions",
 		"completion": "Completion",
 		"display_options": "Display Options",

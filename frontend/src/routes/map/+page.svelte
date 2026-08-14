@@ -62,6 +62,8 @@
 	import CategoryFilterDropdown from '$lib/components/CategoryFilterDropdown.svelte';
 	import Compass from '~icons/mdi/compass';
 	import Tag from '~icons/mdi/tag';
+	import ChevronLeft from '~icons/mdi/chevron-left';
+	import ChevronRight from '~icons/mdi/chevron-right';
 
 	interface Props {
 		data: any;
@@ -77,6 +79,7 @@
 	let showImagePins = $state(false);
 	let showCities = $state(false);
 	let sidebarOpen = $state(false);
+	let sidebarCollapsed = $state(false);
 	let sidebarMode: 'controls' | 'preview' = $state('controls');
 
 	let basemapType: string = $state(normalizeBasemapType(undefined));
@@ -274,13 +277,16 @@
 		return request;
 	}
 
+	function revealSidebar() {
+		sidebarOpen = true;
+		sidebarCollapsed = false;
+	}
+
 	async function loadPreviewForPin(pinId: string) {
 		selected = { kind: 'pin', pinId };
 		selectedPlace = null;
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 
 		const cached = locationCache.get(pinId) ?? null;
 		previewLocation = cached;
@@ -329,9 +335,7 @@
 		previewError = null;
 		previewLoading = false;
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 	}
 
 	function handleViewImageParent(event: CustomEvent<{ href: string }>) {
@@ -390,7 +394,7 @@
 		const lat = parseCoordinate(pin.latitude);
 		const lng = parseCoordinate(pin.longitude);
 		if (lat === null || lng === null) return;
-		sidebarOpen = true;
+		revealSidebar();
 		flyTo(lat, lng);
 		await loadPreviewForPin(pin.id);
 	}
@@ -400,9 +404,7 @@
 		selectedPlace = place;
 		selected = { kind: 'place', place };
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 		flyTo(place.lat, place.lng);
 		if (place.place_id) {
 			place = await enrichPlace(place);
@@ -414,9 +416,7 @@
 	function selectRecommendation(item: Recommendation) {
 		selected = { kind: 'recommendation', item };
 		sidebarMode = 'preview';
-		if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-			sidebarOpen = true;
-		}
+		revealSidebar();
 		flyTo(item.latitude, item.longitude, 15);
 	}
 
@@ -862,8 +862,10 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<div class="w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden">
-	<div class="drawer lg:drawer-open h-full w-full">
+<div
+	class={['map-page w-full h-[calc(100dvh-4rem)] min-h-[24rem] bg-base-200 overflow-hidden', sidebarCollapsed && 'sidebar-collapsed']}
+>
+	<div class="drawer map-page-drawer h-full w-full">
 		<input id="map-drawer" type="checkbox" class="drawer-toggle" bind:checked={sidebarOpen} />
 
 		<div
@@ -1051,7 +1053,7 @@
 
 			{#if searchMode === 'nearby'}
 				<div
-					class="absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
+					class="map-ui-center absolute top-[8.75rem] sm:top-[7.5rem] lg:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none flex flex-col items-center gap-2"
 				>
 					{#if recLoading}
 						<div
@@ -1076,7 +1078,7 @@
 
 			<!-- Floating map toolbar -->
 			<div
-				class="absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
+				class="map-ui-left absolute top-3 left-3 right-3 z-20 flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-start pointer-events-none min-w-0"
 			>
 				<div
 					class="flex items-start gap-1.5 lg:gap-2 min-w-0 w-full lg:flex-1 lg:max-w-xl pointer-events-none"
@@ -1135,21 +1137,9 @@
 					</div>
 				</div>
 			</div>
-
-			<!-- Compact title badge -->
-			<div
-				class="absolute bottom-3 left-3 z-20 pointer-events-none hidden sm:flex items-center gap-2 bg-base-100/80 backdrop-blur-sm rounded-lg px-3 py-1.5 border border-base-300 shadow-xs"
-			>
-				<MapIcon class="w-5 h-5 text-primary" />
-				<span class="text-sm font-semibold text-primary">{$t('map.location_map')}</span>
-				<span class="text-xs text-base-content/60">
-					{filteredPins.length}
-					{$t('map.locations_shown')}
-				</span>
-			</div>
 		</div>
 
-		<!-- Sidebar -->
+		<!-- Sidebar: overlay drawer on mobile, floating panel on desktop -->
 		<div class="drawer-side z-40">
 			<label
 				for="map-drawer"
@@ -1158,9 +1148,26 @@
 				aria-hidden={!sidebarOpen}
 			></label>
 			<div
-				class="w-80 h-full max-h-[calc(100dvh-4rem)] bg-base-100 shadow-2xl flex flex-col overflow-hidden"
+				class="map-controls-panel w-80 h-full max-h-[calc(100dvh-4rem)] bg-base-100/95 backdrop-blur-xl flex flex-col overflow-hidden lg:overflow-visible border-base-300/80 lg:border"
 			>
-				<div class="p-6 flex-1 min-h-0 flex flex-col overflow-hidden">
+				<button
+					type="button"
+					class="map-controls-toggle hidden lg:grid place-items-center h-10 w-8 bg-base-100/95 backdrop-blur-xl border border-base-300/80 border-l-0 rounded-r-xl text-base-content/70 hover:text-base-content hover:bg-base-200/80"
+					onclick={() => (sidebarCollapsed = !sidebarCollapsed)}
+					aria-expanded={!sidebarCollapsed}
+					aria-controls="map-controls-panel-body"
+					aria-label={sidebarCollapsed ? $t('map.show_controls') : $t('map.hide_controls')}
+				>
+					{#if sidebarCollapsed}
+						<ChevronRight class="w-5 h-5" />
+					{:else}
+						<ChevronLeft class="w-5 h-5" />
+					{/if}
+				</button>
+				<div
+					id="map-controls-panel-body"
+					class="p-6 flex-1 min-h-0 h-full flex flex-col overflow-hidden lg:rounded-[inherit]"
+				>
 					{#if sidebarMode === 'preview'}
 						<div class="flex items-center gap-2 mb-4 shrink-0">
 							<div class="p-2 bg-primary/10 rounded-lg">
@@ -1409,6 +1416,89 @@
 {/if}
 
 <style>
+	.map-page {
+		--map-float-inset: 0.75rem;
+		--map-float-width: 20rem;
+		--map-float-gutter: calc(var(--map-float-inset) + var(--map-float-width) + 0.75rem);
+	}
+
+	@media (min-width: 1024px) {
+		.map-page-drawer {
+			display: block;
+			position: relative;
+		}
+
+		.drawer-content {
+			width: 100%;
+			height: 100%;
+		}
+
+		.drawer-side {
+			pointer-events: none;
+			visibility: visible;
+			opacity: 1;
+			position: absolute;
+			inset: 0;
+			width: 100%;
+			height: 100%;
+			overflow: visible;
+			background: transparent;
+			z-index: 30;
+		}
+
+		.drawer-overlay {
+			display: none;
+		}
+
+		.drawer-side > .map-controls-panel {
+			pointer-events: auto;
+			translate: 0;
+			will-change: transform;
+			width: var(--map-float-width);
+			height: calc(100% - (var(--map-float-inset) * 2));
+			max-height: none;
+			margin: var(--map-float-inset);
+			border-radius: 1rem;
+			overflow: visible;
+			transition: translate 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.map-controls-toggle {
+			position: absolute;
+			top: 50%;
+			right: 0;
+			translate: 100% -50%;
+			z-index: 2;
+		}
+
+		.map-ui-left,
+		.map-ui-center {
+			transition: left 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+		}
+
+		.map-ui-left {
+			left: var(--map-float-gutter);
+		}
+
+		.map-ui-center {
+			left: calc(50% + (var(--map-float-gutter) / 2));
+		}
+
+		.sidebar-collapsed {
+			--map-float-gutter: var(--map-float-inset);
+		}
+
+		.sidebar-collapsed .drawer-side > .map-controls-panel {
+			translate: calc(-1 * (var(--map-float-width) + var(--map-float-inset)));
+		}
+
+		.sidebar-collapsed .map-controls-toggle {
+			border-left-width: 1px;
+			border-top-left-radius: 0.75rem;
+			border-bottom-left-radius: 0.75rem;
+		}
+	}
+
 	:global(.maplibregl-marker.map-pin),
 	:global(.mapboxgl-marker.map-pin) {
 		pointer-events: none;

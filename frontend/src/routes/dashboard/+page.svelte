@@ -761,14 +761,14 @@
 					>
 						<h2 class="mb-4 text-lg font-bold">{$t('dashboard.quick_links')}</h2>
 
-						<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
-							{#each quickLinks as link}
+						<div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+							{#each quickLinks as link (link.href)}
 								<a
 									href={link.href}
-									class="btn btn-ghost h-auto min-h-0 flex-col gap-1.5 py-3 px-2 normal-case font-normal border border-base-300/40 bg-base-200/30"
+									class="btn btn-ghost h-auto min-h-24 flex-col gap-2.5 py-5 px-3 normal-case font-medium border border-base-300/40 bg-base-200/30"
 								>
-									<link.icon class="h-5 w-5 text-primary" />
-									<span class="text-xs leading-tight text-center">{$t(link.labelKey)}</span>
+									<link.icon class="h-7 w-7 text-primary" />
+									<span class="text-sm leading-tight text-center">{$t(link.labelKey)}</span>
 								</a>
 							{/each}
 						</div>
